@@ -228,6 +228,7 @@ src/components/docs/table-filter-demo.tsx The filter field's blank name and hint
 src/components/docs/expandable-rows-demo.tsx The disclosure row: the press, the sibling panel and two open at once
 src/components/docs/frozen-columns-demo.tsx The two mirrored scrollers and the height rule the composition reads
 src/components/docs/stat-card-demo.tsx    The metric card's derived reading, its trend roles and the box a reader measures
+src/components/docs/data-skin.test.tsx     Every data page's drawing held to the recipe its component compiles
 src/components/docs/table-demo.tsx        The table's browser renderings and their source strings
 src/components/docs/tag-input-preview.ts   The tag preview's commit rules, budget and publish gate
 src/components/docs/tag-input-demo.tsx     The tag field's two browser renderings and their source strings

@@ -24151,3 +24151,40 @@ rests on the stack.
       assertions that named a removed string were dropped, and the behaviour
       they sat beside still asserts.
 
+`[x]` Re-skin the **fifteen data-display previews** in their components' own
+      shapes — the lane's pages were the last drawings that still rendered raw
+      HTML: a `<table>` with plain cells on the sorting, selection, filtering,
+      column, frozen, expandable, virtualization, chart, property and builder
+      pages, bare `<input>`s (`type="number"`, `type="range"`, `type="search"`)
+      and unstyled `<button>`s, so the pages that exist to show the library
+      looked like a browser default rather than GPUIXUI. Every surface now reads
+      one shared skin in `demos.css` that mirrors the recipe the runtime
+      compiles: `TABLE_*` (`border`/`card` frame, `px-3 py-2 text-sm` cells,
+      `dividerOn(card)` rows, the selected wash, the muted detail strip, the
+      caption), `SURFACE_*`/`KEY_VALUE_*`/`STAT_*`/`ADVANCED_FILTER`/`FILTER_*`/
+      `DATA_TOOLBAR`, `TREE_*` (row height `rowHeightOf`, 16px depth inset, the
+      `selected`/`accent` pair), `CHART_*` (36px axis, category slots, legend)
+      and the primitives' `fieldClass`/NumberField/checkbox shapes plus the
+      menu's `MENU_CONTENT`/`MENU_ITEM`. Controls are the shared `.gx-btn`
+      Button/Toggle family, the new `.gx-dfield` Input/NumberField, `.gx-dcheck`
+      and the toggle-group pressed face; every drawing comment names the
+      component it mirrors. Each interaction stayed wired to the package's pure
+      rules (sort cycle and row model, selection press, literal filter, tree
+      controller/window, column reducers, the builder's `updateAt`/`removeAt`/
+      `appendAt`/`setGroupKind`, the frozen mirror, the chart marks), and the
+      builder gained working field/comparison pickers instead of a fixed pair.
+      `data-skin.test.tsx` (41 cases) is the seam: each style block is compared
+      with `classesToStyle(recipe, themes.dark)` so a component change fails the
+      drawing, and every page's markup is held to its class family with a sweep
+      that rejects the hand-rolled families. Directions measured: `px-3` → `px-4`
+      in `TABLE_CELL` fails `paints a cell at the recipe's inset and type`
+      (`padding: 8px 12px` missing); a renamed `.gx-dt-hcell` block fails the
+      same-named case (`no .gx-dt-hcell block`); restoring one
+      `gx-table-cell` fails `table-sorting`/`table-selection` in the sweep; and
+      the probe's own selectors were moved with the drawings
+      (`data-previews.test.ts`). Every control was pressed on the served build
+      (`/tmp/pw/data-press.mjs`, 47 checks, all PASS: headers, rows, checkboxes,
+      chevrons, arrows, steppers, reveals, menu rows/moves/reset/divider keys,
+      chart mode, inspector edits, builder picks/remove/add/clear/stored
+      refusal). Green: docs suite 2 272 cases, `nub run check`, `lint`, `fmt`.
+      Nothing native applies — browser reproductions over pure package rules.

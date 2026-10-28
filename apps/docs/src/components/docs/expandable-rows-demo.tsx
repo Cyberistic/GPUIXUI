@@ -129,76 +129,79 @@ export function ExpandableRowsDemo() {
     };
 
   return (
-    <div className="gx-demo-frame">
-      <div aria-label="Files with details" className="gx-er" role="table">
-        <div className="gx-er-head" role="rowgroup">
-          <div className="gx-er-headrow" role="row">
-            <span
+    <div className="gx-data-scene">
+      <div aria-label="Files with details" className="gx-dt" role="table">
+        <div className="gx-dt-head" role="rowgroup">
+          <div className="gx-dt-row" role="row">
+            <div
               aria-hidden="true"
-              className="gx-er-track"
-              role="presentation"
+              className="gx-dt-hcell gx-dt-fixed"
               style={{ width: DEFAULT_EXPANDER_WIDTH }}
             />
-            <span className="gx-er-cell gx-er-name" role="columnheader">
+            <div className="gx-dt-hcell" role="columnheader">
               Name
-            </span>
-            <span className="gx-er-cell" role="columnheader">
+            </div>
+            <div className="gx-dt-hcell" role="columnheader">
               Size
-            </span>
-            <span className="gx-er-cell" role="columnheader">
+            </div>
+            <div className="gx-dt-hcell" role="columnheader">
               Modified
-            </span>
+            </div>
           </div>
         </div>
-        <div className="gx-er-body" role="rowgroup">
+        <div role="rowgroup">
           {LISTED_FILES.map((file) => {
             const expanded = Arr.contains(open, file.id);
             return (
               <Fragment key={file.id}>
                 <div
                   aria-expanded={expanded}
-                  className="gx-er-row"
-                  data-open={expanded}
+                  className="gx-dt-row"
+                  data-expanded={expanded ? "true" : "false"}
+                  data-file={file.id}
+                  data-interactive=""
                   onClick={() => press(file.id)}
                   onKeyDown={key(file.id)}
                   role="row"
                   tabIndex={0}
                 >
-                  <span
-                    aria-hidden="true"
-                    className="gx-er-track"
+                  <div
+                    className="gx-dt-cell gx-dt-expander"
                     style={{ width: DEFAULT_EXPANDER_WIDTH }}
                   >
                     {expanderMark(expanded)}
-                  </span>
-                  <span className="gx-er-cell gx-er-name" role="cell">
+                  </div>
+                  <div className="gx-dt-cell" role="cell">
                     {file.name}
-                  </span>
-                  <span className="gx-er-cell" role="cell">
+                  </div>
+                  <div className="gx-dt-cell" role="cell">
                     {file.size}
-                  </span>
-                  <span className="gx-er-cell" role="cell">
+                  </div>
+                  <div className="gx-dt-cell" role="cell">
                     {file.modified}
-                  </span>
+                  </div>
                 </div>
                 {expanded ? (
-                  <div className="gx-er-detail" role="row">
-                    <div className="gx-er-detail-cell" role="cell">
+                  <div className="gx-dt-detail" role="row">
+                    <div role="cell">
                       <div
                         aria-label={`${file.name} details`}
-                        className="gx-kv"
+                        className="gx-dkv"
                         role="list"
                       >
                         {detailOf(file).map((fact) => (
                           <div
-                            className="gx-kv-row"
+                            className="gx-dkv-row"
                             key={fact.key}
                             role="listitem"
                           >
-                            <span className="gx-kv-label" style={{ width: 72 }}>
+                            <span
+                              className="gx-dkv-label"
+                              style={{ width: 72 }}
+                            >
                               {fact.label}
                             </span>
-                            <span className="gx-kv-value">{fact.value}</span>
+                            <span className="gx-dkv-value">{fact.value}</span>
                           </div>
                         ))}
                       </div>
@@ -209,10 +212,10 @@ export function ExpandableRowsDemo() {
             );
           })}
         </div>
+        <p className="gx-dt-caption">
+          {open.length} of {LISTED_FILES.length} panels open
+        </p>
       </div>
-      <p className="gx-demo-readout">
-        {open.length} of {LISTED_FILES.length} panels open
-      </p>
     </div>
   );
 }

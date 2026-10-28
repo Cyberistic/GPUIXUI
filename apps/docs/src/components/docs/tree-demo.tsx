@@ -9,6 +9,7 @@ import {
   type TreeRow,
   type TreeSpec,
 } from "@gpuixui/data/tree/logic";
+import { TREE_INSET } from "@gpuixui/data";
 import { useExpandedRows } from "@gpuixui/data/tree/use-expanded";
 import {
   DEFAULT_OVERDRAW,
@@ -191,7 +192,7 @@ function RowContent({
               ? `Collapse ${dependencyLabel(row.node)}`
               : `Expand ${dependencyLabel(row.node)}`
           }
-          className="gx-tree-chevron"
+          className="gx-dtree-slot"
           onClick={(event) => {
             event.stopPropagation();
             onFlip();
@@ -204,17 +205,15 @@ function RowContent({
       ) : (
         // A leaf keeps the chevron's track so its label lines up with a branch's,
         // and paints no control: the package's own row has nothing to flip.
-        <span
-          aria-hidden="true"
-          className="gx-tree-chevron"
-          data-branch="false"
-        />
+        <span aria-hidden="true" className="gx-dtree-slot" />
       )}
-      <span className="gx-tree-name">
+      <span className="gx-dtree-name">
         {treeName(dependencyLabel(row.node), row.key)}
       </span>
       {row.node.version === undefined ? null : (
-        <span className="gx-tree-version">{row.node.version}</span>
+        <span className="gx-badge gx-badge-sm gx-badge-neutral gx-dtree-badge">
+          {row.node.version}
+        </span>
       )}
     </>
   );
@@ -243,11 +242,11 @@ export function DependencyTreeDemo() {
   };
 
   return (
-    <div className="gx-demo-frame" data-demo="tree-view">
+    <div className="gx-data-scene" data-demo="tree-view">
       <div
         aria-activedescendant={active === undefined ? undefined : rowId(active)}
         aria-label="Dependencies"
-        className="gx-tree"
+        className="gx-dtree"
         onKeyDown={onKeyDown}
         role="tree"
         tabIndex={0}
@@ -259,20 +258,20 @@ export function DependencyTreeDemo() {
               aria-expanded={row.hasChildren ? row.expanded : undefined}
               aria-level={row.depth + 1}
               aria-selected={current}
-              className="gx-tree-row"
+              className="gx-dtree-row"
               data-current={current ? "true" : "false"}
               id={rowId(row.key)}
               key={row.key}
               onClick={() => tree.setActive(Option.some(row.key))}
               role="treeitem"
-              style={{ paddingLeft: 6 + row.depth * TREE_INDENT }}
+              style={{ paddingLeft: TREE_INSET + row.depth * TREE_INDENT }}
             >
               <RowContent onFlip={() => tree.toggle(row.key)} row={row} />
             </div>
           );
         })}
       </div>
-      <p className="gx-demo-readout">{treeReadout(tree.rows, tree.cursor)}</p>
+      <p className="gx-data-readout">{treeReadout(tree.rows, tree.cursor)}</p>
     </div>
   );
 }
@@ -498,23 +497,43 @@ export function VirtualTreeDemo() {
   };
 
   return (
-    <div className="gx-demo-frame" data-demo="virtual-tree">
-      <div className="gx-virt-toolbar">
-        <label className="gx-virt-scroll">
-          <span>Scroll offset</span>
+    <div className="gx-data-scene" data-demo="virtual-tree">
+      <div className="gx-data-row">
+        <label className="gx-dfield gx-dfield-sm gx-dnumber">
           <input
             aria-label="Scroll offset"
-            className="gx-virt-range"
             max={virtualTreeMaxOffset(count)}
             min={0}
             onChange={(event) => scrollTo(Number(event.target.value))}
             step={VIRTUAL_TREE_ROW_HEIGHT}
-            type="range"
+            type="number"
             value={treeOffset(count, offset)}
           />
+          <span className="gx-dnumber-steps">
+            <button
+              aria-label="Scroll up one row"
+              className="gx-dnumber-step"
+              onClick={() =>
+                scrollTo(treeOffset(count, offset) - VIRTUAL_TREE_ROW_HEIGHT)
+              }
+              type="button"
+            >
+              ▲
+            </button>
+            <button
+              aria-label="Scroll down one row"
+              className="gx-dnumber-step"
+              onClick={() =>
+                scrollTo(treeOffset(count, offset) + VIRTUAL_TREE_ROW_HEIGHT)
+              }
+              type="button"
+            >
+              ▼
+            </button>
+          </span>
         </label>
         <button
-          className="gx-table-columns-btn"
+          className="gx-btn gx-btn-sm gx-btn-secondary"
           onClick={revealLast}
           type="button"
         >
@@ -526,7 +545,7 @@ export function VirtualTreeDemo() {
           active === undefined ? undefined : windowRowId(active)
         }
         aria-label="Registry dependencies"
-        className="gx-tree gx-tree-window"
+        className="gx-dtree gx-dtree-window"
         onKeyDown={onKeyDown}
         role="tree"
         style={{ height: VIRTUAL_TREE_VIEWPORT }}
@@ -542,7 +561,7 @@ export function VirtualTreeDemo() {
               aria-expanded={row.hasChildren ? row.expanded : undefined}
               aria-level={row.depth + 1}
               aria-selected={current}
-              className="gx-tree-row"
+              className="gx-dtree-row"
               data-current={current ? "true" : "false"}
               id={windowRowId(row.key)}
               key={row.key}
@@ -550,7 +569,7 @@ export function VirtualTreeDemo() {
               role="treeitem"
               style={{
                 height: VIRTUAL_TREE_ROW_HEIGHT,
-                paddingLeft: 6 + row.depth * TREE_INDENT,
+                paddingLeft: TREE_INSET + row.depth * TREE_INDENT,
                 top: index * VIRTUAL_TREE_ROW_HEIGHT - clamped,
               }}
             >
@@ -559,7 +578,7 @@ export function VirtualTreeDemo() {
           );
         })}
       </div>
-      <p className="gx-demo-readout">{treeWindowReadout(count, offset)}</p>
+      <p className="gx-data-readout">{treeWindowReadout(count, offset)}</p>
     </div>
   );
 }

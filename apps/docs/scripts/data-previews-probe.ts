@@ -61,17 +61,17 @@ export const hydrateScript = (selector: string): string => hydrated(selector);
 
 /** The expandable-rows state: how many rows, which are open, and the readout. */
 export const expandableState = (): string => `(() => {
-  const rows = [...document.querySelectorAll(".gx-er-row")];
+  const rows = [...document.querySelectorAll(".gx-dt-row[data-file]")];
   return [
     rows.length,
     rows.filter((row) => row.getAttribute("aria-expanded") === "true").length,
-    document.querySelector(".gx-demo-readout")?.textContent?.trim() ?? "no-readout",
+    document.querySelector(".gx-dt-caption")?.textContent?.trim() ?? "no-readout",
   ].join("|");
 })()`;
 
 /** Press the row whose name is `name`, the way a reader does. */
 export const pressRow = (name: string): string => `(() => {
-  const row = [...document.querySelectorAll(".gx-er-row")]
+  const row = [...document.querySelectorAll(".gx-dt-row[data-file]")]
     .find((candidate) => (candidate.textContent ?? "").includes(${JSON.stringify(name)}));
   if (row === undefined) return "no-row";
   row.click();
@@ -80,7 +80,7 @@ export const pressRow = (name: string): string => `(() => {
 
 /** Type `query` into the toolbar's field through the native value setter. */
 export const typeQuery = (query: string): string => `(() => {
-  const input = document.querySelector(".gx-toolbar input[type=search]");
+  const input = document.querySelector(".gx-dtoolbar input[type=search]");
   if (input === null) return "no-field";
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
   setter?.call(input, ${JSON.stringify(query)});
@@ -90,8 +90,8 @@ export const typeQuery = (query: string): string => `(() => {
 
 /** What the toolbar reports: the readout's text and the rows it kept. */
 export const toolbarState = (): string => `(() => [
-  document.querySelector(".gx-demo-readout")?.textContent?.trim() ?? "no-readout",
-  [...document.querySelectorAll(".gx-toolbar-row")].length,
+  document.querySelector(".gx-data-readout")?.textContent?.trim() ?? "no-readout",
+  [...document.querySelectorAll('.gx-dt[role=table] [data-row]')].length,
 ].join("|"))()`;
 
 /** Scroll one frozen pane, then report both panes' offsets. */
@@ -100,7 +100,7 @@ export const scrollPane = (
   top: number,
   left: number,
 ): string => `(() => {
-  const body = document.querySelector('[data-pane="${pane}"] .gx-fc-body');
+  const body = document.querySelector('[data-pane="${pane}"] .gx-dt-frozen-body');
   if (body === null) return "no-pane";
   body.scrollTop = ${top};
   body.scrollLeft = ${left};
@@ -111,7 +111,7 @@ export const scrollPane = (
 /** Both panes' offsets, as `frozen:top,left|data:top,left`. */
 export const frozenState = (): string => `(() => {
   const read = (pane) => {
-    const body = document.querySelector('[data-pane="' + pane + '"] .gx-fc-body');
+    const body = document.querySelector('[data-pane="' + pane + '"] .gx-dt-frozen-body');
     return body === null ? "none" : Math.round(body.scrollTop) + "," + Math.round(body.scrollLeft);
   };
   return ["frozen:" + read("frozen"), "data:" + read("data")].join("|");
@@ -119,7 +119,7 @@ export const frozenState = (): string => `(() => {
 
 /** Press the key-value column's choice with `label`. */
 export const pressChoice = (label: string): string => `(() => {
-  const button = [...document.querySelectorAll(".gx-demo-choice")]
+  const button = [...document.querySelectorAll(".gx-toggle")]
     .find((candidate) => (candidate.textContent ?? "").trim() === ${JSON.stringify(label)});
   if (button === undefined) return "no-choice";
   button.click();
@@ -128,10 +128,10 @@ export const pressChoice = (label: string): string => `(() => {
 
 /** The width every label cell paints, and the readout. */
 export const keyValueState = (): string => `(() => {
-  const ticks = [...document.querySelectorAll(".gx-kv-label")].map((cell) => Math.round(cell.getBoundingClientRect().width));
+  const ticks = [...document.querySelectorAll(".gx-dkv-label")].map((cell) => Math.round(cell.getBoundingClientRect().width));
   return [
     [...new Set(ticks)].join(","),
-    document.querySelector(".gx-demo-readout")?.textContent?.trim() ?? "no-readout",
+    document.querySelector(".gx-data-readout")?.textContent?.trim() ?? "no-readout",
   ].join("|");
 })()`;
 
@@ -200,7 +200,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       !(await visit(
         page,
         `${base}${previewPages.expandable}`,
-        ".gx-er-row",
+        ".gx-dt-row[data-file]",
         budget,
       ))
     ) {
@@ -210,26 +210,26 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
     check(
       "expandable: the page opens one panel",
       await page.text(expandableState()),
-      `${expected.expandableRows}|${expected.openOnMount}|1 of ${expected.expandableRows} panels open · the row is the toggle, Enter and Space included`,
+      `${expected.expandableRows}|${expected.openOnMount}|1 of ${expected.expandableRows} panels open`,
     );
     await page.run(pressRow("notes.md"));
     check(
       "expandable: a second row opens and leaves the first open",
       await page.text(expandableState()),
-      `${expected.expandableRows}|${expected.openAfterPress}|2 of ${expected.expandableRows} panels open · the row is the toggle, Enter and Space included`,
+      `${expected.expandableRows}|${expected.openAfterPress}|2 of ${expected.expandableRows} panels open`,
     );
     await page.run(pressRow("harbour-chart.png"));
     check(
       "expandable: a second press closes only its own row",
       await page.text(expandableState()),
-      `${expected.expandableRows}|${expected.openOnMount}|1 of ${expected.expandableRows} panels open · the row is the toggle, Enter and Space included`,
+      `${expected.expandableRows}|${expected.openOnMount}|1 of ${expected.expandableRows} panels open`,
     );
 
     if (
       !(await visit(
         page,
         `${base}${previewPages.toolbar}`,
-        ".gx-toolbar input",
+        ".gx-dtoolbar input",
         budget,
       ))
     ) {
@@ -257,7 +257,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       !(await visit(
         page,
         `${base}${previewPages.frozen}`,
-        '[data-pane="data"] .gx-fc-body',
+        '[data-pane="data"] .gx-dt-frozen-body',
         budget,
       ))
     ) {
@@ -284,7 +284,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       !(await visit(
         page,
         `${base}${previewPages.keyValue}`,
-        ".gx-kv-label",
+        ".gx-dkv-label",
         budget,
       ))
     ) {

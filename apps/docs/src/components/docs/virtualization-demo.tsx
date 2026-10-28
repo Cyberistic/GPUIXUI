@@ -76,63 +76,100 @@ export function VirtualizationDemo() {
   const view = rowsInView(virtualSpec, offset);
 
   return (
-    <div className="gx-virt-demo" data-demo="virtualization">
-      <div className="gx-virt-toolbar">
-        <label className="gx-virt-scroll">
-          <span>Scroll offset</span>
+    <div className="gx-data-scene" data-demo="virtualization">
+      <div className="gx-data-row">
+        <label className="gx-dfield gx-dfield-sm gx-dnumber">
           <input
             aria-label="Scroll offset"
-            className="gx-virt-range"
             max={virtualMaxOffset}
             min={0}
             onChange={(event) =>
               setOffset(virtualOffset(Number(event.target.value)))
             }
             step={VIRTUAL_ROW_HEIGHT}
-            type="range"
+            type="number"
             value={offset}
           />
+          <span className="gx-dnumber-steps">
+            <button
+              aria-label="Scroll up one row"
+              className="gx-dnumber-step"
+              onClick={() =>
+                setOffset(virtualOffset(offset - VIRTUAL_ROW_HEIGHT))
+              }
+              type="button"
+            >
+              ▲
+            </button>
+            <button
+              aria-label="Scroll down one row"
+              className="gx-dnumber-step"
+              onClick={() =>
+                setOffset(virtualOffset(offset + VIRTUAL_ROW_HEIGHT))
+              }
+              type="button"
+            >
+              ▼
+            </button>
+          </span>
         </label>
         <button
-          className="gx-table-columns-btn"
+          className="gx-btn gx-btn-sm gx-btn-secondary"
           onClick={() => setOffset(revealOffset(499))}
           type="button"
         >
           Reveal row 500
         </button>
       </div>
-      <div className="gx-virt-frame">
-        <div className="gx-virt-head" role="presentation">
-          <span>File</span>
-          <span>Window</span>
+      <div aria-label="Build log" className="gx-dt" role="table">
+        <div className="gx-dt-head" role="rowgroup">
+          <div className="gx-dt-row" role="row">
+            <div className="gx-dt-hcell" role="columnheader">
+              File
+            </div>
+            <div className="gx-dt-hcell gx-dt-right" role="columnheader">
+              Window
+            </div>
+          </div>
         </div>
         <div
           aria-label="The mounted rows"
           className="gx-virt-body"
-          role="log"
-          style={{ height: VIRTUAL_VIEWPORT }}
+          role="rowgroup"
+          style={{ height: VIRTUAL_VIEWPORT - 36 }}
         >
           {mounted.map((index) => (
             <div
-              className="gx-virt-row"
+              className="gx-dt-row gx-virt-row"
               data-index={index}
               key={index}
+              role="row"
               style={{
                 height: VIRTUAL_ROW_HEIGHT,
                 top: index * VIRTUAL_ROW_HEIGHT - offset,
               }}
             >
-              <span>{rowName(index)}</span>
-              <span className="gx-table-number">
-                {index >= view.start && index < view.end
-                  ? "in view"
-                  : "overdraw"}
-              </span>
+              <div className="gx-dt-cell" role="cell">
+                {rowName(index)}
+              </div>
+              <div className="gx-dt-cell gx-dt-right" role="cell">
+                <span
+                  className={`gx-badge gx-badge-sm ${
+                    index >= view.start && index < view.end
+                      ? "gx-badge-success"
+                      : "gx-badge-neutral"
+                  }`}
+                >
+                  {index >= view.start && index < view.end
+                    ? "in view"
+                    : "overdraw"}
+                </span>
+              </div>
             </div>
           ))}
         </div>
+        <p className="gx-dt-caption">{windowReadout(offset)}</p>
       </div>
-      <p className="gx-trule-readout">{windowReadout(offset)}</p>
     </div>
   );
 }

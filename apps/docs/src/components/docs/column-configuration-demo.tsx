@@ -175,42 +175,40 @@ export function ColumnConfigurationDemo() {
   };
 
   return (
-    <div className="gx-trule-demo" data-demo="column-configuration">
-      <div className="gx-table-toolbar">
-        <p className="gx-table-hint">
+    <div className="gx-data-scene" data-demo="column-configuration">
+      <div className="gx-data-row" data-between>
+        <span className="gx-data-readout">
           {`${columns.length} of ${COLUMN_DEFS.length} columns · ${contentWidth(
             state,
           )}px of content`}
-        </p>
-        <div className="gx-table-columns">
+        </span>
+        <span className="gx-dmenu-anchor">
           <button
             aria-expanded={menuOpen}
-            className="gx-table-columns-btn"
+            className="gx-btn gx-btn-sm gx-btn-secondary"
             onClick={() => setMenuOpen((open) => !open)}
             type="button"
           >
             Columns
           </button>
           {menuOpen ? (
-            <div className="gx-table-columns-menu">
-              <p className="gx-table-columns-label">Visible columns</p>
+            <div aria-label="Columns" className="gx-dmenu" role="menu">
+              <span className="gx-dmenu-label">Visible columns</span>
               {state.columns.map((column) => {
                 const shown = columns.findIndex((one) => one.id === column.id);
                 return (
                   <div className="gx-cols-row" key={column.id}>
                     <button
-                      aria-pressed={column.visible}
-                      className="gx-table-columns-item gx-cols-toggle"
+                      aria-checked={column.visible}
+                      className="gx-dmenu-item gx-cols-toggle"
                       disabled={column.visible && !canHide(state)}
                       onClick={() =>
                         setState((current) => toggledColumn(current, column.id))
                       }
+                      role="menuitemcheckbox"
                       type="button"
                     >
-                      <span
-                        aria-hidden="true"
-                        className="gx-table-columns-check"
-                      >
+                      <span aria-hidden="true" className="gx-cols-check">
                         {column.visible ? "✓" : ""}
                       </span>
                       {columnName(column.label, column.id)}
@@ -219,7 +217,7 @@ export function ColumnConfigurationDemo() {
                       <>
                         <button
                           aria-label={`Move ${columnName(column.label, column.id)} left`}
-                          className="gx-cols-move"
+                          className="gx-btn gx-btn-ghost gx-btn-sm gx-btn-square"
                           disabled={shown === 0}
                           onClick={() =>
                             setState((current) =>
@@ -232,7 +230,7 @@ export function ColumnConfigurationDemo() {
                         </button>
                         <button
                           aria-label={`Move ${columnName(column.label, column.id)} right`}
-                          className="gx-cols-move"
+                          className="gx-btn gx-btn-ghost gx-btn-sm gx-btn-square"
                           disabled={shown === columns.length - 1}
                           onClick={() =>
                             setState((current) =>
@@ -248,68 +246,82 @@ export function ColumnConfigurationDemo() {
                   </div>
                 );
               })}
+              <span className="gx-dmenu-separator" />
               <button
-                className="gx-table-columns-item gx-cols-reset"
+                className="gx-dmenu-item"
                 onClick={() => setState(openingColumns())}
+                role="menuitem"
                 type="button"
               >
                 Reset columns
               </button>
             </div>
           ) : null}
-        </div>
+        </span>
       </div>
-      <div className="gx-table">
-        <table aria-label="Files, configured columns" className="gx-table-el">
-          <colgroup>
+      <div
+        aria-label="Files, configured columns"
+        className="gx-dt"
+        role="table"
+      >
+        <div className="gx-dt-head" role="rowgroup">
+          <div className="gx-dt-row" role="row">
             {columns.map((column) => (
-              <col key={column.id} style={{ width: column.width }} />
+              <div
+                className="gx-dt-hcell gx-dt-fixed"
+                key={column.id}
+                role="columnheader"
+                style={{ width: column.width }}
+              >
+                <span className="gx-cols-head">
+                  {columnName(column.label, column.id)}
+                  <span
+                    aria-label={`Resize the ${columnName(
+                      column.label,
+                      column.id,
+                    ).toLowerCase()} column`}
+                    aria-orientation="vertical"
+                    aria-valuemax={columnBounds(column).maxWidth}
+                    aria-valuemin={columnBounds(column).minWidth}
+                    aria-valuenow={column.width}
+                    className="gx-dt-divider"
+                    data-resize={column.id}
+                    onKeyDown={(event) => onResizeKey(event, column.id)}
+                    role="separator"
+                    tabIndex={0}
+                  />
+                </span>
+              </div>
             ))}
-          </colgroup>
-          <thead>
-            <tr>
+          </div>
+        </div>
+        <div role="rowgroup">
+          {COLUMN_FILES.map((file) => (
+            <div
+              className="gx-dt-row"
+              data-file={file.id}
+              key={file.id}
+              role="row"
+            >
               {columns.map((column) => (
-                <th className="gx-table-head" key={column.id} scope="col">
-                  <span className="gx-cols-head">
-                    {columnName(column.label, column.id)}
-                    <span
-                      aria-label={`Resize the ${columnName(
-                        column.label,
-                        column.id,
-                      ).toLowerCase()} column`}
-                      aria-orientation="vertical"
-                      aria-valuemax={columnBounds(column).maxWidth}
-                      aria-valuemin={columnBounds(column).minWidth}
-                      aria-valuenow={column.width}
-                      className="gx-cols-divider"
-                      data-resize={column.id}
-                      onKeyDown={(event) => onResizeKey(event, column.id)}
-                      role="separator"
-                      tabIndex={0}
-                    />
-                  </span>
-                </th>
+                <div
+                  className="gx-dt-cell gx-dt-fixed"
+                  key={column.id}
+                  role="cell"
+                  style={{ width: column.width }}
+                >
+                  {columnValue(file, column.id)}
+                </div>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {COLUMN_FILES.map((file) => (
-              <tr className="gx-table-row" key={file.id}>
-                {columns.map((column) => (
-                  <td className="gx-table-cell" key={column.id}>
-                    {columnValue(file, column.id)}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </div>
+          ))}
+        </div>
+        <p className="gx-dt-caption">
+          {hidden.length === 0
+            ? "no hidden columns"
+            : `hidden: ${hidden.join(", ")}`}
+        </p>
       </div>
-      <p className="gx-trule-readout">
-        {hidden.length === 0
-          ? "no hidden columns"
-          : `hidden: ${hidden.join(", ")}`}
-      </p>
     </div>
   );
 }

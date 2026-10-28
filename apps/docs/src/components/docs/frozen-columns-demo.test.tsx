@@ -77,7 +77,7 @@ describe("the frozen-columns preview", () => {
     expect(html).toContain('aria-label="Files"');
     expect(html).toContain('data-pane="frozen"');
     expect(html).toContain('data-pane="data"');
-    expect(html.match(/class="gx-fc-row"/g) ?? []).toHaveLength(
+    expect(html.match(/ data-row="/g) ?? []).toHaveLength(
       FROZEN_RECORDS.length * 2,
     );
     // The grid is the caller's 200px box at rest.
@@ -93,7 +93,7 @@ describe("the frozen-columns preview", () => {
 
     const css = read("apps/docs/src/styles/demos.css");
     const selected = css.slice(
-      css.indexOf('.gx-fc-row[aria-selected="true"] {'),
+      css.indexOf('.gx-dt-row[data-selected="true"] {'),
     );
     expect(selected.slice(0, selected.indexOf("}"))).toContain(
       "background: var(--selected);",
@@ -103,7 +103,7 @@ describe("the frozen-columns preview", () => {
       "border-bottom-color: var(--divider-selected);",
     );
     // Only the data pane pans: the frozen body hides its horizontal overflow.
-    const body = css.slice(css.indexOf(".gx-fc-body {"));
+    const body = css.slice(css.indexOf(".gx-dt-frozen-pane {"));
     expect(body.slice(0, body.indexOf("}"))).toContain("overflow-x: hidden;");
   });
 

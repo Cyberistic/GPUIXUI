@@ -2210,37 +2210,16 @@
   font-size: 11px;
 }
 
-/* ---- property inspector: one object read by a preview, a field, a table and
-   a metric card, the composition `inspector-lifecycle` measured ---- */
-.gx-inspector {
-  display: flex;
-  flex-wrap: wrap;
-  width: 100%;
-  max-width: 680px;
-  min-height: 250px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 6px);
-  background: var(--background);
-  text-align: left;
-}
-
+/* ---- property inspector: one object read by a preview, a panel and a metric.
+   The panel is `SURFACE_PANEL`/`SURFACE_HEADER` and its rows are `KeyValue`'s
+   fixed track, so only the stage — the object's own box — is the caller's. */
 .gx-inspector-stage {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  gap: 8px;
+  flex: 1 1 264px;
   min-width: 264px;
-  padding: 12px;
-  border-right: 1px solid var(--border);
-  background: var(--card);
 }
 
-.gx-inspector-caption {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted-foreground);
+.gx-inspector-panel {
+  flex: 0 0 260px;
 }
 
 .gx-inspector-arena {
@@ -2248,117 +2227,25 @@
   place-items: center;
   flex: 1;
   min-height: 120px;
+  margin: 12px;
   border: 1px dashed var(--border);
-  border-radius: calc(var(--radius) - 2px);
+  border-radius: var(--radius);
 }
 
 .gx-inspector-box {
-  border-radius: calc(var(--radius) - 1px);
+  border-radius: var(--radius);
   background: var(--primary);
 }
 
-.gx-inspector-panel {
-  display: flex;
-  flex-direction: column;
-  flex: none;
-  width: 244px;
-  border-right: 1px solid var(--border);
-  background: var(--card);
-}
-
-.gx-inspector-head {
-  display: flex;
-  align-items: center;
-  flex: none;
-  height: var(--control-height-md);
-  padding: 0 10px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.gx-inspector-rows {
-  display: grid;
-  grid-template-columns: 96px 1fr;
-  align-items: center;
-  gap: 3px 8px;
-  margin: 0;
-  padding: 8px 10px;
-}
-
-.gx-inspector-label {
-  font-size: 11.5px;
-  color: var(--muted-foreground);
-}
-
-.gx-inspector-value {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--foreground);
-}
-
-.gx-inspector-input {
-  width: 100%;
-  height: var(--control-height-sm);
-  padding: 0 var(--control-padding-x-sm);
-  font-size: 11.5px;
-}
-
 .gx-inspector-actions {
-  display: flex;
-  gap: 6px;
   margin-top: auto;
-  padding: 8px 10px;
-  border-top: 1px solid var(--border);
+  padding: 8px 12px;
+  border-top: 1px solid var(--input);
 }
 
 .gx-inspector-readout {
-  display: flex;
-  flex-direction: column;
-  flex: none;
-  gap: 8px;
-  width: 156px;
-  padding: 10px;
-}
-
-.gx-inspector-readout .gx-inspector-rows {
-  grid-template-columns: 1fr;
-  gap: 2px;
-  padding: 0;
-}
-
-.gx-inspector-metric {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: auto;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 1px);
-  background: var(--card);
-}
-
-.gx-inspector-metric-label {
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-
-.gx-inspector-metric-value {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.gx-inspector-metric-unit {
-  margin-left: 4px;
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-
-.gx-inspector-metric-hint {
-  font-size: 10.5px;
-  color: var(--muted-foreground);
+  align-self: flex-start;
+  padding: 4px var(--spacing-sm);
 }
 
 /* ---- typography: the type scale, mirrors @gpuixui/tokens typography ---- */
@@ -5990,13 +5877,6 @@
   gap: 8px;
 }
 
-.gx-table-hint {
-  margin: 0;
-  font-size: 11px;
-  line-height: 1.45;
-  color: var(--muted-foreground);
-}
-
 .gx-table-filter {
   flex-grow: 1;
   min-width: 0;
@@ -6094,13 +5974,6 @@
 
 .gx-table-columns-item:disabled:hover {
   background: transparent;
-}
-
-.gx-cols-reset {
-  margin-top: 4px;
-  border-top: 1px solid var(--divider-card);
-  border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);
-  color: var(--muted-foreground);
 }
 
 .gx-table-columns-check {
@@ -6391,227 +6264,170 @@
   color: var(--muted-foreground);
 }
 
-/* ---- data lane: the Table sorting and selection pages. Each drawing runs
-   `@gpuixui/data`'s own rules — `pressSortOrder` for the header cycle,
-   `constructGrid` for the painted order, and `pressSelection`/`pressMode` for
-   a row press — so only the paint is the browser's. ---- */
-.gx-trule-demo {
+/* ---- data lane: the library's own surfaces ----
+   Every rule below mirrors a recipe the runtime compiles: the table and
+   surface strings in `packages/data/src/{table,surfaces,tree,chart}/recipe.ts`,
+   the menu surface in `@gpuixui/tw`, and the primitives' field/selection
+   recipes in `packages/primitives/src/recipe/index.ts`. They compile against
+   the same registry the runtime uses, so the steps are shadcn's fixed metrics
+   (`px-3` = 12, `py-2` = 8, `text-sm` = 14/20, `text-xs` = 12/16,
+   `rounded-md` = 6, `rounded-lg` = 8) and the paint is the theme's roles.
+   `data-skin.test.tsx` holds these declarations to the compiled class strings:
+   a recipe change fails there before a page drifts.
+
+   A control is not redrawn here — the data pages use the shared `.gx-btn`
+   family for Button/Toggle, and only the field, the checkbox and the menu
+   surface below had no browser shape yet. */
+
+/* The table frame and its parts: `TABLE_*` in table/recipe.ts. A header is a
+   sibling of the row scroller, and a cell is a box the caller fills. */
+.gx-dt {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  max-width: 620px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--foreground);
   text-align: left;
 }
 
-.gx-trule-readout {
-  margin: 0;
-  font-size: 11px;
-  color: var(--muted-foreground);
+.gx-dt-head {
+  border-bottom: 1px solid var(--divider-card);
 }
 
-.gx-trule-readout {
-  font-family: var(--font-mono);
-}
-
-.gx-trule-select {
-  width: 40px;
-  padding: 0;
-  text-align: center;
-}
-
-.gx-trule-select input {
-  margin: 0;
-  accent-color: var(--primary);
-}
-
-/* ---- data lane: the Advanced filtering, Virtualization and Column
-   configuration pages. Each drawing runs `@gpuixui/data`'s own rules —
-   `filterByTree`/`describeTree`/`readFilterTree` for the query, the window
-   calculator for the mounted rows, and the column reducers for show/hide,
-   move and the keyboard resize — so only the paint is the browser's. ---- */
-.gx-filter-controls {
+.gx-dt-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
   align-items: center;
-  gap: 6px;
+  border-bottom: 1px solid var(--divider-card);
 }
 
-.gx-filter-caption,
-.gx-filter-size span {
-  font-size: 11px;
-  color: var(--muted-foreground);
+.gx-dt-row:last-child {
+  border-bottom: 0;
 }
 
-.gx-filter-toggle {
-  height: calc(var(--control-height-sm) - 4px);
-  padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
-  background: transparent;
-  color: var(--foreground);
-  font: inherit;
-  font-size: 11.5px;
-  cursor: pointer;
-}
-
-.gx-filter-toggle[aria-pressed="true"] {
-  border-color: var(--primary);
+.gx-dt-row[data-selected="true"] {
   background: var(--selected);
   color: var(--selected-foreground);
+  border-bottom-color: var(--divider-selected);
 }
 
-.gx-filter-toggle:focus-visible,
-.gx-filter-stored:focus-visible,
-.gx-cols-move:focus-visible,
-.gx-cols-divider:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-.gx-filter-size {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-}
-
-.gx-filter-size .gx-table-filter {
-  width: 72px;
-  flex: none;
-}
-
-.gx-filter-stored {
-  align-self: flex-start;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--primary);
-  font: inherit;
-  font-size: 11.5px;
-  text-align: left;
-  text-decoration: underline;
+.gx-dt-row[data-interactive] {
   cursor: pointer;
 }
 
-.gx-virt-demo {
+.gx-dt-row[data-interactive]:hover {
+  background: var(--hover);
+  border-bottom-color: var(--divider-hover);
+}
+
+.gx-dt-row[data-selected="true"][data-interactive]:hover {
+  background: var(--accent);
+  color: var(--selected-foreground);
+  border-bottom-color: var(--divider-accent);
+}
+
+.gx-dt-hcell {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 8px 12px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.gx-dt-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.gx-dt[data-fixed] .gx-dt-hcell,
+.gx-dt[data-fixed] .gx-dt-cell,
+.gx-dt-fixed {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+/* The caption is the one line below the frame, and the empty set is a row. */
+.gx-dt-caption {
+  margin: 0;
+  padding: 8px 12px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* A checkbox column: the box, not a text cell. */
+.gx-dt-check {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+}
+
+/* The disclosure track: the chevron's box, aligned with the component's. */
+.gx-dt-expander {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  color: var(--muted-foreground);
+}
+
+.gx-dt-empty {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 24px 12px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* The detail row an expanded row opens into: a `muted` strip, not a cell. */
+.gx-dt-detail {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  border-bottom: 1px solid var(--divider-card);
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.gx-dt-detail > * {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* A sort header is the table's ghost Button filling the cell. */
+.gx-dt-sort {
   width: 100%;
-  max-width: 620px;
+  justify-content: flex-start;
   text-align: left;
 }
 
-.gx-virt-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.gx-virt-scroll {
-  display: inline-flex;
-  flex-grow: 1;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  font-size: 11px;
+.gx-dt-glyph {
   color: var(--muted-foreground);
-}
-
-.gx-virt-range {
-  flex-grow: 1;
-  min-width: 0;
-  accent-color: var(--primary);
-}
-
-.gx-virt-frame {
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 2px);
-  background: var(--card);
-}
-
-/* The header is a sibling above the scroller: the only fixed header the
-   runtime paints (`data-grid-fixed-header`). */
-.gx-virt-head,
-.gx-virt-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 0 12px;
   font-size: 12px;
+  line-height: 16px;
 }
 
-.gx-virt-head {
-  height: calc(var(--control-height-sm) - 4px);
-  border-bottom: 1px solid var(--divider-card);
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-
-.gx-virt-body {
-  position: relative;
-  overflow: hidden;
-}
-
-.gx-virt-row {
-  position: absolute;
-  right: 0;
-  left: 0;
-  border-bottom: 1px solid var(--divider-card);
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-
-.gx-virt-row .gx-table-number {
-  color: var(--muted-foreground);
-  font-family: inherit;
-}
-
-.gx-cols-row {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.gx-cols-toggle {
-  flex-grow: 1;
-}
-
-.gx-cols-move {
-  width: 22px;
-  height: var(--control-height-sm);
-  flex: none;
-  padding: 0;
-  border: 0;
-  border-radius: calc(var(--radius) - 1px);
-  background: transparent;
-  color: var(--muted-foreground);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.gx-cols-move:hover:not(:disabled) {
-  background: var(--hover);
-  color: var(--foreground);
-}
-
-.gx-cols-move:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.gx-cols-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.gx-cols-divider {
+/* The resize strip at a header cell's right edge (`TABLE_COLUMN_DIVIDER`). */
+.gx-dt-divider {
   width: 6px;
   height: 18px;
   flex: none;
@@ -6620,63 +6436,619 @@
   cursor: col-resize;
 }
 
-.gx-cols-divider:hover {
-  background: var(--ring);
+.gx-dt-divider:hover,
+.gx-dt-divider:focus-visible {
+  background: var(--primary);
+  outline: none;
 }
 
-/* ---- data lane: the Charts page. The geometry is `@gpuixui/data`'s chart
-   logic and the swatches are the theme's categorical order; only the paint is
-   the browser's. ---- */
-.gx-chart-frame,
-.gx-chart-demo {
+/* A cell pinned to its own track: the width is data, not a share. */
+.gx-dt-fixed {
+  flex: none;
+}
+
+/* `align="right"`: the cell's content sits at the track's end. */
+.gx-dt-right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+/* The frozen composition: a second scroller beside the data pane, mirrored
+   through one offset (`FrozenTable`), so only the data pane pans sideways. */
+.gx-dt-frozen {
+  flex-direction: row;
+}
+
+.gx-dt-frozen-pane,
+.gx-dt-frozen-data {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  max-width: 440px;
-  align-items: flex-start;
+  min-height: 0;
+}
+
+.gx-dt-frozen-pane {
+  flex: none;
+  overflow-x: hidden;
+}
+
+.gx-dt-frozen-data {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.gx-dt-frozen-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* ---- input: mirrors the primitives' `fieldClass` ---- */
+.gx-dfield {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-sm);
+  height: var(--control-height-md);
+  padding: 0 var(--control-padding-x-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--input);
+  color: var(--input-foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.gx-dfield:hover {
+  border-color: var(--border-strong);
+}
+
+.gx-dfield:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
+}
+
+.gx-dfield-sm {
+  height: var(--control-height-sm);
+  padding: 0 var(--control-padding-x-sm);
+}
+
+.gx-dfield > input {
+  flex-grow: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.gx-dfield > input::placeholder {
+  color: var(--muted-foreground);
+}
+
+/* NumberField: the field chrome plus the stepper column that hugs its edge. */
+.gx-dfield.gx-dnumber {
+  gap: 0;
+  padding-right: 0;
+}
+
+.gx-dnumber-steps {
+  display: flex;
+  flex-direction: column;
+  width: 18px;
+  height: calc(100% - 2px);
+  flex: none;
+}
+
+.gx-dnumber-step {
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gx-dnumber-step:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+/* A checkbox: the box the selection recipe paints, checked or mixed. */
+.gx-dcheck {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  margin: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--primary-foreground);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  appearance: none;
+}
+
+.gx-dcheck:checked,
+.gx-dcheck:indeterminate {
+  border-color: transparent;
+  background: var(--primary);
+}
+
+.gx-dcheck:checked::after {
+  content: "✓";
+}
+
+.gx-dcheck:indeterminate::after {
+  content: "–";
+}
+
+.gx-dcheck:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+/* ---- the surfaces: `packages/data/src/surfaces/recipe.ts` ---- */
+.gx-dpanel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--foreground);
   text-align: left;
 }
 
-.gx-chart-demo {
-  max-width: none;
-}
-
-.gx-chart-plot {
-  width: 100%;
-  height: auto;
-}
-
-.gx-chart-grid {
-  stroke: var(--divider-card);
-  stroke-width: 1;
-}
-
-.gx-chart-tick {
-  fill: var(--muted-foreground);
-  font-size: 10px;
-}
-
-.gx-chart-legend {
+.gx-dpanel-head {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-dpanel-title {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.gx-dpanel-body {
+  padding: 0 var(--spacing-sm);
+}
+
+.gx-dkv {
+  display: flex;
+  flex-direction: column;
+}
+
+.gx-dkv-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.gx-dkv-label {
+  flex: none;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-dkv-value {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  color: var(--foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-dstat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--foreground);
+  text-align: left;
+}
+
+.gx-dstat-label,
+.gx-dstat-hint {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-dstat-reading {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.gx-dstat-value {
+  color: var(--foreground);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+}
+
+/* A trend's words are text on the card, so they take the status tone's readable
+   role — the pair `trendTone` returns — never the solid fill. */
+.gx-dstat-trend[data-direction="up"] {
+  color: var(--success-soft-foreground);
+}
+
+.gx-dstat-trend[data-direction="down"] {
+  color: var(--destructive-soft-foreground);
+}
+
+.gx-dstat-trend[data-direction="flat"] {
+  color: var(--muted-foreground);
+}
+
+.gx-dtoolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--muted);
+}
+
+/* The builder: a bounded panel of clauses, each a field, a comparison and a
+   value. The group's rule is the only structure it adds. */
+.gx-dfilter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  text-align: left;
+}
+
+.gx-dfilter-title {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.gx-dfilter-sentence {
+  color: var(--foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-dfilter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border);
+}
+
+.gx-dfilter-clause {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.gx-dfilter-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The virtual body is the scroller the window positions into, so the rows out
+   of view are clipped rather than painted under the caption. */
+.gx-virt-body {
+  position: relative;
+  overflow: hidden;
+}
+
+/* A windowed row is positioned from the estimate; the table paints the rest. */
+.gx-virt-row {
+  position: absolute;
+  right: 0;
+  left: 0;
+}
+
+/* ---- the tree: `TREE_*` in tree/recipe.ts ---- */
+.gx-dtree {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius);
+  text-align: left;
+}
+
+.gx-dtree-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 0;
+  height: var(--row-height);
+  padding-right: 8px;
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.gx-dtree-row:hover {
+  background: var(--hover);
+}
+
+.gx-dtree-row[data-current="true"] {
+  background: var(--selected);
+  color: var(--selected-foreground);
+}
+
+.gx-dtree-row[data-current="true"]:hover {
+  background: var(--accent);
+}
+
+.gx-dtree-slot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.gx-dtree-row[data-current="true"] .gx-dtree-slot {
+  color: var(--selected-foreground);
+}
+
+.gx-dtree-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-dtree-badge {
+  margin-left: 8px;
+}
+
+/* The windowed rows are positioned from the window's estimate. */
+.gx-dtree-window {
+  position: relative;
+  height: 240px;
+  overflow: hidden;
+}
+
+.gx-dtree-window .gx-dtree-row {
+  position: absolute;
+  right: 0;
+  left: 0;
+}
+
+/* ---- the menu surface: `MENU_CONTENT`/`MENU_ITEM` in `@gpuixui/tw` ---- */
+.gx-dmenu-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.gx-dmenu-anchor > .gx-dmenu {
+  right: auto;
+  left: 0;
+}
+
+.gx-dmenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 192px;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 24px;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow:
+    var(--elevation-lg),
+    0 0 0 1px color-mix(in srgb, var(--foreground) 5%, transparent);
+}
+
+.gx-dmenu-label {
+  padding: 10px 12px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-dmenu-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  height: var(--row-height);
+  padding: 0 8px 0 6px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--popover-foreground);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-dmenu-item:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.gx-dmenu-item:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.gx-dmenu-separator {
+  height: 1px;
+  margin: 6px 0;
+  background: color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+/* ---- the chart frame: `CHART_*` in chart/recipe.ts. The plot is the box the
+   package measures; the axis, categories and legend are ordinary boxes. ---- */
+.gx-dchart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.gx-dchart-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.gx-dchart-axis {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  justify-content: space-between;
+  width: 36px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: right;
+}
+
+.gx-dchart-plot {
+  position: relative;
+  flex: none;
+}
+
+.gx-dchart-categories {
+  display: flex;
+  flex-direction: row;
+  padding-left: 36px;
+}
+
+.gx-dchart-category {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-dchart-category > span {
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-dchart-legend {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 11px;
   color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
 }
 
-.gx-chart-legend li {
-  display: inline-flex;
+.gx-dchart-legend li {
+  display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 6px;
 }
 
-.gx-chart-swatch {
+.gx-dchart-swatch {
   width: 8px;
   height: 8px;
-  border-radius: 2px;
+  flex: none;
+  border-radius: var(--radius-sm);
+}
+
+/* ---- the scenes these drawings sit in ---- */
+.gx-data-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 640px;
+  align-items: stretch;
+  text-align: left;
+}
+
+.gx-data-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* A row that puts its readout at one edge and its controls at the other. */
+.gx-data-row[data-between] {
+  justify-content: space-between;
+}
+
+/* Cards that split a row evenly, so two readings sit on one measure. */
+.gx-data-row[data-even] > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.gx-data-readout {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
 }
 
 /* ---- stepper: mirrors components/src/stepper.tsx ----
@@ -13346,312 +13718,12 @@ button.gx-rating-star:focus-visible {
 }
 
 /* A segmented group of choices, shared by the data lane's two drawings. */
-.gx-demo-choices {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-  align-self: flex-start;
-}
-
-.gx-demo-choice {
-  height: 22px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: calc(var(--radius) - 2px);
-  background: transparent;
-  color: var(--muted-foreground);
-  font: inherit;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.gx-demo-choice[aria-pressed="true"] {
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-
-.gx-demo-choice:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-.gx-toolbar {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: 4px 8px;
-  border: 1px solid var(--input);
-  border-radius: var(--radius);
-  background: var(--muted);
-}
-
-/* The field is the primitives' `sm` control: the toolbar takes the search
-   field's own control height from the density the preview carries. */
-.gx-toolbar .gx-field {
-  flex: 1 1 160px;
-  min-width: 0;
-  height: var(--control-height-sm);
-  padding: 0 var(--control-padding-x-sm);
-  font-family: var(--font-sans);
-  font-size: 13px;
-}
-
-.gx-toolbar-rows {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 420px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.gx-toolbar-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--spacing-sm);
-  height: var(--row-height);
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--foreground);
-}
-
-.gx-toolbar-service {
-  flex: 1 1 auto;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.gx-toolbar-meta {
-  flex: 0 0 auto;
-  color: var(--muted-foreground);
-}
-
-.gx-toolbar-state {
-  flex: 0 0 auto;
-  font-variant: small-caps;
-  letter-spacing: 0.04em;
-}
-
-.gx-toolbar-state[data-state="queued"] {
-  color: var(--muted-foreground);
-}
-
-.gx-toolbar-state[data-state="running"] {
-  color: var(--primary);
-}
-
-.gx-toolbar-state[data-state="done"] {
-  color: var(--success-soft-foreground);
-}
-
 /* ---- data: the expandable row and the frozen-column composition. The row
    recipe is `flex flex-row items-center shrink-0` (`TABLE_ROW`) with the table's
    own `dividerOn` rule inside its box, the panel is a sibling on the `muted`
    strip (`TABLE_DETAIL_ROW` + `px-3 py-3 text-sm`), and the grid is
    `TABLE_ROOT`'s card fill with one `input` edge. The frozen column is a second
    scroller beside the data pane, never a sticky cell. ---- */
-.gx-er {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 520px;
-  overflow: hidden;
-  border: 1px solid var(--input);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.gx-er-headrow,
-.gx-er-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  min-width: 0;
-}
-
-.gx-er-headrow {
-  border-bottom: 1px solid var(--divider-card);
-}
-
-.gx-er-row {
-  flex: 0 0 auto;
-  height: var(--row-height);
-  border-bottom: 1px solid var(--divider-card);
-  cursor: pointer;
-}
-
-.gx-er-row:hover {
-  background: var(--hover);
-}
-
-.gx-er-row:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: -2px;
-}
-
-.gx-er-track {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted-foreground);
-  font-size: 11px;
-}
-
-.gx-er-cell {
-  padding: 8px 12px;
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.gx-er-headrow .gx-er-cell {
-  font-weight: 500;
-  color: var(--muted-foreground);
-}
-
-.gx-er-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.gx-er-detail {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  border-bottom: 1px solid var(--divider-card);
-  background: var(--muted);
-  color: var(--muted-foreground);
-}
-
-.gx-er-detail-cell {
-  flex: 1 1 0;
-  min-width: 0;
-  padding: 12px;
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.gx-fc {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 520px;
-  overflow: hidden;
-  border: 1px solid var(--input);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.gx-fc-pane {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.gx-fc-frozen {
-  flex: 0 0 auto;
-  width: 180px;
-  border-right: 1px solid var(--divider-card);
-}
-
-.gx-fc-data {
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-.gx-fc-head {
-  flex: 0 0 auto;
-}
-
-.gx-fc-headrow {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  border-bottom: 1px solid var(--divider-card);
-}
-
-.gx-fc-headrow .gx-fc-cell {
-  font-weight: 500;
-  color: var(--muted-foreground);
-}
-
-.gx-fc-body {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-.gx-fc-data .gx-fc-body {
-  overflow-x: auto;
-}
-
-.gx-fc-rows {
-  display: flex;
-  flex-direction: column;
-  min-width: 380px;
-}
-
-.gx-fc-row {
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: row;
-  align-items: center;
-  height: var(--row-height);
-  border-bottom: 1px solid var(--divider-card);
-  cursor: pointer;
-}
-
-.gx-fc-row:hover {
-  background: var(--hover);
-}
-
-.gx-fc-row[aria-selected="true"] {
-  background: var(--selected);
-  color: var(--selected-foreground);
-  border-bottom-color: var(--divider-selected);
-}
-
-.gx-fc-cell {
-  flex: 0 0 auto;
-  padding: 8px 12px;
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.gx-fc-name {
-  width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.gx-fc-status {
-  width: 120px;
-}
-
-.gx-fc-owner {
-  width: 120px;
-}
-
-.gx-fc-size {
-  width: 140px;
-}
-
 /* A movement transition is a journey, so the reduced-motion preference
    collapses it to the state change it stands for, the rule the native
    components follow. `preview-motion.test.ts` holds every one to a guard. */

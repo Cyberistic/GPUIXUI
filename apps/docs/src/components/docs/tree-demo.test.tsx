@@ -168,8 +168,8 @@ describe("the TreeView preview", () => {
 
   it("keeps the tree the one tab stop its page promises", () => {
     const html = markup(<DependencyTreeDemo />);
-    const chevrons = html.match(/class="gx-tree-chevron"/g) ?? [];
-    const buttons = html.match(/<button[^>]*class="gx-tree-chevron"/g) ?? [];
+    const chevrons = html.match(/class="gx-dtree-slot"/g) ?? [];
+    const buttons = html.match(/<button[^>]*class="gx-dtree-slot"/g) ?? [];
 
     // The tree itself is the tab stop. A branch's chevron stays clickable but
     // out of the tab order, so a keyboard reader does not traverse one button
@@ -180,9 +180,9 @@ describe("the TreeView preview", () => {
     // A leaf keeps the chevron's track and paints no control: the package's own
     // row has nothing to flip under a leaf.
     expect(chevrons.length).toBeGreaterThan(buttons.length);
-    expect(html.match(/data-branch="false"/g) ?? []).toHaveLength(
-      chevrons.length - buttons.length,
-    );
+    expect(
+      html.match(/<span aria-hidden="true" class="gx-dtree-slot">/g) ?? [],
+    ).toHaveLength(chevrons.length - buttons.length);
     expect(html).not.toContain("Expand @gpuixui/tokens");
     expect(read("packages/data/src/tree/row.tsx")).toContain(
       "row.hasChildren && chevron !== undefined",

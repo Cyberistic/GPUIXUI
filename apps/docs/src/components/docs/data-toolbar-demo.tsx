@@ -135,6 +135,14 @@ export const matchingRows = (query: string): ReadonlyArray<QueueRow> => {
     : QUEUE_ROWS;
 };
 
+/** The theme's status tone for one run's state, as the Badge recipe paints it. */
+const stateTone = (state: QueueRow["state"]): string =>
+  state === "done"
+    ? "gx-badge-success"
+    : state === "running"
+      ? "gx-badge-info"
+      : "gx-badge-neutral";
+
 /** The page's preview: a toolbar whose reported query filters its own rows. */
 export function DataToolbarDemo() {
   const [typed, setTyped] = useState("");
@@ -161,16 +169,17 @@ export function DataToolbarDemo() {
   };
 
   return (
-    <div className="gx-demo-frame">
-      <div aria-label="Deploy queue" className="gx-toolbar" role="toolbar">
-        <input
-          aria-label={searchLabel("")}
-          className="gx-field gx-toolbar-search"
-          onChange={(event) => type(event.target.value)}
-          placeholder="Filter services…"
-          type="search"
-          value={typed}
-        />
+    <div className="gx-data-scene">
+      <div aria-label="Deploy queue" className="gx-dtoolbar" role="toolbar">
+        <label className="gx-dfield gx-dfield-sm">
+          <input
+            aria-label={searchLabel("")}
+            onChange={(event) => type(event.target.value)}
+            placeholder="Filter services…"
+            type="search"
+            value={typed}
+          />
+        </label>
         <button
           className="gx-btn gx-btn-sm gx-btn-secondary"
           onClick={reset}
@@ -179,22 +188,51 @@ export function DataToolbarDemo() {
           Reset
         </button>
       </div>
-      <ul aria-label="Matching records" className="gx-toolbar-rows">
-        {rows.map((row) => (
-          <li className="gx-toolbar-row" key={row.id}>
-            <span className="gx-toolbar-service">{row.service}</span>
-            <span className="gx-toolbar-meta">{row.environment}</span>
-            <span className="gx-toolbar-state" data-state={row.state}>
-              {row.state}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <div aria-label="Debounce" className="gx-demo-choices" role="group">
+      <div aria-label="Matching records" className="gx-dt" role="table">
+        <div className="gx-dt-head" role="rowgroup">
+          <div className="gx-dt-row" role="row">
+            <div className="gx-dt-hcell" role="columnheader">
+              Service
+            </div>
+            <div className="gx-dt-hcell" role="columnheader">
+              Environment
+            </div>
+            <div className="gx-dt-hcell" role="columnheader">
+              State
+            </div>
+          </div>
+        </div>
+        <div role="rowgroup">
+          {rows.map((row) => (
+            <div
+              className="gx-dt-row"
+              data-row={row.id}
+              key={row.id}
+              role="row"
+            >
+              <div className="gx-dt-cell" role="cell">
+                {row.service}
+              </div>
+              <div className="gx-dt-cell" role="cell">
+                {row.environment}
+              </div>
+              <div className="gx-dt-cell" role="cell">
+                <span
+                  className={`gx-badge gx-badge-sm ${stateTone(row.state)}`}
+                >
+                  {row.state}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div aria-label="Debounce" className="gx-data-row" role="group">
         {WAITS.map((candidate) => (
           <button
             aria-pressed={candidate.id === choice.id}
-            className="gx-demo-choice"
+            className="gx-btn gx-btn-sm gx-toggle"
+            data-pressed={candidate.id === choice.id ? "" : undefined}
             key={candidate.id}
             onClick={() => setChoice(candidate)}
             type="button"
@@ -203,7 +241,7 @@ export function DataToolbarDemo() {
           </button>
         ))}
       </div>
-      <p className="gx-demo-readout">
+      <p className="gx-data-readout">
         typed “{typed}” · reported “{reported}” · {rows.length} of{" "}
         {QUEUE_ROWS.length} rows · wait {wait} ms
       </p>

@@ -21,9 +21,15 @@ import {
  * `inspector-lifecycle` probe measured. The drawing mirrors that contract with
  * HTML and says so; the Code tab shows the native composition.
  *
- * The rules live in `inspector-preview.ts` so a test can fail on them; this
- * file only renders them.
+ * Every surface is its component's own: `PropertyPanel`'s panel and header
+ * (`SURFACE_PANEL`/`SURFACE_HEADER`), `KeyValue`'s fixed label track, and
+ * `StatCard`'s label/reading/hint column. The rules live in
+ * `inspector-preview.ts` so a test can fail on them; this file only renders
+ * them.
  */
+
+/** The label column's width, the track the probe's fixture names. */
+const LABEL_WIDTH = 96;
 
 /** One read-only row: the label column is fixed, so values line up. */
 const Row = ({
@@ -33,21 +39,23 @@ const Row = ({
   readonly label: string;
   readonly value: string;
 }) => (
-  <>
-    <dt className="gx-inspector-label">{label}</dt>
-    <dd className="gx-inspector-value">{value}</dd>
-  </>
+  <div className="gx-dkv-row" role="listitem">
+    <span className="gx-dkv-label" style={{ width: LABEL_WIDTH }}>
+      {label}
+    </span>
+    <span className="gx-dkv-value">{value}</span>
+  </div>
 );
 
 /** The metric the card derives from the object, never a second copy of it. */
 const Metric = ({ object }: { readonly object: InspectedObject }) => (
-  <div className="gx-inspector-metric">
-    <span className="gx-inspector-metric-label">Area</span>
-    <span className="gx-inspector-metric-value">
-      {areaOf(object)}
-      <span className="gx-inspector-metric-unit">px²</span>
+  <div aria-label="Area" className="gx-dstat" role="group">
+    <span className="gx-dstat-label">Area</span>
+    <span className="gx-dstat-reading">
+      <span className="gx-dstat-value">{areaOf(object)}</span>
+      <span className="gx-dstat-hint">px²</span>
     </span>
-    <span className="gx-inspector-metric-hint">width × height</span>
+    <span className="gx-dstat-hint">width × height</span>
   </div>
 );
 
@@ -57,62 +65,75 @@ export const PropertyPanelDemo = () => {
   const context = propertyRows(object).slice(4);
 
   return (
-    <div aria-label="Property inspector" className="gx-inspector" role="group">
-      <div className="gx-inspector-stage">
-        <p className="gx-inspector-caption">{captionOf(object)}</p>
-        <div aria-hidden="true" className="gx-inspector-arena">
-          <div
-            className="gx-inspector-box"
-            style={{ width: object.width, height: object.height }}
-          />
-        </div>
-      </div>
-
-      <div className="gx-inspector-panel">
-        <div className="gx-inspector-head">Properties</div>
-        <dl className="gx-inspector-rows">
-          <Row label="Name" value={object.name} />
-          <dt className="gx-inspector-label">Tag</dt>
-          <dd className="gx-inspector-value">
-            <input
-              aria-label="Tag"
-              className="gx-field gx-inspector-input"
-              onChange={(event) =>
-                setObject(withTag(object, event.target.value))
-              }
-              placeholder="none"
-              value={object.tag}
+    <div aria-label="Property inspector" className="gx-data-scene" role="group">
+      <div className="gx-data-row">
+        <div className="gx-dpanel gx-inspector-stage">
+          <div className="gx-dpanel-head">
+            <span className="gx-dpanel-title">{captionOf(object)}</span>
+          </div>
+          <div aria-hidden="true" className="gx-inspector-arena">
+            <div
+              className="gx-inspector-box"
+              style={{ width: object.width, height: object.height }}
             />
-          </dd>
-          <Row label="Size" value={sizeValue(object)} />
-          <Row label="Area" value={`${areaOf(object)} px`} />
-          {context.map((row) => (
-            <Row key={row.key} label={row.label} value={row.value} />
-          ))}
-        </dl>
-        <div className="gx-inspector-actions">
-          <button
-            className="gx-btn gx-btn-secondary gx-btn-sm"
-            onClick={() => setObject(widen(object))}
-            type="button"
-          >
-            Wide
-          </button>
-          <button
-            className="gx-btn gx-btn-ghost gx-btn-sm"
-            onClick={() => setObject(resetSize(object))}
-            type="button"
-          >
-            Reset size
-          </button>
+          </div>
+        </div>
+
+        <div className="gx-dpanel gx-inspector-panel">
+          <div className="gx-dpanel-head">
+            <span className="gx-dpanel-title">Properties</span>
+          </div>
+          <div className="gx-dpanel-body">
+            <div aria-label="Properties" className="gx-dkv" role="list">
+              <Row label="Name" value={object.name} />
+              <div className="gx-dkv-row" role="listitem">
+                <span className="gx-dkv-label" style={{ width: LABEL_WIDTH }}>
+                  Tag
+                </span>
+                <label className="gx-dfield gx-dfield-sm gx-dkv-value">
+                  <input
+                    aria-label="Tag"
+                    onChange={(event) =>
+                      setObject(withTag(object, event.target.value))
+                    }
+                    placeholder="none"
+                    value={object.tag}
+                  />
+                </label>
+              </div>
+              <Row label="Size" value={sizeValue(object)} />
+              <Row label="Area" value={`${areaOf(object)} px`} />
+              {context.map((row) => (
+                <Row key={row.key} label={row.label} value={row.value} />
+              ))}
+            </div>
+          </div>
+          <div className="gx-data-row gx-inspector-actions">
+            <button
+              className="gx-btn gx-btn-secondary gx-btn-sm"
+              onClick={() => setObject(widen(object))}
+              type="button"
+            >
+              Wide
+            </button>
+            <button
+              className="gx-btn gx-btn-ghost gx-btn-sm"
+              onClick={() => setObject(resetSize(object))}
+              type="button"
+            >
+              Reset size
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="gx-inspector-readout">
-        <dl className="gx-inspector-rows">
-          <Row label="Tag" value={tagValue(object.tag)} />
-          <Row label="Size" value={sizeValue(object)} />
-        </dl>
+      <div className="gx-data-row">
+        <div className="gx-dpanel gx-inspector-readout">
+          <div aria-label="Selection" className="gx-dkv" role="list">
+            <Row label="Tag" value={tagValue(object.tag)} />
+            <Row label="Size" value={sizeValue(object)} />
+          </div>
+        </div>
         <Metric object={object} />
       </div>
     </div>

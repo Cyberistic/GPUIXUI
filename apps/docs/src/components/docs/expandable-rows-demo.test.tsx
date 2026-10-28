@@ -81,7 +81,7 @@ describe("the expandable-rows preview", () => {
     );
     expect(html.match(/aria-expanded="true"/g) ?? []).toHaveLength(1);
     // One panel, under the row the page opens on.
-    expect(html.match(/class="gx-er-detail"/g) ?? []).toHaveLength(1);
+    expect(html.match(/class="gx-dt-detail"/g) ?? []).toHaveLength(1);
     expect(html).toContain("harbour-chart.png details");
     // The expander track is data: the package's 32px, not a share.
     expect(html.match(/width:32px/g) ?? []).toHaveLength(
@@ -98,11 +98,11 @@ describe("the expandable-rows preview", () => {
     expect(recipe).toContain("text-sm");
 
     const css = read("apps/docs/src/styles/demos.css");
-    const detail = css.slice(css.indexOf(".gx-er-detail {"));
+    const detail = css.slice(css.indexOf(".gx-dt-detail {"));
     expect(detail.slice(0, detail.indexOf("}"))).toContain(
       "background: var(--muted);",
     );
-    const cell = css.slice(css.indexOf(".gx-er-detail-cell {"));
+    const cell = css.slice(css.indexOf(".gx-dt-detail > * {"));
     expect(cell.slice(0, cell.indexOf("}"))).toContain("padding: 12px;");
   });
 
@@ -113,8 +113,10 @@ describe("the expandable-rows preview", () => {
     const html = renderToStaticMarkup(<ExpandableRowsDemo />);
 
     expect(html.match(/role="columnheader"/g) ?? []).toHaveLength(3);
-    expect(html.match(/role="presentation"/g) ?? []).toHaveLength(1);
-    expect(html).not.toContain('aria-label="Expanded"');
+    // The track is decoration in the header and a cell in a row (a row's every
+    // box is a cell), and neither is a column a reader can meet.
+    expect(html.match(/aria-hidden="true"/g) ?? []).toHaveLength(1);
+    expect(html).not.toContain('role="columnheader" aria-hidden');
   });
 
   it("is wired to the page the package ships", () => {
