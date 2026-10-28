@@ -183,22 +183,18 @@ export function FileTreeFrame({
             key={row.key}
             onClick={() => press(row)}
             role="treeitem"
+            style={{ paddingLeft: 6 + row.depth * INDENT }}
           >
-            {row.depth === 0
-              ? undefined
-              : Arr.map(Arr.range(1, row.depth), (level) => (
-                  <span
-                    className="gx-filetree-guide"
-                    data-guide="true"
-                    key={level}
-                  />
-                ))}
             <span
               aria-hidden="true"
               className="gx-filetree-chevron"
               data-branch={row.hasChildren ? "true" : "false"}
             >
-              {row.hasChildren ? (row.expanded ? "▾" : "▸") : ""}
+              {row.hasChildren ? (
+                <BrowserIcon
+                  name={row.expanded ? "chevron-down" : "chevron-right"}
+                />
+              ) : null}
             </span>
             <BrowserIcon
               className="gx-filetree-glyph"
@@ -211,6 +207,9 @@ export function FileTreeFrame({
     </div>
   );
 }
+
+/** The step a deeper row is inset by, as the reference's nested `ml-4`. */
+const INDENT = 16;
 
 /** The page's preview: the workspace, its tab stop and the selected file. */
 export function FileTreeDemo() {

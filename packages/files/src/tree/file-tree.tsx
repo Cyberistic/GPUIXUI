@@ -36,12 +36,7 @@ import {
 } from "@gpuixui/data";
 import { useTree } from "@gpuixui/data/tree/use-tree";
 import { Icon, type IconName } from "@gpuixui/icons";
-import {
-  borderWidthOf,
-  iconSideOf,
-  rowHeightOf,
-  storedText,
-} from "@gpuixui/primitives/core";
+import { iconSideOf, rowHeightOf, storedText } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
@@ -176,7 +171,7 @@ export const FileTreeIcon = ({
 }: FileTreeIconProps) => {
   const theme = useTheme();
   const colors = themeColors(theme);
-  const tint = selected ? colors.accentForeground : colors.mutedForeground;
+  const tint = selected ? colors.foreground : colors.mutedForeground;
   return (
     <div
       role="presentation"
@@ -200,11 +195,8 @@ export const FileTreeIcon = ({
   );
 };
 
-/** A row's name slot: one truncated line in the theme's mono role. */
-export const FileTreeName = ({
-  selected = false,
-  children,
-}: FileTreeNameProps) => {
+/** A row's name slot: one truncated line in the theme's sans role. */
+export const FileTreeName = ({ children }: FileTreeNameProps) => {
   const theme = useTheme();
   const colors = themeColors(theme);
   return (
@@ -218,8 +210,8 @@ export const FileTreeName = ({
     >
       <text
         style={{
-          ...textStyle(theme, "code"),
-          color: selected ? colors.accentForeground : colors.foreground,
+          ...textStyle(theme, "label"),
+          color: colors.foreground,
           display: "block",
           whiteSpace: "nowrap",
           textOverflow: "ellipsis",
@@ -323,9 +315,8 @@ const FileTreeRow = ({
 }: FileTreeRowProps) => {
   const theme = useTheme();
   const colors = themeColors(theme);
-  const tint = selected ? colors.accentForeground : colors.mutedForeground;
-  const guide = borderWidthOf(theme, "thin");
-  const hover = selected ? colors.accent : colors.hover;
+  const tint = selected ? colors.foreground : colors.mutedForeground;
+  const hover = selected ? colors.hover : colors.hover;
   const press =
     pointerWash(theme, "active", selected ? "accent" : "hover") ??
     colors.active;
@@ -348,9 +339,10 @@ const FileTreeRow = ({
       style={{
         ...recipeStyle(FILE_TREE_ROW, theme),
         height: rowHeightOf(theme),
-        paddingLeft: TREE_INSET,
+        paddingLeft: TREE_INSET + row.depth * TREE_INDENT,
         paddingRight: theme.spacing.sm,
-        backgroundColor: selected ? colors.accent : undefined,
+        borderRadius: theme.radius.md,
+        backgroundColor: selected ? colors.hover : undefined,
         hover: { backgroundColor: hover },
         active: { backgroundColor: press },
         focusVisible: {
@@ -360,21 +352,6 @@ const FileTreeRow = ({
         },
       }}
     >
-      {row.depth === 0
-        ? undefined
-        : Arr.map(Arr.range(1, row.depth), (level) => (
-            <div
-              key={level}
-              role="presentation"
-              style={{
-                width: TREE_INDENT,
-                alignSelf: "stretch",
-                borderLeftWidth: guide,
-                borderColor: colors.border,
-                pointerEvents: "none",
-              }}
-            />
-          ))}
       <div
         role="presentation"
         testId={testId === undefined ? undefined : `${testId}-slot`}

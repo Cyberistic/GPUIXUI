@@ -165,14 +165,23 @@ describe("type-ahead", () => {
 });
 
 describe("kinds and glyphs", () => {
-  it("classifies an extension into a kind and paints its glyph", () => {
+  it("classifies an extension into a kind", () => {
     expect(fileKindOf("photo.png", false)).toBe("image");
     expect(fileKindOf("button.tsx", false)).toBe("code");
     expect(fileKindOf("package.json", false)).toBe("config");
     expect(fileKindOf("rows.csv", false)).toBe("data");
     expect(fileKindOf("src", true)).toBe("folder");
+  });
+
+  it("paints one glyph for folders and one for files, whatever the kind", () => {
+    // The reference paints a single file glyph; the chevron says whether a
+    // folder is open. Six glyphs in a column read as decoration.
     expect(fileIcon("folder", false)).toBe("folder");
-    expect(fileIcon("folder", true)).toBe("folder-open");
+    expect(fileIcon("folder", true)).toBe("folder");
+    expect(fileIcon("code", false)).toBe("file");
+    expect(fileIcon("image", true)).toBe("file");
+    expect(fileIcon("config", false)).toBe("file");
+    expect(fileIcon("data", false)).toBe("file");
   });
 
   it("falls back to a plain file for an unknown extension", () => {

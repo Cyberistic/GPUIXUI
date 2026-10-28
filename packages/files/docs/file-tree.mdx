@@ -1,6 +1,6 @@
 ---
 title: File trees
-description: A monospace file tree with declarative folder and file parts, guide lines, per-kind icons, one selected file and one roving tab stop
+description: A file tree with declarative folder and file parts, one folder and one file glyph, one selected file and one roving tab stop
 ---
 
 ## Usage
@@ -93,23 +93,25 @@ set, so a custom row can match the tree.
 | shadcn AI Elements | GPUixUI |
 | ------------------ | ------- |
 | `FileTree` (`role="tree"`, frame, `expanded` / `defaultExpanded` / `selectedPath` / `onSelect`) | `FileTree` (`role="tree"`, frame, `expanded` / `defaultExpanded` / `selected` / `onSelect`) |
-| `FileTreeFolder` (Collapsible, trigger, `FileTreeIcon`, `FileTreeName`, nested lane) | `FileTreeFolder` (one row, chevron glyph, kind glyph, name, guide cells per depth) |
-| `FileTreeFile` (Button, spacer, icon, name) | `FileTreeFile` (one row, blank chevron slot, kind glyph, name) |
+| `FileTreeFolder` (Collapsible, trigger, `FileTreeIcon`, `FileTreeName`, nested lane) | `FileTreeFolder` (one row, chevron glyph, folder glyph, name, inset by depth) |
+| `FileTreeFile` (Button, spacer, icon, name) | `FileTreeFile` (one row, blank chevron slot, file glyph, name) |
 | `FileTreeIcon` (shrink-0 span) | `FileTreeIcon` (icon-sized slot) |
-| `FileTreeName` (truncate span) | `FileTreeName` (one ellipsized mono line) |
+| `FileTreeName` (truncate span) | `FileTreeName` (one ellipsized line) |
 | `FileTreeActions` (right-aligned, stops the row press) | omitted: a `FileTreeFile` custom row is the action slot |
 
-The tree is monospace through the theme's `code` type role, and every row is the
-density's `rowHeight`.
+A row is the theme's `label` type role — the reference's `text-sm` in the sans
+family — and every row is the density's `rowHeight`, rounded one step under the
+radius. The tree paints **no frame of its own**: no border, no background, no
+guide rails, so the surface it sits on (a card, a sidebar, a sheet) is the only
+one. One folder glyph and one file glyph cover every row; the chevron says
+whether a folder is open, and the kind a name classifies into is a fact an app
+can ask for without the paint following it.
 
 ## Limitations
 
 - **The chevron cannot rotate.** GPUix 0.11.0 has no renderer transform, so the
   open and closed states paint `chevron-down` and `chevron-right` instead of
   rotating one glyph.
-- **Guide lines are inline, not positioned.** `position: absolute` resolves
-  against the mount parent in 0.11.0, so a parent-relative rail is not honest;
-  each row paints one 16px cell with a left border per ancestor.
 - **No inline rename.** The reference has no rename and neither did the previous
   surface. A caller that needs one passes an editor as a `FileTreeFile` custom
   row; the tree does not own an empty-name rule.

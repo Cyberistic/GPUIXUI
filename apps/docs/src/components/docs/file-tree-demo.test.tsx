@@ -52,10 +52,6 @@ const markup = (
     />,
   );
 
-/** How many non-root rows a tree paints, and the guides they need. */
-const depthGuides = (rows: ReadonlyArray<{ readonly depth: number }>): number =>
-  Arr.reduce(rows, 0, (sum, row) => sum + row.depth);
-
 describe("the FileTree preview", () => {
   it("paints the rows the package's tree flattens, and none of the closed ones", () => {
     const roots = workspaceTree();
@@ -91,17 +87,16 @@ describe("the FileTree preview", () => {
     );
     expect(missing).toEqual([]);
 
-    const guides = html.match(/data-guide="true"/g) ?? [];
-    expect(guides).toHaveLength(depthGuides(rows));
-    // A root paints no guide; a child paints one, a grandchild two.
-    const guidesIn = (key: string): number => {
+    // The reference paints no rails: depth is a padding the row carries.
+    expect(html.match(/data-guide="true"/g) ?? []).toEqual([]);
+    const insetOf = (key: string): string => {
       const start = html.indexOf(`id="${rowId(key)}"`);
-      const end = html.indexOf("</div>", start);
-      return (html.slice(start, end).match(/data-guide="true"/g) ?? []).length;
+      const end = html.indexOf(">", start);
+      return html.slice(start, end);
     };
-    expect(guidesIn("src")).toBe(0);
-    expect(guidesIn("src/components")).toBe(1);
-    expect(guidesIn("src/components/button.tsx")).toBe(2);
+    expect(insetOf("src")).toContain("padding-left:6px");
+    expect(insetOf("src/components")).toContain("padding-left:22px");
+    expect(insetOf("src/components/button.tsx")).toContain("padding-left:38px");
   });
 
   it("swaps the folder chevron and leaves a file a blank slot", () => {
@@ -109,8 +104,15 @@ describe("the FileTree preview", () => {
     const open = markup(openCursor());
     const closed = markup({ ...openCursor(), expanded: HashSet.empty() });
 
-    expect(open).toContain("▾");
-    expect(closed).toContain("▸");
+    // The chevron is the icon set's glyph, not a character: an open folder and a
+    // closed one paint different paths in the same slot.
+    const chevronOf = (html: string, key: string): string => {
+      const start = html.indexOf(`id="${rowId(key)}"`);
+      const slot = html.indexOf('class="gx-filetree-chevron"', start);
+      return html.slice(slot, slot + 400);
+    };
+    expect(chevronOf(open, "src")).not.toBe(chevronOf(closed, "src"));
+    expect(chevronOf(open, "src")).toContain("<svg");
     // The file rows have no chevron to turn.
     expect(open.match(/data-branch="true"/g)).toHaveLength(
       Arr.filter(fileRows(roots, openCursor()), (row) => row.hasChildren)

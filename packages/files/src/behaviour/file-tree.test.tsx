@@ -262,16 +262,18 @@ describe("the keyboard", () => {
 });
 
 describe("the selection's paint", () => {
-  it("is the accent pair the reference paints, not the brand fill", () => {
+  it("is the neutral wash the reference paints, not a brand fill", () => {
     // The bug: the selected row wore `colors.selected` — a fill role designed to
     // carry `selectedForeground` — so one row of a file tree read as a pressed
-    // primary button. shadcn's file tree selects with `bg-accent
-    // text-accent-foreground`, the wash every other row-level selection uses.
+    // primary button. The reference selects with `bg-accent text-accent-foreground`,
+    // a neutral wash; this theme's neutral row wash is `hover`, because `accent`
+    // here is the platform's tint (macOS blue) rather than shadcn's grey.
     const { root: mounted } = mount({ initialSelected: "src/index.ts" });
     const row = mounted.renderer.findByTestId(rowId("src/index.ts"));
 
-    expect(row?.style.backgroundColor).toBe(lightTheme.colors.accent);
+    expect(row?.style.backgroundColor).toBe(lightTheme.colors.hover);
     expect(row?.style.backgroundColor).not.toBe(lightTheme.colors.selected);
+    expect(row?.style.backgroundColor).not.toBe(lightTheme.colors.accent);
   });
 });
 

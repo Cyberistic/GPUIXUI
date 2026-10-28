@@ -1405,7 +1405,7 @@
 
 .gx-context-row[data-open="true"] {
   background: var(--selected);
-  color: var(--selected-foreground);
+  color: var(--foreground);
 }
 
 .gx-context-row-meta {
@@ -1416,7 +1416,7 @@
 }
 
 .gx-context-row[data-open="true"] .gx-context-row-meta {
-  color: var(--selected-foreground);
+  color: var(--foreground);
 }
 
 /* `.gx-menu` is anchored below a trigger; a context surface is placed at a point. */
@@ -3521,7 +3521,7 @@
 
 .gx-list-row[data-selected="true"] {
   background: var(--selected);
-  color: var(--selected-foreground);
+  color: var(--foreground);
 }
 
 .gx-list-row[data-selected="true"]:hover:not(:disabled) {
@@ -3570,7 +3570,7 @@
 }
 
 .gx-list-row[data-selected="true"] .gx-list-trailing {
-  color: var(--selected-foreground);
+  color: var(--foreground);
 }
 
 .gx-list-row:disabled .gx-list-title {
@@ -6177,13 +6177,13 @@
 
 .gx-table-row[data-selected="true"] .gx-table-cell {
   background: var(--selected);
-  color: var(--selected-foreground);
+  color: var(--foreground);
   border-bottom-color: var(--divider-selected);
 }
 
 .gx-table-row[data-selected="true"]:hover .gx-table-cell {
   background: var(--accent);
-  color: var(--selected-foreground);
+  color: var(--foreground);
   border-bottom-color: var(--divider-accent);
 }
 
@@ -6458,7 +6458,7 @@
 .gx-filter-toggle[aria-pressed="true"] {
   border-color: var(--primary);
   background: var(--selected);
-  color: var(--selected-foreground);
+  color: var(--foreground);
 }
 
 .gx-filter-toggle:focus-visible,
@@ -7612,7 +7612,7 @@
 
 .gx-badge-deploy-row[data-selected] {
   background: var(--selected);
-  color: var(--selected-foreground);
+  color: var(--foreground);
 }
 
 .gx-badge-deploy-row:focus-visible {
@@ -8499,7 +8499,7 @@
 
 .gx-toggle-outline[data-pressed] {
   background: var(--selected);
-  color: var(--selected-foreground);
+  color: var(--foreground);
   box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
@@ -12434,6 +12434,12 @@ button.gx-rating-star:focus-visible {
 
 /* ---- the shared drawing frame: a column with a readout. Every lane's browser
    preview mounts inside it. ---- */
+/* The file tree centres its column, as the reference centres `max-w-xs` in the
+   card; the readout follows it. */
+.gx-demo-frame:has(.gx-filetree) {
+  align-items: center;
+}
+
 .gx-demo-frame {
   display: flex;
   flex-direction: column;
@@ -12514,7 +12520,7 @@ button.gx-rating-star:focus-visible {
 
 .gx-tree-row[data-chosen="true"] {
   background: var(--selected);
-  color: var(--selected-foreground);
+  color: var(--foreground);
 }
 
 .gx-tree-row[data-current="true"] {
@@ -12571,17 +12577,16 @@ button.gx-rating-star:focus-visible {
 
 /* The AI Elements file tree: a mono card, one guide cell per ancestor, a
    chevron that swaps glyphs (no rotation) and one selected file. */
+/* shadcn's demo column: `max-w-xs`, on the host's surface with no frame of its
+   own — the tree adds no border and no background, so the card it sits in is the
+   only one. Names are the sans role, as the reference's `text-sm`. */
 .gx-filetree {
-  /* shadcn's demo column: `max-w-xs`. A tree that filled the preview read as a
-     panel rather than the sidebar slice the component is. */
   width: min(320px, 100%);
-  padding: 4px;
+  padding: 0;
   overflow: auto;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 4px);
-  background: var(--background);
-  font-family: var(--font-mono);
-  font-size: 12px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .gx-filetree:focus-visible {
@@ -12593,8 +12598,8 @@ button.gx-rating-star:focus-visible {
   display: flex;
   align-items: center;
   height: var(--row-height);
-  padding: 0 8px 0 6px;
-  border-radius: var(--radius);
+  padding-right: 8px;
+  border-radius: calc(var(--radius) - 2px);
   color: var(--foreground);
   cursor: pointer;
 }
@@ -12604,31 +12609,32 @@ button.gx-rating-star:focus-visible {
 }
 
 .gx-filetree-row[data-selected="true"] {
-  background: var(--accent);
-  color: var(--accent-foreground);
+  background: var(--hover);
+  color: var(--foreground);
 }
 
-.gx-filetree-row[data-current="true"] {
+/* The cursor is a keyboard fact: a resting tree shows the selection's wash and
+   no ring, and the ring appears once the tree has focus. */
+.gx-filetree:focus-visible .gx-filetree-row[data-current="true"] {
   box-shadow: inset 0 0 0 1px var(--ring);
 }
 
-.gx-filetree-guide {
+.gx-filetree-chevron {
+  display: inline-flex;
   flex: none;
-  align-self: stretch;
-  width: 16px;
-  border-left: 1px solid var(--border);
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  color: var(--muted-foreground);
 }
 
-.gx-filetree-chevron {
-  flex: none;
-  width: 16px;
-  color: var(--muted-foreground);
-  font-size: 10px;
-  text-align: center;
+.gx-filetree-chevron svg {
+  width: 12px;
+  height: 12px;
 }
 
 .gx-filetree-row[data-selected="true"] .gx-filetree-chevron {
-  color: var(--selected-foreground);
+  color: var(--foreground);
 }
 
 .gx-filetree-glyph {
@@ -12640,7 +12646,7 @@ button.gx-rating-star:focus-visible {
 }
 
 .gx-filetree-row[data-selected="true"] .gx-filetree-glyph {
-  color: var(--selected-foreground);
+  color: var(--foreground);
 }
 
 .gx-filetree-name {
@@ -13622,7 +13628,7 @@ button.gx-rating-star:focus-visible {
 
 .gx-fc-row[aria-selected="true"] {
   background: var(--selected);
-  color: var(--selected-foreground);
+  color: var(--foreground);
   border-bottom-color: var(--divider-selected);
 }
 

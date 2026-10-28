@@ -6,10 +6,14 @@
  * so they are set in `style`.
  */
 
-/** The frame: a clipped card that the rows scroll inside. */
-export const FILE_TREE_ROOT =
-  "flex flex-col overflow-hidden rounded-md border border-border bg-background";
+/**
+ * The frame: the rows' column, with no surface of its own.
+ *
+ * The reference draws the tree on the host's surface — a card, a sidebar, a
+ * sheet — so the tree does not add a second border and background around itself.
+ */
+export const FILE_TREE_ROOT = "flex flex-col overflow-hidden";
 
-/** One row: the guides, the chevron slot and the content on one line. */
+/** One row: the chevron slot and the content on one line. */
 export const FILE_TREE_ROW =
   "flex flex-row items-center shrink-0 text-sm cursor-pointer";

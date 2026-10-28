@@ -113,21 +113,16 @@ export const fileKindOf = (name: string, isDirectory: boolean): FileKind => {
   return "file";
 };
 
-/** The glyph a kind paints; an open folder paints the open glyph. */
-export const fileIcon = (kind: FileKind, expanded: boolean): IconName =>
-  kind === "folder"
-    ? expanded
-      ? "folder-open"
-      : "folder"
-    : kind === "image"
-      ? "image"
-      : kind === "code"
-        ? "code"
-        : kind === "config"
-          ? "settings"
-          : kind === "data"
-            ? "database"
-            : "file";
+/**
+ * The glyph a row paints.
+ *
+ * shadcn's file tree paints one folder and one file glyph; the chevron says
+ * whether a folder is open, so the glyph does not also have to. The kind is
+ * still classified (an app can ask for it), but it does not change the paint:
+ * a column of six different glyphs read as decoration, not as a file list.
+ */
+export const fileIcon = (kind: FileKind, _expanded: boolean): IconName =>
+  kind === "folder" ? "folder" : "file";
 
 /** A path into its non-empty segments, failing on a blank path. */
 const toSegments = (
