@@ -2624,7 +2624,17 @@ interface PreviewEntry {
   readonly frozen?: ToastStackSlot;
 }
 
-/** One card. Its tone glyph carries the status; the surface is neutral. */
+/**
+ * One card.
+ *
+ * The slot is the rank's box and the card keeps its own measured height inside
+ * it. A **whole** card used to leave the slot at `height: auto`, and CSS cannot
+ * interpolate `auto` into the 12px peek the card drops to when the next toast
+ * arrives — the collapse happened in one frame, so the toast a reader was
+ * reading was cut in half the instant another appeared. The card measures
+ * itself and the slot gets that number, so the peek is a tween like every other
+ * move in the stack; a leaving card closes to nothing.
+ */
 const ToastCardPreview = ({
   toast,
   leaving,
@@ -2637,49 +2647,78 @@ const ToastCardPreview = ({
   readonly slot: ToastStackSlot;
   readonly onDismiss: () => void;
   readonly onAction?: () => void;
-}) => (
-  <div
-    className={`gx-toast-slot${leaving ? " gx-toast-leaving" : ""}`}
-    data-whole={slot.height === undefined ? "true" : "false"}
-    style={{
-      height: slot.height,
-      width: `calc(100% - ${slot.inset * 2}px)`,
-    }}
-  >
+}) => {
+  const card = useRef<HTMLDivElement | null>(null);
+  const [natural, setNatural] = useState(0);
+  // A card that has just arrived grows into its box instead of appearing at full
+  // height, so the stack opens upward the way the native viewport's
+  // `height: 0 → measured` does. `born` flips on the next frame, which is the
+  // frame the transition starts from.
+  const [born, setBorn] = useState(false);
+
+  useLayoutEffect(() => {
+    const node = card.current;
+    if (node === null) return;
+    const measure = (): void => setNatural(node.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setBorn(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const settled = slot.height ?? (natural === 0 ? undefined : natural);
+  const height = leaving || !born ? 0 : settled;
+
+  return (
     <div
-      className={`gx-toast-card gx-toast-${toast.tone}${
-        slot.interactive ? "" : " gx-toast-behind"
-      }`}
+      className={`gx-toast-slot${leaving ? " gx-toast-leaving" : ""}`}
+      data-whole={slot.height === undefined ? "true" : "false"}
+      style={{
+        height,
+        width: `calc(100% - ${slot.inset * 2}px)`,
+      }}
     >
-      <ToastGlyph>{toastGlyph[toast.tone]}</ToastGlyph>
-      <div className="gx-toast-copy">
-        <p className="gx-toast-title">{toast.title}</p>
-        {toast.description === undefined ? null : (
-          <p className="gx-toast-desc">{toast.description}</p>
+      <div
+        ref={card}
+        className={`gx-toast-card gx-toast-${toast.tone}${
+          slot.interactive ? "" : " gx-toast-behind"
+        }`}
+      >
+        <ToastGlyph>{toastGlyph[toast.tone]}</ToastGlyph>
+        <div className="gx-toast-copy">
+          <p className="gx-toast-title">{toast.title}</p>
+          {toast.description === undefined ? null : (
+            <p className="gx-toast-desc">{toast.description}</p>
+          )}
+        </div>
+        {toast.actionLabel === undefined ? null : (
+          <button
+            className="gx-toast-action"
+            disabled={!slot.interactive}
+            onClick={onAction}
+            type="button"
+          >
+            {toast.actionLabel}
+          </button>
         )}
-      </div>
-      {toast.actionLabel === undefined ? null : (
         <button
-          className="gx-toast-action"
+          aria-label="Dismiss"
+          className="gx-toast-dismiss"
           disabled={!slot.interactive}
-          onClick={onAction}
+          onClick={onDismiss}
           type="button"
         >
-          {toast.actionLabel}
+          ✕
         </button>
-      )}
-      <button
-        aria-label="Dismiss"
-        className="gx-toast-dismiss"
-        disabled={!slot.interactive}
-        onClick={onDismiss}
-        type="button"
-      >
-        ✕
-      </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /**
  * The preview's queue: pushes, auto-dismiss timers, the hover fan and the pause
