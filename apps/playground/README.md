@@ -7539,54 +7539,43 @@ path and no control inside a row to reach by point.
 ### `color-picker-lifecycle` — measured on 0.11.0 here
 
 The **shipped** `@gpuixui/components` `ColorPicker` and a second, disabled one:
-six swatches that are the theme's own roles (`primary`, `secondary`, `accent`,
-`muted`, `destructive`, `foreground`), a preview of the value, and a HEX field.
-The behaviour suite reads each cell's `style.backgroundColor`, the `aria-selected`
-attribute and the draft the host holds — which say what was asked for. This probe
-paints them: every cell is counted in its own **inner** square (a quarter inset
-clears a `radius.md` corner on a 28-point `sm` cell), the marker is the page ink
-only the chosen cell holds, and a refused draft is counted off the field's own
-box in the destructive role.
+a trigger that reports the value, the floating panel it opens, the
+saturation/value area, the hue and alpha rails, the hex field, the contrast
+readout and the theme's six presets (`primary`, `secondary`, `accent`, `muted`,
+`destructive`, `foreground`). The behaviour suite reads `aria-valuetext` and
+the reported hex; this probe reads the paint.
 
 | Step | Check |
 | ---- | ----- |
-| at rest | the readout is `value=#a7a9ff changes=0 refused=0` — the caller's `primary`; each of the six cells paints its own role above the probe's **500**-pixel floor (a 14-point inner square is **784** device pixels at this host's 2x) |
-| the marker | `primary` — and only `primary` — paints the page fill inside a body-ink ring, which is what makes the mark survive a cell whose fill is any role; the preview paints the value |
-| press `accent` | the readout is `value=#2e2370 changes=1 refused=0`, the marker moves to `accent` (and leaves `primary`), and the preview repaints |
-| `Space` | the focus is on `muted`; the **press** chooses nothing (`changes=1`), the **release** chooses (`value=#1e222a changes=2`) |
-| `Enter` | the press chooses the focused `destructive` swatch (`changes=3`) |
-| type `f0a`, `Enter` | the field commits one normal form: `value=#ff00aa changes=4`, no swatch carries the marker (no role matches the typed colour) and the preview paints the typed hex |
-| type `zz` | the field's own box paints the destructive border while the draft is unreadable |
-| `Enter` on `zz` | nothing commits (`value=#ff00aa changes=4`) and the destructive paint is gone — the draft returned to the value |
-| press the disabled swatches | `refused=0`: a disabled picker reports nothing |
-| `Tab` from the stop before it | the traversal reaches the stop **after** it, because its six swatches and its read-only field carry `tabIndex: -1` |
+| at rest | the readout is `value=#A7A9FF changes=0 refused=0` — the caller's `primary` |
+| closed | no panel is painted |
+| press the trigger | the panel is painted as its own surface |
+| press the area at 25%/25% | the committed colour's saturation and value are the point that was pressed (within one percent), and `changes=1` |
+| press `accent` in the preset row | the readout is `value=#2E2370 changes=2 refused=0` |
+| `PageDown` on the alpha rail | the value ends `E6` (90% alpha, 230 of 255) and `changes=3` |
+| type `f0a`, `Enter` | the field commits one normal form: `value=#FF00AA changes=4` |
+| type `zz`, `Enter` | the field's own box paints the theme's `destructive` ink while the draft is unreadable, and the value stays `#FF00AA` |
+| press the disabled trigger | no panel is painted, and `refused=0` |
+| `Tab` from the stop before it | the traversal reaches the stop **after** the disabled picker, whose trigger carries `tabIndex: -1` |
 
 **The field needs a frame between the keys and the submit.** The probe types
 three characters into one frame; pressing `Enter` in that same frame submitted
-the draft from **before** the edit, which read as no commit at all
-(`value=#ff6b6b changes=3`). A `SETTLE` between the typing and `Enter` fixes it —
-a reader cannot type inside one frame, so the probe waits where the window
-coalesces. The frame is also what makes the valid draft's border readable before
-the commit: a readable draft paints no destructive ink.
+the draft from **before** the edit, which read as no commit at all. A `SETTLE`
+between the typing and `Enter` fixes it — a reader cannot type inside one
+frame, so the probe waits where the window coalesces.
 
-**What the frame cannot say.** The picker's group name and its swatches'
-`aria-label`/`aria-selected` are accessibility-tree facts, and a window's
-automation protocol has no a11y verb (`a11y-tree` is the offscreen measurement),
-so this probe reads the paint and the value channel and leaves the names to
-`src/behaviour/color-picker.test.tsx`.
+**What the frame cannot say.** The area's announced saturation, the rails'
+degree and percent sentences and the trigger's name are accessibility-tree
+facts, and a window's automation protocol has no a11y verb; the behaviour suite
+reads those (`picker-area`, `picker-hue`, `picker-alpha` carry
+`aria-valuetext`). The panel's exact anchor offset is the Popover's own
+measured contract, not this component's, so the probe reads that the surface is
+painted rather than re-measuring the anchored layer.
 
-**The probe can fail.** Reading each cell's **whole** box instead of its inner
-square makes all six corners paint the page: `only the chosen swatch carries the
-marker` fails with `expected "primary", got
-"primary,secondary,accent,muted,destructive,foreground"` (exit `1`). The inset is
-the measurement, not a helper's detail.
-
-47 checks, `--only color-picker-lifecycle`, green on 0.11.0 here (three runs,
-13.2–18.1 s). Evidence:
-`.artifacts/live/color-picker-{rest,chosen,drafted,typed,refused,returned}.png`.
-Fixture `src/live/color-picker.ts`, probe `src/live/color-picker-probe.tsx`,
-guard `src/live/color-picker.test.ts`.
-
+15 checks, `--only color-picker-lifecycle`, green on 0.11.0 here. Evidence:
+`.artifacts/live/color-picker-refused.png`. Fixture `src/live/color-picker.ts`,
+probe `src/live/color-picker-probe.tsx`, guard
+`src/live/color-picker.test.ts`.
 
 ### `mention-input-lifecycle` — measured on 0.11.0 here
 

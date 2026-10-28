@@ -990,7 +990,7 @@ describe("the measured target rows", () => {
     expect(pageText("image-zoom.mdx")).toContain("magnified corner is square");
   });
 
-  it("cites the swatch paint and the pip the color-picker probe measured", () => {
+  it("cites the area press and the refused edge the color-picker probe measured", () => {
     const heading = "### `color-picker-lifecycle` — measured on 0.11.0 here";
     const probe = "color-picker-lifecycle";
     const checks = readmeChecks(heading, probe);
@@ -1001,9 +1001,10 @@ describe("the measured target rows", () => {
 
     const claims = [
       `\`${probe}\` (${checks} checks`,
-      "page-filled pip",
-      "`Space` chooses on its release and `Enter` on its press",
-      "`#ff00aa`",
+      "area press commits the colour under the pointer",
+      "`#FF00AA`",
+      "refused=0",
+      "tabIndex: -1",
     ];
     expect(
       missingClaims(

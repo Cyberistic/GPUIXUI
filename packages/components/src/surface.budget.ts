@@ -154,7 +154,9 @@ export const surfaceBudget = {
   // 207 → 208 for `internal/flip-mark.tsx` (plan 717): the two-glyph indicator
   // the accordion's header and the navigation menu's trigger now share, so the
   // cross-fade frames live in one module rather than two.
-  modules: 208,
+  // 208 → 209 for the rebuilt ColorPicker: `color-picker/parts.tsx` joins the
+  // graph, and `color/hex.ts` becomes `color-picker/logic.ts` (one for one).
+  modules: 209,
 
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
@@ -225,7 +227,9 @@ export const surfaceBudget = {
   // 1 452 KiB measured with the chat family's Bubble/Message/MessageScroller
   // rebuild and the Spinner `Button` now paints while busy — two families in
   // one tree, which the 1450 ceiling no longer held: 1450 → 1470 KiB.
-  bytes: 1470 * 1024,
+  // 1489 KiB measured with the rebuilt ColorPicker (area, rails, alpha and
+  // presets); the ceiling keeps the family at 1490 KiB.
+  bytes: 1490 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *

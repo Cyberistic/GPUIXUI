@@ -1,21 +1,14 @@
 /**
  * The `color-picker-lifecycle` fixture: the two pickers the probe paints, the
- * readout its state prints, and the crops a window's frame is read with.
+ * readout its state prints, and the geometry a window's press is aimed with.
  *
- * `ColorPicker` makes three claims a renderer suite cannot check. Its six
- * swatches are the **theme's own roles**, so a frame has to paint them; the
- * chosen swatch carries a marker the component builds from the page fill and
- * the body ink, so the marker has to be found on a fill no theme role owns; and
- * a typed hex goes through one normal form on commit, which only the painted
- * preview can confirm. The behaviour suite reads `style.backgroundColor` and
- * `aria-selected`, which say what was asked for.
- *
- * Every paint reading is confined to one cell's **inner** square: a rounded
- * cell's corners show the page, so a count over the whole box would read the
- * marker's own role out of the radius. A quarter inset clears a `radius.md`
- * corner on a `controlHeight.sm` cell and still holds the whole pip.
+ * `ColorPicker` makes three claims a renderer suite cannot check on its own:
+ * the trigger opens a floating panel below itself, a press on the
+ * saturation/value area commits the colour under the pointer, and a refused
+ * draft paints the field's destructive edge without reaching the value. The
+ * behaviour suite reads `aria-valuetext` and the callback; this fixture lets a
+ * window read the paint.
  */
-import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Pixels } from "@gpuixui/testing";
 
@@ -29,10 +22,10 @@ export const SWATCH_ROLES = [
   "foreground",
 ] as const;
 
-/** One swatch role. */
+/** One preset role. */
 export type SwatchRole = (typeof SWATCH_ROLES)[number];
 
-/** The `testId`s the view, the steps and the unit suite share. */
+/** The `testId`s the view, the steps and the guard share. */
 export const COLOR_PICKER_IDS = {
   probe: "color-picker-probe",
   readout: "color-picker-readout",
@@ -42,47 +35,53 @@ export const COLOR_PICKER_IDS = {
   after: "dp-after",
 } as const;
 
-/** The swatch the picker starts on: the theme's `primary` role. */
+/** The preset the picker starts on: the theme's `primary` role. */
 export const INITIAL_ROLE: SwatchRole = "primary";
 
-/** The swatch a press chooses. */
+/** The preset a press chooses. */
 export const PRESSED_ROLE: SwatchRole = "accent";
 
-/** The swatch `Space`'s release chooses. */
-export const SPACE_ROLE: SwatchRole = "muted";
-
-/** The swatch `Enter`'s press chooses. */
-export const ENTER_ROLE: SwatchRole = "destructive";
-
-/** What a reader types into the field, without the `#` (it is optional input). */
+/** What a reader types into the field (the `#` is optional input). */
 export const TYPED_DRAFT = "f0a";
 
-/** The value a typed draft commits: expanded per digit and lowercased. */
-export const TYPED_COLOUR = "#ff00aa";
+/** The value a typed draft commits. */
+export const TYPED_COLOUR = "#FF00AA";
 
 /** A draft the normal form refuses. */
 export const INVALID_DRAFT = "zz";
 
-/** Where a cell's inner square begins, as a share of its side. */
-export const CELL_INSET = 0.25;
+/** Where the probe presses inside the area, as a share of each side. */
+export const AREA_POINT = { x: 0.25, y: 0.25 } as const;
 
-/**
- * The exact pixels a filled cell's inner square paints.
- *
- * A `sm` control cell is 28 points and its inner square 14, so a whole fill is
- * 784 pixels at this host's 2x scale. The floor leaves room for one device row
- * of antialiasing on each edge while staying far above the pip a `sm` spacing
- * disc can paint (a few dozen).
- */
-export const SWATCH_INK_FLOOR = 500;
+/** The saturation and value that point names. */
+export const AREA_SATURATION = 0.25;
+export const AREA_VALUE = 0.75;
+
+/** A picker part's address beside its trigger. */
+export const partId = (
+  testId: string,
+  part:
+    | "panel"
+    | "swatch"
+    | "area"
+    | "hue"
+    | "alpha"
+    | "hex"
+    | "error"
+    | "preset",
+): string => `${testId}-${part}`;
+
+/** A preset's address, by index. */
+export const presetId = (testId: string, index: number): string =>
+  `${partId(testId, "preset")}-${index}`;
 
 /** What the probe's readout prints. */
 export interface ColorPickerState {
   /** The controlled value, in the component's normal form. */
   readonly value: string;
-  /** How many times the enabled picker reported a new value. */
+  /** How many values the enabled picker reported. */
   readonly changes: number;
-  /** How many times the disabled picker reported one (the refusal count). */
+  /** How many values the disabled picker reported (the refusal count). */
   readonly refused: number;
 }
 
@@ -90,28 +89,61 @@ export interface ColorPickerState {
 export const colorPickerReadout = (state: ColorPickerState): string =>
   `value=${state.value} changes=${state.changes} refused=${state.refused}`;
 
-/** The `#rrggbb` a role paints, in the component's normal form. */
+/** The colour a role paints, in the component's normal form. */
 export const swatchColour = (
   colours: Readonly<Record<SwatchRole, string>>,
   role: SwatchRole,
-): string =>
-  Option.getOrElse(
-    Option.map(Option.fromNullishOr(colours[role]), (hex) => hex.toLowerCase()),
-    () => "",
-  );
+): string => (colours[role] ?? "").toUpperCase();
 
-/** A swatch's address inside a picker. */
-export const swatchId = (testId: string, role: SwatchRole): string => {
-  const index = Arr.findFirstIndex(
-    SWATCH_ROLES,
-    (candidate) => candidate === role,
-  );
-  return `${testId}-swatch-${Option.getOrElse(index, () => -1)}`;
+/** The hue, in degrees, of an opaque hex colour. */
+const hueOf = (hex: string): number => {
+  const digits = hex.replace(/^#/, "");
+  const channel = (index: number): number =>
+    Number.parseInt(digits.slice(index, index + 2), 16) / 255;
+  const r = channel(0);
+  const g = channel(2);
+  const b = channel(4);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const distance = max - min;
+  if (distance === 0) return 0;
+  const h =
+    max === r
+      ? 60 * (((g - b) / distance) % 6)
+      : max === g
+        ? 60 * ((b - r) / distance + 2)
+        : 60 * ((r - g) / distance + 4);
+  return h < 0 ? h + 360 : h;
 };
 
-/** A picker part's address beside its swatches. */
-export const partId = (testId: string, part: "preview" | "hex"): string =>
-  `${testId}-${part}`;
+/** The HSV colour a hex names at the fixture's press point. */
+export const areaColour = (hex: string): string => {
+  const h = hueOf(hex);
+  const s = AREA_SATURATION;
+  const v = AREA_VALUE;
+  const channel = (n: number): number => {
+    const k = (n + h / 60) % 6;
+    return v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+  };
+  const byte = (value: number): string =>
+    Math.round(value * 255)
+      .toString(16)
+      .padStart(2, "0")
+      .toUpperCase();
+  return `#${byte(channel(5))}${byte(channel(3))}${byte(channel(1))}`;
+};
+
+/** The saturation and value a written hex names. */
+export const areaOf = (
+  hex: string,
+): { readonly s: number; readonly v: number } => {
+  const digits = hex.replace(/^#/, "");
+  const channel = (index: number): number =>
+    Number.parseInt(digits.slice(index, index + 2), 16) / 255;
+  const max = Math.max(channel(0), channel(2), channel(4));
+  const min = Math.min(channel(0), channel(2), channel(4));
+  return { s: max === 0 ? 0 : (max - min) / max, v: max };
+};
 
 /** A painted box, as the runtime's layout report gives it. */
 export interface PaintedBox {
@@ -121,23 +153,14 @@ export interface PaintedBox {
   readonly height: number;
 }
 
-/**
- * A box's inner square in the capture's device pixels.
- *
- * The inset is the share a rounded corner claims, so the crop holds the fill
- * and the marker and none of the page a radius shows.
- */
-export const innerRegion = (
+/** A press point inside `box`, in the element's own coordinates. */
+export const pointIn = (
   box: PaintedBox,
-  scale: number,
-  inset = CELL_INSET,
-): Pixels.PixelRegion =>
-  new Pixels.PixelRegion({
-    x: Math.round((box.x + box.width * inset) * scale),
-    y: Math.round((box.y + box.height * inset) * scale),
-    width: Math.max(1, Math.round(box.width * (1 - 2 * inset) * scale)),
-    height: Math.max(1, Math.round(box.height * (1 - 2 * inset) * scale)),
-  });
+  share: { readonly x: number; readonly y: number },
+): { readonly x: number; readonly y: number } => ({
+  x: Math.round(box.width * share.x),
+  y: Math.round(box.height * share.y),
+});
 
 /** A box's whole rectangle in the capture's device pixels. */
 export const boxRegion = (box: PaintedBox, scale: number): Pixels.PixelRegion =>
@@ -148,58 +171,16 @@ export const boxRegion = (box: PaintedBox, scale: number): Pixels.PixelRegion =>
     height: Math.max(1, Math.round(box.height * scale)),
   });
 
-/**
- * The roles whose cells paint `counts`' page ink, in swatch order.
- *
- * A marker is the only page-coloured paint a cell holds, so an empty list is a
- * picker whose value matches no swatch and a one-name list is the chosen
- * swatch — the reading a marker that merely followed the press would fail.
- */
-export const markedRoles = (
-  counts: ReadonlyArray<number>,
-): ReadonlyArray<SwatchRole> =>
-  Arr.map(
-    Arr.filter(
-      Arr.map(SWATCH_ROLES, (role, index) => ({
-        role,
-        count: counts[index] ?? 0,
-      })),
-      (cell) => cell.count > 0,
-    ),
-    (cell) => cell.role,
-  );
-
-/**
- * The roles whose cell painted less than a solid fill.
- *
- * The complement of the floor: an empty list is six painted swatches, and a
- * failure names the role that painted nothing rather than a pixel count.
- */
-export const unpaintedRoles = (
-  counts: ReadonlyArray<number>,
-): ReadonlyArray<SwatchRole> => {
-  const painted = Arr.filter(
-    Arr.map(SWATCH_ROLES, (role, index) => ({
-      role,
-      count: counts[index] ?? 0,
-    })),
-    (cell) => cell.count > SWATCH_INK_FLOOR,
-  );
-  return Arr.filter(
-    SWATCH_ROLES,
-    (role) => !Arr.some(painted, (cell) => cell.role === role),
-  );
-};
-
-/**
- * A role list as one scalar, for the runner's equality check.
- *
- * `expectEqual` compares scalars, so the reading is spelled once here rather
- * than in every assertion: an empty string is no role, and two roles print in
- * swatch order.
- */
-export const formatRoles = (roles: ReadonlyArray<SwatchRole>): string =>
-  Arr.join(roles, ",");
+/** The ink a region of `frame` paints, or `-1` for a region off the frame. */
+export const inkIn = (
+  frame: Pixels.Pixels,
+  region: Pixels.PixelRegion,
+  ink: Pixels.Rgba,
+): number =>
+  Option.match(Option.fromNullishOr(Pixels.crop(frame, region)), {
+    onNone: () => -1,
+    onSome: (crop) => Pixels.countColour(crop, ink),
+  });
 
 /** The checks the probe asserts on a green run. */
-export const COLOR_PICKER_CHECKS = 47;
+export const COLOR_PICKER_CHECKS = 15;

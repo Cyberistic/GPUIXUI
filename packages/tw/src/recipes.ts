@@ -605,23 +605,32 @@ export const TIME_PICKER_SEPARATOR =
 export const TIME_PICKER_CLEAR =
   "text-xs font-sans flex items-center justify-center size-[18px] rounded-sm text-muted-foreground cursor-pointer";
 
-/** `color-picker.tsx` — the picker column. */
-export const COLOR_PICKER_ROOT = "flex flex-col gap-2";
+/** `color-picker.tsx` — the trigger: a swatch and its label, inside a Button. */
+export const COLOR_PICKER_TRIGGER =
+  "flex flex-row items-center gap-2.5 self-start rounded-full border border-border bg-background p-1.5 pr-4";
 
-/** `color-picker.tsx` — the swatch row. */
-export const COLOR_PICKER_SWATCHES = "flex flex-row flex-wrap gap-1.5";
+/** `color-picker.tsx` — the floating panel's column. */
+export const COLOR_PICKER_PANEL = "flex flex-col gap-3.5 p-3.5";
 
-/** `color-picker.tsx` — the preview/field row. */
+/** `color-picker.tsx` — a labelled slider row. */
+export const COLOR_PICKER_ROW = "flex flex-col gap-2";
+
+/** `color-picker.tsx` — the saturation/value field's frame. */
+export const COLOR_PICKER_AREA = "relative w-full rounded-xl";
+
+/** `color-picker.tsx` — the value field's row. */
 export const COLOR_PICKER_FIELD = "flex flex-row items-center gap-2";
 
-/** `color-picker.tsx` — a colour cell's resting box (swatch and preview). The
- * density size, the fill and the selected border stay in `style`. */
-export const COLOR_PICKER_CELL = "rounded-md border border-border";
+/** `color-picker.tsx` — the preset swatch row. */
+export const COLOR_PICKER_SWATCHES =
+  "flex flex-row flex-wrap items-center gap-1.5";
 
-/** `color-picker.tsx` — the HEX field. The density height, focus ring and the
- * valid/invalid border colour stay in `style`. */
-export const COLOR_PICKER_INPUT =
-  "text-sm font-sans flex-grow px-2 bg-background text-input-foreground rounded-md border border-border";
+/** `color-picker.tsx` — the contrast readout. */
+export const COLOR_PICKER_CONTRAST =
+  "flex flex-row items-center gap-2.5 text-sm";
+
+/** `color-picker.tsx` — a swatch disc, in the trigger and in the preset row. */
+export const COLOR_PICKER_CELL = "rounded-full border border-border";
 
 /** `message-scroller.tsx` — the scroller root. */
 export const MESSAGE_SCROLLER_ROOT = "flex flex-col min-h-0 min-w-0";

@@ -109,7 +109,17 @@ const cases: ReadonlyArray<readonly [string, () => ComponentTestRoot]> = [
         </MentionInput>,
       ),
   ],
-  ["ColorPicker", () => renderComponent(<ColorPicker label="Accent" />)],
+  [
+    "ColorPicker",
+    () => {
+      const root = renderComponent(
+        <ColorPicker testId="picker" label="Accent" />,
+      );
+      clickCentreOf(root, "picker");
+      settle(root);
+      return root;
+    },
+  ],
   [
     "CommandMenu",
     () =>

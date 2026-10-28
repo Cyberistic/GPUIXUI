@@ -152,8 +152,26 @@ export const keyboardContracts: readonly KeyboardContract[] = [
   },
   {
     url: "/docs/components/color-picker",
-    sources: ["packages/components/src/color-picker.tsx"],
-    notes: [{ keys: activation, action: "chooses the focused swatch" }],
+    sources: [
+      "packages/components/src/color-picker.tsx",
+      "packages/components/src/color-picker/parts.tsx",
+    ],
+    notes: [
+      {
+        keys: ["Arrow Up", "Arrow Down", "Arrow Left", "Arrow Right"],
+        action:
+          "moves the saturation and brightness thumb, or the focused hue or opacity rail",
+      },
+      {
+        keys: ["Tab"],
+        action:
+          "moves between the panel's controls and wraps inside it, because the panel is not modal",
+      },
+      {
+        keys: ["Escape"],
+        action: "discards a typed hex draft, then closes the panel",
+      },
+    ],
   },
   {
     url: "/docs/components/combobox",

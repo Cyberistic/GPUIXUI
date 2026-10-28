@@ -28,7 +28,7 @@ import {
 } from "../combobox.js";
 import { CommandMenu, CommandMenuInput } from "../command-menu.js";
 import { Field, FieldInput } from "../field.js";
-import { clickCentreOf } from "../internal/interaction.js";
+import { clickCentreOf, settle } from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -114,7 +114,15 @@ const cases: ReadonlyArray<readonly [string, () => ComponentTestRoot]> = [
         </MentionInput>,
       ),
   ],
-  ["ColorPicker", () => mount(<ColorPicker label="Accent" />)],
+  [
+    "ColorPicker",
+    () => {
+      const root = mount(<ColorPicker testId="picker" label="Accent" />);
+      clickCentreOf(root, "picker");
+      settle(root);
+      return root;
+    },
+  ],
   [
     "CommandMenu",
     () =>

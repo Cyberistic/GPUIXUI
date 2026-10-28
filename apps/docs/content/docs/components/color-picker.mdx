@@ -1,9 +1,15 @@
 ---
 title: Color picker
-description: A keyboard-reachable swatch grid and a HEX field — honestly not a saturation square
+description: A swatch that opens a saturation area, hue and alpha rails, a hex field and presets — not a native colour panel
 ---
 
 <ComponentPreview name="color-picker-workflow" />
+
+<ComponentPreview name="color-picker-states" />
+
+The picker is the library's own surface, not the platform's colour panel: every
+part is a primitive it ships, and what the runtime cannot do is stated below
+rather than approximated.
 
 ## Installation
 
@@ -19,24 +25,20 @@ description: A keyboard-reachable swatch grid and a HEX field — honestly not a
 import { useState } from "react";
 import { ColorPicker } from "@gpuixui/components";
 
-const [accent, setAccent] = useState("#5f4bdb");
+const [accent, setAccent] = useState("#2F6BFF");
 
 <ColorPicker
   label="Accent colour"
+  background="#FFFFFF"
   onValueChange={setAccent}
-  swatches={["#5f4bdb", "#2563eb", "#0d9488", "#d97706"]}
+  swatches={["#2F6BFF", "#2563EB", "#0D9488", "#D97706"]}
   value={accent}
 />;
 ```
 
-## Composition
-
-```text
-ColorPicker
-├── swatch cell
-├── hex field
-└── preview cell
-```
+The picker reports; the app owns the value it reports into. `onValueChange`
+always hands back uppercase hex, with two alpha digits when the colour is not
+opaque — `#2F6BFF`, or `#2F6BFF80`.
 
 ## API reference
 
@@ -44,18 +46,25 @@ ColorPicker
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `label` | `string` | — | the group's accessible name; the field is named `<label> hex value`, and a blank value reads as `Color picker` so both are always named |
-| `value` | `string` | — | the controlled value; `undefined` is uncontrolled, and a stored value that is not text means uncontrolled |
-| `defaultValue` | `string` | `"#000000"` | the uncontrolled starting colour; a stored default that is not text paints it |
-| `onValueChange` | `(value: string) => void` | — | a swatch press, or a typed value that normalises |
-| `swatches` | `ReadonlyArray<string>` | six theme roles | the grid, in order; replaces the defaults whole, and a stored value that is not a list paints the theme's defaults |
-| `disabled` | `boolean` | `false` | swatches leave the tab order, the field is read-only, the root fades |
-| `className` | `string` | — | compiled through `@gpuixui/tw`, joined after the recipe |
+| `label` | `string` | — | the trigger and panel's name; a blank value reads as `"Color picker"` so the trigger and the `<label> hex value` field are always named |
+| `value` | `string` | — | the controlled colour; `undefined` is uncontrolled, and a stored value that is not text means uncontrolled |
+| `defaultValue` | `string` | `"#000000"` | the uncontrolled starting colour; a stored default that is not text paints `"#000000"` |
+| `onValueChange` | `(hex: string) => void` | — | every committed colour: an area drag, a rail move, a preset press or a valid typed hex |
+| `background` | `string` | the theme's page | the surface the contrast readout measures against; an unreadable value leaves the readout at `1.00:1` |
+| `swatches` | `ReadonlyArray<string>` | six theme roles | the preset row, in order; a stored value that is not a list paints the theme's defaults |
+| `disabled` | `boolean` | `false` | the trigger leaves the tab order and no part accepts a change |
+| `className` | `string` | — | compiled through `@gpuixui/tw`, joined after the trigger's recipe |
 | `style` | `StateStyle<ColorPickerState>` | — | resolved against `{ disabled, valid }`, merged last |
-| `testId` | `string` | — | the root's locator; each swatch derives `-swatch-<index>` (and `-swatch-<index>-marker` for the chosen cell), the preview `-preview` and the field `-hex` |
+| `testId` | `string` | — | the root's locator; the trigger uses it, and its parts derive `-swatch`, `-panel`, `-done`, `-area`, `-hue`, `-alpha`, `-hex`, `-error` and `-preset` (each preset adds `-<index>`) |
 
 ## Limitations
 
-- The caller's palette is the caller's to check; the theme's six roles are defaults.
-- **Every swatch is its own tab stop.** There is no roving tab stop and no arrow-key movement, so a long palette is a long Tab walk.
-- The chosen cell carries three marks: the strong `foreground` edge, and the pip (the page fill inside the body ink).
+- **No `transform`, no `clip-path`, no screen sampling**: the panel is anchored rather than grown out of the swatch, and the eyedropper is absent rather than a button that reports nothing.
+- **A gradient is exactly two stops, and there is no repeating gradient**: the area is three stacked fills, the hue rail six 60° ramps, and the alpha rail fades to the panel instead of a checkerboard.
+- **Hex is the only grammar**: `rgb()`, `hsl()` and `oklch()` entry is not parsed, and there is no `aria-valuenow` — the area and rails announce through `aria-valuetext`.
+
+## Related
+
+- **Popover** — the surface the picker opens.
+- **Slider** — the rails the hue and alpha channels use.
+- **Input** — the hex field.

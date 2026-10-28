@@ -38,6 +38,8 @@ const COMPONENT_AFFORDANCES = new Set([
   "gx-nfield-step",
   "gx-slider-thumb",
   "gx-color-swatch",
+  "gx-cp-preset",
+  "gx-cp-trigger",
   "gx-context-row",
 ]);
 

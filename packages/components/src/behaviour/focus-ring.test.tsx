@@ -43,7 +43,11 @@ import { Carousel, CarouselControl, CarouselTrack } from "../carousel.js";
 import { Field, FieldInput } from "../field.js";
 import { HotkeyRecorder } from "../hotkey-recorder.js";
 import { Button, IconButton } from "../internal/button.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  settleMotion,
+} from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import { darkTheme } from "../internal/theme.js";
 import { InlineEdit } from "../inline-edit.js";
@@ -227,15 +231,19 @@ describe("focus ring", () => {
     root.unmount();
   });
 
-  it("declares the outline on a swatch, a chip's remove control and a palette field", () => {
+  it("declares the outline on a picker's area, rails and field, a chip's remove control and a palette field", () => {
     const picker = renderComponent(
       <ColorPicker label="Accent colour" testId="picker" value="#000000" />,
     );
-    Arr.forEach(["picker-swatch-0", "picker-hex"], (testId) =>
-      expect(
-        picker.renderer.findByTestId(testId)?.style.focusVisible,
-        `${testId} declares the outline`,
-      ).toMatchObject(outline),
+    clickCentreOf(picker, "picker");
+    settleMotion(picker);
+    Arr.forEach(
+      ["picker-area", "picker-hue", "picker-alpha", "picker-hex"],
+      (testId) =>
+        expect(
+          picker.renderer.findByTestId(testId)?.style.focusVisible,
+          `${testId} declares the outline`,
+        ).toMatchObject(outline),
     );
     picker.unmount();
 

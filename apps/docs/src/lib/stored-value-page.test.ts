@@ -45,8 +45,7 @@ const placement = "packages/components/src/internal/placement.ts";
 const tabs = "packages/components/src/tabs/logic.ts";
 const stepper = "packages/components/src/stepper/logic.ts";
 const alertTone = "packages/components/src/internal/theme.ts";
-const colourPicker = "packages/components/src/color-picker.tsx";
-const colourHex = "packages/components/src/color/hex.ts";
+const colourHex = "packages/components/src/color-picker/logic.ts";
 const tagLogic = "packages/components/src/tag-input/logic.ts";
 const comboboxLogic = "packages/components/src/combobox/logic.ts";
 const commandLogic = "packages/components/src/menu/fuzzy.ts";
@@ -371,7 +370,7 @@ describe("a list a store kept", () => {
     // The default a stored `defaultValue` cannot answer with is not prose: the
     // picker's own constant is the colour, so the page's cell must print it.
     const colour = /const DEFAULT_COLOUR = "([^"]+)"/.exec(
-      read(colourPicker),
+      read(colourHex),
     )?.[1];
     expect(colour).not.toBeUndefined();
     expect(typeof colour).toBe("string");

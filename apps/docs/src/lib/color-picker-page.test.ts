@@ -18,6 +18,7 @@ const read = (path: string): string =>
   readFileSync(new URL(path, repo), "utf8");
 
 const source = read("packages/components/src/color-picker.tsx");
+const logic = read("packages/components/src/color-picker/logic.ts");
 const page = read("apps/docs/content/docs/components/color-picker.mdx");
 
 /** The suffix after `${testId}` in every template the component builds. */
@@ -34,7 +35,7 @@ const row = page.split("\n").find((line) => line.startsWith("| `testId`"));
 
 /** The name the component publishes for a label that says nothing. */
 const fallback =
-  /const DEFAULT_COLOR_PICKER_LABEL = "([^"]+)";/.exec(source)?.[1] ?? "";
+  /const DEFAULT_COLOR_PICKER_LABEL = "([^"]+)";/.exec(logic)?.[1] ?? "";
 
 /** The row that documents the label, and the name it falls back to. */
 const labelRow = page.split("\n").find((line) => line.startsWith("| `label`"));
