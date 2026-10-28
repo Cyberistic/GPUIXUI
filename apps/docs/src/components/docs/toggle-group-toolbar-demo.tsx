@@ -58,9 +58,7 @@ export const ToggleGroupToolbar = () => {
           );
         })}
       </div>
-      <p className="gx-demo-label">
-        One tab stop per group; the arrow keys walk it without pressing.
-      </p>
+      <p className="gx-demo-label">One tab stop</p>
     </div>
   );
 };

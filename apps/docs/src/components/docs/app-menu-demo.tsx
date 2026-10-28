@@ -330,9 +330,8 @@ export function AppMenuDemo() {
       <div className="gx-shell-actions">
         <span className="gx-shell-hint">
           {Option.match(chosen, {
-            onNone: () =>
-              "A closed bar opens nothing on hover; an open one takes a sibling.",
-            onSome: (id) => `The bar reported “${id}”.`,
+            onNone: () => "",
+            onSome: (id) => `reported “${id}”`,
           })}
         </span>
       </div>

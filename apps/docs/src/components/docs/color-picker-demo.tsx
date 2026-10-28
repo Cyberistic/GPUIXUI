@@ -160,15 +160,6 @@ export function ColorPickerWorkflowBody({ theme }: { readonly theme: Theme }) {
             {chosen === undefined ? " · custom" : ` · ${chosen}`}
           </span>
         </div>
-        <p className="gx-color-note">
-          A swatch press commits at once; a typed value commits on{" "}
-          <kbd>Enter</kbd> or when the field loses focus. An invalid draft is
-          marked with the <code>destructive</code> edge and reverts on commit,
-          so <code>value</code> never holds something the picker cannot paint.
-          The preview starts on the theme&rsquo;s <code>primary</code>, so the
-          platform switch repaints the six defaults and the mark follows the
-          same colour.
-        </p>
       </div>
     </div>
   );
@@ -232,16 +223,6 @@ export function ColorPickerStatesBody({ theme }: { readonly theme: Theme }) {
           value={theme.colors.secondary}
         />
       </StateGroup>
-      <p className="gx-color-note">
-        The six defaults are theme roles, so a platform switch repaints them; a
-        caller&rsquo;s palette keeps its own colours. The chosen mark is the
-        strong <code>foreground</code> edge plus the pip — the page fill inside
-        the body ink — because <code>foreground</code> is one of the six
-        defaults and a ring alone disappears into it. For the six defaults the
-        component&rsquo;s own suite measures the best of the three marks on
-        every swatch in both shipped themes; a custom palette is the
-        caller&rsquo;s to check.
-      </p>
     </div>
   );
 }

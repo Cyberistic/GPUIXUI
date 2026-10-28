@@ -47,9 +47,7 @@ const Metric = ({ object }: { readonly object: InspectedObject }) => (
       {areaOf(object)}
       <span className="gx-inspector-metric-unit">px²</span>
     </span>
-    <span className="gx-inspector-metric-hint">
-      width × height, derived from the object
-    </span>
+    <span className="gx-inspector-metric-hint">width × height</span>
   </div>
 );
 
@@ -68,9 +66,6 @@ export const PropertyPanelDemo = () => {
             style={{ width: object.width, height: object.height }}
           />
         </div>
-        <p className="gx-inspector-stage-note">
-          The preview reads the same width and height the table prints.
-        </p>
       </div>
 
       <div className="gx-inspector-panel">

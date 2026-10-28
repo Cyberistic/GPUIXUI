@@ -70,10 +70,9 @@ describe("the chat block", () => {
     );
   });
 
-  it("puts Send, Stop and the keyboard hint in the composer", () => {
+  it("puts Send, Stop and the field in the composer", () => {
     expect(markup).toContain('class="gx-chat-field"');
     expect(markup).toContain(">Send</button>");
-    expect(markup).toContain("Enter sends · Shift+Enter adds a line");
     expect(block(".gx-chat-composer")).toContain(
       "border: 1px solid var(--border)",
     );

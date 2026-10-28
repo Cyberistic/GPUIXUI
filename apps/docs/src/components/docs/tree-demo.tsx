@@ -273,10 +273,6 @@ export function DependencyTreeDemo() {
         })}
       </div>
       <p className="gx-demo-readout">{treeReadout(tree.rows, tree.cursor)}</p>
-      <p className="gx-demo-hint">
-        Focus the tree and use ↑ ↓ ← →, Home and End; Enter or Space flips a
-        branch, and a typed prefix moves to the next row that starts with it.
-      </p>
     </div>
   );
 }
@@ -564,14 +560,6 @@ export function VirtualTreeDemo() {
         })}
       </div>
       <p className="gx-demo-readout">{treeWindowReadout(count, offset)}</p>
-      <p className="gx-demo-hint">
-        The rows are the package's window: the tree holds all{" "}
-        {String(virtualTreeRows.length)} rows and mounts only those in view plus{" "}
-        {VIRTUAL_TREE_OVERDRAW} either side. A cursor move mounts its row before
-        the focus moves, a reveal moves the window first, and a scroll keeps the
-        tab stop on the row at the window's top edge — a row outside the window
-        is not there to focus.
-      </p>
     </div>
   );
 }

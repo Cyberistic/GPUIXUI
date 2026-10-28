@@ -275,18 +275,11 @@ export function FrozenColumnsDemo() {
         </button>
       </div>
       <p className="gx-demo-readout">
-        height {Option.getOrElse(bound, () => "none — the pane's share")} ·
-        frozen column stays, data pane pans ·{" "}
+        height {Option.getOrElse(bound, () => "none — the pane's share")} ·{" "}
         {Option.match(chosen, {
           onNone: () => "no record chosen",
           onSome: (id) => `chosen ${id}`,
         })}
-      </p>
-      <p className="gx-demo-hint">
-        There is no sticky position in GPUix 0.11.0: the frozen column is a
-        second scroller, and both panes read one offset, so a wheel over either
-        keeps the record at the same y. The preview&apos;s frame stands in for
-        the pane the shipped grid measures.
       </p>
     </div>
   );

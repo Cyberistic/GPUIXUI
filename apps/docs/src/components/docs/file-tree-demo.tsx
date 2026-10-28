@@ -228,11 +228,6 @@ export function FileTreeDemo() {
         selected={selected}
       />
       <p className="gx-demo-readout">{selectionReadout(selected)}</p>
-      <p className="gx-demo-hint">
-        Press a folder to open it and a file to select it. Focus the tree and
-        use ↑ ↓ ← →, Home and End; Enter or Space opens a folder or selects a
-        file.
-      </p>
     </div>
   );
 }

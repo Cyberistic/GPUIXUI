@@ -159,9 +159,7 @@ const SyncPanel = () => {
         />
         <div className="gx-switch-copy">
           <span className="gx-switch-title">Reduce motion</span>
-          <span className="gx-switch-hint">
-            This knob lands instead of sliding.
-          </span>
+          <span className="gx-switch-hint">Cuts animation across the app.</span>
         </div>
       </div>
       <p className="gx-switch-readout" role="status">

@@ -127,9 +127,6 @@ export function StatusBarDemo() {
             </button>
           ))}
         </div>
-        <span className="gx-shell-hint">
-          The error item paints {toneRole(tone)}.
-        </span>
       </div>
     </div>
   );

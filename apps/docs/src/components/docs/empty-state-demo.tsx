@@ -45,11 +45,6 @@ export function EmptyStateDemo() {
           <p className="gx-empty-title">Loading…</p>
         </div>
       </div>
-
-      <p className="gx-empty-note">
-        A panel, not a surface: the card behind it is the caller&rsquo;s. The
-        description wraps at a fixed 360px, and any icon paints muted.
-      </p>
     </div>
   );
 }

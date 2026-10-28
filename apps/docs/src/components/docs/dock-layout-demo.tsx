@@ -128,10 +128,17 @@ const TabBody = ({ id }: { readonly id: string }): ReactNode => {
 
   if (id === "preview") {
     return (
-      <p className="gx-layout-copy">
-        The active tab&apos;s content is the caller&apos;s: a tab is an id and a
-        label, and the app renders the body.
-      </p>
+      <div className="gx-layout-rows">
+        {[
+          ["Build", "passing"],
+          ["Region", "eu-west"],
+        ].map(([label, value]) => (
+          <div className="gx-layout-fact" key={label}>
+            <span>{label}</span>
+            <code>{value}</code>
+          </div>
+        ))}
+      </div>
     );
   }
 
@@ -142,7 +149,7 @@ const TabBody = ({ id }: { readonly id: string }): ReactNode => {
   return (
     <div className="gx-layout-rows">
       {["DockLayout", "DockSplit", "DockTabs", "DockTab"].map((symbol) => (
-        <div className="gx-layout-row" key={symbol}>
+        <div className="gx-layout-fact" key={symbol}>
           <span>{symbol}</span>
           <code>@gpuixui/dock</code>
         </div>
@@ -230,7 +237,7 @@ export const DockLayoutFrame = ({ layout, onChange }: DockLayoutFrameProps) => {
   const first = Math.round(layout.size * 100);
 
   return (
-    <div className="gx-layout">
+    <div className="gx-layout-frame">
       <div
         className="gx-layout-pane"
         style={{ flexGrow: layout.size, flexBasis: 0 }}
@@ -278,10 +285,6 @@ export const DockLayoutDemo = () => {
     <div className="gx-layout-demo">
       <DockLayoutFrame layout={layout} onChange={setLayout} />
       <p className="gx-layout-readout">{dockReadout(layout)}</p>
-      <p className="gx-layout-hint">
-        Press a tab to switch its group. Drag the divider, or focus it and press
-        ← →; Home and End take the split.
-      </p>
     </div>
   );
 };

@@ -184,9 +184,6 @@ const SearchWorkflow = () => {
             </li>
           ) : null}
         </ul>
-        <p className="gx-search-note">
-          Enter submits the query · Escape clears only when there is text
-        </p>
       </div>
     </div>
   );
@@ -202,9 +199,7 @@ const SearchStates = () => {
   return (
     <div className="gx-demo gx-search gx-search-states">
       <div className="gx-search-state">
-        <span className="gx-search-state-label">
-          Rest — the hint, and no clear control
-        </span>
+        <span className="gx-search-state-label">Rest</span>
         <PreviewField
           label="Empty search field"
           onChange={setEmpty}
@@ -212,9 +207,7 @@ const SearchStates = () => {
         />
       </div>
       <div className="gx-search-state">
-        <span className="gx-search-state-label">
-          With text — the clear control is a 24px target
-        </span>
+        <span className="gx-search-state-label">With text</span>
         <PreviewField
           label="Filled search field"
           onChange={setFilled}
@@ -222,10 +215,7 @@ const SearchStates = () => {
         />
       </div>
       <div className="gx-search-state">
-        <span className="gx-search-state-label">
-          Disabled — read-only, half opacity, and the target leaves the tab
-          order
-        </span>
+        <span className="gx-search-state-label">Disabled</span>
         <PreviewField
           disabled
           label="Disabled search field"
@@ -234,9 +224,7 @@ const SearchStates = () => {
         />
       </div>
       <div className="gx-search-state">
-        <span className="gx-search-state-label">
-          On a muted toolbar — the field keeps the page role as its own fill
-        </span>
+        <span className="gx-search-state-label">On a muted toolbar</span>
         <div className="gx-search-toolbar">
           <PreviewField
             label="Filter the toolbar"

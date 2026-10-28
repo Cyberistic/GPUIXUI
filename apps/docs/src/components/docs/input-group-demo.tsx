@@ -38,12 +38,6 @@ export function InputGroupDemo() {
           type="text"
         />
       </div>
-
-      <p className="gx-ig-note">
-        The ring belongs to the row, so a trailing shortcut or a leading prefix
-        sits inside the same edge; an addon is laid out by the alignment it
-        names, wherever it is written.
-      </p>
     </div>
   );
 }

@@ -300,11 +300,6 @@ export const TableWorkflow = () => {
           </div>
         </div>
 
-        <p className="gx-table-hint">
-          Press a header to sort by it; Shift-press a second header to add a
-          tie-break.
-        </p>
-
         <div className="gx-table">
           <table aria-label="Deploy queue" className="gx-table-el">
             <caption className="gx-table-caption">

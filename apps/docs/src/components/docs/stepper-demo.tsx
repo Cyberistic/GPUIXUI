@@ -165,9 +165,6 @@ export const StepperWorkflow = () => {
       <p className="gx-demo-label">Create a workspace</p>
       <div className="gx-stepper-card">
         <p className="gx-stepper-title">Create a workspace</p>
-        <p className="gx-stepper-lede">
-          Three steps, one value: the app moves it, the stepper only paints it.
-        </p>
         <div className="gx-stepper">
           <StepList value={flow.step} />
         </div>
@@ -214,12 +211,6 @@ export const StepperWorkflow = () => {
         <p className="gx-stepper-readout" role="status">
           {describe(flow)} refusals={refusals}
         </p>
-        <p className="gx-stepper-note">
-          Next runs the step&rsquo;s check before the value moves, so the
-          indicator never shows a step the reader has not answered. The check
-          and the value are both the app&rsquo;s; the stepper derives the
-          statuses from the number it is handed.
-        </p>
       </div>
     </div>
   );
@@ -258,12 +249,6 @@ export const StepperStates = () => (
       value={4}
     />
     <StateGroup label="vertical" orientation="vertical" value={2} />
-    <p className="gx-stepper-note">
-      The component compares the raw numbers: a value below the first step
-      leaves all of them upcoming, and a value past the last leaves all of them
-      complete. Nothing clamps it, because a stepper cannot know how many steps
-      a workflow has.
-    </p>
   </div>
 );
 

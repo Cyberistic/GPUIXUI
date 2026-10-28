@@ -79,11 +79,6 @@ export function MessageScrollerDemo() {
           pinned: <b>{pinned ? "true" : "false"}</b> · unread: <b>{unread}</b>
         </p>
       </div>
-      <p className="gx-scroller-note">
-        The pin is measured from a 1px tail sentinel, not a scroll height. The
-        affordance sits beneath the viewport — an overlay would resolve against
-        the window in 0.11.0, not the corner.
-      </p>
     </div>
   );
 }

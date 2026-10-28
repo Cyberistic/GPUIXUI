@@ -101,13 +101,6 @@ export function HotkeyRecorderDemo() {
             </button>
           )}
         </div>
-        <p className="gx-hotkey-note">
-          {recording
-            ? "Press a chord; Escape cancels."
-            : value === null
-              ? "Click the recorder, then press a chord."
-              : "Clear is a control, not Backspace."}
-        </p>
       </div>
 
       <div className="gx-hotkey-states" aria-label="Recorder states">

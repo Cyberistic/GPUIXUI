@@ -23,10 +23,8 @@ describe("the empty state preview", () => {
     expect(markup).toContain("Loading…");
   });
 
-  it("names the caller's surface and the panel's fixed measure", () => {
+  it("sets the three panels on the caller's surface", () => {
     expect(markup.match(/class="gx-empty-card"/g)).toHaveLength(3);
-    expect(markup).toContain("A panel, not a surface");
-    expect(markup).toContain("fixed 360px");
   });
 
   it("prints a code sample that imports what it paints", () => {

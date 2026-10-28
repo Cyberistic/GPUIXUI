@@ -48,9 +48,7 @@ export const NumberFieldDemo = () => {
             </button>
           </span>
         </div>
-        <span className="gx-input-help">
-          1–99 · an empty box is a cancelled edit.
-        </span>
+        <span className="gx-input-help">1–99</span>
       </div>
       <div className="gx-input-block">
         <label className="gx-input-label" htmlFor="gx-nfield-demo-invalid">

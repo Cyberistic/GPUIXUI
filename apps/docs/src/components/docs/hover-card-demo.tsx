@@ -73,11 +73,6 @@ export function HoverCardDemo() {
           </span>
         </p>
       </div>
-      <p className="gx-hovercard-note">
-        Hover opens after 700 ms; focus opens at once. Leaving both closes after
-        300 ms, and Escape or a press outside dismisses it. The native card’s
-        wait is a component timer, not a CSS transition.
-      </p>
     </div>
   );
 }

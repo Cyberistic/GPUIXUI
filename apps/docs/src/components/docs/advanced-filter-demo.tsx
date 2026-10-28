@@ -219,12 +219,6 @@ export function AdvancedFilterDemo() {
           ? `Clear “${UNREADABLE_TREE}”`
           : "Load a query from an older release"}
       </button>
-      <p className="gx-trule-hint">
-        The tree is data: “all” keeps a file that satisfies both clauses, “any”
-        keeps one that satisfies either. The sentence above is the package’s
-        own, and a stored query this release cannot decode keeps no rows rather
-        than showing every file the query meant to hide.
-      </p>
     </div>
   );
 }

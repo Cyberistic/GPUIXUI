@@ -133,12 +133,6 @@ export function VirtualizationDemo() {
         </div>
       </div>
       <p className="gx-trule-readout">{windowReadout(offset)}</p>
-      <p className="gx-trule-hint">
-        The header is a sibling above the row scroller, which is the only fixed
-        header the runtime paints. Only the mounted rows exist: the window keeps{" "}
-        {VIRTUAL_OVERDRAW} rows either side of the viewport, and a reveal moves
-        the window before the body scrolls.
-      </p>
     </div>
   );
 }

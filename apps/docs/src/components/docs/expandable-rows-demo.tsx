@@ -211,13 +211,7 @@ export function ExpandableRowsDemo() {
         </div>
       </div>
       <p className="gx-demo-readout">
-        {open.length} of {LISTED_FILES.length} panels open · the row is the
-        toggle, Enter and Space included
-      </p>
-      <p className="gx-demo-hint">
-        The panel is a sibling row, not a cell: a row span does not exist in
-        GPUix 0.11.0. Two rows can be open at once, and the panel&apos;s height
-        is not animated — a windowed table cannot hold these rows.
+        {open.length} of {LISTED_FILES.length} panels open
       </p>
     </div>
   );

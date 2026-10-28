@@ -308,8 +308,8 @@ export function ToolbarDemo() {
         </div>
         <span className="gx-shell-hint">
           {Option.match(chosen, {
-            onNone: () => "One tab stop, moved with the arrow keys.",
-            onSome: (id) => `The strip reported “${id}”.`,
+            onNone: () => "",
+            onSome: (id) => `reported “${id}”`,
           })}
         </span>
       </div>

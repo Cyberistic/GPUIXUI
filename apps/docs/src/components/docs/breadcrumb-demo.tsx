@@ -126,7 +126,6 @@ const BreadcrumbWorkflow = (): ReactNode => {
 
 interface StateTileProps {
   readonly title: string;
-  readonly note: string;
   readonly crumbs: ReadonlyArray<Crumb>;
   readonly maxItems?: number;
   readonly separator?: string;
@@ -134,7 +133,6 @@ interface StateTileProps {
 
 const BreadcrumbTile = ({
   title,
-  note,
   crumbs,
   maxItems,
   separator,
@@ -150,7 +148,6 @@ const BreadcrumbTile = ({
       <div className="gx-breadcrumb-tile-rail">
         <Trail entries={entries} label={title} separator={separator ?? "/"} />
       </div>
-      <p className="gx-breadcrumb-tile-note">{note}</p>
     </div>
   );
 };
@@ -164,7 +161,6 @@ const BreadcrumbStates = (): ReactNode => (
           { label: "Projects" },
           { label: "settings.tsx", current: true },
         ]}
-        note="No maxItems: every entry renders, and the last is the page."
         title="Two levels"
       />
       <BreadcrumbTile
@@ -173,28 +169,16 @@ const BreadcrumbStates = (): ReactNode => (
           { label: "GPUIXUI" },
           { label: "readme.md", current: true },
         ]}
-        note="separator accepts a node, so a chevron replaces the slash."
         separator="›"
         title="A custom separator"
       />
-      <BreadcrumbTile
-        crumbs={CRUMBS}
-        maxItems={4}
-        note="First, ellipsis, tail — the current page never collapses away."
-        title="A collapsed middle"
-      />
+      <BreadcrumbTile crumbs={CRUMBS} maxItems={4} title="A collapsed middle" />
       <BreadcrumbTile
         crumbs={CRUMBS}
         maxItems={1}
-        note="maxItems={1} is clamped to three entries, not one."
         title="A budget below three"
       />
     </div>
-    <p className="gx-breadcrumb-hint">
-      The list is <code>flex-wrap</code>: a trail longer than the bar wraps
-      rather than clipping, and collapse is a budget rather than an overflow
-      strategy.
-    </p>
   </div>
 );
 

@@ -57,10 +57,6 @@ export function ItemDemo() {
           </div>
         ))}
       </div>
-      <p className="gx-item-note">
-        The row decides its surface and density; the media leads, the actions
-        follow, and a header or footer takes a full line of its own.
-      </p>
     </div>
   );
 }

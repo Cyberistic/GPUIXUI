@@ -768,9 +768,7 @@ const LayoutShell = () => (
         </div>
         <div className="gx-shell-card">
           <p className="gx-shell-card-title">Ingest queue</p>
-          <p className="gx-shell-card-desc">
-            The body scrolls; the header stays.
-          </p>
+          <p className="gx-shell-card-desc">42 queued</p>
           <div className="gx-shell-bar">
             <div className="gx-shell-fill" />
           </div>
@@ -2374,7 +2372,7 @@ const FieldValidation = () => {
           <p className="gx-field-desc">
             {created
               ? "Available — this URL is free."
-              : "Lowercase words joined by hyphens. Try hunter-license."}
+              : "Lowercase words joined by hyphens."}
           </p>
         ) : (
           <p className="gx-field-error" role="alert">
@@ -2385,9 +2383,6 @@ const FieldValidation = () => {
       <button className="gx-btn gx-btn-primary" type="submit">
         Create workspace
       </button>
-      <p className="gx-field-note">
-        Enter submits too: the form owns the submit, the field only paints.
-      </p>
     </form>
   );
 };
@@ -2852,9 +2847,6 @@ const ToastWorkflow = () => {
     <div className="gx-toast-demo">
       <div className="gx-toast-stage">
         <p className="gx-demo-label">Workspace</p>
-        <p className="gx-toast-lede">
-          Publish the page, then undo it from the toast.
-        </p>
         <div className="gx-toast-actions">
           <button
             className="gx-btn gx-btn-primary"
@@ -2885,10 +2877,6 @@ const ToastWorkflow = () => {
             Fill the disk
           </button>
         </div>
-        <p className="gx-toast-hint">
-          A fourth toast drops the oldest. Hover the stack to unfold it and
-          pause every clock; leaving resumes them.
-        </p>
       </div>
       <div
         aria-label="Notifications"

@@ -11,9 +11,6 @@ export function GradientDemo() {
       <span aria-hidden="true" className="gx-gradient-layer" />
       <p className="gx-gradient-kicker">Release 0.11</p>
       <p className="gx-gradient-title">Ship faster with panels</p>
-      <p className="gx-gradient-copy">
-        One native runtime, every surface — no DOM in between.
-      </p>
     </div>
   );
 }

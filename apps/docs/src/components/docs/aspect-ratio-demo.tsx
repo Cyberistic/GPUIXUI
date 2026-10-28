@@ -63,11 +63,8 @@ export function AspectRatioDemo() {
       >
         <div className="gx-aspect-box" style={{ aspectRatio: String(ratio) }} />
       </div>
-      <p className="gx-aspect-note">
-        {width}px wide at {ratioId} paints{" "}
-        <strong>{Math.round(width / ratio)}px</strong> tall. The native
-        component hands the ratio to the runtime, so the height follows the
-        width with no measurement of its own.
+      <p className="gx-aspect-readout">
+        {width}px wide at {ratioId} · {Math.round(width / ratio)}px tall
       </p>
     </div>
   );

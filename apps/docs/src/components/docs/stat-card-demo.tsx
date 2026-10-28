@@ -172,8 +172,7 @@ export function StatCardDemo() {
         ))}
       </div>
       <p className="gx-stat-readout">
-        Area {areaReading(sample)} px² · the reading is the box's own
-        arithmetic, and the trend is the change from {previous} px².
+        Area {areaReading(sample)} px² · trend from {previous} px²
       </p>
     </div>
   );

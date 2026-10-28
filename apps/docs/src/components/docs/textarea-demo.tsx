@@ -18,7 +18,7 @@ export const TextAreaDemo = () => (
         id="gx-textarea-demo-notes"
         rows={3}
       />
-      <span className="gx-input-help">Markdown is not interpreted.</span>
+      <span className="gx-input-help">Plain text only.</span>
     </div>
     <div className="gx-input-block">
       <label className="gx-input-label" htmlFor="gx-textarea-demo-invalid">

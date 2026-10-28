@@ -46,7 +46,6 @@ const percent = (selector: string, property: string): number => {
 describe("the image-zoom preview", () => {
   it("draws the picture inside the frame it magnifies in", () => {
     expect(markup).toContain('class="gx-imagezoom"');
-    expect(markup).toContain('class="gx-imagezoom-readout"');
     expect(markup).toContain(
       'alt="A chart of the harbour with four approaches"',
     );

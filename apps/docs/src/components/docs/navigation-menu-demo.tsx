@@ -153,9 +153,7 @@ export const NavigationMenuDemo = (): ReactNode => {
       <div className="gx-nav-scene">
         <div className="gx-nav-head">
           <p className="gx-nav-title">Product</p>
-          <p className="gx-nav-subtitle">
-            One panel at a time — pressed, hovered or stepped into
-          </p>
+          <p className="gx-nav-subtitle">One panel at a time</p>
         </div>
         <nav
           aria-label="Product"
@@ -254,27 +252,10 @@ export const NavigationMenuDemo = (): ReactNode => {
           >
             Press outside the nav
           </button>
-          <span className="gx-nav-controls-note">
-            The native nav listens for a real outside press; the drawing offers
-            one as a control so the rule is pressable.
-          </span>
         </div>
       </div>
       <p aria-live="polite" className="gx-nav-readout" role="status">
         open: {openLabel(state.open)} · focus: {openLabel(focus)} · last: {last}
-      </p>
-      <p className="gx-nav-hint">
-        Resting on a trigger opens it after 150 ms; leaving the trigger and its
-        panel closes it after the same grace. A press, a key or{" "}
-        <kbd>Escape</kbd> cancels a pending hover so a closed panel cannot
-        spring back. <kbd>Enter</kbd> and <kbd>Space</kbd> open with focus left
-        on the trigger; <kbd>ArrowDown</kbd> opens and moves focus onto the
-        panel surface, not its first link.
-      </p>
-      <p className="gx-nav-hint">
-        <kbd>Left</kbd>/<kbd>Right</kbd> move between triggers and{" "}
-        <kbd>Home</kbd>/<kbd>End</kbd> jump — a roving group moves focus without
-        opening.
       </p>
     </div>
   );
@@ -282,18 +263,12 @@ export const NavigationMenuDemo = (): ReactNode => {
 
 interface TileProps {
   readonly title: string;
-  readonly note: string;
   readonly open: string | null;
   readonly disabled?: ReadonlyArray<string>;
 }
 
 /** One state as a still: the panel is in flow here, not anchored. */
-const NavTile = ({
-  title,
-  note,
-  open,
-  disabled = [],
-}: TileProps): ReactNode => (
+const NavTile = ({ title, open, disabled = [] }: TileProps): ReactNode => (
   <div className="gx-nav-tile">
     <p className="gx-nav-tile-title">{title}</p>
     <nav aria-label={title} className="gx-nav-bar">
@@ -330,7 +305,6 @@ const NavTile = ({
         })}
       </div>
     </nav>
-    <p className="gx-nav-tile-note">{note}</p>
   </div>
 );
 
@@ -338,29 +312,14 @@ const NavTile = ({
 export const NavigationMenuStates = (): ReactNode => (
   <div className="gx-demo-navigation">
     <div className="gx-nav-tiles">
-      <NavTile
-        note="No value: nothing is open until a press, a key or 150 ms of rest on a trigger."
-        open={null}
-        title="At rest"
-      />
-      <NavTile
-        note="One panel is open at a time; the caller owns the value and hears every change."
-        open="platform"
-        title="One open"
-      />
+      <NavTile open={null} title="At rest" />
+      <NavTile open="platform" title="One open" />
       <NavTile
         disabled={["community"]}
-        note="A disabled trigger leaves the tab order and opens nothing on hover, press or key."
         open={null}
         title="A disabled trigger"
       />
     </div>
-    <p className="gx-nav-hint">
-      The trigger publishes <code>aria-expanded</code>; the panel is a{" "}
-      <code>role="group"</code> named by the item's <code>value</code>, and a
-      link is a button because <code>@gpuix/native@0.11.0</code> has no anchor
-      element.
-    </p>
   </div>
 );
 

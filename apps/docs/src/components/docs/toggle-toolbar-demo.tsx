@@ -40,12 +40,12 @@ const Mode = ({
 
 export const ToggleToolbar = () => (
   <div className="gx-demo gx-demo-column gx-toggle-scene">
-    <p className="gx-demo-label">Text modes · pressed is the accent face</p>
+    <p className="gx-demo-label">Text modes</p>
     <div className="gx-demo-row">
       <Mode initial label="Bold" />
       <Mode label="Italic" />
     </div>
-    <p className="gx-demo-label">Outline · a mode with an edge</p>
+    <p className="gx-demo-label">Outline</p>
     <div className="gx-demo-row">
       <Mode initial label="Grid" outline />
       <Mode label="List" outline />

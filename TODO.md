@@ -24119,3 +24119,30 @@ carries the measured height; the card grows into its box) and the first fails
 when the height expression goes back to `slot.height`. The stack below the peek
 is unchanged: inset peeks, hover-unfold, per-card clocks paused while the pointer
 rests on the stack.
+
+## Docs previews — a picture, not a lecture
+
+`[x]` `[██████████]` 5/5
+
+`[x]` Every preview scene (`apps/docs/src/components/docs/*-demo.tsx`,
+      `demos.tsx`, `table-rule-demos.tsx`) dropped the paragraphs under the
+      drawing: the `gx-demo-hint`/`gx-table-hint`/`gx-toast-hint`/
+      `gx-hotkey-note` hints, the `.gx-*-lede` and `.gx-*-copy` scenes, the
+      per-tile and per-state notes, and the "Try …"/"Press …"/"Hover …"
+      instructions.
+`[x]` Readouts stayed: a sentence that carried data was shortened to the data
+      (`typed “prod” · 3 of 6 rows`, `3 of 6 panels open`, `height 640 ·
+      chosen web-2`), and state labels lost their explanatory clause
+      (`Rest`, `Disabled`, `One tab stop`).
+`[x]` Scene filler that was narration became app content (`Gradient`'s slogan
+      dropped, `Magnetic`'s note card and `DockLayout`'s Preview tab carry data
+      rows, `Tooltip`'s tips name a command).
+`[x]` `demos.css`: 48 narration rules deleted, the dead `.gx-nav-note`/
+      `.gx-crop-hint`/`.gx-imagezoom-readout` rules removed, and the
+      `.gx-layout-row` collision split — the dock-layout facts are
+      `.gx-layout-fact`, so the layout lane's rows no longer overlap.
+`[x]` `preview-prose.test.ts` guards the rule in both directions (no scene
+      carries a narration class, no style rule survives for one); the copy
+      assertions that named a removed string were dropped, and the behaviour
+      they sat beside still asserts.
+

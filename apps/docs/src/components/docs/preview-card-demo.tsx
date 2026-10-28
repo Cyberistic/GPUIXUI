@@ -46,11 +46,6 @@ export function PreviewCardDemo() {
           </div>
         ) : null}
       </div>
-      <p className="gx-preview-card-note">
-        Hover opens it, leaving both surfaces closes it; a press toggles it
-        outright. Timers are the component&rsquo;s — pass <code>0</code> to
-        disable — and Tab opens nothing by design.
-      </p>
     </div>
   );
 }

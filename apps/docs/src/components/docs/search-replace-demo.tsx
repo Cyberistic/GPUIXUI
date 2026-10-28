@@ -12,8 +12,8 @@ import { useState, type KeyboardEvent } from "react";
  * replacement arrives through the text below, which is the caller's.
  */
 
-export const FIND_SAMPLE = `The preview is the browser's.
-The browser draws the preview; the runtime draws the shipped frame.
+export const FIND_SAMPLE = `The build preview is ready.
+Open the preview before the release.
 A preview is never the authority.`;
 
 export const FIND_QUERY = "preview";

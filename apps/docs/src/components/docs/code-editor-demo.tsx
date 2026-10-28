@@ -98,10 +98,6 @@ export const CodeEditorDemo = () => {
           {readOnly ? "Edit" : "Read only"}
         </button>
       </div>
-      <p className="gx-codeedit-hint">
-        Tab inserts two spaces at the end — 0.11.0 exposes no caret position, so
-        the shipped editor cannot insert where the reader is.
-      </p>
     </div>
   );
 };

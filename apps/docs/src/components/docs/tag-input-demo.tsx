@@ -157,11 +157,6 @@ const TagInputWorkflow = () => {
           rules={keywordRules}
           state={keywords}
         />
-        <p className="gx-tag-note">
-          {locked
-            ? "Read-only: the field and its removal controls answer nothing."
-            : "Enter commits the draft · a comma commits the words before it"}
-        </p>
         <div className="gx-tag-actions">
           <button
             className="gx-btn gx-btn-primary"
@@ -180,10 +175,6 @@ const TagInputWorkflow = () => {
           </label>
         </div>
         <p className="gx-tag-gate">{describeGate(keywords)}</p>
-        <p className="gx-tag-note">
-          The draft is the field's: a caller reads the tokens, never the
-          half-typed word.
-        </p>
       </div>
     </div>
   );
@@ -222,9 +213,7 @@ const TagInputStates = () => {
   return (
     <div className="gx-demo gx-tag gx-tag-states">
       <div className="gx-tag-state">
-        <span className="gx-tag-state-label">
-          Rest — the painted hint, and no chips
-        </span>
+        <span className="gx-tag-state-label">Rest</span>
         <PreviewGroup
           label="Empty keyword list"
           onChange={setRest}
@@ -233,9 +222,7 @@ const TagInputStates = () => {
         />
       </div>
       <div className="gx-tag-state">
-        <span className="gx-tag-state-label">
-          At the limit — five chips, and a sixth token is refused
-        </span>
+        <span className="gx-tag-state-label">At the limit</span>
         <PreviewGroup
           label="Full keyword list"
           onChange={updateFull}
@@ -247,9 +234,7 @@ const TagInputStates = () => {
         </p>
       </div>
       <div className="gx-tag-state">
-        <span className="gx-tag-state-label">
-          Duplicates allowed — a repeated token is a separate token
-        </span>
+        <span className="gx-tag-state-label">Duplicates allowed</span>
         <PreviewGroup
           label="Keywords allowing repeats"
           onChange={setRepeated}
@@ -258,10 +243,7 @@ const TagInputStates = () => {
         />
       </div>
       <div className="gx-tag-state">
-        <span className="gx-tag-state-label">
-          Disabled — read-only, half opacity, and the removal controls are not
-          rendered
-        </span>
+        <span className="gx-tag-state-label">Disabled rendered</span>
         <PreviewGroup
           disabled
           label="Read-only keywords"
@@ -269,9 +251,6 @@ const TagInputStates = () => {
           rules={keywordRules}
           state={locked}
         />
-        <p className="gx-tag-note">
-          The field leaves the tab order; no edit path answers.
-        </p>
       </div>
     </div>
   );

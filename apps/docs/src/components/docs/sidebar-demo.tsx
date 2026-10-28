@@ -336,23 +336,10 @@ export const SidebarDemo = () => {
               {ITEMS.find((item) => item.id === active)?.label}
             </span>
           </div>
-          <div
-            style={{
-              color: "var(--muted-foreground)",
-              flexGrow: 1,
-              fontSize: 12,
-              padding: 16,
-            }}
-          >
-            The gap pays the width the panel loses — {collapsed ? 48 : 176}px
-            here.
-          </div>
+          <div style={{ flexGrow: 1 }} />
         </div>
       </div>
-      <p style={note}>
-        Collapse and the labels clip away, the active row keeps its accent, and
-        the account menu opens from the footer. Last action: {last}.
-      </p>
+      <p style={note}>Last action: {last}.</p>
     </div>
   );
 };

@@ -40,7 +40,7 @@ export const ToggleDemo = () => (
       <ToggleButton label="Italic" outline />
       <ToggleButton label="Disabled" disabled />
     </div>
-    <p className="gx-demo-label">Outline variant · a glyph</p>
+    <p className="gx-demo-label">Outline variant</p>
     <div className="gx-demo-row">
       <ToggleButton label="Grid" outline />
       <ToggleButton label="List" outline />

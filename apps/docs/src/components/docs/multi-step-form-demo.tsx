@@ -164,10 +164,6 @@ export const MultiStepFormBody = ({
       <p className="gx-demo-label">Create a workspace</p>
       <div className="gx-stepper-card">
         <p className="gx-stepper-title">Create a workspace</p>
-        <p className="gx-stepper-lede">
-          Three steps, one gate each: the wizard owns the step, the caller owns
-          the draft.
-        </p>
         <div className="gx-stepper">
           <StepList step={state.step} />
         </div>
@@ -222,12 +218,6 @@ export const MultiStepFormBody = ({
           role="status"
         >
           {describeWizard(state)}
-        </p>
-        <p className="gx-stepper-note">
-          A step&rsquo;s gate runs on Next and again on the last step&rsquo;s
-          Submit, which is a different job from the whole-record decode
-          <code>Form</code> owns. Back clears the refusal; only the current
-          step&rsquo;s content is mounted, so a hidden step keeps no tab stop.
         </p>
       </div>
     </div>
