@@ -831,7 +831,7 @@ export const liveRegistry = [
   {
     id: "color-picker-lifecycle",
     title:
-      "Input: the shipped ColorPicker paints the theme's six roles as swatches, marks the chosen one with a page-filled pip, commits a typed shorthand as one normal form and refuses a draft it cannot read",
+      "Input: the shipped ColorPicker opens a floating panel from its trigger, commits the colour under an area press, carries alpha to the hex it reports, commits a typed shorthand and paints a refused draft's edge",
     capability: "input",
   },
   {
