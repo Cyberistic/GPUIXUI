@@ -388,81 +388,85 @@ const DatePickerPreview = ({
     value.mode === "single" ? value.day !== null : value.range !== null;
 
   return (
-    <div className="gx-date-frame" ref={frame}>
-      <button
-        aria-expanded={open}
-        aria-label={label}
-        className="gx-date-trigger"
-        disabled={disabled}
-        onClick={() => {
-          if (open) {
-            setOpen(false);
-            return;
-          }
-          const anchor = clampToBounds(anchorOf(), bounds);
-          setMonth(monthOf(anchor));
-          setActive(anchor);
-          setFocusOnOpen(true);
-          setOpen(true);
-        }}
-        ref={trigger}
-        type="button"
-      >
-        <span
-          className="gx-date-value"
-          data-placeholder={hasValue ? undefined : ""}
+    <>
+      <div className="gx-date-frame" ref={frame}>
+        <button
+          aria-expanded={open}
+          aria-label={label}
+          className="gx-date-trigger"
+          disabled={disabled}
+          onClick={() => {
+            if (open) {
+              setOpen(false);
+              return;
+            }
+            const anchor = clampToBounds(anchorOf(), bounds);
+            setMonth(monthOf(anchor));
+            setActive(anchor);
+            setFocusOnOpen(true);
+            setOpen(true);
+          }}
+          ref={trigger}
+          type="button"
         >
-          {triggerLabel}
-        </span>
-        <svg aria-hidden="true" className="gx-date-caret" viewBox="0 0 12 12">
-          <path
-            d="M2.5 4.5 6 8l3.5-3.5"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeWidth="1.5"
+          <span
+            className="gx-date-value"
+            data-placeholder={hasValue ? undefined : ""}
+          >
+            {triggerLabel}
+          </span>
+          <svg aria-hidden="true" className="gx-date-caret" viewBox="0 0 12 12">
+            <path
+              d="M2.5 4.5 6 8l3.5-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeWidth="1.5"
+            />
+          </svg>
+        </button>
+        {open ? (
+          <DateSurface
+            active={active}
+            autoFocus={focusOnOpen}
+            bounds={bounds}
+            clearable={clearable}
+            hasValue={hasValue}
+            inline={inline}
+            label={label}
+            month={month}
+            months={months}
+            onActive={(day) => {
+              setActive(day);
+              setMonth(windowMonth(month, months, day));
+            }}
+            onChoose={choose}
+            onClear={clear}
+            onEscape={close}
+            onMonth={(next) => {
+              setMonth(next);
+              setActive(clampToBounds(`${next}-01`, bounds));
+            }}
+            today={today}
+            value={value}
+            weekStartsOn={weekStartsOn}
           />
-        </svg>
-      </button>
-      {open ? (
-        <DateSurface
-          active={active}
-          autoFocus={focusOnOpen}
-          bounds={bounds}
-          clearable={clearable}
-          hasValue={hasValue}
-          inline={inline}
-          label={label}
-          month={month}
-          months={months}
-          onActive={(day) => {
-            setActive(day);
-            setMonth(windowMonth(month, months, day));
-          }}
-          onChoose={choose}
-          onClear={clear}
-          onEscape={close}
-          onMonth={(next) => {
-            setMonth(next);
-            setActive(clampToBounds(`${next}-01`, bounds));
-          }}
-          today={today}
-          value={value}
-          weekStartsOn={weekStartsOn}
-        />
-      ) : null}
+        ) : null}
+      </div>
+      {/* The readout is the field's, not the anchor's: inside the frame it
+          pushed the popup 14px further down and left it under the status line. */}
       <p className="gx-date-readout" role="status">
         {value.mode === "single"
           ? describeValue(value.day)
           : `Value: ${value.range === null ? "none" : `${value.range.from} → ${value.range.to ?? "…"}`}`}
       </p>
-    </div>
+    </>
   );
 };
 
 /** The page's opening preview: a schedule field a reader can really use. */
 export const DatePickerWorkflow = () => (
-  <div className="gx-demo gx-date-scene">
+  <div className="gx-demo gx-date-scene gx-date-popup">
     <div className="gx-date-column">
       <p className="gx-demo-label">Deployment window</p>
       <DatePickerPreview
@@ -530,7 +534,7 @@ export const DatePickerStates = () => (
 
 /** A span field: two months, and the surface closes when the span completes. */
 export const DatePickerRange = () => (
-  <div className="gx-demo gx-date-scene">
+  <div className="gx-demo gx-date-scene gx-date-popup">
     <div className="gx-date-column gx-date-wide">
       <p className="gx-demo-label">Booking window</p>
       <DatePickerPreview
@@ -566,7 +570,7 @@ export const DatePickerPresets = () => {
   });
 
   return (
-    <div className="gx-demo gx-demo-column gx-date-scene">
+    <div className="gx-demo gx-demo-column gx-date-scene gx-date-popup">
       <div className="gx-date-presets">
         <label className="gx-demo-label" htmlFor="date-preset">
           Quick range
