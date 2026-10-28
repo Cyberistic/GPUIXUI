@@ -18,30 +18,32 @@ export type DescriptionRun =
 /** `[words](/a/path)` — no whitespace in the target, so a full stop ends it. */
 const INLINE_LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
 
+/** Where the scan has reached: the runs so far, and the index after them. */
+interface Cursor {
+  readonly runs: ReadonlyArray<DescriptionRun>;
+  readonly at: number;
+}
+
 /** A description split into the runs a page frame prints. */
 export const descriptionRuns = (
   description: string,
 ): ReadonlyArray<DescriptionRun> => {
   const found = Arr.fromIterable(description.matchAll(INLINE_LINK));
-  const runs = Arr.reduce(
-    found,
-    { runs: [] as ReadonlyArray<DescriptionRun>, at: 0 },
-    (cursor, match) => {
-      const start = match.index;
-      const gap = description.slice(cursor.at, start);
-      const link: DescriptionRun = {
-        kind: "link",
-        text: match[1] ?? "",
-        href: match[2] ?? "",
-      };
-      const added: ReadonlyArray<DescriptionRun> =
-        gap === "" ? [link] : [{ kind: "text", text: gap }, link];
-      return {
-        runs: Arr.appendAll(cursor.runs, added),
-        at: start + match[0].length,
-      };
-    },
-  );
+  const start: Cursor = { runs: [], at: 0 };
+  const runs = Arr.reduce(found, start, (cursor, match) => {
+    const gap = description.slice(cursor.at, match.index);
+    const link: DescriptionRun = {
+      kind: "link",
+      text: match[1] ?? "",
+      href: match[2] ?? "",
+    };
+    const added: ReadonlyArray<DescriptionRun> =
+      gap === "" ? [link] : [{ kind: "text", text: gap }, link];
+    return {
+      runs: Arr.appendAll(cursor.runs, added),
+      at: match.index + match[0].length,
+    };
+  });
   const tail = description.slice(runs.at);
   return tail === ""
     ? runs.runs
