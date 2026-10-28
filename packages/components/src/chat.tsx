@@ -54,6 +54,7 @@ import {
   spokenSentence,
   visibleCopy,
 } from "@gpuixui/primitives/core";
+import { Icon } from "@gpuixui/icons";
 import * as Option from "effect/Option";
 import {
   Children,
@@ -72,7 +73,7 @@ import * as Machine from "./chat/logic.js";
  * cannot disagree.
  */
 export * from "./chat/logic.js";
-import { Button } from "./internal/button.js";
+import { Button, actionOnColor } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import {
   fieldHelp,
@@ -447,7 +448,7 @@ export interface ChatComposerProps extends Omit<
   readonly label?: string;
   /** Default `"Send a message…"`. */
   readonly placeholder?: string;
-  /** Default `"Send"`; a blank label reads as the default. */
+  /** The send control's accessible name. Default `"Send"`; a blank label reads as the default. */
   readonly submitLabel?: string;
   /** Default `"Stop"`; a blank label reads as the default. */
   readonly stopLabel?: string;
@@ -595,9 +596,14 @@ export const ChatComposer = ({
             size="sm"
             variant="primary"
             disabled={!canSend}
+            aria-label={submitWord}
             onClick={send}
           >
-            {submitWord}
+            <Icon
+              name="send"
+              size="sm"
+              color={actionOnColor(theme, "primary")}
+            />
           </Button>
         )}
       </div>

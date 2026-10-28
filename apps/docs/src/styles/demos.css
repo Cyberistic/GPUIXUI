@@ -10429,6 +10429,21 @@ button.gx-rating-star:focus-visible {
   gap: 8px;
 }
 
+/* The send action is the icon set's paper plane, in the button's own ink; the
+   word "Send" survives only as its accessible name. */
+.gx-chat-send-icon {
+  display: block;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  color: inherit;
+}
+
+.gx-chat-send-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .gx-chat-field {
   flex: 1;
   min-width: 0;
