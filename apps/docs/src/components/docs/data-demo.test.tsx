@@ -49,12 +49,9 @@ import {
   toggledColumn,
 } from "./column-configuration-demo";
 import {
-  CHART_AXIS,
   CHART_HEIGHT,
-  CHART_LABEL_ROW,
   CHART_LABELS,
   CHART_SERIES,
-  CHART_TOP_ROOM,
   CHART_WIDTH,
   ChartDemoBody,
   chartBarGroups,
@@ -251,11 +248,11 @@ describe("the Virtualization preview", () => {
     const mounted = mountedRows(0);
 
     expect(html).toContain('data-demo="virtualization"');
-    expect(html.match(/class="gx-virt-row"/g)).toHaveLength(mounted.length);
+    expect(html.match(/gx-virt-row/g)).toHaveLength(mounted.length);
     expect(html.match(/data-index="/g)).toHaveLength(mounted.length);
     expect(html).toContain(windowReadout(0));
     // The header is a sibling above the scroller, not a row inside it.
-    expect(html.indexOf("gx-virt-head")).toBeLessThan(
+    expect(html.indexOf("gx-dt-head")).toBeLessThan(
       html.indexOf("gx-virt-body"),
     );
   });
@@ -321,7 +318,7 @@ describe("the Column configuration preview", () => {
 
     expect(html).toContain('data-demo="column-configuration"');
     expect(html.match(/data-resize="/g)).toHaveLength(visible.length);
-    expect(html.match(/class="gx-table-cell"/g)).toHaveLength(
+    expect(html.match(/class="gx-dt-cell gx-dt-fixed"/g)).toHaveLength(
       visible.length * COLUMN_FILES.length,
     );
     for (const column of visible) {
@@ -423,29 +420,56 @@ describe("the Charts preview", () => {
     });
   });
 
-  it("prints the axis its own ticks read as", () => {
+  it("prints the axis, the slots and the legend the frame paints", () => {
     const step = chartCeiling / 4;
+    // The plot is the package's box: the marks fill it, and nothing is clipped
+    // outside it because the axis and the labels are boxes beside it.
     expect(bars).toContain(
-      `viewBox="0 ${-CHART_TOP_ROOM} ${CHART_WIDTH + CHART_AXIS} ${
-        CHART_HEIGHT + CHART_TOP_ROOM + CHART_LABEL_ROW
-      }"`,
+      `viewBox="0 0 ${chartPlot.width} ${chartPlot.height}"`,
     );
-    // The ceiling's tick sits on the plot's top line (baseline 3), so the
-    // viewBox has to start **above** it: at `0` the label lost its upper half
-    // to the clip, which is what this whole case exists to prevent.
-    const viewBox = /viewBox="0 (-?\d+) \d+ \d+"/.exec(bars);
-    expect(viewBox).not.toBeNull();
-    expect(Number(viewBox?.[1])).toBeLessThan(0);
-    expect(bars).toContain(`y="3"`);
     Arr.forEach(chartTicks, (tick) => {
-      expect(bars).toContain(`>${tickLabel(tick, step)}</text>`);
+      expect(bars).toContain(`>${tickLabel(tick, step)}</span>`);
     });
     Arr.forEach(CHART_LABELS, (label) => {
-      expect(bars).toContain(`>${label}</text>`);
+      expect(bars).toContain(`>${label}</span>`);
     });
+    // One slot per category, and each slot is the plot's width divided by the
+    // labels — the composition `chart.tsx` paints.
+    const slot = chartPlot.width / CHART_LABELS.length;
+    expect(bars.match(/class="gx-dchart-category"/g)).toHaveLength(
+      CHART_LABELS.length,
+    );
+    expect(bars).toContain(`width:${slot}px`);
     Arr.forEach(CHART_SERIES, (series) => {
       expect(bars).toContain(series.label);
     });
+  });
+});
+
+describe("the four scenes this file owns", () => {
+  it("draw them in the components' own shapes", () => {
+    const scenes = [
+      [markup(<ColumnConfigurationDemo />), ["gx-dt", "gx-dt-divider"]],
+      [
+        markup(<ChartDemoBody mode="bars" theme={themes.dark} />),
+        ["gx-dchart", "gx-dchart-axis"],
+      ],
+      [markup(<VirtualizationDemo />), ["gx-dt", "gx-virt-row"]],
+      [
+        markup(<AdvancedFilterDemo />),
+        ["gx-dfilter", "gx-dfilter-clause", "gx-dt"],
+      ],
+    ] as const;
+
+    scenes.forEach(([html, present], index) => {
+      expect(present.filter((name) => !html.includes(name))).toEqual([]);
+      expect(html, `scene ${index}`).not.toContain("<table");
+    });
+    // The chart's plot is `chartBox`'s, so the frame paints that box and no
+    // second margin of its own.
+    expect(markup(<ChartDemoBody mode="bars" theme={themes.dark} />)).toContain(
+      `viewBox="0 0 ${chartPlot.width} ${chartPlot.height}"`,
+    );
   });
 });
 

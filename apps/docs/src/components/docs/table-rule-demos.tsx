@@ -40,6 +40,11 @@ import { TABLE_ROWS, type PreviewTableRow } from "./table-preview";
  *
  * The fixture is the curated Table page's deploy queue, so the two pages show
  * one set of records under the same rules.
+ *
+ * The drawing mirrors `TableSortHeader` (a ghost `Button` filling a
+ * `TableHeaderCell`) and `TableRow`/`TableCell` on `Table`'s recipe: the card
+ * frame, the header rule, the cell inset and the selection wash are the
+ * component's, not a second table skin.
  */
 
 /** One column the previews sort by: its field, its visible label and the direction a first press starts at. */
@@ -182,15 +187,19 @@ export interface SortFrameProps {
 /** The drawing itself: one sortable header per column and the rows it orders. */
 export function SortFrame({ order, rows, onSort }: SortFrameProps) {
   return (
-    <div className="gx-trule-demo">
-      <table aria-label="Deploy queue, sortable" className="gx-table-el">
-        <thead>
-          <tr>
+    <div className="gx-data-scene">
+      <div aria-label="Deploy queue, sortable" className="gx-dt" role="table">
+        <div className="gx-dt-head" role="rowgroup">
+          <div className="gx-dt-row" role="row">
             {Arr.map(SORT_COLUMNS, (column) => (
-              <th className="gx-table-head" key={column.field} scope="col">
+              <div
+                className="gx-dt-hcell"
+                key={column.field}
+                role="columnheader"
+              >
                 <button
                   aria-label={sortOrderLabel(column.label, order, column.field)}
-                  className="gx-table-sort"
+                  className="gx-btn gx-btn-ghost gx-btn-sm gx-dt-sort"
                   data-sorted={directionOf(order, column.field)}
                   onClick={(event: MouseEvent<HTMLButtonElement>) =>
                     onSort(column.field, column.initial, event.shiftKey)
@@ -198,26 +207,39 @@ export function SortFrame({ order, rows, onSort }: SortFrameProps) {
                   type="button"
                 >
                   {column.label}
-                  <span aria-hidden="true" className="gx-table-glyph">
+                  <span aria-hidden="true" className="gx-dt-glyph">
                     {glyphOf(order, column.field)}
                   </span>
                 </button>
-              </th>
+              </div>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </div>
+        </div>
+        <div role="rowgroup">
           {Arr.map(rows, (row) => (
-            <tr className="gx-table-row" data-row={row.id} key={row.id}>
-              <td className="gx-table-cell">{row.service}</td>
-              <td className="gx-table-cell">{row.environment}</td>
-              <td className="gx-table-cell">{row.status}</td>
-              <td className="gx-table-cell">{row.duration}s</td>
-            </tr>
+            <div
+              className="gx-dt-row"
+              data-row={row.id}
+              key={row.id}
+              role="row"
+            >
+              <div className="gx-dt-cell" role="cell">
+                {row.service}
+              </div>
+              <div className="gx-dt-cell" role="cell">
+                {row.environment}
+              </div>
+              <div className="gx-dt-cell" role="cell">
+                {row.status}
+              </div>
+              <div className="gx-dt-cell" role="cell">
+                {row.duration}s
+              </div>
+            </div>
           ))}
-        </tbody>
-      </table>
-      <p className="gx-trule-readout">{sortReadout(order)}</p>
+        </div>
+        <p className="gx-dt-caption">{sortReadout(order)}</p>
+      </div>
     </div>
   );
 }
@@ -263,64 +285,74 @@ export function SelectionFrame({
   const some = someSelected(selection, keys);
 
   return (
-    <div className="gx-trule-demo">
-      <table aria-label="Deploy queue, selectable" className="gx-table-el">
-        <thead>
-          <tr>
-            <th className="gx-table-head gx-trule-select" scope="col">
+    <div className="gx-data-scene">
+      <div aria-label="Deploy queue, selectable" className="gx-dt" role="table">
+        <div className="gx-dt-head" role="rowgroup">
+          <div className="gx-dt-row" role="row">
+            <div className="gx-dt-hcell gx-dt-check" role="columnheader">
               <input
                 aria-checked={some ? "mixed" : every}
                 aria-label="Choose every deploy"
                 checked={every}
+                className="gx-dcheck"
                 onChange={onToggleAll}
                 type="checkbox"
               />
-            </th>
+            </div>
             {(["Service", "Environment", "Duration"] as const).map((label) => (
-              <th className="gx-table-head" key={label} scope="col">
+              <div className="gx-dt-hcell" key={label} role="columnheader">
                 {label}
-              </th>
+              </div>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </div>
+        </div>
+        <div role="rowgroup">
           {Arr.map(rows, (row) => {
             const chosen = isSelected(selection, row.id);
             return (
-              <tr
+              <div
                 aria-selected={chosen}
-                className="gx-table-row"
+                className="gx-dt-row"
+                data-interactive=""
                 data-row={row.id}
                 data-selected={chosen ? "true" : "false"}
                 key={row.id}
-                onClick={(event: MouseEvent<HTMLTableRowElement>) =>
+                onClick={(event: MouseEvent<HTMLDivElement>) =>
                   onPress(row.id, {
                     shift: event.shiftKey,
                     cmd: event.metaKey,
                     ctrl: event.ctrlKey,
                   })
                 }
+                role="row"
               >
-                <td className="gx-table-cell gx-trule-select">
+                <div className="gx-dt-cell gx-dt-check" role="cell">
                   <input
                     aria-label={`Choose ${row.service}`}
                     checked={chosen}
+                    className="gx-dcheck"
                     onChange={() => onToggle(row.id)}
                     onClick={(event) => event.stopPropagation()}
                     type="checkbox"
                   />
-                </td>
-                <td className="gx-table-cell">{row.service}</td>
-                <td className="gx-table-cell">{row.environment}</td>
-                <td className="gx-table-cell">{row.duration}s</td>
-              </tr>
+                </div>
+                <div className="gx-dt-cell" role="cell">
+                  {row.service}
+                </div>
+                <div className="gx-dt-cell" role="cell">
+                  {row.environment}
+                </div>
+                <div className="gx-dt-cell" role="cell">
+                  {row.duration}s
+                </div>
+              </div>
             );
           })}
-        </tbody>
-      </table>
-      <p className="gx-trule-readout">
-        {selectionReadout(selection, rows.length)}
-      </p>
+        </div>
+        <p className="gx-dt-caption">
+          {selectionReadout(selection, rows.length)}
+        </p>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import {
+  TREE_INDENT,
   flattenTree,
   treeCursorMove,
   treeName,
@@ -168,8 +169,8 @@ describe("the TreeView preview", () => {
 
   it("keeps the tree the one tab stop its page promises", () => {
     const html = markup(<DependencyTreeDemo />);
-    const chevrons = html.match(/class="gx-tree-chevron"/g) ?? [];
-    const buttons = html.match(/<button[^>]*class="gx-tree-chevron"/g) ?? [];
+    const chevrons = html.match(/class="gx-dtree-slot"/g) ?? [];
+    const buttons = html.match(/<button[^>]*class="gx-dtree-slot"/g) ?? [];
 
     // The tree itself is the tab stop. A branch's chevron stays clickable but
     // out of the tab order, so a keyboard reader does not traverse one button
@@ -180,9 +181,9 @@ describe("the TreeView preview", () => {
     // A leaf keeps the chevron's track and paints no control: the package's own
     // row has nothing to flip under a leaf.
     expect(chevrons.length).toBeGreaterThan(buttons.length);
-    expect(html.match(/data-branch="false"/g) ?? []).toHaveLength(
-      chevrons.length - buttons.length,
-    );
+    expect(
+      html.match(/<span aria-hidden="true" class="gx-dtree-slot">/g) ?? [],
+    ).toHaveLength(chevrons.length - buttons.length);
     expect(html).not.toContain("Expand @gpuixui/tokens");
     expect(read("packages/data/src/tree/row.tsx")).toContain(
       "row.hasChildren && chevron !== undefined",
@@ -199,6 +200,33 @@ describe("the TreeView preview", () => {
     expect(treeReadout(rows, { ...cursor, active: Option.none() })).toBe(
       "11 rows · 3 open · no active row",
     );
+  });
+});
+
+describe("the tree drawing's shape", () => {
+  it("paints the tree's rows at the density's step and the 16px indent", () => {
+    const html = markup(<DependencyTreeDemo />);
+    const css = read("apps/docs/src/styles/demos.css");
+    const row = css.slice(css.indexOf("\n.gx-dtree-row {"));
+
+    expect(html).toContain('class="gx-dtree"');
+    expect(html).toContain('class="gx-dtree-row"');
+    expect(html).toContain('class="gx-dtree-slot"');
+    // `TREE_ROW` is `text-sm` and the row height is the density's `rowHeight`;
+    // `TREE_INDENT` is the measured 16px a level insets by.
+    expect(row.slice(0, row.indexOf("}"))).toContain(
+      "height: var(--row-height);",
+    );
+    expect(row.slice(0, row.indexOf("}"))).toContain("font-size: 14px;");
+    expect(read("packages/data/src/tree/row.tsx")).toContain(
+      "paddingLeft: TREE_INSET + row.depth * TREE_INDENT",
+    );
+    // Every painted row carries the measured inset, and a deeper row by one step.
+    const insets = (html.match(/padding-left:(\d+)px/g) ?? []).map((one) =>
+      Number(/\d+/.exec(one)?.[0]),
+    );
+    expect(insets).toHaveLength((html.match(/role="treeitem"/g) ?? []).length);
+    expect(Math.max(...insets) - Math.min(...insets)).toBe(TREE_INDENT * 2);
   });
 });
 

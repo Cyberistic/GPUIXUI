@@ -134,6 +134,27 @@ describe("the Table sorting preview", () => {
   });
 });
 
+describe("the sorting drawing's shape", () => {
+  it("paints the table's header cell and its ghost sort button", () => {
+    const html = sortingMarkup([]);
+    // `TableSortHeader` is a ghost `Button` inside a `TableHeaderCell`; the
+    // drawing reads the same two recipes rather than a table of its own.
+    expect(html).toContain('class="gx-dt-hcell"');
+    expect(html).toContain('class="gx-btn gx-btn-ghost gx-btn-sm gx-dt-sort"');
+    expect(html).toContain('class="gx-dt"');
+    expect(html).not.toContain("<table");
+
+    const css = readFileSync(
+      new URL("../../styles/demos.css", import.meta.url),
+      "utf8",
+    );
+    const cell = css.slice(css.indexOf("\n.gx-dt-cell {"));
+    // `TABLE_CELL` compiles to `px-3 py-2 text-sm`.
+    expect(cell.slice(0, cell.indexOf("}"))).toContain("padding: 8px 12px;");
+    expect(cell.slice(0, cell.indexOf("}"))).toContain("font-size: 14px;");
+  });
+});
+
 describe("the Table selection preview", () => {
   const rows = sortedRows(OPENING_ORDER);
   const keys = keysOf(rows);

@@ -80,19 +80,21 @@ describe("the data previews probe", () => {
       keyValue: read("apps/docs/src/components/docs/key-value-demo.tsx"),
     };
 
-    expect(modules.expandable).toContain('className="gx-er-row"');
+    expect(modules.expandable).toContain('className="gx-dt-row"');
     expect(modules.expandable).toContain("aria-expanded={expanded}");
-    expect(modules.toolbar).toContain('className="gx-toolbar"');
+    expect(modules.toolbar).toContain('className="gx-dtoolbar"');
     expect(modules.toolbar).toContain('type="search"');
-    expect(modules.toolbar).toContain('className="gx-toolbar-row"');
+    expect(modules.toolbar).toContain('className="gx-dt-row"');
     expect(modules.frozen).toContain('data-pane="frozen"');
     expect(modules.frozen).toContain('data-pane="data"');
-    expect(modules.frozen).toContain('className="gx-fc-body"');
-    expect(modules.keyValue).toContain('className="gx-kv-label"');
+    expect(modules.frozen).toContain('className="gx-dt-frozen-body"');
+    expect(modules.keyValue).toContain('className="gx-dkv-label"');
 
-    // Both choice groups share the one chip, which the probe presses by label.
-    expect(modules.keyValue).toContain('className="gx-demo-choice"');
-    expect(modules.frozen).toContain('className="gx-demo-choice"');
+    // Both choice groups share the one toggle, which the probe presses by label.
+    expect(modules.keyValue).toContain(
+      'className="gx-btn gx-btn-sm gx-toggle"',
+    );
+    expect(modules.frozen).toContain('className="gx-btn gx-btn-sm gx-toggle"');
   });
 
   it("records the press it measured, and the race it waits out", () => {

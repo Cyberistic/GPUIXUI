@@ -166,6 +166,16 @@ describe("the filtering controls preview", () => {
     expect(markup).toContain("reports");
   });
 
+  it("draws the field and the rows in the library's own shapes", () => {
+    // `TableFilterField` is the primitives' `size="sm"` Input above a table,
+    // so the drawing reads `.gx-dfield-sm` inside `.gx-dt` — not a bare input.
+    const markup = renderToStaticMarkup(<TableFilterDemo />);
+    expect(markup).toContain('class="gx-dfield gx-dfield-sm"');
+    expect(markup).toContain('class="gx-dt"');
+    expect(markup).toContain('class="gx-badge gx-badge-sm');
+    expect(markup).not.toContain("<table");
+  });
+
   it("narrows on the field's own edit and reports the rows it keeps", () => {
     // Guarded report: the drawing's input and its row count were suspected
     // dead. The field owns no query, so the drawing holds it and the readout

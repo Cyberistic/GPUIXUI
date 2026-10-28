@@ -131,6 +131,20 @@ export const FROZEN_RECORDS: ReadonlyArray<FrozenRecord> = [
   },
 ];
 
+/** The frozen pane's width, and the width every frozen cell paints. */
+export const FROZEN_WIDTH = 180;
+
+/** The scrolling columns' total width: wider than the pane, so it can pan. */
+export const CONTENT_WIDTH = 420;
+
+/** The badge a record's status paints. */
+const statusTone = (status: FrozenRecord["status"]): string =>
+  status === "approved"
+    ? "gx-badge-success"
+    : status === "draft"
+      ? "gx-badge-warning"
+      : "gx-badge-neutral";
+
 /** The record the grid opens on: the first one, chosen for the whole grid. */
 const OPENING_CHOICE: Option.Option<string> = Option.fromNullishOr(
   FROZEN_RECORDS[0]?.id,
@@ -173,58 +187,103 @@ export function FrozenColumnsDemo() {
   const select = (id: string): void => setChosen(Option.some(id));
 
   const rows = (pane: "frozen" | "data") => (
-    <div className="gx-fc-rows" role="rowgroup">
-      {FROZEN_RECORDS.map((record) => (
-        <div
-          aria-selected={Option.contains(chosen, record.id)}
-          className="gx-fc-row"
-          key={record.id}
-          onClick={() => select(record.id)}
-          role="row"
-        >
-          {pane === "frozen" ? (
-            <span className="gx-fc-cell gx-fc-name" role="cell">
-              {record.name}
-            </span>
-          ) : (
-            <>
-              <span className="gx-fc-cell gx-fc-status" role="cell">
-                {record.status}
-              </span>
-              <span className="gx-fc-cell gx-fc-owner" role="cell">
-                {record.owner}
-              </span>
-              <span className="gx-fc-cell gx-fc-size" role="cell">
-                {record.size}
-              </span>
-            </>
-          )}
-        </div>
-      ))}
+    <div role="rowgroup">
+      {FROZEN_RECORDS.map((record) => {
+        const selected = Option.contains(chosen, record.id);
+        return (
+          <div
+            aria-selected={selected}
+            className="gx-dt-row"
+            data-interactive=""
+            data-row={record.id}
+            data-selected={selected ? "true" : "false"}
+            key={record.id}
+            onClick={() => select(record.id)}
+            role="row"
+            style={{
+              minWidth: pane === "frozen" ? FROZEN_WIDTH : CONTENT_WIDTH,
+            }}
+          >
+            {pane === "frozen" ? (
+              <div
+                className="gx-dt-cell gx-dt-fixed"
+                role="cell"
+                style={{ width: FROZEN_WIDTH }}
+              >
+                {record.name}
+              </div>
+            ) : (
+              <>
+                <div className="gx-dt-cell" role="cell">
+                  <span
+                    className={`gx-badge gx-badge-sm ${statusTone(record.status)}`}
+                  >
+                    {record.status}
+                  </span>
+                </div>
+                <div className="gx-dt-cell" role="cell">
+                  {record.owner}
+                </div>
+                <div className="gx-dt-cell gx-dt-right" role="cell">
+                  {record.size}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 
   return (
-    <div className="gx-demo-frame">
+    <div className="gx-data-scene">
+      <div aria-label="Grid height" className="gx-data-row" role="group">
+        <button
+          aria-pressed={height === READABLE_HEIGHT}
+          className="gx-btn gx-btn-sm gx-toggle"
+          data-pressed={height === READABLE_HEIGHT ? "" : undefined}
+          onClick={() => setHeight(READABLE_HEIGHT)}
+          type="button"
+        >
+          {READABLE_HEIGHT} px
+        </button>
+        <button
+          aria-pressed={Number.isNaN(height)}
+          className="gx-btn gx-btn-sm gx-toggle"
+          data-pressed={Number.isNaN(height) ? "" : undefined}
+          onClick={() => setHeight(UNREADABLE_HEIGHT)}
+          type="button"
+        >
+          NaN
+        </button>
+      </div>
       <div
         aria-label="Files"
-        className="gx-fc"
+        className="gx-dt gx-dt-frozen"
         role="table"
         style={Option.match(bound, {
           onNone: () => undefined,
           onSome: (value) => ({ height: value }),
         })}
       >
-        <div className="gx-fc-pane gx-fc-frozen" data-pane="frozen">
-          <div className="gx-fc-head" role="rowgroup">
-            <div className="gx-fc-headrow" role="row">
-              <span className="gx-fc-cell gx-fc-name" role="columnheader">
+        <div
+          className="gx-dt-frozen-pane"
+          data-pane="frozen"
+          style={{ width: FROZEN_WIDTH }}
+        >
+          <div className="gx-dt-head" role="rowgroup">
+            <div className="gx-dt-row" role="row">
+              <div
+                className="gx-dt-hcell gx-dt-fixed"
+                role="columnheader"
+                style={{ width: FROZEN_WIDTH }}
+              >
                 Name
-              </span>
+              </div>
             </div>
           </div>
           <div
-            className="gx-fc-body"
+            className="gx-dt-frozen-body"
             onScroll={() => apply("frozen")}
             ref={frozen}
             role="rowgroup"
@@ -232,22 +291,26 @@ export function FrozenColumnsDemo() {
             {rows("frozen")}
           </div>
         </div>
-        <div className="gx-fc-pane gx-fc-data" data-pane="data">
-          <div className="gx-fc-head" role="rowgroup">
-            <div className="gx-fc-headrow" role="row">
-              <span className="gx-fc-cell gx-fc-status" role="columnheader">
+        <div className="gx-dt-frozen-data" data-pane="data">
+          <div className="gx-dt-head" role="rowgroup">
+            <div
+              className="gx-dt-row"
+              role="row"
+              style={{ minWidth: CONTENT_WIDTH }}
+            >
+              <div className="gx-dt-hcell" role="columnheader">
                 Status
-              </span>
-              <span className="gx-fc-cell gx-fc-owner" role="columnheader">
+              </div>
+              <div className="gx-dt-hcell" role="columnheader">
                 Owner
-              </span>
-              <span className="gx-fc-cell gx-fc-size" role="columnheader">
+              </div>
+              <div className="gx-dt-hcell gx-dt-right" role="columnheader">
                 Size
-              </span>
+              </div>
             </div>
           </div>
           <div
-            className="gx-fc-body"
+            className="gx-dt-frozen-body"
             onScroll={() => apply("data")}
             ref={data}
             role="rowgroup"
@@ -256,25 +319,7 @@ export function FrozenColumnsDemo() {
           </div>
         </div>
       </div>
-      <div aria-label="Grid height" className="gx-demo-choices" role="group">
-        <button
-          aria-pressed={height === READABLE_HEIGHT}
-          className="gx-demo-choice"
-          onClick={() => setHeight(READABLE_HEIGHT)}
-          type="button"
-        >
-          {READABLE_HEIGHT} px
-        </button>
-        <button
-          aria-pressed={Number.isNaN(height)}
-          className="gx-demo-choice"
-          onClick={() => setHeight(UNREADABLE_HEIGHT)}
-          type="button"
-        >
-          NaN
-        </button>
-      </div>
-      <p className="gx-demo-readout">
+      <p className="gx-data-readout">
         height {Option.getOrElse(bound, () => "none — the pane's share")} ·{" "}
         {Option.match(chosen, {
           onNone: () => "no record chosen",

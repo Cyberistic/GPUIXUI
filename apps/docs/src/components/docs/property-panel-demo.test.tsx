@@ -56,7 +56,7 @@ describe("the property panel preview", () => {
 
   it("prints the rows the probe reads, in its order", () => {
     const labels = [
-      ...markup.matchAll(/class="gx-inspector-label">([^<]+)</g),
+      ...markup.matchAll(/class="gx-dkv-label" style="width:96px">([^<]+)</g),
     ].flatMap((match) => match[1] ?? "");
 
     expect(labels.slice(0, 4)).toEqual(["Name", "Tag", "Size", "Area"]);
@@ -76,10 +76,15 @@ describe("the property panel preview", () => {
     // The stage is a picture of the object, not a scaled diagram: `Wide` has to
     // be visible as the box growing, and the fill is the library's `primary`.
     expect(block(".gx-inspector-box")).toContain("background: var(--primary)");
-    expect(block(".gx-inspector-rows")).toContain(
-      `grid-template-columns: ${fixtureLabelWidth()}px 1fr`,
-    );
-    expect(block(".gx-inspector-input")).toContain(
+    // The panel's rows are `KeyValue`'s fixed track: every label is the one
+    // width the page names, so the values begin at the same x.
+    const widths = [
+      ...markup.matchAll(/class="gx-dkv-label" style="width:(\d+)px"/g),
+    ].map((match) => Number(match[1]));
+    expect(widths.length).toBeGreaterThan(0);
+    expect(new Set(widths)).toEqual(new Set([fixtureLabelWidth()]));
+    // An editable row's field is the primitives' `size="sm"` Input.
+    expect(block(".gx-dfield-sm")).toContain(
       "height: var(--control-height-sm)",
     );
   });

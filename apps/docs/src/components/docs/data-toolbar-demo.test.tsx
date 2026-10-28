@@ -135,9 +135,7 @@ describe("the data toolbar preview", () => {
     expect(html).toContain('placeholder="Filter services…"');
     expect(html).toContain(">Reset<");
     expect(html).not.toContain(">Columns<");
-    expect(html.match(/class="gx-toolbar-row"/g) ?? []).toHaveLength(
-      QUEUE_ROWS.length,
-    );
+    expect(html.match(/ data-row="/g) ?? []).toHaveLength(QUEUE_ROWS.length);
     expect(html).toContain("wait 150 ms");
     expect(html).toContain("6 of 6 rows");
   });
@@ -147,14 +145,17 @@ describe("the data toolbar preview", () => {
     expect(recipe).toContain("border-input bg-muted");
 
     const css = read("apps/docs/src/styles/demos.css");
-    const strip = css.slice(css.indexOf(".gx-toolbar {"));
+    const strip = css.slice(css.indexOf(".gx-dtoolbar {"));
     expect(strip.slice(0, strip.indexOf("}"))).toContain(
       "background: var(--muted);",
     );
+    // `border-input` is shadcn's name for the `border` role; the tokens'
+    // `input` is the field fill, which the strip does not read.
     expect(strip.slice(0, strip.indexOf("}"))).toContain(
-      "border: 1px solid var(--input);",
+      "border: 1px solid var(--border);",
     );
-    const field = css.slice(css.indexOf(".gx-toolbar .gx-field {"));
+    // The toolbar's search field is the primitives' `size="sm"` Input.
+    const field = css.slice(css.indexOf(".gx-dfield-sm {"));
     expect(field.slice(0, field.indexOf("}"))).toContain(
       "height: var(--control-height-sm);",
     );

@@ -82,26 +82,23 @@ export function KeyValueDemo() {
   const track = labelTrack(choice.width);
 
   return (
-    <div className="gx-demo-frame">
-      <div aria-label="File properties" className="gx-kv" role="list">
+    <div className="gx-data-scene">
+      <div aria-label="File properties" className="gx-dkv" role="list">
         {FILE_ENTRIES.map((entry) => (
-          <div className="gx-kv-row" key={entry.key} role="listitem">
-            <span className="gx-kv-label" style={{ width: track }}>
+          <div className="gx-dkv-row" key={entry.key} role="listitem">
+            <span className="gx-dkv-label" style={{ width: track }}>
               {entry.label}
             </span>
-            <span className="gx-kv-value">{entry.value}</span>
+            <span className="gx-dkv-value">{entry.value}</span>
           </div>
         ))}
       </div>
-      <div
-        aria-label="Label column width"
-        className="gx-demo-choices"
-        role="group"
-      >
+      <div aria-label="Label column width" className="gx-data-row" role="group">
         {LABEL_WIDTHS.map((candidate) => (
           <button
             aria-pressed={candidate.id === choice.id}
-            className="gx-demo-choice"
+            className="gx-btn gx-btn-sm gx-toggle"
+            data-pressed={candidate.id === choice.id ? "" : undefined}
             key={candidate.id}
             onClick={() => setChoice(candidate)}
             type="button"
@@ -110,7 +107,7 @@ export function KeyValueDemo() {
           </button>
         ))}
       </div>
-      <p className="gx-demo-readout">{trackReadout(choice)}</p>
+      <p className="gx-data-readout">{trackReadout(choice)}</p>
     </div>
   );
 }

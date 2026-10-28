@@ -25,6 +25,10 @@ import { usePlatform } from "./platform-toggle";
  * `axisTicks`, `groupedBarMarks` and `linePath` place every shape, and the
  * swatches are the theme's own `seriesColors` order, so a series' colour and
  * the bar, path and tick it paints cannot drift from the component.
+ *
+ * The frame mirrors `BarChart`/`LineChart`: the axis column, the plot, the
+ * category slots and the legend, with one layer per series and no grid the
+ * component does not paint.
  */
 
 /** The quarters both series are read across. */
@@ -36,20 +40,9 @@ export const CHART_SERIES: ReadonlyArray<ChartSeries> = [
   { key: "cost", label: "Cost", values: [18, 22, 26, 24] },
 ];
 
-/** The plot's box, and the axis column the drawing adds to its left. */
+/** The plot's box: the sides the caller names, laid out by the package. */
 export const CHART_WIDTH = 360;
 export const CHART_HEIGHT = 160;
-export const CHART_AXIS = 40;
-export const CHART_LABEL_ROW = 24;
-
-/**
- * The space above the plot's top edge.
- *
- * The ceiling's own tick sits on the plot's top line, and an `<svg>` clips what
- * it paints outside its viewBox: without this headroom the label the axis is
- * read against lost its upper half.
- */
-export const CHART_TOP_ROOM = 8;
 
 /** The plot box the package lays out for these sides. */
 export const chartPlot: ChartBox = chartBox(CHART_WIDTH, CHART_HEIGHT, {
@@ -104,72 +97,46 @@ export function ChartDemoBody({
 }) {
   const drawing = chartDrawing(theme, mode);
   const step = chartCeiling / 4;
+  const slot = chartPlot.width / CHART_LABELS.length;
 
   return (
-    <div className="gx-chart-demo" data-demo="charts" data-mode={mode}>
-      <svg
-        aria-label="Revenue against cost by quarter"
-        className="gx-chart-plot"
-        role="img"
-        viewBox={`0 ${-CHART_TOP_ROOM} ${CHART_WIDTH + CHART_AXIS} ${
-          CHART_HEIGHT + CHART_TOP_ROOM + CHART_LABEL_ROW
-        }`}
-      >
-        <g transform={`translate(${CHART_AXIS} 0)`}>
-          {chartTicks.map((tick) => {
-            const y =
-              chartPlot.height - (tick / chartCeiling) * chartPlot.height;
-            return (
-              <g key={tick}>
-                <line
-                  className="gx-chart-grid"
-                  x1={0}
-                  x2={chartPlot.width}
-                  y1={y}
-                  y2={y}
-                />
-                <text
-                  className="gx-chart-tick"
-                  textAnchor="end"
-                  x={-8}
-                  y={y + 3}
-                >
-                  {tickLabel(tick, step)}
-                </text>
-              </g>
-            );
-          })}
-          {CHART_LABELS.map((label, index) => (
-            <text
-              className="gx-chart-tick"
-              key={label}
-              textAnchor="middle"
-              x={(index + 0.5) * (chartPlot.width / CHART_LABELS.length)}
-              y={chartPlot.height + 16}
-            >
-              {label}
-            </text>
+    <div className="gx-dchart" data-demo="charts" data-mode={mode}>
+      <div className="gx-dchart-row">
+        <div
+          aria-hidden="true"
+          className="gx-dchart-axis"
+          style={{ height: chartPlot.height }}
+        >
+          {Arr.reverse(chartTicks).map((tick) => (
+            <span key={tick}>{tickLabel(tick, step)}</span>
           ))}
-          {drawing.bars.map((marks, index) =>
-            drawing.mode === "bars" ? (
-              <g key={CHART_SERIES[index]?.key}>
-                {marks.map((mark, at) =>
-                  mark.kind === "rect" ? (
-                    <rect
-                      fill={seriesColour(drawing.palette, index)}
-                      height={mark.height}
-                      key={at}
-                      width={mark.width}
-                      x={mark.x}
-                      y={mark.y}
-                    />
-                  ) : null,
-                )}
-              </g>
-            ) : null,
-          )}
-          {drawing.mode === "lines"
-            ? drawing.lines.map((path, index) =>
+        </div>
+        <svg
+          aria-label="Revenue against cost by quarter"
+          className="gx-dchart-plot"
+          height={chartPlot.height}
+          role="img"
+          viewBox={`0 0 ${chartPlot.width} ${chartPlot.height}`}
+          width={chartPlot.width}
+        >
+          {drawing.mode === "bars"
+            ? drawing.bars.map((marks, index) => (
+                <g key={CHART_SERIES[index]?.key}>
+                  {marks.map((mark, at) =>
+                    mark.kind === "rect" ? (
+                      <rect
+                        fill={seriesColour(drawing.palette, index)}
+                        height={mark.height}
+                        key={at}
+                        width={mark.width}
+                        x={mark.x}
+                        y={mark.y}
+                      />
+                    ) : null,
+                  )}
+                </g>
+              ))
+            : drawing.lines.map((path, index) =>
                 Option.match(path, {
                   onNone: () => null,
                   onSome: (d) => (
@@ -182,16 +149,26 @@ export function ChartDemoBody({
                     />
                   ),
                 }),
-              )
-            : null}
-        </g>
-      </svg>
-      <ul className="gx-chart-legend">
+              )}
+        </svg>
+      </div>
+      <div className="gx-dchart-categories">
+        {CHART_LABELS.map((label) => (
+          <div
+            className="gx-dchart-category"
+            key={label}
+            style={{ width: slot }}
+          >
+            <span style={{ width: slot }}>{label}</span>
+          </div>
+        ))}
+      </div>
+      <ul className="gx-dchart-legend">
         {CHART_SERIES.map((series, index) => (
           <li key={series.key}>
             <span
               aria-hidden="true"
-              className="gx-chart-swatch"
+              className="gx-dchart-swatch"
               style={{ backgroundColor: seriesColour(drawing.palette, index) }}
             />
             {series.label}
@@ -208,30 +185,25 @@ export function ChartDemo() {
   const [mode, setMode] = useState<ChartMode>("bars");
 
   return (
-    <div className="gx-chart-frame" data-platform={platform}>
+    <div className="gx-data-scene" data-platform={platform}>
       <ChartDemoBody
         key={`${platform}-${look}-${mode}`}
         mode={mode}
         theme={theme}
       />
-      <div className="gx-filter-controls">
-        <span className="gx-filter-caption">Read as</span>
-        <button
-          aria-pressed={mode === "bars"}
-          className="gx-filter-toggle"
-          onClick={() => setMode("bars")}
-          type="button"
-        >
-          bars
-        </button>
-        <button
-          aria-pressed={mode === "lines"}
-          className="gx-filter-toggle"
-          onClick={() => setMode("lines")}
-          type="button"
-        >
-          lines
-        </button>
+      <div aria-label="Read as" className="gx-data-row" role="group">
+        {(["bars", "lines"] as const).map((candidate) => (
+          <button
+            aria-pressed={mode === candidate}
+            className="gx-btn gx-btn-sm gx-toggle"
+            data-pressed={mode === candidate ? "" : undefined}
+            key={candidate}
+            onClick={() => setMode(candidate)}
+            type="button"
+          >
+            {candidate}
+          </button>
+        ))}
       </div>
     </div>
   );

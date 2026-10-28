@@ -64,6 +64,14 @@ export const filterLabel = (label: string | undefined): string =>
 export const filterHint = (placeholder: string | undefined): string =>
   visibleCopy(placeholder) ?? DEFAULT_FILTER_PLACEHOLDER;
 
+/** The theme's status tone for one state, as the Badge recipe paints it. */
+const stateTone = (state: FilterRow["state"]): string =>
+  state === "healthy"
+    ? "gx-badge-success"
+    : state === "degraded"
+      ? "gx-badge-warning"
+      : "gx-badge-neutral";
+
 /** The page's preview: the field narrows the rows it sits above. */
 export function TableFilterDemo() {
   const [query, setQuery] = useState("");
@@ -71,34 +79,60 @@ export function TableFilterDemo() {
   const rows = matchingRows(query);
 
   return (
-    <div className="gx-demo-frame">
-      <input
-        aria-label={filterLabel(label)}
-        className="gx-field"
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={filterHint("")}
-        type="search"
-        value={query}
-      />
-      <ul aria-label="Matching services" className="gx-toolbar-rows">
-        {rows.map((row) => (
-          <li className="gx-toolbar-row" key={row.id}>
-            <span className="gx-toolbar-service">{row.service}</span>
-            <span className="gx-toolbar-meta">{row.environment}</span>
-            <span className="gx-toolbar-state" data-state={row.state}>
-              {row.state}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <div
-        aria-label="Accessible name"
-        className="gx-demo-choices"
-        role="group"
-      >
+    <div className="gx-data-scene">
+      <label className="gx-dfield gx-dfield-sm">
+        <input
+          aria-label={filterLabel(label)}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={filterHint("")}
+          type="search"
+          value={query}
+        />
+      </label>
+      <div aria-label="Matching services" className="gx-dt" role="table">
+        <div className="gx-dt-head" role="rowgroup">
+          <div className="gx-dt-row" role="row">
+            <div className="gx-dt-hcell" role="columnheader">
+              Service
+            </div>
+            <div className="gx-dt-hcell" role="columnheader">
+              Environment
+            </div>
+            <div className="gx-dt-hcell" role="columnheader">
+              State
+            </div>
+          </div>
+        </div>
+        <div role="rowgroup">
+          {rows.map((row) => (
+            <div
+              className="gx-dt-row"
+              data-row={row.id}
+              key={row.id}
+              role="row"
+            >
+              <div className="gx-dt-cell" role="cell">
+                {row.service}
+              </div>
+              <div className="gx-dt-cell" role="cell">
+                {row.environment}
+              </div>
+              <div className="gx-dt-cell" role="cell">
+                <span
+                  className={`gx-badge gx-badge-sm ${stateTone(row.state)}`}
+                >
+                  {row.state}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div aria-label="Accessible name" className="gx-data-row" role="group">
         <button
           aria-pressed={label === ""}
-          className="gx-demo-choice"
+          className="gx-btn gx-btn-sm gx-toggle"
+          data-pressed={label === "" ? "" : undefined}
           onClick={() => setLabel("")}
           type="button"
         >
@@ -106,14 +140,15 @@ export function TableFilterDemo() {
         </button>
         <button
           aria-pressed={label !== ""}
-          className="gx-demo-choice"
+          className="gx-btn gx-btn-sm gx-toggle"
+          data-pressed={label !== "" ? "" : undefined}
           onClick={() => setLabel("Find a service")}
           type="button"
         >
           Find a service
         </button>
       </div>
-      <p className="gx-demo-readout">
+      <p className="gx-data-readout">
         “{query}” · {rows.length} of {FILTER_ROWS.length} rows · name “
         {filterLabel(label)}” · hint “{filterHint("")}”
       </p>

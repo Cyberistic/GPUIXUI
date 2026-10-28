@@ -109,16 +109,16 @@ export function StatCardFrame({
   trend,
 }: StatCardFrameProps) {
   return (
-    <div aria-label={label} className="gx-stat-card" role="group">
-      <span className="gx-stat-label">{label}</span>
-      <span className="gx-stat-reading">
-        <span className="gx-stat-value">{value}</span>
+    <div aria-label={label} className="gx-dstat" role="group">
+      <span className="gx-dstat-label">{label}</span>
+      <span className="gx-dstat-reading">
+        <span className="gx-dstat-value">{value}</span>
         {unit === undefined ? null : (
-          <span className="gx-stat-hint">{unit}</span>
+          <span className="gx-dstat-hint">{unit}</span>
         )}
         {trend === undefined ? null : (
           <span
-            className="gx-stat-trend"
+            className="gx-dstat-hint gx-dstat-trend"
             data-direction={trend.direction}
             title={`Reads ${trendRole(trend.direction)}`}
           >
@@ -126,7 +126,9 @@ export function StatCardFrame({
           </span>
         )}
       </span>
-      {hint === undefined ? null : <span className="gx-stat-hint">{hint}</span>}
+      {hint === undefined ? null : (
+        <span className="gx-dstat-hint">{hint}</span>
+      )}
     </div>
   );
 }
@@ -143,8 +145,8 @@ export function StatCardDemo() {
   };
 
   return (
-    <div className="gx-stat-demo">
-      <div className="gx-stat-row">
+    <div className="gx-data-scene">
+      <div className="gx-data-row" data-even>
         <StatCardFrame
           hint={`${sample.width} × ${sample.height}`}
           label="Area"
@@ -158,11 +160,12 @@ export function StatCardDemo() {
           value={`${STAT_SAMPLES.length}`}
         />
       </div>
-      <div aria-label="Box to measure" className="gx-stat-actions" role="group">
+      <div aria-label="Box to measure" className="gx-data-row" role="group">
         {STAT_SAMPLES.map((candidate) => (
           <button
             aria-pressed={candidate.id === sample.id}
-            className="gx-stat-choice"
+            className="gx-btn gx-btn-sm gx-toggle"
+            data-pressed={candidate.id === sample.id ? "" : undefined}
             key={candidate.id}
             onClick={() => choose(candidate)}
             type="button"
@@ -171,7 +174,7 @@ export function StatCardDemo() {
           </button>
         ))}
       </div>
-      <p className="gx-stat-readout">
+      <p className="gx-data-readout">
         Area {areaReading(sample)} px² · trend from {previous} px²
       </p>
     </div>
