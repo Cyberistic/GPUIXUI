@@ -23,13 +23,14 @@ import { AutoHeight } from "@gpuixui/components/auto-height";
 | `children` | `ReactNode` | — |
 | `open` | `boolean` (required) | — |
 | `level` | `MotionLevel` | `"normal"` |
+| `timing` | `SurfaceTiming` | the `level`'s |
 | `className` | `string` | — |
 | `contentClassName` | `string` | — |
 | `style` | `StateStyle<AutoHeightState>` | — |
 
 ## Motion
 
-The box grows to the content's measured height on the `normal` level (200 ms): it eases out on the way open and in on the way back. The content fades in `20 ms` after the height starts, so the two do not race, and it fades out with the closing box. The subtree stays mounted for the exit window and unmounts after it. Under `MotionProvider preference="reduced"` the duration is zero and the measured height paints at once.
+The box grows to the content's measured height on the `normal` level (200 ms): it eases out on the way open and in on the way back. A caller that moves a box between two resting states passes its own `timing`, so the height and the fade paint on one curve. The content fades in `20 ms` after the height starts, so the two do not race, and it fades out with the closing box. The subtree stays mounted for the exit window and unmounts after it. Under `MotionProvider preference="reduced"` the duration is zero and the measured height paints at once.
 
 ## Limitations
 
