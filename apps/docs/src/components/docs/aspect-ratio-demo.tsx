@@ -6,9 +6,15 @@
  * shape even though the surface is the page's. The width is the reader's: the
  * height under the box is `width / ratio`, so dragging the slider shows the
  * re-layout the native box gets for free.
+ *
+ * The stage is exactly the box at rest — a reservation for the tallest ratio
+ * would leave a band of empty page under every wide box. It grows to the
+ * tallest only while the reader is in the controls, so the box they are about
+ * to choose does not move the page mid-press; the readout sits above the stage
+ * for the same reason.
  */
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 
 const RATIOS = [
   { id: "16:9", ratio: 16 / 9 },
@@ -17,13 +23,24 @@ const RATIOS = [
   { id: "3:4", ratio: 3 / 4 },
 ] as const;
 
+const TALLEST = 3 / 4;
+
 export function AspectRatioDemo() {
   const [width, setWidth] = useState(320);
   const [ratioId, setRatioId] = useState<(typeof RATIOS)[number]["id"]>("16:9");
   const ratio = RATIOS.find((entry) => entry.id === ratioId)?.ratio ?? 16 / 9;
 
   return (
-    <div className="gx-aspect-scene">
+    <div
+      className="gx-aspect-scene"
+      style={
+        {
+          "--gx-aspect-width": `${width}px`,
+          "--gx-aspect-height": `${Math.round(width / ratio)}px`,
+          "--gx-aspect-tallest": `${Math.round(width / TALLEST)}px`,
+        } as CSSProperties
+      }
+    >
       <div className="gx-aspect-controls">
         <label className="gx-aspect-field">
           <span>Width</span>
@@ -41,8 +58,8 @@ export function AspectRatioDemo() {
         <div className="gx-aspect-ratios">
           {RATIOS.map((entry) => (
             <button
-              className="gx-aspect-ratio"
-              data-active={entry.id === ratioId}
+              aria-pressed={entry.id === ratioId}
+              className={`gx-btn gx-btn-sm ${entry.id === ratioId ? "gx-btn-secondary" : "gx-btn-outline"}`}
               key={entry.id}
               onClick={() => setRatioId(entry.id)}
               type="button"
@@ -51,21 +68,13 @@ export function AspectRatioDemo() {
             </button>
           ))}
         </div>
+        <p className="gx-aspect-readout">
+          {width}px wide at {ratioId} · {Math.round(width / ratio)}px tall
+        </p>
       </div>
-      <div
-        className="gx-aspect-frame"
-        style={{
-          width,
-          // Reserve the tallest treatment at this width (the 3:4 portrait), so
-          // changing the ratio or the width never moves the controls.
-          minHeight: Math.round(width / 0.75),
-        }}
-      >
+      <div className="gx-aspect-frame">
         <div className="gx-aspect-box" style={{ aspectRatio: String(ratio) }} />
       </div>
-      <p className="gx-aspect-readout">
-        {width}px wide at {ratioId} · {Math.round(width / ratio)}px tall
-      </p>
     </div>
   );
 }

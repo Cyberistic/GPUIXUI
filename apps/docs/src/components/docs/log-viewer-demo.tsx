@@ -138,7 +138,7 @@ export function LogViewerFrame({
         </div>
         <button
           aria-pressed={follow}
-          className="gx-logviewer-follow"
+          className={`gx-btn gx-btn-sm ${follow ? "gx-btn-secondary" : "gx-btn-outline"}`}
           onClick={() => onFollowChange(!follow)}
           type="button"
         >
@@ -191,7 +191,7 @@ export function LogViewerDemo() {
       />
       <div className="gx-files-actions">
         <button
-          className="gx-files-action"
+          className="gx-btn gx-btn-outline gx-btn-sm"
           onClick={() => setLines((current) => appendLine(current))}
           type="button"
         >

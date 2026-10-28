@@ -60,13 +60,26 @@ describe("login block", () => {
     expect(markup).toContain('class="gx-auth-status"');
   });
 
-  it("labels its fields as the shipped Field does, on a mark and a divider", () => {
+  it("opens on the reference's heading and sentence, with no mark", () => {
+    // The card is the reference the page was asked to reproduce: the head is
+    // the title and one sentence, and a site mark above the form was neither
+    // part of it nor part of the shipped `CardHeader`.
+    expect(markup).toContain(
+      '<h3 class="gx-auth-title">Login to your account</h3>',
+    );
+    expect(markup).toContain(
+      '<p class="gx-auth-desc">Enter your email below to login to your account</p>',
+    );
+    expect(markup).not.toContain("gx-auth-mark");
+    expect(markup).not.toContain(">Sign in</h3>");
+  });
+
+  it("labels its fields as the shipped Field does, on a divider", () => {
     // The preview painted each label as a 10px uppercase mono eyebrow; the
     // shipped `FieldLabel` is 14px medium sans in the body role, so the drawing
     // now names the control rather than annotating a diagram.
     expect(markup).toContain('class="gx-auth-label"');
     expect(markup).not.toContain("gx-block-label");
-    expect(markup).toContain('class="gx-auth-mark"');
     expect(markup).toContain('class="gx-auth-divider"');
     expect(rule(".gx-auth-label")).toContain("font-size: 14px");
     expect(rule(".gx-auth-label")).not.toContain("text-transform");

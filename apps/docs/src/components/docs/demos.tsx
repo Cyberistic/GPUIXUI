@@ -2102,7 +2102,7 @@ const accordionSections = [
 ] as const;
 
 /** The native keyboard contract, reproduced so the preview is explorable. */
-const AccordionDemo = () => {
+export const AccordionDemo = () => {
   const [open, setOpen] = useState<string | null>("surface");
   const rows = useRef<Array<HTMLButtonElement | null>>([]);
   const id = useId();
@@ -2192,7 +2192,7 @@ const accordionSettings = [
 ] as const;
 
 /** A settings panel: one section open, a disabled one below it. */
-const AccordionComposition = () => {
+export const AccordionComposition = () => {
   const [open, setOpen] = useState<string | null>("appearance");
   const id = useId();
 
@@ -2693,7 +2693,7 @@ const ToastCardPreview = ({
         </div>
         {toast.actionLabel === undefined ? null : (
           <button
-            className="gx-toast-action"
+            className="gx-btn gx-btn-outline gx-btn-sm"
             disabled={!slot.interactive}
             onClick={onAction}
             type="button"

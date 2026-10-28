@@ -65,7 +65,10 @@ export function HoverCardDemo() {
                 <p className="gx-hovercard-body">
                   Mathematician · Analytical Engine
                 </p>
-                <button className="gx-hovercard-action" type="button">
+                <button
+                  className="gx-btn gx-btn-outline gx-btn-sm gx-hovercard-action"
+                  type="button"
+                >
                   Open profile
                 </button>
               </div>

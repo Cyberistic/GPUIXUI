@@ -265,7 +265,7 @@ export const TableWorkflow = () => {
           <div className="gx-table-columns" ref={columnsAnchor}>
             <button
               aria-expanded={columnsOpen}
-              className="gx-table-columns-btn"
+              className="gx-btn gx-btn-outline gx-btn-sm"
               onClick={() => setColumnsOpen((open) => !open)}
               type="button"
             >
@@ -441,7 +441,7 @@ export const TableWorkflow = () => {
             <div className="gx-table-pagenav">
               <button
                 aria-label="Previous page"
-                className="gx-table-pagebtn"
+                className="gx-btn gx-btn-outline gx-btn-sm gx-btn-square"
                 disabled={current === 0}
                 onClick={() => setPage(current - 1)}
                 type="button"
@@ -450,7 +450,7 @@ export const TableWorkflow = () => {
               </button>
               <button
                 aria-label="Next page"
-                className="gx-table-pagebtn"
+                className="gx-btn gx-btn-outline gx-btn-sm gx-btn-square"
                 disabled={current >= count - 1}
                 onClick={() => setPage(current + 1)}
                 type="button"

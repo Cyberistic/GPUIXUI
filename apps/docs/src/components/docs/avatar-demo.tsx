@@ -145,8 +145,7 @@ export function AvatarWorkflowBody() {
         </div>
         <button
           aria-pressed={onlineOnly}
-          className="gx-avatar-choice-button"
-          data-chosen={onlineOnly ? "" : undefined}
+          className={`gx-btn gx-btn-sm ${onlineOnly ? "gx-btn-secondary" : "gx-btn-outline"}`}
           onClick={() => setOnlineOnly((value) => !value)}
           type="button"
         >
@@ -172,7 +171,7 @@ export function AvatarWorkflowBody() {
           value={draft}
         />
         <button
-          className="gx-avatar-choice-button"
+          className="gx-btn gx-btn-sm gx-btn-secondary"
           onClick={submit}
           type="button"
         >

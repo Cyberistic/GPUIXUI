@@ -50,7 +50,7 @@ export function ItemDemo() {
               <p className="gx-item-description">{row.description}</p>
             </div>
             <div className="gx-item-actions">
-              <button className="gx-item-action" type="button">
+              <button className="gx-btn gx-btn-outline gx-btn-sm" type="button">
                 {row.action}
               </button>
             </div>

@@ -327,6 +327,11 @@ describe("preview style sheets", () => {
       "--switch-knob-size-lg",
       "--switch-inset-lg",
       "--switch-border-width-lg",
+      // The aspect-ratio drawing sizes its stage from the reader's width and
+      // ratio; the three values are written inline by the scene, not by a theme.
+      "--gx-aspect-width",
+      "--gx-aspect-height",
+      "--gx-aspect-tallest",
     ]);
 
     const unknown = previewCss().map(([sheet, css]) => {
@@ -668,28 +673,27 @@ describe("preview style sheets", () => {
     ).toContain("color: var(--muted-foreground)");
   });
 
-  it("reads a carousel's control fills and its track edge from the theme", () => {
-    // The control is the local `Button`'s `secondary` variant: `secondary` fill,
-    // `borderStrong` edge and the derived opaque pointer steps. The track's edge
-    // is the `border` role: the recipe's `border-input` is shadcn's name for a
-    // border, and the registry resolves it to `border`, because this library's
-    // `input` role is the field fill (the card's own white in light).
+  it("draws the carousel's arrows as the shared secondary button", () => {
+    // The arrows used to carry their own bordered box; they are the local
+    // `Button`'s `secondary` variant, so they paint `.gx-btn` and the sheet must
+    // not keep a second, diverging copy of that fill. The track's edge is the
+    // `border` role: the recipe's `border-input` is shadcn's name for a border,
+    // and the registry resolves it to `border`, because this library's `input`
+    // role is the field fill (the card's own white in light).
     const css = read("../styles/demos.css");
+    const arrows = read("../components/docs/carousel-demo.tsx");
 
-    expect(block(css, ".gx-carousel-btn")).toContain(
+    expect(
+      arrows.match(/gx-btn gx-btn-secondary gx-btn-square/g) ?? [],
+    ).toHaveLength(2);
+    expect(css).not.toContain(".gx-carousel-btn");
+    expect(block(css, ".gx-btn-secondary")).toContain(
       "background: var(--secondary)",
     );
-    expect(block(css, ".gx-carousel-btn")).toContain(
-      "border: 1px solid var(--border-strong)",
-    );
-    expect(block(css, ".gx-carousel-btn:hover:not(:disabled)")).toContain(
-      "var(--secondary-hover)",
-    );
-    expect(block(css, ".gx-carousel-btn:active:not(:disabled)")).toContain(
-      "var(--secondary-pressed)",
-    );
-    expect(block(css, ".gx-carousel-btn:disabled")).toContain(
-      "background: var(--disabled)",
+    // The hover is the recipe's 12% mix toward the foreground, not the
+    // carousel's old opaque `secondary-hover` step.
+    expect(block(css, ".gx-btn-secondary:hover")).toContain(
+      "color-mix(in srgb, var(--secondary), var(--foreground) 12%)",
     );
     expect(block(css, ".gx-carousel-card")).toContain(
       "border: 1px solid var(--border)",

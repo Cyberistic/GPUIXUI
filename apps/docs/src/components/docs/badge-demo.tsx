@@ -168,8 +168,7 @@ export function BadgeWorkflowBody() {
           {deploymentFilters.map((entry) => (
             <button
               aria-pressed={filter === entry}
-              className="gx-badge-choice"
-              data-chosen={filter === entry ? "" : undefined}
+              className={`gx-btn gx-btn-sm ${filter === entry ? "gx-btn-secondary" : "gx-btn-outline"}`}
               key={entry}
               onClick={() => setFilter(entry)}
               type="button"

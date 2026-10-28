@@ -138,8 +138,7 @@ const PolicyBody = ({
         <span className="gx-collapse-row-label">Add jitter</span>
         <button
           aria-pressed={policy.jitter}
-          className="gx-collapse-toggle"
-          data-selected={policy.jitter ? "" : undefined}
+          className={`gx-btn gx-btn-sm ${policy.jitter ? "gx-btn-secondary" : "gx-btn-outline"}`}
           onClick={onJitter}
           type="button"
         >
@@ -318,7 +317,7 @@ const ControlledSection = () => {
         {open ? <StateBody /> : null}
       </div>
       <button
-        className="gx-collapse-consumer"
+        className="gx-btn gx-btn-sm gx-btn-outline"
         onClick={() => setOpen((current) => !current)}
         type="button"
       >

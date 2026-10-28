@@ -22,7 +22,7 @@ export function CopyButtonDemo() {
       </div>
       <button
         aria-label={copied ? "Copied" : "Copy"}
-        className="gx-copybutton-btn"
+        className="gx-btn gx-btn-secondary gx-btn-sm"
         onClick={() => {
           setCopied(true);
           clearTimeout(timer.current);

@@ -1948,7 +1948,6 @@
 }
 
 .gx-kan-tab:focus-visible,
-.gx-kan-filter:focus-visible,
 .gx-kan-plus:focus-visible,
 .gx-kan-more:focus-visible {
   border-radius: calc(var(--radius) + 1px);
@@ -1975,31 +1974,6 @@
 .gx-notif-file-meta {
   font-size: 10.5px;
   color: var(--placeholder);
-}
-
-.gx-notif-download {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  background: var(--card);
-  color: var(--foreground);
-  cursor: pointer;
-}
-
-.gx-notif-download:hover {
-  background: var(--hover);
-  border-color: var(--border-strong);
-}
-
-.gx-notif-download:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
 }
 
 /* The actions row and the accepted line share one height, so accepting is a
@@ -2308,26 +2282,9 @@
   outline-offset: -2px;
 }
 
+/* The filter closes the tab row; its chrome is the shared outline action. */
 .gx-kan-filter {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: var(--control-height-sm);
   margin-left: auto;
-  padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 1px);
-  background: transparent;
-  color: var(--muted-foreground);
-  font-family: inherit;
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.gx-kan-filter:hover {
-  background: var(--hover);
-  color: var(--foreground);
 }
 
 .gx-kan-board {
@@ -5555,29 +5512,12 @@
   color: var(--foreground);
 }
 
+/* The shared outline action at the card's width: the label runs from the
+   terminal glyph to the chevron, so only the row's own layout stays here. */
 .gx-mgmt-debug {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  justify-content: flex-start;
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 4px);
-  background: var(--card);
-  color: var(--foreground);
-  font: inherit;
-  font-size: 11.5px;
   text-align: left;
-  cursor: pointer;
-}
-
-.gx-mgmt-debug:hover {
-  background: var(--hover);
-}
-
-.gx-mgmt-debug:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 1px;
 }
 
 .gx-mgmt-debug-glyph {
@@ -7670,15 +7610,6 @@ button.gx-sb-row {
 
 .gx-sb-scene-open {
   margin-top: 4px;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--primary);
-  color: var(--primary-foreground);
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
 }
 
 .gx-sb-news-button {

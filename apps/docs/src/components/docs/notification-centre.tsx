@@ -384,7 +384,7 @@ const Body = ({
         </span>
         <button
           aria-label={`Download ${body.name}`}
-          className="gx-notif-download"
+          className="gx-btn gx-btn-secondary gx-btn-sm gx-btn-square"
           onClick={onDownload}
           type="button"
         >

@@ -52,7 +52,11 @@ export function MessageScrollerDemo() {
           ))}
         </div>
         {pinned ? null : (
-          <button className="gx-scroller-jump" onClick={jump} type="button">
+          <button
+            className="gx-btn gx-btn-secondary gx-btn-sm"
+            onClick={jump}
+            type="button"
+          >
             {unread === 0
               ? "Jump to latest"
               : `${unread} new ${unread === 1 ? "message" : "messages"}`}
