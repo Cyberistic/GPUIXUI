@@ -9,6 +9,8 @@ import { pageDependenciesPlugin } from "./plugins/page-dependencies-plugin";
 import { pageSourcesPlugin } from "./plugins/page-source-plugin";
 import { packageGraphPlugin } from "./plugins/package-graph-plugin";
 import { publicSymbolsPlugin } from "./plugins/public-symbols-plugin";
+import { repoRoot } from "./src/lib/public-symbols-source";
+import { prerenderPaths } from "./src/lib/prerender-pages";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 
@@ -66,7 +68,30 @@ export default defineConfig({
     gpuixWeb(),
     fumadocsMdx(),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({
+      /**
+       * Render every page once, at build time, into `dist/client`.
+       *
+       * Nearly every route is content; only `/live` needs a per-request
+       * document (`src/lib/prerender-pages.ts` argues it). The Worker stays
+       * deployed for the routes that are genuinely dynamic, but a page request
+       * is answered by Cloudflare's asset layer before the Worker is invoked:
+       * the burst that used to exhaust the CPU limit now renders nothing.
+       */
+      prerender: {
+        enabled: true,
+        // The list below is the whole inventory, derived from the same
+        // collections the sitemap advertises; discovery and crawling would
+        // only guess at it from the route tree and the links in it.
+        autoStaticPathsDiscovery: false,
+        crawlLinks: false,
+        // Each concurrent render holds a whole page (and `/docs/reference` its
+        // 2,700-row symbol table); four keeps the build inside a laptop's
+        // memory.
+        concurrency: 4,
+      },
+      pages: prerenderPaths(repoRoot).map((path) => ({ path })),
+    }),
     react(),
     publicSymbolsPlugin(),
     pageDependenciesPlugin(),
