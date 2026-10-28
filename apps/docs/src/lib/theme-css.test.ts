@@ -4,6 +4,7 @@ import {
   darkSeries,
   decorativeFloor,
   dividerOn,
+  elevationShadow,
   filledHover,
   filledPressed,
   highContrastLightSeries,
@@ -246,6 +247,23 @@ describe("theme bridge", () => {
 
     expect(vars["--font-sans"]).toContain("BlinkMacSystemFont");
     expect(vars["--font-mono"]).toBe(themes.dark.typography.mono);
+  });
+
+  it("publishes each elevation level's own shadow", () => {
+    // A drawing of a raised surface must carry the theme's lift, not a literal
+    // that agrees with one mode: the drawer page painted `0 24px 60px`, which
+    // is no level in either palette.
+    const vars = toCssVars(themes.dark);
+    for (const level of ["sm", "md", "lg"] as const) {
+      const shadow = elevationShadow(themes.dark, level);
+      if (shadow === undefined) throw new Error(`the theme has no ${level}`);
+      expect(vars[`--elevation-${level}`]).toBe(
+        `${shadow.offsetX}px ${shadow.offsetY}px ${shadow.blurRadius}px ${shadow.spreadRadius}px ${shadow.color}`,
+      );
+    }
+    // `overlay` is reserved and empty: a level that paints nothing writes no
+    // variable, so a surface naming it paints flat.
+    expect(vars["--elevation-overlay"]).toBeUndefined();
   });
 
   it("publishes the syntax palette a code block paints", () => {

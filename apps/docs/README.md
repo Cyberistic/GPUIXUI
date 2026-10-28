@@ -167,8 +167,8 @@ src/components/docs/date-picker-preview.ts The picker preview's grid, month arit
 src/components/docs/date-picker-demo.tsx  The date picker's two browser renderings and their source strings
 src/components/docs/time-picker-preview.ts The time field's clock, its segment clamp and its blur padding
 src/components/docs/time-picker-demo.tsx  The time picker's two browser renderings and their source strings
-src/components/docs/drawer-preview.ts     The drawer preview's edge box, dismiss stack and filter rules
-src/components/docs/drawer-demo.tsx       The drawer's two browser renderings and their source strings
+src/components/docs/drawer-preview.ts     The drawer preview's edges, dismiss stack and filter rules
+src/components/docs/sheet-drawer-preview.tsx The sheet and drawer drawings, opened on the surface
 src/components/docs/popover-preview.ts    The popover preview's side gap, snap margin and pull-back
 src/components/docs/popover-sides.tsx     The popover's four sides and its collision pull-back
 src/components/docs/sidebar-demo.tsx      The sidebar and account-menu drawings and their source strings

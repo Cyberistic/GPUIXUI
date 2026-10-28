@@ -181,6 +181,7 @@ component call sites adopt the outline in their own workstream.
 | [716](./716-chat-family-rebuild.md) | Chat family on shadcn's Bubble / Message / MessageScroller, with the fixed-row layout fix | D | `207`, `206` | implemented |
 | [717](./717-file-tree-ai-elements.md) | FileTree on shadcn's AI Elements `file-tree`: parts, guides, one selected path | D | `610` | landed |
 | [718](./718-overlay-surface-fixes.md) | Overlay surfaces: sheet/drawer slide + redesign, popover sides, navigation-menu chevron, hover-card link trigger, one veil wash | D | — | implemented |
+| [719](./719-sheet-drawer-drawings.md) | The sheet and drawer drawings open on the surface, in a frame that is the window | D | `718` | landed |
 
 
 ## How to use a plan

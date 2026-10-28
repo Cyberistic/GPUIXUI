@@ -11,35 +11,26 @@ import {
   activeFilterCount,
   describeIssues,
   dismissTop,
-  drawerBox,
   filterIssues,
   initialFilter,
-  type DrawerSize,
+  isVertical,
   type DrawerSide,
+  type DrawerSize,
   type Issue,
   type IssueFilter,
 } from "./drawer-preview";
+import { usePreviewInteractive } from "./preview-surface";
 
 /**
- * Browser previews for the Drawer page.
+ * The sheet and drawer drawings: the surface each page is about.
  *
- * The shipped drawer is a modal panel anchored to a window edge: it veils the
- * whole window, keeps one tab stop inside the surface, closes on Escape or an
- * outside press unless `dismissible={false}`, and returns focus to its opener.
- * The drawing takes the same rules — focus moves in on open and back to the
- * button that opened it, Tab wraps inside the panel, and the backdrop is the
- * only outside-press target — so a reader pressing through the preview meets
- * the component's contract rather than a generic slide-over.
- *
- * Geometry comes from `drawer-preview.ts`, which reads the component's own
- * size tables in its test. The page says the paint is an approximation: the
- * drawing's slide is a CSS `translate` of the surface's own span, while the
- * native surface travels the same distance on `left`/`top` (the runtime has no
- * `transform`); the inner corners and the grabber are the component's.
+ * Both scenes **open on the surface**. The server markup carries the dialog, so
+ * the first paint is a picture of the drawer rather than an empty stage, and a
+ * press on the visible trigger opens it again for the slide. The geometry,
+ * corners, lift, grabber and travel live in `demos.css`, read out of
+ * `drawer.tsx` by `sheet-drawer-preview.test.ts`; `drawer-preview.ts` owns the
+ * arithmetic a drawing cannot show (the dismiss stack, the filter).
  */
-
-/** The logical window the drawing is laid out in. */
-const PREVIEW_WINDOW = { width: 560, height: 340 } as const;
 
 /** The focusable controls inside the surface, for the Tab wrap. */
 const focusableInside = (root: HTMLElement): ReadonlyArray<HTMLElement> => [
@@ -70,19 +61,17 @@ const trapTab = (event: KeyboardEvent, root: HTMLElement): void => {
 };
 
 /**
- * The open state, the opener to restore focus to, and the panel to focus.
+ * The scene's open state, the opener to restore focus to, and the panel.
  *
- * `dismissible` gates Escape here for the same reason the component gates its
- * dismiss layer: a surface that cannot be left must consume the key, not pass
- * it to whatever is underneath.
+ * The scene starts open, so the still is legible without a press, and only a
+ * reader's own press moves focus into the panel. Every focus passes
+ * `preventScroll`: the browser's `focus()` scrolls a mid-slide surface into
+ * view, which cancels the animation, while the native renderer never scrolls.
  */
 const useDrawer = (dismissible: boolean) => {
-  // The native drawer's focus enters through the renderer, which never scrolls.
-  // A browser `focus()` centres the focused box, and the surface is mid-slide
-  // when it takes focus — the scroll cancels the animation, which is what made
-  // the sheet look static. `preventScroll` is the cause-level fix.
-
-  const [open, setOpen] = useState(false);
+  const interactive = usePreviewInteractive();
+  const [open, setOpen] = useState(true);
+  const openedByReader = useRef(false);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const panel = useRef<HTMLDivElement | null>(null);
 
@@ -93,12 +82,16 @@ const useDrawer = (dismissible: boolean) => {
 
   const openFrom = (event: ReactMouseEvent<HTMLButtonElement>) => {
     trigger.current = event.currentTarget;
+    openedByReader.current = true;
     setOpen(true);
   };
 
   useEffect(() => {
-    if (!open) return;
-    panel.current?.focus({ preventScroll: true });
+    if (!open || !interactive) return;
+    if (openedByReader.current) {
+      openedByReader.current = false;
+      panel.current?.focus({ preventScroll: true });
+    }
 
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape" && dismissible) {
@@ -112,7 +105,7 @@ const useDrawer = (dismissible: boolean) => {
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [close, dismissible, open]);
+  }, [close, dismissible, interactive, open]);
 
   return { open, openFrom, close, panel };
 };
@@ -132,10 +125,12 @@ interface DrawerSurfaceProps {
 }
 
 /**
- * The veil and the edge surface, at the box the component computes.
+ * The veil and the edge surface, at the component's own geometry.
  *
  * The backdrop is `inset: 0` over the drawing's window, as the native veil is
- * the whole window; a press inside the surface stops there rather than closing.
+ * the whole window; the surface's box comes from `data-side`/`data-size` in the
+ * style sheet, so it is anchored to an edge and clamped by the frame. A press
+ * inside the surface stops there rather than closing.
  */
 const DrawerSurface = ({
   side,
@@ -147,43 +142,162 @@ const DrawerSurface = ({
   onBackdrop,
   children,
   footer,
-}: DrawerSurfaceProps) => {
-  const box = drawerBox(side, size, PREVIEW_WINDOW);
-
-  return (
+}: DrawerSurfaceProps) => (
+  <div
+    className="gx-drawer-backdrop gx-overlay-veil"
+    onClick={onBackdrop}
+    role="presentation"
+  >
     <div
-      className="gx-drawer-backdrop gx-overlay-veil"
-      onClick={onBackdrop}
-      role="presentation"
+      aria-label={title}
+      aria-modal="true"
+      className="gx-drawer"
+      data-side={side}
+      data-size={size}
+      onClick={(event) => event.stopPropagation()}
+      ref={panelRef}
+      role="dialog"
+      tabIndex={-1}
     >
-      <div
-        aria-label={title}
-        aria-modal="true"
-        className="gx-drawer"
-        data-side={side}
-        onClick={(event) => event.stopPropagation()}
-        ref={panelRef}
-        role="dialog"
-        style={{ width: box.width, height: box.height }}
-        tabIndex={-1}
-      >
-        {side === "bottom" ? (
-          <div aria-hidden="true" className="gx-drawer-grabber" />
-        ) : null}
-        <button
-          aria-label="Close drawer"
-          className="gx-drawer-close"
-          onClick={onClose}
-          type="button"
-        >
-          ✕
-        </button>
+      {isVertical(side) ? (
+        <div aria-hidden="true" className="gx-drawer-grabber" />
+      ) : null}
+      <div className="gx-drawer-panel">
         <div className="gx-drawer-header">
           <h2 className="gx-drawer-title">{title}</h2>
           <p className="gx-drawer-desc">{description}</p>
         </div>
         <div className="gx-drawer-body">{children}</div>
         <div className="gx-drawer-footer">{footer}</div>
+      </div>
+      <button
+        aria-label="Close drawer"
+        className="gx-drawer-close"
+        onClick={onClose}
+        type="button"
+      >
+        ✕
+      </button>
+    </div>
+  </div>
+);
+
+const sides: ReadonlyArray<{ side: DrawerSide; label: string }> = [
+  { side: "right", label: "From the right" },
+  { side: "left", label: "From the left" },
+  { side: "bottom", label: "From the bottom" },
+  { side: "top", label: "From the top" },
+];
+
+const sizes: ReadonlyArray<DrawerSize> = ["sm", "md", "lg"];
+
+const isDrawerSize = (value: string): value is DrawerSize =>
+  sizes.some((size) => size === value);
+
+/** The measurement the drawing's window is: every edge and size, live. */
+const SheetDrawing = () => {
+  const [side, setSide] = useState<DrawerSide>("right");
+  const [size, setSize] = useState<DrawerSize>("md");
+  const [dismissible, setDismissible] = useState(true);
+  const { open, openFrom, close, panel } = useDrawer(dismissible);
+  const outcome = dismissTop([
+    { name: "dialog", dismissible: true },
+    ...(open ? [{ name: "drawer", dismissible }] : []),
+  ]);
+  const story =
+    outcome.closed === "drawer"
+      ? "Escape closes the drawer; the dialog underneath stays open."
+      : outcome.closed === "dialog"
+        ? "The drawer is closed; Escape reaches the dialog underneath."
+        : "dismissible={false}: Escape is consumed, and the dialog underneath stays open.";
+
+  return (
+    <div className="gx-demo gx-drawer-scene">
+      <div className="gx-drawer-toolbar">
+        {sides.map((entry) => (
+          <button
+            className="gx-btn gx-btn-secondary"
+            key={entry.side}
+            onClick={(event) => {
+              setSide(entry.side);
+              openFrom(event);
+            }}
+            type="button"
+          >
+            {entry.label}
+          </button>
+        ))}
+        <label className="gx-drawer-field">
+          <span>Size</span>
+          <select
+            className="gx-field gx-drawer-select"
+            onChange={(event) => {
+              const next = event.currentTarget.value;
+              if (isDrawerSize(next)) setSize(next);
+            }}
+            value={size}
+          >
+            {sizes.map((entry) => (
+              <option key={entry} value={entry}>
+                {entry}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="gx-drawer-field">
+          <input
+            checked={dismissible}
+            onChange={() => setDismissible((current) => !current)}
+            type="checkbox"
+          />
+          <span>Dismissible</span>
+        </label>
+      </div>
+      <p className="gx-drawer-hint" role="status">
+        {story}
+      </p>
+      <div className="gx-drawer-frame">
+        <div className="gx-drawer-appbar">
+          <span className="gx-drawer-apptitle">Sheet geometry</span>
+          <span className="gx-drawer-readout">
+            side=&quot;{side}&quot; · size=&quot;{size}&quot;
+          </span>
+        </div>
+        <p className="gx-drawer-copy gx-drawer-page">
+          The frame is the window: the sheet is anchored to one edge, its own
+          span outside that edge at the start of the slide, and clamped to the
+          window in the direction it asks for.
+        </p>
+        {open ? (
+          <DrawerSurface
+            description={`side="${side}" · size="${size}"`}
+            footer={
+              <button
+                className="gx-btn gx-btn-primary"
+                onClick={close}
+                type="button"
+              >
+                Close
+              </button>
+            }
+            onBackdrop={dismissible ? close : undefined}
+            onClose={close}
+            panelRef={panel}
+            side={side}
+            size={size}
+            title="Surface geometry"
+          >
+            <p className="gx-drawer-copy">
+              The surface is the theme&apos;s <code>popover</code> fill with a{" "}
+              <code>border</code> edge, the <code>elevation.lg</code> lift and
+              the inner corners rounded — the window edge stays flush.
+            </p>
+            <p className="gx-drawer-copy">
+              A column takes the window&apos;s height; a top or bottom sheet
+              takes its width and wears the grabber.
+            </p>
+          </DrawerSurface>
+        ) : null}
       </div>
     </div>
   );
@@ -240,35 +354,35 @@ const FilterChoice = ({
   </label>
 );
 
-/** A filter button that opens the drawer over the list it narrows. */
-const DrawerWorkflow = () => {
+/** The filter drawer over the list it narrows, on the window's right edge. */
+const DrawerDrawing = () => {
   const [applied, setApplied] = useState<IssueFilter>(initialFilter);
   const [draft, setDraft] = useState<IssueFilter>(initialFilter);
   const { open, openFrom, close, panel } = useDrawer(true);
   const shown = filterIssues(issues, applied);
   const count = activeFilterCount(applied);
 
-  const showFilters = (event: ReactMouseEvent<HTMLButtonElement>) => {
-    setDraft(applied);
-    openFrom(event);
-  };
-
   return (
     <div className="gx-demo gx-drawer-scene">
-      <div className="gx-drawer-frame">
-        <div className="gx-drawer-appbar">
-          <span className="gx-drawer-apptitle">Issues</span>
-          <button
-            className="gx-btn gx-btn-secondary"
-            onClick={showFilters}
-            type="button"
-          >
-            Filters{count === 0 ? "" : ` · ${count}`}
-          </button>
-        </div>
+      <div className="gx-drawer-toolbar">
+        <button
+          className="gx-btn gx-btn-secondary"
+          onClick={(event) => {
+            setDraft(applied);
+            openFrom(event);
+          }}
+          type="button"
+        >
+          Filters{count === 0 ? "" : ` · ${count}`}
+        </button>
         <p className="gx-drawer-readout" role="status">
           {describeIssues(shown.length, issues.length)}
         </p>
+      </div>
+      <div className="gx-drawer-frame">
+        <div className="gx-drawer-appbar">
+          <span className="gx-drawer-apptitle">Issues</span>
+        </div>
         <ul className="gx-drawer-issues">
           {shown.map((issue) => (
             <li
@@ -310,8 +424,8 @@ const DrawerWorkflow = () => {
                 </button>
               </>
             }
-            onClose={close}
             onBackdrop={close}
+            onClose={close}
             panelRef={panel}
             side="right"
             size="md"
@@ -367,116 +481,6 @@ const DrawerWorkflow = () => {
                 filterIssues(issues, draft).length,
                 issues.length,
               )}
-            </p>
-          </DrawerSurface>
-        ) : null}
-      </div>
-    </div>
-  );
-};
-
-const sides: ReadonlyArray<{ side: DrawerSide; label: string }> = [
-  { side: "right", label: "From the right" },
-  { side: "left", label: "From the left" },
-  { side: "bottom", label: "From the bottom" },
-];
-
-/** The three edges and three sizes, with the dismissal switch. */
-const DrawerSides = () => {
-  const [side, setSide] = useState<DrawerSide>("right");
-  const [size, setSize] = useState<DrawerSize>("md");
-  const [dismissible, setDismissible] = useState(true);
-  const { open, openFrom, close, panel } = useDrawer(dismissible);
-  const outcome = dismissTop([
-    { name: "dialog", dismissible: true },
-    { name: "drawer", dismissible },
-  ]);
-
-  return (
-    <div className="gx-demo gx-drawer-scene">
-      <div className="gx-drawer-frame">
-        <div className="gx-drawer-appbar">
-          <span className="gx-drawer-apptitle">Drawer geometry</span>
-          <label className="gx-drawer-field">
-            <span>Size</span>
-            <select
-              className="gx-field gx-drawer-select"
-              onChange={(event) => {
-                const next = event.currentTarget.value;
-                if (next === "sm" || next === "md" || next === "lg") {
-                  setSize(next);
-                }
-              }}
-              value={size}
-            >
-              <option value="sm">sm</option>
-              <option value="md">md</option>
-              <option value="lg">lg</option>
-            </select>
-          </label>
-        </div>
-        <div className="gx-drawer-actions">
-          {sides.map((entry) => (
-            <button
-              className="gx-btn gx-btn-secondary"
-              key={entry.side}
-              onClick={(event) => {
-                setSide(entry.side);
-                openFrom(event);
-              }}
-              type="button"
-            >
-              {entry.label}
-            </button>
-          ))}
-          <label className="gx-drawer-field">
-            <input
-              checked={dismissible}
-              onChange={() => setDismissible((current) => !current)}
-              type="checkbox"
-            />
-            <span>Dismissible</span>
-          </label>
-        </div>
-        <p className="gx-drawer-readout" role="status">
-          {outcome.closed === "drawer"
-            ? "Escape closes the drawer; the dialog underneath stays open."
-            : "Escape is consumed by the drawer; the dialog underneath stays open."}
-        </p>
-        <p className="gx-drawer-hint">
-          A <code>lg</code> column is 560px wide; a bottom sheet is the
-          window&apos;s width and at most 420px tall. Both are capped by the
-          window.
-        </p>
-
-        {open ? (
-          <DrawerSurface
-            description={`side="${side}" · size="${size}"`}
-            footer={
-              <button
-                className="gx-btn gx-btn-primary"
-                onClick={close}
-                type="button"
-              >
-                Close
-              </button>
-            }
-            onClose={close}
-            onBackdrop={dismissible ? close : undefined}
-            panelRef={panel}
-            side={side}
-            size={size}
-            title="Surface geometry"
-          >
-            <p className="gx-drawer-copy">
-              The surface is the theme&apos;s <code>popover</code> fill with a{" "}
-              <code>border</code> edge, the <code>elevation.lg</code> lift and
-              the inner corners rounded — the window edge stays flush.
-            </p>
-            <p className="gx-drawer-copy">
-              {dismissible
-                ? "Escape and a press on the backdrop close it."
-                : "dismissible={false}: Escape and a backdrop press are consumed and close nothing."}
             </p>
           </DrawerSurface>
         ) : null}
@@ -565,9 +569,10 @@ export const Geometry = () => {
 
   return (
     <>
-      <Button onClick={() => setSide("left")}>From the left</Button>
       <Button onClick={() => setSide("right")}>From the right</Button>
+      <Button onClick={() => setSide("left")}>From the left</Button>
       <Button onClick={() => setSide("bottom")}>From the bottom</Button>
+      <Button onClick={() => setSide("top")}>From the top</Button>
       <Button onClick={() => setSize("lg")}>Large</Button>
 
       <Drawer>
@@ -597,8 +602,9 @@ export const Geometry = () => {
 };`;
 
 export {
-  DrawerSides,
-  DrawerWorkflow,
+  DrawerDrawing,
+  DrawerSurface,
   sidesSource as drawerSidesSource,
+  SheetDrawing,
   workflowSource as drawerWorkflowSource,
 };

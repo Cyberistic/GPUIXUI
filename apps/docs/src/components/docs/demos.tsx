@@ -169,11 +169,11 @@ import {
   datePickerWorkflowSource,
 } from "./date-picker-demo";
 import {
-  DrawerSides,
-  DrawerWorkflow,
+  DrawerDrawing,
+  SheetDrawing,
   drawerSidesSource,
   drawerWorkflowSource,
-} from "./drawer-demo";
+} from "./sheet-drawer-preview";
 import {
   SidebarDemo,
   UserMenuDemo,
@@ -3232,8 +3232,8 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: CalendarRange,
     source: calendarRangeSource,
   },
-  "drawer-sides": { render: DrawerSides, source: drawerSidesSource },
-  "drawer-workflow": { render: DrawerWorkflow, source: drawerWorkflowSource },
+  "drawer-sides": { render: SheetDrawing, source: drawerSidesSource },
+  "drawer-workflow": { render: DrawerDrawing, source: drawerWorkflowSource },
   "sidebar-demo": { render: SidebarDemo, source: sidebarDemoSource },
   "user-menu-demo": { render: UserMenuDemo, source: userMenuDemoSource },
   "dropdown-menu-demo": {

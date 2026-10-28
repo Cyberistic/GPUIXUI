@@ -1,6 +1,7 @@
 import {
   controlSizes,
   dividerOn,
+  elevationLevels,
   elevationShadow,
   filledHover,
   filledPressed,
@@ -142,6 +143,16 @@ export const toCssVars = (theme: Theme): CssVars => ({
     dividerOn(theme, theme.colors.accent) ?? theme.colors.border,
   ...Object.fromEntries(
     seriesColors(theme).map((value, index) => [`--series-${index + 1}`, value]),
+  ),
+  // The lift each level paints, so a drawing of a raised surface carries the
+  // theme's own shadow geometry instead of a literal that agrees with one mode.
+  ...Object.fromEntries(
+    elevationLevels.flatMap((level) => {
+      const shadow = elevationShadow(theme, level);
+      return shadow === undefined
+        ? []
+        : [[`--elevation-${level}`, cssShadow(shadow)]];
+    }),
   ),
   ...Object.fromEntries(
     Object.entries(syntaxColors(theme)).map(([role, value]) => [

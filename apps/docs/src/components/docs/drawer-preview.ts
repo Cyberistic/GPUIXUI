@@ -1,73 +1,28 @@
 /**
- * The drawer preview's model: where a surface sits, and which layer an Escape
- * closes.
+ * The drawer preview's model: which edges a surface can take, and which layer an
+ * Escape closes.
  *
- * A drawer is the modal panel that owns the window's edge, so two decisions a
- * drawing cannot show are worth a test: the surface's box is the requested
- * size **clamped to the window** (a `lg` drawer in a narrow window is the
- * window), and dismissal is offered to the topmost layer only. A drawer that
- * cannot be dismissed consumes the gesture without closing anything, which is
- * why an Escape aimed at it does not also close the dialog underneath.
- *
- * The size tables mirror `packages/components/src/drawer.tsx`'s `WIDTH` and
- * `HEIGHT`; `drawer-preview.test.ts` reads the component and fails when the two
- * drift, so this file cannot become a second source of truth.
+ * The geometry a drawing cannot show is the surface's box: the requested size
+ * **clamped to the window** (a `lg` drawer in a narrow window is the window).
+ * That lives in `demos.css` now, where the frame is the window; the model keeps
+ * the edges and the dismiss stack. A drawer that cannot be dismissed consumes
+ * the gesture without closing anything, which is why an Escape aimed at it does
+ * not also close the dialog underneath.
  */
 
 /** The window edge a drawer opens from. */
-export type DrawerSide = "left" | "right" | "bottom";
+export type DrawerSide = "left" | "right" | "bottom" | "top";
 
 /** The surface sizes a drawer offers. */
 export type DrawerSize = "sm" | "md" | "lg";
 
-/** A window, in the pixels the runtime's `useWindowSize` reports. */
-export interface WindowBox {
-  readonly width: number;
-  readonly height: number;
-}
-
-/** The surface's measured box, before it is anchored to an edge. */
-export interface SurfaceBox {
-  readonly width: number;
-  readonly height: number;
-}
-
-/** The column widths a left or right drawer asks for. */
-export const DRAWER_WIDTH: Readonly<Record<DrawerSize, number>> = {
-  sm: 320,
-  md: 400,
-  lg: 560,
-};
-
-/** The sheet heights a bottom drawer asks for. */
-export const DRAWER_HEIGHT: Readonly<Record<DrawerSize, number>> = {
-  sm: 240,
-  md: 320,
-  lg: 420,
-};
-
 /**
- * The surface's box in a window.
- *
- * A column is the requested width and the window's whole height; a bottom
- * sheet is the window's whole width and the requested height. Either one is
- * capped by the window, so a `lg` drawer never paints past the edge a reader
- * would have to scroll to reach.
+ * Whether an edge lays the surface across the window's width rather than down
+ * its height — the component's own `isVertical`, so a drawing cannot treat a
+ * `top` sheet as a column.
  */
-export const drawerBox = (
-  side: DrawerSide,
-  size: DrawerSize,
-  window: WindowBox,
-): SurfaceBox =>
-  side === "bottom"
-    ? {
-        width: window.width,
-        height: Math.min(DRAWER_HEIGHT[size], window.height),
-      }
-    : {
-        width: Math.min(DRAWER_WIDTH[size], window.width),
-        height: window.height,
-      };
+export const isVertical = (side: DrawerSide): boolean =>
+  side === "bottom" || side === "top";
 
 /** One open overlay on the dismiss stack, deepest last. */
 export interface DismissLayer {

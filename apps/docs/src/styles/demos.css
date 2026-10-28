@@ -627,20 +627,34 @@
 }
 
 /* ---- drawer: mirrors components/src/drawer.tsx ----
-   The surface is the popover role with a border edge, the `lg` lift and the
-   inner corners rounded, exactly the surface the component paints. The veil is
-   the shared wash over the whole frame, and the box comes from
-   `drawer-preview.ts` (the component's own size tables, clamped to the window).
-   The sheet slides its own span in from the edge — the native surface travels
-   `left`/`top` by the same distance — and a bottom sheet wears the vaul
-   grabber, which the component paints for a top or bottom edge. */
+   The frame is the window: the veil is `inset: 0` over it, the surface is
+   anchored to the edge it names, and both are measured from the frame rather
+   than from a logical box the drawing carries. The surface is the popover role
+   with a border edge and the theme's `elevation.lg`; only the corners inside
+   the window round (`radius.xl`), so the edge it opens from stays flush. The
+   closed box is the scroller's, so the close control sits outside it and a long
+   body scrolls under the control the way the native surface does. A top or
+   bottom sheet wears the vaul grabber, on the inner edge; the sizes are the
+   component's own tables. */
 .gx-drawer-scene {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+}
+
+.gx-drawer-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 .gx-drawer-frame {
   position: relative;
-  min-height: 340px;
+  width: 100%;
+  height: 420px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 2px);
@@ -664,18 +678,17 @@
 .gx-drawer-readout,
 .gx-drawer-hint {
   margin: 0;
-  padding: 10px 14px;
   color: var(--muted-foreground);
   font-size: 12px;
   line-height: 1.5;
 }
 
 .gx-drawer-readout {
-  padding-bottom: 0;
+  padding: 10px 14px;
 }
 
-.gx-drawer-hint {
-  padding-top: 4px;
+.gx-drawer-page {
+  padding: 12px 14px;
 }
 
 .gx-drawer-issues {
@@ -736,14 +749,6 @@
   font-size: 13px;
 }
 
-.gx-drawer-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-}
-
 .gx-drawer-select {
   width: auto;
   height: var(--control-height-sm);
@@ -769,42 +774,66 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-width: 100%;
-  max-height: 100%;
-  padding: 20px;
-  overflow: auto;
+  overflow: hidden;
   border: 1px solid var(--border);
   background: var(--popover);
   color: var(--popover-foreground);
-  box-shadow: 0 24px 60px var(--shadow);
+  box-shadow: var(--elevation-lg);
   animation: gx-sheet-in-right var(--gx-overlay-ms) ease-out;
 }
 
-/* Only the corners inside the window round; the edge it opens from is flush. */
+/* The component's `WIDTH` and `HEIGHT` tables, per size. */
+.gx-drawer[data-size="sm"] {
+  --gx-drawer-width: 320px;
+  --gx-drawer-height: 240px;
+}
+
+.gx-drawer[data-size="md"] {
+  --gx-drawer-width: 400px;
+  --gx-drawer-height: 320px;
+}
+
+.gx-drawer[data-size="lg"] {
+  --gx-drawer-width: 560px;
+  --gx-drawer-height: 420px;
+}
+
+/* A column asks for its width and takes the window's height; a top or bottom
+   sheet asks for its height and takes the window's width. Both are clamped by
+   the frame, so neither paints past the edge a reader would have to scroll to. */
+.gx-drawer[data-side="left"],
 .gx-drawer[data-side="right"] {
+  width: min(var(--gx-drawer-width), 100%);
+  height: 100%;
+}
+
+.gx-drawer[data-side="top"],
+.gx-drawer[data-side="bottom"] {
+  width: 100%;
+  height: min(var(--gx-drawer-height), 100%);
+}
+
+.gx-drawer[data-side="right"] {
+  margin-left: auto;
   border-radius: var(--radius-xl) 0 0 var(--radius-xl);
 }
 
 .gx-drawer[data-side="left"] {
+  margin-right: auto;
   border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+  animation-name: gx-sheet-in-left;
 }
 
 .gx-drawer[data-side="bottom"] {
+  margin-top: auto;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  animation-name: gx-sheet-in-bottom;
 }
 
-/* vaul's handle: decoration on a top or bottom sheet (no drag host exists). */
-.gx-drawer-grabber {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  translate: -50% 0;
-  width: 40px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--border-strong);
-  pointer-events: none;
+.gx-drawer[data-side="top"] {
+  margin-bottom: auto;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  animation-name: gx-sheet-in-top;
 }
 
 @keyframes gx-sheet-in-right {
@@ -825,38 +854,62 @@
   }
 }
 
-.gx-drawer[data-side="left"] {
-  animation-name: gx-sheet-in-left;
+@keyframes gx-sheet-in-top {
+  from {
+    translate: 0 -100%;
+  }
 }
 
-.gx-drawer[data-side="bottom"] {
-  animation-name: gx-sheet-in-bottom;
+/* vaul's handle: decoration on a top or bottom sheet (no drag host exists). It
+   sits `spacing.sm` from the inner edge, as the component's grabber does. */
+.gx-drawer-grabber {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border-strong);
+  pointer-events: none;
 }
 
+.gx-drawer[data-side="bottom"] .gx-drawer-grabber {
+  top: var(--spacing-sm);
+}
+
+.gx-drawer[data-side="top"] .gx-drawer-grabber {
+  bottom: var(--spacing-sm);
+}
+
+/* The scroller the role=dialog names: the box's own close control sits outside
+   it, so a body scrolled to its end cannot carry the one visible way out. */
+.gx-drawer-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 20px;
+  overflow: auto;
+}
+
+/* Each edge's `animation-name` is one attribute selector more specific than the
+   base rule, so the reduced-motion guard names the edges too. */
 @media (prefers-reduced-motion: reduce) {
   .gx-overlay-veil,
   .gx-nav-content,
   .gx-popover,
   .gx-dialog,
-  .gx-drawer {
+  .gx-drawer,
+  .gx-drawer[data-side="left"],
+  .gx-drawer[data-side="bottom"],
+  .gx-drawer[data-side="top"] {
     animation: none;
   }
 
   .gx-nav-chevron-mark {
     transition: none;
   }
-}
-
-.gx-drawer[data-side="right"] {
-  margin-left: auto;
-}
-
-.gx-drawer[data-side="left"] {
-  margin-right: auto;
-}
-
-.gx-drawer[data-side="bottom"] {
-  margin-top: auto;
 }
 
 .gx-drawer-header {
@@ -882,8 +935,8 @@
 
 .gx-drawer-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
   width: 26px;
   height: 26px;
   display: grid;
@@ -907,7 +960,6 @@
   flex-direction: column;
   gap: 14px;
   min-height: 0;
-  overflow: auto;
 }
 
 .gx-drawer-group {
