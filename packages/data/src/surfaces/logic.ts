@@ -497,6 +497,19 @@ const asGroup = (node: FilterTree, kind: "all" | "any"): FilterTree =>
   );
 
 /** Replace the clause at a path. */
+/**
+ * The clause a field change produces.
+ *
+ * A value describes the field it was typed against: `tracked` is a status, and
+ * carrying it into a numeric clause paints a builder that reads `size equals
+ * tracked`. The comparison survives — it is a choice the reader made about how
+ * to read a field — and the value does not.
+ */
+export const withClauseField = (
+  clause: FieldPredicate,
+  field: string,
+): FieldPredicate => ({ ...clause, field, value: "" });
+
 export const updateAt = (
   tree: FilterTree,
   path: FilterPath,

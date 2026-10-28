@@ -54,6 +54,7 @@ import {
   UNREADABLE_TREE,
   updateAt,
   updatePredicate,
+  withClauseField,
   type FieldPredicate,
   type FilterPath,
   type FilterTree,
@@ -834,5 +835,36 @@ describe("the name a property row is painted by", () => {
     expect(propertyName("", "tag")).toBe("tag");
     expect(propertyName("   ", "name")).toBe("name");
     expect(propertyName("  Tag  ", "tag")).toBe("Tag");
+  });
+});
+
+describe("withClauseField", () => {
+  it("drops the value typed against the field the clause named", () => {
+    // Guarded bug: a status clause switched to `size` kept `tracked`, so the
+    // builder painted `size equals tracked` — a value describing nothing the
+    // clause reads.
+    const clause: FieldPredicate = {
+      kind: "predicate",
+      field: "status",
+      comparison: "equals",
+      value: "tracked",
+    };
+
+    expect(withClauseField(clause, "size")).toEqual({
+      kind: "predicate",
+      field: "size",
+      comparison: "equals",
+      value: "",
+    });
+  });
+
+  it("keeps the comparison the reader chose", () => {
+    const clause: FieldPredicate = {
+      kind: "predicate",
+      field: "size",
+      comparison: "greaterThan",
+      value: "1024",
+    };
+    expect(withClauseField(clause, "age").comparison).toBe("greaterThan");
   });
 });

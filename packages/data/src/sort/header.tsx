@@ -129,6 +129,11 @@ export const TableSortHeader = (props: TableSortHeaderProps) => {
         size="sm"
         fullWidth
         label={sortOrderLabel(label, order, field)}
+        // The cell already carries the column's inset; the ghost button's own
+        // `px-sm` put every header label 8px right of the cells it names.
+        style={{ paddingLeft: 0, paddingRight: 0 }}
+        // The cell already carries the column's inset; the ghost button's own
+        // `px-sm` put every header label 8px right of the cells it names.
         testId={testId === undefined ? undefined : `${testId}-sort`}
         onActivate={(event) => {
           if (props.onSortPress !== undefined) {

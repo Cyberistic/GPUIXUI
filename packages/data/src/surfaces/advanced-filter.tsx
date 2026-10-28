@@ -66,6 +66,7 @@ import {
   setGroupKind,
   UNREADABLE_TREE,
   updateAt,
+  withClauseField,
   type Comparison,
   type FieldPredicate,
   type FilterPath,
@@ -255,7 +256,11 @@ const ClauseRow = ({
           {Arr.map(fields, (field) => (
             <DropdownMenuItem
               key={field.field}
-              onSelect={() => replace({ field: field.field })}
+              onSelect={() =>
+                onChange(
+                  updateAt(root, path, withClauseField(clause, field.field)),
+                )
+              }
               testId={
                 id === undefined ? undefined : `${id}-field-${field.field}`
               }

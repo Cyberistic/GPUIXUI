@@ -114,3 +114,25 @@ describe("a sortable header's announced name", () => {
     );
   });
 });
+
+describe("a sortable header's label", () => {
+  it("sits on the cell's own inset, not the ghost button's padding", () => {
+    // Guarded bug: the ghost button kept its `px-sm` inside a `TableHeaderCell`
+    // that already carries the column's padding, so every header label painted
+    // 8 px right of the cells it names.
+    root = renderData(
+      <TableSortHeader
+        field="service"
+        label="Service"
+        sort={Option.none()}
+        onSort={() => {}}
+        testId="inset-sort"
+      />,
+    );
+    settle(root);
+    const button = root.renderer.findByTestId("inset-sort-sort");
+
+    expect(button?.style.paddingLeft).toBe(0);
+    expect(button?.style.paddingRight).toBe(0);
+  });
+});
