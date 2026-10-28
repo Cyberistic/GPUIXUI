@@ -32,6 +32,7 @@ import {
 } from "./collection-routes";
 import { baseOptions } from "./layout.shared";
 import { completeSection } from "./page-tree";
+import { descriptionRuns } from "./page-description";
 import { docsByOrigin, sectionPages, sourceByOrigin } from "./package-docs";
 import { docsRoute } from "./shared";
 import { docs, source } from "./source";
@@ -124,6 +125,30 @@ export const loadDocsPage = createServerFn({ method: "GET" })
 
 type DocsPageData = Awaited<ReturnType<typeof loadDocsPage>>;
 
+/**
+ * A page's summary line: its words, with the one inline link a description may
+ * carry painted as the link it is. A description is frontmatter, so the text is
+ * authored as Markdown; the frame is where it becomes what a reader clicks.
+ */
+const Description = ({ text }: { readonly text: string }) =>
+  text === "" ? null : (
+    <DocsDescription>
+      {descriptionRuns(text).map((run, index) =>
+        run.kind === "link" ? (
+          <a
+            className="text-fd-primary underline underline-offset-4"
+            href={run.href}
+            key={`${index}-${run.href}`}
+          >
+            {run.text}
+          </a>
+        ) : (
+          run.text
+        ),
+      )}
+    </DocsDescription>
+  );
+
 /** The page frame both collections render into. */
 function PageFrame({
   title,
@@ -134,7 +159,7 @@ function PageFrame({
   children,
 }: {
   readonly title: ReactNode;
-  readonly description: ReactNode;
+  readonly description?: string;
   readonly toc: ComponentProps<typeof DocsPage>["toc"];
   readonly path: string;
   readonly origin: PageOrigin;
@@ -146,7 +171,7 @@ function PageFrame({
         <DocsTitle>{title}</DocsTitle>
         <CopyPage origin={origin} path={path} />
       </div>
-      <DocsDescription>{description}</DocsDescription>
+      <Description text={description ?? ""} />
       <DocsBody>
         {children}
         <EditPage origin={origin} path={path} />

@@ -1,3 +1,4 @@
+import { descriptionText } from "./page-description";
 import { absoluteUrl } from "./site";
 import { appName } from "./shared";
 
@@ -101,7 +102,8 @@ export const docsMetadata = ({
   url: path,
 }: DocsPageMeta) => {
   const url = absoluteUrl(path);
-  const summary = description?.trim() || fallbackDescription;
+  const summary =
+    descriptionText(description ?? "").trim() || fallbackDescription;
 
   return {
     meta: [
