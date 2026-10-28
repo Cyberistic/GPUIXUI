@@ -44,7 +44,6 @@ export const expected = {
   /** `FROZEN_RECORDS`, and the offset the probe scrolls one pane by. */
   frozenRows: 10,
   frozenOffset: 72,
-  frozenPan: 40,
   /** `LABEL_WIDTHS`: the default track, and the wide one. */
   labelWidth: 120,
   wideLabelWidth: 168,
@@ -270,14 +269,13 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       await page.text(frozenState()),
       `frozen:${expected.frozenOffset},0|data:${expected.frozenOffset},0`,
     );
-    await page.run(
-      scrollPane("data", expected.frozenOffset, expected.frozenPan),
-    );
-    await page.run(scrollPane("frozen", 0, 0));
+    // The frozen pane is not a scroller: it keeps its x when its own body is
+    // asked to move, which is the rule the two-pane composition exists for.
+    await page.run(scrollPane("frozen", expected.frozenOffset, 40));
     check(
-      "frozen: a vertical mirror carries the data pane's x",
+      "frozen: the frozen pane never pans sideways",
       await page.text(frozenState()),
-      `frozen:0,0|data:0,${expected.frozenPan}`,
+      `frozen:${expected.frozenOffset},0|data:${expected.frozenOffset},0`,
     );
 
     if (

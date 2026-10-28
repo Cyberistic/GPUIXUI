@@ -24183,7 +24183,7 @@ rests on the stack.
       `gx-table-cell` fails `table-sorting`/`table-selection` in the sweep; and
       the probe's own selectors were moved with the drawings
       (`data-previews.test.ts`). Every control was pressed on the served build
-      (`/tmp/pw/data-press.mjs`, 47 checks, all PASS: headers, rows, checkboxes,
+      (`/tmp/pw/data-press.mjs` + `data-press-extra.mjs`, 79 checks, all PASS: headers, rows, checkboxes,
       chevrons, arrows, steppers, reveals, menu rows/moves/reset/divider keys,
       chart mode, inspector edits, builder picks/remove/add/clear/stored
       refusal). Green: docs suite 2 272 cases, `nub run check`, `lint`, `fmt`.
