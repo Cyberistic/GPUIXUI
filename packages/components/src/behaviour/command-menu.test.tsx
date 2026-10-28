@@ -182,6 +182,21 @@ const groupedActions = (
 ];
 
 describe("CommandMenu", () => {
+  it("paints the highlight as the wash alone, with no left rule", () => {
+    // The bug this guards: the palette's highlighted row inherited the menu
+    // row's emphasis bar, so the selection read as a wash with a second blue
+    // edge beside it — an edge no command palette paints.
+    const palette = renderComponent(<Palette perform={vi.fn()} />);
+    try {
+      const row = palette.renderer.findByTestId("command-open-file");
+      expect(row?.customProps?.["aria-selected"]).toBe(true);
+      expect(row?.style.borderLeftWidth).toBe(0);
+      expect(row?.style.backgroundColor).toBe(darkTheme.colors.hover);
+    } finally {
+      palette.unmount();
+    }
+  });
+
   it("focuses the search input when it opens", () => {
     const palette = renderComponent(<Palette perform={vi.fn()} />);
 
