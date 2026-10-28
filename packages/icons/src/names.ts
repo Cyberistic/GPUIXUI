@@ -70,6 +70,7 @@ export const ICON_NAMES = [
   "refresh",
   "save",
   "search",
+  "send",
   "settings",
   "shield",
   "sliders-horizontal",
