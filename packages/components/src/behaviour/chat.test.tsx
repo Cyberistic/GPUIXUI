@@ -240,19 +240,21 @@ describe("Chat", () => {
 
   it("draws Send as the icon set's paper plane and keeps the word as its name", () => {
     const root = renderComponent(<Conversation rows={1} />);
-    const [plane] = root.renderer.findByType("svg");
+    try {
+      const [plane] = root.renderer.findByType("svg");
 
-    // The same markup the icon set publishes, not a second drawing of a plane.
-    expect(plane?.customProps?.source).toBe(icons.send);
-    // The word is the control's name now; the glyph is all a reader sees.
-    expect(root.renderer.getAllText()).not.toContain("Send");
-    expect(
-      a11yNodes(root.renderer)
-        .filter((node) => node.role === "button")
-        .map((node) => node.name),
-    ).toContain("Send");
-
-    root.unmount();
+      // The same markup the icon set publishes, not a second drawing of a plane.
+      expect(plane?.customProps?.source).toBe(icons.send);
+      // The word is the control's name now; the glyph is all a reader sees.
+      expect(root.renderer.getAllText()).not.toContain("Send");
+      expect(
+        a11yNodes(root.renderer)
+          .filter((node) => node.role === "button")
+          .map((node) => node.name),
+      ).toContain("Send");
+    } finally {
+      root.unmount();
+    }
   });
 
   it("refuses a send while a reply is open, and keeps the draft it refused", () => {
