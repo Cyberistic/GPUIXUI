@@ -123,6 +123,33 @@ describe("the combobox drawing", () => {
     expect(combobox).toContain('aria-haspopup="listbox"');
     expect(combobox).toContain('class="gx-combobox-trigger"');
   });
+
+  it("seats the search row and keeps the list off it", () => {
+    // The bug this guards: the search row was a shrinking flex item, so a long
+    // list squeezed it under the popup's edge and the first option sat on the
+    // field. The row is fixed-height, inset by the popup's own padding, and the
+    // gap below belongs to the row rather than to the list's first option.
+    const popup = block(css, ".gx-combobox-popup");
+    const row = block(css, ".gx-combobox-search-row");
+    expect(px(popup, "padding")).toBe(4);
+    expect(row).toContain("flex: none");
+    expect(row).toContain("height: var(--control-height-sm)");
+    expect(px(row, "margin-bottom")).toBeGreaterThan(0);
+    expect(row).toContain("border-bottom: 1px solid var(--border)");
+  });
+});
+
+describe("the command palette drawing", () => {
+  it("paints the highlight as the wash alone, with no left rule", () => {
+    // The bug this guards: the palette's rows are the shared menu row, whose
+    // emphasis bar belongs to submenu-leading and checked rows. The highlight
+    // read as a wash with a second accent edge beside it.
+    const row = block(css, ".gx-palette .gx-menu-row");
+    expect(row).toContain("border-left-width: 0");
+    expect(block(css, '.gx-menu-row[data-highlighted="true"]')).not.toContain(
+      "box-shadow",
+    );
+  });
 });
 
 describe("the date-picker drawing", () => {

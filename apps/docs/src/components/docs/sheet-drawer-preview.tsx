@@ -120,6 +120,12 @@ interface DrawerSurfaceProps {
   readonly onClose: () => void;
   /** A backdrop press. `undefined` while the drawer is not dismissible. */
   readonly onBackdrop?: () => void;
+  /**
+   * Whether the surface rests open. Default `true`. A closed surface stays in
+   * the DOM while its exit animation runs and is hidden once it ends, as the
+   * native surface stays mounted for its exit window.
+   */
+  readonly open?: boolean;
   readonly children: ReactNode;
   readonly footer: ReactNode;
 }
@@ -140,11 +146,13 @@ const DrawerSurface = ({
   panelRef,
   onClose,
   onBackdrop,
+  open = true,
   children,
   footer,
 }: DrawerSurfaceProps) => (
   <div
     className="gx-drawer-backdrop gx-overlay-veil"
+    data-open={open}
     onClick={onBackdrop}
     role="presentation"
   >
@@ -152,6 +160,7 @@ const DrawerSurface = ({
       aria-label={title}
       aria-modal="true"
       className="gx-drawer"
+      data-open={open}
       data-side={side}
       data-size={size}
       onClick={(event) => event.stopPropagation()}
@@ -264,39 +273,38 @@ const SheetDrawing = () => {
             side=&quot;{side}&quot; · size=&quot;{size}&quot;
           </span>
         </div>
-        {open ? (
-          <DrawerSurface
-            description={`side="${side}" · size="${size}"`}
-            footer={
-              <button
-                className="gx-btn gx-btn-primary"
-                onClick={close}
-                type="button"
-              >
-                Close
-              </button>
-            }
-            onBackdrop={dismissible ? close : undefined}
-            onClose={close}
-            panelRef={panel}
-            side={side}
-            size={size}
-            title="Share project"
-          >
-            <label className="gx-drawer-field">
-              <span>Project</span>
-              <input className="gx-field" defaultValue="Aurora" />
-            </label>
-            <label className="gx-drawer-field">
-              <input defaultChecked type="checkbox" />
-              <span>Notify the team</span>
-            </label>
-            <label className="gx-drawer-field">
-              <input type="checkbox" />
-              <span>Allow guests to comment</span>
-            </label>
-          </DrawerSurface>
-        ) : null}
+        <DrawerSurface
+          description={`side="${side}" · size="${size}"`}
+          footer={
+            <button
+              className="gx-btn gx-btn-primary"
+              onClick={close}
+              type="button"
+            >
+              Close
+            </button>
+          }
+          onBackdrop={dismissible ? close : undefined}
+          onClose={close}
+          open={open}
+          panelRef={panel}
+          side={side}
+          size={size}
+          title="Share project"
+        >
+          <label className="gx-drawer-field">
+            <span>Project</span>
+            <input className="gx-field" defaultValue="Aurora" />
+          </label>
+          <label className="gx-drawer-field">
+            <input defaultChecked type="checkbox" />
+            <span>Notify the team</span>
+          </label>
+          <label className="gx-drawer-field">
+            <input type="checkbox" />
+            <span>Allow guests to comment</span>
+          </label>
+        </DrawerSurface>
       </div>
     </div>
   );
@@ -399,90 +407,86 @@ const DrawerDrawing = () => {
           ) : null}
         </ul>
 
-        {open ? (
-          <DrawerSurface
-            description="Narrow the list. The drawer is app state: applying it closes the surface and re-runs the filter."
-            footer={
-              <>
-                <button
-                  className="gx-btn gx-btn-ghost"
-                  onClick={() => setDraft(initialFilter)}
-                  type="button"
-                >
-                  Reset
-                </button>
-                <button
-                  className="gx-btn gx-btn-primary"
-                  onClick={() => {
-                    setApplied(draft);
-                    close();
-                  }}
-                  type="button"
-                >
-                  Apply filters
-                </button>
-              </>
-            }
-            onBackdrop={close}
-            onClose={close}
-            panelRef={panel}
-            side="right"
-            size="md"
-            title="Filters"
-          >
-            <div className="gx-drawer-group">
-              <span className="gx-drawer-legend">Status</span>
-              <FilterChoice
-                checked={draft.status === "all"}
-                name="gx-drawer-status"
-                onChange={() => setDraft({ ...draft, status: "all" })}
-                type="radio"
+        <DrawerSurface
+          description="Narrow the list. The drawer is app state: applying it closes the surface and re-runs the filter."
+          footer={
+            <>
+              <button
+                className="gx-btn gx-btn-ghost"
+                onClick={() => setDraft(initialFilter)}
+                type="button"
               >
-                All issues
-              </FilterChoice>
-              <FilterChoice
-                checked={draft.status === "open"}
-                name="gx-drawer-status"
-                onChange={() => setDraft({ ...draft, status: "open" })}
-                type="radio"
+                Reset
+              </button>
+              <button
+                className="gx-btn gx-btn-primary"
+                onClick={() => {
+                  setApplied(draft);
+                  close();
+                }}
+                type="button"
               >
-                Open only
-              </FilterChoice>
-            </div>
-            <div className="gx-drawer-group">
-              <span className="gx-drawer-legend">Narrow further</span>
-              <FilterChoice
-                checked={draft.assignedOnly}
-                name="gx-drawer-assigned"
-                onChange={() =>
-                  setDraft({ ...draft, assignedOnly: !draft.assignedOnly })
-                }
-                type="checkbox"
-              >
-                Assigned to me
-              </FilterChoice>
-              <FilterChoice
-                checked={draft.attachmentsOnly}
-                name="gx-drawer-attachments"
-                onChange={() =>
-                  setDraft({
-                    ...draft,
-                    attachmentsOnly: !draft.attachmentsOnly,
-                  })
-                }
-                type="checkbox"
-              >
-                Has an attachment
-              </FilterChoice>
-            </div>
-            <p className="gx-drawer-preview-count" role="status">
-              {describeIssues(
-                filterIssues(issues, draft).length,
-                issues.length,
-              )}
-            </p>
-          </DrawerSurface>
-        ) : null}
+                Apply filters
+              </button>
+            </>
+          }
+          onBackdrop={close}
+          onClose={close}
+          open={open}
+          panelRef={panel}
+          side="right"
+          size="md"
+          title="Filters"
+        >
+          <div className="gx-drawer-group">
+            <span className="gx-drawer-legend">Status</span>
+            <FilterChoice
+              checked={draft.status === "all"}
+              name="gx-drawer-status"
+              onChange={() => setDraft({ ...draft, status: "all" })}
+              type="radio"
+            >
+              All issues
+            </FilterChoice>
+            <FilterChoice
+              checked={draft.status === "open"}
+              name="gx-drawer-status"
+              onChange={() => setDraft({ ...draft, status: "open" })}
+              type="radio"
+            >
+              Open only
+            </FilterChoice>
+          </div>
+          <div className="gx-drawer-group">
+            <span className="gx-drawer-legend">Narrow further</span>
+            <FilterChoice
+              checked={draft.assignedOnly}
+              name="gx-drawer-assigned"
+              onChange={() =>
+                setDraft({ ...draft, assignedOnly: !draft.assignedOnly })
+              }
+              type="checkbox"
+            >
+              Assigned to me
+            </FilterChoice>
+            <FilterChoice
+              checked={draft.attachmentsOnly}
+              name="gx-drawer-attachments"
+              onChange={() =>
+                setDraft({
+                  ...draft,
+                  attachmentsOnly: !draft.attachmentsOnly,
+                })
+              }
+              type="checkbox"
+            >
+              Has an attachment
+            </FilterChoice>
+          </div>
+          <p className="gx-drawer-preview-count" role="status">
+            {describeIssues(filterIssues(issues, draft).length, issues.length)}
+          </p>
+        </DrawerSurface>
       </div>
     </div>
   );
