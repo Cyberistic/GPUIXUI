@@ -369,7 +369,7 @@ describe("the year window", () => {
   it("offers the century around today, not the decade", () => {
     // Guarded bug: the default window was today ± 10, so a 1994 birthday had no
     // year in the dropdown and `Shift`+Page refused the month before it.
-    const root = single({ captionLayout: "dropdown", today: "2026-10-17" });
+    const root = single({ captionLayout: "dropdown" });
     clickCentreOf(root, "date-month-year");
 
     expect(root.renderer.findByTestId("date-month-year-1900")).toBeDefined();
@@ -382,11 +382,7 @@ describe("the year window", () => {
   });
 
   it("narrows to the caller's own floor", () => {
-    const root = single({
-      captionLayout: "dropdown",
-      fromYear: 1970,
-      today: "2026-10-17",
-    });
+    const root = single({ captionLayout: "dropdown", fromYear: 1970 });
     clickCentreOf(root, "date-month-year");
 
     expect(root.renderer.findByTestId("date-month-year-1970")).toBeDefined();

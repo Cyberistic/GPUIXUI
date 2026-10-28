@@ -15,6 +15,7 @@ import {
   formatRange,
   formatValue,
   isAvailable,
+  isoDayOf,
   monthGrid,
   monthLabel,
   MONTH_NAMES,
@@ -66,6 +67,16 @@ const GRID_KEYS: ReadonlySet<string> = new Set<GridKey>([
 ]);
 
 const isGridKey = (key: string): key is GridKey => GRID_KEYS.has(key);
+
+/**
+ * Today, read once when the module is evaluated.
+ *
+ * A prerendered page bakes the day it was built and the browser reads its own
+ * clock, so the two agree unless a visit lands on an older page — the ordinary
+ * trade for date content on a static site, and better than a grid that opens on
+ * a fixture month nobody is in.
+ */
+const TODAY: IsoDay = isoDayOf(new Date());
 
 /** A surface's selection: one day, or a span. */
 type PreviewValue =
@@ -696,9 +707,9 @@ export const DatePickerPresets = () => {
 
 /** A calendar on its own: one day, no popover. */
 export const CalendarSingle = () => {
-  const [day, setDay] = useState<IsoDay | null>("2026-10-17");
-  const [month, setMonth] = useState<IsoMonth>("2026-10");
-  const [active, setActive] = useState<IsoDay>("2026-10-17");
+  const [day, setDay] = useState<IsoDay | null>(TODAY);
+  const [month, setMonth] = useState<IsoMonth>(monthOf(TODAY));
+  const [active, setActive] = useState<IsoDay>(TODAY);
 
   return (
     <div className="gx-demo gx-demo-column gx-date-scene">
@@ -719,7 +730,7 @@ export const CalendarSingle = () => {
         onClear={() => setDay(null)}
         onEscape={() => undefined}
         onMonth={setMonth}
-        today="2026-10-17"
+        today={TODAY}
         value={{ mode: "single", day }}
         weekStartsOn={1}
       />
@@ -738,9 +749,9 @@ export const CalendarSingle = () => {
  * dropdowns are how a reader gets to one without paging eleven months at a time.
  */
 export const CalendarDropdowns = () => {
-  const [day, setDay] = useState<IsoDay | null>("1979-06-14");
-  const [month, setMonth] = useState<IsoMonth>("1979-06");
-  const [active, setActive] = useState<IsoDay>("1979-06-14");
+  const [day, setDay] = useState<IsoDay | null>(TODAY);
+  const [month, setMonth] = useState<IsoMonth>(monthOf(TODAY));
+  const [active, setActive] = useState<IsoDay>(TODAY);
 
   return (
     <div className="gx-demo gx-demo-column gx-date-scene">
@@ -763,8 +774,8 @@ export const CalendarDropdowns = () => {
         onClear={() => setDay(null)}
         onEscape={() => undefined}
         onMonth={setMonth}
-        toYear={2026}
-        today="2026-10-17"
+        toYear={yearOfMonth(monthOf(TODAY))}
+        today={TODAY}
         value={{ mode: "single", day }}
         weekStartsOn={1}
       />
@@ -997,16 +1008,14 @@ export const ReleaseWindow = () => {
 const calendarDropdownsSource = `import { Calendar } from "@gpuixui/components/calendar";
 import { useState } from "react";
 
-const [birthday, setBirthday] = useState("1979-06-14");
+const [birthday, setBirthday] = useState(today);
 
 <Calendar
   mode="single"
   captionLayout="dropdown"
   fromYear={1970}
-  toYear={2026}
   selected={birthday}
   onSelect={setBirthday}
-  defaultMonth="1979-06-14"
 />;`;
 
 export {

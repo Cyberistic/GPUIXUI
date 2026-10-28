@@ -203,6 +203,16 @@ export const monthGrid = (
   );
 };
 
+/**
+ * The ISO day a local date is, e.g. `"2026-10-29"`.
+ *
+ * Read from the local calendar, not UTC: a reader west of Greenwich is still on
+ * yesterday's date for part of their morning, and a grid that opened on the UTC
+ * day marked the wrong one as today.
+ */
+export const isoDayOf = (date: Date): IsoDay =>
+  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+
 /** The month names, January first. */
 export const MONTH_NAMES: ReadonlyArray<string> = MONTHS;
 
@@ -211,7 +221,8 @@ export const monthNumber = (month: IsoMonth): number =>
   Number(month.slice(5, 7));
 
 /** The year an `IsoMonth` names. */
-export const yearOfMonth = (month: IsoMonth): number => Number(month.slice(0, 4));
+export const yearOfMonth = (month: IsoMonth): number =>
+  Number(month.slice(0, 4));
 
 /** The years a caption's year select offers, oldest first. */
 export const yearChoices = (

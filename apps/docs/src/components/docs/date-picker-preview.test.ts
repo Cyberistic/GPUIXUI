@@ -11,6 +11,7 @@ import {
   formatRange,
   formatValue,
   isAvailable,
+  isoDayOf,
   lastDayOfMonth,
   monthGrid,
   monthWindow,
@@ -271,5 +272,18 @@ describe("the value", () => {
     );
     expect(describeValue(null)).toContain("null");
     expect(describeValue("2026-10-17")).toBe("Value: 2026-10-17");
+  });
+});
+
+describe("isoDayOf", () => {
+  it("names the local day, not the UTC one", () => {
+    // Guarded bug class: a grid built from the UTC day marks yesterday for a
+    // reader west of Greenwich for part of their morning.
+    const local = new Date(2026, 9, 29, 0, 30);
+    expect(isoDayOf(local)).toBe("2026-10-29");
+  });
+
+  it("pads a single-digit month and day", () => {
+    expect(isoDayOf(new Date(1970, 0, 5, 12))).toBe("1970-01-05");
   });
 });
