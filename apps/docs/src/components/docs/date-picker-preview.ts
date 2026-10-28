@@ -211,7 +211,8 @@ export const monthNumber = (month: IsoMonth): number =>
   Number(month.slice(5, 7));
 
 /** The year an `IsoMonth` names. */
-export const yearOfMonth = (month: IsoMonth): number => Number(month.slice(0, 4));
+export const yearOfMonth = (month: IsoMonth): number =>
+  Number(month.slice(0, 4));
 
 /** The years a caption's year select offers, oldest first. */
 export const yearChoices = (
