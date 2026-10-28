@@ -47,6 +47,7 @@ blocks/kanban.mdx            A project task board: sidebar, four counted columns
 blocks/settings-dialog.mdx   A modal settings window: section nav, switch, font-size slider, layouts
 blocks/notification-centre.mdx A notification centre: filters, four row bodies, unread dots
 blocks/command-centre.mdx    A command palette over a dimmed page: filter, highlight, run line
+blocks/hunter-pipeline.mdx   A guild's licence dashboard: readings, stages, blocked dossiers, renown
 blocks/file-manager.mdx      A three-pane browser: folders, image tiles and file facts
 blocks/email-inbox.mdx       A four-pane mail client with a filterable list
 blocks/conversations.mdx     A macOS Messages window: threads, search and a composer
@@ -314,6 +315,7 @@ src/components/docs/dashboard.tsx         The dashboard's charts and stats
 src/components/docs/dashboard-management.tsx The console block's browser reproduction and recipe
 src/components/docs/kanban-board.tsx      The kanban board's reproduction, columns and card moves
 src/components/docs/settings-dialog.tsx   The settings dialog's reproduction, theme state and controls
+src/components/docs/hunter-pipeline.tsx  The guild's readings, stages, dossiers and the renown chart
 src/components/docs/notification-centre.tsx The notification centre's rows, filters and mark-read state
 src/components/docs/command-centre.tsx    The command centre's matcher, highlight and run line
 src/components/docs/file-manager-block.tsx The file browser's reducer, panes and recipe

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SignInPageRender, signInPageSource } from "./auth-blocks";
 import { CommandCentreRender, commandCentreSource } from "./command-centre";
+import { HunterPipelineRender, hunterPipelineSource } from "./hunter-pipeline";
 import {
   ConversationsRender,
   conversationsPackages,
@@ -278,6 +279,16 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
     render: CommandCentreRender,
     source: commandCentreSource,
+  },
+  "hunter-pipeline-01": {
+    name: "hunter-pipeline-01",
+    slug: "hunter-pipeline",
+    title: "Hunter pipeline",
+    description:
+      "A guild's licence dashboard: five readings, a seven-stage strip, the dossiers staged and the ones a missing fact blocks, over the renown a fortnight gained.",
+    packages: ["@gpuixui/primitives", "@gpuixui/components"],
+    render: HunterPipelineRender,
+    source: hunterPipelineSource,
   },
   "file-manager-01": {
     name: "file-manager-01",
