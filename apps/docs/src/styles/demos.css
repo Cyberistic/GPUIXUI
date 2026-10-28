@@ -2582,16 +2582,9 @@
   color: var(--destructive-soft-foreground);
 }
 
-.gx-field-set {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 0;
-  padding: 12px 14px 14px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 1px);
-}
-
+/* `.gx-field-set` is the group surface, shared with the Fieldset page's
+   drawing below — one rule, so a native `<fieldset>` and the shipped
+   `role="group"` cannot wear two different boxes. */
 .gx-field-legend {
   padding: 0 4px;
   font-size: 12px;
@@ -8195,9 +8188,11 @@
 }
 
 /* ---- fieldset: mirrors components/src/fieldset.tsx ----
-   A `div role="group"` named by its legend. Only the legend dims when the group
-   is disabled; a control that reads the context paints its own disabled roles,
-   so the subtree is not dimmed whole. */
+   A `div role="group"` named by its legend, on the card's surface: the same
+   fixed corner, 16px padding and `input` edge the card's outline treatment
+   paints, so the fields sit on something instead of a bare outline. Only the
+   legend dims when the group is disabled; a control that reads the context
+   paints its own disabled roles, so the subtree is not dimmed whole. */
 .gx-fieldset-scene {
   display: flex;
   flex-direction: column;
@@ -8213,13 +8208,16 @@
   width: 100%;
 }
 
-.gx-fieldset {
+.gx-fieldset,
+.gx-field-set {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 12px 14px 14px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 1px);
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  background: var(--card);
 }
 
 .gx-fieldset-legend {

@@ -762,10 +762,18 @@ describe("Field recipe", () => {
 
 describe("Fieldset and Form recipes", () => {
   it("resolves the group and form shells", () => {
+    // The group is a card: the same fill, fixed corner and edge role, so a
+    // fieldset reads as a surface instead of a bare outline on the page.
+    const card = style(cn(CARD_BASE, CARD_VARIANTS.outline));
     expect(style(FIELDSET_ROOT)).toEqual({
       display: "flex",
       flexDirection: "column",
       gap: 12,
+      padding: 16,
+      borderRadius: card.borderRadius,
+      borderWidth: card.borderWidth,
+      borderColor: card.borderColor,
+      backgroundColor: card.backgroundColor,
     });
     expect(style(FIELDSET_LEGEND)).toEqual({
       fontSize: 14,
