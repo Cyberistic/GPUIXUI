@@ -353,8 +353,12 @@
 }
 
 .gx-btn-square {
-  width: 34px;
+  width: var(--control-height-md);
   padding: 0;
+}
+
+.gx-btn-sm.gx-btn-square {
+  width: var(--control-height-sm);
 }
 
 .gx-spinner {
@@ -2358,11 +2362,13 @@
 }
 
 /* ---- accordion: mirrors components/src/accordion.tsx ----
-   Header rows are the `label` role at the `lg` control height, separated by a
-   `thin` divider in the `border` role; the indicator is the icon set's
-   chevron, swapped rather than rotated because the runtime has no transform.
-   The panel is the content's own measured height in the native component; here
-   it is a plain block, which the page says is the approximation. */
+   The header is `ACCORDION_TRIGGER` — `px-1`, `gap-2`, `text-sm`/`font-medium`
+   in `foreground` at the `lg` control height — and it is `w-full`, so its wash
+   reaches both edges of the root. A section is separated by the item's own
+   `border` divider, also full width; the indicator is the icon set's chevron,
+   swapped rather than rotated because the runtime has no transform. The panel
+   is the content's own measured height in the native component; here it is a
+   plain block, which the page says is the approximation. */
 .gx-acc {
   display: flex;
   flex-direction: column;
@@ -2398,11 +2404,14 @@
   opacity: 1;
 }
 
+/* The page's own frame around the sections, not the component: the trigger is
+   `w-full`, so the frame carries no side padding — the row's wash and the item
+   dividers reach both edges, as they do inside the native root. */
 .gx-acc-panel {
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
-  padding: 0 12px;
 }
 
 .gx-acc-item + .gx-acc-item {
@@ -2415,7 +2424,7 @@
   justify-content: space-between;
   gap: 8px;
   width: 100%;
-  min-height: var(--control-height-lg);
+  height: var(--control-height-lg);
   padding: 0 4px;
   border: 0;
   background: transparent;
@@ -2454,7 +2463,7 @@
 
 .gx-acc-body {
   margin: 0;
-  padding: 0 4px 10px;
+  padding: 0 4px 8px;
   color: var(--muted-foreground);
   font-size: 13px;
   line-height: 1.5;
@@ -2819,10 +2828,9 @@
   color: var(--muted-foreground);
 }
 
-.gx-toast-action,
 .gx-toast-dismiss {
   flex: 0 0 auto;
-  /* The action and the close mark are fixed-height boxes: without flex the
+  /* The close mark is a fixed-height box beside the action: without flex the
      inherited 28px line box overflows a 24px button and the label sits ~4px
      high. Centring the box's only child is the rule the library's Button
      already uses. */
@@ -2840,13 +2848,6 @@
   cursor: pointer;
 }
 
-.gx-toast-action {
-  padding: 0 8px;
-  border-color: var(--border);
-  color: var(--foreground);
-}
-
-.gx-toast-action:hover,
 .gx-toast-dismiss:hover {
   background: var(--hover);
   color: var(--foreground);
@@ -4508,43 +4509,6 @@
   gap: 6px;
 }
 
-.gx-carousel-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: var(--control-height-md);
-  height: var(--control-height-md);
-  padding: 0 var(--control-padding-x-md);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: var(--secondary);
-  color: var(--secondary-foreground);
-  font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.gx-carousel-btn:hover:not(:disabled) {
-  background: var(--secondary-hover);
-}
-
-.gx-carousel-btn:active:not(:disabled) {
-  background: var(--secondary-pressed);
-}
-
-.gx-carousel-btn:disabled {
-  border-color: transparent;
-  background: var(--disabled);
-  color: var(--disabled-foreground);
-  cursor: not-allowed;
-}
-
-.gx-carousel-btn:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 1px;
-}
-
 .gx-carousel-dots {
   display: flex;
   flex-direction: row;
@@ -5542,35 +5506,6 @@
   outline-offset: -2px;
 }
 
-.gx-collapse-toggle,
-.gx-collapse-consumer {
-  padding: 2px 10px;
-  border: 1px solid var(--border-strong);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--foreground);
-  font-family: inherit;
-  font-size: 12px;
-  line-height: 18px;
-  cursor: pointer;
-}
-
-.gx-collapse-toggle[data-selected] {
-  border-color: transparent;
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.gx-collapse-toggle:hover:not([data-selected]),
-.gx-collapse-consumer:hover {
-  background: var(--hover);
-}
-
-.gx-collapse-toggle:focus-visible,
-.gx-collapse-consumer:focus-visible {
-  outline: 2px solid var(--ring);
-}
-
 .gx-collapse-field {
   display: flex;
   flex-direction: column;
@@ -5908,22 +5843,6 @@
   flex-shrink: 0;
 }
 
-.gx-table-columns-btn {
-  height: var(--control-height-md);
-  padding: 0 var(--control-padding-x-md);
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
-  background: transparent;
-  color: var(--foreground);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.gx-table-columns-btn:hover {
-  background: var(--hover);
-}
-
 .gx-table-columns-menu {
   position: absolute;
   top: calc(100% + 4px);
@@ -6233,29 +6152,6 @@
 .gx-table-pagenav {
   display: flex;
   gap: 4px;
-}
-
-.gx-table-pagebtn {
-  width: var(--control-height-sm);
-  height: var(--control-height-sm);
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 1px);
-  background: transparent;
-  color: var(--foreground);
-  font: inherit;
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.gx-table-pagebtn:hover:not(:disabled) {
-  background: var(--hover);
-}
-
-.gx-table-pagebtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .gx-table-caption {
@@ -7858,28 +7754,6 @@
   text-align: center;
 }
 
-.gx-avatar-choice-button {
-  min-height: 24px;
-  padding: 0 10px;
-  border: 1px solid var(--border-strong);
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--card);
-  color: var(--card-foreground);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.gx-avatar-choice-button[data-chosen] {
-  background: var(--secondary);
-  color: var(--secondary-foreground);
-}
-
-.gx-avatar-choice-button:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 1px;
-}
-
 /* Badge — the pill, its seven variants and the deployments panel.
    The roles are the recipe's (`BADGE_VARIANTS` in packages/tw/src/recipes.ts),
    and `badge-preview.test.ts` compiles that recipe and holds every declaration
@@ -7929,28 +7803,6 @@
   display: flex;
   flex-direction: row;
   gap: 4px;
-}
-
-.gx-badge-choice {
-  min-height: var(--target-size);
-  padding: 0 10px;
-  border: 1px solid var(--border-strong);
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--card);
-  color: var(--card-foreground);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.gx-badge-choice[data-chosen] {
-  background: var(--secondary);
-  color: var(--secondary-foreground);
-}
-
-.gx-badge-choice:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 1px;
 }
 
 .gx-badge-deploys {
@@ -9960,23 +9812,6 @@ button.gx-rating-star:focus-visible {
   color: var(--foreground);
 }
 
-.gx-scroller-jump {
-  align-self: flex-end;
-  height: var(--control-height-sm);
-  padding: 0 var(--control-padding-x-sm);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: var(--secondary);
-  color: var(--secondary-foreground);
-  font-family: var(--font-sans);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.gx-scroller-jump:hover {
-  background: var(--secondary-hover);
-}
-
 .gx-scroller-actions {
   display: flex;
   align-items: center;
@@ -11277,26 +11112,6 @@ button.gx-rating-star:focus-visible {
   font-size: 12px;
 }
 
-.gx-copybutton-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: var(--control-height-sm);
-  padding: 0 var(--control-padding-x-sm);
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--secondary);
-  color: var(--secondary-foreground);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background-color 0.15s;
-}
-
-.gx-copybutton-btn:hover {
-  background: var(--secondary-hover);
-}
-
 .gx-copybutton-glyph {
   display: inline-block;
   animation: gx-roll-in 200ms ease-out both;
@@ -11361,22 +11176,11 @@ button.gx-rating-star:focus-visible {
   gap: 10px;
 }
 
+/* The local Button with one extra layer: the chrome is `.gx-btn`'s, and this
+   only clips the flood to the control's box. */
 .gx-liquid-btn {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--control-height-md);
-  padding: 0 var(--control-padding-x-md);
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 2px);
-  background: transparent;
-  color: var(--foreground);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
 }
 
 .gx-liquid-fill {
@@ -11389,10 +11193,6 @@ button.gx-rating-star:focus-visible {
 
 .gx-liquid-btn:hover .gx-liquid-fill {
   width: 100%;
-}
-
-.gx-liquid-btn-primary .gx-liquid-fill {
-  background: var(--primary);
 }
 
 .gx-liquid-label {
@@ -12842,27 +12642,6 @@ button.gx-rating-star:focus-visible {
   gap: 8px;
 }
 
-.gx-files-action {
-  height: var(--control-height-sm);
-  padding: 0 var(--control-padding-x-sm);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--foreground);
-  font: inherit;
-  font-size: 11.5px;
-  cursor: pointer;
-}
-
-.gx-files-action:hover {
-  background: var(--hover);
-}
-
-.gx-files-action:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
 .gx-tree {
   height: 260px;
   padding: 4px 0;
@@ -13101,28 +12880,6 @@ button.gx-rating-star:focus-visible {
 .gx-logviewer-level:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: -2px;
-}
-
-.gx-logviewer-follow {
-  height: calc(var(--control-height-sm) - 10px);
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted-foreground);
-  font: inherit;
-  font-size: 10.5px;
-  cursor: pointer;
-}
-
-.gx-logviewer-follow[aria-pressed="true"] {
-  border-color: var(--ring);
-  color: var(--foreground);
-}
-
-.gx-logviewer-follow:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
 }
 
 .gx-logviewer-list {
@@ -13811,25 +13568,27 @@ button.gx-rating-star:focus-visible {
   gap: 6px;
 }
 
-.gx-aspect-ratio {
-  height: 26px;
-  padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--muted-foreground);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.gx-aspect-ratio[data-active="true"] {
-  border-color: var(--ring);
-  color: var(--foreground);
-}
-
 .gx-aspect-frame {
   position: relative;
+  width: var(--gx-aspect-width);
+  max-width: 100%;
+  height: var(--gx-aspect-height);
+  transition: height 160ms ease-out;
+}
+
+/* While the reader is choosing, the stage holds the tallest ratio at this
+   width, so pressing a ratio or dragging the slider never reflows the page
+   under the pointer. At rest it is exactly the current box; a keyboard reader
+   keeps the reservation through `:focus-visible`, a pointer press does not. */
+.gx-aspect-controls:hover ~ .gx-aspect-frame,
+.gx-aspect-controls:has(:focus-visible) ~ .gx-aspect-frame {
+  height: var(--gx-aspect-tallest);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-aspect-frame {
+    transition: none;
+  }
 }
 
 .gx-aspect-box {
@@ -13837,6 +13596,11 @@ button.gx-rating-star:focus-visible {
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: linear-gradient(135deg, var(--accent), var(--muted));
+}
+
+/* The popover's action hugs its label; the chrome is the shared outline one. */
+.gx-hovercard-action {
+  align-self: flex-start;
 }
 
 /* ---- item: mirrors components/src/item.tsx's ITEM_* recipes ---- */
@@ -13916,22 +13680,6 @@ button.gx-rating-star:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.gx-item-action {
-  height: var(--control-height-sm);
-  padding: 0 var(--control-padding-x-sm);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--foreground);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.gx-item-action:hover {
-  background: var(--hover);
 }
 
 /* ---- input group: mirrors components/src/input-group.tsx ----
@@ -14113,6 +13861,3 @@ button.gx-rating-star:focus-visible {
   line-height: 20px;
   color: var(--muted-foreground);
 }
-
-/* The card's action is the library's Button (`size="sm"`), so the drawing
-   paints the shared `.gx-btn` family instead of its own pill. */

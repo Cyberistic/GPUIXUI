@@ -1,3 +1,10 @@
+import {
+  BUTTON_BASE,
+  BUTTON_SIZES,
+  BUTTON_VARIANTS,
+  classesToStyle,
+} from "@gpuixui/tw";
+import { themes } from "@gpuixui/tokens";
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -63,6 +70,36 @@ describe("the deployments panel preview", () => {
     expect(workflow).toContain('type="checkbox"');
     expect(workflow).not.toContain('data-eager=""');
     expect(workflow).not.toContain("data-selected");
+  });
+
+  it("draws the filters with the Button exactly, not a box of their own", () => {
+    // Guarded bug: these three were `.gx-badge-choice` — a bordered box with a
+    // 12px label, its own radius and a `[data-chosen]` fill, none of which the
+    // library's Button has. They are the recipe's `outline` and `secondary`
+    // variants at `sm`, so the fill and the height are read out of the recipe.
+    const start = workflow.indexOf('class="gx-badge-filters"');
+    const filters = workflow.slice(start, workflow.indexOf("</div>", start));
+    const buttons = [...filters.matchAll(/<button[^>]*class="([^"]+)"/g)].map(
+      ([, className]) => className,
+    );
+
+    expect(buttons).toEqual([
+      "gx-btn gx-btn-sm gx-btn-secondary",
+      "gx-btn gx-btn-sm gx-btn-outline",
+      "gx-btn gx-btn-sm gx-btn-outline",
+    ]);
+    expect(workflow).not.toContain("gx-badge-choice");
+
+    const sm = classesToStyle(
+      `${BUTTON_BASE} ${BUTTON_SIZES.sm} ${BUTTON_VARIANTS.secondary}`,
+      themes.dark,
+    ).style;
+    expect(sm.height).toBe(themes.dark.density.controlHeight.sm);
+    expect(block(".gx-btn-sm")).toContain("height: var(--control-height-sm);");
+    expect(sm.backgroundColor).toBe(themes.dark.colors.secondary);
+    expect(block(".gx-btn-secondary")).toContain(
+      "background: var(--secondary);",
+    );
   });
 });
 

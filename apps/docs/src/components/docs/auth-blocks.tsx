@@ -156,10 +156,9 @@ export const LoginRender = () => {
         }}
       >
         <div className="gx-auth-head">
-          <AuthMark />
-          <h3 className="gx-auth-title">Sign in</h3>
+          <h3 className="gx-auth-title">Login to your account</h3>
           <p className="gx-auth-desc">
-            Welcome back. Enter your details to continue.
+            Enter your email below to login to your account
           </p>
         </div>
         <AuthField
@@ -685,8 +684,8 @@ export function LoginPage() {
     <Stack direction="column" gap="xl" align="center" style={{ padding: 48 }}>
       <Card variant="outline" style={{ width: 400 }}>
         <CardHeader>
-          <CardTitle>Sign in</CardTitle>
-          <CardDescription>Welcome back. Enter your details to continue.</CardDescription>
+          <CardTitle>Login to your account</CardTitle>
+          <CardDescription>Enter your email below to login to your account</CardDescription>
         </CardHeader>
         <CardContent>
           <Stack direction="column" gap="md">

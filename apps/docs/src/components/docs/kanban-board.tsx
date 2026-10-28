@@ -556,7 +556,10 @@ export const KanbanRender = () => {
                 </button>
               ))}
             </div>
-            <button className="gx-kan-filter" type="button">
+            <button
+              className="gx-btn gx-btn-outline gx-btn-sm gx-kan-filter"
+              type="button"
+            >
               <Glyph size={12}>{ICON.filter}</Glyph>
               Filter
             </button>

@@ -114,7 +114,7 @@ const CarouselPreview = ({
               <div className="gx-carousel-controls">
                 <button
                   aria-label="Previous slide"
-                  className="gx-carousel-btn"
+                  className="gx-btn gx-btn-secondary gx-btn-square"
                   disabled={controlDisabled({
                     active,
                     count,
@@ -128,7 +128,7 @@ const CarouselPreview = ({
                 </button>
                 <button
                   aria-label="Next slide"
-                  className="gx-carousel-btn"
+                  className="gx-btn gx-btn-secondary gx-btn-square"
                   disabled={controlDisabled({
                     active,
                     count,

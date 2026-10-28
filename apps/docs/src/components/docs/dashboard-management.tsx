@@ -548,7 +548,7 @@ const DeploymentsCard = ({
 );
 
 const DebugRow = () => (
-  <button className="gx-mgmt-debug" type="button">
+  <button className="gx-btn gx-btn-outline gx-mgmt-debug" type="button">
     <Glyph className="gx-mgmt-glyph gx-mgmt-debug-glyph" name="terminal" />
     <span>Debug prod deploy failure</span>
     <Glyph className="gx-mgmt-glyph gx-mgmt-debug-chevron" name="chevron" />

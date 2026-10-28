@@ -23,7 +23,7 @@ export function CopyButtonDemo() {
       </div>
       <button
         aria-label={copied ? "Copied" : "Copy"}
-        className="gx-copybutton-btn"
+        className="gx-btn gx-btn-secondary gx-btn-sm"
         onClick={async () => {
           // A copy that did not write is not a copy: the control acknowledges
           // only the text the browser accepted. (It used to flip to "Copied"

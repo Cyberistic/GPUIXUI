@@ -34,7 +34,7 @@ export const Sidebar13Render = () => {
             A modal surface, drawn over the page it was opened from.
           </span>
           <button
-            className="gx-sb-scene-open"
+            className="gx-btn gx-btn-primary"
             onClick={() => setOpen(true)}
             type="button"
           >
