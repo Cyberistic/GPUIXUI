@@ -22,11 +22,7 @@ import {
   ChatRoot,
   type ChatStatus,
 } from "../chat.js";
-import {
-  Bubble,
-  BubbleContent,
-  BubbleReactions,
-} from "../bubble.js";
+import { Bubble, BubbleContent, BubbleReactions } from "../bubble.js";
 import {
   Message,
   MessageAvatar,
