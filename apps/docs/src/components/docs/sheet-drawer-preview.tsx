@@ -204,12 +204,13 @@ const SheetDrawing = () => {
     { name: "dialog", dismissible: true },
     ...(open ? [{ name: "drawer", dismissible }] : []),
   ]);
+  // A readout of what the key did, not a paragraph about what it does.
   const story =
     outcome.closed === "drawer"
-      ? "Escape closes the drawer; the dialog underneath stays open."
+      ? "escape → closed: drawer"
       : outcome.closed === "dialog"
-        ? "The drawer is closed; Escape reaches the dialog underneath."
-        : "dismissible={false}: Escape is consumed, and the dialog underneath stays open.";
+        ? "escape → closed: dialog"
+        : "escape → refused";
 
   return (
     <div className="gx-demo gx-drawer-scene">
@@ -258,16 +259,11 @@ const SheetDrawing = () => {
       </p>
       <div className="gx-drawer-frame">
         <div className="gx-drawer-appbar">
-          <span className="gx-drawer-apptitle">Sheet geometry</span>
+          <span className="gx-drawer-apptitle">Project</span>
           <span className="gx-drawer-readout">
             side=&quot;{side}&quot; · size=&quot;{size}&quot;
           </span>
         </div>
-        <p className="gx-drawer-copy gx-drawer-page">
-          The frame is the window: the sheet is anchored to one edge, its own
-          span outside that edge at the start of the slide, and clamped to the
-          window in the direction it asks for.
-        </p>
         {open ? (
           <DrawerSurface
             description={`side="${side}" · size="${size}"`}
@@ -285,17 +281,20 @@ const SheetDrawing = () => {
             panelRef={panel}
             side={side}
             size={size}
-            title="Surface geometry"
+            title="Share project"
           >
-            <p className="gx-drawer-copy">
-              The surface is the theme&apos;s <code>popover</code> fill with a{" "}
-              <code>border</code> edge, the <code>elevation.lg</code> lift and
-              the inner corners rounded — the window edge stays flush.
-            </p>
-            <p className="gx-drawer-copy">
-              A column takes the window&apos;s height; a top or bottom sheet
-              takes its width and wears the grabber.
-            </p>
+            <label className="gx-drawer-field">
+              <span>Project</span>
+              <input className="gx-field" defaultValue="Aurora" />
+            </label>
+            <label className="gx-drawer-field">
+              <input defaultChecked type="checkbox" />
+              <span>Notify the team</span>
+            </label>
+            <label className="gx-drawer-field">
+              <input type="checkbox" />
+              <span>Allow guests to comment</span>
+            </label>
           </DrawerSurface>
         ) : null}
       </div>

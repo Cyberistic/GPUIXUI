@@ -987,6 +987,13 @@
   accent-color: var(--primary);
 }
 
+/* A text field in a drawer row takes the row's width; a checkbox keeps its
+   own box. */
+.gx-drawer-field > .gx-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .gx-drawer-copy,
 .gx-drawer-preview-count {
   margin: 0;
