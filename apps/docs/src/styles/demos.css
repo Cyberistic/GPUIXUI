@@ -14114,19 +14114,5 @@ button.gx-rating-star:focus-visible {
   color: var(--muted-foreground);
 }
 
-.gx-hovercard-action {
-  align-self: flex-start;
-  height: var(--control-height-sm);
-  padding: 0 var(--control-padding-x-sm);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--popover-foreground);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.gx-hovercard-action:hover {
-  background: var(--hover);
-}
+/* The card's action is the library's Button (`size="sm"`), so the drawing
+   paints the shared `.gx-btn` family instead of its own pill. */
