@@ -69,16 +69,30 @@ the cap.
 
 ## Grouping
 
-`BubbleGroup` tightens the gap to the theme's `xs` (4px). Each bubble names its
+`BubbleGroup` tightens the gap to the theme's `md` (8px). Each bubble names its
 place with `group`: `first` joins below, `middle` joins both sides, `last`
 joins above and keeps a short tail on the sender's corner, and `single` is the
-whole radius.
+whole radius. The joined corner is the theme's `sm` step and the outer corners
+keep `xl`, so a run reads as one column without losing its frame.
+
+## Shape
+
+The surface is shadcn's: `px-3 py-2` (12px by 8px), the `body` type role
+(14px/20px), and the theme's `xl` corner. A bubble is at most 80% of its row
+(`ghost` is 100%); pass `maxWidth` to change the cap.
 
 ## Actions and reactions
 
 `BubbleActions` is laid out even while hidden and fades in on pointer-over or
 when one of its `BubbleAction`s holds focus, so revealing it never moves the
-bubble. `BubbleReactions` is a named row under the surface.
+bubble.
+
+`BubbleReactions` is the pill on the bubble's edge: inset 12px from the
+sender's side, a full radius, the `muted` fill and a page-fill ring around it so
+it reads as cut out of the surface. It hangs a quarter of its height over the
+bubble's bottom edge — `translate-y-3/4`'s crossing, expressed as a negative
+inset from inside the column — and the rest of the pill's box lays out below the
+edge, so the next row cannot paint over it.
 
 ## API
 
@@ -88,14 +102,26 @@ bubble. `BubbleReactions` is a named row under the surface.
 | `BubbleContent` | the framed surface | `className?`, `children` |
 | `BubbleActions` | a named group that reserves its height and fades in | `label?`, `className?`, `children` |
 | `BubbleAction` | one small ghost action, and the `Button` busy state | `label` (required), `onClick`, `disabled?`, `className?`, `loading?`, `loadingLabel?`, `leading?`, `trailing?`, `reducedMotion?` |
-| `BubbleReactions` | a named reaction row | `label` (required), `className?`, `children` |
+| `BubbleReactions` | a named pill that hangs over the surface's edge | `label` (required), `className?`, `children` |
 | `BubbleGroup` | a tighter column | `gap?`, `className?`, `children` |
 
 ## Limitations
 
-- A reaction row sits in the bubble's column, not overlapping the bubble edge:
-  `position: absolute` resolves against the mount parent in
-  `@gpuix/native@0.11.0`, so an overlapping badge would be a window layer.
+- The reaction pill hangs a quarter of its height over the surface's edge.
+  shadcn anchors it absolutely and hangs three quarters; the runtime has no
+  parent-relative absolute positioning (`position: absolute` resolves against
+  the mount parent in `@gpuix/native@0.11.0`), so the pill stays in the column.
+  Its hanging part also lays out below the edge instead of overlapping the next
+  row, and it cannot be raised above a later sibling — leave breathing room
+  under a reacting bubble the way shadcn's docs do.
+- The pill's ring is the page fill (`background`). shadcn rings it in `card`;
+  the bubble has no way to read the surface it sits on, so a bubble hosted on a
+  card paints the page's ring.
+- The surface paints the theme's `xl` corner (12px in the default ladder, 16–18px
+  on the platform skins). shadcn computes `--radius * 1.4` — 14px with its
+  default radius — and the library's ladder has no such step.
+- The type is the recipe's `text-sm` (14px/20px). shadcn sets `leading-relaxed`
+  (22.75px); the type scale has no relaxed step.
 - The avatar is a prop slot rather than a part, because the runtime cannot wrap
   a caller's children in the bubble's column selectively.
 - `BubbleContent` is always a `div`; the runtime has no anchor host, so there is

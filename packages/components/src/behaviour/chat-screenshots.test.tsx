@@ -22,7 +22,7 @@ import {
   ChatRoot,
   type ChatStatus,
 } from "../chat.js";
-import { Bubble, BubbleContent } from "../bubble.js";
+import { Bubble, BubbleContent, BubbleReactions } from "../bubble.js";
 import {
   Message,
   MessageAvatar,
@@ -125,6 +125,23 @@ const Block = ({ status, rows, grown, height = 560 }: BlockProps) => (
   </div>
 );
 
+/** The bubble's reaction pill, at the docs page's width. */
+const Reaction = () => (
+  <div style={{ width: 420, display: "flex" }}>
+    <Bubble variant="muted" testId="reaction-bubble">
+      <BubbleContent testId="reaction-surface">
+        <text>Yes. You are reading a demo that is demoing itself.</text>
+      </BubbleContent>
+      <BubbleReactions
+        testId="reaction-pill"
+        label="Reactions: thumbs up, fire, eyes, and 2 more"
+      >
+        <text>👍🔥👀+2</text>
+      </BubbleReactions>
+    </Bubble>
+  </div>
+);
+
 /** Wheel over the transcript. Positive scrolls toward older rows. */
 const wheel = (
   root: ReturnType<typeof renderComponent>,
@@ -164,6 +181,15 @@ describe.skipIf(process.platform !== "darwin")("Chat frames", () => {
       0,
     );
     expect(capture(root, frame("chat-scrolled"))).toBeGreaterThan(0);
+    root.unmount();
+  });
+
+  it("captures the reaction pill hanging over the bubble's edge", () => {
+    const root = renderComponent(<Reaction />);
+    const surface = requireBounds(root, "reaction-surface");
+    const pill = requireBounds(root, "reaction-pill");
+    expect(surface.y + surface.height - pill.y).toBe(6);
+    expect(capture(root, frame("bubble-reaction"))).toBeGreaterThan(0);
     root.unmount();
   });
 

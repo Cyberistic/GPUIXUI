@@ -60,6 +60,18 @@ agree in the default style and differ where a platform's `radius.md` is 8. The
 carousel page prints the fixed metric, and its preview is a rendering like every
 other.
 
+A **bubble's reaction pill** hangs the same distance in the drawing and in the
+runtime. `BubbleReactions` computes its top inset from its own compiled recipe —
+a quarter of the pill's height plus the column's gap — so the pill crosses the
+surface's bottom edge, and the rest of its box lays out below the edge. shadcn
+anchors the row absolutely and hangs three quarters of it past the edge; the
+runtime cannot position a child against its parent, so the Bubble page says so
+under **Limitations** and the drawing mirrors the native quarter rather than
+shadcn's. The drawing's corner is `var(--radius-xl)` and its type is the
+recipe's 14px/20px, so the platform switch moves the corner with the native one;
+shadcn's `--radius * 1.4` and `leading-relaxed` are the two numbers the library's
+ladder cannot name, and the page prints them.
+
 A **table's row height** follows the platform's density in the preview, while
 the native row is a fixed recipe: `TABLE_CELL` is shadcn's `px-3 py-2 text-sm`,
 so every shipped row is an 8px inset around a 20px line — 36px — whatever the

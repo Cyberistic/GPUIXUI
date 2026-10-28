@@ -10245,44 +10245,72 @@ button.gx-rating-star:focus-visible {
   padding: 2px;
 }
 
-.gx-chat-row {
+/* One run from one speaker. The rows inside are `MessageGroup`'s 6px apart;
+   the transcript's turns are 16px, so a run reads as one block. */
+.gx-chat-turn {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.gx-chat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   min-width: 0;
 }
 
 .gx-chat-row[data-role="user"] {
+  flex-direction: row-reverse;
+}
+
+/* The avatar slot is on every row so a run's bubbles share an edge; only the
+   row that starts the run paints it. */
+.gx-chat-avatar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-top: 2px;
+  border-radius: 9999px;
+  background: var(--muted);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.gx-chat-avatar[data-empty] {
+  visibility: hidden;
+}
+
+.gx-chat-message {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  align-items: flex-start;
+}
+
+.gx-chat-row[data-role="user"] .gx-chat-message {
   align-items: flex-end;
 }
 
-.gx-chat-bubble {
-  min-width: 0;
-  max-width: 80%;
-  border-radius: 12px;
-}
-
-.gx-chat-bubble[data-role="user"] {
-  padding: 8px 12px;
-  background: var(--muted);
-  color: var(--foreground);
-}
-
-.gx-chat-bubble[data-role="assistant"] {
-  padding: 0;
-  background: transparent;
-  color: var(--foreground);
-}
-
-.gx-chat-body {
+.gx-chat-meta {
   margin: 0;
+  padding: 0 2px;
+  color: var(--muted-foreground);
   font-family: var(--font-sans);
-  font-size: 13px;
-  line-height: 20px;
-  white-space: pre-wrap;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
 }
 
-.gx-chat-row[data-live] .gx-chat-body {
+.gx-chat-row[data-live] .gx-bubble-surface {
   color: var(--muted-foreground);
 }
 
@@ -10362,22 +10390,34 @@ button.gx-rating-star:focus-visible {
 }
 
 /* ---- bubble: mirrors components/src/bubble.tsx ----
-   Seven surfaces, start/end alignment, a hidden-until-hover action strip that
-   reserves its height, and joined corners on a grouped run. */
+   The surface's corner, inset, type and the way a reaction pill crosses its
+   bottom edge are the component's; the conversation is the one shadcn's demo
+   draws. A grouped run joins its inner corners through its `data-group`, which
+   is also how the native bubble names its place in the run. */
 .gx-bubble-scene {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: min(480px, 100%);
+  gap: 20px;
+  width: min(420px, 100%);
 }
 
-.gx-bubble-row {
+.gx-bubble-thread {
   display: flex;
+  flex-direction: column;
+  gap: 24px;
   min-width: 0;
 }
 
-.gx-bubble-row[data-align="end"] {
-  justify-content: flex-end;
+/* A run from one sender: the native `BubbleGroup` gap. */
+.gx-bubble-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.gx-bubble-group[data-align="end"] {
+  align-items: flex-end;
 }
 
 .gx-bubble {
@@ -10386,64 +10426,92 @@ button.gx-rating-star:focus-visible {
   gap: 4px;
   min-width: 0;
   max-width: 80%;
-  border-radius: 12px;
+  align-self: flex-start;
+  align-items: flex-start;
 }
 
-.gx-bubble-text {
+.gx-bubble[data-align="end"] {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.gx-bubble-surface {
+  min-width: 0;
   margin: 0;
   padding: 8px 12px;
-  color: inherit;
+  border-radius: var(--radius-xl);
+  color: var(--foreground);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 20px;
 }
 
-.gx-bubble-ghost .gx-bubble-text {
-  padding: 0;
-}
-
-.gx-bubble-default {
+.gx-bubble-surface[data-variant="default"] {
   background: var(--primary);
   color: var(--primary-foreground);
 }
 
-.gx-bubble-secondary {
+.gx-bubble-surface[data-variant="secondary"] {
   background: var(--secondary);
   color: var(--secondary-foreground);
 }
 
-.gx-bubble-muted {
+.gx-bubble-surface[data-variant="muted"] {
   background: var(--muted);
   color: var(--foreground);
 }
 
-.gx-bubble-tinted {
-  background: var(--accent);
-  color: var(--accent-foreground);
+/* The native `tinted` surface is the primary role at 14% over the page. */
+.gx-bubble-surface[data-variant="tinted"] {
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  color: var(--foreground);
 }
 
-.gx-bubble-outline {
+.gx-bubble-surface[data-variant="outline"] {
   border: 1px solid var(--border);
   background: var(--background);
   color: var(--foreground);
 }
 
-.gx-bubble-ghost {
-  max-width: 100%;
+.gx-bubble-surface[data-variant="ghost"] {
+  padding: 0;
+  border-radius: 0;
   background: transparent;
   color: var(--foreground);
 }
 
-.gx-bubble-destructive {
+.gx-bubble-surface[data-variant="destructive"] {
   background: var(--destructive-soft);
   color: var(--destructive-soft-foreground);
+}
+
+/* The run joins its inner edge to the `sm` corner and keeps the full radius on
+   the outer one, exactly as `bubbleCorners` maps it. */
+.gx-bubble[data-group="first"] > .gx-bubble-surface {
+  border-bottom-left-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+}
+
+.gx-bubble[data-group="middle"] > .gx-bubble-surface {
+  border-radius: var(--radius-sm);
+}
+
+.gx-bubble[data-group="last"] > .gx-bubble-surface {
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.gx-bubble[data-align="end"][data-group="last"] > .gx-bubble-surface {
+  border-bottom-left-radius: var(--radius-xl);
+  border-bottom-right-radius: var(--radius-sm);
 }
 
 .gx-bubble-actions {
   display: flex;
   align-items: center;
   gap: 4px;
-  height: 28px;
+  height: var(--control-height-sm);
   opacity: 0;
   pointer-events: none;
 }
@@ -10454,32 +10522,48 @@ button.gx-rating-star:focus-visible {
   pointer-events: auto;
 }
 
-.gx-bubble-group {
+/* The pill hangs over the surface's bottom edge: a quarter of its 24px box
+   (20px line + 2px padding) plus the column's 4px gap, which the native part
+   computes from its own recipe. The ring is the page fill, so the pill reads as
+   cut out of the bubble. */
+.gx-bubble-reactions {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 4px;
-  align-items: flex-start;
-  width: min(480px, 100%);
+  margin-top: -10px;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: var(--muted);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  box-shadow: 0 0 0 2px var(--background);
 }
 
-.gx-bubble-group .gx-bubble {
-  max-width: 80%;
-  border-radius: 12px;
+.gx-bubble[data-align="end"] > .gx-bubble-reactions {
+  align-self: flex-end;
+  margin-right: var(--spacing-lg);
 }
 
-.gx-bubble-group .gx-bubble[data-group="first"] {
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
+.gx-bubble[data-align="start"] > .gx-bubble-reactions {
+  align-self: flex-start;
+  margin-left: var(--spacing-lg);
 }
 
-.gx-bubble-group .gx-bubble[data-group="middle"] {
-  border-radius: 4px;
+.gx-bubble-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
 }
 
-.gx-bubble-group .gx-bubble[data-group="last"] {
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  border-bottom-left-radius: 4px;
+.gx-bubble-chip {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 16px;
 }
 
 .gx-bubble-note {

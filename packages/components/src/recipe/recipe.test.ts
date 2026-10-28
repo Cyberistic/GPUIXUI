@@ -1976,6 +1976,7 @@ describe("Bubble recipe", () => {
       display: "flex",
       flexDirection: "row",
       alignItems: "center",
+      justifyContent: "center",
       gap: 4,
       borderRadius: 9999,
       backgroundColor: darkTheme.colors.muted,
@@ -1983,8 +1984,8 @@ describe("Bubble recipe", () => {
       paddingRight: 6,
       paddingTop: 2,
       paddingBottom: 2,
-      fontSize: 12,
-      lineHeight: 16,
+      fontSize: 14,
+      lineHeight: 20,
     });
     expect(style(BUBBLE_GROUP)).toEqual({
       display: "flex",
