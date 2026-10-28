@@ -28,7 +28,6 @@ import * as Option from "effect/Option";
 import { afterEach, describe, expect, it } from "vitest";
 import { nativeTextTheme as tokenHostTheme } from "@gpuixui/tokens";
 import { ChatComposer, ChatRoot } from "../chat.js";
-import { ColorPicker } from "../color-picker.js";
 import {
   Combobox,
   ComboboxContent,
@@ -70,7 +69,6 @@ const HOSTS = [
   ["tag-input.tsx", "background"],
   ["mention-input.tsx", "background"],
   ["inline-edit.tsx", "background"],
-  ["color-picker.tsx", "background"],
   ["chat.tsx", "background"],
   ["time-picker.tsx", "input"],
   ["command-menu.tsx", "input"],
@@ -155,11 +153,6 @@ const cases: ReadonlyArray<
         </MentionInput>,
         theme,
       ),
-  ],
-  [
-    "ColorPicker",
-    "background",
-    (theme) => mount(<ColorPicker label="Accent" />, theme),
   ],
   [
     "CommandMenu",

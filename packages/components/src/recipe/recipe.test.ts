@@ -184,11 +184,14 @@ import {
   MESSAGE_TOOL_CALL_NAME,
   MESSAGE_TOOL_CALL_RESULT,
   MESSAGE_TOOL_CALL_STATUS,
+  COLOR_PICKER_AREA,
   COLOR_PICKER_CELL,
+  COLOR_PICKER_CONTRAST,
   COLOR_PICKER_FIELD,
-  COLOR_PICKER_INPUT,
-  COLOR_PICKER_ROOT,
+  COLOR_PICKER_PANEL,
+  COLOR_PICKER_ROW,
   COLOR_PICKER_SWATCHES,
+  COLOR_PICKER_TRIGGER,
   COMBOBOX_CARET,
   COMBOBOX_CONTENT,
   COMBOBOX_EMPTY,
@@ -1827,17 +1830,35 @@ describe("TimePicker recipe", () => {
 });
 
 describe("ColorPicker recipe", () => {
-  it("resolves the picker, swatches, field, cell and input", () => {
-    expect(style(COLOR_PICKER_ROOT)).toEqual({
+  it("resolves the trigger, the panel, the area, a row and the presets", () => {
+    expect(style(COLOR_PICKER_TRIGGER)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      alignSelf: "flex-start",
+      borderRadius: darkTheme.radius.full,
+      borderWidth: 1,
+      borderColor: darkTheme.colors.border,
+      backgroundColor: darkTheme.colors.background,
+      padding: 6,
+      paddingRight: 16,
+    });
+    expect(style(COLOR_PICKER_PANEL)).toEqual({
+      display: "flex",
+      flexDirection: "column",
+      gap: 14,
+      padding: 14,
+    });
+    expect(style(COLOR_PICKER_ROW)).toEqual({
       display: "flex",
       flexDirection: "column",
       gap: 8,
     });
-    expect(style(COLOR_PICKER_SWATCHES)).toEqual({
-      display: "flex",
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 6,
+    expect(style(COLOR_PICKER_AREA)).toEqual({
+      position: "relative",
+      width: "100%",
+      borderRadius: darkTheme.radius.xl,
     });
     expect(style(COLOR_PICKER_FIELD)).toEqual({
       display: "flex",
@@ -1845,21 +1866,23 @@ describe("ColorPicker recipe", () => {
       alignItems: "center",
       gap: 8,
     });
-    expect(style(COLOR_PICKER_CELL)).toEqual({
-      borderRadius: 6,
-      borderWidth: 1,
-      borderColor: darkTheme.colors.border,
+    expect(style(COLOR_PICKER_SWATCHES)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "center",
+      gap: 6,
     });
-    expect(style(COLOR_PICKER_INPUT)).toEqual({
+    expect(style(COLOR_PICKER_CONTRAST)).toEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
       fontSize: 14,
       lineHeight: 20,
-      fontFamily: sans,
-      flexGrow: 1,
-      paddingLeft: 8,
-      paddingRight: 8,
-      backgroundColor: darkTheme.colors.background,
-      color: darkTheme.colors.inputForeground,
-      borderRadius: 6,
+    });
+    expect(style(COLOR_PICKER_CELL)).toEqual({
+      borderRadius: darkTheme.radius.full,
       borderWidth: 1,
       borderColor: darkTheme.colors.border,
     });
@@ -2301,7 +2324,7 @@ describe("merge order", () => {
     );
     expect(style(cn(DATE_PICKER_TRIGGER, "w-[280px]")).width).toBe(280);
     expect(style(cn(TIME_PICKER_ROOT, "rounded-none")).borderRadius).toBe(0);
-    expect(style(cn(COLOR_PICKER_ROOT, "flex-row")).flexDirection).toBe("row");
+    expect(style(cn(COLOR_PICKER_ROW, "flex-row")).flexDirection).toBe("row");
     expect(style(cn(MESSAGE_SCROLLER_ROOT, "gap-4")).gap).toBe(16);
     expect(style(cn(MESSAGE_ROOT, "gap-4")).gap).toBe(16);
     expect(style(cn(CHAT_COMPOSER_FIELD, "bg-muted")).backgroundColor).toBe(
@@ -2486,11 +2509,14 @@ describe("no unsupported classes", () => {
       TIME_PICKER_SEGMENT,
       TIME_PICKER_SEPARATOR,
       TIME_PICKER_CLEAR,
-      COLOR_PICKER_ROOT,
+      COLOR_PICKER_TRIGGER,
+      COLOR_PICKER_PANEL,
+      COLOR_PICKER_ROW,
+      COLOR_PICKER_AREA,
       COLOR_PICKER_SWATCHES,
       COLOR_PICKER_FIELD,
+      COLOR_PICKER_CONTRAST,
       COLOR_PICKER_CELL,
-      COLOR_PICKER_INPUT,
       MESSAGE_SCROLLER_ROOT,
       MESSAGE_SCROLLER_VIEWPORT,
       MESSAGE_SCROLLER_CONTENT,
