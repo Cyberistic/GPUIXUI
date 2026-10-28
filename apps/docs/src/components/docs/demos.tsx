@@ -1046,6 +1046,11 @@ const DropdownMenuDemo = () => {
           <p className="gx-menu-file-title">ata-schema.json</p>
           <p className="gx-menu-file-meta">Edited 2 min ago</p>
         </div>
+      </div>
+      {/* The trigger is a row under the card, not inside it: the panel opens
+          4px below the button, and a button vertically centred in the card put
+          the panel over the card's bottom edge and its rounded corner. */}
+      <div className="gx-menu-actions">
         <div className="gx-menu-anchor" ref={anchor}>
           <button
             aria-expanded={open}

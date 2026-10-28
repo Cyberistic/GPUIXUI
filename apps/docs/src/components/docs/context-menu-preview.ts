@@ -70,6 +70,40 @@ export const placeSurface = (
 });
 
 /**
+ * The gap between a menu row and the surface it opens, matching
+ * `packages/components/src/menu/sub.tsx`'s `SUBMENU_GAP`.
+ */
+export const SUBMENU_GAP = 4;
+
+/**
+ * Where a submenu of `submenu` size rests, in the coordinates its parent
+ * surface positions from.
+ *
+ * A submenu wants its row's top and the parent's right edge plus the gap. When
+ * the frame has no room there it opens to the **left**, the way a menu flips,
+ * rather than sliding over its own parent; the point is then pulled back inside
+ * by the same collision rule as {@link placeSurface}. Without this the second
+ * level painted 167px outside the drawing and grew the scene's scroll box under
+ * the row's chevron.
+ */
+export const submenuPlacement = (input: {
+  readonly parent: Box;
+  readonly row: Box;
+  readonly submenu: Size;
+  readonly frame: Size;
+}): Point => {
+  const right = input.parent.x + input.parent.width + SUBMENU_GAP;
+  const left = input.parent.x - SUBMENU_GAP - input.submenu.width;
+  const side = right + input.submenu.width <= input.frame.width ? right : left;
+  const placed = placeSurface(
+    { x: side, y: input.row.y },
+    input.submenu,
+    input.frame,
+  );
+  return { x: placed.x - input.parent.x, y: placed.y - input.parent.y };
+};
+
+/**
  * The point `Shift+F10` opens at: the trigger's bottom-left corner.
  *
  * The keyboard route has no pointer, so the menu opens where a menu belongs —

@@ -79,6 +79,14 @@
   max-width: 100%;
 }
 
+/* A demo root is a scene drawn *inside* the stage, not a second stage. It must
+   not scroll: focusing a surface scrolls the nearest scrollport, and a scene
+   that scrolled carried the open calendar out of the card (its trigger was
+   286px above the frame it belonged to). The stage owns the clip. */
+.gx-demo .gx-demo {
+  overflow: visible;
+}
+
 .gx-demo {
   display: flex;
   flex-wrap: wrap;
@@ -1228,11 +1236,14 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  justify-content: center;
-  gap: 14px;
+  /* The panel hangs out of flow below the trigger; the demo keeps its content
+     at the top and reserves the panel's box underneath, so the stage is the
+     room the menu needs instead of a box that clips it. */
+  justify-content: flex-start;
+  gap: 10px;
   width: 100%;
   max-width: 420px;
-  min-height: 320px;
+  min-height: 340px;
   padding: 24px;
 }
 
@@ -1245,6 +1256,12 @@
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 3px);
   background: var(--card);
+}
+
+/* The trigger's row: the panel opens below it, clear of the card's edge. */
+.gx-menu-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .gx-menu-file-title {
@@ -1490,6 +1507,14 @@
   padding: 24px;
 }
 
+/* A backdrop-filter samples the page behind it; a scroll container between the
+   veil and the page clips that backdrop inside the scrollport and leaves a seam
+   at the surface's edge. A modal stage clips nothing — it is the room the
+   surface fills — so this stage is not a scroll container. */
+.gx-demo:has(> .gx-demo-command):not(.gx-grid-preview) {
+  overflow: visible;
+}
+
 .gx-command-file {
   display: flex;
   align-items: center;
@@ -1533,6 +1558,10 @@
   max-height: 232px;
   overflow-y: auto;
   padding: 5px;
+  /* The list scrolls past the palette's edge; without a fade, the row the box
+     cuts leaves the tops of its letters against the border — the bright speck
+     under the palette that read as a blur artifact. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 10px), transparent);
 }
 
 .gx-palette-empty {
@@ -3117,14 +3146,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* The popup is 280px tall and the scene is a fixed 520px box that clips it,
-     so the control starts near the top rather than dead centre: the opened list
-     has to fit below it, the way a shadcn demo sits on a page. */
-  /* The scene centres a flex item by its own height, so the column has to
-     stretch before its own justify-content can place the control near the top. */
+  /* The control sits near the top so the popup has the room below it; the
+     stage reserves that room (the popup is out of flow and reaches 280px plus
+     its 4px gap past the trigger). A 520px panel used to clip the list mid-row. */
   align-self: stretch;
   justify-content: flex-start;
   padding-top: 56px;
+  /* 280px popup + 4px gap + 24px for the readout under the control. */
+  padding-bottom: 308px;
   gap: 14px;
   width: 100%;
 }
@@ -4630,8 +4659,16 @@
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  min-height: 100%;
   padding: 40px 24px;
+}
+
+/* The popup calendar is out of flow under its field, so the scene that opens
+   one reserves the tallest box the drawings open — two months plus the 6px gap
+   and the readout — and the stage is the room the calendar needs. Inline
+   calendars are in flow; the gallery scene reserves nothing. */
+.gx-date-popup {
+  --gx-date-popup-height: 324px;
+  padding-bottom: calc(var(--gx-date-popup-height) + 6px + 20px);
 }
 
 .gx-date-column {
@@ -4892,6 +4929,10 @@
 }
 
 .gx-date-presets {
+  /* The popup calendar hangs off this field block, the way the trigger is the
+     anchor; without a positioned block it anchored to the whole scene and
+     painted 260px below the card. */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;

@@ -14,6 +14,7 @@ import {
   keyboardAnchor,
   placeSurface,
   pointerAnchor,
+  submenuPlacement,
   typeChar,
   type CloseReason,
   type OpenSource,
@@ -122,8 +123,10 @@ const ContextSurface = ({
   const [highlight, setHighlight] = useState<string | null>(null);
   const [submenu, setSubmenu] = useState(false);
   const [subHighlight, setSubHighlight] = useState<string | null>(null);
+  const [subPlaced, setSubPlaced] = useState<Point | null>(null);
   const [placed, setPlaced] = useState(point);
   const surface = useRef<HTMLDivElement | null>(null);
+  const subSurface = useRef<HTMLDivElement | null>(null);
   const rowRefs = useRef(new Map<string, HTMLButtonElement>());
   const subRefs = useRef(new Map<string, HTMLButtonElement>());
   const buffer = useRef<TypedBuffer>(idleTyped);
@@ -196,6 +199,47 @@ const ContextSurface = ({
       current.x === next.x && current.y === next.y ? current : next,
     );
   }, [point]);
+
+  // The second level opens past its row, and the frame decides the side: with
+  // no room on the right it flips to the left of its parent, the way a menu
+  // does. Without this it painted 167px outside the card, widened the scene's
+  // scroll box under the row's chevron, and was cut off.
+  useLayoutEffect(() => {
+    if (!submenu) return;
+    const parent = surface.current;
+    const row = rowRefs.current.get("share");
+    const menu = subSurface.current;
+    const frame = parent?.offsetParent;
+    if (
+      parent === null ||
+      row === undefined ||
+      menu === null ||
+      !(frame instanceof HTMLElement)
+    ) {
+      return;
+    }
+    const frameBox = frame.getBoundingClientRect();
+    const boxOf = (element: HTMLElement) => {
+      const box = element.getBoundingClientRect();
+      return {
+        x: box.left - frameBox.left,
+        y: box.top - frameBox.top,
+        width: box.width,
+        height: box.height,
+      };
+    };
+    const placed = submenuPlacement({
+      parent: boxOf(parent),
+      row: boxOf(row),
+      submenu: boxOf(menu),
+      frame: { width: frameBox.width, height: frameBox.height },
+    });
+    // The child's `left`/`top` are measured from its parent's padding box.
+    setSubPlaced({
+      x: placed.x - parent.clientLeft,
+      y: placed.y - parent.clientTop,
+    });
+  }, [submenu]);
 
   // The shift, measured: without `preventScroll` a press near the frame's bottom
   // edge scrolled the frame **84 px** to reveal the focused surface, and the file
@@ -352,7 +396,13 @@ const ContextSurface = ({
           onMouseLeave={() =>
             later(MENU_CLOSE_GRACE_MS, () => setSubmenu(false))
           }
+          ref={subSurface}
           role="menu"
+          style={
+            subPlaced === null
+              ? undefined
+              : { left: subPlaced.x, top: subPlaced.y }
+          }
         >
           {shareRows.map((row) => (
             <button

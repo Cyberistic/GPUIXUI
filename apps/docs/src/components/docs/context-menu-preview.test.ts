@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   MENU_CLOSE_GRACE_MS,
+  SUBMENU_GAP,
   SUBMENU_OPEN_DELAY_MS,
   TYPEAHEAD_WINDOW_MS,
   focusAfterClose,
@@ -11,6 +12,7 @@ import {
   pointerAnchor,
   restoresFocus,
   rightPress,
+  submenuPlacement,
   typeChar,
   typed,
   typedMatch,
@@ -49,6 +51,14 @@ const typeahead = readFileSync(
 const menuHover = readFileSync(
   new URL(
     "../../../../../packages/components/src/menu/hover.ts",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
+const menuSub = readFileSync(
+  new URL(
+    "../../../../../packages/components/src/menu/sub.tsx",
     import.meta.url,
   ),
   "utf8",
@@ -250,6 +260,48 @@ describe("opening the drawing moves nothing", () => {
         { width: 520, height: 206 },
       ),
     ).toEqual({ x: 0, y: 0 });
+  });
+
+  it("flips the second level inside the frame it opens beside", () => {
+    // Bug guarded: the submenu opened at the parent's right edge plus 4px and
+    // was never clamped, so a menu opened near the frame's right edge painted
+    // 167px of its second level outside the card (clipped) and grew the scene's
+    // scroll box under the row's chevron.
+    const frame = { width: 520, height: 320 };
+    const submenu = { width: 208, height: 60 };
+    const parent = { x: 312, y: 84, width: 208, height: 156 };
+    const row = { x: 317, y: 88, width: 196, height: 28 };
+
+    const flipped = submenuPlacement({ parent, row, submenu, frame });
+    const flippedBox = {
+      left: parent.x + flipped.x,
+      top: parent.y + flipped.y,
+      right: parent.x + flipped.x + submenu.width,
+      bottom: parent.y + flipped.y + submenu.height,
+    };
+
+    // No room on the right: it opens on the left, clear of the parent.
+    expect(flippedBox.right).toBe(parent.x - SUBMENU_GAP);
+    expect(flippedBox.left).toBeGreaterThanOrEqual(0);
+    expect(flippedBox.top).toBe(row.y);
+    expect(flippedBox.bottom).toBeLessThanOrEqual(frame.height);
+
+    // With room, the second level keeps the row's own side and the 4px gap.
+    const roomy = submenuPlacement({
+      parent: { ...parent, x: 40 },
+      row,
+      submenu,
+      frame,
+    });
+    expect(roomy).toEqual({
+      x: parent.width + SUBMENU_GAP,
+      y: row.y - parent.y,
+    });
+
+    // The drawing takes the clamped point; the shipped submenu keeps the gap.
+    expect(flat(demo)).toContain("submenuPlacement({");
+    expect(flat(menuSub)).toContain("const SUBMENU_GAP = 4");
+    expect(SUBMENU_GAP).toBe(4);
   });
 
   it("focuses the surface without scrolling the page it opened over", () => {

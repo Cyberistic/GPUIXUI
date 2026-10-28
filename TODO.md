@@ -290,6 +290,17 @@ is a 320px column centred in the scene, the caret/check/search marks are icons
 glyphs), the trigger is normal weight, and the popup uses the command shape and
 fits inside the 520px scene. Menu, command and select wrappers had the same
 missing `display: flex`.
+`[x]` **Floating previews inside their stage** — a drawing's stage is the room
+its surface needs, not a box the control sizes: the combobox list and the date
+calendar reserve their panels' boxes (280+4 and 324+6), the date preset
+calendar anchors to its field instead of the whole scene, the context submenu
+flips left and clamps into the frame, and the dropdown trigger moved to a row
+under its card so the panel clears the card's edge. The preview panel's
+`min-height: 100%` — which collapsed every demo root's own floor against a panel
+that hugs its content — is gone, a demo root no longer scrolls under focus (that
+scroll carried an open calendar 286px out of its card), and the command list
+fades the row its clip cuts while the veil's stage stops being a scrollport.
+Six regression cases; each fails with the drawing reverted.
 `[x]` **Preview note removed** — the "Browser preview … not the DOM" paragraph is
 gone from both preview surfaces (component and block), with its imports and the
 test that required its live link. `/live` is now reachable by address only; the
