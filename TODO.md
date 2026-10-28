@@ -24289,3 +24289,34 @@ Directions measured (see the report). Docs: `bubble.mdx` §Shape, §Actions and
 reactions, §Limitations (the quarter hang, the page-fill ring, the 12px vs 14px
 corner and the 20px vs 22.75px leading), `chat.mdx`, `docs/preview-strategy.md`,
 the `Bubble` inventory record and `COMPONENTS.md` row.
+
+## Calendar window, today's date, and the reaction corner (2026-10-29)
+
+`[x]` `[██████████]` 3/3 — **the calendar is no longer a decade, it opens on
+today, and a reaction marks the message's bottom right.**
+
+`[x]` `Calendar`'s `fromYear`/`toYear` defaulted to **today ± 10**, so a 1994
+birthday had no row in the year dropdown and `Shift`+Page refused the month
+before it. The window is now **1900 → today + 100**, narrowed only by the
+caller's own bound or a `disabled` edge; `fromYear={1970}` gives exactly 1970….
+Proof: `calendar.test.tsx` gains `offers the century around today, not the
+decade` (1900 present, 1899 absent, 2060 present, 2130 absent) and `narrows to
+the caller's own floor` (1970 present, 1969 absent); the old click case now
+passes a short window so its option is on the list's first screen. Directions
+measured: the ±10 window fails both new cases by name.
+
+`[x]` Both calendar drawings opened on a **fixture** October 2026 with 17
+October selected. They read the local day once (`isoDayOf`, in
+`date-picker-preview.ts`) and open on its month with it marked and selected —
+verified live: the page's 104 month captions read `October 2026` on 2026-10-29.
+A new `## Dropdown caption` section on both the curated and package pages draws
+a calendar whose caption is a month select and a year select; the year list
+runs 1970 → the current year (57 options), and the page states the default
+window.
+
+`[x]` The bubble's reaction pill mirrored the sender — a start-aligned bubble put
+it at the bubble's left. It now holds the **bottom right** on either side (a
+reaction marks the message, not a speaker), measured on the live page at a 12px
+right inset with the pill crossing the surface's edge. `bubble.test.tsx`'s case
+now measures the corner for both aligns and fails on the old per-side inset (7
+cases failed when inverted).
