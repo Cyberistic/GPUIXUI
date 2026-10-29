@@ -2,6 +2,7 @@
   "title": "Blocks",
   "pages": [
     "index",
+    "all",
     "dashboard",
     "sign-in",
     "dashboard-management",

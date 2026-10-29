@@ -1,4 +1,5 @@
 import { useTheme } from "fumadocs-ui/provider/base";
+import { flushSync } from "react-dom";
 import { retroNames, retroStyles, type RetroName } from "@gpuixui/tokens";
 import { HighlightedCode } from "@/components/highlighted-code";
 import { mainContentId } from "../skip-link";
@@ -46,8 +47,8 @@ function Nav() {
       </div>
       <div className="landing-nav-right">
         <ThemeToggle />
-        <a className="landing-nav-cta" href="/docs">
-          Read the docs
+        <a className="landing-nav-cta" href="/docs/getting-started">
+          Getting started
         </a>
       </div>
     </nav>
@@ -56,15 +57,25 @@ function Nav() {
 
 function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
+  const dark = resolvedTheme === "dark";
 
   // The two icons are always in the DOM; CSS shows the relevant one from the
   // `.dark` class on <html>. Rendering both keeps the server and client markup
-  // identical, so the button hydrates cleanly.
+  // identical, so the button hydrates cleanly. The class swap runs inside a
+  // view transition so the circle-blur mask animates the repaint; browsers
+  // without the API fall back to an instant switch.
+  const toggle = () => {
+    const next = dark ? "light" : "dark";
+    const swap = () => flushSync(() => setTheme(next));
+    if (!document.startViewTransition) return swap();
+    void document.startViewTransition(swap);
+  };
+
   return (
     <button
       aria-label="Toggle theme"
       className="landing-theme-toggle"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      onClick={toggle}
       title="Toggle theme"
       type="button"
     >

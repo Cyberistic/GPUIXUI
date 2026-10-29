@@ -1,5 +1,6 @@
 import { packageCollections } from "./collection-routes";
 import { servedPages } from "./curated-twins";
+import { frontmatterField, frontmatterOf } from "./frontmatter";
 
 /**
  * The component index.
@@ -120,18 +121,6 @@ const sectionOf = (file: string): string | undefined => {
     file.startsWith(`${collection.dir}/`),
   )?.section;
 };
-
-/** A frontmatter scalar; the packages quote a value a YAML parser would reject. */
-const frontmatterValue = (head: string, key: string): string | undefined => {
-  const value = new RegExp(`^${key}:\\s*(.+)$`, "m").exec(head)?.[1]?.trim();
-  if (value === undefined) return undefined;
-  return value.startsWith('"') || value.startsWith("'")
-    ? value.slice(1, -1)
-    : value;
-};
-
-const frontmatter = (source: string): string =>
-  /^---\n([\s\S]*?)\n---\n/.exec(source)?.[1] ?? "";
 
 /** One page's section: its `##` heading and the text under it. */
 interface PageSection {
@@ -445,13 +434,13 @@ const entryOf = (
   const section = sectionOf(page.file);
   if (url === undefined || section === undefined) return undefined;
 
-  const head = frontmatter(page.source);
-  const title = frontmatterValue(head, "title");
+  const head = frontmatterOf(page.source);
+  const title = frontmatterField(head, "title");
   if (title === undefined) return undefined;
 
   return {
     title,
-    description: frontmatterValue(head, "description") ?? "",
+    description: frontmatterField(head, "description") ?? "",
     url,
     section,
     verdict: verdictOf({ title, url }),

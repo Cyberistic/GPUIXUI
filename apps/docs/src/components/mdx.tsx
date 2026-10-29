@@ -1,4 +1,5 @@
 import defaultMdxComponents from "fumadocs-ui/mdx";
+import { AllBlocks } from "./docs/all-blocks";
 import { BlockIndex } from "./docs/block-index";
 import { BlockPreview } from "./docs/block-preview";
 import { ComponentIndex } from "./docs/component-index";
@@ -30,6 +31,7 @@ import { TypeScale } from "./docs/type-scale";
  */
 export const mdxComponents = {
   ...defaultMdxComponents,
+  AllBlocks,
   BlockIndex,
   BlockPreview,
   ComponentIndex,

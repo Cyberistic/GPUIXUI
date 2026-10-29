@@ -39,6 +39,7 @@ reference.mdx                The public entry points and the symbols behind them
 status.mdx                   The whole component inventory, generated from COMPONENTS.md
 themes.mdx                   The live token editor, its audit and its copy output
 blocks/index.mdx             Page-level recipes composed from the library
+blocks/all.mdx               Every block in one column, generated from the pages' frontmatter
 blocks/dashboard.mdx         An activity dashboard composed from the library
 blocks/sign-in.mdx           A full sign-in page: navbar, form card, illustrated quote panel
 blocks/dashboard-management.mdx A three-column management console: service health, deploys, toasts, keys
@@ -306,6 +307,7 @@ src/components/docs/patterns.tsx          The pattern workflows and the chooser
 src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
 src/components/docs/token-list.tsx       A contract's roles or surfaces, rendered from the package's array
 src/components/docs/block-index.tsx       The Blocks index, one thumbnail card per block
+src/components/docs/all-blocks.tsx        The all-blocks page: every block, one row each
 src/components/docs/blocks.tsx            The block registry: Sign in, Settings, Dashboard, Dashboard management, Kanban, Settings dialog, File manager and Email inbox
 src/components/docs/block-preview.tsx     A block page: the screen at the page's own width, then its recipe
 src/components/docs/block-icons.tsx       The glyphs the block previews draw
@@ -459,6 +461,9 @@ src/lib/examples.ts                 The example registry: ids, paths and header 
 src/lib/examples-data.ts            Reads packages/*/examples/*.example.tsx at build time
 src/lib/component-index.ts          The component index: URL mapping, curated shadowing, filter
 src/lib/component-index-data.ts     The index, from every docs collection at build time
+src/lib/block-index.ts              The all-blocks list, built from the block pages' frontmatter
+src/lib/block-index-data.ts         The all-blocks list, read from `content/docs/blocks` at build time
+src/lib/frontmatter.ts              A page's frontmatter block and one scalar field from it
 src/lib/component-props.ts          The props a component declares, read through extends, aliases and Omit
 src/lib/playground-registry.ts      The three playground registries, read at build time for the probe catalogue
 src/lib/component-index-query.ts    The docs indexes' filter on the page URL (`?q=`)
