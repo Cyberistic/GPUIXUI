@@ -401,6 +401,19 @@ The index paints one `alt=""` WebP per block, generated from the real pages by
 in). Verified live: 11 images loaded, 0 live scenes on the index. Thumbnails are
 one palette by nature; the block page still follows the switch. The dashboard
 donut legend wraps instead of clipping at the wider column.
+`[x]` **Hunter pipeline is the whole window** — the block shipped as the note's
+main pane alone (one card: five readings, a seven-cell strip, a chart), so the
+reference's app window read as a dashboard card. It is now the reference's 16:10
+window: the six-note tab strip with traffic lights and `+`/`⌄`, the 190px vault
+rail with the `Guild` branch open, its one current row (`Licence Pipeline`) and
+the `WanTo` footer, the breadcrumb, and the docket the pane opens on — five
+readings, the six stage cells (`Verified` carrying the green check), the two
+dossier columns, the three blocked rows and the two-series chart. The stage
+filter and the chart's night pick stay real (the axis labels are buttons). The
+two verdict figures are the only green numbers; every paint is a theme role.
+`hunter-pipeline.test.ts` holds the tabs, pills, current row, depth contract,
+surface recipe and the no-colour-literal rule; the fixed 16:10 stage is 836×522
+and the page + thumbnail are regenerated with `blocks:thumbnails`.
 `[x]` **Fixed-height controls centre their label** — the toast action and close
 mark are 24px boxes with no flex, so the inherited 28px line box overflowed and
 the label sat ~4px high (measured 6.9 above / 2.7 below; now 4.7 / 4.9). The

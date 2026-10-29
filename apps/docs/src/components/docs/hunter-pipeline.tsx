@@ -1,15 +1,17 @@
 import * as Arr from "effect/Array";
 import { useState } from "react";
+import { BlockIcon, type BlockIconName } from "./block-icons";
 
 /**
- * The hunter pipeline block — a guild's licence dashboard, plus the
- * `@gpuixui/*` recipe a consumer copies.
+ * The hunter pipeline block — a guild's licence docket, plus the `@gpuixui/*`
+ * recipe a consumer copies.
  *
- * The block is one pane of numbers over one list of work: five readings, a
- * seven-stage strip, the dossiers ready to deploy, the ones a missing fact
- * blocks, and the renown the guild gained. The three things a reader changes
- * are the stage the strip names, the filter on the ready column and the window
- * the chart reads — each a pure rule below, so "which dossiers survive the
+ * The block is one whole application window, not a card: a tab strip, the
+ * vault's file tree, and the note it opens on. The note is one pane of numbers
+ * over one list of work — five readings, a six-stage strip, the dossiers ready
+ * to deploy, the ones a missing fact blocks, and the renown the guild gained.
+ * Two things a reader changes are the stage the strip names and the night the
+ * chart reads; each is a pure rule below, so "which dossiers survive the
  * filter" is testable without a rendering.
  */
 
@@ -20,22 +22,55 @@ export interface PipelineStage {
   readonly count: number;
   /** The meta line under the count. */
   readonly meta: string;
-  /** The published stage paints its check in the success tone. */
+  /** The glyph beside the label, in the stage's own tone. */
+  readonly icon: BlockIconName;
+  /** The verified stage paints its glyph in the success tone. */
   readonly tone?: "success";
 }
 
-/** The guild's seven stages, in the order the strip paints them. */
+/** The guild's six stages, in the order the strip paints them. */
 export const pipelineStages: ReadonlyArray<PipelineStage> = [
-  { id: "ideas", label: "Ideas", count: 4, meta: "intel + backlog" },
-  { id: "research", label: "Research", count: 19, meta: "gaps, facts, rivals" },
-  { id: "dossiers", label: "Dossiers", count: 16, meta: "2 ready · 3 blocked" },
-  { id: "deployed", label: "Deployed", count: 0, meta: "field, in progress" },
-  { id: "scheduled", label: "Scheduled", count: 0, meta: "waiting on a slot" },
+  {
+    id: "ideas",
+    label: "Ideas",
+    count: 4,
+    meta: "banks + backlog",
+    icon: "flag",
+  },
+  {
+    id: "research",
+    label: "Research",
+    count: 19,
+    meta: "gaps, facts, rivals",
+    icon: "search",
+  },
+  {
+    id: "dossiers",
+    label: "Dossiers",
+    count: 16,
+    meta: "2 ready · 3 blocked",
+    icon: "file",
+  },
+  {
+    id: "deployed",
+    label: "Deployed",
+    count: 0,
+    meta: "field / in progress",
+    icon: "paperclip",
+  },
+  {
+    id: "scheduled",
+    label: "Scheduled",
+    count: 0,
+    meta: "waiting on a slot",
+    icon: "clock",
+  },
   {
     id: "verified",
     label: "Verified",
     count: 29,
     meta: "last 14 days",
+    icon: "mark",
     tone: "success",
   },
 ];
@@ -45,27 +80,29 @@ export interface HunterReading {
   readonly id: string;
   readonly label: string;
   readonly value: string;
-  readonly unit?: string;
   readonly meta: string;
+  /** The figure the reference paints green: the two that carry the verdict. */
+  readonly tone?: "success";
 }
 
-/** The five readings the dashboard opens on. */
+/** The five readings the docket opens on. */
 export const hunterReadings: ReadonlyArray<HunterReading> = [
   {
     id: "renown-week",
-    label: "Renown · last 7 days",
+    label: "Renown · 7 days",
     value: "28,087",
     meta: "8 snapshot days",
+    tone: "success",
   },
   {
     id: "renown-window",
-    label: "Renown · 14-day window",
+    label: "Renown · 14 days",
     value: "47,513",
     meta: "29 licences",
   },
   {
     id: "licences",
-    label: "Licences · 14-day window",
+    label: "Licences · 14 days",
     value: "11",
     meta: "25 measured",
   },
@@ -74,6 +111,7 @@ export const hunterReadings: ReadonlyArray<HunterReading> = [
     label: "Renown per licence",
     value: "0.25",
     meta: "the number that matters",
+    tone: "success",
   },
   {
     id: "today",
@@ -87,7 +125,7 @@ export const hunterReadings: ReadonlyArray<HunterReading> = [
 export interface HunterDossier {
   readonly id: string;
   readonly title: string;
-  /** The bank the dossier came from. */
+  /** The intel bank the dossier came from. */
   readonly bank: string;
   /** The rank the guild files it under. */
   readonly rank: "S" | "A" | "B";
@@ -96,7 +134,7 @@ export interface HunterDossier {
   readonly state: "ready" | "blocked";
 }
 
-/** The seven dossiers the two columns hold. */
+/** The five dossiers the two columns hold. */
 export const hunterDossiers: ReadonlyArray<HunterDossier> = [
   {
     id: "valar",
@@ -107,9 +145,9 @@ export const hunterDossiers: ReadonlyArray<HunterDossier> = [
     state: "ready",
   },
   {
-    id: "ranked",
-    title: "All 36 licences ranked",
-    bank: "ArcheAge Chronicles",
+    id: "trophies",
+    title: "All 36 trophies ranked",
+    bank: "Phantom Blade Zero",
     rank: "S",
     length: "LONG",
     state: "ready",
@@ -176,6 +214,114 @@ export const stagesFor = (filter: StageFilter): ReadonlyArray<PipelineStage> =>
       ? pipelineStages.filter((stage) => stage.count > 0)
       : pipelineStages.filter((stage) => stage.tone === "success");
 
+/** One note in the window's tab strip. */
+export interface HunterTab {
+  readonly id: string;
+  readonly label: string;
+  readonly active?: boolean;
+}
+
+/** The open tabs, in the strip's order; the docket is the one in front. */
+export const hunterTabs: ReadonlyArray<HunterTab> = [
+  { id: "main", label: "Main Menu" },
+  { id: "guild", label: "Guild App" },
+  { id: "rim", label: "Rim Light Version …" },
+  { id: "time", label: "Time bloc…" },
+  { id: "pipeline", label: "Licence Pipeline", active: true },
+  { id: "grain", label: "Grain Group" },
+];
+
+/** One view the docket's pills name. */
+export interface HunterPill {
+  readonly id: string;
+  readonly label: string;
+  readonly active?: boolean;
+}
+
+/** The four views; the dossier view is in front. */
+export const hunterPills: ReadonlyArray<HunterPill> = [
+  { id: "tracker", label: "Tracker" },
+  { id: "index", label: "Licence index" },
+  { id: "open", label: "Open items" },
+  { id: "dossiers", label: "Dossiers", active: true },
+];
+
+/** One row of the vault tree: a folder that folds, or a note that does not. */
+export interface VaultRow {
+  readonly id: string;
+  readonly label: string;
+  /** How many folders deep the row sits; the top level is `0`. */
+  readonly depth: number;
+  /** An open folder, a closed one, or a note. */
+  readonly kind: "open" | "closed" | "note";
+  /** The note the pane is showing. */
+  readonly current?: boolean;
+}
+
+/** A row as the tree writes it: depth, kind, label, and the open note. */
+type VaultSeed = readonly [
+  depth: number,
+  kind: VaultRow["kind"],
+  label: string,
+  current?: boolean,
+];
+
+/**
+ * The vault tree the window opens on.
+ *
+ * A flat table with a depth per row, not a nested object: the rail paints one
+ * row per line, and the depth is the only thing a row needs from its parents.
+ * The docket's own row closes the open `Guild` branch, and `AGENTS` and `Main
+ * Menu` are the two notes the vault keeps above every folder.
+ */
+const vaultSeeds: ReadonlyArray<VaultSeed> = [
+  [0, "closed", "Docs"],
+  [0, "closed", "Economy"],
+  [0, "closed", "Family"],
+  [0, "closed", "GTD"],
+  [0, "closed", "Journal"],
+  [0, "closed", "Quests"],
+  [0, "closed", "scripts"],
+  [0, "open", "Guild"],
+  [1, "note", "00 Inbox"],
+  [1, "note", "01 Strategy"],
+  [1, "note", "02 Ideas"],
+  [1, "note", "03 Research"],
+  [1, "open", "04 Dossiers"],
+  [2, "open", "ArcheAge Chronicles"],
+  [3, "note", "All 4 Classes Ranked"],
+  [2, "open", "Crimson Desert"],
+  [3, "note", "Everything in Charting the Unkno…"],
+  [3, "note", "Your Build Was Reset"],
+  [2, "closed", "Phantom Blade Zero"],
+  [2, "open", "Valor Mortis"],
+  [3, "note", "Script for Valor Mortis Tips"],
+  [3, "note", "Script for Valor Mortis Tips"],
+  [1, "closed", "05 Production"],
+  [1, "closed", "06 Scheduled"],
+  [1, "open", "07 Verified"],
+  [2, "note", "All 36 Trophies Ran…"],
+  [2, "note", "Phantom Blade Zero"],
+  [2, "note", "Openquestionline"],
+  [2, "note", "LONG"],
+  [1, "closed", "08 Analytics"],
+  [1, "closed", "Archive"],
+  [1, "note", "Licence Pipeline", true],
+  [0, "note", "AGENTS"],
+  [0, "note", "Main Menu"],
+];
+
+/** The tree, with a stable key per row from its place and its label. */
+export const vaultRows: ReadonlyArray<VaultRow> = vaultSeeds.map(
+  ([depth, kind, label, current], index) => ({
+    id: `${index}-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    depth,
+    kind,
+    label,
+    ...(current === undefined ? {} : { current }),
+  }),
+);
+
 /**
  * The step one band of the y axis carries: a number a reader can halve.
  *
@@ -222,6 +368,18 @@ export const renownTicks = (ceiling: number): ReadonlyArray<number> => {
   return Arr.makeBy(bands + 1, (index) => ceiling - step * index);
 };
 
+const CHART_WIDTH = 620;
+const CHART_HEIGHT = 86;
+
+/** The sentence a screen reader hears when the axis picks a night. */
+export const pickedReadout = (day: string | undefined): string => {
+  const night =
+    renownNights.find((entry) => entry.day === day) ?? renownNights.at(-1);
+  return night === undefined
+    ? ""
+    : `${night.day} · ${night.renown.toLocaleString("en-US")} renown · ${night.seals} seals`;
+};
+
 const RenownChart = ({
   nights,
   active,
@@ -232,13 +390,26 @@ const RenownChart = ({
   readonly onPick: (day: string) => void;
 }) => {
   const ceiling = renownCeiling(nights);
-  const width = 620;
-  const height = 168;
-  const point = (index: number, value: number): string => {
-    const x = nights.length === 1 ? 0 : (index / (nights.length - 1)) * width;
-    const y = height - (value / ceiling) * height;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  };
+  const x = (index: number): number =>
+    nights.length === 1 ? 0 : (index / (nights.length - 1)) * CHART_WIDTH;
+  const y = (value: number): number =>
+    CHART_HEIGHT - (value / ceiling) * CHART_HEIGHT;
+  const points = (read: (night: RenownNight) => number): string =>
+    nights
+      .map(
+        (night, index) => `${x(index).toFixed(1)},${y(read(night)).toFixed(1)}`,
+      )
+      .join(" ");
+  const picked = nights.find((night) => night.day === active) ?? nights.at(-1);
+  const pickedIndex = picked === undefined ? -1 : nights.indexOf(picked);
+  // An end label hangs inside the plot: a centred label on the first or last
+  // point loses half of itself to the frame.
+  const anchor =
+    pickedIndex <= 0
+      ? "start"
+      : pickedIndex === nights.length - 1
+        ? "end"
+        : "middle";
 
   return (
     <div className="gx-hunt-chart">
@@ -252,7 +423,7 @@ const RenownChart = ({
           aria-label="Renown gained per day"
           className="gx-hunt-svg"
           role="img"
-          viewBox={`0 0 ${width} ${height}`}
+          viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
         >
           {renownTicks(ceiling)
             .slice(1, -1)
@@ -261,76 +432,71 @@ const RenownChart = ({
                 className="gx-hunt-grid"
                 key={index}
                 x1={0}
-                x2={width}
-                y1={(height / 4) * (index + 1)}
-                y2={(height / 4) * (index + 1)}
+                x2={CHART_WIDTH}
+                y1={(CHART_HEIGHT / 4) * (index + 1)}
+                y2={(CHART_HEIGHT / 4) * (index + 1)}
               />
             ))}
           <polyline
             className="gx-hunt-line"
             data-series="renown"
-            points={nights
-              .map((night, index) => point(index, night.renown))
-              .join(" ")}
+            points={points((night) => night.renown)}
           />
           <polyline
             className="gx-hunt-line"
             data-series="seals"
-            points={nights
-              .map((night, index) => point(index, night.seals))
-              .join(" ")}
+            points={points((night) => night.seals)}
           />
           {nights.map((night, index) => (
             <circle
               className="gx-hunt-dot"
-              cx={point(index, night.renown).split(",")[0]}
-              cy={point(index, night.renown).split(",")[1]}
+              cx={x(index)}
+              cy={y(night.renown)}
               data-active={night.day === active ? "true" : undefined}
               data-series="renown"
               key={night.day}
-              r={night.day === active ? 4 : 2.5}
+              r={night.day === active ? 3 : 1.8}
             />
           ))}
-        </svg>
-        {/* The ticks are painted text with a hit area, not a row of buttons: a
-            chart's axis is not a control set, and a second button chrome under
-            the plot would read as a toolbar. The readout above the axis is what
-            a keyboard or a screen reader hears. */}
-        <svg
-          aria-hidden="true"
-          className="gx-hunt-days"
-          viewBox={`0 0 ${width} 22`}
-        >
-          {nights.map((night, index) => {
-            const x =
-              nights.length === 1 ? 0 : (index / (nights.length - 1)) * width;
-            // The end labels hang inside the plot: a centred label at x=0 or
-            // x=width loses half of itself to the frame.
-            const anchor =
-              index === 0
-                ? "start"
-                : index === nights.length - 1
-                  ? "end"
-                  : "middle";
-            return (
-              <g
-                className="gx-hunt-day"
-                data-active={night.day === active ? "true" : undefined}
-                key={night.day}
-                onClick={() => onPick(night.day)}
+          {picked === undefined ? null : (
+            <>
+              <text
+                className="gx-hunt-point"
+                data-series="renown"
+                textAnchor={anchor}
+                x={x(pickedIndex)}
+                y={Math.max(8, y(picked.renown) - 5)}
               >
-                <rect
-                  height={22}
-                  width={width / nights.length}
-                  x={x - width / nights.length / 2}
-                />
-                <text textAnchor={anchor} x={x} y={15}>
-                  {night.day}
-                </text>
-              </g>
-            );
-          })}
+                {picked.renown.toLocaleString("en-US")}
+              </text>
+              <text
+                className="gx-hunt-point"
+                data-series="seals"
+                textAnchor={anchor}
+                x={x(pickedIndex)}
+                y={Math.min(CHART_HEIGHT - 2, y(picked.seals) + 10)}
+              >
+                {picked.seals}
+              </text>
+            </>
+          )}
         </svg>
+        {/* A day is a real control: the axis labels pick the night the two
+            figures above name, so a keyboard reaches the same readout a
+            pointer does. */}
+        <div aria-label="Snapshot night" className="gx-hunt-days" role="group">
+          {nights.map((night) => (
+            <button
+              aria-pressed={night.day === active}
+              className="gx-hunt-day"
+              key={night.day}
+              onClick={() => onPick(night.day)}
+              type="button"
+            >
+              {night.day}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -349,11 +515,34 @@ const Chip = ({
   </span>
 );
 
-const filters: ReadonlyArray<{ value: StageFilter; label: string }> = [
+const stageFilters: ReadonlyArray<{ value: StageFilter; label: string }> = [
   { value: "all", label: "All stages" },
   { value: "open", label: "Open" },
   { value: "verified", label: "Verified" },
 ];
+
+/** One row of the vault tree, indented by its depth. */
+const VaultLine = ({ row }: { readonly row: VaultRow }) => (
+  <div
+    className="gx-hunt-row"
+    data-current={row.current ? "true" : undefined}
+    data-kind={row.kind}
+    style={{ paddingLeft: `${2 + row.depth * 11}px` }}
+  >
+    <span aria-hidden="true" className="gx-hunt-row-chevron">
+      {row.kind === "note" ? null : (
+        <BlockIcon
+          name={row.kind === "open" ? "chevronDown" : "chevronRight"}
+          size={8}
+        />
+      )}
+    </span>
+    <span aria-hidden="true" className="gx-hunt-row-icon">
+      <BlockIcon name={row.kind === "note" ? "file" : "folder"} size={11} />
+    </span>
+    <span className="gx-hunt-row-label">{row.label}</span>
+  </div>
+);
 
 export const HunterPipelineRender = () => {
   const [filter, setFilter] = useState<StageFilter>("all");
@@ -361,190 +550,295 @@ export const HunterPipelineRender = () => {
   const stages = stagesFor(filter);
   const ready = dossiersIn("ready");
   const blocked = dossiersIn("blocked");
-  // The last night is the chart's resting point: the array is a literal, but a
-  // reader of this file should not have to prove it is non-empty.
-  const latest: RenownNight = renownNights[renownNights.length - 1] ?? {
-    day: "Oct 28",
-    renown: 0,
-    seals: 0,
-  };
-  const picked = renownNights.find((row) => row.day === night) ?? latest;
 
   return (
     <div className="gx-hunt">
-      <header className="gx-hunt-head">
-        <div>
-          <h3 className="gx-hunt-title">Licence pipeline</h3>
-          <p className="gx-hunt-sub">
-            Wednesday, 28 October 2026 · 16 dossiers · 4 intel banks · 29
-            licences in the 14-day window
-          </p>
+      <header className="gx-hunt-titlebar">
+        <span aria-hidden="true" className="gx-hunt-lights">
+          <i />
+          <i />
+          <i />
+        </span>
+        <div aria-label="Open notes" className="gx-hunt-tabs">
+          {hunterTabs.map((tab) => (
+            <span
+              aria-current={tab.active === true ? "page" : undefined}
+              className="gx-hunt-tab"
+              data-active={tab.active ? "true" : undefined}
+              key={tab.id}
+            >
+              <span className="gx-hunt-tab-label">{tab.label}</span>
+              {tab.active ? (
+                <span aria-hidden="true" className="gx-hunt-tab-close">
+                  ×
+                </span>
+              ) : null}
+            </span>
+          ))}
         </div>
-        <div aria-label="Guild views" className="gx-hunt-pills" role="group">
-          <button className="gx-btn gx-btn-outline gx-btn-sm" type="button">
-            Tracker
-          </button>
-          <button className="gx-btn gx-btn-outline gx-btn-sm" type="button">
-            Licence index
-          </button>
-          <button className="gx-btn gx-btn-outline gx-btn-sm" type="button">
-            Open items
-          </button>
-          <button
-            aria-pressed="true"
-            className="gx-btn gx-btn-secondary gx-btn-sm gx-hunt-pill-active"
-            type="button"
-          >
-            Dossiers
-          </button>
-        </div>
+        <span className="gx-hunt-tab-actions">
+          <span aria-hidden="true" className="gx-hunt-tab-action">
+            <BlockIcon name="plus" size={11} />
+          </span>
+          <span aria-hidden="true" className="gx-hunt-tab-action">
+            <BlockIcon name="chevronDown" size={11} />
+          </span>
+        </span>
       </header>
 
-      <section aria-label="Readings" className="gx-hunt-readings">
-        {hunterReadings.map((reading) => (
-          <article className="gx-hunt-reading" key={reading.id}>
-            <p className="gx-hunt-label">{reading.label}</p>
-            <p className="gx-hunt-value">{reading.value}</p>
-            <p className="gx-hunt-meta">{reading.meta}</p>
-          </article>
-        ))}
-      </section>
-
-      <section aria-label="Pipeline" className="gx-hunt-section">
-        <header className="gx-hunt-bar">
-          <h4 className="gx-hunt-h4">Pipeline</h4>
-          <div
-            aria-label="Stage filter"
-            className="gx-hunt-filter"
-            role="group"
-          >
-            {filters.map((entry) => (
-              <button
-                aria-pressed={filter === entry.value}
-                className={`gx-btn gx-btn-sm ${
-                  filter === entry.value ? "gx-btn-secondary" : "gx-btn-ghost"
-                }`}
-                key={entry.value}
-                onClick={() => setFilter(entry.value)}
-                type="button"
-              >
-                {entry.label}
-              </button>
+      <div className="gx-hunt-body">
+        <nav aria-label="Vault" className="gx-hunt-rail">
+          <div className="gx-hunt-tree">
+            {vaultRows.map((row) => (
+              <VaultLine key={row.id} row={row} />
             ))}
           </div>
-        </header>
-        <div className="gx-hunt-stages">
-          {stages.map((stage) => (
-            <div className="gx-hunt-stage" key={stage.id}>
-              <p className="gx-hunt-label">
-                <span aria-hidden="true" className="gx-hunt-stage-glyph" />
-                {stage.label}
-              </p>
-              <p className="gx-hunt-value" data-tone={stage.tone}>
-                {stage.count}
-              </p>
-              <p className="gx-hunt-meta">{stage.meta}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+          <div className="gx-hunt-rail-foot">
+            <span className="gx-hunt-vault">
+              WanTo
+              <BlockIcon name="chevronDown" size={9} />
+            </span>
+            <span className="gx-hunt-rail-actions">
+              <span aria-hidden="true" className="gx-hunt-round">
+                <BlockIcon name="refresh" size={9} />
+              </span>
+              <span aria-hidden="true" className="gx-hunt-round">
+                <BlockIcon name="gear" size={9} />
+              </span>
+            </span>
+          </div>
+        </nav>
 
-      <div className="gx-hunt-columns">
-        <section aria-label="Ready to deploy" className="gx-hunt-column">
-          <header className="gx-hunt-bar">
-            <h4 className="gx-hunt-h4">
-              <span aria-hidden="true" className="gx-hunt-flame" />
-              Ready to deploy
-            </h4>
-            <Chip>{`${ready.length} staged`}</Chip>
+        <main className="gx-hunt-main">
+          <div className="gx-hunt-crumb">
+            <span aria-hidden="true" className="gx-hunt-crumb-nav">
+              <BlockIcon name="chevronLeft" size={11} />
+              <BlockIcon name="chevronRight" size={11} />
+            </span>
+            <span className="gx-hunt-crumb-path">
+              <span>Guild</span>
+              <span aria-hidden="true">/</span>
+              <span data-current="true">Licence Pipeline</span>
+            </span>
+            <span aria-hidden="true" className="gx-hunt-crumb-actions">
+              <BlockIcon name="link" size={10} />
+              <BlockIcon name="more" size={10} />
+            </span>
+          </div>
+
+          <header className="gx-hunt-head">
+            <h3 className="gx-hunt-title">Licence Pipeline</h3>
+            <p className="gx-hunt-sub">
+              Wednesday, 28 October 2026 · 16 dossiers · 4 intel banks · 29
+              licences in the 14-day window
+            </p>
+            {/* The reference draws the note's four views as chrome, not as a
+                control this block implements; a disabled button would lie
+                about an action a reader cannot take. */}
+            <div aria-label="Guild views" className="gx-hunt-pills">
+              {hunterPills.map((pill) => (
+                <span
+                  className={
+                    pill.active === true
+                      ? "gx-btn gx-btn-sm gx-hunt-pill-on"
+                      : "gx-btn gx-btn-outline gx-btn-sm"
+                  }
+                  key={pill.id}
+                >
+                  {pill.label}
+                </span>
+              ))}
+            </div>
           </header>
-          <div className="gx-hunt-cards">
-            {ready.map((dossier) => (
-              <article className="gx-hunt-card" key={dossier.id}>
-                <p className="gx-hunt-card-title">{dossier.title}</p>
-                <div className="gx-hunt-chips">
-                  <Chip>{dossier.bank}</Chip>
-                  <Chip tone="accent">{`Rank ${dossier.rank}`}</Chip>
-                  <Chip>{dossier.length}</Chip>
-                </div>
+
+          <section aria-label="Readings" className="gx-hunt-readings">
+            {hunterReadings.map((reading) => (
+              <article className="gx-card gx-hunt-reading" key={reading.id}>
+                <p className="gx-hunt-label">{reading.label}</p>
+                <p className="gx-hunt-value" data-tone={reading.tone}>
+                  {reading.value}
+                </p>
+                <p className="gx-hunt-meta">{reading.meta}</p>
               </article>
             ))}
+          </section>
+
+          <section aria-label="Pipeline" className="gx-hunt-section">
+            <header className="gx-hunt-bar">
+              <h4 className="gx-hunt-h4">
+                <BlockIcon name="columns" size={11} />
+                Pipeline
+              </h4>
+              <div
+                aria-label="Stage filter"
+                className="gx-hunt-filter"
+                role="group"
+              >
+                {stageFilters.map((entry) => (
+                  <button
+                    aria-pressed={filter === entry.value}
+                    className={`gx-btn gx-btn-sm ${
+                      filter === entry.value
+                        ? "gx-btn-secondary"
+                        : "gx-btn-ghost"
+                    }`}
+                    key={entry.value}
+                    onClick={() => setFilter(entry.value)}
+                    type="button"
+                  >
+                    {entry.label}
+                  </button>
+                ))}
+              </div>
+            </header>
+            <div className="gx-hunt-stages">
+              {stages.map((stage) => (
+                <article className="gx-card gx-hunt-stage" key={stage.id}>
+                  <p className="gx-hunt-label">
+                    <span
+                      aria-hidden="true"
+                      className="gx-hunt-stage-icon"
+                      data-tone={stage.tone}
+                    >
+                      <BlockIcon name={stage.icon} size={9} />
+                    </span>
+                    {stage.label}
+                  </p>
+                  <p className="gx-hunt-value">{stage.count}</p>
+                  <p className="gx-hunt-meta">{stage.meta}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <div className="gx-hunt-columns">
+            <section aria-label="Ready to deploy" className="gx-hunt-column">
+              <header className="gx-hunt-bar">
+                <h4 className="gx-hunt-h4">
+                  <span aria-hidden="true" className="gx-hunt-flame">
+                    <BlockIcon name="flame" size={11} />
+                  </span>
+                  Ready to deploy
+                </h4>
+                <Chip>{`${ready.length} staged`}</Chip>
+              </header>
+              <div className="gx-hunt-cards">
+                {ready.map((dossier) => (
+                  <article className="gx-card gx-hunt-card" key={dossier.id}>
+                    <p className="gx-hunt-card-title">{dossier.title}</p>
+                    <div className="gx-hunt-chips">
+                      <Chip>{dossier.bank}</Chip>
+                      <Chip tone="accent">{`Rank ${dossier.rank}`}</Chip>
+                      <Chip>{dossier.length}</Chip>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section aria-label="Scheduled" className="gx-hunt-column">
+              <header className="gx-hunt-bar">
+                <h4 className="gx-hunt-h4">
+                  <span aria-hidden="true" className="gx-hunt-clock">
+                    <BlockIcon name="clock" size={11} />
+                  </span>
+                  Scheduled
+                </h4>
+                <Chip>0 queued</Chip>
+              </header>
+              <p className="gx-hunt-empty">
+                Nothing waiting for a slot. Seals land here between the exam and
+                the register.
+              </p>
+            </section>
           </div>
-        </section>
 
-        <section aria-label="Scheduled" className="gx-hunt-column">
-          <header className="gx-hunt-bar">
-            <h4 className="gx-hunt-h4">
-              <span aria-hidden="true" className="gx-hunt-clock" />
-              Scheduled
-            </h4>
-            <Chip>0 queued</Chip>
-          </header>
-          <p className="gx-hunt-empty">
-            Nothing waiting for a slot. Seals land here between the exam and the
-            register.
-          </p>
-        </section>
+          <section aria-label="Blocked" className="gx-hunt-section">
+            <header className="gx-hunt-bar">
+              <h4 className="gx-hunt-h4">
+                <span aria-hidden="true" className="gx-hunt-block">
+                  <BlockIcon name="alert" size={11} />
+                </span>
+                Blocked by a missing fact
+              </h4>
+              <Chip tone="warn">{`${blocked.length} need work`}</Chip>
+            </header>
+            <ul className="gx-hunt-blocked">
+              {blocked.map((dossier) => (
+                <li className="gx-hunt-blocked-row" key={dossier.id}>
+                  <span className="gx-hunt-blocked-title">{dossier.title}</span>
+                  <Chip>{dossier.bank}</Chip>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section
+            aria-label="Renown"
+            className="gx-hunt-section gx-hunt-chart-section"
+          >
+            <header className="gx-hunt-bar">
+              <h4 className="gx-hunt-h4">
+                <span aria-hidden="true" className="gx-hunt-spark">
+                  <BlockIcon name="chart" size={11} />
+                </span>
+                Renown gained per day
+              </h4>
+              <Chip>{`${renownNights.length} snapshots`}</Chip>
+            </header>
+            <RenownChart
+              active={night}
+              nights={renownNights}
+              onPick={(day) => setNight(day)}
+            />
+            {/* The two figures on the plot are the readout; a reader who cannot
+                see the drawing still hears the night the axis picked. */}
+            <p aria-live="polite" className="gx-hunt-live">
+              {pickedReadout(night)}
+            </p>
+          </section>
+        </main>
       </div>
-
-      <section aria-label="Blocked" className="gx-hunt-section">
-        <header className="gx-hunt-bar">
-          <h4 className="gx-hunt-h4">
-            <span aria-hidden="true" className="gx-hunt-block" />
-            Blocked by a missing fact
-          </h4>
-          <Chip tone="warn">{`${blocked.length} need work`}</Chip>
-        </header>
-        <ul className="gx-hunt-blocked">
-          {blocked.map((dossier) => (
-            <li className="gx-hunt-blocked-row" key={dossier.id}>
-              <span aria-hidden="true" className="gx-hunt-bullet" />
-              <span className="gx-hunt-blocked-title">{dossier.title}</span>
-              <Chip>{dossier.bank}</Chip>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section aria-label="Renown" className="gx-hunt-section">
-        <header className="gx-hunt-bar">
-          <h4 className="gx-hunt-h4">
-            <span aria-hidden="true" className="gx-hunt-spark" />
-            Renown gained per day
-          </h4>
-          <Chip>{`${renownNights.length} snapshots`}</Chip>
-        </header>
-        <RenownChart
-          active={night}
-          nights={renownNights}
-          onPick={(day) => setNight(day)}
-        />
-        <p aria-live="polite" className="gx-hunt-readout">
-          {`${picked.day} · ${picked.renown.toLocaleString("en-US")} renown · ${picked.seals} seals`}
-        </p>
-      </section>
     </div>
   );
 };
 
-export const hunterPipelineSource = `import { useState } from "react";
-import { Badge } from "@gpuixui/components/badge";
+export const hunterPipelineSource = `import { Badge } from "@gpuixui/components/badge";
 import { Button } from "@gpuixui/primitives";
 import { Card } from "@gpuixui/components/card";
 import { Text } from "@gpuixui/primitives";
 
 const readings = [
-  { label: "Renown · last 7 days", value: "28,087", meta: "8 snapshot days" },
-  { label: "Renown · 14-day window", value: "47,513", meta: "29 licences" },
-  { label: "Licences · 14-day window", value: "11", meta: "25 measured" },
+  { label: "Renown · 7 days", value: "28,087", meta: "8 snapshot days" },
+  { label: "Renown · 14 days", value: "47,513", meta: "29 licences" },
+  { label: "Licences · 14 days", value: "11", meta: "25 measured" },
   { label: "Renown per licence", value: "0.25", meta: "the number that matters" },
   { label: "Rising today", value: "26", meta: "Δ > 0" },
 ];
 
+const stages = [
+  { label: "Ideas", count: 4, meta: "banks + backlog" },
+  { label: "Research", count: 19, meta: "gaps, facts, rivals" },
+  { label: "Dossiers", count: 16, meta: "2 ready · 3 blocked" },
+  { label: "Deployed", count: 0, meta: "field / in progress" },
+  { label: "Scheduled", count: 0, meta: "waiting on a slot" },
+  { label: "Verified", count: 29, meta: "last 14 days" },
+];
+
+/** The pane the window opens on; the tab strip and vault are the app's chrome. */
 export const HunterPipeline = () => (
-  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-    <Text role="h3" weight="semibold">Licence pipeline</Text>
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <Text role="h3" weight="semibold">Licence Pipeline</Text>
+    <Text role="caption" tone="muted">
+      Wednesday, 28 October 2026 · 16 dossiers · 4 intel banks
+    </Text>
+    <div style={{ display: "flex", gap: 6 }}>
+      <Button variant="outline" size="sm">Tracker</Button>
+      <Button variant="outline" size="sm">Licence index</Button>
+      <Button variant="outline" size="sm">Open items</Button>
+      <Button variant="secondary" size="sm">Dossiers</Button>
+    </div>
+    <div style={{ display: "flex", gap: 6 }}>
       {readings.map((reading) => (
         <Card key={reading.label}>
           <Text role="label" tone="muted">{reading.label}</Text>
@@ -553,11 +847,14 @@ export const HunterPipeline = () => (
         </Card>
       ))}
     </div>
-    <div style={{ display: "flex", gap: 8 }}>
-      <Button variant="outline" size="sm">Tracker</Button>
-      <Button variant="outline" size="sm">Licence index</Button>
-      <Button variant="outline" size="sm">Open items</Button>
-      <Button variant="secondary" size="sm">Dossiers</Button>
+    <div style={{ display: "flex", gap: 6 }}>
+      {stages.map((entry) => (
+        <Card key={entry.label}>
+          <Text role="label" tone="muted">{entry.label}</Text>
+          <Text role="h3">{entry.count}</Text>
+          <Text role="caption" tone="muted">{entry.meta}</Text>
+        </Card>
+      ))}
     </div>
     <Badge variant="outline">2 staged</Badge>
     <Badge variant="outline">3 need work</Badge>
