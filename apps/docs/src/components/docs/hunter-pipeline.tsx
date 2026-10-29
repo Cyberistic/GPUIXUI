@@ -1,6 +1,12 @@
+import type { TreeCursor } from "@gpuixui/data/tree/logic";
+import { visibleFileRows, type FileNode } from "@gpuixui/files/tree/logic";
 import * as Arr from "effect/Array";
+import * as HashSet from "effect/HashSet";
+import * as Option from "effect/Option";
+import * as Str from "effect/String";
 import { useState } from "react";
 import { BlockIcon, type BlockIconName } from "./block-icons";
+import { FileTreeFrame } from "./file-tree-demo";
 
 /**
  * The hunter pipeline block — a guild's licence docket, plus the `@gpuixui/*`
@@ -246,81 +252,94 @@ export const hunterPills: ReadonlyArray<HunterPill> = [
   { id: "dossiers", label: "Dossiers", active: true },
 ];
 
-/** One row of the vault tree: a folder that folds, or a note that does not. */
-export interface VaultRow {
-  readonly id: string;
-  readonly label: string;
-  /** How many folders deep the row sits; the top level is `0`. */
-  readonly depth: number;
-  /** An open folder, a closed one, or a note. */
-  readonly kind: "open" | "closed" | "note";
-  /** The note the pane is showing. */
-  readonly current?: boolean;
-}
+/** The last `/` segment of a vault path, which is the row's name. */
+const leaf = (path: string): string =>
+  Option.getOrElse(Arr.last(Str.split("/")(path)), () => path);
 
-/** A row as the tree writes it: depth, kind, label, and the open note. */
-type VaultSeed = readonly [
-  depth: number,
-  kind: VaultRow["kind"],
-  label: string,
-  current?: boolean,
-];
+/** One note: a leaf `FileNode`, declared the way `FileTreeFile` declares one. */
+const note = (path: string): FileNode => ({ name: leaf(path), path });
 
 /**
- * The vault tree the window opens on.
- *
- * A flat table with a depth per row, not a nested object: the rail paints one
- * row per line, and the depth is the only thing a row needs from its parents.
- * The docket's own row closes the open `Guild` branch, and `AGENTS` and `Main
- * Menu` are the two notes the vault keeps above every folder.
+ * One folder: the way `FileTreeFolder` declares one. A folder whose entries the
+ * reference keeps closed declares an empty list — the shipped part paints its
+ * glyph and no disclosure, because there is nothing under it to disclose.
  */
-const vaultSeeds: ReadonlyArray<VaultSeed> = [
-  [0, "closed", "Docs"],
-  [0, "closed", "Economy"],
-  [0, "closed", "Family"],
-  [0, "closed", "GTD"],
-  [0, "closed", "Journal"],
-  [0, "closed", "Quests"],
-  [0, "closed", "scripts"],
-  [0, "open", "Guild"],
-  [1, "note", "00 Inbox"],
-  [1, "note", "01 Strategy"],
-  [1, "note", "02 Ideas"],
-  [1, "note", "03 Research"],
-  [1, "open", "04 Dossiers"],
-  [2, "open", "ArcheAge Chronicles"],
-  [3, "note", "All 4 Classes Ranked"],
-  [2, "open", "Crimson Desert"],
-  [3, "note", "Everything in Charting the Unkno…"],
-  [3, "note", "Your Build Was Reset"],
-  [2, "closed", "Phantom Blade Zero"],
-  [2, "open", "Valor Mortis"],
-  [3, "note", "Script for Valor Mortis Tips"],
-  [3, "note", "Script for Valor Mortis Tips"],
-  [1, "closed", "05 Production"],
-  [1, "closed", "06 Scheduled"],
-  [1, "open", "07 Verified"],
-  [2, "note", "All 36 Trophies Ran…"],
-  [2, "note", "Phantom Blade Zero"],
-  [2, "note", "Openquestionline"],
-  [2, "note", "LONG"],
-  [1, "closed", "08 Analytics"],
-  [1, "closed", "Archive"],
-  [1, "note", "Licence Pipeline", true],
-  [0, "note", "AGENTS"],
-  [0, "note", "Main Menu"],
+const folder = (
+  path: string,
+  children: ReadonlyArray<FileNode> = [],
+): FileNode => ({ name: leaf(path), path, children });
+
+/** The note the pane opens on. */
+export const VAULT_CURRENT = "Guild/Licence Pipeline";
+
+/**
+ * The vault tree the window opens on, declared as the `FileNode` hierarchy
+ * `FileTree` reads from its parts. The docket's own row closes the open `Guild`
+ * branch, and `AGENTS` and `Main Menu` are the two notes the vault keeps above
+ * every folder.
+ */
+export const vaultTree: ReadonlyArray<FileNode> = [
+  folder("Docs"),
+  folder("Economy"),
+  folder("Family"),
+  folder("GTD"),
+  folder("Journal"),
+  folder("Quests"),
+  folder("scripts"),
+  folder("Guild", [
+    note("Guild/00 Inbox"),
+    note("Guild/01 Strategy"),
+    note("Guild/02 Ideas"),
+    note("Guild/03 Research"),
+    folder("Guild/04 Dossiers", [
+      folder("Guild/04 Dossiers/ArcheAge Chronicles", [
+        note("Guild/04 Dossiers/ArcheAge Chronicles/All 4 Classes Ranked"),
+      ]),
+      folder("Guild/04 Dossiers/Crimson Desert", [
+        note(
+          "Guild/04 Dossiers/Crimson Desert/Everything in Charting the Unkno…",
+        ),
+        note("Guild/04 Dossiers/Crimson Desert/Your Build Was Reset"),
+      ]),
+      folder("Guild/04 Dossiers/Phantom Blade Zero"),
+      folder("Guild/04 Dossiers/Valor Mortis", [
+        note("Guild/04 Dossiers/Valor Mortis/Script for Valor Mortis Tips"),
+      ]),
+    ]),
+    folder("Guild/05 Production"),
+    folder("Guild/06 Scheduled"),
+    folder("Guild/07 Verified", [
+      note("Guild/07 Verified/All 36 Trophies Ran…"),
+      note("Guild/07 Verified/Phantom Blade Zero"),
+      note("Guild/07 Verified/Openquestionline"),
+      note("Guild/07 Verified/LONG"),
+    ]),
+    folder("Guild/08 Analytics"),
+    folder("Guild/Archive"),
+    note(VAULT_CURRENT),
+  ]),
+  note("AGENTS"),
+  note("Main Menu"),
 ];
 
-/** The tree, with a stable key per row from its place and its label. */
-export const vaultRows: ReadonlyArray<VaultRow> = vaultSeeds.map(
-  ([depth, kind, label, current], index) => ({
-    id: `${index}-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
-    depth,
-    kind,
-    label,
-    ...(current === undefined ? {} : { current }),
-  }),
-);
+/** The branches the window opens: `Guild`, its dossiers and the verified list. */
+export const vaultOpen: ReadonlyArray<string> = [
+  "Guild",
+  "Guild/04 Dossiers",
+  "Guild/04 Dossiers/ArcheAge Chronicles",
+  "Guild/04 Dossiers/Crimson Desert",
+  "Guild/04 Dossiers/Valor Mortis",
+  "Guild/07 Verified",
+];
+
+/** The cursor the rail opens on: those branches open, the docket standed on. */
+export const vaultCursor = (): TreeCursor => ({
+  expanded: HashSet.fromIterable(vaultOpen),
+  active: Option.some(VAULT_CURRENT),
+});
+
+/** The rows the rail paints at first: the package's own flattening of the tree. */
+export const vaultRows = visibleFileRows(vaultTree, vaultOpen);
 
 /**
  * The step one band of the y axis carries: a number a reader can halve.
@@ -502,15 +521,26 @@ const RenownChart = ({
   );
 };
 
-/** A chip beside a dossier's title or under a reading. */
+/** The Badge variant a chip's tone reads as. */
+const CHIP_TONES = {
+  accent: "gx-badge-primary",
+  success: "gx-badge-success",
+  warn: "gx-badge-warning",
+} as const;
+
+/** A chip beside a dossier's title or under a reading: the Badge drawing. */
 const Chip = ({
   children,
   tone,
 }: {
   readonly children: string;
-  readonly tone?: "accent" | "success" | "warn";
+  readonly tone?: keyof typeof CHIP_TONES;
 }) => (
-  <span className="gx-hunt-chip" data-tone={tone}>
+  <span
+    className={`gx-badge gx-badge-sm ${
+      tone === undefined ? "gx-badge-outline" : CHIP_TONES[tone]
+    } gx-hunt-chip`}
+  >
     {children}
   </span>
 );
@@ -521,32 +551,10 @@ const stageFilters: ReadonlyArray<{ value: StageFilter; label: string }> = [
   { value: "verified", label: "Verified" },
 ];
 
-/** One row of the vault tree, indented by its depth. */
-const VaultLine = ({ row }: { readonly row: VaultRow }) => (
-  <div
-    className="gx-hunt-row"
-    data-current={row.current ? "true" : undefined}
-    data-kind={row.kind}
-    style={{ paddingLeft: `${2 + row.depth * 11}px` }}
-  >
-    <span aria-hidden="true" className="gx-hunt-row-chevron">
-      {row.kind === "note" ? null : (
-        <BlockIcon
-          name={row.kind === "open" ? "chevronDown" : "chevronRight"}
-          size={8}
-        />
-      )}
-    </span>
-    <span aria-hidden="true" className="gx-hunt-row-icon">
-      <BlockIcon name={row.kind === "note" ? "file" : "folder"} size={11} />
-    </span>
-    <span className="gx-hunt-row-label">{row.label}</span>
-  </div>
-);
-
 export const HunterPipelineRender = () => {
   const [filter, setFilter] = useState<StageFilter>("all");
   const [night, setNight] = useState<string | undefined>("Oct 28");
+  const [vault, setVault] = useState(vaultCursor);
   const stages = stagesFor(filter);
   const ready = dossiersIn("ready");
   const blocked = dossiersIn("blocked");
@@ -587,23 +595,37 @@ export const HunterPipelineRender = () => {
       </header>
 
       <div className="gx-hunt-body">
-        <nav aria-label="Vault" className="gx-hunt-rail">
-          <div className="gx-hunt-tree">
-            {vaultRows.map((row) => (
-              <VaultLine key={row.id} row={row} />
-            ))}
+        {/* The rail is the Sidebar drawing's panel (`gx-sb-panel`), its group
+            (`gx-sb-group`) and its footer (`gx-sb-panel-foot`, `gx-sb-row`);
+            the rows are the FileTree drawing, so the branch fold, the guide
+            indent and the selected file are the component's, not this block's. */}
+        <nav
+          aria-label="Vault"
+          className="gx-hunt-rail gx-sb-panel"
+          data-edge="left"
+        >
+          <div className="gx-hunt-tree gx-sb-group">
+            <FileTreeFrame
+              cursor={vault}
+              onCursorChange={setVault}
+              onSelect={() => undefined}
+              roots={vaultTree}
+              selected={VAULT_CURRENT}
+            />
           </div>
-          <div className="gx-hunt-rail-foot">
-            <span className="gx-hunt-vault">
-              WanTo
-              <BlockIcon name="chevronDown" size={9} />
-            </span>
-            <span className="gx-hunt-rail-actions">
-              <span aria-hidden="true" className="gx-hunt-round">
-                <BlockIcon name="refresh" size={9} />
+          <div className="gx-hunt-rail-foot gx-sb-panel-foot">
+            <span className="gx-sb-row gx-hunt-vault">
+              <span className="gx-sb-row-label">WanTo</span>
+              <span className="gx-sb-trail">
+                <BlockIcon name="chevronDown" size={9} />
               </span>
-              <span aria-hidden="true" className="gx-hunt-round">
-                <BlockIcon name="gear" size={9} />
+              <span aria-hidden="true" className="gx-hunt-rail-actions">
+                <span className="gx-sb-iconbtn">
+                  <BlockIcon name="refresh" size={9} />
+                </span>
+                <span className="gx-sb-iconbtn">
+                  <BlockIcon name="gear" size={9} />
+                </span>
               </span>
             </span>
           </div>
@@ -615,11 +637,26 @@ export const HunterPipelineRender = () => {
               <BlockIcon name="chevronLeft" size={11} />
               <BlockIcon name="chevronRight" size={11} />
             </span>
-            <span className="gx-hunt-crumb-path">
-              <span>Guild</span>
-              <span aria-hidden="true">/</span>
-              <span data-current="true">Licence Pipeline</span>
-            </span>
+            {/* The trail is the Breadcrumb drawing: its list, items, separator
+                and current page, at the window's caption size. */}
+            <nav
+              aria-label="Breadcrumb"
+              className="gx-breadcrumb gx-hunt-crumb-path"
+            >
+              <ol className="gx-breadcrumb-list">
+                <li className="gx-breadcrumb-item">
+                  <span className="gx-breadcrumb-link">Guild</span>
+                </li>
+                <li className="gx-breadcrumb-item">
+                  <span aria-hidden="true" className="gx-breadcrumb-sep">
+                    /
+                  </span>
+                  <span aria-selected="true" className="gx-breadcrumb-page">
+                    Licence Pipeline
+                  </span>
+                </li>
+              </ol>
+            </nav>
             <span aria-hidden="true" className="gx-hunt-crumb-actions">
               <BlockIcon name="link" size={10} />
               <BlockIcon name="more" size={10} />
@@ -653,12 +690,19 @@ export const HunterPipelineRender = () => {
 
           <section aria-label="Readings" className="gx-hunt-readings">
             {hunterReadings.map((reading) => (
-              <article className="gx-card gx-hunt-reading" key={reading.id}>
-                <p className="gx-hunt-label">{reading.label}</p>
-                <p className="gx-hunt-value" data-tone={reading.tone}>
-                  {reading.value}
-                </p>
-                <p className="gx-hunt-meta">{reading.meta}</p>
+              <article
+                className="gx-card gx-card-outline gx-hunt-reading"
+                key={reading.id}
+              >
+                <div className="gx-card-header">
+                  <p className="gx-hunt-label">{reading.label}</p>
+                  <p className="gx-hunt-value" data-tone={reading.tone}>
+                    {reading.value}
+                  </p>
+                </div>
+                <div className="gx-card-content">
+                  <p className="gx-hunt-meta">{reading.meta}</p>
+                </div>
               </article>
             ))}
           </section>
@@ -693,19 +737,26 @@ export const HunterPipelineRender = () => {
             </header>
             <div className="gx-hunt-stages">
               {stages.map((stage) => (
-                <article className="gx-card gx-hunt-stage" key={stage.id}>
-                  <p className="gx-hunt-label">
-                    <span
-                      aria-hidden="true"
-                      className="gx-hunt-stage-icon"
-                      data-tone={stage.tone}
-                    >
-                      <BlockIcon name={stage.icon} size={9} />
-                    </span>
-                    {stage.label}
-                  </p>
-                  <p className="gx-hunt-value">{stage.count}</p>
-                  <p className="gx-hunt-meta">{stage.meta}</p>
+                <article
+                  className="gx-card gx-card-outline gx-hunt-stage"
+                  key={stage.id}
+                >
+                  <div className="gx-card-header">
+                    <p className="gx-hunt-label">
+                      <span
+                        aria-hidden="true"
+                        className="gx-hunt-stage-icon"
+                        data-tone={stage.tone}
+                      >
+                        <BlockIcon name={stage.icon} size={9} />
+                      </span>
+                      {stage.label}
+                    </p>
+                    <p className="gx-hunt-value">{stage.count}</p>
+                  </div>
+                  <div className="gx-card-content">
+                    <p className="gx-hunt-meta">{stage.meta}</p>
+                  </div>
                 </article>
               ))}
             </div>
@@ -724,9 +775,14 @@ export const HunterPipelineRender = () => {
               </header>
               <div className="gx-hunt-cards">
                 {ready.map((dossier) => (
-                  <article className="gx-card gx-hunt-card" key={dossier.id}>
-                    <p className="gx-hunt-card-title">{dossier.title}</p>
-                    <div className="gx-hunt-chips">
+                  <article
+                    className="gx-card gx-card-outline gx-hunt-card"
+                    key={dossier.id}
+                  >
+                    <div className="gx-card-header">
+                      <p className="gx-hunt-card-title">{dossier.title}</p>
+                    </div>
+                    <div className="gx-card-content gx-hunt-chips">
                       <Chip>{dossier.bank}</Chip>
                       <Chip tone="accent">{`Rank ${dossier.rank}`}</Chip>
                       <Chip>{dossier.length}</Chip>
@@ -804,9 +860,32 @@ export const HunterPipelineRender = () => {
 };
 
 export const hunterPipelineSource = `import { Badge } from "@gpuixui/components/badge";
-import { Button } from "@gpuixui/primitives";
-import { Card } from "@gpuixui/components/card";
-import { Text } from "@gpuixui/primitives";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@gpuixui/components/breadcrumb";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@gpuixui/components/card";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarProvider,
+} from "@gpuixui/components/sidebar";
+import { FileTree, FileTreeFile, FileTreeFolder } from "@gpuixui/files";
+import { Button, Text } from "@gpuixui/primitives";
 
 const readings = [
   { label: "Renown · 7 days", value: "28,087", meta: "8 snapshot days" },
@@ -825,38 +904,88 @@ const stages = [
   { label: "Verified", count: 29, meta: "last 14 days" },
 ];
 
-/** The pane the window opens on; the tab strip and vault are the app's chrome. */
+/** The window composes the shell; the tab strip is the app's own chrome. */
 export const HunterPipeline = () => (
-  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-    <Text role="h3" weight="semibold">Licence Pipeline</Text>
-    <Text role="caption" tone="muted">
-      Wednesday, 28 October 2026 · 16 dossiers · 4 intel banks
-    </Text>
-    <div style={{ display: "flex", gap: 6 }}>
-      <Button variant="outline" size="sm">Tracker</Button>
-      <Button variant="outline" size="sm">Licence index</Button>
-      <Button variant="outline" size="sm">Open items</Button>
-      <Button variant="secondary" size="sm">Dossiers</Button>
-    </div>
-    <div style={{ display: "flex", gap: 6 }}>
-      {readings.map((reading) => (
-        <Card key={reading.label}>
-          <Text role="label" tone="muted">{reading.label}</Text>
-          <Text role="h3">{reading.value}</Text>
-          <Text role="caption" tone="muted">{reading.meta}</Text>
-        </Card>
-      ))}
-    </div>
-    <div style={{ display: "flex", gap: 6 }}>
-      {stages.map((entry) => (
-        <Card key={entry.label}>
-          <Text role="label" tone="muted">{entry.label}</Text>
-          <Text role="h3">{entry.count}</Text>
-          <Text role="caption" tone="muted">{entry.meta}</Text>
-        </Card>
-      ))}
-    </div>
-    <Badge variant="outline">2 staged</Badge>
-    <Badge variant="outline">3 need work</Badge>
-  </div>
+  <SidebarProvider>
+    <Sidebar>
+      <SidebarContent>
+        <SidebarGroup>
+          <FileTree
+            defaultExpanded={["Guild", "Guild/04 Dossiers"]}
+            selected="Guild/Licence Pipeline"
+          >
+            <FileTreeFolder path="Guild" name="Guild">
+              <FileTreeFolder path="Guild/04 Dossiers" name="04 Dossiers">
+                <FileTreeFile
+                  path="Guild/04 Dossiers/Valor Mortis"
+                  name="Valor Mortis"
+                />
+              </FileTreeFolder>
+              <FileTreeFile
+                path="Guild/Licence Pipeline"
+                name="Licence Pipeline"
+              />
+            </FileTreeFolder>
+            <FileTreeFile path="AGENTS" name="AGENTS" />
+          </FileTree>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuButton label="WanTo" />
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+    <SidebarInset>
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink>Guild</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbPage>Licence Pipeline</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <Text role="h3" weight="semibold">Licence Pipeline</Text>
+      <Text role="caption" tone="muted">
+        Wednesday, 28 October 2026 · 16 dossiers · 4 intel banks
+      </Text>
+      <div style={{ display: "flex", gap: 6 }}>
+        <Button variant="outline" size="sm">Tracker</Button>
+        <Button variant="outline" size="sm">Licence index</Button>
+        <Button variant="outline" size="sm">Open items</Button>
+        <Button variant="secondary" size="sm">Dossiers</Button>
+      </div>
+      <div style={{ display: "flex", gap: 6 }}>
+        {readings.map((reading) => (
+          <Card key={reading.label}>
+            <CardHeader>
+              <Text role="label" tone="muted">{reading.label}</Text>
+              <CardTitle>{reading.value}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Text role="caption" tone="muted">{reading.meta}</Text>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 6 }}>
+        {stages.map((entry) => (
+          <Card key={entry.label}>
+            <CardHeader>
+              <Text role="label" tone="muted">{entry.label}</Text>
+              <CardTitle>{entry.count}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Text role="caption" tone="muted">{entry.meta}</Text>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Badge variant="outline">2 staged</Badge>
+      <Badge variant="warning">3 need work</Badge>
+    </SidebarInset>
+  </SidebarProvider>
 );`;

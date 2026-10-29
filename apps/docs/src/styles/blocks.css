@@ -7646,9 +7646,12 @@ button.gx-sb-row {
 /* ---- hunter pipeline: a guild's whole application window -------------------
    The reference is the app, not one pane of it: a title bar with traffic
    lights and a strip of notes, the vault's tree in its own rail, and the
-   docket the window opens on. The rail and title bar are `muted` chrome, the
-   note sits on the page role, and its cells wear the card recipe. Every figure
-   that carries a verdict is the success role; no rule here names a colour. */
+   docket the window opens on. The rail is the Sidebar panel (`gx-sb-panel`),
+   its tree the FileTree drawing (`gx-filetree`), its trail the Breadcrumb
+   drawing, its cells the Card recipe and its chips the Badge. Only the traffic
+   lights and note strip are the app's own frame: no shipped part paints window
+   chrome. Every figure that carries a verdict is the success role; no rule
+   here names a colour. */
 .gx-hunt {
   display: flex;
   flex-direction: column;
@@ -7771,92 +7774,70 @@ button.gx-sb-row {
   min-height: 0;
 }
 
+/* The rail is the Sidebar panel's recipe (`gx-sb-panel`): the card fill, the
+   card ink and a border on the edge it faces. The 190px is the reference's
+   window width; the tree's own rows and fold are the FileTree drawing's. */
 .gx-hunt-rail {
-  display: flex;
-  flex: none;
-  flex-direction: column;
   width: 190px;
   border-right: 1px solid var(--border);
-  background: var(--muted);
+  background: var(--card);
+  color: var(--card-foreground);
 }
 
 .gx-hunt-tree {
+  /* The rail is a compressed app, so the FileTree's row step is the window's:
+     all 33 rows of the vault fit, the reference's density holds, and the fold
+     still travels one row height because the animation reads this variable. */
+  --row-height: 12px;
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
-  padding: 4px 6px;
   scrollbar-width: thin;
 }
 
-.gx-hunt-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 13px;
+.gx-hunt-tree .gx-filetree {
+  width: 100%;
+  font-size: 8.5px;
+  line-height: 1.2;
+}
+
+.gx-hunt-tree .gx-filetree-row {
   padding-right: 4px;
-  border-radius: 4px;
-  color: var(--muted-foreground);
-  font-size: 9px;
-  white-space: nowrap;
 }
 
-.gx-hunt-row[data-kind="open"] {
-  color: var(--foreground);
-}
-
-.gx-hunt-row[data-current="true"] {
-  background: var(--active);
-  color: var(--foreground);
-}
-
-.gx-hunt-row[data-current="true"] .gx-hunt-row-icon {
-  color: var(--foreground);
-}
-
-.gx-hunt-row-chevron {
-  display: inline-flex;
-  flex: none;
+.gx-hunt-tree .gx-filetree-chevron svg {
   width: 8px;
+  height: 8px;
 }
 
-.gx-hunt-row-icon {
-  display: inline-flex;
-  flex: none;
-  color: var(--muted-foreground);
-}
-
-.gx-hunt-row-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
+.gx-hunt-tree .gx-filetree-glyph {
+  width: 9px;
+  height: 9px;
+  margin-right: 4px;
 }
 
 .gx-hunt-rail-foot {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: space-between;
-  height: 24px;
-  padding: 0 8px;
   border-top: 1px solid var(--border);
-  color: var(--muted-foreground);
-  font-size: 9px;
 }
 
-.gx-hunt-vault,
+.gx-hunt-vault {
+  height: 24px;
+  padding: 0 4px;
+  color: var(--muted-foreground);
+  font-size: 9.5px;
+}
+
 .gx-hunt-rail-actions {
   display: inline-flex;
+  flex: none;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  margin-left: auto;
 }
 
-.gx-hunt-round {
-  display: grid;
-  place-items: center;
+.gx-hunt-rail-actions .gx-sb-iconbtn {
   width: 16px;
   height: 16px;
-  border-radius: 50%;
-  background: var(--background);
-  color: var(--muted-foreground);
 }
 
 /* ---- the note ------------------------------------------------------------ */
@@ -7865,7 +7846,7 @@ button.gx-sb-row {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
   min-height: 0;
   padding: 6px 12px 8px;
@@ -7890,16 +7871,21 @@ button.gx-sb-row {
 }
 
 .gx-hunt-crumb-path {
-  display: flex;
   flex: 1 1 auto;
-  gap: 5px;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
 }
 
-.gx-hunt-crumb-path [data-current="true"] {
-  color: var(--foreground);
+.gx-hunt-crumb-path .gx-breadcrumb-list,
+.gx-hunt-crumb-path .gx-breadcrumb-item {
+  gap: 5px;
+}
+
+.gx-hunt-crumb-path .gx-breadcrumb-link,
+.gx-hunt-crumb-path .gx-breadcrumb-page,
+.gx-hunt-crumb-path .gx-breadcrumb-sep {
+  font-size: 10px;
 }
 
 .gx-hunt-head {
@@ -7957,17 +7943,27 @@ button.gx-sb-row {
   gap: 5px;
 }
 
+/* A reading and a stage are the Card drawing's surface and parts, at the
+   window's density: the header carries the label and the figure, the content
+   the line under it. */
 .gx-hunt-reading,
 .gx-hunt-stage {
   flex: 1 1 0;
   gap: 0;
   min-width: 0;
-  padding: 3px 7px;
   border-radius: var(--radius);
 }
 
-.gx-hunt-stage {
+.gx-hunt-reading .gx-card-header,
+.gx-hunt-stage .gx-card-header {
   gap: 0;
+  padding: 4px 7px 1px;
+}
+
+.gx-hunt-reading .gx-card-content,
+.gx-hunt-stage .gx-card-content {
+  gap: 0;
+  padding: 0 7px 4px;
 }
 
 .gx-hunt-label {
@@ -8091,9 +8087,18 @@ button.gx-sb-row {
 }
 
 .gx-hunt-card {
-  gap: 2px;
-  padding: 3px 7px;
+  gap: 0;
   border-radius: var(--radius);
+}
+
+.gx-hunt-card .gx-card-header {
+  gap: 0;
+  padding: 3px 7px 1px;
+}
+
+.gx-hunt-card .gx-card-content {
+  gap: 0;
+  padding: 0 7px 3px;
 }
 
 .gx-hunt-card-title {
@@ -8107,38 +8112,20 @@ button.gx-sb-row {
 
 .gx-hunt-chips {
   display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 4px;
   overflow: hidden;
 }
 
+/* The chip is the Badge drawing's pill; only the height and type step are the
+   window's, so a row of three stays on one line inside the card. */
 .gx-hunt-chip {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
   height: 13px;
   padding: 0 6px;
-  border: 1px solid var(--border);
-  border-radius: 9999px;
-  color: var(--muted-foreground);
   font-size: 8px;
-  white-space: nowrap;
-}
-
-.gx-hunt-chip[data-tone="accent"] {
-  border-color: transparent;
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-
-.gx-hunt-chip[data-tone="success"] {
-  border-color: transparent;
-  background: var(--success);
-  color: var(--success-foreground);
-}
-
-.gx-hunt-chip[data-tone="warn"] {
-  border-color: var(--warning);
-  color: var(--warning);
+  line-height: 1;
 }
 
 .gx-hunt-empty {

@@ -414,6 +414,18 @@ two verdict figures are the only green numbers; every paint is a theme role.
 `hunter-pipeline.test.ts` holds the tabs, pills, current row, depth contract,
 surface recipe and the no-colour-literal rule; the fixed 16:10 stage is 836×522
 and the page + thumbnail are regenerated with `blocks:thumbnails`.
+`[x]` **Hunter pipeline composes its chrome** — the rail was 33 hand-written
+rows with their own chevrons, indentation arithmetic and active fill, and the
+rail, chips and cells were bespoke boxes. The vault is now the `FileNode`
+hierarchy the File trees drawing reads, so a branch folds with the same 200ms
+row collapse and the current note is the tree's selection; the rail's panel,
+group and footer are the Sidebar recipe, the cells use Card's header/content
+parts, the chips are Badge and the trail is Breadcrumb's list/items/page. The
+traffic lights and note strip stay the app's own frame (no shipped window
+chrome). Live: the branch fold measured 396 (open, 33 rows) → 382 (120ms) →
+348 (240ms, 29 rows) of rows' height. `hunter-pipeline.test.ts` now holds the
+nested tree (a closed branch hides its notes), the current note, the
+rail/window recipes and the Badge chip.
 `[x]` **Fixed-height controls centre their label** — the toast action and close
 mark are 24px boxes with no flex, so the inherited 28px line box overflowed and
 the label sat ~4px high (measured 6.9 above / 2.7 below; now 4.7 / 4.9). The
