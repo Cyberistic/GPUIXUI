@@ -110,7 +110,13 @@ const note: CSSProperties = {
   textAlign: "center",
 };
 
-/** The identity row and its dropdown, shared by both previews. */
+/**
+ * The identity row and its dropdown, shared by both previews.
+ *
+ * The menu opens to the **right** of the footer row, `side="right"` /
+ * `align="end"`: its bottom-right corner meets the row's, so it overlaps the
+ * page beside the panel and grows upward instead of out of the frame.
+ */
 const AccountMenu = ({
   collapsed,
   onAction,
@@ -182,17 +188,19 @@ const AccountMenu = ({
       </button>
       {open ? (
         <div
+          data-align="end"
+          data-side="right"
           style={{
             background: "var(--popover)",
             border: "1px solid var(--border)",
             borderRadius: 10,
-            bottom: collapsed ? 40 : 44,
+            bottom: 0,
             boxShadow: "0 12px 28px rgb(0 0 0 / 0.18)",
             color: "var(--popover-foreground)",
             display: "flex",
             flexDirection: "column",
             gap: 2,
-            left: collapsed ? 40 : 0,
+            left: "calc(100% + 6px)",
             minWidth: 208,
             padding: 6,
             position: "absolute",
@@ -356,17 +364,18 @@ export const UserMenuDemo = () => {
         gap: 12,
       }}
     >
-      <div
-        style={{
-          background: "var(--sidebar)",
-          border: "1px solid var(--sidebar-border)",
-          borderRadius: 10,
-          color: "var(--sidebar-foreground)",
-          minWidth: 240,
-          padding: 8,
-        }}
-      >
-        <AccountMenu collapsed={false} onAction={setLast} />
+      <div style={{ ...page, width: 640, maxWidth: "100%" }}>
+        <div
+          style={{
+            ...panel(false),
+            borderRight: "1px solid var(--sidebar-border)",
+            justifyContent: "flex-end",
+            width: 240,
+          }}
+        >
+          <AccountMenu collapsed={false} onAction={setLast} />
+        </div>
+        <div style={{ background: "var(--background)", flexGrow: 1 }} />
       </div>
       <p style={{ ...note, marginTop: 0 }}>Last action: {last}.</p>
     </div>
