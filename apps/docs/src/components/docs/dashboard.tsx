@@ -1,7 +1,7 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 
 /**
- * Dashboard block — the landing's product window and the `/docs/blocks/dashboard`
+ * Dashboard block — the landing's product window and the `/blocks/dashboard`
  * recipe. Like every block, `DashboardRender` is a browser reproduction of the
  * native geometry/palette (the shipped tree renders through GPUix, not the DOM);
  * `dashboardSource` is the `@gpuixui/*` recipe a consumer copies, and its charts

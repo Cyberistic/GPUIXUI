@@ -176,10 +176,7 @@ export const LoginRender = () => {
           type="password"
         />
         <div className="gx-auth-between">
-          <a
-            className="gx-auth-link"
-            href="/docs/components/auth#forgot-password"
-          >
+          <a className="gx-auth-link" href="/components/auth#forgot-password">
             Forgot password?
           </a>
         </div>
@@ -202,7 +199,7 @@ export const LoginRender = () => {
         </div>
         <p className="gx-auth-footer">
           Don't have an account?{" "}
-          <a className="gx-auth-link" href="/docs/components/auth#sign-up">
+          <a className="gx-auth-link" href="/components/auth#sign-up">
             Sign up
           </a>
         </p>
@@ -324,7 +321,7 @@ export const SignupRender = () => {
         <AuthStatus message={message} phase={phase} />
         <p className="gx-auth-footer">
           Already have an account?{" "}
-          <a className="gx-auth-link" href="/docs/components/auth#sign-in">
+          <a className="gx-auth-link" href="/components/auth#sign-in">
             Sign in
           </a>
         </p>
@@ -384,7 +381,7 @@ export const ForgotPasswordRender = () => {
         </button>
         <AuthStatus message={message} phase={phase} />
         <p className="gx-auth-footer">
-          <a className="gx-auth-link" href="/docs/components/auth#sign-in">
+          <a className="gx-auth-link" href="/components/auth#sign-in">
             Back to sign in
           </a>
         </p>
@@ -547,7 +544,7 @@ export const SignInPageRender = () => {
         <nav aria-label="Primary" className="gx-auth-page-links">
           <a href="/#features">Features</a>
           <a href="/#pricing">Pricing</a>
-          <a href="/docs">Docs</a>
+          <a href="/introduction">Docs</a>
         </nav>
         <button className="gx-btn gx-btn-ghost" type="button">
           Sign in
@@ -623,7 +620,7 @@ export const SignInPageRender = () => {
               </label>
               <a
                 className="gx-auth-link"
-                href="/docs/components/auth#forgot-password"
+                href="/components/auth#forgot-password"
               >
                 Forgot password?
               </a>
@@ -654,7 +651,7 @@ export const SignInPageRender = () => {
             />
             <p className="gx-auth-footer">
               New here?{" "}
-              <a className="gx-auth-link" href="/docs/components/auth#sign-up">
+              <a className="gx-auth-link" href="/components/auth#sign-up">
                 Create an account
               </a>
             </p>

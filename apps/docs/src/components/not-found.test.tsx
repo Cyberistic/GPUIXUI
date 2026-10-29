@@ -26,12 +26,12 @@ describe("the not-found page", () => {
     expect(markup).toContain("404");
 
     const destinations = [
-      "/docs",
-      "/docs/installation",
-      "/docs/getting-started",
-      "/docs/components",
-      "/docs/patterns",
-      "/docs/reference",
+      "/introduction",
+      "/installation",
+      "/getting-started",
+      "/components",
+      "/patterns",
+      "/reference",
     ];
 
     expect(

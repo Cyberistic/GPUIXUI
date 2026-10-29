@@ -261,9 +261,9 @@ describe("the component index", () => {
         group.entries.map((entry) => entry.url),
       );
 
-    expect(elsewhere("tooltip")).not.toContain("/docs/primitives/tooltip");
+    expect(elsewhere("tooltip")).not.toContain("/primitives/tooltip");
     // The positive control: a primitive with no curated page still surfaces.
-    expect(elsewhere("slider")).toContain("/docs/primitives/slider");
+    expect(elsewhere("slider")).toContain("/primitives/slider");
   });
 
   it("reads the filter off the URL instead of state the page cannot share", () => {

@@ -9,10 +9,10 @@ import type { SearchLink } from "fumadocs-ui/contexts/search";
  * `search-links.test.ts` resolves each one to the file that serves it.
  */
 export const searchLinks: SearchLink[] = [
-  ["Getting started", "/docs/getting-started"],
-  ["Installation", "/docs/installation"],
-  ["Components", "/docs/components"],
-  ["Primitives", "/docs/primitives"],
-  ["Patterns", "/docs/patterns"],
-  ["Theming", "/docs/theming"],
+  ["Getting started", "/getting-started"],
+  ["Installation", "/installation"],
+  ["Components", "/components"],
+  ["Primitives", "/primitives"],
+  ["Patterns", "/patterns"],
+  ["Theming", "/theming"],
 ];

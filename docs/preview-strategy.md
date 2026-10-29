@@ -162,7 +162,7 @@ route boots the build, and it cannot claim a route that is not there. The guard
 also reads the installed package, so the size, the memory requirement and the
 browser entry it quotes cannot drift silently. Plan `440-live-gpuix-web-surface`
 is the record of how the route was reached; this section is its outcome.
-`/docs/runtime` publishes the same three constraints, the build's size and the
+`/runtime` publishes the same three constraints, the build's size and the
 reconciler mount to a reader, and the guard holds that page to this policy.
 
 `/live` is **not** the native macOS runtime — it is the same renderer compiled to
@@ -305,7 +305,7 @@ route tree commits node by node and a press on markup that has not hydrated does
 nothing. The installed React (19.3) keeps a host node's committed props on its
 **fiber**, and only some nodes also carry the older `__reactProps$…` store; both
 keys are defined **non-enumerably**. Measured in headless Chrome on
-`/docs/components/button`: the sidebar's search trigger carried no enumerable
+`/components/button`: the sidebar's search trigger carried no enumerable
 property at all, `getOwnPropertyNames` carried `__reactFiber$…` whose
 `memoizedProps.onClick` ran, and a click on that trigger opened the dialog. Every
 probe read with `Object.entries`, so each one waited out its whole hydration
@@ -429,7 +429,7 @@ Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
 against `vite preview`: `light: 3 of 3 surfaces painted #F6F8FA`, exit `0` — the
 Default platform's light page fill, with the dark page `#11141A` before the
 press. The negative control is a link that opens on the other palette:
-`--url '…/docs/components/button?mode=light'` prints
+`--url '…/components/button?mode=light'` prints
 `FAIL a preview opened in light, not dark`, the fill it read beside the dark one
 it expected, and the group's pressed position, then exits `1`.
 `src/lib/palette-switch.test.ts` holds the policy, the command, both measurements
@@ -483,7 +483,7 @@ two platforms, and the cleared one does not.
 
 The authored looks are the third axis (`?look=luna|aero|omarchy`), and the
 sidebar deliberately does not carry them: the platform switch stays the
-mission's four names. The control lives on `/docs/theming`
+mission's four names. The control lives on `/theming`
 (`src/components/docs/look-picker.tsx`), so the press has its own page to be
 measured on. The same probe opens the theming page after the platform steps,
 waits for the picker's first button to carry `__reactProps.onClick`, then
@@ -581,7 +581,7 @@ asserts a different part of the index:
 
 - `slider` is a page only `@gpuixui/primitives` writes,
 - `button` is a component with two addresses — the curated page must answer and
-  the retired `/docs/primitives/button` must not (`curated-twins.ts`),
+  the retired `/primitives/button` must not (`curated-twins.ts`),
 - `architecture` is a page only the site writes.
 
 It reads the options from `role="option"` ids (a page row's id is its URL), the
@@ -596,10 +596,10 @@ nub apps/docs/scripts/search-probe.ts
 
 Measured 2026-10-24 on master, macOS 15.8.1 x86_64, headless Google Chrome
 155.0.8059.80 against the dev server: the dialog opened with **7** suggestions
-(the `links` the root provider passes), `slider → /docs/primitives/slider`,
-`button → /docs/components/button` (not `/docs/primitives/button`), and
-`architecture → /docs/architecture`; Enter on `architecture` opened
-`/docs/architecture` and took the dialog off the screen. Exit `0`.
+(the `links` the root provider passes), `slider → /primitives/slider`,
+`button → /components/button` (not `/primitives/button`), and
+`architecture → /architecture`; Enter on `architecture` opened
+`/architecture` and took the dialog off the screen. Exit `0`.
 
 Two mechanisms are measured rather than assumed, and both have bitten:
 
@@ -623,14 +623,14 @@ section and the site's ledger.
 
 ### The theme editor is measured
 
-`/docs/themes` is the other interaction with no browser measurement: the page a
+`/themes` is the other interaction with no browser measurement: the page a
 consumer opens to take a style, change it and copy the result. Its editor was
 also the one remembered preference that read `localStorage` **directly** — from
 its mount effect, on every colour keystroke and on **Reset** — while the
 platform switch had already learned that a browser may refuse the store. A
 reader who blocks site data threw a `SecurityError` out of that effect and lost
 the page to `Something went wrong`; measured on the served build by making every
-`Storage.prototype` call throw and navigating to `/docs/themes`.
+`Storage.prototype` call throw and navigating to `/themes`.
 
 `apps/docs/scripts/theme-editor-probe.ts` opens the page with that refusal
 installed **before the page's own scripts** (`Page.addScriptToEvaluateOnNewDocument`,
@@ -673,18 +673,18 @@ cannot ship a page the site does not show and the two cannot drift:
 
 | Collection | Source | Route | Sidebar |
 | ---------- | ------ | ----- | ------- |
-| Primitives | `packages/primitives/docs` | `/docs/primitives` | Primitives |
-| Icons | `packages/icons/docs` | `/docs/icons` | Icons |
-| Components | `packages/components/docs` | `/docs/components` | Components |
-| Data | `packages/data/docs` | `/docs/data-display` | Data display |
-| Code surfaces | `packages/editor/docs` | `/docs/editor` | Workspace |
-| File surfaces | `packages/files/docs` | `/docs/files` | Workspace |
-| Shell surfaces | `packages/shell/docs` | `/docs/shell` | Workspace |
-| Panel surfaces | `packages/dock/docs` | `/docs/dock` | Workspace |
-| Media surfaces | `packages/media/docs` | `/docs/media` | Workspace |
+| Primitives | `packages/primitives/docs` | `/primitives` | Primitives |
+| Icons | `packages/icons/docs` | `/icons` | Icons |
+| Components | `packages/components/docs` | `/components` | Components |
+| Data | `packages/data/docs` | `/data-display` | Data display |
+| Code surfaces | `packages/editor/docs` | `/editor` | Workspace |
+| File surfaces | `packages/files/docs` | `/files` | Workspace |
+| Shell surfaces | `packages/shell/docs` | `/shell` | Workspace |
+| Panel surfaces | `packages/dock/docs` | `/dock` | Workspace |
+| Media surfaces | `packages/media/docs` | `/media` | Workspace |
 
-**A lane page shows the surface it is about.** `/docs/layouts`, `/docs/workspace`
-and `/docs/data-display` mount a demo of their flagship surface under the
+**A lane page shows the surface it is about.** `/layouts`, `/workspace`
+and `/data-display` mount a demo of their flagship surface under the
 inventory table — the shell, the panel group and the deploy table — so a reader
 sees what the lane is before the page list. A lane page names a registered demo
 and never ships a drawing for a lane that has none; `lane-page.test.ts` holds all
@@ -827,7 +827,7 @@ that documents it — the curated page, for the five primitives that have one.
 page — the site's own and each package's — has its `@gpuixui/*` imports resolved
 against the package source by `src/lib/page-snippets.test.ts`, because the build
 renders a snippet with the wrong export name exactly like a right one. A plain
-`ts` fence counts: `/docs/runtime` prints its capability calls in one, and a walk
+`ts` fence counts: `/runtime` prints its capability calls in one, and a walk
 that read only `tsx` fences never saw it. The walk found one page that named a
 symbol its package does not publish — `primitives/docs/tooltip.mdx` imported
 `Icon` from `@gpuixui/primitives`, while `Icon` lives in `@gpuixui/icons` — and
@@ -873,7 +873,7 @@ second live copy of one component: the sidebar listed two entries with one title
 a search returned both, and the sitemap advertised two addresses. The curated
 page is canonical, because it is the fuller page and it sits where a reader
 browses a component. `src/lib/curated-twins.ts` is the one list of the five
-retired addresses: `/docs/primitives/<name>` answers a **301** to the curated
+retired addresses: `/primitives/<name>` answers a **301** to the curated
 page with the reader's query preserved, and the sidebar fill, the search index,
 the sitemap and `/llms.txt` all read the list, so none of them can serve the
 twin. The package keeps its Markdown and the tests that hold its API table to
@@ -987,7 +987,7 @@ the mount sits on the package frame rather than the curated one. Measured both
 ways: removing the mount fails the frame case (`expected … to contain
 '<PackageSource url={url} />'`), and pointing the loader at another file fails
 the copy case with the wrong text. Verified in a browser on
-`/docs/primitives/switch`: the accordion opens, prints `Switch.tsx` in full — the
+`/primitives/switch`: the accordion opens, prints `Switch.tsx` in full — the
 same text the file holds, not a summary copy — and the GitHub link is that
 file's own path. The file is printed whole, so a character count here would be a
 second measurement of someone else's file; the policy names the file, not its
@@ -1003,7 +1003,7 @@ a primitive's name here finds the primitive.
 
 ## Theming: a preview paints the library's theme, not the site's
 
-The site has its own identity (a neutral shadcn palette on `/docs` and the
+The site has its own identity (a neutral shadcn palette on `/` and the
 landing's own vocabulary); the components have the library's tokens (iris). A
 preview must show the latter, and it must follow the platform switch, the palette
 switch and the look picker. All three are library values: the platform names
@@ -1021,7 +1021,7 @@ the switch opens on the library's dark identity (`previewMode` in
 `src/lib/platform.ts`) and `?mode=light` paints the light theme. What stays fixed
 is the site's own light/dark mode — a preview does not follow the docs chrome's
 theme, because a preview is a picture of the library and not of the site; the
-palette axis is explicit, shareable and remembered, and `/docs/theming` prints
+palette axis is explicit, shareable and remembered, and `/theming` prints
 the mode a preview opens in rather than leaving a reader in light mode to wonder
 why the previews did not change.
 
@@ -1051,7 +1051,7 @@ not the other, so a scheme cannot silently inherit a variable from its sibling.
   today only the landing's product window. Both classes used to be one: a demo's
   own scene root carries `gx-demo` too, so every scene inside a surface
   re-declared the dark theme and stopped following the platform switch.
-  Measured in a headless browser on `/docs/components/checkbox` — the macOS
+  Measured in a headless browser on `/components/checkbox` — the macOS
   surface's `--control-height-md` is `28px` and its scene read `32px`, the dark
   default, while `?platform=win32` read `32px` in both; with the split the macOS
   scene reads `28px` and Windows `32px`.
@@ -1084,7 +1084,7 @@ for a reader, because a theme that paints a divider into itself, drops a `NaN`
 radius, erases a disabled label, inverts a radius ladder or hides a chart series
 is still broken and none of those is a text pair. The page prints the number as a
 word derived from the gate's own keys, so a fifteenth report cannot land while
-`/docs/themes` promises fourteen, and every report has a case in
+`/themes` promises fourteen, and every report has a case in
 `theme-editor-logic.test.ts` — the cases for the reports no contrast pair covers
 also prove the colour reports stay silent on that brand, so only the new line can
 fail the gate.
@@ -1167,7 +1167,7 @@ The **Limitations** section has a shared half as well as a per-component one. A
 page states what its own control does and cannot do; the runtime's ARIA budget —
 the role-required rule, the attributes it publishes, the attributes it refuses
 and the absent live region — is the cross-cutting contract on
-`/docs/accessibility`, so a page does not have to restate the runtime in order
+`/accessibility`, so a page does not have to restate the runtime in order
 to be honest. `src/lib/accessibility-page.test.ts` holds that page's attribute
 table and refused list to the capability record's row, so a runtime bump that
 changes the budget fails the page rather than leaving it teaching the previous
@@ -1208,7 +1208,7 @@ writes, for the same reason the related line is not: the
 site knows which collection served the page, so `src/lib/page-edit.ts` derives
 the path from the page's `origin` and `path` and `src/components/docs/edit-page.tsx`
 renders it. A curated page keeps its URL over the package page it shadows, so
-`/docs/components/dialog` edits `apps/docs/content/docs/components/dialog.mdx`
+`/components/dialog` edits `apps/docs/content/docs/components/dialog.mdx`
 rather than the package's displaced copy — a link to a file no reader's page
 came from would send a contributor to edit the wrong page.
 
@@ -1222,7 +1222,7 @@ pass on an empty set.
 
 ## The getting-started page
 
-`/docs/getting-started` is the one page that writes the code a reader copies
+`/getting-started` is the one page that writes the code a reader copies
 before they know the components, so it is held to the workspace rather than
 reviewed by eye: `src/lib/getting-started.test.ts` resolves every
 `@gpuixui/*` import to a symbol the package publishes, holds
@@ -1236,8 +1236,8 @@ command.
 ## The lane pages
 
 Three pages sit outside the component and block folders because they describe a
-**composition lane**, not a single component: [Layouts](/docs/layouts),
-[Workspace](/docs/workspace) and [Data display](/docs/data-display). They are
+**composition lane**, not a single component: [Layouts](/layouts),
+[Workspace](/workspace) and [Data display](/data-display). They are
 where a reader lands when the question is "how do I assemble these parts", so
 they have their own contract.
 
@@ -1278,7 +1278,7 @@ were shipped.
 
 ## The patterns page
 
-[Patterns](/docs/patterns) is the one page that describes a **workflow** rather
+[Patterns](/patterns) is the one page that describes a **workflow** rather
 than a component or a lane. A reader who knows what a Dialog is still has to
 decide who owns `open`, what happens to the focus, and what they see when the
 save fails; those answers cross components, so they cannot live on any single
@@ -1312,7 +1312,7 @@ this file, chosen for the same reason the package pages use it.
 ## Examples: source, never a rendering
 
 Every package ships a worked example beside its components — a screen that owns
-its state, not a gallery of props — and `/docs/examples` lists all of them. The
+its state, not a gallery of props — and `/examples` lists all of them. The
 page shows each file's source and the summary the file writes in its own header.
 It does **not** render the example: a GPUix screen drawn in the DOM would be the
 approximation this strategy warns about, with no component page to anchor it, and
@@ -1330,7 +1330,7 @@ stay the theme's. `type-scale.test.tsx` holds the role list to
 `themes.dark.typography` and checks every row's metrics against the theme, so a
 role added to `@gpuixui/tokens` fails the docs until the page describes it.
 
-`<TokenScales>` on [Theming](/docs/theming#scales) follows the same rule for the
+`<TokenScales>` on [Theming](/theming#scales) follows the same rule for the
 geometry: the spacing, radius, border, icon and density rows are read from the
 theme the platform switch resolves, and `token-scales.test.tsx` holds every step
 and its printed pixel value to the theme, the elevation list to the theme's
@@ -1378,7 +1378,7 @@ column, not a preview panel, is the width it is drawn at.
 `src/components/docs/block-preview.test.tsx` fails if the scene goes back
 inside `.gx-component`.
 
-**The index is images, not scenes.** `/docs/blocks` used to mount every block's
+**The index is images, not scenes.** `/blocks` used to mount every block's
 reproduction in its card: twelve compositions with their own state and window
 listeners, all repainted by one platform switch. Each tile now paints a
 checked-in capture of the block's own page, `public/blocks/<slug>.webp`. A
@@ -1386,7 +1386,7 @@ capture is one rendering in one palette, so a tile does not repaint with the
 palette switch (the block page it links to does). The captures are generated
 from the real pages — never drawn for the index — by
 `nub run --filter @gpuixui/docs blocks:thumbnails`
-(`apps/docs/scripts/block-thumbnails.ts`): it opens `/docs/blocks`, reads the
+(`apps/docs/scripts/block-thumbnails.ts`): it opens `/blocks`, reads the
 tile `src` list the index itself prints, opens each block page, waits for
 `.gx-block-stage` and the fonts, and captures the scene's top at the tile's 16:10
 with headless Chrome (`scripts/chrome-session.ts`). A docs server already
@@ -1417,7 +1417,7 @@ constant fails the near-empty case.
 
 ## The examples page
 
-`/docs/examples` is the registry of the worked examples the packages ship. It is
+`/examples` is the registry of the worked examples the packages ship. It is
 generated from `packages/*/examples/*.example.tsx` — one row per file — so it
 cannot advertise an example that does not exist, and a new file appears with no
 docs change.
@@ -1461,12 +1461,12 @@ capability record in `docs/gpuix-capabilities.md` is where it is stated.
 `@gpuix/native` typings, so a bump that publishes an eighth attribute fails the
 record; it then reads every curated page's `## Limitations`, so the same bump
 fails the page that would still tell a reader the control cannot announce it.
-`/docs/accessibility` prints the set and `accessibility-page.test.ts` holds it to
+`/accessibility` prints the set and `accessibility-page.test.ts` holds it to
 the record.
 
 ## The reference page is generated, and it says so
 
-`/docs/reference` is the one page that claims to be the workspace's whole
+`/reference` is the one page that claims to be the workspace's whole
 public surface, so it is generated twice over and held to both sources.
 
 - **Entry points** come from the packages' `exports` maps
@@ -1489,7 +1489,7 @@ Three rules keep that honest:
   shipping the workspace source to every reader.
 - **A symbol links the page its file ships with.** `docsUrlFor` maps the
   declaring module to the page named after it (`IconButton.tsx` →
-  `/docs/primitives/icon-button`, acronyms included) and returns nothing unless
+  `/primitives/icon-button`, acronyms included) and returns nothing unless
   the site mounts that page, so a helper or a package with no docs collection
   keeps its plain name and module path rather than a link to a 404.
   `api-reference.test.tsx` holds every rendered link to the mounted page list and
@@ -1505,7 +1505,7 @@ the scanner's rules are pinned by fixtures that fail when a form is missed.
 
 ## The testing page
 
-[Testing](/docs/testing) documents `@gpuixui/testing`. Its snippets are held to
+[Testing](/testing) documents `@gpuixui/testing`. Its snippets are held to
 the packages' published symbols by `src/lib/page-snippets.test.ts`, like every
 other page's.
 

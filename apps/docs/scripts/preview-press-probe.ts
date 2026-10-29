@@ -26,7 +26,7 @@ import { findChrome, openChrome } from "./chrome-session.ts";
 import { hasHandler } from "./react-ready.ts";
 
 /** The page a cold dev server serves, and the demo it carries. */
-export const defaultUrl = "http://localhost:4175/docs/components/carousel";
+export const defaultUrl = "http://localhost:4175/components/carousel";
 
 /** The slide a carousel readout names, or `undefined` when it names none. */
 export const slideOf = (text: string): number | undefined => {

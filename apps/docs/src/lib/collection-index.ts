@@ -8,7 +8,7 @@ import {
  *
  * A package writes the page for each component it ships, and the site mounts
  * the directory as-is. Three packages also write their section's landing page;
- * the other six do not, so `/docs/media` and its siblings answered **404**
+ * the other six do not, so `/media` and its siblings answered **404**
  * while every page under them answered — a reader who trimmed the address, or
  * followed a breadcrumb, reached a dead end in a section the sidebar lists.
  * The page is generated from the collection the route already mounts, so a new
@@ -25,7 +25,7 @@ export interface CollectionIndexPage {
 
 /** The generated index of one collection. */
 export interface CollectionIndexView {
-  /** The collection's own route, e.g. `/docs/media`. */
+  /** The collection's own route, e.g. `/media`. */
   readonly url: string;
   readonly title: string;
   readonly description: string;

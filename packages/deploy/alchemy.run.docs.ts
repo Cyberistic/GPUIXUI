@@ -13,8 +13,8 @@ export class DocsSite extends Cloudflare.Website.Vite<DocsSite>()("DocsSite", {
   workersDev: true,
   // Every page is prerendered to `dist/client/<path>/index.html`
   // (`src/lib/prerender-pages.ts`), so the asset layer answers a page request
-  // before the Worker is invoked. `drop-trailing-slash` serves `/docs/x` from
-  // `docs/x/index.html` with a 200 and redirects `/docs/x/` to the canonical
+  // before the Worker is invoked. `drop-trailing-slash` serves `/x` from
+  // `x/index.html` with a 200 and redirects `/x/` to the canonical
   // no-slash URL; the default (`auto-trailing-slash`) would do the opposite and
   // put a slash on every canonical URL the site publishes.
   assets: { htmlHandling: "drop-trailing-slash" },

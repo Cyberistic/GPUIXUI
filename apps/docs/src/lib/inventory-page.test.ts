@@ -84,14 +84,10 @@ describe("the inventory page", () => {
 
   it("links a row to the page that reports it", () => {
     expect(rowNamed("Typing text").url).toEqual(
-      Option.some("/docs/components/typing-text"),
+      Option.some("/components/typing-text"),
     );
-    expect(rowNamed("Buttons").url).toEqual(
-      Option.some("/docs/components/button"),
-    );
-    expect(rowNamed("Tables").url).toEqual(
-      Option.some("/docs/components/table"),
-    );
+    expect(rowNamed("Buttons").url).toEqual(Option.some("/components/button"));
+    expect(rowNamed("Tables").url).toEqual(Option.some("/components/table"));
   });
 
   it("leaves a row with no page plain instead of guessing an address", () => {

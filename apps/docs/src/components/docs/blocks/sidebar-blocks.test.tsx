@@ -9,7 +9,7 @@ import { SIDEBAR_EXAMPLES, SidebarExample } from "../sidebar-examples";
  * The one Sidebar page.
  *
  * The sixteen shadcn sidebar blocks used to be sixteen pages and sixteen index
- * tiles. They are now sections of `/docs/blocks/sidebar`: one registry entry,
+ * tiles. They are now sections of `/blocks/sidebar`: one registry entry,
  * one tile, one thumbnail, and sixteen drawings that keep their own state. This
  * guards the merge — a lost example, a slug that points at nothing, a section
  * without its shadcn link, or a control that regressed to paint would all still

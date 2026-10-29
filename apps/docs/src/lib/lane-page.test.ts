@@ -25,7 +25,7 @@ interface LanePage {
 /**
  * The data lane's page lives in a folder, not beside the other two.
  *
- * The `@gpuixui/data` collection is mounted at `/docs/data-display`, so the
+ * The `@gpuixui/data` collection is mounted at `/data-display`, so the
  * package's own pages share the prefix with the lane page; the lane page moves
  * into `data-display/index.mdx` to leave the folder free for them.
  */
@@ -170,7 +170,7 @@ describe("the composition pages", () => {
   it("cross-link the lane they hand off to", () => {
     const orphans = pages
       .filter(({ file }) => {
-        const links = read(file).match(/\]\(\/docs\/[a-z-]+\)/g) ?? [];
+        const links = read(file).match(/\]\(\/[a-z-]+\)/g) ?? [];
         return links.length < 2;
       })
       .map(({ file }) => file);

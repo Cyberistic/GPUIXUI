@@ -34,16 +34,12 @@ const packagedPages = (): string[] =>
 
 describe("the sitemap", () => {
   it("lists one absolute URL per page, sorted", () => {
-    const xml = sitemapXml(["/docs/installation", "/docs", "/"]);
+    const xml = sitemapXml(["/installation", "/", "/"]);
     const locations = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].flatMap((match) =>
       match[1] === undefined ? [] : [match[1]],
     );
 
-    expect(locations).toEqual([
-      `${siteOrigin}/`,
-      `${siteOrigin}/docs`,
-      `${siteOrigin}/docs/installation`,
-    ]);
+    expect(locations).toEqual([`${siteOrigin}/`, `${siteOrigin}/installation`]);
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain(
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
@@ -53,19 +49,18 @@ describe("the sitemap", () => {
 
   it("keeps the landing page and drops a shadowed package page", () => {
     const paths = sitemapPaths(
-      ["/docs", "/docs/components/dialog"],
-      ["/docs/components/dialog", "/docs/components/accordion"],
+      ["/", "/components/dialog"],
+      ["/components/dialog", "/components/accordion"],
     );
 
     expect(paths).toEqual([
       "/",
-      "/docs",
-      "/docs/components/accordion",
-      "/docs/components/dialog",
+      "/components/accordion",
+      "/components/dialog",
       "/live",
     ]);
-    expect(paths.filter((path) => path === "/docs/components/dialog")).toEqual([
-      "/docs/components/dialog",
+    expect(paths.filter((path) => path === "/components/dialog")).toEqual([
+      "/components/dialog",
     ]);
   });
 
@@ -74,27 +69,23 @@ describe("the sitemap", () => {
     // page's preview note, but it is a route rather than a collection
     // document, so a sitemap derived from the collections alone omitted it and
     // a crawler had no path to the site's strongest preview.
-    const paths = sitemapPaths(["/docs"], []);
+    const paths = sitemapPaths(["/"], []);
 
     expect([...siteRoutes]).toEqual(["/", "/live"]);
-    expect(paths).toEqual(["/", "/docs", "/live"]);
+    expect(paths).toEqual(["/", "/live"]);
 
     // The document does not re-add the routes to a list it was handed: the
     // route composes `sitemapPaths`, and a second `<loc>` is a duplicate.
-    const xml = sitemapXml(["/docs/installation", "/docs", "/"]);
+    const xml = sitemapXml(["/installation", "/", "/"]);
     expect(
       [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]),
-    ).toEqual([
-      `${siteOrigin}/`,
-      `${siteOrigin}/docs`,
-      `${siteOrigin}/docs/installation`,
-    ]);
+    ).toEqual([`${siteOrigin}/`, `${siteOrigin}/installation`]);
   });
 
   it("escapes a URL a parser would otherwise reject", () => {
-    expect(sitemapXml(["/docs/a&b"])).toContain("<loc>");
-    expect(sitemapXml(["/docs/a&b"])).not.toContain("a&b");
-    expect(sitemapXml(["/docs/a&b"])).toContain("a&amp;b");
+    expect(sitemapXml(["/a&b"])).toContain("<loc>");
+    expect(sitemapXml(["/a&b"])).not.toContain("a&b");
+    expect(sitemapXml(["/a&b"])).toContain("a&amp;b");
   });
 
   it("lists every page the site serves, and no page a curated page replaces", () => {

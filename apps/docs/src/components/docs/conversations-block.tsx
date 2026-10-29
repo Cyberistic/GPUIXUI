@@ -3,7 +3,7 @@ import { BlockIcon } from "./block-icons";
 import { RailToggle } from "./sidebar-rail";
 
 /**
- * Conversations block — `/docs/blocks/conversations`.
+ * Conversations block — `/blocks/conversations`.
  *
  * One Messages-style window in four platform dresses: macOS Messages, Windows
  * 11 (Fluent 2), Linux (Breeze dark) and Omarchy (a Linux desktop in its own

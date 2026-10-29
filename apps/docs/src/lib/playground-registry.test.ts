@@ -10,7 +10,7 @@ import {
 /**
  * The playground catalogue, held to the registries it is read from.
  *
- * `/docs/playground` is the only page that tells a reader what the companion
+ * `/playground` is the only page that tells a reader what the companion
  * native app can prove, and it is generated: a probe added to the playground has
  * to appear on the page, and a page row has to name a probe the runners print
  * with `--list`. The registries are read here with a line reader — a different
@@ -220,8 +220,8 @@ describe("the playground page", () => {
   });
 
   it("sends a reader to the record and the test lane beside it", () => {
-    expect(page).toContain("(/docs/testing)");
-    expect(page).toContain("(/docs/runtime)");
+    expect(page).toContain("(/testing)");
+    expect(page).toContain("(/runtime)");
     expect(page).toContain("release gate");
     expect(page).toContain("apps/playground/README.md");
   });

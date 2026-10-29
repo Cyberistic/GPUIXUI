@@ -66,7 +66,7 @@ describe("the workspace page's composition table", () => {
   it("sends each part to the section its page lives in", () => {
     // Bug guarded: the closing sentence said every part was under Components
     // while the table links six dock and shell pages in the Workspace section.
-    const sources = [...page.matchAll(/\]\((\/docs\/[^)#]+)\)/g)].flatMap(
+    const sources = [...page.matchAll(/\]\((\/[^)#]+)\)/g)].flatMap(
       (match) => match[1] ?? [],
     );
     const sections = new Set(

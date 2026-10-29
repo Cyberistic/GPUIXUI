@@ -18,7 +18,7 @@ import {
 /**
  * The theme editor probe's premise, held to the site it presses.
  *
- * `scripts/theme-editor-probe.ts` opens `/docs/themes` in a browser whose
+ * `scripts/theme-editor-probe.ts` opens `/themes` in a browser whose
  * `localStorage` throws on every call, edits one colour, reads the audit and
  * presses **Reset**. Its expectation has to be the gate's own answer, not a
  * second copy of it: the probe writes the page's `background` value into
@@ -101,7 +101,7 @@ describe("the theme editor probe", () => {
 
   it("teaches the refusal on the page and the policy", () => {
     // The page promises persistence; it has to say what a refused store does,
-    // the rule `/docs/theming` already states for the platform switch.
+    // the rule `/theming` already states for the platform switch.
     expect(page).toContain("refuses site storage");
     expect(policy).toContain("theme-editor-probe.ts");
     expect(read("README.md")).toContain("scripts/theme-editor-probe.ts");

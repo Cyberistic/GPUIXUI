@@ -50,7 +50,7 @@ const mountedPages = (): ReadonlySet<string> => {
     );
 
   return new Set([
-    ...site("apps/docs/content/docs", "/docs"),
+    ...site("apps/docs/content/docs", ""),
     ...packageCollections.flatMap((collection) =>
       readdirSync(join(root, collection.dir))
         .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
@@ -59,7 +59,7 @@ const mountedPages = (): ReadonlySet<string> => {
     // A collection with no `index.mdx` answers at its route with a generated
     // index, so a dependency link may point there.
     ...collectionIndexUrls(),
-    "/docs/components",
+    "/components",
   ]);
 };
 
@@ -75,22 +75,22 @@ describe("the dependency index", () => {
   it("resolves every mounted package page to the module it documents", () => {
     expect(index.unresolved).toEqual([]);
     expect(Object.keys(index.pages).length).toBeGreaterThanOrEqual(70);
-    expect(index.pages["/docs/components/dialog"]?.module).toBe(
+    expect(index.pages["/components/dialog"]?.module).toBe(
       "packages/components/src/dialog.tsx",
     );
     // `Grid` and `Spacer` live in another component's file, so the file stem
     // alone is not enough — the published symbol names the module.
-    expect(index.pages["/docs/primitives/grid"]?.module).toBe(
+    expect(index.pages["/primitives/grid"]?.module).toBe(
       "packages/primitives/src/components/Stack.tsx",
     );
     // A page whose file name matches neither a published symbol nor a module
     // stem resolves through the part it names in its opening line.
-    expect(index.pages["/docs/data-display/expandable-rows"]?.module).toBe(
+    expect(index.pages["/data-display/expandable-rows"]?.module).toBe(
       "packages/data/src/table/expandable.tsx",
     );
     // A family page names no one subject and matches no stem; the first part
     // its own example imports answers, so the source block shows real code.
-    expect(index.pages["/docs/data-display/charts"]?.module).toBe(
+    expect(index.pages["/data-display/charts"]?.module).toBe(
       "packages/data/src/chart/chart.tsx",
     );
   });
@@ -117,14 +117,14 @@ describe("the dependency index", () => {
 
     expect(mismatched).toEqual([]);
     expect(
-      index.pages["/docs/components/dialog"]?.dependencies.map(
+      index.pages["/components/dialog"]?.dependencies.map(
         (dependency) => dependency.packageName,
       ),
     ).toEqual(["@gpuix/react", "@gpuixui/icons", "@gpuixui/tw"]);
   });
 
   it("keeps each dependency's subpaths, so a reader sees what is imported", () => {
-    const floating = index.pages["/docs/components/dialog"]?.dependencies.find(
+    const floating = index.pages["/components/dialog"]?.dependencies.find(
       (dependency) => dependency.packageName === "@gpuix/react",
     );
 
@@ -142,18 +142,18 @@ describe("the dependency index", () => {
     );
 
     expect(dead).toEqual([]);
-    expect(packagePage("@gpuixui/tokens")).toBe("/docs/theming");
+    expect(packagePage("@gpuixui/tokens")).toBe("/theming");
     expect(
-      index.pages["/docs/components/dialog"]?.dependencies.find(
+      index.pages["/components/dialog"]?.dependencies.find(
         (dependency) => dependency.packageName === "@gpuixui/icons",
       )?.url,
-    ).toBe("/docs/icons/icon");
+    ).toBe("/icons/icon");
   });
 
   it("links every package the site mounts a collection for to that collection", () => {
     // Bug guarded: the map named the four packages whose pages the site writes
     // itself and forgot the six collections mounted since, so a files page
-    // printed `@gpuixui/data` as plain text with `/docs/data-display` a click
+    // printed `@gpuixui/data` as plain text with `/data-display` a click
     // away. The mapping is derived from the collection list, so a new lane is
     // linked without a second edit.
     const unlinked = packageCollections
@@ -164,14 +164,14 @@ describe("the dependency index", () => {
     expect(packageCollections.length).toBeGreaterThanOrEqual(9);
     // A collection's route documents its package; only the icon set documents
     // itself on a page below the route.
-    expect(packagePage("@gpuixui/icons")).toBe("/docs/icons/icon");
-    expect(packagePage("@gpuixui/data")).toBe("/docs/data-display");
-    expect(packagePage("@gpuixui/media")).toBe("/docs/media");
+    expect(packagePage("@gpuixui/icons")).toBe("/icons/icon");
+    expect(packagePage("@gpuixui/data")).toBe("/data-display");
+    expect(packagePage("@gpuixui/media")).toBe("/media");
     expect(
-      index.pages["/docs/files/file-tree"]?.dependencies.find(
+      index.pages["/files/file-tree"]?.dependencies.find(
         (dependency) => dependency.packageName === "@gpuixui/data",
       )?.url,
-    ).toBe("/docs/data-display");
+    ).toBe("/data-display");
   });
 
   it("leaves a package the site does not document unlinked rather than guessing", () => {
@@ -208,10 +208,10 @@ describe("the dependency index", () => {
     expect(mismatched).toEqual([]);
     expect(curated).toHaveLength(40);
     // The two pages the package does not also document at this URL.
-    expect(index.pages["/docs/components/button"]?.module).toBe(
+    expect(index.pages["/components/button"]?.module).toBe(
       "packages/primitives/src/components/Button.tsx",
     );
-    expect(index.pages["/docs/components/table"]?.module).toBe(
+    expect(index.pages["/components/table"]?.module).toBe(
       "packages/data/src/table/table.tsx",
     );
   });

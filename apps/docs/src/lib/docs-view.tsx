@@ -58,7 +58,7 @@ const pageTree = async () =>
     ),
   );
 
-/** The mounted collection that owns a `/docs/<segment>` route. */
+/** The mounted collection that owns a `/<segment>` route. */
 const collectionAt = (segment: string | undefined) =>
   packageCollections.find(
     (collection) => collection.route === `${docsRoute}/${segment}`,

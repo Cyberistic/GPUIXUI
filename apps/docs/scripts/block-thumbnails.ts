@@ -4,10 +4,10 @@
  * The index used to mount a live scene per tile: twelve compositions with their
  * own state and window listeners, all repainted by one platform switch. It now
  * paints a checked-in image per block, and the images are captures of the real
- * renderings — `<BlockPreview>` on `/docs/blocks/<slug>` — never a drawing made
+ * renderings — `<BlockPreview>` on `/blocks/<slug>` — never a drawing made
  * for the index.
  *
- * The list of files is the index's own: the run opens `/docs/blocks`, reads the
+ * The list of files is the index's own: the run opens `/blocks`, reads the
  * `src` of every tile image, and captures the page each one names. A block
  * added to the registry with a page is therefore captured with no edit here,
  * and an index that names no image fails instead of writing nothing.
@@ -112,7 +112,7 @@ const docsServer = async (
   url: string | undefined,
 ): Promise<{ readonly url: string; readonly close: () => Promise<void> }> => {
   const base = url ?? "http://localhost:4175";
-  if (await reachable(`${base}/docs/blocks`)) {
+  if (await reachable(`${base}/blocks`)) {
     return { url: base, close: () => Promise.resolve() };
   }
   if (url !== undefined) {
@@ -137,7 +137,7 @@ const docsServer = async (
       await stop();
       throw new Error(`\`nub run dev\` did not start: ${spawnError.message}`);
     }
-    if (await reachable(`${base}/docs/blocks`)) {
+    if (await reachable(`${base}/blocks`)) {
       return { url: base, close: stop };
     }
     await sleep(500);
@@ -155,7 +155,7 @@ const capture = async (
 ): Promise<ReadonlyArray<string>> => {
   const session = await openChrome(
     chrome,
-    `${base}/docs/blocks`,
+    `${base}/blocks`,
     viewport.width,
     viewport.height,
   );
@@ -180,7 +180,7 @@ const capture = async (
         );
       }
 
-      await session.page.goto(`${base}/docs/blocks/${slug}`);
+      await session.page.goto(`${base}/blocks/${slug}`);
       const box = await sceneBox(session.page);
       await sleep(settleMs);
 

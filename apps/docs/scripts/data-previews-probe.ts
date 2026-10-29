@@ -1,7 +1,7 @@
 /**
  * Measure the data lane's four pressing drawings in a hydrated page.
  *
- * The four previews added to `/docs/data-display` are *interactions* — a row
+ * The four previews added to `/data-display` are *interactions* — a row
  * that opens a panel, a field that reports a debounced query, two panes
  * mirrored through one offset, and a label column that falls back when a width
  * cannot paint. Their unit guards prove the rules; a server-rendered read
@@ -20,10 +20,10 @@ import { propsOfScript } from "./react-ready.ts";
 
 /** The pages this probe visits, and the drawing each one carries. */
 export const previewPages = {
-  expandable: "/docs/data-display/expandable-rows",
-  toolbar: "/docs/data-display/data-toolbar",
-  frozen: "/docs/data-display/frozen-columns",
-  keyValue: "/docs/data-display/key-value",
+  expandable: "/data-display/expandable-rows",
+  toolbar: "/data-display/data-toolbar",
+  frozen: "/data-display/frozen-columns",
+  keyValue: "/data-display/key-value",
 } as const;
 
 /**
@@ -185,7 +185,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
     return 2;
   }
 
-  const session = await openChrome(chrome, `${base}/docs`, 1280, 900);
+  const session = await openChrome(chrome, `${base}/`, 1280, 900);
   const failures: Array<string> = [];
   const check = (name: string, actual: string, want: string): void => {
     if (actual === want) console.log(`PASS ${name}: ${actual}`);

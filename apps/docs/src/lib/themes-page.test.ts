@@ -6,7 +6,7 @@ import {
 } from "../components/docs/theme-editor-logic";
 
 /**
- * `/docs/themes` teaches the editor's audit.
+ * `/themes` teaches the editor's audit.
  *
  * The page described the controls and said nothing about the readout, so the
  * first thing a reader sees after an edit — a line like

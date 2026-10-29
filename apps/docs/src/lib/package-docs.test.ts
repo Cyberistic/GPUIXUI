@@ -32,7 +32,7 @@ const mdxFiles = (dir: URL): ReadonlyArray<string> =>
 const read = (dir: URL, name: string): string =>
   readFileSync(new URL(name, dir), "utf8");
 
-/** Every `.mdx` under `content/docs`, as a URL path (`/docs/foo/bar`). */
+/** Every `.mdx` under `content/docs`, as a URL path (`/foo/bar`). */
 const sitePages = (dir: URL, slugs: ReadonlyArray<string> = []): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     if (entry.isDirectory()) {
@@ -41,7 +41,7 @@ const sitePages = (dir: URL, slugs: ReadonlyArray<string> = []): string[] =>
     if (!entry.name.endsWith(".mdx")) return [];
     const name = entry.name.replace(/\.mdx$/, "");
     const path = name === "index" ? slugs : [...slugs, name];
-    return [`/docs${path.length === 0 ? "" : `/${path.join("/")}`}`];
+    return [`/${path.join("/")}`];
   });
 
 /** A plain YAML scalar may not begin with one of these. */
@@ -119,11 +119,11 @@ describe("the package docs collections", () => {
     );
   });
 
-  it("claim one route each, under /docs", () => {
+  it("claim one route each, at the root", () => {
     const routes = packageCollections.map((collection) => collection.route);
 
     expect(new Set(routes).size).toBe(routes.length);
-    expect(routes.every((route) => route.startsWith("/docs/"))).toBe(true);
+    expect(routes.every((route) => route.startsWith("/"))).toBe(true);
   });
 
   it("fill a section that the site defines", () => {
@@ -186,39 +186,39 @@ describe("the package docs collections", () => {
    * design — and the list must stay true in both directions.
    */
   const curated = new Set([
-    "/docs/components/accordion",
-    "/docs/components/alert",
-    "/docs/components/avatar",
-    "/docs/components/badge",
-    "/docs/components/breadcrumb",
-    "/docs/components/card",
-    "/docs/components/calendar",
-    "/docs/components/carousel",
-    "/docs/components/collapsible",
-    "/docs/components/color-picker",
-    "/docs/components/combobox",
-    "/docs/components/command-menu",
-    "/docs/components/confirm-dialog",
-    "/docs/components/context-menu",
-    "/docs/components/date-picker",
-    "/docs/components/dialog",
-    "/docs/components/drawer",
-    "/docs/components/dropdown-menu",
-    "/docs/components/empty-state",
-    "/docs/components/field",
-    "/docs/components/form",
-    "/docs/components/inline-edit",
-    "/docs/components/list",
-    "/docs/components/navigation-menu",
-    "/docs/components/pagination",
-    "/docs/components/popover",
-    "/docs/components/search-input",
-    "/docs/components/stepper",
-    "/docs/components/tag-input",
-    "/docs/components/tabs",
-    "/docs/components/time-picker",
-    "/docs/components/timeline",
-    "/docs/components/toast",
+    "/components/accordion",
+    "/components/alert",
+    "/components/avatar",
+    "/components/badge",
+    "/components/breadcrumb",
+    "/components/card",
+    "/components/calendar",
+    "/components/carousel",
+    "/components/collapsible",
+    "/components/color-picker",
+    "/components/combobox",
+    "/components/command-menu",
+    "/components/confirm-dialog",
+    "/components/context-menu",
+    "/components/date-picker",
+    "/components/dialog",
+    "/components/drawer",
+    "/components/dropdown-menu",
+    "/components/empty-state",
+    "/components/field",
+    "/components/form",
+    "/components/inline-edit",
+    "/components/list",
+    "/components/navigation-menu",
+    "/components/pagination",
+    "/components/popover",
+    "/components/search-input",
+    "/components/stepper",
+    "/components/tag-input",
+    "/components/tabs",
+    "/components/time-picker",
+    "/components/timeline",
+    "/components/toast",
   ]);
 
   it("never shadow a page outside the curated overrides", () => {
@@ -283,7 +283,7 @@ describe("the package docs collections", () => {
     // serve (`curated-twins.ts`). Either address answers the same component.
     const index = read(new URL("primitives/", docsDir), "index.mdx");
     const linked = new Set(
-      [...index.matchAll(/\]\((\/docs\/[a-z0-9/-]+)\)/g)].flatMap((match) =>
+      [...index.matchAll(/\]\((\/[a-z0-9/-]+)\)/g)].flatMap((match) =>
         match[1] === undefined ? [] : [match[1]],
       ),
     );
@@ -317,7 +317,7 @@ describe("the package docs collections", () => {
     expect(count, "the set's name list is empty").toBeGreaterThan(40);
 
     const index = read(new URL("primitives/", docsDir), "index.mdx");
-    const row = /^\| \[Icons\]\(\/docs\/icons\/icon\) \| (.+) \|$/m.exec(index);
+    const row = /^\| \[Icons\]\(\/icons\/icon\) \| (.+) \|$/m.exec(index);
     expect(row?.[1] ?? "").toContain(`${count} monochrome icons`);
 
     // The page it links prints the same number in the sentence a search

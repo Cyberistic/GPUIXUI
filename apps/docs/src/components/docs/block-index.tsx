@@ -29,7 +29,7 @@ export function BlockIndex() {
           />
           <div className="gx-block-card-body">
             <h3 className="gx-block-card-title">
-              <a href={`/docs/blocks/${block.slug}`}>{block.title}</a>
+              <a href={`/blocks/${block.slug}`}>{block.title}</a>
             </h3>
             <p className="gx-block-card-desc">{block.description}</p>
             <span className="gx-block-card-meta">

@@ -95,8 +95,8 @@ export const llmsSectionOrder: ReadonlyArray<string> = [
 
 /** The site's own folders that are not a package's route, and their section. */
 const siteSections: ReadonlyArray<{ prefix: string; name: string }> = [
-  { prefix: "/docs/blocks", name: "Blocks" },
-  { prefix: "/docs/workspace", name: "Workspace" },
+  { prefix: "/blocks", name: "Blocks" },
+  { prefix: "/workspace", name: "Workspace" },
 ];
 
 const sectionRules = [

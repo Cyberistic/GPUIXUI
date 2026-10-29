@@ -65,7 +65,7 @@ const walk = (
     return [
       {
         ...readFile(new URL(entry.name, dir).pathname),
-        url: `/docs${path.length === 0 ? "" : `/${path.join("/")}`}`,
+        url: `/${path.join("/")}`,
       },
     ];
   });

@@ -32,7 +32,7 @@ import { findChrome, openChrome } from "./chrome-session.ts";
 import { firstReady } from "./react-ready.ts";
 
 /** The page a preview server serves, and the toggle every docs page carries. */
-export const defaultUrl = "http://localhost:4175/docs/components/button";
+export const defaultUrl = "http://localhost:4175/components/button";
 
 /** The accessible name Fumadocs gives the docs theme toggle. */
 export const toggleLabel = "Toggle Theme";

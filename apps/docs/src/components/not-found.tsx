@@ -20,7 +20,7 @@ interface Destination {
 
 const destinations: ReadonlyArray<Destination> = [
   {
-    href: docsRoute,
+    href: `${docsRoute}/introduction`,
     label: "Introduction",
     description: "What the library is, and what it deliberately is not.",
   },

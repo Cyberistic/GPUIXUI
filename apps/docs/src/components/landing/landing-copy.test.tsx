@@ -80,9 +80,7 @@ describe("the landing's authored looks", () => {
 
   it("sends every card to the look picker", () => {
     expect(
-      cards.every((card) =>
-        card.includes('href="/docs/theming#the-look-picker"'),
-      ),
+      cards.every((card) => card.includes('href="/theming#the-look-picker"')),
     ).toBe(true);
   });
 

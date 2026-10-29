@@ -2,7 +2,7 @@
  * The runtime's closed `aria-*` set, as the capability record and the curated
  * pages state it.
  *
- * Two guards read this: `/docs/accessibility` prints the budget as a table, and
+ * Two guards read this: `/accessibility` prints the budget as a table, and
  * every curated page's `## Limitations` repeats the part of it its control
  * depends on. Both read the record's one row, so the parser lives here rather
  * than twice.

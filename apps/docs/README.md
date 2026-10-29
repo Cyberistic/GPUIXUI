@@ -5,7 +5,7 @@ Worker by `packages/deploy/alchemy.run.docs.ts` at
 **https://gpuixui.sudokw.com**. It documents the native library; it does not
 reimplement it. The browser site never pretends to be GPUix.
 
-The landing page lives at `/`. Documentation lives under `/docs` and follows the
+The landing page lives at `/`. Documentation lives at the root and follows the
 shadcn/ui anatomy: a sectioned sidebar, Preview/Code tabs, an install block, the
 page TOC and a previous/next pager. `docs/preview-strategy.md` at the repo root is
 the policy a page follows: every browser rendering is labelled as one, the source
@@ -17,7 +17,7 @@ Every page is an MDX file; the paths below are relative to `content/docs/`.
 `src/lib/readme-ledger.test.ts` holds this list to the directory.
 
 ```
-index.mdx                    Introduction (served at /docs)
+introduction.mdx             Introduction (served at /introduction)
 installation.mdx             Requirements, nub, first component, terminal mode
 getting-started.mdx          A first screen: theme, card, state, run it natively
 architecture.mdx             The package graph, the recipe pipeline, where a change goes
@@ -112,8 +112,9 @@ src/router.tsx                      The router instance
 src/routes/__root.tsx               The document shell, icons and the Fumadocs provider
 src/routes/index.tsx                The landing page at /
 src/routes/live.tsx                 /live, the real GPUix surface (whole page)
-src/routes/docs/index.tsx           /docs, the Introduction
-src/routes/docs/$.tsx               Every other docs page, from either collection
+src/routes/$.tsx                    Every docs page, from either collection
+src/routes/docs/index.tsx           The old / root, a 301 to /
+src/routes/docs/$.tsx               The old /<path>, a 301 to /<path>
 src/routes/api/search.ts            Fumadocs search endpoint over every mounted collection
 src/routes/sitemap[.]xml.ts         /sitemap.xml, generated from every collection
 src/routes/llms[.]txt.ts            /llms.txt, the page index an agent reads instead of the sidebar
@@ -280,30 +281,30 @@ src/components/docs/dependency-strip.tsx  The generated "Built on" line: the mod
 src/components/docs/keyboard-strip.tsx    The generated keyboard contract: the keys a component handles, read from its own modules
 src/components/docs/related-strip.tsx     The generated related-component links a package page ends with
 src/components/docs/native-run-note.tsx   The note above a package page: the playground command and its page
-src/components/docs/playground-scenarios.tsx The probe catalogue on /docs/playground, grouped by capability
+src/components/docs/playground-scenarios.tsx The probe catalogue on /playground, grouped by capability
 src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
 src/components/docs/inventory-cells.tsx   The status badge and note cell the generated component tables share
-src/components/docs/inventory-table.tsx   The whole inventory on /docs/status, grouped by the headings in COMPONENTS.md
+src/components/docs/inventory-table.tsx   The whole inventory on /status, grouped by the headings in COMPONENTS.md
 src/components/docs/lane-pages.tsx        The generated page list on the data and workspace lanes, each package linked to its section entry
 src/components/docs/collection-index.tsx The list a collection route serves when the package writes no landing page
-src/components/docs/component-index.tsx   The 3-column tile grid on /docs/components and its URL filter
+src/components/docs/component-index.tsx   The 3-column tile grid on /components and its URL filter
 src/components/docs/icon-gallery.tsx      Every icon the set publishes, from its own markup
 src/components/docs/use-index-query.ts    A list filter carried in `?q=`, shared by both indexes
-src/components/docs/examples-index.tsx    The generated registry on /docs/examples
+src/components/docs/examples-index.tsx    The generated registry on /examples
 src/components/docs/api-reference.tsx     The entry-point table and the symbol index
-src/components/docs/package-table.tsx     The package table on /docs/architecture, generated from the manifests
+src/components/docs/package-table.tsx     The package table on /architecture, generated from the manifests
 src/components/docs/package-graph.tsx     The direction diagram below it, from the graph's chains
 src/components/docs/type-scale.tsx        The typography specimen, from the theme
 src/components/docs/theme-matrix.tsx      The built-in themes, generated from the token package
-src/components/docs/token-scales.tsx      The spacing/radius/density specimens on /docs/theming
-src/components/docs/style-reference.tsx   The class reference on /docs/styling, compiled from the theme
+src/components/docs/token-scales.tsx      The spacing/radius/density specimens on /theming
+src/components/docs/style-reference.tsx   The class reference on /styling, compiled from the theme
 src/components/docs/platform-toggle.tsx   The platform and palette switch, and the shared preview provider
-src/components/docs/look-picker.tsx       The authored looks, as a control on /docs/theming
+src/components/docs/look-picker.tsx       The authored looks, as a control on /theming
 src/components/docs/platform-style-source.tsx The copyable platform style, generated from the package's own table
 src/components/docs/license-table.tsx     LICENSES/*.md, rendered
 src/components/docs/patterns.tsx          The pattern workflows and the chooser
-src/components/docs/series-swatches.tsx   The theme's categorical data series, on /docs/theming
+src/components/docs/series-swatches.tsx   The theme's categorical data series, on /theming
 src/components/docs/token-list.tsx       A contract's roles or surfaces, rendered from the package's array
 src/components/docs/block-index.tsx       The Blocks index, one thumbnail card per block
 src/components/docs/blocks.tsx            The block registry: Sign in, Settings, Dashboard, Dashboard management, Kanban, Settings dialog, File manager and Email inbox
@@ -403,6 +404,7 @@ src/styles/live.css                       The live surface's bar and its fallbac
 
 src/lib/docs-view.tsx               The shared docs layout and the two-collection page template
 src/lib/layout.shared.tsx           The nav chrome: brand and top-level links
+src/lib/legacy-docs.ts              The 301s a retired /docs address answers with
 src/lib/source.ts                   The Fumadocs collection for content/docs
 src/lib/doc-snippets.test-util.ts   The shared page-snippet and symbol resolve for the page guards
 src/lib/docs-pages.test-util.ts     The docs pages the two machine-document guards read from both trees
@@ -472,9 +474,9 @@ src/lib/platform-style-source.ts    A shipped platform style as the file a reade
 src/lib/platform-storage.ts         The remembered platform/look choice, per axis
 src/lib/browser-storage.ts          The browser store, and the guard that reads a refusal as absence
 src/lib/clipboard.ts                One copy call that answers an absent or refused clipboard as a failed copy
-src/lib/system-palette.ts           The desktop palette /docs/theming decodes and maps, from the shipped functions
+src/lib/system-palette.ts           The desktop palette /theming decodes and maps, from the shipped functions
 src/lib/theme-css.ts                Theme → CSS variables, shared with every preview
-src/lib/style-reference.ts          The class groups /docs/styling prints, resolved by @gpuixui/tw
+src/lib/style-reference.ts          The class groups /styling prints, resolved by @gpuixui/tw
 src/lib/code-theme.ts               The Shiki themes a code block highlights with, from the syntax palette
 src/lib/live-scene.tsx              /live's React screen, styled by the primitives' resolver
 src/lib/gpuix-native.ts             The browser entry `@gpuix/native` resolves to on /live
@@ -494,7 +496,7 @@ scripts/platform-switch-probe.ts    Presses Windows then macOS and reads every s
 scripts/docs-theme-probe.ts         Presses the docs theme toggle and holds every preview on the library's palette
 scripts/data-previews-probe.ts      Presses the data lane's four drawings and reads the panels, rows, offsets and widths back
 scripts/search-probe.ts             Presses the search dialog, types three queries and requires Enter to open the result
-scripts/theme-editor-probe.ts       Edits, audits and resets /docs/themes in a browser that refuses site data
+scripts/theme-editor-probe.ts       Edits, audits and resets /themes in a browser that refuses site data
 ```
 
 `src/routeTree.gen.ts` is generated by the TanStack Start plugin and is not
@@ -519,16 +521,16 @@ is why the route column is the collection's root.
 
 | Collection | Route | Sidebar |
 | ---------- | ----- | ------- |
-| `content/docs` | `/docs` | the curated pages |
-| `packages/primitives/docs` | `/docs/primitives/<name>` | Primitives |
-| `packages/icons/docs` | `/docs/icons/<name>` | Icons |
-| `packages/components/docs` | `/docs/components/<name>` | Components |
-| `packages/data/docs` | `/docs/data-display/<name>` | Data display |
-| `packages/editor/docs` | `/docs/editor/<name>` | Workspace |
-| `packages/files/docs` | `/docs/files/<name>` | Workspace |
-| `packages/shell/docs` | `/docs/shell/<name>` | Workspace |
-| `packages/dock/docs` | `/docs/dock/<name>` | Workspace |
-| `packages/media/docs` | `/docs/media/<name>` | Workspace |
+| `content/docs` | `/` | the curated pages |
+| `packages/primitives/docs` | `/primitives/<name>` | Primitives |
+| `packages/icons/docs` | `/icons/<name>` | Icons |
+| `packages/components/docs` | `/components/<name>` | Components |
+| `packages/data/docs` | `/data-display/<name>` | Data display |
+| `packages/editor/docs` | `/editor/<name>` | Workspace |
+| `packages/files/docs` | `/files/<name>` | Workspace |
+| `packages/shell/docs` | `/shell/<name>` | Workspace |
+| `packages/dock/docs` | `/dock/<name>` | Workspace |
+| `packages/media/docs` | `/media/<name>` | Workspace |
 
 `src/lib/page-tree.ts` merges each package's pages into its section and sorts
 the section by title, so curated and package pages read as one alphabetical lane
@@ -542,8 +544,8 @@ lanes stay collapsed.
 
 A collection's root answers too. Three packages write a landing page
 (`components`, `primitives` and `data`), and the site writes those routes
-itself; the other six write none, so `/docs/icons`, `/docs/editor`,
-`/docs/files`, `/docs/shell`, `/docs/dock` and `/docs/media` answered **404**
+itself; the other six write none, so `/icons`, `/editor`,
+`/files`, `/shell`, `/dock` and `/media` answered **404**
 while every page under them answered — a dead end for a reader who trimmed an
 address or followed a breadcrumb.
 
@@ -641,20 +643,20 @@ page's table of contents carries.
 
 No page restates what the code already says:
 
-- **Examples** (`/docs/examples`) is built from `packages/*/examples/*.example.tsx`
+- **Examples** (`/examples`) is built from `packages/*/examples/*.example.tsx`
   by `src/lib/examples-data.ts`. The row's summary is the file's own header, so
   a new example appears with no docs change and a deleted one leaves no dead
   row. The site shows the source and never renders an example in the browser:
   an example is a GPUix screen, and a DOM drawing of it would be the fake
   preview the preview strategy rules out.
-- **Reference** (`/docs/reference`) publishes the entry points from each
+- **Reference** (`/reference`) publishes the entry points from each
   package's `exports` map, then the symbols behind them. The symbol index needs
   the workspace source, which is far too large for a browser bundle, so
   `plugins/public-symbols-plugin.ts` reads it once at build time and exposes a
   virtual module; `src/lib/public-symbols-data.ts` reads that module and the
   page renders one table. The symbol filter travels in `?q=` like the component
   index's, so a narrowed view can be linked.
-- **Component index** (`/docs/components`) is a three-column tile grid of every
+- **Component index** (`/components`) is a three-column tile grid of every
   composed page, read from its frontmatter and its first
   `<ComponentPreview>` (`component-index.ts`), so the index cannot advertise a
   page that does not exist and a new page appears without a docs edit. A curated
@@ -663,23 +665,23 @@ No page restates what the code already says:
   strip prints, so a component the runtime supports only in part is marked in
   the grid and `partial` is a query. The grid is three across on desktop, two on
   tablet and one on a phone.
-- **Lane pages** (`/docs/layouts`, `/docs/workspace`, `/docs/data-display`) get
+- **Lane pages** (`/layouts`, `/workspace`, `/data-display`) get
   their rows from the tier tables of `COMPONENTS.md` through `<LaneTable>`, so a
   page cannot call a row shipped while the inventory says `todo`.
-- **Implementation status** (`/docs/status`) renders every row grouped by the
+- **Implementation status** (`/status`) renders every row grouped by the
   headings the document uses — the five tiers and the plan 600 animated
   catalogue, which is not a sixth tier — with the group counts and a link to the
   page that publishes each row (`src/components/docs/inventory-table.tsx`,
   `src/lib/inventory-page.ts`).
 - **Typography and Theming** render specimens from the theme itself
   (`<TypeScale>`, `<TokenScales>`), so a token edit moves the page with it.
-- **Styling** (`/docs/styling`) compiles its class reference through
+- **Styling** (`/styling`) compiles its class reference through
   `@gpuixui/tw` against the resolved platform theme (`src/lib/style-reference.ts`),
   so every printed height, corner and refusal reason is the release's own answer
   and the platform switch repaints the table. The docs suite parses the
   compiler's vocabulary out of `packages/tw/src/utilities.ts`, so a utility it
   accepts without a row fails the docs until it is taught.
-- **License** (`/docs/license`) renders `LICENSES/*.md` through
+- **License** (`/license`) renders `LICENSES/*.md` through
   `<LicenseInventory>`; a record added beside the code appears with no docs
   change.
 - **Sitemap** (`/sitemap.xml`) is generated per request from the same
@@ -689,7 +691,7 @@ No page restates what the code already says:
 - **Machine index** (`/llms.txt`) is generated from those same collections
   (`src/lib/llms.ts`), one line per page with its description, grouped by the
   sidebar's sections. It lists the docs pages only: the landing and `/live` are
-  routes a reader opens, not pages a model needs to read. `/docs/reference` links
+  routes a reader opens, not pages a model needs to read. `/reference` links
   it.
 - **Whole document** (`/llms-full.txt`) prints every page's own Markdown in the
   index's order (`src/lib/llms-full.ts`), so a reader that will not open the
@@ -753,7 +755,7 @@ twelve images rather than twelve live compositions. A capture is one rendering
 and one palette, so a tile does not repaint with the switch; the block page it
 links to does. The captures are made from the blocks' own pages, never drawn for
 the index:
-`nub run --filter @gpuixui/docs blocks:thumbnails` opens `/docs/blocks`, reads
+`nub run --filter @gpuixui/docs blocks:thumbnails` opens `/blocks`, reads
 the tile `src` list the index prints, captures each page's `.gx-block-stage` top
 at 16:10 and writes it in place. A new block needs one run, and
 `block-index.test.tsx` fails on a registered block whose image is missing or is
@@ -809,14 +811,14 @@ through `applyStyle`. The choice is carried in
 `?platform=…&mode=…&look=…` and remembered in local storage, and every preview
 renders on a `PreviewSurface` that applies the resolved theme's variables,
 `data-platform`, `data-mode` and `data-look`. A preview therefore paints the
-library's roles, radii, families and density, not a docs palette. `/docs/theming`
+library's roles, radii, families and density, not a docs palette. `/theming`
 mounts `components/docs/look-picker.tsx` — the page's own control, not a sidebar
 group — so a reader presses a look and the specimens beside it repaint; it is
 documented there under **The look picker**.
 
 ## The theme editor
 
-`/docs/themes` mounts `<ThemeEditor>`, which edits the twelve shadcn-core roles,
+`/themes` mounts `<ThemeEditor>`, which edits the twelve shadcn-core roles,
 `radius.md` and the `sans` family for each mode, previews them through the same
 CSS bridge, and copies a `createTheme` module in the shape
 `@gpuixui/tokens` consumes. Its state is the **pins** a reader set, resolved over
@@ -883,7 +885,7 @@ tree. `src/lib/page-edit.ts` derives the path from the same `origin` and `path`
 the loader hands the frame; `src/components/docs/edit-page.tsx` is the footer
 line. No page writes its own path, so renaming a file cannot leave the link
 behind: a curated page keeps its URL over the package page it shadows, so
-`/docs/components/dialog` edits `apps/docs/content/docs/components/dialog.mdx`,
+`/components/dialog` edits `apps/docs/content/docs/components/dialog.mdx`,
 not the package's displaced copy.
 
 `page-edit.test.ts` walks both collections, resolves every page the site serves
@@ -921,8 +923,8 @@ from the same inventory the sitemap advertises — this site's own collection, t
 nine mounted package collections, the indexes a collection route generates, and
 the landing — and `vite.config.ts` hands it to TanStack Start's prerender. Each
 path is written as `dist/client/<path>/index.html`; `packages/deploy` sets the
-asset layer's `htmlHandling` to `drop-trailing-slash`, so `/docs/components/button`
-is answered by that file with a 200, `/docs/components/button/` redirects to it,
+asset layer's `htmlHandling` to `drop-trailing-slash`, so `/components/button`
+is answered by that file with a 200, `/components/button/` redirects to it,
 and the Worker is not invoked at all (`runWorkerFirst` stays off).
 
 The three machine documents are prerendered with the pages: `/sitemap.xml`,

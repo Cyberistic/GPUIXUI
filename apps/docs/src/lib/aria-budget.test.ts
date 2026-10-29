@@ -8,7 +8,7 @@ import {
 
 /**
  * The pinned runtime publishes exactly seven `aria-*` attributes, and the
- * capability record, `/docs/accessibility` and the component pages all state
+ * capability record, `/accessibility` and the component pages all state
  * that closed set.
  *
  * Nothing read the typings themselves, so a `@gpuix/native` bump that published

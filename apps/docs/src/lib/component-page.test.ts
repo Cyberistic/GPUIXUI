@@ -686,7 +686,7 @@ describe("the curated component pages", () => {
   it("documents the payload every onActivate hands over", () => {
     // Bug guarded: `ButtonProps.onActivate` was widened to carry the event that
     // caused the press — the runtime's click point, or the key that activated —
-    // and `/docs/components/button` still typed it `() => void`, so a consumer
+    // and `/components/button` still typed it `() => void`, so a consumer
     // reading the table could not know a payload existed before binding a
     // handler that needed it. Every shipped `onActivate` takes one argument (the
     // event on an action, the row's value on a list), so a nullary cell is a
@@ -727,7 +727,7 @@ describe("the curated component pages", () => {
   it("documents every prop the component each table speaks for declares", () => {
     // Bug guarded: the case above resolves the names a table prints, so a
     // renamed prop fails — but a prop the table omits is silent, and
-    // `/docs/components/button` listed `onClick` and `style` while `ButtonProps`
+    // `/components/button` listed `onClick` and `style` while `ButtonProps`
     // also carried `className`, the five interaction handlers and the tooltip
     // trigger's `onMouseEnter`/`onMouseLeave`. The package pages are held to
     // this rule by `packages/primitives/src/docs.test.ts` §The primitives API

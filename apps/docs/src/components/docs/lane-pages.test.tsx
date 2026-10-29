@@ -17,7 +17,7 @@ import { LanePages } from "./lane-pages";
 /**
  * The lane pages' shipped-page list.
  *
- * Bug guarded: `/docs/data-display` and `/docs/workspace` are the pages a
+ * Bug guarded: `/data-display` and `/workspace` are the pages a
  * reader arrives on when the question is "what does this lane ship", and both
  * answered with a hand-written list. The data lane's table had lost `Table
  * selection`, `Table sorting` and `Column configuration`, and the workspace
@@ -129,9 +129,9 @@ describe("the lane page list", () => {
     // sorting and column configuration to the sidebar and nothing linked them.
     const markup = render("data-display");
 
-    expect(markup).toContain('href="/docs/data-display/table-selection"');
-    expect(markup).toContain('href="/docs/data-display/table-sorting"');
-    expect(markup).toContain('href="/docs/data-display/column-configuration"');
+    expect(markup).toContain('href="/data-display/table-selection"');
+    expect(markup).toContain('href="/data-display/table-sorting"');
+    expect(markup).toContain('href="/data-display/column-configuration"');
   });
 
   it("names all five workspace packages, not only the dock and shell", () => {
@@ -149,8 +149,8 @@ describe("the lane page list", () => {
       "@gpuixui/media",
     ]);
     expect(packages.filter((name) => !markup.includes(name))).toEqual([]);
-    expect(markup).toContain('href="/docs/media/image-preview"');
-    expect(markup).toContain('href="/docs/editor/code-editor"');
+    expect(markup).toContain('href="/media/image-preview"');
+    expect(markup).toContain('href="/editor/code-editor"');
   });
 
   it("links each package's name to the section entry it opens", () => {
@@ -173,17 +173,17 @@ describe("the lane page list", () => {
     const data = render("data-display");
     const workspace = render("workspace");
 
-    expect(data).not.toContain('href="/docs/dock/');
-    expect(data).not.toContain('href="/docs/media/');
-    expect(workspace).not.toContain('href="/docs/data-display/');
-    expect(workspace).not.toContain('href="/docs/components/dialog"');
+    expect(data).not.toContain('href="/dock/');
+    expect(data).not.toContain('href="/media/');
+    expect(workspace).not.toContain('href="/data-display/');
+    expect(workspace).not.toContain('href="/components/dialog"');
   });
 
   it("groups only the lane's pages and drops a collection with none", () => {
     const rows = [
-      row("/docs/data-display/charts", "Data display"),
-      row("/docs/components/dialog", "Components"),
-      row("/docs/workspace/dock-layout", "Workspace"),
+      row("/data-display/charts", "Data display"),
+      row("/components/dialog", "Components"),
+      row("/workspace/dock-layout", "Workspace"),
     ];
 
     const groups = lanePageGroups(rows, "data-display");

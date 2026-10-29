@@ -37,7 +37,7 @@ const mounted = (path: string): boolean =>
   packagePreviews.some(
     (row) =>
       row.origin === "data" &&
-      `/docs/data-display/${row.path.replace(/\.mdx$/, "")}` === path,
+      `/data-display/${row.path.replace(/\.mdx$/, "")}` === path,
   );
 
 describe("the data previews probe", () => {

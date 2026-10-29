@@ -35,7 +35,7 @@ const view = readFileSync(
 
 describe("the keyboard strip", () => {
   it("prints the keys and what each does", () => {
-    const markup = strip("/docs/components/dialog");
+    const markup = strip("/components/dialog");
 
     expect(markup).toContain("Escape");
     expect(markup).toContain("dismisses the topmost overlay");
@@ -45,14 +45,14 @@ describe("the keyboard strip", () => {
 
   it("names the module the keys were read from", () => {
     // The reader should be able to check the strip against the handler.
-    expect(strip("/docs/components/dialog")).toContain("modal.ts");
-    expect(strip("/docs/components/time-picker")).toContain("time-picker.tsx");
+    expect(strip("/components/dialog")).toContain("modal.ts");
+    expect(strip("/components/time-picker")).toContain("time-picker.tsx");
   });
 
   it("names the runtime a wrapper's keys belong to", () => {
     // `Select` handles none of its keys itself; the strip says which module the
     // runtime owns rather than implying the wrapper implements them.
-    const markup = decode(strip("/docs/components/select"));
+    const markup = decode(strip("/components/select"));
     expect(markup).toContain("select.js");
     expect(markup).toContain("in the pinned GPUix runtime");
   });
@@ -74,17 +74,17 @@ describe("the keyboard strip", () => {
   });
 
   it("stays silent on a page that writes its own section", () => {
-    const contract = keyboardContractFor("/docs/components/dialog");
+    const contract = keyboardContractFor("/components/dialog");
     expect(contract).toBeDefined();
 
     // The page's own headings arrive as the table of contents it built.
-    expect(strip("/docs/components/dialog", ["#keyboard"])).toBe("");
-    expect(strip("/docs/components/dialog", ["#usage", "#api"])).not.toBe("");
+    expect(strip("/components/dialog", ["#keyboard"])).toBe("");
+    expect(strip("/components/dialog", ["#usage", "#api"])).not.toBe("");
   });
 
   it("renders nothing on a page no contract names", () => {
-    expect(strip("/docs/components/card")).toBe("");
-    expect(strip("/docs/primitives")).toBe("");
+    expect(strip("/components/card")).toBe("");
+    expect(strip("/primitives")).toBe("");
   });
 
   it("is mounted on both frames", () => {

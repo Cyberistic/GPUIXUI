@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
- * `/docs/dark-mode` said the application owns the mode and passed `getTheme` to
+ * `/dark-mode` said the application owns the mode and passed `getTheme` to
  * the provider — nothing more. `@gpuixui/tokens` also **follows the desktop's
  * palette** (`paletteToTokens`, `paletteMode`, `watchSystemTheme`,
  * `decodeOmarchyPalette`) and reports what a stored theme lost

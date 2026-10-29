@@ -11,8 +11,8 @@ import {
  * The built-in themes, generated from the token package.
  *
  * The four themes the library ships were written out by hand, twice — a table
- * of `getTheme` calls on `/docs/dark-mode` and a table of names and exports on
- * `/docs/theming` — and nothing held either one to `@gpuixui/tokens`: a fifth
+ * of `getTheme` calls on `/dark-mode` and a table of names and exports on
+ * `/theming` — and nothing held either one to `@gpuixui/tokens`: a fifth
  * theme, a renamed export or a new contrast variant would have left both pages
  * describing a library that no longer exists.
  *

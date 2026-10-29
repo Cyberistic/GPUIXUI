@@ -12,8 +12,8 @@ import { collectionByOrigin, packageCollections } from "./collection-routes";
 /**
  * The index a collection serves at its own route.
  *
- * The bug guarded: `/docs/icons`, `/docs/editor`, `/docs/files`, `/docs/shell`,
- * `/docs/dock` and `/docs/media` answered **404** while every page under them
+ * The bug guarded: `/icons`, `/editor`, `/files`, `/shell`,
+ * `/dock` and `/media` answered **404** while every page under them
  * answered, because only three packages write an `index.mdx`. The fix derives
  * the page from the collection, so the failures are a collection with neither a
  * landing page nor the metadata that generates one (a dead section route) and
@@ -37,7 +37,7 @@ const siteIndexes = (
       ]);
     }
     if (entry.name !== "index.mdx") return [];
-    return [`/docs${slugs.length === 0 ? "" : `/${slugs.join("/")}`}`];
+    return [`/${slugs.join("/")}`];
   });
 
 interface Frontmatter {
@@ -147,7 +147,7 @@ describe("the index a collection route serves", () => {
   });
 
   it("lists nothing for a route a site page or a package's own index owns", () => {
-    const page = { title: "Probe", description: "A page.", url: "/docs/x" };
+    const page = { title: "Probe", description: "A page.", url: "/x" };
 
     // The components, primitives and data lanes open with a site-written page,
     // so generating a second one would describe a route nobody serves.

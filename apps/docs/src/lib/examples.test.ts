@@ -50,7 +50,7 @@ describe("the example registry", () => {
   });
 
   it("links every row to a page that exists", () => {
-    // A lane home is a page the site writes (`/docs/data-display`), so the set
+    // A lane home is a page the site writes (`/data-display`), so the set
     // is the component pages, the package collections and every declared home.
     const routes = new Set([
       ...componentIndex.map((entry) => entry.url),
@@ -138,14 +138,12 @@ describe("the summary parser", () => {
 
 describe("matching an example to its page", () => {
   it("prefers the exact page name", () => {
-    expect(pageFor("card", "/docs/components", componentIndex)?.title).toBe(
-      "Card",
-    );
+    expect(pageFor("card", "/components", componentIndex)?.title).toBe("Card");
   });
 
   it("accepts the one page that extends the id", () => {
-    expect(pageFor("otp", "/docs/primitives", componentIndex)?.url).toBe(
-      "/docs/primitives/otp-field",
+    expect(pageFor("otp", "/primitives", componentIndex)?.url).toBe(
+      "/primitives/otp-field",
     );
   });
 
@@ -154,7 +152,7 @@ describe("matching an example to its page", () => {
       {
         title: "A",
         description: "",
-        url: "/docs/primitives/a-one",
+        url: "/primitives/a-one",
         section: "Primitives",
         parts: [],
         props: [],
@@ -167,7 +165,7 @@ describe("matching an example to its page", () => {
       {
         title: "B",
         description: "",
-        url: "/docs/primitives/a-two",
+        url: "/primitives/a-two",
         section: "Primitives",
         parts: [],
         props: [],
@@ -178,7 +176,7 @@ describe("matching an example to its page", () => {
         verdict: undefined,
       },
     ];
-    expect(pageFor("a", "/docs/primitives", pages)).toBeUndefined();
+    expect(pageFor("a", "/primitives", pages)).toBeUndefined();
   });
 });
 

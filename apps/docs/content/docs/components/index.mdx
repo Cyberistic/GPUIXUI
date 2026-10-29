@@ -6,7 +6,7 @@ description: Every component the library ships, and what its page tells you.
 export const playgroundCommand = "nub run dev:playground";
 
 The composed layer: dialogs, menus, pickers, tables and the rest, built from the
-[primitives](/docs/primitives). Every card below is a page — its own browser
+[primitives](/primitives). Every card below is a page — its own browser
 rendering, install block, API table and the real source. The filter matches a
 page's name, its purpose, **the parts it documents**, **the props and prop
 types its API table declares**, **the limits it records** and **its inventory
@@ -14,8 +14,8 @@ verdict**. So `DialogFooter` finds the dialog, `onCheckedChange` finds the
 switch, `StateStyle` finds every page whose props take it, `aria-orientation`
 finds the tabs, `preview` finds the pages that open with a browser rendering,
 and `partial` finds every component the runtime supports only in part. The lower
-lanes have their own maps: [Primitives](/docs/primitives), and the
-`@gpuixui/data` lane at [Data display](/docs/data-display). A filter that finds
+lanes have their own maps: [Primitives](/primitives), and the
+`@gpuixui/data` lane at [Data display](/data-display). A filter that finds
 nothing here names the lower lane that does hold the query, so searching for a
 primitive from this page is a link rather than a dead end.
 
@@ -73,8 +73,8 @@ The mark is not written by hand: the verdict comes from the `COMPONENTS.md` row,
 A section that does not apply is left out rather than faked: a leaf component has
 no Composition, and a page whose runtime facts are all measured elsewhere still
 states its own limits. The facts a page does not repeat are shared:
-[Accessibility](/docs/accessibility) carries the runtime's ARIA budget and the
-pressable-target floors, and [Theming](/docs/theming) carries the token roles and
+[Accessibility](/accessibility) carries the runtime's ARIA budget and the
+pressable-target floors, and [Theming](/theming) carries the token roles and
 the platform switch.
 
 ## The platform looks
@@ -82,7 +82,7 @@ the platform switch.
 Every preview on this site renders through the **Platform** switch at the foot
 of the sidebar: macOS, Linux, Windows or Default. The switch resolves a real
 `@gpuixui/tokens` theme, and the choice travels in the URL
-(`?platform=win32`), so a link shows what you saw. [Theming](/docs/theming#platform-styles)
+(`?platform=win32`), so a link shows what you saw. [Theming](/theming#platform-styles)
 documents what each variant changes today.
 
 ## Previews are browser renderings
@@ -91,7 +91,7 @@ The components render through GPUix, not the DOM. A preview shows geometry,
 palette and states in a browser and says so on the page; it is never the
 authority. To run the real component, open the companion playground with
 <code>{playgroundCommand}</code> — the [native playground
-page](/docs/playground) lists what it mounts.
+page](/playground) lists what it mounts.
 
 <Callout type="warn" title="Status is per component, not per page">
   A page existing does not mean the component is finished. `COMPONENTS.md` holds

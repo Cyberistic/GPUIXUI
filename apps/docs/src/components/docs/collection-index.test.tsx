@@ -8,11 +8,11 @@ import type { CollectionIndexView } from "@/lib/collection-index";
  *
  * The page is generated, so nothing in MDX can hold it: a row that lost its
  * link, its sentence or its count would be a dead end in a section a reader
- * opened from the address bar. The fixture is the shape `/docs/media` serves.
+ * opened from the address bar. The fixture is the shape `/media` serves.
  */
 
 const media: CollectionIndexView = {
-  url: "/docs/media",
+  url: "/media",
   title: "Media surfaces",
   description: "Image preview, upload, crop and QR surfaces.",
   packageName: "@gpuixui/media",
@@ -20,12 +20,12 @@ const media: CollectionIndexView = {
     {
       title: "FileUpload",
       description: "A queue of files with per-file state, progress and retry.",
-      url: "/docs/media/file-upload",
+      url: "/media/file-upload",
     },
     {
       title: "QRCode",
       description: "A QR symbol the caller owns the data for.",
-      url: "/docs/media/qr-code",
+      url: "/media/qr-code",
     },
   ],
 };
@@ -49,14 +49,14 @@ describe("the generated collection index", () => {
   it("says one page in the singular", () => {
     const icons: CollectionIndexView = {
       ...media,
-      url: "/docs/icons",
+      url: "/icons",
       title: "Icon set",
       packageName: "@gpuixui/icons",
       pages: [
         {
           title: "Icon",
           description: "One glyph, its geometry and its naming rule.",
-          url: "/docs/icons/icon",
+          url: "/icons/icon",
         },
       ],
     };

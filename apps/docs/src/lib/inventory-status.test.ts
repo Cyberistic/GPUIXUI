@@ -148,18 +148,18 @@ describe("the status a package page reports", () => {
   it("reports the row the page's own package ships", () => {
     // Bug guarded: `@gpuixui/data` and `@gpuixui/files` each ship a
     // `PropertyPanel`, so both mounted pages carry the title "Property
-    // panels". The join was the title alone, so `/docs/files/property-panel`
+    // panels". The join was the title alone, so `/files/property-panel`
     // reported the **data** package's row: a reader was shown another
     // component's status, and the files panel's two rows were credited to a
     // page that does not document them. The address is the identity the two
     // pages do not share.
     const data = statusForPage(inventory, {
       title: "Property panels",
-      url: "/docs/data-display/property-panel",
+      url: "/data-display/property-panel",
     });
     const files = statusForPage(inventory, {
       title: "Property panels",
-      url: "/docs/files/property-panel",
+      url: "/files/property-panel",
     });
 
     expect(data.kind === "row" && data.row.name).toBe("Property panels");
@@ -167,7 +167,7 @@ describe("the status a package page reports", () => {
     expect(
       rowsForPage(inventory, {
         title: "Property panels",
-        url: "/docs/files/property-panel",
+        url: "/files/property-panel",
       }).map((row) => row.name),
     ).toEqual(["Inspector panels", "Property editors"]);
   });

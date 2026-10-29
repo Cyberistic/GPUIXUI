@@ -174,7 +174,7 @@ const mountedPages = (): ReadonlySet<string> => {
 
   return new Set(
     [
-      ...site("apps/docs/content/docs", "/docs"),
+      ...site("apps/docs/content/docs", ""),
       ...packageCollections.flatMap((collection) =>
         readdirSync(join(root, collection.dir))
           .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")

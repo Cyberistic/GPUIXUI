@@ -9,7 +9,7 @@ import { LookPickerBody } from "./look-picker";
  * The authored-look picker.
  *
  * The sidebar switch is the mission's four platform names and deliberately has
- * no look group; `/docs/theming` carries this control instead. The markup guard
+ * no look group; `/theming` carries this control instead. The markup guard
  * is the button is a real button with the look's own label and the pressed one
  * marked — a picker that painted a fixed style or offered a name the library
  * does not ship would still render.

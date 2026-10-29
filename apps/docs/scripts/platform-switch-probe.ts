@@ -11,7 +11,7 @@
  * its `data-platform`, the `--control-height-md` the bridge wrote and the
  * address bar a copied link would carry.
  *
- * It then opens `/docs/theming`, presses an **authored look** and reads the
+ * It then opens `/theming`, presses an **authored look** and reads the
  * surface's `data-look`, the `--background` the bridge wrote and `?look=` — the
  * look picker is the page's control, not a sidebar group, so it needs its own
  * press path.
@@ -41,11 +41,11 @@ import { findChrome, openChrome } from "./chrome-session.ts";
 import { firstReady } from "./react-ready.ts";
 
 /** The page a preview server serves, and the switch every docs page carries. */
-export const defaultUrl = "http://localhost:4175/docs/components/button";
+export const defaultUrl = "http://localhost:4175/components/button";
 
 /** The look picker's page, on the same origin as `--url`. */
 export const themingUrl = (url: string): string =>
-  new URL("/docs/theming", url).toString();
+  new URL("/theming", url).toString();
 
 /** The platform group's accessible name. */
 export const platformGroup = "Platform style";

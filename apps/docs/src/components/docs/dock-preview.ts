@@ -4,7 +4,7 @@
  * `@gpuixui/dock`'s `SplitPane` owns this rule in the library (`sizeBounds`,
  * `clampSize`, `dragSize`, `resizeByKey`), and the browser preview runs those
  * same functions rather than a second copy: the divider a reader drags on
- * `/docs/workspace` and `/docs/dock/split-pane` answers exactly what the shipped
+ * `/workspace` and `/dock/split-pane` answers exactly what the shipped
  * control answers. `dock-preview.test.ts` holds the drawing's numbers to the
  * package's own over a matrix of sizes and bounds — a preview may approximate
  * the paint, never the rule.

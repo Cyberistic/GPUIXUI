@@ -12,7 +12,7 @@ import { ApiReferenceView } from "./api-reference";
  *
  * The page lists every name the packages publish, and the name alone does not
  * say where to read it: a reader who found `IconButton` had to guess that the
- * page sits at `/docs/primitives/icon-button`. Every link here is resolved
+ * page sits at `/primitives/icon-button`. Every link here is resolved
  * against the mounted pages, so a row can neither point at a page the site does
  * not serve nor lose the link when a page is renamed.
  *
@@ -28,16 +28,16 @@ const markup = renderToStaticMarkup(
   <ApiReferenceView onQueryChange={noop} query="" />,
 );
 const mounted = new Set(componentIndex.map((page) => page.url));
-const linked = [...markup.matchAll(/href="(\/docs\/[^"]+)"/g)].map(
+const linked = [...markup.matchAll(/href="(\/[^"]+)"/g)].map(
   (match) => match[1],
 );
 
 describe("the API reference's symbol links", () => {
   it("links a symbol to the page named after the file that declares it", () => {
-    expect(markup).toContain('href="/docs/primitives/button"');
+    expect(markup).toContain('href="/primitives/button"');
     // The row is the symbol's, not the entry point table's: the name, its
     // module and the page are one row.
-    const start = markup.indexOf('href="/docs/primitives/button"');
+    const start = markup.indexOf('href="/primitives/button"');
     const row = markup.slice(start, markup.indexOf("</tr>", start));
     expect(row).toContain("Button");
     expect(row).toContain("packages/primitives/src/components/Button.tsx");
@@ -55,7 +55,7 @@ describe("the API reference's symbol links", () => {
   });
 
   it("leaves a package with no docs collection unlinked", () => {
-    // `@gpuixui/tokens` ships no `/docs/*` pages, so a link would be invented;
+    // `@gpuixui/tokens` ships no `/*` pages, so a link would be invented;
     // the module path beside the name is the honest provenance.
     const tokens = publicSymbolIndex.packages.find(
       (pkg) => pkg.name === "@gpuixui/tokens",
@@ -63,7 +63,7 @@ describe("the API reference's symbol links", () => {
     expect(tokens?.symbols.length).toBeGreaterThan(20);
     const start = markup.indexOf(">@gpuixui/tokens<");
     const section = markup.slice(start, markup.indexOf("</section>", start));
-    expect(section).not.toContain('href="/docs/');
+    expect(section).not.toContain('href="/');
   });
 });
 

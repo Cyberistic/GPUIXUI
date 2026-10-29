@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
- * `/docs/runtime` is the page that tells a consumer how to read the pinned
+ * `/runtime` is the page that tells a consumer how to read the pinned
  * runtime's matrix, and it showed `capabilities` and `unsupportedFeature` while
  * omitting the two things a caller needs to handle a gap: the
  * `UnsupportedRuntimeFeature` class its Effect fails with, and the

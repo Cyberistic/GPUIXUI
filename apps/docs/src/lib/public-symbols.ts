@@ -93,7 +93,7 @@ export interface PublicSymbolIndex {
 export interface DocsCollection {
   /** `packages/primitives/docs` */
   readonly dir: string;
-  /** `/docs/primitives` */
+  /** `/primitives` */
   readonly route: string;
 }
 
@@ -102,7 +102,7 @@ export interface DocsCollection {
  *
  * A symbol's `module` is the file that declares it, and a component's page is
  * named after that file — `packages/primitives/src/components/IconButton.tsx`
- * is `/docs/primitives/icon-button`, and every part a compound component
+ * is `/primitives/icon-button`, and every part a compound component
  * exports from `card.tsx` lands on the card page, which is where its props are
  * documented. The page decides whether it exists: a helper in `src/core/` has
  * no page, and a link to a page the site does not serve would be worse than no

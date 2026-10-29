@@ -68,10 +68,10 @@ describe("the /llms.txt index", () => {
   });
 
   it("lets the curated page win the address it shares with a package page", () => {
-    // `/docs/components/button` is written twice: the site's curated page and
+    // `/components/button` is written twice: the site's curated page and
     // the page the package ships. The site serves one page there, so the index
     // must print one line, and the site's copy is the one a reader lands on.
-    const url = "/docs/components/button";
+    const url = "/components/button";
     const curated: LlmsPage = {
       url,
       title: "Button",
@@ -101,8 +101,8 @@ describe("the /llms.txt index", () => {
     // component and cite the retired one.
     expect(curatedPrimitiveTwins.length).toBeGreaterThan(0);
 
-    // Read whole link targets: `/docs/primitives/button` is a prefix of the
-    // real `/docs/primitives/button-group`, so a substring test passes for the
+    // Read whole link targets: `/primitives/button` is a prefix of the
+    // real `/primitives/button-group`, so a substring test passes for the
     // wrong reason on two of the five.
     const targets = new Set(listed.flatMap((line) => targetOf(line) ?? []));
     const wrong = curatedPrimitiveTwins.flatMap((twin) =>
@@ -116,9 +116,9 @@ describe("the /llms.txt index", () => {
   });
 
   it("prints a page with no description as a bare link", () => {
-    const line = entries(llmsTxt([{ url: "/docs/a", title: "A" }], []))[0];
+    const line = entries(llmsTxt([{ url: "/a", title: "A" }], []))[0];
 
-    expect(line).toBe(`- [A](${absoluteUrl("/docs/a")})`);
+    expect(line).toBe(`- [A](${absoluteUrl("/a")})`);
   });
 
   it("keeps one line per entry whatever the frontmatter carries", () => {
@@ -126,7 +126,7 @@ describe("the /llms.txt index", () => {
       llmsTxt(
         [
           {
-            url: "/docs/a",
+            url: "/a",
             title: "A [beta]",
             description: "one\ntwo   three",
           },
@@ -138,21 +138,21 @@ describe("the /llms.txt index", () => {
     // A newline would split the entry, and an unescaped bracket would end the
     // link label early — both are one malformed line an agent cannot parse.
     expect(line).toBe(
-      `- [A \\[beta\\]](https://gpuixui.sudokw.com/docs/a): one two three`,
+      `- [A \\[beta\\]](https://gpuixui.sudokw.com/a): one two three`,
     );
   });
 
   it("groups the pages the way the sidebar does, in the sidebar's order", () => {
     const samples = [
-      "/docs/installation",
-      "/docs/components/dialog",
-      "/docs/primitives/button",
-      "/docs/icons/icon",
-      "/docs/data-display/property-panel",
-      "/docs/workspace",
-      "/docs/dock/split-pane",
-      "/docs/editor/code-editor",
-      "/docs/blocks/login",
+      "/installation",
+      "/components/dialog",
+      "/primitives/button",
+      "/icons/icon",
+      "/data-display/property-panel",
+      "/workspace",
+      "/dock/split-pane",
+      "/editor/code-editor",
+      "/blocks/login",
     ].map((url, index) => ({ url, title: `Page ${index}` }));
 
     const headings = llmsTxt(samples, [])
@@ -179,9 +179,9 @@ describe("the /llms.txt index", () => {
     expect(folders.length).toBeGreaterThan(5);
     // A folder with no rule would file its pages under `Docs` — the right
     // fallback for a root page, and the wrong answer for a lane of its own.
-    expect(
-      folders.filter((name) => sectionFor(`/docs/${name}`) === "Docs"),
-    ).toEqual([]);
+    expect(folders.filter((name) => sectionFor(`/${name}`) === "Docs")).toEqual(
+      [],
+    );
     expect(
       packageCollections
         .map((collection) => collection.section)

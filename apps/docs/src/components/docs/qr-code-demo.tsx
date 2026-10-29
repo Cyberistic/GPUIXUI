@@ -17,7 +17,7 @@ import * as Option from "effect/Option";
  */
 
 /** The value the preview encodes: this page's own address. */
-export const QR_VALUE = "https://gpuixui.sudokw.com/docs/media/qr-code";
+export const QR_VALUE = "https://gpuixui.sudokw.com/media/qr-code";
 
 /** The square the page asks for, in points. */
 export const QR_SIZE = 160;
@@ -86,7 +86,7 @@ export const QrCodeDemo = () =>
 export const qrCodeDemoSource = `import { QrCode } from "@gpuixui/media";
 
 <QrCode
-  value="https://gpuixui.sudokw.com/docs/media/qr-code"
+  value="https://gpuixui.sudokw.com/media/qr-code"
   label="The component documentation"
   size={160}
 />;`;

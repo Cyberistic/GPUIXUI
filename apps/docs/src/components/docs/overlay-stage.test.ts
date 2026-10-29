@@ -6,8 +6,8 @@ import { describe, expect, it } from "vitest";
  *
  * Guarded bug: `.gx-dialog-backdrop` was an `inset: 0` layer inside a frame
  * whose only height came from `min-height: 100%` against a preview panel that
- * now hugs its content — so `/docs/components/dialog` painted an empty 28px
- * strip, and `/docs/components/confirm-dialog` clipped its dialog to a sliver.
+ * now hugs its content — so `/components/dialog` painted an empty 28px
+ * strip, and `/components/confirm-dialog` clipped its dialog to a sliver.
  */
 
 const css = readFileSync(

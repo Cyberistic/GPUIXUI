@@ -40,10 +40,10 @@ Components, Contributing), a reusable component page with Preview/Code tabs, a
 page" table of contents and the previous/next pager. Button, Dialog, Popover and
 Tabs are the pattern pages; their previews are labelled browser renderings of
 the native components, and the Code tab plus **Component source** show the real
-implementation. The remaining shadcn surfaces — **Blocks** (`/docs/blocks`) and
-the **Theme Editor** (`/docs/themes`) — landed too: recipe pages composed from
+implementation. The remaining shadcn surfaces — **Blocks** (`/blocks`) and
+the **Theme Editor** (`/themes`) — landed too: recipe pages composed from
 the library and a live token editor backed by `@gpuixui/tokens`. The **Dashboard**
-block (`/docs/blocks/dashboard`) is the landing's product window: a six-card
+block (`/blocks/dashboard`) is the landing's product window: a six-card
 activity dashboard composed from the library, with `BarChart`, `DonutChart` and
 `StackedBar` from `@gpuixui/data`.
 
@@ -55,7 +55,7 @@ there. `apps/docs/README.md` §Prerendering is the contract.
 ## Layout
 
 ```
-apps/docs          Fumadocs docs: landing at `/`, documentation under `/docs`
+apps/docs          Fumadocs docs: landing at `/`, documentation at the root
 apps/playground    Native GPUix playground and smoke tests
 packages/config    Shared TypeScript and tooling configuration
 packages/deploy    Alchemy stack: the docs site's Cloudflare resources

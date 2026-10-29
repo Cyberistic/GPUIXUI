@@ -3,7 +3,7 @@ import { BlockIcon } from "./block-icons";
 import { RailToggle } from "./sidebar-rail";
 
 /**
- * File manager block — `/docs/blocks/file-manager`.
+ * File manager block — `/blocks/file-manager`.
  *
  * A three-pane browser: a folder tree, a folder of image tiles and the selected
  * file's facts. Like every block, `FileManagerRender` reproduces the native

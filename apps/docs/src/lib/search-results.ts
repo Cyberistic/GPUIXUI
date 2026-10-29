@@ -34,7 +34,7 @@ export const encodeSearchResults = Schema.encodeOption(SearchBody);
  *
  * The index splits a long heading into several chunks and every chunk carries
  * the heading's own anchor, so a query for "button" answered with
- * `/docs/components/button#api-reference` three times and
+ * `/components/button#api-reference` three times and
  * `#limitations` twice — the same destination under the same label. The rows
  * arrive ranked, so the first one is the one the dialog showed first; dropping
  * the repeats leaves each section once.

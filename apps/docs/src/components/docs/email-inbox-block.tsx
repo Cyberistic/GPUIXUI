@@ -3,7 +3,7 @@ import { BlockIcon, type BlockIconName } from "./block-icons";
 import { RailToggle } from "./sidebar-rail";
 
 /**
- * Email inbox block — `/docs/blocks/email-inbox`.
+ * Email inbox block — `/blocks/email-inbox`.
  *
  * A four-pane mail client: the folder rail, the message list, the reading pane
  * and the sender's contact card. `EmailInboxRender` is the browser reproduction

@@ -7,7 +7,7 @@ import { buildExamples, type ExampleEntry } from "./examples";
  * A package's examples are native GPUix modules, so the site can only read
  * them: `?raw` gives the page the file a reader copies without making the
  * native package a browser dependency. The glob covers every package, so a new
- * `packages/<pkg>/examples/<id>.example.tsx` appears on `/docs/examples` with
+ * `packages/<pkg>/examples/<id>.example.tsx` appears on `/examples` with
  * no docs change.
  */
 const files = import.meta.glob(

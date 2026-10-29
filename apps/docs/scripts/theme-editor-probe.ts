@@ -2,7 +2,7 @@
  * Prove the theme editor edits, audits and resets a theme in a browser that
  * refuses site data.
  *
- * `/docs/themes` is the page a consumer opens to take one of the library's
+ * `/themes` is the page a consumer opens to take one of the library's
  * styles, change it and copy the result. Three properties had no browser
  * measurement: that a hydrated colour field reaches the preview and the audit,
  * that **Reset** returns the page to the base it opened on, and that the editor
@@ -26,7 +26,7 @@ import { findChrome, openChrome } from "./chrome-session.ts";
 import { hasHandler } from "./react-ready.ts";
 
 /** The page a preview server serves. */
-export const defaultUrl = "http://localhost:4175/docs/themes";
+export const defaultUrl = "http://localhost:4175/themes";
 
 /** The editor's root. */
 export const editorSelector = ".gx-theme-editor";

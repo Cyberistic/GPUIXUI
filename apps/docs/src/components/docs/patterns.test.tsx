@@ -50,7 +50,7 @@ describe("a pattern", () => {
     const markup = render("async-feedback");
 
     expect(markup).toContain("/blob/master/packages/components/examples/");
-    expect(markup).toContain('href="/docs/examples"');
+    expect(markup).toContain('href="/examples"');
   });
 
   it("fails loudly on an id the data does not have", () => {

@@ -18,7 +18,7 @@ export interface DocsPageMeta {
   readonly title: string;
   /** The frontmatter description, if the page has one. */
   readonly description?: string;
-  /** The page's URL path, such as `/docs/components/dialog`. */
+  /** The page's URL path, such as `/components/dialog`. */
   readonly url: string;
 }
 

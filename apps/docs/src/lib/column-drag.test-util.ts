@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 /**
  * The column drag `column-resize-lifecycle` measured, derived from the probe.
  *
- * Two guards print these widths — the capability record with `/docs/runtime`,
+ * Two guards print these widths — the capability record with `/runtime`,
  * and the data-display lane — so they are computed here from the fixture's own
  * numbers and the deltas the probe drives, rather than transcribed. Test-only:
  * the fixture belongs to the playground app, so it is read as source.

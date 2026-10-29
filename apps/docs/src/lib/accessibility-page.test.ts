@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ariaNames, readAriaBudget } from "./aria-budget.test-util";
 
 /**
- * `/docs/accessibility` is the cross-cutting contract every component page
+ * `/accessibility` is the cross-cutting contract every component page
  * points at, and after the 2026-10-23 page prune nothing read it: the page
  * could drop an attribute the runtime publishes, or keep promising one it
  * refuses, while every suite stayed green.

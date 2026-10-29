@@ -68,7 +68,7 @@ const entry = (
   preview,
   demo: undefined,
   verdict: undefined,
-  url: `/docs/${section.toLowerCase()}/${title.toLowerCase()}`,
+  url: `/${section.toLowerCase()}/${title.toLowerCase()}`,
 });
 
 /** A verdict source that knows no rows: the pure cases do not need one. */
@@ -86,15 +86,15 @@ const packageFiles = (): ReadonlyArray<string> =>
 describe("the index's URL mapping", () => {
   it("maps a curated page and each package's pages to their route", () => {
     expect(pageUrl("content/docs/components/dialog.mdx")).toBe(
-      "/docs/components/dialog",
+      "/components/dialog",
     );
     expect(pageUrl("packages/components/docs/card.mdx")).toBe(
-      "/docs/components/card",
+      "/components/card",
     );
     expect(pageUrl("packages/primitives/docs/slider.mdx")).toBe(
-      "/docs/primitives/slider",
+      "/primitives/slider",
     );
-    expect(pageUrl("packages/icons/docs/icon.mdx")).toBe("/docs/icons/icon");
+    expect(pageUrl("packages/icons/docs/icon.mdx")).toBe("/icons/icon");
   });
 
   it("drops a section index and a file that is not a component page", () => {
@@ -567,7 +567,7 @@ describe("the real index", () => {
     const curated = new Set(
       readdirSync(new URL("apps/docs/content/docs/components/", root))
         .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
-        .map((name) => `/docs/components/${name.replace(/\.mdx$/, "")}`),
+        .map((name) => `/components/${name.replace(/\.mdx$/, "")}`),
     );
 
     const missing = packageFiles().filter((file) => {
@@ -594,7 +594,7 @@ describe("the real index", () => {
     const shipped = tier3.filter((row) => row.status !== "todo");
 
     expect(shipped.length).toBeGreaterThan(10);
-    expect(source).toContain("](/docs/data-display)");
+    expect(source).toContain("](/data-display)");
     expect(source).not.toContain("still `todo`");
 
     // The Table page carried the same list: "the rows that remain — a tree, a
@@ -634,7 +634,7 @@ describe("the real index", () => {
     )
       .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
       .map((name) => ({
-        url: `/docs/components/${name.replace(/\.mdx$/, "")}`,
+        url: `/components/${name.replace(/\.mdx$/, "")}`,
         preview: readFileSync(
           new URL(`apps/docs/content/docs/components/${name}`, root),
           "utf8",
@@ -685,11 +685,9 @@ describe("the real index", () => {
 
   it("marks the components the runtime supports only in part", () => {
     const button = componentIndex.find(
-      (row) => row.url === "/docs/primitives/button",
+      (row) => row.url === "/primitives/button",
     );
-    const card = componentIndex.find(
-      (row) => row.url === "/docs/components/card",
-    );
+    const card = componentIndex.find((row) => row.url === "/components/card");
     const partial = componentIndex.filter((row) =>
       row.verdict?.support.startsWith("partial"),
     );
@@ -708,16 +706,14 @@ describe("the real index", () => {
   it("finds a component by a part name, which the sidebar cannot show", () => {
     const found = filterEntries(componentIndex, "DropdownMenuCheckboxItem");
 
-    expect(found.map((row) => row.url)).toContain(
-      "/docs/components/dropdown-menu",
-    );
+    expect(found.map((row) => row.url)).toContain("/components/dropdown-menu");
   });
 
   it("finds a component by a limitation it records", () => {
     const found = filterEntries(componentIndex, "aria-orientation");
 
     expect(found.length).toBeGreaterThan(0);
-    expect(found.map((row) => row.url)).toContain("/docs/components/tabs");
+    expect(found.map((row) => row.url)).toContain("/components/tabs");
   });
 
   it("finds a component by the parts a curated page composes", () => {
@@ -725,18 +721,18 @@ describe("the real index", () => {
       (row) => row.url,
     );
 
-    expect(found).toEqual(["/docs/components/dialog"]);
+    expect(found).toEqual(["/components/dialog"]);
   });
 
   it("finds a component by a prop its page documents", () => {
     const found = filterEntries(componentIndex, "onCheckedChange");
 
-    expect(found.map((row) => row.url)).toContain("/docs/primitives/switch");
+    expect(found.map((row) => row.url)).toContain("/primitives/switch");
   });
 
   it("keeps a part name out of the props a part table lists", () => {
     const tagInput = componentIndex.find(
-      (row) => row.url === "/docs/components/tag-input",
+      (row) => row.url === "/components/tag-input",
     );
 
     expect(tagInput?.props).toContain("onValueChange");
@@ -759,7 +755,7 @@ describe("the real index", () => {
       (row) => row.url,
     );
 
-    expect(found).toContain("/docs/primitives/switch");
+    expect(found).toContain("/primitives/switch");
     // A second axis needs more than one page: a single hit would be the title.
     expect(found.length).toBeGreaterThan(1);
   });
@@ -825,7 +821,7 @@ describe("the real index", () => {
         "the Components index names the shipped data rows' package",
       ).toBe(true);
     }
-    expect(intro).toContain("/docs/data-display");
+    expect(intro).toContain("/data-display");
   });
 
   it("names every curated page in the intro's list, and no page it does not have", () => {

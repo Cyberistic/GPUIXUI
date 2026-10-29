@@ -108,7 +108,7 @@ export const pageRows: Readonly<Record<string, ReadonlyArray<string>>> = {
  * directions.
  */
 export const pageRowsByUrl: Readonly<Record<string, ReadonlyArray<string>>> = {
-  "/docs/files/property-panel": ["Inspector panels", "Property editors"],
+  "/files/property-panel": ["Inspector panels", "Property editors"],
 };
 
 /**

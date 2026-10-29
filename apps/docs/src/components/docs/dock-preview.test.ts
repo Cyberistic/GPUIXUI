@@ -26,7 +26,7 @@ import {
  *
  * `@gpuixui/dock`'s `SplitPane` ships a 6px divider that steps 16px on the
  * arrows and clamps to the caller's bounds, and the browser preview used to
- * restate that arithmetic so the divider was explorable on `/docs/workspace`.
+ * restate that arithmetic so the divider was explorable on `/workspace`.
  * A restatement is a second rule that drifts, so the preview now calls the
  * package's own reducers and this file holds the drawing to them over a matrix
  * of sizes and bounds. A preview may approximate the paint, never the rule.
@@ -189,7 +189,7 @@ describe("the dock preview's paint", () => {
     expect(page).toContain("16px");
     expect(page).toContain("aria-valuetext");
     expect(page).toContain("`SplitPane`");
-    expect(page).toContain("](/docs/dock/split-pane)");
+    expect(page).toContain("](/dock/split-pane)");
     // The page prints the preview's own bounds rather than borrowing the
     // example's, so the two numbers a reader meets cannot be confused.
     expect(splitPage).toContain("220–380");

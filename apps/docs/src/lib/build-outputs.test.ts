@@ -61,7 +61,7 @@ const generated: ReadonlyArray<string> = [
 
 /** Files a contributor edits, which must never be ignored. */
 const source: ReadonlyArray<string> = [
-  "content/docs/index.mdx",
+  "content/docs/introduction.mdx",
   "src/lib/layout.shared.tsx",
   "README.md",
 ];

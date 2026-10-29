@@ -9,12 +9,12 @@ import { descriptionRuns, descriptionText } from "./page-description";
  * prerendered anyway — was told nothing about the accordion, which is the
  * control for that job. Both pages that document the section say so in their
  * description, and the description's one inline link is painted as a link under
- * the `h1`: a literal `[accordion](/docs/…)` in a `<p>` is not a reference a
+ * the `h1`: a literal `[accordion](/…)` in a `<p>` is not a reference a
  * reader can follow.
  */
 
 const SENTENCE =
-  "prefer [accordion](/docs/components/accordion) when prerendering is not too heavy";
+  "prefer [accordion](/components/accordion) when prerendering is not too heavy";
 
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
@@ -39,7 +39,7 @@ describe("the collapsible description", () => {
   it("paints the reference as a link to a page the site serves", () => {
     expect(descriptionRuns(SENTENCE)).toEqual([
       { kind: "text", text: "prefer " },
-      { kind: "link", text: "accordion", href: "/docs/components/accordion" },
+      { kind: "link", text: "accordion", href: "/components/accordion" },
       { kind: "text", text: " when prerendering is not too heavy" },
     ]);
     const target = new URL(

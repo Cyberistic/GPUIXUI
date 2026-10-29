@@ -10,7 +10,7 @@
  * nodes also carry the older `__reactProps$…` store; both keys are defined
  * non-enumerably, so a read through `Object.keys` or `Object.entries` finds
  * nothing on a fully interactive page. Measured in headless Chrome on
- * `/docs/components/button`: the sidebar's search trigger carried no enumerable
+ * `/components/button`: the sidebar's search trigger carried no enumerable
  * property at all, its visible sibling opened the dialog on a click, and
  * `getOwnPropertyNames` carried `__reactFiber$…` whose `memoizedProps.onClick`
  * ran. Every probe read with `Object.entries`, so each waited out its whole

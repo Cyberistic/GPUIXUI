@@ -13,7 +13,7 @@ import {
  *
  * Fumadocs splits a long heading into several index chunks, and every chunk
  * carries the heading's own anchor: a query for "button" answered with
- * `/docs/components/button#api-reference` three times and `#limitations` twice.
+ * `/components/button#api-reference` three times and `#limitations` twice.
  * The dialog rendered each one, so a reader saw the same section under the same
  * label. The rows arrive ranked, so the first is the one to keep.
  */
@@ -27,12 +27,12 @@ const row = (url: string, content: string): SearchResult => ({
 describe("the search result list", () => {
   it("keeps the best-ranked row for an address the index chunked", () => {
     const rows = [
-      row("/docs/components/button", "Button"),
-      row("/docs/components/button#api-reference", "| Prop | Type |"),
-      row("/docs/components/button#api-reference", "## Defaults"),
-      row("/docs/components/button#api-reference", "## Variants"),
-      row("/docs/components/button#limitations", "Role button"),
-      row("/docs/components/button#limitations", "No aria-disabled"),
+      row("/components/button", "Button"),
+      row("/components/button#api-reference", "| Prop | Type |"),
+      row("/components/button#api-reference", "## Defaults"),
+      row("/components/button#api-reference", "## Variants"),
+      row("/components/button#limitations", "Role button"),
+      row("/components/button#limitations", "No aria-disabled"),
     ];
 
     expect(dedupeSearchResults(rows)).toEqual([rows[0], rows[1], rows[4]]);
@@ -42,8 +42,8 @@ describe("the search result list", () => {
     // The fragment is the destination: two sections are two answers, even when
     // the reader lands on one page.
     const rows = [
-      row("/docs/components/tabs#api", "Tabs"),
-      row("/docs/components/tabs#keyboard", "Arrows"),
+      row("/components/tabs#api", "Tabs"),
+      row("/components/tabs#keyboard", "Arrows"),
     ];
 
     expect(dedupeSearchResults(rows)).toHaveLength(2);
@@ -51,9 +51,9 @@ describe("the search result list", () => {
 
   it("keeps pages apart, so a repeat is the only thing removed", () => {
     const rows = [
-      row("/docs/components/button", "Button"),
-      row("/docs/primitives/toggle", "Toggle"),
-      row("/docs/components/button", "Button again"),
+      row("/components/button", "Button"),
+      row("/primitives/toggle", "Toggle"),
+      row("/components/button", "Button again"),
     ];
 
     expect(dedupeSearchResults(rows)).toEqual([rows[0], rows[1]]);
@@ -67,11 +67,11 @@ describe("the search result list", () => {
     // The site edits the address only; `type`, the snippet and the breadcrumbs
     // are Fumadocs' and have to come back unchanged.
     const body =
-      '[{"id":"/docs/components/button","type":"page",' +
-      '"url":"/docs/components/button","content":"Button",' +
+      '[{"id":"/components/button","type":"page",' +
+      '"url":"/components/button","content":"Button",' +
       '"breadcrumbs":["Docs","Components"]},' +
-      '{"id":"/docs/components/button-2","type":"text",' +
-      '"url":"/docs/components/button#api-reference",' +
+      '{"id":"/components/button-2","type":"text",' +
+      '"url":"/components/button#api-reference",' +
       '"content":"| Prop | Type |",' +
       '"breadcrumbs":["Docs","Components"]}]';
 

@@ -8,7 +8,7 @@ import type { ComponentEntry } from "./component-index";
  * caller-owned state, not a prop gallery. The site had no way to see them: a
  * reader learned an example's file name from the page it happened to be
  * documented on. This module turns the files themselves into rows, so a new
- * example appears on `/docs/examples` with no docs change and a deleted one
+ * example appears on `/examples` with no docs change and a deleted one
  * cannot leave a dead row.
  *
  * Pure: `examples-data.ts` supplies the files and the page index.
@@ -86,7 +86,7 @@ const laneHomes: ReadonlyArray<{
 }> = [
   {
     packageName: "data",
-    home: { route: "/docs/data-display", section: "Data display" },
+    home: { route: "/data-display", section: "Data display" },
   },
 ];
 

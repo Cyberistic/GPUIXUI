@@ -11,7 +11,7 @@ import { usePlatform } from "./platform-toggle";
 import { PreviewSurface } from "./preview-surface";
 
 /**
- * The class reference `/docs/styling` mounts.
+ * The class reference `/styling` mounts.
  *
  * Every cell is compiled by `@gpuixui/tw` against the theme the platform switch
  * resolved, so a reader sees this release's number — a macOS control height, a

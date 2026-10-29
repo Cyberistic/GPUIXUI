@@ -110,10 +110,7 @@ export function Hero() {
       <LandingFormula />
 
       <div className="landing-actions">
-        <a
-          className="landing-btn landing-btn-primary"
-          href="/docs/getting-started"
-        >
+        <a className="landing-btn landing-btn-primary" href="/getting-started">
           Get started
         </a>
         <a

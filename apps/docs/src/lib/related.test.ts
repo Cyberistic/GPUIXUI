@@ -40,7 +40,7 @@ const curatedPages = readdirSync(
   new URL("apps/docs/content/docs/components/", root),
 )
   .filter((file) => file.endsWith(".mdx") && file !== "index.mdx")
-  .map((file) => mountedUrl("/docs/components", file));
+  .map((file) => mountedUrl("/components", file));
 
 /** The pages a family may choose between. */
 const served = new Set([...packagePages, ...curatedPages]);

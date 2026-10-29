@@ -93,7 +93,7 @@ const sectionOrder = packageCollections.reduce<ReadonlyArray<string>>(
 /** Where a docs file is served, or `undefined` when it is not a component page. */
 export const pageUrl = (file: string): string | undefined => {
   const site = /^content\/docs\/components\/(.+)\.mdx$/.exec(file);
-  if (site !== null) return indexUrl("/docs/components", site[1]);
+  if (site !== null) return indexUrl("/components", site[1]);
 
   const packaged = /^packages\/([^/]+)\/docs\/(.+)\.mdx$/.exec(file);
   if (packaged === null) return undefined;

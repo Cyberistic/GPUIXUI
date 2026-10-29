@@ -1,15 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DocsView, loadDocsPage } from "@/lib/docs-view";
-import { docsMetadata } from "@/lib/page-meta";
-import { appName, docsRoute } from "@/lib/shared";
+import { legacyDocsRedirect } from "@/lib/legacy-docs";
 
+/** The docs' old root. A published `/docs` link lands on the landing page. */
 export const Route = createFileRoute("/docs/")({
-  component: Page,
-  loader: () => loadDocsPage({ data: [] }),
-  head: ({ loaderData }) =>
-    docsMetadata(loaderData ?? { url: docsRoute, title: appName }),
+  beforeLoad: ({ location }) => {
+    throw legacyDocsRedirect("", location.searchStr);
+  },
 });
-
-function Page() {
-  return <DocsView data={Route.useLoaderData()} />;
-}

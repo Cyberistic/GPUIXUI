@@ -149,7 +149,7 @@ describe("the GPUix web build", () => {
     expect(runtimePage).toContain("WebGL2");
     expect(runtimePage).toContain("browser approximation");
 
-    expect(policy).toContain("/docs/runtime");
+    expect(policy).toContain("/runtime");
   });
 
   it("keeps the policy's status and the tree in agreement", () => {

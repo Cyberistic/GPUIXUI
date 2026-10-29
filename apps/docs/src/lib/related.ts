@@ -42,18 +42,18 @@ export interface SoloPage {
 const page = (label: string, href: string): RelatedPage => ({ label, href });
 
 const primitive = (slug: string, label: string): RelatedPage =>
-  page(label, `/docs/primitives/${slug}`);
+  page(label, `/primitives/${slug}`);
 
 const component = (slug: string, label: string): RelatedPage =>
-  page(label, `/docs/components/${slug}`);
+  page(label, `/components/${slug}`);
 
 const data = (slug: string, label: string): RelatedPage =>
-  page(label, `/docs/data-display/${slug}`);
+  page(label, `/data-display/${slug}`);
 
 const lane =
   (origin: string) =>
   (slug: string, label: string): RelatedPage =>
-    page(label, `/docs/${origin}/${slug}`);
+    page(label, `/${origin}/${slug}`);
 
 const editor = lane("editor");
 const files = lane("files");
@@ -362,11 +362,11 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
  */
 export const soloPages: ReadonlyArray<SoloPage> = [
   {
-    href: "/docs/primitives/theme-provider",
+    href: "/primitives/theme-provider",
     reason: "a provider, not a component — no sibling to choose between",
   },
   {
-    href: "/docs/icons/icon",
+    href: "/icons/icon",
     reason: "the icon set is one page",
   },
 ];

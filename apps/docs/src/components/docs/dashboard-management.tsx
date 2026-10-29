@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 /**
  * Dashboard management block — a dense three-column console for the
- * `/docs/blocks/dashboard-management` recipe. Like every block, the preview is a
+ * `/blocks/dashboard-management` recipe. Like every block, the preview is a
  * browser reproduction of the native geometry and palette (the shipped tree
  * renders through GPUix, not the DOM); the source is the `@gpuixui/*` recipe a
  * consumer copies.

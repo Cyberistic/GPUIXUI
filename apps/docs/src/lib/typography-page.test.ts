@@ -10,7 +10,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 /**
- * `/docs/typography` is the page the mission's information architecture names
+ * `/typography` is the page the mission's information architecture names
  * for type, and it carried a false limitation: "**No heading semantics**:
  * `role="h2"` paints the style, not a heading node." `Text` publishes
  * `role="heading"` with the role's own level for `h1`/`h2`/`h3` and `code` for

@@ -49,8 +49,8 @@ describe("the source behind a package page", () => {
   });
 
   it("prints the file on disk, not a copy of it", async () => {
-    const dialog = await printed("/docs/components/dialog");
-    const button = await printed("/docs/primitives/button");
+    const dialog = await printed("/components/dialog");
+    const button = await printed("/primitives/button");
 
     expect(dialog.file).toContain("export const Dialog =");
     expect(dialog.source).toBe(dialog.file);
@@ -59,7 +59,7 @@ describe("the source behind a package page", () => {
   });
 
   it("reads once, so a re-render does not suspend on a fresh promise", () => {
-    const source = pageSources.sources["/docs/primitives/button"];
+    const source = pageSources.sources["/primitives/button"];
     expect(source).toBeDefined();
     expect(source?.load()).toBe(source?.load());
   });
@@ -68,19 +68,19 @@ describe("the source behind a package page", () => {
     const index = pageSourceIndex(
       [
         {
-          url: "/docs/components/read",
+          url: "/components/read",
           module: "packages/components/src/read.tsx",
         },
         {
-          url: "/docs/components/lost",
+          url: "/components/lost",
           module: "packages/components/src/lost.tsx",
         },
       ],
       { "packages/components/src/read.tsx": () => Promise.resolve("source") },
     );
 
-    expect(Object.keys(index.sources)).toEqual(["/docs/components/read"]);
-    expect(index.unresolved).toEqual(["/docs/components/lost"]);
+    expect(Object.keys(index.sources)).toEqual(["/components/read"]);
+    expect(index.unresolved).toEqual(["/components/lost"]);
   });
 
   it("lists only pages the packages actually ship", () => {

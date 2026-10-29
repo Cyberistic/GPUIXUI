@@ -3,9 +3,9 @@ import { componentDocsRoute, primitiveDocsRoute } from "./shared";
 /**
  * The primitive pages the Components section curates instead.
  *
- * Five Tier 1 components are documented in depth under `/docs/components`,
+ * Five Tier 1 components are documented in depth under `/components`,
  * with previews, an install block and copyable source, while the package still
- * ships its own page for each at `/docs/primitives/<name>`. Serving both gave
+ * ships its own page for each at `/primitives/<name>`. Serving both gave
  * one component two live pages with one title: the sidebar listed it twice, a
  * search returned it twice, and the sitemap advertised two addresses for it.
  *
