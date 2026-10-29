@@ -437,7 +437,10 @@ describe("theme matrix", () => {
     );
   });
 
-  it("TagInput paints chips with the muted role", () => {
+  it("TagInput paints chips with the secondary role", () => {
+    // A chip is a typed token, so its label owes the body floor on its own fill.
+    // `muted` was a rung too close to the field it sits in: the label cleared the
+    // secondary floor but missed the body one in every light style.
     bothThemes(
       () => (
         <TagInput
@@ -450,7 +453,7 @@ describe("theme matrix", () => {
       ),
       (root, theme) => {
         expect(root.renderer.findByTestId("chip")?.style.backgroundColor).toBe(
-          theme.colors.muted,
+          theme.colors.secondary,
         );
       },
     );
