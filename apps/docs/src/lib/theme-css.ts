@@ -87,8 +87,9 @@ const switchVars = (theme: Theme): CssVars => {
  * control reserves around that drawing, the five categorical series colours
  * as `--series-1` through `--series-5` so a chart or a legend paints the
  * theme's scale instead of a palette of its own, the rule a row crosses
- * each fill it can wear (`--divider-card`, `--divider-selected`,
- * `--divider-hover`, `--divider-accent`), because a row paints its rule
+ * each fill it can wear (`--divider-card`, `--divider-muted`,
+ * `--divider-selected`, `--divider-hover`, `--divider-accent`), because a row
+ * or a header band paints its rule
  * *inside* its own box and the raw `border` role is under the perceptibility
  * floor on a wash, and the syntax palette as `--syntax-<kebab role>`, so a code
  * block draws the palette its native `<code>` host paints rather than a
@@ -136,6 +137,10 @@ export const toCssVars = (theme: Theme): CssVars => ({
   // drawing the raw `border` role on a wash would show a line the row does not
   // paint (`packages/data/src/table/table.tsx` → `rule`).
   "--divider-card": dividerOn(theme, theme.colors.card) ?? theme.colors.border,
+  // The header band a table paints its labels on (`bg-muted`): its rule lands
+  // on the band, not on the card behind it.
+  "--divider-muted":
+    dividerOn(theme, theme.colors.muted) ?? theme.colors.border,
   "--divider-selected":
     dividerOn(theme, theme.colors.selected) ?? theme.colors.border,
   "--divider-hover":

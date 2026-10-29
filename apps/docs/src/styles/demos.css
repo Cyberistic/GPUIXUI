@@ -6229,9 +6229,10 @@ button.gx-date-navbtn:hover:not(:disabled) {
    registry's fixed 6px corner and 6px / 2px padding, never shorter than the
    density's `md` control height; the field takes the `sm` height, so the
    platform switch re-heights the group and the field together. A chip is
-   `bg-muted` at 4px with 12/16 text, and its removal control is the shared
-   24px target around a 14px glyph — which is what makes the chip 28px tall,
-   because the target is taller than the word it sits beside. */
+   `bg-secondary` at 4px with 12/16 `foreground` text — the token a reader typed
+   is body copy, and `bg-secondary` is a fill a step off the field's own
+   `background` — and its removal control is the shared 24px target around a
+   14px glyph, which is what makes the chip 28px tall. */
 .gx-tag {
   width: 100%;
   justify-content: center;
@@ -6291,13 +6292,13 @@ button.gx-date-navbtn:hover:not(:disabled) {
   gap: 4px;
   padding: 2px 6px;
   border-radius: 4px;
-  background: var(--muted);
+  background: var(--secondary);
 }
 
 .gx-tag-chip-text {
   font-size: 12px;
   line-height: 16px;
-  color: var(--muted-foreground);
+  color: var(--foreground);
 }
 
 .gx-tag-chip-remove {
@@ -6552,7 +6553,11 @@ button.gx-date-navbtn:hover:not(:disabled) {
   color: var(--primary);
 }
 
-/* The bordered table: a wrapper rounds the corners; the table fixes the grid. */
+/* The bordered table: a wrapper rounds the corners; the table fixes the grid.
+   `table-layout: fixed` needs every track to be a **share** of the table, never
+   a pixel width (`tableTracks` in `table-preview.ts`): a fixed sum wider than
+   the card ran the last columns and the caption past the frame, where
+   `overflow: hidden` cut them into the stray half-row the owner saw. */
 .gx-table {
   overflow: hidden;
   border: 1px solid var(--border);
@@ -6565,15 +6570,28 @@ button.gx-date-navbtn:hover:not(:disabled) {
   table-layout: fixed;
 }
 
+/* The header is its own band: a muted fill and the page's ink, one step
+   stronger than the rows, so it reads as a header rather than a first row. */
 .gx-table-head {
-  padding: 12px;
-  color: var(--muted-foreground);
+  height: calc(var(--control-height-md) + var(--spacing-md));
+  padding: 0 12px;
+  background: var(--muted);
+  color: var(--foreground);
   font: inherit;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   text-align: left;
   vertical-align: middle;
-  border-bottom: 1px solid var(--divider-card);
+  border-bottom: 1px solid var(--divider-muted);
+}
+
+/* A numeric column reads from the right on both sides of the grid. */
+.gx-table-head[data-align="right"] {
+  text-align: right;
+}
+
+.gx-table-head[data-align="right"] .gx-table-sort {
+  justify-content: flex-end;
 }
 
 .gx-table-sort {
@@ -6776,12 +6794,15 @@ button.gx-date-navbtn:hover:not(:disabled) {
   background: var(--skeleton);
 }
 
-/* The footer bar: the selection count left, the page controls right. */
+/* The footer bar: the selection count left, the page controls right. Numbers
+   are tabular, so the counts and the pager do not shuffle as they change. */
 .gx-table-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding-top: 4px;
+  border-top: 1px solid var(--divider-card);
 }
 
 .gx-table-selected,
@@ -6789,17 +6810,28 @@ button.gx-date-navbtn:hover:not(:disabled) {
 .gx-table-pageinfo {
   font-size: 12px;
   color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.gx-table-footer b {
+  color: var(--foreground);
+  font-weight: 600;
 }
 
 .gx-table-pager {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
+/* The page controls sit on their own edge, after a rule that separates them
+   from the counts the way a toolbar's groups are separated. */
 .gx-table-pagenav {
   display: flex;
   gap: 4px;
+  padding-left: 16px;
+  border-left: 1px solid var(--divider-card);
 }
 
 .gx-table-caption {
@@ -9852,9 +9884,20 @@ button.gx-date-navbtn:hover:not(:disabled) {
   display: flex;
   align-items: center;
   width: 100%;
+  /* The shipped hit area is the track padded by half a thumb, so the thumb at
+     either end is centred on the end instead of hanging off it. The rail below
+     is that padded span, and every fraction is measured inside it. */
   height: var(--control-height-md);
+  padding: 0 calc(var(--icon-size-md) / 2);
   cursor: pointer;
   touch-action: none;
+}
+
+.gx-slider-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }
 
 .gx-slider:focus-visible {
@@ -9865,6 +9908,15 @@ button.gx-date-navbtn:hover:not(:disabled) {
 
 .gx-slider[data-disabled] {
   cursor: default;
+}
+
+/* The usable span: the rail every thumb and fill is positioned against. */
+.gx-slider-rail {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  width: 100%;
 }
 
 .gx-slider-track {
@@ -9879,7 +9931,6 @@ button.gx-date-navbtn:hover:not(:disabled) {
 .gx-slider-fill {
   position: absolute;
   top: 0;
-  left: 0;
   height: 100%;
   border-radius: 9999px;
   background: var(--primary);
@@ -9900,6 +9951,17 @@ button.gx-date-navbtn:hover:not(:disabled) {
   background: var(--foreground);
   transform: translate(-50%, -50%);
   cursor: grab;
+}
+
+/* A single slider's thumb is the root's paint, not its own tab stop: the root
+   is the slider. A range's thumbs are buttons, so they keep the browser's own
+   button chrome off. */
+span.gx-slider-thumb {
+  pointer-events: none;
+}
+
+button.gx-slider-thumb {
+  font: inherit;
 }
 
 /* A thumb is the range's own tab stop, so it paints the ring on the keyboard

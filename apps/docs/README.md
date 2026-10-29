@@ -252,7 +252,7 @@ src/components/docs/otp-field-demo.tsx    The six cells that advance and take a 
 src/components/docs/progress-demo.tsx     The determinate fill, buffer and indeterminate segment
 src/components/docs/progress-values-demo.tsx A value stated against its maximum, and an indeterminate bar
 src/components/docs/radio-group-demo.tsx  The one-choice group and its selected dot
-src/components/docs/range-slider-demo.tsx The two draggable thumbs and the fill between them
+src/components/docs/range-slider-demo.tsx Two live thumbs and the fill between them
 src/components/docs/rating-preview.ts     The half a press on a star lands in
 src/components/docs/rating-demo.tsx       The pressable stars, whole and half
 src/components/docs/scroll-area-demo.tsx  The vertical and horizontal bounded frames
@@ -260,9 +260,10 @@ src/components/docs/separator-demo.tsx    The horizontal, vertical and captioned
 src/components/docs/separator-roles-demo.tsx The semantic and decorative rules
 src/components/docs/skeleton-demo.tsx     The pulsing placeholder shapes
 src/components/docs/skeleton-states-demo.tsx The composed card, the circle and the still frame
-src/components/docs/slider-preview.ts     The end a range press grabbed
+src/components/docs/slider-preview.ts     The paint, the end a range press grabbed, and the stepper
+src/components/docs/slider-drawing.tsx    The one live track all three slider pages draw
 src/components/docs/slider-demo.tsx       The draggable track, its keyboard and the disabled paint
-src/components/docs/slider-values-demo.tsx One value and a two-thumb range
+src/components/docs/slider-values-demo.tsx One live value, a two-thumb range and its stepper
 src/components/docs/spacer-demo.tsx       The fixed step and the flexible filler
 src/components/docs/spinner-demo.tsx      The three dots, their sizes and accents
 src/components/docs/stack-demo.tsx        The row, column and justified arrangements

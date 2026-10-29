@@ -182,7 +182,11 @@ component call sites adopt the outline in their own workstream.
 | [717](./717-file-tree-ai-elements.md) | FileTree on shadcn's AI Elements `file-tree`: parts, guides, one selected path | D | `610` | landed |
 | [718](./718-overlay-surface-fixes.md) | Overlay surfaces: sheet/drawer slide + redesign, popover sides, navigation-menu chevron, hover-card link trigger, one veil wash | D | — | implemented |
 | [719](./719-sheet-drawer-drawings.md) | The sheet and drawer drawings open on the surface, in a frame that is the window | D | `718` | landed |
+<<<<<<< HEAD
 | [720](./720-image-preview-log-viewer.md) | The image preview zooms with `ImageZoom`, and the log viewer is its surface | D | `006`, `203` | implemented |
+=======
+| [720](./720-slider-table-tag-fixes.md) | Three docs drawings: the dead slider, the clipped table, the grey chip | D | primitives, data, tw | implemented |
+>>>>>>> origin/fix/slider-table-tag
 
 
 ## How to use a plan

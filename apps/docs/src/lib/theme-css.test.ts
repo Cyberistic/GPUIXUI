@@ -223,11 +223,13 @@ describe("theme bridge", () => {
     );
     expect(vars["--divider-accent"]).not.toBe(themes.dark.colors.border);
 
-    // The sheet reads each derived rule for the state it belongs to, and the
-    // header paints the card rather than a muted strip of its own.
+    // The sheet reads each derived rule for the state it belongs to. The
+    // header is a band of its own now (the owner asked for one), so its rule
+    // crosses `muted` rather than the card behind it.
     const css = read("../styles/demos.css");
-    expect(block(css, ".gx-table-head")).toContain("var(--divider-card)");
-    expect(block(css, ".gx-table-head")).not.toContain("var(--muted)");
+    expect(block(css, ".gx-table-head")).toContain("var(--divider-muted)");
+    expect(block(css, ".gx-table-head")).toContain("background: var(--muted)");
+    expect(vars["--divider-muted"]).toBe(rule(themes.dark.colors.muted));
     // The base cell rule is the last of the three selectors that end in
     // `.gx-table-cell`, so it is read from its own line rather than by prefix.
     const cell = css.slice(css.indexOf("\n.gx-table-cell {"));

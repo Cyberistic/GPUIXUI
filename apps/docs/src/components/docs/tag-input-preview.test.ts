@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
   addTokens as componentAddTokens,
@@ -8,6 +9,7 @@ import {
 import {
   addTokens,
   atLimit,
+  describeRefusal,
   canPublish,
   committed,
   describeBudget,
@@ -69,6 +71,38 @@ const lists: ReadonlyArray<ReadonlyArray<string>> = [
   ["react", "gpuix", "components", "tokens", "motion"],
   ["design", "design"],
 ];
+
+/** The declarations of the one block a selector names, comments removed. */
+const block = (sheet: string, selector: string): string =>
+  [...sheet.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, names]) =>
+      (names ?? "").split(",").some((one) => one.trim() === selector),
+    )
+    .map(([, , body]) => body ?? "")
+    .join("\n");
+
+describe("the preview's chip paint", () => {
+  const css = readFileSync(
+    new URL("../../styles/demos.css", import.meta.url),
+    "utf8",
+  );
+
+  it("takes the recipe's fill and label roles, not a grey of its own", () => {
+    // The chip's contrast is measured on `secondary` with a `foreground` label
+    // (`chip-contrast.test.ts` in the components package). A drawing that kept
+    // the old `muted`/`muted-foreground` pair would show a chip the shipped one
+    // stopped painting.
+    expect(block(css, ".gx-tag-chip")).toContain(
+      "background: var(--secondary)",
+    );
+    expect(block(css, ".gx-tag-chip-text")).toContain(
+      "color: var(--foreground)",
+    );
+    expect(block(css, ".gx-tag-chip-remove")).toContain(
+      "color: var(--muted-foreground)",
+    );
+  });
+});
 
 describe("the preview's token rules", () => {
   it("splits a draft exactly as the component does", () => {
@@ -203,7 +237,26 @@ describe("the preview's budget", () => {
     expect(remaining(state, keywordRules)).toBe(3);
     expect(atLimit(state, keywordRules)).toBe(false);
     expect(describeBudget(state, keywordRules)).toBe(
-      "2 of 5 keywords · 3 left",
+      "2 of 5 keywords added, 3 more will fit.",
+    );
+  });
+
+  it("says why a cleared draft added nothing, in a sentence", () => {
+    // The readout this replaced counted refusals (`refused=1`) beside the
+    // field, which a reader cannot act on. Below the cap the only refusal is a
+    // repeat; at the cap it is the cap.
+    const repeat: Keywords = { tokens: ["react"], draft: "" };
+    const full: Keywords = {
+      tokens: ["a", "b", "c", "d", "e"],
+      draft: "",
+    };
+
+    expect(Option.isNone(describeRefusal(repeat, keywordRules, 0))).toBe(true);
+    expect(describeRefusal(repeat, keywordRules, 1)).toStrictEqual(
+      Option.some("That keyword was refused: it is already on the list."),
+    );
+    expect(describeRefusal(full, keywordRules, 2)).toStrictEqual(
+      Option.some("That keyword was refused: the list is full."),
     );
   });
 
@@ -215,7 +268,7 @@ describe("the preview's budget", () => {
 
     expect(atLimit(state, keywordRules)).toBe(true);
     expect(describeBudget(state, keywordRules)).toBe(
-      "5 of 5 keywords · limit reached",
+      "5 of 5 keywords added: the list is full.",
     );
   });
 });

@@ -20,7 +20,7 @@ describe("the tag input previews", () => {
   it("renders the workflow's chips, its budget and its gate", () => {
     expect(workflow).toContain(">react</span>");
     expect(workflow).toContain(">gpuix</span>");
-    expect(workflow).toContain("2 of 5 keywords · 3 left");
+    expect(workflow).toContain("2 of 5 keywords added, 3 more will fit.");
     expect(workflow).toContain("Ready to publish 2 keywords.");
     expect(workflow).toContain('aria-label="Remove react"');
   });
@@ -45,7 +45,7 @@ describe("the tag input previews", () => {
   it("says the cap is reached, not that it is a number left", () => {
     // The bug this guards: a drawing that prints "0 left" beside "limit
     // reached", or a budget that counts the draft.
-    expect(states).toContain("5 of 5 keywords · limit reached");
+    expect(states).toContain("5 of 5 keywords added: the list is full.");
     expect(states).not.toContain("0 left");
   });
 

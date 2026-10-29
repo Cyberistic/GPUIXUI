@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { tableWorkflowSource } from "./table-demo";
 import {
   ALL_COLUMNS,
+  TABLE_TRACKS,
+  tableTracks,
   allPageSelected,
   cellsOf,
   clampPage,
@@ -560,5 +562,46 @@ describe("the preview's page selection", () => {
       selected: [],
       anchor: "billing",
     });
+  });
+});
+
+/**
+ * The workflow's tracks.
+ *
+ * Guarded bug: the tracks were pixels — `40 + 250 + 150 + 110 + 90 + 48`, 688px
+ * inside the card's 625px table box at 1440 — so the Duration column lost its
+ * tail, the Actions column was invisible, and the caption (a table child, so as
+ * wide as the columns) was clipped into the stray half-line at the bottom of
+ * the stage. A share of the table cannot overrun it.
+ */
+describe("the workflow's tracks", () => {
+  const share = (width: string): number =>
+    Number.parseFloat(width.replace("%", ""));
+
+  it("sums to the whole table, never to more", () => {
+    const tracks = tableTracks(ALL_COLUMNS);
+
+    expect(tracks).toHaveLength(ALL_COLUMNS.length + 2);
+    expect(tracks.reduce((sum, width) => sum + share(width), 0)).toBe(100);
+  });
+
+  it("names every track as a share, not a pixel width", () => {
+    // A pixel width is what overran the card: 688px of columns in a 625px box.
+    for (const width of Object.values(TABLE_TRACKS)) {
+      expect(width.endsWith("%")).toBe(true);
+    }
+  });
+
+  it("keeps the select track narrower than any data column", () => {
+    // The first text column's x is the select track plus its 12px inset; a
+    // select track that grew with its label would move that x per row.
+    expect(share(TABLE_TRACKS.select)).toBeLessThan(
+      share(TABLE_TRACKS.duration),
+    );
+    expect(tableTracks(["service"])).toEqual([
+      TABLE_TRACKS.select,
+      TABLE_TRACKS.service,
+      TABLE_TRACKS.actions,
+    ]);
   });
 });

@@ -1078,14 +1078,14 @@ describe("TagInput recipe", () => {
       paddingRight: 6,
       paddingTop: 2,
       paddingBottom: 2,
-      backgroundColor: darkTheme.colors.muted,
+      backgroundColor: darkTheme.colors.secondary,
       borderRadius: 4,
     });
     expect(style(TAG_INPUT_CHIP_TEXT)).toEqual({
       fontSize: 12,
       lineHeight: 16,
       fontFamily: sans,
-      color: darkTheme.colors.mutedForeground,
+      color: darkTheme.colors.foreground,
     });
     expect(style(TAG_INPUT_CHIP_REMOVE)).toEqual({
       fontSize: 12,
