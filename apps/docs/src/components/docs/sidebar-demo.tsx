@@ -1,56 +1,34 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
-import { BlockIcon, type BlockIconName } from "./block-icons";
+import { avatarSize } from "@gpuixui/tokens";
+import { useState, type ReactNode } from "react";
+import {
+  SIDEBAR_MODES,
+  collapseLabel,
+  panelOffset,
+  panelWidth,
+  type SidebarMode,
+} from "./sidebar-preview";
+import { MENU_WIDTH } from "./user-menu-preview";
 
 /**
  * Browser previews for the Sidebar and User menu pages.
  *
  * The shipped sidebar is a GPUix tree — a width tween, an anchored mobile sheet
- * and a modal's focus rules — so the page cannot mount it. This drawing keeps
- * the parts a reader is learning: the panel, its gap, the icon collapse, the
- * active row and the account menu. The paint is the browser's and the page says
- * so; the behaviour the component promises is measured natively.
+ * and a modal's focus rules — so the page cannot mount it. This drawing is the
+ * same window the sheet and drawer pages draw: an app bar, the panel at the
+ * component's widths as the window's left column, and the inset beside it. The
+ * paint is the browser's and the page says so; the behaviour the component
+ * promises is measured natively.
  */
 
-const FONT = 13;
+const USER = {
+  name: "Benji van der Brand",
+  email: "benji@example.com",
+} as const;
 
-const page: CSSProperties = {
-  background: "var(--background)",
-  border: "1px solid var(--border)",
-  borderRadius: 10,
-  display: "flex",
-  height: 320,
-  overflow: "hidden",
-  position: "relative",
-  width: "100%",
-};
-
-const panel = (collapsed: boolean): CSSProperties => ({
-  background: "var(--card)",
-  borderRight: "1px solid var(--border)",
-  color: "var(--card-foreground)",
-  display: "flex",
-  flexDirection: "column",
-  flexShrink: 0,
-  gap: 6,
-  padding: 8,
-  transition: "width 160ms ease",
-  width: collapsed ? 48 : 176,
-});
-
-const row = (active: boolean, collapsed: boolean): CSSProperties => ({
-  alignItems: "center",
-  background: active ? "var(--accent)" : "transparent",
-  borderRadius: 6,
-  color: active ? "var(--accent-foreground)" : "var(--card-foreground)",
-  display: "flex",
-  fontSize: FONT,
-  fontWeight: active ? 600 : 400,
-  gap: 8,
-  height: 30,
-  justifyContent: collapsed ? "center" : "flex-start",
-  padding: "0 8px",
-  whiteSpace: "nowrap",
-});
+/** A drawn portrait for the identity: a picture, not an initials disc. */
+const PORTRAIT = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#0F766E"/><circle cx="16" cy="12" r="6" fill="#CCFBF1"/><path d="M4 32c0-7 5.4-12 12-12s12 5 12 12z" fill="#CCFBF1"/></svg>`,
+)}`;
 
 const glyph = (path: ReactNode) => (
   <svg
@@ -69,6 +47,12 @@ const glyph = (path: ReactNode) => (
 );
 
 const MARK = {
+  terminal: glyph(
+    <>
+      <path d="m4 17 6-6-6-6" />
+      <path d="M12 19h8" />
+    </>,
+  ),
   home: glyph(
     <>
       <path d="M3 11l9-8 9 8" />
@@ -94,6 +78,37 @@ const MARK = {
       <path d="m7 9 5-5 5 5" />
     </>,
   ),
+  sparkles: glyph(
+    <>
+      <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />
+      <path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z" />
+    </>,
+  ),
+  badge: glyph(
+    <>
+      <path d="M12 3l2.4 1.7 2.9-.2 1 2.7 2.3 1.8-1 2.8 1 2.8-2.3 1.8-1 2.7-2.9-.2L12 21l-2.4-1.7-2.9.2-1-2.7L3.4 15l1-2.8-1-2.8 2.3-1.8 1-2.7 2.9.2z" />
+      <path d="m9 12 2 2 4-4" />
+    </>,
+  ),
+  card: glyph(
+    <>
+      <rect height="14" width="20" x="2" y="5" rx="2" />
+      <path d="M2 10h20" />
+    </>,
+  ),
+  bell: glyph(
+    <>
+      <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6" />
+      <path d="M10 19a2 2 0 0 0 4 0" />
+    </>,
+  ),
+  logout: glyph(
+    <>
+      <path d="M9 4H5v16h4" />
+      <path d="M14 8l4 4-4 4" />
+      <path d="M18 12H9" />
+    </>,
+  ),
 };
 
 const ITEMS = [
@@ -102,237 +117,327 @@ const ITEMS = [
   { id: "settings", label: "Settings", mark: MARK.settings },
 ] as const;
 
-const note: CSSProperties = {
-  color: "var(--muted-foreground)",
-  fontSize: 12,
-  marginTop: 8,
-  textAlign: "center",
+const RUNS = [
+  { id: "run-1042", label: "Landing page copy", state: "done", ms: "1.2s" },
+  { id: "run-1038", label: "Release notes", state: "done", ms: "0.9s" },
+  { id: "run-1031", label: "Changelog digest", state: "failed", ms: "2.4s" },
+] as const;
+
+/** The identity disc: the picture every place the same person appears paints. */
+const Identity = ({ size }: { readonly size: "sm" | "md" }) => {
+  const diameter = avatarSize[size];
+  return (
+    <span
+      aria-hidden="true"
+      className="gx-avatar"
+      style={{ height: diameter, width: diameter }}
+    >
+      <span className="gx-avatar-disc">
+        <img alt="" className="gx-avatar-photo" src={PORTRAIT} />
+      </span>
+    </span>
+  );
 };
 
-/**
- * The account menu's entries, in the order shadcn paints them.
- *
- * A group is the run of rows between two hairlines: `Upgrade to Pro` stands
- * alone above the account rows, and `Log out` stands alone below them.
- */
-const MENU_GROUPS: ReadonlyArray<
-  ReadonlyArray<{
-    readonly label: string;
-    readonly icon: BlockIconName;
-    readonly tone?: "destructive";
-  }>
-> = [
-  [{ label: "Upgrade to Pro", icon: "sparkles" }],
-  [
-    { label: "Account", icon: "badgeCheck" },
-    { label: "Billing", icon: "card" },
-    { label: "Notifications", icon: "bell" },
-  ],
-  [{ label: "Log out", icon: "logout", tone: "destructive" }],
-];
+/** One row of the account menu: a mark and its label. */
+const AccountRow = ({
+  label,
+  mark,
+  onSelect,
+  destructive = false,
+}: {
+  readonly label: string;
+  readonly mark: ReactNode;
+  readonly onSelect: () => void;
+  readonly destructive?: boolean;
+}) => (
+  <button
+    className="gx-user-item"
+    data-destructive={destructive ? "" : undefined}
+    onClick={onSelect}
+    type="button"
+  >
+    {mark}
+    <span className="gx-user-item-label">{label}</span>
+  </button>
+);
 
-/** The identity row and its dropdown, shared by both previews. */
+/**
+ * The identity row and its dropdown.
+ *
+ * `side="bottom"` is the footer placement: an end-anchored menu takes the
+ * trigger's right edge and opens leftward. `side="right"` is the icon rail's:
+ * the menu sits beside the avatar instead of over the window's edge.
+ */
 const AccountMenu = ({
   collapsed,
-  onAction,
+  side,
   defaultOpen = false,
+  onAction,
 }: {
   readonly collapsed: boolean;
-  readonly onAction: (action: string) => void;
-  /** Open on the first paint, so a menu's own page lands on the menu. */
+  readonly side: "bottom" | "right";
   readonly defaultOpen?: boolean;
+  readonly onAction: (action: string) => void;
 }) => {
   const [open, setOpen] = useState(defaultOpen);
+  const identity = (
+    <span className="gx-user-identity">
+      <span className="gx-user-name">{USER.name}</span>
+      <span className="gx-user-email">{USER.email}</span>
+    </span>
+  );
+  const select = (action: string) => {
+    setOpen(false);
+    onAction(action);
+  };
+
   return (
-    <div className="gx-user">
+    <div className="gx-user-menu">
       <button
         aria-expanded={open}
-        aria-haspopup="menu"
-        aria-label="Benji van der Brand account menu"
+        aria-label={`${USER.name} account menu`}
         className="gx-user-trigger"
         data-collapsed={collapsed ? "" : undefined}
-        data-open={open ? "" : undefined}
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
-        <span aria-hidden="true" className="gx-user-disc">
-          B
-        </span>
+        <Identity size={collapsed ? "sm" : "md"} />
         {collapsed ? null : (
           <>
-            <span className="gx-user-identity">
-              <span className="gx-user-name">Benji van der Brand</span>
-              <span className="gx-user-mail">benji@example.com</span>
-            </span>
+            {identity}
             {MARK.updown}
           </>
         )}
       </button>
       {open ? (
         <div
-          aria-label="Benji van der Brand account"
-          className="gx-user-menu"
+          className="gx-user-menu-content"
+          data-align="end"
+          data-side={side}
           role="menu"
+          style={{ width: MENU_WIDTH }}
         >
-          <div className="gx-user-head">
-            <span aria-hidden="true" className="gx-user-disc">
-              B
-            </span>
-            <span className="gx-user-identity">
-              <span className="gx-user-name">Benji van der Brand</span>
-              <span className="gx-user-mail">benji@example.com</span>
-            </span>
+          <div className="gx-user-menu-identity">
+            <Identity size="md" />
+            {identity}
           </div>
-          {MENU_GROUPS.map((group, index) => (
-            <div className="gx-user-group" key={index}>
-              {group.map((entry) => (
-                <button
-                  key={entry.label}
-                  className="gx-user-item"
-                  data-tone={entry.tone}
-                  onClick={() => {
-                    setOpen(false);
-                    onAction(entry.label);
-                  }}
-                  role="menuitem"
-                  type="button"
-                >
-                  <BlockIcon name={entry.icon} size={15} />
-                  {entry.label}
-                </button>
-              ))}
-            </div>
-          ))}
+          <span className="gx-user-separator" role="separator" />
+          <AccountRow
+            label="Upgrade to Pro"
+            mark={MARK.sparkles}
+            onSelect={() => select("Upgrade to Pro")}
+          />
+          <span className="gx-user-separator" role="separator" />
+          <AccountRow
+            label="Account"
+            mark={MARK.badge}
+            onSelect={() => select("Account")}
+          />
+          <AccountRow
+            label="Billing"
+            mark={MARK.card}
+            onSelect={() => select("Billing")}
+          />
+          <AccountRow
+            label="Notifications"
+            mark={MARK.bell}
+            onSelect={() => select("Notifications")}
+          />
+          <span className="gx-user-separator" role="separator" />
+          <AccountRow
+            destructive
+            label="Log out"
+            mark={MARK.logout}
+            onSelect={() => select("Log out")}
+          />
         </div>
       ) : null}
     </div>
   );
 };
 
-/** The panel, its content and the account footer. */
-export const SidebarDemo = () => {
-  const [collapsed, setCollapsed] = useState(false);
+/**
+ * The panel: the window's left column at the component's widths.
+ *
+ * The width and the offcanvas travel are the layout's, not the style sheet's,
+ * because they follow the collapse state; the paint is in `demos.css`.
+ */
+export const SidebarPanel = ({
+  mode,
+  open,
+  onAction,
+}: {
+  readonly mode: SidebarMode;
+  readonly open: boolean;
+  readonly onAction?: (action: string) => void;
+}) => {
   const [active, setActive] = useState("playground");
-  const [last, setLast] = useState("none");
+  const icons = mode === "icon" && !open;
+  const select = onAction ?? (() => undefined);
 
   return (
-    <div>
-      <div style={page}>
-        <div style={panel(collapsed)}>
-          <div style={{ ...row(false, collapsed), fontWeight: 600 }}>
-            {glyph(
-              <>
-                <path d="M12 8V4H8" />
-                <rect height="12" width="16" x="4" y="8" rx="2" />
-              </>,
-            )}
-            {collapsed ? null : "Acme Inc"}
-          </div>
-          <div style={{ height: 4 }} />
-          {ITEMS.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActive(item.id)}
-              style={{
-                ...row(active === item.id, collapsed),
-                border: "none",
-                cursor: "pointer",
-                font: "inherit",
-                fontSize: FONT,
-                width: "100%",
-              }}
-              type="button"
-            >
-              {item.mark}
-              {collapsed ? null : item.label}
-            </button>
-          ))}
-          <div style={{ flexGrow: 1 }} />
-          <AccountMenu collapsed={collapsed} onAction={setLast} />
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
-          <div
-            style={{
-              alignItems: "center",
-              borderBottom: "1px solid var(--border)",
-              display: "flex",
-              gap: 8,
-              padding: 8,
-            }}
-          >
-            <button
-              aria-label="Toggle Sidebar"
-              onClick={() => setCollapsed((value) => !value)}
-              style={{
-                background: "transparent",
-                border: "1px solid var(--border)",
-                borderRadius: 6,
-                color: "var(--foreground)",
-                cursor: "pointer",
-                display: "flex",
-                padding: 5,
-              }}
-              type="button"
-            >
-              {glyph(
-                <>
-                  <rect height="18" width="18" x="3" y="3" rx="2" />
-                  <path d="M9 3v18" />
-                </>,
-              )}
-            </button>
-            <span
-              style={{
-                color: "var(--foreground)",
-                fontSize: 13,
-                fontWeight: 600,
-              }}
-            >
-              {ITEMS.find((item) => item.id === active)?.label}
-            </span>
-          </div>
-          <div style={{ flexGrow: 1 }} />
-        </div>
+    <div
+      className="gx-sidebar-panel"
+      data-collapsible={mode}
+      data-state={open ? "expanded" : "collapsed"}
+      style={{
+        marginLeft: panelOffset(mode, open),
+        width: panelWidth(mode, open),
+      }}
+    >
+      <div className="gx-sidebar-header">
+        <button
+          className="gx-sidebar-brand"
+          onClick={() => select("Acme Inc")}
+          type="button"
+        >
+          {MARK.terminal}
+          {icons ? null : <span>Acme Inc</span>}
+        </button>
       </div>
-      <p style={note}>Last action: {last}.</p>
+      <div className="gx-sidebar-content">
+        {icons ? null : (
+          <span className="gx-sidebar-group-label">Platform</span>
+        )}
+        {ITEMS.map((item) => (
+          <button
+            className="gx-sidebar-row"
+            data-active={active === item.id ? "" : undefined}
+            key={item.id}
+            onClick={() => setActive(item.id)}
+            type="button"
+          >
+            {item.mark}
+            {icons ? null : (
+              <span className="gx-sidebar-row-label">{item.label}</span>
+            )}
+          </button>
+        ))}
+      </div>
+      <div className="gx-sidebar-footer">
+        <AccountMenu
+          collapsed={icons}
+          onAction={select}
+          side={icons ? "right" : "bottom"}
+        />
+      </div>
     </div>
   );
 };
 
-/** The account row alone, for the User menu page. */
+/** The content beside the panel: the room the gap reserves, with real rows. */
+const SidebarInset = () => (
+  <div className="gx-sidebar-inset">
+    <div className="gx-sidebar-inset-bar">
+      <span className="gx-sidebar-inset-title">Playground</span>
+      <button className="gx-btn gx-btn-secondary gx-btn-sm" type="button">
+        Run
+      </button>
+    </div>
+    <div className="gx-sidebar-inset-body">
+      <label className="gx-sidebar-prompt">
+        <span>Prompt</span>
+        <input
+          className="gx-field"
+          defaultValue="Summarise the release notes"
+        />
+      </label>
+      <ul className="gx-sidebar-runs">
+        {RUNS.map((run) => (
+          <li className="gx-sidebar-run" data-state={run.state} key={run.id}>
+            <span aria-hidden="true" className="gx-sidebar-run-dot" />
+            <span className="gx-sidebar-run-title">{run.label}</span>
+            <span className="gx-sidebar-run-meta">
+              {run.id} · {run.ms}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+);
+
+/** The window: the panel on its left, the inset beside it, the controls above. */
+export const SidebarDemo = () => {
+  const [mode, setMode] = useState<SidebarMode>("icon");
+  const [open, setOpen] = useState(true);
+  const [last, setLast] = useState("none");
+
+  return (
+    <div className="gx-demo gx-drawer-scene">
+      <div className="gx-drawer-toolbar">
+        <div aria-label="Collapsible mode" className="gx-tgroup" role="group">
+          {SIDEBAR_MODES.map((entry) => (
+            <button
+              aria-pressed={mode === entry}
+              className="gx-btn gx-toggle"
+              data-pressed={mode === entry ? "" : undefined}
+              key={entry}
+              onClick={() => setMode(entry)}
+              type="button"
+            >
+              {entry}
+            </button>
+          ))}
+        </div>
+        <button
+          aria-expanded={open}
+          aria-label={collapseLabel(open)}
+          className="gx-btn gx-btn-secondary"
+          onClick={() => setOpen((value) => !value)}
+          type="button"
+        >
+          {collapseLabel(open)}
+        </button>
+      </div>
+      <div className="gx-drawer-frame gx-sidebar-frame">
+        <div className="gx-drawer-appbar">
+          <span className="gx-drawer-apptitle">Acme Inc</span>
+          <span className="gx-drawer-readout">
+            collapsible=&quot;{mode}&quot; · state=&quot;
+            {open ? "expanded" : "collapsed"}&quot;
+          </span>
+        </div>
+        <div className="gx-sidebar-body">
+          <SidebarPanel mode={mode} onAction={setLast} open={open} />
+          <SidebarInset />
+        </div>
+      </div>
+      <p className="gx-drawer-hint" role="status">
+        Last action: {last}.
+      </p>
+    </div>
+  );
+};
+
+/** The account row in a right-hand footer, on the window it belongs to. */
 export const UserMenuDemo = () => {
   const [last, setLast] = useState("none");
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "stretch",
-        gap: 12,
-        width: "100%",
-        maxWidth: 320,
-      }}
-    >
-      {/* The footer sits at the bottom of a panel with room above it: a footer
-          menu opens upward, so the preview has to give the surface the height
-          it needs or the frame cuts it off. */}
-      <div
-        style={{
-          background: "var(--card)",
-          border: "1px solid var(--border)",
-          borderRadius: 10,
-          color: "var(--card-foreground)",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-end",
-          minHeight: 300,
-          padding: 8,
-          position: "relative",
-        }}
-      >
-        <AccountMenu collapsed={false} defaultOpen onAction={setLast} />
+    <div className="gx-demo gx-drawer-scene">
+      <div className="gx-user-stage">
+        <div className="gx-drawer-appbar">
+          <span className="gx-drawer-apptitle">Acme Inc</span>
+          <span className="gx-drawer-readout">align=&quot;end&quot;</span>
+        </div>
+        <div className="gx-user-page">
+          <span className="gx-user-page-title">Workspace</span>
+          <span className="gx-user-page-row">Members</span>
+          <span className="gx-user-page-row">Invitations</span>
+        </div>
+        <div className="gx-user-footer">
+          <AccountMenu
+            defaultOpen
+            onAction={setLast}
+            side="bottom"
+            collapsed={false}
+          />
+        </div>
       </div>
-      <p style={{ ...note, marginTop: 0 }}>Last action: {last}.</p>
+      <p className="gx-drawer-hint" role="status">
+        Last action: {last}.
+      </p>
     </div>
   );
 };
@@ -345,7 +450,11 @@ import {
   SidebarTrigger, SidebarUserMenu,
 } from "@gpuixui/components";
 
-const user = { name: "Benji van der Brand", email: "benji@example.com" };
+const user = {
+  name: "Benji van der Brand",
+  email: "benji@example.com",
+  avatar: "/avatars/benji.png",
+};
 
 <SidebarProvider collapsible="icon">
   <Sidebar>
@@ -384,8 +493,15 @@ const user = { name: "Benji van der Brand", email: "benji@example.com" };
 
 export const userMenuDemoSource = `import { UserMenu, SidebarUserMenu } from "@gpuixui/components";
 
+const user = {
+  name: "Benji van der Brand",
+  email: "benji@example.com",
+  avatar: "/avatars/benji.png",
+};
+
 <UserMenu
-  user={{ name: "Benji van der Brand", email: "benji@example.com" }}
+  user={user}
+  align="end"
   onUpgrade={upgrade}
   onAccount={() => navigate("/account")}
   onBilling={() => navigate("/billing")}

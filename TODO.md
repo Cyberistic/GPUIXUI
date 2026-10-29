@@ -301,6 +301,19 @@ that hugs its content — is gone, a demo root no longer scrolls under focus (th
 scroll carried an open calendar 286px out of its card), and the command list
 fades the row its clip cuts while the veil's stage stops being a scrollport.
 Six regression cases; each fails with the drawing reverted.
+`[x]` **Sidebar and user-menu drawings rebuilt on the window** — the sidebar
+page drew a 176px floating card with no app bar or inset, so the owner saw
+"Benji van der …"; it is now the drawer page's window (app bar, the component's
+256px panel and 48px rail, an inset with real rows), with the collapse modes in
+the pressed toggle family and a collapse control that moves the panel (measured
+256 → 48, inset left 787 → 579; offcanvas parks at −256 and `none` keeps 256).
+The account drawing painted an initials "B" where the component paints `src`;
+the trigger and the menu header now show the same picture. The menu is
+end-anchored (`right: 0`) and stays inside its 480px stage — measured at
+1440×1000 dark, trigger and menu right edges both 1002, menu left 778. 12 cases
+in `sidebar-preview.test.tsx` and `user-menu-preview.test.tsx`; inverted: 176
+fails the width and the row room (80 < 150), `left: 0` fails the anchor, a
+missing app bar fails the window case, and the initials disc fails the picture.
 `[x]` **Overlay motion and inset defects** — the confirmation dialog's failure
 block appeared at its full height in one frame (165 → 269 px) and emptied the
 same way on a retry: it now grows and collapses on the toast's move curve (a

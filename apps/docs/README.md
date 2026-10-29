@@ -175,6 +175,8 @@ src/components/docs/sheet-drawer-preview.tsx The sheet and drawer drawings, open
 src/components/docs/popover-preview.ts    The popover preview's side gap, snap margin and pull-back
 src/components/docs/popover-sides.tsx     The popover's four sides and its collision pull-back
 src/components/docs/sidebar-demo.tsx      The sidebar and account-menu drawings and their source strings
+src/components/docs/sidebar-preview.ts    The sidebar drawing's widths, collapse modes and reserved gap
+src/components/docs/user-menu-preview.ts  The account menu drawing's width and end-anchored stage
 src/components/docs/list-preview.ts       The list preview's arrow order, type-ahead and selection rules
 src/components/docs/list-demo.tsx         The list's two browser renderings and their source strings
 src/components/docs/dock-preview.ts       The split preview's rule, read from the dock package's reducers
