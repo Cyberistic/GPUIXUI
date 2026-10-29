@@ -222,7 +222,7 @@ import {
   DRAWER_TITLE,
   MESSAGE_SCROLLER_CONTENT,
   MESSAGE_SCROLLER_ITEM,
-  MESSAGE_SCROLLER_RAIL,
+  MESSAGE_SCROLLER_JUMP,
   MESSAGE_SCROLLER_ROOT,
   MESSAGE_SCROLLER_VIEWPORT,
   NAVIGATION_MENU_CONTENT,
@@ -1898,8 +1898,9 @@ describe("ColorPicker recipe", () => {
 });
 
 describe("MessageScroller recipe", () => {
-  it("resolves the root, viewport, content, row and the reserved rail", () => {
+  it("resolves the root, viewport, content, row and the floating control", () => {
     expect(style(MESSAGE_SCROLLER_ROOT)).toEqual({
+      position: "relative",
       display: "flex",
       flexDirection: "column",
       minHeight: 0,
@@ -1925,12 +1926,12 @@ describe("MessageScroller recipe", () => {
       flexShrink: 0,
       alignSelf: "stretch",
     });
-    expect(style(MESSAGE_SCROLLER_RAIL)).toEqual({
+    expect(style(MESSAGE_SCROLLER_JUMP)).toEqual({
       display: "flex",
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      flexShrink: 0,
+      pointerEvents: "none",
     });
   });
 });
@@ -2263,7 +2264,7 @@ describe("Chat recipe", () => {
     expect(style(CHAT_COMPOSER_ROW)).toEqual({
       display: "flex",
       flexDirection: "row",
-      alignItems: "flex-end",
+      alignItems: "center",
       gap: 8,
     });
     expect(style(CHAT_COMPOSER_FIELD)).toEqual({
@@ -2529,7 +2530,7 @@ describe("no unsupported classes", () => {
       MESSAGE_SCROLLER_VIEWPORT,
       MESSAGE_SCROLLER_CONTENT,
       MESSAGE_SCROLLER_ITEM,
-      MESSAGE_SCROLLER_RAIL,
+      MESSAGE_SCROLLER_JUMP,
       BUBBLE_ROOT,
       BUBBLE_COLUMN,
       BUBBLE_CONTENT,

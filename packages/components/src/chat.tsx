@@ -548,7 +548,10 @@ export const ChatComposer = ({
           {attachments}
         </div>
       )}
-      <div style={recipeStyle(CHAT_COMPOSER_ROW, theme)}>
+      <div
+        testId="chat-composer-row"
+        style={recipeStyle(CHAT_COMPOSER_ROW, theme)}
+      >
         <div style={hintHost({ flexGrow: 1 })}>
           <textarea
             testId="chat-field"

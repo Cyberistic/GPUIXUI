@@ -24422,7 +24422,6 @@ right inset with the pill crossing the surface's edge. `bubble.test.tsx`'s case
 now measures the corner for both aligns and fails on the old per-side inset (7
 cases failed when inverted).
 
-<<<<<<< HEAD
 ## Docs chrome and the folding tree (2026-10-29)
 
 `[x]` `[██████████]` 3/3 — **no phantom control in the calendar, the caption
@@ -24479,7 +24478,6 @@ a horizontal drag steps the value, Shift is ×10, the row's bounds clamp it, a
 click without travel changes nothing, and the field keeps typing. The files
 panel's number rows use it and the primitives' `NumberField` page documents the
 part.
-=======
 ## Media player — Mux's anatomy (2026-10-29)
 
 `[x]` `[██████████]` 1/1
@@ -24499,7 +24497,6 @@ fullscreen request, disabled refusal, bad frame), each inverted and recorded.
 `nub run --filter @gpuixui/media test` 196, `test:behaviour` 27, docs 2341,
 `nub run check` clean. Live probe updated to the new ids and geometry
 (`media-player-lifecycle`, 47 checks, not re-run here).
->>>>>>> origin/feat/media-player-mux
 
 ## Previews that told the wrong story (2026-10-29)
 
@@ -24575,3 +24572,28 @@ now draw the page the surface covers.
 `[x]` **The context menu's second level** opened on top of its parent: a 520px
 scene left no room on the right, so the flip rule fired and landed on the menu
 it belonged to. The frame is 760px now, and the case asserts both sides.
+## Chat composer centring and the scroller's anatomy (2026-10-29)
+
+`[x]` `[██████████]` 3/3 — **the chat send control is centred, the transcript is
+the guild's, and the message scroller's anatomy is shadcn's.**
+
+`[x]` The chat composer's send control sat on the row's bottom edge
+(`items-end`), so a growing field lifted it and left every pixel of slack above
+it. The row is `items-center` in `CHAT_COMPOSER_ROW` and in the docs drawing;
+`chat.test.tsx` measures equal gaps at one line and at a four-line field.
+
+`[x]` The chat block's conversation was a release pipeline: rewritten around the
+sibling block's guild vocabulary (dossier, intel bank, seals, the exam, the
+register, renown, licence), with the "Ready" heading line replaced by the
+prompt it stands for and the header actions held to real buttons.
+
+`[x]` The message scroller now matches shadcn's frame: the jump control floats
+centred over the viewport's bottom edge instead of owning a rail below it; the
+viewport is a fixed-height scroller whose content owns the padding and whose
+rows paint no box; following an append depends on the row count, and following a
+grown row on that row's own size report — a sibling's re-render measures
+nothing. The docs drawing is a real scroll container with the pin measured from
+`scrollHeight - scrollTop - clientHeight` and a floating control that appears
+only when released. Behaviour: `message-scroller.test.tsx` gains the overlay
+placement, the content-composition append, the sibling-render and the
+row-repaint cases; the docs block gains `message-scroller-demo.test.tsx`.

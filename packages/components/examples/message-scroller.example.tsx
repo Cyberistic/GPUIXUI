@@ -112,14 +112,13 @@ export const MessageScrollerExample = () => {
           testId="message-scroller"
           style={{
             height: 280,
-            padding: theme.spacing.md,
             borderWidth: theme.borderWidth.thin,
             borderColor: theme.colors.border,
             borderRadius: theme.radius.lg,
             backgroundColor: theme.colors.card,
           }}
         >
-          <MessageScrollerContent>
+          <MessageScrollerContent style={{ padding: theme.spacing.md }}>
             {messages.map((message) => (
               <MessageScrollerItem key={message.id}>
                 <text

@@ -10380,9 +10380,10 @@ button.gx-rating-star:focus-visible {
 }
 
 /* ---- message scroller: mirrors components/src/message-scroller.tsx ----
-   The viewport is a bounded scroll container; the pin is a 1px tail sentinel's
-   position, and `JumpToLatest` renders beneath it only while unpinned, with the
-   unread count. */
+   The card is the positioned frame; the viewport is a fixed-height scroll
+   container that fills it, the content owns the inset, and a row paints no
+   surface of its own. The jump control floats centred over the viewport's
+   bottom edge, so showing it takes no height from the transcript. */
 .gx-scroller {
   display: flex;
   flex-direction: column;
@@ -10409,53 +10410,77 @@ button.gx-rating-star:focus-visible {
   color: var(--foreground);
 }
 
+.gx-scroller-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 .gx-scroller-viewport {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  max-height: 152px;
+  height: 236px;
   overflow-y: auto;
-  border: 1px solid var(--border);
+  overscroll-behavior: contain;
   border-radius: var(--radius);
   background: var(--background);
 }
 
+.gx-scroller-viewport:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+/* The padding is the content's: a scroll container with an inset of its own
+   clips the first and last row against it. */
+.gx-scroller-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px;
+}
+
+/* An item is a row of text, not a box: the message inside decides its surface. */
 .gx-scroller-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: var(--row-height);
-  padding: 0 10px;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .gx-scroller-row-meta {
-  flex: 0 0 auto;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
   color: var(--muted-foreground);
 }
 
 .gx-scroller-row-body {
+  font-family: var(--font-sans);
   font-size: 13px;
+  line-height: 20px;
   color: var(--foreground);
+}
+
+.gx-scroller-jump {
+  position: absolute;
+  right: 0;
+  bottom: 12px;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.gx-scroller-jump .gx-btn {
+  pointer-events: auto;
 }
 
 .gx-scroller-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.gx-scroller-readout {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--placeholder);
-}
-
-.gx-scroller-readout b {
-  color: var(--primary);
-  font-weight: 600;
 }
 
 /* ---- navigation menu: mirrors components/src/navigation-menu.tsx ----
@@ -10860,6 +10885,16 @@ button.gx-rating-star:focus-visible {
   gap: 4px;
 }
 
+/* The flexible middle. The jump control floats over its bottom edge, so it
+   never takes a row of height from the transcript. */
+.gx-chat-stage {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
 /* The only flexible row. `flex-basis: 0` keeps a tall transcript from asking
    the frame for more height; `overflow-y` is the scroller. */
 .gx-chat-messages {
@@ -10954,30 +10989,21 @@ button.gx-rating-star:focus-visible {
   font-size: 12px;
 }
 
-/* A reserved rail: the control fades and travels 4px inside it, so it never
-   changes the transcript's height. */
-.gx-chat-rail {
+/* The jump control, floating centred over the transcript's bottom edge — the
+   same place the native control takes. A full-width strip carries the centring
+   (no transform); only the button takes the pointer. */
+.gx-chat-jump {
+  position: absolute;
+  right: 0;
+  bottom: 12px;
+  left: 0;
   display: flex;
-  flex: 0 0 auto;
-  align-items: center;
   justify-content: center;
-  height: 32px;
-}
-
-.gx-chat-rail .gx-btn {
-  opacity: 0;
   pointer-events: none;
-  position: relative;
-  top: 4px;
-  transition:
-    opacity 160ms ease-out,
-    top 160ms ease-out;
 }
 
-.gx-chat-rail .gx-btn[data-active="true"] {
-  opacity: 1;
+.gx-chat-jump .gx-btn {
   pointer-events: auto;
-  top: 0;
 }
 
 .gx-chat-composer {
@@ -10998,7 +11024,7 @@ button.gx-rating-star:focus-visible {
 
 .gx-chat-composer-row {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px;
 }
 
@@ -11022,6 +11048,7 @@ button.gx-rating-star:focus-visible {
   min-width: 0;
   min-height: var(--control-height-md);
   max-height: 120px;
+  overflow-y: auto;
   padding: 5px 2px;
   border: 0;
   background: transparent;

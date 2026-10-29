@@ -465,8 +465,8 @@ describe("Chat", () => {
       const viewport = requireBounds(root, "chat-messages").height;
       wheel(root, 160);
       settle(root);
-      // The jump control appeared in its reserved rail: neither the transcript's
-      // height nor the composer's place moved.
+      // The jump control floats over the transcript: neither its height nor the
+      // composer's place moved.
       expect(requireBounds(root, "chat-messages").height).toBe(viewport);
       expect(requireBounds(root, "composer").y).toBe(composer);
       const before = offsetOf(root);
@@ -493,6 +493,8 @@ describe("Chat", () => {
       const pinnedRoot = renderComponent(<Conversation rows={30} />);
       const pinnedComposer = requireBounds(pinnedRoot, "composer").y;
       pinnedRoot.rerender(<Conversation rows={30} status="streaming" grown />);
+      // The grown row reports its size on the next layout.
+      settle(pinnedRoot);
       expect(requireBounds(pinnedRoot, "composer").y).toBe(pinnedComposer);
       expect(endIsVisible(pinnedRoot, 29)).toBe(true);
       pinnedRoot.unmount();
@@ -700,5 +702,55 @@ describe("Chat", () => {
     } finally {
       page.unmount();
     }
+  });
+});
+
+/** A composer at a given draft, so the row's height can be varied. */
+const ComposerAt = ({ value }: { readonly value: string }) => (
+  <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
+    <ChatRoot onSubmit={() => undefined}>
+      <ChatHeader title="Guild desk" />
+      <ChatComposer value={value} />
+    </ChatRoot>
+  </div>
+);
+
+/** The gaps above and below the send control inside its row. */
+const composerGaps = (
+  root: ComponentTestRoot,
+): {
+  readonly above: number;
+  readonly below: number;
+  readonly height: number;
+} => {
+  const row = requireBounds(root, "chat-composer-row");
+  const send = requireBounds(root, "chat-send");
+  return {
+    above: send.y - row.y,
+    below: row.y + row.height - (send.y + send.height),
+    height: row.height,
+  };
+};
+
+/**
+ * The send control is centred on the composer row's cross axis. The bug this
+ * guards: the row was `items-end`, so the prefix of a growing field lifted the
+ * control to the bottom edge and left all the space above it.
+ */
+describe("ChatComposer's send control", () => {
+  it("keeps equal space above and below at one line and at a grown field", () => {
+    const single = renderComponent(<ComposerAt value="One line" />);
+    const one = composerGaps(single);
+    single.unmount();
+
+    const grown = renderComponent(
+      <ComposerAt value={"One\nTwo\nThree\nFour"} />,
+    );
+    const tall = composerGaps(grown);
+    grown.unmount();
+
+    expect(one.above).toBe(one.below);
+    expect(tall.above).toBe(tall.below);
+    expect(tall.height).toBeGreaterThan(one.height);
   });
 });

@@ -3,15 +3,18 @@
  *
  * The shipped parts are GPUix host elements, so the docs mirror the composition
  * instead of mounting it: a fixed header, the transcript as the only flexible
- * row, a composer that never moves, and a reserved rail for the jump control.
- * Every turn is a `Message` row — an avatar and a meta line where a speaker
- * starts a run, then a `Bubble`; two consecutive replies share one run and join
- * their corners. The reader's bubble is the primary fill, the agent's is muted,
- * and one reply carries a reaction pill that crosses its bottom edge.
+ * row, a composer that never moves, and a jump control floating over the
+ * transcript's bottom edge. Every turn is a `Message` row — an avatar and a meta
+ * line where a speaker starts a run, then a `Bubble`; two consecutive replies
+ * share one run and join their corners. The reader's bubble is the primary fill,
+ * the agent's is muted, and one reply carries a reaction pill that crosses its
+ * bottom edge.
  *
- * The transport is scripted. The transcript follows the live edge only while the
- * reader is at it; scrolling up releases the view and the rail's control counts
- * what arrived. The third send fails on purpose so Retry is one press away.
+ * The conversation is the guild's: a dossier moves through its intel bank, its
+ * seals, the exam and the register. The transport is scripted. The transcript
+ * follows the live edge only while the reader is at it; scrolling up releases
+ * the view and the floating control counts what arrived. The third send fails on
+ * purpose so Retry is one press away.
  */
 
 import {
@@ -37,27 +40,27 @@ interface Row {
 }
 
 const REPLY =
-  "The release is green. Three fixes landed: the overlay dismissal order, the tabs anchor and the disabled label.";
+  "The dossier is sealed. The exam is recorded and the renown is on the licence.";
 
 const seed: ReadonlyArray<Row> = [
   {
     id: 1,
     role: "user",
-    body: "Is the release green?",
+    body: "Is the Valar Mortis dossier ready for the register?",
     at: "09:41",
     live: false,
   },
   {
     id: 2,
     role: "assistant",
-    body: "Not yet — the last fix is still running.",
+    body: "Not yet — the intel bank is still missing two seals.",
     at: "09:41",
     live: false,
   },
   {
     id: 3,
     role: "assistant",
-    body: "Every check passed except the last fix.",
+    body: "The exam is passed. The renown is banked with the licence.",
     at: "09:42",
     live: false,
     reaction: "👍",
@@ -65,16 +68,16 @@ const seed: ReadonlyArray<Row> = [
   {
     id: 4,
     role: "user",
-    body: "Then roll it out.",
+    body: "Then seal it and enter it in the register.",
     at: "09:42",
     live: false,
   },
 ];
 
 const STATUS_COPY: Readonly<Record<ChatStatus, string>> = {
-  idle: "Ready",
+  idle: "Ask the agent to seal a dossier or move a licence.",
   streaming: "Replying…",
-  error: "The reply failed. Retry, or send a shorter prompt.",
+  error: "The reply failed. Retry, or send a shorter message.",
 };
 
 /** The turns of the transcript: consecutive rows from one speaker share a run. */
@@ -160,6 +163,7 @@ export function ChatDemo() {
   const [unread, setUnread] = useState(0);
   const [sends, setSends] = useState(0);
   const transcript = useRef<HTMLDivElement | null>(null);
+  const field = useRef<HTMLTextAreaElement | null>(null);
   const words = useRef<ReadonlyArray<string>>([]);
   const nextId = useRef(seed.length + 1);
   const busy = status === "streaming";
@@ -172,6 +176,15 @@ export function ChatDemo() {
   useLayoutEffect(() => {
     if (pinned) scrollToEnd();
   }, [pinned, rows, scrollToEnd]);
+
+  // The native field grows to its content; the drawing measures the same way,
+  // so the row's cross axis is the line count's, not one fixed row.
+  useLayoutEffect(() => {
+    const element = field.current;
+    if (element === null) return;
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  }, [draft]);
 
   useEffect(() => {
     if (status !== "streaming") return;
@@ -223,7 +236,7 @@ export function ChatDemo() {
       return failing
         ? next.map((row) =>
             row.id === next[next.length - 1]?.id
-              ? { ...row, body: "The deploy timed out.", live: false }
+              ? { ...row, body: "The reply failed.", live: false }
               : row,
           )
         : next;
@@ -310,53 +323,53 @@ export function ChatDemo() {
         </div>
       </div>
 
-      <div
-        className="gx-chat-messages"
-        onScroll={() => {
-          const next = atEnd();
-          setPinned(next);
-          if (next) setUnread(0);
-        }}
-        ref={transcript}
-      >
-        <div className="gx-chat-content">
-          {runsOf(rows).map((run) => (
-            <div
-              className="gx-chat-turn"
-              data-role={run[0]?.role}
-              key={run[0]?.id}
-            >
-              {run.map((row, index) => (
-                <Row
-                  first={index === 0}
-                  group={groupOf(index, run.length)}
-                  key={row.id}
-                  row={row}
-                />
-              ))}
-            </div>
-          ))}
-          {busy ? <p className="gx-chat-sr">Assistant is replying.</p> : null}
-        </div>
-      </div>
-
-      <div className="gx-chat-rail">
-        <button
-          aria-hidden={pinned}
-          className="gx-btn gx-btn-secondary gx-btn-sm"
-          data-active={!pinned}
-          onClick={() => {
-            scrollToEnd();
-            setPinned(true);
-            setUnread(0);
+      <div className="gx-chat-stage">
+        <div
+          className="gx-chat-messages"
+          onScroll={() => {
+            const next = atEnd();
+            setPinned(next);
+            if (next) setUnread(0);
           }}
-          tabIndex={pinned ? -1 : 0}
-          type="button"
+          ref={transcript}
         >
-          {unread === 0
-            ? "Jump to latest"
-            : `${unread} new ${unread === 1 ? "message" : "messages"}`}
-        </button>
+          <div className="gx-chat-content">
+            {runsOf(rows).map((run) => (
+              <div
+                className="gx-chat-turn"
+                data-role={run[0]?.role}
+                key={run[0]?.id}
+              >
+                {run.map((row, index) => (
+                  <Row
+                    first={index === 0}
+                    group={groupOf(index, run.length)}
+                    key={row.id}
+                    row={row}
+                  />
+                ))}
+              </div>
+            ))}
+            {busy ? <p className="gx-chat-sr">Assistant is replying.</p> : null}
+          </div>
+        </div>
+        {pinned ? null : (
+          <div className="gx-chat-jump">
+            <button
+              className="gx-btn gx-btn-secondary gx-btn-sm"
+              onClick={() => {
+                scrollToEnd();
+                setPinned(true);
+                setUnread(0);
+              }}
+              type="button"
+            >
+              {unread === 0
+                ? "Jump to latest"
+                : `${unread} new ${unread === 1 ? "message" : "messages"}`}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="gx-chat-composer">
@@ -371,7 +384,8 @@ export function ChatDemo() {
                 send();
               }
             }}
-            placeholder="Ask the agent to change your code…"
+            placeholder="Ask the agent to seal a dossier…"
+            ref={field}
             rows={1}
             value={draft}
           />
@@ -425,7 +439,10 @@ export const Conversation = ({ status, setStatus, messages, send, stop, retry })
     onStop={stop}
     onRetry={retry}
   >
-    <ChatHeader title="New Thread" description="Ask the agent to change your code." />
+    <ChatHeader
+      title="New Thread"
+      description="Ask the agent to seal a dossier or move a licence."
+    />
     <ChatMessages>
       {messages.map((message) => (
         <Message key={message.id} variant={message.role} timestamp={message.at}>
@@ -448,6 +465,9 @@ export const Conversation = ({ status, setStatus, messages, send, stop, retry })
         </Message>
       ))}
     </ChatMessages>
-    <ChatComposer hint="Enter sends · Shift+Enter adds a line" />
+    <ChatComposer
+      placeholder="Ask the agent to seal a dossier…"
+      hint="Enter sends · Shift+Enter adds a line"
+    />
   </ChatRoot>
 );`;

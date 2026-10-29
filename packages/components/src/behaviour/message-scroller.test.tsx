@@ -12,10 +12,16 @@
  */
 
 import * as Option from "effect/Option";
+import { Profiler } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { clickCentreOf, requireBounds } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  requireBounds,
+  settle,
+} from "../internal/interaction.js";
 import {
   MessageScroller,
+  MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerJumpToLatest,
   MessageScrollerViewport,
@@ -222,6 +228,9 @@ describe("MessageScroller", () => {
     const root = renderComponent(<Transcript count={40} />);
 
     root.rerender(<Transcript count={40} grown />);
+    // A growing row reports its new size on the next layout, which is when the
+    // scroller follows it.
+    settle(root);
 
     expect(endIsVisible(root, 39)).toBe(true);
     expect(jumpActive(root)).toBe(false);
@@ -235,6 +244,7 @@ describe("MessageScroller", () => {
     const before = offsetOf(root);
 
     root.rerender(<Transcript count={40} grown />);
+    settle(root);
 
     expect(offsetOf(root)).toBe(before);
     expect(jumpActive(root)).toBe(true);
@@ -253,5 +263,151 @@ describe("MessageScroller", () => {
     expect(onPinnedChange).toHaveBeenCalledWith(false);
 
     root.unmount();
+  });
+});
+
+/**
+ * The jump control floats over the transcript's bottom edge, the way shadcn's
+ * button does. The bug this guards: it used to sit in a rail below the viewport,
+ * taking its own row of height from the scroller.
+ */
+describe("MessageScroller's jump control", () => {
+  it("floats centred over the viewport's bottom edge", () => {
+    const root = renderComponent(<Transcript count={40} />);
+    wheel(root, 120);
+
+    const viewport = requireBounds(root, "viewport");
+    const jump = requireBounds(root, "jump");
+    root.unmount();
+
+    expect(jump.y + jump.height).toBeLessThanOrEqual(
+      viewport.y + viewport.height,
+    );
+    expect(jump.y + jump.height).toBeGreaterThan(
+      viewport.y + viewport.height - 48,
+    );
+    expect(
+      Math.abs(jump.x + jump.width / 2 - (viewport.x + viewport.width / 2)),
+    ).toBeLessThanOrEqual(1);
+  });
+});
+
+/** The documented composition: rows live inside the content part. */
+const ContentTranscript = ({ count }: { readonly count: number }) => (
+  <div style={{ width: 480 }}>
+    <MessageScroller testId="scroller" label="Conversation">
+      <MessageScrollerViewport testId="viewport" style={{ height: 200 }}>
+        <MessageScrollerContent>
+          {Array.from({ length: count }, (_, index) => (
+            <MessageScrollerItem key={index} testId={`row-${index}`}>
+              <text>{`message ${index}`}</text>
+            </MessageScrollerItem>
+          ))}
+        </MessageScrollerContent>
+      </MessageScrollerViewport>
+      <MessageScrollerJumpToLatest testId="jump" />
+    </MessageScroller>
+  </div>
+);
+
+/** A transcript beside a sibling whose text changes, as a composer's draft would. */
+const WithSibling = ({ draft }: { readonly draft: string }) => (
+  <div style={{ width: 480 }}>
+    <text testId="draft">{draft}</text>
+    <MessageScroller testId="scroller" label="Conversation">
+      <MessageScrollerViewport testId="viewport" style={{ height: 200 }}>
+        {Array.from({ length: 40 }, (_, index) => (
+          <MessageScrollerItem key={index} testId={`row-${index}`}>
+            <text>{`message ${index}`}</text>
+          </MessageScrollerItem>
+        ))}
+      </MessageScrollerViewport>
+      <MessageScrollerJumpToLatest testId="jump" />
+    </MessageScroller>
+  </div>
+);
+
+/**
+ * A sibling's keystroke is not a transcript change. The bug this guards: the
+ * viewport re-scrolled the tail on every render, so typing in a composer beside
+ * it forced a layout per character.
+ */
+describe("MessageScroller's measurements", () => {
+  it("follows a row appended inside the content part", () => {
+    const root = renderComponent(<ContentTranscript count={40} />);
+    const before = offsetOf(root);
+
+    root.rerender(<ContentTranscript count={41} />);
+
+    expect(offsetOf(root)).toBeLessThan(before);
+    expect(endIsVisible(root, 40)).toBe(true);
+
+    root.unmount();
+  });
+
+  it("does not scroll or measure when a sibling re-renders", () => {
+    const root = renderComponent(<WithSibling draft="a" />);
+    const scrollIntoView = vi.spyOn(root.renderer, "scrollIntoView");
+    const getElementBounds = vi.spyOn(root.renderer, "getElementBounds");
+    scrollIntoView.mockClear();
+    getElementBounds.mockClear();
+
+    root.rerender(<WithSibling draft="ab" />);
+
+    const scrolled = scrollIntoView.mock.calls.length;
+    const measured = getElementBounds.mock.calls.length;
+    root.unmount();
+
+    expect(scrolled).toBe(0);
+    expect(measured).toBe(0);
+  });
+});
+
+/** A transcript whose rows count their own commits, one profiler per row. */
+const Profiled = ({
+  count,
+  commits,
+}: {
+  readonly count: number;
+  readonly commits: Map<string, number>;
+}) => (
+  <div style={{ width: 480 }}>
+    <MessageScroller testId="scroller" label="Conversation">
+      <MessageScrollerViewport testId="viewport" style={{ height: 200 }}>
+        {Array.from({ length: count }, (_, index) => (
+          <Profiler
+            id={`row-${index}`}
+            key={index}
+            onRender={(id) => commits.set(id, (commits.get(id) ?? 0) + 1)}
+          >
+            <MessageScrollerItem testId={`row-${index}`}>
+              <text>{`message ${index}`}</text>
+            </MessageScrollerItem>
+          </Profiler>
+        ))}
+      </MessageScrollerViewport>
+      <MessageScrollerJumpToLatest testId="jump" />
+    </MessageScroller>
+  </div>
+);
+
+/**
+ * The scroller's state is not what every row reads. The bug this guards: the
+ * shared context carried `pinned`/`unread`, so one store write rebuilt the value
+ * and every row repainted — `n` arrivals cost `n` repaints.
+ */
+describe("MessageScroller's repaints", () => {
+  it("repaints no rows for a jump that only moves the store", () => {
+    const commits = new Map<string, number>();
+    const root = renderComponent(<Profiled count={40} commits={commits} />);
+    wheel(root, 120);
+    commits.clear();
+
+    clickCentreOf(root, "jump");
+
+    const repainted = [...commits.entries()].filter(([, n]) => n > 0);
+    root.unmount();
+
+    expect(repainted).toEqual([]);
   });
 });

@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import { icons } from "@gpuixui/icons";
+import { themes } from "@gpuixui/tokens";
+import { CHAT_COMPOSER_ROW, classesToStyle } from "@gpuixui/tw";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { galleryMarkup } from "@/lib/icon-gallery";
@@ -11,14 +13,18 @@ import { ChatDemo } from "./chat-demo";
  * The bug this guards is the layout shift: the block used to draw a transcript
  * that sized itself to its rows and a status switcher as a control strip, so the
  * composer moved as messages arrived. The block is now a fixed-height frame
- * with a fixed header, the transcript as the only flexible row, a reserved rail
- * for the jump control and a fixed composer.
+ * with a fixed header, the transcript as the only flexible row, a floating jump
+ * control and a fixed composer.
  *
  * The second bug this guards is the pair of plain rows: the agent's replies were
  * unboxed prose and the reader's bubble was the neutral fill, so the block did
  * not show the chat family it documents. Every turn is now a `Message` row with
  * a `Bubble` — the reader on the primary fill, the agent muted — an avatar and
  * meta line only where a speaker starts, and the grouped run's corners joined.
+ *
+ * The third bug is the heading: the block printed "Ready", a status with nothing
+ * to say. The line now carries the prompt it offers, and the conversation is the
+ * guild's — a dossier, its intel bank, its seals, the exam and the register.
  */
 
 const markup = renderToStaticMarkup(<ChatDemo />);
@@ -40,7 +46,37 @@ describe("the chat block", () => {
     expect(markup).toContain(">Reset</button>");
     expect(markup).toContain('class="gx-chat-messages"');
     expect(markup).toContain('class="gx-chat-composer"');
-    expect(markup).toContain('class="gx-chat-rail"');
+    expect(markup).toContain('class="gx-chat-stage"');
+  });
+
+  it("names the dossier's work: the intel bank, seals, the exam and the register", () => {
+    expect(markup).toContain(
+      "Is the Valar Mortis dossier ready for the register?",
+    );
+    expect(markup).toContain("the intel bank is still missing two seals");
+    expect(markup).toContain("The exam is passed");
+    expect(markup).toContain("The renown is banked with the licence");
+    expect(markup).toContain("Then seal it and enter it in the register.");
+    expect(markup).not.toContain("release");
+    expect(markup).not.toContain("deploy");
+    expect(markup).not.toContain("roll it out");
+  });
+
+  it("gives the header a line worth reading and real controls", () => {
+    expect(markup).not.toContain(">Ready<");
+    expect(markup).toContain(
+      "Ask the agent to seal a dossier or move a licence.",
+    );
+    expect(markup).toMatch(/<button[^>]*>Reset<\/button>/);
+  });
+
+  it("centres Send on the composer row's cross axis", () => {
+    expect(block(".gx-chat-composer-row")).toContain("align-items: center");
+    // The native row is the drawing's source of truth: a component that went
+    // back to `items-end` fails here before the drawing can follow it.
+    expect(
+      classesToStyle(CHAT_COMPOSER_ROW, themes.dark).style.alignItems,
+    ).toBe("center");
   });
 
   it("puts every turn in a bubble: the reader on primary, the agent muted", () => {
@@ -92,24 +128,25 @@ describe("the chat block", () => {
   it("keeps the composer's y fixed: the frame has a height and the middle is the only grower", () => {
     expect(block(".gx-chat")).toContain("height: 560px");
     expect(block(".gx-chat")).toContain("display: flex");
+    expect(block(".gx-chat-stage")).toContain("flex: 1 1 0");
+    expect(block(".gx-chat-stage")).toContain("min-height: 0");
     expect(block(".gx-chat-messages")).toContain("flex: 1 1 0");
     expect(block(".gx-chat-messages")).toContain("min-height: 0");
     expect(block(".gx-chat-messages")).toContain("overflow-y: auto");
     expect(block(".gx-chat-head")).toContain("flex: 0 0 auto");
     expect(block(".gx-chat-composer")).toContain("flex: 0 0 auto");
-    expect(block(".gx-chat-rail")).toContain("flex: 0 0 auto");
   });
 
-  it("reserves the jump rail instead of taking height from the transcript", () => {
-    const rail = block(".gx-chat-rail");
-    expect(rail).toContain("height:");
-    expect(rail).not.toContain("display: none");
-    const control = block(".gx-chat-rail .gx-btn");
-    expect(control).toContain("opacity: 0");
-    expect(control).toContain("pointer-events: none");
-    expect(block('.gx-chat-rail .gx-btn[data-active="true"]')).toContain(
-      "opacity: 1",
-    );
+  it("floats the jump control over the transcript's bottom edge", () => {
+    const jump = block(".gx-chat-jump");
+    expect(jump).toContain("position: absolute");
+    expect(jump).toContain("bottom: 12px");
+    expect(jump).toContain("justify-content: center");
+    expect(jump).toContain("pointer-events: none");
+    expect(block(".gx-chat-jump .gx-btn")).toContain("pointer-events: auto");
+    // Pinned, the control is not painted at all: nothing reserves a rail.
+    expect(markup).not.toContain("gx-chat-jump");
+    expect(markup).not.toContain("Jump to latest");
   });
 
   it("puts Send, Stop and the field in the composer", () => {
