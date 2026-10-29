@@ -1,5 +1,6 @@
 import {
   filterByLevel,
+  LEVEL_COLUMN_WIDTH,
   levelTone,
   LOG_LEVELS,
   parseLogLine,
@@ -18,7 +19,9 @@ import { useEffect, useRef, useState } from "react";
  * `@gpuixui/files`' `LogViewer` is a GPUix host list, so the page cannot mount
  * it and this drawing is a labelled approximation. The lines are the package's
  * own: `parseLogLine` reads every row, `filterByLevel` decides what paints, and
- * `levelTone` names the role the level column is tinted with. Only the paint —
+ * `levelTone` names the role the level column is tinted with. The toolbar is the
+ * component's `ToggleGroup`/`Toggle` shape, the gutter is its
+ * `LEVEL_COLUMN_WIDTH`, and a row is the density's `rowHeight`. Only the paint —
  * and the scroll box, because a browser scrolls its own way — is the browser's.
  */
 
@@ -46,6 +49,9 @@ export const APPENDED_LINES: ReadonlyArray<string> = [
   "info hot update src/app.tsx",
 ] as const;
 
+/** The viewport the page's usage passes, in pixels. */
+export const LOG_FRAME_HEIGHT = 240;
+
 /** The rows the filter paints, through the package's parser and filter. */
 export const visibleEntries = (
   lines: ReadonlyArray<string>,
@@ -67,14 +73,6 @@ export const toggleLevel = (
 /** The colour role a level's token paints in; `debug` and `trace` are quiet. */
 export const levelRole = (level: LogLevel): string =>
   Option.getOrElse(levelTone(level), () => "muted");
-
-/** The tail the follow mode anchors on: the last rows that fit the frame. */
-export const FOLLOW_ROWS = 8;
-
-/** The rows a following viewer paints: the tail of the filtered list. */
-export const tailRows = (
-  entries: ReadonlyArray<LogEntry>,
-): ReadonlyArray<LogEntry> => Arr.takeRight(entries, FOLLOW_ROWS);
 
 /** The line an append produces; the caller owns the lines, as with the viewer. */
 export const appendLine = (
@@ -108,7 +106,6 @@ export function LogViewerFrame({
   onFollowChange,
 }: LogViewerFrameProps) {
   const entries = visibleEntries(lines, enabled);
-  const shown = follow ? tailRows(entries) : entries;
   const list = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -117,60 +114,70 @@ export function LogViewerFrame({
   }, [follow, entries.length]);
 
   return (
-    <div className="gx-logviewer">
-      <div className="gx-logviewer-bar">
-        <div aria-label="Levels" className="gx-logviewer-levels" role="group">
-          {LOG_LEVELS.map((level) => {
-            const on = Arr.contains(enabled, level);
-            return (
-              <button
-                aria-pressed={on}
-                className="gx-logviewer-level"
-                data-level={level}
-                key={level}
-                onClick={() => onEnabledChange(toggleLevel(enabled, level))}
-                type="button"
-              >
-                {level}
-              </button>
-            );
-          })}
-        </div>
-        <button
-          aria-pressed={follow}
-          className={`gx-btn gx-btn-sm ${follow ? "gx-btn-secondary" : "gx-btn-outline"}`}
-          onClick={() => onFollowChange(!follow)}
-          type="button"
-        >
-          Follow tail
-        </button>
-      </div>
-      <div
-        aria-label="Build log"
-        className="gx-logviewer-list"
-        data-follow={follow ? "true" : "false"}
-        ref={list}
-        role="log"
-      >
-        {shown.map((entry, index) => (
-          <div
-            className="gx-logviewer-row"
-            data-level={entry.level}
-            data-role={levelRole(entry.level)}
-            key={`${index}-${entry.message}`}
-          >
-            <span className="gx-logviewer-token">{entry.level}</span>
-            <span className="gx-logviewer-message">
-              {Str.isEmpty(entry.message) ? " " : entry.message}
-            </span>
+    <>
+      <div className="gx-logviewer">
+        <div className="gx-logviewer-bar">
+          <div aria-label="Levels" className="gx-tgroup" role="group">
+            {LOG_LEVELS.map((level) => {
+              const on = Arr.contains(enabled, level);
+              return (
+                <button
+                  aria-pressed={on}
+                  className="gx-btn gx-btn-sm gx-toggle gx-logviewer-level"
+                  data-level={level}
+                  data-pressed={on ? "" : undefined}
+                  key={level}
+                  onClick={() => onEnabledChange(toggleLevel(enabled, level))}
+                  type="button"
+                >
+                  {Str.capitalize(level)}
+                </button>
+              );
+            })}
           </div>
-        ))}
+          <button
+            aria-pressed={follow}
+            className="gx-btn gx-btn-sm gx-toggle gx-toggle-outline"
+            data-pressed={follow ? "" : undefined}
+            onClick={() => onFollowChange(!follow)}
+            type="button"
+          >
+            Follow tail
+          </button>
+        </div>
+        <div
+          aria-label="Build log"
+          className="gx-logviewer-list"
+          data-follow={follow ? "true" : "false"}
+          ref={list}
+          role="log"
+          style={{ height: LOG_FRAME_HEIGHT }}
+        >
+          {entries.map((entry, index) => (
+            <div
+              className="gx-logviewer-row"
+              data-level={entry.level}
+              data-role={levelRole(entry.level)}
+              key={`${index}-${entry.message}`}
+            >
+              <span
+                className="gx-logviewer-token"
+                style={{ width: LEVEL_COLUMN_WIDTH }}
+              >
+                {entry.level}
+              </span>
+              <span className="gx-logviewer-message">
+                {Str.isEmpty(entry.message) ? " " : entry.message}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
       <p className="gx-demo-readout">
-        {shown.length} of {entries.length} rows painted
+        {entries.length} of {lines.length} rows
         {follow ? " · following the tail" : " · scrolled where you left it"}
       </p>
-    </div>
+    </>
   );
 }
 

@@ -12540,8 +12540,6 @@ button.gx-rating-star:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 240px;
-  height: 160px;
   overflow: hidden;
   border-radius: var(--radius);
   background: var(--muted);
@@ -12549,22 +12547,14 @@ button.gx-rating-star:focus-visible {
 
 .gx-preview-picture {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  max-width: none;
+  max-height: none;
   object-fit: cover;
   transition:
-    width 300ms ease,
-    height 300ms ease,
-    left 300ms ease,
-    top 300ms ease;
-}
-
-.gx-preview-frame:hover .gx-preview-picture {
-  width: 160%;
-  height: 160%;
-  left: -30%;
-  top: -30%;
+    width 200ms ease,
+    height 200ms ease,
+    left 200ms ease,
+    top 200ms ease;
 }
 
 .gx-preview-caption {
@@ -13329,7 +13319,7 @@ button.gx-rating-star:focus-visible {
 .gx-logviewer {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  width: min(520px, 100%);
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 4px);
   background: var(--card);
@@ -13338,63 +13328,49 @@ button.gx-rating-star:focus-visible {
 
 .gx-logviewer-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  height: var(--control-height-sm);
-  padding: 0 6px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
   border-bottom: 1px solid var(--border);
   background: var(--card);
 }
 
-.gx-logviewer-levels {
-  display: flex;
-  gap: 2px;
-}
-
 .gx-logviewer-level {
-  height: calc(var(--control-height-sm) - 10px);
-  padding: 0 6px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted-foreground);
-  font: inherit;
-  font-size: 10.5px;
   font-family: var(--font-mono);
-  cursor: pointer;
+  font-size: 11px;
+  color: var(--muted-foreground);
 }
 
-.gx-logviewer-level[aria-pressed="true"] {
-  background: var(--accent);
+.gx-logviewer-level[data-pressed] {
   color: var(--accent-foreground);
 }
 
-.gx-logviewer-level[data-level="error"][aria-pressed="true"] {
+.gx-logviewer-level[data-level="error"][data-pressed] {
   color: var(--destructive);
 }
 
-.gx-logviewer-level[data-level="warn"][aria-pressed="true"] {
+.gx-logviewer-level[data-level="warn"][data-pressed] {
   color: var(--warning);
 }
 
-.gx-logviewer-level:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: -2px;
+.gx-logviewer-level[data-level="info"][data-pressed] {
+  color: var(--info);
 }
 
 .gx-logviewer-list {
-  height: 200px;
   overflow: auto;
   font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.55;
+  font-size: 12px;
 }
 
 .gx-logviewer-row {
   display: flex;
-  gap: 8px;
-  padding: 0 8px;
+  align-items: center;
+  gap: var(--spacing-sm);
+  height: var(--row-height);
+  padding: 0 var(--spacing-sm);
   white-space: pre;
 }
 
@@ -13404,7 +13380,6 @@ button.gx-rating-star:focus-visible {
 
 .gx-logviewer-token {
   flex: none;
-  width: 40px;
   color: var(--muted-foreground);
 }
 
@@ -13421,8 +13396,10 @@ button.gx-rating-star:focus-visible {
 }
 
 .gx-logviewer-message {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--foreground);
 }
 

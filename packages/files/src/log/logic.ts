@@ -22,6 +22,9 @@ export const LOG_LEVELS = ["error", "warn", "info", "debug", "trace"] as const;
 /** One severity a log line names. */
 export type LogLevel = (typeof LOG_LEVELS)[number];
 
+/** The width of a row's level gutter, so every message starts at the same `x`. */
+export const LEVEL_COLUMN_WIDTH = 56;
+
 /** Whether a string is a level, for a filter control that reports strings. */
 export const isLogLevel = (value: string): value is LogLevel =>
   Arr.some(LOG_LEVELS, (level) => level === value);

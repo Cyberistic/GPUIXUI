@@ -35,13 +35,14 @@ export {
   DEFAULT_LEVEL,
   filterByLevel,
   isLogLevel,
+  LEVEL_COLUMN_WIDTH,
   levelTone,
   LOG_LEVELS,
   parseLogLine,
 } from "./log/logic.js";
 export type { LogEntry, LogLevel } from "./log/logic.js";
 
-export { LEVEL_COLUMN_WIDTH, LogViewer } from "./log/log-viewer.js";
+export { LogViewer } from "./log/log-viewer.js";
 export type { LogViewerProps } from "./log/log-viewer.js";
 
 export {
