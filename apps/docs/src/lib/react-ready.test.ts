@@ -70,7 +70,6 @@ const hydrationGated = [
   "platform-switch-probe.ts",
   "preview-press-probe.ts",
   "search-probe.ts",
-  "theme-editor-probe.ts",
 ] as const;
 
 describe("a node React has committed", () => {

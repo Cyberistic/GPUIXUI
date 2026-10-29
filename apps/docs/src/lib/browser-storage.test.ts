@@ -6,11 +6,10 @@ import { browserStore, guarded } from "./browser-storage";
  * The one adapter a refused browser store goes through.
  *
  * A reader who blocks site data gets a `SecurityError` from the
- * `window.localStorage` getter, and a store with no room throws on write. Both
- * preferences that remember themselves — the platform switch and the theme
- * editor — read this module, so a regression here breaks two pages at once;
- * `platform-storage.test.ts` and `theme-editor-storage.test.ts` hold what each
- * one does with the absence.
+ * `window.localStorage` getter, and a store with no room throws on write. The
+ * switch that remembers itself — the platform and palette choice — reads this
+ * module, so a regression here breaks every preview on the site;
+ * `platform-storage.test.ts` holds what it reads and what absence answers.
  */
 
 describe("the browser store adapter", () => {
@@ -54,25 +53,19 @@ describe("the browser store adapter", () => {
     ).toBeUndefined();
   });
 
-  it("is the guard both remembered preferences read through", () => {
-    // Neither module may grow its own try/catch: two adapters would let one
-    // page forget how a refusal is answered while the other still worked.
+  it("is the guard the remembered preference reads through", () => {
+    // The module may not grow its own try/catch: a second adapter would let
+    // one reader forget how a refusal is answered while the other still worked.
     const platform = readFileSync(
       new URL("./platform-storage.ts", import.meta.url),
       "utf8",
     );
-    const editor = readFileSync(
-      new URL("../components/docs/theme-editor-storage.ts", import.meta.url),
-      "utf8",
-    );
 
-    [platform, editor].forEach((source) => {
-      expect(source).toContain("browser-storage");
-      expect(source).not.toContain("try {");
-      // The JSDoc may name the property; the code may not call it.
-      expect(source).not.toMatch(
-        /\blocalStorage\.(getItem|setItem|removeItem)/,
-      );
-    });
+    expect(platform).toContain("browser-storage");
+    expect(platform).not.toContain("try {");
+    // The JSDoc may name the property; the code may not call it.
+    expect(platform).not.toMatch(
+      /\blocalStorage\.(getItem|setItem|removeItem)/,
+    );
   });
 });

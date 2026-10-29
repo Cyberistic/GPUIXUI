@@ -34,15 +34,15 @@ The design tokens and theming layer (light, dark, high-contrast, density) is
 landed. Tier 1, the rest of data presentation, workspace and specialised
 components are tracked in `TODO.md`.
 
-The docs site follows shadcn/ui's anatomy: a sectioned sidebar (Getting Started,
-Components, Contributing), a reusable component page with Preview/Code tabs, a
-`nub` install block, Usage, Composition and API reference, plus the "On this
-page" table of contents and the previous/next pager. Button, Dialog, Popover and
+The docs site follows shadcn/ui's anatomy: a sectioned sidebar (the Guide,
+Components, Primitives, Icons, Data display, Workspace, Blocks, Examples,
+Reference), a reusable component page with Preview/Code tabs, a `nub` install
+block, Usage, Composition and API reference, plus the "On this page" table of
+contents and the previous/next pager. Button, Dialog, Popover and
 Tabs are the pattern pages; their previews are labelled browser renderings of
 the native components, and the Code tab plus **Component source** show the real
-implementation. The remaining shadcn surfaces — **Blocks** (`/blocks`) and
-the **Theme Editor** (`/themes`) — landed too: recipe pages composed from
-the library and a live token editor backed by `@gpuixui/tokens`. The **Dashboard**
+implementation. The remaining shadcn surfaces — **Blocks** (`/blocks`) — landed
+too: recipe pages composed from the library. The **Dashboard**
 block (`/blocks/dashboard`) is the landing's product window: a six-card
 activity dashboard composed from the library, with `BarChart`, `DonutChart` and
 `StackedBar` from `@gpuixui/data`.

@@ -144,7 +144,7 @@ describe("the /llms.txt index", () => {
 
   it("groups the pages the way the sidebar does, in the sidebar's order", () => {
     const samples = [
-      "/installation",
+      "/getting-started",
       "/components/dialog",
       "/primitives/button",
       "/icons/icon",

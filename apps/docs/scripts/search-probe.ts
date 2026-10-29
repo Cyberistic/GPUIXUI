@@ -60,8 +60,8 @@ export const searchCases: ReadonlyArray<SearchCase> = [
     absent: ["/primitives/button"],
   },
   {
-    query: "architecture",
-    expected: "/architecture",
+    query: "two minutes",
+    expected: "/getting-started",
     absent: [],
   },
 ];

@@ -2,7 +2,7 @@
  * The inventory lanes.
  *
  * `COMPONENTS.md` is the inventory's source of truth. The three composition
- * pages (`/layouts`, `/data-display`, `/workspace`) render their
+ * pages (`/data-display`, `/workspace`) render their
  * rows straight from its tier tables, so a page cannot call a row shipped while
  * the inventory says `todo`. The parser keeps the table's four columns and
  * reports a row it cannot read instead of dropping it.

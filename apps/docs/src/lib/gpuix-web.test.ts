@@ -57,7 +57,7 @@ const policy = read("docs/preview-strategy.md");
 /** The site's own ledger restates the measurement, so it is held with the policy. */
 const ledger = read("apps/docs/README.md");
 /** The page a reader asks what the pinned runtime provides. */
-const runtimePage = read("apps/docs/content/docs/runtime.mdx");
+const record = read("docs/gpuix-capabilities.md");
 
 /** The wasm build's size, as every surface that prints it writes it. */
 const webSize = (): string =>
@@ -133,23 +133,24 @@ describe("the GPUix web build", () => {
     expect(bytes).toBeGreaterThan(1024 * 1024);
   });
 
-  it("publishes the browser target on the runtime page", () => {
-    // The runtime page is where a reader asks what the pinned package provides,
-    // and it named no browser build while every preview linked `/live` with no
-    // explanation of what that page is. The page prints the same three measured
-    // constraints, the size, and the gap that is still owed.
-    expect(runtimePage).toContain("## The browser build");
-    expect(runtimePage).toContain(`${webSize()} MiB`);
-    expect(runtimePage).toContain("[/live](/live)");
-    expect(runtimePage).toContain("GPUIX web is already running");
-    expect(runtimePage).toContain("Cross-Origin-Opener-Policy");
-    expect(runtimePage).toContain("Cross-Origin-Embedder-Policy");
-    expect(runtimePage).toContain("SharedArrayBuffer");
-    expect(runtimePage).toContain("WebGPU");
-    expect(runtimePage).toContain("WebGL2");
-    expect(runtimePage).toContain("browser approximation");
+  it("publishes the browser target in the capability record", () => {
+    // The record is where a reader asks what the pinned package provides. It
+    // prints the same three measured constraints, the size, and the gap that
+    // is still owed, so the policy and the record cannot disagree.
+    const prose = record.replace(/\s+/g, " ");
 
-    expect(policy).toContain("/runtime");
+    expect(prose).toContain("## 6. The browser build");
+    expect(prose).toContain(`${webSize()} MiB`);
+    expect(prose).toContain("`/live`");
+    expect(prose).toContain("GPUIX web is already running");
+    expect(prose).toContain("Cross-Origin-Opener-Policy");
+    expect(prose).toContain("Cross-Origin-Embedder-Policy");
+    expect(prose).toContain("SharedArrayBuffer");
+    expect(prose).toContain("WebGPU");
+    expect(prose).toContain("WebGL2");
+    expect(prose).toContain("browser approximation");
+
+    expect(policy).toContain("docs/gpuix-capabilities.md");
   });
 
   it("keeps the policy's status and the tree in agreement", () => {

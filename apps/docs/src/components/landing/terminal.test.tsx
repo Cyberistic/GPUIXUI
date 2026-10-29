@@ -21,7 +21,7 @@ const read = (path: string): string =>
 
 const markup = renderToStaticMarkup(<Terminal />);
 const css = read("../../styles/landing.css");
-const installation = read("../../../content/docs/installation.mdx");
+const record = read("../../../../../docs/gpuix-capabilities.md");
 
 const count = (pattern: RegExp): number => markup.match(pattern)?.length ?? 0;
 
@@ -36,13 +36,13 @@ describe("the editor moment", () => {
     expect(markup).toContain('class="landing-term-out"');
   });
 
-  it("types the command the installation page documents", () => {
+  it("types the command the capability record documents", () => {
     // A landing command that no page documents is an invented CLI. This one is
     // read out of the page a reader is sent to.
-    expect(installation).toContain("GPUIX_TERMINAL=1 code GPUIXUI");
+    expect(record).toContain("GPUIX_TERMINAL=1 code GPUIXUI");
     expect(markup).toContain("GPUIX_TERMINAL=1 code GPUIXUI");
     expect(markup).toContain("opening GPUIXUI — terminal mode");
-    expect(markup).toContain('href="/installation"');
+    expect(markup).toContain('href="/getting-started"');
   });
 
   it("waits for the reader to reach it before typing", () => {

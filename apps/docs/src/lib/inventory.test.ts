@@ -15,7 +15,7 @@ import {
 /**
  * The inventory parse behind the composition pages.
  *
- * `/layouts`, `/data-display` and `/workspace` render their rows
+ * `/data-display` and `/workspace` render their rows
  * from `COMPONENTS.md`, so the parser is the seam that keeps a page honest. The
  * guards below check the parts that would fail silently: a row lost to a
  * malformed cell, a lane naming a row that was renamed, a status the page does

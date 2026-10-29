@@ -46,9 +46,7 @@ const COMPONENT_AFFORDANCES = new Set([
 /** Files that are the site's own chrome, not a drawing of a component. */
 const isChrome = (path: string): boolean =>
   path.includes("/landing/") ||
-  path.endsWith("/theme-editor.tsx") ||
   path.endsWith("/recipe-source.tsx") ||
-  path.endsWith("/platform-style-source.tsx") ||
   path.endsWith("/skip-link.tsx");
 
 /** `class { … }` blocks whose declarations paint a bordered, padded box. */

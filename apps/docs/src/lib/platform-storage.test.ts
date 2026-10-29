@@ -217,18 +217,4 @@ describe("the remembered platform choice", () => {
     expect(browserChoiceStorage()).toBe(storage);
     vi.unstubAllGlobals();
   });
-
-  it("is the refusal the theming page promises", () => {
-    // The page a reader checks before trusting the switch: its sentence names
-    // the browser refusing the store and what still works, so the prose cannot
-    // outlive the adapter that makes it true.
-    const page = readRepo("apps/docs/content/docs/theming.mdx").replace(
-      /\s+/g,
-      " ",
-    );
-
-    expect(page).toContain("refuses site storage");
-    expect(page).toContain("keeps the URL's choice and the identity");
-    expect(page).toContain("does not remember the choice");
-  });
 });

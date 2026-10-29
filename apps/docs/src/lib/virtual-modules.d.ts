@@ -7,8 +7,6 @@
  * component imports.
  * `virtual:gpuixui-page-sources` carries each package page's module and the
  * loader that reads it, so the page can print the implementation it documents.
- * `virtual:gpuixui-package-graph` carries the workspace's packages and the
- * dependencies their manifests declare.
  */
 declare module "virtual:gpuixui-public-symbols" {
   const index: import("./public-symbols").PublicSymbolIndex;
@@ -29,9 +27,4 @@ declare module "virtual:gpuixui-page-sources" {
   export const loaders: Readonly<
     Record<string, import("./page-source").SourceLoader>
   >;
-}
-
-declare module "virtual:gpuixui-package-graph" {
-  const graph: import("./package-graph").PackageGraph;
-  export default graph;
 }

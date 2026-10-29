@@ -119,7 +119,7 @@ describe("a docs page's head", () => {
 });
 
 describe("the share card", () => {
-  const pages = [head("/patterns", "Patterns"), landingMeta()];
+  const pages = [head("/getting-started", "Guide"), landingMeta()];
 
   it("is published by a docs page and by the landing page", () => {
     const missing = pages.filter(
@@ -132,7 +132,7 @@ describe("the share card", () => {
   });
 
   it("declares the image's type, size and alternative text", () => {
-    const result = head("/patterns", "Patterns");
+    const result = head("/getting-started", "Guide");
 
     expect(property(result, "og:image:type")).toBe("image/png");
     expect(property(result, "og:image:width")).toBe(String(socialImage.width));

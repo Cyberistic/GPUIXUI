@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 /**
  * The reflow `floating-reflow-lifecycle` measured, derived from the probe.
  *
- * `capability-doc.test.ts` holds the durable record and `/runtime` to these
+ * `capability-doc.test.ts` holds the durable record to these
  * numbers, so a fixture that grows a different gap — or a window that opens at
  * another size — fails by name instead of leaving two documents teaching the
  * retired placement. Test-only: the fixture belongs to the playground app, so it

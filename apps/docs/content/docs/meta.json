@@ -2,20 +2,7 @@
   "title": "Docs",
   "pages": [
     "introduction",
-    "installation",
     "getting-started",
-    "architecture",
-    "styling",
-    "runtime",
-    "accessibility",
-    "motion",
-    "theming",
-    "typography",
-    "dark-mode",
-    "themes",
-    "layouts",
-    "patterns",
-    "keyboard",
     "---",
     "components",
     "primitives",
@@ -24,11 +11,6 @@
     "workspace",
     "blocks",
     "examples",
-    "reference",
-    "status",
-    "testing",
-    "playground",
-    "contributing",
-    "license"
+    "reference"
   ]
 }

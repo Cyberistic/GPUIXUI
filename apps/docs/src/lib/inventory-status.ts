@@ -148,21 +148,21 @@ export const laneRows: ReadonlyArray<{
   },
   {
     row: "Collapsible sidebars",
-    file: "apps/docs/content/docs/runtime.mdx",
+    file: "docs/gpuix-capabilities.md",
     reason:
       "a sidebar is a composition of the dock's layout and the motion width; the clip that makes it a sidebar is measured, not shipped as a component",
   },
   {
     row: "Keyboard navigation",
-    file: "apps/docs/content/docs/runtime.mdx",
+    file: "docs/gpuix-capabilities.md",
     reason:
       "real native focus is the runtime's; the roving-focus model is the composition each shipped family carries rather than one component",
   },
   {
     row: "Command palette",
-    file: "apps/docs/content/docs/patterns.mdx",
+    file: "packages/components/docs/command-menu.mdx",
     reason:
-      "the palette is the shipped CommandMenu plus a window shortcut the app binds; the patterns page teaches that composition",
+      "the palette is the shipped CommandMenu plus a window shortcut the app binds; the package page teaches that composition",
   },
   {
     row: "Breadcrumb navigation",
@@ -190,7 +190,7 @@ export const laneRows: ReadonlyArray<{
   },
   {
     row: "Syntax highlighting",
-    file: "apps/docs/content/docs/runtime.mdx",
+    file: "docs/gpuix-capabilities.md",
     reason:
       "a host capability rather than a component: <code> and <diff> paint the highlighted view, and CodeBlock/CodeEditor compose them",
   },

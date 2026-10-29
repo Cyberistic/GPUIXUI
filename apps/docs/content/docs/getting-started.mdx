@@ -1,91 +1,64 @@
 ---
-title: Getting started
-description: Build a settings card from the library's parts and run it in a native window.
+title: Guide
+description: Install the library, render a component, and pick a theme.
 ---
+
+Two minutes from a clone to a native window.
+
+## Install
+
+```sh
+git clone https://github.com/Cyberistic/GPUIXUI.git
+cd GPUIXUI
+nub install
+nub add @gpuixui/components@workspace:*
+```
+
+Node 24.18.0 and [`nub`](https://nub.dev). A host with no prebuilt GPUix binding builds one first; [`apps/playground/README.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/apps/playground/README.md#the-binding-on-this-host) names the targets and the script.
+
+## The first component
 
 ```tsx
 import { render } from "@gpuix/react";
-import { useState } from "react";
-import { Button, Input, Stack, Switch, Text } from "@gpuixui/primitives";
-import { themes } from "@gpuixui/tokens";
+import { Button } from "@gpuixui/primitives";
+import { darkTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@gpuixui/components/card";
-
-const ProjectSettings = () => {
-  const [name, setName] = useState("Atlas");
-  const [autoSave, setAutoSave] = useState(true);
-  const [saved, setSaved] = useState(false);
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Project settings</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Stack direction="column" gap="md">
-          <Input label="Project name" value={name} onValueChange={setName} />
-          <Stack align="center" direction="row" gap="sm">
-            <Switch
-              checked={autoSave}
-              label="Save automatically"
-              onCheckedChange={setAutoSave}
-            />
-            <Text role="body">Save automatically</Text>
-          </Stack>
-          {saved ? (
-            <Text role="caption" tone="muted">
-              Saved {name}.
-            </Text>
-          ) : null}
-        </Stack>
-      </CardContent>
-      <CardFooter>
-        <Button variant="primary" onActivate={() => setSaved(true)}>
-          Save changes
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-};
 
 render(
-  <ThemeProvider theme={themes.dark}>
-    <ProjectSettings />
+  <ThemeProvider theme={darkTheme}>
+    <Button variant="primary" onActivate={save}>
+      Save changes
+    </Button>
   </ThemeProvider>,
 );
 ```
 
-Only `CardHeader`, `CardContent` and `CardFooter` nest directly in `Card`.
+`render` takes **one** element: a fragment at the root paints only its last child and reports nothing. Run it with `nub run dev:playground`, and run `nub run check` before you call a change done.
 
-`render` takes **one** element — a fragment at the root paints only its last
-child and reports nothing — so keep an app shell's toolbar, body and status bar
-as siblings inside one wrapper.
+## Four rules
 
-## Run it natively
+- **Effect first.** An expected failure is a value in `Effect.Effect<A, E, R>`; domain code does not throw.
+- **Semantic roles only.** A component reads `colors.primary` or `spacing.md`, never a literal.
+- **The runtime is the limit.** No DOM, CSS, `transform`, grid span or canvas. See [the capability record](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/gpuix-capabilities.md) and [the reference](/reference).
+- **Every fix lands with a test** that fails without it.
 
-```sh
-nub run dev:playground
-```
-
-The same window needs a native binding: a host with no prebuilt one — an Intel
-Mac — builds it first, as [Platform support](/installation#platform-support)
-describes.
-
-The same module runs in a terminal:
+## The theme in seven lines
 
 ```tsx
-render(<App />, { terminal: true });
+import { getTheme, platformTheme } from "@gpuixui/tokens";
+
+const theme = getTheme("dark"); // light or dark; add "high" for contrast
+const windows = platformTheme(theme, "win32"); // darwin, win32, linux, default
+
+<ThemeProvider theme={windows}>{app}</ThemeProvider>;
 ```
 
-## Next
+A theme decides the colour roles, type, spacing, radius and density. The mode picks light or dark; the platform switch resolves the same roles for another host.
 
-- [Components](/components) — every page, filterable by name, part, prop or limitation.
-- [Patterns](/patterns) — who owns the state when parts work together.
-- [Theming](/theming) — semantic roles, brand themes and the platform switch.
-- [Runtime capabilities](/runtime) — what the pinned GPUix provides.
+## Where next
+
+- [Components](/components) — every shipped component and its API.
+- [Blocks](/blocks) — whole windows assembled from them.
+- [Icons](/icons/icon) — the set and its two accessibility rules.
+- [Examples](/examples) — runnable screens.
+- **Build prompt** — the repository brief that assembles a screen from the above.

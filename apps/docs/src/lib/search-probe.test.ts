@@ -231,7 +231,7 @@ describe("the search dialog", () => {
     expect(policy).toContain("### The search path is measured");
     expect(policy).toContain("nub apps/docs/scripts/search-probe.ts");
     expect(policy).toContain("slider → /primitives/slider");
-    expect(policy).toContain("architecture → /architecture");
+    expect(policy).toContain("two minutes → /getting-started");
     expect(policy).toContain("button → /components/button");
     expect(policy).toContain("not `/primitives/button`");
     expect(policy).toContain("HTMLInputElement.prototype");

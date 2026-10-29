@@ -39,7 +39,6 @@ const dataDisplayPage = "data-display/index.mdx";
 const workspacePage = "workspace/index.mdx";
 
 const pages: ReadonlyArray<LanePage> = [
-  { file: "layouts.mdx", lane: "layout", title: "Layouts" },
   { file: workspacePage, lane: "workspace", title: "Workspace" },
   { file: dataDisplayPage, lane: "data-display", title: "Data display" },
 ];
@@ -94,9 +93,6 @@ describe("the composition pages", () => {
     ).toEqual([]);
     expect(read(dataDisplayPage)).toContain("## What ships today");
     expect(read(workspacePage)).toContain("## What ships today");
-    // The layout lane composes primitives, whose pages live in their own
-    // collection; there is no package whose pages the lane entry owns.
-    expect(read("layouts.mdx")).not.toContain("<LanePages");
   });
 
   it("mount the page list in the policy, beside the inventory table", () => {
@@ -154,11 +150,8 @@ describe("the composition pages", () => {
     });
 
     expect(positions.every((position) => position > 0)).toBe(true);
-    // Layouts is a guide above the separator; the two package lanes follow the
-    // component group in the order the root meta declares.
-    expect(sidebar.indexOf("layouts")).toBeLessThan(
-      sidebar.indexOf("components"),
-    );
+    // The two package lanes follow the component group in the order the root
+    // meta declares.
     expect(sidebar.indexOf("data-display")).toBeGreaterThan(
       sidebar.indexOf("components"),
     );
@@ -176,32 +169,5 @@ describe("the composition pages", () => {
       .map(({ file }) => file);
 
     expect(orphans).toEqual([]);
-  });
-});
-
-describe("the layouts page's own rules", () => {
-  const page = read("layouts.mdx").replace(/\s+/g, " ");
-  const host = readFileSync(
-    new URL("../../node_modules/@gpuix/native/dist/host.d.ts", import.meta.url),
-    "utf8",
-  );
-
-  it("counts the primitives the package exports, not the inventory rows", () => {
-    // Bug guarded: "five layout primitives" counted the lane's five inventory
-    // rows while `Box`, `Stack`, `Grid`, `Separator`, `Spacer` and `ScrollArea`
-    // are six components.
-    const names = ["Box", "Stack", "Grid", "Separator", "Spacer", "ScrollArea"];
-
-    expect(page).toContain("six layout primitives");
-    names.forEach((name) => expect(page).toContain(`\`${name}\``));
-    expect(page).toContain("five inventory rows");
-  });
-
-  it("does not turn the one-shadow design rule into a runtime limit", () => {
-    // The runtime takes a shadow list (`boxShadow?: BoxShadow | BoxShadow[]`);
-    // the one-shadow-per-level rule is the scale's, not the platform's.
-    expect(host).toMatch(/boxShadow\?:\s*BoxShadow\s*\|\s*BoxShadow\[\]/);
-    expect(page).toContain("A shadow, or a shadow list");
-    expect(page).not.toContain("One shadow per element");
   });
 });

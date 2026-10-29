@@ -99,7 +99,7 @@ describe("the index's URL mapping", () => {
 
   it("drops a section index and a file that is not a component page", () => {
     expect(pageUrl("content/docs/components/index.mdx")).toBeUndefined();
-    expect(pageUrl("content/docs/installation.mdx")).toBeUndefined();
+    expect(pageUrl("content/docs/getting-started.mdx")).toBeUndefined();
     expect(pageUrl("packages/components/README.md")).toBeUndefined();
   });
 });

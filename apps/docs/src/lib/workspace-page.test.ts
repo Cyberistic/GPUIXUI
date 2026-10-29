@@ -77,7 +77,11 @@ describe("the workspace page's composition table", () => {
     );
     const closing = page.split("The frames themselves are on").at(1) ?? "";
 
-    expect([...sections].toSorted()).toEqual(["Components", "Workspace"]);
+    expect([...sections].toSorted()).toEqual([
+      "Components",
+      "Primitives",
+      "Workspace",
+    ]);
     sections.forEach((section) => {
       expect(closing).toContain(section);
     });

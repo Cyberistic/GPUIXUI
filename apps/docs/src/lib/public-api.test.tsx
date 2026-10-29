@@ -296,12 +296,10 @@ describe("the reference page", () => {
     expect(page).toContain("<ApiReference />");
   });
 
-  it("sits in its own sidebar section before Contributing", () => {
+  it("sits in its own sidebar section after the browsing pages", () => {
     const pages = sidebarPages(new URL("../../", import.meta.url));
 
     expect(pages.indexOf("reference")).toBeGreaterThan(pages.indexOf("blocks"));
-    expect(pages.indexOf("reference")).toBeLessThan(
-      pages.indexOf("contributing"),
-    );
+    expect(pages.indexOf("reference")).toBe(pages.length - 1);
   });
 });

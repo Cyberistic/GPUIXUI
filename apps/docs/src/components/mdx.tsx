@@ -9,17 +9,7 @@ import { IconGallery } from "./docs/icon-gallery";
 import { Install } from "./docs/install";
 import { LanePages } from "./docs/lane-pages";
 import { LaneTable } from "./docs/lane-table";
-import { LicenseInventory } from "./docs/license-table";
-import { LookPicker } from "./docs/look-picker";
-import { Pattern, PatternChoices } from "./docs/patterns";
-import { PlatformStyleSource } from "./docs/platform-style-source";
-import { SeriesSwatches } from "./docs/series-swatches";
 import { SidebarExample } from "./docs/sidebar-examples";
-import { StyleReference } from "./docs/style-reference";
-import { ThemeEditor } from "./docs/theme-editor";
-import { ThemeMatrix } from "./docs/theme-matrix";
-import { TokenScales } from "./docs/token-scales";
-import { TypeScale } from "./docs/type-scale";
 
 /**
  * The MDX surface shared by every docs page.
@@ -40,16 +30,5 @@ export const mdxComponents = {
   Install,
   LanePages,
   LaneTable,
-  LicenseInventory,
-  LookPicker,
-  Pattern,
-  PatternChoices,
-  PlatformStyleSource,
-  SeriesSwatches,
   SidebarExample,
-  StyleReference,
-  ThemeEditor,
-  ThemeMatrix,
-  TokenScales,
-  TypeScale,
 };

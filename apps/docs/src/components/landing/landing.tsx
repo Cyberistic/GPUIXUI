@@ -176,7 +176,7 @@ const recipes = retroNames.map((look) => ({
   name: retroStyles[look].label,
   body: lookBodies[look],
   facts: `${retroStyles[look].density} · ${retroStyles[look].radius.md}px corners · ${retroStyles[look].mono}`,
-  href: "/theming#the-look-picker",
+  href: "https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md#authored-looks",
 }));
 
 export function Defaults() {
