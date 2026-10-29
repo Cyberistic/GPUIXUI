@@ -13731,6 +13731,13 @@ button.gx-rating-star:focus-visible {
   font-size: 11.5px;
 }
 
+/* A number's label is the handle: the same words, with the drag cursor. */
+.gx-props-scrub {
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+}
+
 .gx-props-field {
   flex: 1;
   min-width: 0;

@@ -86,11 +86,13 @@ export {
   NumberFieldDecrement,
   NumberFieldIncrement,
   NumberFieldInput,
+  NumberFieldScrubHandle,
   numberRange,
 } from "./NumberField.js";
 export type {
   NumberFieldInputProps,
   NumberFieldProps,
+  NumberFieldScrubHandleProps,
   NumberFieldStepperProps,
 } from "./NumberField.js";
 

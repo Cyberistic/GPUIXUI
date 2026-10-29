@@ -29,10 +29,16 @@ export interface TextPropertyRow extends PropertyRowBase {
   readonly value: string;
 }
 
-/** A number row. */
+/** A number row, with the bounds a scrub clamps to. */
 export interface NumberPropertyRow extends PropertyRowBase {
   readonly type: "number";
   readonly value: number;
+  /** No lower bound when omitted. */
+  readonly min?: number;
+  /** No upper bound when omitted. */
+  readonly max?: number;
+  /** The step one scrub count moves; defaults to 1. */
+  readonly step?: number;
 }
 
 /** A boolean row. */

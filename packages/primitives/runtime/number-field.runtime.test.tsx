@@ -10,7 +10,7 @@
  */
 
 import { useState, type ReactNode } from "react";
-import { expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
@@ -19,6 +19,7 @@ import {
   NumberFieldDecrement,
   NumberFieldIncrement,
   NumberFieldInput,
+  NumberFieldScrubHandle,
 } from "../src/components/NumberField.js";
 import { Stack } from "../src/components/Stack.js";
 import { a11yNode, type Bounds, type Runtime } from "./harness.js";
@@ -731,4 +732,145 @@ it("commits a blur only when the edit produced a number", async () => {
   runtime.type("a b c");
   runtime.focusNext();
   expect(commits).toStrictEqual([42]);
+});
+
+describe("NumberFieldScrubHandle", () => {
+  /** A row whose label scrubs and whose field types, both on one value. */
+  const Row = ({
+    initial,
+    min,
+    max,
+    commits,
+    changes,
+    disabled,
+  }: {
+    readonly initial: number;
+    readonly min?: number;
+    readonly max?: number;
+    readonly commits?: Array<number>;
+    readonly changes?: Array<number>;
+    readonly disabled?: boolean;
+  }) => {
+    const [value, setValue] = useState(initial);
+    return (
+      <Stack direction="row" gap="sm">
+        <NumberFieldScrubHandle
+          testId="scrub"
+          value={value}
+          min={min}
+          max={max}
+          disabled={disabled}
+          onValueChange={(next) => {
+            changes?.push(next);
+            setValue(next);
+          }}
+          onValueCommit={(next) => commits?.push(next)}
+        >
+          Width
+        </NumberFieldScrubHandle>
+        <NumberField
+          testId="nf"
+          label="Width"
+          value={value}
+          min={min}
+          max={max}
+          onValueChange={(next) => {
+            changes?.push(next);
+            setValue(next);
+          }}
+          disabled={disabled}
+        />
+      </Stack>
+    );
+  };
+
+  const mountRow = async (row: ReactNode): Promise<Runtime> => {
+    const runtime = await openWindow();
+    runtime.render(<Surface>{row}</Surface>);
+    return runtime;
+  };
+
+  /** Press the handle's centre and drag `dx` pixels, optionally with Shift. */
+  const dragHandle = (runtime: Runtime, dx: number, shift = false): void => {
+    const box = boundsOf(runtime, "scrub");
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    runtime.renderer.nativeSimulateMouseDown(x, y);
+    runtime.renderer.nativeSimulateMouseMove(
+      x + dx,
+      y,
+      0,
+      shift ? "shift" : undefined,
+    );
+    runtime.renderer.nativeSimulateMouseUp(x + dx, y);
+    runtime.flush();
+  };
+
+  it("moves the value on a horizontal drag and commits once on release", async () => {
+    const changes: Array<number> = [];
+    const commits: Array<number> = [];
+    const runtime = await mountRow(
+      <Row
+        initial={50}
+        min={0}
+        max={100}
+        changes={changes}
+        commits={commits}
+      />,
+    );
+
+    // Eight pixels is two steps at the scrub scale, and the release is the one
+    // commit the gesture reports.
+    dragHandle(runtime, 8);
+    expect(changes).toStrictEqual([52]);
+    expect(commits).toStrictEqual([52]);
+    expect(textOf(runtime, "Width")).toBe("52");
+  });
+
+  it("leaves a click to the text entry it always was", async () => {
+    const changes: Array<number> = [];
+    const runtime = await mountRow(<Row initial={50} changes={changes} />);
+
+    // A press that does not travel is a click: no value moves. The field beside
+    // the handle still types, so the click path is intact.
+    dragHandle(runtime, 0);
+    expect(changes).toStrictEqual([]);
+    const input = inputOf(runtime, "nf");
+    runtime.renderer.focusElement(input.id);
+    runtime.renderer.dispatchNativeEvents();
+    runtime.flush();
+    runtime.type("1");
+    expect(changes.length).toBeGreaterThan(0);
+  });
+
+  it("clamps a drag to the field's bounds", async () => {
+    const changes: Array<number> = [];
+    const runtime = await mountRow(
+      <Row initial={9} min={0} max={10} changes={changes} />,
+    );
+
+    dragHandle(runtime, 40);
+    expect(Arr.last(changes)).toStrictEqual(Option.some(10));
+  });
+
+  it("multiplies the travel by ten while Shift is held", async () => {
+    const changes: Array<number> = [];
+    const runtime = await mountRow(
+      <Row initial={50} min={0} max={1000} changes={changes} />,
+    );
+
+    // Eight pixels is two steps; a held Shift makes that twenty.
+    dragHandle(runtime, 8, true);
+    expect(Arr.last(changes)).toStrictEqual(Option.some(70));
+  });
+
+  it("takes no gesture while disabled", async () => {
+    const changes: Array<number> = [];
+    const runtime = await mountRow(
+      <Row initial={50} changes={changes} disabled />,
+    );
+
+    dragHandle(runtime, 8);
+    expect(changes).toStrictEqual([]);
+  });
 });

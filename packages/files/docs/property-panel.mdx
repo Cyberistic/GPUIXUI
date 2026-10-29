@@ -18,6 +18,10 @@ const rows: ReadonlyArray<PropertyRow> = [
 <PropertyPanel title="Shape" rows={rows} onChange={(record) => apply(record)} />;
 ```
 
+A number row's label is its scrub handle: drag it horizontally to step the
+value (Shift is ten steps) and a click still selects the field for typing. A
+row's optional `min`/`max`/`step` bound the drag and the field.
+
 ## API
 
 | Prop | Type | Default | Consequence |
