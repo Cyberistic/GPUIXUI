@@ -106,28 +106,30 @@ export function StatusBarDemo() {
   );
 
   return (
-    <div className="gx-shell-demo">
+    <div className="gx-shell-demo gx-status-demo">
+      {/* The tone is the demo's control, so it sits above the strip the way a
+          toolbar sits above a status bar — never inside it. */}
+      <div aria-label="Item tone" className="gx-tgroup" role="group">
+        {STATUS_BAR_TONES.map((candidate) => (
+          <button
+            aria-label={candidate}
+            aria-pressed={candidate === tone}
+            className="gx-btn gx-btn-ghost gx-btn-sm gx-toggle"
+            data-pressed={candidate === tone ? "" : undefined}
+            key={candidate}
+            onClick={() => setTone(candidate)}
+            type="button"
+          >
+            {candidate}
+          </button>
+        ))}
+      </div>
       <StatusBarFrame
         label="Editor status"
         left={STATUS_BAR_LEFT}
         right={right}
         theme={theme}
       />
-      <div className="gx-shell-actions">
-        <div aria-label="Item tone" className="gx-shell-group" role="group">
-          {STATUS_BAR_TONES.map((candidate) => (
-            <button
-              aria-pressed={candidate === tone}
-              className="gx-shell-choice"
-              key={candidate}
-              onClick={() => setTone(candidate)}
-              type="button"
-            >
-              {candidate}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

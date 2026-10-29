@@ -13446,6 +13446,15 @@ button.gx-rating-star:focus-visible {
   text-align: left;
 }
 
+/* The strip owns the window's full width; the demo control above it does not. */
+.gx-status-demo {
+  max-width: none;
+}
+
+.gx-status-demo > .gx-tgroup {
+  align-self: flex-start;
+}
+
 .gx-shell-readout {
   margin: 0;
   font-family: var(--font-mono);
@@ -13706,13 +13715,15 @@ button.gx-rating-star:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   min-height: var(--control-height-sm);
-  padding: 4px 8px;
-  border: 1px solid var(--input);
-  border-radius: var(--radius);
+  padding: 4px 10px;
+  border-top: 1px solid var(--input);
+  border-radius: 0;
   background: var(--muted);
   color: var(--foreground);
-  font-size: 11.5px;
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
 
 .gx-shell-status-slot {

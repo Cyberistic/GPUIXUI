@@ -2,9 +2,11 @@
  * StatusBar: the bottom strip of the application chrome.
  *
  * A `role="status"` bar with a left and a right group of items, a `tone` per
- * item, hairline separators and text truncation. It is a row like any other
- * (`COMPONENTS.md`, "Status bars"): the runtime reserves no titlebar, so the
- * chrome is the app's to paint and this bar owns its row.
+ * item, hairline separators and text truncation. It is a full-width strip at
+ * the window's bottom edge — no radius, one top border, the chrome's `muted`
+ * fill and mono `text-xs` items — and a row like any other (`COMPONENTS.md`,
+ * "Status bars"): the runtime reserves no titlebar, so the chrome is the app's
+ * to paint and this bar owns its row.
  */
 
 import type { Props } from "@gpuix/react";
@@ -17,8 +19,8 @@ import { useTheme } from "../theme.js";
 import { toneForeground, type StatusBarTone } from "./logic.js";
 
 const STATUS_BAR =
-  "flex flex-row items-center gap-2 rounded-md border border-input bg-muted px-2 py-1";
-const STATUS_ITEM = "text-xs font-sans";
+  "flex w-full flex-row items-center gap-2 border-t border-input bg-muted px-3 py-1";
+const STATUS_ITEM = "text-xs font-mono";
 const STATUS_SEPARATOR = "h-3 w-px bg-border";
 
 /** The truncation every item shares: shrink to fit and ellipsize the tail. */
