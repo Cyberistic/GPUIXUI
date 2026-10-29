@@ -1,5 +1,5 @@
 import type { TreeCursor } from "@gpuixui/data/tree/logic";
-import { visibleFileRows, type FileNode } from "@gpuixui/files/tree/logic";
+import type { FileNode } from "@gpuixui/files/tree/logic";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
@@ -337,9 +337,6 @@ export const vaultCursor = (): TreeCursor => ({
   expanded: HashSet.fromIterable(vaultOpen),
   active: Option.some(VAULT_CURRENT),
 });
-
-/** The rows the rail paints at first: the package's own flattening of the tree. */
-export const vaultRows = visibleFileRows(vaultTree, vaultOpen);
 
 /**
  * The step one band of the y axis carries: a number a reader can halve.

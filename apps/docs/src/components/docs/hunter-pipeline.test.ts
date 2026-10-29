@@ -17,7 +17,7 @@ import {
   renownTicks,
   stagesFor,
   VAULT_CURRENT,
-  vaultRows,
+  vaultOpen,
   vaultTree,
 } from "./hunter-pipeline";
 
@@ -54,6 +54,9 @@ const cssBlock = (selector: string): string => {
 
 /** The hunter block's own rules, from its section heading to the sheet's end. */
 const huntCss = css.slice(css.indexOf("/* ---- hunter pipeline"));
+
+/** The rows the rail paints at first: the package's own flattening. */
+const vaultRows = visibleFileRows(vaultTree, vaultOpen);
 
 describe("the dossier columns", () => {
   it("splits the list into the staged and the blocked, and loses none", () => {
