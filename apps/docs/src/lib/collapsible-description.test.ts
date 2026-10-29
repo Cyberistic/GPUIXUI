@@ -7,14 +7,17 @@ import { descriptionRuns, descriptionText } from "./page-description";
  *
  * The bug: a reader who wants several sections open — and whose page is not
  * prerendered anyway — was told nothing about the accordion, which is the
- * control for that job. Both pages that document the section say so in their
- * description, and the description's one inline link is painted as a link under
- * the `h1`: a literal `[accordion](/docs/…)` in a `<p>` is not a reference a
- * reader can follow.
+ * control for that job.
+ *
+ * The hint lives in the page body now, not the description: a description is one
+ * line in a list (the build prompt prints every one of them), so a 96-character
+ * sentence with a link in it made the list unreadable. The body is the first
+ * thing under the heading, so a reader still meets the reference immediately —
+ * and it is a link either way, which is what the `descriptionRuns` case below
+ * holds the painter to.
  */
 
-const SENTENCE =
-  "prefer [accordion](/docs/components/accordion) when prerendering is not too heavy";
+const SENTENCE = "[Accordion](/docs/components/accordion)";
 
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
@@ -25,22 +28,30 @@ const descriptionOf = (source: string): string =>
 
 describe("the collapsible description", () => {
   it("names the accordion on both pages that document the section", () => {
-    const curated = descriptionOf(
-      read("../../content/docs/components/collapsible.mdx"),
-    );
-    const packaged = descriptionOf(
-      read("../../../../packages/components/docs/collapsible.mdx"),
+    const curated = read("../../content/docs/components/collapsible.mdx");
+    const packaged = read(
+      "../../../../packages/components/docs/collapsible.mdx",
     );
 
-    expect(curated).toContain(SENTENCE);
-    expect(packaged).toContain(SENTENCE);
+    // The reference is prose on the page, in the first block under the heading.
+    for (const page of [curated, packaged]) {
+      expect(page).toContain(SENTENCE);
+    }
+    // And the description stays one line, because the build prompt prints them
+    // all as a list.
+    for (const page of [curated, packaged]) {
+      expect(descriptionOf(page).length).toBeLessThan(61);
+    }
   });
 
-  it("paints the reference as a link to a page the site serves", () => {
-    expect(descriptionRuns(SENTENCE)).toEqual([
-      { kind: "text", text: "prefer " },
-      { kind: "link", text: "accordion", href: "/docs/components/accordion" },
-      { kind: "text", text: " when prerendering is not too heavy" },
+  it("paints a reference as a link to a page the site serves", () => {
+    // The painter still has to carry an inline link, wherever the sentence
+    // lives: a body paragraph is Markdown, and the description slot must not
+    // become the only place a link can be painted.
+    expect(descriptionRuns(`Reach for ${SENTENCE} instead.`)).toEqual([
+      { kind: "text", text: "Reach for " },
+      { kind: "link", text: "Accordion", href: "/docs/components/accordion" },
+      { kind: "text", text: " instead." },
     ]);
     const target = new URL(
       "../../content/docs/components/accordion.mdx",
@@ -51,9 +62,7 @@ describe("the collapsible description", () => {
   });
 
   it("prints the words alone in the tags that take plain text", () => {
-    expect(descriptionText(SENTENCE)).toBe(
-      "prefer accordion when prerendering is not too heavy",
-    );
+    expect(descriptionText(SENTENCE)).toBe("Accordion");
     expect(descriptionRuns("One section that reveals its body")).toEqual([
       { kind: "text", text: "One section that reveals its body" },
     ]);

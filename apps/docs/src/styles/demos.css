@@ -10675,11 +10675,14 @@ button.gx-rating-star:focus-visible {
   align-items: flex-end;
 }
 
+/* The header takes the side its message is on: the content column already
+   crosses its axis per variant (`flex-start` for a reply, `flex-end` for the
+   reader's own row), and `align-self: flex-start` pinned it to the left so a
+   right-hand message's `You 09:42` sat above the far edge of its own bubble. */
 .gx-message-header {
   display: flex;
   align-items: center;
   gap: 6px;
-  align-self: flex-start;
   color: var(--muted-foreground);
   font-family: var(--font-sans);
   font-size: 12px;

@@ -84,6 +84,7 @@ export const orderedSections = <Page extends { readonly url: string }>(
 
 /** The sidebar's sections, in the order the sidebar shows them. */
 export const llmsSectionOrder: ReadonlyArray<string> = [
+  "Getting started",
   "Docs",
   "Components",
   "Primitives",
@@ -95,6 +96,9 @@ export const llmsSectionOrder: ReadonlyArray<string> = [
 
 /** The site's own folders that are not a package's route, and their section. */
 const siteSections: ReadonlyArray<{ prefix: string; name: string }> = [
+  // The introduction reads before the catalogue, so a reader that only takes the
+  // first section still learns how to install and run the library.
+  { prefix: "/docs/getting-started", name: "Getting started" },
   { prefix: "/docs/blocks", name: "Blocks" },
   { prefix: "/docs/workspace", name: "Workspace" },
 ];

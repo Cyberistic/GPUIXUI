@@ -19,14 +19,14 @@ Every page is an MDX file; the paths below are relative to `content/docs/`.
 ```
 index.mdx                    Introduction (served at /docs)
 installation.mdx             Requirements, nub, first component, terminal mode
-getting-started.mdx          A first screen: theme, card, state, run it natively
+getting-started/index.mdx    A first screen: theme, card, state, run it natively
+getting-started/prompt.mdx   One copyable build prompt, generated from the pages the site ships
 architecture.mdx             The package graph, the recipe pipeline, where a change goes
 styling.mdx                  The class recipe layer: two registries, states, refusals, extension, the React bridge
 theming.mdx                  Semantic roles, themes, the platform switch, the look parameter, the desktop palette
 dark-mode.mdx                App-owned mode switching, following the desktop's palette, restoring a stored theme
 typography.mdx               The ten type roles, the two families, the platform rule
 diagrams.mdx                 Mermaid diagrams at build time, themed from the page's roles
-prompt.mdx                   One copyable build prompt, generated from the pages the site ships
 runtime.mdx                  What the pinned GPUix provides, what it does not, the browser build behind /live, and the workaround
 accessibility.mdx            What a screen reader hears, which states have no attribute, proving the tree, the pressable-target floors and the keyboard dim
 motion.mdx                   House timing and the seam a stored one is read at, retained values and the tween a clock can name, the curves a timing name stands for, the reduced-motion policy, the presence seam (and the clock a stored phase must fit) and the React hooks
