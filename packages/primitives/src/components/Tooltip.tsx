@@ -148,6 +148,7 @@ export interface TooltipProps {
   readonly children: ReactNode;
   /** Defaults to `top`, the runtime's own default. */
   readonly side?: FloatingSide;
+  /** Defaults to `center`, the popover's convention. */
   readonly align?: FloatingAlign;
   /** Milliseconds before the tip opens on hover. Defaults to the provider's. */
   readonly delay?: number;
@@ -280,7 +281,7 @@ export const renderTooltip = (
     description,
     children,
     side,
-    align,
+    align = "center",
     delay,
     open,
     defaultOpen,

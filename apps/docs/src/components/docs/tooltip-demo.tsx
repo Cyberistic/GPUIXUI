@@ -1,4 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { alignLabel } from "./popover-alignment";
+import {
+  TOOLTIP_ALIGNMENTS,
+  TOOLTIP_FRAME_WIDTH,
+  TOOLTIP_TRIGGER_WIDTH,
+  TOOLTIP_WIDTH,
+  tooltipLayout,
+  type TooltipAlign,
+} from "./tooltip-alignment";
 import {
   closedTip,
   describeTip,
@@ -25,10 +34,11 @@ import {
 const tipContent = "Booked revenue, net of refunds.";
 
 /** One trigger whose tip is driven by the preview's clock. */
-const ClockedTip = () => {
+const ClockedTip = ({ align }: { readonly align: TooltipAlign }) => {
   const [reduced, setReduced] = useState(false);
   const timing = reduced ? reducedTipTiming : tipTiming;
   const [state, setState] = useState<TipState>(closedTip);
+  const layout = tooltipLayout(align);
   /** Whether the last focus arrived from a `Tab` rather than a pointer. */
   const tabbed = useRef(false);
   /** When the tip last closed, for the 300 ms reopen window. */
@@ -62,57 +72,62 @@ const ClockedTip = () => {
   }, []);
 
   return (
-    <div className="gx-tooltip-demo">
-      <div className="gx-tip-anchor">
-        <button
-          aria-description={tipContent}
-          className="gx-btn gx-btn-outline"
-          onBlur={() => send({ type: "blur" })}
-          onClick={() => send({ type: "press" })}
-          onFocus={() => {
-            if (tabbed.current) {
+    <>
+      <div className="gx-tip-stage" style={{ width: TOOLTIP_FRAME_WIDTH }}>
+        <div className="gx-tip-anchor" style={{ marginLeft: layout.triggerX }}>
+          <button
+            aria-description={tipContent}
+            className="gx-btn gx-btn-outline"
+            onBlur={() => send({ type: "blur" })}
+            onClick={() => send({ type: "press" })}
+            onFocus={() => {
+              if (tabbed.current) {
+                tabbed.current = false;
+                send({ type: "traversal" });
+                return;
+              }
+              send({ type: "focus" });
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") send({ type: "escape" });
+            }}
+            onMouseDown={() => {
               tabbed.current = false;
-              send({ type: "traversal" });
-              return;
-            }
-            send({ type: "focus" });
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") send({ type: "escape" });
-          }}
-          onMouseDown={() => {
-            tabbed.current = false;
-            send({ type: "press" });
-          }}
-          onMouseEnter={() => {
-            tabbed.current = false;
-            const since = closedAt.current;
-            send({
-              type: "enter",
-              recentlyClosed:
-                since !== null && Date.now() - since <= tipTiming.skipDelay,
-            });
-          }}
-          onMouseLeave={() => send({ type: "leave" })}
-          type="button"
-        >
-          Revenue definition
-        </button>
-        {painted ? (
-          <span
-            className={`gx-tip${state.leaving ? " gx-tip-leaving" : ""}${
-              reduced ? " gx-tip-static" : ""
-            }`}
-            onMouseEnter={() => send({ type: "enter-tip" })}
+              send({ type: "press" });
+            }}
+            onMouseEnter={() => {
+              tabbed.current = false;
+              const since = closedAt.current;
+              send({
+                type: "enter",
+                recentlyClosed:
+                  since !== null && Date.now() - since <= tipTiming.skipDelay,
+              });
+            }}
             onMouseLeave={() => send({ type: "leave" })}
-            role="tooltip"
+            style={{ width: TOOLTIP_TRIGGER_WIDTH }}
+            type="button"
           >
-            {tipContent}
-          </span>
-        ) : null}
+            Revenue definition
+          </button>
+          {painted ? (
+            <span
+              className={`gx-tip${state.leaving ? " gx-tip-leaving" : ""}${
+                reduced ? " gx-tip-static" : ""
+              }`}
+              data-align={align}
+              onMouseEnter={() => send({ type: "enter-tip" })}
+              onMouseLeave={() => send({ type: "leave" })}
+              role="tooltip"
+              style={{ left: layout.offset, width: TOOLTIP_WIDTH }}
+            >
+              {tipContent}
+            </span>
+          ) : null}
+        </div>
       </div>
       <p className="gx-tip-readout" role="status">
-        tip <b>{describeTip(state, timing)}</b>
+        tip <b>{describeTip(state, timing)}</b> · align=&quot;{align}&quot;
       </p>
       <button
         aria-pressed={reduced}
@@ -122,7 +137,7 @@ const ClockedTip = () => {
       >
         {reduced ? "motion: reduced" : "motion: house timing"}
       </button>
-    </div>
+    </>
   );
 };
 
@@ -165,7 +180,7 @@ import { IconButton, Tooltip, useTheme } from "@gpuixui/primitives";
 const theme = useTheme();
 
 export const RevenueHelp = () => (
-  <Tooltip content="Booked revenue, net of refunds." side="bottom">
+  <Tooltip content="Booked revenue, net of refunds." side="bottom" align="center">
     <IconButton
       icon={
         <Icon
@@ -207,12 +222,30 @@ export const Hints = () => {
   );
 };`;
 
-export const TooltipDemo = () => (
-  <div className="gx-demo gx-demo-column gx-tooltip-scene">
-    <p className="gx-demo-label">Hover</p>
-    <ClockedTip />
-  </div>
-);
+export const TooltipDemo = () => {
+  const [align, setAlign] = useState<TooltipAlign>("center");
+
+  return (
+    <div className="gx-demo gx-demo-column gx-tooltip-scene">
+      <div aria-label="Tooltip align" className="gx-tgroup" role="group">
+        {TOOLTIP_ALIGNMENTS.map((name) => (
+          <button
+            aria-pressed={align === name}
+            className="gx-btn gx-toggle gx-toggle-outline"
+            data-pressed={align === name ? "" : undefined}
+            key={name}
+            onClick={() => setAlign(name)}
+            type="button"
+          >
+            {alignLabel(name)}
+          </button>
+        ))}
+      </div>
+      <p className="gx-demo-label">Hover</p>
+      <ClockedTip align={align} />
+    </div>
+  );
+};
 
 export const TooltipStates = () => (
   <div className="gx-demo gx-demo-column gx-tooltip-scene">
