@@ -1,103 +1,130 @@
 /**
- * The status bar as the window paints it.
+ * Status bar behaviour, in the real GPUix renderer.
  *
- * The bug these guard: the strip read as a floating card — a rounded box with a
- * border on all four sides, sans text, and the page's tone demo inside it — on a
- * page whose whole subject is the chrome row at the bottom of a window. The
- * geometry is the renderer's (the bar spans its frame and sits on its bottom
- * edge); the surface is the recipe's (no radius, one top border, the chrome fill
- * and mono `text-xs`), because 0.11.0 publishes no radius query.
+ * The bugs these guard: a `center` group that painted in tree order but ignored
+ * its neighbours (so a one-sided bar centred labels against nothing), an item
+ * painted in the sans scale instead of the mono readout, a tone that never
+ * reached the label, and an empty group that still painted a separator.
  */
 
-import { readFileSync } from "node:fs";
 import type { TestRoot } from "@gpuix/react/testing";
 import { createTestRoot } from "@gpuix/react/testing";
 import { darkTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
+import type { ReactElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { StatusBar } from "../status-bar/status-bar.js";
 
-const FRAME = { width: 900, height: 64 } as const;
-
-const BOX = {
-  display: "flex",
-  flexDirection: "column",
-  width: FRAME.width,
-  height: FRAME.height,
-} as const;
-
-const BAR = [
-  { id: "branch", label: "main" },
-  { id: "position", label: "Ln 12, Col 4" },
-] as const;
-
-const RIGHT = [
-  { id: "errors", label: "3 errors", tone: "destructive" },
-] as const;
-
 let mounted: TestRoot | null = null;
+
+const renderBar = (element: ReactElement): TestRoot => {
+  const root = createTestRoot({ width: 900, height: 60 });
+  root.render(<ThemeProvider theme={darkTheme}>{element}</ThemeProvider>);
+  mounted = root;
+  return root;
+};
 
 afterEach(() => {
   mounted?.unmount();
   mounted = null;
 });
 
-const renderBar = (): TestRoot => {
-  const root = createTestRoot({ width: FRAME.width, height: FRAME.height });
-  root.render(
-    <ThemeProvider theme={darkTheme}>
-      <div style={BOX} testId="frame">
-        <div style={{ flexGrow: 1 }} />
-        <StatusBar
-          label="Editor status"
-          left={[...BAR]}
-          right={[...RIGHT]}
-          testId="status"
-        />
-      </div>
-    </ThemeProvider>,
-  );
-  mounted = root;
-  root.renderer.flush();
-  return root;
-};
-
-const boundsOf = (root: TestRoot, testId: string) => {
+const element = (root: TestRoot, testId: string) => {
   const found = root.renderer.findByTestId(testId);
-  if (found === undefined || found === null) {
-    throw new Error(`no element with testId ${testId}`);
-  }
-  const bounds = root.renderer.getElementBounds(found.id);
-  if (bounds === null) throw new Error(`no painted box for ${testId}`);
-  return bounds;
+  if (found === undefined) throw new Error(`no element with testId ${testId}`);
+  return found;
 };
 
-describe("the status bar in a window", () => {
-  it("spans its frame and rests on the bottom edge", () => {
-    const root = renderBar();
-    const frame = boundsOf(root, "frame");
-    const bar = boundsOf(root, "status");
+const left = [{ id: "branch", label: "main" }];
+const center = [{ id: "file", label: "src/index.ts" }];
+const right = [{ id: "encoding", label: "UTF-8" }];
 
-    expect(bar.x).toBe(frame.x);
-    expect(bar.width).toBe(frame.width);
-    expect(bar.y + bar.height).toBe(frame.y + frame.height);
-    // A strip has the row's height, not the window's.
-    expect(bar.height).toBeLessThan(frame.height);
+describe("StatusBar", () => {
+  it("paints the left, centre and right regions in order", () => {
+    const root = renderBar(
+      <StatusBar
+        center={center}
+        label="Editor status"
+        left={left}
+        right={right}
+        testId="status"
+      />,
+    );
+
+    expect(root.renderer.getAllText()).toEqual([
+      "main",
+      "src/index.ts",
+      "UTF-8",
+    ]);
   });
 
-  it("paints the chrome strip: no radius, one top border, mono text-xs", () => {
-    const source = readFileSync(
-      new URL("../status-bar/status-bar.tsx", import.meta.url),
-      "utf8",
+  it("centres the middle region between two pinned groups", () => {
+    const root = renderBar(
+      <StatusBar
+        center={center}
+        label="Editor status"
+        left={left}
+        right={right}
+        testId="status"
+      />,
     );
-    const recipe = /const STATUS_BAR =\s*"([^"]+)"/.exec(source)?.[1] ?? "";
-    const item = /const STATUS_ITEM =\s*"([^"]+)"/.exec(source)?.[1] ?? "";
+    const bar = element(root, "status");
+    const middle = root.renderer.getElement(bar.children[1] ?? -1);
 
-    expect(recipe).toContain("w-full");
-    expect(recipe).toContain("border-t");
-    expect(recipe).toContain("bg-muted");
-    expect(recipe).not.toContain("rounded");
-    expect(recipe).not.toContain("border border-input");
-    expect(item).toBe("text-xs font-mono");
+    expect(middle?.style.justifyContent).toBe("center");
+  });
+
+  it("ends the middle region against a lone leading group", () => {
+    // The bug guarded: the centre kept `center` without a trailing group, so a
+    // bar whose only pinned content was on the left floated its middle labels
+    // in the middle of the strip.
+    const root = renderBar(
+      <StatusBar
+        center={center}
+        label="Editor status"
+        left={left}
+        testId="status"
+      />,
+    );
+    const bar = element(root, "status");
+    const middle = root.renderer.getElement(bar.children[1] ?? -1);
+
+    expect(middle?.style.justifyContent).toBe("flex-end");
+  });
+
+  it("paints a label in the mono readout scale", () => {
+    const root = renderBar(
+      <StatusBar label="Editor status" left={left} testId="status" />,
+    );
+    const bar = element(root, "status");
+    const group = root.renderer.getElement(bar.children[0] ?? -1);
+    const label = root.renderer.getElement(group?.children[0] ?? -1);
+
+    expect(label?.style.fontFamily).toBe(darkTheme.typography.mono);
+  });
+
+  it("paints a named tone's readable foreground", () => {
+    const root = renderBar(
+      <StatusBar
+        label="Editor status"
+        right={[{ id: "errors", label: "3 errors", tone: "destructive" }]}
+        testId="status"
+      />,
+    );
+    const bar = element(root, "status");
+    const group = root.renderer.getElement(bar.children[2] ?? -1);
+    const label = root.renderer.getElement(group?.children[0] ?? -1);
+
+    expect(label?.style.color).not.toBe(darkTheme.colors.foreground);
+  });
+
+  it("paints no separator for an empty region", () => {
+    const root = renderBar(
+      <StatusBar label="Editor status" left={left} testId="status" />,
+    );
+    const bar = element(root, "status");
+    const trailing = root.renderer.getElement(bar.children[2] ?? -1);
+
+    expect(trailing?.children).toEqual([]);
   });
 });

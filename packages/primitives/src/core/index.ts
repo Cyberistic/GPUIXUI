@@ -184,19 +184,20 @@ export {
   isSpinnerAccent,
   skeletonStyle,
   SPINNER_ACCENTS,
-  SPINNER_DOTS,
+  SPINNER_ARC_TICKS,
   SPINNER_FADE_FLOOR,
+  SPINNER_RING_TICKS,
   SPINNER_SEGMENTS,
   spinnerAccentOf,
-  spinnerDotStyle,
-  spinnerDots,
+  spinnerTickStyle,
+  spinnerTicks,
   STEP_INTERVAL_MS,
 } from "./loading.js";
 export type {
   SkeletonSpec,
   SpinnerAccent,
-  SpinnerDot,
   SpinnerSpec,
+  SpinnerTick,
 } from "./loading.js";
 
 export { controlRing, keyboardRing, keepContent } from "./focus.js";

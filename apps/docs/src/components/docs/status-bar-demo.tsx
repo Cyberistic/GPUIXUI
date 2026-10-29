@@ -37,6 +37,9 @@ export const STATUS_BAR_TONES: ReadonlyArray<StatusBarTone> = [
 export const STATUS_BAR_LEFT: ReadonlyArray<StatusBarItem> = [
   { id: "branch", label: "main" },
   { id: "position", label: "Ln 12, Col 4" },
+];
+
+export const STATUS_BAR_CENTER: ReadonlyArray<StatusBarItem> = [
   { id: "file", label: "packages/shell/src/toolbar/toolbar.tsx" },
 ];
 
@@ -57,6 +60,7 @@ export interface StatusBarFrameProps {
   readonly theme: Theme;
   readonly label: string;
   readonly left: ReadonlyArray<StatusBarItem>;
+  readonly center?: ReadonlyArray<StatusBarItem>;
   readonly right: ReadonlyArray<StatusBarItem>;
 }
 
@@ -65,6 +69,7 @@ export function StatusBarFrame({
   theme,
   label,
   left,
+  center = [],
   right,
 }: StatusBarFrameProps) {
   const group = (items: ReadonlyArray<StatusBarItem>) =>
@@ -89,7 +94,7 @@ export function StatusBarFrame({
   return (
     <div aria-label={label} className="gx-shell-status" role="status">
       {group(left)}
-      <span className="gx-shell-status-gap" />
+      <span className="gx-shell-status-gap">{group(center)}</span>
       {group(right)}
     </div>
   );
@@ -125,6 +130,7 @@ export function StatusBarDemo() {
         ))}
       </div>
       <StatusBarFrame
+        center={STATUS_BAR_CENTER}
         label="Editor status"
         left={STATUS_BAR_LEFT}
         right={right}
@@ -141,11 +147,22 @@ const left: ReadonlyArray<StatusBarItem> = [
   { id: "position", label: "Ln 12, Col 4" },
 ];
 
+const center: ReadonlyArray<StatusBarItem> = [
+  { id: "file", label: "packages/shell/src/toolbar/toolbar.tsx" },
+];
+
 const right: ReadonlyArray<StatusBarItem> = [
   { id: "encoding", label: "UTF-8" },
   { id: "errors", label: "3 errors", tone: "destructive" },
 ];
 
 export function EditorStatus() {
-  return <StatusBar label="Editor status" left={left} right={right} />;
+  return (
+    <StatusBar
+      label="Editor status"
+      left={left}
+      center={center}
+      right={right}
+    />
+  );
 }`;

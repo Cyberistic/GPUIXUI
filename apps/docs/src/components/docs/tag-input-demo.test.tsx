@@ -20,8 +20,9 @@ describe("the tag input previews", () => {
   it("renders the workflow's chips, its budget and its gate", () => {
     expect(workflow).toContain(">react</span>");
     expect(workflow).toContain(">gpuix</span>");
-    expect(workflow).toContain("2 of 5 keywords added, 3 more will fit.");
-    expect(workflow).toContain("Ready to publish 2 keywords.");
+    expect(workflow).toContain(">components</span>");
+    expect(workflow).toContain("5 of 5 keywords added: the list is full.");
+    expect(workflow).toContain("Ready to publish 5 keywords.");
     expect(workflow).toContain('aria-label="Remove react"');
   });
 

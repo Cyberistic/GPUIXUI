@@ -3,13 +3,11 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import * as Option from "effect/Option";
 import {
   canPublish,
   committed,
   describeBudget,
   describeGate,
-  describeRefusal,
   emptyKeywords,
   keywordRules,
   removeLabel,
@@ -54,6 +52,10 @@ interface PreviewGroupProps {
   readonly state: Keywords;
   readonly rules: KeywordRules;
   readonly disabled?: boolean;
+  /** A quiet note at the end of the field: the cap, a key that commits. */
+  readonly hint?: string;
+  /** The caller's own state under the field: the preset and the budget. */
+  readonly caption?: string;
   readonly onChange?: (next: Keywords) => void;
 }
 
@@ -70,6 +72,8 @@ const PreviewGroup = ({
   state,
   rules,
   disabled = false,
+  hint,
+  caption,
   onChange,
 }: PreviewGroupProps) => {
   const input = useRef<HTMLInputElement>(null);
@@ -80,45 +84,53 @@ const PreviewGroup = ({
   };
 
   return (
-    <div
-      aria-label={label}
-      className="gx-tag-group"
-      data-disabled={disabled ? "" : undefined}
-      role="group"
-    >
-      {state.tokens.map((token) => (
-        <span className="gx-tag-chip" key={token}>
-          <span className="gx-tag-chip-text">{token}</span>
-          {disabled ? null : (
-            <button
-              aria-label={removeLabel(token)}
-              className="gx-tag-chip-remove"
-              onClick={() => onChange?.(removed(state, token))}
-              type="button"
-            >
-              <RemoveGlyph />
-            </button>
-          )}
-        </span>
-      ))}
-      <input
-        aria-label="Add a keyword"
-        className="gx-tag-field"
-        onChange={(event) =>
-          onChange?.(typed(state, event.target.value, rules, disabled))
-        }
-        onKeyDown={(event: ReactKeyboardEvent<HTMLInputElement>) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            commit();
+    <div className="gx-tag-fieldset">
+      <div
+        aria-label={label}
+        className="gx-tag-group"
+        data-disabled={disabled ? "" : undefined}
+        role="group"
+      >
+        {state.tokens.map((token) => (
+          <span className="gx-tag-chip" key={token}>
+            <span className="gx-tag-chip-text">{token}</span>
+            {disabled ? null : (
+              <button
+                aria-label={removeLabel(token)}
+                className="gx-tag-chip-remove"
+                onClick={() => onChange?.(removed(state, token))}
+                type="button"
+              >
+                <RemoveGlyph />
+              </button>
+            )}
+          </span>
+        ))}
+        <input
+          aria-label="Add a keyword"
+          className="gx-tag-field"
+          onChange={(event) =>
+            onChange?.(typed(state, event.target.value, rules, disabled))
           }
-        }}
-        placeholder={state.tokens.length === 0 ? "Add a keyword…" : "Add…"}
-        readOnly={disabled}
-        ref={input}
-        tabIndex={disabled ? -1 : 0}
-        value={state.draft}
-      />
+          onKeyDown={(event: ReactKeyboardEvent<HTMLInputElement>) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              commit();
+            }
+          }}
+          placeholder={state.tokens.length === 0 ? "Add a keyword…" : "Add…"}
+          readOnly={disabled}
+          ref={input}
+          tabIndex={disabled ? -1 : 0}
+          value={state.draft}
+        />
+        {hint === undefined ? null : (
+          <span className="gx-tag-hint">{hint}</span>
+        )}
+      </div>
+      {caption === undefined ? null : (
+        <p className="gx-tag-caption">{caption}</p>
+      )}
     </div>
   );
 };
@@ -126,7 +138,7 @@ const PreviewGroup = ({
 /** A publish form: keywords, the budget, the gate and a read-only toggle. */
 const TagInputWorkflow = () => {
   const [keywords, setKeywords] = useState<Keywords>({
-    tokens: ["react", "gpuix"],
+    tokens: ["react", "gpuix", "components", "design", "docs"],
     draft: "",
   });
   const [refused, setRefused] = useState(0);
@@ -148,16 +160,11 @@ const TagInputWorkflow = () => {
       <div className="gx-tag-card">
         <div>
           <p className="gx-tag-title">Publish @acme/ui</p>
-          <p className="gx-tag-meta" role="status">
-            {describeBudget(keywords, keywordRules)}{" "}
-            {Option.match(describeRefusal(keywords, keywordRules, refused), {
-              onNone: () => null,
-              onSome: (line) => line,
-            })}
-          </p>
         </div>
         <PreviewGroup
+          caption={`${describeBudget(keywords, keywordRules)} · refused=${refused}`}
           disabled={locked}
+          hint={`${keywordRules.max} max`}
           label="Package keywords"
           onChange={update}
           rules={keywordRules}
@@ -236,11 +243,7 @@ const TagInputStates = () => {
           state={full}
         />
         <p className="gx-tag-note" role="status">
-          {describeBudget(full, keywordRules)}{" "}
-          {Option.match(describeRefusal(full, keywordRules, refused), {
-            onNone: () => null,
-            onSome: (line) => line,
-          })}
+          {describeBudget(full, keywordRules)} · refused={refused}
         </p>
       </div>
       <div className="gx-tag-state">

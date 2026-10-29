@@ -33,7 +33,8 @@ import {
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
-  spinnerDotStyle,
+  spinnerTickStyle,
+  spinnerTicks,
   skeletonStyle,
   type SkeletonSpec,
 } from "../core/loading.js";
@@ -82,7 +83,6 @@ import {
   sliderRailClass,
   sliderThumbClass,
   sliderTrackClass,
-  spinnerDotClass,
   spinnerGroupClass,
   switchThumbClass,
   switchTrackClass,
@@ -421,24 +421,21 @@ describe("progress and meter recipes", () => {
 });
 
 describe("spinner and skeleton recipes", () => {
-  it("matches the spinner row and a lit dot", () => {
+  it("gives the spinner's ring a relative box and a tick the accent", () => {
     expect(compiled(spinnerGroupClass)).toEqual({
-      display: "flex",
-      flexDirection: "row",
-      alignItems: "center",
-      gap: testTheme.spacing["2xs"],
+      position: "relative",
+      flexShrink: 0,
     });
 
-    const point = { active: true, opacity: 1 };
+    const tick = spinnerTicks(0, 12)[0];
+    if (tick === undefined) throw new Error("the ring drew no tick");
     expect(
-      mergeStyle(compiled(spinnerDotClass("primary")), {
-        width: 12,
-        height: 12,
-        opacity: 1,
-      }),
-    ).toEqual(
-      spinnerDotStyle({ size: 12, accent: "primary" }, point, testTheme),
-    );
+      spinnerTickStyle({ size: 12, accent: "primary" }, tick, testTheme),
+    ).toMatchObject({
+      position: "absolute",
+      backgroundColor: testTheme.colors.primary,
+      borderRadius: testTheme.radius.full,
+    });
   });
 
   it("matches the skeleton shape with data dimensions", () => {
@@ -501,7 +498,6 @@ describe("the geometry recipes register no unsupported classes", () => {
       progressBufferClass("primary"),
       progressBufferClass("muted"),
       spinnerGroupClass,
-      spinnerDotClass("primary"),
       skeletonClass({ circle: true }),
     ];
     const unsupported = Arr.flatMap(

@@ -901,7 +901,7 @@ describe("the primitives docs page contract", () => {
     expect(spinnerSource).toMatch(
       /role=\{name === undefined \? "presentation" : "status"\}/,
     );
-    expect(read("spinner.mdx")).toContain("paints the dots as decoration");
+    expect(read("spinner.mdx")).toContain("paints the ring as decoration");
     expect(read("spinner.mdx")).toContain("no node to walk into");
   });
 

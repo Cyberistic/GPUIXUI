@@ -24,11 +24,15 @@ const Harness = ({
   initial = [],
   max,
   disabled = false,
+  hint,
+  caption,
   onValueChange,
 }: {
   readonly initial?: ReadonlyArray<string>;
   readonly max?: number;
   readonly disabled?: boolean;
+  readonly hint?: string;
+  readonly caption?: string;
   readonly onValueChange?: (value: ReadonlyArray<string>) => void;
 }) => {
   const [tags, setTags] = useState<ReadonlyArray<string>>(initial);
@@ -38,6 +42,8 @@ const Harness = ({
       value={tags}
       max={max}
       disabled={disabled}
+      hint={hint}
+      caption={caption}
       onValueChange={(next) => {
         setTags(next);
         onValueChange?.(next);
@@ -86,6 +92,51 @@ describe("TagInput", () => {
     // fixed grey no theme can reach (`@gpuixui/primitives/hint`).
     expect(tags.renderer.getAllText()).toEqual(["design", "docs", "Add a tag"]);
 
+    tags.unmount();
+  });
+
+  it("keeps the inline field borderless inside the group's field", () => {
+    // The bug guarded: the field painted its own ring and box inside the
+    // bordered group, so a reader saw a field inside a field and the add
+    // control read as a separate, squat box.
+    const tags = renderComponent(<Harness />);
+    const field = tags.renderer.findByTestId("tag-field");
+    if (field === undefined) throw new Error("no tag field");
+    expect(field.style.borderWidth).toBeUndefined();
+    expect(field.style.backgroundColor).toBeUndefined();
+    tags.unmount();
+  });
+
+  it("gives each chip's removal control a real press target", () => {
+    const tags = renderComponent(<Harness initial={["design"]} />);
+    const control = removeControlOf(tags, "chip-design");
+    if (control === undefined) throw new Error("no removal control");
+    expect(control.style.width).toBeGreaterThanOrEqual(24);
+    expect(control.style.height).toBeGreaterThanOrEqual(24);
+    tags.unmount();
+  });
+
+  it("puts the caller's limit in the caption and the quiet note in the field", () => {
+    const tags = renderComponent(
+      <Harness
+        caption="2 of 5 keywords"
+        hint="5 max"
+        initial={["design", "docs"]}
+      />,
+    );
+    expect(tags.renderer.getAllText()).toEqual([
+      "design",
+      "docs",
+      "Add a tag",
+      "5 max",
+      "2 of 5 keywords",
+    ]);
+    tags.unmount();
+  });
+
+  it("renders no caption or hint for a blank one", () => {
+    const tags = renderComponent(<Harness caption="  " hint="" />);
+    expect(tags.renderer.getAllText()).toEqual(["Add a tag"]);
     tags.unmount();
   });
 

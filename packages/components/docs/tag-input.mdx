@@ -1,6 +1,6 @@
 ---
 title: Tag input
-description: Keywords entered through a field, as removable chips
+description: Tokens in one wrapping field — removable chips, a borderless inline input, a hint and a caption
 ---
 
 <ComponentPreview name="tag-input-states" />
@@ -18,7 +18,14 @@ import { TagInput, TagInputChip, TagInputField } from "@gpuixui/components";
 
 const [tags, setTags] = useState<ReadonlyArray<string>>(["design"]);
 
-<TagInput label="Tags" value={tags} onValueChange={setTags} max={5}>
+<TagInput
+  caption={`${tags.length} of 5 tags`}
+  hint="5 max"
+  label="Tags"
+  max={5}
+  value={tags}
+  onValueChange={setTags}
+>
   {tags.map((tag) => (
     <TagInputChip key={tag} value={tag} />
   ))}
@@ -26,25 +33,34 @@ const [tags, setTags] = useState<ReadonlyArray<string>>(["design"]);
 </TagInput>;
 ```
 
-## Composition
+## Anatomy
+
+The chips and the input share **one bordered field**; the group wraps, so chips
+flow onto a second line and the borderless input keeps the rest of the last one.
+`hint` is a quiet note at the end of the field and `caption` is the caller's
+state under it.
 
 ```text
 TagInput
-├── TagInputChip
-└── TagInputField
+└── group
+    ├── TagInputChip     chip with a 24px × removal target
+    ├── TagInputField    borderless inline input that grows
+    └── hint             optional quiet note at the end of the field
 ```
 
 ## API
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `TagInput` | `div` with `role="group"` | `value` (required), `onValueChange` (required), `label` (required), `max?`, `allowDuplicates?`, `disabled?`, `className?`, `children` |
+| `TagInput` | `div` with `role="group"` | `value` (required), `onValueChange` (required), `label` (required), `max?`, `allowDuplicates?`, `disabled?`, `hint?`, `caption?`, `className?`, `children` |
 | `TagInputField` | `<input>` | `className?`, `style?`, `defaultValue?`, `placeholder?`, `readOnly?`, `disabled?`, `autoFocus?`, `invalid?`, `size?`, `fullWidth?`, `label?`, `tabIndex?`, `testId?`, `onValueChange?`, `onClick?`, `onKeyDown?`, `onKeyUp?`, `onFocus?`, `onBlur?`, `ref?`, `aria-id?`, `onLayout?`, `description?` |
 | `TagInputChip` | chip `div` with a removal `role="button"` | `value` (required), `style?`, `className?` |
 
 ## Limitations
 
 - Controlled only.
+- The group cannot observe a descendant's focus on this runtime, so the borderless input carries the focus ring itself rather than the group.
+- `hint` and `caption` are caller copy; the component does not derive a budget from `max`.
 - `max` is a whole count: a fractional cap is floored, and a cap that cannot be read (`NaN`, an infinity) is no cap at all.
 - No Backspace-on-empty removal.
 - A token list read from storage is read at the boundary: a `value` that is not a list carries no tokens, and an entry that is not text is dropped, so a saved record's `null` does not throw out of the edit that adds the next token.

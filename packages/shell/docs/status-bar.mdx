@@ -1,6 +1,6 @@
 ---
 title: Status bar
-description: The bottom strip of the application chrome
+description: The bottom strip of the application chrome — left, centre and right groups, tones, hairline separators, truncation and a mono type scale
 ---
 
 ## Usage
@@ -14,6 +14,7 @@ import { StatusBar } from "@gpuixui/shell";
     { id: "branch", label: "main" },
     { id: "position", label: "Ln 12, Col 4" },
   ]}
+  center={[{ id: "file", label: "packages/shell/src/status-bar/status-bar.tsx" }]}
   right={[
     { id: "encoding", label: "UTF-8" },
     { id: "errors", label: "3 errors", tone: "destructive" },
@@ -21,14 +22,33 @@ import { StatusBar } from "@gpuixui/shell";
 />;
 ```
 
+## Anatomy
+
+gpui-kit's bar has three regions and the centre follows the pinned ends:
+
+- `left` pins to the leading edge and `right` to the trailing edge.
+- `center` is **centred** when both pinned groups have items, **end-aligned**
+  when only `left` does, and **start-aligned** otherwise. The rule is
+  `centerAlignment` and it treats an empty group as absent.
+- A hairline `1px` separator sits between the items of one group, never around
+  the group.
+- Every label truncates (`overflow: hidden`, `textOverflow: ellipsis`,
+  `nowrap`) and shrinks before the group would overflow.
+- Labels are `text-xs` in the theme's **mono** scale — a status readout is
+  scanned, not read as prose.
+- `tone` paints a status role's readable foreground; `default` keeps the bar's
+  own foreground.
+
 ## API
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `StatusBar` | `div` with `role="status"` | `label?`, `left?`, `right?`, `className?` |
+| `StatusBar` | `div` with `role="status"` | `label?`, `left?`, `center?`, `right?`, `className?` |
 | `StatusBarItem` | one `<text>` in a group | `id`, `label`, `tone?` |
 
 ## Limitations
 
 - Truncation is `whiteSpace: "nowrap"` + `overflow: "hidden"` + `textOverflow: "ellipsis"` on each item; a bar whose groups still overflow clips the last item.
 - Separators are 1px elements, not borders: one element carries one border colour.
+- The bar paints its own top hairline and no outer radius, so it can sit at the
+  window's bottom edge. A floating bar is a `className` that overrides both.

@@ -392,6 +392,7 @@ import {
   scrollProgressDemoSource,
 } from "./scroll-progress-demo";
 import { ShineButtonDemo, shineButtonDemoSource } from "./shine-button-demo";
+import { ShimmerDemo, shimmerDemoSource } from "./shimmer-demo";
 import {
   SlidingNumberDemo,
   slidingNumberDemoSource,
@@ -3485,6 +3486,7 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: ShineButtonDemo,
     source: shineButtonDemoSource,
   },
+  "shimmer-demo": { render: ShimmerDemo, source: shimmerDemoSource },
   "sliding-number-demo": {
     render: SlidingNumberDemo,
     source: slidingNumberDemoSource,

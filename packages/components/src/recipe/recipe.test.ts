@@ -1074,10 +1074,12 @@ describe("TagInput recipe", () => {
       flexDirection: "row",
       alignItems: "center",
       gap: 4,
-      paddingLeft: 6,
-      paddingRight: 6,
-      paddingTop: 2,
-      paddingBottom: 2,
+      // The chip's right padding is the remove control's own 24px target, so
+      // the chip pads 8 left and 2 right and lets the × fill the rest.
+      paddingLeft: 8,
+      paddingRight: 2,
+      paddingTop: 0,
+      paddingBottom: 0,
       backgroundColor: darkTheme.colors.secondary,
       borderRadius: 4,
     });
@@ -1085,7 +1087,7 @@ describe("TagInput recipe", () => {
       fontSize: 12,
       lineHeight: 16,
       fontFamily: sans,
-      color: darkTheme.colors.foreground,
+      color: darkTheme.colors.secondaryForeground,
     });
     expect(style(TAG_INPUT_CHIP_REMOVE)).toEqual({
       fontSize: 12,

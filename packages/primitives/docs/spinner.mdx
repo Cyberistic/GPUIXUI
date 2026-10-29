@@ -1,6 +1,6 @@
 ---
 title: Spinner
-description: Three dots, because the runtime cannot rotate
+description: An activity indicator drawn as a ring whose lit arc steps around the circle, because the runtime cannot rotate
 ---
 
 <ComponentPreview name="spinner-demo" />
@@ -20,17 +20,28 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `size` | `IconSize \| number` | `"md"` | the dot side: a theme step, or raw pixels |
-| `accent` | `primary \| destructive \| muted \| on-primary \| on-secondary \| on-destructive \| on-accent \| on-disabled` | `"primary"` | the role every dot paints; a stored name the table does not carry reads as `primary` |
-| `label` | `string` | `loading.busy` (`"Loading"`) | accessible name announced as a status; a blank one paints the dots as decoration (no node to walk into) |
-| `reducedMotion` | `boolean` | the motion provider | holds the lit dot and schedules no interval; the prop overrides the provider |
+| `size` | `IconSize \| number` | `"md"` | the ring's side: a theme step, or raw pixels |
+| `accent` | `primary \| destructive \| muted \| on-primary \| on-secondary \| on-destructive \| on-accent \| on-disabled` | `"primary"` | the role every tick paints; a stored name the table does not carry reads as `primary` |
+| `label` | `string` | `loading.busy` (`"Loading"`) | accessible name announced as a status; a blank one paints the ring as decoration (no node to walk into) |
+| `reducedMotion` | `boolean` | the motion provider | holds the resting arc and schedules no interval; the prop overrides the provider |
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `ref` / `aria-id` / `onLayout` | host props | none | the indicator's own box: the group a layout measures, the instance a caller holds, and the author id an automation host addresses |
 | `testId` | `string` | — | stable locator |
 
+## How the ring moves
+
+The runtime paints a box and its opacity, and nothing else: it cannot rotate. So
+the ring is `SPINNER_RING_TICKS` (12) static ticks placed on a circle by
+`spinnerTicks`, and the **lit arc** moves instead — one head fully opaque, the
+`SPINNER_ARC_TICKS` (7) behind it fading to `SPINNER_FADE_FLOOR` (0.2), the rest
+of the ring empty. The head advances one tick per interval. That gap is what
+reads as a turning arc; nothing rotates.
+
 ## Limitations
 
-- Cannot rotate: a discrete lit-dot step instead.
-- No smooth animation, and the three dots share one size.
-- No inline placement inside a text run; put it in a `Stack`.
+- Cannot rotate: a discrete lit-arc step instead.
+- No smooth motion: the head advances once per interval, so the arc steps tick
+  by tick rather than sweeping.
+- The ring is a fixed box, so it cannot sit inside a text run; put it in a
+  `Stack`.

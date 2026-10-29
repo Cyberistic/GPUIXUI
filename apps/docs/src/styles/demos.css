@@ -15527,3 +15527,115 @@ button.gx-rating-star:focus-visible {
   flex-direction: column;
   min-height: 434px;
 }
+
+/* ---- their newest recipes, appended so they win by order ---- */
+.gx-tag-chip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
+  padding: 0 2px 0 8px;
+  border-radius: 4px;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.gx-tag-chip:hover {
+  background: var(--accent);
+}
+
+.gx-tag-chip-text {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--secondary-foreground);
+}
+
+.gx-tag-chip-remove {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-size);
+  height: var(--target-size);
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--secondary-foreground);
+  cursor: pointer;
+}
+
+.gx-tag-chip-remove:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-tag-chip-remove:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-shimmer-scene {
+  gap: 18px;
+  padding: 24px;
+}
+
+.gx-shimmer-surface {
+  position: relative;
+  overflow: hidden;
+  min-height: 84px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-shimmer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-shimmer-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.gx-shimmer-line {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-shimmer-band {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: row;
+  pointer-events: none;
+}
+
+.gx-shimmer-strip {
+  flex: 1 1 0;
+  height: 100%;
+}
+
+.gx-shimmer-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-shimmer-caption {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--placeholder);
+}
+
+.gx-shimmer-frames {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}

@@ -297,8 +297,9 @@ export const TAG_INPUT_ROOT =
 export const TAG_INPUT_FIELD =
   "text-sm font-sans flex-grow min-w-20 text-input-foreground";
 export const TAG_INPUT_CHIP =
-  "flex flex-row items-center gap-1 px-1.5 py-0.5 bg-secondary rounded-sm";
-export const TAG_INPUT_CHIP_TEXT = "text-xs font-sans text-foreground";
+  "flex flex-row items-center gap-1 py-0 pl-2 pr-0.5 bg-secondary rounded-sm";
+export const TAG_INPUT_CHIP_TEXT =
+  "text-xs font-sans text-secondary-foreground";
 export const TAG_INPUT_CHIP_REMOVE =
   "text-xs font-sans flex items-center justify-center size-4 rounded-sm text-muted-foreground";
 

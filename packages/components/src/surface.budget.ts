@@ -159,7 +159,7 @@ export const surfaceBudget = {
   // 209 → 210 for the classic theme-toggle geometry
   // (`theme-toggler/glyph.ts`): the crossover's frames are a rule of their own
   // rather than arithmetic inside the component.
-  modules: 210,
+  modules: 212,
 
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
@@ -235,7 +235,11 @@ export const surfaceBudget = {
   // 1 491 KiB measured with that picker **and** the same wave's chat, overlay
   // and docs fixes in one tree — the branch figures were each taken alone —
   // so the ceiling moved 1490 → 1500 KiB.
-  bytes: 1500 * 1024,
+  bytes: 1510 * 1024,
+  // 210 → 212 and 1500 → 1510 KiB for the Shimmer effect: `shimmer.tsx`, its
+  // `shimmer/logic.ts` rule, `gradient/logic.ts` (the ramp a strip reads) and the
+  // public `index` row that exports it. Measured 1 541 462 bytes in the tree it
+  // landed in, so 1510 KiB keeps the same headroom the ceiling had before.
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *

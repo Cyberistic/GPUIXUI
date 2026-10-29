@@ -1,12 +1,15 @@
 /**
  * StatusBar: the bottom strip of the application chrome.
  *
- * A `role="status"` bar with a left and a right group of items, a `tone` per
- * item, hairline separators and text truncation. It is a full-width strip at
- * the window's bottom edge — no radius, one top border, the chrome's `muted`
- * fill and mono `text-xs` items — and a row like any other (`COMPONENTS.md`,
- * "Status bars"): the runtime reserves no titlebar, so the chrome is the app's
- * to paint and this bar owns its row.
+ * A `role="status"` bar with three regions — a left group, a centre and a
+ * right group — hairline separators between the items of each group, a tone
+ * per item, truncation on every label, and the mono type scale a status
+ * readout wears. It is the gpui-kit anatomy: the left and right groups pin to
+ * the bar's edges and the centre follows them, centred when both are present
+ * and end-aligned when only the left is.
+ *
+ * The runtime reserves no titlebar, so the chrome is the app's to paint and this
+ * bar owns its row.
  */
 
 import type { Props } from "@gpuix/react";
@@ -16,10 +19,14 @@ import * as Arr from "effect/Array";
 import { Fragment } from "react";
 import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
-import { toneForeground, type StatusBarTone } from "./logic.js";
+import {
+  centerAlignment,
+  toneForeground,
+  type StatusBarTone,
+} from "./logic.js";
 
 const STATUS_BAR =
-  "flex w-full flex-row items-center gap-2 border-t border-input bg-muted px-3 py-1";
+  "flex flex-row items-center gap-2 border-t border-border bg-muted px-3 py-1";
 const STATUS_ITEM = "text-xs font-mono";
 const STATUS_SEPARATOR = "h-3 w-px bg-border";
 
@@ -46,6 +53,8 @@ export interface StatusBarProps extends Omit<Props, "children"> {
   readonly label?: string;
   /** The items pinned to the leading edge. */
   readonly left?: ReadonlyArray<StatusBarItem>;
+  /** The items between the pinned groups; their alignment follows them. */
+  readonly center?: ReadonlyArray<StatusBarItem>;
   /** The items pinned to the trailing edge. */
   readonly right?: ReadonlyArray<StatusBarItem>;
   readonly className?: string;
@@ -55,30 +64,52 @@ export interface StatusBarProps extends Omit<Props, "children"> {
 export const StatusBar = ({
   label,
   left,
+  center,
   right,
   className,
   style,
   ...rest
 }: StatusBarProps) => {
   const theme = useTheme();
+  const leading = left ?? [];
+  const middle = center ?? [];
+  const trailing = right ?? [];
 
   const renderGroup = (items: ReadonlyArray<StatusBarItem>) =>
     Arr.map(items, (item, index) => (
       <Fragment key={item.id}>
         {index === 0 ? null : (
-          <div style={recipeStyle(STATUS_SEPARATOR, theme)} />
+          <div
+            style={mergeStyles(recipeStyle(STATUS_SEPARATOR, theme), {
+              flexShrink: 0,
+            })}
+          />
         )}
         <text
-          style={{
-            ...recipeStyle(STATUS_ITEM, theme),
+          style={mergeStyles(recipeStyle(STATUS_ITEM, theme), {
             color: toneForeground(theme, item.tone ?? "default"),
             ...truncate,
-          }}
+          })}
         >
           {item.label}
         </text>
       </Fragment>
     ));
+
+  const group = (items: ReadonlyArray<StatusBarItem>) => (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: theme.spacing.sm,
+        minWidth: 0,
+        flexShrink: 1,
+      }}
+    >
+      {renderGroup(items)}
+    </div>
+  );
 
   return (
     <div
@@ -87,9 +118,24 @@ export const StatusBar = ({
       {...rest}
       style={mergeStyles(recipeStyle(cn(STATUS_BAR, className), theme), style)}
     >
-      {renderGroup(left ?? [])}
-      <div style={{ flexGrow: 1, flexBasis: 0 }} />
-      {renderGroup(right ?? [])}
+      {group(leading)}
+      <div
+        style={{
+          flexGrow: 1,
+          flexBasis: 0,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: centerAlignment(
+            Arr.length(leading),
+            Arr.length(trailing),
+          ),
+          minWidth: 0,
+        }}
+      >
+        {renderGroup(middle)}
+      </div>
+      {group(trailing)}
     </div>
   );
 };

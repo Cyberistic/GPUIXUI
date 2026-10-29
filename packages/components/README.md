@@ -345,7 +345,7 @@ number, so the two cannot drift.
 | `src/slider.tsx`, `src/slider/logic.ts` | Slider — one `Slider` over a number or a `[from, to]` pair, with the primitive's single/range surface behind it |
 | `src/separator.tsx` | Separator — `decorative` leaves the tree, a semantic rule is a `separator` node |
 | `src/skeleton.tsx` | Skeleton — the placeholder block with shadcn's `animate` switch |
-| `src/spinner.tsx` | Spinner — the three-dot activity mark at `sm`/`md`/`lg`, and the mark `Button`'s `loading` prop paints beside a kept label |
+| `src/spinner.tsx` | Spinner — the ring whose lit arc steps around a circle at `sm`/`md`/`lg`, and the mark `Button`'s `loading` prop paints beside a kept label |
 | `src/toggle.tsx`, `src/toggle-group.tsx` | Toggle and its mode toolbar — the shadcn-shaped surface of the primitives' pressed paint and roving contract |
 | `src/avatar.tsx`, `src/avatar/logic.ts` | Avatar with unicode-safe initials and a presence dot |
 | `src/alert.tsx` | Alert: four tones, a title, an optional icon and a dismiss control |
@@ -380,7 +380,7 @@ number, so the two cannot drift.
 | `src/color-picker.tsx`, `src/color/hex.ts` | ColorPicker: theme swatches and a normalising HEX field (no radial gradient for a saturation/value square in 0.11.0) |
 | `src/hotkey-recorder.tsx` | HotkeyRecorder: capture a chord, reusing `@gpuixui/keyboard` |
 | `src/carousel.tsx` | Carousel: discrete slide stepping with mounted, hidden slides, and a dot per slide on the press floor |
-| `src/tag-input.tsx`, `src/tag-input/logic.ts` | TagInput: tokens with a pure add/remove rule set and removable chips |
+| `src/tag-input.tsx`, `src/tag-input/logic.ts` | TagInput: one wrapping field with borderless inline input, removable chips, an end-of-field hint and a caller caption, over a pure add/remove rule set |
 | `src/inline-edit.tsx` | InlineEdit: display/input swap with one commit contract |
 | `src/countdown.tsx`, `src/countdown/logic.ts` | Countdown: clock text for a remaining duration; the app owns the tick |
 | `src/timeline.tsx` | Timeline: an event rail whose last item ends the connector |
@@ -390,6 +390,7 @@ number, so the two cannot drift.
 | `src/date-picker.tsx`, `src/date-picker/calendar.ts` | DatePicker: a pure `DateTime` month grid in a Popover, with bounded selection and a clear action (the day half) |
 | `src/time-picker.tsx`, `src/time-picker/time.ts` | TimePicker: a 24-hour `HH:mm` field in two labelled segments, with clamped typing, arrow carry/wrap, `minuteStep` and an optional clear |
 | `src/toast.tsx`, `src/toast/*` | the toast provider, viewport and Effect store: a three-card peeking stack that unfolds on hover/focus, one-axis swipe, promise rows, and the stack-wide clock hold |
+| `src/shimmer.tsx`, `src/shimmer/logic.ts` | Shimmer: a travelling highlight composed from a row of two-stop gradient strips, with a reduced-motion still |
 | `src/inventory.ts` | the component inventory records, checked against `COMPONENTS.md` |
 | `src/auto-height.tsx` | AutoHeight: a reveal that tweens to its content's measured height (plan 600) |
 | `src/typing-text.tsx`, `src/typing-text/logic.ts` | TypingText: a code-point reveal on a real-time timer |
