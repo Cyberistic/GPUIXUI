@@ -8,6 +8,7 @@ import {
   type FileNode,
 } from "@gpuixui/files/tree/logic";
 import {
+  paintedRows,
   treeCursorMove,
   type TreeCursor,
   type TreeRow,
@@ -16,7 +17,7 @@ import type { IconName } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
-import { useState, type KeyboardEvent } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import { BrowserIcon } from "./browser-icon";
 import { treeKeyOf } from "./tree-keys";
 
@@ -116,6 +117,16 @@ export interface FileTreeFrameProps {
   readonly onSelect: (path: string) => void;
 }
 
+/** How long the drawing keeps a branch's rows while they fold away. */
+export const FOLD_MS = 220;
+
+/** A branch change: the rows folding out, and the ones folding in. */
+interface Fold {
+  readonly leaving: ReadonlyArray<TreeRow<FileNode>>;
+  readonly before: ReadonlyArray<TreeRow<FileNode>>;
+  readonly entering: ReadonlySet<string>;
+}
+
 /** The drawing itself: one row per visible node, guides, chevron, glyph, name. */
 export function FileTreeFrame({
   roots,
@@ -125,6 +136,42 @@ export function FileTreeFrame({
   onSelect,
 }: FileTreeFrameProps) {
   const rows = fileRows(roots, cursor);
+  const signature = Arr.join(
+    Arr.map(rows, (row) => row.key),
+    "\n",
+  );
+  const [fold, setFold] = useState<Fold | null>(null);
+  const [seen, setSeen] = useState({ signature, rows });
+
+  // A closed branch is absent from `visibleFileRows` in the frame the cursor
+  // changes, so the drawing keeps its rows for the fold and drops them when it
+  // settles; an opened one marks the rows that have just arrived. The change is
+  // decided before React commits, so the rows paint their fold instead of
+  // unmounting for a frame and growing back.
+  if (seen.signature !== signature) {
+    const visible = new Set(Arr.map(rows, (row) => row.key));
+    const previous = new Set(Arr.map(seen.rows, (row) => row.key));
+    const leaving = Arr.filter(seen.rows, (row) => !visible.has(row.key));
+    const entering = Arr.filter(rows, (row) => !previous.has(row.key));
+    setSeen({ signature, rows });
+    setFold(
+      leaving.length === 0 && entering.length === 0
+        ? null
+        : {
+            leaving,
+            before: seen.rows,
+            entering: new Set(Arr.map(entering, (row) => row.key)),
+          },
+    );
+  }
+
+  useEffect(() => {
+    if (fold === null) return;
+    const handle = setTimeout(() => setFold(null), FOLD_MS);
+    return () => clearTimeout(handle);
+  }, [fold]);
+
+  const painted = paintedRows(rows, fold?.leaving ?? [], fold?.before ?? rows);
   const active = Option.getOrUndefined(cursor.active);
   const tab = Option.getOrUndefined(tabRow(rows, selected));
   const current = active ?? tab?.key;
@@ -167,23 +214,31 @@ export function FileTreeFrame({
       role="tree"
       tabIndex={0}
     >
-      {Arr.map(rows, (row) => {
+      {Arr.map(painted, ({ row, leaving }) => {
         const node = row.node;
-        const chosen = node.children === undefined && row.key === selected;
+        const chosen =
+          !leaving && node.children === undefined && row.key === selected;
+        const entering = fold?.entering.has(row.key) === true;
         return (
           <div
-            aria-expanded={row.hasChildren ? row.expanded : undefined}
+            aria-expanded={
+              leaving ? undefined : row.hasChildren ? row.expanded : undefined
+            }
+            aria-hidden={leaving ? true : undefined}
             aria-level={row.depth + 1}
-            aria-selected={chosen}
+            aria-selected={leaving ? undefined : chosen}
             className="gx-filetree-row"
-            data-current={row.key === current ? "true" : "false"}
+            data-current={!leaving && row.key === current ? "true" : "false"}
+            data-entering={entering ? "true" : undefined}
             data-icon={glyphOf(node, row.expanded)}
+            data-leaving={leaving ? "true" : undefined}
             data-selected={chosen ? "true" : "false"}
             id={rowId(row.key)}
             key={row.key}
-            onClick={() => press(row)}
+            onClick={leaving ? undefined : () => press(row)}
             role="treeitem"
             style={{ paddingLeft: 6 + row.depth * INDENT }}
+            tabIndex={leaving ? -1 : undefined}
           >
             <span
               aria-hidden="true"

@@ -29,6 +29,7 @@ import {
   expandedSet,
   flattenTree,
   isExpanded,
+  paintedRows,
   setExpanded,
   toggleExpanded,
   treeCursorMove,
@@ -348,6 +349,64 @@ describe("the typed prefix", () => {
     expect(typeAheadRow(named, Option.none(), "r", labelOf)).toEqual(
       Option.some("gamma"),
     );
+  });
+});
+
+describe("the rows a folding branch still paints", () => {
+  const keys = (
+    nodes: ReadonlyArray<
+      { readonly key: string } | { readonly row: { readonly key: string } }
+    >,
+  ): string[] =>
+    Arr.map(nodes, (entry) => ("row" in entry ? entry.row.key : entry.key));
+
+  it("puts each leaving row back before the row it stood against", () => {
+    const open = expandAll(tree, spec);
+    const before = flattenTree(tree, spec, open);
+    const after = flattenTree(tree, spec, toggleExpanded(open, "components"));
+    const visible = HashSet.fromIterable(Arr.map(after, (row) => row.key));
+    const leaving = Arr.filter(before, (row) => !HashSet.has(visible, row.key));
+
+    const painted = paintedRows(after, leaving, before);
+
+    expect(keys(Arr.filter(painted, (row) => !row.leaving))).toEqual(
+      keys(after),
+    );
+    // The three rows of the closed branch sit where the branch was, between
+    // its folder and the next row — not appended to the bottom of the tree.
+    expect(keys(painted)).toEqual([
+      "src",
+      "components",
+      "button.tsx",
+      "table",
+      "row.tsx",
+      "index.ts",
+      "readme.md",
+    ]);
+    expect(
+      Arr.map(
+        Arr.filter(painted, (row) => row.leaving),
+        (row) => row.row.key,
+      ),
+    ).toEqual(["button.tsx", "table", "row.tsx"]);
+  });
+
+  it("closes a branch at the end of the tree at the end", () => {
+    const tail: ReadonlyArray<Node> = [
+      node("src"),
+      node("docs", [node("theming.mdx")]),
+    ];
+    const open = expandAll(tail, spec);
+    const before = flattenTree(tail, spec, open);
+    const after = flattenTree(tail, spec, toggleExpanded(open, "docs"));
+    const visible = HashSet.fromIterable(Arr.map(after, (row) => row.key));
+    const leaving = Arr.filter(before, (row) => !HashSet.has(visible, row.key));
+
+    expect(keys(paintedRows(after, leaving, before))).toEqual([
+      "src",
+      "docs",
+      "theming.mdx",
+    ]);
   });
 });
 

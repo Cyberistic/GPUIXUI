@@ -170,6 +170,52 @@ describe("the FileTree preview", () => {
     expect(selectionReadout(undefined)).toBe("nothing selected");
   });
 
+  it("folds a closed branch in the drawing instead of deleting it in a frame", () => {
+    // The bug: the rows were dropped the moment the cursor closed the folder,
+    // so the branch vanished in one frame and the tree's height jumped. The
+    // drawing keeps them for a height/opacity fold — native code has no
+    // transform, so a row animates its own box rather than a scale.
+    const css = read("apps/docs/src/styles/demos.css").replace(
+      /\/\*[\s\S]*?\*\//g,
+      "",
+    );
+
+    const block = (selector: string): string => {
+      const start = css.indexOf(`${selector} {`);
+      return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
+    };
+
+    expect(block(".gx-filetree-row")).toMatch(
+      /transition:[\s\S]*height 200ms[\s\S]*opacity 200ms/,
+    );
+    expect(block('.gx-filetree-row[data-leaving="true"]')).toContain(
+      "height: 0",
+    );
+    // The entering rows grow from the same zero, so both directions travel.
+    const keyframes = css.slice(css.indexOf("@keyframes gx-filetree-row-in"));
+    expect(keyframes.slice(0, keyframes.indexOf("\n}"))).toContain("height: 0");
+    expect(keyframes).toContain("height: var(--row-height)");
+
+    // A reduced reader gets the snap, on both halves of the journey.
+    const reduceAt = css.indexOf(
+      "@media (prefers-reduced-motion: reduce)",
+      css.indexOf(".gx-filetree-row"),
+    );
+    let depth = 0;
+    let reduceEnd = reduceAt;
+    for (; reduceEnd < css.length; reduceEnd += 1) {
+      if (css[reduceEnd] === "{") depth += 1;
+      if (css[reduceEnd] === "}" && (depth -= 1) === 0) break;
+    }
+    const reduced = css.slice(reduceAt, reduceEnd);
+    expect(reduced).toContain("transition: none");
+    expect(reduced).toContain("animation: none");
+
+    // The tree's own box is content-sized, so its total height follows the
+    // fold rather than sitting on a fixed box the rows collapse inside.
+    expect(block(".gx-filetree")).not.toMatch(/^\s*height:/m);
+  });
+
   it("opens a folder with the package's key move, not a local toggle", () => {
     const roots = workspaceTree();
     const closed: TreeCursor = {
@@ -213,6 +259,11 @@ describe("the FileTree preview", () => {
     expect(source).toContain("visibleFileRows");
     expect(source).toContain("fileTreeTab");
     expect(source).toContain("treeCursorMove");
+    // The fold keeps the package's row order: the closed branch's rows are put
+    // back where they stood, not appended or hidden in place.
+    expect(source).toContain("paintedRows");
+    expect(source).toContain("data-leaving=");
+    expect(source).toContain("data-entering=");
     expect(source).not.toContain("pressSelection");
     expect(source).not.toContain("flattenTree");
     expect(source).not.toContain('type="checkbox"');

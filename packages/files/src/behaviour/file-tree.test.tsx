@@ -18,11 +18,12 @@
  */
 
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
+import { MotionProvider } from "@gpuixui/motion/react/presence";
 import { lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import * as P from "effect/Predicate";
 import { useState } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { FileTree, FileTreeFile, FileTreeFolder } from "../tree/file-tree.js";
 
 interface WorkspaceProps {
@@ -176,12 +177,14 @@ describe("a folder press", () => {
     expect(painted(mounted)).toContain("opens=assets,src");
   });
 
-  it("closes the same subtree on a second press", () => {
+  it("closes the same subtree on a second press", async () => {
     const { root: mounted } = mount();
     press(mounted, "assets");
     press(mounted, "assets");
 
-    expect(painted(mounted)).not.toContain("logo.png");
+    // The rows are kept for their fold, then dropped when it settles.
+    expect(painted(mounted)).toContain("logo.png");
+    await vi.waitFor(() => expect(painted(mounted)).not.toContain("logo.png"));
     expect(painted(mounted)).toContain("opens=src");
   });
 });
@@ -237,7 +240,7 @@ describe("the keyboard", () => {
     expect(focused(mounted)).toBe(rowId("src/index.ts"));
   });
 
-  it("opens a closed folder with Right and closes it with Left", () => {
+  it("opens a closed folder with Right and closes it with Left", async () => {
     const { root: mounted } = mount({ initialSelected: "src/index.ts" });
     key(mounted, "src/index.ts", "down");
 
@@ -246,7 +249,8 @@ describe("the keyboard", () => {
     expect(focused(mounted)).toBe(rowId("assets"));
 
     key(mounted, "assets", "left");
-    expect(painted(mounted)).not.toContain("logo.png");
+    // The closed branch folds out, then leaves.
+    await vi.waitFor(() => expect(painted(mounted)).not.toContain("logo.png"));
     expect(focused(mounted)).toBe(rowId("assets"));
   });
 
@@ -274,6 +278,109 @@ describe("the selection's paint", () => {
     expect(row?.style.backgroundColor).toBe(lightTheme.colors.hover);
     expect(row?.style.backgroundColor).not.toBe(lightTheme.colors.selected);
     expect(row?.style.backgroundColor).not.toBe(lightTheme.colors.accent);
+  });
+});
+
+describe("a fold's motion", () => {
+  /** Let the fold's state land, then paint: the exit is a second commit. */
+  const fold = async (mounted: TestRoot): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    settle(mounted);
+  };
+
+  /** One row's painted height, `undefined` when it has unmounted. */
+  const height = (mounted: TestRoot, path: string): number | undefined => {
+    const element = mounted.renderer.findByTestId(rowId(path));
+    if (element === undefined) return undefined;
+    return mounted.renderer.getElementBounds(element.id)?.height;
+  };
+
+  /**
+   * The bug this guards: collapsing a folder deleted its rows in one frame, so
+   * a branch vanished instead of folding, and the tree's height jumped by the
+   * branch's whole height. The rows are kept for their exit tween and travel
+   * through intermediate heights; a reduced reader gets the snap.
+   */
+  it("folds a closed branch through intermediate heights", async () => {
+    const { root: mounted } = mount();
+    try {
+      press(mounted, "assets");
+      mounted.renderer.clockFastForward(400);
+      settle(mounted);
+      expect(height(mounted, "assets/logo.png")).toBe(32);
+
+      mounted.renderer.clockPause();
+      press(mounted, "assets");
+      await fold(mounted);
+
+      // The chevron has swapped and the rows have not moved yet.
+      expect(height(mounted, "assets/logo.png")).toBe(32);
+
+      mounted.renderer.clockFastForward(120);
+      settle(mounted);
+      const middle = height(mounted, "assets/logo.png");
+      expect(middle).toBeGreaterThan(0);
+      expect(middle).toBeLessThan(32);
+
+      mounted.renderer.clockFastForward(240);
+      settle(mounted);
+      expect(height(mounted, "assets/logo.png")).toBe(0);
+    } finally {
+      mounted.unmount();
+    }
+  });
+
+  it("snaps the fold under the reduced preference", () => {
+    const mounted = createTestRoot({ width: 1000, height: 700 });
+    root = mounted;
+    try {
+      mounted.render(
+        <ThemeProvider theme={lightTheme}>
+          <MotionProvider preference="reduced">
+            <Workspace initialExpanded={["src", "assets"]} />
+          </MotionProvider>
+        </ThemeProvider>,
+      );
+      settle(mounted);
+
+      mounted.renderer.clockPause();
+      press(mounted, "assets");
+      settle(mounted);
+
+      // No journey: the rows are absent in the frame the branch closes.
+      expect(height(mounted, "assets/logo.png")).toBeUndefined();
+    } finally {
+      mounted.unmount();
+      root = undefined;
+    }
+  });
+
+  it("leaves the selected row and the other branches where they were", () => {
+    const { root: mounted } = mount({ initialSelected: "src/index.ts" });
+    try {
+      const selected = mounted.renderer.findByTestId(rowId("src/index.ts"));
+      const docs = mounted.renderer.findByTestId(rowId("assets"));
+      if (selected === undefined || docs === undefined) {
+        throw new Error("behaviour: the workspace rows are missing");
+      }
+      const before = {
+        selected: mounted.renderer.getElementBounds(selected.id),
+        docs: mounted.renderer.getElementBounds(docs.id),
+      };
+
+      // `assets` closes below the selection, so only the rows after it move.
+      press(mounted, "assets");
+      press(mounted, "assets");
+
+      const after = {
+        selected: mounted.renderer.getElementBounds(selected.id),
+        docs: mounted.renderer.getElementBounds(docs.id),
+      };
+      expect(after.selected?.y).toBe(before.selected?.y);
+      expect(after.docs?.y).toBe(before.docs?.y);
+    } finally {
+      mounted.unmount();
+    }
   });
 });
 

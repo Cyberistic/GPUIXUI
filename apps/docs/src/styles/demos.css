@@ -4878,9 +4878,17 @@
   line-height: 1;
 }
 
-.gx-date-navbtn:hover:not(:disabled) {
+button.gx-date-navbtn:hover:not(:disabled) {
   background: var(--hover);
   color: var(--foreground);
+}
+
+/* The window's spacer holds the navigation pair's geometry without painting
+   anything: it is not a control, so no state can give it a fill. */
+.gx-date-navspacer {
+  width: 26px;
+  height: 26px;
+  visibility: hidden;
 }
 
 .gx-date-navbtn:disabled {
@@ -4894,23 +4902,52 @@
   letter-spacing: -0.01em;
 }
 
-/* The caption's two selects, at the `Select`'s `sm` metrics: a bordered field
-   the width of its longest label, side by side where the month name sits. */
+/* The caption's two selects stand at the `Select`'s `sm` trigger: the `input`
+   field fill, the `border` edge, `radius.md`, the `sm` box and padding, the
+   label type, and the icon set's chevron over a suppressed native arrow. */
 .gx-date-caption {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
 }
 
+.gx-date-field {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
 .gx-date-select {
+  appearance: none;
   height: var(--control-height-sm);
-  padding: 0 var(--control-padding-x-sm);
+  padding: 0 calc(var(--control-padding-x-sm) + var(--icon-size-sm) + 2px) 0
+    var(--control-padding-x-sm);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--input);
   color: var(--input-foreground);
   font-family: var(--font-sans);
   font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.gx-date-select:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+.gx-date-select:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-date-chevron {
+  position: absolute;
+  right: var(--control-padding-x-sm);
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  color: var(--muted-foreground);
+  pointer-events: none;
 }
 
 .gx-date-grid {
@@ -5027,17 +5064,6 @@
 
 .gx-date-column.gx-date-wide .gx-date-frame {
   width: 100%;
-}
-
-.gx-date-select {
-  height: var(--control-height-md);
-  padding: 0 var(--control-padding-x-md);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  font-size: 13px;
 }
 
 .gx-date-presets {
@@ -13271,10 +13297,49 @@ button.gx-rating-star:focus-visible {
   display: flex;
   align-items: center;
   height: var(--row-height);
+  overflow: hidden;
   padding-right: 8px;
   border-radius: calc(var(--radius) - 2px);
   color: var(--foreground);
   cursor: pointer;
+  /* A branch folds: each row travels its own height and fades, so the tree's
+     total height follows the branch instead of jumping. The lead lets the
+     disclosure's glyph swap first; a reduced reader gets the snap below. */
+  transition:
+    height 200ms ease-in 20ms,
+    opacity 200ms ease-in 20ms;
+}
+
+.gx-filetree-row[data-leaving="true"] {
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gx-filetree-row[data-entering="true"] {
+  animation: gx-filetree-row-in 200ms ease-out both;
+}
+
+@keyframes gx-filetree-row-in {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+
+  to {
+    height: var(--row-height);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-filetree-row {
+    transition: none;
+  }
+
+  .gx-filetree-row[data-entering="true"] {
+    animation: none;
+  }
 }
 
 .gx-filetree-row:hover {
