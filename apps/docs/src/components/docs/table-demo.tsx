@@ -15,6 +15,7 @@ import {
   sortOrderGlyph,
   sortOrderLabel,
   TABLE_ROWS,
+  tableTracks,
   toggleColumn,
   togglePageSelection,
   toggleRow,
@@ -55,18 +56,6 @@ const COLUMN_INITIAL: Readonly<Record<ColumnId, "asc" | "desc">> = {
   status: "asc",
   duration: "desc",
 };
-
-/** The fixed width a column paints, so hiding one never reflows the rest. */
-const COLUMN_WIDTH: Readonly<Record<ColumnId, number>> = {
-  service: 250,
-  environment: 150,
-  status: 110,
-  duration: 90,
-};
-
-/** The select track and the actions track are fixed; they never hide. */
-const SELECT_WIDTH = 40;
-const ACTIONS_WIDTH = 48;
 
 /** The glyph a sortable header paints: the order's, or the unsorted affordance. */
 const sortGlyph = (order: PreviewSortOrder, id: ColumnId): string =>
@@ -307,11 +296,9 @@ export const TableWorkflow = () => {
               development.
             </caption>
             <colgroup>
-              <col style={{ width: SELECT_WIDTH }} />
-              {columns.map((id) => (
-                <col key={id} style={{ width: COLUMN_WIDTH[id] }} />
+              {tableTracks(columns).map((width, index) => (
+                <col key={index} style={{ width }} />
               ))}
-              <col style={{ width: ACTIONS_WIDTH }} />
             </colgroup>
             <thead>
               <tr>
@@ -325,7 +312,12 @@ export const TableWorkflow = () => {
                   />
                 </th>
                 {columns.map((id) => (
-                  <th className="gx-table-head" key={id} scope="col">
+                  <th
+                    className="gx-table-head"
+                    data-align={id === "duration" ? "right" : undefined}
+                    key={id}
+                    scope="col"
+                  >
                     <button
                       aria-label={sortOrderLabel(COLUMN_LABELS[id], order, id)}
                       className="gx-table-sort"
@@ -388,7 +380,7 @@ export const TableWorkflow = () => {
                           }
                           type="button"
                         >
-                          …
+                          ⋯
                         </button>
                         {openMenu === row.id ? (
                           <div
@@ -429,14 +421,14 @@ export const TableWorkflow = () => {
 
         <div className="gx-table-footer">
           <span className="gx-table-selected">
-            {selection.selected.length} of {shown.length} row(s) selected.
+            <b>{selection.selected.length}</b> of <b>{shown.length}</b> selected
           </span>
           <div className="gx-table-pager">
             <span className="gx-table-pagesize">
-              Rows per page: {PAGE_SIZE}
+              Rows per page: <b>{PAGE_SIZE}</b>
             </span>
             <span className="gx-table-pageinfo">
-              Page {current + 1} of {count}
+              Page <b>{current + 1}</b> of <b>{count}</b>
             </span>
             <div className="gx-table-pagenav">
               <button
@@ -504,7 +496,7 @@ export const TableStates = () => {
           <table aria-label="Sorted deploys" className="gx-table-el">
             <thead>
               <tr>
-                <th className="gx-table-head" scope="col">
+                <th className="gx-table-head" data-align="right" scope="col">
                   Duration
                   <span aria-hidden="true" className="gx-table-glyph">
                     ↓

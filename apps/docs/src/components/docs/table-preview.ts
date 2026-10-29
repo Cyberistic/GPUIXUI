@@ -79,6 +79,37 @@ export const COLUMN_IDS = [
 /** One hideable column. */
 export type ColumnId = (typeof COLUMN_IDS)[number];
 
+/**
+ * The width every track takes, as a share of the table.
+ *
+ * The workflow preview's tracks used to be pixels (`40 + 250 + 150 + 110 + 90 +
+ * 48`), which is 688px inside a 625px card at 1440 — the Duration column lost
+ * its tail, the Actions column disappeared, and the caption (a table child, so
+ * as wide as the columns) was clipped by the frame: the stray truncated line at
+ * the bottom of the stage. A share cannot overrun the table it is a share of, so
+ * the table lands inside the card at every width and hiding a column lets the
+ * rest take its place.
+ */
+export const TABLE_TRACKS: Readonly<
+  Record<"select" | ColumnId | "actions", string>
+> = {
+  select: "6%",
+  service: "34%",
+  environment: "25%",
+  status: "16%",
+  duration: "12%",
+  actions: "7%",
+};
+
+/** The tracks the workflow paints, in column order, keeping the hidden ones out. */
+export const tableTracks = (
+  columns: ReadonlyArray<ColumnId>,
+): ReadonlyArray<string> => [
+  TABLE_TRACKS.select,
+  ...columns.map((id) => TABLE_TRACKS[id]),
+  TABLE_TRACKS.actions,
+];
+
 /** The value one column paints, before the column is hidden. */
 export const cellOf = (row: PreviewTableRow, id: ColumnId): string =>
   id === "duration" ? `${row.duration}` : row[id];

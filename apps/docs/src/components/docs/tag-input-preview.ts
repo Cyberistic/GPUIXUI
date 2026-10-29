@@ -14,6 +14,8 @@
  * sitting in the field.
  */
 
+import * as Option from "effect/Option";
+
 /** What the field accepts: the cap and whether a repeat is a token. */
 export interface KeywordRules {
   /** The most tokens the list holds; additions past it are refused. */
@@ -138,17 +140,43 @@ export const remaining = (state: Keywords, rules: KeywordRules): number =>
 export const atLimit = (state: Keywords, rules: KeywordRules): boolean =>
   remaining(state, rules) === 0;
 
-/** The budget line the form prints. */
+/**
+ * The budget line the form prints, as a sentence.
+ *
+ * It used to be a readout — `2 of 5 keywords · 3 left · refused=1` — which read
+ * like a debug counter beside the field. The refusal is the next sentence, and
+ * only when there is one.
+ */
 export const describeBudget = (
   state: Keywords,
   rules: KeywordRules,
 ): string => {
+  const counted = `${state.tokens.length} of ${rules.max} keywords added`;
   const left = remaining(state, rules);
-  const counted = `${state.tokens.length} of ${rules.max} keywords`;
   return left === 0
-    ? `${counted} · limit reached`
-    : `${counted} · ${left} left`;
+    ? `${counted}: the list is full.`
+    : `${counted}, ${left} more will fit.`;
 };
+
+/**
+ * What a refused commit means, in a sentence, or nothing when none was refused.
+ *
+ * A commit clears the draft whether or not it landed, so the form has to say
+ * why the word disappeared: at the cap the list is full, and below it the only
+ * refusal `addTokens` can make is a repeat.
+ */
+export const describeRefusal = (
+  state: Keywords,
+  rules: KeywordRules,
+  refused: number,
+): Option.Option<string> =>
+  refused === 0
+    ? Option.none()
+    : Option.some(
+        atLimit(state, rules)
+          ? "That keyword was refused: the list is full."
+          : "That keyword was refused: it is already on the list.",
+      );
 
 /**
  * The line under the publish action.

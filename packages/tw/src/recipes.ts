@@ -280,15 +280,25 @@ export const SEARCH_INPUT_CONTROL =
 export const SEARCH_INPUT_CLEAR =
   "text-xs font-sans flex items-center justify-center size-[18px] rounded-sm text-muted-foreground cursor-pointer";
 
-/** `tag-input.tsx` — the token group. The min-height and field height keep
- * density (ADR 0006). */
+/**
+ * `tag-input.tsx` — the token group. The min-height and field height keep
+ * density (ADR 0006).
+ *
+ * A chip is a **chip**: `bg-secondary` is a fill a step away from the field's
+ * own `bg-background`, and its label is the page's `foreground`, because the
+ * token a reader typed is body copy. `text-muted-foreground` painted it at the
+ * secondary floor — 6.4:1 in the light styles, under the 7:1 a body role is
+ * held to — on a fill that was, in a dark style, a shade of the field behind
+ * it. The removal glyph stays `muted-foreground`, which is measured on
+ * `secondary` at the secondary floor.
+ */
 export const TAG_INPUT_ROOT =
   "flex flex-row flex-wrap items-center gap-1 px-1.5 py-0.5 bg-background rounded-md border border-input";
 export const TAG_INPUT_FIELD =
   "text-sm font-sans flex-grow min-w-20 text-input-foreground";
 export const TAG_INPUT_CHIP =
-  "flex flex-row items-center gap-1 px-1.5 py-0.5 bg-muted rounded-sm";
-export const TAG_INPUT_CHIP_TEXT = "text-xs font-sans text-muted-foreground";
+  "flex flex-row items-center gap-1 px-1.5 py-0.5 bg-secondary rounded-sm";
+export const TAG_INPUT_CHIP_TEXT = "text-xs font-sans text-foreground";
 export const TAG_INPUT_CHIP_REMOVE =
   "text-xs font-sans flex items-center justify-center size-4 rounded-sm text-muted-foreground";
 

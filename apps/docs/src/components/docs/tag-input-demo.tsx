@@ -3,11 +3,13 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
+import * as Option from "effect/Option";
 import {
   canPublish,
   committed,
   describeBudget,
   describeGate,
+  describeRefusal,
   emptyKeywords,
   keywordRules,
   removeLabel,
@@ -147,7 +149,11 @@ const TagInputWorkflow = () => {
         <div>
           <p className="gx-tag-title">Publish @acme/ui</p>
           <p className="gx-tag-meta" role="status">
-            {describeBudget(keywords, keywordRules)} · refused={refused}
+            {describeBudget(keywords, keywordRules)}{" "}
+            {Option.match(describeRefusal(keywords, keywordRules, refused), {
+              onNone: () => null,
+              onSome: (line) => line,
+            })}
           </p>
         </div>
         <PreviewGroup
@@ -230,7 +236,11 @@ const TagInputStates = () => {
           state={full}
         />
         <p className="gx-tag-note" role="status">
-          {describeBudget(full, keywordRules)} · refused={refused}
+          {describeBudget(full, keywordRules)}{" "}
+          {Option.match(describeRefusal(full, keywordRules, refused), {
+            onNone: () => null,
+            onSome: (line) => line,
+          })}
         </p>
       </div>
       <div className="gx-tag-state">

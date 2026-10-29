@@ -24254,6 +24254,29 @@ rests on the stack.
       `innerCorners`; `sheet-drawer-preview.test.tsx` already guards every side,
       so rounding all four fails it (`right rounds the wrong corners`).
 
+## A dead slider, a clipped table, a grey chip (2026-10-29)
+
+`[x]` `[██████████]` 3/3
+
+`[x]` **Slider** — `/docs/components/slider` drew a picture: no press, no keys,
+      and a single value's fill was `last - first`, so `Quality · 62` sat over a
+      `width: 0%` track. The three slider pages share one live drawing now
+      (`slider-drawing.tsx`) built on `pointerValue`, `nearestEnd`, `dragSpan`
+      and `decideValueKey`, with pointer capture, the primitive's half-thumb
+      inset, `−`/`+` through `stepValue`, and the DOM's `ArrowRight` translated
+      to the runtime's `right` (arrows did nothing before).
+`[x]` **Table** — the workflow's tracks were pixels (`688px`) inside a `625px`
+      card, so Duration was cut, Actions was invisible and the caption was
+      clipped into the stray half-line at the bottom. The tracks are shares
+      (sum 100%), the header is its own `muted` band with a `foreground` label,
+      duration is right-aligned and tabular on both sides of the grid, and the
+      footer reads as counts plus a paged group.
+`[x]` **Tag chip** — `muted-foreground` on `muted` measured 6.40–6.83:1 in the
+      four light styles, under the 7:1 a body label is held to, on a fill 1.06:1
+      from the field. The chip is `bg-secondary` with a `foreground` label
+      (13.09–17.14 light, 9.15–11.70 dark, 13.58 high-contrast) and the budget
+      line is a sentence instead of `refused=1`.
+
 ## Docs polish — five drawings corrected (2026-10-29)
 
 `[x]` `[██████████]` 5/5
