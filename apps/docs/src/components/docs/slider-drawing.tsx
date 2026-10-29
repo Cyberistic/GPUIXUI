@@ -111,7 +111,11 @@ export const SliderDrawing = ({
 
   const release = (event: ReactPointerEvent<HTMLDivElement>): void => {
     drag.current = null;
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    // A pointer the window lost its grip on (a cancel, a release outside the
+    // window) is no longer captured, and releasing it again throws.
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
   };
 
   /** A key on the single value, or on one end of the range. */
