@@ -56,7 +56,8 @@ const cssBlock = (selector: string): string => {
 const huntCss = css.slice(css.indexOf("/* ---- hunter pipeline"));
 
 /** The rows the rail paints at first: the package's own flattening. */
-const vaultRows = visibleFileRows(vaultTree, vaultOpen);
+const vaultRows =
+  vaultTree === undefined ? [] : visibleFileRows(vaultTree, vaultOpen);
 
 describe("the dossier columns", () => {
   it("splits the list into the staged and the blocked, and loses none", () => {
