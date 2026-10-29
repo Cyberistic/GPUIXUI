@@ -24493,3 +24493,49 @@ fullscreen request, disabled refusal, bad frame), each inverted and recorded.
 `nub run check` clean. Live probe updated to the new ids and geometry
 (`media-player-lifecycle`, 47 checks, not re-run here).
 >>>>>>> origin/feat/media-player-mux
+
+## Previews that told the wrong story (2026-10-29)
+
+`[x]` `[██████████]` 4/4 — **the account menu lands on its menu, the mention
+input paints its mentions as links, the tooltip stops moving the page, and
+diagrams render from a fence.**
+
+`[x]` **User menu.** The drawing opened the menu upward from a footer with no
+room above it, so the preview's frame cut off every row but `Log out`, and the
+menu was a flat list of labels beside a bare name. It is now the component's
+anatomy — identity block, `Upgrade to Pro` with its sparkle, the three account
+rows with their glyphs, separators, `Log out` in the destructive role — and it
+opens into a stage tall enough to hold it. It also names the roles the shipped
+sidebar paints (`card`, `accent`, `border`): the docs app's own `--sidebar`
+chrome is not in the preview's token scope, so the panel fell back to the
+site's *light* palette and painted white inside a dark stage. Eight cases,
+seven failing without the fix.
+
+`[x]` **Mention input.** An `<input>` paints one colour for its whole value, so
+a mention could only read as the words around it. The drawing composes two
+layers on one type scale — a `div` that paints the runs, and the real textarea
+above it with transparent ink and a visible caret — so `@handle` is an
+accent-inked link with an underline and a wash, and a `@name` that names nobody
+stays text. The box below is the component's surface: popover recipe with
+elevation, avatar disc, name, handle, role, the matched run marked, an empty
+state, the keys a row answers to, and no debug readout. The component records
+the limit honestly. Sixteen cases, all failing without the fix.
+
+`[x]` **Tooltip.** The tip was never the cause — it is absolute and takes no
+layout space. The state readout was: its sentence is longest while the tip is
+open, the scene sized itself to its widest child, and the stage centres that
+scene, so a hover slid everything sideways by 50px. The scene and the readout
+now have their own widths. Measured before and after a hover: every box
+identical, scroll height unchanged. Three cases, each failing on its own
+inversion.
+
+`[x]` **Diagrams (Pele).** `pele` is in the catalog and `apps/docs`; a `mermaid`
+fence becomes a diagram at compile time through a remark plugin (Fumadocs paints
+fences through its own `CodeBlock`, so an MDX `pre` override never sees them),
+and the page ships the SVG in its prerendered HTML. The figure maps every
+`--pele-*` role to a `var()` of the page's own, so the diagram is rendered once
+and a light/dark switch re-themes it — measured at an identical SVG byte length
+across the switch. A source that does not parse is a typed `MermaidError` shown
+with its source. The page states why the library cannot ship one: `<svg source>`
+paints its whole markup as one tint, and an image decodes every fill but cannot
+be re-themed, selected or linked.

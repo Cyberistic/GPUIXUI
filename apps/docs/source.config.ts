@@ -1,5 +1,6 @@
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
 import { codeOptions } from "./src/lib/code-theme";
+import { mermaidFence } from "./src/lib/remark-mermaid";
 
 // Docs content lives in apps/docs/content/docs/<page>.mdx.
 export const docs = defineDocs({ dir: "content/docs" });
@@ -33,6 +34,10 @@ export const dataDocs = defineDocs({
 // themes to `@gpuixui/tokens` and measures every role on the docs card surface.
 export default defineConfig({
   mdxOptions: {
+    // A `mermaid` fence becomes a diagram at compile time, so the prerendered
+    // page carries the SVG. Fumadocs paints fences through its own CodeBlock,
+    // which is why this is a remark plugin and not a `pre` override.
+    remarkPlugins: [mermaidFence],
     rehypeCodeOptions: codeOptions,
   },
 });

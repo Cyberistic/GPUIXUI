@@ -15008,3 +15008,88 @@ button.gx-rating-star:focus-visible {
     transition: none;
   }
 }
+
+/* ---- Mermaid diagrams, rendered by Pele ----------------------------------
+   Pele reads `--pele-*` custom properties, so the figure hands it the preview's
+   own roles and a theme switch re-themes the SVG without a second render. The
+   diagram is a picture: it takes the card's surface, its own border and the
+   theme's radius, and its label is the caption under it. */
+.gx-mermaid {
+  /* Pele paints through `--pele-*`, so the figure hands it the page's own
+     roles. Every value is a `var()` reference, so a light/dark switch re-themes
+     the rendered SVG with no second render. `--pele-accent` takes the ring: in
+     this palette `primary` is a *surface*, so an accent edge painted from it
+     would vanish on a raised card. */
+  --pele-bg: var(--card);
+  --pele-fg: var(--foreground);
+  --pele-muted: var(--muted-foreground);
+  --pele-line: var(--border-strong, var(--border));
+  --pele-surface: var(--muted);
+  --pele-surface-alt: var(--accent);
+  --pele-border: var(--border);
+  --pele-accent: var(--ring);
+  --pele-font: var(--font-sans);
+  --pele-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.gx-mermaid-svg {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+/* Pele sizes its own SVG; the frame only guarantees it can shrink. */
+.gx-mermaid-svg > svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.gx-mermaid-caption {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+/* A source the parser refused: say so, and print what it refused. */
+.gx-mermaid-error {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--destructive);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+}
+
+.gx-mermaid-error-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--destructive);
+}
+
+.gx-mermaid-error-body {
+  margin: 0;
+  font-size: 12px;
+  color: var(--card-foreground);
+}
+
+.gx-mermaid-error-source {
+  margin: 0;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
