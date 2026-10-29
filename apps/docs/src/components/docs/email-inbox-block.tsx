@@ -383,22 +383,27 @@ export function EmailInboxSurface({
       >
         <header className="gx-mail-side-head">
           <h3 className="gx-mail-title gx-rail-label">Mail</h3>
-          <RailToggle
-            className="gx-mail-collapse"
-            collapsed={state.railCollapsed}
-            onToggle={onToggleRail}
-          />
-          <span className="gx-mail-new gx-rail-label">
-            <button className="gx-btn gx-btn-primary gx-btn-sm" type="button">
-              New
-            </button>
-            <button
-              aria-label="New message options"
-              className="gx-btn gx-btn-primary gx-btn-sm gx-mail-new-more"
-              type="button"
-            >
-              <BlockIcon name="chevronDown" size={12} />
-            </button>
+          <span className="gx-mail-head-actions">
+            <span className="gx-mail-new gx-rail-label">
+              <button
+                className="gx-btn gx-btn-primary gx-btn-sm gx-mail-new-main"
+                type="button"
+              >
+                New
+              </button>
+              <button
+                aria-label="New message options"
+                className="gx-btn gx-btn-primary gx-btn-sm gx-mail-new-more"
+                type="button"
+              >
+                <BlockIcon name="chevronDown" size={12} />
+              </button>
+            </span>
+            <RailToggle
+              className="gx-mail-collapse"
+              collapsed={state.railCollapsed}
+              onToggle={onToggleRail}
+            />
           </span>
         </header>
         <button className="gx-mail-refresh" type="button">

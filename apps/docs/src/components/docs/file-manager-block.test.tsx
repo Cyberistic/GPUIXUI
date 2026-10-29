@@ -1,9 +1,12 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
   FileManagerRender,
   FileManagerSurface,
   type FileManagerState,
+  fileFolders,
   fileManagerReducer,
   initialFileManagerState,
   managedFiles,
@@ -32,6 +35,18 @@ const render = (state: FileManagerState): string =>
       state={state}
     />,
   );
+
+const initialFileManagerStateMarkup = render(initialFileManagerState);
+
+const css = readFileSync(
+  fileURLToPath(new URL("../../styles/blocks.css", import.meta.url)),
+  "utf8",
+);
+
+const rule = (selector: string): string => {
+  const start = css.indexOf(`${selector} {`);
+  return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
+};
 
 /** The markup from the first element carrying `marker` to the next close. */
 const from = (markup: string, marker: string, close = "</aside>"): string => {
@@ -153,7 +168,24 @@ describe("fileManagerReducer", () => {
     ).toBe("car-driving.jpg");
   });
 
-  it("collapses the folder tree to icons and expands it again", () => {
+  it("draws the folder rail as a titled panel with disclosure rows and a footer", () => {
+    const rail = from(
+      initialFileManagerStateMarkup,
+      '<aside aria-label="Folders"',
+    );
+
+    expect(rail).toContain('class="gx-fm-side-head"');
+    expect(rail).toContain(">Folders<");
+    expect(rail.match(/class="gx-fm-folder"/g) ?? []).toHaveLength(
+      fileFolders.length,
+    );
+    expect(rail).toContain('class="gx-fm-row-label gx-rail-label">Pictures');
+    expect(rail).toContain('class="gx-fm-trail gx-rail-label"');
+    expect(rail).toContain('data-active="true"');
+    expect(rail).toContain('class="gx-fm-storage gx-rail-label"');
+  });
+
+  it("collapses the folder panel away and expands it again", () => {
     const collapsed = fileManagerReducer(initialFileManagerState, {
       type: "toggle-rail",
     });
@@ -164,7 +196,10 @@ describe("fileManagerReducer", () => {
     expect(markup).toContain('aria-expanded="false"');
     expect(markup).toContain('aria-label="Expand sidebar"');
     expect(markup).toContain('aria-label="Pictures"');
-    expect(markup).toContain('class="gx-rail-label">Pictures</span>');
+    expect(markup).toContain(
+      'class="gx-fm-row-label gx-rail-label">Pictures</span>',
+    );
+    expect(rule('.gx-fm-side[data-collapsed="true"]')).toContain("width: 0");
   });
 });
 

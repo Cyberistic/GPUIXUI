@@ -189,7 +189,14 @@ export function FileManagerSurface({
   return (
     <div className="gx-fm">
       <header className="gx-fm-top">
-        <h3 className="gx-fm-title">Files</h3>
+        <div className="gx-fm-top-start">
+          <RailToggle
+            className="gx-fm-collapse"
+            collapsed={state.railCollapsed}
+            onToggle={onToggleRail}
+          />
+          <h3 className="gx-fm-title">Files</h3>
+        </div>
         <label className="gx-fm-search">
           <BlockIcon name="search" size={13} />
           <input
@@ -223,11 +230,9 @@ export function FileManagerSurface({
           className="gx-fm-side"
           data-collapsed={state.railCollapsed}
         >
-          <RailToggle
-            className="gx-fm-collapse"
-            collapsed={state.railCollapsed}
-            onToggle={onToggleRail}
-          />
+          <header className="gx-fm-side-head">
+            <h4 className="gx-fm-side-title gx-rail-label">Folders</h4>
+          </header>
           <button
             aria-label="Add new item"
             className="gx-btn gx-btn-primary gx-btn-sm gx-fm-add"
@@ -244,7 +249,10 @@ export function FileManagerSurface({
             type="button"
           >
             <BlockIcon name="folder" size={14} />
-            <span className="gx-rail-label">My files</span>
+            <span className="gx-fm-row-label gx-rail-label">My files</span>
+            <span aria-hidden="true" className="gx-fm-trail gx-rail-label">
+              <BlockIcon name="chevronRight" size={11} />
+            </span>
           </button>
           <nav className="gx-fm-tree">
             {fileFolders.map((folder) => (
@@ -258,7 +266,10 @@ export function FileManagerSurface({
                 type="button"
               >
                 <BlockIcon name="folder" size={14} />
-                <span className="gx-rail-label">{folder}</span>
+                <span className="gx-fm-row-label gx-rail-label">{folder}</span>
+                <span aria-hidden="true" className="gx-fm-trail gx-rail-label">
+                  <BlockIcon name="chevronRight" size={11} />
+                </span>
               </button>
             ))}
           </nav>

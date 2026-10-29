@@ -401,6 +401,14 @@ The index paints one `alt=""` WebP per block, generated from the real pages by
 in). Verified live: 11 images loaded, 0 live scenes on the index. Thumbnails are
 one palette by nature; the block page still follows the switch. The dashboard
 donut legend wraps instead of clipping at the wider column.
+`[x]` **Five block drawings corrected** — the hunter pipeline reads on the other
+blocks' rhythm (one hairline-divided card per group, 11px uppercase labels, 20px
+values, `gx-badge-sm` chips, 18px section gaps; the chart's day hit areas are
+transparent instead of black). File manager and conversations draw real panels
+(header, labelled disclosure rows, an active row, a storage footer) and fold
+away whole rather than into a column of unlabelled glyphs or discs. Email's New
+and chevron no longer collide, and kanban's collapse control sits beside the
+board title. Screenshots at 1440×1000 dark; docs suite 2346 green, `check` clean.
 `[x]` **Fixed-height controls centre their label** — the toast action and close
 mark are 24px boxes with no flex, so the inherited 28px line box overflowed and
 the label sat ~4px high (measured 6.9 above / 2.7 below; now 4.7 / 4.9). The

@@ -3213,16 +3213,42 @@
   min-height: 0;
 }
 
+.gx-fm-top-start {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .gx-fm-side {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: 200px;
+  width: 216px;
   flex: none;
   padding: 12px;
+  overflow-x: hidden;
   overflow-y: auto;
   border-right: 1px solid var(--border);
   background: var(--muted);
+}
+
+.gx-fm-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 0 2px;
+}
+
+.gx-fm-side-title {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
 }
 
 .gx-fm-add {
@@ -3246,6 +3272,21 @@
   font-weight: 500;
   text-align: left;
   cursor: pointer;
+}
+
+.gx-fm-row-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-fm-trail {
+  display: inline-flex;
+  flex: none;
+  color: var(--muted-foreground);
+  opacity: 0.7;
 }
 
 .gx-fm-root {
@@ -3672,8 +3713,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 10px;
+}
+
+.gx-mail-head-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
 }
 
 .gx-mail-title {
@@ -3681,23 +3729,23 @@
   font-size: 15px;
   font-weight: 650;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 .gx-mail-new {
   display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
 }
 
-.gx-mail-new .gx-btn-primary:first-child {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+.gx-mail-new .gx-mail-new-main {
+  padding: 0 10px;
 }
 
-.gx-mail-new-more {
-  width: 24px;
-  padding: 0 5px;
-  border-left: 1px solid var(--primary-foreground);
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+.gx-mail-new .gx-mail-new-more {
+  width: 26px;
+  padding: 0;
 }
 
 .gx-mail-refresh {
@@ -4292,7 +4340,7 @@
  */
 @container (max-width: 1120px) {
   .gx-fm-side {
-    width: 170px;
+    width: 190px;
   }
 
   .gx-fm-info {
@@ -4300,7 +4348,7 @@
   }
 
   .gx-mail-side {
-    width: 170px;
+    width: 190px;
   }
 
   .gx-mail-list {
@@ -4314,7 +4362,7 @@
 
 @container (max-width: 900px) {
   .gx-fm-side {
-    width: 150px;
+    width: 180px;
   }
 
   .gx-fm-info {
@@ -4322,7 +4370,7 @@
   }
 
   .gx-mail-side {
-    width: 160px;
+    width: 200px;
   }
 
   .gx-mail-list {
@@ -4510,6 +4558,7 @@
   flex-direction: column;
   width: 330px;
   min-height: 0;
+  overflow: hidden;
   border-right: 1px solid var(--border);
   background: var(--muted);
 }
@@ -4523,7 +4572,63 @@
   flex: none;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 6px 12px 8px;
+}
+
+.gx-conv-side-top {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 12px 4px;
+}
+
+.gx-conv-side-title {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.gx-conv-side-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.gx-conv-new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-conv-new:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.gx-conv-group {
+  margin: 0;
+  padding: 2px 14px 6px;
+  color: var(--muted-foreground);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  line-height: 14px;
+  text-transform: uppercase;
 }
 
 .gx-conv-search {
@@ -4764,7 +4869,13 @@
 
 .gx-conv[data-platform="macos"] .gx-conv-head {
   display: grid;
-  grid-template-columns: 28px 1fr auto;
+  grid-template-columns: auto 1fr auto;
+}
+
+.gx-conv-head-start {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .gx-conv[data-platform="macos"] .gx-conv-contact {
@@ -5732,11 +5843,13 @@
 }
 
 /* ---- collapsible block rails ----
-   Every block with a rail collapses it to a 64px icon strip. The rail animates
-   its width and padding for 200ms; its labels fade and take no width, so the
-   content pane takes the space back without a height change. The toggle states
-   the action (`Collapse sidebar` / `Expand sidebar`) and its `aria-expanded`
-   carries the state. Reduced motion snaps both. */
+   A rail collapses in one of two ways. A folder or navigation rail keeps a
+   64px icon strip: the rail animates its width and padding for 200ms and its
+   labels fade to no width, so the pane takes the space back in one move. A
+   conversation list or folder tree has no icon-only form, so it folds to zero
+   width and a header toggle brings it back. The toggle states the action
+   (`Collapse sidebar` / `Expand sidebar`) and `aria-expanded` carries the
+   state. Reduced motion snaps both. */
 .gx-rail-toggle {
   display: inline-flex;
   flex: none;
@@ -5779,16 +5892,12 @@
     max-width 200ms ease;
 }
 
-.gx-conv-side[data-collapsed="true"],
-.gx-fm-side[data-collapsed="true"],
 .gx-mail-side[data-collapsed="true"],
 .gx-kan-side[data-collapsed="true"],
 .gx-set-side[data-collapsed="true"] {
   width: 64px;
 }
 
-.gx-conv-side[data-collapsed="true"] .gx-rail-label,
-.gx-fm-side[data-collapsed="true"] .gx-rail-label,
 .gx-mail-side[data-collapsed="true"] .gx-rail-label,
 .gx-kan-side[data-collapsed="true"] .gx-rail-label,
 .gx-set-side[data-collapsed="true"] .gx-rail-label {
@@ -5800,47 +5909,20 @@
   pointer-events: none;
 }
 
-/* conversations: the list pane keeps its avatars */
-.gx-conv-side[data-collapsed="true"] .gx-conv-side-head {
-  justify-content: center;
-  padding: 10px 6px;
+/* conversations: the list folds away whole; the thread header's toggle brings
+   it back. A conversation list has no icon-only state — its avatars alone are
+   not a navigation rail. */
+.gx-conv-side[data-collapsed="true"] {
+  width: 0;
+  border-right-width: 0;
 }
 
-.gx-conv-side[data-collapsed="true"] .gx-conv-search {
-  display: none;
-}
-
-.gx-conv-side[data-collapsed="true"] .gx-conv-list {
-  padding: 0 6px 8px;
-}
-
-.gx-conv-side[data-collapsed="true"] .gx-conv-row {
-  justify-content: center;
-  padding: 8px 0;
-}
-
-.gx-conv-side[data-collapsed="true"] .gx-conv-row::after {
-  display: none;
-}
-
-/* file manager: folder icons only, storage facts hidden */
+/* file manager: the folder panel folds away; the top bar's toggle brings it
+   back, so the rail never degrades to a column of unlabelled glyphs. */
 .gx-fm-side[data-collapsed="true"] {
-  padding: 8px;
-}
-
-.gx-fm-side[data-collapsed="true"] .gx-fm-collapse {
-  align-self: center;
-}
-
-.gx-fm-side[data-collapsed="true"] .gx-fm-add,
-.gx-fm-side[data-collapsed="true"] .gx-fm-root,
-.gx-fm-side[data-collapsed="true"] .gx-fm-folder {
-  justify-content: center;
+  width: 0;
   padding: 0;
-}
-
-.gx-fm-side[data-collapsed="true"] .gx-fm-storage {
-  display: none;
+  border-right-width: 0;
 }
 
 /* mail: folder icons only, the message counts and groups hidden */
@@ -5879,7 +5961,7 @@
 }
 
 .gx-kan-side[data-collapsed="true"] .gx-kan-brand {
-  justify-content: space-between;
+  justify-content: center;
   gap: 4px;
   padding: 0;
 }
@@ -7644,21 +7726,22 @@ button.gx-sb-row {
 }
 
 /* ---- hunter pipeline: a guild's licence dashboard --------------------------
-   The main pane of a note-style app: five readings on the card fill, a
-   seven-stage strip, two columns of dossiers, the ones a missing fact blocks,
-   and a two-series renown chart. Every surface is the card recipe's
-   (`bg-card`, the `border` edge, `rounded-lg`); labels are the `caption` role
-   and numbers the `h3` one, so a reader scans counts before words. */
+   A page-level dashboard: one row of readings, the stage strip, the dossier
+   groups and the renown plot. Related facts share one card and are divided by
+   a hairline; a section boundary is the 18px gap, never another border. */
 .gx-hunt {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   width: min(880px, 100%);
-  padding: 20px;
+  padding: 18px;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-sans);
+  container-type: inline-size;
 }
 
 .gx-hunt-head {
@@ -7671,14 +7754,16 @@ button.gx-sb-row {
 
 .gx-hunt-title {
   margin: 0;
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 26px;
 }
 
 .gx-hunt-sub {
-  margin: 4px 0 0;
-  font-size: 13px;
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 18px;
   color: var(--muted-foreground);
 }
 
@@ -7695,39 +7780,44 @@ button.gx-sb-row {
   color: var(--accent-foreground);
 }
 
-/* Five readings on one row at the block's width, as the reference lays them:
-   a 150px floor wrapped the fifth onto a band of its own. */
+/* Five readings, one card: the grid's background is the divider, so the
+   columns keep a hairline at any width. */
 .gx-hunt-readings {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--border);
 }
 
 .gx-hunt-reading {
-  flex: 1 1 116px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
   padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
   background: var(--card);
 }
 
 .gx-hunt-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   margin: 0;
-  font-size: 10px;
+  min-height: 30px;
+  color: var(--muted-foreground);
+  font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
+  line-height: 15px;
   text-transform: uppercase;
-  color: var(--muted-foreground);
 }
 
 .gx-hunt-value {
-  margin: 6px 0 2px;
-  font-size: 26px;
-  font-weight: 700;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
   letter-spacing: -0.02em;
+  line-height: 26px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -7737,14 +7827,28 @@ button.gx-sb-row {
 
 .gx-hunt-meta {
   margin: 0;
-  font-size: 11.5px;
   color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 15px;
 }
 
 .gx-hunt-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+}
+
+.gx-hunt-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gx-hunt-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 
 .gx-hunt-bar {
@@ -7758,20 +7862,24 @@ button.gx-sb-row {
 .gx-hunt-h4 {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   margin: 0;
-  font-size: 15px;
-  font-weight: 650;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  line-height: 16px;
+  text-transform: uppercase;
 }
 
-.gx-hunt-stage-glyph,
 .gx-hunt-flame,
 .gx-hunt-clock,
 .gx-hunt-block,
 .gx-hunt-spark {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
   background: var(--muted-foreground);
 }
 
@@ -7792,110 +7900,88 @@ button.gx-sb-row {
   background: var(--primary);
 }
 
+/* The stage strip is one card, the same idea as the readings. */
 .gx-hunt-stages {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--border);
 }
 
 .gx-hunt-stage {
-  flex: 1 1 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
   padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
   background: var(--card);
 }
 
+.gx-hunt-stage .gx-hunt-label {
+  min-height: 0;
+}
+
 .gx-hunt-stage .gx-hunt-value {
-  font-size: 20px;
-}
-
-.gx-hunt-columns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-}
-
-.gx-hunt-column {
-  display: flex;
-  flex: 1 1 260px;
-  flex-direction: column;
-  gap: 8px;
+  font-size: 18px;
+  line-height: 24px;
 }
 
 .gx-hunt-cards {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
 }
 
 .gx-hunt-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
+  gap: 7px;
+  padding: 12px 14px;
+}
+
+.gx-hunt-card + .gx-hunt-card {
+  border-top: 1px solid var(--border);
 }
 
 .gx-hunt-card-title {
   margin: 0;
   font-size: 13px;
   font-weight: 550;
+  line-height: 18px;
 }
 
 .gx-hunt-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-}
-
-.gx-hunt-chip {
-  display: inline-flex;
-  align-items: center;
-  height: 20px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: 9999px;
-  background: var(--background);
-  color: var(--muted-foreground);
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.gx-hunt-chip[data-tone="accent"] {
-  border-color: transparent;
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-
-.gx-hunt-chip[data-tone="success"] {
-  border-color: transparent;
-  background: var(--success);
-  color: var(--success-foreground);
-}
-
-.gx-hunt-chip[data-tone="warn"] {
-  border-color: var(--warning);
-  color: var(--warning);
+  gap: 4px;
 }
 
 .gx-hunt-empty {
   margin: 0;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px dashed var(--border);
-  border-radius: var(--radius);
-  font-size: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--card);
   color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 18px;
 }
 
 .gx-hunt-blocked {
   display: flex;
   flex-direction: column;
-  gap: 4px;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
   list-style: none;
 }
 
@@ -7903,13 +7989,15 @@ button.gx-sb-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
+  padding: 10px 14px;
+}
+
+.gx-hunt-blocked-row + .gx-hunt-blocked-row {
+  border-top: 1px solid var(--border);
 }
 
 .gx-hunt-bullet {
+  flex: none;
   width: 6px;
   height: 6px;
   border-radius: 9999px;
@@ -7918,14 +8006,15 @@ button.gx-sb-row {
 
 .gx-hunt-blocked-title {
   flex: 1 1 auto;
-  font-size: 12.5px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .gx-hunt-chart {
   display: flex;
-  flex-direction: row;
   gap: 10px;
-  padding: 12px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--card);
@@ -7935,11 +8024,11 @@ button.gx-sb-row {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  width: 46px;
+  width: 44px;
   padding: 2px 0;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
   color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
   text-align: right;
 }
 
@@ -7953,7 +8042,7 @@ button.gx-sb-row {
 
 .gx-hunt-svg {
   width: 100%;
-  height: 168px;
+  height: 160px;
   overflow: visible;
 }
 
@@ -7996,10 +8085,19 @@ button.gx-sb-row {
   cursor: pointer;
 }
 
+/* The hit area is painted text's target, not a fill. */
+.gx-hunt-day rect {
+  fill: transparent;
+}
+
 .gx-hunt-day text {
   fill: var(--muted-foreground);
   font-family: var(--font-mono);
   font-size: 10.5px;
+}
+
+.gx-hunt-day:hover text {
+  fill: var(--foreground);
 }
 
 .gx-hunt-day[data-active="true"] text {
@@ -8009,7 +8107,21 @@ button.gx-sb-row {
 
 .gx-hunt-readout {
   margin: 0;
+  color: var(--muted-foreground);
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--muted-foreground);
+}
+
+@container (max-width: 640px) {
+  .gx-hunt-readings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gx-hunt-stages {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gx-hunt-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

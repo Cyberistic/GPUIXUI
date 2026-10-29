@@ -54,6 +54,17 @@ describe("the email inbox preview", () => {
     expect(initial).toContain("Local Folders");
   });
 
+  it("draws New and its options as two buttons in one group", () => {
+    // The bug this guards: two primary fills met with no gap and the chevron
+    // lost its square edge, so the header read as one clipped pill.
+    const start = initial.indexOf('class="gx-mail-new gx-rail-label"');
+    const group = initial.slice(start, initial.indexOf("</span>", start));
+
+    expect(group).toContain("gx-mail-new-main");
+    expect(group).toContain("gx-mail-new-more");
+    expect((group.match(/gx-btn /g) ?? []).length).toBe(2);
+  });
+
   it("carries the whole toolbar and the three tabs", () => {
     for (const action of [
       "Reply",

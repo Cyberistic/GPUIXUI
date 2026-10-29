@@ -104,6 +104,13 @@ describe("the block's surfaces", () => {
     expect(source).toContain('<svg\n          aria-hidden="true"');
   });
 
+  it("paints chips at the shared badge size, not a second pill", () => {
+    // The bug this guards: the block grew its own 20px outlined chip, so the
+    // dossier metadata read as a louder chrome than the rows it described.
+    expect(source).toContain("gx-badge gx-badge-sm");
+    expect(source).not.toContain('className="gx-hunt-chip"');
+  });
+
   it("names five readings", () => {
     expect(hunterReadings).toHaveLength(5);
   });

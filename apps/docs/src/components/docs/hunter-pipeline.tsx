@@ -337,16 +337,21 @@ const RenownChart = ({
 };
 
 /** A chip beside a dossier's title or under a reading. */
+const chipTone = {
+  neutral: "gx-badge-neutral",
+  accent: "gx-badge-outline",
+  success: "gx-badge-success",
+  warn: "gx-badge-warning",
+} as const;
+
 const Chip = ({
   children,
-  tone,
+  tone = "neutral",
 }: {
   readonly children: string;
-  readonly tone?: "accent" | "success" | "warn";
+  readonly tone?: keyof typeof chipTone;
 }) => (
-  <span className="gx-hunt-chip" data-tone={tone}>
-    {children}
-  </span>
+  <span className={`gx-badge gx-badge-sm ${chipTone[tone]}`}>{children}</span>
 );
 
 const filters: ReadonlyArray<{ value: StageFilter; label: string }> = [
@@ -436,10 +441,7 @@ export const HunterPipelineRender = () => {
         <div className="gx-hunt-stages">
           {stages.map((stage) => (
             <div className="gx-hunt-stage" key={stage.id}>
-              <p className="gx-hunt-label">
-                <span aria-hidden="true" className="gx-hunt-stage-glyph" />
-                {stage.label}
-              </p>
+              <p className="gx-hunt-label">{stage.label}</p>
               <p className="gx-hunt-value" data-tone={stage.tone}>
                 {stage.count}
               </p>

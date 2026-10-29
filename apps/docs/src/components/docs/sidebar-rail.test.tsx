@@ -14,9 +14,11 @@ import {
  * The rail-collapse rule every block shares.
  *
  * The bug this guards: a rail that collapses without stating its state leaves a
- * reader with an icon strip and a toggle that announces nothing, and a rail that
- * changes width with no transition jumps the content pane. The rules are one
- * module and one sheet, so a block cannot invent its own width, label or timing.
+ * reader with a toggle that announces nothing, and a rail that changes width
+ * with no transition jumps the content pane. A navigation rail keeps a 64px
+ * icon strip; a conversation list or folder tree folds away whole, because its
+ * avatars or glyphs alone are not a rail. The rules are one module and one
+ * sheet, so a block cannot invent its own width, label or timing.
  */
 
 const noop = () => {};
@@ -36,13 +38,9 @@ const block = (selector: string): string => {
   return open === -1 ? "" : css.slice(open, css.indexOf("}", open) + 1);
 };
 
-const railBlocks = [
-  "gx-conv-side",
-  "gx-fm-side",
-  "gx-mail-side",
-  "gx-kan-side",
-  "gx-set-side",
-] as const;
+const iconRailBlocks = ["gx-mail-side", "gx-kan-side", "gx-set-side"] as const;
+
+const foldingPanels = ["gx-conv-side", "gx-fm-side"] as const;
 
 describe("the shared rail rule", () => {
   it("flips one boolean and names the action, not the state", () => {
@@ -60,12 +58,19 @@ describe("the shared rail rule", () => {
   });
 
   it("holds every rail to one width, one transition and one label rule", () => {
-    for (const rail of railBlocks) {
+    for (const rail of iconRailBlocks) {
       expect(block(`.${rail}[data-collapsed="true"]`), rail).toContain(
         `width: ${RAIL_COLLAPSED_WIDTH}px`,
       );
       expect(css, rail).toContain(
         `.${rail}[data-collapsed="true"] .gx-rail-label`,
+      );
+    }
+    // A list has no icon-only form: it folds to nothing, so the pane never
+    // shows a column of unlabelled avatars or folder glyphs.
+    for (const panel of foldingPanels) {
+      expect(block(`.${panel}[data-collapsed="true"]`), panel).toContain(
+        "width: 0",
       );
     }
     // One rule moves every rail, and only its width and padding.

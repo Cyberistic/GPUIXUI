@@ -466,11 +466,6 @@ export const KanbanRender = () => {
         <div className="gx-kan-brand">
           <span aria-hidden="true" className="gx-kan-mark" />
           <span className="gx-kan-brand-name gx-rail-label">Hologram</span>
-          <RailToggle
-            className="gx-kan-collapse"
-            collapsed={rail.collapsed}
-            onToggle={rail.toggle}
-          />
         </div>
         <label className="gx-kan-search gx-rail-label">
           <Glyph size={13}>{ICON.search}</Glyph>
@@ -522,6 +517,11 @@ export const KanbanRender = () => {
       <div className="gx-kan-main">
         <header className="gx-kan-head">
           <div className="gx-kan-head-row">
+            <RailToggle
+              className="gx-kan-collapse"
+              collapsed={rail.collapsed}
+              onToggle={rail.toggle}
+            />
             <div className="gx-kan-project">
               <span aria-hidden="true" className="gx-kan-mark" />
               <h3 className="gx-kan-project-name">Hologram</h3>

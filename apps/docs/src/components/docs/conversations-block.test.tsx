@@ -127,6 +127,14 @@ describe("the conversations window", () => {
     expect(initial).toContain('aria-label="Start voice call"');
   });
 
+  it("draws the list pane as a titled conversation list with one open row", () => {
+    expect(initial).toContain('class="gx-conv-side-top"');
+    expect(initial).toContain(">Messages<");
+    expect(initial).toContain('class="gx-conv-group gx-rail-label"');
+    expect(initial).toContain('class="gx-conv-row-text gx-rail-label"');
+    expect(count(initial, /data-selected="true"/g)).toBe(1);
+  });
+
   it("lists the eight Hunter × Hunter conversations with previews and times", () => {
     expect(count(initial, /class="gx-conv-row"/g)).toBe(8);
     for (const name of [
@@ -302,10 +310,10 @@ describe("the four platform dresses", () => {
 });
 
 describe("the conversations' state", () => {
-  it("collapses the list pane to an icon strip and expands it again", () => {
-    // The bug this guards: the rail's toggle painted an icon and changed
-    // nothing. The reducer owns the state, so the aria state, the rail's
-    // collapsed flag and the labels' hidden class move together.
+  it("folds the list pane away whole and expands it again", () => {
+    // The bug this guards: collapsing painted a 64px column of avatars with no
+    // names — a broken column, not a conversation list. The pane now folds to
+    // zero width and the thread header's toggle brings it back.
     const collapsed = conversationsReducer(initialConversationsState, {
       type: "toggle-rail",
     });
@@ -316,6 +324,7 @@ describe("the conversations' state", () => {
     expect(markup).toContain('aria-expanded="false"');
     expect(markup).toContain('aria-label="Expand sidebar"');
     expect(markup).toContain("gx-conv-row-text gx-rail-label");
+    expect(rule('.gx-conv-side[data-collapsed="true"]')).toContain("width: 0");
     expect(
       conversationsReducer(collapsed, { type: "toggle-rail" }).railCollapsed,
     ).toBe(false);

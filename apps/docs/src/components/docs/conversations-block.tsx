@@ -344,6 +344,18 @@ export function ConversationsSurface({
           className="gx-conv-side"
           data-collapsed={state.railCollapsed}
         >
+          <header className="gx-conv-side-top">
+            <h4 className="gx-conv-side-title gx-rail-label">Messages</h4>
+            <span className="gx-conv-side-actions">
+              <button
+                aria-label="New conversation"
+                className="gx-conv-new gx-rail-label"
+                type="button"
+              >
+                <BlockIcon name="plus" size={14} />
+              </button>
+            </span>
+          </header>
           <div className="gx-conv-side-head">
             <span className="gx-conv-search">
               <BlockIcon name="search" size={12} />
@@ -356,12 +368,8 @@ export function ConversationsSurface({
                 value={state.query}
               />
             </span>
-            <RailToggle
-              className="gx-conv-glyph"
-              collapsed={state.railCollapsed}
-              onToggle={onToggleRail}
-            />
           </div>
+          <p className="gx-conv-group gx-rail-label">Conversations</p>
 
           <div className="gx-conv-list">
             {visible.length === 0 ? (
@@ -402,13 +410,20 @@ export function ConversationsSurface({
           className="gx-conv-thread"
         >
           <header className="gx-conv-head">
-            <button
-              aria-label="New message"
-              className="gx-conv-glyph"
-              type="button"
-            >
-              <ComposeGlyph />
-            </button>
+            <span className="gx-conv-head-start">
+              <RailToggle
+                className="gx-conv-glyph"
+                collapsed={state.railCollapsed}
+                onToggle={onToggleRail}
+              />
+              <button
+                aria-label="New message"
+                className="gx-conv-glyph"
+                type="button"
+              >
+                <ComposeGlyph />
+              </button>
+            </span>
             <span className="gx-conv-contact">
               <span className="gx-conv-avatar gx-conv-avatar-sm">
                 {thread.initials}
