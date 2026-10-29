@@ -112,6 +112,37 @@ describe("ColorPicker", () => {
     picker.unmount();
   });
 
+  it("drags the saturation and brightness thumb across the area", () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(<Harness onValueChange={onValueChange} />);
+    open(picker);
+
+    const box = requireBounds(picker, "picker-area");
+    // The press sets the colour at the point that was hit; the moves carry it.
+    picker.renderer.nativeSimulateMouseDown(
+      box.x + box.width * 0.5,
+      box.y + box.height * 0.5,
+    );
+    picker.renderer.nativeSimulateMouseMove(
+      box.x + box.width * 0.25,
+      box.y + box.height * 0.25,
+      0,
+    );
+    picker.renderer.nativeSimulateMouseUp(
+      box.x + box.width * 0.25,
+      box.y + box.height * 0.25,
+    );
+    settle(picker);
+
+    const colour = parse(String(onValueChange.mock.calls.at(-1)?.[0] ?? ""));
+    expect(colour.s).toBeCloseTo(0.25, 1);
+    expect(colour.v).toBeCloseTo(0.75, 1);
+    expect(announced(picker, "picker-area")).toContain("Saturation 25%");
+    expect(announced(picker, "picker-area")).toContain("brightness 75%");
+
+    picker.unmount();
+  });
+
   it("moves the saturation and brightness thumb with the arrow keys", () => {
     const onValueChange = vi.fn();
     const picker = renderComponent(<Harness onValueChange={onValueChange} />);

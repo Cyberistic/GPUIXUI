@@ -36,14 +36,12 @@ import {
   filterByLevel,
   isLogLevel,
   levelTone,
+  LEVEL_COLUMN_WIDTH,
   LOG_LEVELS,
   parseLogLine,
   type LogLevel,
 } from "./logic.js";
 import { LOG_ROW, LOG_TOOLBAR, LOG_VIEWER_ROOT } from "./recipe.js";
-
-/** The width of the level column, so every message starts at the same `x`. */
-export const LEVEL_COLUMN_WIDTH = 56;
 
 /** {@link LogViewer} props. */
 export interface LogViewerProps extends Omit<Props, "children"> {

@@ -24267,6 +24267,30 @@ rests on the stack.
       `innerCorners`; `sheet-drawer-preview.test.tsx` already guards every side,
       so rounding all four fails it (`right rounds the wrong corners`).
 
+## Docs polish — the image preview and the log viewer (2026-10-29)
+
+`[x]` `[██████████]` 2/2
+
+`[x]` **The image preview's zoom is `ImageZoom`'s** — the loaded state drew a
+`:hover` centre scale (`width: 160%`, `left: -30%`) that a browser's width cap
+squashed to 240 × 256 at a 75 %/50 % pointer. The drawing now runs the package's
+`zoomGeometry`/`zoomRest`/`zoomFollow` from the new
+`@gpuixui/components/image-zoom/logic` subpath: measured 240 × 160 at rest and
+`left -108, top -48, 384 × 256` at that pointer, the component's own box. Docs:
+`apps/docs/src/components/docs/image-preview-demo.tsx`, the style sheet (no
+hover rule, `max-width: none`, the 200 ms tween) and `media-demo.test.tsx`'s
+three geometry cases.
+`[x]` **The log viewer is the component's surface** — the toolbar's level chips
+ran together, the 200 px list held eight 17 px rows under a 64 px empty band,
+the level column was 40 px and the readout sat inside the frame. The header is
+the `ToggleGroup`/`Toggle` family, the list is the documented 240 px, a row is
+`--row-height` with `LEVEL_COLUMN_WIDTH` (56) of gutter, all filtered rows fill
+the frame while `Follow tail` anchors the scroll, and the readout is a caption
+under it. Measured before → after: frame 640 × 254 → 520 × 287, list 200 → 240,
+row 17.05 → 28, gutter 40 → 56, rows 8 (of 13) → 13, readout inside → outside.
+Docs: `log-viewer-demo.tsx`, `demos.css`, and `log-viewer-demo.test.tsx`'s
+gutter/row/frame, fill and per-level filter cases.
+
 ## Docs polish — five drawings corrected (2026-10-29)
 
 `[x]` `[██████████]` 5/5

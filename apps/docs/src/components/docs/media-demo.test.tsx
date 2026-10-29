@@ -3,6 +3,11 @@ import * as Option from "effect/Option";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
+  zoomFollow,
+  zoomGeometry,
+  zoomRest,
+} from "@gpuixui/components/image-zoom/logic";
+import {
   cropBars,
   cropGuides,
   cropLabel,
@@ -20,7 +25,12 @@ import {
   UPLOAD_FILES,
   UPLOAD_STEP,
 } from "./file-upload-demo";
-import { ImagePreviewDemo, PreviewFrame } from "./image-preview-demo";
+import {
+  ImagePreviewDemo,
+  PREVIEW_FRAME,
+  PreviewFrame,
+  previewZoom,
+} from "./image-preview-demo";
 import { frameAt, MediaPlayerDemo, PLAYER_DURATION } from "./media-player-demo";
 import {
   modulePath,
@@ -45,6 +55,9 @@ import {
  */
 
 const root = new URL("../../../../../", import.meta.url);
+
+const read = (path: string): string =>
+  readFileSync(new URL(path, root), "utf8");
 
 const markup = (node: Parameters<typeof renderToStaticMarkup>[0]): string =>
   renderToStaticMarkup(node);
@@ -145,12 +158,67 @@ describe("the ImagePreview preview", () => {
     expect(error).not.toContain("<img");
   });
 
+  it("paints the box ImageZoom computes for a pointer, not a centre scale", () => {
+    // The bug guarded: the drawing's zoom was a `:hover { width:160% }` centre
+    // scale, so the spot under the pointer moved instead of staying put. The
+    // expected box comes from the component's own rule, never a snapshot.
+    const pointer = { x: 180, y: 80 };
+    const geometry = zoomGeometry({
+      width: Option.some(PREVIEW_FRAME.width),
+      height: Option.some(PREVIEW_FRAME.height),
+      scale: Option.none(),
+    });
+    const box = zoomFollow(geometry, { x: 0, y: 0, ...PREVIEW_FRAME }, pointer);
+    const html = markup(<PreviewFrame pointer={pointer} status="loaded" />);
+
+    expect(box).toEqual(previewZoom(pointer));
+    expect(box.left).toBe(-108);
+    expect(box.top).toBe(-48);
+    expect(html).toContain(`left:${box.left}px`);
+    expect(html).toContain(`top:${box.top}px`);
+    expect(html).toContain(`width:${box.width}px`);
+    expect(html).toContain(`height:${box.height}px`);
+  });
+
+  it("covers the frame exactly at rest", () => {
+    const rest = zoomRest(
+      zoomGeometry({
+        width: Option.some(PREVIEW_FRAME.width),
+        height: Option.some(PREVIEW_FRAME.height),
+        scale: Option.none(),
+      }),
+    );
+    const html = markup(<PreviewFrame status="loaded" />);
+
+    expect(rest).toEqual({
+      left: 0,
+      top: 0,
+      width: PREVIEW_FRAME.width,
+      height: PREVIEW_FRAME.height,
+    });
+    expect(html).toContain(`width:${rest.width}px`);
+    expect(html).toContain(`height:${rest.height}px`);
+    expect(html).toContain("left:0");
+    expect(html).toContain("top:0");
+  });
+
   it("opens on the loaded state, with the switcher's pressed mark", () => {
     const html = markup(<ImagePreviewDemo />);
 
     expect(html).toContain(`aria-pressed="true"`);
     expect(html).toContain(">loaded<");
     expect(html).toContain(`alt="The dashboard screenshot"`);
+  });
+
+  it("runs the zoom's own rule instead of a hover scale", () => {
+    const source = read("apps/docs/src/components/docs/image-preview-demo.tsx");
+    const styles = read("apps/docs/src/styles/demos.css");
+
+    expect(source).toContain('from "@gpuixui/components/image-zoom/logic"');
+    expect(source).toContain("zoomFollow");
+    expect(source).toContain("zoomRest");
+    // A second lens would be a centre scale in the style sheet.
+    expect(styles).not.toContain(".gx-preview-frame:hover");
   });
 });
 
