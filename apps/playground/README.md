@@ -6693,33 +6693,33 @@ Evidence: `.artifacts/live/media-{rest,playing,paused,sought}.png`.
 
 ### `media-player-lifecycle` — measured on 0.11.0 here
 
-**Does the shipped `MediaPlayer` paint what its package promises?**
+**Does the shipped `MediaPlayer` paint Mux's chrome against its own clock?**
 `media-frame-lifecycle` measured the route a clip can take on this runtime — a
 buffer the app re-pushes, an interval the app owns, a transport the app draws.
 That is the *composition*; the library ships the wrapper (`@gpuixui/media`'s
-`MediaPlayer`), and every claim the package made about its own transport had
-been held only by the offscreen renderer. This probe gives the shipped player
-the same four-second clip and reads the window.
+`MediaPlayer`) with a centred play control, a fading bar, a timeline with a
+buffered range and a thumb, the clock, mute, rate, settings and fullscreen. This
+probe gives the shipped player a four-second clip and reads the window.
 
-The fixture adds nothing a caller would not: the frame function, eight
-amplitude samples, the clip's length, a 250 ms tick and the two report
-callbacks. Everything the probe asserts about the clock, the fill and the keys
-is the **package's own arithmetic** (`@gpuixui/media/player/logic`), so the
-window is measured against the rule the component ships rather than a copy.
+The fixture adds nothing a caller would not: the frame function, the clip's
+length, a buffered span, a 250 ms tick, a 400 ms idle and the two report
+callbacks. Everything the probe asserts about the clock, the fill, the buffered
+range and the keys is the **package's own arithmetic**
+(`@gpuixui/media/player/logic`), so the window is measured against the rule the
+component ships rather than a copy.
 
 | Step | Measured |
 | ---- | -------- |
-| at rest | `playing=false playhead=0 reports=0`, the clock reads `0:00 / 0:04`, the action offers **Play**, and the fill is empty |
-| the picture | 240×135; the first frame's `#1e3a8a` fills its own box (within the 5% capture tolerance), and no later frame paints |
-| the waveform | 200×32, one tinted silhouette in the palette's `mutedForeground` `#C1C7D1`; its first and last rows are the page `#11141A`, so it is a silhouette rather than a filled box |
-| a press on play | the action reads **Pause**, the player reports `playing=true`, the playhead passes a quarter of the clip, and the reports count every move |
-| a second press | the player reports `playing=false`, the clock holds that playhead, and the fill is exactly `progressWidth(held.playhead, 4000, 200)` wide |
+| at rest | `playing=false playhead=0 reports=0`, the clock reads `0:00 / 0:04`, the action offers **Play**, the fill is empty and the buffered range paints half the clip — **248** of the track's 496 |
+| the picture | 512×288; the first frame's `#1e3a8a` fills its own box (within the 5% capture tolerance), and no later frame paints |
+| the timeline | 496×4 — the frame less the bar's two insets — and a press's share of it is a share of the clip |
+| a press on play | the player reports `playing=true`, the playhead passes a quarter of the clip, and the reports count every move |
+| a press on the bar's play | the player reports `playing=false`, the clock holds that playhead, and the fill is exactly `progressWidth(held.playhead, 4000, 496)` wide |
 | End, then Home | `0:04 / 0:04` with the fill full, then `0:00 / 0:04` |
-| three Rights | `0:03 / 0:04`, with the fill at 150 of the track's 200 |
+| three Rights | `0:03 / 0:04`, with the fill at 372 of the track's 496 |
 | the seek's paint | the picture repaints to the third second's `#047857`, and none of the first frame survives |
-| a press three quarters along the track | the press lands 50 points right of the band's centre, and the clock reads `0:03 / 0:04` with the fill at 150 — the share the three Rights reached, now named by the pointer; the report prints `playhead=3000` |
-| a drag to the band's trailing edge, released | `0:04 / 0:04` with the fill full (200) and the report at `playhead=4000`; the release lands outside the 6-point rail the press began on |
-| a hover after the release | the readout is exactly the one the drag left — a released band reports nothing, so a scrub cannot stay armed |
+| a press three quarters along the track | the press lands 124 points right of the band's centre, and the clock reads `0:03 / 0:04` with the fill at 372 — the share the three Rights reached, now named by the pointer; the report prints `playhead=3000` |
+| a drag to the band's trailing edge, released | `0:04 / 0:04` with the fill full (496) and the report at `playhead=4000`; the release lands outside the 4-point rail the press began on; a hover after the release reports nothing |
 | disabled | the picture keeps painting the frame it was on while the action refuses a press, the track refuses a press, and the playhead does not move |
 
 Four rules the shipped player owes:
@@ -6729,26 +6729,26 @@ Four rules the shipped player owes:
    reports. A probe that starts its own interval would be measuring the
    composition again, not the wrapper.
 2. **The transport is the package's arithmetic.** The fill is `progressWidth`,
-   the words are `timeLabel`, and Home/End/Left/Right are `seekPlayhead`; a
-   window that paints them is evidence those pure functions are the ones the
-   view uses.
-3. **`disabled` refuses the transport and keeps the picture.** Disabling stops a
-   running clock, refuses the keys and drops the seek pad's tab stop; the frame
-   and the waveform keep painting, because a disabled player is still a poster.
-4. **The band is the clip.** A press's share of the 24-point band is its share
-   of the clip, and the registered band — not the 6-point rail, which is
-   pointer-transparent — is the element that hears the gesture: a press three
-   quarters along seeks to `0:03`, a drag to the trailing edge reaches the end,
-   and the release ends the scrub, so a hover afterwards moves nothing. A
+   the buffered range is `bufferedWidth`, the words are `timeLabel`, and the
+   keys are `playerIntent`; a window that paints them is evidence those pure
+   functions are the ones the view uses.
+3. **The chrome is painted over the picture.** The bar and its scrim cover the
+   bottom strip, so the frame is counted above them; the bar's own fade and
+   return are held by `src/behaviour/media-player.test.tsx`, where the idle
+   timer and the pointer wake are driven directly.
+4. **The pointer scrub is a press and a drag on a 24-point band.** The rail is
+   pointer-transparent — the band is the element that hears the gesture: a press
+   three quarters along seeks to `0:03`, a drag to the trailing edge reaches the
+   end, and the release ends the scrub, so a hover afterwards moves nothing. A
    disabled band refuses the press for the same reason it refuses the action.
 
-63 checks, `--only media-player-lifecycle`, green on 0.11.0 here (~8 s, three
-captures). Fixture `src/live/media-player.ts` (the ids, the clip, the peaks and
-the readout) + `media-player-probe.tsx` (the view and steps) +
-`media-player.test.ts` (the component's ids and defaults, the frame schedule,
+49 checks, `--only media-player-lifecycle`, green on 0.11.0 here (~3 s, three
+captures). Fixture `src/live/media-player.ts` (the ids, the clip, the buffered
+span and the readout) + `media-player-probe.tsx` (the view and steps) +
+`media-player.test.ts` (the component's ids, the geometry, the frame schedule,
 the report grammar, the registry and wiring, the probe's clock-free route, the
-pointer scrub's band, the count and this section). Evidence:
-`.artifacts/live/media-player-{rest,sought,disabled}.png`.
+pointer scrub's band, the rate menu and faded bar, the count and this section).
+Evidence: `.artifacts/live/media-player-{rest,sought,disabled}.png`.
 
 ### `menu-radio-lifecycle` — measured on 0.11.0 here
 

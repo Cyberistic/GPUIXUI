@@ -24415,6 +24415,7 @@ right inset with the pill crossing the surface's edge. `bubble.test.tsx`'s case
 now measures the corner for both aligns and fails on the old per-side inset (7
 cases failed when inverted).
 
+<<<<<<< HEAD
 ## Docs chrome and the folding tree (2026-10-29)
 
 `[x]` `[██████████]` 3/3 — **no phantom control in the calendar, the caption
@@ -24471,3 +24472,24 @@ a horizontal drag steps the value, Shift is ×10, the row's bounds clamp it, a
 click without travel changes nothing, and the field keeps typing. The files
 panel's number rows use it and the primitives' `NumberField` page documents the
 part.
+=======
+## Media player — Mux's anatomy (2026-10-29)
+
+`[x]` `[██████████]` 1/1
+
+`[x]` Rebuild `@gpuixui/media`'s `MediaPlayer` to Mux's anatomy — a centred play
+control, a bar that fades after idle, a timeline with a played fill, a buffered
+range and a scrub thumb, the clock, mute and a volume `Popover` with the shipped
+`Slider`, playback-rate and settings `DropdownMenu`s, and fullscreen — and remove
+the waveform. The transport stays the app's clock (`Space`/`K`, arrows by
+`seekStep`, Shift or `J`/`L` by `largeSeekStep`, `Home`/`End`, Up/Down, `M`, `F`),
+rate scales the clock, and no decoding is implied. The docs drawing mirrors it
+with the same logic and the three states were captured at 1440×900 dark
+(`media-player-{idle,playing,settings}.png`). Proof: `player/logic.test.ts` 24
+cases, `media-player.test.tsx` 13, the behaviour suite 11 native cases (Space,
+arrow/large steps, pointer→share, fade/return, rate readout, mute, settings,
+fullscreen request, disabled refusal, bad frame), each inverted and recorded.
+`nub run --filter @gpuixui/media test` 196, `test:behaviour` 27, docs 2341,
+`nub run check` clean. Live probe updated to the new ids and geometry
+(`media-player-lifecycle`, 47 checks, not re-run here).
+>>>>>>> origin/feat/media-player-mux

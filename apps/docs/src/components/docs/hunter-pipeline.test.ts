@@ -132,9 +132,8 @@ describe("the renown chart", () => {
     const last = renownNights.at(-1);
     expect(last).toBeDefined();
     expect(last?.renown).toBe(5_663);
+    // The peak sits earlier in the fortnight, so the resting night is not it.
     expect(Math.max(...renownNights.map((night) => night.renown))).toBe(7_420);
-    // The last night is the one the chart rests on, so it must not be the
-    // largest: the peak sits earlier in the fortnight.
     expect(
       Math.max(...renownNights.map((night) => night.renown)),
     ).toBeGreaterThanOrEqual(last?.renown ?? 0);

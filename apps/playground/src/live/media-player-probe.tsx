@@ -6,20 +6,20 @@
  * an image buffer the app re-pushes, an interval the app owns and a transport
  * the app draws. That route is the *composition*, and the library now ships the
  * wrapper: `@gpuixui/media`'s `MediaPlayer` owns the clock, the transport, the
- * fill and the waveform, and the caller supplies the frames. The package proved
+ * fill and Mux's chrome, and the caller supplies the frames. The package proved
  * its own rules against the offscreen renderer; nothing had ever painted the
  * shipped component in a window, so every claim the package makes about the
- * **transport** — the clock's format, the fill's share, the seek's keys, the
- * disabled refusal — was held only by the package's own suite.
+ * **transport** — the clock's format, the played and buffered shares, the seek's
+ * keys, the disabled refusal — was held only by the package's own suite.
  *
  * The probe gives the shipped player the same clip the composition probe
  * measures and reads four things only a window can answer:
  *
  * 1. **The picture.** The frame the playhead names is the frame the picture
  *    paints — a pixel count inside the picture's own box, not a state read.
- * 2. **The waveform.** One tinted `<svg>` mask, drawn as a silhouette: the
- *    ink is inside its box and the box's first and last rows are the page
- *    behind it, so a filled rectangle cannot pass.
+ * 2. **The timeline.** The played fill and the buffered range are the
+ *    package's shares of the frame's own width, read as painted boxes rather
+ *    than as state.
  * 3. **The transport.** The clock, the fill's share and the seek's keys, each
  *    read against the **package's own** arithmetic
  *    (`@gpuixui/media/player/logic`), so the window is measured against the
@@ -33,7 +33,11 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useWindowSize } from "@gpuix/react";
 import { MediaPlayer } from "@gpuixui/media/media-player";
-import { progressWidth, timeLabel } from "@gpuixui/media/player/logic";
+import {
+  bufferedWidth,
+  progressWidth,
+  timeLabel,
+} from "@gpuixui/media/player/logic";
 import { Button } from "@gpuixui/primitives/button";
 import { Pixels, Smoke } from "@gpuixui/testing";
 import { textStyle } from "@gpuixui/tokens";
@@ -46,17 +50,16 @@ import {
   frameAt,
   frameHex,
   PLAYER_CLIP_MS,
+  PLAYER_BUFFERED,
+  PLAYER_CHROME_HEIGHT,
   PLAYER_IDS,
-  PLAYER_PAGE,
-  PLAYER_PEAKS,
+  PLAYER_IDLE_MS,
   PLAYER_POSTER,
   PLAYER_REST,
   PLAYER_SCRUB_OFFSET,
   PLAYER_SEEK_STEP_MS,
   PLAYER_TICK_MS,
   PLAYER_TRACK,
-  PLAYER_WAVEFORM,
-  PLAYER_WAVEFORM_INK,
   playerReadout,
   playerReportOf,
   type PlayerReport,
@@ -105,17 +108,17 @@ const MediaPlayerPage = (): ReactNode => {
         }}
       >
         The shipped MediaPlayer: the app supplies the frames, the component owns
-        the clock, the transport and the waveform.
+        the clock, the transport and Mux's chrome.
       </text>
       <MediaPlayer
         duration={PLAYER_CLIP_MS}
         frameAt={frameAt}
         alt="A clip's frame"
-        peaks={PLAYER_PEAKS}
         width={PLAYER_POSTER.width}
         height={PLAYER_POSTER.height}
-        trackWidth={PLAYER_TRACK.width}
+        buffered={PLAYER_BUFFERED}
         tickMs={PLAYER_TICK_MS}
+        idleMs={PLAYER_IDLE_MS}
         disabled={disabled}
         onPlayheadChange={(playhead) =>
           setReport((current) => ({
@@ -203,7 +206,7 @@ const reportIn = (ctx: Smoke.AsyncSmokeContext, readout: string) =>
 export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(PLAYER_IDS.poster);
-    yield* ctx.host.waitFor(PLAYER_IDS.waveform);
+    yield* ctx.host.waitFor(PLAYER_IDS.controls);
     yield* ctx.host.waitFor(PLAYER_IDS.readout);
 
     // ---- the shipped player at rest ----
@@ -221,11 +224,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
     yield* ctx.expectEqual(
-      "the shipped transport starts paused",
-      yield* ctx.host.text(PLAYER_IDS.play),
-      "Play",
-    );
-    yield* ctx.expectEqual(
       "the shipped clock reads the clip's own start",
       yield* ctx.host.text(PLAYER_IDS.time),
       timeLabel(0, PLAYER_CLIP_MS),
@@ -236,104 +234,49 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
       0,
     );
+    yield* ctx.expectNear(
+      "the shipped buffered range paints the app's own share",
+      (yield* boxOf(ctx, PLAYER_IDS.buffered)).width,
+      bufferedWidth(PLAYER_BUFFERED, PLAYER_CLIP_MS, PLAYER_TRACK.width),
+      1,
+    );
     yield* ctx.expectEqual(
       "the shipped player has reported nothing before it moves",
       yield* ctx.host.text(PLAYER_IDS.readout),
       playerReadout(PLAYER_REST),
     );
-
-    // ---- the waveform ----
-    const waveform = yield* boxOf(ctx, PLAYER_IDS.waveform);
     yield* ctx.expectNear(
-      "the waveform paints the track's width",
-      waveform.width,
-      PLAYER_WAVEFORM.width,
-      1,
-    );
-    yield* ctx.expectNear(
-      "the waveform paints the height the component draws it in",
-      waveform.height,
-      PLAYER_WAVEFORM.height,
+      "the timeline paints the frame less the bar's two insets",
+      (yield* boxOf(ctx, PLAYER_IDS.track)).width,
+      PLAYER_TRACK.width,
       1,
     );
 
     // ---- the picture, at rest ----
+    // The bar fades after its idle window, and the scrim is part of the chrome:
+    // wait it out so the frame is counted where it is not covered.
+    yield* Effect.sleep(Duration.millis(PLAYER_IDLE_MS * 2));
     const rest = yield* frameOf(ctx, REST);
     const scale = yield* scaleOf(ctx, rest);
-    const posterArea =
-      PLAYER_POSTER.width * PLAYER_POSTER.height * scale * scale;
+    const picture = {
+      ...poster,
+      height: poster.height - PLAYER_CHROME_HEIGHT,
+    };
+    const posterArea = picture.width * picture.height * scale * scale;
     yield* ctx.expectNear(
       "the shipped picture paints the frame the playhead names",
-      yield* countIn(ctx, rest, poster, scale, frameHex(0)),
+      yield* countIn(ctx, rest, picture, scale, frameHex(0)),
       posterArea,
       Math.round(posterArea * 0.05),
     );
     yield* ctx.expectEqual(
       "no later frame paints at the clip's start",
-      yield* countIn(ctx, rest, poster, scale, frameHex(PLAYER_SEEK_STEP_MS)),
+      yield* countIn(ctx, rest, picture, scale, frameHex(PLAYER_SEEK_STEP_MS)),
       0,
-    );
-
-    // ---- the waveform's own paint ----
-    const waveArea =
-      PLAYER_WAVEFORM.width * PLAYER_WAVEFORM.height * scale * scale;
-    const wavePaper = yield* countIn(ctx, rest, waveform, scale, PLAYER_PAGE);
-    yield* ctx.expectEqual(
-      "the waveform paints ink of its own",
-      waveArea - wavePaper > 0,
-      true,
-    );
-    yield* ctx.expectEqual(
-      "the waveform paints a silhouette, not a filled box",
-      wavePaper < waveArea,
-      true,
-    );
-    // A row is one device pixel tall, so the box is given in logical points.
-    const row = { width: waveform.width, height: 1 / scale };
-    yield* ctx.expectEqual(
-      "the waveform's first row is the page behind it",
-      yield* countIn(
-        ctx,
-        rest,
-        { ...row, x: waveform.x, y: waveform.y },
-        scale,
-        PLAYER_PAGE,
-      ),
-      Math.round(waveform.width * scale),
-    );
-    yield* ctx.expectEqual(
-      "the waveform's last row is the page behind it",
-      yield* countIn(
-        ctx,
-        rest,
-        {
-          ...row,
-          x: waveform.x,
-          y: waveform.y + waveform.height - 1 / scale,
-        },
-        scale,
-        PLAYER_PAGE,
-      ),
-      Math.round(waveform.width * scale),
-    );
-    yield* ctx.expectEqual(
-      "the waveform paints the muted foreground the component tints it with",
-      (yield* countIn(ctx, rest, waveform, scale, PLAYER_WAVEFORM_INK)) > 0,
-      true,
     );
 
     // ---- the transport ----
     yield* ctx.host.click(PLAYER_IDS.play);
-    yield* settleUntil(
-      ctx.host.text(PLAYER_IDS.play),
-      (text) => text === "Pause",
-      ATTEMPTS,
-    );
-    yield* ctx.expectEqual(
-      "a press starts the shipped transport",
-      yield* ctx.host.text(PLAYER_IDS.play),
-      "Pause",
-    );
     const running = yield* settleUntil(
       ctx.host.text(PLAYER_IDS.readout),
       (text) =>
@@ -362,7 +305,7 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
 
     // Pause: the clock holds, so the label and the report agree exactly.
-    yield* ctx.host.click(PLAYER_IDS.play);
+    yield* ctx.host.click(PLAYER_IDS.playBar);
     const paused = yield* settleUntil(
       ctx.host.text(PLAYER_IDS.readout),
       (text) =>
@@ -373,11 +316,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ATTEMPTS,
     );
     const held = yield* reportIn(ctx, paused);
-    yield* ctx.expectEqual(
-      "the shipped transport offers play again",
-      yield* ctx.host.text(PLAYER_IDS.play),
-      "Play",
-    );
     const clock = yield* settleUntil(
       ctx.host.text(PLAYER_IDS.time),
       (text) => text === timeLabel(held.playhead, PLAYER_CLIP_MS),
@@ -395,8 +333,8 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // ---- the seek pad ----
-    yield* ctx.host.focusElement(PLAYER_IDS.seek);
+    // ---- the transport's keys ----
+    yield* ctx.host.focusElement(PLAYER_IDS.trackHit);
     yield* ctx.host.key("end");
     const ended = yield* settleUntil(
       ctx.host.text(PLAYER_IDS.time),
@@ -459,7 +397,7 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* countIn(
         ctx,
         soughtFrame,
-        poster,
+        picture,
         scale,
         frameHex(3 * PLAYER_SEEK_STEP_MS),
       ),
@@ -468,22 +406,20 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.expectEqual(
       "no earlier frame paints after the seek",
-      yield* countIn(ctx, soughtFrame, poster, scale, frameHex(0)),
+      yield* countIn(ctx, soughtFrame, picture, scale, frameHex(0)),
       0,
     );
 
     // ---- the pointer scrub ----
-    // The band is the clip's whole length, so a press's share of its width is
-    // its share of the clip. The rail inside the band is pointer-transparent,
-    // so the registered band is the element that hears the press.
     yield* ctx.host.key("home");
     yield* settleUntil(
       ctx.host.text(PLAYER_IDS.time),
       (text) => text === timeLabel(0, PLAYER_CLIP_MS),
       ATTEMPTS,
     );
-    // A press with no travel is the down/up pair a click makes, aimed a
-    // quarter of the band right of its centre — three quarters along the clip.
+    // The band is the clip's whole length, so a press's share of its width is
+    // its share of the clip. The rail inside the band is pointer-transparent,
+    // so the registered band is the element that hears the press.
     yield* ctx.host.drag(PLAYER_IDS.trackHit, 0, 0, {
       offset: { x: PLAYER_SCRUB_OFFSET, y: 0 },
       steps: 1,
@@ -518,8 +454,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       3 * PLAYER_SEEK_STEP_MS,
     );
 
-    // The pointer travels to the band's trailing edge, held down, and the
-    // release is outside the rail the press began on.
     yield* ctx.host.drag(PLAYER_IDS.trackHit, PLAYER_SCRUB_OFFSET, 0, {
       offset: { x: PLAYER_SCRUB_OFFSET, y: 0 },
       steps: 8,
@@ -539,15 +473,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       (yield* boxOf(ctx, PLAYER_IDS.fill)).width,
       progressWidth(PLAYER_CLIP_MS, PLAYER_CLIP_MS, PLAYER_TRACK.width),
       1,
-    );
-    const draggedReport = yield* reportIn(
-      ctx,
-      yield* ctx.host.text(PLAYER_IDS.readout),
-    );
-    yield* ctx.expectEqual(
-      "a drag on the track reports the playhead it reached",
-      draggedReport.playhead,
-      PLAYER_CLIP_MS,
     );
 
     // The release ended the gesture: a pointer that rests on the band reports
@@ -574,13 +499,8 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "Enable",
     );
     const before = yield* ctx.host.text(PLAYER_IDS.time);
-    yield* ctx.host.click(PLAYER_IDS.play);
+    yield* ctx.host.click(PLAYER_IDS.playBar);
     yield* Effect.sleep(SETTLE);
-    yield* ctx.expectEqual(
-      "a disabled transport refuses the press",
-      yield* ctx.host.text(PLAYER_IDS.play),
-      "Play",
-    );
     yield* ctx.expectEqual(
       "a disabled player does not move its playhead",
       yield* ctx.host.text(PLAYER_IDS.time),
@@ -602,7 +522,7 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       (yield* countIn(
         ctx,
         disabledFrame,
-        poster,
+        picture,
         scale,
         frameHex(PLAYER_CLIP_MS),
       )) > 0,

@@ -601,7 +601,24 @@ describe("the quiet ink a changed line paints on its tint", () => {
     // it; the quiet role and the tint mapping are what the pairs exist for.
     expect(viewer).toContain("bg-background");
     expect(viewer).toContain("color: theme.colors.mutedForeground");
-    expect(viewer).toContain('kind === "added" ? "success" : "destructive"');
+    // A change's tone is the row's own rule, exhaustive over the kinds the
+    // diff model names: an added line takes `success`, a removed one
+    // `destructive`, and neither falls through to a default. The fill and the
+    // ink are separate rules, so each is named with its own suffix — an
+    // assertion that matched the ink would pass with the fill inverted.
+    expect(viewer).toContain(
+      'Match.when("added", () => statusTone(theme, "success").background)',
+    );
+    expect(viewer).toContain(
+      'Match.when("removed", () => statusTone(theme, "destructive").background)',
+    );
+    expect(viewer).toContain(
+      'Match.when("added", () => statusTone(theme, "success").foreground)',
+    );
+    expect(viewer).toContain(
+      'Match.when("removed", () => statusTone(theme, "destructive").foreground)',
+    );
+    expect(viewer).toContain("Match.exhaustive");
     expect(viewer).toContain(".background");
 
     // Unified mode merges the tint into the row element, which is what makes the
@@ -613,9 +630,23 @@ describe("the quiet ink a changed line paints on its tint", () => {
     const start = viewer.indexOf('{view === "unified" ? (');
     expect(start).toBeGreaterThan(-1);
     const unified = viewer.slice(start, viewer.indexOf(") : (", start));
-    expect(unified).toContain("mergeStyles(");
-    expect(unified).toContain("lineStyle(theme, metrics, row.kind)");
-    expect(unified).toContain("style={quiet}");
+    expect(unified).toContain("<UnifiedRows");
+    expect(unified).not.toContain("<SplitRows");
+
+    // The unified row is one element carrying the fill, so the sign and both
+    // gutter numbers are painted on the tint the row already owns.
+    const unifiedRows = viewer.slice(viewer.indexOf("const UnifiedRows = ("));
+    const unifiedBody = unifiedRows.slice(
+      0,
+      unifiedRows.indexOf("const SplitBlock"),
+    );
+    expect(unifiedBody).toContain("style={lineRow(theme, metrics, row.kind)}");
+    expect(unifiedBody).toContain("{rowSign(row.kind)}");
+
+    // A split block divides two columns, and each side tints its own code.
+    expect(viewer).toContain("const SplitBlock = (");
+    expect(viewer).toContain("const SplitColumn = (");
+    expect(viewer).toContain(`testId={\`\${testId}-divider\`}`);
   });
 
   it("reports line numbers a tint swallows", () => {

@@ -13,7 +13,7 @@ the runtime has no playback element.
 | `FileUpload` | the queue and `upload/queue.ts`'s state machine | the transfer is the caller's `upload(file, onProgress)`; the package owns no network |
 | `CropArea` | a controlled crop hole, its mask and its gestures | four veil bars are the only mask the runtime paints; each is pointer-transparent so the press reaches the frame |
 | `QrCode` | the symbol, its quiet zone and the refusal of a value that does not fit | the encoder is the package's; the paint is one tinted `<svg>` mask, the route `qr-matrix` measured |
-| `MediaPlayer` | the clip's frames, a progress track, a waveform and a transport with a seek pad and a pointer scrub | no `video`/`audio` host, so the caller supplies each frame's bytes and the player owns the clock; `setImagePixels` is the measured paint route |
+| `MediaPlayer` | the poster, Mux's chrome — a centred play control, a fading bar, a timeline with played/buffered/thumb, the clock, mute and volume, rate, settings and fullscreen — and the app-owned clock | no `video`/`audio` host, so the caller supplies each frame's bytes and the player owns the clock; `setImagePixels` is the measured paint route and fullscreen is the window's `toggleFullscreen` |
 
 ## Why a package
 
@@ -34,8 +34,8 @@ src/
   crop/logic.ts       the crop arithmetic (bounds, bars, drag, keyboard)
   qr-code.tsx         the symbol's frame, quiet zone and overflow state
   qr/encode.ts        the encoder (numeric, alphanumeric and byte mode, versions 1-10, Reed-Solomon)
-  media-player.tsx    the frames, the waveform and the transport
-  player/logic.ts     the player's arithmetic (playhead, clock, keys, waveform)
+  media-player.tsx    the poster, Mux's chrome and the transport
+  player/logic.ts     the player's arithmetic (playhead, clock, keys, rates, volume, shares)
   internal.ts         the tw + tokens seam
 examples/             one mountable screen per surface
 docs/                 image-preview.mdx, drop-zone.mdx, file-upload.mdx,
@@ -46,6 +46,6 @@ docs/                 image-preview.mdx, drop-zone.mdx, file-upload.mdx,
 
 ```sh
 nub run --filter @gpuixui/media test          # queue + render-function suites
-nub run --filter @gpuixui/media test:behaviour # the crop gestures, the player transport and the picture names, in the real renderer
+nub run --filter @gpuixui/media test:behaviour # the crop gestures, the player chrome and the picture names, in the real renderer
 nub run --filter @gpuixui/media check-types
 ```

@@ -89,6 +89,8 @@ export const ICON_NAMES = [
   "upload",
   "user",
   "users",
+  "volume-2",
+  "volume-x",
   "warning",
   "x",
 ] as const;

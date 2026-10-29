@@ -358,7 +358,7 @@ src/components/docs/drop-zone-demo.tsx     The drop target's pick action and rec
 src/components/docs/file-upload-demo.tsx   The upload queue's states and simulated transfer, on the package's queue
 src/components/docs/image-preview-demo.tsx The image surface's loaded, loading and error states
 src/components/docs/markdown-editor-demo.tsx The source/preview split with the package's status line
-src/components/docs/media-player-demo.tsx  The transport's clock, seek keys, track and waveform over illustrated frames
+src/components/docs/media-player-demo.tsx  Mux's chrome — the clock, fading bar, timeline, rate and settings — on the package's player logic
 src/components/docs/panel-group-demo.tsx   The group's fractions, dividers and collapse, on the package's own reducers
 src/components/docs/markdown-preview.ts    The preview's block reader, closing fences with the package's rule
 src/components/docs/qr-code-demo.tsx       A scannable symbol from the package's own encoder

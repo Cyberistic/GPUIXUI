@@ -5,18 +5,19 @@
  * from on this runtime: an image buffer the app re-pushes, an interval the app
  * owns and a transport the app draws. That is the route, not the wrapper — the
  * library ships `MediaPlayer` (`@gpuixui/media`), and nothing had ever painted
- * it in a window, so every claim the package made about its own transport was
- * held only by the package's own renderer suite.
+ * it in a window, so every claim the package made about its own chrome was held
+ * only by the package's own renderer suite.
  *
  * This fixture gives the shipped player the **same clip** the composition
  * probe measures, so the two routes can be compared: the frame schedule, the
- * buffer and the four frame colours come from `media-frame.ts`, and what is
- * new here is the shipped component's own ids, the waveform's samples and the
- * report the player makes to its caller.
+ * buffer and the four frame colours come from `media-frame.ts`, and what is new
+ * here is the shipped component's own ids, its buffered range and the report
+ * the player makes to its caller.
  *
- * Every rule the probe asserts is the **package's** rule: the clock and the
- * fill's share come from `@gpuixui/media/player/logic`, so the window is read
- * against the arithmetic the component ships rather than a copy of it.
+ * Every rule the probe asserts is the **package's** rule: the clock, the
+ * fill's share, the buffered share and the rate label come from
+ * `@gpuixui/media/player/logic`, so the window is read against the arithmetic
+ * the component ships rather than a copy of it.
  */
 import * as Option from "effect/Option";
 import type { MediaFrame } from "@gpuixui/media/media-player";
@@ -26,9 +27,7 @@ import {
   framePixels,
   MEDIA_BUFFER,
   MEDIA_CLIP_MS,
-  MEDIA_POSTER,
   MEDIA_SEEK_STEP_MS,
-  MEDIA_TRACK,
 } from "./media-frame.js";
 
 /**
@@ -41,14 +40,24 @@ import {
 export const PLAYER_IDS = {
   root: "media-player",
   poster: "media-poster",
-  waveform: "media-waveform",
+  /** The chrome's bottom bar and the scrim behind it. */
+  controls: "media-controls",
+  scrim: "media-scrim",
+  /** The large centred action, and the small one in the bar. */
   play: "media-play",
+  playBar: "media-play-bar",
   /** The 24-point band around the rail; the rail itself is pointer-transparent. */
   trackHit: "media-track-hit",
   track: "media-track",
   fill: "media-fill",
+  buffered: "media-buffered",
+  thumb: "media-thumb",
   time: "media-time",
-  seek: "media-seek",
+  mute: "media-mute",
+  rate: "media-rate",
+  settings: "media-settings",
+  volume: "media-volume",
+  fullscreen: "media-fullscreen",
   readout: "media-player-readout",
   disable: "media-player-disable",
 } as const;
@@ -56,13 +65,21 @@ export const PLAYER_IDS = {
 /** The ids the shipped component paints, without the probe's own two. */
 export const PLAYER_COMPONENT_IDS = [
   PLAYER_IDS.poster,
-  PLAYER_IDS.waveform,
+  PLAYER_IDS.controls,
+  PLAYER_IDS.scrim,
   PLAYER_IDS.play,
+  PLAYER_IDS.playBar,
   PLAYER_IDS.trackHit,
   PLAYER_IDS.track,
   PLAYER_IDS.fill,
+  PLAYER_IDS.buffered,
+  PLAYER_IDS.thumb,
   PLAYER_IDS.time,
-  PLAYER_IDS.seek,
+  PLAYER_IDS.mute,
+  PLAYER_IDS.rate,
+  PLAYER_IDS.settings,
+  PLAYER_IDS.volume,
+  PLAYER_IDS.fullscreen,
 ] as const;
 
 /** The clip the shipped player plays. */
@@ -71,11 +88,29 @@ export const PLAYER_CLIP_MS = MEDIA_CLIP_MS;
 /** How far one Left/Right press seeks. */
 export const PLAYER_SEEK_STEP_MS = MEDIA_SEEK_STEP_MS;
 
-/** The picture's painted box. */
-export const PLAYER_POSTER = MEDIA_POSTER;
+/** How far `J`, `L` and Shift + arrow seek. */
+export const PLAYER_LARGE_SEEK_STEP_MS = 10_000;
 
-/** The progress track the shipped player draws. */
-export const PLAYER_TRACK = MEDIA_TRACK;
+/** The picture's painted box: 16:9, wide enough for Mux's whole bar. */
+export const PLAYER_POSTER = { width: 512, height: 288 } as const;
+
+/** The insets the bar paints at, from the live theme's own spacing. */
+export const PLAYER_INSET = 8;
+
+/**
+ * The bottom strip the chrome covers: the scrim plus the bar. The picture is
+ * counted above it, where the frame is not under a control.
+ */
+export const PLAYER_CHROME_HEIGHT = 80;
+
+/** The timeline the shipped player draws: the frame less the bar's two insets. */
+export const PLAYER_TRACK = {
+  width: PLAYER_POSTER.width - PLAYER_INSET * 2,
+  height: 4,
+} as const;
+
+/** The part of the clip the app has in hand, painted as the buffered range. */
+export const PLAYER_BUFFERED = PLAYER_CLIP_MS / 2;
 
 /**
  * Where the scrub's press lands, in points from the band's centre.
@@ -98,30 +133,11 @@ export const PLAYER_SCRUB_OFFSET = PLAYER_TRACK.width / 4;
  */
 export const PLAYER_TICK_MS = 250;
 
-/**
- * The waveform's painted box: the track's width and the height the component
- * draws its silhouette in.
- */
-export const PLAYER_WAVEFORM = { width: 200, height: 32 } as const;
+/** How long the chrome stays after the last activity in the probe. */
+export const PLAYER_IDLE_MS = 400;
 
-/**
- * The clip's amplitude samples, drawn as the waveform's silhouette.
- *
- * The loudest sample is below 1 on purpose: the silhouette's own outline then
- * stays inside its box, so a waveform that painted a filled rectangle would
- * fail the reading of the box's first and last rows.
- */
-export const PLAYER_PEAKS: ReadonlyArray<number> = [
-  0.15, 0.55, 0.8, 0.3, 0.65, 0.2, 0.45, 0.1,
-];
-
-/**
- * The ink the waveform paints: the live window's dark palette's
- * `mutedForeground`, which is the colour the shipped component tints the mask
- * with. The guard holds it against the token package, so a palette change
- * cannot leave the probe counting a colour the window stopped painting.
- */
-export const PLAYER_WAVEFORM_INK = "#C1C7D1";
+/** The ink the bar paints its clock in: the live window's dark `foreground`. */
+export const PLAYER_INK = "#EEF1F5";
 
 /** The page behind the player, in the same palette. */
 export const PLAYER_PAGE = "#11141A";
@@ -182,4 +198,4 @@ export const playerReportOf = (
  * the checks a run reports; this is the number the run printed and the README
  * teaches.
  */
-export const PLAYER_CHECKS = 63;
+export const PLAYER_CHECKS = 49;

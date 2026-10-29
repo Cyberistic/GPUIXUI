@@ -14,7 +14,7 @@ import {
   handleBox,
   CROP_HANDLE_SIZE,
 } from "@gpuixui/media/crop/logic";
-import { timeLabel } from "@gpuixui/media/player/logic";
+import { progressWidth, timeLabel } from "@gpuixui/media/player/logic";
 import { qrPlacement } from "@gpuixui/media/qr/encode";
 import { cropStart, CropAreaDemo, CROP_FRAME } from "./crop-area-demo";
 import { DropZoneDemo } from "./drop-zone-demo";
@@ -31,7 +31,16 @@ import {
   PreviewFrame,
   previewZoom,
 } from "./image-preview-demo";
-import { frameAt, MediaPlayerDemo, PLAYER_DURATION } from "./media-player-demo";
+import {
+  frameAt,
+  MediaPlayerDemo,
+  PLAYER_BUFFERED,
+  PLAYER_DURATION,
+  PLAYER_QUALITIES,
+  PLAYER_RATES,
+  PLAYER_TRACK,
+  sharesAt,
+} from "./media-player-demo";
 import {
   modulePath,
   previewSymbol,
@@ -270,18 +279,56 @@ describe("the FileUpload preview", () => {
 });
 
 describe("the MediaPlayer preview", () => {
-  it("draws the transport the component owns", () => {
+  it("draws Mux's chrome, and the transport the component owns", () => {
     const html = markup(<MediaPlayerDemo />);
 
     expect(html).toContain(timeLabel(0, PLAYER_DURATION));
-    expect(html).toContain(">Play<");
+    expect(html).toContain('aria-label="Play"');
     expect(html).toContain('aria-label="Seek back one second"');
     expect(html).toContain('aria-label="Seek forward one second"');
-    expect(html).toContain('aria-label="Go to start"');
-    expect(html).toContain('aria-label="Go to end"');
-    // The waveform is the package's silhouette, used as the mask.
-    expect(html).toContain("gx-player-wave");
+    expect(html).toContain('aria-label="Mute"');
+    expect(html).toContain('aria-label="Volume"');
+    expect(html).toContain('aria-label="Playback rate"');
+    expect(html).toContain('aria-label="Settings"');
+    expect(html).toContain('aria-label="Fullscreen"');
+    // The timeline, its rail and the three boxes are the component's anatomy.
+    expect(html).toContain("gx-player-timeline");
+    expect(html).toContain("gx-player-buffered");
+    expect(html).toContain("gx-player-fill");
+    expect(html).toContain("gx-player-thumb");
+    // The poster is an image drawn per playhead, not a decoded video frame.
     expect(html).toContain("data:image/svg+xml");
+  });
+
+  it("paints the buffered and played widths the package computes", () => {
+    const shares = sharesAt(0);
+    const html = markup(<MediaPlayerDemo />);
+
+    // The drawing is the component's own share rule, scaled to its track.
+    expect(shares.played).toBe(progressWidth(0, PLAYER_DURATION, PLAYER_TRACK));
+    expect(shares.buffered).toBe(
+      progressWidth(PLAYER_BUFFERED, PLAYER_DURATION, PLAYER_TRACK),
+    );
+    expect(shares.buffered).toBeGreaterThan(shares.played);
+    expect(html).toContain(
+      `class="gx-player-buffered" style="width:${(shares.buffered / PLAYER_TRACK) * 100}%"`,
+    );
+    expect(html).toContain(
+      `class="gx-player-fill" style="width:${(shares.played / PLAYER_TRACK) * 100}%"`,
+    );
+  });
+
+  it("offers the component's rates and the page's qualities in its menus", () => {
+    const html = markup(<MediaPlayerDemo />);
+
+    expect(html).toContain(">Playback speed<");
+    expect(html).toContain(">Quality<");
+    PLAYER_RATES.forEach((rate) => expect(html).toContain(`>${rate}×<`));
+    PLAYER_QUALITIES.forEach((quality) =>
+      expect(html).toContain(`>${quality}<`),
+    );
+    // The rate the button prints is the resting rate the menus offer.
+    expect(html).toContain(`aria-checked="true"`);
   });
 
   it("picks the caller's frame for the playhead, clamped at both ends", () => {
