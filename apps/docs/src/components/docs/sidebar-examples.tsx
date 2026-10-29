@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { PreviewSurface } from "./preview-surface";
-import { RecipeSource } from "./recipe-source";
+import { BlockScreen } from "./block-preview";
 import { Sidebar01Render, sidebar01Source } from "./blocks/sidebar-01";
 import { Sidebar02Render, sidebar02Source } from "./blocks/sidebar-02";
 import { Sidebar03Render, sidebar03Source } from "./blocks/sidebar-03";
@@ -162,18 +161,17 @@ export const sidebarExample = (slug: string): SidebarExampleBlock => {
 };
 
 /**
- * One example on the sidebar page: the drawing at the block stage's full width,
- * then its recipe. The page supplies the heading and the shadcn link around it.
+ * One example on the sidebar page, in the same frame as every other block
+ * page. The page supplies the group, the heading and the shadcn link around it.
  */
 export function SidebarExample({ slug }: { readonly slug: string }) {
   const example = sidebarExample(slug);
 
   return (
-    <div className="gx-block-screen not-prose">
-      <PreviewSurface className="gx-block-stage">
-        {example.render()}
-      </PreviewSurface>
-      <RecipeSource label={example.slug} source={example.source} />
-    </div>
+    <BlockScreen
+      name={example.slug}
+      render={example.render}
+      source={example.source}
+    />
   );
 }

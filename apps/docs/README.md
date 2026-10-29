@@ -51,7 +51,7 @@ blocks/hunter-pipeline.mdx   A guild's licence dashboard: readings, stages, bloc
 blocks/file-manager.mdx      A three-pane browser: folders, image tiles and file facts
 blocks/email-inbox.mdx       A four-pane mail client with a filterable list
 blocks/conversations.mdx     A macOS Messages window: threads, search and a composer
-blocks/sidebar.mdx           All sixteen sidebar blocks on one page, each linked to shadcn and live
+blocks/sidebar.mdx           All sixteen sidebar blocks on one page, grouped by the panel each draws
 components/index.mdx         The component grid: one preview tile per page, filter in the URL
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
