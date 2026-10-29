@@ -1,0 +1,72 @@
+---
+title: Shimmer
+description: A travelling highlight across a surface, composed from a row of two-stop gradient strips
+---
+
+<ComponentPreview name="shimmer-demo" />
+
+## Usage
+
+```tsx
+import { Shimmer } from "@gpuixui/components/shimmer";
+
+<Shimmer label="Generating a reply" durationMs={2000}>
+  <p>Generating a reply…</p>
+</Shimmer>;
+
+// A finished surface: the content stands still and no band paints.
+<Shimmer active={false}>
+  <p>Done</p>
+</Shimmer>;
+```
+
+The surface owns the box its children give it. The highlight is painted after
+the content, clips to the surface's corner, and takes no presses, so a link or a
+button inside a shimmering card still works.
+
+## The motion, composed
+
+The runtime paints a gradient with exactly **two stops** and cannot animate
+those stops, and its geometry takes pixels rather than a percentage `left`. So
+the sweep is a **row of `SHIMMER_STEPS` (16) thin strips** across the surface:
+
+- one frame samples a triangular brightness profile at 17 points;
+- each strip is a two-stop ramp between two neighbouring samples, so the rows
+  add up to a smooth band rather than a block;
+- a step moves the profile, and the component ticks once per
+  `durationMs / SHIMMER_STEPS` (125 ms at the default two seconds).
+
+Nothing measures the surface and nothing interpolates a gradient, which is what
+keeps the effect honest on this runtime.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactNode` | none | the surface's content; it lays out the box the band travels across |
+| `active` | `boolean` | `true` | whether the sweep runs; false paints the content alone |
+| `durationMs` | `number` | `2000` | one complete sweep; an unusable value falls back to two seconds |
+| `accent` | `"foreground" \| "primary" \| "muted"` | `"foreground"` | the theme role the highlight paints, at a low alpha |
+| `label` | `string` | none | an accessible name; when set, the surface is a `status` node, and a blank name is decoration |
+| `reducedMotion` | `boolean` | the motion provider | paints the content with no band and schedules no interval |
+| `className` | `string` | — | joined after the surface recipe, so it wins conflicts |
+| `style` | `StyleState<ShimmerState>` | — | a style, or a function of the frame's `peak`, `active` and `reducedMotion` |
+| `testId` | `string` | — | stable locator; the band is `testId-overlay` |
+
+## Accessibility
+
+- Shimmer is activity, not progress. Give it a `label` when the surface means
+  "working" (a `status` node named by that label); leave it unnamed when the
+  highlight decorates content that is already named.
+- Reduced motion paints the content and no band, so the surface still reads.
+- Never use the highlight, its direction or its motion to carry success or a
+  percentage — use `Progress` for a known value and an ordinary surface once the
+  work settles.
+
+## Limitations
+
+- The band steps through 16 frames; it does not sweep smoothly.
+- A gradient is two stops, so each strip is its own ramp. The row reads as a
+  band at a glance, but it is not one continuous gradient.
+- Reduced motion removes the band rather than freezing it mid-surface, because a
+  permanent sheen would read as a state rather than a sweep.

@@ -3,14 +3,14 @@
  * `Spinner` — an activity indicator.
  *
  * **The runtime cannot rotate** (its `motion` has no rotation; see
- * `docs/gpuix-capabilities.md`), so there is no spinning arc. This is a row of
- * dots whose lit dot advances one place per step and whose trail fades — the
- * discrete-step alternative the capability map allows. A `Progress` bar with no
- * `value` is the other option.
+ * `docs/gpuix-capabilities.md`), so there is no spinning arc. The mark is the
+ * reference's own anatomy composed from static parts: a ring of ticks whose
+ * lit arc steps around the circle, head first and tail fading. The geometry is
+ * `spinnerTicks` — pure, relative to the size the caller asked for — so a ring
+ * is the same shape at every step, and only its brightness moves.
  *
  * `reducedMotion` is the caller's answer to a preference the runtime does not
- * expose: the dots stay a status indicator but hold one frame and schedule no
- * interval.
+ * expose: the ring keeps its resting arc and schedules no interval.
  */
 
 import type { ReactElement } from "react";
@@ -20,9 +20,10 @@ import { useMotionPreference } from "@gpuixui/motion/react/presence";
 import { iconPixels } from "@gpuixui/icons";
 import { cn } from "@gpuixui/tw";
 import {
-  SPINNER_DOTS,
+  SPINNER_RING_TICKS,
   STEP_INTERVAL_MS,
-  spinnerDots,
+  spinnerTickStyle,
+  spinnerTicks,
   type SpinnerAccent,
 } from "../core/loading.js";
 import { accessibleName } from "../core/a11y.js";
@@ -33,7 +34,7 @@ import {
 } from "../core/messages.js";
 import { reducedMotionOf, stillFrame } from "../core/motion.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { spinnerDotClass, spinnerGroupClass } from "../recipe/index.js";
+import { spinnerGroupClass } from "../recipe/index.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle, useStep, type ElementHostProps } from "./internal.js";
 import { useMessages } from "./MessagesProvider.js";
@@ -41,7 +42,7 @@ import { useTheme } from "./ThemeProvider.js";
 
 export interface SpinnerProps extends ElementHostProps {
   /**
-   * Dot side: a step on the theme's icon scale, or raw pixels for a mark that
+   * Ring side: a step on the theme's icon scale, or raw pixels for a mark that
    * is not lining up with text. Defaults to the theme's `md` icon step.
    */
   readonly size?: keyof PrimitiveTheme["iconSize"] | number;
@@ -50,7 +51,7 @@ export interface SpinnerProps extends ElementHostProps {
   /** Accessible name. Defaults to the provider's `loading.busy` ("Loading"). */
   readonly label?: string;
   /**
-   * Hold the lit dot and schedule no interval. Defaults to the motion
+   * Hold the resting arc and schedule no interval. Defaults to the motion
    * provider's preference (`MotionProvider`); the runtime exposes none of its
    * own, so the application states it once.
    */
@@ -80,18 +81,12 @@ export const renderSpinner = (
 ): ReactElement => {
   // A named step and a raw count both go through the icon scale's own resolver:
   // a measurement that never arrived (or zero, or negative) must not reach
-  // `width` as `NaN`, which the runtime paints as no dot at all.
-  const dot = iconPixels(size ?? "md");
-  const group = mergeStyle(
+  // `width` as `NaN`, which the runtime paints as no ring at all.
+  const side = iconPixels(size ?? "md");
+  const ring = mergeStyle(
     recipeTw.classesToStyle(cn(spinnerGroupClass, className), theme).style,
-    style,
+    mergeStyle({ width: side, height: side }, style),
   );
-  const dotStyle = (opacity: number): StyleDesc =>
-    mergeStyle(recipeTw.classesToStyle(spinnerDotClass(accent), theme).style, {
-      width: dot,
-      height: dot,
-      opacity,
-    });
   // The caller's own word wins; the provider's `loading.busy` is what a
   // localised tree otherwise has to spell out on every indicator, and a blank
   // row there is a missing translation rather than a silence, so the shipped
@@ -108,16 +103,22 @@ export const renderSpinner = (
       aria-id={controlId}
       onLayout={onLayout}
       testId={testId}
-      style={group}
+      style={ring}
     >
-      {Arr.map(spinnerDots(stillFrame(step, reducedMotion)), (point, index) => (
-        <div key={index} style={dotStyle(point.opacity)} />
-      ))}
+      {Arr.map(
+        spinnerTicks(stillFrame(step, reducedMotion), side),
+        (tick, index) => (
+          <div
+            key={index}
+            style={spinnerTickStyle({ size: side, accent }, tick, theme)}
+          />
+        ),
+      )}
     </div>
   );
 };
 
-/** A three-dot activity indicator. */
+/** A ring of ticks whose lit arc steps around the circle. */
 export const Spinner = (props: SpinnerProps): ReactElement => {
   // The provider states the preference once; the prop is the per-control answer.
   const reducedMotion = reducedMotionOf(
@@ -127,11 +128,9 @@ export const Spinner = (props: SpinnerProps): ReactElement => {
   return renderSpinner(
     { ...props, reducedMotion },
     useTheme(),
-    // One step per dot on the house timing's step level: the timer's cycle is
-    // the row's own length, so a full turn lights 0, 1, 2 and repeats — never
-    // 0, 1, 2, 0, 1, 2, 0, 1, which stepped the lit dot backwards when the
-    // eight-segment bar period wrapped.
-    useStep(SPINNER_DOTS, STEP_INTERVAL_MS, !reducedMotion),
+    // One tick per step: a full turn is the ring's own length, so the head
+    // visits every tick exactly once and never jumps backwards at a cycle edge.
+    useStep(SPINNER_RING_TICKS, STEP_INTERVAL_MS, !reducedMotion),
     useMessages(),
   );
 };

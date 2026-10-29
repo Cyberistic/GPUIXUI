@@ -176,6 +176,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       component("image-zoom", "Image zoom"),
       component("scroll-fade", "Scroll fade"),
       component("scroll-progress", "Scroll progress"),
+      component("shimmer", "Shimmer"),
       component("pinned-list", "Pinned list"),
     ],
   },

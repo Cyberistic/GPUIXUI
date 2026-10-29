@@ -24,8 +24,19 @@ export const PULSE_STEPS = 2;
 /** How many steps an indeterminate bar visits before repeating. */
 export const SPINNER_SEGMENTS = 8;
 
-/** How many dots a spinner paints, and therefore the steps it visits before repeating. */
-export const SPINNER_DOTS = 3;
+/**
+ * How many ticks a spinner's ring is drawn from.
+ *
+ * The runtime cannot rotate (see `docs/gpuix-capabilities.md`), so the ring is
+ * static and the **lit part of it** steps: one tick is the head, the ticks
+ * behind it fade, and the rest of the ring is empty. The count is the ring's
+ * resolution — a dozen ticks read as an arc at `md`, and a size the caller gave
+ * in raw pixels is still a ring because the geometry is relative to it.
+ */
+export const SPINNER_RING_TICKS = 12;
+
+/** How many ticks of the ring are lit at once: the head and its fading tail. */
+export const SPINNER_ARC_TICKS = 7;
 
 /**
  * The cadence a step indicator ticks at: the house timing's `step` level.
@@ -51,7 +62,10 @@ export const STEP_INTERVAL_MS = motionLevels.step;
  */
 export const PULSE_INTERVAL_MS = 700;
 
-/** The dimmest a trail dot paints, as a share of the accent. */
+/**
+ * The dimmest a lit tick paints, as a share of the accent. A tick outside the
+ * arc paints nothing at all; this floor is the tail's far end.
+ */
 export const SPINNER_FADE_FLOOR = 0.2;
 
 export interface SkeletonSpec {
@@ -187,40 +201,82 @@ export interface SpinnerSpec {
   readonly accent: SpinnerAccent;
 }
 
-/** One dot of the activity indicator. */
-export interface SpinnerDot {
-  readonly opacity: number;
-  /** Whether this dot is the emphasised one for this step. */
+/** One tick of the ring: where it sits and how bright it is this frame. */
+export interface SpinnerTick {
+  readonly index: number;
+  /** The head of the arc: the one tick that is fully lit this frame. */
   readonly active: boolean;
+  readonly opacity: number;
+  /** The tick's painted offset from the ring's top-left corner. */
+  readonly x: number;
+  readonly y: number;
+  /** The tick's side, shared by the whole ring. */
+  readonly side: number;
 }
 
 /**
- * Which dot is lit at a given step, and how the rest fade.
+ * The ring at a given step.
  *
- * The active dot moves one place per step and the trail fades toward
- * {@link SPINNER_FADE_FLOOR} at the farthest dot, so the row reads as travelling
- * even though nothing rotates. The fade spans the row (`count - 1` places)
- * rather than a fixed step budget: with three dots, dividing by the bar's eight
- * segments left every trail dot brighter than 0.7 and the lit index stepping
- * backwards once per timer cycle.
+ * Each tick is placed on a circle by its own angle — no `transform`, which the
+ * runtime does not publish — and the lit head advances one tick per step. The
+ * angular distance from the head decides the tick's brightness: the head is
+ * opaque, the {@link SPINNER_ARC_TICKS} behind it fade to
+ * {@link SPINNER_FADE_FLOOR}, and the rest of the ring is empty. That gap is
+ * what makes a static ring read as a turning arc.
+ *
+ * A size that cannot be painted (zero, negative, `NaN`) falls back to one icon
+ * step, because a ring that paints nothing reads as a finished operation. The
+ * tick count and arc length are clamped the same way, so a caller cannot ask
+ * for an empty ring.
  */
-export const spinnerDots = (
+export const spinnerTicks = (
   step: number,
-  count = SPINNER_DOTS,
-): ReadonlyArray<SpinnerDot> => {
-  const dots = Math.max(
-    1,
-    Math.trunc(Number.isFinite(count) ? count : SPINNER_DOTS),
+  size: number,
+  count = SPINNER_RING_TICKS,
+  arc = SPINNER_ARC_TICKS,
+): ReadonlyArray<SpinnerTick> => {
+  const ring = Math.max(
+    2,
+    Math.trunc(Number.isFinite(count) ? count : SPINNER_RING_TICKS),
   );
-  const active = ((step % dots) + dots) % dots;
-  const span = Math.max(1, dots - 1);
-  return Arr.map(Arr.range(0, dots - 1), (index) => ({
-    active: index === active,
-    opacity: Math.max(
-      SPINNER_FADE_FLOOR,
-      1 - ((active - index + dots) % dots) / span,
-    ),
-  }));
+  const lit = Math.min(
+    ring,
+    Math.max(1, Math.trunc(Number.isFinite(arc) ? arc : SPINNER_ARC_TICKS)),
+  );
+  const side = Number.isFinite(size) && size > 0 ? size : 16;
+  const tick = Math.max(1.5, side / 6);
+  const radius = (side - tick) / 2;
+  const head = ((Math.trunc(step) % ring) + ring) % ring;
+  return Arr.map(Arr.range(0, ring - 1), (index) => {
+    const distance = (head - index + ring) % ring;
+    const angle = -Math.PI / 2 + (index / ring) * Math.PI * 2;
+    const centre = side / 2;
+    // Clamp the two tangents: the top and left ticks sit exactly on the box
+    // edge, and floating point puts them a fraction of a pixel outside it.
+    const edge = side - tick;
+    const x = Math.min(
+      edge,
+      Math.max(0, centre + radius * Math.cos(angle) - tick / 2),
+    );
+    const y = Math.min(
+      edge,
+      Math.max(0, centre + radius * Math.sin(angle) - tick / 2),
+    );
+    const opacity =
+      distance >= lit
+        ? 0
+        : distance === lit - 1
+          ? SPINNER_FADE_FLOOR
+          : 1 - (distance / Math.max(1, lit - 1)) * (1 - SPINNER_FADE_FLOOR);
+    return {
+      index,
+      active: distance === 0,
+      opacity,
+      side: tick,
+      x,
+      y,
+    };
+  });
 };
 
 /** The role each accent paints, one entry per accent. */
@@ -243,22 +299,27 @@ const accentColor = (
 ): string | undefined => ACCENT_COLOR[spinnerAccentOf(accent)](theme);
 
 /**
- * One dot of the indicator.
+ * One tick of the ring.
  *
- * Every dot paints the accent; the trail fades through **opacity** rather than
+ * Every tick paints the accent; the tail fades through **opacity** rather than
  * turning grey, so a spinner inside a filled control keeps the fill's on-colour
- * on its whole row instead of painting a muted dot on a brand fill.
+ * on its whole arc instead of painting a muted tick on a brand fill. The box is
+ * placed by `left`/`top` from the ring's own arithmetic — the runtime has no
+ * `transform` to rotate a single tick into place.
  */
-export const spinnerDotStyle = (
+export const spinnerTickStyle = (
   spec: SpinnerSpec,
-  dot: SpinnerDot,
+  tick: SpinnerTick,
   theme: PrimitiveTheme,
 ): StyleDesc => ({
-  width: spec.size,
-  height: spec.size,
+  position: "absolute",
+  left: tick.x,
+  top: tick.y,
+  width: tick.side,
+  height: tick.side,
   flexShrink: 0,
   borderRadius: radiusValue(theme, "full"),
-  opacity: dot.opacity,
+  opacity: tick.opacity,
   backgroundColor: accentColor(spec.accent, theme),
 });
 

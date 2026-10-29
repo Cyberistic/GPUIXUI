@@ -65,6 +65,7 @@ carries — `src/docs.test.ts` reads this table and every page together.
 | `## Usage` | yes | a TSX snippet importing from the public package root |
 | `## API` | yes | prop, type, default, consequence; the variants, sizes and states are the `Type` column |
 | `## Limitations` | yes | at most three measured gaps and the honest alternative |
+| `## How the ring moves` | no | the composed geometry of a marker the runtime cannot rotate |
 | `## Words` | no | the copy table a provider's `messages` seam replaces, and how a stored one merges |
 
 Every component takes the caller's `className` (compiled through the recipe

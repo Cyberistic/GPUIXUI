@@ -437,7 +437,7 @@ describe("theme matrix", () => {
     );
   });
 
-  it("TagInput paints chips with the muted role", () => {
+  it("TagInput paints chips with the secondary role", () => {
     bothThemes(
       () => (
         <TagInput
@@ -450,7 +450,7 @@ describe("theme matrix", () => {
       ),
       (root, theme) => {
         expect(root.renderer.findByTestId("chip")?.style.backgroundColor).toBe(
-          theme.colors.muted,
+          theme.colors.secondary,
         );
       },
     );

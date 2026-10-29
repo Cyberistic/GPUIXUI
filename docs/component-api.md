@@ -417,6 +417,7 @@ the honest parts.
 | Bubbles | `Bubbles` (one part) | — | plan 600 |
 | Fireworks | `Fireworks` (one part) | — | plan 600 |
 | Gradient | `Gradient` (one part) | — | plan 600 |
+| Shimmer | `Shimmer` (one part) | — | plan 600 |
 | Gradient text | `GradientText` (one part) | — | plan 600 |
 | Gravity stars | `GravityStars` (one part) | — | plan 600 |
 | Glyph | `Glyph` (one part) | — | plan 600 |

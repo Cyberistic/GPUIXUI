@@ -21,10 +21,12 @@ import {
 import { Icon } from "@gpuixui/icons";
 import {
   cn,
+  TAG_INPUT_CAPTION,
   TAG_INPUT_CHIP,
   TAG_INPUT_CHIP_REMOVE,
   TAG_INPUT_CHIP_TEXT,
   TAG_INPUT_FIELD,
+  TAG_INPUT_HINT,
   TAG_INPUT_ROOT,
 } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
@@ -102,7 +104,17 @@ export interface TagInputProps extends Omit<Props, "children"> {
   /** Keep repeated tokens. Default `false`. */
   readonly allowDuplicates?: boolean;
   readonly disabled?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  /**
+   * A quiet note at the end of the field — the limit, a key that commits, the
+   * preset the caller started from. Blank renders nothing.
+   */
+  readonly hint?: string;
+  /**
+   * A caption under the field. The caller's own state belongs here (the preset
+   * or the limit), because the field itself carries no prose.
+   */
+  readonly caption?: string;
+  /** A Tailwind class string, joined after the outer recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
@@ -115,6 +127,8 @@ export const TagInput = ({
   max,
   allowDuplicates = false,
   disabled = false,
+  hint,
+  caption,
   className,
   children,
   style,
@@ -167,21 +181,33 @@ export const TagInput = ({
     },
   };
 
+  const note = caption?.trim();
+  const quiet = hint?.trim();
+
   return (
     <TagInputContext.Provider value={context}>
       <div
-        role="group"
-        aria-label={label}
         {...rest}
         style={mergeStyles(
-          mergeStyles(recipeStyle(cn(TAG_INPUT_ROOT, className), theme), {
-            minHeight: controlHeight(theme, "md"),
-            ...disabledFade(disabled),
-          }),
-          style,
+          recipeStyle(cn("flex flex-col gap-1.5", className), theme),
+          mergeStyles({ ...disabledFade(disabled) }, style),
         )}
       >
-        {children}
+        <div
+          role="group"
+          aria-label={label}
+          style={mergeStyles(recipeStyle(TAG_INPUT_ROOT, theme), {
+            minHeight: controlHeight(theme, "md"),
+          })}
+        >
+          {children}
+          {quiet === undefined || quiet === "" ? null : (
+            <text style={recipeStyle(TAG_INPUT_HINT, theme)}>{quiet}</text>
+          )}
+        </div>
+        {note === undefined || note === "" ? null : (
+          <text style={recipeStyle(TAG_INPUT_CAPTION, theme)}>{note}</text>
+        )}
       </div>
     </TagInputContext.Provider>
   );
@@ -231,7 +257,7 @@ export const TagInputField = ({
   });
 
   return (
-    <div style={hintHost({ flexGrow: 1 })}>
+    <div style={hintHost({ flexGrow: 1, minWidth: 0 })}>
       <input
         {...rest}
         // The group paints the page role behind the tokens and this field; the
@@ -297,10 +323,13 @@ export const TagInputChip = ({
       testId={testId}
       style={mergeStyles(
         recipeStyle(cn(TAG_INPUT_CHIP, className), theme),
-        // The group owns the field's disabled face: a second fade here would
-        // composite the chip's own ink twice, so a disabled chip inherits the
-        // root's fade and only loses its removal target.
-        resolveStyle(style, { disabled }),
+        mergeStyles(
+          disabled ? {} : { hover: { backgroundColor: theme.colors.accent } },
+          // The group owns the field's disabled face: a second fade here would
+          // composite the chip's own ink twice, so a disabled chip inherits the
+          // root's fade and only loses its removal target.
+          resolveStyle(style, { disabled }),
+        ),
       )}
     >
       <text style={recipeStyle(TAG_INPUT_CHIP_TEXT, theme)}>{value}</text>
@@ -320,7 +349,15 @@ export const TagInputChip = ({
             hover: { backgroundColor: theme.colors.accent },
           })}
         >
-          <Icon name="x" size="sm" color={theme.colors.mutedForeground} />
+          <Icon
+            name="x"
+            size="sm"
+            color={
+              disabled
+                ? theme.colors.mutedForeground
+                : theme.colors.secondaryForeground
+            }
+          />
         </div>
       )}
     </div>

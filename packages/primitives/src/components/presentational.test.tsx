@@ -22,7 +22,7 @@ import {
   lightTheme,
 } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
-import type { SpinnerAccent } from "../core/loading.js";
+import { SPINNER_RING_TICKS, type SpinnerAccent } from "../core/loading.js";
 import type { RuleSpec, TextTone } from "../core/style.js";
 import type {
   ElevationLevel,
@@ -1092,8 +1092,8 @@ describe("loading", () => {
     expect(opacityAt(5, true)).toBe(resting);
   });
 
-  it("holds a spinner's lit dot when the reader asked for less motion", () => {
-    // The same rule on the second timed indicator: the dots stay a status
+  it("holds a spinner's arc when the reader asked for less motion", () => {
+    // The same rule on the second timed indicator: the ring stays a status
     // report, but no frame after the first is painted.
     const opacitiesAt = (
       step: number,
@@ -1185,39 +1185,56 @@ describe("loading", () => {
     });
   });
 
-  it("sizes a spinner's dots from the icon scale, or from pixels", () => {
+  it("sizes a spinner's ring from the icon scale, or from pixels", () => {
     // The bug guarded: `size` took a bare pixel count while every sibling
     // `size` prop in the package took a named step, so the documented way to
     // line a spinner up with the text beside it was to read `theme.iconSize.sm`
     // and pass the number back — a scale the caller had to find first.
-    const dotSides = (size?: Parameters<typeof renderSpinner>[0]["size"]) =>
-      Arr.map(elementChildren(renderSpinner({ size }, testTheme, 0)), (dot) =>
-        expectSome(numberIn(dot, "width")),
-      );
-    expect(dotSides()).toStrictEqual(Arr.replicate(testTheme.iconSize.md, 3));
-    expect(dotSides("sm")).toStrictEqual(
-      Arr.replicate(testTheme.iconSize.sm, 3),
-    );
-    expect(dotSides(9)).toStrictEqual(Arr.replicate(9, 3));
+    const ringOf = (size?: Parameters<typeof renderSpinner>[0]["size"]) => {
+      const element = renderSpinner({ size }, testTheme, 0);
+      return {
+        width: expectSome(numberIn(element, "width")),
+        height: expectSome(numberIn(element, "height")),
+        ticks: elementChildren(element).length,
+      };
+    };
+    expect(ringOf()).toEqual({
+      width: testTheme.iconSize.md,
+      height: testTheme.iconSize.md,
+      ticks: SPINNER_RING_TICKS,
+    });
+    expect(ringOf("sm")).toEqual({
+      width: testTheme.iconSize.sm,
+      height: testTheme.iconSize.sm,
+      ticks: SPINNER_RING_TICKS,
+    });
+    expect(ringOf(9)).toEqual({
+      width: 9,
+      height: 9,
+      ticks: SPINNER_RING_TICKS,
+    });
   });
 
-  it("reads a dot size it cannot paint as the default step", () => {
+  it("reads a ring size it cannot paint as the default step", () => {
     // The bug: `size` also takes the number a caller measured, and it reached
     // `style.width`/`height` verbatim. A measurement that never arrived
-    // (`NaN`), zero or a negative count paints no dot at all — the status is
+    // (`NaN`), zero or a negative count paints no ring at all — the status is
     // still announced, so the indicator vanishes without a word. The icon
-    // scale's own resolver already answers this case, so a spinner dot reads
-    // the same as an icon.
-    const dotSides = (size?: Parameters<typeof renderSpinner>[0]["size"]) =>
-      Arr.map(elementChildren(renderSpinner({ size }, testTheme, 0)), (dot) =>
-        expectSome(numberIn(dot, "width")),
-      );
+    // scale's own resolver already answers this case.
+    const ringOf = (size?: Parameters<typeof renderSpinner>[0]["size"]) => {
+      const element = renderSpinner({ size }, testTheme, 0);
+      return [
+        expectSome(numberIn(element, "width")),
+        expectSome(numberIn(element, "height")),
+      ];
+    };
     Arr.forEach(
       [Number.NaN, Number.POSITIVE_INFINITY, 0, -8],
       (unpaintable) => {
-        expect(dotSides(unpaintable)).toStrictEqual(
-          Arr.replicate(testTheme.iconSize.md, 3),
-        );
+        expect(ringOf(unpaintable)).toStrictEqual([
+          testTheme.iconSize.md,
+          testTheme.iconSize.md,
+        ]);
       },
     );
   });

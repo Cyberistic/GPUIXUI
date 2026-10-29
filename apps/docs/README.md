@@ -260,7 +260,7 @@ src/components/docs/slider-preview.ts     The end a range press grabbed
 src/components/docs/slider-demo.tsx       The draggable track, its keyboard and the disabled paint
 src/components/docs/slider-values-demo.tsx One value and a two-thumb range
 src/components/docs/spacer-demo.tsx       The fixed step and the flexible filler
-src/components/docs/spinner-demo.tsx      The three dots, their sizes and accents
+src/components/docs/spinner-demo.tsx      The stepped ring, its sizes and accents
 src/components/docs/stack-demo.tsx        The row, column and justified arrangements
 src/components/docs/text-demo.tsx         The roles and tones of one run of type
 src/components/docs/textarea-demo.tsx     The multi-line field's chrome and invalid paint
@@ -372,6 +372,7 @@ src/components/docs/gradient-text-demo.tsx The gradient text's per-glyph ramp
 src/components/docs/gravity-stars-demo.tsx The gravity stars field's falling lights
 src/components/docs/hexagon-demo.tsx       The hexagon field's outline grid
 src/components/docs/highlight-text-demo.tsx The highlight text's query wash
+src/components/docs/shimmer-demo.tsx      Two fixed frames and a live sweep of the travelling band
 src/components/docs/image-zoom-demo.tsx    The image zoom's pointer lens
 src/components/docs/liquid-button-demo.tsx The liquid button's flooding fill
 src/components/docs/magnetic-demo.tsx      The magnetic card's pointer lean

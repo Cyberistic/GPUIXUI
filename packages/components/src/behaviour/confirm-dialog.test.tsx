@@ -193,9 +193,11 @@ describe("ConfirmDialog", () => {
         confirm.renderer.getElement(id),
       );
 
-      expect(dots).toHaveLength(3);
+      // The mark is the stepped ring: twelve static ticks, each painted in
+      // the action's own label role.
+      expect(dots).toHaveLength(12);
       expect(dots.map((dot) => dot?.style.backgroundColor)).toEqual(
-        Array.from({ length: 3 }, () => action?.style.color),
+        Array.from({ length: 12 }, () => action?.style.color),
       );
     } finally {
       confirm.unmount();

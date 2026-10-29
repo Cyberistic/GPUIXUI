@@ -1,6 +1,6 @@
 ---
 title: Spinner
-description: A three-dot activity indicator in three sizes
+description: A ring of ticks whose lit arc steps around the circle, in three sizes
 ---
 
 <ComponentPreview name="spinner-sizes" />
@@ -21,14 +21,19 @@ import { Spinner } from "@gpuixui/components/spinner";
 or glyph beside it. A button takes the same mark through `Button`'s `loading`
 prop instead of composing one.
 
-## Why the mark steps
+## The anatomy, and why it steps
 
-`@gpuix/native@0.11.0` publishes no `transform`, so nothing can rotate. The mark
-is the primitives' three dots: one lights per step and its trail fades, which
-reads as travel because the eye follows the lit position. `MotionProvider
-preference="reduced"` — or `reducedMotion` on this spinner — holds one frame and
-schedules no interval. The preview above is a browser drawing: it cycles the
-dots' opacity, while the native component advances one lit position.
+The reference spinner is a loader circle: one arc of a ring, turning. That
+anatomy is what this mark keeps — a ring, a gap, an arc — but the runtime cannot
+rotate it. `@gpuix/native@0.11.0` publishes no `transform`, so the ring is
+**composed from static ticks** (`spinnerTicks` places 12 of them on a circle) and
+the **lit arc** moves instead: the head is opaque, the seven ticks behind it fade
+to a fifth, and the other five are empty. One tick advances per interval, so the
+gap travels around the circle rather than the ring turning.
+
+`MotionProvider preference="reduced"` — or `reducedMotion` on this spinner —
+holds the resting arc and schedules no interval. The preview above is a browser
+drawing: it paints the same geometry and steps it on the same cadence.
 
 ## API
 
@@ -46,16 +51,17 @@ dots' opacity, while the native component advances one lit position.
 ## Accessibility
 
 - The mark is a `status` node named by `label`, so a reader hears "Loading" (or
-  the caller's own words) rather than a decorative row of dots.
-- A blank `label` paints the dots as decoration: a `status` node with no name is
+  the caller's own words) rather than a decorative ring.
+- A blank `label` paints the ring as decoration: a `status` node with no name is
   still a node an assistive technology walks into.
 - The action that owns a busy spinner carries the same word as its
   `aria-description`; this runtime has no `aria-busy`.
 
 ## Limitations
 
-- Cannot rotate or trace an arc: the runtime has no `transform`. The lit dot
-  steps instead.
-- No smooth interpolation: the lit position advances once per interval.
-- Every dot shares one size, and a spinner cannot sit inside a text run; put it
-  in a `Stack` or a button.
+- Cannot rotate: the ring is static and its lit arc steps.
+- No smooth sweep: the head advances one tick per interval; at `sm` the twelve
+  ticks are close enough that the steps read as a turn, at `lg` the stepping is
+  visible.
+- The ring is a fixed box and cannot sit inside a text run; put it in a `Stack`
+  or a button.

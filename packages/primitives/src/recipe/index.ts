@@ -11,8 +11,6 @@
 import type { ControlSize, TextRole } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import { elevationLevel, isTextRole, radiusStep } from "../core/theme.js";
-import { spinnerAccentOf } from "../core/loading.js";
-import type { SpinnerAccent } from "../core/loading.js";
 import { stackDirection, trackCount } from "../core/layout.js";
 import type {
   BoxSpec,
@@ -818,29 +816,8 @@ export const progressBufferClass = (tone: ProgressTone): string =>
 
 // ── Spinner / Skeleton ───────────────────────────────────────────────
 
-/** The class string a spinner's row resolves to. */
-export const spinnerGroupClass = "flex flex-row items-center gap-2xs";
-
-/** The colour role each spinner accent paints on every dot. */
-const SPINNER_ACCENT_CLASS: Readonly<Record<SpinnerAccent, string>> = {
-  primary: "bg-primary",
-  destructive: "bg-destructive",
-  muted: "bg-muted-foreground",
-  "on-primary": "bg-primary-foreground",
-  "on-secondary": "bg-secondary-foreground",
-  "on-destructive": "bg-destructive-foreground",
-  "on-accent": "bg-accent-foreground",
-  "on-disabled": "bg-disabled-foreground",
-};
-
-/**
- * The class string a spinner dot resolves from its accent.
- *
- * The trail fades through the dot's `opacity` rather than a second role, so an
- * indicator inside a filled control paints that fill's on-colour throughout.
- */
-export const spinnerDotClass = (accent: SpinnerAccent): string =>
-  cn("shrink-0 rounded-full", SPINNER_ACCENT_CLASS[spinnerAccentOf(accent)]);
+/** The class string a spinner's ring resolves to. */
+export const spinnerGroupClass = "relative shrink-0";
 
 /** The class string a skeleton's resting shape resolves from. */
 export const skeletonClass = (spec: {

@@ -5,6 +5,7 @@ import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { statusToneOf, toneForeground } from "@/lib/shell-logic";
 import {
+  STATUS_BAR_CENTER,
   STATUS_BAR_LEFT,
   STATUS_BAR_RIGHT,
   StatusBarFrame,
@@ -35,9 +36,11 @@ const theme = getTheme("dark");
 const bar = (
   left: ReadonlyArray<StatusBarItem>,
   right: ReadonlyArray<StatusBarItem>,
+  center: ReadonlyArray<StatusBarItem> = [],
 ): string =>
   markup(
     <StatusBarFrame
+      center={center}
       label="Editor status"
       left={left}
       right={right}
@@ -72,13 +75,13 @@ describe("the Status bar preview", () => {
   });
 
   it("keeps the caller's groups, their order and their hairlines", () => {
-    const html = bar(STATUS_BAR_LEFT, STATUS_BAR_RIGHT);
+    const html = bar(STATUS_BAR_LEFT, STATUS_BAR_RIGHT, STATUS_BAR_CENTER);
 
     expect(html).toContain('role="status"');
     expect(html).toContain('aria-label="Editor status"');
-    // Three items on the left and two on the right: a hairline between each
-    // group and none before its first item.
-    expect(html.match(/gx-shell-separator/g)).toHaveLength(3);
+    // Two items on the left, one in the centre and two on the right: a
+    // hairline inside each group and none before its first item.
+    expect(html.match(/gx-shell-separator/g)).toHaveLength(2);
     const order = [...html.matchAll(/data-item="([^"]+)"/g)].map(
       (match) => match[1],
     );
