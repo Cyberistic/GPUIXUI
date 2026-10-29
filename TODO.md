@@ -24376,3 +24376,24 @@ reaction marks the message, not a speaker), measured on the live page at a 12px
 right inset with the pill crossing the surface's edge. `bubble.test.tsx`'s case
 now measures the corner for both aligns and fails on the old per-side inset (7
 cases failed when inverted).
+
+## Root docs URLs (2026-10-29)
+
+`[x]` `[██████████]` 3/3 — **the docs drop the `/docs` prefix: pages render at
+the root, and every old address 301s to its new one.**
+
+`[x]` `apps/docs/src/lib/shared.ts` declares `docsRoute = ""` once, and the
+nine lane routes moved with it (`/components`, `/primitives`, `/data-display`,
+…). `src/routes/$.tsx` is the docs splat; the landing, `/live`, `/api/search`,
+`/llms.txt`, `/llms-full.txt` and `/sitemap.xml` outrank it. The introduction
+moved from the docs index to `/introduction`, because `/` is the landing.
+
+`[x]` `src/routes/docs/index.tsx` answers `/docs` with a **301** to `/`;
+`src/routes/docs/$.tsx` answers every `/docs/<path>` with a **301** to
+`/<path>`, query included. Curated twins keep their own 301, so
+`/docs/primitives/button` reaches `/components/button`.
+
+`[x]` Canonicals, `sitemap.xml`, `llms.txt`, `llms-full.txt`, the sidebar, the
+landing, `curated-twins.ts`, the theme editor, the block index and all 131
+content links print the new URLs. The build prerenders 206 pages under the new
+paths and none under `/docs`; `nub run check` and `nub run test` pass.
