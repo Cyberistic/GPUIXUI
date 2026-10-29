@@ -30,6 +30,8 @@ export const Keywords = () => {
     <TagInput
       label="Package keywords"
       max={5}
+      hint="5 max"
+      caption={`${keywords.length} of 5 keywords`}
       value={keywords}
       onValueChange={setKeywords}
     >
@@ -41,6 +43,27 @@ export const Keywords = () => {
   );
 };
 ```
+
+## Anatomy
+
+One bordered field, and the chips live **inside it**:
+
+```text
+TagInput                 the caller's outer block; the caption sits under it
+└── group                role="group", the border, the focus ring
+    ├── TagInputChip     chip, × removal control on a 24px target
+    ├── TagInputField    borderless inline input that grows
+    └── hint             optional quiet note at the end of the field
+```
+
+The group wraps, so the chips flow onto a second line and the input keeps the
+remaining space on the last one. The input has no border or fill of its own: the
+group owns both, and the group paints the ring when the field holds focus. The
+`⌫` key cannot remove a chip — this runtime emits no key event for it — so the
+chip's `×` is the removal path, and it is a real 24px press target rather than a
+glyph. `hint` is the end-of-field note (the cap, the key that commits); `caption`
+is the caller's state under the field (the preset, the budget), so neither is
+baked into the component's prose.
 
 ## Composition
 
@@ -62,8 +85,10 @@ TagInput
 | `max` | `number` | none | additions past it are refused; the chips stay |
 | `allowDuplicates` | `boolean` | `false` | a repeated token is accepted as its own chip |
 | `disabled` | `boolean` | `false` | refuses every edit path and renders no removal control |
+| `hint` | `string` | none | a quiet note at the end of the field; blank renders nothing |
+| `caption` | `string` | none | a caption under the field for the caller's preset or limit; blank renders nothing |
 | `children` | `PartChildren` | — | `TagInputChip` and `TagInputField`, directly inside |
-| `className` | `string` | — | joined after the group recipe, so it wins conflicts |
+| `className` | `string` | — | joined after the outer recipe, so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last over the recipe |
 | `testId` | `string` | — | stable locator for the group |
 

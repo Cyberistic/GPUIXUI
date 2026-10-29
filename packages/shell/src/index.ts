@@ -27,9 +27,11 @@ export {
 export { StatusBar } from "./status-bar/status-bar.js";
 export type { StatusBarItem, StatusBarProps } from "./status-bar/status-bar.js";
 export {
+  centerAlignment,
   statusToneOf,
   toneForeground,
   type StatusBarTone,
+  type StatusCenterAlignment,
 } from "./status-bar/logic.js";
 
 export { Toolbar } from "./toolbar/toolbar.js";

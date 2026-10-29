@@ -79,6 +79,7 @@ import { scrollProgressMeta } from "./scroll-progress.js";
 import { searchInputMeta } from "./search-input.js";
 import { separatorMeta } from "./separator.js";
 import { shineButtonMeta } from "./shine-button.js";
+import { shimmerMeta } from "./shimmer.js";
 import { sidebarMeta } from "./sidebar.js";
 import { skeletonMeta } from "./skeleton.js";
 import { sliderMeta } from "./slider.js";
@@ -190,6 +191,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   searchInputMeta,
   separatorMeta,
   shineButtonMeta,
+  shimmerMeta,
   sidebarMeta,
   skeletonMeta,
   sliderMeta,

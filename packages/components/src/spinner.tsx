@@ -2,16 +2,16 @@
 /**
  * Spinner: an activity indicator, in shadcn's three sizes.
  *
- * The primitives own the mark — three dots whose lit position advances, the
- * accent table and the name it announces. This component is the shadcn-shaped
- * surface over it: a `size` a page can document as `sm`/`md`/`lg`, and the
- * package's host props.
+ * The primitives own the mark — a ring of ticks whose lit arc steps around the
+ * circle, the accent table and the name it announces. This component is the
+ * shadcn-shaped surface over it: a `size` a page can document as `sm`/`md`/`lg`,
+ * and the package's host props.
  *
  * **The mark does not rotate.** `@gpuix/native@0.11.0` publishes no
- * `transform` (see `docs/gpuix-capabilities.md`), so a spinning arc is not a
- * behaviour this library can paint. The honest alternative is the one the
- * primitives already ship: one dot lights per step and its trail fades, which
- * reads as travel because the eye follows the lit position. The page says so.
+ * `transform` (see `docs/gpuix-capabilities.md`), so the arc is composed from
+ * static ticks placed around the circle and the **fill** steps instead: the
+ * head advances one tick per interval and the tail fades. That is the
+ * reference's loader-circle anatomy without a transform. The page says so.
  */
 
 import type { ReactElement } from "react";
@@ -30,7 +30,7 @@ export interface SpinnerProps extends Omit<PrimitiveSpinnerProps, "size"> {
 }
 
 /**
- * A three-dot activity indicator.
+ * A ring of ticks whose lit arc steps around the circle.
  *
  * ```tsx
  * <Spinner label="Refreshing revenue" />
@@ -50,9 +50,9 @@ export const spinnerMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "Cannot rotate: 0.11.0 has no transform, so the mark is three dots with a travelling lit step",
-    "No smooth movement: the lit position advances once per interval",
-    "Every dot shares one size, and a spinner cannot sit inside a text run; put it in a Stack",
+    "Cannot rotate: 0.11.0 has no transform, so the ring is static and its lit arc steps around it",
+    "No smooth movement: the arc's head advances once per interval",
+    "The ring is a box and cannot sit inside a text run; put it in a Stack",
   ],
   docs: "docs/spinner.mdx",
   example: "examples/spinner.example.tsx",

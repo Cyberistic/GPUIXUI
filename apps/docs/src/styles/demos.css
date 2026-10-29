@@ -2881,7 +2881,7 @@
 @media (prefers-reduced-motion: reduce) {
   .gx-btn,
   .gx-spinner,
-  .gx-spin3-dot,
+  .gx-spin-tick,
   .gx-toast-slot,
   .gx-toast-leaving {
     transition: none;
@@ -3388,7 +3388,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(460px, 100%);
+  width: min(380px, 100%);
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 4px);
@@ -4092,7 +4092,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(460px, 100%);
+  width: min(380px, 100%);
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 4px);
@@ -4285,7 +4285,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: min(460px, 100%);
+  width: min(380px, 100%);
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 6px);
@@ -5644,7 +5644,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(460px, 100%);
+  width: min(380px, 100%);
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 4px);
@@ -5665,13 +5665,19 @@
   color: var(--muted-foreground);
 }
 
+.gx-tag-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .gx-tag-group {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   min-height: var(--control-height-md);
-  padding: 2px 6px;
+  padding: 5px 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--background);
@@ -5691,16 +5697,21 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
+  gap: 2px;
+  padding: 0 2px 0 8px;
   border-radius: 4px;
-  background: var(--muted);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.gx-tag-chip:hover {
+  background: var(--accent);
 }
 
 .gx-tag-chip-text {
   font-size: 12px;
   line-height: 16px;
-  color: var(--muted-foreground);
+  color: var(--secondary-foreground);
 }
 
 .gx-tag-chip-remove {
@@ -5714,7 +5725,7 @@
   border: 0;
   border-radius: 4px;
   background: transparent;
-  color: var(--muted-foreground);
+  color: var(--secondary-foreground);
   cursor: pointer;
 }
 
@@ -5729,7 +5740,7 @@
 }
 
 .gx-tag-field {
-  flex: 1;
+  flex: 1 1 96px;
   min-width: 80px;
   height: var(--control-height-sm);
   padding: 0;
@@ -5748,6 +5759,20 @@
 
 .gx-tag-field:read-only {
   cursor: not-allowed;
+}
+
+.gx-tag-hint {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--placeholder);
+}
+
+.gx-tag-caption {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--placeholder);
 }
 
 .gx-tag-note,
@@ -5788,7 +5813,7 @@
   flex-direction: column;
   align-items: stretch;
   gap: 14px;
-  width: min(460px, 100%);
+  width: min(380px, 100%);
 }
 
 .gx-tag-state {
@@ -9523,72 +9548,36 @@ button.gx-rating-star:focus-visible {
   }
 }
 
-/* ---- spinner: three dots ---- */
-.gx-spin3-scene {
+/* ---- spinner: a ring whose lit arc steps ---- */
+.gx-spin-scene {
   gap: 20px;
   padding: 28px 24px;
   min-height: 220px;
 }
 
-.gx-spin3 {
-  display: inline-flex;
-  flex-direction: row;
-  gap: 4px;
+.gx-spin-ring {
+  display: inline-block;
+  position: relative;
+  flex: 0 0 auto;
 }
 
-.gx-spin3-dot {
-  width: var(--icon-size-sm);
-  height: var(--icon-size-sm);
+.gx-spin-tick {
+  position: absolute;
   border-radius: 9999px;
   background: var(--primary);
-  opacity: 0.3;
-  animation: gx-spin3-step 1.2s ease-in-out infinite;
 }
 
-.gx-spin3-dot:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.gx-spin3-dot:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes gx-spin3-step {
-  0%,
-  100% {
-    opacity: 0.3;
-  }
-  40%,
-  60% {
-    opacity: 1;
-  }
-}
-
-/* A mark inside an action takes the action's label role, as the native one does. */
-.gx-btn .gx-spin3-dot {
-  background: currentColor;
-}
-
-.gx-spin3-dot[data-lit] {
-  opacity: 1;
-}
-
-.gx-spin3[data-accent="destructive"] .gx-spin3-dot {
+.gx-spin-ring[data-accent="destructive"] .gx-spin-tick {
   background: var(--destructive);
 }
 
-.gx-spin3[data-accent="muted"] .gx-spin3-dot {
+.gx-spin-ring[data-accent="muted"] .gx-spin-tick {
   background: var(--muted-foreground);
 }
 
-.gx-spin3[data-size="sm"] .gx-spin3-dot {
-  width: 6px;
-  height: 6px;
-}
-
-.gx-spin3[data-size="lg"] .gx-spin3-dot {
-  width: var(--icon-size-lg);
-  height: var(--icon-size-lg);
+/* A mark inside an action takes the action's label role. */
+.gx-btn .gx-spin-tick {
+  background: currentColor;
 }
 
 /* ---- scroll area: the bounded frame ---- */
@@ -10031,7 +10020,7 @@ button.gx-rating-star:focus-visible {
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
-  width: min(460px, 100%);
+  width: min(380px, 100%);
 }
 
 .gx-scroller-card {
@@ -13564,13 +13553,13 @@ button.gx-rating-star:focus-visible {
 .gx-shell-status {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-height: var(--control-height-sm);
-  padding: 4px 8px;
-  border: 1px solid var(--input);
-  border-radius: var(--radius);
+  padding: 5px 12px;
+  border-top: 1px solid var(--border);
   background: var(--muted);
   color: var(--foreground);
+  font-family: var(--font-mono);
   font-size: 11.5px;
 }
 
@@ -13582,7 +13571,11 @@ button.gx-rating-star:focus-visible {
 }
 
 .gx-shell-status-gap {
+  display: flex;
   flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
 }
 
 .gx-shell-status-item {
@@ -14227,4 +14220,70 @@ button.gx-rating-star:focus-visible {
   font-size: 13px;
   line-height: 20px;
   color: var(--muted-foreground);
+}
+
+/* ---- shimmer: a row of strips carrying one travelling profile ---- */
+.gx-shimmer-scene {
+  gap: 18px;
+  padding: 24px;
+}
+
+.gx-shimmer-surface {
+  position: relative;
+  overflow: hidden;
+  min-height: 84px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+}
+
+.gx-shimmer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-shimmer-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.gx-shimmer-line {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-shimmer-band {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: row;
+  pointer-events: none;
+}
+
+.gx-shimmer-strip {
+  flex: 1 1 0;
+  height: 100%;
+}
+
+.gx-shimmer-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-shimmer-caption {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--placeholder);
+}
+
+.gx-shimmer-frames {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }

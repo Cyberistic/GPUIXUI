@@ -156,7 +156,8 @@ export const surfaceBudget = {
   // cross-fade frames live in one module rather than two.
   // 208 → 209 for the rebuilt ColorPicker: `color-picker/parts.tsx` joins the
   // graph, and `color/hex.ts` becomes `color-picker/logic.ts` (one for one).
-  modules: 209,
+  // 209 → 211 for Shimmer (`shimmer.tsx` and `shimmer/logic.ts`).
+  modules: 211,
 
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
@@ -232,7 +233,9 @@ export const surfaceBudget = {
   // 1 491 KiB measured with that picker **and** the same wave's chat, overlay
   // and docs fixes in one tree — the branch figures were each taken alone —
   // so the ceiling moved 1490 → 1500 KiB.
-  bytes: 1500 * 1024,
+  // 1 499.9 KiB measured with Shimmer's two modules; the ceiling moved
+  // 1500 → 1510 KiB so a prose edit does not have to bump it.
+  bytes: 1510 * 1024,
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *

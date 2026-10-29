@@ -79,6 +79,7 @@ export * from "./scroll-progress.js";
 export * from "./search-input.js";
 export * from "./separator.js";
 export * from "./shine-button.js";
+export * from "./shimmer.js";
 export * from "./sidebar.js";
 export * from "./skeleton.js";
 export * from "./slider.js";

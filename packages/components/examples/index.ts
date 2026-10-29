@@ -85,6 +85,7 @@ import { ScrollProgressExample } from "./scroll-progress.example.js";
 import { SearchInputExample } from "./search-input.example.js";
 import { SeparatorExample } from "./separator.example.js";
 import { ShineButtonExample } from "./shine-button.example.js";
+import { ShimmerExample } from "./shimmer.example.js";
 import { SidebarExample } from "./sidebar.example.js";
 import { SkeletonExample } from "./skeleton.example.js";
 import { SliderExample } from "./slider.example.js";
@@ -180,6 +181,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "search-input": SearchInputExample,
   separator: SeparatorExample,
   "shine-button": ShineButtonExample,
+  shimmer: ShimmerExample,
   sidebar: SidebarExample,
   skeleton: SkeletonExample,
   slider: SliderExample,

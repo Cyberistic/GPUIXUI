@@ -14,17 +14,19 @@ import {
   skeletonSize,
   skeletonStyle,
   SPINNER_ACCENTS,
-  SPINNER_DOTS,
+  SPINNER_ARC_TICKS,
   SPINNER_FADE_FLOOR,
+  SPINNER_RING_TICKS,
   SPINNER_SEGMENTS,
-  spinnerDotStyle,
-  spinnerDots,
+  spinnerTickStyle,
+  spinnerTicks,
   STEP_INTERVAL_MS,
 } from "./loading.js";
 import {
   PULSE_INTERVAL_MS as corePulseInterval,
-  SPINNER_DOTS as coreSpinnerDots,
+  SPINNER_ARC_TICKS as coreSpinnerArc,
   SPINNER_FADE_FLOOR as coreSpinnerFloor,
+  SPINNER_RING_TICKS as coreSpinnerTicks,
   STEP_INTERVAL_MS as coreStepInterval,
 } from "./index.js";
 import { testTheme } from "./testing/theme.fixture.js";
@@ -158,101 +160,151 @@ describe("skeletonStyle", () => {
   });
 });
 
-describe("spinnerDots", () => {
-  it("lights exactly one dot per step", () => {
-    const lit = Arr.map(Arr.range(0, 15), (step) =>
-      Arr.filter(spinnerDots(step), (dot) => dot.active),
+describe("spinnerTicks", () => {
+  const headOf = (step: number): number =>
+    Option.getOrElse(
+      Arr.findFirstIndex(spinnerTicks(step, 16), (tick) => tick.active),
+      () => -1,
     );
-    expect(Arr.every(lit, (dots) => dots.length === 1)).toBe(true);
+
+  it("lights exactly one head per step", () => {
+    const heads = Arr.map(Arr.range(0, 47), (step) =>
+      Arr.filter(spinnerTicks(step, 16), (tick) => tick.active),
+    );
+    // A ring with two heads, or none, is not an arc: the head is the one tick
+    // the eye follows around the circle.
+    expect(Arr.every(heads, (ticks) => ticks.length === 1)).toBe(true);
   });
 
-  it("advances the lit dot each step and wraps", () => {
-    const active = (step: number) =>
-      Option.getOrElse(
-        Arr.findFirstIndex(spinnerDots(step), (dot) => dot.active),
-        () => -1,
-      );
-    expect(active(0)).not.toBe(active(1));
-    expect(active(3)).toBe(active(0));
+  it("advances the head one tick per step and wraps at the ring's length", () => {
+    expect(headOf(0)).toBe(0);
+    expect(headOf(1)).toBe(1);
+    expect(headOf(SPINNER_RING_TICKS)).toBe(0);
+    // The bug guarded: a period taken from the indeterminate bar's eight
+    // segments stepped the three-dot row backwards at the cycle edge.
+    for (const step of Arr.range(0, SPINNER_RING_TICKS - 1)) {
+      expect((headOf(step) + 1) % SPINNER_RING_TICKS).toBe(headOf(step + 1));
+    }
   });
 
-  it("fades the trail to its floor and lights one dot per step of a turn", () => {
-    // The bug guarded: the fade divided the trail's distance by the *bar's*
-    // eight segments, so with three dots the dimmest trail dot was 0.75 and the
-    // documented 0.2 floor was unreachable. The period was eight steps too, so
-    // the eighth frame stepped the lit dot backwards (1 -> 0). The fade now
-    // spans the row and a turn is the row's own length.
-    expect(SPINNER_FADE_FLOOR).toBe(0.2);
-    const opacities = Arr.map(spinnerDots(0), (dot) => dot.opacity);
-    expect(Math.min(...opacities)).toBe(SPINNER_FADE_FLOOR);
-    // Lit, the dot ahead (the fade's far end), then the one just behind it.
-    expect(opacities).toStrictEqual([1, 0.2, 0.5]);
-    const lit = Arr.map(Arr.range(0, SPINNER_DOTS - 1), (step) =>
-      Option.getOrElse(
-        Arr.findFirstIndex(spinnerDots(step), (dot) => dot.active),
-        () => -1,
+  it("fades the arc behind the head and leaves the rest of the ring empty", () => {
+    const ticks = spinnerTicks(0, 16);
+    const head = ticks[0];
+    const tailEnd = ticks[SPINNER_ARC_TICKS - 1];
+    // The gap sits immediately clockwise of the head, where the tail has
+    // already run out.
+    const gap = ticks[1];
+
+    expect(head?.opacity).toBe(1);
+    expect(tailEnd?.opacity).toBe(SPINNER_FADE_FLOOR);
+    expect(gap?.opacity).toBe(0);
+    // The arc wraps behind the head, so the lit ticks are contiguous and the
+    // gap is one run — a ring with scattered lit ticks reads as dotted, not as
+    // an arc.
+    expect(Arr.filter(ticks, (tick) => tick.opacity > 0)).toHaveLength(
+      SPINNER_ARC_TICKS,
+    );
+    expect(
+      Arr.every(
+        Arr.range(1, SPINNER_RING_TICKS - SPINNER_ARC_TICKS),
+        (index) => ticks[index]?.opacity === 0,
       ),
-    );
-    expect(lit).toStrictEqual([0, 1, 2]);
+    ).toBe(true);
   });
 
-  it("keeps every dot visible and the active one fully opaque", () => {
-    const dots = spinnerDots(4);
-    expect(Arr.every(dots, (dot) => dot.opacity >= 0.2)).toBe(true);
-    const active = Option.getOrElse(
-      Arr.findFirst(dots, (dot) => dot.active),
-      () => ({ opacity: -1, active: false }),
-    );
-    expect(active.opacity).toBe(1);
+  it("places every tick inside the ring, on its circle", () => {
+    const size = 24;
+    const ticks = spinnerTicks(3, size);
+    const radius = (size - (ticks[0]?.side ?? 0)) / 2;
+
+    expect(ticks).toHaveLength(SPINNER_RING_TICKS);
+    for (const tick of ticks) {
+      const centreX = tick.x + tick.side / 2;
+      const centreY = tick.y + tick.side / 2;
+      expect(centreX - size / 2).toBeCloseTo(
+        radius *
+          Math.cos(
+            -Math.PI / 2 + (tick.index / SPINNER_RING_TICKS) * Math.PI * 2,
+          ),
+        6,
+      );
+      expect(centreY - size / 2).toBeCloseTo(
+        radius *
+          Math.sin(
+            -Math.PI / 2 + (tick.index / SPINNER_RING_TICKS) * Math.PI * 2,
+          ),
+        6,
+      );
+      // A tick that paints outside the ring's box is clipped by a parent and
+      // the arc loses a piece.
+      expect(tick.x).toBeGreaterThanOrEqual(0);
+      expect(tick.y).toBeGreaterThanOrEqual(0);
+      expect(tick.x + tick.side).toBeLessThanOrEqual(size);
+      expect(tick.y + tick.side).toBeLessThanOrEqual(size);
+    }
   });
 
-  it("paints the accent on every dot and fades the trail with opacity", () => {
-    // A trail painted in the muted role put a grey dot on a filled control,
-    // where only that fill's on-colour is legible; the accent is the dot, and
+  it("keeps a usable ring for a size it cannot paint", () => {
+    for (const size of [0, -4, Number.NaN]) {
+      const ticks = spinnerTicks(0, size);
+      expect(ticks).toHaveLength(SPINNER_RING_TICKS);
+      expect(Arr.every(ticks, (tick) => tick.side > 0)).toBe(true);
+      expect(Arr.every(ticks, (tick) => Number.isFinite(tick.x))).toBe(true);
+    }
+  });
+
+  it("paints the accent on every tick and fades the tail with opacity", () => {
+    // A trail painted in the muted role put a grey tick on a filled control,
+    // where only that fill's on-colour is legible; the accent is the tick, and
     // the step is the opacity.
-    const dots = spinnerDots(0);
-    const lit = Arr.filter(dots, (dot) => dot.active);
-    const rest = Arr.filter(dots, (dot) => !dot.active);
-    const spec = { size: 6, accent: "on-primary" } as const;
-    const paint = Arr.map(dots, (dot) => spinnerDotStyle(spec, dot, testTheme));
+    const ticks = spinnerTicks(0, 12);
+    const spec = { size: 12, accent: "on-primary" } as const;
+    const paint = Arr.map(ticks, (tick) =>
+      spinnerTickStyle(spec, tick, testTheme),
+    );
 
     expect(
       Arr.every(
         paint,
-        (s) => s.backgroundColor === testTheme.colors.primaryForeground,
+        (tick) => tick.backgroundColor === testTheme.colors.primaryForeground,
       ),
     ).toBe(true);
-    expect(Arr.every(lit, (dot) => dot.opacity === 1)).toBe(true);
-    expect(Arr.every(rest, (dot) => dot.opacity < 1)).toBe(true);
+    expect(
+      Arr.every(
+        paint,
+        (tick) =>
+          tick.position === "absolute" &&
+          tick.width === ticks[0]?.side &&
+          tick.borderRadius === testTheme.radius.full,
+      ),
+    ).toBe(true);
   });
 
   it("resolves a fill's on-colour for every filled accent", () => {
-    const dot = { active: true, opacity: 1 };
+    const tick = spinnerTicks(0, 12)[0];
+    if (tick === undefined) throw new Error("the ring drew no tick");
     const colourOf = (accent: (typeof SPINNER_ACCENTS)[number]): unknown =>
-      spinnerDotStyle({ size: 6, accent }, dot, testTheme).backgroundColor;
+      spinnerTickStyle({ size: 12, accent }, tick, testTheme).backgroundColor;
 
     expect(colourOf("on-primary")).toBe(testTheme.colors.primaryForeground);
     expect(colourOf("on-secondary")).toBe(testTheme.colors.secondaryForeground);
     expect(colourOf("on-destructive")).toBe(
       testTheme.colors.destructiveForeground,
     );
-    // A pressed toggle's face is the accent role, so its spinner paints the
-    // accent's own on-colour rather than the brand fill behind it.
     expect(colourOf("on-accent")).toBe(testTheme.colors.accentForeground);
-    // A disabled filled action paints the neutral pair, so its spinner reads
-    // on that fill rather than on the action's own.
     expect(colourOf("on-disabled")).toBe(testTheme.colors.disabledForeground);
     expect(colourOf("muted")).toBe(testTheme.colors.mutedForeground);
   });
 });
 
 describe("the spinner's own numbers", () => {
-  it("publishes the row length and the fade floor from the core entry", () => {
-    // The inventory row and the page name both numbers, so a consumer reading
-    // them must be able to import them: a constant the package exports from its
-    // source file but not from its public core entry is a name that resolves in
-    // the repo and not in a consumer's program.
-    expect(coreSpinnerDots).toBe(SPINNER_DOTS);
+  it("publishes the ring's resolution and the fade floor from the core entry", () => {
+    // The page names both numbers, so a consumer reading them must be able to
+    // import them: a constant the package exports from its source file but not
+    // from its public core entry is a name that resolves in the repo and not in
+    // a consumer's program.
+    expect(coreSpinnerTicks).toBe(SPINNER_RING_TICKS);
+    expect(coreSpinnerArc).toBe(SPINNER_ARC_TICKS);
     expect(coreSpinnerFloor).toBe(SPINNER_FADE_FLOOR);
   });
 });
@@ -366,7 +418,7 @@ describe("the loading indicators' cadence", () => {
     // and the pages may only say what the movement *is*.
     const page = (name: string): string =>
       readFileSync(new URL(`../../docs/${name}`, import.meta.url), "utf8");
-    expect(page("spinner.mdx")).toContain("discrete lit-dot step");
+    expect(page("spinner.mdx")).toContain("discrete lit-arc step");
     expect(page("progress.mdx")).toContain("discrete step");
   });
 });

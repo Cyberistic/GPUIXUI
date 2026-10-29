@@ -283,14 +283,18 @@ export const SEARCH_INPUT_CLEAR =
 /** `tag-input.tsx` — the token group. The min-height and field height keep
  * density (ADR 0006). */
 export const TAG_INPUT_ROOT =
-  "flex flex-row flex-wrap items-center gap-1 px-1.5 py-0.5 bg-background rounded-md border border-input";
+  "flex flex-row flex-wrap items-center gap-1.5 px-2 py-1.5 bg-background rounded-md border border-input";
 export const TAG_INPUT_FIELD =
   "text-sm font-sans flex-grow min-w-20 text-input-foreground";
 export const TAG_INPUT_CHIP =
-  "flex flex-row items-center gap-1 px-1.5 py-0.5 bg-muted rounded-sm";
-export const TAG_INPUT_CHIP_TEXT = "text-xs font-sans text-muted-foreground";
+  "flex flex-row items-center gap-1 py-0 pl-2 pr-0.5 bg-secondary rounded-sm";
+export const TAG_INPUT_CHIP_TEXT =
+  "text-xs font-sans text-secondary-foreground";
 export const TAG_INPUT_CHIP_REMOVE =
-  "text-xs font-sans flex items-center justify-center size-4 rounded-sm text-muted-foreground";
+  "text-xs font-sans flex items-center justify-center rounded-sm text-muted-foreground";
+export const TAG_INPUT_HINT =
+  "text-xs font-sans text-muted-foreground select-none";
+export const TAG_INPUT_CAPTION = "text-xs font-sans text-muted-foreground";
 
 /** `timeline.tsx` — the event rail. The dot fill and the last item's padding
  * stay in `style`; the connector is a 1px element (`w-px`). */

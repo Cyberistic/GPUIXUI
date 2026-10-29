@@ -11,6 +11,7 @@
     "./typeahead": "./src/typeahead.ts",
     "./validation/logic": "./src/validation/logic.ts",
     "./countdown/logic": "./src/countdown/logic.ts",
+    "./shimmer/logic": "./src/shimmer/logic.ts",
     "./*": "./src/*.tsx"
   },
   "scripts": {
