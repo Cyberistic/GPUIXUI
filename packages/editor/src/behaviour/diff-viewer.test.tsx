@@ -1,15 +1,17 @@
 /**
  * DiffViewer behaviour, in the real GPUix renderer.
  *
- * The bug these guard: split mode stacked a removed line and its replacement on
+ * The bugs these guard: split mode stacked a removed line and its replacement on
  * two rows — the removed line above a blank right half, then a blank left half
  * above the added line — although a side-by-side diff exists to put them on one
- * row. The logic suite pins the pairing; these cases read it back off the
- * painted tree, so the component cannot stop using it.
+ * row; its cells sized themselves by content, so the two columns were unequal
+ * and the right one was clipped; and the two views used different row heights,
+ * so switching modes moved every row. The logic suite pins the pairing; these
+ * cases read it back off the painted tree, so the component cannot stop using it.
  */
 
 import { createTestRoot } from "@gpuix/react/testing";
-import { darkTheme } from "@gpuixui/tokens";
+import { darkTheme, textStyle } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it } from "vitest";
@@ -69,15 +71,89 @@ describe("DiffViewer in split mode", () => {
     );
     // The change is one row: the old line on the left, the new one on the
     // right, each beside its own line number.
-    expect(rowText(root, "diff-viewer-row-1")).toEqual([
-      "2",
-      "beta",
-      "2",
-      "BETA",
-    ]);
+    expect(rowText(root, "diff-viewer-row-1-before")).toEqual(["2", "beta"]);
+    expect(rowText(root, "diff-viewer-row-1-after")).toEqual(["2", "BETA"]);
     // Three rows, not four: the removal and the addition are not stacked, so
     // the trailing context row sits at index 2 and nothing follows it.
-    expect(root.renderer.findByTestId("diff-viewer-row-3")).toBeUndefined();
+    expect(
+      root.renderer.findByTestId("diff-viewer-row-3-before"),
+    ).toBeUndefined();
+  });
+
+  it("gives the two columns equal widths and a visible divider", () => {
+    // The bug guarded: each cell asked for an equal share but sized itself by
+    // its line first, so a long left line pushed the right column past the
+    // sheet's edge and its code was clipped, with no divider between them.
+    const root = render(
+      <DiffViewer
+        before={"a very long removed line that would push its column wide"}
+        after={"short"}
+        mode="split"
+      />,
+    );
+    const before = root.renderer.findByTestId("diff-viewer-before");
+    const after = root.renderer.findByTestId("diff-viewer-after");
+    expect(before?.style.flexBasis).toBe(0);
+    expect(after?.style.flexBasis).toBe(0);
+    expect(before?.style.flexGrow).toBe(1);
+    expect(after?.style.flexGrow).toBe(1);
+    expect(before?.style.minWidth).toBe(0);
+    expect(after?.style.minWidth).toBe(0);
+    expect(before?.style.overflowX).toBe("scroll");
+    expect(after?.style.overflowX).toBe("scroll");
+    const divider = root.renderer.findByTestId("diff-viewer-divider");
+    expect(divider?.style.width).toBe(darkTheme.borderWidth.thin);
+    expect(divider?.style.backgroundColor).toBe(darkTheme.colors.border);
+  });
+
+  it("holds both sides of a row on one height, and both views on that height", () => {
+    // The bug guarded: unified rows were code height while split rows sized to
+    // their content, so switching modes moved every row below the change.
+    const root = render(
+      <DiffViewer
+        before={"alpha\nbeta\ngamma"}
+        after={"alpha\nBETA\ngamma"}
+        mode="split"
+      />,
+    );
+    const lineHeight = textStyle(darkTheme, "codeBlock").lineHeight;
+    const left = root.renderer.findByTestId("diff-viewer-row-1-before");
+    const right = root.renderer.findByTestId("diff-viewer-row-1-after");
+    expect(left?.style.height).toBe(lineHeight);
+    expect(right?.style.height).toBe(lineHeight);
+    root.unmount();
+
+    const merged = render(
+      <DiffViewer before={"alpha\nbeta\ngamma"} after={"alpha\nBETA\ngamma"} />,
+    );
+    expect(
+      merged.renderer.findByTestId("diff-viewer-row-1")?.style.height,
+    ).toBe(lineHeight);
+  });
+
+  it("paints a hunk heading once across both columns", () => {
+    const before = Array.from({ length: 12 }, (_, index) =>
+      String(index + 1).padStart(2, "0"),
+    );
+    const after = before.map((line) =>
+      line === "02" ? "02 changed" : line === "11" ? "11 changed" : line,
+    );
+    const root = render(
+      <DiffViewer
+        before={before.join("\n")}
+        after={after.join("\n")}
+        mode="split"
+        contextLines={1}
+      />,
+    );
+    // The heading is a row of its own, so it is painted once; the side rows
+    // below it line up because the heading is outside the two columns.
+    expect(rowText(root, "diff-viewer-hunk-0")).toEqual(["@@ -1,3 +1,3 @@"]);
+    expect(rowText(root, "diff-viewer-row-1-before")).toEqual(["2", "02"]);
+    expect(rowText(root, "diff-viewer-row-1-after")).toEqual([
+      "2",
+      "02 changed",
+    ]);
   });
 
   it("names the surface when the stored label is blank", () => {
@@ -133,8 +209,10 @@ describe("DiffViewer in split mode", () => {
         lineNumbers={false}
       />,
     );
-    expect(rowText(root, "diff-viewer-row-1")).toEqual(["beta"]);
-    expect(root.renderer.findByTestId("diff-viewer-row-2")).toBeUndefined();
+    expect(rowText(root, "diff-viewer-row-1-after")).toEqual(["beta"]);
+    expect(
+      root.renderer.findByTestId("diff-viewer-row-2-after"),
+    ).toBeUndefined();
   });
 
   it("paints the default layout for a stored mode name it does not declare", () => {
