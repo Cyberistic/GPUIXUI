@@ -1278,9 +1278,10 @@
   }
 }
 
-/* The sides demo: one trigger, four requested sides, a stage with room for all
-   of them. The collision demo pins its trigger to the frame's right edge. */
-.gx-popover-sides {
+/* The alignment and sides demos: one trigger, a control row above the stage.
+   The collision demo pins its trigger to the frame's right edge. */
+.gx-popover-sides,
+.gx-popover-aligned {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
@@ -1288,18 +1289,14 @@
   min-height: 0;
 }
 
-.gx-popover-sides-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .gx-popover-stage {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
+  /* Tall enough for the 149px panel a bottom side paints under a centred
+     trigger, with the collision margin above and below it. */
+  min-height: 380px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;

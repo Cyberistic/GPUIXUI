@@ -24376,3 +24376,27 @@ reaction marks the message, not a speaker), measured on the live page at a 12px
 right inset with the pill crossing the surface's edge. `bubble.test.tsx`'s case
 now measures the corner for both aligns and fails on the old per-side inset (7
 cases failed when inverted).
+
+## Popover alignment (2026-10-29)
+
+`[x]` `[██████████]` 1/1 — **a popover is centred on its trigger by default,
+and the page's top drawing switches all three alignments.** `PopoverContent`'s
+`align` defaulted to `"start"`, so the page's `Columns` trigger sat on its
+panel's left corner; shadcn centres a popover, so the default is `"center"`
+now (and `popoverAlign` reads a stored name the union does not carry as that
+same default, before the shared placement rule's house `start`). The drawing's
+left/centre/right control is the library's `.gx-tgroup` above the stage, and
+`popover-alignment.ts` places the panel with the component's rule — `start`
+shares left edges, `center` centre lines, `end` right edges — then clamps it by
+the collision margin, so a shifted panel keeps its request instead of becoming
+another alignment. Measured in Chrome at 1440×900 dark: panel 240×149, trigger
+74×28, stage 600×380; start `x 683 = trigger x 683`, centre `600 + 120 = 720 =
+683 + 37`, end `757 = 757`, every box inside the stage; the collision panel
+reads `x 352 · pulled back 150 · 8px` (7px on screen after the 1px frame
+border) with its right edge on the margin, not on the trigger's. Proof:
+`src/behaviour/popover.test.tsx` gains the default-centre case and a case per
+alignment, `internal/placement.test.ts` keeps the house guard, and
+`apps/docs/.../popover-alignment.test.tsx` (5 cases) holds the three relations,
+the drawn `left`, the control's place above the stage and the collision clamp;
+the stored-value page guard now reads the popover's own `popoverAlign`. Inverted
+directions recorded in the branch's report.

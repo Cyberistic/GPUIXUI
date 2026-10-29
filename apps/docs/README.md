@@ -171,7 +171,8 @@ src/components/docs/time-picker-demo.tsx  The time picker's two browser renderin
 src/components/docs/drawer-preview.ts     The drawer preview's edges, dismiss stack and filter rules
 src/components/docs/sheet-drawer-preview.tsx The sheet and drawer drawings, opened on the surface
 src/components/docs/popover-preview.ts    The popover preview's side gap, snap margin and pull-back
-src/components/docs/popover-sides.tsx     The popover's four sides and its collision pull-back
+src/components/docs/popover-alignment.ts  The popover preview's three alignments and their stage clamp
+src/components/docs/popover-sides.tsx     The popover's four sides, three alignments and collision pull-back
 src/components/docs/sidebar-demo.tsx      The sidebar and account-menu drawings and their source strings
 src/components/docs/list-preview.ts       The list preview's arrow order, type-ahead and selection rules
 src/components/docs/list-demo.tsx         The list's two browser renderings and their source strings

@@ -28,6 +28,7 @@ import {
 } from "./files-property-panel-demo";
 import { ToolbarDemo, toolbarDemoSource } from "./toolbar-demo";
 import {
+  PopoverAligned,
   PopoverCollision,
   PopoverSides,
   popoverCollisionSource,
@@ -678,58 +679,6 @@ const DialogDemo = () => {
           </div>
         </div>
       ) : null}
-    </div>
-  );
-};
-
-const PopoverDemo = () => {
-  // The popover is inline, so its open state is the honest resting preview:
-  // the panel and the trigger are both on screen at first paint.
-  const interactive = usePreviewInteractive();
-  const [open, setOpen] = useState(true);
-  const anchor = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open || !interactive) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    const onPress = (event: MouseEvent) => {
-      if (!anchor.current?.contains(event.target as Node)) setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("mousedown", onPress);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("mousedown", onPress);
-    };
-  }, [open, interactive]);
-
-  return (
-    <div className="gx-demo-popover">
-      <div className="gx-popover-anchor" ref={anchor}>
-        <button
-          aria-expanded={open}
-          className="gx-btn gx-btn-secondary"
-          onClick={() => setOpen(!open)}
-          type="button"
-        >
-          Columns
-        </button>
-        {open ? (
-          <div className="gx-popover" role="dialog">
-            <p className="gx-popover-title">Visible columns</p>
-            <p className="gx-popover-body">
-              Choose which fields a run summary shows. The setting is per
-              project.
-            </p>
-            <div className="gx-popover-meta">
-              <span>3 of 7 shown</span>
-              <b>Saved</b>
-            </div>
-          </div>
-        ) : null}
-      </div>
     </div>
   );
 };
@@ -1434,7 +1383,7 @@ const popoverSource = `import {
 
 <Popover>
   <PopoverTrigger variant="secondary">Columns</PopoverTrigger>
-  <PopoverContent side="bottom" align="start" sideOffset={6}>
+  <PopoverContent side="bottom" align="center" sideOffset={6}>
     <text role="heading" aria-level={3}>
       Visible columns
     </text>
@@ -3337,7 +3286,7 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: PaginationWorkflow,
     source: paginationWorkflowSource,
   },
-  "popover-demo": { render: PopoverDemo, source: popoverSource },
+  "popover-demo": { render: PopoverAligned, source: popoverSource },
   "popover-sides": { render: PopoverSides, source: popoverSidesSource },
   "popover-collision": {
     render: PopoverCollision,
