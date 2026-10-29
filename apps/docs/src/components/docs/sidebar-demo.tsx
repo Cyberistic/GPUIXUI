@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { BlockIcon, type BlockIconName } from "./block-icons";
 
 /**
  * Browser previews for the Sidebar and User menu pages.
@@ -24,9 +25,9 @@ const page: CSSProperties = {
 };
 
 const panel = (collapsed: boolean): CSSProperties => ({
-  background: "var(--sidebar)",
-  borderRight: "1px solid var(--sidebar-border)",
-  color: "var(--sidebar-foreground)",
+  background: "var(--card)",
+  borderRight: "1px solid var(--border)",
+  color: "var(--card-foreground)",
   display: "flex",
   flexDirection: "column",
   flexShrink: 0,
@@ -38,11 +39,9 @@ const panel = (collapsed: boolean): CSSProperties => ({
 
 const row = (active: boolean, collapsed: boolean): CSSProperties => ({
   alignItems: "center",
-  background: active ? "var(--sidebar-accent)" : "transparent",
+  background: active ? "var(--accent)" : "transparent",
   borderRadius: 6,
-  color: active
-    ? "var(--sidebar-accent-foreground)"
-    : "var(--sidebar-foreground)",
+  color: active ? "var(--accent-foreground)" : "var(--card-foreground)",
   display: "flex",
   fontSize: FONT,
   fontWeight: active ? 600 : 400,
@@ -110,71 +109,60 @@ const note: CSSProperties = {
   textAlign: "center",
 };
 
+/**
+ * The account menu's entries, in the order shadcn paints them.
+ *
+ * A group is the run of rows between two hairlines: `Upgrade to Pro` stands
+ * alone above the account rows, and `Log out` stands alone below them.
+ */
+const MENU_GROUPS: ReadonlyArray<
+  ReadonlyArray<{
+    readonly label: string;
+    readonly icon: BlockIconName;
+    readonly tone?: "destructive";
+  }>
+> = [
+  [{ label: "Upgrade to Pro", icon: "sparkles" }],
+  [
+    { label: "Account", icon: "badgeCheck" },
+    { label: "Billing", icon: "card" },
+    { label: "Notifications", icon: "bell" },
+  ],
+  [{ label: "Log out", icon: "logout", tone: "destructive" }],
+];
+
 /** The identity row and its dropdown, shared by both previews. */
 const AccountMenu = ({
   collapsed,
   onAction,
+  defaultOpen = false,
 }: {
   readonly collapsed: boolean;
   readonly onAction: (action: string) => void;
+  /** Open on the first paint, so a menu's own page lands on the menu. */
+  readonly defaultOpen?: boolean;
 }) => {
-  const [open, setOpen] = useState(false);
-  const entries = ["Upgrade to Pro", "Account", "Billing", "Notifications"];
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ position: "relative" }}>
+    <div className="gx-user">
       <button
         aria-expanded={open}
+        aria-haspopup="menu"
         aria-label="Benji van der Brand account menu"
+        className="gx-user-trigger"
+        data-collapsed={collapsed ? "" : undefined}
+        data-open={open ? "" : undefined}
         onClick={() => setOpen((value) => !value)}
-        style={{
-          alignItems: "center",
-          background: "transparent",
-          border: "none",
-          borderRadius: 6,
-          color: "inherit",
-          cursor: "pointer",
-          display: "flex",
-          font: "inherit",
-          gap: 8,
-          justifyContent: collapsed ? "center" : "flex-start",
-          padding: 4,
-          width: "100%",
-        }}
         type="button"
       >
-        <span
-          aria-hidden="true"
-          style={{
-            alignItems: "center",
-            background: "var(--muted)",
-            borderRadius: 999,
-            color: "var(--foreground)",
-            display: "flex",
-            fontSize: 11,
-            height: 24,
-            justifyContent: "center",
-            width: 24,
-          }}
-        >
+        <span aria-hidden="true" className="gx-user-disc">
           B
         </span>
         {collapsed ? null : (
           <>
-            <span
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                flexGrow: 1,
-                lineHeight: 1.3,
-                textAlign: "left",
-              }}
-            >
-              <span style={{ fontSize: 12, fontWeight: 600 }}>
-                Benji van der Brand
-              </span>
-              <span style={{ color: "var(--muted-foreground)", fontSize: 11 }}>
-                benji@example.com
-              </span>
+            <span className="gx-user-identity">
+              <span className="gx-user-name">Benji van der Brand</span>
+              <span className="gx-user-mail">benji@example.com</span>
             </span>
             {MARK.updown}
           </>
@@ -182,72 +170,39 @@ const AccountMenu = ({
       </button>
       {open ? (
         <div
-          style={{
-            background: "var(--popover)",
-            border: "1px solid var(--border)",
-            borderRadius: 10,
-            bottom: collapsed ? 40 : 44,
-            boxShadow: "0 12px 28px rgb(0 0 0 / 0.18)",
-            color: "var(--popover-foreground)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            left: collapsed ? 40 : 0,
-            minWidth: 208,
-            padding: 6,
-            position: "absolute",
-            zIndex: 2,
-          }}
+          aria-label="Benji van der Brand account"
+          className="gx-user-menu"
+          role="menu"
         >
-          <span style={{ fontSize: 11, padding: "4px 8px" }}>
-            Benji van der Brand
-          </span>
-          {entries.map((entry) => (
-            <button
-              key={entry}
-              onClick={() => {
-                setOpen(false);
-                onAction(entry);
-              }}
-              style={{
-                background: "transparent",
-                border: "none",
-                borderRadius: 6,
-                color: "inherit",
-                cursor: "pointer",
-                font: "inherit",
-                fontSize: 12,
-                padding: "6px 8px",
-                textAlign: "left",
-              }}
-              type="button"
-            >
-              {entry}
-            </button>
+          <div className="gx-user-head">
+            <span aria-hidden="true" className="gx-user-disc">
+              B
+            </span>
+            <span className="gx-user-identity">
+              <span className="gx-user-name">Benji van der Brand</span>
+              <span className="gx-user-mail">benji@example.com</span>
+            </span>
+          </div>
+          {MENU_GROUPS.map((group, index) => (
+            <div className="gx-user-group" key={index}>
+              {group.map((entry) => (
+                <button
+                  key={entry.label}
+                  className="gx-user-item"
+                  data-tone={entry.tone}
+                  onClick={() => {
+                    setOpen(false);
+                    onAction(entry.label);
+                  }}
+                  role="menuitem"
+                  type="button"
+                >
+                  <BlockIcon name={entry.icon} size={15} />
+                  {entry.label}
+                </button>
+              ))}
+            </div>
           ))}
-          <span
-            style={{ background: "var(--border)", height: 1, margin: "4px 0" }}
-          />
-          <button
-            onClick={() => {
-              setOpen(false);
-              onAction("Log out");
-            }}
-            style={{
-              background: "transparent",
-              border: "none",
-              borderRadius: 6,
-              color: "var(--destructive)",
-              cursor: "pointer",
-              font: "inherit",
-              fontSize: 12,
-              padding: "6px 8px",
-              textAlign: "left",
-            }}
-            type="button"
-          >
-            Log out
-          </button>
         </div>
       ) : null}
     </div>
@@ -352,21 +307,30 @@ export const UserMenuDemo = () => {
       style={{
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
+        alignItems: "stretch",
         gap: 12,
+        width: "100%",
+        maxWidth: 320,
       }}
     >
+      {/* The footer sits at the bottom of a panel with room above it: a footer
+          menu opens upward, so the preview has to give the surface the height
+          it needs or the frame cuts it off. */}
       <div
         style={{
-          background: "var(--sidebar)",
-          border: "1px solid var(--sidebar-border)",
+          background: "var(--card)",
+          border: "1px solid var(--border)",
           borderRadius: 10,
-          color: "var(--sidebar-foreground)",
-          minWidth: 240,
+          color: "var(--card-foreground)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          minHeight: 300,
           padding: 8,
+          position: "relative",
         }}
       >
-        <AccountMenu collapsed={false} onAction={setLast} />
+        <AccountMenu collapsed={false} defaultOpen onAction={setLast} />
       </div>
       <p style={{ ...note, marginTop: 0 }}>Last action: {last}.</p>
     </div>

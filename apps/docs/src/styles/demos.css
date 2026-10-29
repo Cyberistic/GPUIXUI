@@ -14676,3 +14676,173 @@ button.gx-rating-star:focus-visible {
   line-height: 20px;
   color: var(--muted-foreground);
 }
+
+/* ---- user menu ------------------------------------------------------------
+   The account row shadcn puts in a sidebar footer, and the menu it opens. Every
+   surface is the component's: the trigger is a ghost row (the sidebar's own
+   hover wash, the avatar disc, the name over the address and the disclosure
+   mark), and the menu is the popover recipe — `--popover`, the `--border` edge,
+   the theme's radius and elevation.
+
+   The menu opens **upward** from the footer, which is what a footer menu does,
+   and the preview's stage is tall enough that it lands whole: the surface must
+   never be clipped by the frame that holds the trigger. */
+.gx-user {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.gx-user-trigger {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.gx-user-trigger:hover,
+.gx-user-trigger[data-open] {
+  background: var(--accent);
+}
+
+.gx-user-trigger[data-collapsed] {
+  justify-content: center;
+}
+
+.gx-user-trigger:focus-visible,
+.gx-user-item:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -1px;
+}
+
+.gx-user-disc {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 9999px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.gx-user-identity {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.gx-user-name,
+.gx-user-mail {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-user-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gx-user-mail {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+/* The menu: the popover surface, anchored above the trigger it belongs to. */
+.gx-user-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 224px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: var(--elevation-lg);
+}
+
+.gx-user-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+}
+
+/* A hairline between two groups, drawn as the group's own top edge. */
+.gx-user-group + .gx-user-group {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.gx-user-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.gx-user-item:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-user-item[data-tone="destructive"] {
+  color: var(--destructive);
+}
+
+.gx-user-item[data-tone="destructive"]:hover {
+  background: var(--accent);
+  color: var(--destructive);
+}
+
+/* The icon column is one width, so every label starts at the same x. */
+.gx-user-item .gx-block-glyph {
+  width: 15px;
+  flex: none;
+  color: var(--muted-foreground);
+}
+
+.gx-user-item[data-tone="destructive"] .gx-block-glyph {
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-user-trigger,
+  .gx-user-item {
+    transition: none;
+  }
+}

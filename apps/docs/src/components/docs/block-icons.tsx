@@ -11,6 +11,8 @@ import type { ReactNode } from "react";
 export type BlockIconName =
   | "alert"
   | "archive"
+  | "bell"
+  | "card"
   | "chart"
   | "chevronDown"
   | "chevronLeft"
@@ -40,6 +42,9 @@ export type BlockIconName =
   | "search"
   | "send"
   | "snooze"
+  | "sparkles"
+  | "badgeCheck"
+  | "logout"
   | "star"
   | "trash"
   | "zap";
@@ -56,6 +61,18 @@ const GLYPHS: Readonly<Record<BlockIconName, ReactNode>> = {
       <rect height="4" rx="1" width="18" x="3" y="4" />
       <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
       <path d="M10 12h4" />
+    </>
+  ),
+  bell: (
+    <>
+      <path d="M18 8a6 6 0 1 0-12 0c0 6-3 7-3 7h18s-3-1-3-7" />
+      <path d="M10.3 20a3 3 0 0 0 3.4 0" />
+    </>
+  ),
+  card: (
+    <>
+      <rect height="14" rx="2" width="20" x="2" y="5" />
+      <path d="M2 10h20" />
     </>
   ),
   chart: (
@@ -212,6 +229,25 @@ const GLYPHS: Readonly<Record<BlockIconName, ReactNode>> = {
     </>
   ),
   zap: <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z" />,
+  sparkles: (
+    <>
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+      <path d="m6.4 6.4 2.8 2.8M14.8 14.8l2.8 2.8M17.6 6.4l-2.8 2.8M9.2 14.8l-2.8 2.8" />
+    </>
+  ),
+  badgeCheck: (
+    <>
+      <path d="M12 2.5 15 5l3.5-.5.5 3.5 2.5 3-2.5 3 .5 3.5L15 17l-3 2.5L9 17l-3.5.5L5 14 2.5 11 5 8l.5-3.5L9 5Z" />
+      <path d="m9 11 2 2 4-4" />
+    </>
+  ),
+  logout: (
+    <>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="m16 17 5-5-5-5" />
+      <path d="M21 12H9" />
+    </>
+  ),
 };
 
 /** One block glyph, `currentColor` at `size` pixels. */
