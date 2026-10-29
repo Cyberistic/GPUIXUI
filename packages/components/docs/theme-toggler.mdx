@@ -38,7 +38,7 @@ const [mode, setMode] = useState<"light" | "dark">("dark");
 | `lightLabel` | `string` | `"Switch to light theme"` |
 | `darkLabel` | `string` | `"Switch to dark theme"` |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` |
-| `level` | `SurfaceLevel` | `"fast"` |
+| `level` | `SurfaceLevel` | `"slow"` |
 | `className` | `string` | — |
 | `style` | `StateStyle<ThemeTogglerState>` | — |
 
@@ -46,5 +46,5 @@ const [mode, setMode] = useState<"light" | "dark">("dark");
 
 - `level` is read through `surfaceLevelOf`, so a saved `"none"` paints at rest; the table's own `motionLevelOf` would animate it.
 - The component holds no theme state.
-- One glyph, not a cross-fade — no `transform`.
+- The crescent is not bitten out of the sun's disc: the runtime has no `transform` and no clip-path, so the sun shrinks into the centre while the crescent grows out of it — the two shapes cross over instead of one morphing.
 - The glyph does not follow the hover tint.

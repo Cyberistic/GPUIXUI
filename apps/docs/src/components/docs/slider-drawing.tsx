@@ -82,12 +82,16 @@ export const SliderDrawing = ({
       onNone: () => {},
       onSome: (value) => {
         if (!pair) {
-          drag.current = { end: "end", point: value };
+          drag.current = { anchor: value };
           onChange?.([value]);
           return;
         }
-        drag.current = { end: nearestEnd(value, span), point: value };
-        const next = dragSpan(drag.current, span, value, range);
+        // Pin the end the pointer is *not* moving, then draw the span around it:
+        // the dragged end can pass its pair and keeps following the pointer.
+        drag.current = {
+          anchor: nearestEnd(value, span) === "start" ? span.end : span.start,
+        };
+        const next = dragSpan(drag.current, value, range);
         onChange?.([next.start, next.end]);
       },
     });
@@ -103,7 +107,7 @@ export const SliderDrawing = ({
           onChange?.([value]);
           return;
         }
-        const next = dragSpan(gesture, span, value, range);
+        const next = dragSpan(gesture, value, range);
         onChange?.([next.start, next.end]);
       },
     });

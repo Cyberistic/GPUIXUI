@@ -5,25 +5,31 @@
  * direction is a tie — so the pair opens around the press instead of dragging a
  * thumb that has nowhere to go. Once the ends differ, the grab is ordinary: the
  * end the reader pressed follows the pointer and the other stays pinned. That
- * rule is `spanFrom`'s and `moveSpanEnd`'s in the primitive; this module only
+ * rule is `spanFrom`'s in the primitive; this module only
  * decides which one the gesture is.
  */
 
 import {
   clampValue,
-  moveSpanEnd,
-  normalizeSpan,
   spanFrom,
   stepValue,
   valueFraction,
   type ValueRange,
   type ValueSpan,
+  normalizeSpan,
 } from "@gpuixui/primitives/core";
 
-/** The end a press grabbed, and the value it landed on. */
+/**
+ * The end a press pinned: the one the pointer is **not** moving.
+ *
+ * A drag that remembered the grabbed end clamped it onto its pair, because
+ * `moveSpanEnd` refuses to cross — the pair collapsed and the next move read the
+ * stale press point and jumped back. Holding the *other* end and drawing the span
+ * around it lets the dragged end pass, and the thumb under the pointer is simply
+ * the one that moved.
+ */
 export interface SpanDrag {
-  readonly end: "start" | "end";
-  readonly point: number;
+  readonly anchor: number;
 }
 
 /**
@@ -95,15 +101,9 @@ export const shiftSpan = (
   return { start, end: clampValue(start + width, range) };
 };
 
-/** The span a pointer at `value` draws from a grabbed pair. */
+/** The span a pointer at `value` draws from a pinned end. */
 export const dragSpan = (
   drag: SpanDrag,
-  span: ValueSpan,
   value: number,
   range: ValueRange,
-): ValueSpan => {
-  const current = normalizeSpan(span, range);
-  return current.start === current.end
-    ? spanFrom(drag.point, value, range)
-    : moveSpanEnd(current, drag.end, value, range);
-};
+): ValueSpan => spanFrom(drag.anchor, value, range);

@@ -611,7 +611,60 @@ it("keeps tracking a drag that leaves the track, and ends it on the release", as
   expect(announced(runtime, "Volume")).toBe("100");
 });
 
-it("keeps a range drag that leaves the track on the end it grabbed", async () => {
+it("keeps a crossed range drag on the thumb the pointer now holds", async () => {
+  // The bug guarded: a drag remembered the thumb its **press** grabbed and
+  // moved it with `moveSpanEnd`, which refuses to cross. Pulling the low end
+  // past the high end clamped both onto one value, and the next move read the
+  // coincident pair as a fresh span around the original press — the thumb
+  // jumped back. A crossing now continues on the far thumb: the span stays
+  // ordered, the hand keeps the pointer, and the fill stays between the ends.
+  const runtime = await mount(
+    <RangeSlider testId="r" label="Price" defaultValue={[20, 60] as const} />,
+  );
+  const box = boundsOf(runtime, "r");
+  const start = pointAt(runtime, "r", 0.25);
+  runtime.mouseDownAt(start.x, start.y);
+  expect(announced(runtime, "Price minimum")).toBe("25");
+
+  runtime.mouseMoveAt(pointAt(runtime, "r", 0.9).x, start.y, 0);
+  runtime.flush();
+  expect(announced(runtime, "Price minimum")).toBe("60");
+  expect(announced(runtime, "Price maximum")).toBe("90");
+
+  // The far thumb is the one being dragged now: it holds the focus, its
+  // painted centre is the pointer's value, and the next move still follows.
+  const focused = Option.getOrElse(runtime.focusedElement(), () =>
+    expect.fail("no thumb holds focus after the crossing"),
+  );
+  expect(String(focused.customProps?.["aria-label"] ?? "")).toBe(
+    "Price maximum",
+  );
+  const usable = box.width - 2 * INSET;
+  const centreOf = (index: number): number => {
+    const part = partsOf(runtime, "r")[index] ?? expect.fail("no such part");
+    const bounds = Option.getOrElse(runtime.boundsOfId(part.id), () =>
+      expect.fail("the part painted no box"),
+    );
+    return bounds.x + bounds.width / 2;
+  };
+  // Thumbs are the rail's second and fourth children; the pair sits at 60/90.
+  expect(centreOf(1)).toBeCloseTo(box.x + INSET + 0.6 * usable, 0);
+  expect(centreOf(3)).toBeCloseTo(box.x + INSET + 0.9 * usable, 0);
+  runtime.mouseMoveAt(pointAt(runtime, "r", 0.4).x, start.y, 0);
+  runtime.flush();
+  expect(announced(runtime, "Price minimum")).toBe("40");
+  expect(announced(runtime, "Price maximum")).toBe("60");
+  runtime.mouseUpAt(pointAt(runtime, "r", 0.4).x, start.y);
+
+  // The fill is the segment between the thumbs: 40 → 60 of the track.
+  const fill = partsOf(runtime, "r")[2] ?? expect.fail("no second fill");
+  const fillBox = Option.getOrElse(runtime.boundsOfId(fill.id), () =>
+    expect.fail("the range painted no second fill"),
+  );
+  expect(fillBox.width / usable).toBeCloseTo(0.2, 1);
+});
+
+it("keeps a range drag that leaves the track on the thumb it holds", async () => {
   const runtime = await mount(
     <RangeSlider testId="r" label="Price" defaultValue={[20, 60] as const} />,
   );
@@ -621,10 +674,10 @@ it("keeps a range drag that leaves the track on the end it grabbed", async () =>
   expect(announced(runtime, "Price minimum")).toBe("25");
   runtime.mouseMoveAt(box.x + box.width + 150, start.y, 0);
   runtime.flush();
-  // The start it grabbed followed the pointer past the track and stopped on
-  // the end it may not cross.
+  // The start crossed the end and the pointer kept its thumb: the pair is
+  // ordered and the dragged value is at the far end of the track.
   expect(announced(runtime, "Price minimum")).toBe("60");
-  expect(announced(runtime, "Price maximum")).toBe("60");
+  expect(announced(runtime, "Price maximum")).toBe("100");
   runtime.mouseUpAt(box.x + box.width + 150, start.y);
 });
 
@@ -708,7 +761,7 @@ it("focuses the thumb it moved, and an arrow moves only that end", async () => {
   expect(announced(runtime, "Price minimum")).toBe("20");
 });
 
-it("never lets the two ends cross", async () => {
+it("keeps the keyboard's two ends in order", async () => {
   const runtime = await mount(
     <RangeSlider testId="r" label="Price" defaultValue={[0, 0] as const} />,
   );

@@ -104,37 +104,60 @@ describe("the stepper", () => {
 });
 
 describe("a range drag", () => {
-  it("moves the grabbed end and pins the other", () => {
-    expect(
-      dragSpan({ end: "end", point: 80 }, { start: 20, end: 80 }, 55, RANGE),
-    ).toStrictEqual({ start: 20, end: 55 });
-    expect(
-      dragSpan({ end: "start", point: 20 }, { start: 20, end: 80 }, 64, RANGE),
-    ).toStrictEqual({ start: 64, end: 80 });
+  it("moves the end under the pointer and pins the other", () => {
+    // Pressing near the high end pins the low one at 20.
+    expect(dragSpan({ anchor: 20 }, 55, RANGE)).toStrictEqual({
+      start: 20,
+      end: 55,
+    });
+    // Pressing near the low end pins the high one at 80.
+    expect(dragSpan({ anchor: 80 }, 64, RANGE)).toStrictEqual({
+      start: 64,
+      end: 80,
+    });
   });
 
-  it("never lets the ends cross", () => {
-    expect(
-      dragSpan({ end: "start", point: 20 }, { start: 20, end: 80 }, 95, RANGE),
-    ).toStrictEqual({ start: 80, end: 80 });
-    expect(
-      dragSpan({ end: "end", point: 80 }, { start: 20, end: 80 }, 3, RANGE),
-    ).toStrictEqual({ start: 20, end: 20 });
+  it("keeps the ends ordered when one is dragged past the other", () => {
+    // The pair is ordered by construction, so there is no crossing to refuse.
+    expect(dragSpan({ anchor: 20 }, 95, RANGE)).toStrictEqual({
+      start: 20,
+      end: 95,
+    });
+    expect(dragSpan({ anchor: 80 }, 3, RANGE)).toStrictEqual({
+      start: 3,
+      end: 80,
+    });
   });
 
   it("opens a coincident pair around the press, in either direction", () => {
-    expect(
-      dragSpan({ end: "start", point: 50 }, { start: 50, end: 50 }, 70, RANGE),
-    ).toStrictEqual({ start: 50, end: 70 });
-    expect(
-      dragSpan({ end: "start", point: 50 }, { start: 50, end: 50 }, 20, RANGE),
-    ).toStrictEqual({ start: 20, end: 50 });
+    expect(dragSpan({ anchor: 50 }, 70, RANGE)).toStrictEqual({
+      start: 50,
+      end: 70,
+    });
+    expect(dragSpan({ anchor: 50 }, 20, RANGE)).toStrictEqual({
+      start: 20,
+      end: 50,
+    });
   });
 
   it("holds a press that does not move", () => {
-    expect(
-      dragSpan({ end: "start", point: 50 }, { start: 50, end: 50 }, 50, RANGE),
-    ).toStrictEqual({ start: 50, end: 50 });
+    expect(dragSpan({ anchor: 50 }, 50, RANGE)).toStrictEqual({
+      start: 50,
+      end: 50,
+    });
+  });
+
+  it("lets one end cross its pair and keeps following the pointer", () => {
+    // The bug: the drag remembered the grabbed end and ran it through
+    // `moveSpanEnd`, which refuses to cross — the pair clamped together and the
+    // next move re-read the stale press point, so the thumb jumped back. The
+    // span around a pinned anchor is ordered by construction, and the pointer's
+    // value stays the end that moved.
+    const crossing = dragSpan({ anchor: 80 }, 20, RANGE);
+    expect(crossing).toStrictEqual({ start: 20, end: 80 });
+
+    const beyond = dragSpan({ anchor: 80 }, 95, RANGE);
+    expect(beyond).toStrictEqual({ start: 80, end: 95 });
   });
 });
 

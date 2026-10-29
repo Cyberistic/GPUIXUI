@@ -156,7 +156,10 @@ export const surfaceBudget = {
   // cross-fade frames live in one module rather than two.
   // 208 → 209 for the rebuilt ColorPicker: `color-picker/parts.tsx` joins the
   // graph, and `color/hex.ts` becomes `color-picker/logic.ts` (one for one).
-  modules: 209,
+  // 209 → 210 for the classic theme-toggle geometry
+  // (`theme-toggler/glyph.ts`): the crossover's frames are a rule of their own
+  // rather than arithmetic inside the component.
+  modules: 210,
 
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB

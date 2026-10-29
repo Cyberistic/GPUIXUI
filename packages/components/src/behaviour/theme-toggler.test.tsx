@@ -4,14 +4,15 @@
  * The bugs these guard: a control whose accessible name describes the current
  * theme instead of the press (so a reader cannot tell what pressing it does); a
  * press that reports the mode it is already in, or one that reports nothing at
- * all; a glyph that swaps without the house entrance, or an entrance that
- * ignores `level="none"` and the reduced preference; and a caller's own copy
- * being ignored.
+ * all; a flip that is a hard swap rather than the sun/crescent crossover, or one
+ * that ignores `level="none"` and the reduced preference; a glyph whose size
+ * per theme moved the control's box; and a caller's own copy being ignored.
  *
- * The entrance is measured on the runtime's motion clock as geometry: the glyph
- * arrives 3 px low and settles. The fade itself is a paint value the tree does
- * not expose — the `surface-fade` live probe proves it for the seam this control
- * shares with every overlay.
+ * The crossover is measured on the runtime's motion clock as geometry: each
+ * glyph's own box grows or shrinks inside one fixed wrapper, so both stay
+ * centred and the button cannot reflow. The fade itself is a paint value the
+ * tree does not expose — the `surface-fade` live probe proves it for the seam
+ * this control shares with every overlay.
  */
 
 import { describe, expect, it } from "vitest";
@@ -31,13 +32,15 @@ import { ThemeToggler } from "../theme-toggler.js";
 const buttonName = (renderer: TestRenderer): string =>
   nodesWithRole(renderer, "button")[0]?.name ?? "";
 
-/** The glyph's offset from its centred place inside the control, in pixels. */
-const glyphOffset = (page: ReturnType<typeof renderComponent>): number => {
-  const button = requireBounds(page, "theme-toggler");
-  const glyph = requireBounds(page, "theme-toggler-glyph");
-  const centred = button.y + (button.height - glyph.height) / 2;
-  return glyph.y - centred;
-};
+/** One glyph layer's painted box. */
+const layer = (
+  page: ReturnType<typeof renderComponent>,
+  part: "sun" | "moon",
+) => requireBounds(page, `theme-toggler-${part}`);
+
+/** The centre of a painted box on the x axis. */
+const centreX = (bounds: { readonly x: number; readonly width: number }) =>
+  bounds.x + bounds.width / 2;
 
 describe("ThemeToggler", () => {
   it("names the press and paints one decorative glyph", () => {
@@ -107,7 +110,7 @@ describe("ThemeToggler", () => {
     }
   });
 
-  it("paints the glyph at rest for a stored none read through the reader", () => {
+  it("paints the rest frames for a stored none read through the reader", () => {
     // The `level` prop is a persisted choice as often as a literal; the reader
     // beside the vocabulary is what keeps a saved `"none"` still.
     const saved: unknown = "none";
@@ -120,60 +123,89 @@ describe("ThemeToggler", () => {
     );
     try {
       page.renderer.clockPause();
+      page.rerender(
+        <ThemeToggler
+          mode="light"
+          level={surfaceLevelOf(saved)}
+          onChange={() => undefined}
+        />,
+      );
       settle(page);
-      expect(glyphOffset(page)).toBeCloseTo(0, 1);
+      expect(layer(page, "sun").width).toBeLessThan(layer(page, "moon").width);
       expect(
-        page.renderer.findByTestId("theme-toggler-glyph")?.customProps?.motion,
+        page.renderer.findByTestId("theme-toggler-sun")?.customProps?.motion,
       ).toBeUndefined();
     } finally {
       page.unmount();
     }
   });
 
-  it("rises the glyph 3px into place on the fast level", () => {
+  it("keeps the control's box identical when the mode flips", () => {
+    // The layout shift this guards: a glyph that changed the control's size
+    // moved the button (and everything centred with it) on every press. Both
+    // glyphs share one fixed box, so the control cannot reflow.
     const page = renderComponent(
       <ThemeToggler mode="dark" onChange={() => undefined} />,
     );
     try {
+      const before = requireBounds(page, "theme-toggler");
       page.renderer.clockPause();
       page.rerender(<ThemeToggler mode="light" onChange={() => undefined} />);
       settle(page);
-      expect(glyphOffset(page)).toBeCloseTo(3, 1);
+      page.renderer.clockFastForward(400);
+      settle(page);
+      expect(requireBounds(page, "theme-toggler")).toStrictEqual(before);
+    } finally {
+      page.unmount();
+    }
+  });
+
+  it("crosses the sun into the crescent, both glyphs centred", () => {
+    const page = renderComponent(
+      <ThemeToggler mode="dark" onChange={() => undefined} />,
+    );
+    try {
+      const sun = layer(page, "sun");
+      const moon = layer(page, "moon");
+      // At rest: the sun owns the box, the crescent waits at 55% of it.
+      expect(sun.width).toBeGreaterThan(moon.width);
+      expect(centreX(sun)).toBeCloseTo(centreX(moon), 0);
+
+      page.renderer.clockPause();
+      page.rerender(<ThemeToggler mode="light" onChange={() => undefined} />);
+      settle(page);
+      // Half the slow level: the two are crossing, not jumping.
+      page.renderer.clockFastForward(160);
+      settle(page);
+      const crossingSun = layer(page, "sun");
+      const crossingMoon = layer(page, "moon");
+      expect(crossingSun.width).toBeLessThan(sun.width);
+      expect(crossingSun.width).toBeGreaterThan(moon.width);
+      expect(crossingMoon.width).toBeGreaterThan(moon.width);
+      expect(crossingMoon.width).toBeLessThan(sun.width);
+      expect(centreX(crossingSun)).toBeCloseTo(centreX(crossingMoon), 0);
 
       page.renderer.clockFastForward(400);
       settle(page);
-      expect(glyphOffset(page)).toBeCloseTo(0, 1);
-    } finally {
-      page.unmount();
-    }
-  });
-
-  it("paints the glyph at rest for level none", () => {
-    const page = renderComponent(
-      <ThemeToggler mode="dark" level="none" onChange={() => undefined} />,
-    );
-    try {
-      page.renderer.clockPause();
-      page.rerender(
-        <ThemeToggler mode="light" level="none" onChange={() => undefined} />,
+      expect(layer(page, "sun").width).toBeCloseTo(moon.width, 1);
+      expect(layer(page, "moon").width).toBeCloseTo(sun.width, 1);
+      expect(centreX(layer(page, "sun"))).toBeCloseTo(
+        centreX(layer(page, "moon")),
+        0,
       );
-      settle(page);
-      expect(glyphOffset(page)).toBeCloseTo(0, 1);
-      expect(
-        page.renderer.findByTestId("theme-toggler-glyph")?.customProps?.motion,
-      ).toBeUndefined();
     } finally {
       page.unmount();
     }
   });
 
-  it("paints the glyph at rest under the reduced preference", () => {
+  it("snaps the crossover under the reduced preference", () => {
     const page = renderComponent(
       <MotionProvider preference="reduced">
         <ThemeToggler mode="dark" onChange={() => undefined} />
       </MotionProvider>,
     );
     try {
+      const sun = layer(page, "sun").width;
       page.renderer.clockPause();
       page.rerender(
         <MotionProvider preference="reduced">
@@ -181,7 +213,9 @@ describe("ThemeToggler", () => {
         </MotionProvider>,
       );
       settle(page);
-      expect(glyphOffset(page)).toBeCloseTo(0, 1);
+      // No clock advance: the journey is removed, the final frame is not.
+      expect(layer(page, "moon").width).toBeCloseTo(sun, 1);
+      expect(layer(page, "sun").width).toBeLessThan(sun);
     } finally {
       page.unmount();
     }

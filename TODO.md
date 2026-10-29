@@ -57,6 +57,21 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ---
 
+## Component fixes — slider crossing and the theme toggler
+
+`[x]` `[██████████]` 3/3
+
+`[x]` Range slider: a drag that crosses the other end keeps following the
+      pointer on the thumb it now holds, the span stays ordered and the fill
+      stays between the ends (primitive + browser drawing)
+`[x]` Theme toggler: the control's box is identical in light and dark — the
+      drawing reserves its readout width so the page cannot shift
+`[x]` Theme toggler: the classic sun/crescent crossover in the component and the
+      drawing (no transform or clip-path: the leaving glyph shrinks into the
+      centre while the arriving one grows)
+
+---
+
 ## Phase A — audit and feasibility
 
 `[x]` `[██████████]` 6/6

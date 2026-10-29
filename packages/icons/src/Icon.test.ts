@@ -166,4 +166,19 @@ describe("Icon", () => {
     });
     expect(props.testId).toBe("field-search-icon");
   });
+
+  it("hands over a tween and lets the caller's style win", () => {
+    // The theme toggler grows a crescent out of the sun's box: GPUix has no
+    // transform, so the size the path scales from is the tween's own geometry.
+    const frame = { width: 8, height: 8, left: 4, top: 4, opacity: 0 };
+    const { props } = render({
+      name: "moon",
+      color: "#123456",
+      motion: { initial: false, animate: frame },
+      style: { position: "absolute" },
+    });
+    expect(props.motion?.animate).toStrictEqual(frame);
+    expect(props.style?.position).toBe("absolute");
+    expect(props.style?.width).toBe(ICON_SIZES.md);
+  });
 });

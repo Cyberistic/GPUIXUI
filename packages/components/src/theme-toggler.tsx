@@ -9,9 +9,13 @@
  * for the mode a press would switch **to** (`theme-toggler/logic.ts`), and
  * reports the requested mode through `onChange`.
  *
- * The glyph arrives with the house entrance on the `fast` level, because the
- * runtime has no `transform` (upstream issue #102): a fade plus a 3 px rise
- * rather than two glyphs scaling over each other. `MotionProvider
+ * The flip is the classic theme toggle: a sun's rays retract while a crescent
+ * grows, both on the same button. The runtime has no `transform` and no
+ * clip-path, so the disc cannot be bitten into a crescent and nothing can turn;
+ * what it does tween is geometry, so two stacked glyphs cross over — the one
+ * leaving shrinks into the centre while it fades, the one arriving grows out of
+ * it (`theme-toggler/glyph.ts`). Both are always mounted in one fixed box, so
+ * the control cannot move when the theme changes. `MotionProvider
  * preference="reduced"` and `level="none"` paint the resting glyph in the frame
  * it appears.
  */
@@ -22,14 +26,15 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
-import { Icon } from "@gpuixui/icons";
+import { Icon, iconPixels } from "@gpuixui/icons";
 import { cn } from "@gpuixui/tw";
-import { useMotionPreference } from "./internal/presence.js";
+import { motionLevelOf } from "@gpuixui/motion/timing";
+import { useMotionPreference, useMoveTiming } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { IconButton, type ButtonSize } from "./internal/button.js";
 import { useTheme } from "./internal/theme.js";
 import { surfaceLevelOf, type SurfaceLevel } from "./motion.js";
-import { Reveal } from "./reveal.js";
+import { glyphFrame, incomingDelayShare } from "./theme-toggler/glyph.js";
 import {
   toggleIcon,
   toggleLabel,
@@ -60,9 +65,10 @@ export interface ThemeTogglerProps extends Omit<
   /** The control's size. Default `"md"`. */
   readonly size?: ButtonSize;
   /**
-   * The glyph's entrance level, or `"none"` to paint it at rest. Default
-   * `"fast"` (160 ms). Read through `surfaceLevelOf`, so a level an application
-   * restored from storage can be decoded with the same reader.
+   * The flip's level, or `"none"` to paint the glyph at rest. Default
+   * `"slow"` (320 ms): the crossover moves two glyphs, so it needs the longest
+   * house level to read. Read through `surfaceLevelOf`, so a level an
+   * application restored from storage decodes with the same reader.
    */
   readonly level?: SurfaceLevel;
   /** A Tailwind class string for the control, joined last. */
@@ -84,7 +90,7 @@ export const ThemeToggler = ({
   lightLabel,
   darkLabel,
   size = "md",
-  level: storedLevel = "fast",
+  level: storedLevel = "slow",
   className,
   style,
   testId,
@@ -94,9 +100,37 @@ export const ThemeToggler = ({
   const preference = useMotionPreference();
   const level = surfaceLevelOf(storedLevel);
   const base = testId ?? "theme-toggler";
+  const flip = useMoveTiming(motionLevelOf(level));
+  // The glyph that leaves starts at once; the one arriving waits 15%, the
+  // stagger the classic toggle gives its incoming shape. A reduced run has a
+  // zero duration, so the wait is zero too.
+  const stagger = (flip.duration ?? 0) * incomingDelayShare;
+  const box = iconPixels("sm");
   const glyph = (
-    <Icon name={toggleIcon(mode)} size="sm" color={theme.colors.foreground} />
-  );
+    name: ReturnType<typeof toggleIcon>,
+    shown: boolean,
+    part: string,
+  ) => {
+    const frame = glyphFrame(box, shown);
+    return (
+      <Icon
+        name={name}
+        size="sm"
+        color={theme.colors.foreground}
+        testId={`${base}-${part}`}
+        style={{ position: "absolute", ...frame }}
+        motion={
+          level === "none"
+            ? undefined
+            : {
+                initial: false,
+                animate: frame,
+                transition: shown ? { ...flip, delay: stagger } : flip,
+              }
+        }
+      />
+    );
+  };
 
   return (
     <IconButton
@@ -113,18 +147,13 @@ export const ThemeToggler = ({
         }),
       )}
     >
-      {level === "none" ? (
-        <div testId={`${base}-glyph`}>{glyph}</div>
-      ) : (
-        <Reveal
-          testId={`${base}-glyph`}
-          from="below"
-          distance={3}
-          level={level}
-        >
-          {glyph}
-        </Reveal>
-      )}
+      <div
+        testId={`${base}-glyph`}
+        style={{ position: "relative", width: box, height: box }}
+      >
+        {glyph("sun", mode === "dark", "sun")}
+        {glyph("moon", mode === "light", "moon")}
+      </div>
     </IconButton>
   );
 };
@@ -137,7 +166,7 @@ export const themeTogglerMeta = {
   gpuixSupport: "yes",
   limitations: [
     "the control reports the mode a press requests; the application owns the theme state, its storage and the provider it re-renders with",
-    "one glyph fades and rises in rather than two cross-fading: a cross-fade needs both mounted over each other and the runtime has no transform to scale them",
+    "the crescent is not bitten out of the disc: with no transform or clip-path the sun shrinks into the centre while the crescent grows, so the two cross over rather than one shape morphing",
     "the glyph paints one role, so the control's hover wash does not tint the vector (GPUix does not inherit colour into an `<svg>`)",
   ],
   docs: "docs/theme-toggler.mdx",
