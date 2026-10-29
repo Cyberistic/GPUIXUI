@@ -285,7 +285,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     slug: "hunter-pipeline",
     title: "Hunter pipeline",
     description:
-      "A guild's licence dashboard: five readings, a seven-stage strip, the dossiers staged and the ones a missing fact blocks, over the renown a fortnight gained.",
+      "A guild's whole app window: a note strip, the vault's tree and the docket it opens on — five readings, a six-stage strip, the dossiers staged and the ones a missing fact blocks, over the renown a fortnight gained.",
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
     render: HunterPipelineRender,
     source: hunterPipelineSource,

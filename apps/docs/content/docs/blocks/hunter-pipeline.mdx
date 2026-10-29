@@ -1,11 +1,12 @@
 ---
 title: Hunter pipeline
-description: A guild's licence dashboard — five readings, a seven-stage strip, the dossiers staged and the ones a missing fact blocks, over the renown a fortnight gained.
+description: A guild's whole app window — a note strip, the vault's tree and the docket it opens on, with five readings, a six-stage strip, the dossiers staged and the ones a missing fact blocks, over the renown a fortnight gained.
 ---
 
-The dashboard a guild reads before it deploys anyone: how much renown the
-fortnight brought, which stage each dossier sits in, what is staged, what a
-missing fact holds, and the shape of the last eight nights.
+The window a guild keeps open: the vault's branches down the left, the docket
+in front, how much renown the fortnight brought, which stage each dossier sits
+in, what is staged, what a missing fact holds, and the shape of the last eight
+nights.
 
 <BlockPreview name="hunter-pipeline-01" />
 
@@ -15,17 +16,22 @@ The block composes:
 
 - `Button` from `@gpuixui/primitives` for the four view pills and the stage
   filter
-- `Card` from `@gpuixui/components/card` for the five readings, the seven
-  stage cells and the dossier rows
+- `Card` from `@gpuixui/components/card` for the five readings, the six stage
+  cells and the dossier cards
 - `Badge` from `@gpuixui/components/badge` for the bank, rank and length chips
 - `Text` from `@gpuixui/primitives` for the `caption` labels and the `h3`
   numbers
 
+The window's chrome is drawn to the reference: the title bar's six notes, the
+vault tree's branch structure and its one current row, and the breadcrumb. The
+rail rows are the block's own — a tree row is a disclosure and an icon on one
+line, not a `Button`.
+
 The chart is drawn, not shipped: the runtime has no chart host, so the block
-paints two polylines over the same night list the readout reads.
+paints two polylines over the same night list the axis labels pick.
 
 ## What a reader can change
 
 - **The stage filter** narrows the strip to the open stages or to the verified
   one; `all` keeps every stage.
-- **A day on the chart** picks the night the readout prints.
+- **A day on the chart** picks the night whose two figures the plot labels.
