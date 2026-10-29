@@ -99,15 +99,27 @@ const EdgePopover = () => (
   </div>
 );
 
-/** A trigger near the window centre, where a centred panel has room to sit. */
-const CentredPopover = () => (
+/**
+ * A trigger near the window centre, where a panel has room on every alignment.
+ *
+ * The inner row is shrink-to-fit: the anchored layer measures the positioning
+ * root, so a stretched root makes `end` read from the page's edge instead of the
+ * trigger's.
+ */
+const AlignedPopover = ({
+  align,
+}: {
+  readonly align?: "start" | "center" | "end";
+}) => (
   <div style={{ paddingLeft: 540, paddingTop: 100 }}>
-    <Popover>
-      <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
-      <PopoverContent testId="panel" align="center">
-        <text>Visible columns</text>
-      </PopoverContent>
-    </Popover>
+    <div style={{ display: "flex", flexDirection: "row" }}>
+      <Popover>
+        <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
+        <PopoverContent testId="panel" align={align}>
+          <text>Visible columns</text>
+        </PopoverContent>
+      </Popover>
+    </div>
   </div>
 );
 
@@ -150,8 +162,8 @@ const Controlled = ({
 };
 
 describe("Popover", () => {
-  it("opens below its trigger when the trigger is clicked", () => {
-    const popover = renderComponent(<Filters />);
+  it("opens centred below its trigger when the trigger is clicked", () => {
+    const popover = renderComponent(<AlignedPopover />);
 
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
 
@@ -167,7 +179,15 @@ describe("Popover", () => {
     expect(panel.value.y).toBeGreaterThanOrEqual(
       trigger.value.y + trigger.value.height,
     );
-    expect(panel.value.x).toBe(trigger.value.x);
+    // The house alignment is `center`, so a panel opens on its trigger's
+    // centre line even when the caller names no `align`.
+    expect(
+      Math.abs(
+        panel.value.x +
+          panel.value.width / 2 -
+          (trigger.value.x + trigger.value.width / 2),
+      ),
+    ).toBeLessThanOrEqual(1);
 
     popover.unmount();
   });
@@ -314,22 +334,57 @@ describe("Popover", () => {
     }
   });
 
-  it("centres a requested panel on its trigger", () => {
-    const popover = renderComponent(<CentredPopover />);
-    clickCentreOf(popover, "trigger");
-    settleMotion(popover);
+  it("opens a panel on each alignment it is asked for", () => {
+    // The panel's own relation to its trigger: `start` shares a left edge,
+    // `center` a centre line and `end` a right edge. GPUix 0.11.0 centres on
+    // the trigger's containing block, so the component maps `center` to `start`
+    // plus the measured half difference (plan 323).
+    const alignments = [
+      [
+        "start",
+        (
+          trigger: ReturnType<typeof requireBounds>,
+          panel: ReturnType<typeof requireBounds>,
+        ) => expect(panel.x).toBe(trigger.x),
+      ],
+      [
+        "center",
+        (
+          trigger: ReturnType<typeof requireBounds>,
+          panel: ReturnType<typeof requireBounds>,
+        ) =>
+          expect(
+            Math.abs(
+              panel.x + panel.width / 2 - (trigger.x + trigger.width / 2),
+            ),
+          ).toBeLessThanOrEqual(1),
+      ],
+      [
+        "end",
+        (
+          trigger: ReturnType<typeof requireBounds>,
+          panel: ReturnType<typeof requireBounds>,
+        ) => expect(panel.x + panel.width).toBe(trigger.x + trigger.width),
+      ],
+    ] as const;
 
-    const trigger = requireBounds(popover, "trigger");
-    const panel = requireBounds(popover, "panel");
+    for (const [align, expectRelation] of alignments) {
+      const popover = renderComponent(<AlignedPopover align={align} />);
+      try {
+        clickCentreOf(popover, "trigger");
+        settleMotion(popover);
 
-    // GPUix 0.11.0 centres on the trigger's containing block, not the trigger;
-    // the component maps `center` to `start` plus the measured half difference
-    // (plan 323).
-    expect(
-      Math.abs(panel.x + panel.width / 2 - (trigger.x + trigger.width / 2)),
-    ).toBeLessThanOrEqual(1);
+        const window = popover.renderer.getWindowSize();
+        const trigger = requireBounds(popover, "trigger");
+        const panel = requireBounds(popover, "panel");
 
-    popover.unmount();
+        expectRelation(trigger, panel);
+        expect(panel.x).toBeGreaterThanOrEqual(0);
+        expect(panel.x + panel.width).toBeLessThanOrEqual(window.width);
+      } finally {
+        popover.unmount();
+      }
+    }
   });
 
   it("opens above a trigger near the window bottom instead of covering it", () => {

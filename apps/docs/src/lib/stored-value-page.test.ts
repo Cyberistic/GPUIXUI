@@ -59,7 +59,14 @@ const storedValues: ReadonlyArray<StoredValue> = [
   { page: "drawer.mdx", prop: "size", source: drawer, reader: "drawerSize" },
   { page: "dialog.mdx", prop: "size", source: dialog, reader: "dialogSize" },
   { page: "popover.mdx", prop: "side", source: placement, reader: "sideOf" },
-  { page: "popover.mdx", prop: "align", source: placement, reader: "alignOf" },
+  {
+    page: "popover.mdx",
+    prop: "align",
+    // The popover's own default is `center`, so it reads a stored name before
+    // the shared rule (whose house word is `start`).
+    source: "packages/components/src/popover.tsx",
+    reader: "popoverAlign",
+  },
   {
     page: "combobox.mdx",
     prop: "side",
