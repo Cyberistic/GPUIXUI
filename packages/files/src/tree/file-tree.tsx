@@ -24,18 +24,30 @@
  * a monospace name, and one selected file path.
  */
 
-import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import type {
+  EventPayload,
+  MotionProps,
+  Props,
+  PublicInstance,
+} from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import {
   TREE_INDENT,
   TREE_INSET,
   expandedSet,
+  paintedRows,
   treeName,
   type TreeCursor,
   type TreeRow,
 } from "@gpuixui/data";
 import { useTree } from "@gpuixui/data/tree/use-tree";
 import { Icon, type IconName } from "@gpuixui/icons";
+import {
+  delayedTiming,
+  transitionWindowMs,
+  type PresenceTiming,
+} from "@gpuixui/motion/presence";
+import { useSurfaceTiming } from "@gpuixui/motion/react/presence";
 import { iconSideOf, rowHeightOf, storedText } from "@gpuixui/primitives/core";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
@@ -297,10 +309,24 @@ interface FileTreeRowProps {
   readonly tabbable: boolean;
   readonly content: ReactNode;
   readonly testId: string | undefined;
+  /** The row has just arrived and folds in from nothing. */
+  readonly entering: boolean;
+  /** The row's branch closed; it paints only for its exit tween. */
+  readonly leaving: boolean;
+  readonly timing: PresenceTiming;
   readonly onPress: () => void;
   readonly onKeyDown: (event: EventPayload) => void;
-  readonly attach: (instance: PublicInstance | null) => void;
+  readonly attach?: (instance: PublicInstance | null) => void;
 }
+
+/**
+ * How long a fold waits before its rows travel.
+ *
+ * The disclosure's glyph swaps in the frame it is pressed, so the fold starts a
+ * beat later and reads as the branch following the chevron. It is also the
+ * delay the exit's mount window counts.
+ */
+const FOLD_LEAD_MS = 20;
 
 /** One painted row: guides, the chevron slot, the glyph, the name. */
 const FileTreeRow = ({
@@ -309,6 +335,9 @@ const FileTreeRow = ({
   tabbable,
   content,
   testId,
+  entering,
+  leaving,
+  timing,
   onPress,
   onKeyDown,
   attach,
@@ -320,6 +349,16 @@ const FileTreeRow = ({
   const press =
     pointerWash(theme, "active", selected ? "accent" : "hover") ??
     colors.active;
+  const height = rowHeightOf(theme);
+  const resting = { height, opacity: 1 };
+  const folded = { height: 0, opacity: 0 };
+  const motion: MotionProps = {
+    initial: entering ? folded : resting,
+    animate: leaving ? folded : resting,
+    transition: leaving
+      ? delayedTiming(timing.exit, FOLD_LEAD_MS)
+      : timing.enter,
+  };
 
   return (
     <div
@@ -327,22 +366,27 @@ const FileTreeRow = ({
       role="treeitem"
       aria-label={treeName(row.node.name, row.key)}
       aria-level={row.depth + 1}
-      {...(row.node.children === undefined
-        ? { "aria-selected": selected }
-        : row.hasChildren
-          ? { "aria-expanded": row.expanded }
-          : {})}
-      tabIndex={tabbable ? 0 : -1}
+      {...(leaving
+        ? { "aria-hidden": true }
+        : row.node.children === undefined
+          ? { "aria-selected": selected }
+          : row.hasChildren
+            ? { "aria-expanded": row.expanded }
+            : {})}
+      tabIndex={!leaving && tabbable ? 0 : -1}
       testId={testId}
-      onClick={onPress}
-      onKeyDown={onKeyDown}
+      onClick={leaving ? undefined : onPress}
+      onKeyDown={leaving ? undefined : onKeyDown}
+      motion={motion}
       style={{
         ...recipeStyle(FILE_TREE_ROW, theme),
-        height: rowHeightOf(theme),
+        height,
+        overflow: "hidden",
         paddingLeft: TREE_INSET + row.depth * TREE_INDENT,
         paddingRight: theme.spacing.sm,
         borderRadius: theme.radius.md,
         backgroundColor: selected ? colors.hover : undefined,
+        ...(leaving ? { pointerEvents: "none" } : {}),
         hover: { backgroundColor: hover },
         active: { backgroundColor: press },
         focusVisible: {
@@ -388,6 +432,13 @@ const FileTreeRow = ({
   );
 };
 
+/** The rows a branch change is moving: those folding out, and those folding in. */
+type Fold = Option.Option<{
+  readonly leaving: ReadonlyArray<TreeRow<FileNode>>;
+  readonly before: ReadonlyArray<TreeRow<FileNode>>;
+  readonly entering: HashSet.HashSet<string>;
+}>;
+
 /**
  * A file tree: folders that open, one selected file, guide lines and a glyph
  * per kind.
@@ -426,7 +477,57 @@ export const FileTree = ({
     Option.map(fileTreeTab(rows, selectedPath), (row) => row.key),
   );
   const pendingSelection = useRef(false);
+  const timing = useSurfaceTiming("normal");
+  const foldWindow = Math.max(
+    transitionWindowMs(timing.enter),
+    transitionWindowMs(delayedTiming(timing.exit, FOLD_LEAD_MS)),
+  );
+  const [fold, setFold] = useState<Fold>(Option.none());
+  const [seen, setSeen] = useState(rows);
 
+  // A closed branch is gone from `visibleFileRows` in the frame its cursor
+  // changes, so its rows are handed to `paintedRows` with the order they stood
+  // in and kept for the exit window. The fold is decided while the rows change
+  // render, before React commits, so the branch paints its exit instead of
+  // unmounting for a frame and growing back. A reduced run has no window: the
+  // rows are absent at once, which is the snap the preference asks for.
+  if (seen !== rows) {
+    const before = seen;
+    const visible = HashSet.fromIterable(Arr.map(rows, (row) => row.key));
+    const previous = HashSet.fromIterable(Arr.map(before, (row) => row.key));
+    const leaving = Arr.filter(before, (row) => !HashSet.has(visible, row.key));
+    const entering = Arr.filter(rows, (row) => !HashSet.has(previous, row.key));
+    setSeen(rows);
+    setFold(
+      foldWindow === 0 ||
+        (Arr.isReadonlyArrayEmpty(leaving) &&
+          Arr.isReadonlyArrayEmpty(entering))
+        ? Option.none()
+        : Option.some({
+            leaving,
+            before,
+            entering: HashSet.fromIterable(Arr.map(entering, (row) => row.key)),
+          }),
+    );
+  }
+
+  useEffect(() => {
+    if (Option.isNone(fold)) return;
+    const handle = setTimeout(() => setFold(Option.none()), foldWindow);
+    return () => clearTimeout(handle);
+  }, [fold, foldWindow]);
+
+  const painted = paintedRows(
+    rows,
+    Option.match(fold, {
+      onNone: () => [],
+      onSome: (current) => current.leaving,
+    }),
+    Option.match(fold, {
+      onNone: () => rows,
+      onSome: (current) => current.before,
+    }),
+  );
   const report = (next: HashSet.HashSet<string>): void => {
     if (HashSet.isSubset(open, next) && HashSet.isSubset(next, open)) return;
     if (expanded === undefined) setStoredExpanded(next);
@@ -499,7 +600,7 @@ export const FileTree = ({
           style,
         )}
       >
-        {Arr.map(rows, (row) => (
+        {Arr.map(painted, ({ row, leaving }) => (
           <FileTreeRow
             key={row.key}
             row={row}
@@ -509,9 +610,15 @@ export const FileTree = ({
             testId={
               testId === undefined ? undefined : `${testId}-row-${row.key}`
             }
+            entering={Option.match(fold, {
+              onNone: () => false,
+              onSome: (current) => HashSet.has(current.entering, row.key),
+            })}
+            leaving={leaving}
+            timing={timing}
             onPress={() => tree.activate(row)}
             onKeyDown={tree.handleKey}
-            attach={tree.attach(row.key)}
+            attach={leaving ? undefined : tree.attach(row.key)}
           />
         ))}
       </div>

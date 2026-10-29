@@ -24376,3 +24376,33 @@ reaction marks the message, not a speaker), measured on the live page at a 12px
 right inset with the pill crossing the surface's edge. `bubble.test.tsx`'s case
 now measures the corner for both aligns and fails on the old per-side inset (7
 cases failed when inverted).
+
+## Docs chrome and the folding tree (2026-10-29)
+
+`[x]` `[██████████]` 3/3 — **no phantom control in the calendar, the caption
+selects are the shipped `sm` field, and a folder folds instead of snapping.**
+
+`[x]` The range window's nav spacer carried `gx-date-navbtn`, so the gap between
+the two months painted the button's `hover` square. It is
+`gx-date-navspacer` (26×26, hidden) and the pointer wash is scoped to
+`button.gx-date-navbtn`; `date-picker-chrome.test.tsx` holds the range, single
+and dropdown drawings to no `navbtn` span and to a spacer with no background in
+any state. Inverted: the old markup fails the span case by regex.
+
+`[x]` The caption `<select>`s wore the browser's arrow box (a second
+`.gx-date-select` rule overrode the first at `md` metrics). They are now the
+`Select`'s `sm` trigger — `appearance: none`, `--input` fill, `border`,
+`radius`, `--control-height-sm` (24 on macOS, 28 default) and the icon set's
+`chevron-down` over the field; the preset select shares it. Inverted: two
+`.gx-date-select` blocks fail the one-rule case by name.
+
+`[x]` `FileTree` and its drawing dropped a closed branch's rows in one frame.
+The rows are kept for a `height`/`opacity` fold (`@gpuixui/data`'s new
+`paintedRows` puts each back where it stood), the native rows tween through the
+motion seam and unmount after the exit window, the browser rows use a 200 ms
+transition plus an enter keyframe with a reduced-motion snap, and the tree is
+content-sized so its height follows. Measured on the live page: the assets
+branch 56 → 39.6 at 120 ms → 0 at 240 ms, tree 448 → 431.6 → 392, selected row
+untouched by the row tween. Native behaviour: the fold case fails without the
+fix (`expected undefined to be 32`). The runtime cannot animate a scale — the
+chevron swaps glyphs instead, and the rows animate their own box.

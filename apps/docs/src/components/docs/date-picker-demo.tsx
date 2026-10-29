@@ -2,7 +2,9 @@ import {
   useEffect,
   useRef,
   useState,
+  type ChangeEvent,
   type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
 } from "react";
 import {
   addDays,
@@ -37,6 +39,7 @@ import {
   type RangePaint,
   type WeekStart,
 } from "./date-picker-preview";
+import { BrowserIcon } from "./browser-icon";
 
 /**
  * Browser previews for the Calendar and Date picker pages.
@@ -90,6 +93,44 @@ const paintOf = (value: PreviewValue, day: IsoDay): RangePaint | "selected" =>
       ? "selected"
       : null
     : rangePaint(value.range, day);
+
+/**
+ * A caption select: the `Select`'s `sm` trigger with the icon set's chevron.
+ *
+ * A native `<select>` paints its own arrow and box, so it is stripped to a
+ * field (`appearance: none`) and the chevron is the library's glyph over it.
+ */
+const CaptionSelect = ({
+  id,
+  label,
+  name,
+  value,
+  defaultValue,
+  onChange,
+  children,
+}: {
+  readonly id?: string;
+  readonly label: string;
+  readonly name: string;
+  readonly value?: string | number;
+  readonly defaultValue?: string;
+  readonly onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  readonly children: ReactNode;
+}) => (
+  <span className="gx-date-field">
+    <select
+      {...(id === undefined ? {} : { id })}
+      aria-label={label}
+      className="gx-date-select"
+      name={name}
+      onChange={onChange}
+      {...(value === undefined ? { defaultValue } : { value })}
+    >
+      {children}
+    </select>
+    <BrowserIcon className="gx-date-chevron" name="chevron-down" />
+  </span>
+);
 
 interface SurfaceProps {
   readonly label: string;
@@ -207,13 +248,13 @@ const DateSurface = ({
                   <span aria-hidden="true">‹</span>
                 </button>
               ) : (
-                <span aria-hidden="true" className="gx-date-navbtn" />
+                <span aria-hidden="true" className="gx-date-navspacer" />
               )}
               {captionLayout === "dropdown" ? (
                 <span className="gx-date-caption">
-                  <select
-                    aria-label="Month"
-                    className="gx-date-select"
+                  <CaptionSelect
+                    label="Month"
+                    name="month"
                     onChange={(event) =>
                       onMonth(
                         addMonths(
@@ -230,10 +271,10 @@ const DateSurface = ({
                         {name}
                       </option>
                     ))}
-                  </select>
-                  <select
-                    aria-label="Year"
-                    className="gx-date-select"
+                  </CaptionSelect>
+                  <CaptionSelect
+                    label="Year"
+                    name="year"
                     onChange={(event) =>
                       onMonth(
                         addMonths(
@@ -251,7 +292,7 @@ const DateSurface = ({
                         {year}
                       </option>
                     ))}
-                  </select>
+                  </CaptionSelect>
                 </span>
               ) : (
                 <span className="gx-date-month" role="status">
@@ -269,7 +310,7 @@ const DateSurface = ({
                   <span aria-hidden="true">›</span>
                 </button>
               ) : (
-                <span aria-hidden="true" className="gx-date-navbtn" />
+                <span aria-hidden="true" className="gx-date-navspacer" />
               )}
             </div>
             <div
@@ -645,10 +686,11 @@ export const DatePickerPresets = () => {
         <label className="gx-demo-label" htmlFor="date-preset">
           Quick range
         </label>
-        <select
-          className="gx-date-select"
-          id="date-preset"
+        <CaptionSelect
           defaultValue=""
+          id="date-preset"
+          label="Quick range"
+          name="quick-range"
           onChange={(event) => {
             const choice = event.target.value;
             const next =
@@ -669,7 +711,7 @@ export const DatePickerPresets = () => {
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
           <option value="month">This month</option>
-        </select>
+        </CaptionSelect>
         <DateSurface
           active={active}
           bounds={bounds}
