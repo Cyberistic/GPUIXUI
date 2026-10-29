@@ -478,7 +478,6 @@ export const CommandMenuItem = ({
             tone: "default",
             active: highlighted,
             disabled: action.disabled === true,
-            mark: false,
           },
           className,
         ),

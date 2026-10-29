@@ -141,11 +141,16 @@ describe("the combobox drawing", () => {
 
 describe("the command palette drawing", () => {
   it("paints the highlight as the wash alone, with no left rule", () => {
-    // The bug this guards: the palette's rows are the shared menu row, whose
-    // emphasis bar belongs to submenu-leading and checked rows. The highlight
-    // read as a wash with a second accent edge beside it.
-    const row = block(css, ".gx-palette .gx-menu-row");
-    expect(row).toContain("border-left-width: 0");
+    // The bug this guards: a highlighted row read as a wash with a second
+    // accent edge beside it. The row wore a 2px emphasis bar on its left edge —
+    // the reason the palette needed an exemption from it. The bar is gone from
+    // every row now, so the exemption is gone too and the rule is the stronger
+    // one: no menu row paints a left edge, in the palette or anywhere else.
+    expect(block(css, ".gx-menu-row")).not.toContain("border-left");
+    expect(css).not.toContain(".gx-palette .gx-menu-row");
+    expect(block(css, '.gx-menu-row[data-highlighted="true"]')).not.toContain(
+      "border-left",
+    );
     expect(block(css, '.gx-menu-row[data-highlighted="true"]')).not.toContain(
       "box-shadow",
     );

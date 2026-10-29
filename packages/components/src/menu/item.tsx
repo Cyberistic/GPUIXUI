@@ -109,25 +109,28 @@ export interface MenuRowState {
   readonly tone: MenuItemTone;
   readonly active: boolean;
   readonly disabled: boolean;
-  /**
-   * Paints the emphasis bar a submenu-leading or checked row wears. Default
-   * `true`; the command palette's highlight is its wash alone.
-   */
-  readonly mark?: boolean;
 }
 
 /** The row's own look, shared by actions, checkbox rows and the Command menu.
  *
  * The resting geometry and type come from the `MENU_ITEM` recipe (fixed shadcn
- * metrics); the density height, the emphasis bar and the state colours stay here
- * because they are density- and state-driven (ADR 0006).
+ * metrics); the density height and the state colours stay here because they are
+ * density- and state-driven (ADR 0006).
+ *
+ * A highlighted row is its wash. The 2px emphasis bar it used to wear sat on the
+ * row's own edge, beside the chevron or the check that already says what the row
+ * is, and read as a second, unrelated mark. The measurement is why it could not
+ * work: an `accent` bar on a `hover` wash sits under the boundary floor in
+ * all eighteen styles (`accent` against `hover` is the pair
+ * `internal/theme.test.ts` measures), so the bar was a mark a reader had to
+ * hunt for — and a mark that has to be hunted for is not a mark.
  */
 export const menuRowStyle = (
   theme: ReturnType<typeof useTheme>,
   row: MenuRowState,
   className?: string,
 ): Props["style"] => {
-  const { tone, active, disabled, mark = true } = row;
+  const { tone, active, disabled } = row;
   const color = disabled
     ? theme.colors.disabledForeground
     : Match.value(tone).pipe(
@@ -142,14 +145,6 @@ export const menuRowStyle = (
   return {
     ...overlaySurfaceStyle(MENU_ITEM, className, theme),
     height: controlHeight(theme, "sm"),
-    borderLeftWidth: mark ? theme.borderWidth.strong : 0,
-    // The bar marks the row that leads an open submenu or holds a checked
-    // state, and it sits on that row's `hover` wash. A mark has to be found
-    // from across the surface, so it paints `primary` — the role the mark
-    // contract measures at 3:1 on the popover and on the wash, as the check
-    // mark beside it does. `accent` is a wash role: it read 1.000:1 on the
-    // Luna dark look's own row and under the floor in all eighteen styles.
-    borderColor: active ? theme.colors.primary : theme.colors.popover,
     backgroundColor: active ? theme.colors.hover : undefined,
     // The 50% fade composited a disabled label into its own fill, which a
     // high-contrast theme asks 3:1 of; the `disabled`/`disabledForeground` pair

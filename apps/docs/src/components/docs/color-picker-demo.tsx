@@ -32,7 +32,6 @@ import {
   composite,
   contrast,
   defaultSwatches,
-  describe,
   grade,
   hueAt,
   hueSegment,
@@ -440,24 +439,73 @@ const Trigger = ({
  */
 const usePanelPresence = (open: boolean) => {
   const [mounted, setMounted] = useState(open);
-  const reduced = useRef(false);
 
   useEffect(() => {
     if (open) {
       setMounted(true);
       return;
     }
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reduced.current = query.matches;
-    if (query.matches) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setMounted(false);
       return;
     }
+    // The timer is the fallback for a run the browser never reports (a tab in
+    // the background), so it must not cut the tween short.
     const timer = window.setTimeout(() => setMounted(false), PANEL_EXIT_MS);
     return () => window.clearTimeout(timer);
   }, [open]);
 
-  return { mounted, onAnimationEnd: () => setMounted(false), reduced };
+  return {
+    mounted,
+    /**
+     * Leave the tree when the *exit* ends.
+     *
+     * The panel animates in as well, and an `animationend` does not say which
+     * run it belongs to — so an unconditional unmount ended the entrance, and
+     * the picker closed itself the moment it reopened.
+     */
+    onAnimationEnd: () => {
+      if (!open) setMounted(false);
+    },
+  };
+};
+
+/**
+ * The closed state, as a control.
+ *
+ * A trigger painted shut and never opening is a dead control on a page that
+ * documents one that opens, so this state owns a real toggle.
+ */
+const ClosedPicker = ({ theme }: { readonly theme: Theme }) => {
+  const swatches = defaultSwatches(theme);
+  const [hsva] = useState<Hsva>(
+    () => parseHex("#2F6BFF") ?? { h: 220, s: 0.8, v: 1, a: 1 },
+  );
+  const [open, setOpen] = useState(false);
+  const panel = usePanelPresence(open);
+
+  return (
+    <div className="gx-cp-closed">
+      <Trigger
+        hsva={hsva}
+        label="Accent colour"
+        open={open}
+        onToggle={() => setOpen((current) => !current)}
+      />
+      {panel.mounted ? (
+        <Panel
+          background={theme.colors.background}
+          draft={toHex(hsva)}
+          hsva={hsva}
+          invalid={false}
+          label="Accent colour"
+          onAnimationEnd={panel.onAnimationEnd}
+          open={open}
+          swatches={swatches}
+        />
+      ) : null}
+    </div>
+  );
 };
 
 /** A deploy-style workflow: the app owns the value, the picker reports it. */
@@ -530,8 +578,12 @@ export function ColorPickerWorkflowBody({ theme }: { readonly theme: Theme }) {
             swatches={swatches}
           />
         ) : undefined}
+        {/* The committed value and the draft, in sentences rather than a
+            `value=… draft=…` line: a readout is data, not a debug dump. */}
         <div className="gx-cp-readout" role="status">
-          {describe(value, draft)}
+          {draft === value
+            ? `Committed ${value}.`
+            : `Draft ${draft} — ${parseHex(draft, hsva.h) === undefined ? "not a hex colour yet" : "ready to commit"}.`}
         </div>
         <div className="gx-cp-chosen-row">
           <span
@@ -605,7 +657,7 @@ export function ColorPickerStatesBody({ theme }: { readonly theme: Theme }) {
         />
       </StateGroup>
       <StateGroup label="Closed — the trigger reports the value and the colour">
-        <Trigger hsva={accent} label="Accent colour" open={false} />
+        <ClosedPicker theme={theme} />
         <Trigger disabled hsva={accent} label="Locked colour" open={false} />
       </StateGroup>
     </div>

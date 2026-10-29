@@ -613,12 +613,16 @@ describe("DropdownMenu", () => {
     menu.unmount();
   });
 
-  it("paints a highlighted row's bar in a role the mark floor measures", () => {
-    // The bug: the bar painted `colors.accent`, a wash role, on the `hover`
-    // wash the highlighted row already wears — under the 3:1 mark floor in all
-    // eighteen shipped, high-contrast, platform and authored styles, and
-    // 1.000:1 on the Luna dark look's own row — so the cue naming the row that
-    // leads an open submenu was invisible.
+  it("paints no emphasis bar on a highlighted row, in any style", () => {
+    // The bug this guards now: the row used to wear a 2px emphasis bar on its
+    // left edge, beside the chevron or the check that already says what the row
+    // is. It read as a second, unrelated mark — and it could not read as a cue
+    // at all: the role it painted was a wash, under the 3:1 mark floor on the
+    // `hover` wash in all eighteen shipped, high-contrast, platform and authored
+    // styles, and 1.000:1 on the Luna dark look's own row.
+    //
+    // A highlighted row is its wash. The measurement below is the reason the
+    // bar was removed rather than repainted.
     const styles = [
       getTheme("light"),
       getTheme("dark"),
@@ -639,15 +643,15 @@ describe("DropdownMenu", () => {
       clickCentreOf(menu, "trigger");
       menu.renderer.simulateKeystrokes("down");
 
-      const bar = menu.renderer.findByTestId("rename")?.style.borderColor;
+      const row = menu.renderer.findByTestId("rename")?.style;
 
       menu.unmount();
 
-      expect(bar).toBe(theme.colors.primary);
-      expect(
-        contrastRatio(theme.colors.primary, theme.colors.hover) ?? 0,
-      ).toBeGreaterThanOrEqual(contrastFloorsFor(theme).boundary);
-      // The premise: the role the bar used to paint cannot be read on the wash.
+      // No left edge at all: not a width, not a colour.
+      expect(row?.borderLeftWidth ?? 0).toBe(0);
+      expect(row?.borderColor).toBeUndefined();
+      // The premise: a bar painted from the wash role cannot be read on the
+      // wash, which is why the row is its wash alone.
       expect(
         contrastRatio(theme.colors.accent, theme.colors.hover) ?? 0,
       ).toBeLessThan(contrastFloorsFor(theme).boundary);

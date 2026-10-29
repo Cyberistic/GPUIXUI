@@ -24539,3 +24539,32 @@ across the switch. A source that does not parse is a typed `MermaidError` shown
 with its source. The page states why the library cannot ship one: `<svg source>`
 paints its whole markup as one tint, and an image decodes every fill but cannot
 be re-themed, selected or linked.
+
+## Dialogs, menus and the picker's own toggle (2026-10-29)
+
+`[x]` `[█████████░]` 5/6 — **the picker opens, the menu bar is gone, the
+overlays blur the page they cover, the field's glyph is an icon, and the
+context menu's second level sits beside its parent.**
+
+`[x]` **Colour picker.** The panel reopened and unmounted in the same frame: the
+`animationend` handler was unconditional, so the *entrance* run ended the
+surface. It now leaves only when the exit ends, and the "closed" state on the
+page is a real toggle instead of a trigger painted shut. Its `value=… draft=…`
+debug line is a sentence.
+
+`[x]` **The emphasis bar is gone.** A highlighted menu row wore a 2px accent bar
+on its left edge, beside the chevron or check that already says what the row is.
+Removed from the drawing and from `menu/item.tsx` (and the `mark` prop with it),
+with the measurement kept as the reason: an accent bar on a hover wash is under
+the boundary floor in all eighteen styles.
+
+`[x]` **Overlay parity.** The dialog and confirmation had the drawer's veil and
+filter but nothing behind them to blur, so their backdrop read flat. Both scenes
+now draw the page the surface covers.
+
+`[x]` **The field's glyph** was a 14px text character; it is the icon set's
+`search` at 16px, in the drawing and in the code sample.
+
+`[x]` **The context menu's second level** opened on top of its parent: a 520px
+scene left no room on the right, so the flip rule fired and landed on the menu
+it belonged to. The frame is 760px now, and the case asserts both sides.

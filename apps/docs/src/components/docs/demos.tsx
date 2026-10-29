@@ -611,16 +611,32 @@ const DialogDemo = () => {
 
   return (
     <div className="gx-demo-dialog">
-      <button
-        className="gx-btn gx-btn-primary"
-        onClick={() => {
-          openedByReader.current = true;
-          setOpen(true);
-        }}
-        type="button"
-      >
-        Rename project
-      </button>
+      {/* The page the dialog covers. The veil blurs what is behind it, and a
+          scene with only a trigger behind the veil had nothing to blur — the
+          drawer's blur read and the dialog's did not, for that reason alone. */}
+      <div aria-hidden="true" className="gx-dialog-behind">
+        <div className="gx-dialog-behind-bar">
+          <span className="gx-dialog-behind-title">Project</span>
+          <button
+            className="gx-btn gx-btn-primary"
+            onClick={() => {
+              openedByReader.current = true;
+              setOpen(true);
+            }}
+            type="button"
+          >
+            Rename project
+          </button>
+        </div>
+        <div className="gx-dialog-behind-rows">
+          {["Hunter License", "Field reports", "Licence index"].map((row) => (
+            <div className="gx-dialog-behind-row" key={row}>
+              <span>{row}</span>
+              <span className="gx-dialog-behind-meta">Updated 2 min ago</span>
+            </div>
+          ))}
+        </div>
+      </div>
       {open ? (
         <div
           className="gx-dialog-backdrop gx-overlay-veil"
@@ -1845,19 +1861,35 @@ const ConfirmDialogDemo = () => {
 
   return (
     <div className="gx-confirm-demo">
-      <div className="gx-demo-row">
-        <button
-          className="gx-btn gx-btn-destructive"
-          onClick={() => {
-            openedByReader.current = true;
-            setAttempt(0);
-            setPhase("idle");
-            setOpen(true);
-          }}
-          type="button"
-        >
-          Archive project
-        </button>
+      {/* The page the confirmation covers, so the veil has something to blur:
+          the drawer's blur read and this one did not, for want of content
+          behind it rather than for want of a filter. */}
+      <div aria-hidden="true" className="gx-dialog-behind">
+        <div className="gx-dialog-behind-bar">
+          <span className="gx-dialog-behind-title">Hunter License</span>
+          <button
+            className="gx-btn gx-btn-destructive"
+            onClick={() => {
+              openedByReader.current = true;
+              setAttempt(0);
+              setPhase("idle");
+              setOpen(true);
+            }}
+            type="button"
+          >
+            Archive project
+          </button>
+        </div>
+        <div className="gx-dialog-behind-rows">
+          {["18 open dossiers", "Licence index", "Renown history"].map(
+            (row) => (
+              <div className="gx-dialog-behind-row" key={row}>
+                <span>{row}</span>
+                <span className="gx-dialog-behind-meta">Updated 2 min ago</span>
+              </div>
+            ),
+          )}
+        </div>
         {phase === "archived" ? (
           <span className="gx-confirm-status">
             Archived — restore it from the archive within 30 days.

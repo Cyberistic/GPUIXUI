@@ -6,6 +6,8 @@
  * component's focus state — the browser is the only part approximated.
  */
 
+import { BlockIcon } from "./block-icons";
+
 export function InputGroupDemo() {
   return (
     <div className="gx-ig-scene">
@@ -13,8 +15,11 @@ export function InputGroupDemo() {
         Search
       </label>
       <div className="gx-ig-group">
+        {/* A field's leading glyph is the icon set's, at the size a field
+            uses: the text character it replaced rendered at 14px in the
+            page's own family and read as a punctuation mark. */}
         <span aria-hidden="true" className="gx-ig-addon">
-          ⌕
+          <BlockIcon name="search" size={16} />
         </span>
         <input
           className="gx-ig-input"
@@ -48,11 +53,12 @@ export const inputGroupDemoSource = `import {
   InputGroupInput,
   InputGroupText,
 } from "@gpuixui/components/input-group";
+import { Icon } from "@gpuixui/icons";
 
 <InputGroup label="Search" description="Files and people in this space.">
   <InputGroupInput placeholder="Search…" />
   <InputGroupAddon align="inline-start">
-    <InputGroupText>⌕</InputGroupText>
+    <Icon name="search" size="sm" />
   </InputGroupAddon>
   <InputGroupAddon align="inline-end">
     <InputGroupText>⌘K</InputGroupText>

@@ -1447,7 +1447,6 @@
   height: var(--control-height-sm);
   padding: 0 8px;
   border: 0;
-  border-left: 2px solid transparent;
   border-radius: calc(var(--radius) - 1px);
   background: transparent;
   color: var(--foreground);
@@ -1457,15 +1456,11 @@
   cursor: pointer;
 }
 
+/* A highlighted row is its wash. The 2px emphasis bar it used to wear sat on
+   the row's own edge, beside the chevron or the check that already says what
+   the row is, and read as a second, unrelated mark. */
 .gx-menu-row[data-highlighted="true"] {
   background: var(--hover);
-  border-left-color: var(--accent);
-}
-
-/* The command-menu drawing shares the menu row, whose emphasis bar belongs to
-   submenu-leading and checked rows. The palette's highlight is its wash alone. */
-.gx-palette .gx-menu-row {
-  border-left-width: 0;
 }
 
 .gx-menu-row:disabled {
@@ -1514,7 +1509,11 @@
   justify-content: flex-start;
   gap: 10px;
   width: 100%;
-  max-width: 520px;
+  /* Wide enough for a second level on the right: the parent menu is 208 and so
+     is the submenu it opens, and the row they hang from sits inside the file
+     list. A 520 frame left no room, so the flip rule put the submenu on the
+     left — where it covered the menu it belongs to. */
+  max-width: 760px;
   min-height: 320px;
   padding: 20px;
   position: relative;
@@ -14703,6 +14702,15 @@ button.gx-rating-star:focus-visible {
   color: var(--muted-foreground);
 }
 
+/* The leading glyph is the icon set's `search` at 16px, the size a field uses.
+   A text character at 14px in the page's own family read as punctuation. */
+.gx-ig-addon .gx-block-glyph {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  stroke-width: 2;
+}
+
 .gx-ig-addon-end {
   padding-left: 0;
   padding-right: 12px;
@@ -15092,4 +15100,68 @@ button.gx-rating-star:focus-visible {
   line-height: 1.6;
   overflow-x: auto;
   white-space: pre;
+}
+
+/* The closed state's own toggle: the trigger and the panel it opens, stacked so
+   the panel grows out of the pill it belongs to. */
+.gx-cp-closed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  position: relative;
+}
+
+/* The page a dialog covers. A `backdrop-filter` blurs what is behind it, and a
+   scene that held only its trigger gave the veil nothing to sample — which is
+   why the drawer's blur read and the dialog's did not, for want of content
+   rather than for want of a filter. */
+.gx-dialog-behind {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 520px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.gx-dialog-behind-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gx-dialog-behind-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--card-foreground);
+}
+
+.gx-dialog-behind-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-dialog-behind-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+  color: var(--card-foreground);
+  font-size: 12.5px;
+}
+
+.gx-dialog-behind-meta {
+  color: var(--muted-foreground);
+  font-size: 11.5px;
 }

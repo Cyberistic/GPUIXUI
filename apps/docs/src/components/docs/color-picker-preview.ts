@@ -238,10 +238,6 @@ export const chosenRole = (
 ): string | undefined =>
   swatches.find((swatch) => sameColour(swatch.value, value))?.role;
 
-/** The readout the workflow prints under the picker. */
-export const describe = (value: string, draft: string): string =>
-  `value=${value} draft=${draft} ${parseHex(draft) === undefined ? "invalid" : "valid"}`;
-
 /**
  * A pointer's position on a rail, as the fraction it sits at.
  *
