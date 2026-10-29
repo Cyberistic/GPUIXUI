@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import { visibleFileRows } from "@gpuixui/files/tree/logic";
+import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import {
   dossiersIn,
@@ -14,7 +16,9 @@ import {
   renownStep,
   renownTicks,
   stagesFor,
-  vaultRows,
+  VAULT_CURRENT,
+  vaultOpen,
+  vaultTree,
 } from "./hunter-pipeline";
 
 /**
@@ -24,9 +28,12 @@ import {
  * seven-cell strip, a chart — so the "whole app window" the reference shows
  * read as one card. The chrome is half of why it reads as the reference: the
  * six-note tab strip, the vault tree with its open branch and its one current
- * note, the breadcrumb, and the four views the note names. These cases hold
- * what a rendering cannot be checked on, and the CSS reads assert the drawing
- * is the window at the reference's proportions, not a card.
+ * note, the breadcrumb, and the four views the note names. The second bug was
+ * the chrome's paint: the vault was a hand-written row table with its own
+ * chevrons and indentation, and the rail, chips and cells were bespoke boxes,
+ * so the block folded nothing and matched no component. These cases hold what
+ * a rendering cannot be checked on, and the CSS reads assert the drawing is the
+ * window at the reference's proportions and every surface is a recipe's.
  */
 
 const source = readFileSync(
@@ -47,6 +54,10 @@ const cssBlock = (selector: string): string => {
 
 /** The hunter block's own rules, from its section heading to the sheet's end. */
 const huntCss = css.slice(css.indexOf("/* ---- hunter pipeline"));
+
+/** The rows the rail paints at first: the package's own flattening. */
+const vaultRows =
+  vaultTree === undefined ? [] : visibleFileRows(vaultTree, vaultOpen);
 
 describe("the dossier columns", () => {
   it("splits the list into the staged and the blocked, and loses none", () => {
@@ -129,14 +140,11 @@ describe("the renown chart", () => {
 
   it("reads the eight snapshots the block claims", () => {
     expect(renownNights).toHaveLength(8);
+    // The last night is the one the chart rests on, so it must be the largest.
     const last = renownNights.at(-1);
-    expect(last).toBeDefined();
-    expect(last?.renown).toBe(5_663);
-    // The peak sits earlier in the fortnight, so the resting night is not it.
+    if (last === undefined) throw new Error("the chart has no last night");
+    expect(last.renown).toBe(5_663);
     expect(Math.max(...renownNights.map((night) => night.renown))).toBe(7_420);
-    expect(
-      Math.max(...renownNights.map((night) => night.renown)),
-    ).toBeGreaterThanOrEqual(last?.renown ?? 0);
   });
 });
 
@@ -160,39 +168,39 @@ describe("the window's chrome", () => {
   });
 
   it("closes the open vault branch with the note the pane shows", () => {
-    const current = vaultRows.filter((row) => row.current === true);
-    expect(current).toHaveLength(1);
-    const note = current[0];
-    if (note === undefined) throw new Error("the tree names no current note");
-    expect(note.label).toBe("Licence Pipeline");
+    const current = vaultRows.find((row) => row.key === VAULT_CURRENT);
+    if (current === undefined)
+      throw new Error("the tree paints no current note");
+    expect(current.node.name).toBe("Licence Pipeline");
     // The reference's active row sits at the bottom of the open `Guild`
     // branch, not loose among the vault's top-level notes.
-    expect(note.depth).toBe(1);
-    expect(note.kind).toBe("note");
-    const branch = vaultRows.find((row) => row.label === "Guild");
-    expect(branch?.kind).toBe("open");
-    expect(vaultRows.indexOf(branch ?? note)).toBeLessThan(
-      vaultRows.indexOf(note),
-    );
-    expect(vaultRows.at(-1)?.label).toBe("Main Menu");
+    expect(current.depth).toBe(1);
+    expect(current.hasChildren).toBe(false);
+    const branch = vaultRows.find((row) => row.key === "Guild");
+    if (branch === undefined)
+      throw new Error("the tree paints no Guild branch");
+    expect(branch.expanded).toBe(true);
+    expect(vaultRows.indexOf(branch)).toBeLessThan(vaultRows.indexOf(current));
+    expect(vaultRows.at(-1)?.node.name).toBe("Main Menu");
   });
 
-  it("indents every row by a depth its parent could own", () => {
-    // A nested row deeper than its predecessor's depth + 1 would hang off a
-    // folder that is not open; a row that jumps to depth 3 under a closed
-    // folder reads as a different tree.
-    for (const [index, row] of vaultRows.entries()) {
-      expect(row.depth).toBeGreaterThanOrEqual(0);
-      if (index === 0) continue;
-      const parent = vaultRows[index - 1];
-      expect(row.depth).toBeLessThanOrEqual((parent?.depth ?? 0) + 1);
-      if (row.depth > 0) {
-        const ancestor = vaultRows
-          .slice(0, index)
-          .findLast((candidate) => candidate.depth === row.depth - 1);
-        expect(ancestor?.kind).not.toBe("closed");
-      }
-    }
+  it("declares the vault as nested branches, not a flat row list", () => {
+    const guild = vaultTree.find((node) => node.path === "Guild");
+    if (guild === undefined) throw new Error("the vault has no Guild branch");
+    const dossiers = guild.children?.find(
+      (node) => node.path === "Guild/04 Dossiers",
+    );
+    expect(dossiers?.children).toHaveLength(4);
+    expect(dossiers?.children?.[0]?.children?.[0]?.name).toBe(
+      "All 4 Classes Ranked",
+    );
+
+    // A closed branch takes its notes with it: the flat row table kept every
+    // row, so the pane could not fold, and the current note never moved.
+    const closed = visibleFileRows(vaultTree, ["Guild/04 Dossiers"]);
+    expect(closed.length).toBeLessThan(vaultRows.length);
+    expect(Arr.map(closed, (row) => row.key)).not.toContain(VAULT_CURRENT);
+    expect(Arr.map(closed, (row) => row.key)).toContain("Main Menu");
   });
 
   it("paints the two verdict figures green and no others", () => {
@@ -228,9 +236,46 @@ describe("the block's surfaces", () => {
     expect(source).toMatch(/aria-pressed=\{night\.day === active\}/);
   });
 
-  it("wears the card recipe on the reading and stage cells", () => {
-    expect(source).toContain('className="gx-card gx-hunt-reading"');
-    expect(source).toContain('className="gx-card gx-hunt-stage"');
-    expect(source).toContain('className="gx-card gx-hunt-card"');
+  it("paints the vault with the FileTree drawing inside the Sidebar rail", () => {
+    // Bug guarded: the rail was 33 hand-written `div`s with their own chevrons,
+    // indentation arithmetic and active fill — a second file tree that could
+    // not fold. The rows are the FileTree drawing now, and the rail is the
+    // Sidebar panel, group and footer.
+    expect(source).toContain('className="gx-hunt-rail gx-sb-panel"');
+    expect(source).toContain('className="gx-hunt-tree gx-sb-group"');
+    expect(source).toContain("<FileTreeFrame");
+    expect(source).not.toContain("gx-hunt-row");
+    expect(huntCss).not.toContain(".gx-hunt-row");
+    expect(cssBlock(".gx-hunt-rail")).toContain("background: var(--card)");
+    expect(cssBlock(".gx-hunt-rail")).not.toContain("var(--muted)");
+    expect(cssBlock(".gx-hunt-tree .gx-filetree")).toContain("width: 100%");
+    // The window is shorter than the FileTree page, so the rail's row step is
+    // the block's: the whole vault fits and the current note paints at rest.
+    expect(cssBlock(".gx-hunt-tree")).toContain("--row-height: 12px");
+    expect(vaultRows).toHaveLength(33);
+    expect(vaultRows.length * 12).toBeLessThan(423);
+  });
+
+  it("reads the trail, the chips and the cells from their drawings", () => {
+    expect(source).toContain("gx-breadcrumb-list");
+    expect(source).toContain("gx-breadcrumb-page");
+    expect(source).toContain("gx-breadcrumb-sep");
+    expect(source).toContain("gx-badge gx-badge-sm");
+    expect(source.match(/gx-card-header/g)?.length).toBeGreaterThanOrEqual(3);
+    expect(source.match(/gx-card-content/g)?.length).toBeGreaterThanOrEqual(3);
+    // The chip's compact metrics are the window's; its pill is the Badge's.
+    expect(cssBlock(".gx-hunt-chip")).not.toContain("border");
+  });
+
+  it("wears the card recipe on the reading, stage and dossier cells", () => {
+    expect(source).toContain(
+      'className="gx-card gx-card-outline gx-hunt-reading"',
+    );
+    expect(source).toContain(
+      'className="gx-card gx-card-outline gx-hunt-stage"',
+    );
+    expect(source).toContain(
+      'className="gx-card gx-card-outline gx-hunt-card"',
+    );
   });
 });
