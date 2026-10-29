@@ -16,7 +16,10 @@ import { BrowserIcon } from "./browser-icon";
  * it and this drawing is a labelled approximation. The rules are the package's:
  * `splitOverflow` decides which actions stay in the strip and which overflow,
  * `initialRoving` and `moveRoving` decide which slot holds the single tab
- * stop. Only the paint is the browser's.
+ * stop. Only the paint is the browser's — and the paint is the shipped one: the
+ * leading group is the shared `.gx-btn` family, the divider is a hairline, the
+ * mode group is a `gx-tgroup`, and the overflow trigger is the square icon
+ * action, so a reader sees the component's anatomy rather than a second chrome.
  */
 
 /** One action in the strip. */
@@ -28,6 +31,12 @@ export interface ToolbarAction {
   readonly disabled?: boolean;
 }
 
+/** One mode in the trailing group. */
+export interface ToolbarMode {
+  readonly id: string;
+  readonly label: string;
+}
+
 /** The actions the drawing opens with: two groups and a disabled action. */
 export const TOOLBAR_ACTIONS: ReadonlyArray<ToolbarAction> = [
   { id: "new", label: "New", group: "file" },
@@ -36,6 +45,12 @@ export const TOOLBAR_ACTIONS: ReadonlyArray<ToolbarAction> = [
   { id: "undo", label: "Undo", group: "edit" },
   { id: "redo", label: "Redo", group: "edit" },
   { id: "find", label: "Find", group: "find" },
+];
+
+/** The trailing mode group: the toolbar's own view switch. */
+export const TOOLBAR_MODES: ReadonlyArray<ToolbarMode> = [
+  { id: "edit", label: "Edit" },
+  { id: "preview", label: "Preview" },
 ];
 
 /** The visible slots the drawing offers: the overflow trigger takes one. */
@@ -125,11 +140,17 @@ export interface ToolbarFrameProps {
   readonly max: number;
   readonly tabStop: Option.Option<number>;
   readonly overflowOpen: boolean;
+  /** The trailing mode group. Omit to draw no group. */
+  readonly modes?: ReadonlyArray<ToolbarMode>;
+  /** The pressed mode. */
+  readonly mode?: string;
   /** Reports the slot that holds the tab stop. */
   readonly onTabStopChange: (slot: Option.Option<number>) => void;
   readonly onOverflowOpenChange: (open: boolean) => void;
   /** Reports the action a reader chose. */
   readonly onAction: (id: string) => void;
+  /** Reports the mode a reader pressed. */
+  readonly onModeChange?: (id: string) => void;
 }
 
 /** The strip, the overflow menu and the readout. */
@@ -138,9 +159,12 @@ export function ToolbarFrame({
   max,
   tabStop,
   overflowOpen,
+  modes = [],
+  mode,
   onTabStopChange,
   onOverflowOpenChange,
   onAction,
+  onModeChange,
 }: ToolbarFrameProps) {
   const strip = toolbarStrip(actions, max);
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -148,6 +172,10 @@ export function ToolbarFrame({
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const key = event.key;
     if (key !== "ArrowLeft" && key !== "ArrowRight") return;
+    // A key in the mode group is the group's; only an action or the overflow
+    // trigger roves this strip.
+    const target = event.target as HTMLElement;
+    if (target.closest(".gx-tgroup") !== null) return;
     event.preventDefault();
     const next = moveTabStop(
       strip,
@@ -162,7 +190,7 @@ export function ToolbarFrame({
   };
 
   return (
-    <div className="gx-shell-demo">
+    <div className="gx-shell-demo gx-toolbar-demo">
       <div
         aria-label="Document"
         className="gx-shell-toolbar"
@@ -183,7 +211,7 @@ export function ToolbarFrame({
               <button
                 aria-disabled={action.disabled === true}
                 aria-label={action.label}
-                className="gx-shell-action"
+                className="gx-btn gx-btn-ghost gx-btn-sm"
                 data-action={action.id}
                 data-disabled={action.disabled === true ? "true" : "false"}
                 data-tab-stop={
@@ -192,13 +220,6 @@ export function ToolbarFrame({
                 onClick={() => {
                   if (action.disabled === true) return;
                   onAction(action.id);
-                }}
-                onKeyDown={(event) => {
-                  if (action.disabled === true) return;
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    onAction(action.id);
-                  }
                 }}
                 ref={(element) => {
                   refs.current[index] = element;
@@ -211,24 +232,44 @@ export function ToolbarFrame({
             </span>
           );
         })}
-        {Arr.length(strip.overflow) > 0 ? (
-          <span className="gx-shell-slot">
+
+        <span className="gx-shell-spacer" />
+
+        {modes.length === 0 ? null : (
+          <span aria-hidden="true" className="gx-shell-separator" />
+        )}
+        {modes.length === 0 ? null : (
+          <div aria-label="View" className="gx-tgroup" role="group">
+            {modes.map((candidate) => (
+              <button
+                aria-label={candidate.label}
+                aria-pressed={candidate.id === mode}
+                className="gx-btn gx-btn-ghost gx-btn-sm gx-toggle"
+                data-mode={candidate.id}
+                data-pressed={candidate.id === mode ? "" : undefined}
+                key={candidate.id}
+                onClick={() => onModeChange?.(candidate.id)}
+                type="button"
+              >
+                {candidate.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {Arr.length(strip.overflow) === 0 ? null : (
+          <>
+            <span aria-hidden="true" className="gx-shell-separator" />
             <button
               aria-expanded={overflowOpen}
               aria-haspopup="menu"
               aria-label="More actions"
-              className="gx-shell-action gx-shell-overflow"
+              className="gx-btn gx-btn-ghost gx-btn-sm gx-btn-square"
               data-action="overflow"
               data-tab-stop={
                 Option.contains(tabStop, strip.slots - 1) ? "true" : "false"
               }
               onClick={() => onOverflowOpenChange(!overflowOpen)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  onOverflowOpenChange(!overflowOpen);
-                }
-              }}
               ref={(element) => {
                 refs.current[strip.slots - 1] = element;
               }}
@@ -237,8 +278,8 @@ export function ToolbarFrame({
             >
               <BrowserIcon name="ellipsis" />
             </button>
-          </span>
-        ) : null}
+          </>
+        )}
       </div>
       {overflowOpen && Arr.length(strip.overflow) > 0 ? (
         <div aria-label="More actions" className="gx-shell-menu" role="menu">
@@ -274,24 +315,30 @@ export function ToolbarDemo() {
   );
   const [overflowOpen, setOverflowOpen] = useState(false);
   const [chosen, setChosen] = useState<Option.Option<string>>(Option.none());
+  const [mode, setMode] = useState(TOOLBAR_MODES[0]?.id ?? "");
 
   return (
-    <div className="gx-shell-demo">
+    <div className="gx-shell-demo gx-toolbar-demo">
       <ToolbarFrame
         actions={TOOLBAR_ACTIONS}
         max={max}
+        mode={mode}
+        modes={TOOLBAR_MODES}
         onAction={(id) => setChosen(Option.some(id))}
+        onModeChange={setMode}
         onOverflowOpenChange={setOverflowOpen}
         onTabStopChange={setTabStop}
         overflowOpen={overflowOpen}
         tabStop={tabStop}
       />
       <div className="gx-shell-actions">
-        <div aria-label="Visible slots" className="gx-shell-group" role="group">
+        <div aria-label="Visible slots" className="gx-tgroup" role="group">
           {TOOLBAR_SLOTS.map((slots) => (
             <button
+              aria-label={`${slots} slots`}
               aria-pressed={slots === max}
-              className="gx-shell-choice"
+              className="gx-btn gx-btn-ghost gx-btn-sm gx-toggle"
+              data-pressed={slots === max ? "" : undefined}
               key={slots}
               onClick={() => {
                 setMax(slots);
@@ -317,7 +364,7 @@ export function ToolbarDemo() {
   );
 }
 
-export const toolbarDemoSource = `import { Toolbar, type ToolbarAction } from "@gpuixui/shell";
+export const toolbarDemoSource = `import { Toolbar, type ToolbarAction, type ToolbarMode } from "@gpuixui/shell";
 
 const actions: ReadonlyArray<ToolbarAction> = [
   { id: "new", label: "New", group: "file" },
@@ -328,12 +375,20 @@ const actions: ReadonlyArray<ToolbarAction> = [
   { id: "find", label: "Find", group: "find" },
 ];
 
+const modes: ReadonlyArray<ToolbarMode> = [
+  { id: "edit", label: "Edit" },
+  { id: "preview", label: "Preview" },
+];
+
 export function DocumentToolbar() {
+  const [mode, setMode] = useState(() => modes[0]?.id ?? "");
   return (
     <Toolbar
       label="Document"
       max={5}
       actions={actions}
+      modes={modes}
+      onModeChange={(mode) => setMode(mode)}
       onAction={(id) => run(id)}
     />
   );
