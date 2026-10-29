@@ -12,6 +12,7 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -151,13 +152,16 @@ export const reconstructAfter = (
     (edit) => edit.text,
   );
 
+/** What a painted row is: a line of the script, or the heading that introduces a hunk. */
+export type RowKind = LineKind | "hunk";
+
 /** One row the viewer paints, with the line number it carries on each side. */
 export interface DiffRow {
-  readonly kind: LineKind;
+  readonly kind: RowKind;
   readonly text: string;
-  /** 1-based line number on the before side; `None` for a pure addition. */
+  /** 1-based line number on the before side; `None` for a pure addition or a hunk heading. */
   readonly before: Option.Option<number>;
-  /** 1-based line number on the after side; `None` for a pure removal. */
+  /** 1-based line number on the after side; `None` for a pure removal or a hunk heading. */
   readonly after: Option.Option<number>;
 }
 
@@ -233,9 +237,7 @@ const pairRun = (run: ReadonlyArray<DiffRow>): ReadonlyArray<SplitPair> => {
  * diff exists to show: the left cell is what was there and the right cell what
  * replaced it.
  */
-export const splitPairs = (
-  rows: ReadonlyArray<DiffRow>,
-): ReadonlyArray<SplitPair> =>
+const pairRows = (rows: ReadonlyArray<DiffRow>): ReadonlyArray<SplitPair> =>
   Arr.match(rows, {
     onEmpty: () => [],
     onNonEmpty: (nonEmpty) =>
@@ -252,5 +254,215 @@ export const splitPairs = (
                 right: Option.some(row),
               }))
             : pairRun(group),
+      ),
+  });
+
+/** How many unchanged rows a hunk keeps either side of a change. */
+export const DEFAULT_CONTEXT = 3;
+
+/** One run of rows the viewer paints, and the heading that names the lines a skip dropped. */
+export interface DiffHunk {
+  /** `@@ -beforeStart,count +afterStart,count @@`; `None` when the hunk shows the whole script. */
+  readonly heading: Option.Option<DiffRow>;
+  readonly rows: ReadonlyArray<DiffRow>;
+}
+
+const numbersOf = (
+  rows: ReadonlyArray<DiffRow>,
+  side: (row: DiffRow) => Option.Option<number>,
+): ReadonlyArray<number> =>
+  Arr.reduce(rows, Arr.empty<number>(), (numbers, row) =>
+    Option.match(side(row), {
+      onNone: () => numbers,
+      onSome: (value) => Arr.append(numbers, value),
+    }),
+  );
+
+/**
+ * The range a hunk names on one side.
+ *
+ * A side with lines in the slice starts at its first line. A pure addition names
+ * the before side with no lines, so it starts after the last before line before
+ * the hunk — `@@ -3,0 +4,1 @@`, not `@@ -0,0 +4,1 @@`, because the reader needs
+ * to know where the insertion lands.
+ */
+const spanOf = (
+  all: ReadonlyArray<DiffRow>,
+  visible: ReadonlyArray<DiffRow>,
+  start: number,
+  side: (row: DiffRow) => Option.Option<number>,
+): { readonly start: number; readonly count: number } =>
+  Arr.match(numbersOf(visible, side), {
+    onEmpty: () => ({
+      start: Arr.length(
+        Arr.filter(Arr.take(all, start), (row) => Option.isSome(side(row))),
+      ),
+      count: 0,
+    }),
+    onNonEmpty: (values) => ({
+      start: Arr.getUnsafe(values, 0),
+      count: Arr.length(values),
+    }),
+  });
+
+const headingOf = (
+  all: ReadonlyArray<DiffRow>,
+  visible: ReadonlyArray<DiffRow>,
+  start: number,
+): Option.Option<DiffRow> => {
+  if (start === 0 && Arr.length(visible) === Arr.length(all)) {
+    return Option.none();
+  }
+  const before = spanOf(all, visible, start, (row) => row.before);
+  const after = spanOf(all, visible, start, (row) => row.after);
+  return Option.some({
+    kind: "hunk",
+    text: `@@ -${before.start},${before.count} +${after.start},${after.count} @@`,
+    before: Option.none(),
+    after: Option.none(),
+  });
+};
+
+/**
+ * Split the numbered rows into hunks, keeping `context` unchanged rows either
+ * side of a change and naming the lines a skip dropped.
+ *
+ * A change within `2·context` rows of the previous one joins the same hunk, so
+ * the context windows abut and the slices never overlap: no change is shown
+ * twice. A script with no changes is one hunk with no heading: the viewer shows
+ * the file rather than an empty sheet. `context: Number.POSITIVE_INFINITY`
+ * keeps everything and therefore emits no heading.
+ */
+export const hunks = (
+  rows: ReadonlyArray<DiffRow>,
+  context: number = DEFAULT_CONTEXT,
+): ReadonlyArray<DiffHunk> => {
+  const reach = context >= 0 ? context : 0;
+  const changes = Arr.filterMap(rows, (row, index) =>
+    row.kind === "context" ? Result.failVoid : Result.succeed(index),
+  );
+  // A change within `2·context` rows of the previous one shares its hunk, so
+  // the two context windows abut rather than skip a row between them.
+  const spans = Arr.reduce(
+    changes,
+    Arr.empty<{ readonly start: number; readonly end: number }>(),
+    (spans, index) =>
+      Option.match(Arr.last(spans), {
+        onNone: () => [{ start: index, end: index + 1 }],
+        onSome: (span) =>
+          index - span.end <= 2 * reach
+            ? Arr.append(Arr.dropRight(spans, 1), {
+                start: span.start,
+                end: index + 1,
+              })
+            : Arr.append(spans, { start: index, end: index + 1 }),
+      }),
+  );
+  return Arr.match(spans, {
+    onEmpty: () => [{ heading: Option.none(), rows }],
+    onNonEmpty: (runs) =>
+      Arr.map(runs, (span) => {
+        const start = Math.max(0, span.start - reach);
+        const end = Math.min(Arr.length(rows), span.end + reach);
+        const visible = Arr.drop(Arr.take(rows, end), start);
+        return { heading: headingOf(rows, visible, start), rows: visible };
+      }),
+  });
+};
+
+const headingRows = (hunk: DiffHunk): ReadonlyArray<DiffRow> =>
+  Option.match(hunk.heading, {
+    onNone: () => [],
+    onSome: (heading) => [heading],
+  });
+
+const flattenPair = (pair: SplitPair): ReadonlyArray<DiffRow> =>
+  Option.match(pair.left, {
+    onNone: () =>
+      Option.match(pair.right, {
+        onNone: () => [],
+        onSome: (row) => [row],
+      }),
+    onSome: (left) =>
+      left.kind === "context"
+        ? [left]
+        : Option.match(pair.right, {
+            onNone: () => [left],
+            onSome: (right) => [left, right],
+          }),
+  });
+
+/**
+ * The unified row sequence: each hunk's heading, then every changed pair with
+ * the removal and the addition it became adjacent, and every context row once.
+ */
+export const rows = (
+  numbered: ReadonlyArray<DiffRow>,
+  context: number = DEFAULT_CONTEXT,
+): ReadonlyArray<DiffRow> =>
+  Arr.flatMap(hunks(numbered, context), (hunk) =>
+    Arr.appendAll(
+      headingRows(hunk),
+      Arr.flatMap(pairRows(hunk.rows), flattenPair),
+    ),
+  );
+
+/**
+ * The split row sequence: the same hunks, paired across the divider.
+ *
+ * A heading pairs with nothing on the right, so a split viewer paints it once
+ * across both columns; every other row aligns a left cell with a right cell and
+ * blanks the side that ran out.
+ */
+export const pairs = (
+  numbered: ReadonlyArray<DiffRow>,
+  context: number = DEFAULT_CONTEXT,
+): ReadonlyArray<SplitPair> =>
+  Arr.flatMap(hunks(numbered, context), (hunk) =>
+    Arr.appendAll(
+      Arr.map(headingRows(hunk), (heading) => ({
+        left: Option.some(heading),
+        right: Option.none(),
+      })),
+      pairRows(hunk.rows),
+    ),
+  );
+
+/** One split block: a heading that spans the sheet, or a run of paired rows between two headings. */
+export interface SplitBlock {
+  readonly heading: Option.Option<DiffRow>;
+  readonly pairs: ReadonlyArray<SplitPair>;
+}
+
+/** Whether a pair carries a heading rather than two cells. */
+const isHeading = (pair: SplitPair): boolean =>
+  Option.exists(pair.left, (row) => row.kind === "hunk");
+
+/**
+ * Group the split pairs into the blocks a viewer paints: a heading on its own,
+ * then each run of pairs that share the two-column layout.
+ *
+ * The two columns are separate scrollers, so a heading cannot live inside them
+ * and still span the sheet — it is a block of its own. Every non-heading block
+ * has one row per pair, so the two sides always line up.
+ */
+export const blocks = (
+  script: ReadonlyArray<SplitPair>,
+): ReadonlyArray<SplitBlock> =>
+  Arr.match(script, {
+    onEmpty: () => [],
+    onNonEmpty: (nonEmpty) =>
+      Arr.map(
+        Arr.groupWith(
+          nonEmpty,
+          (left, right) => isHeading(left) === isHeading(right),
+        ),
+        (group) =>
+          isHeading(Arr.getUnsafe(group, 0))
+            ? {
+                heading: Arr.getUnsafe(group, 0).left,
+                pairs: Arr.empty<SplitPair>(),
+              }
+            : { heading: Option.none(), pairs: group },
       ),
   });
