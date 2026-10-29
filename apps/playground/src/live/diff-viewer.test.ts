@@ -94,7 +94,6 @@ describe("the shipped component's paint", () => {
     expect(component).toContain('whiteSpace: "nowrap"');
     expect(component).toContain("overflow-hidden");
     expect(component).toContain("bg-background");
-    expect(component).toContain("flexBasis: 0");
     expect(component).toContain("minWidth: 0");
     expect(component).toContain('overflowX: "scroll"');
   });

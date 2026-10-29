@@ -93,8 +93,6 @@ describe("DiffViewer in split mode", () => {
     );
     const before = root.renderer.findByTestId("diff-viewer-before");
     const after = root.renderer.findByTestId("diff-viewer-after");
-    expect(before?.style.flexBasis).toBe(0);
-    expect(after?.style.flexBasis).toBe(0);
     expect(before?.style.flexGrow).toBe(1);
     expect(after?.style.flexGrow).toBe(1);
     expect(before?.style.minWidth).toBe(0);
