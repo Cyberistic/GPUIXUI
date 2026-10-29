@@ -36,13 +36,22 @@ PreviewCard
 └── PreviewCardContent
 ```
 
+## Behaviour
+
+- `PreviewCardContent` takes the popover's `align`: `start` shares the trigger's
+  left edge, `center` (the default) its centre line and `end` its right edge,
+  measured against the trigger rather than the runtime's containing block.
+- The card is hoverable, so the pointer can leave the trigger and cross the 6px
+  gap: the close is delayed (`closeDelay`, 150 ms by default) and the card's own
+  enter cancels it.
+
 ## API
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `PreviewCard` | a positioning root; owns open state and the timers | `open?`, `defaultOpen?`, `onOpenChange?`, `openDelay?`, `closeDelay?`, `children` |
 | `PreviewCardTrigger` | button, `aria-expanded` | button props |
-| `PreviewCardContent` | anchored `role="group"` named by `label` | `label` (required), `side?`, `align?`, `sideOffset?`, `collisionPadding?`, `className?`, `children` |
+| `PreviewCardContent` | anchored `role="group"` named by `label` | `label` (required), `side?`, `align?` (default `center`), `sideOffset?`, `collisionPadding?`, `alignOffset?`, `className?`, `children` |
 
 ## Limitations
 

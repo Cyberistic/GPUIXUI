@@ -23,6 +23,7 @@ import {
   focusedTestId,
   hoverCentreOf,
   requireBounds,
+  settleMotion,
   waitFor,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
@@ -32,6 +33,37 @@ const hoverCard = (root: ReturnType<typeof renderComponent>): void => {
   const bounds = requireBounds(root, "preview");
   root.renderer.nativeSimulateMouseMove(bounds.x + 10, bounds.y + 10);
 };
+
+/**
+ * An open card near the window centre, where every alignment has room.
+ *
+ * The inner row is shrink-to-fit: the anchored layer measures the positioning
+ * root, so a stretched root makes `end` read from the page's edge instead of
+ * the trigger's.
+ */
+const AlignedCard = ({
+  align,
+}: {
+  readonly align?: "start" | "center" | "end";
+}) => (
+  <div style={{ paddingLeft: 540, paddingTop: 100 }}>
+    <div style={{ display: "flex", flexDirection: "row" }}>
+      <PreviewCard open openDelay={0} closeDelay={0}>
+        <PreviewCardTrigger testId="trigger">
+          design-system.md
+        </PreviewCardTrigger>
+        <PreviewCardContent
+          align={align}
+          label="Design system"
+          style={{ width: 240 }}
+          testId="preview"
+        >
+          <text>Tokens, roles and themes.</text>
+        </PreviewCardContent>
+      </PreviewCard>
+    </div>
+  </div>
+);
 
 /** A document link with a hoverable preview card. */
 const Workspace = ({
@@ -99,6 +131,75 @@ describe("PreviewCard", () => {
       expect(card.renderer.findByTestId("preview")).toBeDefined(),
     );
     card.unmount();
+  });
+
+  it("opens centred on its trigger when the caller names no align", () => {
+    // The card defaulted to `align="start"`, so it sat on its trigger's left
+    // corner where the popover centres. The house relation is `center`.
+    const card = renderComponent(<AlignedCard />);
+    settleMotion(card);
+
+    const trigger = requireBounds(card, "trigger");
+    const preview = requireBounds(card, "preview");
+
+    expect(
+      Math.abs(preview.x + preview.width / 2 - (trigger.x + trigger.width / 2)),
+    ).toBeLessThanOrEqual(1);
+    expect(preview.y).toBeGreaterThanOrEqual(trigger.y + trigger.height);
+
+    card.unmount();
+  });
+
+  it("opens the card on each alignment it is asked for", () => {
+    // The panel's own relation to its trigger: `start` shares a left edge,
+    // `center` a centre line and `end` a right edge. GPUix 0.11.0 centres on
+    // the containing block, so `center` is `start` plus the measured half
+    // difference (the popover's rule).
+    const alignments = [
+      [
+        "start",
+        (
+          trigger: ReturnType<typeof requireBounds>,
+          preview: ReturnType<typeof requireBounds>,
+        ) => expect(preview.x).toBe(trigger.x),
+      ],
+      [
+        "center",
+        (
+          trigger: ReturnType<typeof requireBounds>,
+          preview: ReturnType<typeof requireBounds>,
+        ) =>
+          expect(
+            Math.abs(
+              preview.x + preview.width / 2 - (trigger.x + trigger.width / 2),
+            ),
+          ).toBeLessThanOrEqual(1),
+      ],
+      [
+        "end",
+        (
+          trigger: ReturnType<typeof requireBounds>,
+          preview: ReturnType<typeof requireBounds>,
+        ) => expect(preview.x + preview.width).toBe(trigger.x + trigger.width),
+      ],
+    ] as const;
+
+    for (const [align, expectRelation] of alignments) {
+      const card = renderComponent(<AlignedCard align={align} />);
+      try {
+        settleMotion(card);
+
+        const window = card.renderer.getWindowSize();
+        const trigger = requireBounds(card, "trigger");
+        const preview = requireBounds(card, "preview");
+
+        expectRelation(trigger, preview);
+        expect(preview.x).toBeGreaterThanOrEqual(0);
+        expect(preview.x + preview.width).toBeLessThanOrEqual(window.width);
+      } finally {
+        card.unmount();
+      }
+    }
   });
 
   it("takes the documented delay when the delay it was given cannot be read", async () => {

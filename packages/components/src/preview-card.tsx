@@ -21,6 +21,7 @@ import {
   FloatingLayer,
   floatingRootStyle,
   mergeStyles,
+  type FloatingAlign,
   type FloatingContentProps,
 } from "@gpuix/react/floating";
 import { PREVIEW_CARD_CONTENT } from "@gpuixui/tw";
@@ -54,8 +55,14 @@ import {
   useSurfacePresence,
   useSurfaceTiming,
 } from "./internal/presence.js";
+import { isAlign } from "./internal/placement.js";
 import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
+import { usePlacement } from "./internal/use-placement.js";
+
+/** The alignment a caller asked for, or this card's own `center` default. */
+const previewCardAlign = (align: unknown): FloatingAlign =>
+  isAlign(align) ? align : "center";
 
 /** The rules a card part follows; throws outside a {@link PreviewCard}. */
 interface PreviewCardContextValue {
@@ -192,12 +199,14 @@ export interface PreviewCardContentProps extends FloatingContentProps {
   readonly label: string;
   /** Default `"bottom"`. */
   readonly side?: "top" | "right" | "bottom" | "left";
-  /** Default `"start"`. */
+  /** Default `"center"`. `"center"` is measured from the trigger, not the runtime's `center`. */
   readonly align?: "start" | "center" | "end";
   /** Default `6`. */
   readonly sideOffset?: number;
   /** Default `8`. */
   readonly collisionPadding?: number;
+  /** Added on top of the measured centre correction. Default `0`. */
+  readonly alignOffset?: number;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
@@ -206,19 +215,36 @@ export interface PreviewCardContentProps extends FloatingContentProps {
 export const PreviewCardContent = ({
   label,
   side = "bottom",
-  align = "start",
+  align = "center",
   sideOffset = 6,
   collisionPadding = 8,
+  alignOffset = 0,
   className,
   children,
   onKeyDown,
   onMouseDownOutside,
   style,
+  ref,
   ...rest
 }: PreviewCardContentProps) => {
   const theme = useTheme();
   const { open, hover, trigger, dismissedByOutsidePress } = usePreviewCard();
   const renderer = useGpuix().renderer;
+  const surface = useRef<PublicInstance | null>(null);
+  const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+
+  const timing = useSurfaceTiming("fast");
+  const presence = useSurfacePresence(open, timing);
+  const placement = usePlacement({
+    // The surface is still painted while it leaves, so its measured side must
+    // not reset under the exit tween.
+    open: presence.mounted,
+    side,
+    align: previewCardAlign(align),
+    margin: collisionPadding,
+    trigger,
+    surface,
+  });
 
   const close = useRef<() => void>(() => undefined);
   useLayoutEffect(() => {
@@ -245,21 +271,20 @@ export const PreviewCardContent = ({
     }, depth);
   }, [depth, dismissedByOutsidePress, open, renderer, trigger]);
 
-  const timing = useSurfaceTiming("fast");
-  const presence = useSurfacePresence(open, timing);
-
   if (!presence.mounted) return null;
 
   return (
     <FloatingLayer
-      motion={presenceMotion(fadeFromAnchor(side, 4), presence)}
-      side={side}
-      align={align}
+      motion={presenceMotion(fadeFromAnchor(placement.side, 4), presence)}
+      side={placement.side}
+      align={placement.align}
       sideOffset={sideOffset}
+      alignOffset={placement.alignOffset + alignOffset}
       collisionPadding={collisionPadding}
       role="group"
       aria-label={label}
       tabIndex={-1}
+      ref={setSurface}
       {...rest}
       onMouseEnter={(event) => {
         hover.pointer("content", true);

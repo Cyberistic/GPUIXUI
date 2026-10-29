@@ -4132,6 +4132,14 @@
   display: inline-flex;
 }
 
+/* The stage holds the room above the trigger the tip opens into, so the
+   alignment control can sit above it without the tip covering it. */
+.gx-tip-stage {
+  display: flex;
+  align-items: flex-end;
+  min-height: 96px;
+}
+
 .gx-tip {
   position: absolute;
   bottom: calc(100% + 6px);
@@ -10487,16 +10495,23 @@ button.gx-rating-star:focus-visible {
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
-  width: min(360px, 100%);
+  width: min(640px, 100%);
+}
+
+.gx-preview-card-stage {
+  position: relative;
+  min-height: 200px;
 }
 
 .gx-preview-card-anchor {
   position: relative;
+  width: fit-content;
 }
 
 .gx-preview-card-trigger {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
   height: var(--control-height-md);
   padding: 0 var(--control-padding-x-md);
   border: 0;
@@ -10530,6 +10545,13 @@ button.gx-rating-star:focus-visible {
   box-shadow: 0 12px 28px var(--shadow);
 }
 
+/* The 6px gap is a hole the pointer has to cross: leaving the trigger and
+   entering this strip keeps the card open, so `Open file` can be pressed. */
+.gx-preview-card-bridge {
+  position: absolute;
+  top: 100%;
+}
+
 .gx-preview-card-title {
   margin: 0;
   font-size: 14px;
@@ -10559,6 +10581,18 @@ button.gx-rating-star:focus-visible {
 
 .gx-preview-card-link:hover {
   background: var(--hover);
+}
+
+.gx-preview-card-readout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--placeholder);
+}
+
+.gx-preview-card-readout b {
+  color: var(--primary);
+  font-weight: 600;
 }
 
 /* ---- chat: the block, on the fixed-row contract of ChatRoot ----
