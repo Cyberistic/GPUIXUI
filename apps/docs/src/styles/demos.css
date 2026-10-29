@@ -1928,7 +1928,7 @@
 .gx-dock {
   display: flex;
   width: 100%;
-  max-width: 620px;
+  max-width: 660px;
   height: 260px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -1942,7 +1942,7 @@
   flex-direction: column;
   flex: none;
   gap: 2px;
-  width: 148px;
+  width: 156px;
   padding: 10px 8px;
   background: var(--card);
 }
@@ -13736,6 +13736,11 @@ button.gx-rating-star:focus-visible {
   cursor: col-resize;
   touch-action: none;
   user-select: none;
+}
+
+.gx-props-scrub:hover {
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--hover);
 }
 
 .gx-props-field {

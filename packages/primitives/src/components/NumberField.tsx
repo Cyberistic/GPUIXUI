@@ -556,6 +556,7 @@ export const NumberFieldScrubHandle = ({
     onEnd: (next) => onValueCommit?.(next),
   });
   const inert = disabled === true;
+  const wash = inert ? undefined : colorRole(theme, "hover");
   return (
     <div
       role="presentation"
@@ -570,6 +571,15 @@ export const NumberFieldScrubHandle = ({
           alignItems: "center",
           minWidth: 0,
           cursor: inert ? "default" : "col-resize",
+          // The wash is the handle's one affordance: the words are the target.
+          ...(wash === undefined
+            ? {}
+            : {
+                hover: {
+                  backgroundColor: wash,
+                  borderRadius: theme.radius.sm,
+                },
+              }),
         },
         mergeStyle(recipeTw.classesToStyle(className, theme).style, style),
       )}

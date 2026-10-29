@@ -24376,3 +24376,31 @@ reaction marks the message, not a speaker), measured on the live page at a 12px
 right inset with the pill crossing the surface's edge. `bubble.test.tsx`'s case
 now measures the corner for both aligns and fails on the old per-side inset (7
 cases failed when inverted).
+
+## Shell chrome and the number scrubber (2026-10-29)
+
+`[x]` `[██████████]` 4/4 — **the four chrome drawings match the components they
+stand in for, and a number is scrubbed from its label.**
+
+`[x]` The split preview's rail held 132px against a row of 118px of words plus
+badge, so the file name soft-wrapped out of its 28px row (scroll height 42) and
+its own `border-right` sat beside the 6px divider. The rail is 156px, the name
+ellipsizes instead of wrapping, and the divider is the only rule; measured
+156 + 312 + 6 + 144 = 618 = the frame's inner width.
+
+`[x]` The status bar painted as a 640px rounded pill with sans text and the tone
+chips inside it. It is now a full-width strip — no radius, one top border, the
+chrome fill, mono `text-xs`, hairline separators — and the tone selector is a
+`ToggleGroup` above it.
+
+`[x]` The toolbar hand-rolled `.gx-shell-action` buttons and had no trailing
+group. It now composes the primitives' `Button`, `IconButton`, `ToggleGroup`
+and `Separator` with a leading group, a flexible spacer and the trailing mode
+group plus overflow trigger; the drawing paints the shared `.gx-btn` family.
+
+`[x]` A number property was a `<input type="number">` with the browser's
+spinner and an inert label. `NumberFieldScrubHandle` makes the label the handle:
+a horizontal drag steps the value, Shift is ×10, the row's bounds clamp it, a
+click without travel changes nothing, and the field keeps typing. The files
+panel's number rows use it and the primitives' `NumberField` page documents the
+part.
