@@ -4179,9 +4179,8 @@
 
 .gx-mail-person-mail {
   margin: 1px 0 0;
-  overflow: hidden;
   color: var(--muted-foreground);
-  font-size: 11px;
+  font-size: 10px;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -7980,7 +7979,7 @@ button.gx-sb-row {
 .gx-hunt-stages {
   display: flex;
   flex: none;
-  gap: 5px;
+  gap: 10px;
 }
 
 /* A reading and a stage are the Card drawing's surface and parts, at the
@@ -7997,13 +7996,13 @@ button.gx-sb-row {
 .gx-hunt-reading .gx-card-header,
 .gx-hunt-stage .gx-card-header {
   gap: 0;
-  padding: 4px 7px 1px;
+  padding: 10px 12px 2px;
 }
 
 .gx-hunt-reading .gx-card-content,
 .gx-hunt-stage .gx-card-content {
   gap: 0;
-  padding: 0 7px 4px;
+  padding: 0 12px 10px;
 }
 
 .gx-hunt-label {
@@ -8013,17 +8012,19 @@ button.gx-sb-row {
   margin: 0;
   overflow: hidden;
   color: var(--muted-foreground);
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.07em;
-  line-height: 1.3;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
   text-transform: uppercase;
-  white-space: nowrap;
+  /* A label wraps rather than clipping: the window is 836px wide, and a
+     truncated `RENOWN · 7 DA` is worse than two lines. */
+  white-space: normal;
 }
 
 .gx-hunt-value {
   margin: 0;
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -8031,7 +8032,12 @@ button.gx-sb-row {
 }
 
 .gx-hunt-stage .gx-hunt-value {
-  font-size: 15px;
+  font-size: 17px;
+}
+
+.gx-hunt-stage .gx-hunt-label {
+  font-size: 9px;
+  letter-spacing: 0.02em;
 }
 
 .gx-hunt-value[data-tone="success"] {
@@ -8063,7 +8069,7 @@ button.gx-sb-row {
   display: flex;
   flex: none;
   flex-direction: column;
-  gap: 2px;
+  gap: 10px;
 }
 
 .gx-hunt-bar {
@@ -8155,16 +8161,17 @@ button.gx-sb-row {
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   overflow: hidden;
 }
 
 /* The chip is the Badge drawing's pill; only the height and type step are the
    window's, so a row of three stays on one line inside the card. */
 .gx-hunt-chip {
-  height: 13px;
-  padding: 0 6px;
-  font-size: 8px;
+  height: 20px;
+  padding: 0 7px;
+  flex: none;
+  font-size: 10px;
   line-height: 1;
 }
 
@@ -8191,7 +8198,8 @@ button.gx-sb-row {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  height: 16px;
+  min-height: 26px;
+  padding: 2px 0;
   border-bottom: 1px solid var(--border);
 }
 
@@ -8301,11 +8309,13 @@ button.gx-sb-row {
 }
 
 .gx-hunt-day {
-  height: 10px;
+  height: 18px;
   padding: 0;
   border: 0;
   border-radius: 2px;
   background: transparent;
+  /* The tick is a hit area, not a chip: it must not paint over the plot. */
+  outline: none;
   color: var(--muted-foreground);
   cursor: pointer;
   font-family: var(--font-mono);
