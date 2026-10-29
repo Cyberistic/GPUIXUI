@@ -50,13 +50,7 @@ export interface PageDependencyIndex {
  */
 const sitePages: Readonly<Record<string, string>> = {
   "@gpuixui/icons": "/icons/icon",
-  "@gpuixui/tokens": "/theming",
-  "@gpuixui/tw": "/styling",
-  "@gpuixui/motion": "/motion",
-  "@gpuixui/keyboard": "/keyboard",
-  "@gpuixui/testing": "/testing",
-  "@gpuix/react": "/runtime",
-  "@gpuix/native": "/runtime",
+  "@gpuixui/tokens": "/getting-started",
 };
 
 /** A name with its case and punctuation removed, so `OTPField` matches `otp-field`. */

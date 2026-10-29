@@ -56,11 +56,10 @@ describe("writing to the clipboard", () => {
     vi.unstubAllGlobals();
   });
 
-  it("is the only clipboard call the three copy controls make", () => {
+  it("is the only clipboard call the copy controls make", () => {
     const sources = [
       "../components/docs/copy-page.tsx",
       "../components/docs/recipe-source.tsx",
-      "../components/docs/theme-editor.tsx",
     ].map((path) => readFileSync(new URL(path, import.meta.url), "utf8"));
 
     sources.forEach((source) => {

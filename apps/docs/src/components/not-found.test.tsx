@@ -27,10 +27,9 @@ describe("the not-found page", () => {
 
     const destinations = [
       "/introduction",
-      "/installation",
       "/getting-started",
       "/components",
-      "/patterns",
+      "/blocks",
       "/reference",
     ];
 

@@ -18,28 +18,13 @@ Every page is an MDX file; the paths below are relative to `content/docs/`.
 
 ```
 introduction.mdx             Introduction (served at /introduction)
-installation.mdx             Requirements, nub, first component, terminal mode
-getting-started/index.mdx    A first screen: theme, card, state, run it natively
+getting-started/index.mdx    The guide: install, the first component, the four rules, the theme, where next
 getting-started/prompt.mdx   One copyable build prompt, generated from the pages the site ships
-architecture.mdx             The package graph, the recipe pipeline, where a change goes
-styling.mdx                  The class recipe layer: two registries, states, refusals, extension, the React bridge
-theming.mdx                  Semantic roles, themes, the platform switch, the look parameter, the desktop palette
-dark-mode.mdx                App-owned mode switching, following the desktop's palette, restoring a stored theme
-typography.mdx               The ten type roles, the two families, the platform rule
 diagrams.mdx                 Mermaid diagrams at build time, themed from the page's roles
-runtime.mdx                  What the pinned GPUix provides, what it does not, the browser build behind /live, and the workaround
-accessibility.mdx            What a screen reader hears, which states have no attribute, proving the tree, the pressable-target floors and the keyboard dim
-motion.mdx                   House timing and the seam a stored one is read at, retained values and the tween a clock can name, the curves a timing name stands for, the reduced-motion policy, the presence seam (and the clock a stored phase must fit) and the React hooks
-layouts.mdx                  The layout lane: primitives, the window frame, runtime facts
 workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
 data-display/index.mdx      The data lane: what ships, the table gate, runtime gaps
-patterns.mdx                 The workflows that cross components, and who owns the state
-keyboard.mdx                 The chord grammar, keymaps, sequences, the command registry and its React provider
 examples.mdx                 The example registry, generated from every package's examples
-playground.mdx               The companion native app: run commands, the probe catalogue, where evidence lands
 reference.mdx                The public entry points and the symbols behind them
-status.mdx                   The whole component inventory, generated from COMPONENTS.md
-themes.mdx                   The live token editor, its audit and its copy output
 blocks/index.mdx             Page-level recipes composed from the library
 blocks/all.mdx               Every block in one column, generated from the pages' frontmatter
 blocks/dashboard.mdx         An activity dashboard composed from the library
@@ -97,9 +82,6 @@ components/time-picker.mdx   Curated: one clock behind typing, arrows and midnig
 components/toast.mdx         Curated: the bounded queue, one action, the hold
 components/tooltip.mdx       Curated: the tip's clock, its entry and held exit, the traversal that never opens it
 primitives/index.mdx         The Tier 1 section index (its pages come from the packages)
-testing.mdx                  The two test lanes, the check model and the report
-contributing.mdx             The checks, the worktree rules, the component checklist and how to write its page
-license.mdx                  Licenses and attribution, read from LICENSES/*.md
 ```
 
 ## Site source
@@ -108,7 +90,6 @@ license.mdx                  Licenses and attribution, read from LICENSES/*.md
 plugins/public-symbols-plugin.ts    Build-time module: the public symbol index
 plugins/page-dependencies-plugin.ts Build-time module: the packages each package page's component imports
 plugins/page-source-plugin.ts       Build-time module: each package page's module, as a lazy loader
-plugins/package-graph-plugin.ts     Build-time module: the package graph behind the architecture table
 
 src/start.ts                        TanStack Start instance, the Worker cache policy and the server functions' origin check
 src/router.tsx                      The router instance
@@ -288,11 +269,9 @@ src/components/docs/dependency-strip.tsx  The generated "Built on" line: the mod
 src/components/docs/keyboard-strip.tsx    The generated keyboard contract: the keys a component handles, read from its own modules
 src/components/docs/related-strip.tsx     The generated related-component links a package page ends with
 src/components/docs/native-run-note.tsx   The note above a package page: the playground command and its page
-src/components/docs/playground-scenarios.tsx The probe catalogue on /playground, grouped by capability
 src/components/docs/page-example.tsx      The worked example a component page links back to
 src/components/docs/lane-table.tsx        The generated rows on the three lane pages
 src/components/docs/inventory-cells.tsx   The status badge and note cell the generated component tables share
-src/components/docs/inventory-table.tsx   The whole inventory on /status, grouped by the headings in COMPONENTS.md
 src/components/docs/lane-pages.tsx        The generated page list on the data and workspace lanes, each package linked to its section entry
 src/components/docs/collection-index.tsx The list a collection route serves when the package writes no landing page
 src/components/docs/component-index.tsx   The 3-column tile grid on /components and its URL filter
@@ -300,18 +279,7 @@ src/components/docs/icon-gallery.tsx      Every icon the set publishes, from its
 src/components/docs/use-index-query.ts    A list filter carried in `?q=`, shared by both indexes
 src/components/docs/examples-index.tsx    The generated registry on /examples
 src/components/docs/api-reference.tsx     The entry-point table and the symbol index
-src/components/docs/package-table.tsx     The package table on /architecture, generated from the manifests
-src/components/docs/package-graph.tsx     The direction diagram below it, from the graph's chains
-src/components/docs/type-scale.tsx        The typography specimen, from the theme
-src/components/docs/theme-matrix.tsx      The built-in themes, generated from the token package
-src/components/docs/token-scales.tsx      The spacing/radius/density specimens on /theming
-src/components/docs/style-reference.tsx   The class reference on /styling, compiled from the theme
 src/components/docs/platform-toggle.tsx   The platform and palette switch, and the shared preview provider
-src/components/docs/look-picker.tsx       The authored looks, as a control on /theming
-src/components/docs/platform-style-source.tsx The copyable platform style, generated from the package's own table
-src/components/docs/license-table.tsx     LICENSES/*.md, rendered
-src/components/docs/patterns.tsx          The pattern workflows and the chooser
-src/components/docs/series-swatches.tsx   The theme's categorical data series, on /theming
 src/components/docs/token-list.tsx       A contract's roles or surfaces, rendered from the package's array
 src/components/docs/block-index.tsx       The Blocks index, one thumbnail card per block
 src/components/docs/all-blocks.tsx        The all-blocks page: every block, one row each
@@ -353,9 +321,6 @@ src/components/docs/blocks/sidebar-14.tsx The sidebar block 14's browser reprodu
 src/components/docs/blocks/sidebar-15.tsx The sidebar block 15's browser reproduction and recipe
 src/components/docs/blocks/sidebar-16.tsx The sidebar block 16's browser reproduction and recipe
 src/components/docs/live-surface.tsx      Boots the wasm renderer on /live, mounts the reconciler and reports what it painted
-src/components/docs/theme-editor.tsx      The live token editor
-src/components/docs/theme-editor-storage.ts The editor's remembered pins, through the guarded store
-src/components/docs/theme-editor-logic.ts Its pure core: edits, audit, copy output
 src/components/docs/scatter.ts              The decorative fields' deterministic point scatter
 src/components/docs/auto-height-demo.tsx   The auto height's expand/collapse preview and its source
 src/components/docs/avatar-group-demo.tsx  The facepile's overlap, ring and overflow chip
@@ -410,7 +375,6 @@ src/styles/demos.css                      Scoped browser previews of the native 
 src/styles/blocks.css                     The block recipes' preview styles
 src/styles/landing.css                    The landing page's styles
 src/styles/platform.css                   The platform switch's own chrome
-src/styles/theme-editor.css               The theme editor's chrome and preview
 src/styles/live.css                       The live surface's bar and its fallback sentence
 
 src/lib/docs-view.tsx               The shared docs layout and the two-collection page template
@@ -451,7 +415,6 @@ src/lib/virtual-modules.d.ts        The types of the build-time modules
 src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack bridge for the previews
 src/lib/inventory.ts                Parses the tier tables and animated catalogue of COMPONENTS.md into rows and sections
 src/lib/inventory-data.ts           The parsed inventory, at build time
-src/lib/inventory-page.ts           Groups the inventory by its own headings and joins each row to its page
 src/lib/lane-pages.ts               The pages a lane's packages ship, grouped by package
 src/lib/inventory-status.ts         The page → COMPONENTS.md row join behind the status strip (title, plus the address two pages can share), both ways
 src/lib/public-api.ts               Derives the entry points from each package's exports map
@@ -459,9 +422,6 @@ src/lib/public-api-data.ts          The entry points, at build time
 src/lib/public-symbols.ts           The symbol index model: kinds, modules and summaries
 src/lib/public-symbols-source.ts    Reads the workspace source the index describes
 src/lib/public-symbols-data.ts      The index, read from the plugin's build-time module
-src/lib/package-graph.ts            The package table's order, responsibilities, direction chains and model
-src/lib/package-graph-source.ts     Reads packages/*/package.json for the table
-src/lib/package-graph-data.ts       The graph, read from the plugin's build-time module
 src/lib/page-dependencies.ts        The dependency model: a page's component imports, grouped by package; a mounted collection's route is its package's page
 src/lib/page-dependencies-source.ts Reads each package page's component module and each curated page's source block, at build time
 src/lib/page-dependencies-data.ts   The dependency index, read from the plugin's build-time module
@@ -476,21 +436,14 @@ src/lib/block-index.ts              The all-blocks list, built from the block pa
 src/lib/block-index-data.ts         The all-blocks list, read from `content/docs/blocks` at build time
 src/lib/frontmatter.ts              A page's frontmatter block and one scalar field from it
 src/lib/component-props.ts          The props a component declares, read through extends, aliases and Omit
-src/lib/playground-registry.ts      The three playground registries, read at build time for the probe catalogue
 src/lib/component-index-query.ts    The docs indexes' filter on the page URL (`?q=`)
 src/lib/icon-gallery.ts             The icon gallery's entries and its paint rule
 src/lib/related.ts                  The related-component families a package page's strip prints
-src/lib/patterns.ts                 The one source of the patterns and their parts
-src/lib/licenses.ts                 The LICENSES/*.md parse
-src/lib/licenses-data.ts            The licence records, at build time
 src/lib/platform.ts                 The platform and look switch: parse, label, resolve, and the mode a preview paints
-src/lib/platform-style-source.ts    A shipped platform style as the file a reader copies, generated from the package
 src/lib/platform-storage.ts         The remembered platform/look choice, per axis
 src/lib/browser-storage.ts          The browser store, and the guard that reads a refusal as absence
 src/lib/clipboard.ts                One copy call that answers an absent or refused clipboard as a failed copy
-src/lib/system-palette.ts           The desktop palette /theming decodes and maps, from the shipped functions
 src/lib/theme-css.ts                Theme → CSS variables, shared with every preview
-src/lib/style-reference.ts          The class groups /styling prints, resolved by @gpuixui/tw
 src/lib/code-theme.ts               The Shiki themes a code block highlights with, from the syntax palette
 src/lib/remark-mermaid.ts           Turns a `mermaid` fence into a diagram at compile time
 src/lib/prompt-data.ts             The build prompt: prose plus the rows the pages generate
@@ -512,7 +465,6 @@ scripts/platform-switch-probe.ts    Presses Windows then macOS and reads every s
 scripts/docs-theme-probe.ts         Presses the docs theme toggle and holds every preview on the library's palette
 scripts/data-previews-probe.ts      Presses the data lane's four drawings and reads the panels, rows, offsets and widths back
 scripts/search-probe.ts             Presses the search dialog, types three queries and requires Enter to open the result
-scripts/theme-editor-probe.ts       Edits, audits and resets /themes in a browser that refuses site data
 ```
 
 `src/routeTree.gen.ts` is generated by the TanStack Start plugin and is not
@@ -681,25 +633,14 @@ No page restates what the code already says:
   strip prints, so a component the runtime supports only in part is marked in
   the grid and `partial` is a query. The grid is three across on desktop, two on
   tablet and one on a phone.
-- **Lane pages** (`/layouts`, `/workspace`, `/data-display`) get
-  their rows from the tier tables of `COMPONENTS.md` through `<LaneTable>`, so a
-  page cannot call a row shipped while the inventory says `todo`.
-- **Implementation status** (`/status`) renders every row grouped by the
-  headings the document uses — the five tiers and the plan 600 animated
-  catalogue, which is not a sixth tier — with the group counts and a link to the
-  page that publishes each row (`src/components/docs/inventory-table.tsx`,
-  `src/lib/inventory-page.ts`).
-- **Typography and Theming** render specimens from the theme itself
-  (`<TypeScale>`, `<TokenScales>`), so a token edit moves the page with it.
-- **Styling** (`/styling`) compiles its class reference through
-  `@gpuixui/tw` against the resolved platform theme (`src/lib/style-reference.ts`),
-  so every printed height, corner and refusal reason is the release's own answer
-  and the platform switch repaints the table. The docs suite parses the
-  compiler's vocabulary out of `packages/tw/src/utilities.ts`, so a utility it
-  accepts without a row fails the docs until it is taught.
-- **License** (`/license`) renders `LICENSES/*.md` through
-  `<LicenseInventory>`; a record added beside the code appears with no docs
-  change.
+- **Lane pages** (`/workspace`, `/data-display`) get their rows from the tier
+  tables of `COMPONENTS.md` through `<LaneTable>`, so a page cannot call a row
+  shipped while the inventory says `todo`.
+- **Guide** (`/getting-started`) is the one getting-started page: install, the
+  first component, the four rules, the theme in seven lines and the way out.
+  The reference matter the old guide lane carried lives where it describes the
+  code — `docs/gpuix-capabilities.md`, `docs/tokens.md`, `docs/design-system.md`
+  and each package's README.
 - **Sitemap** (`/sitemap.xml`) is generated per request from the same
   collections plus the site's two routes — the landing and `/live`
   (`src/lib/sitemap.ts`) — with one URL per page and a curated page shadowing
@@ -815,7 +756,7 @@ Press me,Waiting for a press`, the button sampled `#a7a9ff` at `41,113`, the
 banner `#1e222a` at `500,149`, and one press through the automation locator
 sampled `#0e5135` with "Pressed 1 time" — a React tree, a real press.
 
-## The platform switch and the look picker
+## The platform switch and the authored looks
 
 `PlatformToggle` sits in the sidebar footer and offers macOS, Linux, Windows and
 Default — the mission's four platform names and **no look group**, because a look
@@ -827,24 +768,9 @@ through `applyStyle`. The choice is carried in
 `?platform=…&mode=…&look=…` and remembered in local storage, and every preview
 renders on a `PreviewSurface` that applies the resolved theme's variables,
 `data-platform`, `data-mode` and `data-look`. A preview therefore paints the
-library's roles, radii, families and density, not a docs palette. `/theming`
-mounts `components/docs/look-picker.tsx` — the page's own control, not a sidebar
-group — so a reader presses a look and the specimens beside it repaint; it is
-documented there under **The look picker**.
-
-## The theme editor
-
-`/themes` mounts `<ThemeEditor>`, which edits the twelve shadcn-core roles,
-`radius.md` and the `sans` family for each mode, previews them through the same
-CSS bridge, and copies a `createTheme` module in the shape
-`@gpuixui/tokens` consumes. Its state is the **pins** a reader set, resolved over
-the platform style the switch selected (`platformThemes`), so switching the
-platform re-bases the preview and inputs while the edits stay, and the copied
-module prints the resolved values. The edits persist to the URL and to local
-storage. Its readout is `auditTheme` — the library's own gate — so a role the
-renderer cannot paint, a text pair below its floor and an invisible divider are
-all reported, and a persisted state that would paint black is rejected instead of
-restored. `theme-editor-logic.ts` is the pure core and its tests.
+library's roles, radii, families and density, not a docs palette. The looks are
+table data, documented in `docs/tokens.md` §Authored looks; no page mounts a
+picker for them.
 
 ## Component pages
 

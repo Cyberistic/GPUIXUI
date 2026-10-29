@@ -15,7 +15,7 @@ import { declaredTypes, propsOf, type TypeIndex } from "./component-props";
  * package fails the introduction until the snippet follows.
  *
  * `ThemeProvider` is the tokens package's React bridge and outside the three
- * packages the props reader scans; its props are documented on `/theming`.
+ * packages the props reader scans; its props are documented in the [guide](/getting-started).
  */
 
 const root = new URL("../../../../", import.meta.url);

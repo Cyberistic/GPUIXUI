@@ -24703,3 +24703,29 @@ moved from the docs index to `/introduction`, because `/` is the landing.
 landing, `curated-twins.ts`, the theme editor, the block index and all 131
 content links print the new URLs. The build prerenders 206 pages under the new
 paths and none under `/docs`; `nub run check` and `nub run test` pass.
+
+## One guide (2026-10-30)
+
+`[x]` `[██████████]` 3/3 — **the guide lane is one page, and five prose pages
+are gone.**
+
+`[x]` `/getting-started` is **Guide**: install, the first component, the four
+rules (Effect, semantic roles, the runtime's limits, a test with every fix), the
+theme in seven lines, and the way out. The fourteen other guide-lane pages
+(`installation`, `architecture`, `styling`, `runtime`, `accessibility`, `motion`,
+`theming`, `typography`, `dark-mode`, `themes`, `layouts`, `patterns`,
+`keyboard`, plus the page's old body) are deleted from the content tree, the
+sidebar and every inbound link.
+
+`[x]` `status`, `testing`, `playground`, `contributing` and `license` are
+deleted with the components that rendered them, the ledger rows, the guard
+suites and the probes. The facts a reader still needs moved to their source:
+`docs/gpuix-capabilities.md` gains the browser build and keeps the capability
+matrix, `docs/tokens.md` keeps the theme roles and the authored looks,
+`docs/design-system.md` keeps accessibility, each package README keeps its own
+module, and `packages/icons/docs/icon.mdx` carries the Lucide attribution with
+`LICENSES/` as the ledger.
+
+`[x]` `nub run --filter @gpuixui/docs test` is 201 files / 2039 tests green and
+`nub run check` is green; the new guide is captured at 1440×1000 in dark mode
+with the final sidebar.

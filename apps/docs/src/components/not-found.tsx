@@ -25,14 +25,9 @@ const destinations: ReadonlyArray<Destination> = [
     description: "What the library is, and what it deliberately is not.",
   },
   {
-    href: `${docsRoute}/installation`,
-    label: "Installation",
-    description: "The workspace, nub, and your first component.",
-  },
-  {
     href: `${docsRoute}/getting-started`,
-    label: "Getting started",
-    description: "Build a settings screen in four steps.",
+    label: "Guide",
+    description: "Install the workspace, render a component and pick a theme.",
   },
   {
     href: componentDocsRoute,
@@ -40,9 +35,9 @@ const destinations: ReadonlyArray<Destination> = [
     description: "Every page, filterable by name, part, prop or limit.",
   },
   {
-    href: `${docsRoute}/patterns`,
-    label: "Patterns",
-    description: "Who owns the state when several parts work together.",
+    href: `${docsRoute}/blocks`,
+    label: "Blocks",
+    description: "Whole windows assembled from the library's parts.",
   },
   {
     href: `${docsRoute}/reference`,

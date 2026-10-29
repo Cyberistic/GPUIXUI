@@ -34,12 +34,15 @@ const packagedPages = (): string[] =>
 
 describe("the sitemap", () => {
   it("lists one absolute URL per page, sorted", () => {
-    const xml = sitemapXml(["/installation", "/", "/"]);
+    const xml = sitemapXml(["/getting-started", "/", "/"]);
     const locations = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].flatMap((match) =>
       match[1] === undefined ? [] : [match[1]],
     );
 
-    expect(locations).toEqual([`${siteOrigin}/`, `${siteOrigin}/installation`]);
+    expect(locations).toEqual([
+      `${siteOrigin}/`,
+      `${siteOrigin}/getting-started`,
+    ]);
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain(
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
@@ -76,10 +79,10 @@ describe("the sitemap", () => {
 
     // The document does not re-add the routes to a list it was handed: the
     // route composes `sitemapPaths`, and a second `<loc>` is a duplicate.
-    const xml = sitemapXml(["/installation", "/", "/"]);
+    const xml = sitemapXml(["/getting-started", "/", "/"]);
     expect(
       [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]),
-    ).toEqual([`${siteOrigin}/`, `${siteOrigin}/installation`]);
+    ).toEqual([`${siteOrigin}/`, `${siteOrigin}/getting-started`]);
   });
 
   it("escapes a URL a parser would otherwise reject", () => {

@@ -73,16 +73,17 @@ The mark is not written by hand: the verdict comes from the `COMPONENTS.md` row,
 A section that does not apply is left out rather than faked: a leaf component has
 no Composition, and a page whose runtime facts are all measured elsewhere still
 states its own limits. The facts a page does not repeat are shared:
-[Accessibility](/accessibility) carries the runtime's ARIA budget and the
-pressable-target floors, and [Theming](/theming) carries the token roles and
-the platform switch.
+[Accessibility](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/design-system.md#9-accessibility) carries the runtime's ARIA budget and the
+pressable-target floors, and the [guide](/getting-started) carries the token
+roles and the platform switch.
 
 ## The platform looks
 
 Every preview on this site renders through the **Platform** switch at the foot
 of the sidebar: macOS, Linux, Windows or Default. The switch resolves a real
 `@gpuixui/tokens` theme, and the choice travels in the URL
-(`?platform=win32`), so a link shows what you saw. [Theming](/theming#platform-styles)
+(`?platform=win32`), so a link shows what you saw.
+[`docs/tokens.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md#platform-styles)
 documents what each variant changes today.
 
 ## Previews are browser renderings
@@ -90,8 +91,9 @@ documents what each variant changes today.
 The components render through GPUix, not the DOM. A preview shows geometry,
 palette and states in a browser and says so on the page; it is never the
 authority. To run the real component, open the companion playground with
-<code>{playgroundCommand}</code> — the [native playground
-page](/playground) lists what it mounts.
+<code>{playgroundCommand}</code> — the
+[playground README](https://github.com/Cyberistic/GPUIXUI/blob/master/apps/playground/README.md)
+lists what it mounts.
 
 <Callout type="warn" title="Status is per component, not per page">
   A page existing does not mean the component is finished. `COMPONENTS.md` holds

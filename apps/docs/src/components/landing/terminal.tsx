@@ -18,7 +18,7 @@ import { usePrefersReducedMotion } from "./reduced-motion";
  * `prefers-reduced-motion` is one CSS block plus a jump to the last stage.
  */
 
-/** The launch command `docs/installation` documents: GPUIXUI, in the terminal. */
+/** The launch command the guide documents: GPUIXUI, in the terminal. */
 const COMMAND = "GPUIX_TERMINAL=1 code GPUIXUI";
 
 /** One typed character, the shell's pause, then the editor. */
@@ -320,7 +320,7 @@ export function Terminal() {
         <p className="landing-terminal-caption">
           A browser drawing of VS Code — its Dark Modern chrome and palette —
           with <code>src/app/page.tsx</code> open. The command is the one{" "}
-          <a href="/installation">the installation page</a> documents.
+          <a href="/getting-started">the guide</a> documents.
         </p>
         <button
           aria-label="Replay the terminal animation"

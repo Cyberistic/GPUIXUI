@@ -255,7 +255,7 @@ const dead = pages.flatMap((page) =>
 
 describe("the site's links", () => {
   it("slug a heading the way the rendered page does", () => {
-    expect(slug("The look picker")).toBe("the-look-picker");
+    expect(slug("The platform styles")).toBe("the-platform-styles");
     expect(slug("Tray / menu bar")).toBe("tray--menu-bar");
     expect(slug("`isTerminal()`")).toBe("isterminal");
     expect(slug("Native view / webview")).toBe("native-view--webview");

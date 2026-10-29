@@ -47,14 +47,14 @@ describe("the search index's page list", () => {
 
   it("cannot emit one URL twice, whichever collection repeats it", () => {
     const pages = uniqueSearchPages(
-      [page("/theming", "Theming")],
+      [page("/getting-started", "Theming")],
       [
-        [page("/theming", "Theming again")],
-        [page("/theming", "Theming once more")],
+        [page("/getting-started", "Theming again")],
+        [page("/getting-started", "Theming once more")],
       ],
     );
 
-    expect(urls(pages)).toEqual(["/theming"]);
+    expect(urls(pages)).toEqual(["/getting-started"]);
   });
 
   it("is the rule the route indexes with, not a copy nothing uses", () => {

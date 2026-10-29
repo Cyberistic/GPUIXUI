@@ -11,19 +11,9 @@ import { IconGallery } from "./docs/icon-gallery";
 import { Install } from "./docs/install";
 import { LanePages } from "./docs/lane-pages";
 import { LaneTable } from "./docs/lane-table";
-import { LicenseInventory } from "./docs/license-table";
-import { LookPicker } from "./docs/look-picker";
 import { MermaidDiagram } from "./docs/mermaid-diagram";
-import { Pattern, PatternChoices } from "./docs/patterns";
-import { PlatformStyleSource } from "./docs/platform-style-source";
 import { PromptPage } from "./docs/prompt-page";
-import { SeriesSwatches } from "./docs/series-swatches";
 import { SidebarExample } from "./docs/sidebar-examples";
-import { StyleReference } from "./docs/style-reference";
-import { ThemeEditor } from "./docs/theme-editor";
-import { ThemeMatrix } from "./docs/theme-matrix";
-import { TokenScales } from "./docs/token-scales";
-import { TypeScale } from "./docs/type-scale";
 
 /** The text a `<code>` element holds, or `undefined` when it is not a fence. */
 const codeOf = (
@@ -77,19 +67,8 @@ export const mdxComponents = {
   Install,
   LanePages,
   LaneTable,
-  LicenseInventory,
-  LookPicker,
   MermaidDiagram,
-  Pattern,
-  PatternChoices,
-  PlatformStyleSource,
   pre,
   PromptPage,
-  SeriesSwatches,
   SidebarExample,
-  StyleReference,
-  ThemeEditor,
-  ThemeMatrix,
-  TokenScales,
-  TypeScale,
 };

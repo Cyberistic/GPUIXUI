@@ -122,7 +122,6 @@ const rowTokens = (): ReadonlyArray<string> =>
 
 const modalFixture = read("apps/playground/src/live/modal-scroll.ts");
 const motionFixture = read("apps/playground/src/live/motion-interruption.ts");
-const runtimePage = read("apps/docs/content/docs/runtime.mdx");
 
 /** One numeric constant the fixture exports. */
 const fixtureNumber = (name: string): number => {
@@ -228,23 +227,23 @@ describe("docs/gpuix-capabilities.md", () => {
     // a modal over a scrolling page needs no scroll lock. Every figure the
     // record prints is the fixture's own arithmetic, so a changed row count or
     // viewport fails here instead of leaving a stale measurement behind.
-    const pageRows = fixtureNumber("MODAL_PAGE_ROWS");
     const rowHeight = fixtureNumber("MODAL_ROW_HEIGHT");
+    const pageRows = fixtureNumber("MODAL_PAGE_ROWS");
     const bodyRows = fixtureNumber("BODY_ROWS");
     const pageViewport = fixtureNumber("PAGE_VIEWPORT");
     const dialogViewport = fixtureNumber("DIALOG_VIEWPORT");
     const chrome = fixtureNumber("DIALOG_CHROME_HEIGHT");
     expect([
-      pageRows,
       rowHeight,
+      pageRows,
       bodyRows,
       pageViewport,
       dialogViewport,
       chrome,
     ]).toEqual([40, 40, 30, 472, 456, 220]);
 
-    const pageContent = pageRows * rowHeight;
     const dialogContent = bodyRows * rowHeight + chrome;
+    const pageContent = pageRows * rowHeight;
     const pageClamp = Math.min(0, pageViewport - pageContent);
     const dialogClamp = Math.min(0, dialogViewport - dialogContent);
     expect([pageContent, dialogContent, pageClamp, dialogClamp]).toEqual([
@@ -263,12 +262,6 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(evidence).toContain("`occlude`");
     expect(evidence).toContain("`onScroll`");
     expect(row?.workaround).toContain("no scroll lock");
-
-    // The page is a summary of the record, not a second copy: it names the
-    // rule, the probe and the consequence a reader acts on.
-    expect(runtimePage).toContain("`modal-scroll-lifecycle`");
-    expect(runtimePage).toContain("no scroll lock");
-    expect(runtimePage).toContain("occlude");
   });
 
   it("records an interrupted animation continuing, from its fixture", () => {
@@ -311,15 +304,6 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(evidence).toContain("`motion-geometry`");
     expect(row?.workaround).toContain("generation filter");
 
-    // The page is a summary of the record, not a second copy.
-    const pageRow = runtimePage
-      .split("\n")
-      .find((line) => line.startsWith("| An interrupted animation continues"));
-    expect(pageRow).toContain("`motion-interruption`");
-    expect(pageRow).toContain(`${checks} checks`);
-    expect(pageRow).toContain("**192**");
-    expect(pageRow).toContain("**329.5**");
-
     // §5 owes every cited probe a line.
     expect(doc.slice(doc.indexOf("## 5."))).toContain("`motion-interruption`");
   });
@@ -352,15 +336,6 @@ describe("docs/gpuix-capabilities.md", () => {
       (measured?.slice(1) ?? []).filter((word) => !evidence.includes(word)),
     ).toEqual([]);
     expect(row?.workaround).toContain("one element");
-
-    // The page is a summary of the record, not a second copy: the rule, the
-    // last child and the action a reader takes.
-    const pageRow = runtimePage
-      .split("\n")
-      .find((line) => line.startsWith("| One host element at the window root"));
-    expect(pageRow).toContain("**last** child");
-    expect(pageRow).toContain("ninth");
-    expect(pageRow).toContain("one element");
   });
 
   it("owes only probes a registry declares, in one sentence", () => {
@@ -406,16 +381,6 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(section).toContain("disabled");
     expect(section).toContain("`escape`");
     expect(section).toContain("status bar");
-
-    // The page is a summary of the record, not a second copy: it names the
-    // probe, the parts and the one action a reader takes.
-    const pageRow = runtimePage
-      .split("\n")
-      .find((line) => line.startsWith("| In-window application chrome"));
-    expect(pageRow).toContain("`app-chrome-lifecycle`");
-    expect(pageRow).toContain("47 checks");
-    expect(pageRow).toContain("AppMenu");
-    expect(pageRow).toContain("`Enter`");
 
     // §5 owes every cited probe a line.
     expect(doc.slice(doc.indexOf("## 5."))).toContain("`app-chrome-lifecycle`");
@@ -464,13 +429,6 @@ describe("docs/gpuix-capabilities.md", () => {
     ["540", "32x32", "4576", "516x64"].forEach((number) =>
       expect(section).toContain(number),
     );
-
-    const pageRow = runtimePage
-      .split("\n")
-      .find((line) => line.startsWith("| A radio group is one tab stop"));
-    expect(pageRow).toContain("`radio-group-lifecycle`");
-    expect(pageRow).toContain(`${checks} checks`);
-    expect(pageRow).toContain("one stop");
 
     expect(doc.slice(doc.indexOf("## 5."))).toContain(
       "`radio-group-lifecycle`",

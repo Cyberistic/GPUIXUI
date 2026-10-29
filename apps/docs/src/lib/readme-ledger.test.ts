@@ -94,23 +94,21 @@ describe("the apps/docs ledger", () => {
     expect(policy).toContain("## The strategy");
   });
 
-  it("says the sidebar offers platforms and names where the look control lives", () => {
-    // `8c180a9f` removed the sidebar's Look group, and `/theming` and the
-    // preview policy were corrected with it. A look picker returned to the page
-    // — not the sidebar — so the ledger has to name the file a contributor
-    // edits without claiming a group the footer does not carry.
+  it("says the sidebar offers platforms, never a look group", () => {
+    // The footer carries the four platform names; an authored look is applied
+    // in the URL (`?look=luna`) and has no control of its own. The ledger must
+    // describe that shape without naming a picker the tree no longer ships.
     const readme = ledger.join("\n");
     const page = readFileSync(
-      new URL("../../content/docs/theming.mdx", import.meta.url),
+      new URL("../../content/docs/components/index.mdx", import.meta.url),
       "utf8",
     );
 
-    expect(page).toContain("### The look picker");
-    expect(page).toContain("<LookPicker />");
-    expect(readme).toContain("## The platform switch and the look picker");
+    expect(page).toContain("?platform=win32");
+    expect(readme).toContain("## The platform switch and the authored looks");
     expect(readme).toContain("no look group");
     expect(readme).toContain("?look=luna");
-    expect(readme).toContain("components/docs/look-picker.tsx");
+    expect(readme).not.toContain("look-picker.tsx");
     expect(readme).not.toContain("**Look** offers");
   });
 

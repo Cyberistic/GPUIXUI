@@ -142,7 +142,7 @@ describe("the dependency index", () => {
     );
 
     expect(dead).toEqual([]);
-    expect(packagePage("@gpuixui/tokens")).toBe("/theming");
+    expect(packagePage("@gpuixui/tokens")).toBe("/getting-started");
     expect(
       index.pages["/components/dialog"]?.dependencies.find(
         (dependency) => dependency.packageName === "@gpuixui/icons",

@@ -162,7 +162,7 @@ export const modeSearch = (mode: ThemeMode): string => `?${modeParam}=${mode}`;
  * preview deliberately does not follow it: a preview is a picture of the
  * library, and its identity is the dark theme. The palette a reader compares is
  * the switch's own `?mode=` axis, so the site resolves one opening mode and
- * says which — `/theming` prints this value rather than typing "dark", so a
+ * says which — the guide prints this value rather than typing "dark", so a
  * page and the provider cannot disagree.
  */
 export const previewMode: ThemeMode = "dark";

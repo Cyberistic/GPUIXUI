@@ -144,7 +144,7 @@ describe("the /llms.txt index", () => {
 
   it("groups the pages the way the sidebar does, in the sidebar's order", () => {
     const samples = [
-      "/installation",
+      "/getting-started",
       "/components/dialog",
       "/primitives/button",
       "/icons/icon",
@@ -160,8 +160,10 @@ describe("the /llms.txt index", () => {
       .filter((line) => line.startsWith("## "))
       .map((line) => line.slice(3));
 
+    // Every sample page has a section of its own, so no page falls through to
+    // the `Docs` fallback.
     expect(headings).toEqual([
-      "Docs",
+      "Guide",
       "Components",
       "Primitives",
       "Icons",

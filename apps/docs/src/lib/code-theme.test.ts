@@ -197,22 +197,24 @@ describe("the docs' code theme", () => {
     expect(below).toEqual([]);
   });
 
-  it("teaches the palette on the theming page", () => {
-    const page = readFileSync(
-      new URL("../../content/docs/theming.mdx", import.meta.url),
+  it("teaches the palette in the token record", () => {
+    const record = readFileSync(
+      new URL("../../../../docs/tokens.md", import.meta.url),
       "utf8",
     );
-    const start = page.indexOf("## Code colours");
-    const end = page.indexOf("\n## ", start + 1);
-    const section = start === -1 ? "" : page.slice(start, end);
+    const start = record.indexOf("## Syntax palette");
+    const end = record.indexOf("\n## ", start + 1);
+    const section = start === -1 ? "" : record.slice(start, end);
 
-    expect(section).toContain("{syntaxRoles.length}");
-    expect(section).toContain("<TokenList names={syntaxSurfaces} />");
-    expect(section).toContain("{contrastFloors.body}:1");
-    expect(section).toContain("{contrastFloors.secondary}:1");
+    // The fact a consumer needs: the palette is the theme's, the host's own
+    // fallback is foreign, and the audit is `syntaxFailures`.
+    expect(section).toContain("syntaxColors(theme)");
+    expect(section).toContain("syntaxFailures");
+    expect(section).toContain("twenty-four");
     // The site's own half is a claim a reader can follow to the file.
-    expect(section).toContain("apps/docs/src/lib/code-theme.ts");
-    expect(section).toContain("syntaxColors(themes[mode])");
+    expect(
+      readFileSync(new URL("./code-theme.ts", import.meta.url), "utf8"),
+    ).toContain("syntaxColors(themes[mode])");
   });
 
   it("is the theme the docs build highlights with", () => {

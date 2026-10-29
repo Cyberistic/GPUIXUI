@@ -105,7 +105,7 @@ describe("the component section", () => {
           page("Button", "/components/button"),
           page("Tabs", "/components/tabs"),
         ]),
-        page("Contributing", "/contributing"),
+        page("Guide", "/getting-started"),
       ]),
       "Components",
       shipped,
@@ -129,7 +129,7 @@ describe("the component section", () => {
     expect(completed.children.map((node) => node.name)).toEqual([
       "Introduction",
       "Components",
-      "Contributing",
+      "Guide",
     ]);
   });
 

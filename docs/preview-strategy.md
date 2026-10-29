@@ -162,8 +162,8 @@ route boots the build, and it cannot claim a route that is not there. The guard
 also reads the installed package, so the size, the memory requirement and the
 browser entry it quotes cannot drift silently. Plan `440-live-gpuix-web-surface`
 is the record of how the route was reached; this section is its outcome.
-`/runtime` publishes the same three constraints, the build's size and the
-reconciler mount to a reader, and the guard holds that page to this policy.
+`docs/gpuix-capabilities.md` publishes the same three constraints and the
+build's size to a reader, and the guard holds that record to this policy.
 
 `/live` is **not** the native macOS runtime — it is the same renderer compiled to
 wasm — and its label says so.
@@ -479,30 +479,6 @@ nothing". `choosingPlatform` in `src/lib/platform.ts` is that rule, and
 `platform.test.ts` holds both directions: the stale look paints the same page in
 two platforms, and the cleared one does not.
 
-### The look picker is a measured click
-
-The authored looks are the third axis (`?look=luna|aero|omarchy`), and the
-sidebar deliberately does not carry them: the platform switch stays the
-mission's four names. The control lives on `/theming`
-(`src/components/docs/look-picker.tsx`), so the press has its own page to be
-measured on. The same probe opens the theming page after the platform steps,
-waits for the picker's first button to carry `__reactProps.onClick`, then
-presses **Windows XP (Luna)**, **Windows 7 (Aero)** and **Omarchy**. It reads
-the first preview surface's `data-look`, its `data-platform` and `data-mode`,
-the `--background` the bridge wrote and the address bar. The background is held
-to `resolvePlatformTheme(platform, mode, look).colors.background`, the exact
-theme the provider resolves, because a look owns the palette for the mode and a
-constant would pass on the wrong one.
-
-Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
-against the dev server: `Windows XP (Luna): #101E33 over darwin`,
-`Windows 7 (Aero): #101C27 over darwin`, `Omarchy: #1A1B26 over darwin`, exit
-`0`. The negative control is a wiring that drops `setLook`: the URL and every
-surface stay unchanged and the probe prints
-`FAIL pressing Windows XP (Luna) left no preview surface on luna` — the same
-line for `aero` and `omarchy` — exit `1`. `src/lib/platform-switch.test.ts`
-holds the section, the command, the three readouts and the look readout parser.
-
 ### The docs theme switch is a measured click
 
 The site has **two** palettes, and they are deliberately independent:
@@ -595,11 +571,11 @@ nub apps/docs/scripts/search-probe.ts
 ```
 
 Measured 2026-10-24 on master, macOS 15.8.1 x86_64, headless Google Chrome
-155.0.8059.80 against the dev server: the dialog opened with **7** suggestions
+155.0.8059.80 against the dev server: the dialog opened with **5** suggestions
 (the `links` the root provider passes), `slider → /primitives/slider`,
 `button → /components/button` (not `/primitives/button`), and
-`architecture → /architecture`; Enter on `architecture` opened
-`/architecture` and took the dialog off the screen. Exit `0`.
+`two minutes → /getting-started`; Enter on `two minutes` opened
+`/getting-started` and took the dialog off the screen. Exit `0`.
 
 Two mechanisms are measured rather than assumed, and both have bitten:
 
@@ -621,50 +597,6 @@ refused one is the retired twin of the page it expects, and each query appears
 in prose on the page it must find — plus the typing and submit order, this
 section and the site's ledger.
 
-### The theme editor is measured
-
-`/themes` is the other interaction with no browser measurement: the page a
-consumer opens to take a style, change it and copy the result. Its editor was
-also the one remembered preference that read `localStorage` **directly** — from
-its mount effect, on every colour keystroke and on **Reset** — while the
-platform switch had already learned that a browser may refuse the store. A
-reader who blocks site data threw a `SecurityError` out of that effect and lost
-the page to `Something went wrong`; measured on the served build by making every
-`Storage.prototype` call throw and navigating to `/themes`.
-
-`apps/docs/scripts/theme-editor-probe.ts` opens the page with that refusal
-installed **before the page's own scripts** (`Page.addScriptToEvaluateOnNewDocument`,
-so the mount effect meets it), and walks the editor's path. It reads the page's
-own `background` value and writes it into `primary`: the failing pair is the one
-`themeFindings` reports, not a chosen hex. It then requires the audit to name
-`primary`, `?theme=` to carry the edit, the editor to stay mounted — and
-**Reset** to return the field to the value the page opened on and to drop the
-parameter.
-
-Two mechanisms are measured rather than assumed:
-
-- **A preloaded script is the only way to refuse the store.** A patch run after
-  load arrives after the mount effect has read it, which is the bug, not the
-  test; the DevTools `Page` domain also has to be enabled before
-  `addScriptToEvaluateOnNewDocument`, or the script never reaches the document
-  and the run silently measures a working store.
-- **A refused call is counted.** The preload increments `__storeAttempts` before
-  it throws, so a probe that never reached the store cannot pass as one that
-  survived it.
-
-The negative controls are the failures a passing probe would hide. Restoring
-the direct `localStorage` read makes the app crash during hydration and prints
-`FAIL the editor never hydrated within 90000 ms (it carries no React onClick)`;
-a Reset that leaves the edit prints `FAIL Reset left ?theme= in the URL`.
-`src/lib/theme-editor-probe.test.ts` holds the probe's premise to the site — its
-edit is the gate's own finding, its selectors are the editor's, the refusal
-names all three calls, and its readout parser refuses a truncated line.
-
-Measured 2026-10-24 on master against the dev server, headless Chrome on macOS
-15.8.1 x86_64: the base painted `primary #0A6CD6` after **36** refused storage
-calls, the edit produced **28** audit findings and wrote `?theme=`, Reset
-restored the base and the passing audit, exit `0`.
-
 ### Pages the package writes
 
 Each package writes the page a component ships with. The site mounts those
@@ -683,12 +615,11 @@ cannot ship a page the site does not show and the two cannot drift:
 | Panel surfaces | `packages/dock/docs` | `/dock` | Workspace |
 | Media surfaces | `packages/media/docs` | `/media` | Workspace |
 
-**A lane page shows the surface it is about.** `/layouts`, `/workspace`
-and `/data-display` mount a demo of their flagship surface under the
+**A lane page shows the surface it is about.** `/workspace` and
+`/data-display` mount a demo of their flagship surface under the
 inventory table — the shell, the panel group and the deploy table — so a reader
 sees what the lane is before the page list. A lane page names a registered demo
-and never ships a drawing for a lane that has none; `lane-page.test.ts` holds all
-three.
+and never ships a drawing for a lane that has none; `lane-page.test.ts` holds both lane pages.
 
 The table is the mounted set, not an illustration: `package-docs.test.ts` reads
 it against `packageCollections` in both directions, so a collection the site mounts
@@ -827,8 +758,8 @@ that documents it — the curated page, for the five primitives that have one.
 page — the site's own and each package's — has its `@gpuixui/*` imports resolved
 against the package source by `src/lib/page-snippets.test.ts`, because the build
 renders a snippet with the wrong export name exactly like a right one. A plain
-`ts` fence counts: `/runtime` prints its capability calls in one, and a walk
-that read only `tsx` fences never saw it. The walk found one page that named a
+`ts` fence counts: a capability example is TypeScript, and a walk that read
+only `tsx` fences never saw it. The walk found one page that named a
 symbol its package does not publish — `primitives/docs/tooltip.mdx` imported
 `Icon` from `@gpuixui/primitives`, while `Icon` lives in `@gpuixui/icons` — and
 the primitives workstream fixed the page; the defect record was deleted in the
@@ -1005,14 +936,12 @@ a primitive's name here finds the primitive.
 
 The site has its own identity (a neutral shadcn palette on `/` and the
 landing's own vocabulary); the components have the library's tokens (iris). A
-preview must show the latter, and it must follow the platform switch, the palette
-switch and the look picker. All three are library values: the platform names
+preview must show the latter, and it must follow the platform switch and the palette switch. Both are library values: the platform names
 come from `platformStyles`, the palettes are the library's own light and dark
 themes, and the looks are the authored `retroStyles` — Windows XP (Luna),
 Windows 7 (Aero) and Omarchy — which are styles of the same shape, not a fifth
 platform (the mission's toggle stays
-macOS · Linux · Windows · Default, and the sidebar offers platforms only; the
-look picker is the Theming page's own control, not a sidebar group). Each is
+macOS · Linux · Windows · Default, and the sidebar offers platforms only). Each is
 written to the URL (`?platform=…&mode=…&look=…`) so a link carries what the
 reader saw.
 
@@ -1021,9 +950,8 @@ the switch opens on the library's dark identity (`previewMode` in
 `src/lib/platform.ts`) and `?mode=light` paints the light theme. What stays fixed
 is the site's own light/dark mode — a preview does not follow the docs chrome's
 theme, because a preview is a picture of the library and not of the site; the
-palette axis is explicit, shareable and remembered, and `/theming` prints
-the mode a preview opens in rather than leaving a reader in light mode to wonder
-why the previews did not change.
+palette axis is explicit, shareable and remembered, so a reader in light mode
+can see why the previews did not change.
 
 The site's own palette is the one thing that is not a library theme, so it is
 held to the library's contract instead: `src/styles/app.css` declares the
@@ -1067,27 +995,6 @@ not the other, so a scheme cannot silently inherit a variable from its sibling.
 The exception is the dashboard block: its `--dash-*` palette is its own, because
 the landing renders the same markup in a light and a dark window. It is labelled
 as a browser reproduction and is excluded from the literal guard.
-
-The theme editor follows the switch too, with one difference: it stores only the
-roles a reader changed and resolves those over `platformThemes(platform, look)`
-for the mode on screen. Switching the platform therefore re-bases the editor's
-preview and its inputs while the edits stay, and **Copy theme** prints the
-resolved values — what a reader copies is what they saw. `theme-editor.test.tsx`
-renders the same surface over the Windows style and fails if the colour inputs
-still print the identity's roles; `theme-editor-logic.test.ts` holds the pins to
-the base in both directions and keeps the persistence boundary (`parseState`)
-rejecting a pinned value the renderer cannot paint.
-
-The readout under the preview is the whole audit, not a contrast check: all fourteen
-`auditTheme` reports are flattened into one list (`auditFindings`), each worded
-for a reader, because a theme that paints a divider into itself, drops a `NaN`
-radius, erases a disabled label, inverts a radius ladder or hides a chart series
-is still broken and none of those is a text pair. The page prints the number as a
-word derived from the gate's own keys, so a fifteenth report cannot land while
-`/themes` promises fourteen, and every report has a case in
-`theme-editor-logic.test.ts` — the cases for the reports no contrast pair covers
-also prove the colour reports stay silent on that brand, so only the new line can
-fail the gate.
 
 ## The site's own keyboard path
 
@@ -1166,13 +1073,11 @@ passes — is the one table the completeness rule exempts, and the map says so.
 The **Limitations** section has a shared half as well as a per-component one. A
 page states what its own control does and cannot do; the runtime's ARIA budget —
 the role-required rule, the attributes it publishes, the attributes it refuses
-and the absent live region — is the cross-cutting contract on
-`/accessibility`, so a page does not have to restate the runtime in order
-to be honest. `src/lib/accessibility-page.test.ts` holds that page's attribute
-table and refused list to the capability record's row, so a runtime bump that
-changes the budget fails the page rather than leaving it teaching the previous
-release. `src/lib/aria-budget.test.ts` holds the record and every mounted page to
-the installed `@gpuix/native` typings. `src/lib/package-page-template.test.ts`
+and the absent live region — is the cross-cutting contract in
+`docs/gpuix-capabilities.md`, so a page does not have to restate the runtime in
+order to be honest. `src/lib/capability-doc.test.ts` holds the record to the
+installed `@gpuix/native` typings, so a runtime bump that changes the budget
+fails the record rather than leaving it teaching the previous release. `src/lib/package-page-template.test.ts`
 holds every package page to its own `## API` and `## Limitations`.
 
 A page that documents a **dismissing surface** — a dialog, a drawer, a toast
@@ -1220,24 +1125,22 @@ mount. The floors are real — the site's own collection and every mounted packa
 collection carry a minimum page count — so a scan that stopped matching cannot
 pass on an empty set.
 
-## The getting-started page
+## The guide
 
-`/getting-started` is the one page that writes the code a reader copies
-before they know the components, so it is held to the workspace rather than
-reviewed by eye: `src/lib/getting-started.test.ts` resolves every
-`@gpuixui/*` import to a symbol the package publishes, holds
-`nub run dev:playground` to the root manifest, requires every numbered step to
-link the page it depends on, and pairs each `useState` value with the table row
-that says who owns it. It is not a component page: there is no preview, because
-a whole screen drawn in the browser would be the approximation this file opens
-by ruling out, and the runnable artefact is the snippet plus the playground
-command.
+`/getting-started` is the one page that writes the code a reader copies before
+they know the components, so it is held to the workspace rather than reviewed by
+eye: `src/lib/getting-started.test.ts` resolves every `@gpuixui/*` import to a
+symbol the package publishes, holds the `nub` commands to the manifests, holds
+the install targets to the workspace's packages, checks the one-element render
+rule, and refuses a description longer than sixty characters. It is not a
+component page: there is no preview, because a whole screen drawn in the browser
+would be the approximation this file opens by ruling out.
 
 ## The lane pages
 
-Three pages sit outside the component and block folders because they describe a
-**composition lane**, not a single component: [Layouts](/layouts),
-[Workspace](/workspace) and [Data display](/data-display). They are
+Two pages sit outside the component and block folders because they describe a
+**composition lane**, not a single component: [Workspace](/workspace) and
+[Data display](/data-display). They are
 where a reader lands when the question is "how do I assemble these parts", so
 they have their own contract.
 
@@ -1276,39 +1179,6 @@ composition of native parts, not a new component"). A docking layout, a table or
 a chart is described in prose and its gap is recorded — never drawn as if it
 were shipped.
 
-## The patterns page
-
-[Patterns](/patterns) is the one page that describes a **workflow** rather
-than a component or a lane. A reader who knows what a Dialog is still has to
-decide who owns `open`, what happens to the focus, and what they see when the
-save fails; those answers cross components, so they cannot live on any single
-component page. Each pattern is a section with:
-
-| Part | Contents |
-| ---- | -------- |
-| heading | the pattern's title, in the page so the "On this page" list reaches it |
-| `<Pattern>` | the situation, a parts table, the state owner, the ordered steps, the failure it prevents, and the runnable example |
-
-**The parts table is generated from `src/lib/patterns.ts`**, and the guard is
-what keeps it true: `patterns.test.ts` walks `content/docs` and every
-`packages/*/docs` directory, requires each linked URL to be a page that exists,
-and requires the named part to appear in that page's own text. A renamed part or
-a moved page therefore fails the docs suite instead of leaving a confident link
-to nothing. The example each pattern names must be a file the example registry
-publishes (`packages/*/examples/*.example.tsx`), so "run this" cannot point at a
-file that is gone.
-
-**The chooser is data too.** `patternChoices` answers "which component?" with the
-one to use and **when it is the wrong answer**, checked by the same guard, so the
-table cannot recommend a component the library does not ship. It is the one place
-the site compares components instead of documenting each in isolation.
-
-**No workflow preview.** A pattern is native behaviour with state, timing and
-failure paths, and the site has no native surface — so a pattern shows the real
-source file and the component pages' limitations rather than a drawing of a
-conversation that only works in the browser. That is strategy 4 from the top of
-this file, chosen for the same reason the package pages use it.
-
 ## Examples: source, never a rendering
 
 Every package ships a worked example beside its components — a screen that owns
@@ -1321,21 +1191,6 @@ registry to the files on disk in both directions, so a new example appears
 without a docs change and a deleted one leaves no dead row.
 
 ## Generated specimens
-
-A preview whose content *is* the tokens is generated, not drawn. The typography
-page's `<TypeScale>` enumerates the theme's text roles, prints each resolved
-`size/leading · weight` and paints the specimen at those metrics on a
-`PreviewSurface`, so the platform switch changes the families while the sizes
-stay the theme's. `type-scale.test.tsx` holds the role list to
-`themes.dark.typography` and checks every row's metrics against the theme, so a
-role added to `@gpuixui/tokens` fails the docs until the page describes it.
-
-`<TokenScales>` on [Theming](/theming#scales) follows the same rule for the
-geometry: the spacing, radius, border, icon and density rows are read from the
-theme the platform switch resolves, and `token-scales.test.tsx` holds every step
-and its printed pixel value to the theme, the elevation list to the theme's
-levels, and the density table to the presets. A step added to the token package
-therefore appears without a docs change, and a step removed fails the suite.
 
 ## Adding a preview
 
@@ -1457,12 +1312,10 @@ code block.
 
 The runtime's `aria-*` set is closed — `role` plus seven attributes — and the
 capability record in `docs/gpuix-capabilities.md` is where it is stated.
-`src/lib/aria-budget.test.ts` reads that row beside the installed
+`src/lib/capability-doc.test.ts` reads that row beside the installed
 `@gpuix/native` typings, so a bump that publishes an eighth attribute fails the
-record; it then reads every curated page's `## Limitations`, so the same bump
-fails the page that would still tell a reader the control cannot announce it.
-`/accessibility` prints the set and `accessibility-page.test.ts` holds it to
-the record.
+record. The guarded set lives there; a page links to it rather than restating
+it.
 
 ## The reference page is generated, and it says so
 
@@ -1502,10 +1355,4 @@ is one export — follows the re-exports, and resolves each name to the module
 that declares it. `public-symbols.test.ts` holds it to the workspace in both
 directions: every published module yields the symbols its source declares, and
 the scanner's rules are pinned by fixtures that fail when a form is missed.
-
-## The testing page
-
-[Testing](/testing) documents `@gpuixui/testing`. Its snippets are held to
-the packages' published symbols by `src/lib/page-snippets.test.ts`, like every
-other page's.
 
