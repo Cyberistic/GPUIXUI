@@ -59,19 +59,21 @@ describe("the user menu drawing", () => {
     expect(scene).toContain('aria-expanded="true"');
   });
 
-  it("anchors the menu's right edge to the trigger's", () => {
-    // `user-menu.tsx` defaults to `align="end"`, so the drawing declares the
-    // anchor on the shared right edge instead of the trigger's left one.
+  it("opens beside the footer row, on its right", () => {
+    // A sidebar footer's account menu belongs beside the row, over the page
+    // rather than over the panel it lives in: the trigger's right edge is the
+    // menu's left edge plus the gap. `align="end"` still governs the vertical
+    // relation, so the two share a bottom.
     expect(menu).toContain('align = "end"');
     expect(scene).toContain('data-align="end"');
-    expect(scene).toContain('data-side="bottom"');
-    expect(block('.gx-user-menu-content[data-side="bottom"]')).toContain(
-      "bottom: calc(100% + 4px)",
+    expect(scene).toContain('data-side="right"');
+    expect(block('.gx-user-menu-content[data-side="right"]')).toContain(
+      "left: calc(100% + 4px)",
     );
-    expect(
-      block('.gx-user-menu-content[data-side="bottom"][data-align="end"]'),
-    ).toContain("right: 0");
-    // The trigger fills the anchor box, so its right edge is the menu's.
+    expect(block('.gx-user-menu-content[data-side="right"]')).toContain(
+      "bottom: 0",
+    );
+    // The trigger fills the anchor box, so its right edge is the menu's origin.
     expect(block(".gx-user-trigger")).toContain("width: 100%");
     expect(MENU_WIDTH).toBe(Number(/const MENU_WIDTH = (\d+)/.exec(menu)?.[1]));
   });

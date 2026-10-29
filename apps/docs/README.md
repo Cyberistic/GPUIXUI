@@ -132,7 +132,8 @@ src/components/docs/inspector-preview.ts    The property inspector preview's one
 src/components/docs/property-panel-demo.tsx The inspector's four readers of that object and its source string
 src/components/docs/navigation-menu-demo.tsx The nav's two browser renderings and their source strings
 src/components/docs/navigation-menu-preview.ts The nav's reducer, its hover clock and its roving group
-src/components/docs/preview-card-demo.tsx  The hoverable card's open and close
+src/components/docs/preview-card-demo.tsx  The hoverable card's alignments, its gap bridge and the action it reports
+src/components/docs/preview-card-preview.ts The card preview's three alignments and their stage geometry
 src/components/docs/hover-card-demo.tsx   The hover card's delay, the travel into it and its two open paths
 src/components/docs/aspect-ratio-demo.tsx The ratio box's height under a width the reader moves
 src/components/docs/item-demo.tsx         The item row's media, text and actions in three surfaces
@@ -222,7 +223,8 @@ src/components/docs/table-demo.tsx        The table's browser renderings and the
 src/components/docs/tag-input-preview.ts   The tag preview's commit rules, budget and publish gate
 src/components/docs/tag-input-demo.tsx     The tag field's two browser renderings and their source strings
 src/components/docs/tooltip-preview.ts    The tip's clock: delay, close grace, reopen window, held exit, reduced preference, traversal
-src/components/docs/tooltip-demo.tsx      The tooltip's browser renderings (clock, motion switch, states) and their source strings
+src/components/docs/tooltip-alignment.ts  The tip preview's three alignments and their stage geometry
+src/components/docs/tooltip-demo.tsx      The tooltip's browser renderings (alignments, clock, motion switch, states) and their source strings
 src/components/docs/box-demo.tsx          The box's surface tones and facts as a labelled diagram
 src/components/docs/button-group-demo.tsx The button group's attached and separated modes
 src/components/docs/checkbox-group-demo.tsx The group's roving one-tab-stop list around the shared box

@@ -895,7 +895,10 @@ const surfaces: ReadonlyArray<SurfaceMotion> = [
     surface: "Preview card",
     prints: ["4px", "fast"],
     paints: [
-      { file: "src/preview-card.tsx", marker: "fadeFromAnchor(side, 4)" },
+      {
+        file: "src/preview-card.tsx",
+        marker: "fadeFromAnchor(placement.side, 4)",
+      },
       { file: "src/preview-card.tsx", marker: 'useSurfaceTiming("fast")' },
     ],
   },

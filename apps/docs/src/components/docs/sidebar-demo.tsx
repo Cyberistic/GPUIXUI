@@ -165,9 +165,9 @@ const AccountRow = ({
 /**
  * The identity row and its dropdown.
  *
- * `side="bottom"` is the footer placement: an end-anchored menu takes the
- * trigger's right edge and opens leftward. `side="right"` is the icon rail's:
- * the menu sits beside the avatar instead of over the window's edge.
+ * `side="right"` — the default a reader expects from a sidebar footer — puts the
+ * menu beside the row, over the page rather than over the panel it belongs to.
+ * `side="bottom"` is still available for a footer with no room beside it.
  */
 const AccountMenu = ({
   collapsed,
@@ -430,7 +430,7 @@ export const UserMenuDemo = () => {
           <AccountMenu
             defaultOpen
             onAction={setLast}
-            side="bottom"
+            side="right"
             collapsed={false}
           />
         </div>
