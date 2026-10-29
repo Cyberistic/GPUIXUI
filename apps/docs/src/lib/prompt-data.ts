@@ -84,6 +84,29 @@ version is the workspace protocol.
 Node 24, \`nub\` as the package manager. \`nub run fmt\` does not apply the repo's
 formatter config; use \`sh node_modules/.bin/oxfmt --config .oxfmtrc.json <files>\`.
 
+## Window
+
+    render(<App />, {
+      title: "My app", width: 1100, height: 720,
+      minWidth: 720, minHeight: 480,
+    });
+
+GPUix opens one window per process. Always set \`minWidth\`/\`minHeight\`: a shell of
+a 260px rail beside a pane has a size below which neither fits, and without a
+minimum the window lets a pane collapse into a clipped column.
+
+## Appearance
+
+A docs page carries its appearance in the URL, so a link can name a look:
+
+    ?mode=dark          dark or light (also accepted as ?appearance=dark)
+    ?platform=darwin    darwin, win32, linux, or default
+    ?look=luna          an authored look: luna, aero, omarchy
+
+There is **no OS appearance query** in GPUix 0.11.0 (a measured absence: no
+\`appearance\`, \`prefers*\` or \`reduce*\` export). The app owns the mode and passes
+it in; \`@gpuixui/motion\` takes reduced motion as a boolean for the same reason.
+
 ## Rules
 
 - Effect for logic: typed failures, \`Option\` for absence, \`Schema\` at

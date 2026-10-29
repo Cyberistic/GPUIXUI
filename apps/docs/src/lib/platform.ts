@@ -112,8 +112,16 @@ export const lookFromSearch = (search: string): LookName | undefined =>
 /** The query value a look writes (`luna`), or nothing for the platform style. */
 export const lookSearch = (look: LookName): string => look;
 
-/** The query parameter that carries the palette a preview paints. */
+/**
+ * The query parameters that carry the palette a preview paints.
+ *
+ * `mode` is what the switch writes; `appearance` is the same value under the
+ * name a link from elsewhere is likely to use, so `?appearance=dark` and
+ * `?mode=dark` both open dark. The switch keeps writing `mode`, and a page that
+ * carries both reads `mode` first.
+ */
 export const modeParam = "mode";
+export const appearanceParam = "appearance";
 
 /**
  * The palettes a preview offers, in switch order: the library's identity first,
@@ -136,9 +144,13 @@ export const parseMode = (
   raw: string | null | undefined,
 ): ThemeMode | undefined => modeOrder.find((mode) => mode === raw);
 
-/** Read the mode out of a query string (`?mode=light`). */
-export const modeFromSearch = (search: string): ThemeMode | undefined =>
-  parseMode(new URLSearchParams(search).get(modeParam));
+/** Read the mode out of a query string (`?mode=light`, or `?appearance=light`). */
+export const modeFromSearch = (search: string): ThemeMode | undefined => {
+  const params = new URLSearchParams(search);
+  return (
+    parseMode(params.get(modeParam)) ?? parseMode(params.get(appearanceParam))
+  );
+};
 
 /** The query string a mode produces (`?mode=light`). */
 export const modeSearch = (mode: ThemeMode): string => `?${modeParam}=${mode}`;

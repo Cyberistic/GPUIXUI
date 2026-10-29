@@ -46,6 +46,11 @@ const program = Effect.gen(function* () {
     title: "GPUIXUI playground",
     width: 1100,
     height: 720,
+    // The shell is a 260px rail beside a scenario: below this the rail and the
+    // pane cannot both hold their own minimum, so the window stops shrinking
+    // rather than letting a pane collapse into a clipped column.
+    minWidth: 720,
+    minHeight: 480,
   });
   return 0;
 });
