@@ -4,11 +4,11 @@
  *
  * The editor package's page makes three claims about paint and layout that the
  * offscreen renderer cannot hold: an added line tints the `success` soft role
- * and a removed line the `destructive` one, a split diff puts one change on one
- * row with a blank cell where a side ran out, and a line that outgrows its
- * surface is clipped rather than wrapped. The headless `editor-surface`
- * scenario measured the raw `<diff>` host a patch string goes into; nothing had
- * painted the wrapper a consumer imports.
+ * and a removed line the `destructive` one; a split diff puts one change on one
+ * row between two equal columns, with a side that ran out painted blank; and a
+ * line that outgrows its column stays one line tall while its column scrolls.
+ * The headless `editor-surface` scenario measured the raw `<diff>` host a patch
+ * string goes into; nothing had painted the wrapper a consumer imports.
  *
  * The probe mounts four viewers, each bounded to the caller's width on a card
  * page:
@@ -16,10 +16,11 @@
  * 1. **Unified** — the row count, each row's height and its own text (marker,
  *    both gutters, line), and the tint each kind paints, counted inside its own
  *    box.
- * 2. **Split** — one row per change: the removed and added halves of a
- *    replacement share a row, and an appended line paints a blank left cell.
+ * 2. **Split** — equal side columns with a divider; the removed and added
+ *    halves of a replacement share a baseline, an appended line paints a blank
+ *    left cell, and each side keeps its own tint.
  * 3. **The long line** — a 160-character addition in a 420-point surface stays
- *    one line tall and its surface keeps the caller's width.
+ *    one line tall and its column keeps the caller's width.
  * 4. **Nothing changed** — one context row, no tint of either kind.
  */
 import { Duration, Effect } from "effect";
@@ -40,17 +41,18 @@ import {
   DIFF_LINE_HEIGHT,
   DIFF_LONG,
   DIFF_PAGE,
-  DIFF_ROWS,
   DIFF_SAME,
   DIFF_SAME_ROWS,
-  DIFF_SIDE_BAND,
   DIFF_SPLIT_ROWS,
+  DIFF_SPLIT_SIDE_WIDTH,
   DIFF_SUCCESS,
   DIFF_SURFACE,
+  DIFF_UNIFIED_ROWS,
   DIFF_WIDTH,
   diffRowId,
+  diffSideId,
   longRowText,
-  splitRowText,
+  splitSideText,
   unifiedRowText,
 } from "./diff-viewer.js";
 import { captureScale } from "./frame.js";
@@ -117,7 +119,7 @@ const DiffViewerPage = (): ReactNode => {
           style={{ width: DIFF_WIDTH }}
         />
       </Section>
-      <Section caption="Split: one change per row; the appended line has no left cell.">
+      <Section caption="Split: one change per row over two equal columns.">
         <DiffViewer
           testId={DIFF_IDS.split}
           before={DIFF_BEFORE}
@@ -182,6 +184,25 @@ const rowsOf = (ctx: Smoke.AsyncSmokeContext, viewer: string, count: number) =>
     { concurrency: 1 },
   );
 
+/** The boxes of both sides of every split pair, in row order. */
+const splitRowsOf = (ctx: Smoke.AsyncSmokeContext, count: number) =>
+  Effect.forEach(
+    Arr.range(0, count - 1),
+    (index) =>
+      Effect.gen(function* () {
+        const before = yield* boxOf(
+          ctx,
+          diffSideId(DIFF_IDS.split, index, "before"),
+        );
+        const after = yield* boxOf(
+          ctx,
+          diffSideId(DIFF_IDS.split, index, "after"),
+        );
+        return { index, before, after };
+      }),
+    { concurrency: 1 },
+  );
+
 /** Captures the window and decodes it. */
 const frameOf = (ctx: Smoke.AsyncSmokeContext, name: string) =>
   Effect.gen(function* () {
@@ -216,19 +237,13 @@ const countIn = (
 const areaOf = (box: Smoke.Bounds, scale: number): number =>
   Math.round(box.width * box.height * scale * scale);
 
-/** The left or right band of a row, as a share of its width. */
-const bandOf = (box: Smoke.Bounds, from: number, to: number): Smoke.Bounds => ({
-  x: box.x + box.width * from,
-  y: box.y,
-  width: box.width * (to - from),
-  height: box.height,
-});
-
 export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    yield* ctx.host.waitFor(diffRowId(DIFF_IDS.unified, DIFF_ROWS.length - 1));
     yield* ctx.host.waitFor(
-      diffRowId(DIFF_IDS.split, DIFF_SPLIT_ROWS.length - 1),
+      diffRowId(DIFF_IDS.unified, DIFF_UNIFIED_ROWS.length - 1),
+    );
+    yield* ctx.host.waitFor(
+      diffSideId(DIFF_IDS.split, DIFF_SPLIT_ROWS.length - 1, "after"),
     );
     yield* ctx.host.waitFor(diffRowId(DIFF_IDS.long, 0));
     yield* ctx.host.waitFor(diffRowId(DIFF_IDS.same, 0));
@@ -245,17 +260,21 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
 
     // ---- unified: the rows ----
-    const unifiedRows = yield* rowsOf(ctx, DIFF_IDS.unified, DIFF_ROWS.length);
+    const unifiedRows = yield* rowsOf(
+      ctx,
+      DIFF_IDS.unified,
+      DIFF_UNIFIED_ROWS.length,
+    );
     yield* ctx.expectEqual(
-      "the unified viewer paints one row per edit-script line",
+      "the unified viewer paints one row per displayed line",
       Arr.length(unifiedRows),
-      DIFF_ROWS.length,
+      DIFF_UNIFIED_ROWS.length,
     );
     yield* Effect.forEach(
       unifiedRows,
       ({ index, box }) =>
         Effect.gen(function* () {
-          const row = Arr.getUnsafe(DIFF_ROWS, index);
+          const row = Arr.getUnsafe(DIFF_UNIFIED_ROWS, index);
           yield* ctx.expectNear(
             `the unified row ${index} paints one code line tall`,
             box.height,
@@ -276,7 +295,7 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1, discard: true },
     );
     const pastUnified = yield* ctx.host.bounds(
-      diffRowId(DIFF_IDS.unified, DIFF_ROWS.length),
+      diffRowId(DIFF_IDS.unified, DIFF_UNIFIED_ROWS.length),
     );
     yield* ctx.expectEqual(
       "the unified viewer paints no row past its last line",
@@ -329,7 +348,7 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Math.round(areaOf(context.box, scale) * 0.35),
     );
 
-    // ---- split: one change per row ----
+    // ---- split: equal columns, one change per row ----
     const splitRoot = yield* boxOf(ctx, DIFF_IDS.split);
     yield* ctx.expectNear(
       "the split surface takes its caller's width too",
@@ -337,147 +356,165 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       DIFF_WIDTH,
       1,
     );
-    const splitRows = yield* rowsOf(
-      ctx,
-      DIFF_IDS.split,
-      DIFF_SPLIT_ROWS.length,
+    const beforeColumn = yield* boxOf(ctx, `${DIFF_IDS.split}-before`);
+    const afterColumn = yield* boxOf(ctx, `${DIFF_IDS.split}-after`);
+    const divider = yield* boxOf(ctx, `${DIFF_IDS.split}-divider`);
+    yield* ctx.expectNear(
+      "the left column takes half the surface",
+      beforeColumn.width,
+      DIFF_SPLIT_SIDE_WIDTH,
+      1,
     );
+    yield* ctx.expectNear(
+      "the right column takes the same half",
+      afterColumn.width,
+      DIFF_SPLIT_SIDE_WIDTH,
+      1,
+    );
+    yield* ctx.expectNear(
+      "the divider is one point wide",
+      divider.width,
+      1,
+      0.5,
+    );
+    yield* ctx.expectNear(
+      "the divider sits between the columns",
+      divider.x,
+      beforeColumn.x + beforeColumn.width,
+      1,
+    );
+
+    const splitRows = yield* splitRowsOf(ctx, DIFF_SPLIT_ROWS.length);
     yield* ctx.expectEqual(
       "the split viewer paints one row per change, not per side",
       Arr.length(splitRows),
       DIFF_SPLIT_ROWS.length,
     );
-    yield* ctx.expectEqual(
-      "a replacement and its addition share one split row",
-      yield* ctx.host.text(diffRowId(DIFF_IDS.split, 1)),
-      splitRowText(Arr.getUnsafe(DIFF_SPLIT_ROWS, 1)),
-    );
-    yield* ctx.expectEqual(
-      "an appended line paints the right cell with no left line",
-      yield* ctx.host.text(diffRowId(DIFF_IDS.split, 3)),
-      splitRowText(Arr.getUnsafe(DIFF_SPLIT_ROWS, 3)),
-    );
     yield* Effect.forEach(
       splitRows,
-      ({ index, box }) =>
-        ctx.expectNear(
-          `the split row ${index} paints one code line tall`,
-          box.height,
-          DIFF_LINE_HEIGHT,
-          1,
-        ),
+      ({ index, before, after }) =>
+        Effect.gen(function* () {
+          const pair = Arr.getUnsafe(DIFF_SPLIT_ROWS, index);
+          yield* ctx.expectNear(
+            `the split row ${index} paints one code line tall on the left`,
+            before.height,
+            DIFF_LINE_HEIGHT,
+            1,
+          );
+          yield* ctx.expectNear(
+            `the split row ${index} paints one code line tall on the right`,
+            after.height,
+            DIFF_LINE_HEIGHT,
+            1,
+          );
+          yield* ctx.expectNear(
+            `the split row ${index} keeps both sides on one baseline`,
+            before.y,
+            after.y,
+            1,
+          );
+          yield* ctx.expectEqual(
+            `the split row ${index} paints the before line in its own column`,
+            yield* ctx.host.text(diffSideId(DIFF_IDS.split, index, "before")),
+            splitSideText(pair.left, true),
+          );
+          yield* ctx.expectEqual(
+            `the split row ${index} paints the after line in its own column`,
+            yield* ctx.host.text(diffSideId(DIFF_IDS.split, index, "after")),
+            splitSideText(pair.right, true),
+          );
+        }),
       { concurrency: 1, discard: true },
     );
 
     const splitFrame = yield* frameOf(ctx, SPLIT);
     const changed = Arr.getUnsafe(splitRows, 1);
-    const left = bandOf(changed.box, 0, DIFF_SIDE_BAND);
-    const right = bandOf(changed.box, 1 - DIFF_SIDE_BAND, 1);
-    const middle = bandOf(changed.box, 0.5, 0.62);
-    const tail = bandOf(changed.box, 0.98, 1);
     yield* ctx.expectEqual(
-      "the removed side of a split row paints its tint in the left band",
-      (yield* countIn(ctx, splitFrame, left, scale, DIFF_DESTRUCTIVE)) > 0,
+      "the removed side of a split row paints its tint",
+      (yield* countIn(
+        ctx,
+        splitFrame,
+        changed.before,
+        scale,
+        DIFF_DESTRUCTIVE,
+      )) > 0,
       true,
     );
     yield* ctx.expectEqual(
-      "the added side paints its tint in the right band",
-      (yield* countIn(ctx, splitFrame, right, scale, DIFF_SUCCESS)) > 0,
+      "the added side paints its tint on its own side of the divider",
+      (yield* countIn(ctx, splitFrame, changed.after, scale, DIFF_SUCCESS)) > 0,
       true,
     );
     yield* ctx.expectEqual(
-      "the left band paints none of the added role",
-      yield* countIn(ctx, splitFrame, left, scale, DIFF_SUCCESS),
+      "the left column paints none of the added role",
+      yield* countIn(ctx, splitFrame, changed.before, scale, DIFF_SUCCESS),
       0,
     );
     yield* ctx.expectEqual(
-      "the right band paints none of the removed role",
-      yield* countIn(ctx, splitFrame, right, scale, DIFF_DESTRUCTIVE),
+      "the right column paints none of the removed role",
+      yield* countIn(ctx, splitFrame, changed.after, scale, DIFF_DESTRUCTIVE),
       0,
-    );
-    // The cells are sized by their content, not split down the middle: the
-    // removed line's tint crosses the row's midpoint.
-    yield* ctx.expectEqual(
-      "a split cell is sized by its own line, so the removed tint crosses the midpoint",
-      (yield* countIn(ctx, splitFrame, middle, scale, DIFF_DESTRUCTIVE)) > 0,
-      true,
-    );
-    // And the price of that: the added line, pushed past the midpoint, is cut
-    // at the surface's edge.
-    yield* ctx.expectEqual(
-      "the pushed added line is clipped at the surface's edge",
-      (yield* countIn(ctx, splitFrame, tail, scale, DIFF_SUCCESS)) > 0,
-      true,
     );
 
     const appended = Arr.getUnsafe(splitRows, 3);
-    const blank = bandOf(appended.box, 0, DIFF_SIDE_BAND);
-    const filled = bandOf(appended.box, 1 - DIFF_SIDE_BAND, 1);
-    const appendedTail = bandOf(appended.box, 0.98, 1);
     yield* ctx.expectEqual(
       "a blank split cell paints no destructive tint",
-      yield* countIn(ctx, splitFrame, blank, scale, DIFF_DESTRUCTIVE),
+      yield* countIn(ctx, splitFrame, appended.before, scale, DIFF_DESTRUCTIVE),
       0,
     );
     yield* ctx.expectEqual(
       "a blank split cell paints no success tint",
-      yield* countIn(ctx, splitFrame, blank, scale, DIFF_SUCCESS),
+      yield* countIn(ctx, splitFrame, appended.before, scale, DIFF_SUCCESS),
       0,
     );
     yield* ctx.expectNear(
       "a blank split cell paints the diff's own surface",
-      yield* countIn(ctx, splitFrame, blank, scale, DIFF_SURFACE),
-      areaOf(blank, scale),
-      Math.round(areaOf(blank, scale) * 0.35),
+      yield* countIn(ctx, splitFrame, appended.before, scale, DIFF_SURFACE),
+      areaOf(appended.before, scale),
+      Math.round(areaOf(appended.before, scale) * 0.35),
     );
     yield* ctx.expectEqual(
-      "the appended line still paints its own tint beside the blank cell",
-      (yield* countIn(ctx, splitFrame, filled, scale, DIFF_SUCCESS)) > 0,
+      "the appended line paints its own tint beside the blank cell",
+      (yield* countIn(ctx, splitFrame, appended.after, scale, DIFF_SUCCESS)) >
+        0,
       true,
-    );
-    yield* ctx.expectEqual(
-      "an appended line that fits ends before the surface's edge",
-      yield* countIn(ctx, splitFrame, appendedTail, scale, DIFF_SUCCESS),
-      0,
     );
 
     const contextRow = Arr.getUnsafe(splitRows, 0);
-    const contextLeftSuccess = yield* countIn(
-      ctx,
-      splitFrame,
-      bandOf(contextRow.box, 0, DIFF_SIDE_BAND),
-      scale,
-      DIFF_SUCCESS,
-    );
-    const contextRightSuccess = yield* countIn(
-      ctx,
-      splitFrame,
-      bandOf(contextRow.box, 1 - DIFF_SIDE_BAND, 1),
-      scale,
-      DIFF_SUCCESS,
-    );
     yield* ctx.expectEqual(
-      "a split context row paints no success tint either half",
-      contextLeftSuccess + contextRightSuccess,
+      "a split context row paints no success tint either side",
+      (yield* countIn(
+        ctx,
+        splitFrame,
+        contextRow.before,
+        scale,
+        DIFF_SUCCESS,
+      )) +
+        (yield* countIn(
+          ctx,
+          splitFrame,
+          contextRow.after,
+          scale,
+          DIFF_SUCCESS,
+        )),
       0,
     );
-    const contextLeftDestructive = yield* countIn(
-      ctx,
-      splitFrame,
-      bandOf(contextRow.box, 0, DIFF_SIDE_BAND),
-      scale,
-      DIFF_DESTRUCTIVE,
-    );
-    const contextRightDestructive = yield* countIn(
-      ctx,
-      splitFrame,
-      bandOf(contextRow.box, 1 - DIFF_SIDE_BAND, 1),
-      scale,
-      DIFF_DESTRUCTIVE,
-    );
     yield* ctx.expectEqual(
-      "a split context row paints no destructive tint either half",
-      contextLeftDestructive + contextRightDestructive,
+      "a split context row paints no destructive tint either side",
+      (yield* countIn(
+        ctx,
+        splitFrame,
+        contextRow.before,
+        scale,
+        DIFF_DESTRUCTIVE,
+      )) +
+        (yield* countIn(
+          ctx,
+          splitFrame,
+          contextRow.after,
+          scale,
+          DIFF_DESTRUCTIVE,
+        )),
       0,
     );
 
@@ -491,13 +528,13 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const longRow = yield* boxOf(ctx, diffRowId(DIFF_IDS.long, 0));
     yield* ctx.expectNear(
-      "a line longer than its surface still paints exactly one row tall",
+      "a line longer than its column still paints exactly one row tall",
       longRow.height,
       DIFF_LINE_HEIGHT,
       1,
     );
     yield* ctx.expectEqual(
-      "the long row is clipped to the surface, not widened by its line",
+      "the long row keeps the surface's width and scrolls its line",
       Math.round(longRow.width),
       Math.round(longRoot.width) - 2,
     );
@@ -508,7 +545,7 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const painted = yield* ctx.host.paintedText();
     yield* ctx.expectEqual(
-      "the long line is painted whole, only clipped by the surface",
+      "the long line is painted whole, only scrolled by its column",
       Arr.some(painted, (line) => line.includes(DIFF_LONG)),
       true,
     );
@@ -520,12 +557,11 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
 
     // ---- nothing changed ----
-    const sameRoot = yield* boxOf(ctx, DIFF_IDS.same);
     const sameRow = yield* boxOf(ctx, diffRowId(DIFF_IDS.same, 0));
     yield* ctx.expectNear(
-      "an unchanged diff is exactly one row tall",
-      sameRoot.height,
-      sameRow.height + 2,
+      "an unchanged diff's row paints one code line tall",
+      sameRow.height,
+      DIFF_LINE_HEIGHT,
       1,
     );
     yield* ctx.expectEqual(

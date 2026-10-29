@@ -7832,18 +7832,18 @@ true, got false`). Evidence: `.artifacts/live/ripple-{rest,hover,small,clip,afte
 ### `diff-viewer-lifecycle` — measured on 0.11.0 here
 
 **Does the shipped `DiffViewer` paint change as tint, pair a split diff on one
-row, and keep a long line one line tall?** The editor package's page makes all
-three claims, and the package's suites read the reported tree: a `<text>` run's
-box and its declared colour are not the tint a window paints behind a row, a
-`flexGrow` cell is not a measured divider, and `whiteSpace: "nowrap"` is a
-declaration until a wrapped row grows. The headless `editor-surface` scenario
-mounted the raw `<diff>` host a patch string goes into; this probe mounts the
-wrapper a consumer imports.
+row between two equal columns, and keep a long line one line tall?** The editor
+package's page makes all three claims, and the package's suites read the
+reported tree: a `<text>` run's box and its declared colour are not the tint a
+window paints behind a row, a `flexGrow` cell is not a measured divider, and
+`whiteSpace: "nowrap"` is a declaration until a wrapped row grows. The headless
+`editor-surface` scenario mounted the raw `<diff>` host a patch string goes into;
+this probe mounts the wrapper a consumer imports.
 
 Four viewers are bounded to **420** points on a `card` page, so the diff's own
 `background` surface is a different colour from the page behind it. Their rows,
-line numbers and split pairing are derived from the package's own
-`diffStrings`/`numberDiff`/`splitPairs`.
+line numbers, hunk model and split pairing are derived from the package's own
+`diffStrings`/`numberDiff`/`rows`/`pairs`.
 
 | Step | Measured |
 | ---- | -------- |
@@ -7853,44 +7853,37 @@ line numbers and split pairing are derived from the package's own
 | an added line | fills its whole row with the `success` soft role `#0E5135`; none of the `destructive` role paints there |
 | a context line | paints the diff's own surface `#11141A` (on the `card` page `#191D25`), no tint of either kind |
 | the split surface | **4** rows for two changes: the replacement is one row, the appended line another |
-| a replacement on one row | the removed line's tint and the added line's tint share row 1; the row's text is `2export const doubled = total * 2;2export const doubled = total * 3;` |
+| the two columns | each side is **208.5** points wide — half of the 417 points left inside the frame and the 1-point divider — and the divider paints between them |
+| a replacement on one row | the removed line's tint and the added line's tint share row 1 at the same baseline; the left cell reads `2export const doubled = total * 2;` and the right `2export const doubled = total * 3;` |
 | the appended line's blank cell | the left cell paints no tint and the surface fill; the right cell paints the added role beside it |
-| the split's divider | the cells are sized by their own lines, not down the middle: the removed tint ends at **59%** of the row and the added cell's gutter begins at **61%** — so the removed tint crosses the midpoint |
-| the price of that | the pushed added line runs to the surface's edge and is **clipped** there, while the appended line that fits ends before it |
-| a long line | a **176**-character addition (160 of them `x`) in the 420-point surface still paints **one 18-point row** on a 418-wide row; the text is painted whole and clipped, not wrapped |
+| each column's overflow | a line wider than its column scrolls inside that column; neither column grows past its half or clips its neighbour |
+| a long line | a **176**-character addition (160 of them `x`) in the 420-point surface still paints **one 18-point row** on a 418-wide row; the line is painted whole and the column scrolls it, not wraps it |
 | no gutters | the long viewer's row reads `+console.log('xxx…` with no line numbers, so `lineNumbers={false}` removes both gutters |
 | nothing changed | one **18**-point context row, no `success` or `destructive` tint, and no second row |
 
-Three rules the window measured:
+Three rules the probe holds:
 
 1. **A change is a tint, and the tint is the tone's soft role.** A removed row
    is `statusTone(theme, "destructive").background` and an added row
    `statusTone(theme, "success").background`, painted across the whole row; a
    context row keeps the surface. The probe reads the roles from the shipped
    palette, so a palette change re-measures rather than inherits.
-2. **A split row pairs a change; it does not halve the surface.** The two cells
-   are `flexGrow` over a zero basis but the runtime sizes them by their content,
-   so a changed line wider than half the row pushes the other cell right and
-   clips it. That is the measured limit of the shipped composition: a caller
-   that needs both lines whole should give the diff a wider pane.
-3. **A long line is clipped, not wrapped.** `whiteSpace: "nowrap"` plus the
-   surface's `overflow-hidden` keeps the row one line tall and the surface at
-   the width its caller gave it; the model still paints the whole line, so a
-   copy or a wider pane recovers it.
+2. **A split row is two equal columns, not a content-sized pair.** Each side is
+   `flexGrow: 1` over `flexBasis: 0` with `minWidth: 0`, so the runtime's
+   content minimum cannot push the other column; a 1-point divider sits between
+   them. Both sides paint the same number of rows at the code line height, so a
+   paired change sits level across the divider, and each side owns its horizontal
+   scroller. The old content-sized layout — the removed tint crossing the
+   midpoint and the added line cut at the surface's edge — is retracted.
+3. **A long line is one row, and its column scrolls.** `whiteSpace: "nowrap"`
+   and a fixed row height keep the row one line tall; the overflow belongs to
+   the column's scroller, so a copy or a wider pane recovers the rest.
 
-98 checks, `--only diff-viewer-lifecycle`, green on 0.11.0 here (~4.6 s, four
-captures: `diff-unified`, `diff-split`, `diff-long`, `diff-same`). Fixture
-`src/live/diff-viewer.ts` + probe `src/live/diff-viewer-probe.tsx` +
-`diff-viewer.test.ts` (the component's ids and paint, the rows derived from its
-own logic, the fixture's colours from the palette, the registry and wiring, the
-band sampling, the count and this section). Negative controls measured, exit `1`
-each and restored green: expecting the pushed added line to end before the
-surface fails
-`the pushed added line is clipped at the surface's edge` (`expected 0, got
-550`), and reading the split sides at the row's midpoint (`DIFF_SIDE_BAND` at
-`0.5`) fails `the right band paints none of the removed role` (`expected 0, got
-2379`) — the removed line's tint crossing the midpoint, read as the other
-side's content.
+116 checks, `--only diff-viewer-lifecycle`, four captures: `diff-unified`,
+`diff-split`, `diff-long`, `diff-same`. Fixture `src/live/diff-viewer.ts` +
+probe `src/live/diff-viewer-probe.tsx` + `diff-viewer.test.ts` (the component's
+ids and paint, the rows derived from its own logic, the fixture's colours from
+the palette, the registry and wiring, the equal-column bounds and this section).
 Evidence: `.artifacts/live/diff-{unified,split,long,same}.png`.
 
 ### `switch-lifecycle` — measured on 0.11.0 here

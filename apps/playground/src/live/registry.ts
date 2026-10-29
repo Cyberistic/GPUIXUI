@@ -861,7 +861,7 @@ export const liveRegistry = [
   {
     id: "diff-viewer-lifecycle",
     title:
-      "Content: the shipped DiffViewer tints a removed and an added line with their soft roles, pairs a split change on one row with a blank cell where a side ran out, and clips a long line to the caller's surface",
+      "Content: the shipped DiffViewer tints a removed and an added line with their soft roles, pairs a split change on one row between two equal columns with a blank cell where a side ran out, and keeps a long line one row tall in its own scroller",
     capability: "content",
   },
   {
