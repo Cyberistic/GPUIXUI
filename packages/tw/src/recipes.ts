@@ -296,6 +296,9 @@ export const TAG_INPUT_ROOT =
   "flex flex-row flex-wrap items-center gap-1 px-1.5 py-0.5 bg-background rounded-md border border-input";
 export const TAG_INPUT_FIELD =
   "text-sm font-sans flex-grow min-w-20 text-input-foreground";
+export const TAG_INPUT_CAPTION = "text-xs font-sans text-muted-foreground";
+export const TAG_INPUT_HINT =
+  "text-xs font-sans text-muted-foreground select-none";
 export const TAG_INPUT_CHIP =
   "flex flex-row items-center gap-1 py-0 pl-2 pr-0.5 bg-secondary rounded-sm";
 export const TAG_INPUT_CHIP_TEXT =
