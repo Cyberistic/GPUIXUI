@@ -49,6 +49,8 @@ import {
   numberDraftText,
   parseNumberText,
   scrubNumber,
+  SCRUB_PIXELS_PER_STEP,
+  SHIFT_SCRUB_SCALE,
   stepNumber,
   syncNumberDraft,
   withNumberDraftText,
@@ -202,6 +204,11 @@ interface ScrubOptions {
   readonly current: number;
   readonly range: NumberRange;
   readonly disabled: boolean;
+  /**
+   * The axis the gesture reads. `y` is the spin column's (up raises the
+   * value); `x` is the field's (right raises it, the inspector convention).
+   */
+  readonly axis: "x" | "y";
   readonly onValue: (next: number) => void;
   /** A gesture that moved the value is over: report the value it ended on. */
   readonly onEnd: (value: number) => void;
@@ -221,11 +228,17 @@ const useNumberScrub = ({
   current,
   range,
   disabled,
+  axis,
   onValue,
   onEnd,
 }: ScrubOptions): NumberFieldScrub => {
+  const at = (event: EventPayload): Option.Option<number> =>
+    Option.fromNullishOr(axis === "y" ? event.y : event.x);
+  /** How far the pointer travelled toward the raising direction. */
+  const travel = (origin: number, now: number): number =>
+    axis === "y" ? origin - now : now - origin;
   const press = useRef<
-    Option.Option<{ readonly y: number; readonly value: number }>
+    Option.Option<{ readonly at: number; readonly value: number }>
   >(Option.none());
   const scrubbed = useRef(false);
   /** The value the gesture in flight has reached, so its end can report it. */
@@ -235,11 +248,11 @@ const useNumberScrub = ({
       // A secondary or middle press is not a step gesture.
       if (!primaryButton(event)) return;
       // A new gesture starts clean: the previous drag's click may never have
-      // arrived (the pointer was released outside the column).
+      // arrived (the pointer was released outside the control).
       scrubbed.current = false;
       last.current = Option.some(current);
-      press.current = Option.map(Option.fromNullishOr(event.y), (y) => ({
-        y,
+      press.current = Option.map(at(event), (at) => ({
+        at,
         value: current,
       }));
     },
@@ -248,15 +261,22 @@ const useNumberScrub = ({
         press.current = Option.none();
         return;
       }
+      const held = event.modifiers?.shift === true ? SHIFT_SCRUB_SCALE : 1;
       Option.match(
         Option.all({
           origin: press.current,
-          y: Option.fromNullishOr(event.y),
+          at: at(event),
         }),
         {
           onNone: () => {},
-          onSome: ({ origin, y }) => {
-            const next = scrubNumber(origin.value, origin.y - y, range);
+          onSome: ({ origin, at }) => {
+            const next = scrubNumber(
+              origin.value,
+              travel(origin.at, at),
+              range,
+              SCRUB_PIXELS_PER_STEP,
+              held,
+            );
             if (next === current) return;
             scrubbed.current = true;
             last.current = Option.some(next);
@@ -309,7 +329,7 @@ export interface NumberFieldPart {
   readonly range: NumberRange;
   readonly focus: FocusState;
   readonly handlers: NumberFieldHandlers;
-  /** The spin column's drag gesture; absent when the pure renderer is used. */
+  /** The spin column's vertical drag gesture; absent when the pure renderer is used. */
   readonly scrub: Option.Option<NumberFieldScrub>;
   /** The caller's host handlers, installed on the input and the steppers. */
   readonly interaction: InteractionProps;
@@ -477,6 +497,97 @@ export const renderNumberFieldInput = (
 /** The field's text box, inside a number field. */
 export const NumberFieldInput = (props: NumberFieldInputProps): ReactElement =>
   renderNumberFieldInput(props, useNumberFieldPart("NumberFieldInput"));
+
+/** {@link NumberFieldScrubHandle} props. */
+export interface NumberFieldScrubHandleProps {
+  /** The value a drag starts from. Bind it to the same record as the field. */
+  readonly value: number;
+  /** No lower bound when omitted. */
+  readonly min?: number;
+  /** No upper bound when omitted. */
+  readonly max?: number;
+  /** The step one scrub count moves; defaults to 1. */
+  readonly step?: number;
+  readonly disabled?: boolean;
+  /** Receives every frame of a drag, clamped to the bounds. */
+  readonly onValueChange: (next: number) => void;
+  /** Receives the value a whole drag ended on. */
+  readonly onValueCommit?: (value: number) => void;
+  /** The visible words a reader drags — an inspector's row label. */
+  readonly children?: ReactNode;
+  /** Extra style, merged after the handle's own. */
+  readonly style?: StyleDesc;
+  readonly className?: string;
+  readonly testId?: string;
+}
+
+/**
+ * The label an inspector scrubs.
+ *
+ * The runtime's `<input>` takes no mouse events of its own (the text host
+ * consumes the press), so a horizontal scrub cannot live on a number field's
+ * text. It lives on the label beside it: a painted run of words that answers a
+ * press, drags one step per {@link SCRUB_PIXELS_PER_STEP} to the right, gives
+ * {@link SHIFT_SCRUB_SCALE}× while Shift is held and reports the value it
+ * ended on. A press that does not travel is a click — the words take no value —
+ * so the field beside it stays a text field.
+ */
+export const NumberFieldScrubHandle = ({
+  value,
+  min,
+  max,
+  step,
+  disabled,
+  onValueChange,
+  onValueCommit,
+  children,
+  style,
+  className,
+  testId,
+}: NumberFieldScrubHandleProps): ReactElement => {
+  const theme = useTheme();
+  const range = numberRange({ min, max, step });
+  const gesture = useNumberScrub({
+    current: clampNumeric(value, range),
+    range,
+    disabled: disabled === true,
+    axis: "x",
+    onValue: onValueChange,
+    onEnd: (next) => onValueCommit?.(next),
+  });
+  const inert = disabled === true;
+  const wash = inert ? undefined : colorRole(theme, "hover");
+  return (
+    <div
+      role="presentation"
+      testId={testId}
+      onMouseDown={inert ? undefined : gesture.onMouseDown}
+      onMouseMove={inert ? undefined : gesture.onMouseMove}
+      onMouseUp={inert ? undefined : gesture.onMouseUp}
+      style={mergeStyle(
+        {
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          minWidth: 0,
+          cursor: inert ? "default" : "col-resize",
+          // The wash is the handle's one affordance: the words are the target.
+          ...(wash === undefined
+            ? {}
+            : {
+                hover: {
+                  backgroundColor: wash,
+                  borderRadius: theme.radius.sm,
+                },
+              }),
+        },
+        mergeStyle(recipeTw.classesToStyle(className, theme).style, style),
+      )}
+    >
+      {children}
+    </div>
+  );
+};
 
 /** {@link NumberFieldIncrement} and {@link NumberFieldDecrement} props. */
 export interface NumberFieldStepperProps {
@@ -692,6 +803,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
     current: clampNumeric(state.value.current, range),
     range,
     disabled: props.disabled === true,
+    axis: "y",
     onValue: (next) => {
       apply(next);
     },

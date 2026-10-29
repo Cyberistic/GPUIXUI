@@ -1930,7 +1930,7 @@
 .gx-dock {
   display: flex;
   width: 100%;
-  max-width: 620px;
+  max-width: 660px;
   height: 260px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -1944,9 +1944,8 @@
   flex-direction: column;
   flex: none;
   gap: 2px;
-  width: 132px;
+  width: 156px;
   padding: 10px 8px;
-  border-right: 1px solid var(--border);
   background: var(--card);
 }
 
@@ -1966,7 +1965,14 @@
   padding: 0 8px;
   border-radius: calc(var(--radius) - 1px);
   font-size: 12px;
+  white-space: nowrap;
   color: var(--muted-foreground);
+}
+
+.gx-dock-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gx-dock-file[aria-current="page"] {
@@ -1976,6 +1982,7 @@
 }
 
 .gx-dock-file b {
+  flex: none;
   font-family: var(--font-mono);
   font-size: 9.5px;
   font-weight: 500;
@@ -13571,6 +13578,15 @@ button.gx-rating-star:focus-visible {
   text-align: left;
 }
 
+/* The strip owns the window's full width; the demo control above it does not. */
+.gx-status-demo {
+  max-width: none;
+}
+
+.gx-status-demo > .gx-tgroup {
+  align-self: flex-start;
+}
+
 .gx-shell-readout {
   margin: 0;
   font-family: var(--font-mono);
@@ -13591,88 +13607,32 @@ button.gx-rating-star:focus-visible {
   gap: 8px;
 }
 
-.gx-shell-group {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-}
-
-.gx-shell-choice {
-  height: 22px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: calc(var(--radius) - 2px);
-  background: transparent;
-  color: var(--muted-foreground);
-  font: inherit;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.gx-shell-choice[aria-pressed="true"] {
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-
-.gx-shell-choice:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-/* The strip: one row of actions, a hairline between groups, one tab stop. */
+/* The window's top strip: the shared buttons, a flexible spacer, then the
+   trailing group. The strip owns its row; its controls keep their own paint. */
 .gx-shell-toolbar {
   display: flex;
-  flex-wrap: wrap;
+  width: 100%;
   align-items: center;
   gap: 4px;
   min-height: var(--control-height-sm);
-  padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
   background: var(--card);
+}
+
+.gx-shell-spacer {
+  flex: 1 1 auto;
+}
+
+/* The strip owns the window's full width; the page control below it does not. */
+.gx-toolbar-demo {
+  max-width: none;
 }
 
 .gx-shell-slot {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-}
-
-.gx-shell-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--control-height-sm);
-  padding: 0 var(--control-padding-x-sm);
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--foreground);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.gx-shell-action:hover {
-  background: var(--hover);
-}
-
-.gx-shell-action[data-disabled="true"] {
-  color: var(--disabled-foreground);
-  cursor: not-allowed;
-}
-
-/* The tab stop is a ring on the slot that holds it, as the runtime paints it. */
-.gx-shell-action[data-tab-stop="true"] {
-  box-shadow: inset 0 0 0 1px var(--ring);
-}
-
-.gx-shell-action:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
 }
 
 .gx-shell-separator {
@@ -13831,13 +13791,15 @@ button.gx-rating-star:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   min-height: var(--control-height-sm);
-  padding: 4px 8px;
-  border: 1px solid var(--input);
-  border-radius: var(--radius);
+  padding: 4px 10px;
+  border-top: 1px solid var(--input);
+  border-radius: 0;
   background: var(--muted);
   color: var(--foreground);
-  font-size: 11.5px;
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
 
 .gx-shell-status-slot {
@@ -13899,6 +13861,18 @@ button.gx-rating-star:focus-visible {
   flex: none;
   color: var(--muted-foreground);
   font-size: 11.5px;
+}
+
+/* A number's label is the handle: the same words, with the drag cursor. */
+.gx-props-scrub {
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.gx-props-scrub:hover {
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--hover);
 }
 
 .gx-props-field {

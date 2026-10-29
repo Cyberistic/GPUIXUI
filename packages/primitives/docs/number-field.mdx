@@ -48,6 +48,24 @@ const [copies, setCopies] = useState(1);
 | `ref` / `aria-id` / `onLayout` | host props | none | the native `<input>` is the addressed element |
 | `testId` | `string` | — | stable locator on the field's chrome |
 
+### `NumberFieldScrubHandle`
+
+The label an inspector drags. Mount it beside a `NumberField` and give both the
+same value and bounds: a horizontal drag moves one step per 4px, a held Shift
+multiplies that by 10, and `min`/`max` clamp it. A press that does not travel is a
+click, so the field beside it stays a text field.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `number` | — | the value a drag starts from |
+| `min` / `max` | `number` | none | the bounds a drag clamps to |
+| `step` | `number` | `1` | the step one scrub count moves |
+| `onValueChange` | `(value: number) => void` | — | every frame of a drag, already clamped |
+| `onValueCommit` | `(value: number) => void` | — | the value the whole drag ended on |
+| `disabled` | `boolean` | `false` | takes no gesture, and paints no resize cursor |
+| `children` | `ReactNode` | — | the visible words a reader drags |
+| `style` / `className` / `testId` | host props | — | merged after the handle's own |
+
 ## Limitations
 
 - Decimal text by default; grouped or locale display goes through `formatValue`/`parseValue`.

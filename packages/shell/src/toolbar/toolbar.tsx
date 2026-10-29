@@ -6,6 +6,13 @@
  * overflows the tail into a menu behind an ellipsis trigger. The roving and the
  * overflow split are pure (`logic.ts`); this component wires them to focus and
  * renders the strip.
+ *
+ * The strip's anatomy is the window's: a leading group of actions, a flexible
+ * spacer, then the trailing group — an optional `ToggleGroup` of view modes and
+ * the overflow trigger. Actions are the primitives' `Button` (a `ghost`, `sm`
+ * one, with its icon as the leading slot), the trigger is an `IconButton`, the
+ * rule between groups is a `Separator`, and a mode group is a `ToggleGroup`, so
+ * the chrome owns no button of its own.
  */
 
 import type { KeyEvent, Props, PublicInstance, StyleDesc } from "@gpuix/react";
@@ -16,7 +23,13 @@ import {
   mergeStyles,
 } from "@gpuix/react/floating";
 import { Icon, type IconName } from "@gpuixui/icons";
-import { isPlainKey } from "@gpuixui/primitives";
+import {
+  Button,
+  IconButton,
+  isPlainKey,
+  Separator,
+  ToggleGroup,
+} from "@gpuixui/primitives";
 import { cn, MENU_CONTENT, MENU_ITEM } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -31,10 +44,8 @@ import {
   type ToolbarItemSpec,
 } from "./logic.js";
 
-const TOOLBAR = "flex flex-row items-center gap-1";
-const TOOLBAR_ACTION =
-  "flex flex-row items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium font-sans text-foreground";
-const TOOLBAR_SEPARATOR = "h-4 w-px bg-border";
+const TOOLBAR =
+  "flex w-full flex-row items-center gap-1 border-b border-input bg-card px-2 py-1";
 const TOOLBAR_ITEM_LABEL = "text-sm font-medium font-sans";
 
 /** One action in the strip. */
@@ -47,6 +58,13 @@ export interface ToolbarAction {
   readonly disabled?: boolean;
 }
 
+/** One mode the toolbar's trailing `ToggleGroup` offers. */
+export interface ToolbarMode {
+  readonly id: string;
+  readonly label: string;
+  readonly disabled?: boolean;
+}
+
 /** {@link Toolbar} props. */
 export interface ToolbarProps extends Omit<Props, "children"> {
   /** The toolbar's accessible name. */
@@ -56,22 +74,20 @@ export interface ToolbarProps extends Omit<Props, "children"> {
   readonly max?: number;
   /** Called when an action is activated. */
   readonly onAction?: (id: string) => void;
+  /** The trailing mode group. Omit to draw no group. */
+  readonly modes?: ReadonlyArray<ToolbarMode>;
+  /** The pressed mode, when the group is controlled. */
+  readonly mode?: string;
+  /** Called when a mode is pressed. */
+  readonly onModeChange?: (id: string) => void;
+  /** The modes group's accessible name. Defaults to `View`. */
+  readonly modesLabel?: string;
   readonly className?: string;
 }
 
-/** A slot is a visible action, or the overflow trigger in the last slot. */
-const isOverflowSlot = (
-  slot: number,
-  visibleCount: number,
-  hasOverflow: boolean,
-): boolean => hasOverflow && slot === visibleCount;
-
-const actionStyle = (theme: Theme, disabled: boolean): StyleDesc => ({
-  ...recipeStyle(TOOLBAR_ACTION, theme),
-  ...(disabled
-    ? { opacity: disabledOpacity, cursor: "not-allowed" }
-    : { hover: { backgroundColor: theme.colors.hover }, cursor: "pointer" }),
-});
+/** A slot is a visible action, or the overflow trigger after them. */
+const isOverflowSlot = (slot: number, visibleCount: number): boolean =>
+  slot === visibleCount;
 
 const overflowItemStyle = (theme: Theme, disabled: boolean): StyleDesc => ({
   ...recipeStyle(MENU_ITEM, theme),
@@ -85,6 +101,10 @@ export const Toolbar = ({
   actions,
   max,
   onAction,
+  modes,
+  mode,
+  onModeChange,
+  modesLabel = "View",
   className,
   style,
   ...rest
@@ -103,9 +123,14 @@ export const Toolbar = ({
   const visibleCount = Arr.length(split.visible);
   const hasOverflow = Arr.length(split.overflow) > 0;
   const slotCount = visibleCount + (hasOverflow ? 1 : 0);
+  const modeOptions = Arr.map(modes ?? [], (candidate) => ({
+    value: candidate.id,
+    label: candidate.label,
+    disabled: candidate.disabled === true,
+  }));
 
   const isDisabled = (slot: number): boolean =>
-    isOverflowSlot(slot, visibleCount, hasOverflow)
+    isOverflowSlot(slot, visibleCount)
       ? false
       : (split.visible[slot]?.disabled ?? true);
 
@@ -117,29 +142,25 @@ export const Toolbar = ({
   const refs = useRef<Array<PublicInstance | null>>([]);
   const overflowRef = useRef<PublicInstance | null>(null);
 
+  const focusSlot = (slot: number): void => {
+    const target = refs.current[slot];
+    if (target !== null && target !== undefined) {
+      renderer?.focusElement?.(target.id);
+    }
+  };
+
   const handleKeyDown = (event: KeyEvent): void => {
     const key = event.key ?? "";
     if (!isPlainKey(event.modifiers)) return;
-
-    if (key === "left" || key === "right") {
-      const delta = key === "right" ? 1 : -1;
-      const next = moveRoving(
-        Option.getOrElse(roving, () => 0),
-        slotCount,
-        delta,
-        isDisabled,
-      );
-      setRoving(next);
-      Option.match(next, {
-        onNone: () => undefined,
-        onSome: (slot) => {
-          const target = refs.current[slot];
-          if (target !== null && target !== undefined) {
-            renderer?.focusElement?.(target.id);
-          }
-        },
-      });
-    }
+    if (key !== "left" && key !== "right") return;
+    const next = moveRoving(
+      Option.getOrElse(roving, () => 0),
+      slotCount,
+      key === "right" ? 1 : -1,
+      isDisabled,
+    );
+    setRoving(next);
+    Option.map(next, focusSlot);
   };
 
   const closeOverflow = (): void => {
@@ -172,41 +193,33 @@ export const Toolbar = ({
         return (
           <Fragment key={action.id}>
             {groupBefore ? (
-              <div style={recipeStyle(TOOLBAR_SEPARATOR, theme)} />
+              <Separator orientation="vertical" className="h-4" />
             ) : null}
-            <div
-              role="button"
+            <Button
+              variant="ghost"
+              size="sm"
+              label={action.label}
+              disabled={disabled}
               tabIndex={Option.contains(roving, index) ? 0 : -1}
-              aria-label={action.label}
-              aria-disabled={disabled}
               testId={`toolbar-action-${action.id}`}
               ref={(instance) => {
                 refs.current[index] = instance;
               }}
-              onClick={() => {
-                if (disabled) return;
-                onAction?.(action.id);
-              }}
-              onKeyDown={(event) => {
-                if (disabled) return;
-                const key = event.key ?? "";
-                if (!isPlainKey(event.modifiers)) return;
-                if (key === "space") event.preventDefault();
-                if (key === "enter" || key === "space") onAction?.(action.id);
-              }}
-              style={actionStyle(theme, disabled)}
+              onActivate={() => onAction?.(action.id)}
+              leading={
+                action.icon === undefined ? undefined : (
+                  <Icon
+                    name={action.icon}
+                    color={
+                      disabled
+                        ? theme.colors.disabledForeground
+                        : theme.colors.foreground
+                    }
+                    size="sm"
+                  />
+                )
+              }
             >
-              {action.icon === undefined ? null : (
-                <Icon
-                  name={action.icon}
-                  color={
-                    disabled
-                      ? theme.colors.disabledForeground
-                      : theme.colors.foreground
-                  }
-                  size="sm"
-                />
-              )}
               <text
                 style={{
                   ...recipeStyle(TOOLBAR_ITEM_LABEL, theme),
@@ -217,35 +230,44 @@ export const Toolbar = ({
               >
                 {action.label}
               </text>
-            </div>
+            </Button>
           </Fragment>
         );
       })}
+
+      <div style={{ flexGrow: 1, flexBasis: 0 }} />
+
+      {modeOptions.length === 0 ? null : (
+        <Fragment>
+          <Separator orientation="vertical" className="h-4" />
+          <ToggleGroup
+            type="single"
+            label={modesLabel}
+            size="sm"
+            options={modeOptions}
+            {...(mode === undefined ? {} : { value: mode })}
+            onValueChange={onModeChange}
+            itemTestId={(id) => `toolbar-mode-${id}`}
+          />
+        </Fragment>
+      )}
+
       {hasOverflow ? (
         <Fragment>
-          <div
-            role="button"
-            tabIndex={Option.contains(roving, visibleCount) ? 0 : -1}
-            aria-label="More actions"
+          <IconButton
+            label="More actions"
+            size="sm"
             aria-haspopup="menu"
             aria-expanded={overflowOpen}
             testId="toolbar-overflow"
+            tabIndex={Option.contains(roving, visibleCount) ? 0 : -1}
             ref={(instance) => {
               refs.current[visibleCount] = instance;
               overflowRef.current = instance;
             }}
-            onClick={() => setOverflowOpen((open) => !open)}
-            onKeyDown={(event) => {
-              const key = event.key ?? "";
-              if (!isPlainKey(event.modifiers)) return;
-              if (key === "space") event.preventDefault();
-              if (key === "enter" || key === "space")
-                setOverflowOpen((open) => !open);
-            }}
-            style={actionStyle(theme, false)}
-          >
-            <Icon name="ellipsis" color={theme.colors.foreground} size="sm" />
-          </div>
+            onActivate={() => setOverflowOpen((open) => !open)}
+            icon={<Icon name="ellipsis" color={theme.colors.foreground} />}
+          />
           {overflowOpen ? (
             <FloatingLayer
               role="menu"

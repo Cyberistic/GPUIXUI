@@ -24,7 +24,14 @@
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { Input, NumberField, Select, Switch } from "@gpuixui/primitives";
+import {
+  Input,
+  NumberField,
+  NumberFieldScrubHandle,
+  Select,
+  Switch,
+  Text,
+} from "@gpuixui/primitives";
 import { cn } from "@gpuixui/tw";
 import { Match } from "effect";
 import type { ReactElement } from "react";
@@ -68,15 +75,12 @@ export interface PropertyPanelProps extends Omit<
   readonly testId?: string;
 }
 
-/** The field a row's `type` names, bound to the record's edit. */
+/** The field a row's `type` names, bound to the edit its row reports. */
 const renderField = (
   row: PropertyRow,
-  record: PropertyRecord,
-  onChange: (record: PropertyRecord) => void,
-): ReactElement => {
-  const edit = (value: PropertyValue): void =>
-    onChange(setProperty(record, row.key, value));
-  return Match.value(row).pipe(
+  edit: (value: PropertyValue) => void,
+): ReactElement =>
+  Match.value(row).pipe(
     Match.when(isTextRow, (row) => (
       <Input
         value={row.value}
@@ -92,6 +96,9 @@ const renderField = (
         onValueChange={edit}
         size="sm"
         className="w-full"
+        min={row.min}
+        max={row.max}
+        step={row.step}
         testId={`field-${row.key}`}
       />
     )),
@@ -115,7 +122,6 @@ const renderField = (
     )),
     Match.exhaustive,
   );
-};
 
 /**
  * A panel of property rows, one field per row.
@@ -154,38 +160,64 @@ export const PropertyPanel = ({
           paddingRight: theme.spacing.sm,
         }}
       >
-        {rows.map((row) => (
-          <div
-            key={row.key}
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: theme.spacing.sm,
-              ...recipeStyle(PROPERTY_ROW, theme),
-            }}
-          >
+        {rows.map((row) => {
+          const edit = (value: PropertyValue): void =>
+            onChange(setProperty(record, row.key, value));
+          const labelStyle = {
+            ...recipeStyle(PROPERTY_LABEL, theme),
+            width: labelWidth,
+            flexGrow: 0,
+            flexShrink: 0,
+            flexBasis: labelWidth,
+          };
+          const labelTestId =
+            testId === undefined ? undefined : `${testId}-label-${row.key}`;
+          return (
             <div
-              testId={
-                testId === undefined ? undefined : `${testId}-label-${row.key}`
-              }
+              key={row.key}
               style={{
-                ...recipeStyle(PROPERTY_LABEL, theme),
-                width: labelWidth,
-                flexGrow: 0,
-                flexShrink: 0,
-                flexBasis: labelWidth,
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: theme.spacing.sm,
+                ...recipeStyle(PROPERTY_ROW, theme),
               }}
             >
-              {row.label}
+              {isNumberRow(row) ? (
+                // A number's label is its scrub handle: the field's text takes
+                // no press of its own, so the words beside it drag the value and
+                // the field keeps the typing.
+                <NumberFieldScrubHandle
+                  testId={labelTestId}
+                  value={row.value}
+                  min={row.min}
+                  max={row.max}
+                  step={row.step}
+                  onValueChange={edit}
+                  style={labelStyle}
+                >
+                  <Text role="caption" tone="muted">
+                    {row.label}
+                  </Text>
+                </NumberFieldScrubHandle>
+              ) : (
+                <div testId={labelTestId} style={labelStyle}>
+                  {row.label}
+                </div>
+              )}
+              <div
+                style={{
+                  flexGrow: 1,
+                  flexShrink: 1,
+                  flexBasis: 0,
+                  minWidth: 0,
+                }}
+              >
+                {renderField(row, edit)}
+              </div>
             </div>
-            <div
-              style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 }}
-            >
-              {renderField(row, record, onChange)}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

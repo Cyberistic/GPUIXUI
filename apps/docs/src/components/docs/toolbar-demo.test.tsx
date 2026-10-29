@@ -6,6 +6,7 @@ import { splitOverflow } from "@/lib/shell-logic";
 import {
   TOOLBAR_ACTIONS,
   TOOLBAR_MAX,
+  TOOLBAR_MODES,
   ToolbarFrame,
   initialTabStop,
   moveTabStop,
@@ -35,6 +36,14 @@ const read = (path: string): string =>
 const markup = (node: Parameters<typeof renderToStaticMarkup>[0]): string =>
   renderToStaticMarkup(node);
 
+/** The declarations of the first `selector { … }` block in a style sheet. */
+const block = (css: string, selector: string): string => {
+  const start = css.indexOf(`${selector} {`);
+  if (start === -1) return "";
+  const end = css.indexOf("}", start);
+  return end === -1 ? "" : css.slice(start, end);
+};
+
 const frame = (
   tabStop: Option.Option<number>,
   overflowOpen = false,
@@ -44,7 +53,10 @@ const frame = (
     <ToolbarFrame
       actions={TOOLBAR_ACTIONS}
       max={max}
+      mode={TOOLBAR_MODES[0]?.id}
+      modes={TOOLBAR_MODES}
       onAction={() => undefined}
+      onModeChange={() => undefined}
       onOverflowOpenChange={() => undefined}
       onTabStopChange={() => undefined}
       overflowOpen={overflowOpen}
@@ -133,6 +145,41 @@ describe("the Toolbar preview", () => {
     expect(frame(initialTabStop(strip))).toContain(
       "4 of 6 in the strip · the tab stop is on New",
     );
+  });
+
+  it("paints the shared button family in the strip's groups", () => {
+    // Guarded bug: the drawing shipped a second button chrome (`.gx-shell-action`)
+    // and put the overflow trigger after the last action, so the strip had no
+    // trailing group and no mode group — nothing like the component's anatomy.
+    const html = frame(
+      initialTabStop(toolbarStrip(TOOLBAR_ACTIONS, TOOLBAR_MAX)),
+    );
+    const css = read("apps/docs/src/styles/demos.css");
+
+    const buttons = [...html.matchAll(/<button[^>]*class="([^"]*)"/g)].map(
+      (match) => match[1] ?? "",
+    );
+    // Four visible actions, two modes and the overflow trigger.
+    expect(buttons).toHaveLength(7);
+    expect(buttons.every((classes) => classes.includes("gx-btn"))).toBe(true);
+    expect(html).toContain('class="gx-btn gx-btn-ghost gx-btn-sm"');
+    expect(html).toContain("gx-btn-square");
+
+    // Leading group, flexible spacer, then the trailing group.
+    const toolbar = html.slice(html.indexOf('role="toolbar"'));
+    const spacer = toolbar.indexOf("gx-shell-spacer");
+    const modes = toolbar.indexOf('class="gx-tgroup"');
+    const overflow = toolbar.indexOf('data-action="overflow"');
+    expect(spacer).toBeGreaterThan(-1);
+    expect(modes).toBeGreaterThan(spacer);
+    expect(overflow).toBeGreaterThan(modes);
+
+    // The strip is the window's full-width row, its controls spaced by the
+    // recipe's gap, and it owns no radius of its own.
+    const strip = block(css, ".gx-shell-toolbar");
+    expect(strip).toContain("width: 100%;");
+    expect(strip).toContain("gap: 4px;");
+    expect(strip).not.toContain("border-radius");
   });
 
   it("runs the package's reducers instead of restating them", () => {

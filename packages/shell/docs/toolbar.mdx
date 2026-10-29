@@ -22,8 +22,12 @@ const actions: ReadonlyArray<ToolbarAction> = [
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Toolbar` | `div` with `role="toolbar"` | `label?`, `actions` (required), `max?`, `onAction?`, `className?` |
-| `ToolbarAction` | one action | `id`, `label`, `icon?`, `group?`, `disabled?` |
+| `Toolbar` | `div` with `role="toolbar"` | `label?`, `actions` (required), `max?`, `onAction?`, `modes?`, `mode?`, `onModeChange?`, `modesLabel?`, `className?` |
+| `ToolbarAction` | one `Button` in the leading group | `id`, `label`, `icon?`, `group?`, `disabled?` |
+| `ToolbarMode` | one option in the trailing `ToggleGroup` | `id`, `label`, `disabled?` |
+
+The strip is a leading group of actions, a flexible spacer, then the trailing
+group — the mode group and the overflow trigger.
 
 ## Limitations
 

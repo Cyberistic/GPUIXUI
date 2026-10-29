@@ -287,28 +287,44 @@ export const stepNumber = (
 export const SCRUB_PIXELS_PER_STEP = 4;
 
 /**
- * The value a vertical drag aims at.
+ * The multiplier a held Shift gives a scrub.
  *
- * `travel` is how far the pointer moved **up** since the press (a downward drag
- * is negative), so dragging up raises the value. The travel is quantised with a
+ * A coarse gesture for a wide range: one pixel of travel is ten steps, which is
+ * the inspector convention (Figma, Blender) and why the same drag reaches both
+ * ends of an unbounded field.
+ */
+export const SHIFT_SCRUB_SCALE = 10;
+
+/**
+ * The value a drag aims at.
+ *
+ * `travel` is how far the pointer moved **toward the raising direction** since
+ * the press (up for a vertical scrub, right for a horizontal one), so a drag
+ * away from that direction is negative. The travel is quantised with a
  * sign-aware round: ±6px is two steps in both directions, where
  * `Math.round(-6 / 4)` is `-1` and the same gesture would answer differently
- * depending on which way it went. A travel that cannot be measured leaves the
- * value alone, and a scale that cannot be laid out falls back to
- * {@link SCRUB_PIXELS_PER_STEP} — the same absence rule as a broken step.
+ * depending on which way it went. `stepScale` multiplies the counted steps (a
+ * held Shift passes {@link SHIFT_SCRUB_SCALE}). A travel that cannot be
+ * measured leaves the value alone, and a scale that cannot be laid out falls
+ * back to {@link SCRUB_PIXELS_PER_STEP} — the same absence rule as a broken
+ * step.
  */
 export const scrubNumber = (
   start: number,
   travel: number,
   range: NumberRange,
   pixelsPerStep = SCRUB_PIXELS_PER_STEP,
+  stepScale = 1,
 ): number => {
   if (!Number.isFinite(travel)) return start;
   const scale =
     Number.isFinite(pixelsPerStep) && pixelsPerStep > 0
       ? pixelsPerStep
       : SCRUB_PIXELS_PER_STEP;
-  const steps = Math.sign(travel) * Math.round(Math.abs(travel) / scale);
+  const multiplier =
+    Number.isFinite(stepScale) && stepScale > 0 ? stepScale : 1;
+  const steps =
+    Math.sign(travel) * Math.round(Math.abs(travel) / scale) * multiplier;
   return stepNumber(start, range, steps);
 };
 

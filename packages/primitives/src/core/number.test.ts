@@ -23,6 +23,7 @@ import {
   parseNumberText,
   parseNumericText,
   SCRUB_PIXELS_PER_STEP,
+  SHIFT_SCRUB_SCALE,
   scrubNumber,
   stepNumber,
   syncNumberDraft,
@@ -367,6 +368,23 @@ describe("scrubNumber", () => {
     expect(scrubNumber(50, 4, RANGE, Number.NaN)).toBe(51);
     expect(scrubNumber(50, 4, RANGE, 0)).toBe(51);
     expect(scrubNumber(50, 8, RANGE, 8)).toBe(51);
+  });
+
+  it("multiplies the counted steps by a held modifier's scale", () => {
+    // The bug guarded: Shift is the coarse gesture an inspector promises, and a
+    // scale applied to the *pixels* rather than the steps would answer 2 at
+    // 8px instead of 20.
+    expect(SHIFT_SCRUB_SCALE).toBe(10);
+    expect(
+      scrubNumber(50, 8, RANGE, SCRUB_PIXELS_PER_STEP, SHIFT_SCRUB_SCALE),
+    ).toBe(70);
+    expect(
+      scrubNumber(50, -8, RANGE, SCRUB_PIXELS_PER_STEP, SHIFT_SCRUB_SCALE),
+    ).toBe(30);
+    // A scale the field cannot read is no multiplier, not a NaN.
+    expect(scrubNumber(50, 8, RANGE, SCRUB_PIXELS_PER_STEP, Number.NaN)).toBe(
+      52,
+    );
   });
 });
 

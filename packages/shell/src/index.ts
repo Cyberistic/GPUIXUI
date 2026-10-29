@@ -33,7 +33,11 @@ export {
 } from "./status-bar/logic.js";
 
 export { Toolbar } from "./toolbar/toolbar.js";
-export type { ToolbarAction, ToolbarProps } from "./toolbar/toolbar.js";
+export type {
+  ToolbarAction,
+  ToolbarMode,
+  ToolbarProps,
+} from "./toolbar/toolbar.js";
 export {
   initialRoving,
   moveRoving,

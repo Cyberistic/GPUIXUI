@@ -9,10 +9,17 @@ import {
   type PropertyRow,
   type PropertyValue,
 } from "@gpuixui/files/property/logic";
+import {
+  clampNumeric,
+  normalizeNumberRange,
+  scrubNumber,
+  SCRUB_PIXELS_PER_STEP,
+  SHIFT_SCRUB_SCALE,
+} from "@gpuixui/primitives/core";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import { Match } from "effect";
-import { useState } from "react";
+import { useRef, useState, type PointerEvent } from "react";
 
 /**
  * Browser preview for the Property panels page.
@@ -36,10 +43,41 @@ const DEFAULTS = {
 /** The label column's width, the width the shipped panel defaults to. */
 export const LABEL_WIDTH = 120;
 
+/** The bounds a width row scrubs between, so a drag reaches both ends. */
+export const WIDTH_MIN = 120;
+export const WIDTH_MAX = 640;
+
+/** The range a number row scrubs in: one step per count, clamped to its bounds. */
+export const scrubRange = (min: number, max: number) =>
+  normalizeNumberRange({ min, max, step: 1 });
+
+/** The value a horizontal scrub reports — the package's own arithmetic. */
+export const scrubValue = (
+  start: number,
+  travel: number,
+  min: number | undefined,
+  max: number | undefined,
+  shift: boolean,
+): number =>
+  scrubNumber(
+    start,
+    travel,
+    scrubRange(min ?? -Infinity, max ?? Infinity),
+    SCRUB_PIXELS_PER_STEP,
+    shift ? SHIFT_SCRUB_SCALE : 1,
+  );
+
 /** The rows the preview opens with: one of each kind the panel renders. */
 export const PANEL_ROWS: ReadonlyArray<PropertyRow> = [
   { type: "text", key: "name", label: "Name", value: DEFAULTS.name },
-  { type: "number", key: "width", label: "Width", value: DEFAULTS.width },
+  {
+    type: "number",
+    key: "width",
+    label: "Width",
+    value: DEFAULTS.width,
+    min: WIDTH_MIN,
+    max: WIDTH_MAX,
+  },
   {
     type: "boolean",
     key: "visible",
@@ -157,14 +195,23 @@ function Field({
         value={textValueOf(record, text)}
       />
     )),
-    Match.when(isNumberRow, () => (
+    Match.when(isNumberRow, (number) => (
       <input
         className="gx-props-field"
         id={id}
-        min={80}
-        onChange={(event) => edit(Number(event.target.value))}
-        type="number"
-        value={numberValueOf(record, row)}
+        inputMode="numeric"
+        onChange={(event) => {
+          const parsed = Number.parseInt(event.target.value, 10);
+          if (!Number.isFinite(parsed)) return;
+          edit(
+            clampNumeric(
+              parsed,
+              scrubRange(number.min ?? -Infinity, number.max ?? Infinity),
+            ),
+          );
+        }}
+        type="text"
+        value={numberValueOf(record, number)}
       />
     )),
     Match.when(isBooleanRow, () => (
@@ -194,6 +241,70 @@ function Field({
   );
 }
 
+/** The label an inspector scrubs: a horizontal drag, Shift for a coarse one. */
+export interface ScrubLabelProps {
+  readonly htmlFor: string;
+  readonly value: number;
+  readonly min?: number;
+  readonly max?: number;
+  /** Reports every frame of the drag, clamped to the row's bounds. */
+  readonly onValueChange: (next: number) => void;
+  readonly children: string;
+}
+
+/** The words a press drags; a click that does not travel still focuses the field. */
+export function ScrubLabel({
+  htmlFor,
+  value,
+  min,
+  max,
+  onValueChange,
+  children,
+}: ScrubLabelProps) {
+  const drag = useRef<
+    | { readonly pointerId: number; readonly x: number; readonly value: number }
+    | undefined
+  >(undefined);
+  const end = (event: PointerEvent<HTMLLabelElement>): void => {
+    if (drag.current?.pointerId === event.pointerId) drag.current = undefined;
+  };
+
+  return (
+    <label
+      className="gx-props-label gx-props-scrub"
+      htmlFor={htmlFor}
+      onPointerCancel={end}
+      onPointerDown={(event) => {
+        event.currentTarget.setPointerCapture(event.pointerId);
+        drag.current = {
+          pointerId: event.pointerId,
+          x: event.clientX,
+          value,
+        };
+      }}
+      onPointerMove={(event) => {
+        const active = drag.current;
+        if (active === undefined || active.pointerId !== event.pointerId) {
+          return;
+        }
+        onValueChange(
+          scrubValue(
+            active.value,
+            event.clientX - active.x,
+            min,
+            max,
+            event.shiftKey,
+          ),
+        );
+      }}
+      onPointerUp={end}
+      style={{ width: LABEL_WIDTH }}
+    >
+      {children}
+    </label>
+  );
+}
+
 /** The drawing itself: the labelled rows and the object they describe. */
 export function PropertyPanelFrame({
   rows,
@@ -207,13 +318,27 @@ export function PropertyPanelFrame({
         <div className="gx-props-rows">
           {rows.map((row) => (
             <div className="gx-props-row" key={row.key}>
-              <label
-                className="gx-props-label"
-                htmlFor={fieldId(row.key)}
-                style={{ width: LABEL_WIDTH }}
-              >
-                {row.label}
-              </label>
+              {isNumberRow(row) ? (
+                <ScrubLabel
+                  htmlFor={fieldId(row.key)}
+                  max={row.max}
+                  min={row.min}
+                  onValueChange={(next) =>
+                    onChange(setProperty(record, row.key, next))
+                  }
+                  value={numberValueOf(record, row)}
+                >
+                  {row.label}
+                </ScrubLabel>
+              ) : (
+                <label
+                  className="gx-props-label"
+                  htmlFor={fieldId(row.key)}
+                  style={{ width: LABEL_WIDTH }}
+                >
+                  {row.label}
+                </label>
+              )}
               <Field onChange={onChange} record={record} row={row} />
             </div>
           ))}

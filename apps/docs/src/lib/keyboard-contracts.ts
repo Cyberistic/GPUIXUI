@@ -557,7 +557,12 @@ export const keyboardContracts: readonly KeyboardContract[] = [
   },
   {
     url: "/docs/shell/toolbar",
-    sources: ["packages/shell/src/toolbar/toolbar.tsx"],
+    // The strip's activation is the primitives' `Button`/`IconButton`; the
+    // roving and the Escape close are the toolbar's own.
+    sources: [
+      "packages/shell/src/toolbar/toolbar.tsx",
+      "packages/primitives/src/components/Button.tsx",
+    ],
     notes: [
       {
         keys: ["Arrow Left", "Arrow Right"],

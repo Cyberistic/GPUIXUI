@@ -77,7 +77,7 @@ export const DockPreview = () => {
             className="gx-dock-file"
             key={file.name}
           >
-            {file.name}
+            <span className="gx-dock-name">{file.name}</span>
             {file.note === "" ? null : <b>{file.note}</b>}
           </span>
         ))}

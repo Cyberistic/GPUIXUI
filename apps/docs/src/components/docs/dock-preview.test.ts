@@ -177,6 +177,42 @@ describe("the dock preview's paint", () => {
     );
   });
 
+  it("tiles its columns and keeps the rail's rows inside it", () => {
+    // Guarded bugs: the rail's fixed 132px track could not hold a file name
+    // plus its badge, so the name soft-wrapped out of its 28px row and the
+    // overflow painted under the editor; and the rail's own `border-right` sat
+    // beside the divider, drawing the separator twice. The frame is a
+    // border-box, so its inner width is what the three columns divide.
+    const px = (declarations: string, name: string): number => {
+      const value = new RegExp(`${name}:\\s*(-?[\\d.]+)px`).exec(declarations);
+      if (value === null) throw new Error(`no ${name} in "${declarations}"`);
+      return Number(value[1]);
+    };
+
+    const frame = block(css, ".gx-dock");
+    const rail = block(css, ".gx-dock-rail");
+    const row = block(css, ".gx-dock-file");
+    const name = block(css, ".gx-dock-name");
+    const badge = block(css, ".gx-dock-file b");
+
+    const inner = px(frame, "max-width") - 2 * px(frame, "border");
+    const inspector =
+      inner - px(rail, "width") - DOCK_INITIAL - DOCK_DIVIDER_WIDTH;
+
+    expect(inspector).toBeGreaterThan(0);
+    expect(
+      px(rail, "width") + DOCK_INITIAL + DOCK_DIVIDER_WIDTH + inspector,
+    ).toBe(inner);
+    // The divider is the one rule between the rail and the editor.
+    expect(rail).not.toContain("border-right");
+    // A row is one line: a name that cannot fit ellipsizes, the badge keeps
+    // its width, and neither paints outside the row.
+    expect(row).toContain("white-space: nowrap;");
+    expect(name).toContain("text-overflow: ellipsis;");
+    expect(name).toContain("min-width: 0;");
+    expect(badge).toContain("flex: none;");
+  });
+
   it("is registered as a composition and mounted on both pages that draw it", () => {
     expect(demos).toContain('"panel-preview": {');
     expect(demos).toContain("render: DockPreview");
