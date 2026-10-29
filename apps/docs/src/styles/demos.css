@@ -12851,7 +12851,7 @@ button.gx-rating-star:focus-visible {
   background: var(--card);
   font-family: var(--font-mono);
   font-size: 12px;
-  line-height: 22px;
+  line-height: 20px;
 }
 
 /* One row is one code line high in both views, so switching modes moves
@@ -12862,7 +12862,7 @@ button.gx-rating-star:focus-visible {
   align-items: stretch;
   width: max-content;
   min-width: 100%;
-  height: 22px;
+  height: 20px;
   white-space: pre;
 }
 
