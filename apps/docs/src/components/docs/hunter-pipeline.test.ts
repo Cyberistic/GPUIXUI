@@ -89,7 +89,7 @@ describe("the renown chart", () => {
   it("reads the eight snapshots the block claims", () => {
     expect(renownNights).toHaveLength(8);
     // The last night is the one the chart rests on, so it must be the largest.
-    const last = renownNights[renownNights.length - 1].renown;
+    const last = renownNights.at(-1)?.renown ?? 0;
     expect(
       Math.max(...renownNights.map((night) => night.renown)),
     ).toBeGreaterThanOrEqual(last);

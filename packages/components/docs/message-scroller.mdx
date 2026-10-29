@@ -54,20 +54,28 @@ MessageScroller
 ## The height contract
 
 The viewport is the flexible middle of the scroller: it grows, may shrink and
-never makes the frame taller. The jump control owns a **reserved rail** below
-it, so showing it does not take height from the viewport or move anything below
-the scroller. Give the scroller a bounded height (directly, or through a sized
-flex parent) because a viewport with no height has nothing to scroll.
+never makes the frame taller. The jump control floats over the viewport's bottom
+edge, centred, so showing it does not take height from the transcript or move
+anything below the scroller. The root is the positioned box that the control
+resolves against. Give the scroller a bounded height (directly, or through a
+sized flex parent) because a viewport with no height has nothing to scroll.
+
+The viewport carries no inset of its own: put the transcript's padding on
+`MessageScrollerContent` (or the rows), so the scrollbar sits at the edge and
+the first and last row keep their inset.
 
 ## Following and releasing
 
 - A reader inside `threshold` (default 24px) of the tail is at the end. New rows
   and a reply that grows keep the tail visible.
 - Scrolling away releases the view: appends and growth change nothing, and the
-  rail's control counts the rows that arrived.
+  floating control counts the rows that arrived.
 - Jump to latest returns to the end and re-pins.
-- A row that grows through its own state is still followed while pinned: the 1px
-  tail sentinel's `onLayout` is the measurement, so no React render is needed.
+- A row that grows through its own state is still followed while pinned: the
+  item's own `onLayout` size report is the measurement, so no React render is
+  needed.
+- A sibling that re-renders does not move the tail: the follow rule depends on
+  the row count and on measured sizes, never on a plain render.
 - An observation the scroller cannot read (`NaN`) is ignored; the pin state is
   kept.
 
@@ -86,20 +94,20 @@ is never moved.
 | `MessageScroller` | `role="group"` named by `label` | `label` (required), `threshold?`, `previousItemPeek?`, `pinned?`, `defaultPinned?`, `onPinnedChange?`, `streaming?`, `className?`, `children` |
 | `MessageScrollerViewport` | the scroll container and its tail sentinel | `style`, `onScroll?`, `onLayout?`, `ref?`, `className?`, `children` |
 | `MessageScrollerContent` | the rows column; publishes `aria-busy` | `className?`, `children` |
-| `MessageScrollerItem` | one row, no surface | `scrollAnchor?`, `className?`, `children`, `ref?` |
-| `MessageScrollerJumpToLatest` | a secondary control in a reserved rail | `label?`, `className?`, `style?` |
+| `MessageScrollerItem` | one row, no surface; reports its size | `scrollAnchor?`, `className?`, `children`, `ref?` |
+| `MessageScrollerJumpToLatest` | a floating secondary control, centred over the viewport's bottom edge | `label?`, `className?`, `style?` |
 
 ## Limitations
 
 - Not virtualized; every row renders. `<virtual-list>` takes an item count
   rather than compound children.
-- The jump control travels inside the rail, not over the viewport's corner:
-  `position: absolute` resolves against the mount parent in `0.11.0`.
 - No `aria-live` role, so new rows are not announced; the control's count is
   painted and the content publishes `aria-busy` while a reply is streaming.
 - Turn anchoring has no follow-output handoff: after a new turn is anchored, the
   reader is away from the tail until they jump back. shadcn resumes following
   once the reply fills the viewport; this release keeps the reader's position.
+- `scrollToMessage` is not part of this release: items carry a ref and report
+  their size, but there is no id index or external jump command yet.
 
 ## Related
 
