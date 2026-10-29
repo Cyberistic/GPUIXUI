@@ -4123,13 +4123,22 @@
   gap: 18px;
   min-height: 200px;
   padding: 92px 24px 32px;
+  /* A fixed width, because the readout under the trigger is longest while the
+     tip is open: a scene that sized itself to its widest child re-centred on
+     every hover, which is the shift the reader saw. */
+  width: min(360px, 100%);
 }
 
+/* The scene is this column's widest child, and the state readout below the
+   trigger changes length as the tip opens and closes — so an auto-width column
+   re-centred the whole scene on every hover. The column takes the scene's
+   width and centres its children, which keeps the trigger still. */
 .gx-tooltip-demo {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  align-items: flex-start;
+  align-items: center;
+  width: 100%;
 }
 
 .gx-tooltip-states {
@@ -4208,9 +4217,14 @@
 
 .gx-tip-readout {
   margin: 0;
+  /* Full width, so the sentence inside it grows without growing its box: the
+     readout is longest while the tip is open, and a shrink-to-fit box moved
+     itself to say so. */
+  width: 100%;
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.6;
+  text-align: center;
   color: var(--placeholder);
 }
 
