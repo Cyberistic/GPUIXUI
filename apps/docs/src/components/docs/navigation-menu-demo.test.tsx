@@ -93,6 +93,12 @@ const block = (selector: string): string => {
   return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
 };
 
+/** A pixel declaration, or `NaN` when the drawing does not declare it. */
+const px = (body: string, property: string): number => {
+  const value = new RegExp(`${property}:\\s*(-?\\d+)px`).exec(body)?.[1];
+  return value === undefined ? Number.NaN : Number(value);
+};
+
 describe("the navigation menu's chevron", () => {
   it("paints both lucide marks in one fixed slot on every trigger", () => {
     expect(workflow).not.toMatch(/[⌄⌃]/);
@@ -124,5 +130,23 @@ describe("the navigation menu's chevron", () => {
     expect(block(".gx-nav-content")).toContain(
       "animation: gx-nav-panel-in 200ms ease-out",
     );
+  });
+});
+
+describe("the navigation menu's panel room", () => {
+  it("keeps the whole panel inside the stage", () => {
+    // The bug this guards: the panel is out of flow, so the stage's content
+    // ended above the panel's last row and `overflow: auto` cut it — the panel
+    // reached 620.4px against a 613.8px stage at every width. The scene now
+    // reserves the panel's own box under the bar, and the demo's controls
+    // follow the reserve, so the stage always contains what the nav opens.
+    const panel = 138; // measured: three 40px rows, 6px insets, a 1px border
+    const overshoot = panel - 7; // the panel starts inside the bar's padding
+
+    expect(px(block(".gx-nav-scene"), "padding-bottom")).toBeGreaterThanOrEqual(
+      overshoot,
+    );
+    // The controls are a sibling of the scene, below the reserved box.
+    expect(workflow).toContain('</nav></div><div class="gx-nav-controls">');
   });
 });

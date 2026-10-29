@@ -101,27 +101,49 @@ const page = readFileSync(
 interface Section {
   readonly number: string;
   readonly title: string;
+  readonly description: string;
   readonly href: string;
   readonly slug: string;
 }
 
-/** Each `## Sidebar NN — title`, its shadcn link and the example it mounts. */
-const sections: ReadonlyArray<Section> = [
-  ...page.matchAll(
-    /^## Sidebar (\d\d) — (.+)\n\nReproduces \[shadcn's `sidebar-\d\d` block\]\((https:\/\/ui\.shadcn\.com\/blocks\/sidebar#sidebar-\d\d)\)\.\n\n<SidebarExample slug="(sidebar-\d\d)" \/>$/gm,
-  ),
-].map((match) => {
-  const [, number, title, href, slug] = match;
-  if (
-    number === undefined ||
-    title === undefined ||
-    href === undefined ||
-    slug === undefined
-  ) {
-    throw new Error("a sidebar section did not parse");
-  }
-  return { number, title, href, slug };
-});
+interface Group {
+  readonly title: string;
+  readonly sections: ReadonlyArray<Section>;
+}
+
+/** Each `## group`, and each `### Sidebar NN — title` section beneath it. */
+const groups: ReadonlyArray<Group> = page
+  .split(/^## /m)
+  .slice(1)
+  .map((chunk) => {
+    const [title = "", ...body] = chunk.split("\n");
+    const sections = [
+      ...body
+        .join("\n")
+        .matchAll(
+          /^### Sidebar (\d\d) — (.+)\n\n(.+)\n\n<SidebarExample slug="(sidebar-\d\d)" \/>$/gm,
+        ),
+    ].map((match) => {
+      const [, number, sectionTitle, description, slug] = match;
+      const href =
+        /\[shadcn's `sidebar-\d\d`\]\((https:\/\/ui\.shadcn\.com\/blocks\/sidebar#sidebar-\d\d)\)/.exec(
+          description ?? "",
+        )?.[1];
+      if (
+        number === undefined ||
+        sectionTitle === undefined ||
+        description === undefined ||
+        slug === undefined ||
+        href === undefined
+      ) {
+        throw new Error("a sidebar section did not parse");
+      }
+      return { number, title: sectionTitle, description, href, slug };
+    });
+    return { title, sections };
+  });
+
+const sections = groups.flatMap((group) => group.sections);
 
 const css = readFileSync(
   new URL("../../../styles/blocks.css", import.meta.url),
@@ -167,18 +189,53 @@ describe("the Sidebar page", () => {
     ).toEqual(["sidebar"]);
   });
 
-  it("reproduces all sixteen examples, in order, each with its shadcn link", () => {
-    expect(sections.map((section) => section.slug)).toEqual(
-      SIDEBAR_EXAMPLES.map((example) => example.slug),
-    );
-    expect(sections.map((section) => section.title)).toEqual(
-      SIDEBAR_EXAMPLES.map((example) => example.title),
-    );
-    expect(sections.map((section) => section.href)).toEqual(
-      SIDEBAR_EXAMPLES.map((example) => example.href),
-    );
-    expect(sections.map((section) => section.number)).toEqual(
-      Array.from({ length: 16 }, (_, index) => `${index + 1}`.padStart(2, "0")),
+  it("groups all sixteen examples by the panel each one draws", () => {
+    expect(
+      groups.map((group) => [group.title, group.sections.map((s) => s.slug)]),
+    ).toEqual([
+      [
+        "Documentation panels",
+        [
+          "sidebar-01",
+          "sidebar-02",
+          "sidebar-03",
+          "sidebar-04",
+          "sidebar-05",
+          "sidebar-06",
+        ],
+      ],
+      [
+        "Workspace panels",
+        ["sidebar-07", "sidebar-08", "sidebar-10", "sidebar-11", "sidebar-12"],
+      ],
+      ["More than one panel", ["sidebar-09", "sidebar-14", "sidebar-15"]],
+      ["Panels in a frame", ["sidebar-13", "sidebar-16"]],
+    ]);
+  });
+
+  it("names every section and says what it demonstrates in one sentence", () => {
+    const broken = sections.flatMap((section) => {
+      const example = SIDEBAR_EXAMPLES.find(
+        (entry) => entry.slug === section.slug,
+      );
+      // The link's URL carries periods of its own; count the prose's stops.
+      const prose = section.description.replace(/\[[^\]]+\]\([^)]+\)/g, "");
+      const faults = [
+        section.number === section.slug.slice(-2) ? "" : "number",
+        example?.title === section.title ? "" : "title",
+        example?.href === section.href ? "" : "link",
+        (prose.match(/\./g) ?? []).length === 1 && prose.endsWith(".")
+          ? ""
+          : "description",
+      ].filter(Boolean);
+      return faults.length === 0
+        ? []
+        : [`${section.slug}: ${faults.join(",")}`];
+    });
+
+    expect(broken).toEqual([]);
+    expect(sections.map((section) => section.slug).sort()).toEqual(
+      SIDEBAR_EXAMPLES.map((example) => example.slug).sort(),
     );
   });
 

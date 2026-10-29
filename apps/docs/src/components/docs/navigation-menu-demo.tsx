@@ -242,17 +242,15 @@ export const NavigationMenuDemo = (): ReactNode => {
             })}
           </div>
         </nav>
-        <div className="gx-nav-controls">
-          <button
-            className="gx-btn gx-btn-sm gx-btn-secondary"
-            onClick={() =>
-              send({ type: "outside" }, "a press outside closed it")
-            }
-            type="button"
-          >
-            Press outside the nav
-          </button>
-        </div>
+      </div>
+      <div className="gx-nav-controls">
+        <button
+          className="gx-btn gx-btn-sm gx-btn-secondary"
+          onClick={() => send({ type: "outside" }, "a press outside closed it")}
+          type="button"
+        >
+          Press outside the nav
+        </button>
       </div>
       <p aria-live="polite" className="gx-nav-readout" role="status">
         open: {openLabel(state.open)} · focus: {openLabel(focus)} · last: {last}

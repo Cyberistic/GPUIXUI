@@ -10610,10 +10610,15 @@ button.gx-rating-star:focus-visible {
   width: min(560px, 100%);
 }
 
+/* The panel hangs out of flow from an item inside the bar: it starts 7px above
+   the bar's bottom edge and is 138px tall (three 40px rows, its 6px insets and
+   a border). The scene keeps that box clear under the bar, and the demo's own
+   controls follow it, so the stage's edge is never the frame that cuts it. */
 .gx-nav-scene {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding-bottom: 138px;
 }
 
 .gx-nav-head {

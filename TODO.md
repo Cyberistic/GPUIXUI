@@ -365,6 +365,13 @@ the 10 actions popover, the footer user menu, 13's settings dialog and Escape
 for every overlay; 13/15's `collapsible="none"` panels carry a caption. The
 guards read the one page and hold all sixteen examples, links, states and the
 single thumbnail.
+`[x]` **Sidebar page groups, and a whole nav panel** — the sixteen sections are
+grouped by the panel each draws: documentation (01–06), workspace
+(07/08/10/11/12), more than one (09/14/15) and in a frame (13/16), each with one
+sentence of what it shows. The navigation-menu drawing reserves the panel's
+138px box under the bar, so the open panel stays inside the stage at
+1440/1100/900 (bottom 621/637/637 against 754.5/770.5/770.5) instead of
+overflowing it by 6.5px; its controls follow the reserve.
 `[x]` **Sidebar parity audit** — the surface matches shadcn's 24 exports and
 their props; two gaps closed: `SidebarProvider width/iconWidth/mobileWidth` (the
 CSS variables as numbers, a bad value reading as the default) and

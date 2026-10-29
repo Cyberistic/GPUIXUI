@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import { blocks } from "./blocks";
 import { PreviewSurface } from "./preview-surface";
 import { RecipeSource } from "./recipe-source";
 
 /**
- * One block page: the recipe's screen, then the source that draws it.
+ * The block frame: the recipe's screen, then the source that draws it.
  *
  * A block is a page, not a specimen, so it is not mounted in the component
  * pages' fixed-height Preview/Code panel — that box cropped a dashboard and
@@ -13,6 +14,24 @@ import { RecipeSource } from "./recipe-source";
  * The scene is still `PreviewSurface`, so the palette, `data-platform` and
  * platform font keep following the switch.
  */
+export function BlockScreen({
+  name,
+  render,
+  source,
+}: {
+  readonly name: string;
+  readonly render: () => ReactNode;
+  readonly source: string;
+}) {
+  return (
+    <div className="gx-block-screen not-prose">
+      <PreviewSurface className="gx-block-stage">{render()}</PreviewSurface>
+      <RecipeSource label={name} source={source} />
+    </div>
+  );
+}
+
+/** One block page, by its registry name. */
 export function BlockPreview({ name }: { name: string }) {
   const block = blocks[name];
   if (block === undefined) {
@@ -20,11 +39,10 @@ export function BlockPreview({ name }: { name: string }) {
   }
 
   return (
-    <div className="gx-block-screen not-prose">
-      <PreviewSurface className="gx-block-stage">
-        {block.render()}
-      </PreviewSurface>
-      <RecipeSource label={block.name} source={block.source} />
-    </div>
+    <BlockScreen
+      name={block.name}
+      render={block.render}
+      source={block.source}
+    />
   );
 }
