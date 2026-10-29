@@ -24400,3 +24400,29 @@ alignment, `internal/placement.test.ts` keeps the house guard, and
 the drawn `left`, the control's place above the stage and the collision clamp;
 the stored-value page guard now reads the popover's own `popoverAlign`. Inverted
 directions recorded in the branch's report.
+
+## Anchor alignment — preview card, tooltip, user menu (2026-10-30)
+
+`[x]` `[███]` 3/3 — **the three anchored surfaces agree with the popover's
+`align`, the preview card can be entered, and the account menu opens to the
+right.** `PreviewCardContent` now takes `align` (default `center`) and resolves
+it through the shared `usePlacement`/`placement.ts` rule, so `start` shares the
+trigger's left edge, `center` its centre line and `end` its right edge. The
+page's drawing offers Left / Centre / Right in a `.gx-tgroup` above the stage
+and fills the 6px gap with a transparent bridge (the component keeps its own
+150 ms close the card's enter cancels). `Tooltip` states `center` as its
+`align` default and its page offers the same three-way toggle, placed by the
+popover's arithmetic. The User menu drawing's menu is `side="right"` /
+`align="end"`: its bottom-right corner meets the footer row's bottom-right, 6px
+outside the panel, and grows upward over the page already inside the frame.
+Measured in Chrome at 1440×1000 dark: preview-card trigger x 610 / right 758,
+cards at x 610 (start), 534–834 (centre 684) and 458–758 (end) with a 5.99px
+gap whose every pixel hit-tests to the bridge, and the crossed press reports
+`Open file`; tooltip trigger x 580.5 / right 728.5, tips at 580.5, 554.5–754.5
+and 528.5–728.5; menu left 508.5 against trigger right 502.5 (6px), both bottoms
+648.86, menu 208×271 inside the 320px frame. Proof: `preview-card.test.tsx`
+gains the default-centre and per-alignment cases, `preview-card-alignment.test.tsx`
+holds the three relations, the bridge height against the component's
+`sideOffset` and the control's place above the stage, `tooltip-alignment.test.tsx`
+holds the tip's relations and control, and the docs + components suites are
+green.
