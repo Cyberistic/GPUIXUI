@@ -23,7 +23,7 @@
 
 import { typeaheadMatchIndex } from "@gpuixui/components/typeahead";
 import { spokenText } from "@gpuixui/primitives/core";
-import { Match } from "effect";
+import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -120,6 +120,56 @@ export const flattenTree = <T>(
     visit(root, 0, Option.none(), HashSet.empty()),
   );
   return rows;
+};
+
+/** One row as a folding tree paints it: the visible rows, and the ones leaving. */
+export interface PaintedRow<T> {
+  readonly row: TreeRow<T>;
+  /** The branch this row belonged to closed; it is painted for its exit only. */
+  readonly leaving: boolean;
+}
+
+/**
+ * The rows to paint while a branch folds.
+ *
+ * A collapsed branch is absent from {@link flattenTree} in the frame the cursor
+ * changes, so a tree that keeps its rows for an exit tween has to put each one
+ * back where it stood: before the first row after it that still paints. A
+ * leaving row at the tail of the tree closes at the end. A closing branch
+ * therefore travels out of the place it occupied rather than jumping.
+ */
+export const paintedRows = <T>(
+  rows: ReadonlyArray<TreeRow<T>>,
+  leaving: ReadonlyArray<TreeRow<T>>,
+  before: ReadonlyArray<TreeRow<T>>,
+): ReadonlyArray<PaintedRow<T>> => {
+  const visible = HashSet.fromIterable(Arr.map(rows, (row) => row.key));
+  const anchorOf = (row: TreeRow<T>): Option.Option<string> =>
+    pipe(
+      Arr.findFirstIndex(before, (candidate) => candidate.key === row.key),
+      Option.flatMap((index) =>
+        Arr.findFirst(Arr.drop(before, index + 1), (candidate) =>
+          HashSet.has(visible, candidate.key),
+        ),
+      ),
+      Option.map((candidate) => candidate.key),
+    );
+  const anchoredBefore = (key: string): ReadonlyArray<TreeRow<T>> =>
+    Arr.filter(leaving, (row) => Option.contains(anchorOf(row), key));
+
+  return [
+    ...Arr.flatMap(rows, (row) => [
+      ...Arr.map(anchoredBefore(row.key), (gone) => ({
+        row: gone,
+        leaving: true,
+      })),
+      { row, leaving: false },
+    ]),
+    ...Arr.map(
+      Arr.filter(leaving, (row) => Option.isNone(anchorOf(row))),
+      (row) => ({ row, leaving: true }),
+    ),
+  ];
 };
 
 /** Every key in the tree that has children, in paint order. */

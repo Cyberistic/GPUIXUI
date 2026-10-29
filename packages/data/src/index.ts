@@ -375,6 +375,7 @@ export {
   flattenTree,
   isExpanded,
   isTreeKey,
+  paintedRows,
   setExpanded,
   toggleExpanded,
   treeCursorMove,
@@ -382,7 +383,12 @@ export {
   treeName,
   typeAheadRow,
 } from "./tree/logic.js";
-export type { TreeCursor, TreeRow, TreeSpec } from "./tree/logic.js";
+export type {
+  PaintedRow,
+  TreeCursor,
+  TreeRow,
+  TreeSpec,
+} from "./tree/logic.js";
 
 export { TREE_INSET, TreeView } from "./tree/tree-view.js";
 export type { TreeViewProps } from "./tree/tree-view.js";
