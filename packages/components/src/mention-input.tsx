@@ -511,6 +511,7 @@ export const mentionInputMeta = {
   gpuixSupport: "partial",
   limitations: [
     "the query comes from the text, not the caret: mid-string editing is not supported (0.11.0 has no caret API)",
+    "a mention cannot be painted as a link *inside* the field: an `<input>` paints one colour for its whole value, so the field shows plain `@name` and the colour and the link belong to the rendered comment (`mentionRuns` in the docs drawing shows the painted-mirror technique a browser can use)",
     "a space typed while the floating list is mounted is consumed by the runtime before the field sees it; Escape or a selection closes the list",
     "Tab insertion is not claimed: 0.11.0 moves focus at the platform level",
     "Enter arrives as the input's submit event, so it is handled there",

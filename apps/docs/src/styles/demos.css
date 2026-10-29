@@ -9889,14 +9889,18 @@ button.gx-rating-star:focus-visible {
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
-  width: min(420px, 100%);
+  width: min(460px, 100%);
+  /* The list is an overlay, so it takes no layout space: the scene reserves
+     its height here instead, and the surface cannot be clipped by a stage that
+     only measured the card. */
+  min-height: 320px;
 }
 
 .gx-mention-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   padding: 16px;
   border: 1px solid var(--border);
@@ -9904,73 +9908,137 @@ button.gx-rating-star:focus-visible {
   background: var(--card);
 }
 
+.gx-mention-head,
+.gx-mention-foot {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .gx-mention-title {
   margin: 0;
   font-size: 13px;
   font-weight: 650;
-  color: var(--foreground);
+  color: var(--card-foreground);
 }
 
-.gx-mention-field {
-  display: flex;
-  align-items: center;
-  height: var(--control-height-md);
-  padding: 0 var(--control-padding-x-md);
+.gx-mention-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+/* The composer: one box, two layers. The mirror paints the runs and the
+   textarea above it owns the caret, so both must agree on every metric that
+   moves a glyph — family, size, leading, padding and wrapping. */
+.gx-mention-composer {
+  position: relative;
+  display: grid;
+  /* The list anchors to this box, so it hangs under the field rather than
+     under the card's foot. */
+  width: 100%;
   border: 1px solid var(--input);
   border-radius: var(--radius);
   background: var(--background);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
+.gx-mention-composer:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
+}
+
+.gx-mention-mirror,
 .gx-mention-input {
-  flex: 1;
+  grid-area: 1 / 1;
   min-width: 0;
-  height: 100%;
-  padding: 0;
+  margin: 0;
+  padding: 8px var(--control-padding-x-md);
   border: 0;
-  outline: none;
-  background: transparent;
-  color: var(--input-foreground);
   font-family: var(--font-sans);
   font-size: 13px;
+  line-height: 20px;
+  letter-spacing: normal;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.gx-mention-mirror {
+  color: var(--foreground);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* The real field: transparent ink over the painted runs, visible caret. */
+.gx-mention-input {
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--foreground);
+  outline: none;
 }
 
 .gx-mention-input::placeholder {
   color: var(--placeholder);
 }
 
-.gx-mention-field:focus-within {
-  border-color: var(--ring);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
+.gx-mention-input::selection {
+  background: color-mix(in srgb, var(--ring) 40%, transparent);
 }
 
+/* A mention reads as a link: the accent ink, the underline, and a wash that
+   marks the token as one run rather than three words. */
+.gx-mention-run {
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--ring) 18%, transparent);
+  color: var(--ring);
+  font-weight: 550;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.gx-mention-run:hover {
+  background: color-mix(in srgb, var(--ring) 30%, transparent);
+}
+
+/* The suggestion surface: the popover recipe, anchored under the field, never
+   wider than the box that holds it. */
 .gx-mention-list {
   position: absolute;
-  top: calc(100% - 8px);
-  left: 16px;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 200px;
+  gap: 1px;
   padding: 4px;
-  border: 1px solid var(--input);
-  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   background: var(--popover);
-  box-shadow: 0 12px 28px var(--shadow);
+  color: var(--popover-foreground);
+  box-shadow: var(--elevation-lg);
 }
 
 .gx-mention-item {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  min-height: var(--control-height-sm);
-  padding: 4px 8px;
+  gap: 8px;
+  padding: 6px 8px;
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--popover-foreground);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  text-align: left;
+  color: inherit;
+  font: inherit;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -9979,11 +10047,91 @@ button.gx-rating-star:focus-visible {
   color: var(--accent-foreground);
 }
 
+.gx-mention-disc {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 9999px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.gx-mention-item[data-highlighted] .gx-mention-disc {
+  background: var(--popover);
+  color: var(--accent-foreground);
+}
+
+.gx-mention-identity {
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.gx-mention-name {
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.gx-mention-handle {
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-mention-item[data-highlighted] .gx-mention-handle {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.gx-mention-name,
+.gx-mention-handle {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The matched run, so a reader sees why a row is in the list. */
+.gx-mention-item mark {
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ring);
+  font-weight: 700;
+}
+
+.gx-mention-item[data-highlighted] mark {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.gx-mention-sep {
+  opacity: 0.6;
+}
+
+.gx-mention-empty {
+  margin: 0;
+  padding: 10px 8px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-mention-keys {
+  margin: 0;
+  padding: 6px 8px 2px;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
 .gx-mention-readout {
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--placeholder);
+  font-size: 11.5px;
+  color: var(--muted-foreground);
 }
 
 /* ---- message: mirrors components/src/message.tsx's MESSAGE_* recipes ----
