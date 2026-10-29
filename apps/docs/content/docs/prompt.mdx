@@ -1,0 +1,14 @@
+---
+title: Prompt
+description: One copyable prompt that installs GPUIxUI, lists every component and block, and names the rules — generated from the pages themselves, so it cannot drift.
+---
+
+Paste this into an agent before it starts. It is generated at build time from the
+pages the site ships: the component rows come from the same index the Components
+page renders, and the block rows from the block pages' own frontmatter. A page
+that lands is in the prompt on the next build; a page that is removed leaves it.
+
+The instructions stay short on purpose — they are the context an agent spends
+before it writes anything. The two lists are the reference.
+
+<PromptPage />

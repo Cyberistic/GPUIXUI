@@ -514,6 +514,9 @@
    `@gpuixui/motion`'s table by `overlay-veil.test.ts`. */
 :root {
   --gx-overlay-ms: 320ms;
+  /* The motion table's `fast` level: what a control's own state change runs
+     over. A switch's fill crossing from off to on is that, not an overlay. */
+  --gx-motion-fast: 160ms;
 }
 
 .gx-overlay-veil {
@@ -1505,8 +1508,12 @@
    shared menu rules above, because the component shares those parts. */
 .gx-context-scene {
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
+  /* Centred, like every other scene: the file list and its readout sat in the
+     stage's left third with the room beside them, which read as a layout
+     accident rather than a scene. The menu positions itself from the pointer,
+     so centring the page it opens over changes nothing about the menu. */
+  align-items: center;
+  justify-content: center;
   gap: 10px;
   width: 100%;
   /* Wide enough for a second level on the right: the parent menu is 208 and so
@@ -3960,6 +3967,13 @@
   border-color: var(--switch-edge, var(--border-strong));
   border-radius: 9999px;
   background: var(--switch-off, var(--muted));
+  /* The fill travels between the off and on roles instead of snapping: the
+     component animates the same crossing, and a switch whose colour jumps was
+     the one control on the page that did not move. `fast` is the motion table's
+     160ms, the level a control transition uses. */
+  transition:
+    background-color var(--gx-motion-fast, 160ms) ease,
+    border-color var(--gx-motion-fast, 160ms) ease;
   pointer-events: none;
 }
 
@@ -8877,8 +8891,12 @@ button.gx-date-navbtn:hover:not(:disabled) {
   color: var(--foreground);
 }
 
+/* The rule a separator paints. The component's recipe is `h-px bg-border`, so
+   the drawing's `--border-strong` was a full rung heavier than the thing it
+   documents: `--border-strong` is the role for an edge a reader must find (a
+   focused field, a dragged splitter), not for a hairline between groups. */
 .gx-sep-part {
-  background: var(--border-strong);
+  background: var(--border);
 }
 
 .gx-sep-part[data-orientation="horizontal"] {
@@ -10741,9 +10759,13 @@ button.gx-rating-star:focus-visible {
 .gx-preview-card-scene {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: 16px;
   width: min(360px, 100%);
+  /* The card is an overlay below its trigger, so it takes no layout space: the
+     scene reserves the height here or the stage cuts the card in half. */
+  min-height: 340px;
 }
 
 .gx-preview-card-anchor {
@@ -10783,7 +10805,7 @@ button.gx-rating-star:focus-visible {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--popover);
-  box-shadow: 0 12px 28px var(--shadow);
+  box-shadow: var(--elevation-lg);
 }
 
 .gx-preview-card-title {
@@ -12451,7 +12473,9 @@ button.gx-rating-star:focus-visible {
 /* ---- pinned list: section headers held at the viewport top. ---- */
 .gx-pinnedlist {
   width: min(320px, 100%);
-  height: 220px;
+  /* Tall enough to show the effect: a header that sticks only reads as pinned
+     when a reader can scroll a section past it, and 220px showed barely one. */
+  height: 380px;
   overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 2px);
@@ -14502,6 +14526,7 @@ button.gx-rating-star:focus-visible {
    components follow. `preview-motion.test.ts` holds every one to a guard. */
 @media (prefers-reduced-motion: reduce) {
   .gx-switch-thumb,
+  .gx-switch-track,
   .gx-carousel-dot-mark,
   .gx-liquid-fill,
   .gx-magnetic-card,
@@ -15196,4 +15221,45 @@ button.gx-rating-star:focus-visible {
 .gx-dialog-behind-meta {
   color: var(--muted-foreground);
   font-size: 11.5px;
+}
+
+/* ---- the build prompt ----------------------------------------------------
+   One string, printed and copied. It is code, so it is monospace; it is long,
+   so it scrolls inside a bounded frame rather than growing the page. */
+.gx-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.gx-prompt-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gx-prompt-meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-prompt-body {
+  margin: 0;
+  padding: 16px;
+  max-height: 620px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--card-foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre;
+  tab-size: 4;
 }

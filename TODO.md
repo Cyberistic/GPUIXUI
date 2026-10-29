@@ -24597,3 +24597,19 @@ nothing. The docs drawing is a real scroll container with the pin measured from
 only when released. Behaviour: `message-scroller.test.tsx` gains the overlay
 placement, the content-composition append, the sibling-render and the
 row-repaint cases; the docs block gains `message-scroller-demo.test.tsx`.
+
+## A prompt an agent can be handed (2026-10-29)
+
+`[x]` `[██████████]` 1/1 — **`/docs/prompt` prints one copyable string, and the
+component and block rows are generated from the pages rather than kept by hand.**
+
+`[x]` The prose covers install, run and contribute, and names the two habits that
+fail review (semantic roles; a fix lands with a test that fails without it). It is
+**218 words**, under the 500-word budget, because the lists are the reference and
+the prose is the context an agent spends before it writes anything.
+
+`[x]` The rows come from the site itself: components from the same build-time
+index the Components page renders (98), blocks from the block pages' own
+frontmatter (13). Proven dynamic: adding a block page moved the count to 14 and
+listed it with no edit to the prompt module, and a hand-kept list fails the case
+that holds the property.

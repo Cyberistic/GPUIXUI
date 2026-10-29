@@ -28,6 +28,7 @@ export const effectSlugs: ReadonlyArray<string> = [
   "scroll-progress",
   "sliding-number",
   "sliding-text",
+  "stars",
   "typing-text",
 ];
 

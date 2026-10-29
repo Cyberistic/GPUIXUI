@@ -15,6 +15,7 @@ import { LookPicker } from "./docs/look-picker";
 import { MermaidDiagram } from "./docs/mermaid-diagram";
 import { Pattern, PatternChoices } from "./docs/patterns";
 import { PlatformStyleSource } from "./docs/platform-style-source";
+import { PromptPage } from "./docs/prompt-page";
 import { SeriesSwatches } from "./docs/series-swatches";
 import { SidebarExample } from "./docs/sidebar-examples";
 import { StyleReference } from "./docs/style-reference";
@@ -81,6 +82,7 @@ export const mdxComponents = {
   PatternChoices,
   PlatformStyleSource,
   pre,
+  PromptPage,
   SeriesSwatches,
   SidebarExample,
   StyleReference,

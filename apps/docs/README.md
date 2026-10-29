@@ -26,6 +26,7 @@ theming.mdx                  Semantic roles, themes, the platform switch, the lo
 dark-mode.mdx                App-owned mode switching, following the desktop's palette, restoring a stored theme
 typography.mdx               The ten type roles, the two families, the platform rule
 diagrams.mdx                 Mermaid diagrams at build time, themed from the page's roles
+prompt.mdx                   One copyable build prompt, generated from the pages the site ships
 runtime.mdx                  What the pinned GPUix provides, what it does not, the browser build behind /live, and the workaround
 accessibility.mdx            What a screen reader hears, which states have no attribute, proving the tree, the pressable-target floors and the keyboard dim
 motion.mdx                   House timing and the seam a stored one is read at, retained values and the tween a clock can name, the curves a timing name stands for, the reduced-motion policy, the presence seam (and the clock a stored phase must fit) and the React hooks
@@ -319,6 +320,7 @@ src/components/docs/settings-dialog.tsx   The settings dialog's reproduction, th
 src/components/docs/hunter-pipeline.tsx  The guild's readings, stages, dossiers and the renown chart
 src/components/docs/mermaid.ts          Rendering Mermaid with Pele, and the role mapping
 src/components/docs/mermaid-diagram.tsx A diagram's frame, its caption and its refusal
+src/components/docs/prompt-page.tsx     The prompt printed as one string, with one copy action
 src/components/docs/notification-centre.tsx The notification centre's rows, filters and mark-read state
 src/components/docs/command-centre.tsx    The command centre's matcher, highlight and run line
 src/components/docs/file-manager-block.tsx The file browser's reducer, panes and recipe
@@ -480,6 +482,7 @@ src/lib/theme-css.ts                Theme → CSS variables, shared with every p
 src/lib/style-reference.ts          The class groups /docs/styling prints, resolved by @gpuixui/tw
 src/lib/code-theme.ts               The Shiki themes a code block highlights with, from the syntax palette
 src/lib/remark-mermaid.ts           Turns a `mermaid` fence into a diagram at compile time
+src/lib/prompt-data.ts             The build prompt: prose plus the rows the pages generate
 src/lib/live-scene.tsx              /live's React screen, styled by the primitives' resolver
 src/lib/gpuix-native.ts             The browser entry `@gpuix/native` resolves to on /live
 src/lib/block-source.test.ts        A block's copyable source, resolved against the workspace
