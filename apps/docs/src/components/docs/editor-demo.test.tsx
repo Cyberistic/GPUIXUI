@@ -93,9 +93,40 @@ describe("the Diff viewer preview", () => {
     expect(markup).toContain('data-kind="removed"');
     expect(markup).toContain('data-kind="added"');
     expect(markup).toContain("base + tax");
-    expect(markup).toContain(">unified<");
-    expect(markup).toContain(">split<");
+    expect(markup).toContain(">Unified<");
+    expect(markup).toContain(">Split<");
     expect(markup).toContain(`${diffRows().length} rows`);
+  });
+
+  it("pairs the change beside its replacement in the unified sheet", () => {
+    const markup = html(<DiffViewerDemo />);
+    const removed = markup.indexOf('data-kind="removed"');
+    const added = markup.indexOf('data-kind="added"', removed);
+    expect(removed).toBeGreaterThan(-1);
+    expect(added).toBeGreaterThan(removed);
+  });
+
+  it("draws a skippable change as a heading, with no unchanged slab around it", () => {
+    const markup = html(<DiffViewerDemo />);
+    expect(markup).toContain("gx-diff-hunk");
+    expect(markup).toMatch(/@@ -\d+,\d+ \+\d+,\d+ @@/);
+    // The long unchanged middle is skipped rather than painted as context.
+    expect(markup).not.toContain("Math.round");
+  });
+
+  it("draws two equal scrollers and a divider in split mode", () => {
+    // The bug guarded: the split preview was one grid whose cells sized to
+    // their content, so the right column overflowed the sheet and the divider
+    // was painted through the code. Each side is its own scroller now, with a
+    // shared row height.
+    const markup = html(<DiffViewerDemo initialMode="split" />);
+
+    expect(markup.match(/gx-diff-side-before/g)).toHaveLength(2);
+    expect(markup.match(/gx-diff-side-after/g)).toHaveLength(2);
+    expect(markup.match(/gx-diff-divider/g)).toHaveLength(2);
+    expect(markup.match(/gx-diff-cols/g)).toHaveLength(2);
+    // Every painted side row keeps the one code-line height the sheet uses.
+    expect(markup.match(/class="gx-diff-line"/g)?.length).toBeGreaterThan(0);
   });
 });
 

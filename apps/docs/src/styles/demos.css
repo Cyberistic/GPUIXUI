@@ -12832,18 +12832,20 @@ button.gx-rating-star:focus-visible {
 }
 
 .gx-diff-demo {
+  /* One width for both views: a sheet that sized itself to its longest line
+     grew when the reader switched to split, and every row shifted. */
+  width: 100%;
   gap: 10px;
 }
 
-.gx-diff-bar,
 .gx-md-modes {
   display: flex;
   gap: 6px;
 }
 
 .gx-diff {
-  width: min(560px, 100%);
-  overflow: auto;
+  width: 100%;
+  overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
@@ -12852,39 +12854,98 @@ button.gx-rating-star:focus-visible {
   line-height: 22px;
 }
 
-.gx-diff-table {
+/* One row is one code line high in both views, so switching modes moves
+   nothing. The row grows past the sheet for a long line instead of wrapping or
+   clipping, and the surface or the split column that owns it scrolls. */
+.gx-diff-line {
   display: flex;
-  flex-direction: column;
-}
-
-.gx-diff-row {
-  display: grid;
-  grid-template-columns: 34px 34px 1fr;
-  gap: 0 8px;
-  padding: 0 8px;
+  align-items: stretch;
+  width: max-content;
+  min-width: 100%;
+  height: 22px;
   white-space: pre;
 }
 
-.gx-diff[data-mode="split"] .gx-diff-row {
-  grid-template-columns: 26px 1fr 26px 1fr;
+.gx-diff-unified {
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+  padding: 4px 0;
+  scrollbar-color: var(--border-strong) transparent;
+  scrollbar-width: thin;
 }
 
-.gx-diff-row[data-kind="added"],
-.gx-diff-text[data-kind="added"] {
-  background: var(--success-soft);
-  color: var(--success-soft-foreground);
-}
-
-.gx-diff-row[data-kind="removed"],
-.gx-diff-text[data-kind="removed"] {
-  background: var(--destructive-soft);
-  color: var(--destructive-soft-foreground);
+.gx-diff-sign {
+  flex: 0 0 16px;
+  color: var(--muted-foreground);
+  text-align: center;
+  user-select: none;
 }
 
 .gx-diff-num {
+  flex: 0 0 36px;
+  padding-right: 6px;
   color: var(--muted-foreground);
   text-align: right;
   user-select: none;
+}
+
+.gx-diff-text {
+  flex: 1 0 auto;
+  padding-right: 8px;
+  color: var(--foreground);
+}
+
+.gx-diff-line[data-kind="added"] {
+  background: var(--success-soft);
+}
+
+.gx-diff-line[data-kind="added"] .gx-diff-text {
+  color: var(--success-soft-foreground);
+}
+
+.gx-diff-line[data-kind="removed"] {
+  background: var(--destructive-soft);
+}
+
+.gx-diff-line[data-kind="removed"] .gx-diff-text {
+  color: var(--destructive-soft-foreground);
+}
+
+.gx-diff-hunk {
+  background: var(--muted);
+}
+
+.gx-diff-hunk .gx-diff-text {
+  padding-left: 8px;
+  color: var(--muted-foreground);
+}
+
+/* ---- split: two equal scrollers over one shared row height ---- */
+.gx-diff-split {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.gx-diff-cols {
+  display: flex;
+  align-items: stretch;
+}
+
+.gx-diff-side {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-color: var(--border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.gx-diff-divider {
+  flex: 0 0 1px;
+  background: var(--border);
 }
 
 .gx-md {
