@@ -11,16 +11,16 @@
  * recorded in `COMPONENTS.md` and the page.
  *
  * **The frame owns its height.** The viewport grows inside the root
- * (`flex: 1 1 0; min-height: 0`), and the jump control sits in a reserved rail
- * below it. The rail is the layout-shift fix: the control used to be an
- * ordinary sibling, so showing it took height from the viewport and moved the
- * composer. A rail that is always laid out means the control can fade and travel
- * without resizing anything.
+ * (`flex: 1 1 0; min-height: 0`), and the jump control floats over its bottom
+ * edge: the root is the positioned box, so the control is an overlay rather
+ * than a row that takes height from the transcript. Mounting it therefore moves
+ * nothing above or below the scroller.
  *
- * **An append while the reader is away changes nothing.** The viewport scrolls
- * only when the store says it is pinned; a laid-out row (a streamed reply
- * growing) reaches the same rule through the tail sentinel's `onLayout`, so a
- * reader who scrolled up is never pulled back.
+ * **An append while the reader is away changes nothing.** The scroller scrolls
+ * only when the store says it is pinned. An appended row follows on the commit
+ * that added it (the row count is the dependency), and a row that grows in place
+ * follows through its own `onLayout` size report. Neither path measures on a
+ * render the content did not cause, so a sibling's keystroke moves nothing.
  *
  * `scrollAnchor` on an item is opt-in turn anchoring: a newly mounted anchor is
  * placed near the top of the viewport with `previousItemPeek` of the row above
@@ -40,11 +40,12 @@ import {
   cn,
   MESSAGE_SCROLLER_CONTENT,
   MESSAGE_SCROLLER_ITEM,
-  MESSAGE_SCROLLER_RAIL,
+  MESSAGE_SCROLLER_JUMP,
   MESSAGE_SCROLLER_ROOT,
   MESSAGE_SCROLLER_VIEWPORT,
 } from "@gpuixui/tw";
 import {
+  Children,
   createContext,
   useContext,
   useEffect,
@@ -64,7 +65,7 @@ import {
 } from "./internal/parts.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
-import { controlHeight, useTheme } from "./internal/theme.js";
+import { useTheme } from "./internal/theme.js";
 import {
   makeMessageScrollerStore,
   type MessageScrollerState,
@@ -125,6 +126,25 @@ const useMessageScrollerState = (): MessageScrollerState => {
     );
   }
   return value;
+};
+
+/**
+ * Follow the tail when the rows under this part change.
+ *
+ * The dependency is the row count, not the element identity: a parent that
+ * re-renders for its own reasons (a sibling's keystroke) passes fresh elements
+ * with the same count, and a scroller that measured on that render would force
+ * a layout for text nobody typed into the transcript. Growth at a fixed count is
+ * the row's own size report, not this hook.
+ */
+const useFollowAppendedRows = (children: PartChildren): void => {
+  const scroller = useMessageScroller();
+  const rows = Children.count(children);
+  useLayoutEffect(() => {
+    if (scroller.pinned.current && scroller.ready.current) {
+      scroller.scrollToEnd.current();
+    }
+  }, [rows, scroller]);
 };
 
 /** {@link MessageScroller} props. */
@@ -319,9 +339,7 @@ export const MessageScrollerViewport = ({
 
   // A row appended or a streamed reply grown: while pinned, the tail stays in
   // view. Unpinned, the position is never touched.
-  useLayoutEffect(() => {
-    if (scroller.pinned.current) scrollToEnd();
-  });
+  useFollowAppendedRows(children);
 
   const align = (instance: PublicInstance): void => {
     const viewport = viewportRef.current;
@@ -433,6 +451,7 @@ export const MessageScrollerContent = ({
 }: MessageScrollerContentProps) => {
   const theme = useTheme();
   const state = useMessageScrollerState();
+  useFollowAppendedRows(children);
   assertParts(messageScrollerContent, children);
   return (
     <div
@@ -493,6 +512,15 @@ export const MessageScrollerItem = ({
       {...rest}
       ref={mergedRef}
       onLayout={(event) => {
+        // The row's own size report: a streamed reply that grows in place
+        // moves the tail without adding a child, so this is what follows it.
+        if (
+          !first.current &&
+          scroller.pinned.current &&
+          scroller.ready.current
+        ) {
+          scroller.scrollToEnd.current();
+        }
         if (first.current) {
           first.current = false;
           if (
@@ -530,10 +558,11 @@ export interface MessageScrollerJumpToLatestProps extends Omit<
 /**
  * The way back to the newest row.
  *
- * It always owns a reserved rail, because a control that takes height only
- * while unpinned moves the composer. Hidden, it is untabbable, takes no pointer
- * input and leaves the accessibility tree; the fade and 4px travel are motion
- * on `opacity` and `top` — the runtime has no transform.
+ * It floats over the viewport's bottom edge, centred, the way shadcn's button
+ * sits above the transcript: a full-width absolute strip carries the centring
+ * (the runtime has no transform), and the button inside it takes the pointer.
+ * Hidden, nothing is mounted, so it is untabbable and absent from the
+ * accessibility tree; the fade and 4px travel are motion on `opacity` and `top`.
  */
 export const MessageScrollerJumpToLatest = ({
   label = "Jump to latest",
@@ -550,43 +579,39 @@ export const MessageScrollerJumpToLatest = ({
     state.unread === 0
       ? label
       : `${state.unread} new ${state.unread === 1 ? "message" : "messages"}`;
-  const railHeight = controlHeight(theme, "sm") + theme.spacing.sm;
+
+  if (!active) return null;
 
   return (
     <div
-      style={mergeStyles(recipeStyle(MESSAGE_SCROLLER_RAIL, theme), {
-        height: railHeight,
-        flexShrink: 0,
+      style={mergeStyles(recipeStyle(MESSAGE_SCROLLER_JUMP, theme), {
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: theme.spacing.lg,
       })}
     >
-      {/*
-        The control is mounted only while it can act: a hidden control still
-        publishes a button node in 0.11.0, and the tests that read the transcript
-        name the controls that are really there. The rail keeps its height, so
-        mounting it at the live edge never moves anything.
-      */}
-      {active ? (
-        <div
-          motion={{
-            initial: { opacity: 0, top: 4 },
-            animate: { opacity: 1, top: 0 },
-            transition: { duration: 0.2, ease: "easeOut" },
+      <div
+        motion={{
+          initial: { opacity: 0, top: 4 },
+          animate: { opacity: 1, top: 0 },
+          transition: { duration: 0.2, ease: "easeOut" },
+        }}
+        style={{ pointerEvents: "auto" }}
+      >
+        <Button
+          {...rest}
+          variant="secondary"
+          size="sm"
+          onClick={(event) => {
+            scroller.jump();
+            onClick?.(event);
           }}
+          style={mergeStyles(recipeStyle(cn(className ?? ""), theme), style)}
         >
-          <Button
-            {...rest}
-            variant="secondary"
-            size="sm"
-            onClick={(event) => {
-              scroller.jump();
-              onClick?.(event);
-            }}
-            style={mergeStyles(recipeStyle(cn(className ?? ""), theme), style)}
-          >
-            {text}
-          </Button>
-        </div>
-      ) : null}
+          {text}
+        </Button>
+      </div>
     </div>
   );
 };
@@ -628,8 +653,7 @@ export const messageScrollerMeta = {
   gpuixSupport: "partial",
   limitations: [
     "the viewport renders every row: <virtual-list> takes itemCount rather than compound children, so long histories are not virtualized",
-    "the jump control travels inside a reserved rail, not over the viewport's corner: position: absolute resolves against the mount parent in 0.11.0",
-    "a row that grows without the scroller re-rendering is followed through the tail sentinel's onLayout while pinned; there is no resize observer for an unpinned row, which is intentional",
+    "a row that grows in place is followed through its own onLayout size report while pinned; there is no resize observer for a row outside the item wrapper, which is intentional",
     "no aria-live role in 0.11.0, so new rows are not announced; the jump control's count is painted",
     "a threshold or arrival count it cannot read (NaN) is ignored, so the pin state is kept and the affordance never paints NaN",
   ],

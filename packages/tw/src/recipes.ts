@@ -641,8 +641,8 @@ export const COLOR_PICKER_CONTRAST =
 /** `color-picker.tsx` — a swatch disc, in the trigger and in the preset row. */
 export const COLOR_PICKER_CELL = "rounded-full border border-border";
 
-/** `message-scroller.tsx` — the scroller root. */
-export const MESSAGE_SCROLLER_ROOT = "flex flex-col min-h-0 min-w-0";
+/** `message-scroller.tsx` — the scroller root, the box the jump control floats in. */
+export const MESSAGE_SCROLLER_ROOT = "relative flex flex-col min-h-0 min-w-0";
 
 /** `message-scroller.tsx` — the scroll viewport. `overflow-y: scroll` stays in
  * `style` (scroll logic). */
@@ -656,11 +656,10 @@ export const MESSAGE_SCROLLER_CONTENT = "flex flex-col min-w-0";
 export const MESSAGE_SCROLLER_ITEM =
   "flex flex-col min-w-0 shrink-0 self-stretch";
 
-/** `message-scroller.tsx` — the reserved rail the jump control travels in. Its
- * height is a theme metric and stays in `style`, because the rail is what keeps
- * the viewport from resizing when the control appears. */
-export const MESSAGE_SCROLLER_RAIL =
-  "flex flex-row items-center justify-center shrink-0";
+/** `message-scroller.tsx` — the jump control's centring strip. It floats over
+ * the viewport's bottom edge; its inset is a theme metric and stays in `style`. */
+export const MESSAGE_SCROLLER_JUMP =
+  "flex flex-row items-center justify-center pointer-events-none";
 
 /** `bubble.tsx` — the bubble's row: an optional avatar beside the column. */
 export const BUBBLE_ROOT = "flex flex-row items-end gap-2 min-w-0";
@@ -803,7 +802,7 @@ export const CHAT_COMPOSER =
   "flex flex-col gap-2 rounded-lg border border-border bg-background p-2";
 
 /** `chat.tsx` — the composer's field-and-actions row. */
-export const CHAT_COMPOSER_ROW = "flex flex-row items-end gap-2";
+export const CHAT_COMPOSER_ROW = "flex flex-row items-center gap-2";
 
 /** `chat.tsx` — the composer field. The focus ring and selection wash stay in
  * `style`. */
