@@ -29,6 +29,7 @@ import {
   FloatingLayer,
   floatingRootStyle,
   mergeStyles,
+  type FloatingAlign,
   type FloatingContentProps,
 } from "@gpuix/react/floating";
 import { POPOVER_CONTENT } from "@gpuixui/tw";
@@ -64,9 +65,14 @@ import {
   useSurfacePresence,
   useSurfaceTiming,
 } from "./internal/presence.js";
+import { isAlign } from "./internal/placement.js";
 import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
+
+/** The alignment a caller asked for, or this popover's own `center` default. */
+const popoverAlign = (align: unknown): FloatingAlign =>
+  isAlign(align) ? align : "center";
 
 /** The rules a {@link PopoverContent} follows; throws outside a {@link Popover}. */
 interface PopoverContextValue {
@@ -179,7 +185,7 @@ export interface PopoverContentProps extends FloatingContentProps {
   readonly className?: string;
   /** Default `"bottom"`. Flipped once if the snapped surface would cover the trigger. */
   readonly side?: "top" | "right" | "bottom" | "left";
-  /** Default `"start"`. `"center"` is measured from the trigger, not the runtime's `center`. */
+  /** Default `"center"`. `"center"` is measured from the trigger, not the runtime's `center`. */
   readonly align?: "start" | "center" | "end";
   /** The gap between the trigger and the surface. Default `6`. */
   readonly sideOffset?: number;
@@ -196,7 +202,7 @@ export interface PopoverContentProps extends FloatingContentProps {
 export const PopoverContent = ({
   className,
   side = "bottom",
-  align = "start",
+  align = "center",
   sideOffset = 6,
   alignOffset = 0,
   collisionPadding = 8,
@@ -220,7 +226,7 @@ export const PopoverContent = ({
     // not reset under the exit tween.
     open: presence.mounted,
     side,
-    align,
+    align: popoverAlign(align),
     margin: collisionPadding,
     trigger,
     surface,

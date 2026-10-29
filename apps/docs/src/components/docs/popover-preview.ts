@@ -27,8 +27,8 @@ export const sideLabel = (side: PopoverSide): string =>
 /** The panel's width in the drawings, so the arithmetic is predictable. */
 export const POPOVER_PANEL_WIDTH = 240;
 
-/** The frame the collision drawing measures against. */
-export const POPOVER_FRAME_WIDTH = 560;
+/** The frame the side, alignment and collision drawings measure against. */
+export const POPOVER_FRAME_WIDTH = 600;
 
 /** The right padding the collision drawing's trigger sits at. */
 export const POPOVER_FRAME_PADDING = 24;

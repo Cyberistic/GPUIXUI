@@ -24288,7 +24288,6 @@ rests on the stack.
       `innerCorners`; `sheet-drawer-preview.test.tsx` already guards every side,
       so rounding all four fails it (`right rounds the wrong corners`).
 
-<<<<<<< HEAD
 ## Docs polish — the image preview and the log viewer (2026-10-29)
 
 `[x]` `[██████████]` 2/2
@@ -24312,7 +24311,6 @@ under it. Measured before → after: frame 640 × 254 → 520 × 287, list 200 �
 row 17.05 → 28, gutter 40 → 56, rows 8 (of 13) → 13, readout inside → outside.
 Docs: `log-viewer-demo.tsx`, `demos.css`, and `log-viewer-demo.test.tsx`'s
 gutter/row/frame, fill and per-level filter cases.
-=======
 ## A dead slider, a clipped table, a grey chip (2026-10-29)
 
 `[x]` `[██████████]` 3/3
@@ -24335,7 +24333,6 @@ gutter/row/frame, fill and per-level filter cases.
       from the field. The chip is `bg-secondary` with a `foreground` label
       (13.09–17.14 light, 9.15–11.70 dark, 13.58 high-contrast) and the budget
       line is a sentence instead of `refused=1`.
->>>>>>> origin/fix/slider-table-tag
 
 ## Docs polish — five drawings corrected (2026-10-29)
 
@@ -24651,3 +24648,26 @@ index the Components page renders (98), blocks from the block pages' own
 frontmatter (13). Proven dynamic: adding a block page moved the count to 14 and
 listed it with no edit to the prompt module, and a hand-kept list fails the case
 that holds the property.
+## Popover alignment (2026-10-29)
+
+`[x]` `[██████████]` 1/1 — **a popover is centred on its trigger by default,
+and the page's top drawing switches all three alignments.** `PopoverContent`'s
+`align` defaulted to `"start"`, so the page's `Columns` trigger sat on its
+panel's left corner; shadcn centres a popover, so the default is `"center"`
+now (and `popoverAlign` reads a stored name the union does not carry as that
+same default, before the shared placement rule's house `start`). The drawing's
+left/centre/right control is the library's `.gx-tgroup` above the stage, and
+`popover-alignment.ts` places the panel with the component's rule — `start`
+shares left edges, `center` centre lines, `end` right edges — then clamps it by
+the collision margin, so a shifted panel keeps its request instead of becoming
+another alignment. Measured in Chrome at 1440×900 dark: panel 240×149, trigger
+74×28, stage 600×380; start `x 683 = trigger x 683`, centre `600 + 120 = 720 =
+683 + 37`, end `757 = 757`, every box inside the stage; the collision panel
+reads `x 352 · pulled back 150 · 8px` (7px on screen after the 1px frame
+border) with its right edge on the margin, not on the trigger's. Proof:
+`src/behaviour/popover.test.tsx` gains the default-centre case and a case per
+alignment, `internal/placement.test.ts` keeps the house guard, and
+`apps/docs/.../popover-alignment.test.tsx` (5 cases) holds the three relations,
+the drawn `left`, the control's place above the stage and the collision clamp;
+the stored-value page guard now reads the popover's own `popoverAlign`. Inverted
+directions recorded in the branch's report.

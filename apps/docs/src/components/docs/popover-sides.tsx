@@ -7,6 +7,12 @@ import {
 } from "react";
 import { usePreviewInteractive } from "./preview-surface";
 import {
+  POPOVER_ALIGNMENTS,
+  alignLabel,
+  alignmentLayout,
+  type PopoverAlign,
+} from "./popover-alignment";
+import {
   POPOVER_COLLISION_PADDING,
   POPOVER_FRAME_WIDTH,
   POPOVER_PANEL_WIDTH,
@@ -19,19 +25,20 @@ import {
 } from "./popover-preview";
 
 /**
- * Browser previews for the Popover page's sides.
+ * Browser previews for the Popover page.
  *
- * The shipped popover takes a `side` and a `sideOffset`, keeps that side unless
- * it has no room at all, and lets the runtime pull a snapped surface back inside
- * the window by `collisionPadding`. The drawings show all four sides on one
- * trigger and a panel against the frame's right edge, where the pull-back is the
- * thing a reader needs to see. They are illustrations of the native surface —
- * the component renders through GPUix, not the DOM.
+ * The shipped popover takes a `side`, an `align` and a `sideOffset`, keeps the
+ * side unless it has no room at all, centres a panel on its trigger by default,
+ * and lets the runtime pull a snapped surface back inside the window by
+ * `collisionPadding`. The drawings show the three alignments on one trigger, all
+ * four sides on another, and a panel against the frame's right edge, where the
+ * pull-back is the thing a reader needs to see. They are illustrations of the
+ * native surface — the component renders through GPUix, not the DOM.
  */
 
 const usePopover = () => {
   const [open, setOpen] = useState(true);
-  const anchor = useRef<HTMLDivElement | null>(null);
+  const scene = useRef<HTMLDivElement | null>(null);
   const interactive = usePreviewInteractive();
 
   const close = useCallback(() => setOpen(false), []);
@@ -42,7 +49,7 @@ const usePopover = () => {
       if (event.key === "Escape") close();
     };
     const onPress = (event: MouseEvent) => {
-      if (!anchor.current?.contains(event.target as Node)) close();
+      if (!scene.current?.contains(event.target as Node)) close();
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("mousedown", onPress);
@@ -52,10 +59,10 @@ const usePopover = () => {
     };
   }, [close, interactive, open]);
 
-  return { anchor, close, open, setOpen };
+  return { close, open, scene, setOpen };
 };
 
-/** The panel's body, shared by both drawings. */
+/** The panel's body, shared by the drawings. */
 const PanelBody = ({ note }: { readonly note: ReactNode }): ReactNode => (
   <>
     <p className="gx-popover-title">Visible columns</p>
@@ -67,22 +74,86 @@ const PanelBody = ({ note }: { readonly note: ReactNode }): ReactNode => (
   </>
 );
 
+/**
+ * The three alignments, switched from one control row above the stage.
+ *
+ * The panel's `left` is `alignmentLayout`'s: `start` shares the trigger's left
+ * edge, `center` its centre line and `end` its right edge, and a panel with no
+ * room shifts back only as far as the collision margin.
+ */
+export const PopoverAligned = ({
+  align: initialAlign = "center",
+}: {
+  readonly align?: PopoverAlign;
+} = {}): ReactNode => {
+  const [align, setAlign] = useState<PopoverAlign>(initialAlign);
+  const { close, open, scene, setOpen } = usePopover();
+  const layout = alignmentLayout(align);
+
+  return (
+    <div className="gx-demo-popover gx-popover-aligned" ref={scene}>
+      <div aria-label="Popover align" className="gx-tgroup" role="group">
+        {POPOVER_ALIGNMENTS.map((name) => (
+          <button
+            aria-pressed={align === name}
+            className="gx-btn gx-toggle gx-toggle-outline"
+            data-pressed={align === name ? "" : undefined}
+            key={name}
+            onClick={() => {
+              setAlign(name);
+              setOpen(true);
+            }}
+            type="button"
+          >
+            {alignLabel(name)}
+          </button>
+        ))}
+      </div>
+      <div className="gx-popover-stage" style={{ width: POPOVER_FRAME_WIDTH }}>
+        <div className="gx-popover-anchor">
+          <button
+            aria-expanded={open}
+            className="gx-btn gx-btn-secondary"
+            onClick={open ? close : () => setOpen(true)}
+            style={{ width: POPOVER_TRIGGER_WIDTH }}
+            type="button"
+          >
+            Columns
+          </button>
+          {open ? (
+            <div
+              aria-label={`Popover aligned ${align}`}
+              className="gx-popover"
+              data-align={align}
+              role="dialog"
+              style={{ left: layout.offset, width: POPOVER_PANEL_WIDTH }}
+            >
+              <PanelBody note="Choose which fields a run summary shows. The setting is per project." />
+            </div>
+          ) : null}
+        </div>
+      </div>
+      <p className="gx-popover-readout" role="status">
+        align=&quot;{align}&quot; · panel left {layout.left} · shift{" "}
+        {layout.shifted}
+      </p>
+    </div>
+  );
+};
+
 /** The four sides, switched from one control row. */
 export const PopoverSides = (): ReactNode => {
   const [side, setSide] = useState<PopoverSide>("bottom");
-  const { anchor, close, open, setOpen } = usePopover();
+  const { close, open, scene, setOpen } = usePopover();
 
   return (
-    <div className="gx-demo-popover gx-popover-sides">
-      <div
-        aria-label="Popover side"
-        className="gx-popover-sides-row"
-        role="group"
-      >
+    <div className="gx-demo-popover gx-popover-sides" ref={scene}>
+      <div aria-label="Popover side" className="gx-tgroup" role="group">
         {POPOVER_SIDES.map((name) => (
           <button
             aria-pressed={side === name}
-            className="gx-btn gx-btn-sm gx-btn-secondary"
+            className="gx-btn gx-toggle gx-toggle-outline"
+            data-pressed={side === name ? "" : undefined}
             key={name}
             onClick={() => {
               setSide(name);
@@ -95,7 +166,7 @@ export const PopoverSides = (): ReactNode => {
         ))}
       </div>
       <div className="gx-popover-stage" style={{ width: POPOVER_FRAME_WIDTH }}>
-        <div className="gx-popover-anchor" ref={anchor}>
+        <div className="gx-popover-anchor">
           <button
             aria-expanded={open}
             className="gx-btn gx-btn-secondary"
@@ -142,20 +213,20 @@ export const PopoverSides = (): ReactNode => {
  * can check against the rule.
  */
 export const PopoverCollision = (): ReactNode => {
-  const { anchor, close, open } = usePopover();
+  const { close, open, scene, setOpen } = usePopover();
   const layout = collisionLayout();
 
   return (
-    <div className="gx-demo-popover gx-popover-sides">
+    <div className="gx-demo-popover gx-popover-sides" ref={scene}>
       <div
         className="gx-popover-stage gx-popover-stage-edge"
         style={{ width: POPOVER_FRAME_WIDTH }}
       >
-        <div className="gx-popover-anchor" ref={anchor}>
+        <div className="gx-popover-anchor">
           <button
             aria-expanded={open}
             className="gx-btn gx-btn-secondary"
-            onClick={close}
+            onClick={open ? close : () => setOpen(true)}
             style={{ width: POPOVER_TRIGGER_WIDTH }}
             type="button"
           >

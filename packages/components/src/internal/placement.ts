@@ -25,7 +25,8 @@
  * `side` and `align` are named by the caller but can arrive from persisted UI
  * state the library never type-checked, so every rule reads them through the
  * house guards below: an unknown name is the house `bottom`/`start` rather than
- * a `Match.exhaustive` that throws out of the render.
+ * a `Match.exhaustive` that throws out of the render. A component whose own
+ * `align` default differs reads it before the rule (Popover's `alignOf`).
  */
 
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
@@ -81,7 +82,7 @@ export interface Placement {
 const PlacementSide = Schema.Literals(["top", "right", "bottom", "left"]);
 
 /** The three alignments the anchored layer paints. */
-const PlacementAlign = Schema.Literals(["start", "center", "end"]);
+export const isAlign = Schema.is(Schema.Literals(["start", "center", "end"]));
 
 /**
  * The side a stored choice asks for, or the house `bottom`.
@@ -97,7 +98,7 @@ const sideOf = (side: unknown): FloatingSide =>
 
 /** The alignment a stored choice asks for, or the house `start`. */
 const alignOf = (align: unknown): FloatingAlign =>
-  Schema.is(PlacementAlign)(align) ? align : "start";
+  isAlign(align) ? align : "start";
 
 const oppositeSide = (side: unknown): FloatingSide =>
   Match.value(sideOf(side)).pipe(
