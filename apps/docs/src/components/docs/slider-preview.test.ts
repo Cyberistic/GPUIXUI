@@ -1,52 +1,78 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { valueFraction } from "@gpuixui/primitives/core";
 import { dragSpan } from "./slider-preview";
 
 /**
- * A range drag keeps its ends in order, and a press on the coincident pair a
- * price filter opens with opens it around the press.
+ * A range drag holds the end it is not moving and orders the span around it.
  *
- * Guarded bug: the Range slider page drew two thumbs at fixed percentages and
- * took no pointer at all — "range slider does not work". The drawing now drags
- * through the primitive's rules, and these are the two moves a hand-written
- * drag gets wrong: crossing the ends (which swaps which value the caller reads
- * back) and a press on a pair that has nowhere to go.
+ * Guarded bug: the drag remembered which thumb the **press** grabbed and moved
+ * it with `moveSpanEnd`, which refuses to cross. Pulling the low end past the
+ * high end clamped both onto one value; the next move then saw a coincident pair
+ * and fell back to the press point, so the thumb jumped back where the gesture
+ * started. A crossing must instead continue on the thumb the pointer now holds —
+ * the pair swaps roles, stays ordered, and the fill stays between the ends.
  */
 
 const RANGE = { min: 0, max: 100, step: 1 } as const;
 
 describe("a range drag", () => {
   it("moves the grabbed end and pins the other", () => {
-    expect(
-      dragSpan({ end: "end", point: 80 }, { start: 20, end: 80 }, 55, RANGE),
-    ).toStrictEqual({ start: 20, end: 55 });
-    expect(
-      dragSpan({ end: "start", point: 20 }, { start: 20, end: 80 }, 64, RANGE),
-    ).toStrictEqual({ start: 64, end: 80 });
+    expect(dragSpan({ anchor: 80 }, 55, RANGE)).toStrictEqual({
+      start: 55,
+      end: 80,
+    });
+    expect(dragSpan({ anchor: 20 }, 64, RANGE)).toStrictEqual({
+      start: 20,
+      end: 64,
+    });
   });
 
-  it("never lets the ends cross", () => {
-    expect(
-      dragSpan({ end: "start", point: 20 }, { start: 20, end: 80 }, 95, RANGE),
-    ).toStrictEqual({ start: 80, end: 80 });
-    expect(
-      dragSpan({ end: "end", point: 80 }, { start: 20, end: 80 }, 3, RANGE),
-    ).toStrictEqual({ start: 20, end: 20 });
+  it("crosses the other end without collapsing the span", () => {
+    const crossed = dragSpan({ anchor: 80 }, 95, RANGE);
+    expect(crossed).toStrictEqual({ start: 80, end: 95 });
+    expect(crossed.start).toBeLessThanOrEqual(crossed.end);
+  });
+
+  it("keeps the dragged end on the pointer after it crosses", () => {
+    // The moving value is the low end's, past the anchor: it is now the high
+    // thumb, and it keeps following on both sides of the anchor.
+    expect(dragSpan({ anchor: 80 }, 90, RANGE)).toStrictEqual({
+      start: 80,
+      end: 90,
+    });
+    expect(dragSpan({ anchor: 80 }, 100, RANGE)).toStrictEqual({
+      start: 80,
+      end: 100,
+    });
+    expect(dragSpan({ anchor: 80 }, 70, RANGE)).toStrictEqual({
+      start: 70,
+      end: 80,
+    });
+  });
+
+  it("paints the fill between the ends after a crossing", () => {
+    const crossed = dragSpan({ anchor: 80 }, 95, RANGE);
+    const from = valueFraction(crossed.start, RANGE);
+    const to = valueFraction(crossed.end, RANGE);
+    expect(from).toBeCloseTo(0.8, 6);
+    expect(to).toBeCloseTo(0.95, 6);
+    expect(to - from).toBeCloseTo(0.15, 6);
   });
 
   it("opens a coincident pair around the press, in either direction", () => {
-    expect(
-      dragSpan({ end: "start", point: 50 }, { start: 50, end: 50 }, 70, RANGE),
-    ).toStrictEqual({ start: 50, end: 70 });
-    expect(
-      dragSpan({ end: "start", point: 50 }, { start: 50, end: 50 }, 20, RANGE),
-    ).toStrictEqual({ start: 20, end: 50 });
-  });
-
-  it("holds a press that does not move", () => {
-    expect(
-      dragSpan({ end: "start", point: 50 }, { start: 50, end: 50 }, 50, RANGE),
-    ).toStrictEqual({ start: 50, end: 50 });
+    expect(dragSpan({ anchor: 50 }, 70, RANGE)).toStrictEqual({
+      start: 50,
+      end: 70,
+    });
+    expect(dragSpan({ anchor: 50 }, 20, RANGE)).toStrictEqual({
+      start: 20,
+      end: 50,
+    });
+    expect(dragSpan({ anchor: 50 }, 50, RANGE)).toStrictEqual({
+      start: 50,
+      end: 50,
+    });
   });
 });
 
@@ -63,7 +89,9 @@ describe("the slider drawings", () => {
     }
   });
 
-  it("a range press asks which end it grabbed", () => {
-    expect(read("range-slider-demo.tsx")).toContain("nearestEnd");
+  it("a range press anchors the other end rather than the grabbed one", () => {
+    const source = read("range-slider-demo.tsx");
+    expect(source).toContain("nearestEnd");
+    expect(source).toContain("anchor");
   });
 });

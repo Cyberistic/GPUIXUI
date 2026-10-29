@@ -1,37 +1,29 @@
 /**
  * The browser glue between a range drag and the slider's own arithmetic.
  *
- * A press on two coincident thumbs cannot say which end it grabbed — every
- * direction is a tie — so the pair opens around the press instead of dragging a
- * thumb that has nowhere to go. Once the ends differ, the grab is ordinary: the
- * end the reader pressed follows the pointer and the other stays pinned. That
- * rule is `spanFrom`'s and `moveSpanEnd`'s in the primitive; this module only
- * decides which one the gesture is.
+ * A drag holds the end it is **not** moving: the press names the nearer end to
+ * the pointer, and the other end's value is the anchor. Every move draws the
+ * span around that anchor with `spanFrom`, so the ends are ordered by
+ * construction. That is also what makes a crossing continuous: the dragged end
+ * passes the anchor, `spanFrom` puts it on the far side, and the thumb the
+ * pointer is now dragging is the other one — no clamp, no collapsed pair and no
+ * stale press point to jump back to.
  */
 
 import {
-  moveSpanEnd,
-  normalizeSpan,
   spanFrom,
   type ValueRange,
   type ValueSpan,
 } from "@gpuixui/primitives/core";
 
-/** The end a press grabbed, and the value it landed on. */
+/** The end a press pinned: the one the pointer is not moving. */
 export interface SpanDrag {
-  readonly end: "start" | "end";
-  readonly point: number;
+  readonly anchor: number;
 }
 
 /** The span a pointer at `value` draws from a grabbed pair. */
 export const dragSpan = (
   drag: SpanDrag,
-  span: ValueSpan,
   value: number,
   range: ValueRange,
-): ValueSpan => {
-  const current = normalizeSpan(span, range);
-  return current.start === current.end
-    ? spanFrom(drag.point, value, range)
-    : moveSpanEnd(current, drag.end, value, range);
-};
+): ValueSpan => spanFrom(drag.anchor, value, range);

@@ -11803,6 +11803,8 @@ button.gx-rating-star:focus-visible {
 
 /* ---- theme toggler: an icon control flipping between light and dark. ---- */
 .gx-themetoggler {
+  /* `motionLevels.slow`: the flip's default level in the component. */
+  --gx-theme-flip: 320ms;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -11820,8 +11822,6 @@ button.gx-rating-star:focus-visible {
   background: transparent;
   color: var(--foreground);
   font: inherit;
-  font-size: 15px;
-  line-height: 1;
   cursor: pointer;
   transition: background-color 0.15s;
 }
@@ -11830,15 +11830,72 @@ button.gx-rating-star:focus-visible {
   background: var(--hover);
 }
 
+/* One fixed glyph box with both shapes stacked: the control cannot reflow. */
 .gx-themetoggler-glyph {
-  display: inline-block;
-  animation: gx-rotating-in 200ms ease-out both;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+
+.gx-themetoggler-sun,
+.gx-themetoggler-moon {
+  grid-area: 1 / 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition:
+    width var(--gx-theme-flip) ease,
+    height var(--gx-theme-flip) ease,
+    opacity var(--gx-theme-flip) ease;
+}
+
+.gx-themetoggler-sun > svg,
+.gx-themetoggler-moon > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The glyph that leaves shrinks at once; the one arriving grows 15% later. */
+.gx-themetoggler-btn[data-mode="dark"] .gx-themetoggler-sun {
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  transition-delay: calc(var(--gx-theme-flip) * 0.15);
+}
+
+.gx-themetoggler-btn[data-mode="dark"] .gx-themetoggler-moon,
+.gx-themetoggler-btn[data-mode="light"] .gx-themetoggler-sun {
+  width: 55%;
+  height: 55%;
+  opacity: 0;
+  transition-delay: 0ms;
+}
+
+.gx-themetoggler-btn[data-mode="light"] .gx-themetoggler-moon {
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  transition-delay: calc(var(--gx-theme-flip) * 0.15);
 }
 
 .gx-themetoggler-readout {
+  display: grid;
   margin: 0;
   color: var(--muted-foreground);
   font-size: 12px;
+}
+
+/* Both labels share one cell, so the wider one reserves the width. */
+.gx-themetoggler-readout > * {
+  grid-area: 1 / 1;
+}
+
+.gx-themetoggler-reserve {
+  visibility: hidden;
 }
 
 /* ---- auto height: content growing into its measured height. ---- */
@@ -12410,11 +12467,17 @@ button.gx-rating-star:focus-visible {
   .gx-slidingnumber-value,
   .gx-ripple-wash,
   .gx-shine-sheen,
-  .gx-themetoggler-glyph,
+  .gx-themetoggler-sun,
+  .gx-themetoggler-moon,
   .gx-autoheight-content,
   .gx-pagetransition-view,
   .gx-reveal-content {
     animation: none;
+  }
+
+  .gx-themetoggler-sun,
+  .gx-themetoggler-moon {
+    transition: none;
   }
 }
 

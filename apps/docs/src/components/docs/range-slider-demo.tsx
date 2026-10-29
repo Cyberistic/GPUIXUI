@@ -3,8 +3,9 @@
  *
  * A range is two ends of one interval on a single track, and the drawing drags
  * them with the primitive's **own** arithmetic: a press aims at a value with
- * `pointerValue`, `nearestEnd` says which thumb it grabbed, and `dragSpan` keeps
- * the ends from crossing — including the coincident pair a price filter opens
+ * `pointerValue`, `nearestEnd` says which thumb it grabbed, and `dragSpan`
+ * anchors the other end so a drag that crosses keeps following the pointer on
+ * the thumb it now holds — including the coincident pair a price filter opens
  * with. Each thumb steps with `decideValueKey` and `moveSpanEnd`, so the
  * keyboard moves one end and never the pair.
  *
@@ -51,8 +52,14 @@ const RangeSlider = ({
 
   const grab = (clientX: number, element: HTMLElement) => {
     const value = aim(clientX, element);
-    drag.current = { end: nearestEnd(value, span), point: value };
-    onChange?.(dragSpan(drag.current, span, value, RANGE));
+    const end = nearestEnd(value, span);
+    drag.current = {
+      anchor:
+        span.start === span.end
+          ? span.start
+          : span[end === "start" ? "end" : "start"],
+    };
+    onChange?.(dragSpan(drag.current, value, RANGE));
   };
 
   const key = (end: "start" | "end") => (event: ReactKeyboardEvent) => {
@@ -77,12 +84,7 @@ const RangeSlider = ({
         const current = drag.current;
         if (current === null) return;
         onChange?.(
-          dragSpan(
-            current,
-            span,
-            aim(event.clientX, event.currentTarget),
-            RANGE,
-          ),
+          dragSpan(current, aim(event.clientX, event.currentTarget), RANGE),
         );
       }}
       onPointerUp={(event) => {

@@ -28,9 +28,11 @@ const theme = useTheme();
 | `label` | `string` | none | accessible name; a non-blank label promotes the icon to an image |
 | `testId` | `string` | — | stable locator |
 | `rotation` | `number` | `0` | clockwise degrees about the 24x24 centre, written into the markup; `NaN` reads as no turn |
+| `motion` | `MotionProps` | none | a tween for the icon's own box: `width`/`height` size the path and `left`/`top` keep it centred, because the runtime has no `transform` |
+| `style` | `StyleDesc` | none | extra style merged over the icon's own, last |
 
 ## Limitations
 
 - Monochrome only: no two-tone, duotone or brand marks.
-- No spin animation: `rotation` is a static turn, because an animated one would need a frame-driven re-render. Use `Spinner` for a moving mark.
+- No spin animation: `rotation` is a static turn, because an animated one would need a frame-driven re-render. Use `Spinner` for a moving mark. A `motion` tween moves and resizes the box; it does not rotate the path — write the turn into `rotation` and animate around it.
 - No icon font and no ligatures.

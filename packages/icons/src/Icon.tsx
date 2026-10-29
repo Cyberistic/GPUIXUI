@@ -1,6 +1,6 @@
 /** @jsxImportSource @gpuix/react */
 import type { ReactElement } from "react";
-import type { SvgProps } from "@gpuix/react";
+import type { MotionProps, StyleDesc, SvgProps } from "@gpuix/react";
 import { rotatedIconMarkup } from "./registry.js";
 import type { IconName } from "./names.js";
 import { iconPixels, type IconSize } from "./sizes.js";
@@ -36,6 +36,17 @@ export interface IconProps {
    * resvg resolves it. `90`, `180` and `270` are exact; any finite angle works.
    */
   readonly rotation?: number;
+  /**
+   * A tween for the icon's own box.
+   *
+   * GPUix has no `transform`, so a glyph that grows or turns inside a control
+   * animates its **geometry**: `width`/`height` are the size the path scales
+   * from and `left`/`top` the inset that keeps it centred. The resting
+   * `width`/`height` in `style` stay the frame a reduced run lands on.
+   */
+  readonly motion?: MotionProps;
+  /** Extra style, merged over the icon's own, last. */
+  readonly style?: StyleDesc;
 }
 
 /**
@@ -65,6 +76,8 @@ export const Icon = ({
   label,
   testId,
   rotation = 0,
+  motion,
+  style: extra,
 }: IconProps): ReactElement<SvgProps> => {
   const pixels = iconPixels(size);
   const named = iconLabel(label);
@@ -75,6 +88,7 @@ export const Icon = ({
     color,
     // An icon inside a control must not steal the press from it.
     pointerEvents: "none",
+    ...extra,
   };
   return (
     <svg
@@ -82,6 +96,7 @@ export const Icon = ({
       role={named === undefined ? "presentation" : "img"}
       aria-label={named}
       testId={testId}
+      motion={motion}
       style={style}
     />
   );

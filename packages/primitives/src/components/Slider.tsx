@@ -813,16 +813,18 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
   );
   const trackId = useRef<number | null>(null);
   const thumbIds = useRef<Map<0 | 1, number>>(new Map());
-  const activeEnd = useRef<"start" | "end">("start");
   /**
-   * Where a press landed on a coincident pair, so the drag spans around it.
+   * The value the end being dragged must not move: the other end, held still.
    *
-   * Both ends on one value is one point, and a press there cannot say which
-   * thumb it grabbed; `spanFrom` reads the gesture as a span around that point
-   * instead, so the pair can be pulled either way. A press on two separate
-   * ends leaves this empty and the ordinary "move the end I grabbed" applies.
+   * A drag is the moving value drawn around this anchor with `spanFrom`, which
+   * keeps the ends ordered and lets them swap roles when the pointer crosses —
+   * the dragged thumb continues on the far side instead of stopping on the
+   * other. A press on a coincident pair anchors the pair's own point, so it can
+   * be pulled apart in either direction.
    */
-  const grabPoint = useRef<Option.Option<number>>(Option.none());
+  const anchor = useRef<Option.Option<number>>(Option.none());
+  /** The thumb the pointer held last, so a crossing moves focus once. */
+  const followedEnd = useRef<"start" | "end">("start");
   const dragging = useRef(false);
   const [focusedIndex, setFocusedIndex] = useState<Option.Option<0 | 1>>(
     Option.none(),
@@ -857,22 +859,10 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     });
     gesture.current = Option.none();
   };
-  const change = (
-    span: ValueSpan,
-    end: "start" | "end",
-    value: number,
-  ): void => {
+  const change = (next: ValueSpan): void => {
     // A tuple is rebuilt on every interaction, so `Object.is` cannot see an
     // unchanged span: an arrow at a bound or a press on a thumb reported the
     // value the control already held. Report only a real move.
-    const next = moveSpanEnd(span, end, value, range);
-    if (next.start !== span.start || next.end !== span.end) {
-      gesture.current = Option.some(spanTuple(next));
-      state.set(spanTuple(next));
-    }
-  };
-  /** Report a span the pointer drew, when it differs from the one painted. */
-  const commitSpan = (next: ValueSpan): void => {
     const span = spanOf(state.value.current, range);
     if (next.start !== span.start || next.end !== span.end) {
       gesture.current = Option.some(spanTuple(next));
@@ -920,13 +910,14 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
             onNone: () => {},
             onSome: (value) => {
               const end = nearestEnd(value, span);
-              activeEnd.current = end;
-              grabPoint.current =
+              const held =
                 span.start === span.end
-                  ? Option.some(span.start)
-                  : Option.none();
+                  ? span.start
+                  : span[end === "start" ? "end" : "start"];
+              anchor.current = Option.some(held);
+              followedEnd.current = end;
               dragging.current = true;
-              change(span, end, value);
+              change(spanFrom(held, value, range));
               focusThumb(end === "start" ? 0 : 1);
             },
           },
@@ -936,7 +927,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
         if (props.disabled === true || !dragging.current) return;
         if (event.pressedButton !== 0) {
           dragging.current = false;
-          grabPoint.current = Option.none();
+          anchor.current = Option.none();
           endGesture();
           return;
         }
@@ -952,34 +943,27 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
           {
             onNone: () => {},
             onSome: (value) =>
-              Option.match(grabPoint.current, {
-                // The gesture began on one point: span around it, so the pair
-                // can be pulled apart in either direction. The end it draws is
-                // the one that holds focus afterwards, so a reader who switches
-                // to the keyboard continues from the thumb they just moved.
-                onSome: (point) => {
+              Option.match(anchor.current, {
+                onNone: () => {},
+                onSome: (held) => {
+                  change(spanFrom(held, value, range));
+                  // The thumb under the pointer is the far side of the anchor
+                  // once the drag has crossed it, so focus moves with the hand
+                  // and the keyboard continues from the thumb that was dragged.
                   const target = clampValue(value, range);
-                  const end =
-                    target > point ? "end" : target < point ? "start" : null;
-                  commitSpan(spanFrom(point, target, range));
-                  if (end !== null && end !== activeEnd.current) {
-                    activeEnd.current = end;
-                    focusThumb(end === "start" ? 0 : 1);
-                  }
+                  if (target === held) return;
+                  const end = target < held ? "start" : "end";
+                  if (end === followedEnd.current) return;
+                  followedEnd.current = end;
+                  focusThumb(end === "start" ? 0 : 1);
                 },
-                onNone: () =>
-                  change(
-                    spanOf(state.value.current, range),
-                    activeEnd.current,
-                    value,
-                  ),
               }),
           },
         );
       },
       onPointerUp: () => {
         dragging.current = false;
-        grabPoint.current = Option.none();
+        anchor.current = Option.none();
         endGesture();
       },
     },
