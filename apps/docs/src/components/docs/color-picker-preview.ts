@@ -241,3 +241,51 @@ export const chosenRole = (
 /** The readout the workflow prints under the picker. */
 export const describe = (value: string, draft: string): string =>
   `value=${value} draft=${draft} ${parseHex(draft) === undefined ? "invalid" : "valid"}`;
+
+/**
+ * A pointer's position on a rail, as the fraction it sits at.
+ *
+ * The rule is the component's: a pointer's distance from the box's left edge
+ * over the box's width, clamped to the ends. The component reads the same
+ * numbers from the renderer's bounds, so a drag here and a drag there pick the
+ * same colour.
+ */
+export const railFraction = (
+  pointer: number,
+  box: { readonly left: number; readonly width: number },
+): number => (box.width <= 0 ? 0 : clamp((pointer - box.left) / box.width));
+
+/**
+ * A pointer's position on the area, as the saturation and brightness it names.
+ *
+ * The brightness runs the other way: the area's top is full brightness and its
+ * floor is none, so the fraction is measured from the bottom.
+ */
+export const areaFractions = (
+  pointer: { readonly clientX: number; readonly clientY: number },
+  box: {
+    readonly left: number;
+    readonly top: number;
+    readonly width: number;
+    readonly height: number;
+  },
+): { readonly saturation: number; readonly brightness: number } => ({
+  saturation:
+    box.width <= 0 ? 0 : clamp((pointer.clientX - box.left) / box.width),
+  brightness:
+    box.height <= 0 ? 0 : clamp(1 - (pointer.clientY - box.top) / box.height),
+});
+
+/**
+ * The hue a rail's fraction names.
+ *
+ * The rail is a closed circle of 360°, so its right end is the first hue
+ * again. A fraction short of the end names the last degree the rail paints —
+ * 359° — and only the end itself closes the circle, so a rounding that
+ * overshoots 360° is the end and not a degree beyond it.
+ */
+export const hueAt = (fraction: number): number => {
+  const clamped = clamp(fraction);
+  if (clamped >= 1) return 0;
+  return Math.min(359, Math.round(clamped * 360));
+};

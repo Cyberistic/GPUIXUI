@@ -988,7 +988,9 @@
   .gx-drawer[data-open="false"],
   .gx-drawer[data-open="false"][data-side="left"],
   .gx-drawer[data-open="false"][data-side="bottom"],
-  .gx-drawer[data-open="false"][data-side="top"] {
+  .gx-drawer[data-open="false"][data-side="top"],
+  .gx-cp-panel,
+  .gx-cp-panel[data-open="false"] {
     animation: none;
   }
 
@@ -7543,6 +7545,33 @@
   border-radius: var(--radius-lg);
   background: var(--popover);
   color: var(--popover-foreground);
+  /* The panel leaves the way it came: it grows out of the trigger pill and
+     shrinks back into it, over the library's `slow` level. The origin is the
+     trigger's own left edge, so the surface travels toward the pill rather
+     than toward the panel's centre. */
+  transform-origin: 0 0;
+  animation: gx-cp-panel-in var(--gx-overlay-ms) ease-out;
+}
+
+.gx-cp-panel[data-open="false"] {
+  animation-name: gx-cp-panel-out;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+  pointer-events: none;
+}
+
+@keyframes gx-cp-panel-in {
+  from {
+    opacity: 0;
+    scale: 0.94;
+  }
+}
+
+@keyframes gx-cp-panel-out {
+  to {
+    opacity: 0;
+    scale: 0.94;
+  }
 }
 
 .gx-cp-panel[data-disabled] {

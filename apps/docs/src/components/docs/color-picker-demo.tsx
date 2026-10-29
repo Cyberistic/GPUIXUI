@@ -14,9 +14,17 @@
  */
 
 import type { Theme } from "@gpuixui/tokens";
-import { useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 import {
   alphaRamp,
+  areaFractions,
   areaLayers,
   brandSwatches,
   chosenRole,
@@ -26,9 +34,11 @@ import {
   defaultSwatches,
   describe,
   grade,
+  hueAt,
   hueSegment,
   opaqueHex,
   parseHex,
+  railFraction,
   sameColour,
   toHex,
   type Hsva,
@@ -41,7 +51,70 @@ const PANEL_WIDTH = 304;
 const AREA_HEIGHT = 148;
 const THUMB = 20;
 
+/**
+ * How long the panel's exit runs, in milliseconds.
+ *
+ * The style sheet's `--gx-overlay-ms` is the same number: the timer here is the
+ * fallback for a run the browser never reports (a tab in the background), and
+ * it must not cut the tween short.
+ */
+const PANEL_EXIT_MS = 320;
+
 const percent = (fraction: number): string => `${fraction * 100}%`;
+
+/**
+ * A drag on one of the picker's rails.
+ *
+ * The rail captures the pointer on the press, so a drag that leaves the rail
+ * keeps reporting to it — clamped to the ends — until the release. That is the
+ * rule the runtime's own slider follows: a control that only hears the press
+ * is a control whose knob cannot be dragged.
+ *
+ * `read` is handed the element's own box, so the rule that turns a pointer
+ * into a value is the caller's and stays in one place.
+ */
+const useRailDrag = <T,>(
+  read: (
+    box: DOMRect,
+    pointer: { readonly clientX: number; readonly clientY: number },
+  ) => T,
+  onValue: (value: T) => void,
+) => {
+  const dragging = useRef(false);
+
+  const handle = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      const element = event.currentTarget;
+      if (event.buttons !== 0 && dragging.current) {
+        // The button was released outside the window: the gesture is over.
+        dragging.current = false;
+        element.releasePointerCapture?.(event.pointerId);
+        return;
+      }
+      if (!dragging.current) return;
+      onValue(read(element.getBoundingClientRect(), event));
+    },
+    [onValue, read],
+  );
+
+  const onPointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      if (event.button !== 0) return;
+      dragging.current = true;
+      // The capture is what carries the gesture past the rail's own box.
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+      onValue(read(event.currentTarget.getBoundingClientRect(), event));
+    },
+    [onValue, read],
+  );
+
+  const onPointerUp = useCallback((event: ReactPointerEvent<HTMLElement>) => {
+    dragging.current = false;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+  }, []);
+
+  return { onPointerDown, onPointerMove: handle, onPointerUp };
+};
 
 const rgbCss = ({
   r,
@@ -62,6 +135,10 @@ interface PanelProps {
   readonly background: string;
   readonly swatches: ReadonlyArray<Swatch>;
   readonly disabled?: boolean;
+  /** Whether the panel is open; a closing panel paints its exit. */
+  readonly open?: boolean;
+  /** Called when the exit run ends, so the panel can leave the tree. */
+  readonly onAnimationEnd?: () => void;
   readonly onDraft?: (draft: string) => void;
   readonly onCommit?: () => void;
   readonly onHue?: (hue: number) => void;
@@ -93,6 +170,8 @@ const Panel = ({
   background,
   swatches,
   disabled = false,
+  open = true,
+  onAnimationEnd,
   onDraft,
   onCommit,
   onHue,
@@ -108,11 +187,41 @@ const Panel = ({
   const ratio = contrast(hsva, background);
   const value = grade(ratio ?? 1);
 
+  const readArea = useCallback(
+    (
+      box: DOMRect,
+      pointer: { readonly clientX: number; readonly clientY: number },
+    ) => areaFractions(pointer, box),
+    [],
+  );
+  const areaDrag = useRailDrag(readArea, (point) => {
+    if (disabled || onArea === undefined) return;
+    onArea(point.saturation, point.brightness);
+  });
+
+  const readRail = useCallback(
+    (
+      box: DOMRect,
+      pointer: { readonly clientX: number; readonly clientY: number },
+    ) => railFraction(pointer.clientX, box),
+    [],
+  );
+  const hueDrag = useRailDrag(readRail, (fraction) => {
+    if (disabled || onHue === undefined) return;
+    onHue(hueAt(fraction));
+  });
+  const alphaDrag = useRailDrag(readRail, (fraction) => {
+    if (disabled || onAlpha === undefined) return;
+    onAlpha(fraction);
+  });
+
   return (
     <div
       aria-label={`${label} colour`}
       className="gx-cp-panel"
       data-disabled={disabled ? "" : undefined}
+      data-open={open ? "true" : "false"}
+      onAnimationEnd={onAnimationEnd}
       role="dialog"
       style={{ width: `min(${PANEL_WIDTH}px, 100vw - 32px)` }}
     >
@@ -135,15 +244,9 @@ const Panel = ({
         aria-label={`${label} saturation and brightness`}
         aria-valuetext={`Saturation ${Math.round(hsva.s * 100)}%, brightness ${Math.round(hsva.v * 100)}%`}
         className="gx-cp-area"
-        onPointerDown={(event) => {
-          if (disabled || onArea === undefined) return;
-          const box = event.currentTarget.getBoundingClientRect();
-          onArea(
-            Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)),
-            1 -
-              Math.min(1, Math.max(0, (event.clientY - box.top) / box.height)),
-          );
-        }}
+        onPointerDown={areaDrag.onPointerDown}
+        onPointerMove={areaDrag.onPointerMove}
+        onPointerUp={areaDrag.onPointerUp}
         role="slider"
         style={{
           height: AREA_HEIGHT,
@@ -177,18 +280,9 @@ const Panel = ({
           aria-label={`${label} hue`}
           aria-valuetext={`${Math.round(hsva.h)} degrees`}
           className="gx-cp-track"
-          onPointerDown={(event) => {
-            if (disabled || onHue === undefined) return;
-            const box = event.currentTarget.getBoundingClientRect();
-            onHue(
-              Math.round(
-                Math.min(
-                  1,
-                  Math.max(0, (event.clientX - box.left) / box.width),
-                ) * 360,
-              ) % 360,
-            );
-          }}
+          onPointerDown={hueDrag.onPointerDown}
+          onPointerMove={hueDrag.onPointerMove}
+          onPointerUp={hueDrag.onPointerUp}
           role="slider"
           tabIndex={disabled ? -1 : 0}
         >
@@ -214,13 +308,9 @@ const Panel = ({
           aria-label={`${label} opacity`}
           aria-valuetext={`${Math.round(hsva.a * 100)}%`}
           className="gx-cp-track"
-          onPointerDown={(event) => {
-            if (disabled || onAlpha === undefined) return;
-            const box = event.currentTarget.getBoundingClientRect();
-            onAlpha(
-              Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)),
-            );
-          }}
+          onPointerDown={alphaDrag.onPointerDown}
+          onPointerMove={alphaDrag.onPointerMove}
+          onPointerUp={alphaDrag.onPointerUp}
           role="slider"
           tabIndex={disabled ? -1 : 0}
         >
@@ -336,6 +426,40 @@ const Trigger = ({
   </button>
 );
 
+/**
+ * A panel that leaves the way it came.
+ *
+ * The panel is not unmounted when it closes: it stays in the tree with
+ * `data-open="false"` and the style sheet runs the exit over it, so the surface
+ * travels back into the trigger pill instead of being cut. It is unmounted once
+ * the run ends.
+ *
+ * The reduced-motion case is the one that needs no timer: the run is switched
+ * off, so the panel is removed at once — which is what `animationend` would
+ * report had it fired.
+ */
+const usePanelPresence = (open: boolean) => {
+  const [mounted, setMounted] = useState(open);
+  const reduced = useRef(false);
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      return;
+    }
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    reduced.current = query.matches;
+    if (query.matches) {
+      setMounted(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setMounted(false), PANEL_EXIT_MS);
+    return () => window.clearTimeout(timer);
+  }, [open]);
+
+  return { mounted, onAnimationEnd: () => setMounted(false), reduced };
+};
+
 /** A deploy-style workflow: the app owns the value, the picker reports it. */
 export function ColorPickerWorkflowBody({ theme }: { readonly theme: Theme }) {
   const swatches = defaultSwatches(theme);
@@ -350,6 +474,7 @@ export function ColorPickerWorkflowBody({ theme }: { readonly theme: Theme }) {
   const [draft, setDraft] = useState<string>(toHex(start));
   const [invalid, setInvalid] = useState(false);
   const [open, setOpen] = useState(true);
+  const panel = usePanelPresence(open);
   const chosen = chosenRole(swatches, value);
 
   const apply = (next: Hsva): void => {
@@ -378,13 +503,15 @@ export function ColorPickerWorkflowBody({ theme }: { readonly theme: Theme }) {
           open={open}
           onToggle={() => setOpen((current) => !current)}
         />
-        {open ? (
+        {panel.mounted ? (
           <Panel
             background={theme.colors.background}
             draft={draft}
             hsva={hsva}
             invalid={invalid}
             label="Accent colour"
+            open={open}
+            onAnimationEnd={panel.onAnimationEnd}
             onAlpha={(alpha) => apply({ ...hsva, a: alpha })}
             onArea={(saturation, brightness) =>
               apply({ ...hsva, s: saturation, v: brightness })
