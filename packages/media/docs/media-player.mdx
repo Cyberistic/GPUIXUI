@@ -1,6 +1,6 @@
 ---
 title: MediaPlayer
-description: A clip's frames and a transport — an app-owned clock, a progress track and a seek pad — composed from the runtime's image and text hosts because it has no playback element
+description: A clip's poster and Mux's chrome — a centred play control, a fading transport bar with a played/buffered timeline, the clock, volume, rate, settings and fullscreen — composed from the runtime's image host because it has no playback element
 ---
 
 <ComponentPreview name="media-player-demo" />
@@ -16,15 +16,14 @@ const frameAt = (playhead: number): Option.Option<MediaFrame> =>
   Option.some(frames[Math.floor(playhead / 1000)] ?? firstFrame);
 
 <MediaPlayer
-  duration={4000}
+  duration={24_000}
   frameAt={frameAt}
   alt="A clip's frame"
   label="Generated clip"
-  width={240}
-  height={135}
-  trackWidth={240}
-  peaks={waveformSamples}
-  seekStep={500}
+  width={640}
+  height={360}
+  buffered={18_000}
+  qualities={["Auto", "1080p", "720p"]}
   onPlayheadChange={(playhead) => savePosition(playhead)}
 />;
 ```
@@ -37,22 +36,34 @@ const frameAt = (playhead: number): Option.Option<MediaFrame> =>
 | `frameAt` | `(playhead) => Option<MediaFrame>` (a value that is not a function reads as no source) | — (no picture) |
 | `alt` | `string` | required (a blank name reads as the player's own) |
 | `label` | `string` | `"Media player"` (a blank name reads as the default) |
-| `width` | `number` | `240` |
-| `height` | `number` | `135` |
-| `trackWidth` | `number` | `200` |
-| `peaks` | `ReadonlyArray<number>` (`0…1`) | — (no waveform) |
+| `width` | `number` | `640` |
+| `height` | `number` | `360` |
+| `buffered` | `number` (milliseconds) | the whole clip |
 | `defaultPlayhead` | `number` | `0` |
 | `onPlayheadChange` | `(playhead: number) => void` | — |
 | `defaultPlaying` | `boolean` | `false` |
 | `onPlayingChange` | `(playing: boolean) => void` | — |
+| `defaultVolume` | `number` (`0…1`) | `1` |
+| `onVolumeChange` | `(volume: number) => void` | — |
+| `defaultMuted` | `boolean` | `false` |
+| `onMutedChange` | `(muted: boolean) => void` | — |
+| `rates` | `ReadonlyArray<number>` | `[0.5, 1, 1.5, 2]` |
+| `defaultRate` | `number` | `1` |
+| `onRateChange` | `(rate: number) => void` | — |
+| `qualities` | `ReadonlyArray<string>` | `[]` (the settings menu offers speed only) |
+| `defaultQuality` | `string` | the first quality |
+| `onQualityChange` | `(quality: string) => void` | — |
 | `tickMs` | `number` | `100` |
 | `seekStep` | `number` | `1000` |
+| `largeSeekStep` | `number` | `10000` |
+| `idleMs` | `number` | `3000` |
+| `onFullscreenChange` | `(fullscreen: boolean) => void` | — |
 | `playLabel` | `string` | `"Play"` (a blank label reads as the default) |
 | `pauseLabel` | `string` | `"Pause"` (a blank label reads as the default) |
 | `disabled` | `boolean` | `false` |
 | `className` | `string` | — |
 | `style` | `StyleDesc` | — |
-| `testId` | `string` | — |
+| `testId` | `string` | `"media-player"` |
 
 A `MediaFrame` is `{ width, height, pixels }`, where `pixels` are straight RGBA
 bytes (`width * height * 4`). The player pushes them with
@@ -62,80 +73,80 @@ paints no new picture rather than a broken one.
 
 ## Keyboard
 
-The seek pad is a focusable `role="slider"` named `<label> position` and
-announces the clock through `aria-valuetext`:
+The player is a focusable group, so its keys work while it, its timeline or any
+control inside it holds the focus:
 
 | Key | What it does |
 | --- | ------------ |
-| `Home` | seek to the clip's start |
-| `End` | seek to the clip's end (and stop a running clip) |
-| `Left` | seek back by `seekStep` |
-| `Right` | seek forward by `seekStep` |
+| `Space` / `K` | play or pause |
+| `Left` / `Right` | seek back or forward by `seekStep` |
+| `Shift` + `Left` / `Right` | seek back or forward by `largeSeekStep` |
+| `J` / `L` | seek back or forward by `largeSeekStep` |
+| `Up` / `Down` | raise or lower the volume by five points |
+| `Home` / `End` | seek to the clip's start or end (and stop a running clip) |
+| `M` | mute or unmute |
+| `F` | ask the window for fullscreen |
 
-The play/pause action is the shipped `Button`, so it activates on click, Enter
-and Space and leaves the tab order while disabled.
+Every control is a shipped `Button`/`IconButton` with its own name, so Enter and
+Space activate the focused control as they do elsewhere in the library.
 
 ## Pointer
 
-The progress track is also a seek control: a press on it seeks to the share of
-the clip the pointer names, and a drag while the primary button is held scrubs.
-The painted rail is 6 points tall inside a **24-point** target
-(`targetSize.minimum`, the same floor a checkbox's target keeps), and the rail
-itself is pointer-transparent so a press anywhere in that band reaches the
-track. A press outside the band's ends clamps to 0:00 or the clip's end; a
-secondary press begins no scrub (it is a context-menu gesture); and a move that
-holds no button ends the gesture, so a release outside the track cannot leave it
-armed for the next hover. The player reads the track's box from the renderer at
-press time — the route the shipped `Slider` uses — so a resize is picked up
-without a second measurement.
+The timeline is a seek control: a press seeks to the share of the clip the
+pointer names, and a drag while the primary button is held scrubs. The painted
+rail is 4 points tall with a 12-point thumb, and the hit target is the
+**24-point** band around it (`targetSize.minimum`); the rail is
+pointer-transparent inside that band. The player reads the band's box from the
+renderer at press time — the route the shipped `Slider` uses — so a resize is
+picked up without a second measurement. A press outside the band's ends clamps
+to 0:00 or the clip's end, a secondary press begins no scrub, and a move that
+holds no button ends the gesture.
+
+The bar fades out after `idleMs` without a pointer move, key or focus, and any
+of those brings it back. A popup keeps it painted while it is open.
 
 ## Limitations
 
-- **Measured in a window**: `media-player-lifecycle` (63 checks, 0.11.0) mounts
-  the shipped player on a four-second clip and reads the frame the playhead
-  names (240×135), a 200×32 waveform silhouette in the palette's
-  `mutedForeground` with page-coloured first and last rows, the `0:00 / 0:04`
-  clock, the fill at the package's own `progressWidth`, `End`/`Home` and three
-  `Right`s seeking to `0:03` with the picture repainted to that second's frame,
-  a **press three quarters along the 24-point band** seeking to `0:03` at fill
-  **150** and a **drag to its trailing edge** reaching `0:04` at **200** with the
-  release ending the gesture (a hover afterwards reports nothing), and
-  `disabled` refusing the transport and the track while the picture keeps
-  painting.
-- **No audio, and no decoding.** The runtime declares no `video` or `audio`
-  element and no playback verb, so the caller supplies each frame's bytes. This
-  player is the picture and the transport; a clip's frames must arrive from the
-  app.
-- **A pointer scrub is a press and a drag, not a click on a rail.** The track
-  seeks to the share a press names and follows a drag while the primary button
-  is held; the rail itself is pointer-transparent inside its 24-point target. A
-  release delivered outside the target ends the scrub, so the next hover moves
-  nothing. A caller that wants a finer pointer target can set `trackWidth`.
-- **The pad announces through `aria-valuetext`**: `@gpuix/native@0.11.0` has no
-  `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so the clock is the value a
-  reader hears (the same rule the shipped sliders follow).
-- **The waveform is decorative.** `peaks` draws one tinted `<svg>` silhouette
-  (the runtime's single-mask route); it is not a second seek surface.
-- **The clock is the player's.** `defaultPlayhead` and `defaultPlaying` are
-  starting points and the two callbacks report every change; the component owns
-  the interval, so a caller does not drive the playhead frame by frame.
-- **A disabled player stops.** Its clock is not a background job, and its pad
-  leaves the tab order while the picture and waveform keep painting.
+- **No audio, no decoding, no `<video>`.** The runtime declares no `video` or
+  `audio` element and no playback verb, so the caller supplies each frame's
+  bytes and the app owns the clock. This player is the poster and the transport;
+  a clip's frames must arrive from the app, and the volume, rate and quality it
+  reports are the app's settings to apply. The paint route is
+  `media-frame-lifecycle`'s; the shipped wrapper is measured in a window by
+  `media-player-lifecycle` (49 checks, 0.11.0) at 512×288, which reads the
+  `0:00 / 0:04` clock, a 496×4 timeline with the buffered share at 248, the
+  fill, the seek keys, a press and a drag on the track, the rate menu, the
+  faded bar and a disabled player.
+- **Fullscreen is the window's.** `F` and the fullscreen control call the
+  renderer's `toggleFullscreen`; the player reports the state it asked for, and
+  the OS may refuse it. There is no element-level fullscreen on this runtime.
+- **The buffered range is the app's answer.** `buffered` is a caller-supplied
+  span, because nothing decodes here; the default is the whole clip, the range a
+  caller that can answer every frame has in hand. A range behind the playhead
+  paints as far as the played fill.
+- **A quality is a label the app supplies.** `qualities` is empty by default and
+  the settings menu then offers only the playback speed; a chosen quality is
+  reported to the app, which owns the rendition.
+- **The rate scales the app-owned clock.** `onRateChange` reports the choice and
+  the interval advances the playhead by `tickMs × rate`, so the readout and the
+  picture agree; there is no decoder whose speed could differ.
+- **A disabled player stops.** Its clock is not a background job, and its
+  controls leave the tab order while the poster keeps painting.
 - **A finished clip restarts on Play.** Pressing Play at the clip's end starts
   from zero, the way a player's own button does.
 - **Values that cannot be laid out read as defaults**: a stored `duration` that
-  is not positive is a zero-length clip, and a stored `tickMs`, `seekStep`,
-  `width`, `height` or `trackWidth` that is not positive reads as its default.
+  is not positive is a zero-length clip, a stored `rate` that is not positive is
+  `1×`, a stored volume outside `0…1` is clamped, and a stored `tickMs`,
+  `seekStep`, `largeSeekStep`, `idleMs`, `width` or `height` that is not
+  positive reads as its default.
 - **A frame source that is not a function is no source.** A player restored with
   a workspace carries `null` for a field its record never held, so only a
-  function is a frame source: the audio-style player paints instead of the
+  function is a frame source: the poster-less player paints instead of the
   layout effect throwing `frameAt is not a function` (`frameAtOf`).
 - **A decoded frame is read structurally.** `frameAt`'s answer is a decoder's
   output, so a frame that arrived without its bytes, with a partial buffer or
   with a box that cannot be laid out paints no picture and keeps the transport
   running — a decoder's failure must not unmount the player (`isFrame`).
-- **A stored `peaks` must be a list**: `peaks` is a decode's output or a saved
-  record's field, so a value that is not a list — `null`, a number, an object
-  from an older shape — paints no waveform rather than throwing out of the
-  render, and a list whose entry is not a number keeps its shape and draws a
-  flat point (`peaksOf`).
+- **The timeline announces through `aria-valuetext`**: `@gpuix/native@0.11.0`
+  has no `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so the clock is the
+  value a reader hears (the same rule the shipped sliders follow).

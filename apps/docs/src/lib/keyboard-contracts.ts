@@ -545,6 +545,25 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     notes: [{ keys: activation, action: "expands or collapses the row" }],
   },
   {
+    url: "/docs/media/media-player",
+    sources: ["packages/media/src/player/logic.ts"],
+    notes: [
+      { keys: ["Space"], action: "play or pause the clip" },
+      {
+        keys: ["Arrow Left", "Arrow Right"],
+        action: "seek back or forward by the player's step",
+      },
+      {
+        keys: ["Arrow Up", "Arrow Down"],
+        action: "raise or lower the volume by five points",
+      },
+      {
+        keys: ["Home", "End"],
+        action: "seek to the clip's start or end",
+      },
+    ],
+  },
+  {
     url: "/docs/editor/code-editor",
     sources: ["packages/editor/src/code-editor/code-editor.tsx"],
     notes: [

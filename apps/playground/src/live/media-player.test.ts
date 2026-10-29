@@ -18,6 +18,7 @@ import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  bufferedWidth,
   MEDIA_SEEK_STEP_MS,
   MEDIA_TICK_MS,
   progressWidth,
@@ -31,18 +32,17 @@ import {
   frameHex,
   PLAYER_CHECKS,
   PLAYER_CLIP_MS,
+  PLAYER_BUFFERED,
   PLAYER_COMPONENT_IDS,
   PLAYER_IDS,
+  PLAYER_INK,
   PLAYER_PAGE,
-  PLAYER_PEAKS,
   PLAYER_POSTER,
   PLAYER_REST,
   PLAYER_SCRUB_OFFSET,
   PLAYER_SEEK_STEP_MS,
   PLAYER_TICK_MS,
   PLAYER_TRACK,
-  PLAYER_WAVEFORM,
-  PLAYER_WAVEFORM_INK,
   playerReadout,
   playerReportOf,
 } from "./media-player.js";
@@ -99,12 +99,11 @@ describe("the shipped component's surface", () => {
   });
 
   it("declares the geometry and the clock the fixture hands it", () => {
-    expect(numberIn("DEFAULT_WIDTH")).toBe(PLAYER_POSTER.width);
-    expect(numberIn("DEFAULT_HEIGHT")).toBe(PLAYER_POSTER.height);
-    expect(numberIn("DEFAULT_TRACK_WIDTH")).toBe(PLAYER_TRACK.width);
-    expect(numberIn("WAVEFORM_HEIGHT")).toBe(PLAYER_WAVEFORM.height);
-    // The waveform is drawn at the track's own width, so the two boxes align.
-    expect(PLAYER_WAVEFORM.width).toBe(PLAYER_TRACK.width);
+    // The timeline is the frame less the bar's two insets, and its rail is the
+    // component's own height.
+    expect(PLAYER_TRACK.width).toBe(PLAYER_POSTER.width - 16);
+    expect(PLAYER_TRACK.height).toBe(numberIn("TRACK_HEIGHT"));
+    expect(`${PLAYER_POSTER.width}×${PLAYER_POSTER.height}`).toBe("512×288");
     // The fixture overrides the shipped tick on purpose: this host's paint
     // rate paces the interval, so the probe waits longer per tick than the
     // component's default.
@@ -113,11 +112,13 @@ describe("the shipped component's surface", () => {
     // default, so a changed default must fail here rather than in the window.
     expect(PLAYER_SEEK_STEP_MS).toBe(MEDIA_SEEK_STEP_MS);
     expect(probe).toContain("tickMs={PLAYER_TICK_MS}");
+    expect(probe).toContain("idleMs={PLAYER_IDLE_MS}");
     expect(probe).not.toContain("seekStep=");
+    expect(probe).toContain("buffered={PLAYER_BUFFERED}");
   });
 
   it("reads its colours from the palette the live window paints", () => {
-    expect(PLAYER_WAVEFORM_INK).toBe(darkTheme.colors.mutedForeground);
+    expect(PLAYER_INK).toBe(darkTheme.colors.foreground);
     expect(PLAYER_PAGE).toBe(darkTheme.colors.background);
   });
 });
@@ -151,11 +152,12 @@ describe("the clip the shipped player is given", () => {
     );
   });
 
-  it("draws a silhouette with an amplitude, not a flat band", () => {
-    expect(PLAYER_PEAKS.length).toBeGreaterThan(1);
-    expect(Arr.every(PLAYER_PEAKS, (peak) => peak > 0 && peak < 1)).toBe(true);
-    expect(Arr.some(PLAYER_PEAKS, (peak) => peak >= 0.5)).toBe(true);
-    expect(Arr.some(PLAYER_PEAKS, (peak) => peak <= 0.25)).toBe(true);
+  it("holds a buffered range inside the clip", () => {
+    expect(PLAYER_BUFFERED).toBeGreaterThan(0);
+    expect(PLAYER_BUFFERED).toBeLessThan(PLAYER_CLIP_MS);
+    expect(
+      bufferedWidth(PLAYER_BUFFERED, PLAYER_CLIP_MS, PLAYER_TRACK.width),
+    ).toBeLessThan(PLAYER_TRACK.width);
   });
 });
 
@@ -202,7 +204,6 @@ describe("the probe", () => {
     );
     expect(probe).toContain("<MediaPlayer");
     expect(probe).toContain("frameAt={frameAt}");
-    expect(probe).toContain("peaks={PLAYER_PEAKS}");
     expect(probe).toContain("disabled={disabled}");
     expect(probe).toContain("onPlayheadChange=");
     expect(probe).toContain("onPlayingChange=");
@@ -213,8 +214,9 @@ describe("the probe", () => {
   });
 
   it("reads the window against the package's own arithmetic", () => {
+    expect(probe).toContain("@gpuixui/media/player/logic");
     expect(probe).toContain(
-      'import { progressWidth, timeLabel } from "@gpuixui/media/player/logic";',
+      "bufferedWidth(PLAYER_BUFFERED, PLAYER_CLIP_MS, PLAYER_TRACK.width)",
     );
     expect(probe).toContain(
       "progressWidth(held.playhead, PLAYER_CLIP_MS, PLAYER_TRACK.width)",
@@ -278,11 +280,12 @@ describe("the record", () => {
     expect(section).toContain(timeLabel(PLAYER_CLIP_MS, PLAYER_CLIP_MS));
     expect(section).toContain(frameHex(3 * PLAYER_SEEK_STEP_MS));
     expect(section).toContain(`${PLAYER_POSTER.width}×${PLAYER_POSTER.height}`);
-    expect(section).toContain(
-      `${PLAYER_WAVEFORM.width}×${PLAYER_WAVEFORM.height}`,
-    );
-    expect(section).toContain(PLAYER_WAVEFORM_INK);
+    expect(section).toContain(`${PLAYER_TRACK.width}×${PLAYER_TRACK.height}`);
+    expect(section).toContain(PLAYER_INK);
     expect(section).toContain(PLAYER_PAGE);
+    expect(section).toContain(
+      `${bufferedWidth(PLAYER_BUFFERED, PLAYER_CLIP_MS, PLAYER_TRACK.width)}`,
+    );
   });
 
   it("prints the pointer scrub the same window measured", () => {
@@ -300,9 +303,9 @@ describe("the record", () => {
     expect(section).toContain("the track refuses a press");
   });
 
-  it("names the poster the shipped player paints", () => {
-    expect(PLAYER_POSTER).toEqual(MEDIA_POSTER);
-    expect(PLAYER_TRACK.width).toBe(MEDIA_TRACK.width);
+  it("keeps the composed clip's frame schedule and paints it larger", () => {
+    expect(PLAYER_POSTER.width).toBeGreaterThan(MEDIA_POSTER.width);
+    expect(MEDIA_TRACK.width).toBeLessThan(PLAYER_TRACK.width);
   });
 
   it("names the probe among those measured alone", () => {

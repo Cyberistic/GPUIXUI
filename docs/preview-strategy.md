@@ -716,7 +716,7 @@ and the editor lane draws all four of its own (`code-editor`, `diff-viewer`,
 `resizeSplit`, `resizeSplitByKey`, `setActiveTab`,
 `normalizePanels`, `resizePanels`, `resizePanelsByKey`,
 `togglePanelCollapsed`), `@gpuixui/media`'s `crop/logic`,
-`qr/encode` and `upload/queue`, `@gpuixui/files`' `tree/logic`, `log/logic` and
+`qr/encode`, `upload/queue` and `player/logic`, `@gpuixui/files`' `tree/logic`, `log/logic` and
 `property/logic` over `@gpuixui/data`'s tree flattening, cursor and selection,
 `@gpuixui/editor`'s `diff/logic`,
 `markdown/logic` and `search/logic`, and `@gpuixui/shell`'s toolbar, menu-bar

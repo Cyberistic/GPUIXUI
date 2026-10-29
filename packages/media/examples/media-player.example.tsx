@@ -1,12 +1,12 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * MediaPlayer example: a four-frame clip with a waveform and a transport.
+ * MediaPlayer example: a four-frame clip with Mux's chrome over it.
  *
  * The frames are generated here because the runtime has no playback host: the
  * caller owns decoding, and this screen hands the player one colour per second.
- * The same player without `frameAt` is the audio-style form. Press the progress
- * track to seek to that share of the clip, drag it while the primary button is
- * held, or use Home/End/Left/Right on the seek pad.
+ * The same player without `frameAt` is the poster-less form. Press the timeline
+ * to seek to that share of the clip, drag it while the primary button is held,
+ * or use Space, the arrows, `M` and `F` on the player.
  */
 
 import * as Option from "effect/Option";
@@ -34,31 +34,25 @@ const frameAt = (playhead: number): Option.Option<MediaFrame> => {
   });
 };
 
-const PEAKS = [
-  0.2, 0.45, 0.8, 0.55, 0.3, 0.6, 0.95, 0.7, 0.35, 0.5, 0.75, 0.4, 0.25, 0.6,
-  0.9, 0.5,
-];
-
 export const MediaPlayerExample = () => (
   <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
     <MediaPlayer
       duration={4000}
       alt="A generated clip's frame"
       label="Generated clip"
-      width={240}
-      height={135}
-      trackWidth={240}
-      peaks={PEAKS}
-      seekStep={500}
+      width={480}
+      height={270}
+      buffered={3000}
+      qualities={["Auto", "1080p", "720p"]}
       frameAt={frameAt}
     />
     <MediaPlayer
       duration={4000}
       alt=""
-      label="Audio-style clip"
-      trackWidth={240}
-      peaks={PEAKS}
-      seekStep={500}
+      label="Poster-less clip"
+      width={480}
+      height={270}
+      qualities={["Auto", "1080p"]}
     />
   </div>
 );

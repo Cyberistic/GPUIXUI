@@ -1036,8 +1036,8 @@ describe("the measured target rows", () => {
 
     const claims = [
       `\`${probe}\` (${checks} checks`,
-      "240×135",
-      "200×32",
+      "512×288",
+      "496×4",
       "0:00 / 0:04",
     ];
     expect(

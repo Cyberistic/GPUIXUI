@@ -735,7 +735,7 @@ export const liveRegistry = [
   {
     id: "media-player-lifecycle",
     title:
-      "Content: the shipped MediaPlayer paints the frame the playhead names, a waveform silhouette, and a transport that seeks and refuses",
+      "Content: the shipped MediaPlayer paints the frame the playhead names, a coupled clock and timeline, and a transport that seeks and refuses",
     capability: "content",
   },
   {
