@@ -8,7 +8,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 /**
- * `/docs/styling` described itself as "how a class string becomes a GPUix style,
+ * `/styling` described itself as "how a class string becomes a GPUix style,
  * and how to extend the rules" and then stopped at the default registry: it
  * never showed `createTw`, the extension point the primitives package its own
  * documentation points at, and it never named `@gpuixui/tw/react` or the

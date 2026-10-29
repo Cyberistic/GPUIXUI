@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
- * `/docs/testing` is how a contributor runs the suites, and it taught the whole
+ * `/testing` is how a contributor runs the suites, and it taught the whole
  * headless script and one live scenario as though they were the same loop: the
  * headless runner's `--only` and `--list` were absent, so an iteration that
  * touched one scenario ran every one, and nothing said the full live suite opens

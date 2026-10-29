@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
- * `/docs/keyboard` documents `@gpuixui/keyboard`, and its React row named
+ * `/keyboard` documents `@gpuixui/keyboard`, and its React row named
  * `CommandRegistryProvider` and `useCommandRegistry` without the specifier they
  * live at: the root entry point exports neither, so a reader who copied the one
  * import the page showed got `does not export CommandRegistryProvider`. The

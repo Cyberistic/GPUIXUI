@@ -126,7 +126,7 @@ describe("drawing buttons", () => {
       if (classes.some((name) => name.startsWith("gx-btn"))) return [];
       return classes
         .filter((name) => chrome.has(name) && !COMPONENT_AFFORDANCES.has(name))
-        .map((name) => `${file.split("/docs/").at(-1)}: <${tag}> .${name}`);
+        .map((name) => `${file.split("/").at(-1)}: <${tag}> .${name}`);
     });
 
     expect(offenders.join("\n")).toBe("");

@@ -41,7 +41,7 @@ const siteUrl = (file: string): string => {
     .replace(/\.mdx$/, "")
     .replace(/(^|\/)index$/, "")
     .replace(/\/$/, "");
-  return slug === "" ? "/docs" : `/docs/${slug}`;
+  return slug === "" ? "/" : `/${slug}`;
 };
 
 interface Served {
@@ -106,8 +106,8 @@ describe("the file behind a page", () => {
   });
 
   it("names the branch and repository the site publishes from", () => {
-    expect(pageEditUrl("site", "index.mdx")).toBe(
-      `https://github.com/${gitConfig.user}/${gitConfig.repo}/edit/${gitConfig.branch}/apps/docs/content/docs/index.mdx`,
+    expect(pageEditUrl("site", "introduction.mdx")).toBe(
+      `https://github.com/${gitConfig.user}/${gitConfig.repo}/edit/${gitConfig.branch}/apps/docs/content/docs/introduction.mdx`,
     );
 
     // The repository is an argument, not a literal beside the branch: a fork
@@ -162,9 +162,9 @@ describe("every page the site serves", () => {
 
     // A curated page shares its URL with a package page only when both files
     // exist; the site wins, so the edit link must name the site's.
-    expect(collisions).toContain("/docs/components/dialog");
+    expect(collisions).toContain("/components/dialog");
     expect(collisions.length).toBeGreaterThanOrEqual(30);
-    expect(pages.get("/docs/components/dialog")).toEqual({
+    expect(pages.get("/components/dialog")).toEqual({
       origin: "site",
       path: "components/dialog.mdx",
     });

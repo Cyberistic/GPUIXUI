@@ -95,7 +95,7 @@ describe("the apps/docs ledger", () => {
   });
 
   it("says the sidebar offers platforms and names where the look control lives", () => {
-    // `8c180a9f` removed the sidebar's Look group, and `/docs/theming` and the
+    // `8c180a9f` removed the sidebar's Look group, and `/theming` and the
     // preview policy were corrected with it. A look picker returned to the page
     // — not the sidebar — so the ledger has to name the file a contributor
     // edits without claiming a group the footer does not carry.

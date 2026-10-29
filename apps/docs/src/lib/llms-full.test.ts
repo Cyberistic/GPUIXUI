@@ -100,17 +100,17 @@ describe("the /llms-full.txt document", () => {
   });
 
   it("keeps the curated page in place of the package page it shadows", () => {
-    // The site serves the curated page at `/docs/components/button`; the
+    // The site serves the curated page at `/components/button`; the
     // package ships a second page at the same address, and the document must
     // print the copy a reader lands on.
     const curated = page(
-      "/docs/components/button",
+      "/components/button",
       "Button",
       "## Usage\n\nThe site's page.",
       "The site's page",
     );
     const shadowed = page(
-      "/docs/components/button",
+      "/components/button",
       "Package button",
       "## Usage\n\nThe package's copy.",
       "The package's copy",
@@ -144,7 +144,7 @@ describe("the /llms-full.txt document", () => {
       llmsFullTxt(
         [
           page(
-            "/docs/a",
+            "/a",
             "A",
             "---\ntitle: A\ndescription: A page.\n---\n\n## Usage\n\nThe body.",
           ),
@@ -159,25 +159,18 @@ describe("the /llms-full.txt document", () => {
   });
 
   it("prints no blank block for a page with no body", () => {
-    const single = llmsFullTxt(
-      [page("/docs/a", "A", "   \n\n", "The note.")],
-      [],
-    );
+    const single = llmsFullTxt([page("/a", "A", "   \n\n", "The note.")], []);
     const block = blocks(single)[0];
 
     expect(block?.text).toBe(
-      ["# A", "", `Source: ${absoluteUrl("/docs/a")}`, "", "The note."].join(
-        "\n",
-      ),
+      ["# A", "", `Source: ${absoluteUrl("/a")}`, "", "The note."].join("\n"),
     );
     // A body that is absent must not leave the separator's blank line doubled.
     expect(single).not.toContain("\n\n\n");
   });
 
   it("keeps every page's own headings, so an agent can cite a section", () => {
-    const block = printed.find((entry) =>
-      entry.url.endsWith("/docs/media/qr-code"),
-    );
+    const block = printed.find((entry) => entry.url.endsWith("/media/qr-code"));
 
     expect(block).toBeDefined();
     expect(block?.text).toMatch(/^## /m);
@@ -229,7 +222,7 @@ describe("the /llms-full.txt document", () => {
   });
 
   it("is named by the index and by the reference page", () => {
-    const index: LlmsPage[] = [{ url: "/docs/a", title: "A" }];
+    const index: LlmsPage[] = [{ url: "/a", title: "A" }];
 
     expect(llmsTxt(index, [])).toContain(absoluteUrl(llmsFullPath));
 

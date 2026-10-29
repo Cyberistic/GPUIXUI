@@ -61,7 +61,7 @@ const pages = (dir: URL, slug = ""): ReadonlyArray<[string, string]> =>
 
 /**
  * The documents beside the site that a page sends a reader to: the inventory a
- * status strip links, the capability record `/docs/runtime` publishes, and the
+ * status strip links, the capability record `/runtime` publishes, and the
  * README a visitor lands on before the site.
  */
 const documents = [

@@ -8,7 +8,7 @@ import {
 import { PlaygroundScenarios } from "./playground-scenarios";
 
 /**
- * The probe catalogue on `/docs/playground`.
+ * The probe catalogue on `/playground`.
  *
  * The page's whole value is that it lists what the native app actually runs, so
  * the render is held in both directions: every suite's count, host, source and

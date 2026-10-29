@@ -6,7 +6,7 @@ import { manifest, runsIn, undeclaredRuns } from "./page-commands.test-util";
 import { repoRoot } from "./public-symbols-source";
 
 /**
- * `/docs/contributing` is where a reader who wants to add a component lands, so
+ * `/contributing` is where a reader who wants to add a component lands, so
  * its commands have to run and its checklist has to match the one the
  * repository gates on. It printed six `nub run` commands that nothing checked,
  * and its "What a component ships with" list stopped at the inventory row —

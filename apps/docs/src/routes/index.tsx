@@ -4,7 +4,7 @@ import { landingMeta } from "@/lib/page-meta";
 import landingCss from "@/styles/landing.css?url";
 
 // The marketing landing page: the "Hunter License" identity over the
-// stacked-native hero. Docs live under `/docs`.
+// stacked-native hero. Docs live at the root, beside `/live`.
 export const Route = createFileRoute("/")({
   component: Page,
   head: () => {

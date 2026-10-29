@@ -2,7 +2,7 @@ import { patternById, patternChoices } from "../../lib/patterns";
 import { gitConfig } from "../../lib/shared";
 
 /**
- * One pattern, rendered under its own heading on `/docs/patterns`.
+ * One pattern, rendered under its own heading on `/patterns`.
  *
  * The heading lives in the page so the "On this page" table of contents lists
  * every pattern; everything under it comes from `patterns.ts`, so the parts
@@ -62,7 +62,7 @@ export function Pattern({ id }: { id: string }) {
           {pattern.example}
         </a>{" "}
         · mounted by the library's{" "}
-        <a className="underline" href="/docs/examples">
+        <a className="underline" href="/examples">
           examples registry
         </a>
       </p>

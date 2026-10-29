@@ -98,9 +98,9 @@ export const llmsSectionOrder: ReadonlyArray<string> = [
 const siteSections: ReadonlyArray<{ prefix: string; name: string }> = [
   // The introduction reads before the catalogue, so a reader that only takes the
   // first section still learns how to install and run the library.
-  { prefix: "/docs/getting-started", name: "Getting started" },
-  { prefix: "/docs/blocks", name: "Blocks" },
-  { prefix: "/docs/workspace", name: "Workspace" },
+  { prefix: "/getting-started", name: "Getting started" },
+  { prefix: "/blocks", name: "Blocks" },
+  { prefix: "/workspace", name: "Workspace" },
 ];
 
 const sectionRules = [

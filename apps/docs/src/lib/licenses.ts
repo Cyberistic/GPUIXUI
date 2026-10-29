@@ -2,7 +2,7 @@
  * The licence records.
  *
  * `LICENSES/<reference>.md` is one row of the release inventory: where a
- * reference came from, its licence, and what we take from it. `/docs/license`
+ * reference came from, its licence, and what we take from it. `/license`
  * renders these files rather than restating them, so a record added beside the
  * code appears on the site with no docs change, and a reference whose terms
  * were never verified cannot hide behind a summary.

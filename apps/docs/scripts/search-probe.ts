@@ -22,7 +22,7 @@ import { findChrome, openChrome } from "./chrome-session.ts";
 import { firstReady } from "./react-ready.ts";
 
 /** The page a preview server serves; the dialog is mounted by the root layout. */
-export const defaultUrl = "http://localhost:4175/docs/components/button";
+export const defaultUrl = "http://localhost:4175/components/button";
 
 /** The trigger every docs page carries. */
 export const searchTrigger = "button[data-search]";
@@ -51,17 +51,17 @@ export interface SearchCase {
 export const searchCases: ReadonlyArray<SearchCase> = [
   {
     query: "slider",
-    expected: "/docs/primitives/slider",
+    expected: "/primitives/slider",
     absent: [],
   },
   {
     query: "button",
-    expected: "/docs/components/button",
-    absent: ["/docs/primitives/button"],
+    expected: "/components/button",
+    absent: ["/primitives/button"],
   },
   {
     query: "architecture",
-    expected: "/docs/architecture",
+    expected: "/architecture",
     absent: [],
   },
 ];

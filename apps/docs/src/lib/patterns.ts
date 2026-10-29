@@ -18,7 +18,7 @@
 export interface PatternPart {
   /** The exported part or component, spelled as the page spells it. */
   readonly name: string;
-  /** The page that documents it, e.g. `/docs/components/confirm-dialog`. */
+  /** The page that documents it, e.g. `/components/confirm-dialog`. */
   readonly url: string;
   /** Its one job inside this pattern. */
   readonly job: string;
@@ -64,17 +64,17 @@ export const patterns: ReadonlyArray<Pattern> = [
     parts: [
       {
         name: "ConfirmDialog",
-        url: "/docs/components/confirm-dialog",
+        url: "/components/confirm-dialog",
         job: "the two safety decisions: Cancel holds the focus, and confirming only reports — it never closes",
       },
       {
         name: "Dialog",
-        url: "/docs/components/dialog",
+        url: "/components/dialog",
         job: "the veil, Escape, focus in and the Tab trap it reuses",
       },
       {
         name: "Alert",
-        url: "/docs/components/alert",
+        url: "/components/alert",
         job: "the failure that stays inside the dialog, next to the action that failed",
       },
     ],
@@ -98,22 +98,22 @@ export const patterns: ReadonlyArray<Pattern> = [
     parts: [
       {
         name: "Form",
-        url: "/docs/components/form",
+        url: "/components/form",
         job: "the schema run over a `@tanstack/form-core` state, the single alert summary and the decoded `onSubmit`",
       },
       {
         name: "Field",
-        url: "/docs/components/field",
+        url: "/components/field",
         job: "the label, the description and the message around one control",
       },
       {
         name: "Fieldset",
-        url: "/docs/components/fieldset",
+        url: "/components/fieldset",
         job: "the group whose legend names it and whose `disabled` reaches its inputs",
       },
       {
         name: "Button",
-        url: "/docs/primitives/button",
+        url: "/primitives/button",
         job: "the submit control, disabled by the same pending flag",
       },
     ],
@@ -137,17 +137,17 @@ export const patterns: ReadonlyArray<Pattern> = [
     parts: [
       {
         name: "SearchInput",
-        url: "/docs/components/search-input",
+        url: "/components/search-input",
         job: "the query, the clear control, Enter and Escape",
       },
       {
         name: "List",
-        url: "/docs/components/list",
+        url: "/components/list",
         job: "the rows, their roving tab stop and the selection",
       },
       {
         name: "EmptyState",
-        url: "/docs/components/empty-state",
+        url: "/components/empty-state",
         job: "the zero-result panel that says which query emptied it",
       },
     ],
@@ -171,17 +171,17 @@ export const patterns: ReadonlyArray<Pattern> = [
     parts: [
       {
         name: "CommandMenu",
-        url: "/docs/components/command-menu",
+        url: "/components/command-menu",
         job: "the dialog, the query and the ranking inside each group",
       },
       {
         name: "Dialog",
-        url: "/docs/components/dialog",
+        url: "/components/dialog",
         job: "the modal surface, Escape and the focus rules the palette composes",
       },
       {
         name: "KeyboardShortcuts",
-        url: "/docs/components/keyboard-shortcuts",
+        url: "/components/keyboard-shortcuts",
         job: "the keycaps a row displays; binding the chord stays the app's job",
       },
     ],
@@ -205,17 +205,17 @@ export const patterns: ReadonlyArray<Pattern> = [
     parts: [
       {
         name: "Toast",
-        url: "/docs/components/toast",
+        url: "/components/toast",
         job: "the queued result, its one labelled action, and the pause while hovered or focused",
       },
       {
         name: "Progress",
-        url: "/docs/primitives/progress",
+        url: "/primitives/progress",
         job: "the fraction, when the work can report one, and a discrete step when it cannot",
       },
       {
         name: "Button",
-        url: "/docs/primitives/button",
+        url: "/primitives/button",
         job: "the trigger's `loading` state, which blocks a second press",
       },
     ],
@@ -240,12 +240,12 @@ export const patterns: ReadonlyArray<Pattern> = [
     parts: [
       {
         name: "MessageScroller",
-        url: "/docs/components/message-scroller",
+        url: "/components/message-scroller",
         job: "the pinned follow, the unread count and the jump-to-latest affordance",
       },
       {
         name: "EmptyState",
-        url: "/docs/components/empty-state",
+        url: "/components/empty-state",
         job: "the first-run panel before the first row arrives",
       },
     ],
@@ -266,42 +266,42 @@ export const patterns: ReadonlyArray<Pattern> = [
 export const patternChoices: ReadonlyArray<PatternChoice> = [
   {
     need: "Pick one value from a fixed list of a dozen or fewer",
-    use: { name: "Select", url: "/docs/primitives/select" },
+    use: { name: "Select", url: "/primitives/select" },
     because:
       "GPUix's published Select owns the open state, positioning and dismissal; you pass the options as data.",
     not: "when the list is long, loaded asynchronously, multiple, or needs typing — it has no type-ahead.",
   },
   {
     need: "Pick from many options, pick several, or offer a value that does not exist yet",
-    use: { name: "Combobox", url: "/docs/components/combobox" },
+    use: { name: "Combobox", url: "/components/combobox" },
     because:
       "The rows are ranked as the reader types, and a single-select offers one Create row when the query matches nothing.",
     not: "when the options load asynchronously or carry group headings — neither exists in v1.",
   },
   {
     need: "Run an action from anywhere in the window",
-    use: { name: "CommandMenu", url: "/docs/components/command-menu" },
+    use: { name: "CommandMenu", url: "/components/command-menu" },
     because:
       "A modal palette with per-group ranking, a keyboard highlight and a search field that keeps the focus.",
     not: "for the actions on one object — that is a Dropdown menu anchored to its trigger.",
   },
   {
     need: "Act on the object under the pointer",
-    use: { name: "ContextMenu", url: "/docs/components/context-menu" },
+    use: { name: "ContextMenu", url: "/components/context-menu" },
     because:
       "It opens at the pointer on a right click, and at the trigger's corner on Shift+F10.",
     not: "when the actions belong to the screen rather than the object; put them in a toolbar or a command palette.",
   },
   {
     need: "Move between the sections of a page",
-    use: { name: "NavigationMenu", url: "/docs/components/navigation-menu" },
+    use: { name: "NavigationMenu", url: "/components/navigation-menu" },
     because:
       "One anchored panel at a time, opened by hover after a delay or by press, with arrows moving between triggers.",
     not: "to show where the reader is — that is Breadcrumb, or Tabs for sibling views.",
   },
   {
     need: "Filter a long list the reader already has",
-    use: { name: "SearchInput", url: "/docs/components/search-input" },
+    use: { name: "SearchInput", url: "/components/search-input" },
     because:
       "It is the field and nothing else: the query, the clear control, Enter and Escape. The filtering stays yours.",
     not: "when the reader chooses from ranked options — that is a Combobox, which owns the list.",

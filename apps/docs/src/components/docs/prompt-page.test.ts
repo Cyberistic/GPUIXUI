@@ -25,7 +25,7 @@ describe("what the prompt is made of", () => {
     // Every row is a page, and every page is a row: a component the site does
     // not document is not offered.
     for (const entry of promptComponents) {
-      expect(entry.url.startsWith("/docs/")).toBe(true);
+      expect(entry.url.startsWith("/")).toBe(true);
       expect(prompt).toContain(`${entry.title} —`);
     }
   });
@@ -35,7 +35,7 @@ describe("what the prompt is made of", () => {
     const prompt = buildPrompt();
 
     for (const entry of promptBlocks) {
-      expect(entry.url.startsWith("/docs/blocks/")).toBe(true);
+      expect(entry.url.startsWith("/blocks/")).toBe(true);
       expect(prompt).toContain(`${entry.title} —`);
     }
     // A block page's description is its frontmatter's, not a title repeated.
@@ -58,14 +58,14 @@ describe("what the prompt is made of", () => {
       [
         {
           title: "Probe",
-          url: "/docs/components/probe",
+          url: "/components/probe",
           description: "Proof.",
         },
       ],
       [
         {
           title: "Probe block",
-          url: "/docs/blocks/probe",
+          url: "/blocks/probe",
           description: "Proof.",
         },
       ],
@@ -73,7 +73,7 @@ describe("what the prompt is made of", () => {
 
     expect(prompt).toContain("## Components (1)");
     expect(prompt).toContain(
-      "- Probe — Proof. (https://gpuixui.sudokw.com/docs/components/probe)",
+      "- Probe — Proof. (https://gpuixui.sudokw.com/components/probe)",
     );
     expect(prompt).toContain("## Blocks (1)");
     expect(prompt).not.toContain("## Components (98)");

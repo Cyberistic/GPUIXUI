@@ -229,13 +229,10 @@ describe("the index model", () => {
 
 describe("the page a symbol's module ships with", () => {
   const collections = [
-    { dir: "packages/primitives/docs", route: "/docs/primitives" },
-    { dir: "packages/components/docs", route: "/docs/components" },
+    { dir: "packages/primitives/docs", route: "/primitives" },
+    { dir: "packages/components/docs", route: "/components" },
   ];
-  const pages = [
-    { url: "/docs/primitives/otp-field" },
-    { url: "/docs/components/card" },
-  ];
+  const pages = [{ url: "/primitives/otp-field" }, { url: "/components/card" }];
 
   it("kebab-cases the declaring file, acronyms included", () => {
     expect(
@@ -244,10 +241,10 @@ describe("the page a symbol's module ships with", () => {
         collections,
         pages,
       ),
-    ).toBe("/docs/primitives/otp-field");
+    ).toBe("/primitives/otp-field");
     expect(
       docsUrlFor("packages/components/src/card.tsx", collections, pages),
-    ).toBe("/docs/components/card");
+    ).toBe("/components/card");
   });
 
   it("refuses a helper, a bare index and a page the site does not mount", () => {

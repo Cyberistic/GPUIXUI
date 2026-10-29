@@ -74,7 +74,7 @@ const activation: readonly KeyLabel[] = ["Enter", "Space"];
 
 export const keyboardContracts: readonly KeyboardContract[] = [
   {
-    url: "/docs/components/accordion",
+    url: "/components/accordion",
     sources: ["packages/components/src/accordion.tsx"],
     notes: [
       {
@@ -89,22 +89,22 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/alert",
+    url: "/components/alert",
     sources: ["packages/components/src/alert.tsx"],
     notes: [{ keys: activation, action: "runs the alert's action" }],
   },
   {
-    url: "/docs/components/breadcrumb",
+    url: "/components/breadcrumb",
     sources: ["packages/components/src/breadcrumb.tsx"],
     notes: [{ keys: activation, action: "follows the focused crumb" }],
   },
   {
-    url: "/docs/components/button",
+    url: "/components/button",
     sources: ["packages/primitives/src/components/Button.tsx"],
     notes: [{ keys: activation, action: "activates the button" }],
   },
   {
-    url: "/docs/components/carousel",
+    url: "/components/carousel",
     sources: ["packages/components/src/carousel.tsx"],
     notes: [
       { keys: ["Arrow Right", "Arrow Left"], action: "steps one slide" },
@@ -113,7 +113,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/chat",
+    url: "/components/chat",
     sources: ["packages/components/src/chat.tsx"],
     notes: [
       {
@@ -123,12 +123,12 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/checkbox",
+    url: "/components/checkbox",
     sources: ["packages/primitives/src/components/Checkbox.tsx"],
     notes: [{ keys: activation, action: "toggles the box" }],
   },
   {
-    url: "/docs/primitives/checkbox-group",
+    url: "/primitives/checkbox-group",
     sources: ["packages/primitives/src/components/CheckboxGroup.tsx"],
     notes: [
       {
@@ -141,7 +141,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     also: "A typed prefix moves focus to the first matching option without toggling it.",
   },
   {
-    url: "/docs/components/collapsible",
+    url: "/components/collapsible",
     sources: ["packages/components/src/collapsible.tsx"],
     notes: [
       {
@@ -151,7 +151,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/color-picker",
+    url: "/components/color-picker",
     sources: [
       "packages/components/src/color-picker.tsx",
       "packages/components/src/color-picker/parts.tsx",
@@ -174,7 +174,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/combobox",
+    url: "/components/combobox",
     sources: ["packages/components/src/combobox.tsx"],
     runtime: "apps/docs/node_modules/@gpuix/react/dist/components/combobox.js",
     notes: [
@@ -192,7 +192,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     also: "Enter runs the highlighted option through the field's own submit.",
   },
   {
-    url: "/docs/components/command-menu",
+    url: "/components/command-menu",
     sources: [
       "packages/components/src/command-menu.tsx",
       "packages/components/src/internal/modal.ts",
@@ -209,7 +209,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     also: "Enter runs the highlighted action through the search field's submit.",
   },
   {
-    url: "/docs/components/confirm-dialog",
+    url: "/components/confirm-dialog",
     sources: modal,
     notes: [
       { keys: ["Escape"], action: "cancels, unless a confirm is busy" },
@@ -218,7 +218,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     also: "Cancel is focused first; confirming reports and never closes.",
   },
   {
-    url: "/docs/components/context-menu",
+    url: "/components/context-menu",
     sources: ["packages/components/src/context-menu.tsx", ...menu],
     notes: [
       {
@@ -236,7 +236,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/calendar",
+    url: "/components/calendar",
     sources: [
       "packages/components/src/calendar.tsx",
       "packages/components/src/calendar/logic.ts",
@@ -261,7 +261,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/date-picker",
+    url: "/components/date-picker",
     sources: [
       "packages/components/src/date-picker.tsx",
       "packages/components/src/calendar.tsx",
@@ -282,7 +282,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/dialog",
+    url: "/components/dialog",
     sources: modal,
     notes: [
       { keys: ["Escape"], action: "dismisses the topmost overlay" },
@@ -293,7 +293,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/drawer",
+    url: "/components/drawer",
     sources: modal,
     notes: [
       { keys: ["Escape"], action: "dismisses the drawer" },
@@ -301,7 +301,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/dropdown-menu",
+    url: "/components/dropdown-menu",
     sources: ["packages/components/src/dropdown-menu.tsx", ...menu],
     notes: [
       {
@@ -322,7 +322,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/hotkey-recorder",
+    url: "/components/hotkey-recorder",
     sources: ["packages/components/src/hotkey-recorder.tsx"],
     notes: [
       {
@@ -333,7 +333,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/inline-edit",
+    url: "/components/inline-edit",
     sources: ["packages/components/src/inline-edit.tsx"],
     notes: [
       { keys: ["Enter"], action: "starts an edit, and commits the input" },
@@ -342,7 +342,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/list",
+    url: "/components/list",
     sources: ["packages/components/src/list.tsx"],
     notes: [
       {
@@ -360,7 +360,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     also: "A typed letter jumps to the first row whose label starts with it.",
   },
   {
-    url: "/docs/components/mention-input",
+    url: "/components/mention-input",
     sources: ["packages/components/src/mention-input.tsx"],
     notes: [
       {
@@ -372,7 +372,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/navigation-menu",
+    url: "/components/navigation-menu",
     sources: ["packages/components/src/navigation-menu.tsx"],
     notes: [
       {
@@ -388,7 +388,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/popover",
+    url: "/components/popover",
     sources: ["packages/components/src/popover.tsx"],
     notes: [
       { keys: ["Escape"], action: "closes the popover" },
@@ -396,7 +396,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/hover-card",
+    url: "/components/hover-card",
     sources: ["packages/components/src/hover-card.tsx"],
     notes: [
       {
@@ -406,12 +406,12 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/preview-card",
+    url: "/components/preview-card",
     sources: ["packages/components/src/preview-card.tsx"],
     notes: [{ keys: ["Escape"], action: "closes the open card" }],
   },
   {
-    url: "/docs/primitives/radio-group",
+    url: "/primitives/radio-group",
     sources: ["packages/primitives/src/components/RadioGroup.tsx"],
     notes: [
       {
@@ -424,7 +424,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     also: "A typed prefix selects the option it reaches, because selection follows focus.",
   },
   {
-    url: "/docs/primitives/rating",
+    url: "/primitives/rating",
     sources: ["packages/primitives/src/components/Rating.tsx"],
     notes: [
       {
@@ -437,7 +437,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/search-input",
+    url: "/components/search-input",
     sources: ["packages/components/src/search-input.tsx"],
     notes: [
       { keys: ["Escape"], action: "clears the field" },
@@ -446,7 +446,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     also: "Enter in the field submits through `onSubmit`.",
   },
   {
-    url: "/docs/components/select",
+    url: "/components/select",
     sources: [],
     runtime: "apps/docs/node_modules/@gpuix/react/dist/components/select.js",
     notes: [
@@ -473,12 +473,12 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     also: "The list is modal while it is open: a press outside closes it.",
   },
   {
-    url: "/docs/components/switch",
+    url: "/components/switch",
     sources: ["packages/primitives/src/components/Switch.tsx"],
     notes: [{ keys: activation, action: "toggles the switch" }],
   },
   {
-    url: "/docs/components/tabs",
+    url: "/components/tabs",
     sources: ["packages/components/src/tabs.tsx"],
     notes: [
       {
@@ -500,7 +500,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/tag-input",
+    url: "/components/tag-input",
     sources: ["packages/components/src/tag-input.tsx"],
     notes: [
       { keys: ["Enter"], action: "commits the draft as a tag" },
@@ -511,7 +511,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/components/time-picker",
+    url: "/components/time-picker",
     sources: ["packages/components/src/time-picker.tsx"],
     notes: [
       {
@@ -522,12 +522,12 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/primitives/toggle",
+    url: "/primitives/toggle",
     sources: ["packages/primitives/src/components/Toggle.tsx"],
     notes: [{ keys: activation, action: "toggles the pressed state" }],
   },
   {
-    url: "/docs/primitives/toggle-group",
+    url: "/primitives/toggle-group",
     sources: ["packages/primitives/src/components/ToggleGroup.tsx"],
     notes: [
       {
@@ -540,12 +540,12 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     also: "A typed prefix moves focus to the first matching option without toggling it.",
   },
   {
-    url: "/docs/data-display/expandable-rows",
+    url: "/data-display/expandable-rows",
     sources: ["packages/data/src/table/expandable.tsx"],
     notes: [{ keys: activation, action: "expands or collapses the row" }],
   },
   {
-    url: "/docs/media/media-player",
+    url: "/media/media-player",
     sources: ["packages/media/src/player/logic.ts"],
     notes: [
       { keys: ["Space"], action: "play or pause the clip" },
@@ -564,7 +564,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/editor/code-editor",
+    url: "/editor/code-editor",
     sources: ["packages/editor/src/code-editor/code-editor.tsx"],
     notes: [
       {
@@ -575,7 +575,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/shell/toolbar",
+    url: "/shell/toolbar",
     // The strip's activation is the primitives' `Button`/`IconButton`; the
     // roving and the Escape close are the toolbar's own.
     sources: [
@@ -596,7 +596,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
-    url: "/docs/shell/app-menu",
+    url: "/shell/app-menu",
     sources: ["packages/shell/src/app-menu/app-menu.tsx"],
     notes: [
       {

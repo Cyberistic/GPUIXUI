@@ -66,7 +66,7 @@ const pages: ReadonlyArray<Page> = [
   ...walk(
     new URL("apps/docs/content/docs/", root),
     "apps/docs/content/docs/",
-    (slug) => (slug === "" || slug === "index" ? "/docs" : `/docs/${slug}`),
+    (slug) => (slug === "" || slug === "index" ? "/" : `/${slug}`),
   ),
   ...packageCollections.flatMap((collection) =>
     walk(
@@ -106,32 +106,28 @@ describe("the search dialog", () => {
   it("reads the options, the highlighted result and the address, refusing a short line", () => {
     expect(
       parseSearchReadout(
-        "/docs/architecture /docs/primitives/slider|/docs/architecture|/docs/components/button",
+        "/architecture /primitives/slider|/architecture|/components/button",
       ),
     ).toEqual({
-      options: ["/docs/architecture", "/docs/primitives/slider"],
-      active: "/docs/architecture",
-      path: "/docs/components/button",
+      options: ["/architecture", "/primitives/slider"],
+      active: "/architecture",
+      path: "/components/button",
     });
-    expect(parseSearchReadout("|/docs/architecture|/docs")?.options).toEqual(
-      [],
-    );
+    expect(parseSearchReadout("|/architecture|/")?.options).toEqual([]);
     // A truncated line has no address; reading the blanks would compare two
     // empty strings and pass.
-    expect(parseSearchReadout("/docs/architecture|")).toBeUndefined();
-    expect(parseSearchReadout("/docs/a|/docs/a|/docs/a|extra")).toBeUndefined();
+    expect(parseSearchReadout("/architecture|")).toBeUndefined();
+    expect(parseSearchReadout("/a|/a|/a|extra")).toBeUndefined();
     expect(parseSearchReadout("")).toBeUndefined();
   });
 
   it("tells a page row from one of its sections", () => {
-    expect(
-      isPageRow("/docs/components/button", "/docs/components/button"),
-    ).toBe(true);
+    expect(isPageRow("/components/button", "/components/button")).toBe(true);
     // A section id is the page's id plus a chunk number, so an exact compare is
     // the only thing that knows Enter will open the page rather than a heading.
-    expect(
-      isPageRow("/docs/components/button-14", "/docs/components/button"),
-    ).toBe(false);
+    expect(isPageRow("/components/button-14", "/components/button")).toBe(
+      false,
+    );
   });
 
   it("names only pages the site serves, and refuses only the pages it retires", () => {
@@ -234,10 +230,10 @@ describe("the search dialog", () => {
   it("records the measurement in the policy and the site's ledger", () => {
     expect(policy).toContain("### The search path is measured");
     expect(policy).toContain("nub apps/docs/scripts/search-probe.ts");
-    expect(policy).toContain("slider → /docs/primitives/slider");
-    expect(policy).toContain("architecture → /docs/architecture");
-    expect(policy).toContain("button → /docs/components/button");
-    expect(policy).toContain("not `/docs/primitives/button`");
+    expect(policy).toContain("slider → /primitives/slider");
+    expect(policy).toContain("architecture → /architecture");
+    expect(policy).toContain("button → /components/button");
+    expect(policy).toContain("not `/primitives/button`");
     expect(policy).toContain("HTMLInputElement.prototype");
 
     const readme = readFileSync(new URL("apps/docs/README.md", root), "utf8");

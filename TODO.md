@@ -434,8 +434,6 @@ two verdict figures are the only green numbers; every paint is a theme role.
 `hunter-pipeline.test.ts` holds the tabs, pills, current row, depth contract,
 surface recipe and the no-colour-literal rule; the fixed 16:10 stage is 836×522
 and the page + thumbnail are regenerated with `blocks:thumbnails`.
-<<<<<<< HEAD
-=======
 `[x]` **Hunter pipeline composes its chrome** — the rail was 33 hand-written
 rows with their own chevrons, indentation arithmetic and active fill, and the
 rail, chips and cells were bespoke boxes. The vault is now the `FileNode`
@@ -448,7 +446,6 @@ chrome). Live: the branch fold measured 396 (open, 33 rows) → 382 (120ms) →
 348 (240ms, 29 rows) of rows' height. `hunter-pipeline.test.ts` now holds the
 nested tree (a closed branch hides its notes), the current note, the
 rail/window recipes and the Badge chip.
->>>>>>> origin/fix/hunter-block-components
 `[x]` **Fixed-height controls centre their label** — the toast action and close
 mark are 24px boxes with no flex, so the inherited 28px line box overflowed and
 the label sat ~4px high (measured 6.9 above / 2.7 below; now 4.7 / 4.9). The
@@ -24686,3 +24683,23 @@ alignment, `internal/placement.test.ts` keeps the house guard, and
 the drawn `left`, the control's place above the stage and the collision clamp;
 the stored-value page guard now reads the popover's own `popoverAlign`. Inverted
 directions recorded in the branch's report.
+## Root docs URLs (2026-10-29)
+
+`[x]` `[██████████]` 3/3 — **the docs drop the `/docs` prefix: pages render at
+the root, and every old address 301s to its new one.**
+
+`[x]` `apps/docs/src/lib/shared.ts` declares `docsRoute = ""` once, and the
+nine lane routes moved with it (`/components`, `/primitives`, `/data-display`,
+…). `src/routes/$.tsx` is the docs splat; the landing, `/live`, `/api/search`,
+`/llms.txt`, `/llms-full.txt` and `/sitemap.xml` outrank it. The introduction
+moved from the docs index to `/introduction`, because `/` is the landing.
+
+`[x]` `src/routes/docs/index.tsx` answers `/docs` with a **301** to `/`;
+`src/routes/docs/$.tsx` answers every `/docs/<path>` with a **301** to
+`/<path>`, query included. Curated twins keep their own 301, so
+`/docs/primitives/button` reaches `/components/button`.
+
+`[x]` Canonicals, `sitemap.xml`, `llms.txt`, `llms-full.txt`, the sidebar, the
+landing, `curated-twins.ts`, the theme editor, the block index and all 131
+content links print the new URLs. The build prerenders 206 pages under the new
+paths and none under `/docs`; `nub run check` and `nub run test` pass.

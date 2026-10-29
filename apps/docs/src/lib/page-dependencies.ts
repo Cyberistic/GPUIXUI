@@ -49,14 +49,14 @@ export interface PageDependencyIndex {
  * than link nowhere.
  */
 const sitePages: Readonly<Record<string, string>> = {
-  "@gpuixui/icons": "/docs/icons/icon",
-  "@gpuixui/tokens": "/docs/theming",
-  "@gpuixui/tw": "/docs/styling",
-  "@gpuixui/motion": "/docs/motion",
-  "@gpuixui/keyboard": "/docs/keyboard",
-  "@gpuixui/testing": "/docs/testing",
-  "@gpuix/react": "/docs/runtime",
-  "@gpuix/native": "/docs/runtime",
+  "@gpuixui/icons": "/icons/icon",
+  "@gpuixui/tokens": "/theming",
+  "@gpuixui/tw": "/styling",
+  "@gpuixui/motion": "/motion",
+  "@gpuixui/keyboard": "/keyboard",
+  "@gpuixui/testing": "/testing",
+  "@gpuix/react": "/runtime",
+  "@gpuix/native": "/runtime",
 };
 
 /** A name with its case and punctuation removed, so `OTPField` matches `otp-field`. */

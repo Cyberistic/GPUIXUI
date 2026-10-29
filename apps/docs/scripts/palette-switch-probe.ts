@@ -30,7 +30,7 @@ import { findChrome, openChrome } from "./chrome-session.ts";
 import { firstReady, propsOfScript } from "./react-ready.ts";
 
 /** The page a preview server serves, and the switch every docs page carries. */
-export const defaultUrl = "http://localhost:4175/docs/components/button";
+export const defaultUrl = "http://localhost:4175/components/button";
 
 /** The palette group's accessible name, and the two buttons it offers. */
 export const paletteGroup = "Preview palette";

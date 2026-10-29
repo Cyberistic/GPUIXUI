@@ -12,7 +12,7 @@ import {
 } from "./sidebar-kit";
 
 /**
- * Sidebar 01 — sectioned docs navigation, at `/docs/blocks/sidebar-01`.
+ * Sidebar 01 — sectioned docs navigation, at `/blocks/sidebar-01`.
  *
  * shadcn's opening sidebar: a version switcher over a search field, four
  * labelled sections, and a breadcrumbed page beside it. The browser drawing and

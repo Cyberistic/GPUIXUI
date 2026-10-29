@@ -14,7 +14,7 @@ import {
  * reads as a component that ignores its reader. React 19 keeps a host node's
  * committed props on its **fiber**, only some nodes also carry the older
  * `__reactProps$…` store, and both keys are non-enumerable: measured in headless
- * Chrome on `/docs/components/button`, the sidebar's search trigger had no
+ * Chrome on `/components/button`, the sidebar's search trigger had no
  * enumerable property at all while a click on it opened the dialog. Every probe
  * read with `Object.entries`, so each one waited out its whole hydration budget
  * against a live page and reported "never hydrated".

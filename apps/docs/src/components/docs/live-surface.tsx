@@ -297,7 +297,7 @@ export function LiveSurface() {
   return (
     <main className="live-surface" id={mainContentId} tabIndex={-1}>
       <header className="live-surface-bar">
-        <a href="/docs">Back to the docs</a>
+        <a href="/introduction">Back to the docs</a>
         <span>{liveSurfaceLabel}</span>
       </header>
       {status.kind === "unavailable" ? (

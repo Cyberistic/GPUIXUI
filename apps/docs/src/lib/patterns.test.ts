@@ -33,7 +33,7 @@ const mdxFiles = (dir: URL): ReadonlyArray<URL> =>
 const contentUrl = (file: URL): string => {
   const path = file.pathname.split("/content/docs/")[1] ?? "";
   const slug = path.replace(/\.mdx$/, "").replace(/\/index$/, "");
-  return slug === "" ? "/docs" : `/docs/${slug}`;
+  return slug === "" ? "/" : `/${slug}`;
 };
 
 /**
@@ -192,7 +192,7 @@ describe("the patterns page", () => {
   });
 
   it("hands off to the block, example and reference pages", () => {
-    const links = page.match(/\]\(\/docs\/[a-z0-9/-]+(?:#[a-z-]+)?\)/g) ?? [];
+    const links = page.match(/\]\(\/[a-z0-9/-]+(?:#[a-z-]+)?\)/g) ?? [];
 
     expect(links.length).toBeGreaterThanOrEqual(3);
   });

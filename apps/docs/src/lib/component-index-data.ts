@@ -7,6 +7,7 @@ import {
 } from "./component-index";
 import { inventory } from "./inventory-data";
 import { statusForPage } from "./inventory-status";
+import { curatedPrimitiveTwins } from "./curated-twins";
 
 /**
  * The component index, read at build time.
@@ -55,3 +56,18 @@ export const componentIndex: ReadonlyArray<ComponentEntry> = buildIndex(
 /** The composed lane, which is what the Components page's grid lists. */
 export const componentPages: ReadonlyArray<ComponentEntry> =
   componentIndex.filter((entry) => entry.section === "Components");
+
+/**
+ * The Tier 1 lane, without the pages a curated page replaces.
+ *
+ * Five primitives are documented in full under `/components` and their package
+ * URL redirects there (`curated-twins.ts`), so listing the retired address
+ * again would offer a reader a component they cannot reach. Everything else in
+ * the lane is its own page.
+ */
+export const primitivePages: ReadonlyArray<ComponentEntry> =
+  componentIndex.filter(
+    (entry) =>
+      entry.section === "Primitives" &&
+      !curatedPrimitiveTwins.some((twin) => twin.retired === entry.url),
+  );

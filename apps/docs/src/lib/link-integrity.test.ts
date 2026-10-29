@@ -8,8 +8,8 @@ import { packageCollections } from "./collection-routes";
  * Nothing else notices a dead link. The sidebar guard holds `meta.json` to the
  * files, but a page's prose can point anywhere: when `IconButton` landed its
  * page, the Primitives index silently stopped linking it, and two component
- * pages linked `/docs/keyboard-shortcuts` when the page lives at
- * `/docs/components/keyboard-shortcuts`. A renamed heading breaks an anchor the
+ * pages linked `/keyboard-shortcuts` when the page lives at
+ * `/components/keyboard-shortcuts`. A renamed heading breaks an anchor the
  * same way, and neither failure shows up in a build.
  *
  * The known defects are listed rather than hidden: a link this guard cannot
@@ -58,7 +58,7 @@ const walk = (
 const sitePages = walk(
   new URL("apps/docs/content/docs/", root),
   "apps/docs/content/docs/",
-  (slug) => (slug === "" || slug === "index" ? "/docs" : `/docs/${slug}`),
+  (slug) => (slug === "" ? "/" : `/${slug}`),
 );
 
 /** The pages a package ships, mounted as collections. */
@@ -80,7 +80,7 @@ const extraRoutes: ReadonlyArray<string> = [
   "/",
   // The live GPUix surface: a real wasm renderer, not a docs page.
   "/live",
-  // The generated page index `/docs/reference` points a machine reader at.
+  // The generated page index `/reference` points a machine reader at.
   "/llms.txt",
   // The same pages as one document, which `/llms.txt` and the page name.
   "/llms-full.txt",
@@ -91,7 +91,7 @@ const mounted = new Set<string>([
   ...extraRoutes,
 ]);
 
-/** Drop fenced code: a snippet's `](/docs/…)` is sample text, not a link. */
+/** Drop fenced code: a snippet's `](/…)` is sample text, not a link. */
 const prose = (source: string): string => {
   const kept: string[] = [];
   let fenced = false;
@@ -177,9 +177,9 @@ const linksOf = (page: Page): ReadonlyArray<Link> => {
  * matches a dead link, so a fix must delete its row.
  *
  * Empty: the three cross-links between the keyboard-shortcut and hotkey-recorder
- * pages omitted the `/docs/components` prefix; the components workstream
- * corrected them. The six editor cross-links pointed at `/docs/components` while
- * the editor collection mounts at `/docs/editor`; the editor workstream
+ * pages omitted the `/components` prefix; the components workstream
+ * corrected them. The six editor cross-links pointed at `/components` while
+ * the editor collection mounts at `/editor`; the editor workstream
  * repointed them and dropped its six rows.
  */
 const knownDeadLinks: ReadonlyArray<{
@@ -214,11 +214,11 @@ const deadReason = (link: Link): string | undefined => {
 };
 
 /**
- * Every in-site link a rendered component writes as a literal `href="/docs…"`.
+ * Every in-site link a rendered component writes as a literal `href="/…"`.
  *
  * A page's Markdown is walked above; the strips and frames around the page are
  * TSX, and nothing read them. The dependency strip on every component page
- * linked `/docs/architecture#the-packages` while that page had no heading by
+ * linked `/architecture#the-packages` while that page had no heading by
  * that name, so the link a reader follows to learn where a package belongs
  * landed at the top of the page.
  */
@@ -236,7 +236,7 @@ const componentLinks: ReadonlyArray<Link> = (() => {
   return files(new URL("apps/docs/src/", root), "apps/docs/src/").flatMap(
     (file) => {
       const source = readFileSync(new URL(file, root), "utf8");
-      return [...source.matchAll(/\shref="(\/docs[^"]*)"/g)].flatMap((match) =>
+      return [...source.matchAll(/\shref="(\/[^"#][^"]*)"/g)].flatMap((match) =>
         match[1] === undefined
           ? []
           : [{ from: file, url: "/", target: match[1] }],

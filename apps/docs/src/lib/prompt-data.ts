@@ -1,4 +1,4 @@
-import { componentPages } from "./component-index-data";
+import { componentPages, primitivePages } from "./component-index-data";
 import { frontmatter, frontmatterValue } from "./component-index";
 
 /**
@@ -48,7 +48,7 @@ export const promptBlocks: ReadonlyArray<PromptEntry> = Object.entries(
       : [
           {
             title,
-            url: `/docs/blocks/${slug}`,
+            url: `/blocks/${slug}`,
             description: frontmatterValue(head, "description") ?? "",
           },
         ];
@@ -56,18 +56,20 @@ export const promptBlocks: ReadonlyArray<PromptEntry> = Object.entries(
   .toSorted((left, right) => left.title.localeCompare(right.title));
 
 /**
- * The components the site ships, one row per page.
+ * Every component the site ships, one row per page.
  *
- * The index's own order is already alphabetical inside each section, which is
- * the order a reader scans; the prompt keeps it rather than re-sorting flat.
+ * Both lanes: the composed components and the Tier 1 primitives, minus the five
+ * a curated page replaces. The index's own order is alphabetical inside each
+ * section, which is the order a reader scans.
  */
-export const promptComponents: ReadonlyArray<PromptEntry> = componentPages.map(
-  (entry) => ({
-    title: entry.title,
-    url: entry.url,
-    description: entry.description,
-  }),
-);
+export const promptComponents: ReadonlyArray<PromptEntry> = [
+  ...componentPages,
+  ...primitivePages,
+].map((entry) => ({
+  title: entry.title,
+  url: entry.url,
+  description: entry.description,
+}));
 
 /** One line per entry: the shape a prompt reads best. */
 const line = (entry: PromptEntry): string =>
@@ -118,7 +120,7 @@ them.`;
 /**
  * The whole prompt: the prose, then the two lists the site generates.
  *
- * Rendered by `/docs/prompt` and copied as text, so what an agent reads is the
+ * Rendered by the prompt page and copied as text, so what an agent reads is the
  * same string the page prints — there is no second source to keep in step.
  */
 export const buildPrompt = (

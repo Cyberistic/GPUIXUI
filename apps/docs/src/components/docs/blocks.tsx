@@ -50,7 +50,7 @@ import { Sidebar01Render, sidebar01Source } from "./blocks/sidebar-01";
 
 export interface Block {
   readonly name: string;
-  /** The docs page slug under `/docs/blocks/`. */
+  /** The docs page slug under `/blocks/`. */
   readonly slug: string;
   readonly title: string;
   readonly description: string;

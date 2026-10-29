@@ -1,7 +1,7 @@
 /**
  * The management console on the landing.
  *
- * The block shipped on `/docs/blocks/dashboard-management` and the landing
+ * The block shipped on `/blocks/dashboard-management` and the landing
  * still showed only the activity dashboard, so the page that advertises the
  * compositions never showed the densest one. The section renders the block
  * itself — the same tree the docs page mounts — so a change in the recipe
@@ -22,7 +22,7 @@ describe("the management console on the landing", () => {
   });
 
   it("links the section to the recipe it shows", () => {
-    expect(markup).toContain('href="/docs/blocks/dashboard-management"');
+    expect(markup).toContain('href="/blocks/dashboard-management"');
     expect(markup).toContain("Every deploy, one screen.");
   });
 

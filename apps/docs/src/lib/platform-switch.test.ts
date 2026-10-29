@@ -127,8 +127,8 @@ describe("the look picker's readout", () => {
   });
 
   it("opens the picker on the page that documents it", () => {
-    expect(themingUrl("http://localhost:4175/docs/components/button")).toBe(
-      "http://localhost:4175/docs/theming",
+    expect(themingUrl("http://localhost:4175/components/button")).toBe(
+      "http://localhost:4175/theming",
     );
   });
 });

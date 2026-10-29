@@ -104,7 +104,7 @@ describe("the site's snippets", () => {
 
 describe("the snippet parse", () => {
   it("reads a plain TypeScript fence, not only a tsx one", () => {
-    // `/docs/runtime` prints its capability calls in a `ts` fence, and the guard
+    // `/runtime` prints its capability calls in a `ts` fence, and the guard
     // read only `tsx` fences, so that import was never resolved.
     const page = '```ts\nimport { Icon } from "@gpuixui/primitives";\n```\n';
 

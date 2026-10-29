@@ -36,21 +36,21 @@ const tree: PageTree.Root = {
   name: "Docs",
   children: [
     separator("Getting Started"),
-    page("Introduction", "/docs"),
+    page("Introduction", "/"),
     folder("Blocks", [
-      page("Blocks", "/docs/blocks"),
-      page("Login", "/docs/blocks/login"),
+      page("Blocks", "/blocks"),
+      page("Login", "/blocks/login"),
     ]),
     separator("Composition"),
-    folder("Primitives", [page("Slider", "/docs/primitives/slider")]),
+    folder("Primitives", [page("Slider", "/primitives/slider")]),
   ],
 };
 
 const section: SearchSection = {
   name: "Primitives",
   pages: [
-    { name: "Slider", url: "/docs/primitives/slider" },
-    { name: "Button", url: "/docs/primitives/button" },
+    { name: "Slider", url: "/primitives/slider" },
+    { name: "Button", url: "/primitives/button" },
   ],
 };
 
@@ -101,7 +101,7 @@ describe("the search tree", () => {
     // The page lands under the section's own folder, so its breadcrumb is that
     // folder — not the root group it happens to sit after.
     expect(urlsIn(result.children, "Primitives")).toContain(
-      "/docs/primitives/button",
+      "/primitives/button",
     );
   });
 
@@ -109,10 +109,10 @@ describe("the search tree", () => {
     // The Button page is new; Slider is already in the tree. Completing the
     // section must not list it twice.
     const found = urls(searchPageTree(tree, [section]).children);
-    const slider = found.filter((url) => url === "/docs/primitives/slider");
+    const slider = found.filter((url) => url === "/primitives/slider");
 
     expect(slider).toHaveLength(1);
-    expect(found).toContain("/docs/blocks/login");
+    expect(found).toContain("/blocks/login");
   });
 
   it("does not mutate the tree it reads", () => {
@@ -121,7 +121,7 @@ describe("the search tree", () => {
     searchPageTree(tree, [section]);
 
     expect(separators(tree.children).map((node) => node.name)).toEqual(before);
-    expect(urls(tree.children)).not.toContain("/docs/primitives/button");
+    expect(urls(tree.children)).not.toContain("/primitives/button");
   });
 
   it("is the tree the search route indexes with, built once", () => {

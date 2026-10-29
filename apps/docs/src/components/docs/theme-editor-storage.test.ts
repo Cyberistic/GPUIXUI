@@ -12,12 +12,12 @@ import {
 /**
  * The editor's half of a remembered preference.
  *
- * `/docs/themes` promises that edits persist to the URL and `localStorage`, and
+ * `/themes` promises that edits persist to the URL and `localStorage`, and
  * it used to read and write that store directly — inside the mount effect, on
  * every colour keystroke and on **Reset**. A browser with site data blocked
  * throws from all three, so such a reader lost the page to `Something went
  * wrong` — measured on the served build by blocking `Storage.prototype` and
- * navigating to `/docs/themes`. The platform switch already answered a refusal
+ * navigating to `/themes`. The platform switch already answered a refusal
  * as absence; these cases hold the editor to the same rule.
  */
 

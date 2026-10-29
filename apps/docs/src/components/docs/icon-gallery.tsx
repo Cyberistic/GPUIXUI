@@ -8,7 +8,7 @@ import {
 /**
  * Every icon the set publishes, drawn from the markup the package ships.
  *
- * The gallery is the visual half of the icon set: the [Icons page](/docs/icons/icon)
+ * The gallery is the visual half of the icon set: the [Icons page](/icons/icon)
  * carries the API, the size scale and the accessibility rules, while this grid
  * answers "what does `git-branch` look like". The geometry is the package's own,
  * so a glyph cannot be redrawn from memory; the paint section of

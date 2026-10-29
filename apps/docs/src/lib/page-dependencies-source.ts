@@ -213,7 +213,7 @@ const curatedModule = (root: string, markdown: string): string | undefined => {
  *
  * A curated page is MDX this app owns, and the module it displays is the file
  * its `<ComponentSource>` names — not the package page the URL shadows. The two
- * can document different modules: `/docs/components/button` shows the
+ * can document different modules: `/components/button` shows the
  * primitives' action, while the components package's page documents its own
  * wrapper. Reading the page's own source block keeps the generated dependency
  * strip beside the code the reader can see.

@@ -30,8 +30,8 @@ describe("the site origin", () => {
   });
 
   it("builds an absolute URL for a path, a bare path and the root", () => {
-    expect(absoluteUrl("/docs/runtime")).toBe(`${siteOrigin}/docs/runtime`);
-    expect(absoluteUrl("docs/runtime")).toBe(`${siteOrigin}/docs/runtime`);
+    expect(absoluteUrl("/runtime")).toBe(`${siteOrigin}/runtime`);
+    expect(absoluteUrl("runtime")).toBe(`${siteOrigin}/runtime`);
     expect(absoluteUrl("/")).toBe(`${siteOrigin}/`);
   });
 });

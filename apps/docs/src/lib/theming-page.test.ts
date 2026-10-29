@@ -3,7 +3,7 @@ import { retroNames, retroStyles } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 
 /**
- * `/docs/theming` teaches the platform switch but stopped at `platformTheme`:
+ * `/theming` teaches the platform switch but stopped at `platformTheme`:
  * a consumer could pick a shipped look and could not author one, although the
  * mission's acceptance is that a reader takes a platform theme file, edits it
  * and ships their own look.

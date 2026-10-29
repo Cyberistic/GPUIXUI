@@ -23,7 +23,7 @@ export interface NamedImport {
 /**
  * The page's fenced TypeScript snippets, in reading order.
  *
- * A `ts` fence is as copyable as a `tsx` one: `/docs/runtime` prints
+ * A `ts` fence is as copyable as a `tsx` one: `/runtime` prints
  * `import { capabilities } from "@gpuixui/runtime"` in a plain TypeScript block,
  * and a guard that read only `tsx` never saw it.
  */

@@ -52,7 +52,7 @@ import { VirtualizationDemo } from "./virtualization-demo";
 /**
  * The data lane's pages, held to the components they draw.
  *
- * Every one of the fifteen `/docs/data-display` previews is a browser
+ * Every one of the fifteen `/data-display` previews is a browser
  * reproduction of a GPUix host, so nothing type-checks the paint: a drawing can
  * keep its rules and still drift into hand-rolled markup — which is exactly
  * what these pages did, with a raw `<table>`, a bare `<input>` and unstyled

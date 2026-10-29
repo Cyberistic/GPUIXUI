@@ -6,7 +6,7 @@ import {
 } from "@gpuixui/tokens";
 
 /**
- * The desktop palette `/docs/theming` prints, decoded and mapped by the shipped
+ * The desktop palette `/theming` prints, decoded and mapped by the shipped
  * functions.
  *
  * A documentation table copied from a run drifts the moment the decoder or the

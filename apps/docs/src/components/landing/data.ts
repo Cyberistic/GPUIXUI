@@ -88,7 +88,7 @@ export const navLinks = [
   { label: "Lineage", href: "#lineage" },
   { label: "Defaults", href: "#platforms" },
   { label: "Code", href: "#code" },
-  { label: "Docs", href: "/docs" },
+  { label: "Docs", href: "/introduction" },
 ] as const;
 
 export const attribution = [

@@ -97,7 +97,7 @@ describe("the icon gallery", () => {
     );
     // The page mounts the URL-backed component and links the reference half.
     expect(page).toContain("<IconGallery />");
-    expect(page).toContain("](/docs/icons/icon)");
+    expect(page).toContain("](/icons/icon)");
     // Honesty: the drawings are the package's geometry, painted by the browser.
     expect(page).toContain("drawn from the markup the package ships");
     expect(page).toContain("style.color");

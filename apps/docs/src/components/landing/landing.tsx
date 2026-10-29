@@ -46,7 +46,7 @@ function Nav() {
       </div>
       <div className="landing-nav-right">
         <ThemeToggle />
-        <a className="landing-nav-cta" href="/docs">
+        <a className="landing-nav-cta" href="/introduction">
           Read the docs
         </a>
       </div>
@@ -126,7 +126,7 @@ export function Management() {
       <p className="landing-lead">
         A management console composed from the same parts — service health,
         deploys, toasts, an API-key table and a context menu. The recipe lives
-        on the <a href="/docs/blocks/dashboard-management">blocks page</a>.
+        on the <a href="/blocks/dashboard-management">blocks page</a>.
       </p>
       <div className="landing-dashboard landing-management">
         <DashboardManagementRender />
@@ -151,7 +151,7 @@ function Dashboard() {
         A dashboard composed from the library's parts — cards, badges, progress,
         search and charts. This is a browser rendering of the same{" "}
         <code>@gpuixui/*</code> tree the native runtime draws; the recipe lives
-        on the <a href="/docs/blocks/dashboard">blocks page</a>.
+        on the <a href="/blocks/dashboard">blocks page</a>.
       </p>
       <div className="landing-dashboard">
         <DashboardRender />
@@ -176,7 +176,7 @@ const recipes = retroNames.map((look) => ({
   name: retroStyles[look].label,
   body: lookBodies[look],
   facts: `${retroStyles[look].density} · ${retroStyles[look].radius.md}px corners · ${retroStyles[look].mono}`,
-  href: "/docs/theming#the-look-picker",
+  href: "/theming#the-look-picker",
 }));
 
 export function Defaults() {
@@ -236,8 +236,8 @@ function CodeAndComponent() {
       </div>
 
       <p className="landing-code-caption">
-        <a href="/docs/components/tabs">Tabs</a> — a compound-part component;
-        browser preview of the native geometry and palette.
+        <a href="/components/tabs">Tabs</a> — a compound-part component; browser
+        preview of the native geometry and palette.
       </p>
     </section>
   );

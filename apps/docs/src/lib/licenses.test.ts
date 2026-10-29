@@ -12,7 +12,7 @@ import { sidebarPages } from "./sidebar-pages.test-util";
  *
  * `LICENSES/<reference>.md` is a release requirement, so the site reads it
  * rather than restating it — and a record the parser cannot read would vanish
- * from `/docs/license` with no other symptom, which is the one outcome a
+ * from `/license` with no other symptom, which is the one outcome a
  * licence page may not have. A record therefore has to name where it came from,
  * its licence, what we take and what we leave out; each is checked here.
  */
@@ -73,7 +73,7 @@ describe("the licence records", () => {
   it("accepts the verb a record uses for what it leaves out", () => {
     // The Lucide record says "What we do not copy" — the section the shape
     // requires, worded for an icon set. A parser that only knew "use" dropped
-    // the whole record from `/docs/license` with no other symptom, which is the
+    // the whole record from `/license` with no other symptom, which is the
     // one outcome a licence page may not have.
     const parsed = parseLicense(
       "lucide.md",

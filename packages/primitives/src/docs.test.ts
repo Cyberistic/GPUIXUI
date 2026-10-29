@@ -796,7 +796,7 @@ describe("the primitives docs page contract", () => {
   it("documents the caller's className on every primitive page", () => {
     // The bug guarded: the tw migration gave every primitive a compiled
     // Tailwind escape hatch joined after its recipe, and sixteen pages never
-    // grew the row — a reader of `/docs/primitives/button` found `style` and
+    // grew the row — a reader of `/primitives/button` found `style` and
     // `testId` but not the prop that reaches the recipe. `Spacer` was the one
     // component without the prop, so it gained one rather than an exception
     // here; `Select` is the documented exception, because its root paints only

@@ -87,7 +87,11 @@ const useRailDrag = <T,>(
       if (event.buttons !== 0 && dragging.current) {
         // The button was released outside the window: the gesture is over.
         dragging.current = false;
-        element.releasePointerCapture?.(event.pointerId);
+        try {
+          element.releasePointerCapture?.(event.pointerId);
+        } catch {
+          // Already released, or never held.
+        }
         return;
       }
       if (!dragging.current) return;
@@ -100,16 +104,27 @@ const useRailDrag = <T,>(
     (event: ReactPointerEvent<HTMLElement>) => {
       if (event.button !== 0) return;
       dragging.current = true;
-      // The capture is what carries the gesture past the rail's own box.
-      event.currentTarget.setPointerCapture?.(event.pointerId);
+      // Report the press first: the capture is what carries the gesture past the
+      // element's box, but it throws `NotFoundError` when the pointer is not
+      // active, and a throw here aborted the handler before the value was ever
+      // read — which is a knob that cannot be dragged.
       onValue(read(event.currentTarget.getBoundingClientRect(), event));
+      try {
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+      } catch {
+        // No capture available: the drag still works inside the element.
+      }
     },
     [onValue, read],
   );
 
   const onPointerUp = useCallback((event: ReactPointerEvent<HTMLElement>) => {
     dragging.current = false;
-    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    try {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    } catch {
+      // Already released, or never held.
+    }
   }, []);
 
   return { onPointerDown, onPointerMove: handle, onPointerUp };

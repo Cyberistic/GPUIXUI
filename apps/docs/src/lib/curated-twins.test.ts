@@ -16,8 +16,8 @@ import { uniqueSearchPages } from "./search-index";
  * One page per component.
  *
  * Bug guarded: `Button`, `Checkbox`, `Select`, `Switch` and `Tooltip` were
- * documented twice — a curated page under `/docs/components` and the package
- * page under `/docs/primitives` — so the sidebar listed two entries with one
+ * documented twice — a curated page under `/components` and the package
+ * page under `/primitives` — so the sidebar listed two entries with one
  * title, a search returned both, and the sitemap advertised two addresses for
  * one component. The curated page is canonical; the package URL redirects to it
  * and neither the sidebar, the search index, the sitemap nor `/llms.txt` may
@@ -49,7 +49,7 @@ const curated = new Map(
     .filter((name) => name !== "index.mdx")
     .map((name) => [
       titleOf(new URL(name, new URL("components/", docsDir))),
-      `/docs/components/${name.replace(/\.mdx$/, "")}`,
+      `/components/${name.replace(/\.mdx$/, "")}`,
     ]),
 );
 
@@ -87,20 +87,20 @@ describe("the curated primitive twins", () => {
   });
 
   it("keeps the query a reader followed to a retired address", () => {
-    expect(curatedRedirect("/docs/primitives/button", "?platform=win32")).toBe(
-      "/docs/components/button?platform=win32",
+    expect(curatedRedirect("/primitives/button", "?platform=win32")).toBe(
+      "/components/button?platform=win32",
     );
-    expect(curatedRedirect("/docs/primitives/button", "")).toBe(
-      "/docs/components/button",
+    expect(curatedRedirect("/primitives/button", "")).toBe(
+      "/components/button",
     );
     expect(
-      curatedRedirect("/docs/primitives/slider", "?platform=win32"),
+      curatedRedirect("/primitives/slider", "?platform=win32"),
     ).toBeUndefined();
   });
 
   it("is what the redirect and the sidebar read, not a list nothing uses", () => {
     const route = readFileSync(
-      new URL("../routes/docs/$.tsx", import.meta.url),
+      new URL("../routes/$.tsx", import.meta.url),
       "utf8",
     );
     const packageDocs = readFileSync(

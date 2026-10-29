@@ -41,7 +41,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 /**
- * `/docs/motion` is the one page that documents `@gpuixui/motion`, and it
+ * `/motion` is the one page that documents `@gpuixui/motion`, and it
  * claimed the package while omitting one of its entry points: the presence seam
  * — `fadeFrom`, `presenceTiming`, `presenceMotion`, `presenceStyle`,
  * `exitWindowMs` and the rest — shipped and every overlay in the library takes

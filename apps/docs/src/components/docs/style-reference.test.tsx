@@ -12,7 +12,7 @@ import {
 import { StyleReferenceBody } from "./style-reference";
 
 /**
- * The class reference on `/docs/styling`.
+ * The class reference on `/styling`.
  *
  * The page taught ten representative classes, so a consumer writing a recipe
  * had to read `packages/tw` to learn the other eighty. The table is now

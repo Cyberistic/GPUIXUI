@@ -194,7 +194,7 @@ describe("the live surface's route", () => {
       expect(start.toLowerCase()).toContain(header.toLowerCase());
     }
 
-    // Both are scoped to the one route: isolating /docs would lock the rest of
+    // Both are scoped to the one route: isolating /live would lock the rest of
     // the site's embeds for a renderer it never loads.
     expect(vite).toContain('startsWith("/live")');
     expect(start).toContain('pathname.startsWith("/live")');

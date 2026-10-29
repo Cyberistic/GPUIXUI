@@ -320,7 +320,7 @@ export function Terminal() {
         <p className="landing-terminal-caption">
           A browser drawing of VS Code — its Dark Modern chrome and palette —
           with <code>src/app/page.tsx</code> open. The command is the one{" "}
-          <a href="/docs/installation">the installation page</a> documents.
+          <a href="/installation">the installation page</a> documents.
         </p>
         <button
           aria-label="Replay the terminal animation"

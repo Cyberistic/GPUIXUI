@@ -57,11 +57,7 @@ const canonicalOf = (result: Head): string | undefined =>
 
 describe("a docs page's head", () => {
   it("names the page, not the site", () => {
-    const result = head(
-      "/docs/components/dialog",
-      "Dialog",
-      "A modal surface.",
-    );
+    const result = head("/components/dialog", "Dialog", "A modal surface.");
 
     expect(descriptionOf(result)).toBe("A modal surface.");
     expect(result.meta[0]).toEqual({ title: `Dialog · ${appName}` });
@@ -69,40 +65,37 @@ describe("a docs page's head", () => {
   });
 
   it("publishes an absolute canonical URL for the page", () => {
-    const result = head("/docs/primitives/button", "Button");
-    const url = `${siteOrigin}/docs/primitives/button`;
+    const result = head("/primitives/button", "Button");
+    const url = `${siteOrigin}/primitives/button`;
 
     expect(canonicalOf(result)).toBe(url);
     expect(property(result, "og:url")).toBe(url);
   });
 
   it("keeps the platform switch out of the canonical URL", () => {
-    const result = head("/docs/components/button", "Button", "The action.");
+    const result = head("/components/button", "Button", "The action.");
 
     expect(canonicalOf(result)).not.toContain("platform");
     // The switch still travels in a shareable link; only the canonical drops it.
-    expect(absoluteUrl("/docs/components/button?platform=win32")).toContain(
+    expect(absoluteUrl("/components/button?platform=win32")).toContain(
       "platform=win32",
     );
   });
 
-  it("does not double the slash for the docs index or the landing page", () => {
-    expect(canonicalOf(head("/docs", "Introduction"))).toBe(
-      `${siteOrigin}/docs`,
-    );
+  it("publishes the site root without doubling the slash", () => {
     expect(canonicalOf(head("/", "Home"))).toBe(`${siteOrigin}/`);
   });
 
   it("falls back to a real description when a page has none", () => {
-    const missing = descriptionOf(head("/docs/runtime", "Runtime"));
-    const blank = descriptionOf(head("/docs/runtime", "Runtime", "   "));
+    const missing = descriptionOf(head("/runtime", "Runtime"));
+    const blank = descriptionOf(head("/runtime", "Runtime", "   "));
 
     expect(missing).toContain(appName);
     expect(blank).toBe(missing);
   });
 
   it("is mounted by every docs route and by the landing page", () => {
-    const docsRoutes = [read("docs/index.tsx"), read("docs/$.tsx")];
+    const docsRoutes = [read("$.tsx")];
 
     expect(
       docsRoutes.filter(
@@ -126,7 +119,7 @@ describe("a docs page's head", () => {
 });
 
 describe("the share card", () => {
-  const pages = [head("/docs/patterns", "Patterns"), landingMeta()];
+  const pages = [head("/patterns", "Patterns"), landingMeta()];
 
   it("is published by a docs page and by the landing page", () => {
     const missing = pages.filter(
@@ -139,7 +132,7 @@ describe("the share card", () => {
   });
 
   it("declares the image's type, size and alternative text", () => {
-    const result = head("/docs/patterns", "Patterns");
+    const result = head("/patterns", "Patterns");
 
     expect(property(result, "og:image:type")).toBe("image/png");
     expect(property(result, "og:image:width")).toBe(String(socialImage.width));

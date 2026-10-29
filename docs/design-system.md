@@ -1626,7 +1626,7 @@ carries the wash contract, whose report the gate already returns.
 
 - No component-level token catalogue. Semantic roles plus scales are enough; a
   per-component token file would duplicate the same decisions.
-- No theme-authoring UI in the library. The docs site's `/docs/themes` editor is a
+- No theme-authoring UI in the library. The docs site's `/themes` editor is a
   consumer of the same `Theme` shape; the library ships the API, not the editor.
 - No motion tokens here. `@gpuixui/motion` owns durations, easings, springs and
   inertia; this package stays colour, type, space, radius and elevation.

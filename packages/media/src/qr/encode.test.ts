@@ -423,7 +423,7 @@ describe("encodeQr", () => {
   });
 
   it("picks the mask with the lowest penalty of the eight", () => {
-    const value = "https://gpuixui.dev/docs";
+    const value = "https://gpuixui.dev/";
     const auto = encodeQr(value, { level: "Q" });
     expect(auto).toBeInstanceOf(QrSymbol);
     if (!(auto instanceof QrSymbol)) return;

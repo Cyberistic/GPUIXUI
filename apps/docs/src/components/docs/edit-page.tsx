@@ -6,7 +6,7 @@ import { pageEditUrl, pageMarkdownPath } from "@/lib/page-edit";
  *
  * Every docs page is Markdown — this site's own or a package's — and the footer
  * names the file as well as linking it, so a contributor knows what to open
- * before GitHub does. `/docs/components` and the README ledger count the same
+ * before GitHub does. `/components` and the README ledger count the same
  * files; `page-edit.test.ts` holds every served page to one that exists.
  */
 export function EditPage({

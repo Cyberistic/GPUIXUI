@@ -11,7 +11,7 @@ import { gitConfig } from "./shared";
  * loader hands the frame, so it cannot drift from the page beside it.
  *
  * A curated page shadows the package page with the same URL. The site serves
- * `/docs/components/dialog` from `content/docs`, so that is the file to edit;
+ * `/components/dialog` from `content/docs`, so that is the file to edit;
  * the package's displaced copy is a page no reader sees.
  */
 

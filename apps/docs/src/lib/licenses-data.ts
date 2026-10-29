@@ -8,7 +8,7 @@ import {
  * `LICENSES/`, read at build time.
  *
  * The records are the release inventory, not a copy of it: a file added there
- * appears on `/docs/license` with no docs change. `licenses.test.ts` holds the
+ * appears on `/license` with no docs change. `licenses.test.ts` holds the
  * parse, so a file in an unreadable shape fails the suite instead of vanishing
  * from the page.
  */

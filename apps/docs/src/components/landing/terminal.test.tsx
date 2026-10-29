@@ -42,7 +42,7 @@ describe("the editor moment", () => {
     expect(installation).toContain("GPUIX_TERMINAL=1 code GPUIXUI");
     expect(markup).toContain("GPUIX_TERMINAL=1 code GPUIXUI");
     expect(markup).toContain("opening GPUIXUI — terminal mode");
-    expect(markup).toContain('href="/docs/installation"');
+    expect(markup).toContain('href="/installation"');
   });
 
   it("waits for the reader to reach it before typing", () => {

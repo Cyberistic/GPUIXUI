@@ -27,15 +27,15 @@ describe("the Blocks index", () => {
   it("links a card by its title, never by a box around the preview", () => {
     expect(markup).toContain('<div class="gx-block-card-link">');
     expect(markup).toContain(
-      '<h3 class="gx-block-card-title"><a href="/docs/blocks/sign-in">Sign in</a></h3>',
+      '<h3 class="gx-block-card-title"><a href="/blocks/sign-in">Sign in</a></h3>',
     );
     expect(markup).not.toContain('<a class="gx-block-card-link"');
   });
 
   it("links every registered block, once, in registry order", () => {
-    const hrefs = [
-      ...markup.matchAll(/<a href="\/docs\/blocks\/([a-z0-9-]+)"/g),
-    ].map((match) => match[1]);
+    const hrefs = [...markup.matchAll(/<a href="\/blocks\/([a-z0-9-]+)"/g)].map(
+      (match) => match[1],
+    );
 
     expect(hrefs).toEqual(blockList.map((block) => block.slug));
   });

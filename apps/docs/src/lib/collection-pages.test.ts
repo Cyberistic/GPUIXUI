@@ -25,7 +25,7 @@ const unwritten: PackageCollection = {
   origin: "data",
   dir: "packages/not-yet-shipped/docs",
   packageName: "@gpuixui/not-yet-shipped",
-  route: "/docs/not-yet-shipped",
+  route: "/not-yet-shipped",
   section: "Data display",
   kind: "data surface",
 };

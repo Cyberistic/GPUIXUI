@@ -3,6 +3,24 @@ title: Icons
 description: 83 monochrome icons and their size scale
 ---
 
+## Where these come from
+
+The geometry is [Lucide](https://lucide.dev)'s, on its 24×24 grid with a 2px
+stroke, used under the ISC licence and attributed in `LICENSES/`. Lucide ships
+React components; this package ships the same shapes as plain markup strings,
+because the runtime paints an icon as data: `<svg source>` takes the geometry and
+tints it with the element's own `style.color`.
+
+That is the whole contract. An icon carries no colour, no size and no state of its
+own — one markup serves every theme and every platform look — and the wrapper
+fixes the grid and the two paint values a monochrome tint can use (`fill: none`,
+`stroke: #000`, which the runtime replaces with the token you pass). Nothing is
+traced or redrawn: a shape that leaves the grid, or one that carries a colour
+literal, fails `registry.test.ts` rather than shipping.
+
+Adding an icon is two edits: the name in `names.ts` and its markup in
+`registry.ts`. TypeScript refuses the pair if one is missing.
+
 ## Usage
 
 ```tsx

@@ -1,8 +1,8 @@
 /**
- * The class reference on `/docs/styling`, resolved by the compiler itself.
+ * The class reference on `/styling`, resolved by the compiler itself.
  *
  * `@gpuixui/tw` decides what a class paints; a table copied from its source
- * goes stale the moment a utility moves, and `/docs/styling` showed ten
+ * goes stale the moment a utility moves, and `/styling` showed ten
  * representative classes with no way to find the other eighty. Every row here
  * is compiled through `classesToStyle` and `unsupportedReason` against the theme
  * the platform switch resolved, so a reader sees the number this release paints

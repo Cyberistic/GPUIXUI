@@ -13,9 +13,9 @@ import { searchLinks } from "./search-links";
 
 const app = new URL("../../", import.meta.url);
 
-/** The file that serves a docs URL: `/docs/x` → `x.mdx` or `x/index.mdx`. */
+/** The file that serves a docs URL: `/x` → `x.mdx` or `x/index.mdx`. */
 const serves = (href: string): boolean => {
-  const slug = href.replace(/^\/docs\/?/, "").replace(/\/$/, "");
+  const slug = href.replace(/^\//, "").replace(/\/$/, "");
   return (
     existsSync(new URL(`content/docs/${slug}.mdx`, app)) ||
     existsSync(new URL(`content/docs/${slug || "."}/index.mdx`, app))
@@ -28,7 +28,7 @@ describe("the search dialog's quick links", () => {
     expect(searchLinks.length).toBeGreaterThanOrEqual(5);
     expect(
       searchLinks.every(
-        ([name, href]) => name.trim().length > 0 && href.startsWith("/docs"),
+        ([name, href]) => name.trim().length > 0 && href.startsWith("/"),
       ),
     ).toBe(true);
   });

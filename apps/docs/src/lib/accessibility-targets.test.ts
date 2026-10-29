@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
- * `/docs/accessibility` published the ARIA budget and stopped there. Two
+ * `/accessibility` published the ARIA budget and stopped there. Two
  * accessibility facts the library measures had no page on the site: the
  * **pressable-target floors** (`targetSize`, `targetInset`) that a control
  * smaller than its hit box reserves, and the **keyboard dim** the runtime

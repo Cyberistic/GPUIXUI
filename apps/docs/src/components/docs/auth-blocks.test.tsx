@@ -48,8 +48,8 @@ describe("login block", () => {
   it("prints the fields, the reset link, both providers and the sign-up footer", () => {
     expect(markup).toContain('name="email"');
     expect(markup).toContain('name="password"');
-    expect(markup).toContain('href="/docs/components/auth#forgot-password"');
-    expect(markup).toContain('href="/docs/components/auth#sign-up"');
+    expect(markup).toContain('href="/components/auth#forgot-password"');
+    expect(markup).toContain('href="/components/auth#sign-up"');
     expect(markup).toContain("GitHub");
     expect(markup).toContain("Google");
     expect(text(markup)).toContain("Don't have an account?");
@@ -112,7 +112,7 @@ describe("signup block", () => {
     expect(markup).toContain('name="confirm"');
     expect(markup).toContain('name="terms"');
     expect(markup).toContain('value="accepted"');
-    expect(markup).toContain('href="/docs/components/auth#sign-in"');
+    expect(markup).toContain('href="/components/auth#sign-in"');
     expect(text(markup)).toContain("Already have an account?");
   });
 
@@ -148,7 +148,7 @@ describe("forgot-password block", () => {
     expect(markup).toContain('name="email"');
     expect(markup).toContain("Send reset link");
     expect(text(markup)).toContain("Back to sign in");
-    expect(markup).toContain('href="/docs/components/auth#sign-in"');
+    expect(markup).toContain('href="/components/auth#sign-in"');
   });
 
   it("names the address the note was sent to", () => {
@@ -191,7 +191,7 @@ describe("the sign-in page", () => {
     expect(markup).toContain("gx-auth-page-aside");
     expect(markup).toContain('href="/#features"');
     expect(markup).toContain('href="/#pricing"');
-    expect(markup).toContain('href="/docs"');
+    expect(markup).toContain('href="/introduction"');
     expect(text(markup)).toContain("The same components, one theme away.");
   });
 
@@ -203,8 +203,8 @@ describe("the sign-in page", () => {
     expect(markup).toContain('type="password"');
     expect(markup).toContain('aria-label="Show password"');
     expect(markup).toContain('aria-pressed="false"');
-    expect(markup).toContain('href="/docs/components/auth#forgot-password"');
-    expect(markup).toContain('href="/docs/components/auth#sign-up"');
+    expect(markup).toContain('href="/components/auth#forgot-password"');
+    expect(markup).toContain('href="/components/auth#sign-up"');
     expect(text(markup)).toContain("GitHub");
     expect(text(markup)).toContain("Google");
     expect(text(markup)).toContain("New here?");
@@ -245,7 +245,7 @@ describe("the auth surface's placement", () => {
     // preview" is no longer a per-block choice. What makes the sign-in entry a
     // page is its own markup — navbar, body, quote panel — which the render
     // check below holds; the registry keeps exactly one auth entry beside the
-    // auth cards on `/docs/components/auth`.
+    // auth cards on `/components/auth`.
     const auth = blockList.filter((block) =>
       ["login", "signup", "forgot-password", "otp", "sign-in"].includes(
         block.slug,

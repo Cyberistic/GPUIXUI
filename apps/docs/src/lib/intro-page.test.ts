@@ -3,8 +3,9 @@ import { describe, expect, it } from "vitest";
 import { declaredTypes, propsOf, type TypeIndex } from "./component-props";
 
 /**
- * `/docs` is the first page a reader copies from, and both of its snippets had
- * drifted from the components they show: the `Badge` example passed
+ * `/introduction` is the first page a reader copies from, and both of its
+ * snippets had drifted from the components they show: the `Badge` example
+ * passed
  * `tone="success"`, which is `Alert`'s prop — `Badge` takes `variant`, so the
  * snippet a reader pasted first did not compile — and the placement paragraph
  * promised that a `DialogTitle` "outside a `DialogHeader` fails", while
@@ -14,7 +15,7 @@ import { declaredTypes, propsOf, type TypeIndex } from "./component-props";
  * package fails the introduction until the snippet follows.
  *
  * `ThemeProvider` is the tokens package's React bridge and outside the three
- * packages the props reader scans; its props are documented on `/docs/theming`.
+ * packages the props reader scans; its props are documented on `/theming`.
  */
 
 const root = new URL("../../../../", import.meta.url);
@@ -22,7 +23,7 @@ const root = new URL("../../../../", import.meta.url);
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
 
-const page = read("apps/docs/content/docs/index.mdx");
+const page = read("apps/docs/content/docs/introduction.mdx");
 
 const types: TypeIndex = declaredTypes();
 

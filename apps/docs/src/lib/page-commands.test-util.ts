@@ -9,8 +9,8 @@ import { repoRoot } from "./public-symbols-source";
  *
  * A page's shell snippet looks correct whether or not the script behind it
  * exists, and this repository renames scripts (a package's `test` gains a
- * `test:runtime` or a `test:behaviour` sibling). `/docs/installation` was the
- * first page held this way; `/docs/contributing` prints the same commands for a
+ * `test:runtime` or a `test:behaviour` sibling). `/installation` was the
+ * first page held this way; `/contributing` prints the same commands for a
  * contributor, so the reader is shared rather than copied.
  */
 

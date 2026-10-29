@@ -78,9 +78,9 @@ describe("the implementation-status table", () => {
 
   it("links a documented row and leaves an undocumented one plain", () => {
     expect(rowMarkup("Typing text")).toContain(
-      'href="/docs/components/typing-text"',
+      'href="/components/typing-text"',
     );
-    expect(rowMarkup("Buttons")).toContain('href="/docs/components/button"');
+    expect(rowMarkup("Buttons")).toContain('href="/components/button"');
     expect(rowMarkup("Terminal surfaces")).not.toContain("href=");
   });
 

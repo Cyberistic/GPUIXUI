@@ -36,12 +36,12 @@ const walk = (
 
 const mounted: ReadonlyArray<Mounted> = [
   ...walk(join(appDir, "content/docs"), (slug) =>
-    slug === "" ? "/docs" : `/docs/${slug}`,
+    slug === "" ? "/" : `/${slug}`,
   ),
   ...["primitives", "components", "icons"].flatMap((pkg) =>
     walk(
       join(appDir, `../../packages/${pkg}/docs`),
-      (slug) => `/docs/${pkg}/${slug}`,
+      (slug) => `/${pkg}/${slug}`,
     ),
   ),
 ];
@@ -83,7 +83,7 @@ describe("the landing page's links", () => {
   it("send a new reader to the quick-start and the component index", () => {
     const targets = links.map(({ href }) => href);
 
-    expect(targets).toContain("/docs/getting-started");
-    expect(targets).toContain("/docs");
+    expect(targets).toContain("/getting-started");
+    expect(targets).toContain("/");
   });
 });

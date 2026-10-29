@@ -17,7 +17,7 @@ import { descriptionRuns, descriptionText } from "./page-description";
  * holds the painter to.
  */
 
-const SENTENCE = "[Accordion](/docs/components/accordion)";
+const SENTENCE = "[Accordion](/components/accordion)";
 
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
@@ -50,7 +50,7 @@ describe("the collapsible description", () => {
     // become the only place a link can be painted.
     expect(descriptionRuns(`Reach for ${SENTENCE} instead.`)).toEqual([
       { kind: "text", text: "Reach for " },
-      { kind: "link", text: "Accordion", href: "/docs/components/accordion" },
+      { kind: "link", text: "Accordion", href: "/components/accordion" },
       { kind: "text", text: " instead." },
     ]);
     const target = new URL(

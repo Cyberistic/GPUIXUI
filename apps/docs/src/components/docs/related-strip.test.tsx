@@ -15,21 +15,21 @@ const render = (url: string, sections: ReadonlyArray<string> = []): string =>
 
 describe("the related strip", () => {
   it("prints the page's siblings, each linked to its page", () => {
-    const markup = render("/docs/components/ripple-button");
+    const markup = render("/components/ripple-button");
 
     expect(markup).toContain("Related · Actions and their effects");
-    expect(markup).toContain('href="/docs/components/liquid-button"');
+    expect(markup).toContain('href="/components/liquid-button"');
     expect(markup).toContain(">Liquid button</a>");
-    expect(markup).toContain('href="/docs/components/button"');
-    expect(markup).not.toContain('href="/docs/components/ripple-button"');
+    expect(markup).toContain('href="/components/button"');
+    expect(markup).not.toContain('href="/components/ripple-button"');
   });
 
   it("keeps a package page linked to the curated page the site serves", () => {
     // The curated page keeps its URL, so it is what a reader follows; the
     // package page it shadows is never mounted.
-    const markup = render("/docs/components/preview-card");
+    const markup = render("/components/preview-card");
 
-    expect(markup).toContain('href="/docs/components/dialog"');
+    expect(markup).toContain('href="/components/dialog"');
     expect(markup).toContain(">Dialog</a>");
   });
 
@@ -37,12 +37,12 @@ describe("the related strip", () => {
     // The curated page keeps its URL, so it is the page a reader lands on; a
     // strip mounted only on the package frame left all thirty-nine curated
     // components with no sibling links at all.
-    const markup = render("/docs/components/dialog");
+    const markup = render("/components/dialog");
 
     expect(markup).toContain("Related · Overlays");
-    expect(markup).toContain('href="/docs/components/drawer"');
-    expect(markup).toContain('href="/docs/components/popover"');
-    expect(markup).not.toContain('href="/docs/components/dialog"');
+    expect(markup).toContain('href="/components/drawer"');
+    expect(markup).toContain('href="/components/popover"');
+    expect(markup).not.toContain('href="/components/dialog"');
   });
 
   it("is mounted on the curated frame, not only the package frame", () => {
@@ -68,7 +68,7 @@ describe("the related strip", () => {
       .map((name) => name.replace(/\.mdx$/, ""));
 
     const missing = slugs.flatMap((slug) => {
-      const url = `/docs/components/${slug}`;
+      const url = `/components/${slug}`;
       const related = relatedFor(url);
       if (related === undefined) return [`${url}: no family`];
       return related.pages.some((member) => member.href === url)
@@ -84,14 +84,14 @@ describe("the related strip", () => {
     // A mounted package page may write the section itself; printing the
     // generated family under its own would offer two lists of siblings.
     expect(
-      render("/docs/data-display/column-configuration", [
+      render("/data-display/column-configuration", [
         "#usage",
         "#api",
         "#related",
       ]),
     ).toBe("");
     expect(
-      render("/docs/data-display/column-configuration", ["#usage", "#api"]),
+      render("/data-display/column-configuration", ["#usage", "#api"]),
     ).toContain("Related · Table surfaces");
   });
 
@@ -112,16 +112,16 @@ describe("the related strip", () => {
   it("prints the media player's siblings, not an empty line", () => {
     // The player landed after the families were written, so its page ended with
     // no related line while the other media pages were its family all along.
-    const markup = render("/docs/media/media-player");
+    const markup = render("/media/media-player");
 
     expect(markup).toContain("Related · Media surfaces");
-    expect(markup).toContain('href="/docs/media/crop-area"');
-    expect(markup).not.toContain('href="/docs/media/media-player"');
+    expect(markup).toContain('href="/media/crop-area"');
+    expect(markup).not.toContain('href="/media/media-player"');
   });
 
   it("renders nothing for an argued solo or a page outside the component lanes", () => {
-    expect(render("/docs/primitives/tooltip")).toBe("");
-    expect(render("/docs/components/not-a-page")).toBe("");
-    expect(render("/docs/theming")).toBe("");
+    expect(render("/primitives/tooltip")).toBe("");
+    expect(render("/components/not-a-page")).toBe("");
+    expect(render("/theming")).toBe("");
   });
 });

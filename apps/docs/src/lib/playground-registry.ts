@@ -5,7 +5,7 @@ import terminalSource from "../../../playground/src/terminal/run.ts?raw";
 /**
  * The companion playground's catalogue, read from its own registries.
  *
- * The site cannot render the native library, so `/docs/playground` is the page
+ * The site cannot render the native library, so `/playground` is the page
  * that sends a reader to the app that can — and a hand-written list of probes
  * drifts the moment one is added. The three registries are the single source of
  * truth the runners' `--list` prints, so the page reads them at build time
