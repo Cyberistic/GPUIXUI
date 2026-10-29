@@ -1,5 +1,5 @@
+import { allBlocks } from "./block-index-data";
 import { componentPages, primitivePages } from "./component-index-data";
-import { frontmatter, frontmatterValue } from "./component-index";
 
 /**
  * The build prompt, generated from the pages the site already ships.
@@ -23,37 +23,20 @@ export interface PromptEntry {
 
 const siteRoot = "https://gpuixui.sudokw.com";
 
-/** The block pages, read from their own frontmatter. */
-const blockFiles = import.meta.glob("../../content/docs/blocks/*.mdx", {
-  eager: true,
-  query: "?raw",
-  import: "default",
-});
-
-/** The slug a block page's filename names. */
-const slugOf = (file: string): string =>
-  file.slice(file.lastIndexOf("/") + 1).replace(/\.mdx$/, "");
-
-/** The blocks the site ships, alphabetical, without their index page. */
-export const promptBlocks: ReadonlyArray<PromptEntry> = Object.entries(
-  blockFiles,
-)
-  .flatMap(([file, source]) => {
-    const slug = slugOf(file);
-    if (slug === "index") return [];
-    const head = frontmatter(source);
-    const title = frontmatterValue(head, "title");
-    return title === undefined
-      ? []
-      : [
-          {
-            title,
-            url: `/blocks/${slug}`,
-            description: frontmatterValue(head, "description") ?? "",
-          },
-        ];
-  })
-  .toSorted((left, right) => left.title.localeCompare(right.title));
+/**
+ * The blocks a reader can visit, from the same index the all-blocks page and
+ * `llms.txt` read.
+ *
+ * One glob, one list: a page that lands is on every surface at once, and the
+ * prompt cannot describe a block differently from the page it links to.
+ */
+export const promptBlocks: ReadonlyArray<PromptEntry> = allBlocks.map(
+  (block) => ({
+    title: block.title,
+    url: block.url,
+    description: block.description,
+  }),
+);
 
 /**
  * Every component the site ships, one row per page.

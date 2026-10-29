@@ -5731,6 +5731,46 @@
   color: var(--muted-foreground);
 }
 
+/* ---- all blocks: one column ---- */
+
+.gx-all-blocks {
+  display: flex;
+  flex-direction: column;
+  margin: 1.5rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.gx-all-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 2px;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+}
+
+.gx-all-block:hover .gx-all-block-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gx-all-block:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gx-all-block-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.gx-all-block-desc {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
 /* ---- collapsible block rails ----
    Every block with a rail collapses it to a 64px icon strip. The rail animates
    its width and padding for 200ms; its labels fade and take no width, so the

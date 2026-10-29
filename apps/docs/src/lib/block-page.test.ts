@@ -46,7 +46,7 @@ const entries: ReadonlyArray<BlockEntry> = [
 });
 
 const pageFiles = readdirSync(pageDir).filter(
-  (file) => file.endsWith(".mdx") && file !== "index.mdx",
+  (file) => file.endsWith(".mdx") && file !== "index.mdx" && file !== "all.mdx",
 );
 const pageFor = (slug: string): string =>
   here(`../../content/docs/blocks/${slug}.mdx`);

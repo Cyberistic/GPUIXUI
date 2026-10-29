@@ -15556,3 +15556,14 @@ button.gx-rating-star:focus-visible {
   white-space: pre;
   tab-size: 4;
 }
+
+/* The panel's slot. The picker is an in-flow panel, so unmounting it on close
+   pulled everything under it up the page — the shift the reader saw. The slot
+   keeps the open panel's height whether or not the panel is mounted, so the
+   surface can run its exit over the box it already occupies and nothing below
+   it moves. */
+.gx-cp-panel-slot {
+  display: flex;
+  flex-direction: column;
+  min-height: 434px;
+}

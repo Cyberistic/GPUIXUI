@@ -182,6 +182,7 @@
 
 /* theme toggle — a real button with an accessible name */
 .landing-theme-toggle {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -208,22 +209,99 @@
   outline-offset: 2px;
 }
 
+/* Both icons sit in the button; the `.dark` class picks which one shows.
+ * Copied from Braven's toggle: a 300ms scale/rotate/opacity swap. */
 .landing-theme-toggle svg {
+  position: absolute;
   width: 17px;
   height: 17px;
+  transition:
+    transform 0.3s,
+    opacity 0.3s;
 }
 
-/* show the moon in light (switch to dark), the sun in dark (switch to light) */
 .landing-theme-toggle .landing-icon-sun {
-  display: none;
+  transform: rotate(0) scale(1);
+  opacity: 1;
 }
 
 .dark .landing-theme-toggle .landing-icon-sun {
-  display: block;
+  transform: rotate(-90deg) scale(0);
+  opacity: 0;
+}
+
+.landing-theme-toggle .landing-icon-moon {
+  transform: rotate(90deg) scale(0);
+  opacity: 0;
 }
 
 .dark .landing-theme-toggle .landing-icon-moon {
-  display: none;
+  transform: rotate(0) scale(1);
+  opacity: 1;
+}
+
+/* Braven's theme-switch view transition, verbatim: a blurred white circle
+ * grows over the repaint. The toggle swaps the theme inside
+ * `document.startViewTransition`, which is what plays this. */
+::view-transition-group(root) {
+  animation-timing-function: var(--expo-out);
+}
+
+::view-transition-new(root) {
+  mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MCA0MCI+PGRlZnM+PGZpbHRlciBpZD0iYmx1ciI+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMiIvPjwvZmlsdGVyPjwvZGVmcz48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxOCIgZmlsbD0id2hpdGUiIGZpbHRlcj0idXJsKCNibHVyKSIvPjwvc3ZnPg==")
+    center / 0 no-repeat;
+  animation: scale 1s;
+  animation-fill-mode: both;
+}
+
+::view-transition-old(root),
+.dark::view-transition-old(root) {
+  animation: none;
+  animation-fill-mode: both;
+  z-index: -1;
+}
+
+.dark::view-transition-new(root) {
+  animation: scale 1s;
+  animation-fill-mode: both;
+}
+
+@keyframes scale {
+  to {
+    mask-size: 200vmax;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-theme-toggle svg {
+    transition: none;
+  }
+
+  ::view-transition-new(root),
+  .dark::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+:root {
+  --expo-out: linear(
+    0 0%,
+    0.1684 2.66%,
+    0.3165 5.49%,
+    0.446 8.52%,
+    0.5581 11.78%,
+    0.6535 15.29%,
+    0.7341 19.11%,
+    0.8011 23.3%,
+    0.8557 27.93%,
+    0.8962 32.68%,
+    0.9283 38.01%,
+    0.9529 44.08%,
+    0.9711 51.14%,
+    0.9833 59.06%,
+    0.9915 68.74%,
+    1 100%
+  );
 }
 
 /* ---- hero ---- */

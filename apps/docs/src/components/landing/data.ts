@@ -85,10 +85,8 @@ export const countWord = (count: number): string =>
 export const landingLookCount = platforms.length;
 
 export const navLinks = [
-  { label: "Lineage", href: "#lineage" },
-  { label: "Defaults", href: "#platforms" },
-  { label: "Code", href: "#code" },
   { label: "Docs", href: "/introduction" },
+  { label: "Blocks", href: "/blocks/all" },
 ] as const;
 
 export const attribution = [

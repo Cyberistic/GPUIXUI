@@ -1,5 +1,6 @@
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { isValidElement, type ComponentProps, type ReactNode } from "react";
+import { AllBlocks } from "./docs/all-blocks";
 import { BlockIndex } from "./docs/block-index";
 import { BlockPreview } from "./docs/block-preview";
 import { ComponentIndex } from "./docs/component-index";
@@ -65,6 +66,7 @@ const pre = ({ children, ...rest }: ComponentProps<"pre">) => {
  */
 export const mdxComponents = {
   ...defaultMdxComponents,
+  AllBlocks,
   BlockIndex,
   BlockPreview,
   ComponentIndex,

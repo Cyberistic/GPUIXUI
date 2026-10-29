@@ -507,18 +507,20 @@ const ClosedPicker = ({ theme }: { readonly theme: Theme }) => {
         open={open}
         onToggle={() => setOpen((current) => !current)}
       />
-      {panel.mounted ? (
-        <Panel
-          background={theme.colors.background}
-          draft={toHex(hsva)}
-          hsva={hsva}
-          invalid={false}
-          label="Accent colour"
-          onAnimationEnd={panel.onAnimationEnd}
-          open={open}
-          swatches={swatches}
-        />
-      ) : null}
+      <div className="gx-cp-panel-slot">
+        {panel.mounted ? (
+          <Panel
+            background={theme.colors.background}
+            draft={toHex(hsva)}
+            hsva={hsva}
+            invalid={false}
+            label="Accent colour"
+            onAnimationEnd={panel.onAnimationEnd}
+            open={open}
+            swatches={swatches}
+          />
+        ) : null}
+      </div>
     </div>
   );
 };
@@ -566,33 +568,35 @@ export function ColorPickerWorkflowBody({ theme }: { readonly theme: Theme }) {
           open={open}
           onToggle={() => setOpen((current) => !current)}
         />
-        {panel.mounted ? (
-          <Panel
-            background={theme.colors.background}
-            draft={draft}
-            hsva={hsva}
-            invalid={invalid}
-            label="Accent colour"
-            open={open}
-            onAnimationEnd={panel.onAnimationEnd}
-            onAlpha={(alpha) => apply({ ...hsva, a: alpha })}
-            onArea={(saturation, brightness) =>
-              apply({ ...hsva, s: saturation, v: brightness })
-            }
-            onCommit={commitDraft}
-            onDraft={(next) => {
-              setDraft(next);
-              setInvalid(false);
-            }}
-            onHue={(hue) => apply({ ...hsva, h: hue })}
-            onPreset={(swatch) => {
-              const next = choose(swatch.value, value, hsva.h);
-              const parsed = parseHex(next.value, hsva.h);
-              if (parsed !== undefined) apply(parsed);
-            }}
-            swatches={swatches}
-          />
-        ) : undefined}
+        <div className="gx-cp-panel-slot">
+          {panel.mounted ? (
+            <Panel
+              background={theme.colors.background}
+              draft={draft}
+              hsva={hsva}
+              invalid={invalid}
+              label="Accent colour"
+              open={open}
+              onAnimationEnd={panel.onAnimationEnd}
+              onAlpha={(alpha) => apply({ ...hsva, a: alpha })}
+              onArea={(saturation, brightness) =>
+                apply({ ...hsva, s: saturation, v: brightness })
+              }
+              onCommit={commitDraft}
+              onDraft={(next) => {
+                setDraft(next);
+                setInvalid(false);
+              }}
+              onHue={(hue) => apply({ ...hsva, h: hue })}
+              onPreset={(swatch) => {
+                const next = choose(swatch.value, value, hsva.h);
+                const parsed = parseHex(next.value, hsva.h);
+                if (parsed !== undefined) apply(parsed);
+              }}
+              swatches={swatches}
+            />
+          ) : undefined}
+        </div>
         {/* The committed value and the draft, in sentences rather than a
             `value=… draft=…` line: a readout is data, not a debug dump. */}
         <div className="gx-cp-readout" role="status">
