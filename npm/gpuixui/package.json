@@ -1,0 +1,30 @@
+{
+  "name": "gpuixui",
+  "version": "0.0.0",
+  "private": false,
+  "description": "Native React components for GPUix \u2014 the GPUIxUI library. Reserved; the release follows.",
+  "license": "MIT",
+  "homepage": "https://gpuixui.sudokw.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cyberistic/GPUIXUI.git"
+  },
+  "keywords": [
+    "gpui",
+    "gpuix",
+    "react",
+    "components",
+    "desktop",
+    "native",
+    "ui"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "README.md"
+  ],
+  "scripts": {
+    "publish:name": "npm publish --access public"
+  }
+}
