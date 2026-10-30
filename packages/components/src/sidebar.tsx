@@ -1153,7 +1153,10 @@ export const SidebarMenuButton = ({
         style,
       )}
     >
-      {label === undefined ? null : (
+      {/* The rail is a glyph: the label's zero-width text still takes a flex
+          slot and its 8px gap, which pushed the icon 4px off the row's centre.
+          The accessible name is `Action`'s own `label`, so nothing is lost. */}
+      {label === undefined || icon ? null : (
         <text
           style={mergeStyles(recipeStyle(SIDEBAR_MENU_LABEL, theme), {
             color: isActive
@@ -1465,7 +1468,10 @@ export const SidebarMenuSubButton = ({
         style,
       )}
     >
-      {label === undefined ? null : (
+      {/* The rail is a glyph: the label's zero-width text still takes a flex
+          slot and its 8px gap, which pushed the icon 4px off the row's centre.
+          The accessible name is `Action`'s own `label`, so nothing is lost. */}
+      {label === undefined || icon ? null : (
         <text
           style={mergeStyles(recipeStyle(SIDEBAR_MENU_LABEL, theme), {
             color: isActive
