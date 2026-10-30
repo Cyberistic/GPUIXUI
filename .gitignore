@@ -52,10 +52,11 @@ references
 # salvage queue (working state; originals live in the salvage/* tags)
 .agents/slop/salvage-queue/
 
-# The launch film's render output. The cut is reproducible from
-# `media/launch/build/` (README there has the four commands); the frames and the
-# encoded file are artefacts, not repository content.
+# The launch film's artefacts. Takes are captured from apps/playground/src/film
+# and encoded into footage; both, and the render, are reproducible from
+# `media/launch/README.md`, so none of them is repository content.
 media/launch/gpuixui-launch.mp4
-media/launch/stills/
-media/launch/frames/
-media/launch/audio/
+media/launch/takes/
+media/launch/assets/footage/
+media/launch/renders/
+media/launch/.media/

@@ -13,8 +13,9 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import type { ReactNode } from "react";
 
-/** The film's ground (SPEC): Apple's light grey. */
-export const GROUND = "#F5F5F7";
+/** The film's ground (SPEC): the macOS look's own page, so the macro takes,
+ * painted on it, meet the composition without a seam. */
+export const GROUND = "#F2F2F7";
 
 interface Chrome {
   readonly height: number;
