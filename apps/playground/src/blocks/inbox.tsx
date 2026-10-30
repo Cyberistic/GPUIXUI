@@ -19,10 +19,38 @@ export interface Thread {
 }
 
 export const threads: ReadonlyArray<Thread> = [
-  { id: "film", from: "Mara Ito", subject: "Launch film, second cut", preview: "Every press has its own sound now…", when: "09:41", unread: true },
-  { id: "blocks", from: "Ben Ade", subject: "Blocks are compiled", preview: "Settings, Kanban and Inbox run natively…", when: "09:12", unread: true },
-  { id: "omarchy", from: "Kai Lund", subject: "Theme follow on Omarchy", preview: "colors.toml changes, the app repaints…", when: "Yesterday", unread: false },
-  { id: "terminal", from: "Ada Lovelace", subject: "Terminal frames at 2x", preview: "The in-band resize carries pixels…", when: "Mon", unread: false },
+  {
+    id: "film",
+    from: "Mara Ito",
+    subject: "Launch film, second cut",
+    preview: "Every press has its own sound now…",
+    when: "09:41",
+    unread: true,
+  },
+  {
+    id: "blocks",
+    from: "Ben Ade",
+    subject: "Blocks are compiled",
+    preview: "Settings, Kanban and Inbox run natively…",
+    when: "09:12",
+    unread: true,
+  },
+  {
+    id: "omarchy",
+    from: "Kai Lund",
+    subject: "Theme follow on Omarchy",
+    preview: "colors.toml changes, the app repaints…",
+    when: "Yesterday",
+    unread: false,
+  },
+  {
+    id: "terminal",
+    from: "Ada Lovelace",
+    subject: "Terminal frames at 2x",
+    preview: "The in-band resize carries pixels…",
+    when: "Mon",
+    unread: false,
+  },
 ];
 
 /** The inbox, as a window's whole content. */
@@ -34,9 +62,23 @@ export const Inbox = () => {
     <Stack
       direction="row"
       testId="inbox"
-      style={{ flexGrow: 1, width: "100%", height: "100%", alignItems: "stretch", backgroundColor: theme.colors.background }}
+      style={{
+        flexGrow: 1,
+        width: "100%",
+        height: "100%",
+        alignItems: "stretch",
+        backgroundColor: theme.colors.background,
+      }}
     >
-      <Stack direction="column" style={{ flexBasis: 0, flexGrow: 2, borderRightWidth: 1, borderColor: theme.colors.border }}>
+      <Stack
+        direction="column"
+        style={{
+          flexBasis: 0,
+          flexGrow: 2,
+          borderRightWidth: 1,
+          borderColor: theme.colors.border,
+        }}
+      >
         {Arr.map(threads, (thread) => (
           <div
             key={thread.id}
@@ -49,11 +91,16 @@ export const Inbox = () => {
               padding: theme.spacing.lg,
               borderBottomWidth: 1,
               borderColor: theme.colors.border,
-              backgroundColor: thread.id === open ? theme.colors.accent : undefined,
+              backgroundColor:
+                thread.id === open ? theme.colors.accent : undefined,
             }}
           >
             <Avatar name={thread.from} size="sm" />
-            <Stack direction="column" gap="2xs" style={{ flexGrow: 1, minWidth: 0 }}>
+            <Stack
+              direction="column"
+              gap="2xs"
+              style={{ flexGrow: 1, minWidth: 0 }}
+            >
               <Stack direction="row" justify="between" align="center">
                 <Text role="label">{thread.from}</Text>
                 <Text role="caption" tone="muted">
@@ -73,7 +120,11 @@ export const Inbox = () => {
       {Option.match(current, {
         onNone: () => null,
         onSome: (thread) => (
-          <Stack direction="column" gap="lg" style={{ flexBasis: 0, flexGrow: 3, padding: theme.spacing.xl }}>
+          <Stack
+            direction="column"
+            gap="lg"
+            style={{ flexBasis: 0, flexGrow: 3, padding: theme.spacing.xl }}
+          >
             <Stack direction="row" gap="sm" align="center">
               <Avatar name={thread.from} size="md" />
               <Stack direction="column" gap="2xs" style={{ flexGrow: 1 }}>

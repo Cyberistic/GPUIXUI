@@ -124,7 +124,11 @@ const Sidebar = () => {
               name === "Appearance" ? theme.colors.accent : undefined,
           }}
         >
-          <Icon name={icon} size={theme.iconSize.sm} color={theme.colors.foreground} />
+          <Icon
+            name={icon}
+            size={theme.iconSize.sm}
+            color={theme.colors.foreground}
+          />
           <Text role="body">{name}</Text>
         </Stack>
       ))}

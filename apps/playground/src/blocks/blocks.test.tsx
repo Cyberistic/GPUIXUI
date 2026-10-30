@@ -52,7 +52,12 @@ describe("Settings", () => {
     const [look, setLook] = useState<Look>("darwin");
     return (
       <ThemeProvider theme={platformTheme(lightTheme, look)}>
-        <Settings look={look} onLookChange={setLook} dark={false} onDarkChange={() => {}} />
+        <Settings
+          look={look}
+          onLookChange={setLook}
+          dark={false}
+          onDarkChange={() => {}}
+        />
       </ThemeProvider>
     );
   };
@@ -70,7 +75,8 @@ describe("Settings", () => {
 describe("Inbox", () => {
   it("opens the thread that is clicked", () => {
     const r = mount(<Inbox />);
-    const shown = () => r.getAllText().filter((t) => t === "Theme follow on Omarchy").length;
+    const shown = () =>
+      r.getAllText().filter((t) => t === "Theme follow on Omarchy").length;
     expect(shown()).toBe(1);
     const row = centre(r, "thread-omarchy");
     r.nativeSimulateClick(row.x, row.y);
@@ -88,7 +94,11 @@ describe("Kanban", () => {
     r.nativeSimulateMouseMove(from.x, from.y);
     r.nativeSimulateMouseDown(from.x, from.y, 0);
     for (let step = 1; step <= 6; step += 1)
-      r.nativeSimulateMouseMove(from.x + ((to.x - from.x) * step) / 6, from.y, 0);
+      r.nativeSimulateMouseMove(
+        from.x + ((to.x - from.x) * step) / 6,
+        from.y,
+        0,
+      );
     r.nativeSimulateMouseUp(to.x, from.y, 0);
     r.flush();
     expect(parentColumn(r, "task-theme")).toBe("column-Done");
