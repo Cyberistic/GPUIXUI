@@ -1,18 +1,24 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * Shimmer: a travelling highlight across a surface.
+ * Shimmer: a travelling highlight, painted into a text run.
  *
- * The runtime paints a gradient with exactly two stops and cannot animate the
- * stops themselves (see `docs/gpuix-capabilities.md`), so the effect is
- * **composed**: a row of thin strips, each a two-stop ramp between two
- * neighbouring samples of one brightness profile, and a step moves the profile.
- * Nothing measures the surface, nothing rotates, and nothing interpolates a
- * gradient; the strips repaint at {@link SHIMMER_STEPS} discrete positions.
+ * A `background-clip: text` gradient is not available: the runtime has no mask
+ * and no background-clip, and a `<text>` host paints one `color`. A plain
+ * string child is therefore composed as **one text host per code point**, each
+ * taking its ink from the travelling profile at its place in the line. That is
+ * a per-glyph colour step, not a continuous fill — the honest form this runtime
+ * can paint — and it is the strongest form of the browser drawing, not the same
+ * effect.
  *
- * The surface owns its children's layout: the highlight is painted after them
- * and takes no presses, so a button or a link inside still works. Under
+ * Any other child — a card, an icon beside a label, a run this component cannot
+ * recolour — keeps the surface band: a row of thin two-stop ramps over the
+ * content, sampled from that same profile. The two paths are different
+ * drawings; neither is presented as the other.
+ *
+ * The surface owns its children's layout: the band is painted after them and
+ * takes no presses, so a button or a link inside still works. Under
  * `MotionProvider preference="reduced"` — or `reducedMotion` on this surface —
- * the band is not painted at all: the content is the resting state, and no
+ * the text rests at its own colour and the band is not painted at all: no
  * interval is scheduled.
  */
 
@@ -25,17 +31,26 @@ import {
 import { reducedMotionOf } from "@gpuixui/motion/timing";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import type { ReactElement, ReactNode } from "react";
 import { useEffect, useState } from "react";
+import type { GradientLine } from "./gradient-text/logic.js";
 import { rampOf } from "./gradient/logic.js";
 import { useMotionPreference } from "./internal/presence.js";
 import { recipeStyle } from "./internal/recipe.js";
-import { nameOf } from "./internal/text.js";
-import { alpha, useTheme, type Theme } from "./internal/theme.js";
+import { nameOf, textOf } from "./internal/text.js";
+import {
+  alpha,
+  textStyle,
+  useTheme,
+  type TextRole,
+  type Theme,
+} from "./internal/theme.js";
 import {
   SHIMMER_STEPS,
   shimmerFrame,
   shimmerInterval,
+  shimmerLines,
 } from "./shimmer/logic.js";
 
 /** The roles a shimmer highlight may paint. */
@@ -57,8 +72,13 @@ export interface ShimmerProps extends Omit<Props, "children" | "style"> {
   readonly active?: boolean;
   /** One complete sweep, in milliseconds. Default `2000`. */
   readonly durationMs?: number;
-  /** The role the highlight paints. Default `foreground`, at a low alpha. */
+  /**
+   * The role the highlight paints. Default `primary`: a text run blends toward
+   * it, and a band paints it at a low alpha.
+   */
   readonly accent?: ShimmerAccent;
+  /** The typographic role a text run paints. Default `"body"`. */
+  readonly role?: TextRole;
   /**
    * Hold the content still with no band. Defaults to the motion provider's
    * preference; the runtime exposes none of its own.
@@ -78,11 +98,57 @@ const ACCENT_ROLE: Readonly<Record<ShimmerAccent, (theme: Theme) => string>> = {
   muted: (theme) => theme.colors.mutedForeground,
 };
 
+/** One line of inked glyphs; words wrap between each other, never inside one. */
+const GlyphLine = ({
+  line,
+  metrics,
+  gap,
+}: {
+  readonly line: GradientLine;
+  readonly metrics: ReturnType<typeof textStyle>;
+  readonly gap: number;
+}) => (
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "baseline",
+      columnGap: gap,
+    }}
+  >
+    {line.words.map((word) => (
+      <div
+        key={word.key}
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "baseline",
+        }}
+      >
+        {word.glyphs.map((glyph) => (
+          <text
+            key={glyph.key}
+            {...Option.match(glyph.label, {
+              onNone: () => ({ role: "presentation" as const }),
+              onSome: (wordLabel) => ({ "aria-label": wordLabel }),
+            })}
+            style={{ ...metrics, color: glyph.color }}
+          >
+            {glyph.text}
+          </text>
+        ))}
+      </div>
+    ))}
+  </div>
+);
+
 export const Shimmer = ({
   children,
   active = true,
   durationMs = 2_000,
-  accent = "foreground",
+  accent = "primary",
+  role = "body",
   reducedMotion,
   label,
   className,
@@ -103,9 +169,15 @@ export const Shimmer = ({
     return () => clearInterval(id);
   }, [running, durationMs]);
 
-  const frame = shimmerFrame(step);
-  const role = ACCENT_ROLE[accent](theme);
+  const frame = shimmerFrame(running ? step : 0);
+  const ink = ACCENT_ROLE[accent](theme);
   const name = nameOf(label);
+  const text = typeof children === "string" ? textOf(children) : undefined;
+  const metrics = textStyle(theme, role);
+  const lines =
+    text === undefined
+      ? []
+      : shimmerLines(text, theme.colors.foreground, ink, frame);
 
   return (
     <div
@@ -121,8 +193,24 @@ export const Shimmer = ({
         }),
       )}
     >
-      {children}
-      {running ? (
+      {text === undefined ? (
+        children
+      ) : (
+        <div
+          testId={rest.testId === undefined ? undefined : `${rest.testId}-ink`}
+          style={{ display: "flex", flexDirection: "column" }}
+        >
+          {lines.map((line) => (
+            <GlyphLine
+              gap={Math.round(metrics.fontSize * 0.3)}
+              key={line.key}
+              line={line}
+              metrics={metrics}
+            />
+          ))}
+        </div>
+      )}
+      {text === undefined && running ? (
         <div
           testId={
             rest.testId === undefined ? undefined : `${rest.testId}-overlay`
@@ -148,8 +236,8 @@ export const Shimmer = ({
                 // The role is a colour; the sample is a **share** of its
                 // resting alpha, so the peak is a sheen rather than the ink.
                 background: rampOf(
-                  alpha(role, 0.3 * (frame.alphas[index] ?? 0)),
-                  alpha(role, 0.3 * (frame.alphas[index + 1] ?? 0)),
+                  alpha(ink, 0.3 * (frame.alphas[index] ?? 0)),
+                  alpha(ink, 0.3 * (frame.alphas[index + 1] ?? 0)),
                   90,
                 ),
               }}
@@ -168,9 +256,10 @@ export const shimmerMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "Cannot interpolate a gradient: the band steps through 16 sampled profiles",
-    "Two stops per ramp, so a strip is the smallest movable piece",
-    "Reduced motion paints the content with no band at all",
+    "No mask or background-clip: a text run is inked one code point at a time",
+    "A glyph's ink is one colour, so the sheen is discrete at glyph resolution",
+    "Children that cannot be recoloured keep the surface band, a different drawing",
+    "Reduced motion rests the text and paints no band",
   ],
   docs: "docs/shimmer.mdx",
   example: "examples/shimmer.example.tsx",

@@ -1,19 +1,25 @@
 /**
  * Browser preview for the Shimmer page.
  *
- * The native surface is a row of thin strips: each strip is a two-stop ramp
- * between two neighbouring samples of one triangular brightness profile, and
- * the profile's peak travels across the row. The drawing uses the component's
- * own `shimmerFrame`, so the preview and the paint cannot disagree about where
- * the highlight is. Two fixed frames sit beside a live surface, because the
- * effect is easier to read when two points in its travel are side by side.
+ * The drawing puts the highlight **in the text**: `.gx-shimmer-content` carries
+ * a travelling linear-gradient, clipped to the glyphs with `background-clip:
+ * text`, and every stop is the component's own `shimmerFrame` sampled across
+ * the line. The preview and the component therefore cannot disagree about where
+ * the highlight is. Two fixed frames sit beside the live surface, because the
+ * travel is easier to read when two points are side by side.
+ *
+ * The native component cannot do this (no mask, no background-clip): it inks a
+ * text run one code point at a time, or lays a band over children it cannot
+ * recolour. The page states that difference rather than implying the two are
+ * the same drawing.
  */
 
-import { SHIMMER_STEPS, shimmerFrame } from "@gpuixui/components/shimmer/logic";
-import * as Arr from "effect/Array";
+import {
+  SHIMMER_INK,
+  shimmerFrame,
+  type ShimmerFrame,
+} from "@gpuixui/components/shimmer/logic";
 import { useEffect, useState, type ReactNode } from "react";
-
-const STEPS = Arr.range(0, SHIMMER_STEPS - 1);
 
 interface SurfaceProps {
   /** A fixed frame, or `undefined` to run the sweep. */
@@ -22,10 +28,25 @@ interface SurfaceProps {
   readonly children: ReactNode;
 }
 
-const strip = (from: number, to: number): string =>
-  `linear-gradient(90deg, color-mix(in srgb, var(--foreground) ${from * 30}%, transparent), color-mix(in srgb, var(--foreground) ${to * 30}%, transparent))`;
+/**
+ * The gradient at one frame.
+ *
+ * Each sample is the profile's alpha blended out of the role the theme gives
+ * it, so the unlit glyphs keep their resting ink and the peak reads as a sheen.
+ * The stop positions are the strip edges the native band paints, so both
+ * drawings describe the same travel.
+ */
+export const shimmerGradient = (frame: ShimmerFrame): string => {
+  const last = frame.alphas.length - 1;
+  const stops = frame.alphas.map((alpha, index) => {
+    const share = Math.round(alpha * SHIMMER_INK * 100);
+    const position = last === 0 ? 0 : (index / last) * 100;
+    return `color-mix(in srgb, var(--primary) ${share}%, var(--foreground)) ${position}%`;
+  });
+  return `linear-gradient(90deg, ${stops.join(", ")})`;
+};
 
-/** One surface: the content, then the band over it. */
+/** One surface: the content painted with the frame's gradient. */
 const ShimmerSurface = ({ step, label, children }: SurfaceProps) => {
   const [live, setLive] = useState(0);
 
@@ -43,20 +64,11 @@ const ShimmerSurface = ({ step, label, children }: SurfaceProps) => {
   return (
     <div className="gx-shimmer-frame">
       <div className="gx-shimmer-surface">
-        <div className="gx-shimmer-content">{children}</div>
-        <div aria-hidden="true" className="gx-shimmer-band">
-          {Arr.map(STEPS, (index) => (
-            <span
-              className="gx-shimmer-strip"
-              key={index}
-              style={{
-                background: strip(
-                  frame.alphas[index] ?? 0,
-                  frame.alphas[index + 1] ?? 0,
-                ),
-              }}
-            />
-          ))}
+        <div
+          className="gx-shimmer-content"
+          style={{ backgroundImage: shimmerGradient(frame) }}
+        >
+          {children}
         </div>
       </div>
       <span className="gx-shimmer-caption">{label}</span>
@@ -85,11 +97,14 @@ export const ShimmerDemo = () => (
 
 export const shimmerDemoSource = `import { Shimmer } from "@gpuixui/components/shimmer";
 
+// A plain string is inked one code point at a time from the travelling profile.
 <Shimmer label="Generating a reply" durationMs={2000}>
-  <p>Generating a reply…</p>
+  Generating a reply…
 </Shimmer>;
 
-// A surface that owns its own height, clipping the band:
-<Shimmer active={false}>
-  <p>Done</p>
+// A composed child keeps the surface band; the runtime cannot recolour it.
+<Shimmer label="Reading the conversation">
+  <Card>
+    <Text role="body">The assistant is reading the conversation.</Text>
+  </Card>
 </Shimmer>;`;

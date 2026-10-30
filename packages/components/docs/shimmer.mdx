@@ -1,6 +1,6 @@
 ---
 title: Shimmer
-description: A travelling highlight across a surface, composed from a row of two-stop gradient strips
+description: A travelling highlight painted into text, or a surface band over children the runtime cannot recolour
 ---
 
 <ComponentPreview name="shimmer-demo" />
@@ -10,63 +10,81 @@ description: A travelling highlight across a surface, composed from a row of two
 ```tsx
 import { Shimmer } from "@gpuixui/components/shimmer";
 
+// A plain string is inked one code point at a time from the travelling profile.
 <Shimmer label="Generating a reply" durationMs={2000}>
-  <p>Generating a reply…</p>
+  Generating a reply…
 </Shimmer>;
 
-// A finished surface: the content stands still and no band paints.
-<Shimmer active={false}>
-  <p>Done</p>
+// A finished surface: the text rests and no profile runs.
+<Shimmer active={false}>Done</Shimmer>;
+
+// Composed children cannot be recoloured, so they keep the surface band.
+<Shimmer label="Reading the conversation">
+  <Card>
+    <Text role="body">The assistant is reading the conversation.</Text>
+  </Card>
 </Shimmer>;
 ```
 
-The surface owns the box its children give it. The highlight is painted after
-the content, clips to the surface's corner, and takes no presses, so a link or a
-button inside a shimmering card still works.
+A **string** child is a text run: every code point is its own text host and
+takes the profile's ink at its place in the line. Any **other** child keeps the
+surface band — a row of thin two-stop ramps over the content — because the
+runtime cannot recolour a tree it did not build.
 
-## The motion, composed
+## Two drawings, honestly
 
-The runtime paints a gradient with exactly **two stops** and cannot animate
-those stops, and its geometry takes pixels rather than a percentage `left`. So
-the sweep is a **row of `SHIMMER_STEPS` (16) thin strips** across the surface:
+The browser can put a gradient *inside* the glyphs with `background-clip: text`.
+The native runtime cannot: it has no mask and no background-clip, and a `<text>`
+host paints one `color`. So the native component does the strongest thing it can
+and says what it is:
 
-- one frame samples a triangular brightness profile at 17 points;
-- each strip is a two-stop ramp between two neighbouring samples, so the rows
-  add up to a smooth band rather than a block;
-- a step moves the profile, and the component ticks once per
-  `durationMs / SHIMMER_STEPS` (125 ms at the default two seconds).
+- **A string child** is split into words and code points. Each code point takes
+  one colour sampled from the same triangular profile the band uses, blending
+  from the theme's `foreground` toward the chosen accent. The sheen is discrete
+  at glyph resolution, not a continuous fill.
+- **Any other child** keeps the band: `SHIMMER_STEPS` (16) strips, each a
+  two-stop ramp between neighbouring samples of that profile, stepping once per
+  `durationMs / SHIMMER_STEPS` (125 ms at the default).
 
-Nothing measures the surface and nothing interpolates a gradient, which is what
-keeps the effect honest on this runtime.
+The two paths are not the same drawing, and neither is presented as the other.
+The browser preview puts the gradient in the text; the native string path is the
+closest the runtime gets to it.
 
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `children` | `ReactNode` | none | the surface's content; it lays out the box the band travels across |
-| `active` | `boolean` | `true` | whether the sweep runs; false paints the content alone |
+| `children` | `ReactNode` | none | a string is inked per code point; any other child keeps the surface band |
+| `active` | `boolean` | `true` | whether the profile runs; false rests the text and paints no band |
 | `durationMs` | `number` | `2000` | one complete sweep; an unusable value falls back to two seconds |
-| `accent` | `"foreground" \| "primary" \| "muted"` | `"foreground"` | the theme role the highlight paints, at a low alpha |
+| `accent` | `"foreground" \| "primary" \| "muted"` | `"primary"` | the role the highlight paints; a text run blends toward it, a band paints it at a low alpha |
+| `role` | text role | `"body"` | the typographic role a text run paints |
 | `label` | `string` | none | an accessible name; when set, the surface is a `status` node, and a blank name is decoration |
-| `reducedMotion` | `boolean` | the motion provider | paints the content with no band and schedules no interval |
+| `reducedMotion` | `boolean` | the motion provider | rests the text, paints no band and schedules no interval |
 | `className` | `string` | — | joined after the surface recipe, so it wins conflicts |
 | `style` | `StyleState<ShimmerState>` | — | a style, or a function of the frame's `peak`, `active` and `reducedMotion` |
-| `testId` | `string` | — | stable locator; the band is `testId-overlay` |
+| `testId` | `string` | — | stable locator; a text run is `testId-ink`, a band is `testId-overlay` |
 
 ## Accessibility
 
+- A text run is announced word by word: the first glyph of each word carries
+  the word as its accessible name and the rest are presentational, because the
+  runtime has no `aria-hidden`.
 - Shimmer is activity, not progress. Give it a `label` when the surface means
   "working" (a `status` node named by that label); leave it unnamed when the
   highlight decorates content that is already named.
-- Reduced motion paints the content and no band, so the surface still reads.
+- Reduced motion rests the text and paints no band, so the surface still reads.
 - Never use the highlight, its direction or its motion to carry success or a
   percentage — use `Progress` for a known value and an ordinary surface once the
   work settles.
 
 ## Limitations
 
-- The band steps through 16 frames; it does not sweep smoothly.
-- A gradient is two stops, so each strip is its own ramp. The row reads as a
-  band at a glance, but it is not one continuous gradient.
-- Reduced motion removes the band rather than freezing it mid-surface, because a
-  permanent sheen would read as a state rather than a sweep.
+- **No mask, no `background-clip`**: a text run is one colour per code point, so
+  the sheen is discrete at glyph resolution rather than a continuous fill.
+- **A gradient is two stops**: the band's strips are each their own ramp, and a
+  row of them reads as a band at a glance but is not one continuous gradient.
+- **Composed children are not recoloured**: a card, an icon or a mixed tree
+  keeps the band because the runtime cannot repaint its text.
+- **Reduced motion removes the highlight** rather than freezing it mid-surface,
+  because a permanent sheen would read as a state rather than a sweep.

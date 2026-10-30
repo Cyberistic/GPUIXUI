@@ -8,7 +8,13 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { SHIMMER_STEPS, shimmerFrame, shimmerInterval } from "./logic.js";
+import {
+  SHIMMER_STEPS,
+  shimmerFrame,
+  shimmerInk,
+  shimmerInterval,
+  shimmerLines,
+} from "./logic.js";
 
 const peakIndex = (step: number): number => {
   const { alphas } = shimmerFrame(step);
@@ -49,6 +55,41 @@ describe("shimmerFrame", () => {
       expect(frame.alphas.length).toBeGreaterThan(1);
       expect(frame.alphas.every(Number.isFinite)).toBe(true);
     }
+  });
+});
+
+describe("shimmerInk", () => {
+  it("rests at the source colour when the profile is dark", () => {
+    expect(shimmerInk(shimmerFrame(0), 0.5, "#123456", "#abcdef")).toBe(
+      "#123456",
+    );
+  });
+
+  it("takes part of the accent at a peak that crosses the glyph", () => {
+    const peak = shimmerFrame(4);
+    const at = peak.alphas.indexOf(peak.peak) / (peak.alphas.length - 1);
+    const lit = shimmerInk(peak, at, "#000000", "#ffffff");
+
+    expect(lit).not.toBe("#000000");
+    expect(lit).not.toBe("#ffffff");
+  });
+
+  it("inks a text run per glyph, in reading order", () => {
+    const lines = shimmerLines(
+      "Shop it",
+      "#000000",
+      "#ffffff",
+      shimmerFrame(4),
+    );
+    const colors = lines.flatMap((line) =>
+      line.words.flatMap((word) => word.glyphs.map((glyph) => glyph.color)),
+    );
+    const glyphs = lines.flatMap((line) =>
+      line.words.flatMap((word) => word.glyphs.map((glyph) => glyph.text)),
+    );
+
+    expect(glyphs.join("")).toBe("Shopit");
+    expect(new Set(colors).size).toBeGreaterThan(1);
   });
 });
 

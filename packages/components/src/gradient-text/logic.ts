@@ -95,6 +95,8 @@ export interface GradientGlyph {
   readonly key: string;
   readonly text: string;
   readonly color: string;
+  /** Where the glyph sits in its line, from `0` at the first to `1` at the last. */
+  readonly position: number;
   /** The word this glyph belongs to, on the first glyph only. */
   readonly label: Option.Option<string>;
 }
@@ -118,32 +120,31 @@ const wordGlyphs = (
   line: number,
   start: number,
   total: number,
-  from: string,
-  to: string,
+  colorAt: (position: number) => string,
 ): ReadonlyArray<GradientGlyph> =>
   Arr.map(Arr.fromIterable(word), (text, local) => {
     const index = start + local;
-    const t = total <= 1 ? 0 : index / (total - 1);
+    const position = total <= 1 ? 0 : index / (total - 1);
     return {
       key: `${line}:${index}:${text}`,
       text,
-      color: gradientColor(from, to, t),
+      color: colorAt(position),
+      position,
       label: local === 0 ? Option.some(word) : Option.none(),
     };
   });
 
 /**
- * The lines, words and glyphs of `text`.
+ * The lines, words and glyphs of `text`, each coloured by `colorAt`.
  *
- * An explicit newline starts a new row, every run of whitespace is one word gap,
- * a blank line contributes no row, and the ramp restarts at each line — a
- * two-line headline reads as two complete ramps rather than one ramp split at
- * the break.
+ * An explicit newline starts a new row, every run of whitespace is one word
+ * gap, a blank line contributes no row, and the position restarts at each line,
+ * because a two-line run is two complete profiles rather than one split at the
+ * break.
  */
-export const gradientLines = (
+export const glyphLines = (
   text: string,
-  from: string,
-  to: string,
+  colorAt: (position: number) => string,
 ): ReadonlyArray<GradientLine> =>
   Arr.filterMap(
     Arr.map(Str.split(text, "\n"), (line, index) => ({
@@ -164,13 +165,21 @@ export const gradientLines = (
             {
               key: `${index}:${start}:${word}`,
               label: word,
-              glyphs: wordGlyphs(word, index, start, total, from, to),
+              glyphs: wordGlyphs(word, index, start, total, colorAt),
             },
           ]);
           return Result.succeed({ key: String(index), words: placed[1] });
         },
       }),
   );
+
+/** The lines and glyphs of `text`, coloured by a ramp from `from` to `to`. */
+export const gradientLines = (
+  text: string,
+  from: string,
+  to: string,
+): ReadonlyArray<GradientLine> =>
+  glyphLines(text, (position) => gradientColor(from, to, position));
 
 /** How many glyphs a layout paints, for a state a caller can read. */
 export const glyphCount = (lines: ReadonlyArray<GradientLine>): number =>
