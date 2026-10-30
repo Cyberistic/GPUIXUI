@@ -1,0 +1,51 @@
+---
+title: Platform
+description: The behaviours only the operating system owns.
+---
+
+Some things are not paint: the traffic lights over a window's title, the system
+path picker, a window that minimises or enters fullscreen. These pages cover the
+small surface that hands those to the OS, and the rule for what belongs here.
+
+## The rule
+
+**If the OS owns the behaviour, take it from the OS. If it is a picture, paint
+it.** A button, a row, a popover and a tooltip are pictures with behaviour this
+library implements, so they stay in the GPU surface and repaint with the theme.
+A file panel, a window's zoom button and the title bar's lights are the system's,
+so the app asks for them instead of drawing a convincing copy.
+
+That boundary is what keeps one component API on macOS, Windows and Linux: the
+painted surface is shared, and this section is the short list of calls that are
+not.
+
+## What ships
+
+| Surface | Entry | What the OS owns |
+| --- | --- | --- |
+| Title bar | `TitleBar` | the row the traffic lights float over, and the 78-point inset they need |
+| Window verbs | `useWindowActions` | minimise, zoom, fullscreen, rename, activate |
+| Path picker | `window.pickPaths` | the system's open panel, and its cancel |
+
+The window itself is opened with the options that make the bar possible:
+`titlebarTransparent` hides the system titlebar, `trafficLightX` / `trafficLightY`
+place the lights over the app's bar, and `windowBackground: "blurred"` gives the
+window the platform's vibrancy material.
+
+```tsx
+render(<App />, {
+  title: "Files",
+  titlebarTransparent: true,
+  trafficLightX: 20,
+  trafficLightY: 14,
+  windowBackground: "blurred",
+});
+```
+
+## What stays painted
+
+The OS menu bar has no API in this release, so `AppMenu` draws the menu in-window
+(`/shell/app-menu`). Alerts, sheets and popovers are this library's own floating
+layers, not `NSAlert` or `NSPopover`: they are part of the design system and
+repaint with the theme. A native colour panel and a native tooltip are the same
+kind of gap and are listed in `TODO.md` rather than pretended to exist.

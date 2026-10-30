@@ -23,6 +23,9 @@ getting-started/prompt.mdx   One copyable build prompt, generated from the pages
 diagrams.mdx                 Mermaid diagrams at build time, themed from the page's roles
 themes.mdx                   The live token editor, the authored looks, the Aero look's generated CSS, and the compiled style/type/scale references
 workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
+platform/index.mdx            The native surface: what the OS owns and what the library paints
+platform/title-bar.mdx        The bar the app paints under the window's traffic lights
+platform/window.mdx           The window's verbs and the system's path picker
 data-display/index.mdx      The data lane: what ships, the table gate, runtime gaps
 registry.mdx                 The shadcn registry: install command and what the files still need
 examples.mdx                 The example registry, generated from every package's examples
@@ -287,6 +290,7 @@ src/components/docs/examples-index.tsx    The generated registry on /examples
 src/components/docs/api-reference.tsx     The entry-point table and the symbol index
 src/components/docs/platform-toggle.tsx   The platform and palette switch, and the shared preview provider
 src/components/docs/theme-editor.tsx      The live token editor, its audit readout and the preview panel
+src/components/docs/platform-demos.tsx    Drawings of the native title bar and the system path panel
 src/components/docs/personalization-demo.tsx  Windows 7's Personalization screen, rebuilt from the Aero look's roles
 src/components/docs/theme-editor-logic.ts The editor's pins, resolution, formatters and audit mapping
 src/components/docs/theme-editor-storage.ts The editor's remembered state through the guarded store

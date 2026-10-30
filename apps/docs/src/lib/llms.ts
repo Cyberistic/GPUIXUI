@@ -91,6 +91,7 @@ export const llmsSectionOrder: ReadonlyArray<string> = [
   "Icons",
   "Data display",
   "Workspace",
+  "Platform",
   "Blocks",
 ];
 
@@ -101,6 +102,7 @@ const siteSections: ReadonlyArray<{ prefix: string; name: string }> = [
   { prefix: "/getting-started", name: "Guide" },
   { prefix: "/blocks", name: "Blocks" },
   { prefix: "/workspace", name: "Workspace" },
+  { prefix: "/platform", name: "Platform" },
 ];
 
 const sectionRules = [

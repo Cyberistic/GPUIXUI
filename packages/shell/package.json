@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Application chrome — menu bars, status bars and toolbars — rendered by GPUix through React.",
+  "description": "Application chrome and the native surface \u2014 title bars, status bars, toolbars, window actions and the system path picker.",
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
@@ -21,7 +21,8 @@
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "@gpuixui/tw": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "@gpuix/native": "catalog:"
   },
   "peerDependencies": {
     "react": "^19.2.0"

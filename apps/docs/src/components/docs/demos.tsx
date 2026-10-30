@@ -9,6 +9,12 @@ import {
   type ReactNode,
 } from "react";
 import { IconGalleryView } from "./icon-gallery";
+import {
+  FilePanelDemo,
+  TitleBarDemo,
+  titleBarDemoSource,
+  windowActionsSource,
+} from "./platform-demos";
 import { usePreviewInteractive } from "./preview-surface";
 import {
   CountingNumberDemo,
@@ -3198,6 +3204,14 @@ export const demos: Readonly<Record<string, Demo>> = {
   "drawer-sides": { render: SheetDrawing, source: drawerSidesSource },
   "drawer-workflow": { render: DrawerDrawing, source: drawerWorkflowSource },
   "sidebar-demo": { render: SidebarDemo, source: sidebarDemoSource },
+  "platform-title-bar": {
+    render: TitleBarDemo,
+    source: titleBarDemoSource,
+  },
+  "platform-file-panel": {
+    render: FilePanelDemo,
+    source: windowActionsSource,
+  },
   "icon-gallery-demo": {
     render: IconGalleryDemo,
     source: iconGalleryDemoSource,

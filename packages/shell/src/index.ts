@@ -47,3 +47,20 @@ export {
   type OverflowSplit,
   type ToolbarItemSpec,
 } from "./toolbar/logic.js";
+
+export { TitleBar } from "./platform/title-bar.js";
+export type { TitleBarProps } from "./platform/title-bar.js";
+export {
+  TITLE_BAR_HEIGHT,
+  TRAFFIC_LIGHT_INSET,
+  pickedPaths,
+  titleBarPadding,
+  type PickedPaths,
+  type TitleBarDensity,
+} from "./platform/logic.js";
+export {
+  FilePanelError,
+  useWindowActions,
+  windowActions,
+} from "./platform/window.js";
+export type { WindowActions, WindowHost } from "./platform/window.js";

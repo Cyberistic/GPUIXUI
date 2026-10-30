@@ -801,6 +801,9 @@ importers:
 
   packages/shell:
     dependencies:
+      '@gpuix/native':
+        specifier: 'catalog:'
+        version: 0.11.0
       '@gpuix/react':
         specifier: 'catalog:'
         version: 0.11.0(react@19.3.1)
