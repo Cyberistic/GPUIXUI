@@ -6,6 +6,7 @@ import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
 import { curatedTwinOf } from "./curated-twins";
 import { readRegistry } from "./registry-source";
+import { siteOrigin } from "./site";
 
 /**
  * The shadcn registry, held to the pages and files it claims.
@@ -279,6 +280,32 @@ describe("the shadcn registry", () => {
       items.flatMap((item) => item.files.filter((file) => file.content === "")),
     ).toEqual([]);
     expect(index.items).toEqual(items.map(listed));
+  });
+
+  it("submits a directory entry that resolves to this site", () => {
+    // shadcn's directory is how `@sudokw/<item>` reaches the CLI, so the entry
+    // is the one document that must agree with both the origin and the flat
+    // layout: a homepage on another host, or a template without `{name}`, is a
+    // namespace the CLI resolves to nothing.
+    const entry = JSON.parse(
+      readFileSync(join(root, "registry/shadcn-directory.json"), "utf8"),
+    ) as ReadonlyArray<Record<string, string>>;
+
+    expect(entry).toHaveLength(1);
+    const [directory] = entry;
+    if (directory === undefined) throw new Error("no directory entry");
+
+    expect(directory.name).toMatch(/^@[a-zA-Z0-9][a-zA-Z0-9_-]*$/);
+    expect(directory.homepage).toBe(siteOrigin);
+    expect(directory.url).toBe(`${siteOrigin}/{name}.json`);
+    expect(directory.logo).toContain("var(--foreground)");
+    expect(Object.keys(directory).toSorted()).toEqual([
+      "description",
+      "homepage",
+      "logo",
+      "name",
+      "url",
+    ]);
   });
 
   it("serves each item at a flat, unique root address", () => {

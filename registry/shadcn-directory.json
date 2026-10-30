@@ -1,0 +1,9 @@
+[
+  {
+    "name": "@sudokw",
+    "homepage": "https://gpuixui.sudokw.com",
+    "url": "https://gpuixui.sudokw.com/{name}.json",
+    "description": "Native React components for GPUix, in shadcn's API and shipped as source you own, rendered by a GPU runtime instead of the DOM.",
+    "logo": "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96' fill='var(--foreground)'><path d='M19.2 22.2h57.6a12 12 0 0 1 12 12v27.6a12 12 0 0 1-12 12H19.2a12 12 0 0 1-12-12V34.2a12 12 0 0 1 12-12Zm0 6.6a5.4 5.4 0 0 0-5.4 5.4v27.6a5.4 5.4 0 0 0 5.4 5.4h57.6a5.4 5.4 0 0 0 5.4-5.4V34.2a5.4 5.4 0 0 0-5.4-5.4H19.2Z'/><rect x='31.2' y='34.2' width='14.4' height='14.4' rx='3.6'/><rect x='50.4' y='34.2' width='14.4' height='14.4' rx='3.6' opacity='.6'/><rect x='31.2' y='53.4' width='14.4' height='14.4' rx='3.6' opacity='.6'/><rect x='50.4' y='53.4' width='14.4' height='14.4' rx='3.6'/></svg>"
+  }
+]
