@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>GPUIxUI — launch film</title>
+    <style>
+      :root {
+        --ink: #f5f5f7;
+        --dim: #86868b;
+        --hair: rgba(255, 255, 255, 0.14);
+        --bg: #000;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #stage {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+      }
+      .center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .kicker {
+        font-size: 15px;
+        letter-spacing: 0.34em;
+        text-transform: uppercase;
+        color: var(--dim);
+        font-weight: 500;
+      }
+      .wordmark {
+        margin-top: 26px;
+        font-size: 92px;
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        text-indent: 0.3em;
+      }
+      .sub {
+        margin-top: 22px;
+        font-size: 26px;
+        font-weight: 300;
+        color: #a1a1a6;
+      }
+      .rule {
+        margin-top: 42px;
+        width: 320px;
+        height: 1px;
+        background: var(--hair);
+      }
+      /* ---- claim ---- */
+      .lines {
+        position: absolute;
+        left: 160px;
+        top: 300px;
+      }
+      .line {
+        font-size: 76px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        line-height: 1.14;
+        margin: 0 0 26px;
+        color: #fff;
+      }
+      .line span {
+        color: #6e6e73;
+      }
+      /* ---- footage ---- */
+      .frame {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+
+      .window {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+      }
+
+      .window img {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        box-shadow: 0 60px 140px rgba(0, 0, 0, 0.7);
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform-origin: center;
+      }
+
+      .glow {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 1500px;
+        height: 900px;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(
+          ellipse at center,
+          rgba(95, 75, 219, 0.22),
+          rgba(0, 0, 0, 0) 65%
+        );
+        filter: blur(20px);
+      }
+      .frame img {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform-origin: center;
+        will-change: transform;
+      }
+      .frame .wipe {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+      .scrim {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 260px;
+        pointer-events: none;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0));
+      }
+
+      .caption {
+        position: absolute;
+        left: 120px;
+        bottom: 84px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 15px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #d2d2d7;
+        font-weight: 500;
+      }
+      .caption i {
+        width: 34px;
+        height: 1px;
+        background: var(--hair);
+        display: block;
+      }
+      /* ---- speed ---- */
+      .speed {
+        position: absolute;
+        left: 150px;
+        top: 220px;
+      }
+      .big {
+        font-variant-numeric: tabular-nums;
+        font-family: "SF Mono", ui-monospace, Menlo, monospace;
+        font-size: 300px;
+        font-weight: 300;
+        letter-spacing: -0.06em;
+        line-height: 0.9;
+      }
+      .unit {
+        margin-top: 10px;
+        font-size: 30px;
+        color: #a1a1a6;
+        font-weight: 300;
+      }
+      .ticks {
+        position: absolute;
+        left: 156px;
+        bottom: 240px;
+        display: flex;
+        gap: 9px;
+      }
+      .ticks i {
+        width: 10px;
+        height: 46px;
+        border-radius: 2px;
+        background: #2a2a2e;
+      }
+      .stat {
+        position: absolute;
+        right: 170px;
+        top: 250px;
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+        align-items: flex-start;
+      }
+      .stat div {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+      }
+      .stat b {
+        font-family: "SF Mono", ui-monospace, Menlo, monospace;
+        font-size: 42px;
+        font-weight: 400;
+      }
+      .stat span {
+        font-size: 17px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .ring {
+        position: absolute;
+        right: 210px;
+        bottom: 210px;
+        width: 220px;
+        height: 220px;
+      }
+      .ring i {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 9999px;
+        background: #fff;
+      }
+      /* ---- haptics ---- */
+      .haptic-title {
+        position: absolute;
+        left: 150px;
+        top: 210px;
+        font-size: 96px;
+        font-weight: 500;
+        letter-spacing: -0.03em;
+      }
+      .haptic-sub {
+        position: absolute;
+        left: 156px;
+        top: 330px;
+        font-size: 30px;
+        color: #a1a1a6;
+        font-weight: 300;
+      }
+      .wave {
+        position: absolute;
+        left: 150px;
+        right: 150px;
+        bottom: 230px;
+        height: 180px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .wave i {
+        flex: 1;
+        background: #6e6e73;
+        border-radius: 2px;
+        min-height: 2px;
+      }
+      /* ---- close ---- */
+      .end {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 34px;
+      }
+      .end .url {
+        font-size: 42px;
+        font-weight: 400;
+        letter-spacing: -0.01em;
+      }
+      .end .meta {
+        font-size: 19px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .end .rule2 {
+        width: 220px;
+        height: 1px;
+        background: var(--hair);
+      }
+      /* ---- finishing ---- */
+      .grain {
+        position: absolute;
+        inset: -20%;
+        pointer-events: none;
+        opacity: 0.05;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
+      }
+      .vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          ellipse at center,
+          transparent 40%,
+          rgba(0, 0, 0, 0.55) 100%
+        );
+      }
+      .fade {
+        position: absolute;
+        inset: 0;
+        background: #000;
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <!-- 1. open -->
+      <section class="scene" id="open">
+        <div class="center" id="open-inner">
+          <div class="kicker" id="kicker">Native components</div>
+          <img id="logo" src="img/logo.svg" width="120" height="120" alt="" />
+          <div class="wordmark" id="wordmark">GPUIxUI</div>
+          <div class="sub" id="sub">React. Rendered by the GPU.</div>
+          <div class="rule" id="orule"></div>
+        </div>
+      </section>
+
+      <!-- 2. claim -->
+      <section class="scene" id="claim">
+        <div class="lines">
+          <p class="line" id="l1">The React you know.</p>
+          <p class="line" id="l2">A runtime you <span>don’t.</span></p>
+          <p class="line" id="l3">Every frame, drawn by the GPU.</p>
+        </div>
+      </section>
+
+      <!-- 3. footage montage -->
+      <section class="scene" id="montage">
+        <div class="frame" id="f-aero">
+          <div class="glow"></div>
+          <img src="img/aero.png" id="i-aero" alt="" />
+        </div>
+        <div class="frame" id="f-hunter">
+          <div class="glow"></div>
+          <img src="img/hunter.png" id="i-hunter" alt="" />
+        </div>
+        <div class="frame" id="f-icons">
+          <div class="glow"></div>
+          <img src="img/icons.png" id="i-icons" alt="" />
+        </div>
+        <div class="frame" id="f-editor">
+          <div class="glow"></div>
+          <img src="img/editor.png" id="i-editor" alt="" />
+        </div>
+        <div class="scrim" id="scrim"></div>
+        <div class="caption" id="cap">
+          <i></i><span id="cap-text">Blocks</span>
+        </div>
+      </section>
+
+      <!-- 4. speed -->
+      <section class="scene" id="speed">
+        <div class="speed">
+          <div class="big" id="count">0</div>
+          <div class="unit">frames per second</div>
+        </div>
+        <div class="ticks" id="ticks"></div>
+        <div class="stat">
+          <div class="stat-row" id="row-a">
+            <b>0</b><span>canvas elements</span>
+          </div>
+          <div class="stat-row" id="row-b">
+            <b>1</b><span>native window</span>
+          </div>
+          <div class="stat-row" id="row-c">
+            <b>GPU</b><span>draws every frame</span>
+          </div>
+        </div>
+        <div class="ring" id="ring"></div>
+      </section>
+
+      <!-- 5. haptics -->
+      <section class="scene" id="haptics">
+        <div class="haptic-title" id="h-title">Sound.</div>
+        <div class="haptic-sub" id="h-sub">
+          Written in code, not recorded.
+        </div>
+        <div class="wave" id="wave"></div>
+        <div class="frame" id="f-tooltip" style="inset: auto 0 0 auto; width: 700px; height: 500px">
+          <img src="img/spinner.png" id="i-spinner" alt="" />
+        </div>
+      </section>
+
+      <!-- 6. close -->
+      <section class="scene" id="close">
+        <div class="frame" id="f-dash">
+          <img src="img/dashboard.png" id="i-dash" alt="" />
+        </div>
+        <div class="caption" id="cap2" style="opacity: 0">
+          <i></i><span>05  Composed blocks</span>
+        </div>
+        <div class="end" id="end">
+          <img id="logo2" src="img/logo.svg" width="96" height="96" alt="" />
+          <div class="url">gpuixui.sudokw.com</div>
+          <div class="rule2"></div>
+          <div class="meta">shadcn registry · @sudokw</div>
+        </div>
+      </section>
+
+      <div class="grain" id="grain"></div>
+      <div class="vignette"></div>
+      <div class="fade" id="fade"></div>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+      const seg = (t, a, b) => clamp((t - a) / (b - a));
+      const out = (x) => 1 - Math.pow(1 - x, 3);
+      const inOut = (x) =>
+        x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+
+      const set = (id, s) => Object.assign($(id).style, s);
+
+      /** The logo's own mark, sized to a box. */
+      const logoStyle = (progress) => ({
+        opacity: String(progress),
+        transform: `scale(${0.88 + 0.12 * out(progress)})`,
+      });
+
+      const TICKS = 60;
+      const ticks = $("ticks");
+      for (let i = 0; i < TICKS; i += 1) ticks.appendChild(document.createElement("i"));
+
+      const RING = 12;
+      const ring = $("ring");
+      for (let i = 0; i < RING; i += 1) ring.appendChild(document.createElement("i"));
+
+      const WAVE = 96;
+      const wave = $("wave");
+      for (let i = 0; i < WAVE; i += 1) wave.appendChild(document.createElement("i"));
+
+      /** A deterministic height for one wave bar. */
+      const bar = (i, t) =>
+        Math.abs(
+          Math.sin(i * 0.31 + t * 3.1) * Math.cos(i * 0.11 - t * 1.7) +
+            Math.sin(i * 0.07 + t * 0.9) * 0.6,
+        ) / 1.6;
+
+      /**
+       * Each still is fit to the frame that holds it: the 2x screenshots are not
+       * all the same shape, so a fixed width would letterbox the wide ones and
+       * float the tall ones.
+       */
+      const fitImages = () => {
+        document.querySelectorAll(".frame").forEach((frame) => {
+          const box = frame.getBoundingClientRect();
+          const img = frame.querySelector("img");
+          if (!img || img.naturalWidth === 0) return;
+          const aspect = img.naturalWidth / img.naturalHeight;
+          const wide = aspect >= 1.35;
+          // A wide still fits inside the frame with air around it; a tall page
+          // fills the width and pans, because a contained portrait would be
+          // unreadable at 1080p.
+          const width = wide
+            ? Math.min(box.width * 0.88, (box.height * 0.78) * aspect)
+            : aspect < 0.8
+              ? box.width * 0.62
+              : box.width * 0.74;
+          const height = (img.naturalHeight / img.naturalWidth) * width;
+          img.style.width = `${width}px`;
+          img.style.height = "auto";
+          const overflow = Math.max(0, height - box.height);
+          img.dataset.overflow = String(overflow);
+          img.dataset.half = String(overflow / 2);
+        });
+      };
+
+      window.prepare = async () => {
+        await document.fonts.ready;
+        await Promise.all(
+          [...document.images].map((img) => img.decode().catch(() => undefined)),
+        );
+        fitImages();
+        window.renderAt(0);
+      };
+
+      const SCENES = ["open", "claim", "montage", "speed", "haptics", "close"];
+
+      window.renderAt = (t) => {
+        for (const id of SCENES) set(id, { opacity: "0" });
+        for (const id of ["f-aero", "f-hunter", "f-icons", "f-editor", "f-dash", "f-tooltip"]) {
+          set(id, { opacity: "0" });
+        }
+        set("cap", { opacity: "0" });
+        set("cap2", { opacity: "0" });
+
+        // 1. open: 0.0 - 3.4
+        if (t < 3.6) {
+          set("open", { opacity: "1" });
+          const p = out(seg(t, 0.15, 1.5));
+          Object.assign($("logo").style, logoStyle(p));
+          const w = out(seg(t, 0.55, 1.9));
+          set("wordmark", {
+            opacity: String(w),
+            letterSpacing: `${0.46 - 0.16 * out(seg(t, 0.55, 2.4))}em`,
+            transform: `translateY(${18 * (1 - w)}px)`,
+          });
+          const k = out(seg(t, 0.3, 1.6));
+          set("kicker", {
+            opacity: String(k * 0.9),
+            transform: `translateY(${10 * (1 - k)}px)`,
+          });
+          const s = out(seg(t, 1.05, 2.4));
+          set("sub", {
+            opacity: String(s),
+            transform: `translateY(${14 * (1 - s)}px)`,
+          });
+          set("orule", {
+            opacity: String(0.9 * out(seg(t, 1.4, 2.6))),
+            transform: `scaleX(${out(seg(t, 1.4, 2.9))})`,
+          });
+          set("open-inner", {
+            transform: `scale(${1 + 0.012 * seg(t, 1.6, 3.4)})`,
+          });
+        }
+
+        // 2. claim: 3.4 - 7.2
+        if (t >= 3.4 && t < 7.4) {
+          set("claim", { opacity: "1" });
+          const lines = [
+            ["l1", 3.5, 6.6],
+            ["l2", 4.35, 6.6],
+            ["l3", 5.2, 6.6],
+          ];
+          lines.forEach(([id, start, end], index) => {
+            const p = out(seg(t, start, start + 0.75));
+            const fade = 1 - seg(t, end, end + 0.5);
+            const dim = index === 2 ? 1 : t > start + 0.85 ? 0.34 : 1;
+            set(id, {
+              opacity: String(p * fade * dim),
+              transform: `translateY(${26 * (1 - p)}px)`,
+            });
+          });
+        }
+
+        // 3. montage: 7.2 - 12.4
+        if (t >= 7.2 && t < 12.6) {
+          set("montage", { opacity: "1" });
+          const shots = [
+            ["f-aero", "i-aero", 7.2, 8.7, "01  Windows 7, rebuilt", 1, 1.05],
+            ["f-hunter", "i-hunter", 8.7, 10.1, "02  Notes", 1, 1.04],
+            ["f-icons", "i-icons", 10.1, 11.4, "03  83 icons", 1, 1.05],
+            ["f-editor", "i-editor", 11.4, 12.6, "04  Themes", 1, 1.04],
+          ];
+          shots.forEach(([frame, img, start, end, label, from, to]) => {
+            if (t < start || t >= end) return;
+            const local = seg(t, start, end);
+            const node = $(img);
+            const overflow = Number(node.dataset.overflow ?? 0);
+            const half = Number(node.dataset.half ?? 0);
+            set(frame, { opacity: "1" });
+            set(img, {
+              transform: `translate(-50%, -50%) translateY(${(half - overflow * 0.5 * inOut(local)).toFixed(1)}px) scale(${from + (to - from) * inOut(local)})`,
+            });
+            const wipe = out(seg(t, start, start + 0.34));
+            set(frame, {
+              clipPath: `inset(${(1 - wipe) * 100}% 0 0 0)`,
+            });
+            const cap = out(seg(t, start + 0.1, start + 0.5));
+            set("cap", { opacity: String(cap * 0.95) });
+            $("cap-text").textContent = label;
+          });
+        }
+
+        // 4. speed: 12.6 - 17.4
+        if (t >= 12.6 && t < 17.5) {
+          set("speed", { opacity: "1" });
+          const count = Math.round(60 * out(seg(t, 12.85, 14.05)));
+          $("count").textContent = String(count);
+          const p = out(seg(t, 12.7, 13.3));
+          set("count", {
+            opacity: String(p),
+            transform: `translateY(${24 * (1 - p)}px)`,
+          });
+          const lit = Math.round(TICKS * out(seg(t, 12.85, 14.05)));
+          [...ticks.children].forEach((tick, i) => {
+            tick.style.background = i < lit ? "#f5f5f7" : "#2a2a2e";
+            tick.style.transform = `scaleY(${i < lit ? 1 : 0.6})`;
+          });
+          [
+            ["row-a", 13.5],
+            ["row-b", 13.9],
+            ["row-c", 14.3],
+          ].forEach(([id, start]) => {
+            const p2 = out(seg(t, start, start + 0.55));
+            set(id, {
+              opacity: String(p2),
+              transform: `translateY(${12 * (1 - p2)}px)`,
+            });
+          });
+          // the shipped mark: a ring of static ticks whose lit arc steps
+          const step = Math.floor((t - 12.6) * 8) % RING;
+          [...ring.children].forEach((tick, i) => {
+            const angle = (i / RING) * Math.PI * 2 - Math.PI / 2;
+            const distance = (step - i + RING) % RING;
+            const opacity = distance < 7 ? 1 - distance / 8 : 0.12;
+            tick.style.left = `${110 + 88 * Math.cos(angle) - 6}px`;
+            tick.style.top = `${110 + 88 * Math.sin(angle) - 6}px`;
+            tick.style.opacity = String(opacity);
+          });
+          const rp = out(seg(t, 13.2, 14.2));
+          set("ring", { opacity: String(rp * 0.95) });
+        }
+
+        // 5. haptics: 17.4 - 21.8
+        if (t >= 17.4 && t < 21.9) {
+          set("haptics", { opacity: "1" });
+          const a = out(seg(t, 17.5, 18.2));
+          set("h-title", {
+            opacity: String(a),
+            transform: `translateY(${18 * (1 - a)}px)`,
+          });
+          const b = out(seg(t, 18.0, 18.7));
+          set("h-sub", {
+            opacity: String(b * 0.95),
+            transform: `translateY(${14 * (1 - b)}px)`,
+          });
+          set("wave", { opacity: String(out(seg(t, 17.9, 18.6))) });
+          [...wave.children].forEach((node, i) => {
+            const h = bar(i, t) * 168 + 3;
+            node.style.height = `${h}px`;
+            node.style.background = h > 90 ? "#f5f5f7" : "#5b5b60";
+          });
+          if (t > 20.1) {
+            const local = seg(t, 20.1, 21.9);
+            set("f-tooltip", { opacity: String(out(seg(t, 20.1, 20.5))) });
+            set("i-spinner", {
+              transform: `translate(-50%, -50%) scale(${1.5 - 0.06 * local})`,
+            });
+          }
+        }
+
+        // 6. close: 21.8 - 27.2
+        if (t >= 21.8) {
+          set("close", { opacity: "1" });
+          if (t < 24.3) {
+            const local = seg(t, 21.8, 24.3);
+            set("f-dash", { opacity: String(out(seg(t, 21.85, 22.3))) });
+            const cap2 = out(seg(t, 22.0, 22.5)) * (1 - seg(t, 24.0, 24.35));
+            set("cap2", { opacity: String(cap2 * 0.95) });
+            const dash = $("i-dash");
+            const dashHalf = Number(dash.dataset.half ?? 0);
+            const dashOverflow = Number(dash.dataset.overflow ?? 0);
+            set("i-dash", {
+              transform: `translate(-50%, -50%) translateY(${(dashHalf - dashOverflow * 0.55 * inOut(local)).toFixed(1)}px) scale(${1 + 0.03 * inOut(local)})`,
+            });
+            set("f-dash", {
+              clipPath: `inset(${(1 - out(seg(t, 21.85, 22.25))) * 100}% 0 0 0)`,
+            });
+            set("end", { opacity: "0" });
+          } else {
+            set("f-dash", { opacity: String(1 - seg(t, 24.2, 24.6)) });
+            const e = out(seg(t, 24.35, 25.1));
+            set("end", {
+              opacity: String(e),
+              transform: `scale(${0.985 + 0.015 * e})`,
+            });
+            Object.assign($("logo2").style, logoStyle(e));
+          }
+        }
+
+        set("fade", { opacity: String(seg(t, 26.5, 27.2)) });
+      };
+    </script>
+  </body>
+</html>
