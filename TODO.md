@@ -24795,3 +24795,56 @@ account's existing `~/.ssh/id_ed25519` is now registered as a **signing** key,
 the branch is one commit made with `git commit -S`, and the `Signed commits`
 check passes. A fork's Vercel preview stays unauthorized, which is not a failure
 of the change.
+
+## The reported previews, and the crash behind them (2026-10-30)
+
+`[x]` `[██████████]` 10/10 — **the data-display routes no longer crash.** The
+preview and the landing called a demo as a function (`demo.render()`), so the
+drawing's hooks were counted as the preview's own; navigating from one data page
+to another opened the same component with a different hook list and threw React
+error #300 until a refresh remounted it. Both call sites render `<Drawing />`
+now, and `component-preview.test.ts` refuses a call (measured failing in both
+directions).
+
+`[x]` The **spinner** painted two labels around nothing: the ring's demo was
+rewritten to absolutely placed ticks and the style sheet kept only the
+reduced-motion mention of the class, so no rule sized or filled it. The ring,
+tick and accent rules are back, an in-button ring takes the `on-*` role of the
+fill it sits on, and `spinner-demo.test.tsx` holds the sheet.
+
+`[x]` The **tooltip** opens with its tip showing, and its readout is one fixed
+line, so hovering no longer moves the button under it (measured: the button's
+`y` is 690 before and after).
+
+`[x]` The **user menu** opened past its stage's clipped edge, which is why it
+was invisible: the account row sits at the stage's left now and the popover
+opens beside it inside the frame. The geometry constants and the test hold the
+menu's right edge to the stage's inset.
+
+`[x]` **Shimmer** is neutral like shadcn's: the copy rests on `mutedForeground`
+and the sweep is `foreground`. The browser drawing samples the same pair.
+
+`[x]` A **collapsed rail** centres its mark. The hidden label was still a flex
+child and kept the row's gap, which pushed every avatar ~5px off the axis; the
+collapsed state zeroes both. Measured: row centre 334.5, avatar centre 334.5.
+
+`[x]` **Icons** is a gallery of all 83 glyphs in a six-column grid over the
+usage, API and limits that a reader copies, with provenance moved to the
+package README and `LICENSES/lucide.md`.
+
+`[x]` **Themes** carries Windows 7's Personalization screen rebuilt as a block
+from the Aero look's roles (chrome, address bar, links, theme grid, four
+settings; the thumbnails are the palette's series, no artwork copied), a wider
+editor form, and the audit prose cut from six sections to the lines a reader
+needs.
+
+`[x]` **Every block page** keeps its preview and its composition list and drops
+the prose around them (the sidebar page keeps its one sentence per example,
+which its own case requires).
+
+`[x]` **The hunter** reads as an Obsidian note: properties, list rows, bullets,
+a callout and a chart, with the card recipe gone from its pane and from the
+sheet. Its window is taller so the note fits without scrolling.
+
+Gates: docs 2285, components 1177, primitives 1267, shell 32; `nub run check`
+green; the site deployed and all 195 sitemap pages answer 200.
