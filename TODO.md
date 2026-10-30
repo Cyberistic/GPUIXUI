@@ -24747,8 +24747,11 @@ with the final sidebar.
 
 ## Theme page, shimmer ink, hunter copy and picker drag (2026-10-30)
 
-`[x]` `[██████████]` 4/4 — **the lost `fix/theme-shimmer-hunter` work is back on
-`feat/theme-shimmer-hunter`.**
+`[x]` `[██████████]` 4/4 — **the lost theme/shimmer/hunter work is on `master`
+and deployed.** It was cherry-picked from `feat/theme-shimmer-hunter` rather
+than merged whole: that branch's `7dc7c7990` duplicates work master already
+carries, so its theme page, shimmer ink and hunter copy came over on their own
+and the two conflicts were resolved by hand.
 
 `[x]` `/themes` mounts the restored live editor, the authored look picker, the
 Aero look on the editor's own panel with `toCssText`'s generated stylesheet, and
@@ -24762,12 +24765,18 @@ point at a time because the runtime has no mask or `background-clip`. Composed
 children keep the surface band, and the page states that the two drawings are
 not the same.
 
-`[x]` The hunter block's metas fit one line in the 836px window (`Renown · 7d`,
-`gaps · rivals`, `2 ready · 3 held`, `field work`, `awaiting slot`,
-`the key ratio`), at a 9.5px label and 10.5px meta. `hunterCellFits` fails a meta
-past either cell's budget.
+`[x]` The hunter block's copy fits one line in its window: metas read
+`Renown · 7d`, `gaps · rivals`, `2 ready · 3 held`, `field work`,
+`awaiting slot`, `the key ratio`, and the three reading labels the branch had
+renamed wrapped instead (`Renown · 14-day window`, `Licences · 14-day window`,
+`Renown per licence` measured 27.5px against a 14px line), so they read
+`Renown · 14d`, `Licences`, `Per licence`. A label is uppercase and tracked and
+carries 12 characters where the meta under it carries 16, so the budget now has
+a `label` cell and `hunterCellFits` holds each line to its own.
 
 `[x]` The color picker's area drag keeps reporting while the primary button is
-held (`stillHeld`), measured in the production build: pressing the knob at
-(736.6, 272.2) and moving with the button held took the readout from
-`#3B9DFF` to `#0E2B47`.
+held. The branch's `stillHeld` helper was **not** taken: master's `useRailDrag`
+already reads `event.buttons === 0` as the release, reports the press before it
+captures the pointer and survives a refused capture, and the drag was measured
+in a production build after that fix. The branch's commit was skipped rather
+than layered on top.
