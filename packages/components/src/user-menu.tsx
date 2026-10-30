@@ -3,7 +3,7 @@
  * UserMenu: the account row shadcn puts in a sidebar footer.
  *
  * The trigger is an avatar, the reader's name and address, and a
- * chevrons-up-down affordance; the menu repeats the identity under a label,
+ * account row; the menu repeats the identity under a label,
  * offers **Upgrade to Pro**, then Account / Billing / Notifications, and closes
  * with Log out behind separators. It is a standalone component — render it in a
  * toolbar or a header — and {@link SidebarUserMenu} is the same menu in the
@@ -81,7 +81,7 @@ export interface UserMenuProps
   readonly menuTestId?: string;
 }
 
-/** The trigger row: avatar, name over address, and the disclosure mark. */
+/** The trigger row: the avatar, and the name over the address. */
 const IDENTITY_HEIGHT = 48;
 const IDENTITY_HEIGHT_COLLAPSED = 32;
 const MENU_WIDTH = 224;
@@ -169,13 +169,6 @@ export const UserMenu = ({
         >
           {avatar}
           {collapsed ? null : identity}
-          {collapsed ? null : (
-            <Icon
-              name="chevrons-up-down"
-              size="sm"
-              color={theme.colors.mutedForeground}
-            />
-          )}
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent
