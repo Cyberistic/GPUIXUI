@@ -98,6 +98,11 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  /* The roles, the radius and the font outrun the specimen, so the column
+     scrolls in its own box: both panes end together instead of the preview
+     carrying a stage taller than the card it holds. */
+  max-height: 620px;
+  overflow-y: auto;
   padding: 18px;
   border-right: 1px solid var(--border);
   background: var(--card);
@@ -207,6 +212,9 @@
   flex-direction: column;
   gap: 16px;
   align-items: flex-start;
+  /* The column scrolls and the pane stretches to it, so the specimen centres
+     in the stage rather than hanging from its top edge. */
+  justify-content: center;
   padding: 28px;
   background: var(--background);
   color: var(--foreground);

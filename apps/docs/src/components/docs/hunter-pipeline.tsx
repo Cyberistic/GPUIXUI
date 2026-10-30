@@ -94,15 +94,17 @@ export interface HunterReading {
 /**
  * The characters one cell carries on one line at the block's own width.
  *
- * A stage cell is the narrower of the two: the strip's six cells share the
- * note's inner width, and 18 characters at the meta size stay inside it. A
- * reading is one of five, so it carries 24. The values are conservative on
- * purpose: the copy is shortened to fit them rather than clipped by an
- * ellipsis, and `hunterCellFits` fails a page whose copy grows past one.
+ * Six stage cells share the strip's inner width and five readings share the one
+ * above it. A label is uppercase and tracked, so it carries fewer characters
+ * than the meta under it: measured on the block's window, 12 characters paint
+ * on one line and 14 wrap, while 16 of meta still fit. The copy is shortened to
+ * those budgets rather than clipped by an ellipsis, and `hunterCellFits` fails a
+ * page whose copy grows past the line it was written for.
  */
 export const hunterCellBudget = {
-  stage: 18,
-  reading: 24,
+  label: 12,
+  stage: 16,
+  reading: 16,
 } as const;
 
 /** Whether a line of copy fits one cell without wrapping or clipping. */
@@ -122,19 +124,19 @@ export const hunterReadings: ReadonlyArray<HunterReading> = [
   },
   {
     id: "renown-window",
-    label: "Renown · 14-day window",
+    label: "Renown · 14d",
     value: "47,513",
     meta: "29 licences",
   },
   {
     id: "licences",
-    label: "Licences · 14-day window",
+    label: "Licences",
     value: "11",
     meta: "25 measured",
   },
   {
     id: "per-licence",
-    label: "Renown per licence",
+    label: "Per licence",
     value: "0.25",
     meta: "the key ratio",
     tone: "success",
@@ -906,9 +908,9 @@ import { Button, Text } from "@gpuixui/primitives";
 
 const readings = [
   { label: "Renown · 7d", value: "28,087", meta: "8 snapshot days" },
-  { label: "Renown · 14-day window", value: "47,513", meta: "29 licences" },
-  { label: "Licences · 14-day window", value: "11", meta: "25 measured" },
-  { label: "Renown per licence", value: "0.25", meta: "the key ratio" },
+  { label: "Renown · 14d", value: "47,513", meta: "29 licences" },
+  { label: "Licences", value: "11", meta: "25 measured" },
+  { label: "Per licence", value: "0.25", meta: "the key ratio" },
   { label: "Rising today", value: "26", meta: "Δ > 0" },
 ];
 

@@ -82,20 +82,23 @@ describe("the dossier columns", () => {
   });
 
   it("keeps every cell's copy inside the one-line budget", () => {
-    // The 836×524 window truncated `the number that ma…`, `gaps, facts, riv…`,
-    // `2 ready · 3 blo…` and `field / in progr…`. The copy is shortened and
-    // this budget is the guard: a longer meta fails here before it clips.
+    // The window truncated `the number that ma…`, `gaps, facts, riv…`,
+    // `2 ready · 3 blo…` and `field / in progr…`, and the labels renamed to
+    // `Renown · 14-day window` wrapped onto a second line. The copy is
+    // shortened and this budget is the guard: longer copy fails here before it
+    // wraps.
     for (const stage of pipelineStages) {
-      expect(hunterCellFits(stage.label, "stage")).toBe(true);
+      expect(hunterCellFits(stage.label, "label")).toBe(true);
       expect(hunterCellFits(stage.meta, "stage")).toBe(true);
     }
     for (const reading of hunterReadings) {
-      expect(hunterCellFits(reading.label, "reading")).toBe(true);
+      expect(hunterCellFits(reading.label, "label")).toBe(true);
       expect(hunterCellFits(reading.meta, "reading")).toBe(true);
     }
   });
 
-  it("rejects a meta the cell cannot hold on one line", () => {
+  it("rejects copy the cell cannot hold on one line", () => {
+    expect(hunterCellFits("a label far past the budget", "label")).toBe(false);
     expect(hunterCellFits("a meta far past the cell budget", "stage")).toBe(
       false,
     );
