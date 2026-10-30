@@ -3,7 +3,7 @@
  * UserMenu: the account row shadcn puts in a sidebar footer.
  *
  * The trigger is an avatar, the reader's name and address, and a
- * chevrons-up-down affordance; the menu repeats the identity under a label,
+ * account row; the menu repeats the identity under a label,
  * offers **Upgrade to Pro**, then Account / Billing / Notifications, and closes
  * with Log out behind separators. It is a standalone component — render it in a
  * toolbar or a header — and {@link SidebarUserMenu} is the same menu in the
@@ -81,7 +81,7 @@ export interface UserMenuProps
   readonly menuTestId?: string;
 }
 
-/** The trigger row: avatar, name over address, and the disclosure mark. */
+/** The trigger row: the avatar, and the name over the address. */
 const IDENTITY_HEIGHT = 48;
 const IDENTITY_HEIGHT_COLLAPSED = 32;
 const MENU_WIDTH = 224;
@@ -142,8 +142,10 @@ export const UserMenu = ({
         style={mergeStyles(
           {
             height: collapsed ? IDENTITY_HEIGHT_COLLAPSED : IDENTITY_HEIGHT,
+            // A 26px avatar in a 32px row: 3px a side, so the disc's rim is
+            // the box's inset instead of overflowing a shrunken slot.
             ...(collapsed
-              ? { width: IDENTITY_HEIGHT_COLLAPSED, padding: 4 }
+              ? { width: IDENTITY_HEIGHT_COLLAPSED, padding: 3 }
               : { paddingLeft: 8, paddingRight: 8 }),
             justifyContent: collapsed ? "center" : "flex-start",
             color: theme.colors.cardForeground,
@@ -157,26 +159,23 @@ export const UserMenu = ({
           otherwise take the press on 0.11.0 instead of bubbling it to the
           action. This row only lays the identity out.
         */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            flexGrow: 1,
-            minWidth: 0,
-          }}
-        >
-          {avatar}
-          {collapsed ? null : identity}
-          {collapsed ? null : (
-            <Icon
-              name="chevrons-up-down"
-              size="sm"
-              color={theme.colors.mutedForeground}
-            />
-          )}
-        </div>
+        {collapsed ? (
+          avatar
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              flexGrow: 1,
+              minWidth: 0,
+            }}
+          >
+            {avatar}
+            {identity}
+          </div>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent
         label={`${user.name} account`}
@@ -201,78 +200,100 @@ export const UserMenu = ({
           {avatar}
           {identity}
         </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            testId="user-menu-upgrade"
-            onSelect={onUpgrade}
-            leading={
-              <Icon
-                name="sparkles"
-                size="sm"
-                color={theme.colors.mutedForeground}
-              />
-            }
-          >
-            Upgrade to Pro
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            testId="user-menu-account"
-            onSelect={onAccount}
-            leading={
-              <Icon
-                name="badge-check"
-                size="sm"
-                color={theme.colors.mutedForeground}
-              />
-            }
-          >
-            Account
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            testId="user-menu-billing"
-            onSelect={onBilling}
-            leading={
-              <Icon
-                name="credit-card"
-                size="sm"
-                color={theme.colors.mutedForeground}
-              />
-            }
-          >
-            Billing
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            testId="user-menu-notifications"
-            onSelect={onNotifications}
-            leading={
-              <Icon
-                name="bell"
-                size="sm"
-                color={theme.colors.mutedForeground}
-              />
-            }
-          >
-            Notifications
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          testId="user-menu-log-out"
-          onSelect={onLogOut}
-          leading={
-            <Icon
-              name="log-out"
-              size="sm"
-              color={theme.colors.mutedForeground}
-            />
-          }
-        >
-          Log out
-        </DropdownMenuItem>
+        {/* An item with no handler is a dead end, so it is not painted: the
+            menu is the actions the caller actually wired. */}
+        {onUpgrade === undefined ? null : (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                testId="user-menu-upgrade"
+                onSelect={onUpgrade}
+                leading={
+                  <Icon
+                    name="sparkles"
+                    size="sm"
+                    color={theme.colors.mutedForeground}
+                  />
+                }
+              >
+                Upgrade to Pro
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        )}
+        {onAccount === undefined &&
+        onBilling === undefined &&
+        onNotifications === undefined ? null : (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              {onAccount === undefined ? null : (
+                <DropdownMenuItem
+                  testId="user-menu-account"
+                  onSelect={onAccount}
+                  leading={
+                    <Icon
+                      name="badge-check"
+                      size="sm"
+                      color={theme.colors.mutedForeground}
+                    />
+                  }
+                >
+                  Account
+                </DropdownMenuItem>
+              )}
+              {onBilling === undefined ? null : (
+                <DropdownMenuItem
+                  testId="user-menu-billing"
+                  onSelect={onBilling}
+                  leading={
+                    <Icon
+                      name="credit-card"
+                      size="sm"
+                      color={theme.colors.mutedForeground}
+                    />
+                  }
+                >
+                  Billing
+                </DropdownMenuItem>
+              )}
+              {onNotifications === undefined ? null : (
+                <DropdownMenuItem
+                  testId="user-menu-notifications"
+                  onSelect={onNotifications}
+                  leading={
+                    <Icon
+                      name="bell"
+                      size="sm"
+                      color={theme.colors.mutedForeground}
+                    />
+                  }
+                >
+                  Notifications
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuGroup>
+          </>
+        )}
+        {onLogOut === undefined ? null : (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              testId="user-menu-log-out"
+              onSelect={onLogOut}
+              leading={
+                <Icon
+                  name="log-out"
+                  size="sm"
+                  color={theme.colors.mutedForeground}
+                />
+              }
+            >
+              Log out
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
