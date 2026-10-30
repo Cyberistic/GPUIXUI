@@ -142,8 +142,10 @@ export const UserMenu = ({
         style={mergeStyles(
           {
             height: collapsed ? IDENTITY_HEIGHT_COLLAPSED : IDENTITY_HEIGHT,
+            // A 26px avatar in a 32px row: 3px a side, so the disc's rim is
+            // the box's inset instead of overflowing a shrunken slot.
             ...(collapsed
-              ? { width: IDENTITY_HEIGHT_COLLAPSED, padding: 4 }
+              ? { width: IDENTITY_HEIGHT_COLLAPSED, padding: 3 }
               : { paddingLeft: 8, paddingRight: 8 }),
             justifyContent: collapsed ? "center" : "flex-start",
             color: theme.colors.cardForeground,
@@ -157,19 +159,23 @@ export const UserMenu = ({
           otherwise take the press on 0.11.0 instead of bubbling it to the
           action. This row only lays the identity out.
         */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            flexGrow: 1,
-            minWidth: 0,
-          }}
-        >
-          {avatar}
-          {collapsed ? null : identity}
-        </div>
+        {collapsed ? (
+          avatar
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              flexGrow: 1,
+              minWidth: 0,
+            }}
+          >
+            {avatar}
+            {identity}
+          </div>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent
         label={`${user.name} account`}
