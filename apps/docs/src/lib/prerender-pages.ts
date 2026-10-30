@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 import { indexedCollections } from "./collection-index";
 import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
-import { registryPaths } from "./registry-source";
 import { docsRoute } from "./shared";
 import { sitemapPaths } from "./sitemap";
 
@@ -100,14 +99,17 @@ export const packagePageUrls = (root: string | URL): ReadonlyArray<string> =>
  *
  * `sitemapPaths` already drops a page a curated page replaces and keeps one
  * entry per URL, so a redirect stays a redirect: a retired package URL is not
- * prerendered and the Worker still answers it with its 301. The registry adds
- * its index and one document per item, generated from the same pages.
+ * prerendered and the Worker still answers it with its 301.
+ *
+ * The shadcn registry is **not** here: its index and 158 item documents carry
+ * the source of every installed file, and bundling them into the Worker went
+ * over Cloudflare's 63.9 MiB ceiling. `scripts/emit-registry.ts` writes them to
+ * `dist/client` after the build, so the edge serves them as assets.
  */
 export const prerenderPaths = (root: string | URL): ReadonlyArray<string> =>
   [
     ...sitemapPaths(sitePageUrls(root), packagePageUrls(root)),
     ...staticDocumentPaths,
-    ...registryPaths(root),
   ]
     .filter((path) => !dynamicPaths.includes(path))
     .toSorted();

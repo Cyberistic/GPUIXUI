@@ -40,15 +40,16 @@ describe("the prerendered paths", () => {
     expect(paths).toEqual(expect.arrayContaining([...staticDocumentPaths]));
   });
 
-  it("renders the registry index and every item it lists", () => {
-    // The registry is generated from the page tree and served from the root;
-    // a path missing here is a JSON document the Worker would render per
-    // request, and one the asset layer could have answered.
+  it("keeps the registry out of the Worker's bundle", () => {
+    // Registry documents carry the source of every file an item installs, and
+    // bundling all 159 of them into the Worker went over Cloudflare's 63.9 MiB
+    // ceiling. `scripts/emit-registry.ts` writes them to `dist/client` after
+    // the build, so they must never reappear in the prerender list.
     const registry = registryPaths(root);
 
     expect(registry.length).toBeGreaterThan(100);
     expect(registry).toContain("/registry.json");
-    expect(paths).toEqual(expect.arrayContaining([...registry]));
+    expect(registry.filter((path) => paths.includes(path))).toEqual([]);
   });
 
   it("leaves the routes a static asset cannot answer to the Worker", () => {
