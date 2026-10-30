@@ -24781,11 +24781,17 @@ captures the pointer and survives a refused capture, and the drag was measured
 in a production build after that fix. The branch's commit was skipped rather
 than layered on top.
 
-`[!]` The **shadcn directory entry** is submitted as
-[shadcn-ui/ui#12542](https://github.com/shadcn-ui/ui/pull/12542) — `registry/shadcn-directory.json`
-appended to `apps/v4/registry/directory.json`, one line, namespace unique,
-validated locally against the file's own `registryDirectorySchema`. **Blocked on
-signed commits**: the repository's `Require signed branch commits` ruleset is
-active on `~ALL` refs and no signing key is registered on the account, so the
-API-created commit reads `unsigned` and the PR cannot merge until it is signed
-or re-committed from the web editor.
+`[x]` The **shadcn directory entry** is submitted as
+[shadcn-ui/ui#12542](https://github.com/shadcn-ui/ui/pull/12542): one commit,
+seven added lines, `apps/v4/registry/directory.json` only, namespace unique, and
+validated locally against that file's own `registryDirectorySchema`. The entry
+itself lives at `registry/shadcn-directory.json` with `registry/README.md` beside
+it, and `apps/docs/src/lib/registry.test.ts` holds the homepage and `{name}`
+template to the deployed origin.
+
+The repository requires signed commits on every ref, and neither an SSH signing
+key nor `commit.gpgsign` existed, so the first attempt could not merge. The
+account's existing `~/.ssh/id_ed25519` is now registered as a **signing** key,
+the branch is one commit made with `git commit -S`, and the `Signed commits`
+check passes. A fork's Vercel preview stays unauthorized, which is not a failure
+of the change.
