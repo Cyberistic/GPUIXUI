@@ -41,8 +41,10 @@ block, Usage, Composition and API reference, plus the "On this page" table of
 contents and the previous/next pager. Button, Dialog, Popover and
 Tabs are the pattern pages; their previews are labelled browser renderings of
 the native components, and the Code tab plus **Component source** show the real
-implementation. The remaining shadcn surfaces — **Blocks** (`/blocks`) — landed
-too: recipe pages composed from the library. The **Dashboard**
+implementation. The remaining shadcn surfaces — **Blocks** (`/blocks`) and the
+**Theme page** (`/themes`) — landed too: recipe pages composed from the library,
+and a live token editor with the authored looks, the compiled style reference and
+the Aero look's generated stylesheet. The **Dashboard**
 block (`/blocks/dashboard`) is the landing's product window: a six-card
 activity dashboard composed from the library, with `BarChart`, `DonutChart` and
 `StackedBar` from `@gpuixui/data`.

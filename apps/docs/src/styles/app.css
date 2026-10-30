@@ -10,6 +10,7 @@
 @import "./demos.css";
 @import "./blocks.css";
 @import "./platform.css";
+@import "./theme-editor.css";
 
 /*
  * The docs palette: Fumadocs' shadcn preset in both schemes — neutral surfaces,

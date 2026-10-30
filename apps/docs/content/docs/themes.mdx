@@ -1,0 +1,129 @@
+---
+title: Theme
+description: A live editor for the library's semantic tokens, the authored looks, and the stylesheet a look compiles to.
+---
+
+Edit the tokens and watch them apply to a preview in real time. The editor reads its defaults from `@gpuixui/tokens` and emits the same `createTheme` shape the library consumes.
+
+<ThemeEditor />
+
+Light and dark are independent. Edits persist to the URL and `localStorage`; **Reset** returns to the selected platform style. **Copy theme** prints a whole resolved `createTheme` module you can ship.
+
+A browser that refuses site storage — the reader blocked site data, or the store has no room — keeps the editor, the URL and every preview: the edit applies, the link carries it and the next visit opens on the base style. **Copy theme** answers a browser with no clipboard as a failed copy rather than an error.
+
+## Reading the audit
+
+The readout under the preview is `auditTheme`'s result, one line per finding:
+what it measured, the ratio the paint produced, and the floor it had to reach. A
+failing contrast pair reads `mutedForeground on muted — 3.90:1 (needs 4.5:1)`.
+
+**Unmeasurable** means the contrast cannot be computed — a translucent colour,
+or a selection wash that cannot be composited over its surface — rather than that
+it passed. A finding names the report it came from, so an inverted ladder reads
+as a ladder, not as a colour.
+
+A declared switch reports three things: the colours it paints, where each one is
+measured, and whether its box can be drawn at all. `switch height — 22 cannot
+hold a knob that needs 32` is a track that cannot hold its knob and both insets,
+and `switch width — 0 cannot be laid out (needs a size greater than zero)` is a
+slot the renderer cannot draw. The box comes from the platform style the
+sidebar selected, not from a role.
+
+The base is the platform style the sidebar selected, in the mode on screen.
+Edits are stored per mode and applied over that base, so switching the platform
+re-bases the preview and the audit while your edits stay.
+
+## The looks
+
+<LookPicker />
+
+A **platform style** is one of the four variants of the identity; an **authored
+look** is a style applied over one. The picker paints a look over whichever
+platform the sidebar switch shows and writes it to the URL (`?look=luna`), so a
+link carries the choice and the store remembers it. The sidebar itself offers
+the four platform names only, because a look is not a fifth platform.
+
+| Look | `mono` | `radius.md` | Density |
+| ---- | ------ | ----------- | ------- |
+| `luna` — Windows XP (Luna) | `Lucida Console` | 2 | `compact` |
+| `aero` — Windows 7 (Aero) | `Consolas` | 4 | `comfortable` |
+| `omarchy` — Omarchy | `JetBrains Mono` | 2 | `compact` |
+
+The UI face stays the runtime's sentinel on all three: the package bundles no
+font, so naming Tahoma, Segoe UI or JetBrains Mono as the UI face would silently
+fall back on a machine that lacks it. The monospace family is the look's own.
+
+### Aero, and the CSS it compiles to
+
+The panel below is the editor's preview under `retroTheme(themes.dark, "aero")`.
+The stylesheet beneath it is generated from the same theme by `toCssText`, so
+every variable the panel reads is a line a reader can copy into an application.
+
+<AeroTheme />
+
+The Aero look is token values — colours, radii, density and the monospace
+family. It copies no artwork: no gradient, bitmap, icon, cursor or logo, so
+there is no redistributable asset and no trademark in the identity. The runtime
+could not paint most of that chrome at all: there is no `backdropFilter` for
+Aero's glass, no multi-stop, radial or conic gradient for a title bar, and no
+CSS `filter`, `clip-path`, blend mode or per-element `transform` for a glow,
+reflection or shaped clip. Two-stop linear gradients and `inset` shadows are
+available; see [the capability
+record](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/gpuix-capabilities.md)
+for the measured verdicts.
+
+Neither Windows era shipped a dark mode, so the two dark editions are authored
+here — invented, not reconstructions. Omarchy's pair is not invented: its dark
+set is Tokyo Night and its light set the Flexoki Light reference. All six themes
+are held to the same contrast and decorative contracts as every other theme.
+Provenance and the palette mapping are recorded in `docs/tokens.md` §Authored
+looks and §Omarchy's `colors.toml`.
+
+### Author a style
+
+`platformStyles` and `retroStyles` are ordinary tables — `packages/tokens/src/platforms.ts` and `packages/tokens/src/retro.ts`. Copy one, edit a value, and apply it; a role the style omits keeps the base theme's value.
+
+```tsx
+import { applyStyle, themes, type PlatformStyle } from "@gpuixui/tokens";
+
+const acme: PlatformStyle = {
+  label: "Acme",
+  sans: "sans",
+  mono: "Menlo",
+  radius: { none: 0, sm: 4, md: 6, lg: 8, xl: 12, full: 9999 },
+  density: "compact",
+  contrast: "default",
+  colors: {
+    light: { primary: "#0F5E8C", primaryForeground: "#FFFFFF" },
+    dark: { primary: "#4FA9E0", primaryForeground: "#06222F" },
+  },
+};
+
+const brand = applyStyle(themes.light, acme);
+```
+
+`contrast` names the variant the palette was designed for: a base of another variant ignores the style's colours and data series and takes only its geometry and families. Run `auditTheme(brand)` before shipping; `passed` is true only when every report is empty.
+
+## The style reference
+
+A recipe is only as portable as the vocabulary it is written in, so here is all
+of it — compiled, not transcribed. Every row is `classesToStyle`'s answer for
+the theme the platform switch selected, so a macOS control height, a Linux
+corner and a dark role are the numbers this release actually paints. A class
+the renderer cannot express is refused **by name**, with the compiler's own
+reason, never silently compiled to nothing.
+
+<StyleReference />
+
+### Type scale
+
+Every role the theme carries, at the size and leading this release paints.
+
+<TypeScale />
+
+### Spacing, radius and density
+
+The steps a layout takes, the corners a surface wears, and the control geometry
+the platform style selects.
+
+<TokenScales />

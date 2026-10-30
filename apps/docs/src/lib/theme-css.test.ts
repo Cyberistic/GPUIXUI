@@ -13,6 +13,7 @@ import {
   platformStyles,
   platformTheme,
   retroStyles,
+  retroTheme,
   syntaxColors,
   targetSize,
   themes,
@@ -23,7 +24,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { cssFontStack } from "./fonts";
 import { resolvePlatformTheme } from "./platform";
-import { toCssVars } from "./theme-css";
+import { toCssText, toCssVars } from "./theme-css";
 import {
   THUMB_SLIDE_CSS_EASE,
   THUMB_SLIDE_MS,
@@ -848,5 +849,28 @@ describe("the data series", () => {
     // The recipe's swatches read the same scale through the theme hook.
     expect(source).toContain("const series = seriesColors(theme)");
     expect(source).toContain("const theme = useTheme()");
+  });
+});
+
+describe("the generated stylesheet", () => {
+  it("writes every variable the preview reads, exactly once", () => {
+    // The Aero block used to hand a reader a transcribed copy of the theme.
+    // A role added to the bridge would have gone missing from it, so the block
+    // and the preview now read one generated table.
+    const theme = retroTheme(themes.dark, "aero");
+    const vars = Object.entries(toCssVars(theme));
+    const text = toCssText(theme, ".aero");
+
+    expect(text.startsWith(".aero {\n")).toBe(true);
+    expect(text.trimEnd().endsWith("}")).toBe(true);
+    expect(text.trimEnd().split("\n")).toHaveLength(vars.length + 2);
+    for (const [name, value] of vars) {
+      expect(text).toContain(`  ${name}: ${value};`);
+      expect(text.split(`  ${name}: `)).toHaveLength(2);
+    }
+  });
+
+  it("names the root selector by default", () => {
+    expect(toCssText(themes.light).startsWith(":root {\n")).toBe(true);
   });
 });
