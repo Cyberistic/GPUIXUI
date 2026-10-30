@@ -1,33 +1,39 @@
-"""The cut's sound design: earshot takes placed on every cut."""
+"""The blocks cut's sound design: a quiet bed, a cue on every section, a tick on every press."""
 import pathlib
 import numpy as np
 import soundfile as sf
 import soxr
 
 SR = 48_000
-DURATION = 19.4
+DURATION = 20.53
 SFX = pathlib.Path("/tmp/film/audio/sfx")
 
 CUES = [
-    (0.12, "sub", -12),
-    (0.55, "soft", -16),
-    (1.10, "tink", -22),
-    (1.80, "swish_flick", -18),
-    (1.84, "knock_wood", -22),
-    (3.40, "swish_flick", -19),
-    (4.60, "swish_flick", -19),
-    (6.00, "swish_flick", -19),
-    (7.20, "swish_flick", -19),
-    (8.60, "swish_flick", -19),
-    (9.80, "kick", -13),
-    (9.84, "punch", -14),
-    (10.80, "swish_flick", -19),
-    (12.00, "swish_flick", -19),
-    (13.20, "swish_bright", -17),
-    (15.60, "swell", -18),
-    (15.80, "glock", -14),
-    (16.30, "chime", -18),
-    (18.40, "rumble", -22),
+    (0.10, "sub", -13),
+    (0.55, "soft", -17),
+    (1.05, "tink", -22),
+    (1.58, "swish_flick", -17),
+    (1.62, "knock_wood", -21),
+    (3.80, "click_soft", -14),
+    (4.08, "swish_flick", -17),
+    (4.12, "knock_wood", -21),
+    (6.20, "click_soft", -15),
+    (6.58, "swish_flick", -17),
+    (6.62, "knock_wood", -21),
+    (8.50, "click_soft", -15),
+    (9.08, "swish_flick", -17),
+    (9.12, "knock_wood", -21),
+    (10.90, "click_soft", -15),
+    (11.58, "swish_flick", -17),
+    (11.62, "knock_wood", -21),
+    (13.50, "click_soft", -15),
+    (14.08, "swish_bright", -15),
+    (14.14, "glock", -13),
+    (15.40, "click_soft", -16),
+    (16.88, "swell", -16),
+    (16.98, "glock", -13),
+    (17.50, "chime", -17),
+    (19.60, "rumble", -21),
 ]
 
 
@@ -49,12 +55,19 @@ for at, name, gain in CUES:
     if start < len(mix):
         mix[start:end] += sample[: end - start] * (10 ** (gain / 20))
 
+# A bed: a slow, low triad with a breathing filter, under everything.
 time = np.arange(len(mix)) / SR
-fade = np.clip(time / 2.0, 0, 1) ** 2 * np.clip((DURATION - time) / 1.8, 0, 1) ** 2
-bed = (np.sin(2 * np.pi * 45 * time) + 0.5 * np.sin(2 * np.pi * 90 * time + 0.7)) * (0.012 * fade)
+fade = np.clip(time / 2.2, 0, 1) ** 2 * np.clip((DURATION - time) / 1.6, 0, 1) ** 2
+breath = 0.55 + 0.45 * np.sin(2 * np.pi * 0.11 * time)
+bed = (
+    0.55 * np.sin(2 * np.pi * 55 * time)
+    + 0.3 * np.sin(2 * np.pi * 82.5 * time + 0.4)
+    + 0.18 * np.sin(2 * np.pi * 110 * time + 1.2)
+    + 0.08 * np.sin(2 * np.pi * 220 * time + 2.1)
+) * (0.020 * fade * breath)
 mix += np.stack([bed, bed], axis=1)
 
 mix = np.tanh(mix * 0.9)
 mix *= 0.89 / max(1e-9, float(np.max(np.abs(mix))))
-sf.write("/tmp/film/mix2.wav", mix, SR, subtype="PCM_24")
-print("mix2:", round(len(mix) / SR, 2), "s")
+sf.write("/tmp/film/mix3.wav", mix, SR, subtype="PCM_24")
+print("mix3:", round(len(mix) / SR, 2), "s")
