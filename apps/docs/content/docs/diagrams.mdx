@@ -1,19 +1,11 @@
 ---
 title: Diagrams
-description: Mermaid diagrams rendered at build time by Pele
+description: A mermaid fence, rendered at build time by Pele.
 ---
 
-A page sometimes needs a picture of a shape — a pipeline, a lifecycle, a chain of
-packages — and prose is the wrong tool for it. Diagrams renders
-[Mermaid](https://mermaid.js.org) with [Pele](https://pele.run), a synchronous
-renderer with no runtime dependency, so the drawing is in the prerendered HTML:
-a reader gets the picture before any script runs.
-
-## A fence is the whole API
-
-A ` ```mermaid ` code fence is a diagram. Nothing else is needed, and the fence
-stays source — a page that wants the Mermaid text as text wraps it in a plain
-fence.
+A fence tagged `mermaid` is the whole API. [Pele](https://pele.run) renders it
+during the build, so the drawing is in the prerendered HTML and the fence stays
+the source a reader can copy.
 
 ```mermaid
 flowchart LR
@@ -28,27 +20,7 @@ flowchart LR
   render --> reader([Reader])
 ```
 
-The source behind that picture is the diagram's own text:
-
-```text
-flowchart LR
-  subgraph author[Author]
-    component[Component] --> recipe[Recipe]
-  end
-  subgraph render[Render]
-    recipe --> themed[Themed surface]
-    themed --> frame[Frame]
-  end
-  author --> render
-  render --> reader([Reader])
-```
-
-## Themed from the page, not from the diagram
-
-Pele paints through `--pele-*` custom properties, and this site maps every one of
-them to its own role:
-
-| Pele | The page's role |
+| Pele role | The page's role |
 | --- | --- |
 | `--pele-bg` | `--card` |
 | `--pele-fg` | `--foreground` |
@@ -58,29 +30,11 @@ them to its own role:
 | `--pele-accent` | `--ring` |
 | `--pele-border` | `--border` |
 
-Every value is a `var()` reference, so the diagram is rendered once and the
-surface it sits on decides its colours. Switching between light and dark
-re-themes the same SVG — there is no second render, and no image to re-export.
+Every value is a `var()`, so the diagram is rendered once and the surface it sits
+on decides its colours.
 
-## A diagram that does not parse
-
-The source is user text, so a broken diagram is a typed failure, not a thrown
-page: the parser's sentence is printed with the source under it, because a
-diagram you cannot see is a source you have to fix.
+A source Pele cannot read prints the parser's sentence with the source under it:
 
 ```mermaid
 this is not a diagram
 ```
-
-## Why the library does not ship one
-
-A GPUix surface cannot paint a Mermaid diagram. The runtime's `<svg source>`
-paints its whole markup **as one tint** — the markup is masked in the element's
-colour, so a shape's own `fill` never reaches the frame — and a diagram is many
-colours. The library's other vector route decodes SVG **bytes** through
-`ImgInstance.setImage`, which does paint every fill its own colour, but an image
-cannot be re-themed by a custom property, cannot be selected, and cannot carry a
-link.
-
-The docs site is a browser, so it takes the SVG as markup. That is why Diagrams
-is a page about the documentation rather than a component.
