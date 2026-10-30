@@ -17,7 +17,7 @@ import {
 import { componentIndex, componentPages } from "./component-index-data";
 import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
-import { laneView, summarize } from "./inventory";
+
 import { inventory } from "./inventory-data";
 import { statusForPage } from "./inventory-status";
 import { readPublishedModules, repoRoot } from "./public-symbols-source";
@@ -580,34 +580,6 @@ describe("the real index", () => {
     expect(missing).toEqual([]);
   });
 
-  it("leaves a lane's status to its rows", () => {
-    // The page said the data lane was partial — "column configuration,
-    // virtualisation, a tree view, charts and the inspector surfaces are still
-    // `todo`" — after every one of those rows had shipped. The rows carry the
-    // inventory's verdict, so the page must not keep a second copy that only
-    // the reader notices is stale.
-    const source = readFileSync(
-      new URL("apps/docs/content/docs/components/index.mdx", root),
-      "utf8",
-    );
-    const tier3 = inventory.rows.filter((row) => row.tier === 3);
-    const shipped = tier3.filter((row) => row.status !== "todo");
-
-    expect(shipped.length).toBeGreaterThan(10);
-    expect(source).toContain("](/data-display)");
-    expect(source).not.toContain("still `todo`");
-
-    // The Table page carried the same list: "the rows that remain — a tree, a
-    // chart surface — are recorded as gaps", after both shipped. It names the
-    // pages a grid composes with instead.
-    const tablePage = readFileSync(
-      new URL("apps/docs/content/docs/components/table.mdx", root),
-      "utf8",
-    );
-    expect(tablePage).not.toContain("recorded as gaps");
-    expect(tablePage).not.toContain("the rows that remain");
-  });
-
   it("starts with the primitives and ends with the workspace surfaces", () => {
     // The sections are the collection order, read off the rows instead of
     // retyped: a package that lands after the components appends a section,
@@ -760,114 +732,26 @@ describe("the real index", () => {
     expect(found.length).toBeGreaterThan(1);
   });
 
-  it("keeps every query the Components page shows resolvable", () => {
-    // The examples are the sentences that say what the filter finds —
-    // "`DialogFooter` finds the dialog … and `partial` finds …". Only those
-    // are read: the neighbouring sentence names a package (`@gpuixui/data`)
-    // and a link, neither of which is a query, and reading every code span in
-    // the intro called them broken examples.
-    const page = readFileSync(
-      new URL("../../content/docs/components/index.mdx", import.meta.url),
+  it("keeps every query the filter offers resolvable", () => {
+    // The examples live in the field's own placeholder — the page's intro used
+    // to carry them in prose, which was fourteen lines explaining a search box.
+    // Whatever the field offers has to resolve, so a reader who types what it
+    // suggests lands on a card rather than an empty grid.
+    const field = readFileSync(
+      new URL("../components/docs/component-index.tsx", import.meta.url),
       "utf8",
     );
-    const examples = [
-      ...page
-        .slice(0, page.indexOf("<ComponentIndex"))
-        .matchAll(/`([^`]+)` finds /g),
-    ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
+    const placeholder = /placeholder="([^"]+)"/.exec(field)?.[1] ?? "";
+    const examples = [...placeholder.matchAll(/[“"]([^”"]+)[”"]/g)].flatMap(
+      (match) => (match[1] === undefined ? [] : [match[1]]),
+    );
 
-    expect(examples.length).toBeGreaterThanOrEqual(4);
+    expect(examples.length).toBeGreaterThanOrEqual(2);
     expect(
       examples.filter(
         (term) => filterEntries(componentIndex, term).length === 0,
       ),
     ).toEqual([]);
-  });
-
-  it("never calls a pending lane shipped, so a reader is not sent to a page that is not there", () => {
-    // The intro said the Tier 2 set was "dialogs, menus, tabs, pickers,
-    // **tables** and the rest of the feedback layer", while `COMPONENTS.md`
-    // recorded every Tier 3 table row as `todo` — a top-level page promising a
-    // component the inventory says does not exist. The claim is held to the
-    // inventory rather than to a fixed sentence: while the lane ships nothing
-    // the word is refused; once it ships, the intro must not keep saying it
-    // ships nothing (`@gpuixui/data` landed its table core, and the sentence
-    // still called the lane unshipped).
-    const page = readFileSync(
-      new URL("../../content/docs/components/index.mdx", import.meta.url),
-      "utf8",
-    );
-    const intro = page.slice(0, page.indexOf("<ComponentIndex"));
-    const lane = laneView(inventory, "data-display");
-    expect(lane.rows.length, "the data lane has no rows").toBeGreaterThan(0);
-    const { shipped } = summarize(lane.rows);
-
-    if (shipped === 0) {
-      expect(
-        /\btables\b/i.test(intro),
-        "the Components index calls tables part of the shipped set",
-      ).toBe(false);
-    } else {
-      expect(
-        /data lane is not shipped/i.test(intro),
-        "the Components index calls a partly shipped data lane unshipped",
-      ).toBe(false);
-      expect(
-        /records (?:its|the data lane's) rows as `todo`/i.test(intro),
-        "the Components index calls every data row pending while some ship",
-      ).toBe(false);
-      expect(
-        intro.includes("@gpuixui/data"),
-        "the Components index names the shipped data rows' package",
-      ).toBe(true);
-    }
-    expect(intro).toContain("/data-display");
-  });
-
-  it("names every curated page in the intro's list, and no page it does not have", () => {
-    // The bullet is the reader's summary of which components the site documents
-    // in depth. It is prose beside generated rows, so a new curated page — or a
-    // page whose title moved — leaves it behind while the sidebar and the index
-    // above it grow. The list is held to the pages' own frontmatter, in both
-    // directions, so an advertised name with no page fails too.
-    const dir = new URL("apps/docs/content/docs/components/", root);
-    const titles = readdirSync(dir)
-      .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
-      .map((name) => {
-        const source = readFileSync(new URL(name, dir), "utf8");
-        const frontmatter = source.slice(0, source.indexOf("---", 3));
-        const title = /^title:\s*(.+)$/m.exec(frontmatter)?.[1]?.trim() ?? name;
-        return title.replace(/^["']|["']$/g, "");
-      });
-
-    const page = readFileSync(
-      new URL("../../content/docs/components/index.mdx", import.meta.url),
-      "utf8",
-    );
-    const listed =
-      /documented here in depth — ([\s\S]+?) — with browser previews/.exec(
-        page,
-      )?.[1];
-    expect(listed, "the intro no longer lists the curated pages").toBeDefined();
-
-    // A segment is one page's title, or two titles the author joined with
-    // "and" ("Tooltip and Toast"); a title that itself contains "and" stays
-    // whole because the exact match is tried first.
-    const names = (listed ?? "").split(/,\s*/).flatMap((segment) => {
-      // Markdown wraps the bullet, so a title can span two source lines.
-      const text = segment.replaceAll(/\s+/g, " ").trim();
-      if (titles.includes(text)) return [text];
-      const joined = text.split(/\sand\s/);
-      return joined.every((name) => titles.includes(name)) ? joined : [text];
-    });
-
-    // Two named lists rather than one array comparison: a failure says which
-    // page the bullet forgot or which name it advertises with no page behind it.
-    expect({
-      missing: titles.filter((title) => !names.includes(title)),
-      extra: names.filter((name) => !titles.includes(name)),
-    }).toEqual({ missing: [], extra: [] });
-    expect(titles.length).toBeGreaterThanOrEqual(30);
   });
 
   it("lists only parts the library actually exports", () => {

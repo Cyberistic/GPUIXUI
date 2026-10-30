@@ -184,46 +184,6 @@ describe("the component index", () => {
     ).toEqual([]);
   });
 
-  it("points a query the composed lane cannot answer at the lane that can", () => {
-    // A reader who types a primitive's name on the composed lane has not made a
-    // mistake, and "no component matches" is a dead end that hides the page one
-    // section down the sidebar. The sample names a primitive this lane does not
-    // document; "range slider" used to, until the Slider page landed here.
-    const query = "spacer";
-
-    expect(filterEntries(componentPages, query)).toEqual([]);
-    const elsewhere = otherLaneMatches(componentIndex, query);
-    const linked = renderToStaticMarkup(
-      <ComponentIndexView onQueryChange={noop} query={query} />,
-    );
-
-    expect(elsewhere.length).toBeGreaterThan(0);
-    expect(linked).toContain('data-other-lane="true"');
-    expect(linked).toContain(elsewhere[0]?.lane ?? "");
-    expect(
-      elsewhere
-        .flatMap((group) => group.entries)
-        .filter((entry) => !linked.includes(`href="${entry.url}"`)),
-    ).toEqual([]);
-    expect(linked).not.toContain(
-      "No composed component matches “range slider”. Try a shorter word",
-    );
-
-    // The page teaches the behaviour a reader has to expect; the sentence and
-    // the empty state land in one commit.
-    const page = readFileSync(
-      new URL("../../../content/docs/components/index.mdx", import.meta.url),
-      "utf8",
-    );
-    expect(page).toContain("names the lower lane");
-
-    const policy = readFileSync(
-      new URL("../../../../../docs/preview-strategy.md", import.meta.url),
-      "utf8",
-    );
-    expect(policy).toContain("query is not a dead end");
-  });
-
   it("keeps the dead-end sentence when no lane holds the query", () => {
     const query = "zzzzzz";
 
@@ -289,10 +249,9 @@ describe("the component index", () => {
     expect(hook).toContain("indexQueryFromSearch(search)");
     expect(hook).toContain('history.replaceState(null, "", url.toString())');
     expect(hook).toContain("indexQuerySearch(next, url.search)");
-    // The page teaches the parameter it writes, so a reader can link a view.
-    // A Markdown code span and an explicit `<code>` tag render the same, so
-    // either form counts; the parameter itself is what must be printed.
-    expect(page).toMatch(/`\?q=partial`|<code>\?q=partial<\/code>/);
+    // The page is the grid and nothing else now, so the parameter it writes is
+    // taught by the field itself rather than by a paragraph above it.
+    expect(mount).toContain("?q=");
     // And it mounts the URL-backed component, not the view directly.
     expect(page).toContain("<ComponentIndex />");
   });

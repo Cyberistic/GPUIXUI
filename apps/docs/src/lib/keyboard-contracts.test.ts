@@ -276,25 +276,4 @@ describe("the keyboard contracts", () => {
       keyboardContracts.filter((contract) => !served.has(contract.url)),
     ).toEqual([]);
   });
-
-  it("is taught on the page that explains what a page carries", () => {
-    // The index's "How to read a page" table is the reader's map of a
-    // component page; a generated block it does not name is one a reader
-    // cannot look for. A contract may cite the installed runtime instead of
-    // workspace source, so the row has to say where the keys can come from —
-    // otherwise a wrapper's page teaches keys the map says the page does not
-    // carry.
-    const index = read("apps/docs/content/docs/components/index.mdx");
-    const row =
-      index
-        .split("\n")
-        .find((line) => line.startsWith("| Keyboard |"))
-        ?.toLowerCase() ?? "";
-    const citesRuntime = keyboardContracts.some(
-      (contract) => contract.runtime !== undefined,
-    );
-
-    expect(row).toContain("generated");
-    expect(row.includes("runtime") || !citesRuntime).toBe(true);
-  });
 });

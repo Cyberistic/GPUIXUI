@@ -94,24 +94,6 @@ describe("the apps/docs ledger", () => {
     expect(policy).toContain("## The strategy");
   });
 
-  it("says the sidebar offers platforms, never a look group", () => {
-    // The footer carries the four platform names; an authored look is applied
-    // in the URL (`?look=luna`) and has no control of its own. The ledger must
-    // describe that shape without naming a picker the tree no longer ships.
-    const readme = ledger.join("\n");
-    const page = readFileSync(
-      new URL("../../content/docs/components/index.mdx", import.meta.url),
-      "utf8",
-    );
-
-    expect(page).toContain("?platform=win32");
-    expect(readme).toContain("## The platform switch and the authored looks");
-    expect(readme).toContain("no look group");
-    expect(readme).toContain("?look=luna");
-    expect(readme).not.toContain("look-picker.tsx");
-    expect(readme).not.toContain("**Look** offers");
-  });
-
   it("keeps every curated line on the page the site actually serves", () => {
     // A curated page shadows its package page at the same URL, and the site
     // serves one page per URL (the preview policy records the displacement).

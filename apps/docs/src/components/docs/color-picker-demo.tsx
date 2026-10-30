@@ -84,8 +84,11 @@ const useRailDrag = <T,>(
   const handle = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
       const element = event.currentTarget;
-      if (event.buttons !== 0 && dragging.current) {
-        // The button was released outside the window: the gesture is over.
+      if (event.buttons === 0 && dragging.current) {
+        // No button is held: the release happened outside the window, so the
+        // gesture is over. (The check read `!== 0`, which ended the drag on the
+        // first move *with* the button down — the press reported once and the
+        // knob then ignored every move, which is a knob that cannot be dragged.)
         dragging.current = false;
         try {
           element.releasePointerCapture?.(event.pointerId);

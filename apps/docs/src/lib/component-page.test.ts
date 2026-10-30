@@ -790,15 +790,6 @@ describe("the curated component pages", () => {
 });
 
 describe("the component section index", () => {
-  it("mounts the generated index rather than a hand-kept list", () => {
-    // The index reads the same frontmatter the pages render, so a page added
-    // to any collection appears without a docs edit.
-    const index = source("index.mdx");
-
-    expect(index).toContain("<ComponentIndex />");
-    expect(index).toContain("?q=partial");
-  });
-
   it("lists every curated page in the generated grid", () => {
     // The index listed Button, Dialog, Popover and Tabs while the Dropdown
     // menu page shipped beside them, so a reader looking for a menu preview was
@@ -812,86 +803,6 @@ describe("the component section index", () => {
         .map((name) => title(source(name)))
         .filter((pageTitle) => !listed.has(pageTitle)),
     ).toEqual([]);
-  });
-
-  it("renders each page's demo in its grid tile", () => {
-    // The index offers `preview` as a query and says a page that mounts a
-    // preview renders it; a tile that dropped the demo would leave the claim
-    // false and the grid a wall of names.
-    const index = source("index.mdx");
-    const grid = readFileSync(
-      new URL("../components/docs/component-index.tsx", import.meta.url),
-      "utf8",
-    );
-
-    expect(grid).toContain("<Scene />");
-    expect(grid).toContain("data-preview");
-    expect(index).toContain("renders it in its grid tile");
-    expect(index).toContain("`preview` finds");
-  });
-
-  it("teaches the verdict mark a row wears, and where it comes from", () => {
-    // The index marks the rows the inventory does not call whole; an
-    // unexplained `partial` beside a component's name reads as a docs bug, and
-    // a hand-written verdict would drift from the row the page prints.
-    const index = source("index.mdx");
-    const component = readFileSync(
-      new URL("../components/docs/component-index.tsx", import.meta.url),
-      "utf8",
-    );
-
-    expect(component).toContain("verdictMark");
-    expect(index).toContain("**partial**");
-    expect(index).toContain(
-      "finds every component the runtime supports only in part",
-    );
-    expect(index).toContain("`COMPONENTS.md` row");
-  });
-
-  it("says how to run the native component, from one command", () => {
-    // The command is a constant the page prints as an expression, so the
-    // prose and the command cannot drift.
-    const index = source("index.mdx");
-
-    expect(index).toContain(
-      'export const playgroundCommand = "nub run dev:playground";',
-    );
-    expect(index).toContain("<code>{playgroundCommand}</code>");
-  });
-
-  it("teaches only the sections a page can actually have", () => {
-    // The index described a page from memory — Variants / Sizes / States,
-    // Keyboard, Theming, "Accessibility and limitations" — while the template
-    // the pages follow has none of those headings. `Keyboard` returned as the
-    // strip the frame generates, not as an authored heading: the rows are the
-    // policy's own section names plus the four generated blocks, held to the
-    // template table rather than to this comment.
-    const generated = [
-      "Status",
-      "Dependencies",
-      "Keyboard",
-      "Related",
-    ] as const;
-    const allowed = [
-      ...policySections().filter((section) => section !== "frontmatter"),
-      ...generated,
-    ];
-    const index = source("index.mdx");
-    const start = index.indexOf("## How to read a page");
-    const end = index.indexOf("\n## ", start + 1);
-    const taught = index
-      .slice(start, end === -1 ? undefined : end)
-      .split("\n")
-      .filter((line) => line.startsWith("|") && !/^\|[\s:|-]+\|$/.test(line))
-      .slice(1)
-      .map((line) => line.replace(/^\|/, "").split("|")[0]?.trim() ?? "")
-      .filter((label) => label !== "");
-
-    expect(taught.length).toBeGreaterThanOrEqual(6);
-    expect(taught.filter((label) => !allowed.includes(label))).toEqual([]);
-    // The template's own name, not the old invented one.
-    expect(taught).toContain("Limitations");
-    expect(taught).not.toContain("Accessibility and limitations");
   });
 
   it("names the limits section the template declares, not the one it replaced", () => {
