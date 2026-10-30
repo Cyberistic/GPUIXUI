@@ -20,6 +20,7 @@ Every page is an MDX file; the paths below are relative to `content/docs/`.
 index.mdx                    Introduction (served at /docs)
 installation.mdx             Requirements, nub, first component, terminal mode
 getting-started.mdx          A first screen: theme, card, state, run it natively
+registry.mdx                 The shadcn registry: install a component's source, and the runtime it still needs
 architecture.mdx             The package graph, the recipe pipeline, where a change goes
 styling.mdx                  The class recipe layer: two registries, states, refusals, extension, the React bridge
 theming.mdx                  Semantic roles, themes, the platform switch, the look parameter, the desktop palette
@@ -106,6 +107,7 @@ plugins/public-symbols-plugin.ts    Build-time module: the public symbol index
 plugins/page-dependencies-plugin.ts Build-time module: the packages each package page's component imports
 plugins/page-source-plugin.ts       Build-time module: each package page's module, as a lazy loader
 plugins/package-graph-plugin.ts     Build-time module: the package graph behind the architecture table
+plugins/registry-plugin.ts          Build-time module: the shadcn registry's index and one loader per item
 
 src/start.ts                        TanStack Start instance, the Worker cache policy and the server functions' origin check
 src/router.tsx                      The router instance
@@ -118,6 +120,8 @@ src/routes/api/search.ts            Fumadocs search endpoint over every mounted 
 src/routes/sitemap[.]xml.ts         /sitemap.xml, generated from every collection
 src/routes/llms[.]txt.ts            /llms.txt, the page index an agent reads instead of the sidebar
 src/routes/llms-full[.]txt.ts       /llms-full.txt, every page as Markdown in one document
+src/routes/registry[.]json.ts       /registry.json, the shadcn registry index
+src/routes/{$name}[.]json.ts        /<name>.json, one shadcn registry item
 
 src/components/mdx.tsx              The MDX component registry
 src/components/highlighted-code.tsx A render-time code block, in the library's syntax palette
@@ -434,6 +438,9 @@ src/lib/sitemap.ts                  The sitemap's URL set
 src/lib/prerender-pages.ts          The routes the build renders once, and the one route it leaves to the Worker
 src/lib/llms.ts                     /llms.txt: every page, grouped by the sidebar's section, with its note
 src/lib/llms-full.ts                /llms-full.txt: every page's own Markdown, in the index's order
+src/lib/registry.ts                 The shadcn registry model: item names, dependencies, the index and one item's JSON
+src/lib/registry-source.ts          Reads the served pages and their modules to build the index and every item, at build time
+src/lib/registry-data.ts            The registry, read from the plugin's build-time module
 src/lib/virtual-modules.d.ts        The types of the build-time modules
 src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack bridge for the previews
 src/lib/inventory.ts                Parses the tier tables and animated catalogue of COMPONENTS.md into rows and sections

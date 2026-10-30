@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { curatedPrimitiveTwins, servedUrls } from "./curated-twins";
 import { packageDocsFiles, siteDocsFiles } from "./docs-pages.test-util";
 import { prerenderPaths, staticDocumentPaths } from "./prerender-pages";
+import { registryPaths } from "./registry-source";
 
 /**
  * The build renders these paths once and the Worker never renders them again,
@@ -37,6 +38,17 @@ describe("the prerendered paths", () => {
       "/llms-full.txt",
     ]);
     expect(paths).toEqual(expect.arrayContaining([...staticDocumentPaths]));
+  });
+
+  it("renders the registry index and every item it lists", () => {
+    // The registry is generated from the page tree and served from the root;
+    // a path missing here is a JSON document the Worker would render per
+    // request, and one the asset layer could have answered.
+    const registry = registryPaths(root);
+
+    expect(registry.length).toBeGreaterThan(100);
+    expect(registry).toContain("/registry.json");
+    expect(paths).toEqual(expect.arrayContaining([...registry]));
   });
 
   it("leaves the routes a static asset cannot answer to the Worker", () => {

@@ -24376,3 +24376,25 @@ reaction marks the message, not a speaker), measured on the live page at a 12px
 right inset with the pill crossing the surface's edge. `bubble.test.tsx`'s case
 now measures the corner for both aligns and fails on the old per-side inset (7
 cases failed when inverted).
+
+## shadcn registry (2026-10-30)
+
+`[x]` `[██████████]` 1/1 — **the docs site is a flat shadcn registry.**
+
+`[x]` The site generates its shadcn registry from the pages and sources it
+already serves: `/registry.json` (the index, file paths without content) and one
+`/<package>-<page>.json` per component (157 items, all `registry:component`, with
+each file's content). The names are package-qualified because the registry is
+flat and eight page names repeat across sections (`primitives-progress` vs
+`components-progress`). The item's files are the documented module plus every
+same-package relative import it needs; the index's description and each item's
+`docs` state the GPUix caveat — the files render through `@gpuix/react`, not the
+DOM, and need `@gpuix/native`; the private `@gpuixui/*` packages come from the
+workspace. Blocks are not items: their pages are browser drawings of a
+composition, so no block ships a self-contained file. Proof: `registry.test.ts`
+(7 cases) holds the index to the served pages, every file to the bytes on disk,
+each item to its imports, and the dependencies to the workspace's manifests;
+`prerender-pages.test.ts` holds the build to serving every document. The build's
+`dist/client` carries all 158 JSON files; `shadcn registry validate` reports
+157/157 valid and the fetched schemas accept the index and every item. Docs:
+`/docs/registry`.

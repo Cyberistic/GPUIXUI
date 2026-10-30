@@ -122,7 +122,10 @@ const sectionOf = (file: string): string | undefined => {
 };
 
 /** A frontmatter scalar; the packages quote a value a YAML parser would reject. */
-const frontmatterValue = (head: string, key: string): string | undefined => {
+export const frontmatterValue = (
+  head: string,
+  key: string,
+): string | undefined => {
   const value = new RegExp(`^${key}:\\s*(.+)$`, "m").exec(head)?.[1]?.trim();
   if (value === undefined) return undefined;
   return value.startsWith('"') || value.startsWith("'")
@@ -130,7 +133,8 @@ const frontmatterValue = (head: string, key: string): string | undefined => {
     : value;
 };
 
-const frontmatter = (source: string): string =>
+/** The frontmatter block a page opens with, without its `---` fences. */
+export const frontmatter = (source: string): string =>
   /^---\n([\s\S]*?)\n---\n/.exec(source)?.[1] ?? "";
 
 /** One page's section: its `##` heading and the text under it. */
