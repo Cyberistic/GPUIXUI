@@ -7716,11 +7716,12 @@ button.gx-sb-row {
   align-items: center;
   gap: 6px;
   margin: 0;
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted-foreground);
+  white-space: nowrap;
 }
 
 .gx-hunt-value {
@@ -7737,8 +7738,9 @@ button.gx-sb-row {
 
 .gx-hunt-meta {
   margin: 0;
-  font-size: 11.5px;
+  font-size: 10.5px;
   color: var(--muted-foreground);
+  white-space: nowrap;
 }
 
 .gx-hunt-section {

@@ -27,10 +27,10 @@ export interface PipelineStage {
 /** The guild's seven stages, in the order the strip paints them. */
 export const pipelineStages: ReadonlyArray<PipelineStage> = [
   { id: "ideas", label: "Ideas", count: 4, meta: "intel + backlog" },
-  { id: "research", label: "Research", count: 19, meta: "gaps, facts, rivals" },
-  { id: "dossiers", label: "Dossiers", count: 16, meta: "2 ready · 3 blocked" },
-  { id: "deployed", label: "Deployed", count: 0, meta: "field, in progress" },
-  { id: "scheduled", label: "Scheduled", count: 0, meta: "waiting on a slot" },
+  { id: "research", label: "Research", count: 19, meta: "gaps · rivals" },
+  { id: "dossiers", label: "Dossiers", count: 16, meta: "2 ready · 3 held" },
+  { id: "deployed", label: "Deployed", count: 0, meta: "field work" },
+  { id: "scheduled", label: "Scheduled", count: 0, meta: "awaiting slot" },
   {
     id: "verified",
     label: "Verified",
@@ -49,11 +49,30 @@ export interface HunterReading {
   readonly meta: string;
 }
 
+/**
+ * The characters one cell carries on one line at the block's 836px window.
+ *
+ * A stage cell is the narrower of the two: six cells share the block's inner
+ * width, and 18 characters at the 10.5px meta size stay inside it. A reading is
+ * one of five, so it carries 24. The values are conservative on purpose — the
+ * copy is shortened to fit them rather than clipped by an ellipsis.
+ */
+export const hunterCellBudget = {
+  stage: 18,
+  reading: 24,
+} as const;
+
+/** Whether a line of copy fits one cell without wrapping or clipping. */
+export const hunterCellFits = (
+  text: string,
+  cell: keyof typeof hunterCellBudget,
+): boolean => [...text].length <= hunterCellBudget[cell];
+
 /** The five readings the dashboard opens on. */
 export const hunterReadings: ReadonlyArray<HunterReading> = [
   {
     id: "renown-week",
-    label: "Renown · last 7 days",
+    label: "Renown · 7d",
     value: "28,087",
     meta: "8 snapshot days",
   },
@@ -73,7 +92,7 @@ export const hunterReadings: ReadonlyArray<HunterReading> = [
     id: "per-licence",
     label: "Renown per licence",
     value: "0.25",
-    meta: "the number that matters",
+    meta: "the key ratio",
   },
   {
     id: "today",
@@ -534,10 +553,10 @@ import { Card } from "@gpuixui/components/card";
 import { Text } from "@gpuixui/primitives";
 
 const readings = [
-  { label: "Renown · last 7 days", value: "28,087", meta: "8 snapshot days" },
+  { label: "Renown · 7d", value: "28,087", meta: "8 snapshot days" },
   { label: "Renown · 14-day window", value: "47,513", meta: "29 licences" },
   { label: "Licences · 14-day window", value: "11", meta: "25 measured" },
-  { label: "Renown per licence", value: "0.25", meta: "the number that matters" },
+  { label: "Renown per licence", value: "0.25", meta: "the key ratio" },
   { label: "Rising today", value: "26", meta: "Δ > 0" },
 ];
 
