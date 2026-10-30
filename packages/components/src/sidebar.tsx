@@ -1180,8 +1180,12 @@ export const SidebarMenuButton = ({
       {shown ? (
         <TooltipContent
           side="right"
-          align="center"
-          sideOffset={6}
+          // The runtime's `center` anchors to the row's top edge, so a rail tip
+          // painted half a row too high; `start` puts its top on the row and
+          // the extra offset clears the rail's own padding, not just the 32px
+          // button, so the tip never sits over the panel's edge.
+          align="start"
+          sideOffset={6 + (context.iconWidth - 32) / 2}
           testId={testId === undefined ? undefined : `${testId}-tip`}
           style={recipeStyle(SIDEBAR_TOOLTIP, theme)}
         >
