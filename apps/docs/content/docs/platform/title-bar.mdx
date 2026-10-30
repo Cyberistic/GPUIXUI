@@ -5,8 +5,7 @@ description: The row the traffic lights float over.
 
 <ComponentPreview name="platform-title-bar" />
 
-`TitleBar` is the app's own bar under the window's lights. It reserves their
-78-point box, centres the title, and hosts the actions a titlebar carries.
+`TitleBar` reserves the traffic lights' 78-point box.
 
 ```tsx
 <TitleBar title="Files" actions={<WindowButtons />} />
@@ -20,7 +19,5 @@ description: The row the traffic lights float over.
 | `leading` | `ReactNode` | none | content after the lights: a back chevron, a sidebar toggle |
 | `actions` | `ReactNode` | none | trailing window actions |
 
-It only works with a transparent-chrome window: pass `titlebarTransparent` to
-`render()` and place the lights with `trafficLightX` / `trafficLightY`. Verified
-in a window by the `window-chrome` probe, which measured that the runtime
-reserves no titlebar of its own.
+It needs a transparent-chrome window: pass `titlebarTransparent` to `render()` and
+place the lights with `trafficLightX` / `trafficLightY`.

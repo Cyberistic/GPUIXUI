@@ -5,7 +5,8 @@ description: Minimise, zoom, fullscreen, rename, and the system's path picker.
 
 <ComponentPreview name="platform-file-panel" />
 
-`useWindowActions` binds the window's verbs for the tree it is called in.
+`useWindowActions` binds the window's verbs for the tree it is called in; a host
+without them fails at setup, naming them.
 
 ```tsx
 const window = useWindowActions();
@@ -16,9 +17,8 @@ window.toggleFullscreen();
 window.setTitle("Files");
 ```
 
-The path picker is the OS panel, and its answer is a tag, not a nullable list: a
-cancel is `Cancelled`, so a caller cannot report "0 files" for a reader who
-changed their mind.
+`pickPaths` opens the system panel and answers `Picked` or `Cancelled`, and fails
+with `FilePanelError` if the platform refuses.
 
 ```tsx
 const chosen = await Effect.runPromise(
@@ -36,7 +36,3 @@ if (chosen._tag === "Picked") copy(chosen.paths);
 | `toggleFullscreen` | enters or leaves fullscreen | all |
 | `setTitle` | renames the window | all |
 | `pickPaths` | opens the system path panel | all |
-
-`pickPaths` fails with `FilePanelError` when the platform refuses to open the
-panel; a host without the window verbs fails once at setup, naming them, rather
-than handing back buttons that do nothing.
