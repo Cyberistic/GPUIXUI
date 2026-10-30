@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --ground: #08080c;
+        --ink: #f5f5f7;
+        --dim: #9a9aa2;
+        --font-display:
+          -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
+        --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ground);
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ground);
+        color: var(--ink);
+        font-family: var(--font-display);
+      }
+      #ground {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      video.clip {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+      }
+      .caption {
+        position: absolute;
+        left: 120px;
+        bottom: 64px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 30px;
+        color: var(--dim);
+      }
+      .caption b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .caption::before {
+        content: "";
+        width: 34px;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.35);
+      }
+      #stack {
+        position: absolute;
+        left: 120px;
+        bottom: 58px;
+        display: flex;
+        flex-direction: row;
+        gap: 28px;
+        font-size: 38px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+      }
+      #stack span {
+        color: #6e6e78;
+      }
+      #end {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        background: radial-gradient(
+          ellipse at 50% 42%,
+          rgba(123, 108, 246, 0.18),
+          rgba(0, 0, 0, 0) 62%
+        );
+      }
+      #mark {
+        width: 128px;
+        height: 128px;
+      }
+      #wordmark {
+        font-size: 62px;
+        font-weight: 650;
+        letter-spacing: 0.22em;
+        text-indent: 0.22em;
+        white-space: nowrap;
+      }
+      #url {
+        font-size: 30px;
+        color: #d2d2d7;
+      }
+      #meta {
+        font-family: var(--font-mono);
+        font-size: 15px;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      #ring {
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        opacity: 0;
+      }
+      #fade {
+        position: absolute;
+        inset: 0;
+        background: #000;
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="22"
+      data-width="1920"
+      data-height="1080"
+    >
+      <video
+        id="footage"
+        class="clip"
+        src="assets/footage.mp4"
+        muted
+        playsinline
+        data-start="0"
+        data-duration="15.3"
+        data-track-index="1"
+        style="
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1920px;
+          height: 1080px;
+          object-fit: cover;
+        "
+      ></video>
+
+      <div
+        id="stack"
+        class="clip"
+        data-start="0.2"
+        data-duration="2.4"
+        data-track-index="2"
+      >
+        <span id="w-react">React</span>
+        <span id="w-tailwind">Tailwind</span>
+        <span id="w-shadcn">shadcn</span>
+        <span id="w-gpui">GPUI</span>
+      </div>
+
+      <div
+        class="caption clip"
+        id="c-blocks"
+        data-start="2.6"
+        data-duration="2.3"
+        data-track-index="2"
+      >
+        <span>Blocks, from the same parts</span>
+      </div>
+      <div
+        class="caption clip"
+        id="c-windows"
+        data-start="5.1"
+        data-duration="2.3"
+        data-track-index="2"
+      >
+        <span><b>Windows 11</b> · same tree</span>
+      </div>
+      <div
+        class="caption clip"
+        id="c-linux"
+        data-start="7.6"
+        data-duration="2.3"
+        data-track-index="2"
+      >
+        <span><b>Linux</b> · same tree</span>
+      </div>
+      <div
+        class="caption clip"
+        id="c-omarchy"
+        data-start="10.1"
+        data-duration="2.3"
+        data-track-index="2"
+      >
+        <span><b>Omarchy</b> · a look, not a fork</span>
+      </div>
+      <div
+        class="caption clip"
+        id="c-light"
+        data-start="12.6"
+        data-duration="2.6"
+        data-track-index="2"
+      >
+        <span>Follows your desktop theme</span>
+      </div>
+
+      <section
+        class="clip"
+        id="end"
+        data-start="15.3"
+        data-duration="6.7"
+        data-track-index="3"
+      >
+        <img id="mark" src="assets/logo.png" alt="" />
+        <div id="ring"></div>
+        <div id="wordmark">GPUIxUI</div>
+        <div id="url">gpuixui.sudokw.com</div>
+        <div id="meta" data-layout-ignore>SHADCN REGISTRY · @SUDOKW</div>
+      </section>
+
+      <div id="fade"></div>
+
+      <audio
+        id="bed"
+        data-start="0"
+        data-duration="22"
+        data-volume="0.5"
+        src="assets/bed.wav"
+      ></audio>
+      <audio
+        id="a-sub"
+        data-start="0.05"
+        data-volume="0.45"
+        src="assets/sub.wav"
+      ></audio>
+      <audio
+        id="a-swish1"
+        data-start="0.9"
+        data-volume="0.32"
+        src="assets/swish_flick.wav"
+      ></audio>
+      <audio
+        id="a-click1"
+        data-start="1.4"
+        data-volume="0.4"
+        src="assets/click_soft.wav"
+      ></audio>
+      <audio
+        id="a-swish2"
+        data-start="2.58"
+        data-volume="0.36"
+        src="assets/swish_flick.wav"
+      ></audio>
+      <audio
+        id="a-knock1"
+        data-start="2.62"
+        data-volume="0.26"
+        src="assets/knock_wood.wav"
+      ></audio>
+      <audio
+        id="a-swish3"
+        data-start="5.08"
+        data-volume="0.36"
+        src="assets/swish_flick.wav"
+      ></audio>
+      <audio
+        id="a-swish4"
+        data-start="7.58"
+        data-volume="0.36"
+        src="assets/swish_flick.wav"
+      ></audio>
+      <audio
+        id="a-swish5"
+        data-start="10.08"
+        data-volume="0.36"
+        src="assets/swish_flick.wav"
+      ></audio>
+      <audio
+        id="a-bright"
+        data-start="12.56"
+        data-volume="0.34"
+        src="assets/swish_bright.wav"
+      ></audio>
+      <audio
+        id="a-glock1"
+        data-start="12.62"
+        data-volume="0.4"
+        src="assets/glock.wav"
+      ></audio>
+      <audio
+        id="a-swell"
+        data-start="15.35"
+        data-volume="0.36"
+        src="assets/swell.wav"
+      ></audio>
+      <audio
+        id="a-glock2"
+        data-start="15.7"
+        data-volume="0.38"
+        src="assets/glock.wav"
+      ></audio>
+      <audio
+        id="a-chime"
+        data-start="16.4"
+        data-volume="0.36"
+        src="assets/chime.wav"
+      ></audio>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // The window arrives; the stack names light in order under the moving rows.
+      tl.from(
+        "#footage",
+        { y: 70, scale: 1.03, duration: 0.8, ease: "power3.out" },
+        0,
+      );
+      tl.from(
+        "#stack span",
+        { y: 22, opacity: 0, duration: 0.4, stagger: 0.1, ease: "power3.out" },
+        0.15,
+      );
+      tl.to("#w-react", { color: "#f5f5f7", duration: 0.18 }, 0.6);
+      tl.to("#w-tailwind", { color: "#f5f5f7", duration: 0.18 }, 1.0);
+      tl.to("#w-shadcn", { color: "#f5f5f7", duration: 0.18 }, 1.4);
+      tl.to("#w-gpui", { color: "#f5f5f7", duration: 0.18 }, 1.8);
+      tl.to("#stack", { opacity: 0, duration: 0.2 }, 2.45);
+
+      // Camera: a push into the list, then back out before the platform changes.
+      tl.to(
+        "#footage",
+        { scale: 1.16, x: -50, duration: 0.5, ease: "power3.inOut" },
+        1.2,
+      );
+      tl.to(
+        "#footage",
+        { scale: 1, x: 0, duration: 0.5, ease: "power3.inOut" },
+        2.2,
+      );
+      tl.to(
+        "#footage",
+        { scale: 1.1, x: 40, duration: 0.5, ease: "power3.inOut" },
+        3.4,
+      );
+      tl.to(
+        "#footage",
+        { scale: 1, x: 0, duration: 0.4, ease: "power3.inOut" },
+        4.2,
+      );
+
+      // Each caption rises in as its platform lands.
+      ["#c-blocks", "#c-windows", "#c-linux", "#c-omarchy", "#c-light"].forEach(
+        (id, index) => {
+          tl.fromTo(
+            id,
+            { opacity: 0, y: 16 },
+            { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" },
+            2.7 + index * 0,
+          );
+        },
+      );
+
+      // The end card is performed: mark, ring, wordmark, address.
+      tl.from("#end", { opacity: 0, duration: 0.25 }, 15.3);
+      tl.from(
+        "#mark",
+        { scale: 0.55, opacity: 0, duration: 0.5, ease: "back.out(2)" },
+        15.35,
+      );
+      tl.fromTo(
+        "#ring",
+        { scale: 0.5, opacity: 0.7 },
+        { scale: 1.7, opacity: 0, duration: 0.8, ease: "power2.out" },
+        15.5,
+      );
+      tl.from(
+        "#wordmark",
+        { clipPath: "inset(0 100% 0 0)", duration: 0.7, ease: "power3.inOut" },
+        15.7,
+      );
+      tl.from("#url", { y: 12, opacity: 0, duration: 0.4 }, 16.2);
+      tl.from("#meta", { opacity: 0, duration: 0.4 }, 16.5);
+      tl.to("#fade", { opacity: 1, duration: 0.5 }, 21.4);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
