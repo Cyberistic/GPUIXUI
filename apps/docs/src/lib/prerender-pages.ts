@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { indexedCollections } from "./collection-index";
 import { collectionPages } from "./collection-pages";
 import { packageCollections } from "./collection-routes";
+import { registryPaths } from "./registry-source";
 import { docsRoute } from "./shared";
 import { sitemapPaths } from "./sitemap";
 
@@ -99,12 +100,14 @@ export const packagePageUrls = (root: string | URL): ReadonlyArray<string> =>
  *
  * `sitemapPaths` already drops a page a curated page replaces and keeps one
  * entry per URL, so a redirect stays a redirect: a retired package URL is not
- * prerendered and the Worker still answers it with its 301.
+ * prerendered and the Worker still answers it with its 301. The registry adds
+ * its index and one document per item, generated from the same pages.
  */
 export const prerenderPaths = (root: string | URL): ReadonlyArray<string> =>
   [
     ...sitemapPaths(sitePageUrls(root), packagePageUrls(root)),
     ...staticDocumentPaths,
+    ...registryPaths(root),
   ]
     .filter((path) => !dynamicPaths.includes(path))
     .toSorted();

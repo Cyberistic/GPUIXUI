@@ -126,6 +126,7 @@ edited:
 | **vitest** | tests | co-located `src/**/*.test.ts` |
 | **GPUix** | native rendering target | the runtime the library is built on |
 | **Fumadocs** | documentation platform | the docs site |
+| **shadcn registry** | source distribution | generated at build time from the component pages; served at `/registry.json` and `/<package>-<page>.json` (docs: `/docs/registry`) |
 | **alchemy** | deploy | `packages/deploy/alchemy.run.docs.ts` |
 | **git worktree** | agent isolation | one writer per tree, `workspaces/` |
 

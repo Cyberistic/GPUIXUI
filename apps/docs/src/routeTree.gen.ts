@@ -14,7 +14,9 @@ import { Route as SplatRouteImport } from './routes/$'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as RegistryDotjsonRouteImport } from './routes/registry[.]json'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as Char123nameChar125DotjsonRouteImport } from './routes/{$name}[.]json'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as DocsSplatRouteImport } from './routes/docs/$'
@@ -44,11 +46,22 @@ const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
   path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegistryDotjsonRoute = RegistryDotjsonRouteImport.update({
+  id: '/registry.json',
+  path: '/registry.json',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char123nameChar125DotjsonRoute =
+  Char123nameChar125DotjsonRouteImport.update({
+    id: '/{$name}.json',
+    path: '/{$name}.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiSearchRoute = ApiSearchRouteImport.update({
   id: '/api/search',
   path: '/api/search',
@@ -71,7 +84,9 @@ export interface FileRoutesByFullPath {
   '/live': typeof LiveRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/registry.json': typeof RegistryDotjsonRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/{$name}.json': typeof Char123nameChar125DotjsonRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/': typeof DocsIndexRoute
@@ -82,7 +97,9 @@ export interface FileRoutesByTo {
   '/live': typeof LiveRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/registry.json': typeof RegistryDotjsonRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/{$name}.json': typeof Char123nameChar125DotjsonRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs': typeof DocsIndexRoute
@@ -94,7 +111,9 @@ export interface FileRoutesById {
   '/live': typeof LiveRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/registry.json': typeof RegistryDotjsonRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/{$name}.json': typeof Char123nameChar125DotjsonRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/': typeof DocsIndexRoute
@@ -107,7 +126,9 @@ export interface FileRouteTypes {
     | '/live'
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/registry.json'
     | '/sitemap.xml'
+    | '/{$name}.json'
     | '/api/search'
     | '/docs/$'
     | '/docs/'
@@ -118,7 +139,9 @@ export interface FileRouteTypes {
     | '/live'
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/registry.json'
     | '/sitemap.xml'
+    | '/{$name}.json'
     | '/api/search'
     | '/docs/$'
     | '/docs'
@@ -129,7 +152,9 @@ export interface FileRouteTypes {
     | '/live'
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/registry.json'
     | '/sitemap.xml'
+    | '/{$name}.json'
     | '/api/search'
     | '/docs/$'
     | '/docs/'
@@ -141,7 +166,9 @@ export interface RootRouteChildren {
   LiveRoute: typeof LiveRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
+  RegistryDotjsonRoute: typeof RegistryDotjsonRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  Char123nameChar125DotjsonRoute: typeof Char123nameChar125DotjsonRoute
   ApiSearchRoute: typeof ApiSearchRoute
   DocsSplatRoute: typeof DocsSplatRoute
   DocsIndexRoute: typeof DocsIndexRoute
@@ -184,11 +211,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/registry.json': {
+      id: '/registry.json'
+      path: '/registry.json'
+      fullPath: '/registry.json'
+      preLoaderRoute: typeof RegistryDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/{$name}.json': {
+      id: '/{$name}.json'
+      path: '/{$name}.json'
+      fullPath: '/{$name}.json'
+      preLoaderRoute: typeof Char123nameChar125DotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/search': {
@@ -221,7 +262,9 @@ const rootRouteChildren: RootRouteChildren = {
   LiveRoute: LiveRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
+  RegistryDotjsonRoute: RegistryDotjsonRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  Char123nameChar125DotjsonRoute: Char123nameChar125DotjsonRoute,
   ApiSearchRoute: ApiSearchRoute,
   DocsSplatRoute: DocsSplatRoute,
   DocsIndexRoute: DocsIndexRoute,

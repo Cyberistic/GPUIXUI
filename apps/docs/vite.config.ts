@@ -8,6 +8,7 @@ import { defineConfig, type Plugin } from "vite";
 import { pageDependenciesPlugin } from "./plugins/page-dependencies-plugin";
 import { pageSourcesPlugin } from "./plugins/page-source-plugin";
 import { publicSymbolsPlugin } from "./plugins/public-symbols-plugin";
+import { registryPlugin } from "./plugins/registry-plugin";
 import { repoRoot } from "./src/lib/public-symbols-source";
 import { prerenderPaths } from "./src/lib/prerender-pages";
 
@@ -95,6 +96,7 @@ export default defineConfig({
     publicSymbolsPlugin(),
     pageDependenciesPlugin(),
     pageSourcesPlugin(),
+    registryPlugin(),
     liveIsolation(),
   ],
   // `@/` mirrors the tsconfig path; Start's dependency scanner does not read it.

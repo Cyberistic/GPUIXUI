@@ -28,3 +28,17 @@ declare module "virtual:gpuixui-page-sources" {
     Record<string, import("./page-source").SourceLoader>
   >;
 }
+
+/** The shadcn registry, generated from the served pages and their sources. */
+declare module "virtual:gpuixui-registry" {
+  /** The index document, `registry.json`, as it is served. */
+  export const registryIndex: string;
+  /** Every item name the registry serves, in index order. */
+  export const registryNames: ReadonlyArray<string>;
+  /** Pages the generator could not resolve to a module. Must stay empty. */
+  export const registryUnresolved: ReadonlyArray<string>;
+  /** One JSON document per item, each loaded on its own. */
+  export const loadRegistryItem: Readonly<
+    Record<string, () => Promise<string>>
+  >;
+}

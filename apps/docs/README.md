@@ -23,6 +23,7 @@ getting-started/prompt.mdx   One copyable build prompt, generated from the pages
 diagrams.mdx                 Mermaid diagrams at build time, themed from the page's roles
 workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
 data-display/index.mdx      The data lane: what ships, the table gate, runtime gaps
+registry.mdx                 The shadcn registry: install command and what the files still need
 examples.mdx                 The example registry, generated from every package's examples
 reference.mdx                The public entry points and the symbols behind them
 blocks/index.mdx             Page-level recipes composed from the library
@@ -103,6 +104,8 @@ src/routes/api/search.ts            Fumadocs search endpoint over every mounted 
 src/routes/sitemap[.]xml.ts         /sitemap.xml, generated from every collection
 src/routes/llms[.]txt.ts            /llms.txt, the page index an agent reads instead of the sidebar
 src/routes/llms-full[.]txt.ts       /llms-full.txt, every page as Markdown in one document
+src/routes/registry[.]json.ts       /registry.json, the shadcn registry index
+src/routes/{$name}[.]json.ts        /<name>.json, one shadcn registry item
 
 src/components/mdx.tsx              The MDX component registry
 src/components/highlighted-code.tsx A render-time code block, in the library's syntax palette
@@ -414,6 +417,9 @@ src/lib/sitemap.ts                  The sitemap's URL set
 src/lib/prerender-pages.ts          The routes the build renders once, and the one route it leaves to the Worker
 src/lib/llms.ts                     /llms.txt: every page, grouped by the sidebar's section, with its note
 src/lib/llms-full.ts                /llms-full.txt: every page's own Markdown, in the index's order
+src/lib/registry.ts                 The shadcn registry model: item names, dependencies, the index and one item's JSON
+src/lib/registry-source.ts          Reads the served pages and their modules to build the index and every item, at build time
+src/lib/registry-data.ts            The registry, read from the plugin's build-time module
 src/lib/virtual-modules.d.ts        The types of the build-time modules
 src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack bridge for the previews
 src/lib/inventory.ts                Parses the tier tables and animated catalogue of COMPONENTS.md into rows and sections
@@ -456,6 +462,7 @@ src/lib/block-source.test.ts        A block's copyable source, resolved against 
 src/lib/gpuix-web.test.ts           The GPUix web build: browser entry, shared memory and the policy's status
 src/lib/live-frame.test.ts          The live probe's judge and its PNG pixel reader
 src/lib/live-surface.test.ts        /live's batch, its route and the isolation headers
+plugins/registry-plugin.ts           Provides virtual:gpuixui-registry at build time
 
 scripts/live-frame.ts               The live surface's frame contract: page, report, pixel
 scripts/chrome-session.ts           The headless-Chrome page every probe drives, preload script included
