@@ -94,10 +94,9 @@ describe("the apps/docs ledger", () => {
     expect(policy).toContain("## The strategy");
   });
 
-  it("says the sidebar offers platforms, never a look group", () => {
+  it("says the sidebar offers platforms and the theme page owns the picker", () => {
     // The footer carries the four platform names; an authored look is applied
-    // in the URL (`?look=luna`) and has no control of its own. The ledger must
-    // describe that shape without naming a picker the tree no longer ships.
+    // in the URL (`?look=luna`) and the picker is the theme page's own control.
     const readme = ledger.join("\n");
     const page = readFileSync(
       new URL("../../content/docs/components/index.mdx", import.meta.url),
@@ -108,7 +107,7 @@ describe("the apps/docs ledger", () => {
     expect(readme).toContain("## The platform switch and the authored looks");
     expect(readme).toContain("no look group");
     expect(readme).toContain("?look=luna");
-    expect(readme).not.toContain("look-picker.tsx");
+    expect(readme).toContain("look-picker.tsx");
     expect(readme).not.toContain("**Look** offers");
   });
 
