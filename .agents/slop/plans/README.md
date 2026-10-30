@@ -210,3 +210,9 @@ component call sites adopt the outline in their own workstream.
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [610](./610-tier3-data.md) | Tier 3 data presentation: the `@gpuixui/data` package | D | components, primitives, tw, tokens, motion | done — phases 1–7, 3b, the selection column and the windowed tree landed |
+
+### Media
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [060](./060-launch-film-feel.md) | Launch film "Feel it": real takes, native blocks, sound as haptics | media | playground, tokens | in progress |
