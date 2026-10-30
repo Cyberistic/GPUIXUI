@@ -1,7 +1,8 @@
 # Launch film
 
-`gpuixui-launch.mp4`: 19.4 seconds, 1920×1080, 60 fps, H.264 + AAC. Three real
-GPUix windows on a Mac wallpaper, cut fast, with a sound design made in code.
+`gpuixui-launch.mp4`: 20.5 seconds, 1920×1080, 60 fps, H.264 + AAC. The library's
+blocks running as one native GPUix window, with a cursor, four platform dresses
+and the Omarchy look.
 
 **Play:** open the file, or `ffplay -autoexit gpuixui-launch.mp4`.
 
@@ -9,47 +10,54 @@ GPUix windows on a Mac wallpaper, cut fast, with a sound design made in code.
 
 | Time | Shot | Caption |
 | --- | --- | --- |
-| 0.0–1.8 | logo, wordmark, tagline | — |
-| 1.8–3.4 | Files, the whole window | files, now native. |
-| 3.4–4.6 | Files, punched into the list | — |
-| 4.6–6.0 | Tasks, the whole board | boards that hold state. |
-| 6.0–7.2 | Tasks, punched into a column | — |
-| 7.2–8.6 | Workspace, the command palette | command-k. |
-| 8.6–9.8 | Workspace, punched into the results | — |
-| 9.8–10.8 | `60` | fps, on the GPU |
-| 10.8–13.2 | Files and Tasks again, tighter | — |
-| 13.2–15.6 | all three at once | a whole library, one runtime. |
-| 15.6–19.4 | end card | — |
+| 0.0–1.6 | logo | — |
+| 1.6–4.1 | File manager, macOS | React, Tailwind, shadcn — and GPUI under it. |
+| 4.1–6.6 | Kanban board, macOS | Blocks, with real state. |
+| 6.6–9.1 | File manager, Windows 11 chrome | Windows 11. |
+| 9.1–11.6 | Kanban board, Linux chrome | Linux. |
+| 11.6–14.1 | File manager, Omarchy dark | Omarchy, dark. |
+| 14.1–16.9 | Inbox, Omarchy light | Follows your theme. |
+| 16.9–20.5 | end card | — |
 
 ## Where the pictures come from
 
-The three windows are **real GPUix applications**, not drawings: `apps/playground/src/film/main.tsx`
-mounts each one on the native renderer and writes a PNG per frame. The demos are
-pure functions of the frame number, so the capture is frame-accurate and does
-not depend on what else is on the screen.
+One **native GPUix window**, captured frame by frame:
 
 ```
 nub run --filter playground build
-nub apps/playground/dist/film/main.js files   capture /tmp/film/take-files   420
-nub apps/playground/dist/film/main.js tasks   capture /tmp/film/take-tasks   420
-nub apps/playground/dist/film/main.js palette capture /tmp/film/take-palette 420
+nub apps/playground/dist/film/blocks.js capture /tmp/film/take-blocks 1100
 ```
 
-`media/launch/src/edit.py` cuts the takes into shots: the wallpaper, the window
-cropped to the shot's framing, scaled and rounded through an alpha mask, and the
-caption. `mix.py` places the sound design, and `ffmpeg` muxes the two.
+`apps/playground/src/film/blocks.tsx` renders three of the site's blocks — the
+file manager, the kanban board and the inbox — as real trees. Every frame is a
+pure function of its index:
 
-The sound design is [earshot](https://github.com/Leonxlnx/earshot)'s shipped
-bank, made from recipes rather than recordings (`cut_hit/kick`, `cut_hit/punch`,
-`swish/flick`, `knock/wood`, `mallet/glock`,
-`notify/mid_tine`, `reverse_swell/short`), placed on every cut over a 45 Hz bed.
+- **the block and its platform** come from the frame number, so the window
+  restyles itself from macOS to Windows to Linux to the Omarchy look while the
+  content stays (`platformTheme`, `retroTheme`);
+- **the selection** advances through the rows, so the UI is alive without a
+  pointer;
+- **the cursor** is drawn in the tree (an arrow path plus a press ring) because
+  an offscreen capture has no OS pointer: waypoints are eased between, and three
+  presses ripple at frames 70, 260, 460, 700 and 900.
+
+`media/launch/src/edit-blocks.py` cuts the take into sections with a slow push,
+the window's rounded mask and its caption; `mix.py` places the sound design.
+
+## Sound
+
+[earshot](https://github.com/Leonxlnx/earshot)'s code-made bank, no recordings:
+a flick whoosh and a wood knock on every section, a soft click on every press,
+a bright swish and a glock on the Omarchy flip, a swell and chime into the end
+card, over a 55 Hz triad with a slow breath. The delivered file measures
+−18.8 LUFS and −0.4 dBTP.
 
 ## Rebuild
 
 ```
-python3 media/launch/src/edit.py          # picture.mp4, from the takes
-python3 media/launch/src/mix.py           # mix2.wav
-ffmpeg -i picture.mp4 -i mix2.wav -c:v copy -c:a aac -b:a 192k -shortest \
+python3 media/launch/src/edit-blocks.py     # b-picture.mp4, from the take
+python3 media/launch/src/mix.py             # mix3.wav
+ffmpeg -i b-picture.mp4 -i mix3.wav -c:v copy -c:a aac -b:a 192k -shortest \
   -movflags +faststart gpuixui-launch.mp4
 ```
 
