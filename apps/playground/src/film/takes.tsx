@@ -5,13 +5,15 @@
  *   nub apps/playground/dist/film/takes.js <take> <outDir>
  */
 import { Button, Slider, Switch } from "@gpuixui/primitives";
-import { lightTheme, platformTheme, type Theme } from "@gpuixui/tokens";
+import { darkTheme, lightTheme, platformTheme, type Theme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import { mkdirSync } from "node:fs";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { Settings, type Look } from "../blocks/settings.js";
+import { GROUND, Window } from "./frame.js";
 import { magnify } from "./magnify.js";
 import { capture, type Take } from "./take.js";
 
@@ -36,6 +38,20 @@ const stage = (theme: Theme, child: ReactNode) => (
 );
 
 const macro = (k: number) => magnify(mac, k);
+
+/** The Settings block in its window, restyled by its own Look control. */
+const SettingsWindow = () => {
+  const [look, setLook] = useState<Look>("darwin");
+  const [dark, setDark] = useState(false);
+  const theme = platformTheme(dark ? darkTheme : lightTheme, look);
+  return (
+    <div style={{ width: 1024, height: 576, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: GROUND }}>
+      <Window theme={theme} platform={look} title="Settings" width={880} height={470}>
+        <Settings look={look} onLookChange={setLook} dark={dark} onDarkChange={setDark} />
+      </Window>
+    </div>
+  );
+};
 
 export const takes: Readonly<Record<string, Take>> = {
   /** Shot 1: the first press. Down at 0.70 s, up at 0.83 s. */
@@ -95,6 +111,30 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 18, aim: { testId: "save", dx: 60, dy: 20 }, down: true },
       { frame: 27, aim: { testId: "save", dx: 60, dy: 20 } },
       { frame: 53, aim: { testId: "save", dx: 80, dy: 50 } },
+    ],
+  },
+  /** Shots 4–5: the pull-back to the block, then Windows (10.8 s) and Linux (12.4 s). */
+  settings: {
+    width: 1024,
+    height: 576,
+    frames: 228,
+    view: () => <SettingsWindow />,
+    pointer: [
+      { frame: 0, aim: { testId: "save", dx: 12, dy: 6 } },
+      { frame: 36, aim: { testId: "save", dx: 12, dy: 6 } },
+      { frame: 64, aim: { testId: "sounds" } },
+      { frame: 66, aim: { testId: "sounds" }, down: true },
+      { frame: 69, aim: { testId: "sounds" } },
+      { frame: 92, aim: { testId: "sounds" } },
+      { frame: 94, aim: { testId: "sounds" }, down: true },
+      { frame: 97, aim: { testId: "sounds" } },
+      { frame: 128, aim: { testId: "look-win32" } },
+      { frame: 132, aim: { testId: "look-win32" }, down: true },
+      { frame: 135, aim: { testId: "look-win32" } },
+      { frame: 176, aim: { testId: "look-linux" } },
+      { frame: 180, aim: { testId: "look-linux" }, down: true },
+      { frame: 183, aim: { testId: "look-linux" } },
+      { frame: 227, aim: { testId: "look-linux", dx: 30, dy: 40 } },
     ],
   },
 };
