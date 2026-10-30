@@ -1,58 +1,56 @@
 # Launch film
 
-`gpuixui-launch.mp4`: 27 seconds, 1920×1080, 60 fps, H.264 + AAC. Black stage,
-Apple-style typography, real screenshots of the shipped site, and a sound design
-made in code.
+`gpuixui-launch.mp4`: 19.4 seconds, 1920×1080, 60 fps, H.264 + AAC. Three real
+GPUix windows on a Mac wallpaper, cut fast, with a sound design made in code.
 
 **Play:** open the file, or `ffplay -autoexit gpuixui-launch.mp4`.
 
 ## The cut
 
-| Time | What | Sound |
+| Time | Shot | Caption |
 | --- | --- | --- |
-| 0.0–3.4 | Logo, wordmark tracking in, "React. Rendered by the GPU." | sub hit, soft click, tick |
-| 3.4–7.2 | Three lines: the React you know / a runtime you don't / every frame, drawn by the GPU | two UI pops, then a punch under the third line |
-| 7.2–12.6 | Footage: Windows 7 rebuilt, the Obsidian note, 83 icons, the theme editor | a swish and a wood knock on every cut |
-| 12.6–17.4 | `60` counting up, 60 ticks lighting, "0 canvas elements / 1 native window / GPU draws every frame", the shipped spinner's stepped arc | a tick run rising into a punch |
-| 17.4–21.8 | "Sound." over a live waveform | sub, pop, three knocks, a zing |
-| 21.8–27.2 | Composed blocks, then the end card | swell, glock, chime, a low rumble on the fade |
+| 0.0–1.8 | logo, wordmark, tagline | — |
+| 1.8–3.4 | Files, the whole window | files, now native. |
+| 3.4–4.6 | Files, punched into the list | — |
+| 4.6–6.0 | Tasks, the whole board | boards that hold state. |
+| 6.0–7.2 | Tasks, punched into a column | — |
+| 7.2–8.6 | Workspace, the command palette | command-k. |
+| 8.6–9.8 | Workspace, punched into the results | — |
+| 9.8–10.8 | `60` | fps, on the GPU |
+| 10.8–13.2 | Files and Tasks again, tighter | — |
+| 13.2–15.6 | all three at once | a whole library, one runtime. |
+| 15.6–19.4 | end card | — |
 
-## How it is made
+## Where the pictures come from
 
-The film is a single HTML page whose `renderAt(t)` places every element from
-its own timeline, with no CSS transitions. Playwright steps `t` frame by frame
-at 60 fps and screenshots 1 080p PNGs, so the picture never drops a frame and the
-same `t` always draws the same image. `ffmpeg` turns the frames into H.264.
-
-The sound design is [earshot](https://github.com/Leonxlnx/earshot)'s shipped
-bank, made from recipes rather than recordings (`earshot sfx render click/soft`,
-`ui_pop/soft`, `swish/flick`, `cut_hit/punch`, `knock/wood`, `mallet/glock`,
-`notify/mid_tine`, `reverse_swell/short`). `mix.py` places each take at its cue
-with its own gain, adds a 45 Hz bed with the octaves above it, and prints a
-24-bit master; `ffmpeg loudnorm` brings it to −17.6 LUFS with −1.4 dBTP of
-headroom.
+The three windows are **real GPUix applications**, not drawings: `apps/playground/src/film/main.tsx`
+mounts each one on the native renderer and writes a PNG per frame. The demos are
+pure functions of the frame number, so the capture is frame-accurate and does
+not depend on what else is on the screen.
 
 ```
-# 1. stills of the shipped site (needs apps/docs running)
-node media/launch/src/stills.mjs
+nub run --filter playground build
+nub apps/playground/dist/film/main.js files   capture /tmp/film/take-files   420
+nub apps/playground/dist/film/main.js tasks   capture /tmp/film/take-tasks   420
+nub apps/playground/dist/film/main.js palette capture /tmp/film/take-palette 420
+```
 
-# 2. frames: 1 632 × 1 080p, ~9 minutes
-node media/launch/src/render.mjs
+`media/launch/src/edit.py` cuts the takes into shots: the wallpaper, the window
+cropped to the shot's framing, scaled and rounded through an alpha mask, and the
+caption. `mix.py` places the sound design, and `ffmpeg` muxes the two.
 
-# 3. sound: earshot renders + the mixer
-earshot sfx render <id> -o audio/sfx/<name>.wav
-python media/launch/src/mix.py
+The sound design is [earshot](https://github.com/Leonxlnx/earshot)'s shipped
+bank, made from recipes rather than recordings (`cut_hit/kick`, `cut_hit/punch`,
+`swish/flick`, `knock/wood`, `mallet/glock`,
+`notify/mid_tine`, `reverse_swell/short`), placed on every cut over a 45 Hz bed.
 
-# 4. picture, then sound
-ffmpeg -framerate 60 -i frames/%05d.png -c:v libx264 -preset slow -crf 20 \
-  -pix_fmt yuv420p -movflags +faststart silent.mp4
-ffmpeg -i silent.mp4 -i mix.wav -c:v copy -c:a aac -b:a 192k -shortest \
+## Rebuild
+
+```
+python3 media/launch/src/edit.py          # picture.mp4, from the takes
+python3 media/launch/src/mix.py           # mix2.wav
+ffmpeg -i picture.mp4 -i mix2.wav -c:v copy -c:a aac -b:a 192k -shortest \
   -movflags +faststart gpuixui-launch.mp4
 ```
 
-The screenshots are the site's own drawings: the Windows 7 Personalization
-screen from `/themes`, the licence note from `/blocks/hunter-pipeline`, the icon
-grid from `/icons/icon`, and the theme editor — no mock-up of a component the
-library does not ship.
-
-`poster/launch.png` is the frame at 7.6 s.
+`poster/launch.png` is the frame at 3.0 s.
