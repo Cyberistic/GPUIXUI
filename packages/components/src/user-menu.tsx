@@ -194,78 +194,100 @@ export const UserMenu = ({
           {avatar}
           {identity}
         </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            testId="user-menu-upgrade"
-            onSelect={onUpgrade}
-            leading={
-              <Icon
-                name="sparkles"
-                size="sm"
-                color={theme.colors.mutedForeground}
-              />
-            }
-          >
-            Upgrade to Pro
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            testId="user-menu-account"
-            onSelect={onAccount}
-            leading={
-              <Icon
-                name="badge-check"
-                size="sm"
-                color={theme.colors.mutedForeground}
-              />
-            }
-          >
-            Account
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            testId="user-menu-billing"
-            onSelect={onBilling}
-            leading={
-              <Icon
-                name="credit-card"
-                size="sm"
-                color={theme.colors.mutedForeground}
-              />
-            }
-          >
-            Billing
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            testId="user-menu-notifications"
-            onSelect={onNotifications}
-            leading={
-              <Icon
-                name="bell"
-                size="sm"
-                color={theme.colors.mutedForeground}
-              />
-            }
-          >
-            Notifications
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          testId="user-menu-log-out"
-          onSelect={onLogOut}
-          leading={
-            <Icon
-              name="log-out"
-              size="sm"
-              color={theme.colors.mutedForeground}
-            />
-          }
-        >
-          Log out
-        </DropdownMenuItem>
+        {/* An item with no handler is a dead end, so it is not painted: the
+            menu is the actions the caller actually wired. */}
+        {onUpgrade === undefined ? null : (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                testId="user-menu-upgrade"
+                onSelect={onUpgrade}
+                leading={
+                  <Icon
+                    name="sparkles"
+                    size="sm"
+                    color={theme.colors.mutedForeground}
+                  />
+                }
+              >
+                Upgrade to Pro
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        )}
+        {onAccount === undefined &&
+        onBilling === undefined &&
+        onNotifications === undefined ? null : (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              {onAccount === undefined ? null : (
+                <DropdownMenuItem
+                  testId="user-menu-account"
+                  onSelect={onAccount}
+                  leading={
+                    <Icon
+                      name="badge-check"
+                      size="sm"
+                      color={theme.colors.mutedForeground}
+                    />
+                  }
+                >
+                  Account
+                </DropdownMenuItem>
+              )}
+              {onBilling === undefined ? null : (
+                <DropdownMenuItem
+                  testId="user-menu-billing"
+                  onSelect={onBilling}
+                  leading={
+                    <Icon
+                      name="credit-card"
+                      size="sm"
+                      color={theme.colors.mutedForeground}
+                    />
+                  }
+                >
+                  Billing
+                </DropdownMenuItem>
+              )}
+              {onNotifications === undefined ? null : (
+                <DropdownMenuItem
+                  testId="user-menu-notifications"
+                  onSelect={onNotifications}
+                  leading={
+                    <Icon
+                      name="bell"
+                      size="sm"
+                      color={theme.colors.mutedForeground}
+                    />
+                  }
+                >
+                  Notifications
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuGroup>
+          </>
+        )}
+        {onLogOut === undefined ? null : (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              testId="user-menu-log-out"
+              onSelect={onLogOut}
+              leading={
+                <Icon
+                  name="log-out"
+                  size="sm"
+                  color={theme.colors.mutedForeground}
+                />
+              }
+            >
+              Log out
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
