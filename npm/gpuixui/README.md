@@ -1,4 +1,4 @@
-# gpuixui
+# @sudokw/gpuixui
 
 Native React components for GPUix — the **GPUIxUI** library: dialogs, menus,
 pickers, tables, editors, a file tree, a media player, workspace chrome, and 83
@@ -11,9 +11,10 @@ icons, all themed by semantic roles.
 - Build prompt for an agent: <https://gpuixui.sudokw.com/getting-started/prompt>
 
 GPUIxUI is a from-scratch library built on top of the GPUix runtime. It is not
-published by the GPUix maintainers and is not part of the `@gpuix` scope on npm;
-the components render through GPUix's reconciler rather than the DOM, so they are
-not interchangeable with a browser component library.
+published by the GPUix maintainers and is not part of the `@gpuix` scope on npm —
+the scope here is the project's own. The components render through GPUix's
+reconciler rather than the DOM, so they are not interchangeable with a browser
+component library.
 
 ## Status
 

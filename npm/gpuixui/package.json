@@ -1,5 +1,5 @@
 {
-  "name": "gpuixui",
+  "name": "@sudokw/gpuixui",
   "version": "0.0.0",
   "private": false,
   "description": "Native React components for GPUix \u2014 the GPUIxUI library. Reserved; the release follows.",
