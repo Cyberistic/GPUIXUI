@@ -2,14 +2,15 @@
 /**
  * Shimmer example: a generating state, and the same surface settled.
  *
- * The highlight is the surface's own: the content owns the words and the box,
- * and `Shimmer` paints the travelling band over it. The second card is the
- * state the caller switches to when the work lands — no band, no timer.
+ * A string child is a text run: the component splits it into code points and
+ * inks each one from the travelling profile, because the runtime has no
+ * background-clip. The second card is the state the caller switches to when the
+ * work lands — the text rests and no timer runs.
  */
 
 import { Card } from "../src/card.js";
 import { Shimmer } from "../src/shimmer.js";
-import { textStyle, useTheme } from "../src/internal/theme.js";
+import { useTheme } from "../src/internal/theme.js";
 
 export const ShimmerExample = () => {
   const theme = useTheme();
@@ -23,15 +24,13 @@ export const ShimmerExample = () => {
           label="Generating a reply"
           style={{ padding: theme.spacing.lg }}
         >
-          <text style={textStyle(theme, "body")}>Generating a reply…</text>
+          Generating a reply…
         </Shimmer>
       </Card>
 
       <Card style={{ padding: 0, overflow: "hidden" }}>
         <Shimmer active={false} style={{ padding: theme.spacing.lg }}>
-          <text style={textStyle(theme, "body")}>
-            The reply is ready and the surface is still.
-          </text>
+          The reply is ready and the surface is still.
         </Shimmer>
       </Card>
     </div>

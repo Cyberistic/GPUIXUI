@@ -14238,36 +14238,37 @@ button.gx-rating-star:focus-visible {
   background: var(--card);
 }
 
+/* The highlight is in the glyphs: the gradient is clipped to the text and the
+   frame-driving stop positions come from the component's own `shimmerFrame`. */
 .gx-shimmer-content {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* A block child does not inherit the parent's clipped background, so each line
+   carries the same gradient over its own box. */
+.gx-shimmer-content > * {
+  background-image: inherit;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 .gx-shimmer-title {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
-  color: var(--foreground);
 }
 
 .gx-shimmer-line {
   margin: 0;
   font-size: 12px;
-  color: var(--muted-foreground);
-}
-
-.gx-shimmer-band {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: row;
-  pointer-events: none;
-}
-
-.gx-shimmer-strip {
-  flex: 1 1 0;
-  height: 100%;
 }
 
 .gx-shimmer-frame {
