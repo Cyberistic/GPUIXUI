@@ -19,6 +19,7 @@ import { mkdirSync } from "node:fs";
 import { useState, type ReactNode } from "react";
 import { Settings, type Look } from "../blocks/settings.js";
 import { GROUND, Window } from "./frame.js";
+import { OmarchyDesktop, type OmarchyLook } from "./omarchy.js";
 import { magnify } from "./magnify.js";
 import { capture, type Take } from "./take.js";
 
@@ -43,6 +44,10 @@ const stage = (theme: Theme, child: ReactNode) => (
 );
 
 const macro = (k: number) => magnify(mac, k);
+
+/** Shot 7's theme changes, by frame: each a new `colors.toml` on the desktop. */
+const omarchyAt = (frame: number): OmarchyLook =>
+  frame < 40 ? "tokyo-night" : frame < 72 ? "catppuccin" : frame < 100 ? "kanagawa" : "rose-pine";
 
 /** The Settings block in its window, restyled by its own Look control. */
 const SettingsWindow = () => {
@@ -160,6 +165,22 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 180, aim: { testId: "look-linux" }, down: true },
       { frame: 183, aim: { testId: "look-linux" } },
       { frame: 227, aim: { testId: "look-linux", dx: 30, dy: 40 } },
+    ],
+  },
+  /** Shots 7–8: four Omarchy themes, then a card dragged to Done. */
+  omarchy: {
+    width: 1280,
+    height: 720,
+    frames: 270,
+    view: (frame) => <OmarchyDesktop look={omarchyAt(frame)} />,
+    pointer: [
+      { frame: 0, aim: { x: 1180, y: 660 } },
+      { frame: 110, aim: { x: 1180, y: 660 } },
+      { frame: 140, aim: { testId: "task-theme", dx: -40 } },
+      { frame: 146, aim: { testId: "task-theme", dx: -40 }, down: true },
+      { frame: 190, aim: { testId: "column-Done", dy: 40 }, down: true },
+      { frame: 196, aim: { testId: "column-Done", dy: 40 } },
+      { frame: 269, aim: { testId: "column-Done", dx: 40, dy: 120 } },
     ],
   },
 };

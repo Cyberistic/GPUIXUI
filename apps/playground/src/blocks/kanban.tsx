@@ -1,0 +1,183 @@
+/**
+ * Kanban — three columns of cards; a card is dragged to another column.
+ *
+ * The drag is the divider's rule (`@gpuixui/dock`): a card subscribes to both
+ * `onMouseDown` and `onMouseMove`, so the runtime captures the pointer for the
+ * whole gesture. The runtime has no `transform`, so a lifted card is offset
+ * with `left`/`top` inside its slot, raised with the theme's top elevation. On
+ * release it moves to the column whose measured bounds (`onLayout`) hold the
+ * pointer.
+ */
+import { Avatar } from "@gpuixui/components/avatar";
+import { Badge } from "@gpuixui/components/badge";
+import { Card } from "@gpuixui/components/card";
+import { Stack, Text } from "@gpuixui/primitives";
+import { elevationShadow } from "@gpuixui/tokens";
+import { useTheme } from "@gpuixui/tokens/react";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import { useRef, useState } from "react";
+
+export const columns = ["Backlog", "In progress", "Done"] as const;
+export type Column = (typeof columns)[number];
+
+export interface Task {
+  readonly id: string;
+  readonly title: string;
+  readonly tag: string;
+  readonly owner: string;
+}
+
+const initial: Readonly<Record<Column, ReadonlyArray<Task>>> = {
+  Backlog: [
+    { id: "icons", title: "Icon set for the dock", tag: "Design", owner: "Mara Ito" },
+    { id: "docs", title: "Blocks gallery copy", tag: "Docs", owner: "Ben Ade" },
+    { id: "a11y", title: "Screen reader labels", tag: "Access", owner: "Noor Haddad" },
+    { id: "grid", title: "Virtualised data grid", tag: "Data", owner: "Kai Lund" },
+  ],
+  "In progress": [
+    { id: "theme", title: "Follow the Omarchy theme", tag: "Tokens", owner: "Kai Lund" },
+    { id: "terminal", title: "Terminal resize in-band", tag: "Runtime", owner: "Ada Lovelace" },
+    { id: "film", title: "Launch film sound pass", tag: "Media", owner: "Mara Ito" },
+  ],
+  Done: [
+    { id: "switch", title: "Native switch metrics", tag: "Primitives", owner: "Noor Haddad" },
+    { id: "slider", title: "Slider detents", tag: "Primitives", owner: "Ben Ade" },
+  ],
+};
+
+interface Drag {
+  readonly id: string;
+  readonly from: Column;
+  readonly originX: number;
+  readonly originY: number;
+  readonly dx: number;
+  readonly dy: number;
+}
+
+interface Bounds {
+  readonly x: number;
+  readonly width: number;
+}
+
+/** The column whose measured bounds hold `x`. */
+export const columnAt = (bounds: Partial<Record<Column, Bounds>>, x: number): Option.Option<Column> =>
+  Arr.findFirst(columns, (column) =>
+    Option.match(Option.fromNullishOr(bounds[column]), {
+      onNone: () => false,
+      onSome: (b) => x >= b.x && x < b.x + b.width,
+    }),
+  );
+
+/** `tasks` with `id` moved from `from` to the end of `to`. */
+export const moveTask = (
+  tasks: Readonly<Record<Column, ReadonlyArray<Task>>>,
+  id: string,
+  from: Column,
+  to: Column,
+): Readonly<Record<Column, ReadonlyArray<Task>>> =>
+  from === to
+    ? tasks
+    : Option.match(Arr.findFirst(tasks[from], (task) => task.id === id), {
+        onNone: () => tasks,
+        onSome: (task) => ({
+          ...tasks,
+          [from]: Arr.filter(tasks[from], (t) => t.id !== id),
+          [to]: Arr.append(tasks[to], task),
+        }),
+      });
+
+/** The board, as a window's whole content. */
+export const Kanban = () => {
+  const theme = useTheme();
+  const [tasks, setTasks] = useState(initial);
+  // The press lives in a ref: the runtime can deliver a whole gesture before
+  // React commits the render the press scheduled (`drag-between-panes`).
+  const drag = useRef<Drag | null>(null);
+  const [offset, setOffset] = useState<Pick<Drag, "id" | "dx" | "dy"> | null>(null);
+  const bounds = useRef<Partial<Record<Column, Bounds>>>({});
+
+  const drop = (x: number) => {
+    const pressed = drag.current;
+    if (pressed === null) return;
+    Option.map(columnAt(bounds.current, x), (to) => setTasks((now) => moveTask(now, pressed.id, pressed.from, to)));
+    drag.current = null;
+    setOffset(null);
+  };
+
+  // Both listeners sit on the card, the element that paints a background: a
+  // press stops at the first painted hitbox, and the pair arms pointer capture.
+  const card = (column: Column, task: Task) => {
+    const lifted = offset?.id === task.id ? offset : null;
+    return (
+      <Card
+        key={task.id}
+        variant="outline"
+        testId={`task-${task.id}`}
+        style={{
+          padding: theme.spacing.lg,
+          position: "relative",
+          left: lifted?.dx ?? 0,
+          top: lifted?.dy ?? 0,
+          boxShadow: lifted === null ? undefined : elevationShadow(theme, "lg"),
+        }}
+        onMouseDown={(event) => {
+          drag.current = { id: task.id, from: column, originX: event.x ?? 0, originY: event.y ?? 0, dx: 0, dy: 0 };
+          setOffset({ id: task.id, dx: 0, dy: 0 });
+        }}
+        onMouseMove={(event) => {
+          const pressed = drag.current;
+          if (pressed?.id !== task.id) return;
+          if (event.pressedButton !== 0) return drop(event.x ?? pressed.originX);
+          setOffset({ id: task.id, dx: (event.x ?? 0) - pressed.originX, dy: (event.y ?? 0) - pressed.originY });
+        }}
+        onMouseUp={(event) => drop(event.x ?? 0)}
+      >
+        <Stack direction="column" gap="sm">
+          <Text role="label">{task.title}</Text>
+          <Stack direction="row" align="center" justify="between">
+            <Badge variant="neutral">{task.tag}</Badge>
+            <Avatar name={task.owner} size="sm" />
+          </Stack>
+        </Stack>
+      </Card>
+    );
+  };
+
+  return (
+    <Stack
+      direction="row"
+      gap="lg"
+      testId="kanban"
+      style={{ flexGrow: 1, width: "100%", height: "100%", padding: theme.spacing.xl, backgroundColor: theme.colors.background }}
+    >
+      {Arr.map(columns, (column) => (
+        <div
+          key={column}
+          testId={`column-${column}`}
+          onLayout={(event) => {
+            bounds.current = { ...bounds.current, [column]: { x: event.x ?? 0, width: event.width ?? 0 } };
+          }}
+          style={{
+            flexGrow: 1,
+            flexBasis: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.md,
+            padding: theme.spacing.md,
+            borderRadius: theme.radius.lg,
+            backgroundColor: theme.colors.muted,
+          }}
+        >
+          <Stack direction="row" align="center" justify="between" style={{ paddingBottom: theme.spacing.xs }}>
+            <Text role="label">{column}</Text>
+            <Text role="caption" tone="muted">
+              {String(tasks[column].length)}
+            </Text>
+          </Stack>
+          {Arr.map(tasks[column], (task) => card(column, task))}
+        </div>
+      ))}
+    </Stack>
+  );
+};
