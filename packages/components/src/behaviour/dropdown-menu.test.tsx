@@ -497,6 +497,31 @@ describe("DropdownMenu", () => {
     menu.unmount();
   });
 
+  it("closes on a second press of the trigger, and not by reopening", async () => {
+    // The bug: the trigger reopened the menu instead of closing it. The guard
+    // against the dismissing press's own click was cleared by a microtask, which
+    // runs *before* that click — so the trigger read "no dismissal", saw the menu
+    // closed, and toggled it back open. The dismiss layer now records the point
+    // the press landed on, so the click that belongs to that press is recognised
+    // as the same gesture and closes instead of toggling.
+    const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
+
+    clickCentreOf(menu, "trigger");
+    expect(menu.renderer.findByTestId("menu")).toBeDefined();
+
+    // The second press is the same point, one gesture later.
+    clickCentreOf(menu, "trigger");
+    await waitFor(() =>
+      expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
+    );
+
+    // And a third press opens it again: the record expires with its gesture.
+    clickCentreOf(menu, "trigger");
+    expect(menu.renderer.findByTestId("menu")).toBeDefined();
+
+    menu.unmount();
+  });
+
   it("takes the press a leaving surface would leak", async () => {
     const onBehind = vi.fn();
     const menu = renderComponent(

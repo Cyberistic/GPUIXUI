@@ -101,6 +101,46 @@ const consumedPress = (event: EventPayload, now: bigint): boolean => {
   return repeated;
 };
 
+/**
+ * The point the last dismissed press landed on, kept past the pop it caused.
+ *
+ * A press, its release and its click are **one** gesture: the surface closes on
+ * the press, and the trigger then hears that press's click. Without a record of
+ * where the press landed, the trigger cannot tell that click from a reader's
+ * next press and toggles the surface straight back open — an overlay that can be
+ * opened and never closed by its own trigger.
+ */
+let lastDismissedPoint: Option.Option<{
+  readonly point: string;
+  readonly at: bigint;
+}> = Option.none();
+
+/** A press's point: where it landed and which button, without its event type. */
+const pointOf = (event: EventPayload): string =>
+  Arr.join(":")(
+    Arr.map([event.x, event.y, event.button], (part) =>
+      part === undefined ? "" : `${part}`,
+    ),
+  );
+
+/**
+ * Whether `event` is the click of the press a layer just dismissed on.
+ *
+ * The record outlives the layer pop, because the pop is what the press caused,
+ * and it expires with the same four-frame window a repeated press uses: a reader
+ * cannot press twice inside it, and a deliberate second press lands after it.
+ */
+export const isDismissalClick = (
+  event: EventPayload,
+  now: bigint = monotonicNanos(),
+): boolean =>
+  Option.exists(
+    lastDismissedPoint,
+    (dismissed) =>
+      dismissed.point === pointOf(event) &&
+      now - dismissed.at <= PRESS_WINDOW_NANOS,
+  );
+
 /** Whether an earlier layer already consumed this key dispatch. Records it if not. */
 const consumedKeystroke = (keystrokeId: number): boolean => {
   if (Option.contains(dismissedKeystroke, keystrokeId)) return true;
@@ -162,6 +202,7 @@ export const dismissTopLayer = (
   return Option.match(topmost(), {
     onNone: () => false,
     onSome: (onDismiss) => {
+      lastDismissedPoint = Option.some({ point: pointOf(event), at: now });
       onDismiss(event);
       return true;
     },

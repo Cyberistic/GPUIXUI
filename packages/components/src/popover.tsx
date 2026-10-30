@@ -66,6 +66,7 @@ import {
   useSurfaceTiming,
 } from "./internal/presence.js";
 import { isAlign } from "./internal/placement.js";
+import { isDismissalClick } from "./internal/dismiss-layer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
@@ -80,7 +81,6 @@ interface PopoverContextValue {
   readonly setOpen: (open: boolean) => void;
   readonly trigger: RefObject<PublicInstance | null>;
   /** Set by a dismissing outside press, consumed by the click that follows it. */
-  readonly dismissedByOutsidePress: RefObject<boolean>;
 }
 
 const PopoverContext = createContext<PopoverContextValue | undefined>(
@@ -122,10 +122,9 @@ export const Popover = ({
     onChange: onOpenChange,
   });
   const trigger = useRef<PublicInstance | null>(null);
-  const dismissedByOutsidePress = useRef(false);
 
   const context = useMemo<PopoverContextValue>(
-    () => ({ open, setOpen, trigger, dismissedByOutsidePress }),
+    () => ({ open, setOpen, trigger }),
     [open, setOpen],
   );
 
@@ -155,8 +154,7 @@ export const PopoverTrigger = ({
   variant = "secondary",
   ...rest
 }: PopoverTriggerProps) => {
-  const { open, setOpen, trigger, dismissedByOutsidePress } =
-    usePopoverContext();
+  const { open, setOpen, trigger } = usePopoverContext();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
   return (
@@ -167,12 +165,11 @@ export const PopoverTrigger = ({
       aria-expanded={open}
       onActivate={(event) => {
         (onActivate ?? onClick)?.(event);
-        // The press that dismissed the popover owns this click: toggling here
-        // would re-open what the same gesture just closed.
-        if (dismissedByOutsidePress.current) {
-          dismissedByOutsidePress.current = false;
-          return;
-        }
+        // The click of the press that just dismissed the surface closes it — it
+        // must not toggle it back open. The dismiss layer recognises the gesture
+        // by the point its press landed on, so this is a fact about the gesture,
+        // not a race between two events.
+        if (isDismissalClick(event)) return;
         setOpen(!open);
       }}
     />
@@ -214,8 +211,7 @@ export const PopoverContent = ({
   ...rest
 }: PopoverContentProps) => {
   const theme = useTheme();
-  const { open, setOpen, trigger, dismissedByOutsidePress } =
-    usePopoverContext();
+  const { open, setOpen, trigger } = usePopoverContext();
   const renderer = useGpuix().renderer;
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
@@ -253,12 +249,8 @@ export const PopoverContent = ({
         return;
       }
       // Mark the press so the click it belongs to cannot re-open the popover.
-      dismissedByOutsidePress.current = true;
-      queueMicrotask(() => {
-        dismissedByOutsidePress.current = false;
-      });
     }, depth);
-  }, [depth, dismissedByOutsidePress, open, renderer, trigger]);
+  }, [depth, open, renderer, trigger]);
 
   if (!presence.mounted) return null;
 

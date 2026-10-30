@@ -31,7 +31,11 @@ import {
 } from "react";
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
-import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import {
+  dismissTopLayer,
+  isDismissalClick,
+  pushDismissLayer,
+} from "./internal/dismiss-layer.js";
 import { DismissScope, useDismissDepth } from "./internal/dismiss-scope.js";
 import { isActivation, isDown, isUp, swallowsDefault } from "./internal/key.js";
 import {
@@ -76,7 +80,6 @@ interface DropdownContextValue {
   readonly setOpen: (open: boolean) => void;
   readonly trigger: RefObject<PublicInstance | null>;
   /** Set by a dismissing outside press, consumed by the click that follows it. */
-  readonly dismissedByOutsidePress: RefObject<boolean>;
   /** The row a keyboard open should focus once the rows have registered. */
   readonly pendingFocus: RefObject<"first" | "last" | null>;
 }
@@ -121,7 +124,6 @@ export const DropdownMenu = ({
   });
   const renderer = useGpuix().renderer;
   const trigger = useRef<PublicInstance | null>(null);
-  const dismissedByOutsidePress = useRef(false);
   const restoreFocus = useRef(false);
   const wasOpen = useRef(false);
   /** The edge a keyboard open should land on once the rows register. */
@@ -141,10 +143,6 @@ export const DropdownMenu = ({
       // Marking here (rather than in the dismiss handler) means a nested
       // submenu's outside press gets the same guard. The microtask clears the
       // mark before the next user gesture.
-      dismissedByOutsidePress.current = true;
-      queueMicrotask(() => {
-        dismissedByOutsidePress.current = false;
-      });
     }
     setOpenRef.current(false);
   }, []);
@@ -176,7 +174,7 @@ export const DropdownMenu = ({
   }, [open]);
 
   const context = useMemo<DropdownContextValue>(
-    () => ({ open, setOpen, trigger, dismissedByOutsidePress, pendingFocus }),
+    () => ({ open, setOpen, trigger, pendingFocus }),
     [open, setOpen],
   );
 
@@ -200,8 +198,7 @@ export const DropdownMenuTrigger = ({
   disabled = false,
   ...rest
 }: ButtonProps) => {
-  const { open, setOpen, trigger, dismissedByOutsidePress, pendingFocus } =
-    useDropdownContext();
+  const { open, setOpen, trigger, pendingFocus } = useDropdownContext();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
   const openAt = (edge: "first" | "last"): void => {
@@ -240,10 +237,7 @@ export const DropdownMenuTrigger = ({
         pendingFocus.current = null;
         // The press that dismissed the menu owns this click: toggling here would
         // re-open what the same gesture just closed.
-        if (dismissedByOutsidePress.current) {
-          dismissedByOutsidePress.current = false;
-          return;
-        }
+        if (isDismissalClick(event)) return;
         setOpen(!open);
       }}
     />
