@@ -24780,3 +24780,12 @@ already reads `event.buttons === 0` as the release, reports the press before it
 captures the pointer and survives a refused capture, and the drag was measured
 in a production build after that fix. The branch's commit was skipped rather
 than layered on top.
+
+`[!]` The **shadcn directory entry** is submitted as
+[shadcn-ui/ui#12542](https://github.com/shadcn-ui/ui/pull/12542) — `registry/shadcn-directory.json`
+appended to `apps/v4/registry/directory.json`, one line, namespace unique,
+validated locally against the file's own `registryDirectorySchema`. **Blocked on
+signed commits**: the repository's `Require signed branch commits` ruleset is
+active on `~ALL` refs and no signing key is registered on the account, so the
+API-created commit reads `unsigned` and the PR cannot merge until it is signed
+or re-committed from the web editor.
