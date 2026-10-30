@@ -14,7 +14,12 @@
  */
 
 import type { Theme } from "@gpuixui/tokens";
-import { useState, type ReactNode } from "react";
+import {
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 import {
   alphaRamp,
   areaLayers,
@@ -30,6 +35,7 @@ import {
   opaqueHex,
   parseHex,
   sameColour,
+  stillHeld,
   toHex,
   type Hsva,
   type Swatch,
@@ -42,6 +48,49 @@ const AREA_HEIGHT = 148;
 const THUMB = 20;
 
 const percent = (fraction: number): string => `${fraction * 100}%`;
+
+interface DragHandlers {
+  readonly onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  readonly onPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  readonly onPointerUp: () => void;
+  readonly onPointerCancel: () => void;
+}
+
+/**
+ * A press that keeps reporting while the pointer moves with the button held.
+ *
+ * The release check is `stillHeld`: a move carrying no button ends the drag.
+ * The earlier check ended it while the button was still down, so a knob could
+ * not be dragged at all.
+ */
+const usePressDrag = (
+  onPoint: (event: ReactPointerEvent<HTMLDivElement>) => void,
+  enabled = true,
+): DragHandlers => {
+  const dragging = useRef(false);
+  return {
+    onPointerDown: (event) => {
+      if (!enabled || event.button !== 0) return;
+      dragging.current = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      onPoint(event);
+    },
+    onPointerMove: (event) => {
+      if (!dragging.current) return;
+      if (!stillHeld(event.buttons)) {
+        dragging.current = false;
+        return;
+      }
+      onPoint(event);
+    },
+    onPointerUp: () => {
+      dragging.current = false;
+    },
+    onPointerCancel: () => {
+      dragging.current = false;
+    },
+  };
+};
 
 const rgbCss = ({
   r,
@@ -108,6 +157,41 @@ const Panel = ({
   const ratio = contrast(hsva, background);
   const value = grade(ratio ?? 1);
 
+  const areaDrag = usePressDrag(
+    (event) => {
+      if (onArea === undefined) return;
+      const box = event.currentTarget.getBoundingClientRect();
+      onArea(
+        Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)),
+        1 - Math.min(1, Math.max(0, (event.clientY - box.top) / box.height)),
+      );
+    },
+    !disabled && onArea !== undefined,
+  );
+
+  const hueDrag = usePressDrag(
+    (event) => {
+      if (onHue === undefined) return;
+      const box = event.currentTarget.getBoundingClientRect();
+      onHue(
+        Math.round(
+          Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)) *
+            360,
+        ) % 360,
+      );
+    },
+    !disabled && onHue !== undefined,
+  );
+
+  const alphaDrag = usePressDrag(
+    (event) => {
+      if (onAlpha === undefined) return;
+      const box = event.currentTarget.getBoundingClientRect();
+      onAlpha(Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)));
+    },
+    !disabled && onAlpha !== undefined,
+  );
+
   return (
     <div
       aria-label={`${label} colour`}
@@ -135,15 +219,7 @@ const Panel = ({
         aria-label={`${label} saturation and brightness`}
         aria-valuetext={`Saturation ${Math.round(hsva.s * 100)}%, brightness ${Math.round(hsva.v * 100)}%`}
         className="gx-cp-area"
-        onPointerDown={(event) => {
-          if (disabled || onArea === undefined) return;
-          const box = event.currentTarget.getBoundingClientRect();
-          onArea(
-            Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)),
-            1 -
-              Math.min(1, Math.max(0, (event.clientY - box.top) / box.height)),
-          );
-        }}
+        {...areaDrag}
         role="slider"
         style={{
           height: AREA_HEIGHT,
@@ -177,18 +253,7 @@ const Panel = ({
           aria-label={`${label} hue`}
           aria-valuetext={`${Math.round(hsva.h)} degrees`}
           className="gx-cp-track"
-          onPointerDown={(event) => {
-            if (disabled || onHue === undefined) return;
-            const box = event.currentTarget.getBoundingClientRect();
-            onHue(
-              Math.round(
-                Math.min(
-                  1,
-                  Math.max(0, (event.clientX - box.left) / box.width),
-                ) * 360,
-              ) % 360,
-            );
-          }}
+          {...hueDrag}
           role="slider"
           tabIndex={disabled ? -1 : 0}
         >
@@ -214,13 +279,7 @@ const Panel = ({
           aria-label={`${label} opacity`}
           aria-valuetext={`${Math.round(hsva.a * 100)}%`}
           className="gx-cp-track"
-          onPointerDown={(event) => {
-            if (disabled || onAlpha === undefined) return;
-            const box = event.currentTarget.getBoundingClientRect();
-            onAlpha(
-              Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)),
-            );
-          }}
+          {...alphaDrag}
           role="slider"
           tabIndex={disabled ? -1 : 0}
         >

@@ -241,3 +241,13 @@ export const chosenRole = (
 /** The readout the workflow prints under the picker. */
 export const describe = (value: string, draft: string): string =>
   `value=${value} draft=${draft} ${parseHex(draft) === undefined ? "invalid" : "valid"}`;
+
+/**
+ * Whether a pointer move still carries a pressed button.
+ *
+ * A drag ends when the move reports no button (`0`) — not the other way round.
+ * The earlier check treated `buttons !== 0` as the release, so the first move
+ * with the primary button held ended the gesture while the pointer was still
+ * down.
+ */
+export const stillHeld = (buttons: number): boolean => buttons !== 0;
