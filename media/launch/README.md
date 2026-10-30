@@ -1,64 +1,56 @@
 # Launch film
 
-`gpuixui-launch.mp4`: 20.5 seconds, 1920×1080, 60 fps, H.264 + AAC. The library's
-blocks running as one native GPUix window, with a cursor, four platform dresses
-and the Omarchy look.
+`gpuixui-launch.mp4`: 22 seconds, 1920×1080, 30 fps, H.264 + AAC. A
+[HyperFrames](https://hyperframes.ai) composition over one recording of the real
+window, with a sound design made in code.
 
 **Play:** open the file, or `ffplay -autoexit gpuixui-launch.mp4`.
 
 ## The cut
 
-| Time | Shot | Caption |
+| Time | What | Type |
 | --- | --- | --- |
-| 0.0–1.6 | logo | — |
-| 1.6–4.1 | File manager, macOS | React, Tailwind, shadcn — and GPUI under it. |
-| 4.1–6.6 | Kanban board, macOS | Blocks, with real state. |
-| 6.6–9.1 | File manager, Windows 11 chrome | Windows 11. |
-| 9.1–11.6 | Kanban board, Linux chrome | Linux. |
-| 11.6–14.1 | File manager, Omarchy dark | Omarchy, dark. |
-| 14.1–16.9 | Inbox, Omarchy light | Follows your theme. |
-| 16.9–20.5 | end card | — |
+| 0.0–2.6 | the window arrives, the stack names light in order | React · Tailwind · shadcn · GPUI |
+| 2.6–5.0 | the board, camera push and pull | Blocks, from the same parts |
+| 5.0–7.5 | the same tree, Windows 11 chrome | Windows 11 · same tree |
+| 7.5–10.0 | Linux chrome | Linux · same tree |
+| 10.0–12.5 | Omarchy dark | Omarchy · a look, not a fork |
+| 12.5–15.3 | Omarchy light | Follows your desktop theme |
+| 15.3–22.0 | the end card, performed | mark, ring, wordmark, address |
 
 ## Where the pictures come from
 
-One **native GPUix window**, captured frame by frame:
+One **native GPUix window**, captured frame by frame, then cut into the six
+sections by `src/edit-blocks.py` (slow push, rounded mask, no captions — the
+captions are the composition's job):
 
 ```
 nub run --filter playground build
 nub apps/playground/dist/film/blocks.js capture /tmp/film/take-blocks 1100
+python3 media/launch/src/edit-blocks.py      # b-clean.mp4 → assets/footage.mp4
 ```
 
-`apps/playground/src/film/blocks.tsx` renders three of the site's blocks — the
-file manager, the kanban board and the inbox — as real trees. Every frame is a
-pure function of its index:
+`apps/playground/src/film/blocks.tsx` renders three of the site's blocks — file
+manager, kanban, inbox — as real trees, with the block, the platform, the look,
+the selected row and a drawn cursor all computed from the frame number. That is
+why the same window restyles from macOS to Windows to Linux to Omarchy while the
+content stays.
 
-- **the block and its platform** come from the frame number, so the window
-  restyles itself from macOS to Windows to Linux to the Omarchy look while the
-  content stays (`platformTheme`, `retroTheme`);
-- **the selection** advances through the rows, so the UI is alive without a
-  pointer;
-- **the cursor** is drawn in the tree (an arrow path plus a press ring) because
-  an offscreen capture has no OS pointer: waypoints are eased between, and three
-  presses ripple at frames 70, 260, 460, 700 and 900.
+The film itself is `src/hyperframes/index.html`: one footage clip, kinetic
+captions, the end card, and the audio bed with earshot's cues, rendered by
 
-`media/launch/src/edit-blocks.py` cuts the take into sections with a slow push,
-the window's rounded mask and its caption; `mix.py` places the sound design.
+```
+npx hyperframes render
+```
+
+Contract kept: every timed element is a `clip` with `data-start` and
+`data-duration`, the root declares `data-duration="22"`, and one paused GSAP
+timeline is registered as `window.__timelines.main`.
 
 ## Sound
 
-[earshot](https://github.com/Leonxlnx/earshot)'s code-made bank, no recordings:
-a flick whoosh and a wood knock on every section, a soft click on every press,
-a bright swish and a glock on the Omarchy flip, a swell and chime into the end
-card, over a 55 Hz triad with a slow breath. The delivered file measures
-−18.8 LUFS and −0.4 dBTP.
+[earshot](https://github.com/Leonxlnx/earshot)'s code-made bank: a sub hit on
+the open, a flick whoosh on every platform change, a bright swish and glock on
+the Omarchy flip, a swell and chime into the end card, over a 55 Hz triad bed.
 
-## Rebuild
-
-```
-python3 media/launch/src/edit-blocks.py     # b-picture.mp4, from the take
-python3 media/launch/src/mix.py             # mix3.wav
-ffmpeg -i b-picture.mp4 -i mix3.wav -c:v copy -c:a aac -b:a 192k -shortest \
-  -movflags +faststart gpuixui-launch.mp4
-```
-
-`poster/launch.png` is the frame at 3.0 s.
+`poster/launch.png` is the frame at 6.0 s.
