@@ -40,7 +40,10 @@ export interface Take {
   /** Keyframes of the pointer, in frame order; it eases between them. */
   readonly pointer?: ReadonlyArray<Waypoint>;
   /** Keystrokes sent to the focused element on a frame (`"a b enter"`). */
-  readonly keys?: ReadonlyArray<{ readonly frame: number; readonly keys: string }>;
+  readonly keys?: ReadonlyArray<{
+    readonly frame: number;
+    readonly keys: string;
+  }>;
 }
 
 export interface PointerSample {
@@ -61,26 +64,32 @@ export const pointerAt = (
   frame: number,
   locate: (aim: Aim) => { x: number; y: number },
 ): Option.Option<{ x: number; y: number; down: boolean }> =>
-  Option.map(Arr.findLastIndex(path, (point) => point.frame <= frame), (index) => {
-    const from = path[index]!;
-    const start = locate(from.aim);
-    const down = from.down === true;
-    return Option.match(Option.fromNullishOr(path[index + 1]), {
-      onNone: () => ({ ...start, down }),
-      onSome: (to) => {
-        const end = locate(to.aim);
-        const t = easeInOut((frame - from.frame) / (to.frame - from.frame));
-        return {
-          x: start.x + (end.x - start.x) * t,
-          y: start.y + (end.y - start.y) * t,
-          down,
-        };
-      },
-    });
-  });
+  Option.map(
+    Arr.findLastIndex(path, (point) => point.frame <= frame),
+    (index) => {
+      const from = path[index]!;
+      const start = locate(from.aim);
+      const down = from.down === true;
+      return Option.match(Option.fromNullishOr(path[index + 1]), {
+        onNone: () => ({ ...start, down }),
+        onSome: (to) => {
+          const end = locate(to.aim);
+          const t = easeInOut((frame - from.frame) / (to.frame - from.frame));
+          return {
+            x: start.x + (end.x - start.x) * t,
+            y: start.y + (end.y - start.y) * t,
+            down,
+          };
+        },
+      });
+    },
+  );
 
 /** Capture `take` into `outDir` as `0000.png…` and `cursor.json`. */
-export const capture = (take: Take, outDir: string): ReadonlyArray<PointerSample> => {
+export const capture = (
+  take: Take,
+  outDir: string,
+): ReadonlyArray<PointerSample> => {
   const root = createTestRoot({ width: take.width, height: take.height });
   const renderer = root.renderer;
   const locate = (aim: Aim): { x: number; y: number } => {
@@ -107,18 +116,26 @@ export const capture = (take: Take, outDir: string): ReadonlyArray<PointerSample
   for (let frame = 0; frame < take.frames; frame += 1) {
     root.render(take.view(frame));
     renderer.flush();
-    for (const { keys } of Arr.filter(take.keys ?? [], (k) => k.frame === frame))
+    for (const { keys } of Arr.filter(
+      take.keys ?? [],
+      (k) => k.frame === frame,
+    ))
       renderer.simulateKeystrokes(keys);
-    Option.map(pointerAt(take.pointer ?? [], frame, locate), ({ x, y, down }) => {
-      renderer.nativeSimulateMouseMove(x, y, held ? 0 : undefined);
-      if (down && !held) renderer.nativeSimulateMouseDown(x, y, 0);
-      if (!down && held) renderer.nativeSimulateMouseUp(x, y, 0);
-      held = down;
-      samples.push({ frame, x: x * DEVICE_SCALE, y: y * DEVICE_SCALE, down });
-    });
+    Option.map(
+      pointerAt(take.pointer ?? [], frame, locate),
+      ({ x, y, down }) => {
+        renderer.nativeSimulateMouseMove(x, y, held ? 0 : undefined);
+        if (down && !held) renderer.nativeSimulateMouseDown(x, y, 0);
+        if (!down && held) renderer.nativeSimulateMouseUp(x, y, 0);
+        held = down;
+        samples.push({ frame, x: x * DEVICE_SCALE, y: y * DEVICE_SCALE, down });
+      },
+    );
     renderer.clockSet(origin + (frame * 1000) / FPS);
     renderer.flush();
-    renderer.captureScreenshot(`${outDir}/${String(frame).padStart(4, "0")}.png`);
+    renderer.captureScreenshot(
+      `${outDir}/${String(frame).padStart(4, "0")}.png`,
+    );
   }
   root.unmount();
   writeFileSync(`${outDir}/cursor.json`, JSON.stringify(samples));

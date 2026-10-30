@@ -5,7 +5,12 @@
  *   nub apps/playground/dist/film/takes.js <take> <outDir>
  */
 import { Button, Slider, Switch } from "@gpuixui/primitives";
-import { darkTheme, lightTheme, platformTheme, type Theme } from "@gpuixui/tokens";
+import {
+  darkTheme,
+  lightTheme,
+  platformTheme,
+  type Theme,
+} from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -45,9 +50,29 @@ const SettingsWindow = () => {
   const [dark, setDark] = useState(false);
   const theme = platformTheme(dark ? darkTheme : lightTheme, look);
   return (
-    <div style={{ width: 1024, height: 576, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: GROUND }}>
-      <Window theme={theme} platform={look} title="Settings" width={880} height={470}>
-        <Settings look={look} onLookChange={setLook} dark={dark} onDarkChange={setDark} />
+    <div
+      style={{
+        width: 1024,
+        height: 576,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: GROUND,
+      }}
+    >
+      <Window
+        theme={theme}
+        platform={look}
+        title="Settings"
+        width={880}
+        height={470}
+      >
+        <Settings
+          look={look}
+          onLookChange={setLook}
+          dark={dark}
+          onDarkChange={setDark}
+        />
       </Window>
     </div>
   );
@@ -143,14 +168,18 @@ const [, , name = "", outDir = ""] = process.argv;
 Effect.runSync(
   Option.match(R.get(takes, name), {
     onNone: () =>
-      Effect.logError(`unknown take "${name}"; one of ${R.keys(takes).join(", ")}`),
+      Effect.logError(
+        `unknown take "${name}"; one of ${R.keys(takes).join(", ")}`,
+      ),
     onSome: (take) =>
       Effect.sync(() => {
         mkdirSync(outDir, { recursive: true });
         return capture(take, outDir).length;
       }).pipe(
         Effect.flatMap((moves) =>
-          Effect.logInfo(`${name}: ${take.frames} frames, ${moves} pointer samples → ${outDir}`),
+          Effect.logInfo(
+            `${name}: ${take.frames} frames, ${moves} pointer samples → ${outDir}`,
+          ),
         ),
       ),
   }),

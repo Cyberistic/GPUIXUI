@@ -29,7 +29,10 @@ const press: Take = {
 };
 
 /** The same take with the pointer resting on the switch and never pressing. */
-const rest: Take = { ...press, pointer: [{ frame: 0, aim: { testId: "switch" } }] };
+const rest: Take = {
+  ...press,
+  pointer: [{ frame: 0, aim: { testId: "switch" } }],
+};
 
 const shoot = (take: Take = press): ReadonlyArray<Buffer> => {
   const dir = mkdtempSync(join(tmpdir(), "take-"));
@@ -44,7 +47,9 @@ describe("capture", () => {
 
   it("is repeatable frame for frame", () => {
     const second = shoot();
-    first.forEach((frame, index) => expect(frame.equals(second[index]!)).toBe(true));
+    first.forEach((frame, index) =>
+      expect(frame.equals(second[index]!)).toBe(true),
+    );
   });
 
   it("shows the press from its frame on, not before", () => {

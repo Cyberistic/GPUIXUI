@@ -9,7 +9,8 @@ const unitless = new Set(["fontWeight", "opacity", "name", "mode", "contrast"]);
 
 const scale = (value: unknown, k: number, key: string): unknown => {
   if (unitless.has(key)) return value;
-  if (typeof value === "number") return key === "lineHeight" && value < 4 ? value : value * k;
+  if (typeof value === "number")
+    return key === "lineHeight" && value < 4 ? value : value * k;
   if (Array.isArray(value)) return value.map((item) => scale(item, k, key));
   if (value !== null && typeof value === "object")
     return Object.fromEntries(

@@ -17,7 +17,7 @@ import {
   Text,
   ToggleGroup,
 } from "@gpuixui/primitives";
-import type { PlatformName } from "@gpuixui/tokens";
+import type { PlatformName, Theme } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import { useState, type ReactNode } from "react";
@@ -49,19 +49,39 @@ export interface SettingsProps {
   readonly onDarkChange: (dark: boolean) => void;
 }
 
-const Row = ({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) => (
-  <Stack direction="row" align="center" justify="between" gap="lg" style={{ paddingTop: 12, paddingBottom: 12 }}>
-    <Stack direction="column" gap="2xs">
-      <Text role="label">{label}</Text>
-      {hint === undefined ? null : (
-        <Text role="caption" tone="muted">
-          {hint}
-        </Text>
-      )}
+/** The sidebar's and the volume track's width, from the spacing scale. */
+const railWidth = (theme: Theme): number => theme.spacing["5xl"] * 3.5;
+
+const Row = ({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) => {
+  const theme = useTheme();
+  return (
+    <Stack
+      direction="row"
+      align="center"
+      justify="between"
+      gap="lg"
+      style={{ paddingTop: theme.spacing.lg, paddingBottom: theme.spacing.lg }}
+    >
+      <Stack direction="column" gap="2xs">
+        <Text role="label">{label}</Text>
+        {hint === undefined ? null : (
+          <Text role="caption" tone="muted">
+            {hint}
+          </Text>
+        )}
+      </Stack>
+      {children}
     </Stack>
-    {children}
-  </Stack>
-);
+  );
+};
 
 const Sidebar = () => {
   const theme = useTheme();
@@ -70,14 +90,19 @@ const Sidebar = () => {
       direction="column"
       gap="2xs"
       style={{
-        width: 220,
-        padding: 14,
+        width: railWidth(theme),
+        padding: theme.spacing.lg,
         backgroundColor: theme.colors.background,
         borderRightWidth: 1,
         borderColor: theme.colors.border,
       }}
     >
-      <Stack direction="row" gap="sm" align="center" style={{ paddingBottom: 14 }}>
+      <Stack
+        direction="row"
+        gap="sm"
+        align="center"
+        style={{ paddingBottom: theme.spacing.lg }}
+      >
         <Avatar name="Ada Lovelace" size="md" />
         <Stack direction="column" gap="2xs">
           <Text role="label">Ada Lovelace</Text>
@@ -93,12 +118,13 @@ const Sidebar = () => {
           gap="sm"
           align="center"
           style={{
-            padding: 8,
+            padding: theme.spacing.md,
             borderRadius: theme.radius.md,
-            backgroundColor: name === "Appearance" ? theme.colors.accent : undefined,
+            backgroundColor:
+              name === "Appearance" ? theme.colors.accent : undefined,
           }}
         >
-          <Icon name={icon} size="sm" color={theme.colors.foreground} />
+          <Icon name={icon} size={theme.iconSize.sm} color={theme.colors.foreground} />
           <Text role="body">{name}</Text>
         </Stack>
       ))}
@@ -107,41 +133,86 @@ const Sidebar = () => {
 };
 
 /** The Appearance pane, as a window's whole content. */
-export const Settings = ({ look, onLookChange, dark, onDarkChange }: SettingsProps) => {
+export const Settings = ({
+  look,
+  onLookChange,
+  dark,
+  onDarkChange,
+}: SettingsProps) => {
   const theme = useTheme();
   const [sounds, setSounds] = useState(true);
   return (
     <Stack
       direction="row"
       testId="settings"
-      style={{ flexGrow: 1, alignItems: "stretch", backgroundColor: theme.colors.card }}
+      style={{
+        flexGrow: 1,
+        width: "100%",
+        height: "100%",
+        alignItems: "stretch",
+        backgroundColor: theme.colors.card,
+      }}
     >
       <Sidebar />
-      <Stack direction="column" gap="lg" style={{ flexGrow: 1, padding: 28 }}>
+      <Stack
+        direction="column"
+        gap="lg"
+        style={{ flexGrow: 1, padding: theme.spacing["2xl"] }}
+      >
         <Text role="h2">Appearance</Text>
-        <Card variant="outline" style={{ paddingLeft: 18, paddingRight: 18 }}>
+        <Card
+          variant="outline"
+          style={{
+            paddingLeft: theme.spacing.xl,
+            paddingRight: theme.spacing.xl,
+          }}
+        >
           <Row label="Look" hint="Every control follows the platform">
             <ToggleGroup
               type="single"
               label="Look"
               value={look}
-              onValueChange={(next) => (isLook(next) ? onLookChange(next) : undefined)}
+              onValueChange={(next) =>
+                isLook(next) ? onLookChange(next) : undefined
+              }
               options={looks}
               itemTestId={(value) => `look-${value}`}
             />
           </Row>
           <Separator orientation="horizontal" />
           <Row label="Dark mode">
-            <Switch testId="dark" label="Dark mode" checked={dark} onCheckedChange={onDarkChange} />
+            <Switch
+              testId="dark"
+              label="Dark mode"
+              checked={dark}
+              onCheckedChange={onDarkChange}
+            />
           </Row>
         </Card>
-        <Card variant="outline" style={{ paddingLeft: 18, paddingRight: 18 }}>
+        <Card
+          variant="outline"
+          style={{
+            paddingLeft: theme.spacing.xl,
+            paddingRight: theme.spacing.xl,
+          }}
+        >
           <Row label="Sound effects" hint="Play a sound on every press">
-            <Switch testId="sounds" label="Sound effects" checked={sounds} onCheckedChange={setSounds} />
+            <Switch
+              testId="sounds"
+              label="Sound effects"
+              checked={sounds}
+              onCheckedChange={setSounds}
+            />
           </Row>
           <Separator orientation="horizontal" />
           <Row label="Volume">
-            <Slider testId="volume" label="Volume" step={10} defaultValue={60} style={{ width: 220 }} />
+            <Slider
+              testId="volume"
+              label="Volume"
+              step={10}
+              defaultValue={60}
+              style={{ width: railWidth(theme) }}
+            />
           </Row>
         </Card>
         <Spacer />

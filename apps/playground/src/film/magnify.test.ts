@@ -13,13 +13,19 @@ describe("magnify", () => {
   it("scales every token length", () => {
     expect(big.spacing.md).toBe(lightTheme.spacing.md * 8);
     expect(big.radius.md).toBe(lightTheme.radius.md * 8);
-    expect(big.density.controlHeight.md).toBe(lightTheme.density.controlHeight.md * 8);
-    expect(big.typography.body.fontSize).toBe(lightTheme.typography.body.fontSize * 8);
+    expect(big.density.controlHeight.md).toBe(
+      lightTheme.density.controlHeight.md * 8,
+    );
+    expect(big.typography.body.fontSize).toBe(
+      lightTheme.typography.body.fontSize * 8,
+    );
   });
 
   it("keeps colours, weights and the theme's identity", () => {
     expect(big.colors).toBe(lightTheme.colors);
-    expect(big.typography.body.fontWeight).toBe(lightTheme.typography.body.fontWeight);
+    expect(big.typography.body.fontWeight).toBe(
+      lightTheme.typography.body.fontWeight,
+    );
     expect(big.typography.sans).toBe(lightTheme.typography.sans);
     expect(big.mode).toBe(lightTheme.mode);
   });
