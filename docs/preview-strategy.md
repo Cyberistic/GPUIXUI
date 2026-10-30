@@ -996,6 +996,11 @@ The exception is the dashboard block: its `--dash-*` palette is its own, because
 the landing renders the same markup in a light and a dark window. It is labelled
 as a browser reproduction and is excluded from the literal guard.
 
+`/themes` is measured in a browser whose `localStorage` throws on every call:
+`apps/docs/scripts/theme-editor-probe.ts` opens the page, edits one role, reads
+the audit and presses **Reset**, so the editor's promise to keep working when the
+store is refused is a press rather than a sentence.
+
 ## The site's own keyboard path
 
 The site documents keyboard contracts, so its own chrome carries one. A docs page

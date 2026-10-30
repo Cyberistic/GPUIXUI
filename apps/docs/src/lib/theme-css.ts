@@ -173,3 +173,21 @@ export const toCssVars = (theme: Theme): CssVars => ({
     ]),
   ),
 });
+
+/**
+ * The same variables as a stylesheet a reader can copy.
+ *
+ * A preview paints through a `style` prop, but a reader taking a theme into an
+ * application needs the declarations themselves. The block is generated from
+ * {@link toCssVars}, so it can never name a variable the preview does not read
+ * or miss one it does.
+ *
+ * @example
+ * ```ts
+ * toCssText(retroTheme(themes.dark, "aero"), ".aero");
+ * ```
+ */
+export const toCssText = (theme: Theme, selector = ":root"): string =>
+  `${selector} {\n${Object.entries(toCssVars(theme))
+    .map(([name, value]) => `  ${name}: ${value};`)
+    .join("\n")}\n}\n`;

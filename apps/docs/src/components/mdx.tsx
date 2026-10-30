@@ -1,6 +1,7 @@
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { isValidElement, type ComponentProps, type ReactNode } from "react";
 import { AllBlocks } from "./docs/all-blocks";
+import { AeroTheme } from "./docs/aero-theme";
 import { BlockIndex } from "./docs/block-index";
 import { BlockPreview } from "./docs/block-preview";
 import { ComponentIndex } from "./docs/component-index";
@@ -13,7 +14,12 @@ import { LanePages } from "./docs/lane-pages";
 import { LaneTable } from "./docs/lane-table";
 import { MermaidDiagram } from "./docs/mermaid-diagram";
 import { PromptPage } from "./docs/prompt-page";
+import { LookPicker } from "./docs/look-picker";
 import { SidebarExample } from "./docs/sidebar-examples";
+import { StyleReference } from "./docs/style-reference";
+import { ThemeEditor } from "./docs/theme-editor";
+import { TokenScales } from "./docs/token-scales";
+import { TypeScale } from "./docs/type-scale";
 
 /** The text a `<code>` element holds, or `undefined` when it is not a fence. */
 const codeOf = (
@@ -57,6 +63,7 @@ const pre = ({ children, ...rest }: ComponentProps<"pre">) => {
 export const mdxComponents = {
   ...defaultMdxComponents,
   AllBlocks,
+  AeroTheme,
   BlockIndex,
   BlockPreview,
   ComponentIndex,
@@ -70,5 +77,10 @@ export const mdxComponents = {
   MermaidDiagram,
   pre,
   PromptPage,
+  LookPicker,
   SidebarExample,
+  StyleReference,
+  ThemeEditor,
+  TokenScales,
+  TypeScale,
 };
