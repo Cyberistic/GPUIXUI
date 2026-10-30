@@ -24423,3 +24423,30 @@ module, and `packages/icons/docs/icon.mdx` carries the Lucide attribution with
 `[x]` `nub run --filter @gpuixui/docs test` is 201 files / 2039 tests green and
 `nub run check` is green; the new guide is captured at 1440×1000 in dark mode
 with the final sidebar.
+
+## Theme page, shimmer ink, hunter copy and picker drag (2026-10-30)
+
+`[x]` `[██████████]` 4/4 — **the lost `fix/theme-shimmer-hunter` work is back on
+`feat/theme-shimmer-hunter`.**
+
+`[x]` `/themes` mounts the restored live editor, the authored look picker, the
+Aero look on the editor's own panel with `toCssText`'s generated stylesheet, and
+the compiled class, type and scale references. The page sits after the guide in
+the sidebar, the guide's way out links it, and the docs ledger names every
+restored module.
+
+`[x]` Shimmer puts the highlight **in the text**: the browser drawing clips a
+frame-driven gradient to the glyphs, and a native string child is inked one code
+point at a time because the runtime has no mask or `background-clip`. Composed
+children keep the surface band, and the page states that the two drawings are
+not the same.
+
+`[x]` The hunter block's metas fit one line in the 836px window (`Renown · 7d`,
+`gaps · rivals`, `2 ready · 3 held`, `field work`, `awaiting slot`,
+`the key ratio`), at a 9.5px label and 10.5px meta. `hunterCellFits` fails a meta
+past either cell's budget.
+
+`[x]` The color picker's area drag keeps reporting while the primary button is
+held (`stillHeld`), measured in the production build: pressing the knob at
+(736.6, 272.2) and moving with the button held took the readout from
+`#3B9DFF` to `#0E2B47`.
