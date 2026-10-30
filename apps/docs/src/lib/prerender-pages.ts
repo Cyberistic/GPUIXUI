@@ -103,8 +103,8 @@ export const packagePageUrls = (root: string | URL): ReadonlyArray<string> =>
  *
  * The shadcn registry is **not** here: its index and 158 item documents carry
  * the source of every installed file, and bundling them into the Worker went
- * over Cloudflare's 63.9 MiB ceiling. `scripts/emit-registry.ts` writes them to
- * `dist/client` after the build, so the edge serves them as assets.
+ * over Cloudflare's 63.9 MiB ceiling. `plugins/registry-assets-plugin.ts` emits them
+ * into the client bundle, so the edge serves them as assets.
  */
 export const prerenderPaths = (root: string | URL): ReadonlyArray<string> =>
   [

@@ -43,8 +43,8 @@ describe("the prerendered paths", () => {
   it("keeps the registry out of the Worker's bundle", () => {
     // Registry documents carry the source of every file an item installs, and
     // bundling all 159 of them into the Worker went over Cloudflare's 63.9 MiB
-    // ceiling. `scripts/emit-registry.ts` writes them to `dist/client` after
-    // the build, so they must never reappear in the prerender list.
+    // ceiling. `plugins/registry-assets-plugin.ts` emits them into the client
+    // bundle, so they must never reappear in the prerender list.
     const registry = registryPaths(root);
 
     expect(registry.length).toBeGreaterThan(100);

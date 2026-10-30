@@ -272,7 +272,16 @@ const resolvedPages = (
   );
 };
 
-/** Every item, in page order, and the pages no module resolved for. */
+/** One served document: the address a client fetches and the JSON it gets. */
+export interface RegistryDocument {
+  readonly path: string;
+  readonly json: string;
+}
+
+/**
+ * Every item, in page order, the documents that serve them, and the pages no
+ * module resolved for.
+ */
 export const readRegistry = (
   root: string | URL,
 ): {
@@ -281,6 +290,7 @@ export const readRegistry = (
     readonly name: string;
     readonly json: string;
   }>;
+  readonly documents: ReadonlyArray<RegistryDocument>;
   readonly unresolved: ReadonlyArray<string>;
 } => {
   const repo = rootOf(root);
@@ -301,20 +311,28 @@ export const readRegistry = (
     };
   });
 
+  const entries = items.map((item) => ({
+    name: item.name,
+    json: itemJson(item),
+  }));
+  const index = indexJson(items);
+
   return {
-    items: items.map((item) => ({ name: item.name, json: itemJson(item) })),
-    index: indexJson(items),
+    items: entries,
+    index,
+    documents: [
+      { path: "/registry.json", json: index },
+      ...entries.map((entry) => ({
+        path: `/${entry.name}.json`,
+        json: entry.json,
+      })),
+    ],
     unresolved,
   };
 };
 
 /** The machine paths the registry serves: the index and one document per item. */
-export const registryPaths = (root: string | URL): ReadonlyArray<string> => {
-  const repo = rootOf(root);
-  return [
-    "/registry.json",
-    ...resolvedPages(repo, reader(repo)).pages.map(
-      ({ page, packageName }) => `/${itemName(packageName, page.slug)}.json`,
-    ),
-  ].toSorted();
-};
+export const registryPaths = (root: string | URL): ReadonlyArray<string> =>
+  readRegistry(root)
+    .documents.map((document) => document.path)
+    .toSorted();

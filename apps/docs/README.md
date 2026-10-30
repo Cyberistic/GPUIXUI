@@ -419,7 +419,6 @@ src/lib/llms.ts                     /llms.txt: every page, grouped by the sideba
 src/lib/llms-full.ts                /llms-full.txt: every page's own Markdown, in the index's order
 src/lib/registry.ts                 The shadcn registry model: item names, dependencies, the index and one item's JSON
 src/lib/registry-source.ts          Reads the served pages and their modules to build the index and every item, at build time
-src/lib/registry-data.ts            The registry, read from the plugin's build-time module
 src/lib/virtual-modules.d.ts        The types of the build-time modules
 src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack bridge for the previews
 src/lib/inventory.ts                Parses the tier tables and animated catalogue of COMPONENTS.md into rows and sections
@@ -462,7 +461,7 @@ src/lib/block-source.test.ts        A block's copyable source, resolved against 
 src/lib/gpuix-web.test.ts           The GPUix web build: browser entry, shared memory and the policy's status
 src/lib/live-frame.test.ts          The live probe's judge and its PNG pixel reader
 src/lib/live-surface.test.ts        /live's batch, its route and the isolation headers
-plugins/registry-plugin.ts           Provides virtual:gpuixui-registry at build time
+plugins/registry-assets-plugin.ts    Emits registry.json and every item into the client bundle
 
 scripts/live-frame.ts               The live surface's frame contract: page, report, pixel
 scripts/chrome-session.ts           The headless-Chrome page every probe drives, preload script included
