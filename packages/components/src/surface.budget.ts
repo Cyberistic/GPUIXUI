@@ -235,11 +235,15 @@ export const surfaceBudget = {
   // 1 491 KiB measured with that picker **and** the same wave's chat, overlay
   // and docs fixes in one tree — the branch figures were each taken alone —
   // so the ceiling moved 1490 → 1500 KiB.
-  bytes: 1510 * 1024,
+  bytes: 1520 * 1024,
   // 210 → 212 and 1500 → 1510 KiB for the Shimmer effect: `shimmer.tsx`, its
   // `shimmer/logic.ts` rule, `gradient/logic.ts` (the ramp a strip reads) and the
   // public `index` row that exports it. Measured 1 541 462 bytes in the tree it
   // landed in, so 1510 KiB keeps the same headroom the ceiling had before.
+  // 1 547 119 bytes measured with the text half of the effect: a string child
+  // is inked one code point at a time (`shimmer/logic.ts`'s profile, read per
+  // glyph), which the band alone never needed, so 1510 → 1520 KiB restores the
+  // ~10 KiB of headroom the next family opens with.
   /**
    * The motion share of a **family** consumer's graph, in modules and bytes.
    *
