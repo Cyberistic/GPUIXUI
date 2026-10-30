@@ -15687,3 +15687,187 @@ button.gx-rating-star:focus-visible {
 .gx-spin-ring[data-accent="on-destructive"] .gx-spin-tick {
   background-color: var(--destructive-foreground);
 }
+
+/* ---- the native surface ----
+   Drawings of the two things a browser cannot mount: the titlebar the app
+   paints under the window's traffic lights, and the system's path panel. */
+.gx-platform-scene {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 24px;
+  background: var(--background);
+}
+
+.gx-platform-window {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-platform-lights {
+  position: absolute;
+  top: 13px;
+  left: 20px;
+  display: flex;
+  gap: 8px;
+}
+
+.gx-platform-lights i {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: var(--border-strong);
+}
+
+.gx-platform-lights i:nth-child(1) {
+  background: #ff5f57;
+}
+.gx-platform-lights i:nth-child(2) {
+  background: #febc2e;
+}
+.gx-platform-lights i:nth-child(3) {
+  background: #28c840;
+}
+
+.gx-platform-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding-left: 78px;
+  padding-right: 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.gx-platform-title {
+  flex: 1;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.gx-platform-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.gx-platform-action {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--card);
+}
+
+.gx-platform-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.gx-platform-line {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--muted);
+}
+
+.gx-platform-line-short {
+  width: 45%;
+}
+
+.gx-platform-caption {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 11.5px;
+}
+
+.gx-platform-panel {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--card);
+}
+
+.gx-platform-panel-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 176px;
+  padding: 12px;
+  border-right: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.gx-platform-panel-side-item {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-platform-panel-side-item[data-current] {
+  background: var(--selected);
+  color: var(--selected-foreground);
+}
+
+.gx-platform-panel-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  min-width: 0;
+}
+
+.gx-platform-panel-title {
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gx-platform-panel-rows {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-platform-panel-row {
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+  font-size: 12px;
+}
+
+.gx-platform-panel-row[data-current] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-platform-panel-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.gx-platform-panel-button {
+  padding: 4px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 12px;
+}
+
+.gx-platform-panel-button[data-primary] {
+  border-color: transparent;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}

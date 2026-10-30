@@ -1,0 +1,42 @@
+---
+title: Window actions
+description: Minimise, zoom, fullscreen, rename, and the system's path picker.
+---
+
+<ComponentPreview name="platform-file-panel" />
+
+`useWindowActions` binds the window's verbs for the tree it is called in.
+
+```tsx
+const window = useWindowActions();
+
+window.minimize();
+window.zoom();
+window.toggleFullscreen();
+window.setTitle("Files");
+```
+
+The path picker is the OS panel, and its answer is a tag, not a nullable list: a
+cancel is `Cancelled`, so a caller cannot report "0 files" for a reader who
+changed their mind.
+
+```tsx
+const chosen = await Effect.runPromise(
+  window.pickPaths({ directories: true, prompt: "Choose a folder" }),
+);
+
+if (chosen._tag === "Picked") copy(chosen.paths);
+```
+
+| Action | What it does | Platform |
+| --- | --- | --- |
+| `activate` | brings the window forward | all |
+| `minimize` | sends it to the Dock | all |
+| `zoom` | the platform's zoom or maximise | all |
+| `toggleFullscreen` | enters or leaves fullscreen | all |
+| `setTitle` | renames the window | all |
+| `pickPaths` | opens the system path panel | all |
+
+`pickPaths` fails with `FilePanelError` when the platform refuses to open the
+panel; a host without the window verbs fails once at setup, naming them, rather
+than handing back buttons that do nothing.
