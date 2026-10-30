@@ -957,11 +957,11 @@ export const USER_MENU_IDENTITY = "flex flex-col items-start min-w-0 flex-grow";
 
 /** `user-menu.tsx` — the name. */
 export const USER_MENU_NAME =
-  "text-sm font-medium font-sans text-card-foreground whitespace-nowrap text-ellipsis";
+  "min-w-0 overflow-hidden text-sm font-medium font-sans text-card-foreground whitespace-nowrap text-ellipsis";
 
 /** `user-menu.tsx` — the address. */
 export const USER_MENU_EMAIL =
-  "text-xs font-sans text-muted-foreground whitespace-nowrap text-ellipsis";
+  "min-w-0 overflow-hidden text-xs font-sans text-muted-foreground whitespace-nowrap text-ellipsis";
 
 /** `aspect-ratio.tsx` — the box. `aspect-(--ratio)` is the runtime's
  * `aspectRatio` value, so the recipe keeps only what the box owns. */
