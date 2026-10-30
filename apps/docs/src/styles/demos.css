@@ -1459,7 +1459,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(480px, 100%);
+  width: min(520px, 100%);
   height: 400px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -1493,7 +1493,9 @@
 .gx-user-footer {
   display: flex;
   flex: none;
-  justify-content: flex-end;
+  /* The row starts at the stage's left so its menu, which opens beside it,
+     lands inside the stage rather than past the clipped edge. */
+  justify-content: flex-start;
   padding: 8px;
   border-top: 1px solid var(--border);
   background: var(--card);
@@ -4502,6 +4504,10 @@
 
 .gx-tip-readout {
   margin: 0;
+  /* One line, always: the sentence changes with the tip's state, and a box
+     that grew with it moved the button under it on every hover. */
+  min-height: 18px;
+  white-space: nowrap;
   /* Full width, so the sentence inside it grows without growing its box: the
      readout is longest while the tip is open, and a shrink-to-fit box moved
      itself to say so. */
@@ -15639,4 +15645,45 @@ button.gx-rating-star:focus-visible {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+/* The spinner ring: a box of absolutely placed ticks. The runtime cannot
+   rotate, so the arc is composed — each tick is a rounded square whose opacity
+   is its place in the travelling arc, and the box is the whole mark. */
+.gx-spin-scene {
+  align-items: center;
+  gap: 12px;
+  padding: 28px 24px;
+}
+
+.gx-spin-ring {
+  position: relative;
+  display: block;
+  flex: none;
+}
+
+.gx-spin-tick {
+  position: absolute;
+  border-radius: 9999px;
+  background-color: var(--primary);
+}
+
+.gx-spin-ring[data-accent="destructive"] .gx-spin-tick {
+  background-color: var(--destructive);
+}
+
+.gx-spin-ring[data-accent="muted"] .gx-spin-tick {
+  background-color: var(--muted-foreground);
+}
+
+.gx-spin-ring[data-accent="on-primary"] .gx-spin-tick {
+  background-color: var(--primary-foreground);
+}
+
+.gx-spin-ring[data-accent="on-secondary"] .gx-spin-tick {
+  background-color: var(--secondary-foreground);
+}
+
+.gx-spin-ring[data-accent="on-destructive"] .gx-spin-tick {
+  background-color: var(--destructive-foreground);
 }

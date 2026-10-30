@@ -91,7 +91,7 @@
 
 .gx-te-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) 1fr;
+  grid-template-columns: minmax(320px, 420px) 1fr;
 }
 
 .gx-te-controls {
@@ -159,7 +159,7 @@
 }
 
 .gx-te-color-value {
-  width: 92px;
+  width: 112px;
   height: 28px;
   padding: 0 8px;
   border: 1px solid var(--border);
@@ -338,4 +338,345 @@
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
+}
+
+/* ---- Windows 7 Personalization ----
+   The themes page's Aero specimen: the control panel's screen rebuilt in the
+   look's own roles. Chrome is a two-stop gradient (the runtime's only gradient)
+   and every mark is a shape, so nothing here is a bitmap of the original. */
+
+.gx-pz {
+  margin: 1.25rem 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--primary) 22%, var(--background)),
+    var(--background)
+  );
+}
+
+.gx-pz-window {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: var(--elevation-lg);
+}
+
+.gx-pz-titlebar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  height: 30px;
+  padding: 0 6px 0 10px;
+  border-bottom: 1px solid var(--border-strong);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--background) 70%, var(--foreground)),
+    var(--muted)
+  );
+}
+
+.gx-pz-title {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-pz-caption {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.gx-pz-caption-button {
+  position: relative;
+  width: 22px;
+  height: 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--card), var(--muted));
+}
+
+.gx-pz-caption-button[data-mark="close"] {
+  background: linear-gradient(180deg, var(--destructive), var(--destructive));
+  border-color: var(--destructive);
+}
+
+.gx-pz-caption-button[data-mark="minimize"]::after,
+.gx-pz-caption-button[data-mark="maximize"]::after {
+  position: absolute;
+  right: 4px;
+  bottom: 5px;
+  left: 4px;
+  height: 1px;
+  background: var(--foreground);
+  content: "";
+}
+
+.gx-pz-caption-button[data-mark="maximize"]::after {
+  bottom: 4px;
+  height: 7px;
+  border: 1px solid var(--foreground);
+  background: transparent;
+}
+
+.gx-pz-address {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+
+.gx-pz-nav {
+  padding: 0 4px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+
+.gx-pz-trail {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.gx-pz-caret {
+  color: var(--placeholder);
+}
+
+.gx-pz-search {
+  width: 132px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--input);
+  color: var(--placeholder);
+  font-size: 11px;
+}
+
+.gx-pz-body {
+  display: flex;
+  flex-direction: row;
+  min-height: 300px;
+}
+
+.gx-pz-links {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 8px;
+  width: 190px;
+  padding: 14px 12px;
+  border-right: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 55%, var(--card));
+}
+
+.gx-pz-link {
+  color: var(--primary);
+  font-size: 11.5px;
+  cursor: default;
+}
+
+.gx-pz-link[data-first] {
+  margin-bottom: 6px;
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.gx-pz-see {
+  margin-top: auto;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-pz-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 18px;
+  background: var(--card);
+}
+
+.gx-pz-heading {
+  margin: 0;
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.gx-pz-lead {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 11.5px;
+}
+
+.gx-pz-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 18px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--background);
+}
+
+.gx-pz-theme {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: default;
+}
+
+.gx-pz-stack {
+  position: relative;
+  width: 74px;
+  height: 46px;
+}
+
+/* Each tile previews a wallpaper, not the same one eight times: the palette's
+   own series tints stand in for the wallpapers the original ships. */
+.gx-pz-stack[data-theme="0"] .gx-pz-thumb {
+  background: linear-gradient(160deg, var(--series-1), var(--series-2));
+}
+
+.gx-pz-stack[data-theme="1"] .gx-pz-thumb {
+  background: linear-gradient(160deg, var(--series-2), var(--series-3));
+}
+
+.gx-pz-stack[data-theme="2"] .gx-pz-thumb {
+  background: linear-gradient(160deg, var(--series-3), var(--series-4));
+}
+
+.gx-pz-stack[data-theme="3"] .gx-pz-thumb {
+  background: linear-gradient(160deg, var(--series-4), var(--series-5));
+}
+
+.gx-pz-stack[data-theme="4"] .gx-pz-thumb {
+  background: linear-gradient(160deg, var(--series-5), var(--series-6));
+}
+
+.gx-pz-stack[data-theme="5"] .gx-pz-thumb {
+  background: linear-gradient(160deg, var(--series-6), var(--series-7));
+}
+
+.gx-pz-stack[data-theme="6"] .gx-pz-thumb {
+  background: linear-gradient(160deg, var(--series-7), var(--series-8));
+}
+
+.gx-pz-stack[data-theme="7"] .gx-pz-thumb {
+  background: linear-gradient(160deg, var(--series-8), var(--series-1));
+}
+
+.gx-pz-thumb {
+  position: absolute;
+  inset: 4px 0 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  background: linear-gradient(160deg, var(--primary), var(--accent));
+}
+
+.gx-pz-stack::before,
+.gx-pz-stack::after {
+  position: absolute;
+  right: 6px;
+  left: 14px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--muted);
+  content: "";
+}
+
+.gx-pz-stack::before {
+  top: 0;
+  z-index: 1;
+  right: 4px;
+  left: 12px;
+  background: linear-gradient(160deg, var(--accent), var(--muted));
+}
+
+.gx-pz-stack::after {
+  top: 2px;
+  right: 2px;
+  left: 10px;
+  background: linear-gradient(160deg, var(--secondary), var(--muted));
+}
+
+.gx-pz-theme[data-current] .gx-pz-thumb {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.gx-pz-theme-label {
+  color: var(--foreground);
+  font-size: 11px;
+}
+
+.gx-pz-settings {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 6px 12px 0;
+}
+
+.gx-pz-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+  text-align: center;
+  cursor: default;
+}
+
+.gx-pz-setting-mark {
+  width: 42px;
+  height: 30px;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  background: linear-gradient(150deg, var(--primary), var(--accent));
+}
+
+.gx-pz-setting-mark[data-setting="1"] {
+  background: linear-gradient(150deg, var(--accent), var(--background));
+}
+
+.gx-pz-setting-mark[data-setting="2"] {
+  background: linear-gradient(150deg, var(--secondary), var(--muted));
+}
+
+.gx-pz-setting-mark[data-setting="3"] {
+  background: linear-gradient(150deg, var(--muted), var(--background));
+}
+
+.gx-pz-setting-label {
+  color: var(--primary);
+  font-size: 11px;
+}
+
+.gx-pz-setting-value {
+  color: var(--muted-foreground);
+  font-size: 10.5px;
 }

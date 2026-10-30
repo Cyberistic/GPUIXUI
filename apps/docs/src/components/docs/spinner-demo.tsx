@@ -23,7 +23,13 @@ const arcOpacity = (index: number, step: number): number => {
 
 interface RingProps {
   readonly side?: number;
-  readonly accent?: "primary" | "destructive" | "muted";
+  readonly accent?:
+    | "primary"
+    | "destructive"
+    | "muted"
+    | "on-primary"
+    | "on-secondary"
+    | "on-destructive";
   readonly label?: string;
 }
 
@@ -126,15 +132,15 @@ export const SpinnerInButtons = () => (
     <p className="gx-demo-label">In an action</p>
     <div className="gx-demo-row">
       <button className="gx-btn gx-btn-primary" type="button">
-        <Ring accent="muted" label="Saving" side={16} />
+        <Ring accent="on-primary" label="Saving" side={16} />
         Saving…
       </button>
       <button className="gx-btn gx-btn-secondary" type="button">
-        <Ring label="Loading" side={16} />
+        <Ring accent="on-secondary" label="Loading" side={16} />
         Refresh
       </button>
       <button className="gx-btn gx-btn-destructive" disabled type="button">
-        <Ring accent="muted" label="Deleting" side={16} />
+        <Ring accent="on-destructive" label="Deleting" side={16} />
         Deleting…
       </button>
     </div>

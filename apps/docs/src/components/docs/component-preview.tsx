@@ -20,6 +20,11 @@ export function ComponentPreview({ name }: { name: string }) {
   if (demo === undefined) {
     throw new Error(`ComponentPreview: no demo named "${name}"`);
   }
+  // The drawing is an element, never a call: `demo.render()` would run the
+  // demo's hooks as this component's own, and the next page's demo would open
+  // with a different hook list — the hook-order crash that used to take a
+  // package page down until a refresh remounted it.
+  const Drawing = demo.render;
 
   return (
     <div className="gx-component not-prose">
@@ -31,7 +36,9 @@ export function ComponentPreview({ name }: { name: string }) {
           </TabsList>
         </div>
         <TabsContent className="gx-component-panel" value="preview">
-          <PreviewSurface>{demo.render()}</PreviewSurface>
+          <PreviewSurface>
+            <Drawing />
+          </PreviewSurface>
         </TabsContent>
         <TabsContent
           className="gx-component-panel gx-component-code"

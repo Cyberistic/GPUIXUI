@@ -5839,6 +5839,27 @@
   pointer-events: none;
 }
 
+/* A collapsed rail centres its mark. The label is still a flex child (it
+   animates its width), so it kept the row's weight and gap and pushed the
+   avatar off the axis. */
+[data-collapsed="true"] .gx-rail-label {
+  flex: 0 0 0;
+}
+
+[data-collapsed="true"]
+  :is(
+    .gx-conv-row,
+    .gx-fm-add,
+    .gx-fm-root,
+    .gx-fm-folder,
+    .gx-mail-folder,
+    .gx-mail-refresh,
+    .gx-kan-nav,
+    .gx-set-nav-item
+  ) {
+  column-gap: 0;
+}
+
 /* conversations: the list pane keeps its avatars */
 .gx-conv-side[data-collapsed="true"] .gx-conv-side-head {
   justify-content: center;
@@ -7696,7 +7717,10 @@ button.gx-sb-row {
   flex-direction: column;
   width: 100%;
   aspect-ratio: 16 / 10;
-  min-height: 500px;
+  /* Taller than the cards were: a note is read top to bottom, and the window
+     holds the properties, the pipeline, the dossiers and the chart without
+     scrolling. */
+  min-height: 840px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 2px);
@@ -7927,28 +7951,6 @@ button.gx-sb-row {
   font-size: 10px;
 }
 
-.gx-hunt-head {
-  display: flex;
-  flex: none;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.gx-hunt-title {
-  margin: 0;
-  font-size: 21px;
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-}
-
-.gx-hunt-sub {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 9.5px;
-  line-height: 1.2;
-}
-
 .gx-hunt-pills,
 .gx-hunt-filter {
   display: flex;
@@ -7974,199 +7976,14 @@ button.gx-sb-row {
   color: var(--success-foreground);
 }
 
-/* ---- readings and stages ------------------------------------------------- */
-.gx-hunt-readings,
-.gx-hunt-stages {
-  display: flex;
-  flex: none;
-  gap: 10px;
-}
-
-/* A reading and a stage are the Card drawing's surface and parts, at the
-   window's density: the header carries the label and the figure, the content
-   the line under it. */
-.gx-hunt-reading,
-.gx-hunt-stage {
-  flex: 1 1 0;
-  gap: 0;
-  min-width: 0;
-  border-radius: var(--radius);
-}
-
-.gx-hunt-reading .gx-card-header,
-.gx-hunt-stage .gx-card-header {
-  gap: 0;
-  padding: 10px 12px 2px;
-}
-
-.gx-hunt-reading .gx-card-content,
-.gx-hunt-stage .gx-card-content {
-  gap: 0;
-  padding: 0 12px 10px;
-}
-
-.gx-hunt-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 0;
-  overflow: hidden;
-  color: var(--muted-foreground);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1.25;
-  text-transform: uppercase;
-  /* A label wraps rather than clipping: the window is 836px wide, and a
-     truncated `RENOWN · 7 DA` is worse than two lines. */
-  white-space: normal;
-}
-
-.gx-hunt-value {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-}
-
-.gx-hunt-stage .gx-hunt-value {
-  font-size: 17px;
-}
-
-.gx-hunt-stage .gx-hunt-label {
-  font-size: 9px;
-  letter-spacing: 0.02em;
-}
-
-.gx-hunt-value[data-tone="success"] {
-  color: var(--success);
-}
-
-.gx-hunt-meta {
-  margin: 0;
-  overflow: hidden;
-  color: var(--muted-foreground);
-  font-size: 8.5px;
-  line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.gx-hunt-stage-icon {
-  display: inline-flex;
-  flex: none;
-  color: var(--muted-foreground);
-}
-
-.gx-hunt-stage-icon[data-tone="success"] {
-  color: var(--success);
-}
-
-/* ---- section bars -------------------------------------------------------- */
-.gx-hunt-section {
-  display: flex;
-  flex: none;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.gx-hunt-bar {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 12px;
-}
-
-.gx-hunt-h4 {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.gx-hunt-flame {
-  display: inline-flex;
-  color: var(--warning);
-}
-
-.gx-hunt-clock {
-  display: inline-flex;
-  color: var(--success);
-}
-
 .gx-hunt-block {
   display: inline-flex;
   color: var(--destructive);
 }
 
-.gx-hunt-spark {
-  display: inline-flex;
-  color: var(--primary);
-}
-
-/* ---- the two dossier columns --------------------------------------------- */
-.gx-hunt-columns {
-  display: flex;
-  flex: none;
-  gap: 10px;
-}
-
-.gx-hunt-column {
-  display: flex;
-  flex: 1 1 0;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.gx-hunt-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.gx-hunt-card {
-  gap: 0;
-  border-radius: var(--radius);
-}
-
-.gx-hunt-card .gx-card-header {
-  gap: 0;
-  padding: 3px 7px 1px;
-}
-
-.gx-hunt-card .gx-card-content {
-  gap: 0;
-  padding: 0 7px 3px;
-}
-
-.gx-hunt-card-title {
-  margin: 0;
-  overflow: hidden;
-  font-size: 10px;
-  font-weight: 550;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.gx-hunt-chips {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  overflow: hidden;
-}
-
-/* The chip is the Badge drawing's pill; only the height and type step are the
-   window's, so a row of three stays on one line inside the card. */
+/* ---- chips ---------------------------------------------------------------
+   The chip is the Badge drawing's pill; only the height and type step are the
+   window's, so a row of three stays on one line inside the note. */
 .gx-hunt-chip {
   height: 20px;
   padding: 0 7px;
@@ -8175,50 +7992,7 @@ button.gx-sb-row {
   line-height: 1;
 }
 
-.gx-hunt-empty {
-  margin: 0;
-  padding: 3px 7px 0;
-  color: var(--muted-foreground);
-  font-size: 9px;
-  font-style: italic;
-  line-height: 1.35;
-}
-
-/* ---- the blocked rows ---------------------------------------------------- */
-.gx-hunt-blocked {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.gx-hunt-blocked-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 26px;
-  padding: 2px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.gx-hunt-blocked-row:last-child {
-  border-bottom: none;
-}
-
-.gx-hunt-blocked-title {
-  overflow: hidden;
-  font-size: 9.5px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* ---- the renown chart ---------------------------------------------------- */
-.gx-hunt-chart-section {
-  margin-top: auto;
-}
-
 .gx-hunt-chart {
   display: flex;
   gap: 6px;
@@ -8339,4 +8113,273 @@ button.gx-sb-row {
 .gx-hunt-day:focus-visible {
   outline: 1px solid var(--ring);
   outline-offset: 1px;
+}
+
+/* ---- the hunter note -----------------------------------------------------
+   The content pane is a note, not a dashboard: properties, headings, bullets
+   and a callout, at Obsidian's type and rule weights. Every colour is a theme
+   role, so the block repaints with the preview switch. */
+.gx-note {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 16px 18px 20px;
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.gx-hunt-main > .gx-note {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.gx-note-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gx-note-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.gx-note-meta {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 11.5px;
+}
+
+.gx-note-props {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 2px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-note-prop {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10px;
+  padding: 3px 2px;
+}
+
+.gx-note-prop-key {
+  flex: 1;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 11.5px;
+}
+
+.gx-note-prop-value {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+}
+
+.gx-note-prop-value b {
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gx-note-prop-value b[data-tone="success"] {
+  color: var(--success);
+}
+
+.gx-note-prop-note {
+  color: var(--placeholder);
+  font-size: 10.5px;
+}
+
+.gx-note-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-note-columns {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+}
+
+.gx-note-heading {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-note-h {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.gx-note-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-note-row {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) auto minmax(0, 1.1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 3px 4px;
+  border-radius: var(--radius-sm);
+}
+
+.gx-note-row:hover {
+  background: var(--hover);
+}
+
+.gx-note-row-icon {
+  display: flex;
+  color: var(--muted-foreground);
+}
+
+.gx-note-row-icon[data-tone="success"] {
+  color: var(--success);
+}
+
+.gx-note-row-label {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-note-row-count {
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.gx-note-row-note {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-note-bullets {
+  gap: 3px;
+}
+
+.gx-note-bullet {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 1px 4px;
+  font-size: 12px;
+}
+
+/* The title takes the line it needs; the chips wrap under it, aligned with the
+   text rather than with the bullet. */
+.gx-note-bullet-body {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 6px;
+  min-width: 0;
+}
+
+.gx-note-bullet-chips {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.gx-note-bullet-mark {
+  color: var(--placeholder);
+  font-size: 10px;
+}
+
+.gx-note-link {
+  color: var(--brand-text);
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in srgb, var(--brand-text) 40%, transparent);
+  text-underline-offset: 2px;
+}
+
+.gx-note-muted {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 11.5px;
+}
+
+.gx-note-callout {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius-sm);
+  background: var(--warning-soft);
+  color: var(--warning-soft-foreground);
+}
+
+.gx-note-callout-title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gx-note-callout-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-note-callout .gx-note-bullet-mark {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.gx-note-callout .gx-note-link {
+  color: inherit;
+  text-decoration-color: currentColor;
+}
+
+.gx-note .gx-hunt-live {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
 }

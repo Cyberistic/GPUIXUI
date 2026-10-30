@@ -8,6 +8,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
+import { IconGalleryView } from "./icon-gallery";
 import { usePreviewInteractive } from "./preview-surface";
 import {
   CountingNumberDemo,
@@ -2985,6 +2986,20 @@ export const App = () => (
   </ToastProvider>
 );`;
 
+/** The gallery with the filter in its own state: a demo has no router to read. */
+const IconGalleryDemo = () => {
+  const [query, setQuery] = useState("");
+  return <IconGalleryView onQueryChange={setQuery} query={query} />;
+};
+
+const iconGalleryDemoSource = `import { Icon } from "@gpuixui/icons";
+import { useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
+
+<Icon name="search" color={theme.colors.mutedForeground} />;
+<Icon color={theme.colors.destructive} label="Overdue" name="warning" />;`;
+
 export const demos: Readonly<Record<string, Demo>> = {
   "accordion-demo": { render: AccordionDemo, source: accordionDemoSource },
   "accordion-composition": {
@@ -3183,6 +3198,10 @@ export const demos: Readonly<Record<string, Demo>> = {
   "drawer-sides": { render: SheetDrawing, source: drawerSidesSource },
   "drawer-workflow": { render: DrawerDrawing, source: drawerWorkflowSource },
   "sidebar-demo": { render: SidebarDemo, source: sidebarDemoSource },
+  "icon-gallery-demo": {
+    render: IconGalleryDemo,
+    source: iconGalleryDemoSource,
+  },
   "user-menu-demo": { render: UserMenuDemo, source: userMenuDemoSource },
   "dropdown-menu-demo": {
     render: DropdownMenuDemo,

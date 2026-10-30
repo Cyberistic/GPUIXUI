@@ -283,26 +283,31 @@ describe("the block's surfaces", () => {
     expect(vaultRows.length * 12).toBeLessThan(423);
   });
 
-  it("reads the trail, the chips and the cells from their drawings", () => {
+  it("reads the trail and the chips from their drawings", () => {
     expect(source).toContain("gx-breadcrumb-list");
     expect(source).toContain("gx-breadcrumb-page");
     expect(source).toContain("gx-breadcrumb-sep");
     expect(source).toContain("gx-badge gx-badge-sm");
-    expect(source.match(/gx-card-header/g)?.length).toBeGreaterThanOrEqual(3);
-    expect(source.match(/gx-card-content/g)?.length).toBeGreaterThanOrEqual(3);
     // The chip's compact metrics are the window's; its pill is the Badge's.
     expect(cssBlock(".gx-hunt-chip")).not.toContain("border");
   });
 
-  it("wears the card recipe on the reading, stage and dossier cells", () => {
-    expect(source).toContain(
-      'className="gx-card gx-card-outline gx-hunt-reading"',
-    );
-    expect(source).toContain(
-      'className="gx-card gx-card-outline gx-hunt-stage"',
-    );
-    expect(source).toContain(
-      'className="gx-card gx-card-outline gx-hunt-card"',
-    );
+  it("reads as a note, not a dashboard", () => {
+    // Bug guarded: the content pane was three grids of bordered cards, so the
+    // block read as a metrics wall rather than the Obsidian note it describes.
+    // The readings are the note's properties, the stages are list rows, the
+    // dossiers are bullets and the blocked ones are a callout; a card recipe
+    // that creeps back in fails here.
+    expect(source).toContain('className="gx-note-props"');
+    expect(source).toContain('className="gx-note-row"');
+    expect(source).toContain('className="gx-note-bullet"');
+    expect(source).toContain('className="gx-note-callout"');
+    expect(source).not.toContain("gx-card");
+    expect(huntCss).not.toContain(".gx-hunt-reading");
+    // A note keeps one rule weight: headings and the properties block are
+    // hairlines, and the callout is the only filled surface.
+    expect(cssBlock(".gx-note-heading")).toContain("border-bottom: 1px solid");
+    expect(cssBlock(".gx-note-callout")).toContain("border-left: 3px solid");
+    expect(source.match(/gx-note-section/g)?.length).toBeGreaterThanOrEqual(3);
   });
 });

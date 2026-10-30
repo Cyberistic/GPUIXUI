@@ -3,10 +3,6 @@ title: Settings dialog
 description: A modal settings window
 ---
 
-A modal settings window: a dimmed stage, a 260px nav pane of settings sections
-and a theme pane with three controls. The left nav, the switch, the slider and
-the layout cards all change the state a reader can watch.
-
 <BlockPreview name="settings-dialog-01" />
 
 ## Composition
@@ -19,18 +15,3 @@ The block composes:
 - `Button`, `Slider`, `Stack`, `Switch`, `Text` and `useTheme` from
   `@gpuixui/primitives`
 - `Icon` from `@gpuixui/icons`
-
-## State
-
-The switch flips `aria-checked` and translates its knob; the slider is a range
-input whose value is the `px` label; the layout cards are a radio group, and the
-selected one carries an accent ring and a check. Every one of those changes
-paint, a ring or a transform — never a border width, padding or size — so the
-panel stays still. The check is always in the markup and hidden with
-`visibility`, which is why selecting a card cannot move its label.
-
-The preview above is a browser reproduction of the recipe's geometry and
-palette; the code tab is the `@gpuixui/*` source. The dimmed stage is the
-theme's `overlay` role and the panes read `background`, `card`, `accent`,
-`primary`, `secondary`, `border`, `ring` and `shadow`, so the platform and look
-switch repaint the window.

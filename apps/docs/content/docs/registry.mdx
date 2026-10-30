@@ -1,38 +1,19 @@
 ---
 title: Registry
-description: Install a component's source with the shadcn CLI — and the runtime it still needs.
+description: Install a component's source with the shadcn CLI.
 ---
 
-GPUIxUI publishes a flat [shadcn registry](https://ui.shadcn.com/docs/registry):
-an index at [`/registry.json`](/registry.json) and one document per component
-beside it, `/<package>-<component>.json`. The index names each item's files
-without their content; the item's own JSON carries it.
+A flat shadcn registry: an index at [`/registry.json`](/registry.json) and one
+document per item beside it, `/<package>-<component>.json`.
 
 ```sh
 npx shadcn@latest add https://gpuixui.sudokw.com/primitives-button.json
 ```
 
-A name is `<package>-<page>`, because the registry is flat and eight page names
-belong to two components in different sections (`primitives-progress` and
-`components-progress` are different components). Every item is generated from
-the page that documents it and the source that implements it, so the registry
-cannot list a component the documentation does not.
+The copied files render through GPUix, not the DOM, so each item declares
+`@gpuix/react` and the per-platform `@gpuix/native` binding. The `@gpuixui/*`
+packages are private to the repository, so a consuming project installs them
+from a checkout with `nub add`.
 
-## What the files still need
-
-The copied files are **not** a DOM component: they render through GPUix's
-reconciler against `@gpuix/react`, not the browser, and need the per-platform
-`@gpuix/native` binding. The item declares both, so the CLI installs them; the
-[guide](/getting-started) lists the hosts `@gpuix/native` ships
-binaries for.
-
-The `@gpuixui/*` sibling packages the files import (`@gpuixui/tw`,
-`@gpuixui/primitives`, `@gpuixui/tokens`, …) are private workspace packages,
-not npm releases. Inside a GPUIXUI checkout they are one command:
-
-```sh
-nub add @gpuixui/primitives@workspace:* @gpuixui/tw@workspace:* @gpuixui/tokens@workspace:*
-```
-
-So today the registry distributes **owned source**, not a one-command install
-for a plain React app: the project must already consume the workspace packages.
+Names are `<package>-<component>` because the registry is flat and eight page
+names belong to two components (`primitives-progress` and `components-progress`).

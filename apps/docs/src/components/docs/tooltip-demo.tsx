@@ -37,7 +37,12 @@ const tipContent = "Booked revenue, net of refunds.";
 const ClockedTip = ({ align }: { readonly align: TooltipAlign }) => {
   const [reduced, setReduced] = useState(false);
   const timing = reduced ? reducedTipTiming : tipTiming;
-  const [state, setState] = useState<TipState>(closedTip);
+  // The page opens with its tip showing: a reader who never hovers still sees
+  // the thing this preview is about. The clock owns it from the first leave.
+  const [state, setState] = useState<TipState>({
+    ...closedTip,
+    open: true,
+  });
   const layout = tooltipLayout(align);
   /** Whether the last focus arrived from a `Tab` rather than a pointer. */
   const tabbed = useRef(false);

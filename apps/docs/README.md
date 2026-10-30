@@ -287,6 +287,7 @@ src/components/docs/examples-index.tsx    The generated registry on /examples
 src/components/docs/api-reference.tsx     The entry-point table and the symbol index
 src/components/docs/platform-toggle.tsx   The platform and palette switch, and the shared preview provider
 src/components/docs/theme-editor.tsx      The live token editor, its audit readout and the preview panel
+src/components/docs/personalization-demo.tsx  Windows 7's Personalization screen, rebuilt from the Aero look's roles
 src/components/docs/theme-editor-logic.ts The editor's pins, resolution, formatters and audit mapping
 src/components/docs/theme-editor-storage.ts The editor's remembered state through the guarded store
 src/components/docs/look-picker.tsx       The authored looks, as a control on /themes

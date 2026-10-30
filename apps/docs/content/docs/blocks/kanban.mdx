@@ -3,10 +3,6 @@ title: Kanban board
 description: A project task board with counted columns
 ---
 
-A task board recipe for **Hologram**: an app sidebar with search and project
-nav, a project header with a member row and tabs, and four columns whose counts,
-dots and cards all come from one array.
-
 <BlockPreview name="kanban-01" />
 
 ## Composition
@@ -20,17 +16,3 @@ The block composes:
   `@gpuixui/components/tabs`
 - `Button`, `Stack`, `Text` and `useTheme` from `@gpuixui/primitives`
 - `Icon` from `@gpuixui/icons`
-
-## State
-
-Dragging is out of scope: the browser shim has no pointer capture, and a
-drag preview that cannot be dropped is worse than none. Each card's `…` menu
-offers **Move to →** the other three columns instead, and the heading count is
-derived from the same array, so a move can never leave a count stale. `+` appends
-a placeholder card to its column; the next unused id comes from the cards, so a
-second press cannot collide.
-
-The preview above is a browser reproduction of the recipe's geometry and
-palette; the code tab is the `@gpuixui/*` source. The four dot colours, the
-three priority tints and every fill read the preview surface's theme roles, so
-the platform and look switch repaint the board.

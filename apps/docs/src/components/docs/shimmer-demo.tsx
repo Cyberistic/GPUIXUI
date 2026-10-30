@@ -32,7 +32,8 @@ interface SurfaceProps {
  * The gradient at one frame.
  *
  * Each sample is the profile's alpha blended out of the role the theme gives
- * it, so the unlit glyphs keep their resting ink and the peak reads as a sheen.
+ * it, so the unlit glyphs rest on the muted role and the peak reads as a
+ * neutral sheen — the same pair the component inks (grey copy, bright sweep).
  * The stop positions are the strip edges the native band paints, so both
  * drawings describe the same travel.
  */
@@ -41,7 +42,7 @@ export const shimmerGradient = (frame: ShimmerFrame): string => {
   const stops = frame.alphas.map((alpha, index) => {
     const share = Math.round(alpha * SHIMMER_INK * 100);
     const position = last === 0 ? 0 : (index / last) * 100;
-    return `color-mix(in srgb, var(--primary) ${share}%, var(--foreground)) ${position}%`;
+    return `color-mix(in srgb, var(--foreground) ${share}%, var(--muted-foreground)) ${position}%`;
   });
   return `linear-gradient(90deg, ${stops.join(", ")})`;
 };

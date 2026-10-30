@@ -226,6 +226,9 @@ function CodeAndComponent() {
   if (demo === undefined) {
     throw new Error('CodeAndComponent: no demo named "tabs-demo"');
   }
+  // A demo is an element, not a call: `demo.render()` would run its hooks as
+  // this section's own.
+  const Drawing = demo.render;
 
   return (
     <section className="landing-section" id="code">
@@ -242,7 +245,9 @@ function CodeAndComponent() {
         <div className="landing-code-preview">
           {/* The landing sits outside a `PreviewSurface`, so the scene needs the
               dark defaults `gx-base` carries; on a docs page the surface does. */}
-          <div className="gx-base gx-demo">{demo.render()}</div>
+          <div className="gx-base gx-demo">
+            <Drawing />
+          </div>
         </div>
       </div>
 

@@ -682,196 +682,171 @@ export const HunterPipelineRender = () => {
             </span>
           </div>
 
-          <header className="gx-hunt-head">
-            <h3 className="gx-hunt-title">Licence Pipeline</h3>
-            <p className="gx-hunt-sub">
-              Wednesday, 28 October 2026 · 16 dossiers · 4 intel banks · 29
-              licences in the 14-day window
-            </p>
-            {/* The reference draws the note's four views as chrome, not as a
-                control this block implements; a disabled button would lie
-                about an action a reader cannot take. */}
-            <div aria-label="Guild views" className="gx-hunt-pills">
-              {hunterPills.map((pill) => (
-                <span
-                  className={
-                    pill.active === true
-                      ? "gx-btn gx-btn-sm gx-hunt-pill-on"
-                      : "gx-btn gx-btn-outline gx-btn-sm"
-                  }
-                  key={pill.id}
-                >
-                  {pill.label}
-                </span>
-              ))}
-            </div>
-          </header>
-
-          <section aria-label="Readings" className="gx-hunt-readings">
-            {hunterReadings.map((reading) => (
-              <article
-                className="gx-card gx-card-outline gx-hunt-reading"
-                key={reading.id}
-              >
-                <div className="gx-card-header">
-                  <p className="gx-hunt-label">{reading.label}</p>
-                  <p className="gx-hunt-value" data-tone={reading.tone}>
-                    {reading.value}
-                  </p>
-                </div>
-                <div className="gx-card-content">
-                  <p className="gx-hunt-meta">{reading.meta}</p>
-                </div>
-              </article>
-            ))}
-          </section>
-
-          <section aria-label="Pipeline" className="gx-hunt-section">
-            <header className="gx-hunt-bar">
-              <h4 className="gx-hunt-h4">
-                <BlockIcon name="columns" size={11} />
-                Pipeline
-              </h4>
-              <div
-                aria-label="Stage filter"
-                className="gx-hunt-filter"
-                role="group"
-              >
-                {stageFilters.map((entry) => (
-                  <button
-                    aria-pressed={filter === entry.value}
-                    className={`gx-btn gx-btn-sm ${
-                      filter === entry.value
-                        ? "gx-btn-secondary"
-                        : "gx-btn-ghost"
-                    }`}
-                    key={entry.value}
-                    onClick={() => setFilter(entry.value)}
-                    type="button"
+          <article aria-label="Note" className="gx-note">
+            <header className="gx-note-head">
+              <h3 className="gx-note-title">Licence Pipeline</h3>
+              <p className="gx-note-meta">
+                Wednesday, 28 October 2026 · 16 dossiers · 4 intel banks · 29
+                licences in the 14-day window
+              </p>
+              {/* The reference draws the note's four views as chrome, not as a
+                  control this block implements; a disabled button would lie
+                  about an action a reader cannot take. */}
+              <div aria-label="Guild views" className="gx-hunt-pills">
+                {hunterPills.map((pill) => (
+                  <span
+                    className={
+                      pill.active === true
+                        ? "gx-btn gx-btn-sm gx-hunt-pill-on"
+                        : "gx-btn gx-btn-outline gx-btn-sm"
+                    }
+                    key={pill.id}
                   >
-                    {entry.label}
-                  </button>
+                    {pill.label}
+                  </span>
                 ))}
               </div>
             </header>
-            <div className="gx-hunt-stages">
-              {stages.map((stage) => (
-                <article
-                  className="gx-card gx-card-outline gx-hunt-stage"
-                  key={stage.id}
-                >
-                  <div className="gx-card-header">
-                    <p className="gx-hunt-label">
-                      <span
-                        aria-hidden="true"
-                        className="gx-hunt-stage-icon"
-                        data-tone={stage.tone}
-                      >
-                        <BlockIcon name={stage.icon} size={9} />
-                      </span>
-                      {stage.label}
-                    </p>
-                    <p className="gx-hunt-value">{stage.count}</p>
-                  </div>
-                  <div className="gx-card-content">
-                    <p className="gx-hunt-meta">{stage.meta}</p>
-                  </div>
-                </article>
+
+            <dl aria-label="Readings" className="gx-note-props">
+              {hunterReadings.map((reading) => (
+                <div className="gx-note-prop" key={reading.id}>
+                  <dt className="gx-note-prop-key">{reading.label}</dt>
+                  <dd className="gx-note-prop-value">
+                    <b data-tone={reading.tone}>{reading.value}</b>
+                    <span className="gx-note-prop-note">{reading.meta}</span>
+                  </dd>
+                </div>
               ))}
-            </div>
-          </section>
+            </dl>
 
-          <div className="gx-hunt-columns">
-            <section aria-label="Ready to deploy" className="gx-hunt-column">
-              <header className="gx-hunt-bar">
-                <h4 className="gx-hunt-h4">
-                  <span aria-hidden="true" className="gx-hunt-flame">
-                    <BlockIcon name="flame" size={11} />
-                  </span>
-                  Ready to deploy
-                </h4>
-                <Chip>{`${ready.length} staged`}</Chip>
+            <section aria-label="Pipeline" className="gx-note-section">
+              <header className="gx-note-heading">
+                <h4 className="gx-note-h">Pipeline</h4>
+                <div
+                  aria-label="Stage filter"
+                  className="gx-hunt-filter"
+                  role="group"
+                >
+                  {stageFilters.map((entry) => (
+                    <button
+                      aria-pressed={filter === entry.value}
+                      className={`gx-btn gx-btn-sm ${
+                        filter === entry.value
+                          ? "gx-btn-secondary"
+                          : "gx-btn-ghost"
+                      }`}
+                      key={entry.value}
+                      onClick={() => setFilter(entry.value)}
+                      type="button"
+                    >
+                      {entry.label}
+                    </button>
+                  ))}
+                </div>
               </header>
-              <div className="gx-hunt-cards">
-                {ready.map((dossier) => (
-                  <article
-                    className="gx-card gx-card-outline gx-hunt-card"
-                    key={dossier.id}
-                  >
-                    <div className="gx-card-header">
-                      <p className="gx-hunt-card-title">{dossier.title}</p>
-                    </div>
-                    <div className="gx-card-content gx-hunt-chips">
-                      <Chip>{dossier.bank}</Chip>
-                      <Chip tone="accent">{`Rank ${dossier.rank}`}</Chip>
-                      <Chip>{dossier.length}</Chip>
-                    </div>
-                  </article>
+              <ul className="gx-note-list">
+                {stages.map((stage) => (
+                  <li className="gx-note-row" key={stage.id}>
+                    <span
+                      aria-hidden="true"
+                      className="gx-note-row-icon"
+                      data-tone={stage.tone}
+                    >
+                      <BlockIcon name={stage.icon} size={10} />
+                    </span>
+                    <span className="gx-note-row-label">{stage.label}</span>
+                    <span className="gx-note-row-count">{stage.count}</span>
+                    <span className="gx-note-row-note">{stage.meta}</span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </section>
 
-            <section aria-label="Scheduled" className="gx-hunt-column">
-              <header className="gx-hunt-bar">
-                <h4 className="gx-hunt-h4">
-                  <span aria-hidden="true" className="gx-hunt-clock">
-                    <BlockIcon name="clock" size={11} />
-                  </span>
-                  Scheduled
-                </h4>
-                <Chip>0 queued</Chip>
-              </header>
-              <p className="gx-hunt-empty">
-                Nothing waiting for a slot. Seals land here between the exam and
-                the register.
-              </p>
-            </section>
-          </div>
+            <div className="gx-note-columns">
+              <section
+                aria-label="Ready to deploy"
+                className="gx-note-section gx-note-column"
+              >
+                <header className="gx-note-heading">
+                  <h4 className="gx-note-h">Ready to deploy</h4>
+                  <Chip>{`${ready.length} staged`}</Chip>
+                </header>
+                <ul className="gx-note-list gx-note-bullets">
+                  {ready.map((dossier) => (
+                    <li className="gx-note-bullet" key={dossier.id}>
+                      <span aria-hidden="true" className="gx-note-bullet-mark">
+                        •
+                      </span>
+                      <span className="gx-note-bullet-body">
+                        <span className="gx-note-link">{dossier.title}</span>
+                        <span className="gx-note-bullet-chips">
+                          <Chip>{dossier.bank}</Chip>
+                          <Chip tone="accent">{`Rank ${dossier.rank}`}</Chip>
+                          <Chip>{dossier.length}</Chip>
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
 
-          <section aria-label="Blocked" className="gx-hunt-section">
-            <header className="gx-hunt-bar">
-              <h4 className="gx-hunt-h4">
+              <section
+                aria-label="Scheduled"
+                className="gx-note-section gx-note-column"
+              >
+                <header className="gx-note-heading">
+                  <h4 className="gx-note-h">Scheduled</h4>
+                  <Chip>0 queued</Chip>
+                </header>
+                <p className="gx-note-muted">
+                  Nothing waiting for a slot. Seals land here between the exam
+                  and the register.
+                </p>
+              </section>
+            </div>
+
+            <aside aria-label="Blocked" className="gx-note-callout">
+              <p className="gx-note-callout-title">
                 <span aria-hidden="true" className="gx-hunt-block">
                   <BlockIcon name="alert" size={11} />
                 </span>
                 Blocked by a missing fact
-              </h4>
-              <Chip tone="warn">{`${blocked.length} need work`}</Chip>
-            </header>
-            <ul className="gx-hunt-blocked">
-              {blocked.map((dossier) => (
-                <li className="gx-hunt-blocked-row" key={dossier.id}>
-                  <span className="gx-hunt-blocked-title">{dossier.title}</span>
-                  <Chip>{dossier.bank}</Chip>
-                </li>
-              ))}
-            </ul>
-          </section>
+              </p>
+              <ul className="gx-note-callout-list">
+                {blocked.map((dossier) => (
+                  <li className="gx-note-bullet" key={dossier.id}>
+                    <span aria-hidden="true" className="gx-note-bullet-mark">
+                      •
+                    </span>
+                    <span className="gx-note-bullet-body">
+                      <span className="gx-note-link">{dossier.title}</span>
+                      <span className="gx-note-bullet-chips">
+                        <Chip>{dossier.bank}</Chip>
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </aside>
 
-          <section
-            aria-label="Renown"
-            className="gx-hunt-section gx-hunt-chart-section"
-          >
-            <header className="gx-hunt-bar">
-              <h4 className="gx-hunt-h4">
-                <span aria-hidden="true" className="gx-hunt-spark">
-                  <BlockIcon name="chart" size={11} />
-                </span>
-                Renown gained per day
-              </h4>
-              <Chip>{`${renownNights.length} snapshots`}</Chip>
-            </header>
-            <RenownChart
-              active={night}
-              nights={renownNights}
-              onPick={(day) => setNight(day)}
-            />
-            {/* The two figures on the plot are the readout; a reader who cannot
-                see the drawing still hears the night the axis picked. */}
-            <p aria-live="polite" className="gx-hunt-live">
-              {pickedReadout(night)}
-            </p>
-          </section>
+            <section aria-label="Renown" className="gx-note-section">
+              <header className="gx-note-heading">
+                <h4 className="gx-note-h">Renown gained per day</h4>
+                <Chip>{`${renownNights.length} snapshots`}</Chip>
+              </header>
+              <RenownChart
+                active={night}
+                nights={renownNights}
+                onPick={(day) => setNight(day)}
+              />
+              {/* The two figures on the plot are the readout; a reader who
+                  cannot see the drawing still hears the night the axis picked. */}
+              <p aria-live="polite" className="gx-hunt-live">
+                {pickedReadout(night)}
+              </p>
+            </section>
+          </article>
         </main>
       </div>
     </div>

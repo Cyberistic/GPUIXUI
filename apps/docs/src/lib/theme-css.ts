@@ -1,4 +1,5 @@
 import {
+  brandText,
   controlSizes,
   dividerOn,
   elevationLevels,
@@ -126,6 +127,10 @@ export const toCssVars = (theme: Theme): CssVars => ({
   ...switchVars(theme),
   // A filled box's hover and press are the theme's derived opaque fills, not an
   // alpha lift, so a preview shadowing a checked control must take them here.
+  // A link is written in the role `brandText` derives: the fill role is under
+  // the text floor on several surfaces, so the bridge publishes the measured
+  // colour rather than the raw brand.
+  "--brand-text": brandText(theme),
   "--primary-hover": filledHover(theme, "primary"),
   "--primary-pressed": filledPressed(theme, "primary"),
   "--secondary-hover": filledHover(theme, "secondary"),

@@ -3,7 +3,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { UserMenuDemo } from "./sidebar-demo";
 import {
+  ANCHOR_WIDTH,
   MENU_WIDTH,
+  SIDE_OFFSET,
   STAGE_INSET,
   STAGE_MENU_LEFT,
   STAGE_WIDTH,
@@ -61,10 +63,11 @@ describe("the user menu drawing", () => {
 
   it("opens beside the footer row, on its right", () => {
     // A sidebar footer's account menu belongs beside the row, over the page
-    // rather than over the panel it lives in: the trigger's right edge is the
-    // menu's left edge plus the gap. `align="end"` still governs the vertical
-    // relation, so the two share a bottom.
+    // rather than over the panel it lives in: the row's right edge plus the
+    // component's `sideOffset` is the menu's left edge. `align="end"` still
+    // governs the vertical relation, so the two share a bottom.
     expect(menu).toContain('align = "end"');
+    expect(menu).toContain("sideOffset={4}");
     expect(scene).toContain('data-align="end"');
     expect(scene).toContain('data-side="right"');
     expect(block('.gx-user-menu-content[data-side="right"]')).toContain(
@@ -76,23 +79,29 @@ describe("the user menu drawing", () => {
     // The trigger fills the anchor box, so its right edge is the menu's origin.
     expect(block(".gx-user-trigger")).toContain("width: 100%");
     expect(MENU_WIDTH).toBe(Number(/const MENU_WIDTH = (\d+)/.exec(menu)?.[1]));
+    expect(SIDE_OFFSET).toBe(4);
   });
 
   it("keeps the anchored menu inside the stage it belongs to", () => {
-    // The footer hands the account row to the stage's right, and the menu
-    // reaches one menu width back from the trigger's right edge.
-    expect(block(".gx-user-stage")).toContain("width: min(480px, 100%)");
-    expect(block(".gx-user-footer")).toContain("justify-content: flex-end");
+    // The row is the footer's first child, so the menu that opens beside it
+    // lands inside the stage. Its right edge is the check that matters: past
+    // the stage's inset the menu is clipped, which is how this drawing once
+    // shipped an invisible menu.
+    expect(block(".gx-user-stage")).toContain("width: min(520px, 100%)");
+    expect(block(".gx-user-stage")).toContain("overflow: hidden");
+    expect(block(".gx-user-footer")).toContain("justify-content: flex-start");
     expect(block(".gx-user-footer")).toContain("padding: 8px");
     expect(block(".gx-user-footer .gx-user-menu")).toContain("width: 240px");
 
-    expect(STAGE_WIDTH).toBe(480);
+    expect(STAGE_WIDTH).toBe(520);
     expect(STAGE_INSET).toBe(8);
-    expect(TRIGGER_RIGHT).toBe(STAGE_WIDTH - STAGE_INSET);
-    // The relation the anchor states: left + width = trigger's right edge.
-    expect(STAGE_MENU_LEFT + MENU_WIDTH).toBe(TRIGGER_RIGHT);
-    // And it does not reach past the stage's own inset.
-    expect(STAGE_MENU_LEFT).toBeGreaterThanOrEqual(STAGE_INSET);
+    expect(ANCHOR_WIDTH).toBe(240);
+    expect(TRIGGER_RIGHT).toBe(STAGE_INSET + ANCHOR_WIDTH);
+    // The relation the anchor states: the row's right edge plus the offset.
+    expect(STAGE_MENU_LEFT).toBe(TRIGGER_RIGHT + SIDE_OFFSET);
+    expect(STAGE_MENU_LEFT + MENU_WIDTH).toBeLessThanOrEqual(
+      STAGE_WIDTH - STAGE_INSET,
+    );
   });
 
   it("keeps the account anatomy the component documents", () => {

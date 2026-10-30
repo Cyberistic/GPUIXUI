@@ -3,24 +3,6 @@ title: Icons
 description: 83 monochrome icons and their size scale
 ---
 
-## Where these come from
-
-The geometry is [Lucide](https://lucide.dev)'s, on its 24×24 grid with a 2px
-stroke, used under the ISC licence and attributed in `LICENSES/`. Lucide ships
-React components; this package ships the same shapes as plain markup strings,
-because the runtime paints an icon as data: `<svg source>` takes the geometry and
-tints it with the element's own `style.color`.
-
-That is the whole contract. An icon carries no colour, no size and no state of its
-own — one markup serves every theme and every platform look — and the wrapper
-fixes the grid and the two paint values a monochrome tint can use (`fill: none`,
-`stroke: #000`, which the runtime replaces with the token you pass). Nothing is
-traced or redrawn: a shape that leaves the grid, or one that carries a colour
-literal, fails `registry.test.ts` rather than shipping.
-
-Adding an icon is two edits: the name in `names.ts` and its markup in
-`registry.ts`. TypeScript refuses the pair if one is missing.
-
 ## Usage
 
 ```tsx
@@ -36,6 +18,10 @@ const theme = useTheme();
 <Icon name="warning" color={theme.colors.destructive} size="md" label="Overdue" />;
 ```
 
+An icon is data: the runtime paints it from `<svg source>` and tints it with the
+element's own `style.color`. It carries no colour, size or state of its own, so
+one markup serves every theme and platform look.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -49,16 +35,11 @@ const theme = useTheme();
 | `motion` | `MotionProps` | none | a tween for the icon's own box: `width`/`height` size the path and `left`/`top` keep it centred, because the runtime has no `transform` |
 | `style` | `StyleDesc` | none | extra style merged over the icon's own, last |
 
-## Where these come from
-
-The geometry is copied from [Lucide](https://lucide.dev) `lucide-static@1.61.0`
-on its 24x24 grid, under ISC and MIT; the notice that redistribution must carry
-is [`LICENSES/lucide.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/LICENSES/lucide.md).
-`star-filled` and `sort-asc` are the package's own. `LICENSES/` is the ledger for
-every reference the library takes from.
-
 ## Limitations
 
 - Monochrome only: no two-tone, duotone or brand marks.
-- No spin animation: `rotation` is a static turn, because an animated one would need a frame-driven re-render. Use `Spinner` for a moving mark. A `motion` tween moves and resizes the box; it does not rotate the path — write the turn into `rotation` and animate around it.
+- A static turn, not a spin: use `Spinner` for a moving mark.
 - No icon font and no ligatures.
+
+The geometry is Lucide's (`lucide-static@1.61.0`, ISC and MIT), recorded in
+`LICENSES/lucide.md`; `star-filled` and `sort-asc` are the package's own.

@@ -147,7 +147,7 @@ export const Shimmer = ({
   children,
   active = true,
   durationMs = 2_000,
-  accent = "primary",
+  accent = "foreground",
   role = "body",
   reducedMotion,
   label,
@@ -177,7 +177,10 @@ export const Shimmer = ({
   const lines =
     text === undefined
       ? []
-      : shimmerLines(text, theme.colors.foreground, ink, frame);
+      : // The resting ink is the muted role and the sweep is the accent, so a
+        // neutral run reads the way shadcn's does: grey text a bright band
+        // passes over. The accent is the sheen, not the colour of the copy.
+        shimmerLines(text, theme.colors.mutedForeground, ink, frame);
 
   return (
     <div

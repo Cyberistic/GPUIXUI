@@ -122,6 +122,26 @@ describe("the component previews", () => {
     );
   });
 
+  it("mounts each drawing as its own element, not as a call", () => {
+    // Bug guarded: the preview called `demo.render()`, so the drawing's hooks
+    // ran as `ComponentPreview`'s own. Navigating from one data page to the
+    // next then opened the same component with a different hook list and threw
+    // React's hook-order error (#300), which left the route crashed until a
+    // refresh remounted it. A demo is an element; a call is that bug.
+    for (const file of [
+      "apps/docs/src/components/docs/component-preview.tsx",
+      "apps/docs/src/components/landing/landing.tsx",
+    ]) {
+      // The rule is about code, so the comment that explains it is stripped
+      // first: a guard that trips on its own reasoning guards nothing.
+      const code = read(file)
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/^\s*\/\/.*$/gm, "");
+      expect(code, file).not.toMatch(/demo\.render\(\)/);
+      expect(code, file).toContain("<Drawing />");
+    }
+  });
+
   it("carry the native source a reader copies, not an empty code tab", () => {
     const empty = Object.entries(demos)
       .filter(([, demo]) => demo.source.trim().length === 0)

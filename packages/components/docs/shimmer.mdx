@@ -40,7 +40,7 @@ and says what it is:
 
 - **A string child** is split into words and code points. Each code point takes
   one colour sampled from the same triangular profile the band uses, blending
-  from the theme's `foreground` toward the chosen accent. The sheen is discrete
+  from the theme's `mutedForeground` toward the chosen accent. The sheen is discrete
   at glyph resolution, not a continuous fill.
 - **Any other child** keeps the band: `SHIMMER_STEPS` (16) strips, each a
   two-stop ramp between neighbouring samples of that profile, stepping once per
@@ -57,7 +57,7 @@ closest the runtime gets to it.
 | `children` | `ReactNode` | none | a string is inked per code point; any other child keeps the surface band |
 | `active` | `boolean` | `true` | whether the profile runs; false rests the text and paints no band |
 | `durationMs` | `number` | `2000` | one complete sweep; an unusable value falls back to two seconds |
-| `accent` | `"foreground" \| "primary" \| "muted"` | `"primary"` | the role the highlight paints; a text run blends toward it, a band paints it at a low alpha |
+| `accent` | `"foreground" \| "primary" \| "muted"` | `"foreground"` | the role the highlight paints; a text run blends toward it from the muted role, a band paints it at a low alpha |
 | `role` | text role | `"body"` | the typographic role a text run paints |
 | `label` | `string` | none | an accessible name; when set, the surface is a `status` node, and a blank name is decoration |
 | `reducedMotion` | `boolean` | the motion provider | rests the text, paints no band and schedules no interval |

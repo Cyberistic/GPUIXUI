@@ -3,11 +3,6 @@ title: Dashboard
 description: An activity dashboard with stats and charts
 ---
 
-A dashboard recipe for the **Hunter Association** that composes the most parts
-of a window: a `Card` grid of stats, `Progress` rows for projects and apps,
-`Badge` deltas, a `SearchInput`, `Icon` glyphs, and the `Stack`/`Text` layout
-for the sidebar and top bar.
-
 <BlockPreview name="dashboard-01" />
 
 ## Composition
@@ -23,18 +18,11 @@ The block composes:
 
 ## Charts
 
-The three charts are the package's: `BarChart` for the day's hours,
-`DonutChart` for the token split and `StackedBar` for the hourly series. Each
-series is one `<svg>` layer tinted through `style.color`, because the runtime
-paints an `<svg source>` as **one tint** — measured by the playground's
-`content-surfaces`, a shape's own `fill` never reaches the frame, so a
-multi-series chart is one stacked element per colour. The colours are the theme's
-categorical [data series](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md#data-series), never a palette of the
-recipe's own. The parts are documented on
-[Charts](/data-display/charts).
+`BarChart`, `DonutChart` and `StackedBar` are the package's, documented on
+[Charts](/data-display/charts). The runtime paints an `<svg source>` as **one tint**,
+so a multi-series chart is one stacked element per colour and the colours are
+the theme's own series.
 
-The preview above is a browser reproduction of the recipe's geometry and
-palette, because a browser cannot mount the native components: its bars, donut
-and stacked columns are drawn by hand in the theme's series, read through
-`--series-1` to `--series-5`, which is why the platform and look switch repaints
-the marks and every legend swatch together.
+The preview is a browser reproduction, `stacked` the way the recipe is: its
+marks are drawn by hand in `--series-1` to `--series-5`, so the look switch
+repaints them together.

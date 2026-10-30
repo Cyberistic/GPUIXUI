@@ -3,11 +3,6 @@ title: Command centre
 description: A command palette over a dimmed page
 ---
 
-The command centre is a modal over a dimmed page. The panel is open in the
-preview: an issue chip names the context, the field carries a visible caret, and
-six actions wait behind it. The background is the block's own surface, blurred
-and dimmed, not the page around it.
-
 <BlockPreview name="command-centre-01" />
 
 ## Composition
@@ -18,17 +13,3 @@ The block composes:
   `@gpuixui/components/command-menu`
 - `Badge` from `@gpuixui/components/badge`
 - `Stack` and `Text` from `@gpuixui/primitives`
-
-## The actions
-
-Each row leads with an icon, names itself, and aligns its keycaps right:
-`Assign to… A`, `Assign to me I`, `Set status as… S`, `Prioritize… P`,
-`Change estimate to… ⌘E` (two caps) and `Add label… L`. The highlighted row is
-the accent wash plus a 2px inset bar on its left edge, so moving the highlight
-never changes a row's width.
-
-The preview follows the palette's rules in the browser: typing filters the list,
-`↑` and `↓` move the highlight and wrap at both ends, `Enter` prints
-`Ran: <label>` in the reserved footer line, and `Esc` clears the query back to
-the opening highlight. The list keeps a fixed height, so a query that matches one
-row does not resize the panel.

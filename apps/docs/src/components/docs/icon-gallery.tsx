@@ -78,7 +78,7 @@ function IconTile({ icon }: { readonly icon: GalleryIcon }) {
           className="block size-6"
           dangerouslySetInnerHTML={{ __html: icon.markup }}
         />
-        <figcaption className="font-mono text-[0.65rem] text-muted-foreground">
+        <figcaption className="max-w-full truncate font-mono text-[0.65rem] text-muted-foreground">
           {icon.name}
         </figcaption>
       </figure>

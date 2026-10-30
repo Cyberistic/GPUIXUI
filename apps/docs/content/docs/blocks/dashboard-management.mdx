@@ -3,12 +3,6 @@ title: Dashboard management
 description: A dense three-column service console
 ---
 
-A management console recipe for **atlas-edge**: three columns of real parts on
-one page. The first column carries the service's health, a command palette, a
-deployment failure and a chunked upload; the second the compute runtime, the
-toast stack, the deploy table and the way into a failure; the third a menu, an
-empty state and the API keys.
-
 <BlockPreview name="dashboard-management-01" />
 
 ## Composition
@@ -29,19 +23,3 @@ The block composes:
 - `Button`, `Progress`, `RadioGroup`, `Stack` and `Text` from
   `@gpuixui/primitives`
 - `useTheme` from `@gpuixui/tokens/react`
-
-## The state each panel owns
-
-The runtime radios select one card at a time; the toast `×` dismisses that card
-and leaves the reserved stack in place; a deployment row selects and paints the
-chosen row; each API-key copy button acknowledges with "Copied" for a second;
-and the upload's Cancel turns the bar into a cancelled, resumable row. The
-preview shows those states in the browser — the shipped block renders through
-GPUix, not the DOM.
-
-## From three columns to one
-
-The grid is three equal columns at desktop width, two under 1200px and one under
-760px. Every state keeps its box: a selection paints a fill rather than an edge,
-the toast stack reserves both cards, and the copy and upload actions reserve
-their labels, so pressing a control never moves the page.
