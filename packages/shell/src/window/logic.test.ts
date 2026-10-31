@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   hasTrafficLights,
   moveSelection,
+  visibleIds,
   nativeWindowOptions,
   TOOLBAR_HEIGHT,
   toolbarInset,
@@ -84,5 +85,17 @@ describe("the source list's keyboard", () => {
 
   it("selects nothing in an empty list", () => {
     expect(Option.isNone(moveSelection([], "inbox", "down"))).toBe(true);
+  });
+});
+
+describe("visibleIds", () => {
+  const sections = [
+    { id: "a", items: [{ id: "one" }, { id: "two" }] },
+    { id: "b", items: [{ id: "three" }] },
+  ];
+
+  it("lists every row of an open section and none of a folded one", () => {
+    expect(visibleIds(sections, new Set())).toEqual(["one", "two", "three"]);
+    expect(visibleIds(sections, new Set(["a"]))).toEqual(["three"]);
   });
 });

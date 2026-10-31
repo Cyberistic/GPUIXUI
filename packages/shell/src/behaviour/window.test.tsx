@@ -5,7 +5,9 @@
  * window's top edge (the lights then float over nothing), content that starts
  * above the toolbar's bottom edge, a source-list row that paints a hover wash
  * Mac sidebars never paint, and an arrow key that moves focus without moving
- * the choice.
+ * the choice. Plan 731: a sidebar fixed at its width, a section that cannot
+ * fold (or folds and leaves its rows on the arrows' path), and a list that
+ * ignores a typed label.
  */
 
 import { readFileSync } from "node:fs";
@@ -32,7 +34,11 @@ const SECTIONS: ReadonlyArray<SourceListSection> = [
   {
     id: "folders",
     title: "Folders",
-    items: [{ id: "archive", label: "Archive", icon: "folder" }],
+    collapsible: true,
+    items: [
+      { id: "archive", label: "Archive", icon: "folder" },
+      { id: "junk", label: "Junk", icon: "folder" },
+    ],
   },
 ];
 
@@ -127,6 +133,37 @@ describe("the window's anatomy", () => {
   });
 });
 
+describe("the sidebar's width", () => {
+  it("drags from the sidebar's hairline, clamped to its bounds", () => {
+    const root = render();
+    const seam = boundsOf(root, "window-sidebar-divider");
+    const x = seam.x + seam.width / 2;
+    const y = seam.y + seam.height / 2;
+    root.renderer.nativeSimulateMouseDown(x, y);
+    root.renderer.nativeSimulateMouseMove(x + 60, y, 0);
+    root.renderer.nativeSimulateMouseUp(x + 60, y);
+    root.renderer.flush();
+    expect(boundsOf(root, "toolbar").x).toBe(280);
+
+    root.renderer.nativeSimulateMouseDown(x + 60, y);
+    root.renderer.nativeSimulateMouseMove(x + 600, y, 0);
+    root.renderer.nativeSimulateMouseUp(x + 600, y);
+    root.renderer.flush();
+    expect(boundsOf(root, "toolbar").x).toBe(360);
+  });
+
+  it("answers the arrows and Home from the keyboard", () => {
+    const root = render();
+    const seam = element(root, "window-sidebar-divider");
+    root.renderer.nativeSimulateKeyDown(seam.id, "home");
+    root.renderer.flush();
+    expect(boundsOf(root, "toolbar").x).toBe(180);
+    root.renderer.nativeSimulateKeyDown(seam.id, "right");
+    root.renderer.flush();
+    expect(boundsOf(root, "toolbar").x).toBe(196);
+  });
+});
+
 describe("the source list", () => {
   it("moves the choice with the arrow keys", () => {
     const root = render();
@@ -143,7 +180,38 @@ describe("the source list", () => {
       "end",
     );
     root.renderer.flush();
-    expect(element(root, "source-archive").customProps?.["aria-selected"]).toBe(
+    expect(element(root, "source-junk").customProps?.["aria-selected"]).toBe(
+      true,
+    );
+  });
+
+  it("jumps to the row whose label starts with the typed letters", () => {
+    const root = render();
+    root.renderer.nativeSimulateKeyDown(element(root, "source-inbox").id, "j");
+    root.renderer.flush();
+    expect(element(root, "source-junk").customProps?.["aria-selected"]).toBe(
+      true,
+    );
+  });
+
+  it("folds a section, and its rows leave the arrows' path", () => {
+    const root = render();
+    const header = boundsOf(root, "source-section-folders");
+    root.renderer.nativeSimulateClick(
+      header.x + 4,
+      header.y + header.height / 2,
+    );
+    root.renderer.flush();
+    expect(
+      element(root, "source-section-folders").customProps?.["aria-expanded"],
+    ).toBe(false);
+    expect(root.renderer.findByTestId("source-archive") ?? null).toBeNull();
+    root.renderer.nativeSimulateKeyDown(
+      element(root, "source-inbox").id,
+      "end",
+    );
+    root.renderer.flush();
+    expect(element(root, "source-drafts").customProps?.["aria-selected"]).toBe(
       true,
     );
   });

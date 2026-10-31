@@ -89,3 +89,19 @@ export const moveSelection = (
         : Math.min(last, Math.max(0, at + (key === "down" ? 1 : -1)));
   return Arr.get(ids, index);
 };
+
+/**
+ * The rows a reader can reach: every item of an open section, none of a folded
+ * one. The arrows and type-ahead walk this list, so a folded place is skipped
+ * rather than chosen out of sight.
+ */
+export const visibleIds = (
+  sections: ReadonlyArray<{
+    readonly id: string;
+    readonly items: ReadonlyArray<{ readonly id: string }>;
+  }>,
+  folded: ReadonlySet<string>,
+): ReadonlyArray<string> =>
+  Arr.flatMap(sections, (section) =>
+    folded.has(section.id) ? [] : Arr.map(section.items, (item) => item.id),
+  );

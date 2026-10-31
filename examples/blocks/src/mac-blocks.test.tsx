@@ -7,6 +7,7 @@
  * menu-bar switch that leaves the status line stale; an agent whose Send adds
  * nothing; a calendar switch that keeps the calendar's events; a welcome whose
  * Continue does not advance; a viewer whose thumbnail does not open the HUD.
+ * Plan 731: overlapping events split into equal slivers instead of cascading.
  */
 import { createTestRoot } from "@gpuix/react/testing";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
@@ -110,6 +111,22 @@ describe("the Mac-app blocks", () => {
     press(r, "calendar-arena");
     expect(has(r, "event-e3")).toBe(false);
     expect(has(r, "event-e1")).toBe(true);
+  });
+
+  it("calendar: an overlapping event cascades, keeping most of the column", () => {
+    const r = mount(<CalendarBlock platform="darwin" />);
+    const box = (id: string) => {
+      const b = r.getElementBounds(r.findByTestId(id)?.id ?? -1);
+      expect(b, id).not.toBeNull();
+      return b!;
+    };
+    const day = box("day-0");
+    const first = box("event-e1");
+    const second = box("event-e2");
+    // e2 overlaps e1: it starts a third of the way in and lies over it.
+    expect(second.x).toBeGreaterThan(first.x);
+    expect(second.width).toBeGreaterThan(day.width / 2);
+    expect(first.width).toBeGreaterThan(day.width * 0.9);
   });
 
   it("welcome: Continue advances, and Import calls the app", () => {

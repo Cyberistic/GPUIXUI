@@ -22,6 +22,9 @@ each item landing as its own commit with a test that can fail.
 | 4 | Deepen the Mac blocks | **done**: the agent's reply streams word by word with Stop; the viewer's photos are composed scenes (sky, sun, hills) instead of flat swatches; calendar events carry their time and clamp to two lines; the notes editor fills its pane; captures re-taken. **Kept**: the launcher keeps its own ranked list rather than `CommandMenu` (the ranking is its point and is tested) |
 | 5 | A Hunter License block | **done**: `examples/blocks/src/license/` — the Association's registry as a Mac window: source list by rank and specialty, the licence card with the Gon mark, rank stars and number, privileges as switches; logic and renderer tests, docs page, capture, landing tile |
 | 6 | By-eye pass in real windows | every Mac block opened natively and captured; needs the macOS privacy prompt answered |
+| 7 | Resizable window sidebar | **done**: `Window` drags and keys its sidebar between `sidebarMinWidth`/`sidebarMaxWidth` (180/360) through the dock's `Divider` in its new `seam` mode — floats over the hairline, paints nothing; `onSidebarWidthChange` persists it (`shell/src/behaviour/window.test.tsx`) |
+| 8 | `SourceList` folding and type-ahead | **done**: `collapsible`/`defaultCollapsed` sections fold from a disclosure header and leave the arrows' path (`visibleIds`); typed letters jump through primitives' `useTypeAhead`, now exported. Used by the License and Pipeline blocks |
+| 9 | Calendar overlaps | **done**: Calendar.app's cascade — a later lane starts part-way in and lies over the earlier with a hairline edge, so no event is an equal sliver; hour grid and labels; each calendar its own wash and ink (`mac-blocks.test.tsx`) |
 
 ## STOP
 

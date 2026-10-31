@@ -38,6 +38,13 @@ export interface DividerProps {
   /** The divider's accessible name. */
   readonly label?: string;
   readonly disabled?: boolean;
+  /**
+   * Float over the leading pane's trailing edge instead of taking a gap: no
+   * fill, no width in the flow and no pressed highlight — AppKit's split-view
+   * seam, where the pane's own hairline is all that shows. The parent must be
+   * positioned.
+   */
+  readonly seam?: boolean;
   /** Stable locator for automation. */
   readonly testId?: string;
   /** A press armed the capture; the parent records its starting size. */
@@ -56,6 +63,7 @@ export const Divider = ({
   valueText,
   label,
   disabled,
+  seam = false,
   testId,
   onDragStart,
   onDragDelta,
@@ -74,12 +82,15 @@ export const Divider = ({
       ? { width: DIVIDER_WIDTH, cursor: "col-resize" }
       : { height: DIVIDER_WIDTH, cursor: "row-resize" };
 
+  const placement: StyleDesc = seam
+    ? { position: "absolute", top: 0, right: 0, bottom: 0 }
+    : mergeStyle(mergeStyle(recipeStyle(DIVIDER, theme), geometry), {
+        flexShrink: 0,
+        flexGrow: 0,
+        position: "relative",
+      });
   const style = mergeStyle(
-    mergeStyle(mergeStyle(recipeStyle(DIVIDER, theme), geometry), {
-      flexShrink: 0,
-      flexGrow: 0,
-      position: "relative",
-    }),
+    mergeStyle(placement, geometry),
     controlFocusRing(theme, { disabled }),
   );
 
@@ -129,13 +140,15 @@ export const Divider = ({
         if (key !== undefined && isDividerKey(key)) onKey(key);
       }}
     >
-      <div
-        style={highlight}
-        motion={{
-          animate: { opacity: dragging ? 1 : 0 },
-          transition: motionTiming("fast", { phase: "enter" }),
-        }}
-      />
+      {seam ? null : (
+        <div
+          style={highlight}
+          motion={{
+            animate: { opacity: dragging ? 1 : 0 },
+            transition: motionTiming("fast", { phase: "enter" }),
+          }}
+        />
+      )}
     </div>
   );
 };

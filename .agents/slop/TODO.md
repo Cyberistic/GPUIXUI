@@ -24881,4 +24881,4 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` 729 — eight Mac-app blocks (notes, settings, launcher, menubar, agent, calendar, welcome, viewer)
 `[x]` 730 — measured proof numbers (`apps/docs/src/lib/proof.json`)
 `[x]` 727 — the landing rebuilt on native captures and measured numbers
-`[~]` 731 — launch quality pass: account menu, press routing, `Select` pop-up, deeper Mac blocks, Hunter License block done; by-eye pass in real windows pending
+`[~]` 731 — launch quality pass: account menu, press routing, `Select` pop-up, deeper Mac blocks, Hunter License block, resizable sidebar, source-list folding and type-ahead, calendar cascade done; by-eye pass in real windows pending

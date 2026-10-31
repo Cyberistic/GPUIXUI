@@ -141,6 +141,7 @@ export const License = ({ platform }: { readonly platform?: PlatformName }) => {
             {
               id: "specialties",
               title: "Specialties",
+              collapsible: true,
               items: Arr.map(specialties, (specialty) => ({
                 id: specialty,
                 label: specialty,

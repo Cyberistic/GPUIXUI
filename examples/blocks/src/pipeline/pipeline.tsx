@@ -219,6 +219,7 @@ export const Pipeline = ({
             {
               id: "projects",
               title: "Projects",
+              collapsible: true,
               items: Arr.map(projects, (project) => ({
                 id: project,
                 label: project,
