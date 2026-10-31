@@ -268,9 +268,12 @@ const u32 = (n: number) => [
   (n >>> 8) & 0xff,
   n & 0xff,
 ];
+/** The chunk tags: "MThd" and "MTrk". */
+const MTHD = [0x4d, 0x54, 0x68, 0x64];
+const MTRK = [0x4d, 0x54, 0x72, 0x6b];
 const body = track();
 const file = Uint8Array.from([
-  ...[0x4d, 0x54, 0x68, 0x64],
+  ...MTHD,
   ...u32(6),
   0,
   0,
@@ -278,7 +281,7 @@ const file = Uint8Array.from([
   1,
   (PPQ >> 8) & 0xff,
   PPQ & 0xff,
-  ...[0x4d, 0x54, 0x72, 0x6b],
+  ...MTRK,
   ...u32(body.length),
   ...body,
 ]);
