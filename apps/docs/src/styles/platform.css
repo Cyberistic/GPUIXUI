@@ -272,3 +272,108 @@
   font-size: 11px;
   font-weight: 600;
 }
+
+/* ---- the Mac controls (plan 725) ----------------------------------------- */
+.gx-mac-scene {
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--foreground);
+}
+
+.gx-segmented {
+  display: flex;
+  gap: 2px;
+  width: 300px;
+  padding: 2px;
+  border-radius: var(--radius);
+  background: var(--muted);
+}
+
+.gx-segmented button {
+  flex: 1;
+  height: var(--control-height-sm);
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+}
+
+.gx-segmented button[aria-checked="true"] {
+  background: var(--background);
+  box-shadow: var(--elevation-sm);
+}
+
+.gx-mac-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 260px;
+}
+
+.gx-disclosure button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  font-weight: 600;
+}
+
+.gx-disclosure button span {
+  color: var(--muted-foreground);
+  font-size: 10px;
+}
+
+.gx-disclosure p {
+  margin: 2px 0 0 16px;
+  color: var(--muted-foreground);
+}
+
+.gx-inset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 400px;
+}
+
+.gx-inset-title {
+  padding-left: 4px;
+  font-weight: 600;
+}
+
+.gx-inset-box {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.gx-inset-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+  padding: 6px 12px;
+}
+
+.gx-inset-row + .gx-inset-row {
+  border-top: 1px solid var(--border);
+}
+
+.gx-inset-row small {
+  display: block;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-inset-switch {
+  width: 38px;
+  height: 22px;
+  border-radius: 9999px;
+  background: var(--switch-off, var(--muted));
+}
+
+.gx-inset-switch[data-on] {
+  background: var(--switch-on, var(--primary));
+}

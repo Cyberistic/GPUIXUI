@@ -159,7 +159,10 @@ export const surfaceBudget = {
   // 209 → 210 for the classic theme-toggle geometry
   // (`theme-toggler/glyph.ts`): the crossover's frames are a rule of their own
   // rather than arithmetic inside the component.
-  modules: 212,
+  // 212 → 215 for the three Mac controls (plan 725): `segmented-control.tsx`,
+  // `disclosure.tsx` and `inset-group.tsx`, each one family over parts the
+  // graph already carried.
+  modules: 215,
 
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
@@ -235,7 +238,9 @@ export const surfaceBudget = {
   // 1 491 KiB measured with that picker **and** the same wave's chat, overlay
   // and docs fixes in one tree — the branch figures were each taken alone —
   // so the ceiling moved 1490 → 1500 KiB.
-  bytes: 1520 * 1024,
+  // 1 525 KiB measured 2026-10-31 with the three Mac controls (plan 725), past
+  // the 1520 KiB ceiling: 1520 → 1540 KiB for the next family's headroom.
+  bytes: 1540 * 1024,
   // 210 → 212 and 1500 → 1510 KiB for the Shimmer effect: `shimmer.tsx`, its
   // `shimmer/logic.ts` rule, `gradient/logic.ts` (the ramp a strip reads) and the
   // public `index` row that exports it. Measured 1 541 462 bytes in the tree it

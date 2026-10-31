@@ -1,0 +1,51 @@
+---
+title: Inset group
+description: A settings form's grouped rows, as System Settings draws them
+---
+
+<ComponentPreview name="inset-group-demo" />
+
+## Usage
+
+```tsx
+import { InsetGroup, InsetGroupRow } from "@gpuixui/components/inset-group";
+
+<InsetGroup title="Notifications">
+  <InsetGroupRow
+    label="Show previews"
+    description="Message text on the lock screen"
+    control={<Switch label="Show previews" />}
+  />
+  <InsetGroupRow label="Badge app icon" control={<Switch label="Badge app icon" />} />
+</InsetGroup>;
+```
+
+## Composition
+
+```text
+InsetGroup
+├── title (optional)
+└── box — rounded card, hairline edge
+    └── InsetGroupRow × n — label leading, control trailing, a hairline between rows
+```
+
+## API
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `InsetGroup` | `title` | `string` | — |
+| `InsetGroup` | `children` | `ReactNode` — the `InsetGroupRow`s | — |
+| `InsetGroupRow` | `label` | `string` | — |
+| `InsetGroupRow` | `description` | `string` — a secondary line | — |
+| `InsetGroupRow` | `control` | `ReactNode` — a switch, a select, a segmented control | — |
+
+## Accessibility
+
+- The group's `title` is its accessible name; each row's label names the row,
+  and its control carries its own label (a `Switch` needs `label`).
+
+## Related
+
+- **Select** — the Mac's pop-up button: a trigger that shows its value.
+- **Segmented control** — a few choices in one row.
+- **Switch** — an on/off row's control.

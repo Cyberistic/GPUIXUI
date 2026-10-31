@@ -15,6 +15,9 @@ import type { ComponentType } from "react";
 import { AccordionExample } from "./accordion.example.js";
 import { AlertExample } from "./alert.example.js";
 import { AspectRatioExample } from "./aspect-ratio.example.js";
+import { DisclosureExample } from "./disclosure.example.js";
+import { InsetGroupExample } from "./inset-group.example.js";
+import { SegmentedControlExample } from "./segmented-control.example.js";
 import { AutoHeightExample } from "./auto-height.example.js";
 import { AvatarExample } from "./avatar.example.js";
 import { AvatarGroupExample } from "./avatar-group.example.js";
@@ -111,6 +114,9 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   accordion: AccordionExample,
   alert: AlertExample,
   "aspect-ratio": AspectRatioExample,
+  disclosure: DisclosureExample,
+  "inset-group": InsetGroupExample,
+  "segmented-control": SegmentedControlExample,
   "auto-height": AutoHeightExample,
   avatar: AvatarExample,
   "avatar-group": AvatarGroupExample,

@@ -5,7 +5,7 @@
 | Owner | `components` (`packages/components`) |
 | Depends on | `724` (darwin tokens and hover policy) |
 | Feeds | `728`, `729` |
-| Status | planned |
+| Status | landed 2026-10-31 |
 
 ## Why
 

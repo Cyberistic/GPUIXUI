@@ -1,0 +1,58 @@
+---
+title: Segmented control
+description: One choice among a few, as a Mac view switcher
+---
+
+<ComponentPreview name="segmented-control-demo" />
+
+## Usage
+
+```tsx
+import { SegmentedControl } from "@gpuixui/components/segmented-control";
+
+const [view, setView] = useState("list");
+
+<SegmentedControl
+  label="View"
+  value={view}
+  onValueChange={setView}
+  items={[
+    { value: "list", label: "List", icon: "list" },
+    { value: "board", label: "Board", icon: "grid" },
+  ]}
+/>;
+```
+
+## Composition
+
+```text
+SegmentedControl (the muted track, one tab stop)
+└── segment × n (the primitives' action; the chosen one raised)
+```
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `label` | `string` — the group's accessible name | — |
+| `items` | `{ value, label, icon?, disabled? }[]` | — |
+| `value` | `string` — the chosen segment | — |
+| `onValueChange` | `(value: string) => void` | — |
+| `size` | `"sm" \| "md"` | `"sm"` |
+
+## Behaviour
+
+- The arrow keys **select** as they move and stop at either end, skipping a
+  disabled segment — a Mac segmented control's rule, not a tab list's. Focus
+  follows the choice.
+- Segments share the track's width equally.
+
+## Limitations
+
+- 0.11.0 publishes no `aria-checked` reading; the chosen segment is the group's
+  one tab stop.
+
+## Related
+
+- **Toggle group** — modes that switch independently, where arrows only move focus.
+- **Tabs** — a choice that also swaps a panel.

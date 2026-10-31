@@ -119,3 +119,6 @@ export {
   useTheme,
   type Theme,
 } from "./internal/theme.js";
+export * from "./segmented-control.js";
+export * from "./disclosure.js";
+export * from "./inset-group.js";

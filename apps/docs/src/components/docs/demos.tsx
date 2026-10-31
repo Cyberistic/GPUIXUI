@@ -311,6 +311,14 @@ import { BoxDemo, boxDemoSource } from "./box-demo";
 import { ButtonGroupDemo, buttonGroupDemoSource } from "./button-group-demo";
 import { AspectRatioDemo, aspectRatioDemoSource } from "./aspect-ratio-demo";
 import {
+  DisclosureDemo,
+  disclosureDemoSource,
+  InsetGroupDemo,
+  insetGroupDemoSource,
+  SegmentedControlDemo,
+  segmentedControlDemoSource,
+} from "./mac-controls-demo";
+import {
   CheckboxGroupDemo,
   checkboxGroupDemoSource,
 } from "./checkbox-group-demo";
@@ -3348,6 +3356,12 @@ export const demos: Readonly<Record<string, Demo>> = {
     render: PreviewCardDemo,
     source: previewCardDemoSource,
   },
+  "segmented-control-demo": {
+    render: SegmentedControlDemo,
+    source: segmentedControlDemoSource,
+  },
+  "disclosure-demo": { render: DisclosureDemo, source: disclosureDemoSource },
+  "inset-group-demo": { render: InsetGroupDemo, source: insetGroupDemoSource },
   "aspect-ratio-demo": {
     render: AspectRatioDemo,
     source: aspectRatioDemoSource,

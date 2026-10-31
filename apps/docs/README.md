@@ -291,6 +291,7 @@ src/components/docs/examples-index.tsx    The generated registry on /examples
 src/components/docs/api-reference.tsx     The entry-point table and the symbol index
 src/components/docs/platform-toggle.tsx   The platform and palette switch, and the shared preview provider
 src/components/docs/theme-editor.tsx      The live token editor, its audit readout and the preview panel
+src/components/docs/mac-controls-demo.tsx Drawings of the segmented control, the disclosure and the inset group
 src/components/docs/platform-demos.tsx    Drawings of the native window and the system path panel
 src/components/docs/window-frame.tsx      The browser drawing of the shell's Window, worn by every block
 src/components/docs/personalization-demo.tsx  Windows 7's Personalization screen, rebuilt from the Aero look's roles

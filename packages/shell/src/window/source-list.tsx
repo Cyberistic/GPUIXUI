@@ -24,7 +24,7 @@ import { Icon, type IconName } from "@gpuixui/icons";
 import { isPlainKey } from "@gpuixui/primitives";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { textStyle, useTheme } from "../theme.js";
 import { moveSelection, type SourceListKey } from "./logic.js";
 
@@ -83,10 +83,20 @@ export const SourceList = ({
     Arr.map(section.items, (item) => item.id),
   );
 
-  const choose = (id: string): void => {
-    onValueChange(id);
-    const row = rows.current.get(id);
+  // The tab stop moves with the choice; focus follows once the new stop has
+  // rendered, or the runtime focuses the row that is leaving it.
+  const follow = useRef(false);
+
+  useEffect(() => {
+    if (!follow.current) return;
+    follow.current = false;
+    const row = rows.current.get(value);
     if (row !== undefined) renderer?.focusElement?.(row.id);
+  }, [value, renderer]);
+
+  const choose = (id: string): void => {
+    follow.current = true;
+    onValueChange(id);
   };
 
   const onKeyDown = (event: KeyEvent): void =>

@@ -1,0 +1,43 @@
+---
+title: Disclosure
+description: An inspector section headed by a triangle
+---
+
+<ComponentPreview name="disclosure-demo" />
+
+## Usage
+
+```tsx
+import { Disclosure } from "@gpuixui/components/disclosure";
+
+<Disclosure title="Details">
+  <PropertyRows />
+</Disclosure>;
+```
+
+## Composition
+
+```text
+Disclosure (a Collapsible)
+├── trigger — the triangle and the 13-point semibold title
+└── content — opened through the collapsible's measured reveal
+```
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `title` | `string` | — |
+| `defaultOpen` | `boolean` | `true`, as an inspector opens |
+| `testId` | `string` — on the header | — |
+| `children` | `ReactNode` — the body | — |
+
+## Limitations
+
+- The runtime has no `transform`, so the triangle is the right and down chevrons
+  swapped rather than one glyph turned.
+
+## Related
+
+- **Collapsible** — the section this composes, for any header.
+- **Accordion** — several sections where only one opens.

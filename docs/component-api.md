@@ -330,6 +330,9 @@ the page and the package in the same change.
 | --------- | ----- | --------------- | ------ |
 | Cards | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` | — | plan 111 |
 | Aspect ratio | `AspectRatio` | — | — |
+| Segmented control | `SegmentedControl` | — | plan 725 |
+| Disclosure | `Disclosure` | — | plan 725 |
+| Inset group | `InsetGroup`, `InsetGroupRow` | — | plan 725 |
 | Badges | `Badge` | — | plan 111 |
 | Avatars | `Avatar` | `AvatarRoot`/`Image`/`Fallback` | plan 111 |
 | Avatar group | `AvatarGroup` | — | plan 600 |

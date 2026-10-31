@@ -522,6 +522,18 @@ export const keyboardContracts: readonly KeyboardContract[] = [
     ],
   },
   {
+    url: "/components/segmented-control",
+    sources: ["packages/components/src/segmented-control.tsx"],
+    notes: [
+      {
+        keys: ["Arrow Left", "Arrow Right"],
+        action:
+          "selects the next or previous enabled segment, stopping at the ends",
+      },
+    ],
+    also: "A segment's own activation is the primitives' action: a press selects it.",
+  },
+  {
     url: "/primitives/toggle",
     sources: ["packages/primitives/src/components/Toggle.tsx"],
     notes: [{ keys: activation, action: "toggles the pressed state" }],

@@ -72,6 +72,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       primitive("toggle-group", "Toggle group"),
       component("toggle", "Toggle"),
       component("toggle-group", "Toggle group"),
+      component("segmented-control", "Segmented control"),
     ],
   },
   {
@@ -200,6 +201,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       component("card", "Card"),
       component("accordion", "Accordion"),
       component("collapsible", "Collapsible"),
+      component("disclosure", "Disclosure"),
       component("carousel", "Carousel"),
       component("tabs", "Tabs"),
       component("bubble", "Bubble"),
@@ -247,6 +249,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       component("auth", "Auth"),
       component("field", "Field and inline validation"),
       component("fieldset", "Fieldset"),
+      component("inset-group", "Inset group"),
       component("form", "Form"),
       component("multi-step-form", "MultiStepForm"),
       component("inline-edit", "Inline edit"),
