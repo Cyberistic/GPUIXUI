@@ -23,3 +23,14 @@ export const send = (
     },
   ]);
 };
+
+/** The first `words` words of a reply as it streams; all of it at the end. */
+export const revealed = (text: string, words: number): string => {
+  const all = text.split(" ");
+  return words >= all.length
+    ? text
+    : all.slice(0, Math.max(0, words)).join(" ");
+};
+
+/** How many words a reply streams in. */
+export const wordCount = (text: string): number => text.split(" ").length;

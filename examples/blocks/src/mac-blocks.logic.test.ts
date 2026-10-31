@@ -11,7 +11,7 @@
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { transcript } from "./agent/data.js";
-import { send } from "./agent/logic.js";
+import { revealed, send } from "./agent/logic.js";
 import { events } from "./calendar/data.js";
 import { layoutDay, visible, weekStart } from "./calendar/logic.js";
 import { results } from "./launcher/data.js";
@@ -90,6 +90,14 @@ describe("agent", () => {
       "you",
       "agent",
     ]);
+  });
+});
+
+describe("agent streaming", () => {
+  it("reveals a reply word by word, then whole", () => {
+    expect(revealed("On it — reading the files", 2)).toBe("On it");
+    expect(revealed("On it", 9)).toBe("On it");
+    expect(revealed("On it", 0)).toBe("");
   });
 });
 

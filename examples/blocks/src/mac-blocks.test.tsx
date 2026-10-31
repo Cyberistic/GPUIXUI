@@ -98,6 +98,9 @@ describe("the Mac-app blocks", () => {
     press(r, "send");
     expect(has(r, "turn-t3")).toBe(true);
     expect(has(r, "turn-t4")).toBe(true);
+    // The reply streams: Send is Stop until the last word lands.
+    expect(has(r, "stop")).toBe(true);
+    expect(has(r, "send")).toBe(false);
   });
 
   it("calendar: switching a calendar off hides its events", () => {

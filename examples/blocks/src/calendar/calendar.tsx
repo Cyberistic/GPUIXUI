@@ -18,6 +18,10 @@ const HOURS = 11;
 const ROW = 40;
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
+/** `9.5` → `9:30`. */
+const hourLabel = (hour: number): string =>
+  `${Math.floor(hour)}:${String(Math.round((hour % 1) * 60)).padStart(2, "0")}`;
+
 export const CalendarBlock = ({
   platform,
 }: {
@@ -163,7 +167,12 @@ export const CalendarBlock = ({
                           overflow: "hidden",
                         }}
                       >
-                        <Text>{event.title}</Text>
+                        <Text role="caption" tone="muted">
+                          {hourLabel(event.start)}
+                        </Text>
+                        <Text role="caption" clamp={2}>
+                          {event.title}
+                        </Text>
                       </div>
                     ) : (
                       <div key={cell} style={{ flexGrow: 1, flexBasis: 0 }} />

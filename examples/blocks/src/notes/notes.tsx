@@ -95,7 +95,9 @@ export const Notes = ({ platform }: { readonly platform?: PlatformName }) => {
               onValueChange={(body) =>
                 setAll(editNote(all, current.value.id, body))
               }
-              style={{ flexGrow: 1 }}
+              // A textarea's height is rows (the runtime's own control), so
+              // the editor asks for enough to fill the pane.
+              minRows={24}
             />
           </Stack>
         ) : null}

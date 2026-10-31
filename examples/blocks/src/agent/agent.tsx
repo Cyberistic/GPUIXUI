@@ -10,18 +10,33 @@ import { SourceList, Window, WindowToolbar } from "@gpuixui/shell";
 import type { PlatformName } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { sessions, touched, transcript } from "./data.js";
-import { send } from "./logic.js";
+import { revealed, send, wordCount } from "./logic.js";
 
 export const Agent = ({ platform }: { readonly platform?: PlatformName }) => {
   const theme = useTheme();
   const [session, setSession] = useState<string>("s1");
   const [turns, setTurns] = useState(transcript);
   const [draft, setDraft] = useState("");
+  // The newest reply streams in word by word; `null` is no stream running.
+  const [streamed, setStreamed] = useState<number | null>(null);
+  const last = turns.at(-1);
+  const streaming =
+    streamed !== null && last !== undefined && streamed < wordCount(last.text);
+
+  useEffect(() => {
+    if (!streaming) return;
+    const timer = setTimeout(() => setStreamed((n) => (n ?? 0) + 1), 45);
+    return () => clearTimeout(timer);
+  }, [streaming, streamed]);
+
   const submit = () => {
-    setTurns(send(turns, draft));
+    const next = send(turns, draft);
+    if (next === turns) return;
+    setTurns(next);
     setDraft("");
+    setStreamed(0);
   };
 
   return (
@@ -90,7 +105,9 @@ export const Agent = ({ platform }: { readonly platform?: PlatformName }) => {
               size="xs"
             />
             <Text style={{ flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
-              {turn.text}
+              {turn === last && streamed !== null
+                ? revealed(turn.text, streamed)
+                : turn.text}
             </Text>
           </Stack>
         ))}
@@ -113,9 +130,19 @@ export const Agent = ({ platform }: { readonly platform?: PlatformName }) => {
           onSubmit={submit}
           style={{ flexGrow: 1 }}
         />
-        <Button testId="send" onActivate={submit}>
-          Send
-        </Button>
+        {streaming ? (
+          <Button
+            testId="stop"
+            variant="outline"
+            onActivate={() => setStreamed(null)}
+          >
+            Stop
+          </Button>
+        ) : (
+          <Button testId="send" onActivate={submit}>
+            Send
+          </Button>
+        )}
       </Stack>
     </Window>
   );
