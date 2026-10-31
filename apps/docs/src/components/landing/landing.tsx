@@ -171,6 +171,12 @@ function CodeAndComponent() {
   );
 }
 
+/** The maker's line at the very bottom of the landing. */
+export const credit = {
+  handle: "@sudo_kw",
+  href: "https://sudokw.com",
+} as const;
+
 function Footer() {
   return (
     <footer className="landing-footer">
@@ -184,6 +190,12 @@ function Footer() {
           source
         </a>
       </span>
+      <p className="landing-credit">
+        Made with ☕ by{" "}
+        <a href={credit.href} rel="noopener noreferrer" target="_blank">
+          {credit.handle}
+        </a>
+      </p>
     </footer>
   );
 }

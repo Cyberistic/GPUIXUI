@@ -141,7 +141,9 @@
   flex: none;
   width: 22px;
   height: 22px;
-  background: url("/logo.svg") center / contain no-repeat;
+  background: currentColor;
+  -webkit-mask: url("/logo-outline.svg") center / contain no-repeat;
+  mask: url("/logo-outline.svg") center / contain no-repeat;
 }
 
 .landing-nav-links {
@@ -661,6 +663,17 @@
 
 .landing-footer a {
   color: var(--fg);
+}
+
+.landing-credit {
+  flex-basis: 100%;
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+.landing-credit a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ---- responsive ---- */
