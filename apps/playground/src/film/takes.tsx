@@ -20,6 +20,7 @@ import { useState, type ReactNode } from "react";
 import { Settings, type Look } from "@gpuixui/blocks/settings";
 import { GROUND, Window } from "./frame.js";
 import { OmarchyDesktop, type OmarchyLook } from "./omarchy.js";
+import { DesktopBlock, type DesktopLook } from "@gpuixui/blocks/desktop";
 import { magnify } from "./magnify.js";
 import { capture, type Take } from "./take.js";
 
@@ -89,7 +90,27 @@ const SettingsWindow = () => {
   );
 };
 
+/** The desktop block: Start pressed at frame 24, a window raised at 60. */
+const desktop = (look: DesktopLook): Take => ({
+  width: 1280,
+  height: 800,
+  frames: 90,
+  view: () => <DesktopBlock look={look} />,
+  pointer: [
+    { frame: 0, aim: { x: 700, y: 640 } },
+    { frame: 20, aim: { testId: "start" } },
+    { frame: 24, aim: { testId: "start" }, down: true },
+    { frame: 26, aim: { testId: "start" } },
+    { frame: 54, aim: { testId: "task-explorer" } },
+    { frame: 60, aim: { testId: "task-explorer" }, down: true },
+    { frame: 62, aim: { testId: "task-explorer" } },
+    { frame: 89, aim: { testId: "task-explorer", dy: -120 } },
+  ],
+});
+
 export const takes: Readonly<Record<string, Take>> = {
+  "desktop-luna": desktop("luna"),
+  "desktop-aero": desktop("aero"),
   /** Shot 1: the first press. Down at 0.70 s, up at 0.83 s. */
   switch: {
     width: 960,

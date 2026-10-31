@@ -2,13 +2,16 @@
  * The blocks, in the real GPUix renderer. The bugs these guard: a block that
  * paints nothing, a Look control that does not restyle the tree, a thread click
  * that does not open the thread, and a kanban drag that leaves the card where
- * it was (or drops it in a column the pointer was not over).
+ * it was (or drops it in a column the pointer was not over). The desktop: a
+ * Start button that does not open the menu, a taskbar button that does not
+ * bring its window to the front, and a menu a press on the desktop leaves open.
  */
 import { createTestRoot } from "@gpuix/react/testing";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import { useState, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { DesktopBlock } from "./desktop/desktop.js";
 import { Inbox } from "./inbox/inbox.js";
 import { Kanban } from "./kanban/kanban.js";
 import { Settings, type Look } from "./settings/settings.js";
@@ -21,7 +24,7 @@ let unmount = () => {};
 afterEach(() => unmount());
 
 const mount = (node: ReactNode) => {
-  const root = createTestRoot({ width: 1024, height: 640 });
+  const root = createTestRoot({ width: 1280, height: 800 });
   root.render(<ThemeProvider theme={lightTheme}>{node}</ThemeProvider>);
   root.renderer.flush();
   unmount = root.unmount;
@@ -104,3 +107,36 @@ describe("Kanban", () => {
     expect(parentColumn(r, "task-theme")).toBe("column-Done");
   });
 });
+
+describe("Desktop", () => {
+  /** The windows' ids in paint order: the last is in front. */
+  const order = (r: Renderer) => {
+    const root = r.findByTestId("desktop");
+    return (root?.children ?? [])
+      .map((id) => r.getElement(id)?.testId)
+      .filter((id): id is string => id?.startsWith("window-") === true);
+  };
+
+  for (const look of ["luna", "aero"] as const) {
+    it(`opens Start, raises from the taskbar and closes on the desktop (${look})`, () => {
+      const r = mount(<DesktopBlock look={look} />);
+      expect(r.findByTestId("start-menu")).toBeUndefined();
+      const start = centre(r, "start");
+      r.nativeSimulateClick(start.x, start.y);
+      r.flush();
+      expect(r.findByTestId("start-menu")).toBeDefined();
+
+      r.nativeSimulateMouseDown(1200, 60, 0);
+      r.nativeSimulateMouseUp(1200, 60, 0);
+      r.flush();
+      expect(r.findByTestId("start-menu")).toBeUndefined();
+
+      expect(order(r)).toEqual(["window-explorer", "window-license"]);
+      const task = centre(r, "task-explorer");
+      r.nativeSimulateClick(task.x, task.y);
+      r.flush();
+      expect(order(r)).toEqual(["window-license", "window-explorer"]);
+    });
+  }
+});
+
