@@ -4,7 +4,7 @@
 | ----- | ----- |
 | Owner | `components` → new package `packages/fx` |
 | Depends on | — (independent; land before `727` so the landing does not list them) |
-| Status | planned |
+| Status | landed 2026-10-31 — the internals went public as the designed `authoring` entry, the owner-free route the STOP named |
 
 ## Why
 

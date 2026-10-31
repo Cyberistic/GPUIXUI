@@ -48,7 +48,6 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
-import { rippleFrames } from "./ripple-button/logic.js";
 import { indicatorBox } from "./tabs/indicator.js";
 
 const packageRoot = new URL("../", import.meta.url);
@@ -257,11 +256,7 @@ describe("the pointer contract", () => {
 const inlineDelay = /\.\.\.timing(?:\.\w+)?\s*,\s*delay\s*:/;
 
 /** The arrivals that queue behind a stagger, and the seam that builds it. */
-const staggered = [
-  "src/reveal.tsx",
-  "src/avatar-group.tsx",
-  "src/splitting-text.tsx",
-] as const;
+const staggered = ["src/reveal.tsx", "src/avatar-group.tsx"] as const;
 const timingSeam = "src/internal/presence.tsx";
 const retiredDelayCopies = ["groupEntering", "unitTransition"] as const;
 
@@ -565,15 +560,12 @@ describe("the motion grammar", () => {
         { x: 15, y: 20, width: 50, height: 30 },
       ),
     );
-    const ripple = Arr.flatMap(
-      Object.values(rippleFrames({ x: 10, y: 10 }, 20)),
-      (frame) => Object.keys(frame),
-    );
+    // The radius tween's painter is the ripple, which lives in `@gpuixui/fx`
+    // (plan 726) and holds its own frames to the runtime's fields there.
     const painted = [
       ["opacity", presenceKeys],
-      ["size", [...pill, ...ripple]],
+      ["size", pill],
       ["position", [...presenceKeys, ...pill]],
-      ["radius", ripple],
     ] as const;
     Arr.forEach(painted, ([movement, keys]) => {
       expect(movement.length).toBeGreaterThan(0);
@@ -586,7 +578,6 @@ describe("the motion grammar", () => {
     expect(pill).toContain("width");
     expect(pill).toContain("height");
     expect(pill).toContain("left");
-    expect(ripple).toContain("borderRadius");
   });
 
   it("holds the Motion row to that grammar, and to the suites it cites", () => {

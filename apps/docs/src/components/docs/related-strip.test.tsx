@@ -15,13 +15,13 @@ const render = (url: string, sections: ReadonlyArray<string> = []): string =>
 
 describe("the related strip", () => {
   it("prints the page's siblings, each linked to its page", () => {
-    const markup = render("/components/ripple-button");
+    const markup = render("/effects/ripple-button");
 
     expect(markup).toContain("Related · Actions and their effects");
-    expect(markup).toContain('href="/components/liquid-button"');
+    expect(markup).toContain('href="/effects/liquid-button"');
     expect(markup).toContain(">Liquid button</a>");
     expect(markup).toContain('href="/components/button"');
-    expect(markup).not.toContain('href="/components/ripple-button"');
+    expect(markup).not.toContain('href="/effects/ripple-button"');
   });
 
   it("keeps a package page linked to the curated page the site serves", () => {

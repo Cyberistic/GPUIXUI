@@ -8,7 +8,7 @@
  * for a key it never carried, a number a settings column held, an object a
  * decoder answered. Every surface in this catalogue read the prop raw:
  * `accessibleName`/`Str.trim` threw `self.trim is not a function` out of the
- * first render for `CopyButton`, `ImageZoom`, `AvatarGroup` and `RotatingText`
+ * first render for `CopyButton`, `ImageZoom` and `AvatarGroup`
  * (taking the surface with it), and the rest published the number itself as an
  * `aria-label`, so a reader heard a value the caller never wrote. `nameOf`
  * (`internal/text.ts`) reads a name as text or nothing, and every surface takes
@@ -27,13 +27,10 @@ import { CodeBlock } from "../code-block.js";
 import { CopyButton } from "../copy-button.js";
 import { CountingNumber } from "../counting-number.js";
 import { ImageZoom } from "../image-zoom.js";
-import { MotionGrid } from "../motion-grid.js";
 import { PinnedList } from "../pinned-list.js";
-import { RotatingText } from "../rotating-text.js";
 import { ScrollFade } from "../scroll-fade.js";
 import { ScrollProgress } from "../scroll-progress.js";
 import { SlidingNumber } from "../sliding-number.js";
-import { TypingText } from "../typing-text.js";
 
 /** The names the frame just painted into the accessibility tree. */
 const names = (
@@ -119,49 +116,6 @@ describe("a stored name that is not text", () => {
     }
   });
 
-  it("names a rotation by the phrase on screen", () => {
-    const page = renderComponent(
-      <Frame>
-        <RotatingText
-          testId="rotating"
-          // @ts-expect-error — the name a store wrote as a number.
-          label={42}
-          phrases={["First phrase", "Second phrase"]}
-        />
-      </Frame>,
-    );
-    try {
-      survived(page);
-      expect(names(page)).toContain("First phrase");
-    } finally {
-      page.unmount();
-    }
-  });
-
-  it("names a reveal by the phrase it reveals", () => {
-    const page = renderComponent(
-      <Frame>
-        <TypingText
-          testId="typing"
-          // @ts-expect-error — the name a store wrote as a number.
-          label={42}
-          text="Ada"
-          speed={20}
-          delay={1_000}
-        />
-      </Frame>,
-    );
-    try {
-      survived(page);
-      // The whole phrase is the name from the first frame, before any of it is
-      // revealed; a name the store wrote as a number is no name, and the
-      // half-typed content would answer for it.
-      expect(names(page)).toContain("Ada");
-    } finally {
-      page.unmount();
-    }
-  });
-
   it("names a count by the value it reads", () => {
     const page = renderComponent(
       <Frame>
@@ -199,31 +153,6 @@ describe("a stored name that is not text", () => {
       expect(
         nodesWithRole(page.renderer, "status").map((node) => node.name),
       ).toEqual(["7"]);
-    } finally {
-      page.unmount();
-    }
-  });
-
-  it("publishes no grid node for a name that is not text", () => {
-    const page = renderComponent(
-      <Frame>
-        <MotionGrid
-          testId="grid"
-          // @ts-expect-error — the heading a store wrote as a number.
-          label={42}
-          items={[
-            { id: "a", content: <text>Alpha</text> },
-            { id: "b", content: <text>Beta</text> },
-          ]}
-        />
-      </Frame>,
-    );
-    try {
-      survived(page);
-      expect(page.renderer.findByTestId("motion-grid-cell-a")).toBeDefined();
-      const grid = page.renderer.findByTestId("grid");
-      expect(grid?.customProps?.["aria-label"]).toBeUndefined();
-      expect(grid?.customProps?.role).toBeUndefined();
     } finally {
       page.unmount();
     }

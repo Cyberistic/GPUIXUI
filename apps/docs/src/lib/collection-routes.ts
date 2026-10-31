@@ -6,6 +6,7 @@ import {
   filesDocsRoute,
   iconDocsRoute,
   mediaDocsRoute,
+  effectsDocsRoute,
   primitiveDocsRoute,
   shellDocsRoute,
 } from "./shared";
@@ -29,7 +30,8 @@ export type PackageOrigin =
   | "files"
   | "shell"
   | "dock"
-  | "media";
+  | "media"
+  | "fx";
 
 /**
  * Which collection a page came from.
@@ -180,6 +182,20 @@ const media: PackageCollection = {
   },
 };
 
+const fx: PackageCollection = {
+  origin: "fx",
+  dir: "packages/fx/docs",
+  packageName: "@gpuixui/fx",
+  route: effectsDocsRoute,
+  section: "Effects",
+  kind: "effect",
+  index: {
+    title: "Effects",
+    description:
+      "Decorative motion — particles, stars, shine and ripple, kinetic text — kept out of the core library.",
+  },
+};
+
 export const packageCollections = [
   primitives,
   icons,
@@ -190,6 +206,7 @@ export const packageCollections = [
   shell,
   dock,
   media,
+  fx,
 ] as const;
 
 export const collectionByOrigin = {
@@ -202,6 +219,7 @@ export const collectionByOrigin = {
   shell,
   dock,
   media,
+  fx,
 } satisfies Record<PackageOrigin, PackageCollection>;
 
 /**
@@ -221,4 +239,5 @@ export const packageSections: ReadonlyArray<{
   { name: "Icons", origins: ["icons"] },
   { name: "Data display", origins: ["data"] },
   { name: "Workspace", origins: ["dock", "editor", "files", "shell", "media"] },
+  { name: "Effects", origins: ["fx"] },
 ];

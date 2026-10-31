@@ -35,6 +35,6 @@ export function TypingTextDemo() {
   );
 }
 
-export const typingTextDemoSource = `import { TypingText } from "@gpuixui/components/typing-text";
+export const typingTextDemoSource = `import { TypingText } from "@gpuixui/fx/typing-text";
 
 <TypingText text="Deploying to production…" speed={35} caret />;`;

@@ -71,6 +71,7 @@ packages/dock       Tier 4 panels: split panes, panel groups, dock layouts
 packages/editor     Tier 4 code surfaces: editor, diff, search and replace
 packages/files      Tier 4 file and inspector surfaces: tree, log, properties
 packages/media      Tier 4 media surfaces: image preview, drop zone, upload
+packages/fx         Decorative motion, built on the components' authoring seams (plan 726)
 packages/shell      Tier 4 app chrome: menus, status bar, toolbar
 packages/data       Tier 3 data presentation: tables, sort/selection/filter, charts
 packages/tw         shadcn class recipes → GPUix StyleDesc (with `cn`)

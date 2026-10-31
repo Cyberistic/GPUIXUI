@@ -20,7 +20,7 @@ export function LiquidButtonDemo() {
   );
 }
 
-export const liquidButtonDemoSource = `import { LiquidButton } from "@gpuixui/components/liquid-button";
+export const liquidButtonDemoSource = `import { LiquidButton } from "@gpuixui/fx/liquid-button";
 
 <LiquidButton variant="primary" onClick={save}>
   Save draft

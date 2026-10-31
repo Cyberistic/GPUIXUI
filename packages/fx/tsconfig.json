@@ -1,0 +1,10 @@
+{
+  "extends": "@gpuixui/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@gpuix/react",
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["src", "examples"]
+}

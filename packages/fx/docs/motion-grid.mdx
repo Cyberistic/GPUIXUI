@@ -1,0 +1,49 @@
+---
+title: Motion grid
+description: Cells that travel to their new slots when order changes
+---
+
+<ComponentPreview name="motion-grid-demo" />
+
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
+
+```tsx
+import { MotionGrid } from "@gpuixui/fx/motion-grid";
+
+<MotionGrid
+  items={tools.map((tool) => ({ id: tool.id, content: <ToolCard tool={tool} /> }))}
+  columns={3}
+  cellWidth={160}
+  rowHeight={120}
+  gap={12}
+  label="Tool board"
+/>;
+```
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `items` | `ReadonlyArray<MotionGridItem>` (a value that is not a list reads as none; an entry without a text `id` is dropped) | — |
+| `columns` | `number` | `3` |
+| `cellWidth` | `number` | `160` |
+| `rowHeight` | `number` | `120` |
+| `gap` | `number` | `12` |
+| `level` | `MotionLevel` | `"normal"` |
+| `label` | `string` | — |
+| `className` | `string` | — |
+| `style` | `StateStyle<MotionGridState>` | — |
+
+## Limitations
+
+- No cell sizes its row; the caller names both.
+- Inset movement, no `transform`.
+- A fixed number of columns.
+- **A stored cell list is read**: a grid restored with a saved layout carries JSON's `null` for a list its record never carried, so a value that is not a list paints an empty frame instead of throwing from the first cell, and an entry without a text `id` is not a cell — it is dropped while its neighbours keep their slots (`itemsOf`).
+- A stored `label` that is not text is no name: `nameOf` reads it at the boundary, so the grid publishes no group node instead of a group named `42`.

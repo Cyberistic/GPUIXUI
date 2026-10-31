@@ -1,0 +1,39 @@
+---
+title: Gravity stars
+description: A decorative field of stars falling into a well
+---
+
+<ComponentPreview name="gravity-stars-demo" />
+
+## Usage
+
+```tsx
+import { GravityStars } from "@gpuixui/fx/gravity-stars";
+
+<div style={{ position: "relative", height: 280, overflow: "hidden" }}>
+  <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}>
+    <GravityStars count={44} seed={7} />
+  </div>
+  <SignInCard />
+</div>;
+```
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `count` | `number` | `36` |
+| `seed` | `number` | `1` |
+| `minSize` | `number` | `1` |
+| `maxSize` | `number` | `3` |
+| `color` | `string` | theme `primary` |
+| `fallMs` | `number` | `3_000` |
+| `level` | `MotionLevel` | `"slow"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<GravityStarsState>` | — |
+
+## Limitations
+
+- Straight legs, not a curve; stars cannot orbit the well.
+- The well cannot follow the pointer.
+- The box must be bounded by the caller.

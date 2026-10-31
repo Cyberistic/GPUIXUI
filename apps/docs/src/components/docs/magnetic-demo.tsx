@@ -41,7 +41,7 @@ export function MagneticDemo() {
   );
 }
 
-export const magneticDemoSource = `import { Magnetic } from "@gpuixui/components/magnetic";
+export const magneticDemoSource = `import { Magnetic } from "@gpuixui/fx/magnetic";
 
 <Magnetic onClick={open}>
   <Card>

@@ -91,6 +91,7 @@ export const llmsSectionOrder: ReadonlyArray<string> = [
   "Icons",
   "Data display",
   "Workspace",
+  "Effects",
   "Platform",
   "Blocks",
 ];

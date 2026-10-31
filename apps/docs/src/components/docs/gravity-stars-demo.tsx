@@ -30,7 +30,7 @@ export function GravityStarsDemo() {
   );
 }
 
-export const gravityStarsDemoSource = `import { GravityStars } from "@gpuixui/components/gravity-stars";
+export const gravityStarsDemoSource = `import { GravityStars } from "@gpuixui/fx/gravity-stars";
 
 <div style={{ position: "relative", height: 280, overflow: "hidden" }}>
   <div style={{ position: "absolute", inset: 0 }}>

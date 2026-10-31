@@ -20,7 +20,7 @@ export function ShineButtonDemo() {
   );
 }
 
-export const shineButtonDemoSource = `import { ShineButton } from "@gpuixui/components/shine-button";
+export const shineButtonDemoSource = `import { ShineButton } from "@gpuixui/fx/shine-button";
 
 <ShineButton variant="primary" onClick={deploy}>
   Deploy

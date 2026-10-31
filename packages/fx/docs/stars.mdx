@@ -1,0 +1,45 @@
+---
+title: Stars
+description: A decorative field of twinkling lights
+---
+
+<ComponentPreview name="stars-demo" />
+
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
+
+```tsx
+import { Stars } from "@gpuixui/fx/stars";
+
+<div style={{ position: "relative", height: 240, overflow: "hidden" }}>
+  <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}>
+    <Stars count={64} seed={11} />
+  </div>
+  <EmptyState title="No builds yet" />
+</div>;
+```
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `count` | `number` | `48` |
+| `seed` | `number` | `1` |
+| `minSize` | `number` | `1` |
+| `maxSize` | `number` | `3` |
+| `color` | `string` | theme `foreground` |
+| `twinkleMs` | `number` | `2_400` |
+| `level` | `MotionLevel` | `"slow"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<{ count, reducedMotion, width, height }>` | — |
+
+## Limitations
+
+- The box must be bounded; the field measures itself.
+- A hidden field keeps animating — unmount it.
+- A resize re-draws the sky from the same seed.

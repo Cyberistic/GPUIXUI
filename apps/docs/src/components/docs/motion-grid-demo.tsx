@@ -58,7 +58,7 @@ export function MotionGridDemo() {
   );
 }
 
-export const motionGridDemoSource = `import { MotionGrid } from "@gpuixui/components/motion-grid";
+export const motionGridDemoSource = `import { MotionGrid } from "@gpuixui/fx/motion-grid";
 
 <MotionGrid
   items={tools.map((tool) => ({ id: tool.id, content: <ToolCard tool={tool} /> }))}
