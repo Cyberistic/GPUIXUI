@@ -17,7 +17,7 @@ import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import { mkdirSync } from "node:fs";
 import { useState, type ReactNode } from "react";
-import { Settings, type Look } from "../blocks/settings.js";
+import { Settings, type Look } from "@gpuixui/blocks/settings";
 import { GROUND, Window } from "./frame.js";
 import { OmarchyDesktop, type OmarchyLook } from "./omarchy.js";
 import { magnify } from "./magnify.js";

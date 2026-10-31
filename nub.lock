@@ -250,6 +250,9 @@ importers:
       '@gpuix/react':
         specifier: 'catalog:'
         version: 0.11.0(react@19.3.1)
+      '@gpuixui/blocks':
+        specifier: workspace:*
+        version: link:../../examples/blocks
       '@gpuixui/components':
         specifier: workspace:*
         version: link:../../packages/components
@@ -339,6 +342,46 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+
+  examples/blocks:
+    dependencies:
+      '@gpuix/react':
+        specifier: 'catalog:'
+        version: 0.11.0(react@19.3.1)
+      '@gpuixui/components':
+        specifier: workspace:*
+        version: link:../../packages/components
+      '@gpuixui/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
+      '@gpuixui/primitives':
+        specifier: workspace:*
+        version: link:../../packages/primitives
+      '@gpuixui/tokens':
+        specifier: workspace:*
+        version: link:../../packages/tokens
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.5
+    devDependencies:
+      '@gpuixui/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@types/node':
+        specifier: ^26.1.1
+        version: 26.6.5
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.3.0
+      react:
+        specifier: ^19.2.0
+        version: 19.3.1
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@26.6.5)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
   packages/components:
     dependencies:

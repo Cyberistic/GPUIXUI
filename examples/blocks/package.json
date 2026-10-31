@@ -1,0 +1,36 @@
+{
+  "name": "@gpuixui/blocks",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The blocks: whole screens composed from the library, compiled — the recipe the docs print and the window the film captures.",
+  "exports": {
+    "./settings": "./src/settings/settings.tsx",
+    "./kanban": "./src/kanban/kanban.tsx",
+    "./inbox": "./src/inbox/inbox.tsx",
+    "./desktop": "./src/desktop/desktop.tsx"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gpuix/react": "catalog:",
+    "@gpuixui/components": "workspace:*",
+    "@gpuixui/icons": "workspace:*",
+    "@gpuixui/primitives": "workspace:*",
+    "@gpuixui/tokens": "workspace:*",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@gpuixui/config": "workspace:*",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

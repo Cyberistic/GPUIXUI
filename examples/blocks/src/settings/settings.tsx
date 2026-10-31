@@ -6,7 +6,7 @@
  */
 import { Avatar } from "@gpuixui/components/avatar";
 import { Card } from "@gpuixui/components/card";
-import { Icon, type IconName } from "@gpuixui/icons";
+import { Icon } from "@gpuixui/icons";
 import {
   Button,
   Separator,
@@ -17,30 +17,14 @@ import {
   Text,
   ToggleGroup,
 } from "@gpuixui/primitives";
-import type { PlatformName, Theme } from "@gpuixui/tokens";
+import type { Theme } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import { useState, type ReactNode } from "react";
+import { looks, sections, type Look } from "./data.js";
+import { isLook } from "./logic.js";
 
-/** The looks the pane offers, in the order it shows them. */
-export const looks = [
-  { value: "darwin", label: "macOS" },
-  { value: "win32", label: "Windows" },
-  { value: "linux", label: "Linux" },
-] as const satisfies ReadonlyArray<{ value: PlatformName; label: string }>;
-
-export type Look = (typeof looks)[number]["value"];
-
-const isLook = (value: string): value is Look =>
-  Arr.some(looks, (look) => look.value === value);
-
-const sections: ReadonlyArray<readonly [IconName, string]> = [
-  ["settings", "General"],
-  ["sun", "Appearance"],
-  ["bell", "Notifications"],
-  ["volume-2", "Sound"],
-  ["shield", "Privacy"],
-];
+export { looks, type Look } from "./data.js";
 
 export interface SettingsProps {
   readonly look: Look;
@@ -103,11 +87,11 @@ const Sidebar = () => {
         align="center"
         style={{ paddingBottom: theme.spacing.lg }}
       >
-        <Avatar name="Ada Lovelace" size="md" />
+        <Avatar name="Gon Freecss" size="md" />
         <Stack direction="column" gap="2xs">
-          <Text role="label">Ada Lovelace</Text>
+          <Text role="label">Gon Freecss</Text>
           <Text role="caption" tone="muted">
-            GPUIxUI account
+            Hunter License
           </Text>
         </Stack>
       </Stack>

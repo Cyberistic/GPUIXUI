@@ -8,50 +8,7 @@ import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
-
-export interface Thread {
-  readonly id: string;
-  readonly from: string;
-  readonly subject: string;
-  readonly preview: string;
-  readonly when: string;
-  readonly unread: boolean;
-}
-
-export const threads: ReadonlyArray<Thread> = [
-  {
-    id: "film",
-    from: "Mara Ito",
-    subject: "Launch film, second cut",
-    preview: "Every press has its own sound now…",
-    when: "09:41",
-    unread: true,
-  },
-  {
-    id: "blocks",
-    from: "Ben Ade",
-    subject: "Blocks are compiled",
-    preview: "Settings, Kanban and Inbox run natively…",
-    when: "09:12",
-    unread: true,
-  },
-  {
-    id: "omarchy",
-    from: "Kai Lund",
-    subject: "Theme follow on Omarchy",
-    preview: "colors.toml changes, the app repaints…",
-    when: "Yesterday",
-    unread: false,
-  },
-  {
-    id: "terminal",
-    from: "Ada Lovelace",
-    subject: "Terminal frames at 2x",
-    preview: "The in-band resize carries pixels…",
-    when: "Mon",
-    unread: false,
-  },
-];
+import { threads } from "./data.js";
 
 /** The inbox, as a window's whole content. */
 export const Inbox = () => {

@@ -17,74 +17,8 @@ import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useRef, useState } from "react";
-
-export const columns = ["Backlog", "In progress", "Done"] as const;
-export type Column = (typeof columns)[number];
-
-export interface Task {
-  readonly id: string;
-  readonly title: string;
-  readonly tag: string;
-  readonly owner: string;
-}
-
-const initial: Readonly<Record<Column, ReadonlyArray<Task>>> = {
-  Backlog: [
-    {
-      id: "icons",
-      title: "Icon set for the dock",
-      tag: "Design",
-      owner: "Mara Ito",
-    },
-    { id: "docs", title: "Blocks gallery copy", tag: "Docs", owner: "Ben Ade" },
-    {
-      id: "a11y",
-      title: "Screen reader labels",
-      tag: "Access",
-      owner: "Noor Haddad",
-    },
-    {
-      id: "grid",
-      title: "Virtualised data grid",
-      tag: "Data",
-      owner: "Kai Lund",
-    },
-  ],
-  "In progress": [
-    {
-      id: "theme",
-      title: "Follow the Omarchy theme",
-      tag: "Tokens",
-      owner: "Kai Lund",
-    },
-    {
-      id: "terminal",
-      title: "Terminal resize in-band",
-      tag: "Runtime",
-      owner: "Ada Lovelace",
-    },
-    {
-      id: "film",
-      title: "Launch film sound pass",
-      tag: "Media",
-      owner: "Mara Ito",
-    },
-  ],
-  Done: [
-    {
-      id: "switch",
-      title: "Native switch metrics",
-      tag: "Primitives",
-      owner: "Noor Haddad",
-    },
-    {
-      id: "slider",
-      title: "Slider detents",
-      tag: "Primitives",
-      owner: "Ben Ade",
-    },
-  ],
-};
+import { board, columns, type Column, type Task } from "./data.js";
+import { columnAt, moveTask, type Bounds } from "./logic.js";
 
 interface Drag {
   readonly id: string;
@@ -93,11 +27,6 @@ interface Drag {
   readonly originY: number;
   readonly dx: number;
   readonly dy: number;
-}
-
-interface Bounds {
-  readonly x: number;
-  readonly width: number;
 }
 
 interface Rect extends Bounds {
@@ -112,43 +41,10 @@ const rectOf = (event: EventPayload): Rect => ({
   height: event.height ?? 0,
 });
 
-/** The column whose measured bounds hold `x`. */
-export const columnAt = (
-  bounds: Partial<Record<Column, Bounds>>,
-  x: number,
-): Option.Option<Column> =>
-  Arr.findFirst(columns, (column) =>
-    Option.match(Option.fromNullishOr(bounds[column]), {
-      onNone: () => false,
-      onSome: (b) => x >= b.x && x < b.x + b.width,
-    }),
-  );
-
-/** `tasks` with `id` moved from `from` to the end of `to`. */
-export const moveTask = (
-  tasks: Readonly<Record<Column, ReadonlyArray<Task>>>,
-  id: string,
-  from: Column,
-  to: Column,
-): Readonly<Record<Column, ReadonlyArray<Task>>> =>
-  from === to
-    ? tasks
-    : Option.match(
-        Arr.findFirst(tasks[from], (task) => task.id === id),
-        {
-          onNone: () => tasks,
-          onSome: (task) => ({
-            ...tasks,
-            [from]: Arr.filter(tasks[from], (t) => t.id !== id),
-            [to]: Arr.append(tasks[to], task),
-          }),
-        },
-      );
-
 /** The board, as a window's whole content. */
 export const Kanban = () => {
   const theme = useTheme();
-  const [tasks, setTasks] = useState(initial);
+  const [tasks, setTasks] = useState(board);
   // The press lives in a ref: the runtime can deliver a whole gesture before
   // React commits the render the press scheduled (`drag-between-panes`).
   const drag = useRef<Drag | null>(null);

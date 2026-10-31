@@ -7,7 +7,7 @@ import { darkTheme, lightTheme, platformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import { useState } from "react";
 import { magnify } from "./magnify.js";
-import { Settings, type Look } from "../blocks/settings.js";
+import { Settings, type Look } from "@gpuixui/blocks/settings";
 
 /** The theme the terminal paints in: the Linux look, magnified 2×. */
 export const terminalTheme = (dark: boolean) =>

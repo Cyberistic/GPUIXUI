@@ -9,9 +9,9 @@ import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import { useState, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Inbox } from "./inbox.js";
-import { Kanban } from "./kanban.js";
-import { Settings, type Look } from "./settings.js";
+import { Inbox } from "./inbox/inbox.js";
+import { Kanban } from "./kanban/kanban.js";
+import { Settings, type Look } from "./settings/settings.js";
 
 // The first mount in a file loads the native binding and its fonts: measured at
 // 7.3 s cold against vitest's 5 s default.

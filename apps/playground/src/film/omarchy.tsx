@@ -18,8 +18,8 @@ import * as Arr from "effect/Array";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { ReactNode } from "react";
-import { Inbox } from "../blocks/inbox.js";
-import { Kanban } from "../blocks/kanban.js";
+import { Inbox } from "@gpuixui/blocks/inbox";
+import { Kanban } from "@gpuixui/blocks/kanban";
 
 export const omarchyLooks = [
   "tokyo-night",
