@@ -47,7 +47,13 @@ const macro = (k: number) => magnify(mac, k);
 
 /** Shot 7's theme changes, by frame: each a new `colors.toml` on the desktop. */
 const omarchyAt = (frame: number): OmarchyLook =>
-  frame < 40 ? "tokyo-night" : frame < 72 ? "catppuccin" : frame < 100 ? "kanagawa" : "rose-pine";
+  frame < 40
+    ? "tokyo-night"
+    : frame < 72
+      ? "catppuccin"
+      : frame < 100
+        ? "kanagawa"
+        : "rose-pine";
 
 /** The Settings block in its window, restyled by its own Look control. */
 const SettingsWindow = () => {

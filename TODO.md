@@ -24848,3 +24848,13 @@ sheet. Its window is taller so the note fits without scrolling.
 
 Gates: docs 2285, components 1177, primitives 1267, shell 32; `nub run check`
 green; the site deployed and all 195 sitemap pages answer 200.
+
+## Launch film (plan 060)
+
+`[x]` Native blocks compiled from library parts: Settings, Kanban, Inbox, with behaviour tests
+`[x]` Take runner: real input through GPUI hit testing, stepped motion clock (`apps/playground/src/film`)
+`[x]` Takes: macro Switch / Slider / Button, Settings across three looks, terminal mode, Omarchy desktop
+`[x]` Tactile sound kit (`media/launch/sound/kit.sh`) and the 33 s HyperFrames cut (`media/launch`)
+`[ ]` Music bed under the tactile layer (needs a track or a HeyGen sign-in)
+`[ ]` Docs blocks read their source from the compiled blocks instead of uncompiled strings
+

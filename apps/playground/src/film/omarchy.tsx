@@ -8,7 +8,11 @@
  * `paletteToTokens` — the same path an app takes when the desktop's theme file
  * changes.
  */
-import { decodeOmarchyPalette, paletteToTokens, type Theme } from "@gpuixui/tokens";
+import {
+  decodeOmarchyPalette,
+  paletteToTokens,
+  type Theme,
+} from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import { readFileSync } from "node:fs";
@@ -17,14 +21,29 @@ import type { ReactNode } from "react";
 import { Inbox } from "../blocks/inbox.js";
 import { Kanban } from "../blocks/kanban.js";
 
-export const omarchyLooks = ["tokyo-night", "catppuccin", "kanagawa", "rose-pine"] as const;
+export const omarchyLooks = [
+  "tokyo-night",
+  "catppuccin",
+  "kanagawa",
+  "rose-pine",
+] as const;
 export type OmarchyLook = (typeof omarchyLooks)[number];
 
 const source = (name: OmarchyLook) =>
-  readFileSync(fileURLToPath(new URL(`../../src/film/omarchy/${name}.toml`, import.meta.url)), "utf8");
+  readFileSync(
+    fileURLToPath(
+      new URL(`../../src/film/omarchy/${name}.toml`, import.meta.url),
+    ),
+    "utf8",
+  );
 
 const wallpaper = (name: OmarchyLook) =>
-  fileURLToPath(new URL(`../../../../media/launch/assets/omarchy/${name}.png`, import.meta.url));
+  fileURLToPath(
+    new URL(
+      `../../../../media/launch/assets/omarchy/${name}.png`,
+      import.meta.url,
+    ),
+  );
 
 /** A look's theme, decoded from its real `colors.toml`. */
 export const omarchyTheme = (name: OmarchyLook): Theme =>
@@ -36,7 +55,15 @@ const EDGE = 26;
 const BAR = 28;
 const BORDER = 2;
 
-const Tile = ({ theme, flex, children }: { theme: Theme; flex: number; children: ReactNode }) => (
+const Tile = ({
+  theme,
+  flex,
+  children,
+}: {
+  theme: Theme;
+  flex: number;
+  children: ReactNode;
+}) => (
   <div
     style={{
       flexGrow: flex,
@@ -53,15 +80,36 @@ const Tile = ({ theme, flex, children }: { theme: Theme; flex: number; children:
 );
 
 const Bar = ({ theme }: { theme: Theme }) => (
-  <div style={{ height: BAR, display: "flex", flexDirection: "row", alignItems: "center", paddingLeft: 14, paddingRight: 14, backgroundColor: theme.colors.background }}>
-    <div style={{ flexGrow: 1, display: "flex", flexDirection: "row", gap: 12 }}>
+  <div
+    style={{
+      height: BAR,
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      paddingLeft: 14,
+      paddingRight: 14,
+      backgroundColor: theme.colors.background,
+    }}
+  >
+    <div
+      style={{ flexGrow: 1, display: "flex", flexDirection: "row", gap: 12 }}
+    >
       {Arr.map(["1", "2", "3"], (n) => (
-        <text key={n} style={{ fontSize: 12, color: n === "1" ? theme.colors.primary : theme.colors.mutedForeground }}>
+        <text
+          key={n}
+          style={{
+            fontSize: 12,
+            color:
+              n === "1" ? theme.colors.primary : theme.colors.mutedForeground,
+          }}
+        >
           {n}
         </text>
       ))}
     </div>
-    <text style={{ fontSize: 12, color: theme.colors.foreground }}>Friday 09:41</text>
+    <text style={{ fontSize: 12, color: theme.colors.foreground }}>
+      Friday 09:41
+    </text>
     <div style={{ flexGrow: 1 }} />
   </div>
 );
@@ -71,10 +119,36 @@ export const OmarchyDesktop = ({ look }: { look: OmarchyLook }) => {
   const theme = omarchyTheme(look);
   return (
     <ThemeProvider theme={theme}>
-      <div style={{ width: 1280, height: 720, display: "flex", flexDirection: "column" }}>
-        <img src={wallpaper(look)} objectFit="cover" style={{ position: "absolute", left: 0, top: 0, width: 1280, height: 720 }} />
+      <div
+        style={{
+          width: 1280,
+          height: 720,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <img
+          src={wallpaper(look)}
+          objectFit="cover"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: 1280,
+            height: 720,
+          }}
+        />
         <Bar theme={theme} />
-        <div style={{ flexGrow: 1, display: "flex", flexDirection: "row", gap: GAP, padding: EDGE, minHeight: 0 }}>
+        <div
+          style={{
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "row",
+            gap: GAP,
+            padding: EDGE,
+            minHeight: 0,
+          }}
+        >
           <Tile theme={theme} flex={3}>
             <Kanban />
           </Tile>

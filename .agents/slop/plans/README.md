@@ -215,4 +215,4 @@ component call sites adopt the outline in their own workstream.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [060](./060-launch-film-feel.md) | Launch film "Feel it": real takes, native blocks, sound as haptics | media | playground, tokens | in progress |
+| [060](./060-launch-film-feel.md) | Launch film "Feel it": real takes, native blocks, sound as haptics | media | playground, tokens | landed — music bed open |

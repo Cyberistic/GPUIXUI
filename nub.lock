@@ -265,6 +265,9 @@ importers:
       '@gpuixui/files':
         specifier: workspace:*
         version: link:../../packages/files
+      '@gpuixui/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@gpuixui/media':
         specifier: workspace:*
         version: link:../../packages/media

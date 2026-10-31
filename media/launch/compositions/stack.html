@@ -1,0 +1,27 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; background: #f2f2f7; overflow: hidden; font-family: Inter, sans-serif; }
+    #root .row { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; gap: 76px; }
+    #root .word { font-size: 124px; font-weight: 700; letter-spacing: -0.04em; color: #1d1d1f; opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="stack" data-width="1920" data-height="1080">
+    <div class="row">
+      <span id="w-gpui" class="word">GPUI</span>
+      <span id="w-react" class="word">React</span>
+      <span id="w-shadcn" class="word">shadcn</span>
+      <span id="w-tailwind" class="word">Tailwind</span>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // Each word is pressed in like a key: it lands low and small, then springs
+    // up (sound: cap-0..3, one frame after each landing).
+    ["#w-gpui", "#w-react", "#w-shadcn", "#w-tailwind"].forEach((word, i) => {
+      const at = 0.25 + i * 0.45;
+      tl.fromTo(word, { opacity: 0, y: 14, scale: 0.92 }, { opacity: 1, duration: 0.05 }, at);
+      tl.fromTo(word, { y: 14, scale: 0.92 }, { y: 0, scale: 1, duration: 0.42, ease: "back.out(1.6)" }, at + 0.05);
+    });
+    tl.to(".word", { opacity: 0, filter: "blur(8px)", duration: 0.22, ease: "power2.in", stagger: 0.03 }, 2.2);
+    window.__timelines["stack"] = tl;
+  </script>
+</template>
