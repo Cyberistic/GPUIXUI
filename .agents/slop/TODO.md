@@ -24866,7 +24866,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 
 ## Native Mac — materials, window, blocks and the landing (plans 721–730, 2026-10-31)
 
-`[ ]` Pre-existing behaviour failures found while landing 724 (fail at `3caccbe10`, before any native-mac code): `packages/components` `user-menu.test.tsx` (3: `user-menu-notifications` never mounts) and `sidebar.test.tsx` / `sidebar-screenshots.test.tsx` (5, the account menu). `nub run test` does not run `test:behaviour`, so the gates stayed green. Owner: components
+`[x]` Pre-existing behaviour failures (`user-menu`, `sidebar`, `sidebar-screenshots`): not a product bug — the suites predated PR #1's rule that the account menu paints only the rows a caller handles; they now wire the handlers they expect (and a case pins the rule). Components behaviour 1201/1201
 
 `[x]` `[██████████]` 11/11
 

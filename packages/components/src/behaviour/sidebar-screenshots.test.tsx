@@ -113,7 +113,16 @@ const Frame = ({ open }: { readonly open: boolean }) => (
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarUserMenu user={user} />
+        {/* Every action wired, so the frame shows the whole menu: the menu
+            paints only the rows a caller handles (#1). */}
+        <SidebarUserMenu
+          user={user}
+          onUpgrade={() => undefined}
+          onAccount={() => undefined}
+          onBilling={() => undefined}
+          onNotifications={() => undefined}
+          onLogOut={() => undefined}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

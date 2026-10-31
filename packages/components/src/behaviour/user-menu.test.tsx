@@ -31,7 +31,7 @@ const account = () => ({
 describe("UserMenu", () => {
   it("opens from the identity row and paints every action", async () => {
     const root = renderComponent(
-      <UserMenu user={user} onAccount={() => undefined} />,
+      <UserMenu user={user} {...account()} />,
     );
     expect(root.renderer.getAllText()).toContain("Benji van der Brand");
     expect(root.renderer.getAllText()).toContain("benji@example.com");
@@ -55,6 +55,22 @@ describe("UserMenu", () => {
     root.unmount();
   });
 
+  it("paints only the rows the caller handles", async () => {
+    // The menu's own rule (#1): a row with no handler is not offered, and a
+    // group whose every row is unhandled takes its separator with it.
+    const root = renderComponent(
+      <UserMenu user={user} onAccount={() => undefined} />,
+    );
+    clickCentreOf(root, "user-menu-trigger");
+    await waitFor(() => {
+      settle(root);
+      requireBounds(root, "user-menu-account");
+    });
+    expect(root.renderer.findByTestId("user-menu-billing")).toBeUndefined();
+    expect(root.renderer.findByTestId("user-menu-upgrade")).toBeUndefined();
+    root.unmount();
+  });
+
   it("runs one action and closes the menu", async () => {
     const handlers = account();
     const root = renderComponent(<UserMenu user={user} {...handlers} />);
@@ -75,7 +91,9 @@ describe("UserMenu", () => {
   });
 
   it("opens beside an icon rail and paints only the avatar", async () => {
-    const root = renderComponent(<UserMenu user={user} collapsed />);
+    const root = renderComponent(
+      <UserMenu user={user} collapsed {...account()} />,
+    );
     expect(requireBounds(root, "user-menu-trigger").width).toBe(32);
     expect(root.renderer.getAllText()).not.toContain("benji@example.com");
 
