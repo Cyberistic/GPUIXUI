@@ -1,0 +1,45 @@
+---
+title: Particles
+description: A decorative field of drifting motes
+---
+
+<ComponentPreview name="particles-demo" />
+
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
+
+```tsx
+import { Particles } from "@gpuixui/fx/particles";
+
+<div style={{ position: "relative", height: 220, overflow: "hidden" }}>
+  <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}>
+    <Particles count={28} seed={7} />
+  </div>
+  <Hero copy="Aurora 3.0" />
+</div>;
+```
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `count` | `number` | `24` |
+| `seed` | `number` | `1` |
+| `minSize` | `number` | `2` |
+| `maxSize` | `number` | `5` |
+| `color` | `string` | theme `primary` |
+| `driftMs` | `number` | `14_000` |
+| `level` | `MotionLevel` | `"slow"` |
+| `className` | `string` | — |
+| `style` | `StateStyle<{ count, reducedMotion, width, height }>` | — |
+
+## Limitations
+
+- The box must be bounded; the field measures itself.
+- A hidden field keeps animating — unmount it.
+- A resize re-draws the field from the same seed.

@@ -31,7 +31,7 @@ export function SlidingTextDemo() {
   );
 }
 
-export const slidingTextDemoSource = `import { SlidingText } from "@gpuixui/components/sliding-text";
+export const slidingTextDemoSource = `import { SlidingText } from "@gpuixui/fx/sliding-text";
 
 <div style={{ width: 220 }}>
   <SlidingText text={status} role="bodyStrong" />

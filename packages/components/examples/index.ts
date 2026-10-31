@@ -24,7 +24,6 @@ import { AvatarGroupExample } from "./avatar-group.example.js";
 import { BadgeExample } from "./badge.example.js";
 import { BreadcrumbExample } from "./breadcrumb.example.js";
 import { BubbleExample } from "./bubble.example.js";
-import { BubblesExample } from "./bubbles.example.js";
 import { CalendarExample } from "./calendar.example.js";
 import { CardExample } from "./card.example.js";
 import { CarouselExample } from "./carousel.example.js";
@@ -47,11 +46,8 @@ import { DropdownMenuExample } from "./dropdown-menu.example.js";
 import { EmptyStateExample } from "./empty-state.example.js";
 import { FieldExample } from "./field.example.js";
 import { FieldsetExample } from "./fieldset.example.js";
-import { FireworksExample } from "./fireworks.example.js";
 import { GradientExample } from "./gradient.example.js";
 import { GradientTextExample } from "./gradient-text.example.js";
-import { GravityStarsExample } from "./gravity-stars.example.js";
-import { HexagonExample } from "./hexagon.example.js";
 import { HighlightTextExample } from "./highlight-text.example.js";
 import { FormExample } from "./form.example.js";
 import { GlyphExample } from "./glyph.example.js";
@@ -62,41 +58,30 @@ import { ItemExample } from "./item.example.js";
 import { ImageZoomExample } from "./image-zoom.example.js";
 import { InlineEditExample } from "./inline-edit.example.js";
 import { KeyboardShortcutsExample } from "./keyboard-shortcuts.example.js";
-import { LiquidButtonExample } from "./liquid-button.example.js";
 import { ListExample } from "./list.example.js";
-import { MagneticExample } from "./magnetic.example.js";
 import { MentionInputExample } from "./mention-input.example.js";
 import { MessageExample } from "./message.example.js";
 import { MessageScrollerExample } from "./message-scroller.example.js";
 import { MotionExample } from "./motion.example.js";
-import { MotionGridExample } from "./motion-grid.example.js";
 import { MultiStepFormExample } from "./multi-step-form.example.js";
 import { NavigationMenuExample } from "./navigation-menu.example.js";
 import { PageTransitionExample } from "./page-transition.example.js";
 import { PaginationExample } from "./pagination.example.js";
-import { ParticlesExample } from "./particles.example.js";
 import { PinnedListExample } from "./pinned-list.example.js";
 import { PopoverExample } from "./popover.example.js";
 import { PreviewCardExample } from "./preview-card.example.js";
 import { ProgressExample } from "./progress.example.js";
 import { RevealExample } from "./reveal.example.js";
-import { RippleButtonExample } from "./ripple-button.example.js";
-import { RollingTextExample } from "./rolling-text.example.js";
-import { RotatingTextExample } from "./rotating-text.example.js";
 import { ScrollFadeExample } from "./scroll-fade.example.js";
 import { ScrollProgressExample } from "./scroll-progress.example.js";
 import { SearchInputExample } from "./search-input.example.js";
 import { SeparatorExample } from "./separator.example.js";
-import { ShineButtonExample } from "./shine-button.example.js";
 import { ShimmerExample } from "./shimmer.example.js";
 import { SidebarExample } from "./sidebar.example.js";
 import { SkeletonExample } from "./skeleton.example.js";
 import { SliderExample } from "./slider.example.js";
 import { SpinnerExample } from "./spinner.example.js";
 import { SlidingNumberExample } from "./sliding-number.example.js";
-import { SlidingTextExample } from "./sliding-text.example.js";
-import { SplittingTextExample } from "./splitting-text.example.js";
-import { StarsExample } from "./stars.example.js";
 import { StepperExample } from "./stepper.example.js";
 import { TabsExample } from "./tabs.example.js";
 import { TagInputExample } from "./tag-input.example.js";
@@ -106,7 +91,6 @@ import { TimelineExample } from "./timeline.example.js";
 import { ToastExample } from "./toast.example.js";
 import { ToggleExample } from "./toggle.example.js";
 import { ToggleGroupExample } from "./toggle-group.example.js";
-import { TypingTextExample } from "./typing-text.example.js";
 import { UserMenuExample } from "./user-menu.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
@@ -123,7 +107,6 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   badge: BadgeExample,
   breadcrumb: BreadcrumbExample,
   bubble: BubbleExample,
-  bubbles: BubblesExample,
   calendar: CalendarExample,
   card: CardExample,
   carousel: CarouselExample,
@@ -146,11 +129,8 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "empty-state": EmptyStateExample,
   field: FieldExample,
   fieldset: FieldsetExample,
-  fireworks: FireworksExample,
   gradient: GradientExample,
   "gradient-text": GradientTextExample,
-  "gravity-stars": GravityStarsExample,
-  hexagon: HexagonExample,
   "highlight-text": HighlightTextExample,
   form: FormExample,
   glyph: GlyphExample,
@@ -161,41 +141,30 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "image-zoom": ImageZoomExample,
   "inline-edit": InlineEditExample,
   "keyboard-shortcuts": KeyboardShortcutsExample,
-  "liquid-button": LiquidButtonExample,
   list: ListExample,
-  magnetic: MagneticExample,
   "mention-input": MentionInputExample,
   message: MessageExample,
   "message-scroller": MessageScrollerExample,
   motion: MotionExample,
-  "motion-grid": MotionGridExample,
   "multi-step-form": MultiStepFormExample,
   "navigation-menu": NavigationMenuExample,
   "page-transition": PageTransitionExample,
   pagination: PaginationExample,
-  particles: ParticlesExample,
   "pinned-list": PinnedListExample,
   popover: PopoverExample,
   "preview-card": PreviewCardExample,
   progress: ProgressExample,
   reveal: RevealExample,
-  "ripple-button": RippleButtonExample,
-  "rolling-text": RollingTextExample,
-  "rotating-text": RotatingTextExample,
   "scroll-fade": ScrollFadeExample,
   "scroll-progress": ScrollProgressExample,
   "search-input": SearchInputExample,
   separator: SeparatorExample,
-  "shine-button": ShineButtonExample,
   shimmer: ShimmerExample,
   sidebar: SidebarExample,
   skeleton: SkeletonExample,
   slider: SliderExample,
   spinner: SpinnerExample,
   "sliding-number": SlidingNumberExample,
-  "sliding-text": SlidingTextExample,
-  "splitting-text": SplittingTextExample,
-  stars: StarsExample,
   stepper: StepperExample,
   tabs: TabsExample,
   "tag-input": TagInputExample,
@@ -205,6 +174,5 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   toast: ToastExample,
   toggle: ToggleExample,
   "toggle-group": ToggleGroupExample,
-  "typing-text": TypingTextExample,
   "user-menu": UserMenuExample,
 };

@@ -539,6 +539,7 @@ is why the route column is the collection's root.
 | `packages/shell/docs` | `/shell/<name>` | Workspace |
 | `packages/dock/docs` | `/dock/<name>` | Workspace |
 | `packages/media/docs` | `/media/<name>` | Workspace |
+| `packages/fx/docs` | `/effects/<name>` | Effects |
 
 `src/lib/page-tree.ts` merges each package's pages into its section and sorts
 the section by title, so curated and package pages read as one alphabetical lane

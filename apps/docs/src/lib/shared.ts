@@ -11,6 +11,7 @@ export const filesDocsRoute = "/files";
 export const shellDocsRoute = "/shell";
 export const dockDocsRoute = "/dock";
 export const mediaDocsRoute = "/media";
+export const effectsDocsRoute = "/effects";
 export const gitConfig = {
   user: "Cyberistic",
   repo: "GPUIXUI",

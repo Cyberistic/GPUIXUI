@@ -1,0 +1,42 @@
+---
+title: Ripple button
+description: An action whose press spreads a wash from the pointer
+---
+
+<ComponentPreview name="ripple-button-demo" />
+
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
+
+```tsx
+import { RippleButton } from "@gpuixui/fx/ripple-button";
+
+<RippleButton variant="primary" onClick={deploy}>
+  Deploy
+</RippleButton>;
+```
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `disabled` | `boolean` | `false` |
+| `loading`, `loadingLabel`, `reducedMotion`, `leading`, `trailing` | the shared `Button` busy contract | — |
+| `level` | `MotionLevel` | `"notice"` |
+| `rippleColor` | `string` | the label ink at 28% |
+| `onClick` | `(event) => void` | — |
+| `onLayout` | `(event) => void` | — |
+| `style` | `StyleDesc` | — |
+
+## Limitations
+
+- Inset geometry, not a scale — no `transform`.
+- Every press mounts one layer for the tween.
+- The wash sits above the label, at 28%.

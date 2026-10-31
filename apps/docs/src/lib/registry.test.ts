@@ -76,6 +76,7 @@ const COMPONENT_LANES = [
   "/shell",
   "/dock",
   "/media",
+  "/effects",
 ] as const;
 
 /** The served pages a registry item can describe: a guide documents no module. */

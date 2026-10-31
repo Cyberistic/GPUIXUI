@@ -1,4 +1,8 @@
-import { componentDocsRoute, primitiveDocsRoute } from "./shared";
+import {
+  componentDocsRoute,
+  effectsDocsRoute,
+  primitiveDocsRoute,
+} from "./shared";
 
 /**
  * The primitive pages the Components section curates instead.
@@ -34,9 +38,37 @@ export const curatedPrimitiveTwins: ReadonlyArray<CuratedTwin> = [
   curated: `${componentDocsRoute}/${name}`,
 }));
 
-/** The curated page for a retired package URL, if there is one. */
+/**
+ * The effects that left `@gpuixui/components` for `@gpuixui/fx` (plan 726):
+ * their old component addresses answer with the effect page.
+ */
+export const movedEffects: ReadonlyArray<CuratedTwin> = [
+  "bubbles",
+  "fireworks",
+  "gravity-stars",
+  "hexagon",
+  "liquid-button",
+  "magnetic",
+  "motion-grid",
+  "particles",
+  "ripple-button",
+  "rolling-text",
+  "rotating-text",
+  "shine-button",
+  "sliding-text",
+  "splitting-text",
+  "stars",
+  "typing-text",
+].map((name) => ({
+  retired: `${componentDocsRoute}/${name}`,
+  curated: `${effectsDocsRoute}/${name}`,
+}));
+
+/** The page a retired URL now lives at, if it has moved. */
 export const curatedTwinOf = (url: string): string | undefined =>
-  curatedPrimitiveTwins.find((twin) => twin.retired === url)?.curated;
+  [...curatedPrimitiveTwins, ...movedEffects].find(
+    (twin) => twin.retired === url,
+  )?.curated;
 
 /** The pages the site serves: a retired twin is redirected, not rendered. */
 export const servedPages = <Page extends { readonly url: string }>(

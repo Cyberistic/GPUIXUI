@@ -60,6 +60,7 @@ const files = lane("files");
 const shell = lane("shell");
 const dock = lane("dock");
 const media = lane("media");
+const effect = lane("effects");
 
 export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
   {
@@ -132,9 +133,9 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
     name: "Actions and their effects",
     pages: [
       component("button", "Button"),
-      component("ripple-button", "Ripple button"),
-      component("liquid-button", "Liquid button"),
-      component("shine-button", "Shine button"),
+      effect("ripple-button", "Ripple button"),
+      effect("liquid-button", "Liquid button"),
+      effect("shine-button", "Shine button"),
       component("copy-button", "Copy button"),
       component("theme-toggler", "Theme toggler"),
     ],
@@ -144,12 +145,12 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
     pages: [
       component("gradient-text", "Gradient text"),
       component("highlight-text", "Highlight text"),
-      component("splitting-text", "Splitting text"),
-      component("rotating-text", "Rotating text"),
-      component("rolling-text", "Rolling text"),
-      component("sliding-text", "Sliding text"),
+      effect("splitting-text", "Splitting text"),
+      effect("rotating-text", "Rotating text"),
+      effect("rolling-text", "Rolling text"),
+      effect("sliding-text", "Sliding text"),
       component("sliding-number", "Sliding number"),
-      component("typing-text", "Typing text"),
+      effect("typing-text", "Typing text"),
       component("counting-number", "Counting number"),
       component("glyph", "Glyph"),
     ],
@@ -157,12 +158,12 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
   {
     name: "Animated backgrounds",
     pages: [
-      component("particles", "Particles"),
-      component("stars", "Stars"),
-      component("gravity-stars", "Gravity stars"),
-      component("bubbles", "Bubbles"),
-      component("fireworks", "Fireworks"),
-      component("hexagon", "Hexagon"),
+      effect("particles", "Particles"),
+      effect("stars", "Stars"),
+      effect("gravity-stars", "Gravity stars"),
+      effect("bubbles", "Bubbles"),
+      effect("fireworks", "Fireworks"),
+      effect("hexagon", "Hexagon"),
       component("gradient", "Gradient"),
     ],
   },
@@ -172,8 +173,8 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       component("reveal", "Reveal"),
       component("auto-height", "Auto height"),
       component("page-transition", "Page transition"),
-      component("motion-grid", "Motion grid"),
-      component("magnetic", "Magnetic"),
+      effect("motion-grid", "Motion grid"),
+      effect("magnetic", "Magnetic"),
       component("image-zoom", "Image zoom"),
       component("scroll-fade", "Scroll fade"),
       component("scroll-progress", "Scroll progress"),

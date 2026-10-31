@@ -1,0 +1,37 @@
+---
+title: Liquid button
+description: An action a soft fill floods into on hover
+---
+
+<ComponentPreview name="liquid-button-demo" />
+
+## Usage
+
+```tsx
+import { LiquidButton } from "@gpuixui/fx/liquid-button";
+
+<LiquidButton variant="primary" onClick={save}>
+  Save draft
+</LiquidButton>;
+```
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `disabled` | `boolean` | `false` |
+| `loading`, `loadingLabel`, `reducedMotion`, `leading`, `trailing` | the shared `Button` busy contract | — |
+| `level` | `MotionLevel` | `"normal"` |
+| `liquidColor` | `string` | label ink at 16% |
+| `onMouseMove` | `(event) => void` | — |
+| `onMouseLeave` | `(event) => void` | — |
+| `onLayout` | `(event) => void` | — |
+| `style` | `StyleDesc` | — |
+
+## Limitations
+
+- Inset travel, not a scaled blob; the fill is a straight rectangle.
+- Edges come from moves; a teleported pointer paints nothing until it moves.
+- The flood crosses the label at 16% ink.

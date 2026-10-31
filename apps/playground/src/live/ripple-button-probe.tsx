@@ -25,7 +25,7 @@ import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useWindowSize } from "@gpuix/react";
-import { RippleButton } from "@gpuixui/components";
+import { RippleButton } from "@gpuixui/fx";
 import { actionOnColor } from "@gpuixui/primitives/button";
 import { Pixels, Smoke } from "@gpuixui/testing";
 import { textStyle, type Theme } from "@gpuixui/tokens";

@@ -24,6 +24,7 @@ import { useState } from "react";
 import type { ComponentType, ReactNode } from "react";
 import { examples as componentExamples } from "@gpuixui/components/examples";
 import { examples as fileExamples } from "@gpuixui/files/examples";
+import { examples as fxExamples } from "@gpuixui/fx/examples";
 import {
   AppMenuExample,
   StatusBarExample,
@@ -54,6 +55,7 @@ const shellExamples: Readonly<Record<string, ComponentType>> = {
  */
 export const examples: Readonly<Record<string, ComponentType>> = {
   ...componentExamples,
+  ...fxExamples,
   ...shellExamples,
   ...fileExamples,
 };

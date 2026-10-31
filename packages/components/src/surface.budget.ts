@@ -162,7 +162,10 @@ export const surfaceBudget = {
   // 212 → 215 for the three Mac controls (plan 725): `segmented-control.tsx`,
   // `disclosure.tsx` and `inset-group.tsx`, each one family over parts the
   // graph already carried.
-  modules: 215,
+  // 215 → 175 when the sixteen decorative effects (their modules, logic,
+  // stores and `internal/text-swap.ts`) moved to `@gpuixui/fx` (plan 726):
+  // the core entry no longer carries a particle field or a kinetic headline.
+  modules: 175,
 
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
@@ -240,7 +243,10 @@ export const surfaceBudget = {
   // so the ceiling moved 1490 → 1500 KiB.
   // 1 525 KiB measured 2026-10-31 with the three Mac controls (plan 725), past
   // the 1520 KiB ceiling: 1520 → 1540 KiB for the next family's headroom.
-  bytes: 1540 * 1024,
+  // 1 312 KiB measured with the effects in `@gpuixui/fx` (plan 726): the
+  // ceiling comes down 1540 → 1340 KiB so the room they left is not refilled
+  // silently.
+  bytes: 1340 * 1024,
   // 210 → 212 and 1500 → 1510 KiB for the Shimmer effect: `shimmer.tsx`, its
   // `shimmer/logic.ts` rule, `gradient/logic.ts` (the ramp a strip reads) and the
   // public `index` row that exports it. Measured 1 541 462 bytes in the tree it

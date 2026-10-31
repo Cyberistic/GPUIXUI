@@ -469,3 +469,13 @@ negative control in `apps/playground/README.md`.
    in the same commit. The registry is what `apps/playground` mounts, and
    `src/examples.test.ts` fails when an example file has no entry — the docs
    site reads the filesystem, so an unregistered example looks shipped.
+
+## Authoring your own
+
+`@gpuixui/components/authoring` publishes the seams every component here is
+built on — the theme seam, the recipe cache, `measure`, the local store, the
+presence contract, the shared text and action parts — and
+`@gpuixui/components/authoring/testing` the behaviour-suite helpers. Building
+on them gives a component of your own the same contracts the library's keep;
+`@gpuixui/fx` is built entirely on them (plan 726).
+

@@ -1,0 +1,43 @@
+---
+title: Shine button
+description: An action a soft sheen crosses under the pointer
+---
+
+<ComponentPreview name="shine-button-demo" />
+
+## Installation
+
+```bash
+nub add @gpuixui/components
+```
+
+## Usage
+
+```tsx
+import { ShineButton } from "@gpuixui/fx/shine-button";
+
+<ShineButton variant="primary" onClick={deploy}>
+  Deploy
+</ShineButton>;
+```
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `variant` | `"primary" \| "secondary" \| "ghost" \| "danger"` | `"secondary"` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `disabled` | `boolean` | `false` |
+| `loading`, `loadingLabel`, `reducedMotion`, `leading`, `trailing` | the shared `Button` busy contract | — |
+| `level` | `MotionLevel` | `"notice"` |
+| `sheenColor` | `string` | the label colour |
+| `onMouseEnter` | `(event) => void` | — |
+| `onLayout` | `(event) => void` | — |
+| `style` | `StyleDesc` | — |
+
+## Limitations
+
+- Inset travel, not a scaled layer.
+- Two stops, two halves; the runtime's gradient accepts two.
+- One sweep per entry: a repeating sheen needs the caller to re-enter or its own timer.
+- A reduced-motion reader, a keyboard reader and a disabled action get no sheen; the control's hover fill and focus ring are the feedback that remains. A band already crossing when the action is disabled goes with it — the action can no longer answer the hover the band marks — and re-enabling waits for the next entry rather than reviving the old sweep.

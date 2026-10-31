@@ -227,21 +227,24 @@ describe("the real inventory", () => {
       "## Animated primitives (plan 600)",
       "### Declined and covered catalogue entries",
     );
+    // The decorative half of the catalogue moved to `@gpuixui/fx` (plan 726)
+    // and its own section; both are the animated tier.
+    const effects = section("## Effects", "## Blocked by the runtime");
     const tierFive = section(
       "## Tier 5 — specialised",
       "## Animated primitives",
     );
 
-    expect(animated.length).toBeGreaterThanOrEqual(30);
+    expect(animated.length + effects.length).toBeGreaterThanOrEqual(30);
     expect(
       inventory.rows
         .filter((row) => row.tier === "animated")
         .map((row) => row.name),
-    ).toEqual(animated);
+    ).toEqual([...animated, ...effects]);
     expect(
       inventory.rows.filter((row) => row.tier === 5).map((row) => row.name),
     ).toEqual(tierFive);
-    expect(animated).toContain("Typing text");
+    expect(effects).toContain("Typing text");
     expect(tierFive).not.toContain("Typing text");
     expect(
       inventory.rows.some(

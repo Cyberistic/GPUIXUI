@@ -42,7 +42,8 @@ export interface Inventory {
 }
 
 const tierHeading = /^## Tier (\d+)/;
-const animatedHeading = /^## Animated primitives\b/;
+/** The animated catalogue: the core's rows and `@gpuixui/fx`'s (plan 726). */
+const animatedHeading = /^## (Animated primitives|Effects)\b/;
 const columnHeading = /^\|\s*Component\s*\|\s*Status\s*\|/;
 const rule = /^\|[\s:|-]+\|$/;
 

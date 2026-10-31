@@ -46,6 +46,6 @@ export function HexagonDemo() {
   );
 }
 
-export const hexagonDemoSource = `import { Hexagon } from "@gpuixui/components/hexagon";
+export const hexagonDemoSource = `import { Hexagon } from "@gpuixui/fx/hexagon";
 
 <Hexagon radius={34} stroke={1} style={{ width: 520, height: 260 }} />;`;

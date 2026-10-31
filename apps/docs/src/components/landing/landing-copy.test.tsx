@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
 import raw from "../../lib/proof.json";
 import { landingBlocks } from "./blocks-strip";
 import { Hero, heroMedia } from "./hero";
-import { Landing } from "./landing";
+import { credit, Landing } from "./landing";
 import { feelClips } from "./feel";
 import { proofFigures } from "./proof";
 
@@ -80,5 +80,20 @@ describe("the landing", () => {
   it("says nothing about hunters' licences", () => {
     const page = renderToStaticMarkup(<Landing />);
     expect(page).not.toMatch(/Hunter License|licence card/i);
+  });
+
+  it("ends with the maker's line, the handle an underlined link to the site", () => {
+    const page = renderToStaticMarkup(<Landing />);
+    const line = page.slice(page.indexOf('class="landing-credit"'));
+    expect(line).toContain("Made with ☕ by");
+    expect(line).toContain(`href="${credit.href}"`);
+    expect(line).toContain(`>${credit.handle}</a>`);
+    expect(page.indexOf('class="landing-credit"')).toBeGreaterThan(
+      page.lastIndexOf("landing-footer"),
+    );
+    const css = readFileSync(at("../../styles/landing.css"), "utf8");
+    expect(css.slice(css.indexOf(".landing-credit a {"))).toMatch(
+      /^[^}]*text-decoration: underline/,
+    );
   });
 });

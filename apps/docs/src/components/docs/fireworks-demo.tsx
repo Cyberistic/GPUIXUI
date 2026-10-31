@@ -68,7 +68,7 @@ export function FireworksDemo() {
   );
 }
 
-export const fireworksDemoSource = `import { Fireworks } from "@gpuixui/components/fireworks";
+export const fireworksDemoSource = `import { Fireworks } from "@gpuixui/fx/fireworks";
 
 <div style={{ position: "relative", height: 260, overflow: "hidden" }}>
   <div style={{ position: "absolute", inset: 0 }}>
