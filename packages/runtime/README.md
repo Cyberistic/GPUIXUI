@@ -34,6 +34,7 @@ or does not. A `supported: false` entry carries the honest `reason` and
 | `globalShortcut` | **no** — key events fire only while the window is focused |
 | `tray` | **no** — no tray/menu-bar/status-item host |
 | `nativeView` | **no** — no webview/native child-view host |
+| `systemAppearance` | **no** — no accent colour, Light/Dark choice or Reduce Transparency; read them with `@gpuixui/shell`'s `readAppearance` |
 | `terminal` | **yes** — `render(<App />, { terminal: true })`, `isTerminal()` |
 | `headlessDialog` | **yes** — `@gpuix/react/dialog` with a one-per-window Escape layer |
 | `tabNavigation` | **yes** — Tab/Shift+Tab move focus by default |

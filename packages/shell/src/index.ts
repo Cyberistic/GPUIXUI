@@ -76,3 +76,16 @@ export {
   windowActions,
 } from "./platform/window.js";
 export type { WindowActions, WindowHost } from "./platform/window.js";
+
+export {
+  AppearanceReadError,
+  appearancePoll,
+  readAppearance,
+  watchAppearance,
+} from "./appearance/appearance.js";
+export {
+  accentColor,
+  appearanceOverrides,
+  decodeAppearance,
+  type SystemAppearance,
+} from "./appearance/logic.js";

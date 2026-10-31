@@ -34,6 +34,7 @@ describe("capability matrix", () => {
       "gridSpan",
       "imeComposition",
       "nativeView",
+      "systemAppearance",
       "transform",
       "tray",
     ]);

@@ -45,6 +45,29 @@ count, titled sections, and one tab stop. ↑/↓/Home/End move the choice and s
 at either end. As on macOS, a row paints **no hover wash**, and the chosen row is
 emphasized (the accent fill) only while the list holds focus.
 
+## Following the Mac
+
+The runtime reports neither the accent colour, the Light/Dark choice nor Reduce
+Transparency, so `@gpuixui/shell` reads them from `defaults` at the app's
+boundary. `watchAppearance` emits the settings now and on each change (polled
+every two seconds), and `appearanceOverrides` turns them into a theme edit: the
+accent repaints `primary`, `ring` and the selection with a readable ink, and
+Reduce Transparency paints every material opaque.
+
+```tsx
+const app = watchAppearance.pipe(
+  Stream.runForEach((appearance) =>
+    Effect.sync(() =>
+      setTheme(extendTheme(getTheme(appearance.mode), appearanceOverrides(appearance, base))),
+    ),
+  ),
+  Effect.provide(NodeServices.layer),
+);
+```
+
+A sandboxed `.app` may be refused the global domain; the read then fails with
+`AppearanceReadError` instead of guessing a blue.
+
 ## Limits
 
 The runtime reserves no titlebar and reports none, so whether the OS bar is

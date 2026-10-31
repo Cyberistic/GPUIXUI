@@ -95,6 +95,8 @@ const labels: Readonly<Record<string, string>> = {
   globalShortcut: "Global / system shortcut",
   tray: "Tray / menu bar / status item",
   nativeView: "Native view / webview / embedded browser",
+  systemAppearance:
+    "System appearance (accent, Light/Dark, Reduce Transparency)",
   terminal: "Terminal rendering",
   headlessDialog: "Headless dialog",
   tabNavigation: "Tab / Shift+Tab focus traversal",
