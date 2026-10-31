@@ -5,7 +5,7 @@
 | Owner | `playground` (`apps/playground/src/bench`) |
 | Depends on | `728` (the pipeline block is the measured app) |
 | Feeds | `727` §3 (proof strip) |
-| Status | planned |
+| Status | landed 2026-10-31 |
 
 ## Why
 

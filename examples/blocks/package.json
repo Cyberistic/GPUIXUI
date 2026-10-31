@@ -14,7 +14,8 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "test": "vitest run",
-    "dev": "nub src/main.tsx"
+    "dev": "nub src/main.tsx",
+    "bench": "nub src/bench/run.ts"
   },
   "dependencies": {
     "@gpuix/react": "catalog:",

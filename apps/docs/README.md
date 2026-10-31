@@ -466,6 +466,7 @@ src/lib/component-props.ts          The props a component declares, read through
 src/lib/component-index-query.ts    The docs indexes' filter on the page URL (`?q=`)
 src/lib/icon-gallery.ts             The icon gallery's entries and its paint rule
 src/lib/related.ts                  The related-component families a package page's strip prints
+src/lib/proof.ts                    The landing's measured numbers, decoded from the bench's proof.json
 src/lib/platform.ts                 The platform and look switch: parse, label, resolve, and the mode a preview paints
 src/lib/platform-storage.ts         The remembered platform/look choice, per axis
 src/lib/browser-storage.ts          The browser store, and the guard that reads a refusal as absence

@@ -24868,7 +24868,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 
 `[ ]` Pre-existing behaviour failures found while landing 724 (fail at `3caccbe10`, before any native-mac code): `packages/components` `user-menu.test.tsx` (3: `user-menu-notifications` never mounts) and `sidebar.test.tsx` / `sidebar-screenshots.test.tsx` (5, the account menu). `nub run test` does not run `test:behaviour`, so the gates stayed green. Owner: components
 
-`[ ]` `[██████░░░░]` 6/11
+`[ ]` `[███████░░░]` 7/11
 
 `[x]` Write the native-Mac plan set (721–730), index it, retire plan 434 (Hunter landing)
 `[x]` 721 — macOS materials: measure a translucent fill in a blurred window, then the material roles
@@ -24879,5 +24879,5 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[!]` 726 — `@gpuixui/fx`: move the decorative effects out of `@gpuixui/components` (blocked: needs the shared internals `presence`/`measure`/`scatter` hoisted public first — owner decision, see plan index)
 `[x]` 728 — `examples/blocks` contract + the pipeline block; delete the Hunter block
 `[ ]` 729 — eight Mac-app blocks (notes, settings, launcher, menubar, agent, calendar, welcome, viewer)
-`[ ]` 730 — measured proof numbers (`apps/docs/src/lib/proof.json`)
+`[x]` 730 — measured proof numbers (`apps/docs/src/lib/proof.json`)
 `[ ]` 727 — the landing rebuilt on native captures and measured numbers

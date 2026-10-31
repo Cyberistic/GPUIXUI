@@ -1,0 +1,10 @@
+{
+  "measuredAt": "2026-10-31T06:54:34.842Z",
+  "machine": "Mac14,10",
+  "os": "macOS 26.3",
+  "runtime": "@gpuix/native 0.11.0",
+  "runs": 10,
+  "coldStartMs": 666,
+  "idleRssMb": 201,
+  "installMb": 23
+}
