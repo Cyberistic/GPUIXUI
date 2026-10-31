@@ -24868,13 +24868,13 @@ green; the site deployed and all 195 sitemap pages answer 200.
 
 `[ ]` Pre-existing behaviour failures found while landing 724 (fail at `3caccbe10`, before any native-mac code): `packages/components` `user-menu.test.tsx` (3: `user-menu-notifications` never mounts) and `sidebar.test.tsx` / `sidebar-screenshots.test.tsx` (5, the account menu). `nub run test` does not run `test:behaviour`, so the gates stayed green. Owner: components
 
-`[ ]` `[█████████░]` 9/11 (724 in part, 726 blocked)
+`[ ]` `[██████████]` 10/11 (726 open)
 
 `[x]` Write the native-Mac plan set (721–730), index it, retire plan 434 (Hunter landing)
 `[x]` 721 — macOS materials: measure a translucent fill in a blurred window, then the material roles
 `[x]` 722 — `Window` and `SourceList` in `@gpuixui/shell`; `TitleBar` folded in
 `[x]` 723 — system accent, appearance and Reduce Transparency (record the runtime gap)
-`[~]` 724 — HIG pass: darwin sizes, hover policy, menus, sheets, focus (interaction, menus and type landed; sheet-from-toolbar, tooltip delay, overlay scrollbars, table density, focus ring, toolbar bezel open)
+`[x]` 724 — HIG pass: darwin sizes, hover policy, menus, sheets, focus
 `[x]` 725 — `SegmentedControl`, `PopUpButton`, `Disclosure`, `PathControl`, `InsetGroup`
 `[!]` 726 — `@gpuixui/fx`: move the decorative effects out of `@gpuixui/components` (blocked: needs the shared internals `presence`/`measure`/`scatter` hoisted public first — owner decision, see plan index)
 `[x]` 728 — `examples/blocks` contract + the pipeline block; delete the Hunter block

@@ -27,6 +27,7 @@ import {
   Button,
   IconButton,
   isPlainKey,
+  ToolbarScope,
   Separator,
   ToggleGroup,
 } from "@gpuixui/primitives";
@@ -170,152 +171,155 @@ export const Toolbar = ({
   };
 
   return (
-    <div
-      role="toolbar"
-      {...(label === undefined ? {} : { "aria-label": label })}
-      {...rest}
-      onKeyDown={handleKeyDown}
-      style={mergeStyles(
-        mergeStyles(
-          recipeStyle(cn(TOOLBAR, className), theme),
-          floatingRootStyle(),
-        ),
-        style,
-      )}
-    >
-      {Arr.map(Arr.take(actions, visibleCount), (action, index) => {
-        const disabled = action.disabled === true;
-        const groupBefore =
-          index === 0
-            ? false
-            : (actions[index - 1]?.group ?? undefined) !==
-              (action.group ?? undefined);
-        return (
-          <Fragment key={action.id}>
-            {groupBefore ? (
-              <Separator orientation="vertical" className="h-4" />
-            ) : null}
-            <Button
-              variant="ghost"
-              size="sm"
-              label={action.label}
-              disabled={disabled}
-              tabIndex={Option.contains(roving, index) ? 0 : -1}
-              testId={`toolbar-action-${action.id}`}
-              ref={(instance) => {
-                refs.current[index] = instance;
-              }}
-              onActivate={() => onAction?.(action.id)}
-              leading={
-                action.icon === undefined ? undefined : (
-                  <Icon
-                    name={action.icon}
-                    color={
-                      disabled
-                        ? theme.colors.disabledForeground
-                        : theme.colors.foreground
-                    }
-                    size="sm"
-                  />
-                )
-              }
-            >
-              <text
-                style={{
-                  ...recipeStyle(TOOLBAR_ITEM_LABEL, theme),
-                  color: disabled
-                    ? theme.colors.disabledForeground
-                    : theme.colors.foreground,
+    // Its actions are toolbar buttons: on AppKit they keep the bezel hover.
+    <ToolbarScope.Provider value>
+      <div
+        role="toolbar"
+        {...(label === undefined ? {} : { "aria-label": label })}
+        {...rest}
+        onKeyDown={handleKeyDown}
+        style={mergeStyles(
+          mergeStyles(
+            recipeStyle(cn(TOOLBAR, className), theme),
+            floatingRootStyle(),
+          ),
+          style,
+        )}
+      >
+        {Arr.map(Arr.take(actions, visibleCount), (action, index) => {
+          const disabled = action.disabled === true;
+          const groupBefore =
+            index === 0
+              ? false
+              : (actions[index - 1]?.group ?? undefined) !==
+                (action.group ?? undefined);
+          return (
+            <Fragment key={action.id}>
+              {groupBefore ? (
+                <Separator orientation="vertical" className="h-4" />
+              ) : null}
+              <Button
+                variant="ghost"
+                size="sm"
+                label={action.label}
+                disabled={disabled}
+                tabIndex={Option.contains(roving, index) ? 0 : -1}
+                testId={`toolbar-action-${action.id}`}
+                ref={(instance) => {
+                  refs.current[index] = instance;
                 }}
-              >
-                {action.label}
-              </text>
-            </Button>
-          </Fragment>
-        );
-      })}
-
-      <div style={{ flexGrow: 1, flexBasis: 0 }} />
-
-      {modeOptions.length === 0 ? null : (
-        <Fragment>
-          <Separator orientation="vertical" className="h-4" />
-          <ToggleGroup
-            type="single"
-            label={modesLabel}
-            size="sm"
-            options={modeOptions}
-            {...(mode === undefined ? {} : { value: mode })}
-            onValueChange={onModeChange}
-            itemTestId={(id) => `toolbar-mode-${id}`}
-          />
-        </Fragment>
-      )}
-
-      {hasOverflow ? (
-        <Fragment>
-          <IconButton
-            label="More actions"
-            size="sm"
-            aria-haspopup="menu"
-            aria-expanded={overflowOpen}
-            testId="toolbar-overflow"
-            tabIndex={Option.contains(roving, visibleCount) ? 0 : -1}
-            ref={(instance) => {
-              refs.current[visibleCount] = instance;
-              overflowRef.current = instance;
-            }}
-            onActivate={() => setOverflowOpen((open) => !open)}
-            icon={<Icon name="ellipsis" color={theme.colors.foreground} />}
-          />
-          {overflowOpen ? (
-            <FloatingLayer
-              role="menu"
-              aria-label="More actions"
-              tabIndex={-1}
-              side="bottom"
-              align="end"
-              sideOffset={2}
-              onKeyDown={(event) => {
-                if (event.key === "escape") {
-                  event.preventDefault();
-                  closeOverflow();
-                }
-              }}
-              style={recipeStyle(cn(MENU_CONTENT, "min-w-40"), theme)}
-            >
-              {Arr.map(Arr.drop(actions, visibleCount), (action) => {
-                const disabled = action.disabled === true;
-                return (
-                  <div
-                    key={action.id}
-                    role="menuitem"
-                    aria-disabled={disabled}
-                    testId={`toolbar-overflow-item-${action.id}`}
-                    onClick={() => {
-                      if (disabled) return;
-                      onAction?.(action.id);
-                      setOverflowOpen(false);
-                    }}
-                    style={overflowItemStyle(theme, disabled)}
-                  >
-                    <text
-                      style={{
-                        ...recipeStyle(TOOLBAR_ITEM_LABEL, theme),
-                        color: disabled
+                onActivate={() => onAction?.(action.id)}
+                leading={
+                  action.icon === undefined ? undefined : (
+                    <Icon
+                      name={action.icon}
+                      color={
+                        disabled
                           ? theme.colors.disabledForeground
-                          : theme.colors.popoverForeground,
+                          : theme.colors.foreground
+                      }
+                      size="sm"
+                    />
+                  )
+                }
+              >
+                <text
+                  style={{
+                    ...recipeStyle(TOOLBAR_ITEM_LABEL, theme),
+                    color: disabled
+                      ? theme.colors.disabledForeground
+                      : theme.colors.foreground,
+                  }}
+                >
+                  {action.label}
+                </text>
+              </Button>
+            </Fragment>
+          );
+        })}
+
+        <div style={{ flexGrow: 1, flexBasis: 0 }} />
+
+        {modeOptions.length === 0 ? null : (
+          <Fragment>
+            <Separator orientation="vertical" className="h-4" />
+            <ToggleGroup
+              type="single"
+              label={modesLabel}
+              size="sm"
+              options={modeOptions}
+              {...(mode === undefined ? {} : { value: mode })}
+              onValueChange={onModeChange}
+              itemTestId={(id) => `toolbar-mode-${id}`}
+            />
+          </Fragment>
+        )}
+
+        {hasOverflow ? (
+          <Fragment>
+            <IconButton
+              label="More actions"
+              size="sm"
+              aria-haspopup="menu"
+              aria-expanded={overflowOpen}
+              testId="toolbar-overflow"
+              tabIndex={Option.contains(roving, visibleCount) ? 0 : -1}
+              ref={(instance) => {
+                refs.current[visibleCount] = instance;
+                overflowRef.current = instance;
+              }}
+              onActivate={() => setOverflowOpen((open) => !open)}
+              icon={<Icon name="ellipsis" color={theme.colors.foreground} />}
+            />
+            {overflowOpen ? (
+              <FloatingLayer
+                role="menu"
+                aria-label="More actions"
+                tabIndex={-1}
+                side="bottom"
+                align="end"
+                sideOffset={2}
+                onKeyDown={(event) => {
+                  if (event.key === "escape") {
+                    event.preventDefault();
+                    closeOverflow();
+                  }
+                }}
+                style={recipeStyle(cn(MENU_CONTENT, "min-w-40"), theme)}
+              >
+                {Arr.map(Arr.drop(actions, visibleCount), (action) => {
+                  const disabled = action.disabled === true;
+                  return (
+                    <div
+                      key={action.id}
+                      role="menuitem"
+                      aria-disabled={disabled}
+                      testId={`toolbar-overflow-item-${action.id}`}
+                      onClick={() => {
+                        if (disabled) return;
+                        onAction?.(action.id);
+                        setOverflowOpen(false);
                       }}
+                      style={overflowItemStyle(theme, disabled)}
                     >
-                      {action.label}
-                    </text>
-                  </div>
-                );
-              })}
-            </FloatingLayer>
-          ) : null}
-        </Fragment>
-      ) : null}
-    </div>
+                      <text
+                        style={{
+                          ...recipeStyle(TOOLBAR_ITEM_LABEL, theme),
+                          color: disabled
+                            ? theme.colors.disabledForeground
+                            : theme.colors.popoverForeground,
+                        }}
+                      >
+                        {action.label}
+                      </text>
+                    </div>
+                  );
+                })}
+              </FloatingLayer>
+            ) : null}
+          </Fragment>
+        ) : null}
+      </div>
+    </ToolbarScope.Provider>
   );
 };

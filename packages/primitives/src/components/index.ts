@@ -34,7 +34,7 @@ export type { TextProps } from "./Text.js";
 export { Label, labelledBy } from "./Label.js";
 export type { LabelProps } from "./Label.js";
 
-export { Button } from "./Button.js";
+export { Button, ToolbarScope } from "./Button.js";
 export type { ButtonFocus, ButtonProps, ButtonState } from "./Button.js";
 
 export { IconButton, iconButtonProps } from "./IconButton.js";

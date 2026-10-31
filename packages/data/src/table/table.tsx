@@ -444,12 +444,17 @@ export const TableRow = ({
           ...(interactive
             ? {
                 cursor: "pointer",
-                hover: {
-                  // A style prop's state record replaces the compiled class's,
-                  // so the row restates the recipe's own `hover` fill.
-                  backgroundColor: hoverFill,
-                  borderColor: rule(hoverFill),
-                },
+                // A style prop's state record replaces the compiled class's,
+                // so the row restates the recipe's own `hover` fill — and an
+                // AppKit row states none: a Mac table answers the press, not a
+                // pointer crossing it (`Theme.interaction`, plan 724).
+                hover:
+                  theme.interaction === "appkit"
+                    ? {}
+                    : {
+                        backgroundColor: hoverFill,
+                        borderColor: rule(hoverFill),
+                      },
                 active: {
                   backgroundColor: pressFill,
                   borderColor: rule(pressFill),

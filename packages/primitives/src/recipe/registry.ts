@@ -19,7 +19,7 @@ import {
   filledPressed,
   targetSize,
 } from "@gpuixui/tokens";
-import { createTw } from "@gpuixui/tw";
+import { createTw, type TwCompiler } from "@gpuixui/tw";
 import { pipe } from "effect";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -187,7 +187,7 @@ const filledFill = (
       : undefined;
 
 /** The primitives' compiler: built-in utilities plus the theme-scale steps. */
-export const recipeTw = createTw({
+const compiler = createTw({
   utilities: {
     // Geometry and text chrome the built-in table lacks.
     "flex-row": () => ({ flexDirection: "row" }),
@@ -488,3 +488,22 @@ export const recipeTw = createTw({
     },
   },
 });
+
+/**
+ * The primitives' compiler, with the platform's pointer model applied.
+ *
+ * Under the AppKit interaction (`Theme.interaction`, plan 724) a control does
+ * not answer a pointer crossing it, so every recipe's `hover` record is dropped
+ * here — the one place every primitive's resting style is compiled — and the
+ * press, focus and disabled records stay. A toolbar's bezel is the exception,
+ * added back by `Button` inside a `ToolbarScope`.
+ */
+export const recipeTw: TwCompiler = {
+  ...compiler,
+  classesToStyle: (className, theme, state) => {
+    const result = compiler.classesToStyle(className, theme, state);
+    if (theme.interaction !== "appkit") return result;
+    const { hover: _pointer, ...style } = result.style;
+    return { ...result, style };
+  },
+};

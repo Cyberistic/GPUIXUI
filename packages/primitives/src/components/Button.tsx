@@ -41,7 +41,13 @@
  * activation.
  */
 
-import { useContext, useState, type ReactElement, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
@@ -58,7 +64,7 @@ import {
   isPlainKey,
   swallowKeyDefault,
 } from "../core/keyboard.js";
-import { controlSize, iconSideOf } from "../core/theme.js";
+import { colorRole, controlSize, iconSideOf } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   variantSpinnerAccent,
@@ -82,6 +88,13 @@ import { controlRing, keepContent } from "../core/focus.js";
 import { Spinner } from "./Spinner.js";
 import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/**
+ * Marks the actions of a toolbar. AppKit drops every control's hover except a
+ * toolbar button's, which shows its bezel under the pointer (plan 724), so the
+ * shell's toolbars provide this and `Button` reads it.
+ */
+export const ToolbarScope = createContext(false);
 
 export interface ButtonProps
   extends InteractionProps, TooltipTriggerProps, ActionHostProps {
@@ -180,6 +193,8 @@ export const renderButton = (
   focus: ButtonFocus,
   attached = false,
   messages: PrimitiveMessages = defaultMessages,
+  /** The action sits in a toolbar (`ToolbarScope`). */
+  inToolbar = false,
 ): ReactElement => {
   const {
     variant = "primary",
@@ -243,7 +258,11 @@ export const renderButton = (
   const base =
     disabled === true
       ? suppressFeedback(mergeStyle(resolved.style, resolved.disabled))
-      : resolved.style;
+      : theme.interaction === "appkit" && inToolbar
+        ? mergeStyle(resolved.style, {
+            hover: { backgroundColor: colorRole(theme, "muted") },
+          })
+        : resolved.style;
   const own = mergeStyle(
     // A filled action's label is the control, so it keeps full opacity while
     // another control has the keyboard focus (`paintsFilledSurface`).
@@ -331,5 +350,6 @@ export const Button = (props: ButtonProps): ReactElement => {
     },
     useContext(AttachedGroup),
     useMessages(),
+    useContext(ToolbarScope),
   );
 };

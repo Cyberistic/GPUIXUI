@@ -3877,6 +3877,22 @@ and a menu's highlighted row takes the accent, `primary`, with
 `extendTheme(theme, { interaction: "pointer" })` puts a macOS palette back on
 the web's model.
 
+Under `"appkit"` the primitives' recipe compiler drops every control's `hover`
+record (one choke point for buttons, checkboxes, switches and the rest), a
+clickable `@gpuixui/data` table row paints no hover, and a tooltip waits
+AppKit's second (`APPKIT_TOOLTIP_DELAY_MS`; a `TooltipProvider`'s or a tip's own
+delay still wins). The one hover AppKit keeps is a toolbar button's bezel: the
+shell's toolbars provide `ToolbarScope`, and a button inside it shows the
+`muted` bezel under the pointer. A Mac sheet hangs from the toolbar: a top
+`DrawerContent` with `inset` drops that far below the window's top, centred.
+
+Two AppKit details are deliberately **not** copied: the focus ring stays the
+opaque `ring` role at the strong border width — AppKit's half-transparent,
+wider ring would fail the 3:1 boundary floor — and it follows the system accent
+through `appearanceOverrides`; and scrollbars do not fade when idle, because the
+runtime's thumb (`scrollbarColor`) is already an overlay that takes no pointer
+input but has no idle state to hide in (`@gpuix/native` 0.11.0 `host.d.ts`).
+
 The darwin style also sizes AppKit's text: a 13-point body (`body`,
 `bodyStrong`), 12-point `label` and 11-point `caption`, through the platform
 style's `type` group, which merges into the typography field by field.

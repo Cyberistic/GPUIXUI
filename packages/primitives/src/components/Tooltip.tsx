@@ -41,9 +41,11 @@
 
 import {
   Fragment,
+  createContext,
   cloneElement,
   isValidElement,
   useEffect,
+  useContext,
   useLayoutEffect,
   useState,
   type ReactElement,
@@ -122,9 +124,31 @@ export const renderTooltipProvider = ({
   </GpuixTooltipProvider>
 );
 
-/** One timing for every `Tooltip` below it. */
-export const TooltipProvider = (props: TooltipProviderProps): ReactElement =>
-  renderTooltipProvider(props);
+/**
+ * AppKit's tooltip wait (plan 724): a Mac tip appears after about a second of
+ * rest, where the web's appears at 300 ms.
+ */
+export const APPKIT_TOOLTIP_DELAY_MS = 1000;
+
+/** The wait a tip falls back to on its theme, or the runtime's own default. */
+export const tooltipDelayFor = (theme: PrimitiveTheme): number | undefined =>
+  theme.interaction === "appkit" ? APPKIT_TOOLTIP_DELAY_MS : undefined;
+
+/** Whether a `TooltipProvider` states the timing above a tip. */
+const ProvidedTiming = createContext(false);
+
+/** One timing for every `Tooltip` below it; on an AppKit theme, AppKit's wait. */
+export const TooltipProvider = (props: TooltipProviderProps): ReactElement => {
+  const theme = useTheme();
+  return (
+    <ProvidedTiming.Provider value>
+      {renderTooltipProvider({
+        ...props,
+        delay: props.delay ?? tooltipDelayFor(theme),
+      })}
+    </ProvidedTiming.Provider>
+  );
+};
 
 export interface TooltipProps {
   /**
@@ -383,7 +407,11 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
     if (props.open === undefined) setRequested(next);
   };
   const side = props.side ?? "top";
-  return renderTooltip(props, theme, {
+  // A provider states the timing for every tip below it; a tip without one
+  // takes its theme's wait, and a tip's own `delay` wins over both.
+  const provided = useContext(ProvidedTiming);
+  const delay = props.delay ?? (provided ? undefined : tooltipDelayFor(theme));
+  return renderTooltip({ ...props, delay }, theme, {
     mounted,
     present: wanted,
     side,

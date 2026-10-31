@@ -33,6 +33,7 @@ import { defaultMessages, type PrimitiveMessages } from "../core/messages.js";
 import { reducedMotionOf } from "../core/motion.js";
 import {
   renderButton,
+  ToolbarScope,
   type ButtonFocus,
   type ButtonProps,
   type ButtonState,
@@ -152,8 +153,16 @@ export const renderIconButton = (
   focus: ButtonFocus,
   attached = false,
   messages: PrimitiveMessages = defaultMessages,
+  inToolbar = false,
 ): ReactElement =>
-  renderButton(iconButtonProps(props), theme, focus, attached, messages);
+  renderButton(
+    iconButtonProps(props),
+    theme,
+    focus,
+    attached,
+    messages,
+    inToolbar,
+  );
 
 /** A square, icon-only action that carries its name. */
 export const IconButton = (props: IconButtonProps): ReactElement => {
@@ -170,5 +179,6 @@ export const IconButton = (props: IconButtonProps): ReactElement => {
     focus,
     useContext(AttachedGroup),
     useMessages(),
+    useContext(ToolbarScope),
   );
 };

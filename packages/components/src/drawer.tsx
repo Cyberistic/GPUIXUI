@@ -194,6 +194,13 @@ export interface DrawerContentProps extends Omit<Props, "children"> {
   /** Renders the top-right close control. Default `true`. */
   readonly showClose?: boolean;
   /**
+   * A top sheet hangs this many points below the window's top edge, centred
+   * and at most the window's width less 80: AppKit's sheet, dropped from the
+   * toolbar's bottom edge (pass the toolbar's height, plan 724). Other edges
+   * ignore it.
+   */
+  readonly inset?: number;
+  /**
    * Paints the grabber a top or bottom sheet wears. Default `true`; a column
    * never paints one. It is decoration: the runtime has no drag host, so no
    * gesture follows it (vaul's handle without the drag).
@@ -328,6 +335,7 @@ export const DrawerContent = ({
   size: requestedSize = "md",
   label,
   showClose = true,
+  inset,
   grabber = true,
   initialFocus,
   className,
@@ -374,7 +382,11 @@ export const DrawerContent = ({
 
   if (!presence.mounted) return null;
 
-  const box = surfaceSize(side, size, window);
+  const hangs = side === "top" && inset !== undefined;
+  const edgeBox = surfaceSize(side, size, window);
+  const box = hangs
+    ? { ...edgeBox, width: Math.min(edgeBox.width, window.width - 80) }
+    : edgeBox;
   const close = () => setOpen(false);
   const handleKeyDown = (event: KeyEvent): void => {
     handleModalKeyDown({ event, contentId: trapId, renderer, onKeyDown });
@@ -405,6 +417,7 @@ export const DrawerContent = ({
             alignItems: "stretch",
             justifyContent:
               side === "left" || side === "top" ? "flex-start" : "flex-end",
+            ...(hangs ? { alignItems: "center", paddingTop: inset } : {}),
             ...presenceStyle(presence.present),
           },
         )}

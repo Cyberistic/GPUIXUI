@@ -19,6 +19,7 @@
 
 import { isTerminal, type Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { ToolbarScope } from "@gpuixui/primitives";
 import { createContext, useContext, type ReactNode } from "react";
 import {
   currentPlatform,
@@ -223,7 +224,7 @@ export const WindowToolbar = ({
         style,
       )}
     >
-      {leading}
+      <ToolbarScope.Provider value>{leading}</ToolbarScope.Provider>
       {title === undefined ? null : (
         <text
           style={{
@@ -239,7 +240,7 @@ export const WindowToolbar = ({
         </text>
       )}
       <div style={{ flexGrow: 1, flexBasis: 0, minWidth: 0 }} />
-      {actions}
+      <ToolbarScope.Provider value>{actions}</ToolbarScope.Provider>
     </div>
   );
 };

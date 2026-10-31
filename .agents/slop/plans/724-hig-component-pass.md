@@ -4,7 +4,7 @@
 | ----- | ----- |
 | Owner | `primitives` + `components` (each in its own worktree; one commit per family) |
 | Depends on | `721`, `722` (the `Window` the audit renders in) |
-| Status | planned |
+| Status | landed 2026-10-31 |
 
 ## Why
 
