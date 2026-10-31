@@ -115,9 +115,10 @@ src/routes/{$name}[.]json.ts        /<name>.json, one shadcn registry item
 src/components/mdx.tsx              The MDX component registry
 src/components/highlighted-code.tsx A render-time code block, in the library's syntax palette
 src/components/landing/landing.tsx  The landing page composition
+src/components/landing/hero.tsx     The hero: one line, the calls to action, the native film loop
+src/components/landing/proof.tsx    The measured numbers, read from the bench's proof.json
+src/components/landing/blocks-strip.tsx The block tiles, each linking to its page
 src/components/landing/deck.tsx     The three-desktop deck and the Omarchy strip under it
-src/components/landing/terminal.tsx The editor moment: a typed command, then VS Code
-src/components/landing/lineage.tsx  References and attribution on the landing page
 src/components/landing/reduced-motion.ts The one prefers-reduced-motion query both moving surfaces read
 src/components/landing/data.ts      The landing page's content, as data
 src/components/not-found.tsx        The 404 inside the docs chrome

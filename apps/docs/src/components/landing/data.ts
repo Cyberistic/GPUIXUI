@@ -64,29 +64,10 @@ export const omarchyCards: ReadonlyArray<OmarchyCard> = [
 
 export const repo = "https://github.com/Cyberistic/GPUIXUI";
 
-/** The numbers a heading prints as words, so a count cannot drift from its list. */
-const countWords = [
-  "Zero",
-  "One",
-  "Two",
-  "Three",
-  "Four",
-  "Five",
-  "Six",
-  "Seven",
-  "Eight",
-] as const;
-
-/** A count as the word a landing heading prints it, e.g. `3` → `"Three"`. */
-export const countWord = (count: number): string =>
-  countWords[count] ?? String(count);
-
-/** The desktops the deck shows; the hero and the editor sample print it. */
-export const landingLookCount = platforms.length;
-
 export const navLinks = [
   { label: "Docs", href: "/introduction" },
   { label: "Blocks", href: "/blocks/all" },
+  { label: "Live", href: "/live" },
 ] as const;
 
 export const attribution = [

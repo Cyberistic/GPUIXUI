@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { Hero, nextDesktop } from "./deck";
+import { Desktops, nextDesktop } from "./deck";
 import { omarchyCards, platforms } from "./data";
 
 /**
@@ -18,7 +18,7 @@ import { omarchyCards, platforms } from "./data";
  * cards without their icons — would still build.
  */
 
-const markup = renderToStaticMarkup(<Hero />);
+const markup = renderToStaticMarkup(<Desktops />);
 
 const css = readFileSync(
   fileURLToPath(new URL("../../styles/landing.css", import.meta.url)),
@@ -35,9 +35,8 @@ const rule = (selector: string, last = false): string => {
 /** The Omarchy strip's markup, from its opening tag to the deck's footnote. */
 const strip = (): string => {
   const start = markup.indexOf('class="landing-omarchy"');
-  // The conversations block inside the deck carries a `</header>` of its own,
-  // so the slice ends at the hero's, which is the first one after the strip.
-  const end = markup.indexOf("</header>", start);
+  // The strip is the section's last child, so it runs to the section's close.
+  const end = markup.lastIndexOf("</section>");
   return start === -1 || end === -1 ? "" : markup.slice(start, end);
 };
 
@@ -125,7 +124,7 @@ describe("the landing deck", () => {
     const stripMarkup = strip();
 
     // The cards stand where the fourth desktop stood: after the deck, before
-    // the hero closes.
+    // the section closes.
     expect(markup.indexOf('class="landing-deck"')).toBeLessThan(
       markup.indexOf('class="landing-omarchy"'),
     );

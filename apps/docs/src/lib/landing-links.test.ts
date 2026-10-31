@@ -46,7 +46,12 @@ const mounted: ReadonlyArray<Mounted> = [
   ),
 ];
 
-const urls = new Set(["/", ...mounted.map(({ url }) => url)]);
+/** The plain static routes (`src/routes/live.tsx` → `/live`). */
+const staticRoutes = readdirSync(join(appDir, "src/routes"))
+  .filter((name) => /^[a-z-]+\.tsx$/.test(name) && name !== "index.tsx")
+  .map((name) => `/${name.replace(/\.tsx$/, "")}`);
+
+const urls = new Set(["/", ...staticRoutes, ...mounted.map(({ url }) => url)]);
 
 const landingFiles: ReadonlyArray<string> = readdirSync(
   join(appDir, "src/components/landing"),

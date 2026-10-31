@@ -1,5 +1,5 @@
 /**
- * The hero deck: one platform window per desktop in `landingPlatformOrder`,
+ * The desktops deck: one platform window per desktop in `landingPlatformOrder`,
  * each running the **conversations block** in its own dress — macOS Messages,
  * Windows 11 Fluent and Linux Breeze — so each card is recognisably its
  * desktop.
@@ -11,7 +11,7 @@
  * theme, so its claims sit under the deck as four small cards instead of a
  * fourth window.
  */
-import { Fragment, useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
   darkTheme,
   lightTheme,
@@ -22,13 +22,7 @@ import {
 import { toCssVars } from "../../lib/theme-css";
 import { BlockIcon } from "../docs/block-icons";
 import { ConversationWindow } from "../docs/conversations-block";
-import {
-  platforms,
-  omarchyCards,
-  countWord,
-  landingLookCount,
-  repo,
-} from "./data";
+import { platforms, omarchyCards } from "./data";
 import type { OmarchyIcon, Platform } from "./data";
 import { usePrefersReducedMotion } from "./reduced-motion";
 
@@ -49,36 +43,7 @@ const desktopTheme = (id: Platform["id"]): Theme =>
 export const nextDesktop = (top: number): number =>
   (top + 1) % platforms.length;
 
-/**
- * The recipe line: the five things GPUIxUI is made of, read as one equation.
- *
- * The hero says what the library looks like; this says what it is built from,
- * so a reader who knows shadcn or Base UI can place it before scrolling.
- */
-export function LandingFormula() {
-  const parts = ["GPUI", "React", "shadcn", "Base UI", "Tailwind"] as const;
-
-  return (
-    <p className="landing-formula">
-      {parts.map((part, index) => (
-        <Fragment key={part}>
-          {index > 0 ? (
-            <span aria-hidden="true" className="landing-formula-op">
-              +
-            </span>
-          ) : null}
-          <span className="landing-formula-part">{part}</span>
-        </Fragment>
-      ))}
-      <span aria-hidden="true" className="landing-formula-op">
-        =
-      </span>
-      <span className="landing-formula-result">GPUIxUI</span>
-    </p>
-  );
-}
-
-export function Hero() {
+export function Desktops() {
   const [top, setTop] = useState(0);
   const [paused, setPaused] = useState(false);
   const reduced = usePrefersReducedMotion();
@@ -95,33 +60,13 @@ export function Hero() {
   };
 
   return (
-    <header className="landing-hero">
-      <h1 className="landing-title">
-        One library.
-        <br />
-        {countWord(landingLookCount)} native <em>looks</em>.
-      </h1>
-
-      <p className="landing-sub">
-        Components that run on GPUix, styled to feel at home on macOS, Windows
-        11 and Linux — with the source in your hands.
+    <section className="landing-section landing-desktops" id="desktops">
+      <p className="landing-kicker">Every desktop</p>
+      <h2 className="landing-h2">The same tree, at home everywhere.</h2>
+      <p className="landing-lead">
+        Mac first — and the same components wear Windows 11 and Linux, or follow
+        your Omarchy theme.
       </p>
-
-      <LandingFormula />
-
-      <div className="landing-actions">
-        <a className="landing-btn landing-btn-primary" href="/getting-started">
-          Get started
-        </a>
-        <a
-          className="landing-btn landing-btn-ghost"
-          href={repo}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          GitHub
-        </a>
-      </div>
 
       <div className="landing-switch-row">
         <PlatformSwitch onChange={select} value={top} />
@@ -144,7 +89,7 @@ export function Hero() {
       </div>
 
       <OmarchyStrip />
-    </header>
+    </section>
   );
 }
 
