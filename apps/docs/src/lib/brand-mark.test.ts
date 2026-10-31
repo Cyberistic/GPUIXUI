@@ -7,7 +7,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
+const read = (path: string) =>
+  readFileSync(new URL(path, import.meta.url), "utf8");
 
 /** Gon's hair and skin, as the raster favicons paint them. */
 const HAIR = "#0A1D0F";
@@ -23,7 +24,10 @@ describe("the brand mark", () => {
 
   it("is drawn in its own colours wherever the site shows it", () => {
     const rule = (css: string, selector: string) =>
-      css.slice(css.indexOf(`${selector} {`), css.indexOf("}", css.indexOf(`${selector} {`)));
+      css.slice(
+        css.indexOf(`${selector} {`),
+        css.indexOf("}", css.indexOf(`${selector} {`)),
+      );
     const marks = [
       rule(read("../styles/app.css"), ".gx-mark"),
       rule(read("../styles/landing.css"), ".landing-mark"),
