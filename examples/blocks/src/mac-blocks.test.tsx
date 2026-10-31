@@ -16,6 +16,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Agent } from "./agent/agent.js";
 import { CalendarBlock } from "./calendar/calendar.js";
 import { Launcher } from "./launcher/launcher.js";
+import { License } from "./license/license.js";
 import { MenuBar } from "./menubar/menubar.js";
 import { Notes } from "./notes/notes.js";
 import { Preferences } from "./preferences/preferences.js";
@@ -121,6 +122,16 @@ describe("the Mac-app blocks", () => {
     expect(has(r, "step-3")).toBe(true);
     press(r, "continue");
     expect(has(r, "step-3")).toBe(true);
+  });
+
+  it("license: a hunter opens their licence, stars and all", () => {
+    const r = mount(<License platform="darwin" />);
+    expect(has(r, "stars-0")).toBe(true);
+    press(r, "hunter-ging");
+    expect(has(r, "stars-2")).toBe(true);
+    press(r, "source-Gourmet");
+    expect(has(r, "hunter-menchi")).toBe(true);
+    expect(has(r, "hunter-gon")).toBe(false);
   });
 
   it("viewer: a thumbnail opens the photo under its HUD", () => {

@@ -23,6 +23,7 @@ import type { ComponentType } from "react";
 import { Agent } from "./agent/agent.js";
 import { CalendarBlock } from "./calendar/calendar.js";
 import { Launcher } from "./launcher/launcher.js";
+import { License } from "./license/license.js";
 import { MenuBar } from "./menubar/menubar.js";
 import { Notes } from "./notes/notes.js";
 import { Pipeline } from "./pipeline/pipeline.js";
@@ -34,6 +35,7 @@ const blocks: Readonly<
   Record<string, ComponentType<{ readonly platform?: PlatformName }>>
 > = {
   pipeline: Pipeline,
+  license: License,
   notes: Notes,
   preferences: Preferences,
   launcher: () => <Launcher />,

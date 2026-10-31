@@ -31,6 +31,7 @@ import { Agent } from "./agent/agent.js";
 import { CalendarBlock } from "./calendar/calendar.js";
 import { Inbox } from "./inbox/inbox.js";
 import { Launcher } from "./launcher/launcher.js";
+import { License } from "./license/license.js";
 import { MenuBar } from "./menubar/menubar.js";
 import { Notes } from "./notes/notes.js";
 import { Preferences } from "./preferences/preferences.js";
@@ -44,6 +45,7 @@ const [slug = "pipeline", ...flags] = process.argv.slice(2);
 
 const blocks: Readonly<Record<string, ComponentType>> = {
   pipeline: Pipeline,
+  license: License,
   notes: Notes,
   preferences: Preferences,
   launcher: Launcher,

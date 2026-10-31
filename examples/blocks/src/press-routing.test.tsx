@@ -23,6 +23,7 @@ import { CalendarBlock } from "./calendar/calendar.js";
 import { Inbox } from "./inbox/inbox.js";
 import { Kanban } from "./kanban/kanban.js";
 import { Launcher } from "./launcher/launcher.js";
+import { License } from "./license/license.js";
 import { MenuBar } from "./menubar/menubar.js";
 import { Notes } from "./notes/notes.js";
 import { Pipeline } from "./pipeline/pipeline.js";
@@ -40,6 +41,7 @@ const screens: Readonly<Record<string, ComponentType>> = {
   "block:inbox": Inbox,
   "block:kanban": Kanban,
   "block:launcher": () => <Launcher />,
+  "block:license": License,
   "block:menubar": MenuBar,
   "block:notes": Notes,
   "block:pipeline": Pipeline,

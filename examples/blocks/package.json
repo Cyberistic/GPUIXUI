@@ -17,7 +17,8 @@
     "./agent": "./src/agent/agent.tsx",
     "./calendar": "./src/calendar/calendar.tsx",
     "./welcome": "./src/welcome/welcome.tsx",
-    "./viewer": "./src/viewer/viewer.tsx"
+    "./viewer": "./src/viewer/viewer.tsx",
+    "./license": "./src/license/license.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

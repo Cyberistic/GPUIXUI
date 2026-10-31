@@ -9,7 +9,7 @@ export const landingBlocks = [
   { slug: "kanban", title: "Kanban" },
   { slug: "email-inbox", title: "Inbox" },
   { slug: "settings", title: "Settings" },
-  { slug: "file-manager", title: "File manager" },
+  { slug: "license", title: "Hunter License" },
 ] as const;
 
 export function BlocksStrip() {

@@ -24868,7 +24868,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 
 `[x]` Pre-existing behaviour failures (`user-menu`, `sidebar`, `sidebar-screenshots`): not a product bug — the suites predated PR #1's rule that the account menu paints only the rows a caller handles; they now wire the handlers they expect (and a case pins the rule). Components behaviour 1201/1201
 
-`[x]` `[██████████]` 11/11
+`[~]` `[█████████░]` 11/12
 
 `[x]` Write the native-Mac plan set (721–730), index it, retire plan 434 (Hunter landing)
 `[x]` 721 — macOS materials: measure a translucent fill in a blurred window, then the material roles
@@ -24881,3 +24881,4 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` 729 — eight Mac-app blocks (notes, settings, launcher, menubar, agent, calendar, welcome, viewer)
 `[x]` 730 — measured proof numbers (`apps/docs/src/lib/proof.json`)
 `[x]` 727 — the landing rebuilt on native captures and measured numbers
+`[~]` 731 — launch quality pass: account menu, press routing, `Select` pop-up, deeper Mac blocks, Hunter License block done; by-eye pass in real windows pending
