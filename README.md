@@ -22,7 +22,7 @@
 ## What it is
 
 GPUIxUI is a native UI component library for desktop apps, rendered on the GPU by
-[GPUix](https://gpuix.dev) through React — no DOM, no webview. It keeps the
+[GPUix](https://github.com/remorses/gpuix) through React — no DOM, no webview. It keeps the
 developer experience of [shadcn/ui](https://ui.shadcn.com): Base UI-style
 compound parts, Tailwind-style class recipes, and components you install as
 source you own. One component tree wears a macOS, Windows or Linux look, follows
