@@ -189,7 +189,7 @@ describe("the recorded budget", () => {
    * rather than a physics hook's.
    */
   const family = measurePackageSurface(
-    fileURLToPath(new URL("./motion-grid.tsx", import.meta.url)),
+    fileURLToPath(new URL("./reveal.tsx", import.meta.url)),
   );
   const familyMotion = Option.getOrElse(
     Arr.findFirst(family.groups, (group) => group.name === "@gpuixui/motion"),

@@ -99,7 +99,7 @@ const tier1Rows = (): ReadonlyArray<Row> =>
 
 /** The animated primitives plan 600 lands, held to the same contract. */
 const animatedRows = (): ReadonlyArray<Row> =>
-  rowsBetween("## Animated primitives (plan 600)", "## Blocked by the runtime");
+  rowsBetween("## Animated primitives (plan 600)", "## Effects");
 
 /** The Tier 3–5 target rows, which no component here implements yet. */
 const targetRows = (): ReadonlyArray<Row> =>

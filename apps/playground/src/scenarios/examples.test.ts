@@ -207,7 +207,9 @@ describe("the example gallery's registry", () => {
     const componentIds = Arr.fromIterable(
       componentRegistry.matchAll(/^  "([a-z0-9-]+)":/gm),
     ).map((match) => match[1] ?? "");
-    expect(Arr.length(componentIds)).toBeGreaterThan(40);
+    // The sixteen effects left for `@gpuixui/fx` (plan 726), so the floor that
+    // proves the regex read the registry at all is the core's own count.
+    expect(Arr.length(componentIds)).toBeGreaterThan(30);
     const merged = [
       "app-menu",
       "status-bar",

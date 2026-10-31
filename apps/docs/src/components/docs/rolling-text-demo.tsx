@@ -31,6 +31,6 @@ export function RollingTextDemo() {
   );
 }
 
-export const rollingTextDemoSource = `import { RollingText } from "@gpuixui/components/rolling-text";
+export const rollingTextDemoSource = `import { RollingText } from "@gpuixui/fx/rolling-text";
 
 <RollingText text={status} role="bodyStrong" />;`;

@@ -47,7 +47,7 @@ export function RippleButtonDemo() {
   );
 }
 
-export const rippleButtonDemoSource = `import { RippleButton } from "@gpuixui/components/ripple-button";
+export const rippleButtonDemoSource = `import { RippleButton } from "@gpuixui/fx/ripple-button";
 
 <RippleButton variant="primary" onClick={deploy}>
   Deploy

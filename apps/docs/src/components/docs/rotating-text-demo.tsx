@@ -34,7 +34,7 @@ export function RotatingTextDemo() {
   );
 }
 
-export const rotatingTextDemoSource = `import { RotatingText } from "@gpuixui/components/rotating-text";
+export const rotatingTextDemoSource = `import { RotatingText } from "@gpuixui/fx/rotating-text";
 
 <RotatingText
   phrases={["Faster builds", "Safer releases", "One runtime"]}

@@ -30,7 +30,7 @@ export function StarsDemo() {
   );
 }
 
-export const starsDemoSource = `import { Stars } from "@gpuixui/components/stars";
+export const starsDemoSource = `import { Stars } from "@gpuixui/fx/stars";
 
 <div style={{ position: "relative", height: 240, overflow: "hidden" }}>
   <div style={{ position: "absolute", inset: 0 }}>

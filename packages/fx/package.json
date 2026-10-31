@@ -1,0 +1,40 @@
+{
+  "name": "@gpuixui/fx",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Decorative motion \u2014 particles, fireworks, stars, shine and ripple buttons, magnetic and kinetic text \u2014 built on @gpuixui/components' authoring seams, kept out of the core library (plan 726).",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./examples": "./examples/index.ts",
+    "./*": "./src/*.tsx"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:behaviour": "vitest run --config vitest.behaviour.config.ts"
+  },
+  "dependencies": {
+    "@gpuix/react": "catalog:",
+    "@gpuixui/components": "workspace:*",
+    "@gpuixui/icons": "workspace:*",
+    "@gpuixui/motion": "workspace:*",
+    "@gpuixui/primitives": "workspace:*",
+    "@gpuixui/tokens": "workspace:*",
+    "@gpuixui/tw": "workspace:*",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@gpuixui/config": "workspace:*",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

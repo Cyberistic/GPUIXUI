@@ -614,6 +614,7 @@ cannot ship a page the site does not show and the two cannot drift:
 | Shell surfaces | `packages/shell/docs` | `/shell` | Workspace |
 | Panel surfaces | `packages/dock/docs` | `/dock` | Workspace |
 | Media surfaces | `packages/media/docs` | `/media` | Workspace |
+| Effects | `packages/fx/docs` | `/effects` | Effects |
 
 **A lane page shows the surface it is about.** `/workspace` and
 `/data-display` mount a demo of their flagship surface under the

@@ -10,6 +10,7 @@ import {
   filesDocsRoute,
   iconDocsRoute,
   mediaDocsRoute,
+  effectsDocsRoute,
   primitiveDocsRoute,
   shellDocsRoute,
 } from "./shared";
@@ -103,6 +104,15 @@ const mediaDocs = defineDocs({
   },
 });
 
+const fxDocs = defineDocs({
+  dir: "../../packages/fx/docs",
+  docs: {
+    files: ["**/*.mdx"],
+    async: true,
+    postprocess: { includeProcessedMarkdown: true },
+  },
+});
+
 export const docsByOrigin = {
   primitives: primitiveDocs,
   icons: iconDocs,
@@ -113,6 +123,7 @@ export const docsByOrigin = {
   shell: shellDocs,
   dock: dockDocs,
   media: mediaDocs,
+  fx: fxDocs,
 } satisfies Record<PackageOrigin, typeof primitiveDocs>;
 
 const primitiveSource = loader({
@@ -160,6 +171,11 @@ const mediaSource = loader({
   baseUrl: mediaDocsRoute,
 });
 
+const fxSource = loader({
+  source: fxDocs.toFumadocsSource(),
+  baseUrl: effectsDocsRoute,
+});
+
 export const sourceByOrigin = {
   primitives: primitiveSource,
   icons: iconSource,
@@ -170,6 +186,7 @@ export const sourceByOrigin = {
   shell: shellSource,
   dock: dockSource,
   media: mediaSource,
+  fx: fxSource,
 } satisfies Record<PackageOrigin, typeof primitiveSource>;
 
 /** Every mounted package source, in sidebar order. */

@@ -592,9 +592,11 @@ describe("the real index", () => {
       "Components",
       "Data display",
       "Workspace",
+      "Effects",
     ]);
     expect(componentIndex[0]?.section).toBe("Primitives");
-    expect(componentIndex.at(-1)?.section).toBe("Workspace");
+    // The decorative effects close the index, after every working surface.
+    expect(componentIndex.at(-1)?.section).toBe("Effects");
   });
 
   it("marks exactly the pages that mount a preview", () => {

@@ -38,6 +38,6 @@ export function SplittingTextDemo() {
   );
 }
 
-export const splittingTextDemoSource = `import { SplittingText } from "@gpuixui/components/splitting-text";
+export const splittingTextDemoSource = `import { SplittingText } from "@gpuixui/fx/splitting-text";
 
 <SplittingText text="Build native interfaces" role="h1" />;`;

@@ -29,7 +29,7 @@ export function BubblesDemo() {
   );
 }
 
-export const bubblesDemoSource = `import { Bubbles } from "@gpuixui/components/bubbles";
+export const bubblesDemoSource = `import { Bubbles } from "@gpuixui/fx/bubbles";
 
 <div style={{ position: "relative", height: 260, overflow: "hidden" }}>
   <div style={{ position: "absolute", inset: 0 }}>

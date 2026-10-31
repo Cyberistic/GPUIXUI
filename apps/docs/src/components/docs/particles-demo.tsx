@@ -33,7 +33,7 @@ export function ParticlesDemo() {
   );
 }
 
-export const particlesDemoSource = `import { Particles } from "@gpuixui/components/particles";
+export const particlesDemoSource = `import { Particles } from "@gpuixui/fx/particles";
 
 <div style={{ position: "relative", height: 220, overflow: "hidden" }}>
   <div style={{ position: "absolute", inset: 0 }}>
