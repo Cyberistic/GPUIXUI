@@ -189,8 +189,8 @@ component call sites adopt the outline in their own workstream.
 
 The product pass of 2026-10-31: the runtime already opens a vibrant window with a
 transparent titlebar (`docs/gpuix-capabilities.md:82`, `:144`) and nothing used
-it. Owner decisions: the Hunter identity is dropped; Mac first, Windows and Linux
-keep their looks. `727` supersedes `434` (deleted).
+it. Owner decisions: Mac first, Windows and Linux keep their looks; the Hunter ×
+Hunter theme stays (confirmed 2026-10-31) — sample data uses its people and places. `727` supersedes `434` (deleted).
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |

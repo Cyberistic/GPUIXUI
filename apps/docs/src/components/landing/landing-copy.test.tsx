@@ -77,11 +77,6 @@ describe("the landing", () => {
     expect(page).toContain('href="/live"');
   });
 
-  it("says nothing about hunters' licences", () => {
-    const page = renderToStaticMarkup(<Landing />);
-    expect(page).not.toMatch(/Hunter License|licence card/i);
-  });
-
   it("ends with the maker's line, the handle an underlined link to the site", () => {
     const page = renderToStaticMarkup(<Landing />);
     const line = page.slice(page.indexOf('class="landing-credit"'));
