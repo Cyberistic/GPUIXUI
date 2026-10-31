@@ -44,7 +44,9 @@ const blocks: Readonly<
   viewer: Viewer,
 };
 
-const [slug = "", out = "", ...flags] = process.argv.slice(2);
+const [slug = "", out = "", ...flags] = process.argv
+  .slice(2)
+  .filter((arg) => arg !== "--");
 const platform = flags.find(isPlatformName) ?? "darwin";
 const base = flags.includes("--dark") ? darkTheme : lightTheme;
 const Block = blocks[slug];

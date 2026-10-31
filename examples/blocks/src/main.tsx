@@ -9,6 +9,13 @@
  * traffic lights over its sidebar. One block per process: the runtime paints
  * one window per application (`docs/gpuix-capabilities.md`).
  *
+ * `--terminal` paints the block through GPUix's terminal platform instead of a
+ * window (`render(<App />, { terminal: true })`), inside kitty or Ghostty:
+ *
+ *   nub run --filter @gpuixui/blocks dev -- settings --terminal
+ *
+ * A leading `--` is nub's argument separator, passed through: it is skipped.
+ *
  * `--bench` (plan 730) reports the process's resident memory five seconds
  * after the window mounts, as `bench rss=<bytes>`, and exits.
  */
@@ -38,9 +45,11 @@ import { Viewer } from "./viewer/viewer.js";
 import { Welcome } from "./welcome/welcome.js";
 import { Kanban } from "./kanban/kanban.js";
 import { Pipeline } from "./pipeline/pipeline.js";
-import { Settings } from "./settings/settings.js";
+import { SettingsApp } from "./settings/settings.js";
 
-const [slug = "pipeline", ...flags] = process.argv.slice(2);
+const [slug = "pipeline", ...flags] = process.argv
+  .slice(2)
+  .filter((arg) => arg !== "--");
 
 const blocks: Readonly<Record<string, ComponentType>> = {
   pipeline: Pipeline,
@@ -61,14 +70,7 @@ const blocks: Readonly<Record<string, ComponentType>> = {
   ),
   inbox: Inbox,
   kanban: Kanban,
-  settings: () => (
-    <Settings
-      look="darwin"
-      onLookChange={() => undefined}
-      dark={false}
-      onDarkChange={() => undefined}
-    />
-  ),
+  settings: () => <SettingsApp initialLook={flags.includes("--terminal") ? "linux" : "darwin"} />,
 };
 
 const program = Option.match(R.get(blocks, slug), {
@@ -86,12 +88,14 @@ const program = Option.match(R.get(blocks, slug), {
         <ThemeProvider theme={theme}>
           <Block />
         </ThemeProvider>,
-        {
-          title: slug,
-          width: 1100,
-          height: 700,
-          ...nativeWindowOptions(theme, currentPlatform),
-        },
+        flags.includes("--terminal")
+          ? { terminal: true }
+          : {
+              title: slug,
+              width: 1100,
+              height: 700,
+              ...nativeWindowOptions(theme, currentPlatform),
+            },
       );
       return 0;
     }).pipe(

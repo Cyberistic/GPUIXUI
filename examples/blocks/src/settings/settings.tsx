@@ -17,8 +17,8 @@ import {
   Text,
   ToggleGroup,
 } from "@gpuixui/primitives";
-import type { Theme } from "@gpuixui/tokens";
-import { useTheme } from "@gpuixui/tokens/react";
+import { darkTheme, lightTheme, platformTheme, type Theme } from "@gpuixui/tokens";
+import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import { useState, type ReactNode } from "react";
 import { looks, sections, type Look } from "./data.js";
@@ -212,5 +212,16 @@ export const Settings = ({
         </Stack>
       </Stack>
     </Stack>
+  );
+};
+
+/** The pane as an app: it owns its look and mode, and restyles itself with them. */
+export const SettingsApp = ({ initialLook = "darwin" }: { readonly initialLook?: Look }) => {
+  const [look, setLook] = useState<Look>(initialLook);
+  const [dark, setDark] = useState(false);
+  return (
+    <ThemeProvider theme={platformTheme(dark ? darkTheme : lightTheme, look)}>
+      <Settings look={look} onLookChange={setLook} dark={dark} onDarkChange={setDark} />
+    </ThemeProvider>
   );
 };
