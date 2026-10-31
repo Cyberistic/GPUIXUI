@@ -27,6 +27,8 @@ import {
   decodeWindowBackground,
   splitWindowBackground,
   surfaceAlpha,
+  TRANSLUCENT_FILL,
+  translucentFill,
   windowBackgrounds,
 } from "./backdrop.js";
 import { captureScale, describeColour, framePoint } from "./frame.js";
@@ -42,6 +44,25 @@ describe("the backdrop expectation", () => {
       ["transparent", 0],
       ["blurred", 0],
     ]);
+  });
+
+  it("keeps a translucent fill's alpha only where the window leaves the desktop", () => {
+    expect(
+      Arr.map(windowBackgrounds, (mode) =>
+        describeColour(translucentFill(mode)),
+      ),
+    ).toEqual([
+      "rgba(102, 102, 102, 255)",
+      "rgba(102, 102, 102, 102)",
+      "rgba(102, 102, 102, 102)",
+    ]);
+  });
+
+  it("premultiplies the translucent fixture's white by its own alpha", () => {
+    const fill = Option.getOrThrow(
+      Option.fromNullishOr(Pixels.hexToRgba(TRANSLUCENT_FILL)),
+    );
+    expect(translucentFill("blurred").r).toBe(fill.a);
   });
 
   it("holds the fixture's css fill to the rgba the frame is asserted against", () => {

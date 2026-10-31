@@ -8383,3 +8383,12 @@ button.gx-sb-row {
   font-family: var(--font-mono);
   font-size: 10.5px;
 }
+
+/* ---- materials (plan 721) ------------------------------------------------
+   A native sidebar is the desktop blurred through a translucent tint; the
+   drawing pairs the theme's material with the browser's own blur. An opaque
+   theme publishes its opaque role, so the filter changes nothing there. */
+.gx-material {
+  background: var(--material-sidebar);
+  backdrop-filter: blur(30px) saturate(1.8);
+}

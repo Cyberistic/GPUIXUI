@@ -3831,6 +3831,42 @@ without a palette would inherit is real. `syntax.test.ts` holds the host object
 and the tables; the probe is the paint. Evidence:
 [`apps/playground/README.md` §`syntax-palette`](../apps/playground/README.md).
 
+## Materials
+
+A native window paints its sidebar, titlebar, popovers, HUDs and sheets as a
+**material**: the desktop blurred through the window, under a tint. The darwin
+style opens a vibrant window (`window: "blurred"`, passed to
+`WindowOptions.windowBackground`) and carries one translucent fill per material
+and mode; every other style and look declares none.
+
+Measured on `@gpuix/native` 0.11.0 (`window-backdrop` probe, plan 721): a
+`#FFFFFF66` fill reads `rgba(102, 102, 102, 102)` in a transparent or blurred
+window — premultiplied, the alpha kept, so the window server blends it over the
+desktop — and `rgba(102, 102, 102, 255)` in an opaque one, where it composites
+against the window's own black surface. That is why a material is never painted
+directly: `materialFill(theme, name)` returns the fill only when the theme's
+window is `"blurred"` and the reader has not asked for less transparency
+(`reduceTransparency`), and otherwise the opaque role in `materialFallback`.
+
+| Material | Fallback role | darwin light | darwin dark |
+| -------- | ------------- | ------------ | ----------- |
+| `sidebar` | `muted` | `#E9E9EF99` | `#16161A80` |
+| `titlebar` | `background` | `#F2F2F7CC` | `#1C1C1ECC` |
+| `popover` | `popover` | `#FFFFFFCC` | `#2C2C30CC` |
+| `hud` | `popover` | `#FFFFFFB3` | `#1C1C1EB3` |
+| `sheet` | `card` | `#FFFFFFE6` | `#26262AE6` |
+
+Each tint is its fallback's colour at a share the blur shows through. Text on a
+material is held to the contrast floors on the **fallback**: the desktop behind
+a translucent surface is unknowable, so the opaque role is the worst case the
+theme can promise. The exports are `materialNames`, `materialFallback`,
+`materialFill` and the `MaterialName`, `MaterialFills` and `WindowBackground`
+types; `materials`, `window` and `reduceTransparency` are ordinary theme groups,
+so `extendTheme` and `themeOverrides` reach them like any other.
+
+The blur itself is composited behind the window, so an app-side capture cannot
+show it: confirm the look by eye on macOS.
+
 ## Spacing
 
 | Token | Pixels |

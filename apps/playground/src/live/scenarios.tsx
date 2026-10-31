@@ -408,6 +408,10 @@ import {
   BACKDROP_FILL,
   BACKDROP_FILL_RGBA,
   backdropPoint,
+  TRANSLUCENT_BOX,
+  TRANSLUCENT_FILL,
+  translucentFill,
+  translucentPoint,
   contentPoint,
   decodeWindowBackground,
   surfaceAlpha,
@@ -17173,6 +17177,17 @@ const BackdropProbe = (): ReactNode => {
         }}
       />
       <div
+        testId="backdrop-translucent"
+        style={{
+          position: "absolute",
+          left: TRANSLUCENT_BOX.x,
+          top: TRANSLUCENT_BOX.y,
+          width: TRANSLUCENT_BOX.width,
+          height: TRANSLUCENT_BOX.height,
+          backgroundColor: TRANSLUCENT_FILL,
+        }}
+      />
+      <div
         style={{
           position: "absolute",
           left: BACKDROP_BOX.x,
@@ -17221,6 +17236,14 @@ const backdropSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         onSome: (colour) => colour.a,
       }),
       surfaceAlpha(mode),
+    );
+    yield* ctx.expectEqual(
+      `${mode}: the translucent box over the window`,
+      Option.match(at(framePoint(translucentPoint, scale)), {
+        onNone: () => "outside the capture",
+        onSome: describeColour,
+      }),
+      describeColour(translucentFill(mode)),
     );
   });
 

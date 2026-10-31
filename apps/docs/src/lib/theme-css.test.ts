@@ -11,6 +11,8 @@ import {
   highContrastThemes,
   lightSeries,
   platformStyles,
+  materialFill,
+  materialNames,
   platformTheme,
   retroStyles,
   retroTheme,
@@ -267,6 +269,19 @@ describe("theme bridge", () => {
     // `overlay` is reserved and empty: a level that paints nothing writes no
     // variable, so a surface naming it paints flat.
     expect(vars["--elevation-overlay"]).toBeUndefined();
+  });
+
+  it("publishes each material as the fill the native window paints", () => {
+    // A block drawing of a macOS sidebar must show the material the window
+    // paints, and an opaque theme's drawing its opaque role (plan 721).
+    const mac = platformTheme(themes.light, "darwin");
+    expect(
+      materialNames.map((name) => toCssVars(mac)[`--material-${name}`]),
+    ).toEqual(materialNames.map((name) => materialFill(mac, name)));
+    expect(toCssVars(mac)["--material-sidebar"]).not.toBe(mac.colors.muted);
+    expect(toCssVars(themes.dark)["--material-sidebar"]).toBe(
+      themes.dark.colors.muted,
+    );
   });
 
   it("publishes the syntax palette a code block paints", () => {

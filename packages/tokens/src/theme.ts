@@ -28,6 +28,11 @@ import {
   type PlatformStyleSource,
 } from "./platforms.js";
 import {
+  materialNames,
+  type MaterialFills,
+  type WindowBackground,
+} from "./materials.js";
+import {
   borderWidth,
   controlSizes,
   defaultDensity,
@@ -157,6 +162,15 @@ export interface Theme {
    * declares a switch also owns the box the platform ships it in.
    */
   readonly switchMetrics?: SwitchMetrics;
+  /**
+   * The material fills a platform's window paints (`materials.ts`). Absent on
+   * every base theme, whose materials paint their opaque roles.
+   */
+  readonly materials?: MaterialFills;
+  /** The window background the materials need; absent is `"opaque"`. */
+  readonly window?: WindowBackground;
+  /** The reader asked the OS for less transparency: materials paint opaque. */
+  readonly reduceTransparency?: boolean;
 }
 
 /** The colours a platform's own switch paints, in one mode. */
@@ -285,6 +299,12 @@ export interface ThemeOverrides {
   readonly switch?: SwitchColors;
   /** Replace the platform switch box whole, or declare one on a theme. */
   readonly switchMetrics?: SwitchMetrics;
+  /** Replace the material fills whole, or declare them on a theme. */
+  readonly materials?: MaterialFills;
+  /** The window background the materials need. */
+  readonly window?: WindowBackground;
+  /** Paint every material as its opaque role (the OS's Reduce Transparency). */
+  readonly reduceTransparency?: boolean;
 }
 
 /**
@@ -314,7 +334,7 @@ export type Stored<T> =
       : T | null;
 
 /** The groups an override replaces whole, so a stored one is not merged. */
-type WholeGroup = "switch" | "switchMetrics";
+type WholeGroup = "switch" | "switchMetrics" | "materials";
 
 /**
  * A partial theme as a store hands it back.
@@ -768,6 +788,9 @@ export function extendTheme(
     // carries none.
     switch: overrides.switch ?? base.switch,
     switchMetrics: overrides.switchMetrics ?? base.switchMetrics,
+    materials: overrides.materials ?? base.materials,
+    window: overrides.window ?? base.window,
+    reduceTransparency: overrides.reduceTransparency ?? base.reduceTransparency,
   };
 }
 
@@ -1129,6 +1152,22 @@ export function themeOverrides(
     sameMetrics(theme.switchMetrics, base.switchMetrics)
       ? undefined
       : theme.switchMetrics;
+  const materials =
+    theme.materials == null ||
+    materialNames.every(
+      (material) => theme.materials?.[material] === base.materials?.[material],
+    )
+      ? undefined
+      : theme.materials;
+  const window =
+    theme.window == null || theme.window === base.window
+      ? undefined
+      : theme.window;
+  const reduceTransparency =
+    theme.reduceTransparency == null ||
+    theme.reduceTransparency === base.reduceTransparency
+      ? undefined
+      : theme.reduceTransparency;
   const diff = {
     ...(name === undefined ? {} : { name }),
     ...(isEmptyGroup(colors) ? {} : { colors }),
@@ -1143,6 +1182,9 @@ export function themeOverrides(
     ...(syntax === undefined ? {} : { syntax }),
     ...(toggle === undefined ? {} : { switch: toggle }),
     ...(metrics === undefined ? {} : { switchMetrics: metrics }),
+    ...(materials === undefined ? {} : { materials }),
+    ...(window === undefined ? {} : { window }),
+    ...(reduceTransparency === undefined ? {} : { reduceTransparency }),
   };
   // The mirror of `EveryGroupOverridable`: a group a `Theme` gains must also be
   // one this diff can name, or the round trip silently loses it.
@@ -1375,6 +1417,14 @@ export function applyStyle(base: Theme, style: PlatformStyleSource): Theme {
     switchMetrics: applies
       ? (style.switchMetrics ?? undefined)
       : base.switchMetrics,
+    // Materials are the platform's window, like its switch: a look that declares
+    // none paints the opaque roles, and a lost group is that same "none".
+    materials: applies ? modeOf(style.materials, mode) : base.materials,
+    window: applies
+      ? style.window === "blurred"
+        ? "blurred"
+        : undefined
+      : base.window,
   };
 }
 

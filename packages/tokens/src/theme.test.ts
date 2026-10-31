@@ -1092,6 +1092,9 @@ describe("the extension mechanism", () => {
     "syntax",
     "switch",
     "switchMetrics",
+    "materials",
+    "window",
+    "reduceTransparency",
   ] as const satisfies readonly Exclude<keyof Theme, "mode" | "contrast">[];
 
   type ListedGroup = (typeof overridableGroups)[number];
@@ -1153,6 +1156,9 @@ describe("the extension mechanism", () => {
     switchMetrics: () => ({
       switchMetrics: { width: 44, height: 24, knob: 20, inset: 2, border: 1 },
     }),
+    materials: () => ({ materials: { sidebar: "#10101080" } }),
+    window: () => ({ window: "blurred" }),
+    reduceTransparency: () => ({ reduceTransparency: true }),
   } satisfies Record<ListedGroup, (base: Theme) => ThemeOverrides>;
 
   it("carries every group when nothing is overridden", () => {

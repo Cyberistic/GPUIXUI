@@ -194,7 +194,7 @@ keep their looks. `727` supersedes `434` (deleted).
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [721](./721-macos-materials.md) | macOS materials: translucent surface roles, measured in a blurred window first | tokens | `063` | planned |
+| [721](./721-macos-materials.md) | macOS materials: translucent surface roles, measured in a blurred window first | tokens | `063` | **landed** — option T (a translucent fill keeps its alpha over a blurred window, `rgba(102,102,102,102)`); `materialFill` + darwin fills; fields optional like `switch`; by-eye blur check moves to `722` (no playground mode holds a blurred window open) |
 | [722](./722-native-window.md) | `Window` + `SourceList`: sidebar under the lights, unified toolbar, inspector | shell | `721` | planned |
 | [723](./723-system-appearance.md) | Follow the system accent, appearance and Reduce Transparency (runtime gap, read at the boundary) | shell, tokens | `721`, `433` | planned |
 | [724](./724-hig-component-pass.md) | HIG pass: darwin sizes, hover policy, menus, sheets, focus — as tokens | primitives, components | `721`, `722` | planned |

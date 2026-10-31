@@ -15,6 +15,7 @@ import {
   type DensityName,
   type Radius,
 } from "./scale.js";
+import type { MaterialFills, WindowBackground } from "./materials.js";
 import type { StoredSeries } from "./series.js";
 import { darkSyntax, type StoredSyntax, type SyntaxColors } from "./syntax.js";
 import type {
@@ -86,6 +87,13 @@ export interface PlatformStyle extends PlatformType {
    * knob and the gap between them come from the same system specification.
    */
   readonly switchMetrics?: SwitchMetrics;
+  /**
+   * The material fills the platform's window paints, per mode, and the window
+   * background they need (`materials.ts`). A style that declares none paints
+   * every material as its opaque role.
+   */
+  readonly materials?: Readonly<Partial<Record<ThemeMode, MaterialFills>>>;
+  readonly window?: WindowBackground;
   /**
    * The categorical scale the look paints its data marks in, per mode. A mode it
    * omits — and every style that declares none — resolves the base theme's scale
@@ -178,6 +186,10 @@ export interface PlatformStyleSource {
   readonly switch?: Partial<Record<ThemeMode, SwitchColors>> | null;
   /** The box the platform's own switch is drawn in. */
   readonly switchMetrics?: SwitchMetrics | null;
+  /** The material fills, per mode, or `null` for the opaque roles. */
+  readonly materials?: Partial<Record<ThemeMode, MaterialFills>> | null;
+  /** The window background; anything but `"blurred"` is opaque. */
+  readonly window?: unknown;
 }
 
 /**
@@ -254,6 +266,26 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
       },
     },
     switchMetrics: { width: 38, height: 22, knob: 20, inset: 1, border: 0 },
+    // The window is vibrant; each material is its opaque role at a share the
+    // blur shows through (plan 721). Text on a material is held to the floors on
+    // the opaque role, the worst case a translucent surface cannot promise.
+    window: "blurred",
+    materials: {
+      light: {
+        sidebar: "#E9E9EF99",
+        titlebar: "#F2F2F7CC",
+        popover: "#FFFFFFCC",
+        hud: "#FFFFFFB3",
+        sheet: "#FFFFFFE6",
+      },
+      dark: {
+        sidebar: "#16161A80",
+        titlebar: "#1C1C1ECC",
+        popover: "#2C2C30CC",
+        hud: "#1C1C1EB3",
+        sheet: "#26262AE6",
+      },
+    },
     colors: {
       light: {
         background: "#F2F2F7",
