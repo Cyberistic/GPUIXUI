@@ -174,3 +174,26 @@ export const Window = ({
     </ThemeProvider>
   );
 };
+
+/** macOS's traffic lights alone, for a block that is a whole native window and
+ * leaves their box free under a transparent titlebar. */
+export const Lights = ({
+  x = 20,
+  y = 20,
+}: {
+  readonly x?: number;
+  readonly y?: number;
+}) => (
+  <div
+    style={{
+      position: "absolute",
+      left: x,
+      top: y,
+      display: "flex",
+      flexDirection: "row",
+      gap: 8,
+    }}
+  >
+    {Arr.map(["#FF5F57", "#FEBC2E", "#28C840"], light)}
+  </div>
+);

@@ -50,9 +50,9 @@ export const datasets: Readonly<Record<Range, Dataset>> = {
       },
       {
         label: "Aura",
-        value: "64",
-        change: "+6",
-        trend: [52, 55, 54, 58, 60, 61, 64],
+        value: "84",
+        change: "+62",
+        trend: [22, 35, 31, 48, 57, 66, 84],
       },
     ],
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -60,7 +60,7 @@ export const datasets: Readonly<Record<Range, Dataset>> = {
       { key: "gon", label: "Gon", values: [3, 5, 4, 6, 6, 8, 9] },
       { key: "killua", label: "Killua", values: [4, 4, 6, 5, 7, 7, 8] },
     ],
-    aura: [52, 55, 54, 58, 60, 61, 64],
+    aura: [22, 35, 31, 48, 57, 66, 84],
   },
   month: {
     tiles: [
@@ -84,9 +84,9 @@ export const datasets: Readonly<Record<Range, Dataset>> = {
       },
       {
         label: "Aura",
-        value: "61",
-        change: "+14",
-        trend: [47, 50, 53, 57, 59, 61],
+        value: "78",
+        change: "+48",
+        trend: [30, 38, 46, 61, 70, 78],
       },
     ],
     labels: ["W1", "W2", "W3", "W4"],
@@ -94,7 +94,7 @@ export const datasets: Readonly<Record<Range, Dataset>> = {
       { key: "gon", label: "Gon", values: [18, 24, 31, 41] },
       { key: "killua", label: "Killua", values: [22, 27, 33, 38] },
     ],
-    aura: [47, 53, 57, 61],
+    aura: [30, 46, 61, 78],
   },
 };
 

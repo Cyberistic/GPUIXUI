@@ -7,6 +7,7 @@
 import { Button, Slider, Switch } from "@gpuixui/primitives";
 import {
   darkTheme,
+  extendTheme,
   lightTheme,
   platformTheme,
   type Theme,
@@ -18,11 +19,19 @@ import * as R from "effect/Record";
 import { mkdirSync } from "node:fs";
 import { useState, type ReactNode } from "react";
 import { Settings, type Look } from "@gpuixui/blocks/settings";
-import { GROUND, Window } from "./frame.js";
+import { GROUND, Lights, Window } from "./frame.js";
 import { OmarchyDesktop, type OmarchyLook } from "./omarchy.js";
+import { Agent } from "@gpuixui/blocks/agent";
+import { CalendarBlock } from "@gpuixui/blocks/calendar";
 import { DesktopBlock, type DesktopLook } from "@gpuixui/blocks/desktop";
+import { Launcher } from "@gpuixui/blocks/launcher";
+import { Notes } from "@gpuixui/blocks/notes";
+import { Pipeline } from "@gpuixui/blocks/pipeline";
+import { Stats } from "@gpuixui/blocks/stats";
+import { Viewer } from "@gpuixui/blocks/viewer";
+import { Welcome } from "@gpuixui/blocks/welcome";
 import { magnify } from "./magnify.js";
-import { capture, type Take } from "./take.js";
+import { capture, type Take, type Waypoint } from "./take.js";
 
 const mac = platformTheme(lightTheme, "darwin");
 
@@ -90,6 +99,53 @@ const SettingsWindow = () => {
   );
 };
 
+/** The macOS look with an opaque window: what the offscreen renderer can paint
+ * of a vibrant one (the blur is the window server's). */
+const macWindow = extendTheme(mac, { window: "opaque" });
+
+/** A Mac-app block, 1100×700, with the lights the OS would draw over it. */
+const macApp = (
+  view: ReactNode,
+  pointer: ReadonlyArray<Waypoint>,
+  keys: Take["keys"] = [],
+  lights = true,
+): Take => ({
+  width: 1100,
+  height: 700,
+  frames: 75,
+  view: () => (
+    <ThemeProvider theme={macWindow}>
+      <div style={{ width: 1100, height: 700, display: "flex" }}>
+        {view}
+        {lights ? <Lights /> : null}
+      </div>
+    </ThemeProvider>
+  ),
+  pointer,
+  keys,
+});
+
+/** A press on `testId` at `frame`, arriving from `from` and settling near it. */
+const pressAt = (
+  testId: string,
+  frame: number,
+  from: { x: number; y: number },
+): ReadonlyArray<Waypoint> => [
+  { frame: 0, aim: from },
+  { frame: frame - 4, aim: { testId } },
+  { frame, aim: { testId }, down: true },
+  { frame: frame + 3, aim: { testId } },
+  // At rest on a fixed point: the press may remove its own target (a photo opens).
+  { frame: 74, aim: { x: from.x - 80, y: from.y - 60 } },
+];
+
+/** `text` typed one character every two frames from `frame`. */
+const typing = (text: string, frame: number): NonNullable<Take["keys"]> =>
+  [...text].map((char, i) => ({
+    frame: frame + i * 2,
+    keys: char === " " ? "space" : char,
+  }));
+
 /** The desktop block: Start pressed at frame 24, a window raised at 60. */
 const desktop = (look: DesktopLook): Take => ({
   width: 1280,
@@ -109,6 +165,60 @@ const desktop = (look: DesktopLook): Take => ({
 });
 
 export const takes: Readonly<Record<string, Take>> = {
+  pipeline: macApp(
+    <Pipeline platform="darwin" />,
+    pressAt("work-w1", 30, { x: 900, y: 600 }),
+  ),
+  notes: macApp(
+    <Notes platform="darwin" />,
+    pressAt("note-n3", 30, { x: 700, y: 600 }),
+  ),
+  calendar: macApp(
+    <CalendarBlock platform="darwin" />,
+    pressAt("next", 30, { x: 800, y: 500 }),
+  ),
+  viewer: macApp(
+    <Viewer platform="darwin" />,
+    pressAt("photo-p2", 30, { x: 900, y: 600 }),
+  ),
+  welcome: macApp(
+    <Welcome platform="darwin" />,
+    pressAt("continue", 34, { x: 800, y: 620 }),
+  ),
+  stats: macApp(
+    <Window
+      theme={macWindow}
+      platform="darwin"
+      title="Heavens Arena"
+      width={1100}
+      height={700}
+    >
+      <Stats />
+    </Window>,
+    pressAt("range-month", 30, { x: 800, y: 300 }),
+    [],
+    false,
+  ),
+  launcher: macApp(
+    <Launcher />,
+    pressAt("launcher-query", 8, { x: 760, y: 400 }),
+    typing("hunter", 16),
+    false,
+  ),
+  agent: macApp(
+    <Agent platform="darwin" />,
+    [
+      { frame: 0, aim: { x: 700, y: 600 } },
+      { frame: 8, aim: { testId: "composer" } },
+      { frame: 10, aim: { testId: "composer" }, down: true },
+      { frame: 12, aim: { testId: "composer" } },
+      { frame: 50, aim: { testId: "send" } },
+      { frame: 54, aim: { testId: "send" }, down: true },
+      { frame: 57, aim: { testId: "send" } },
+      { frame: 74, aim: { testId: "send", dx: 20, dy: -40 } },
+    ],
+    typing("add a retry test", 16),
+  ),
   "desktop-luna": desktop("luna"),
   "desktop-aero": desktop("aero"),
   /** Shot 1: the first press. Down at 0.70 s, up at 0.83 s. */

@@ -107,6 +107,15 @@ export const capture = (
     };
   };
 
+  // Each aim is resolved once, when the pointer first needs it, and kept: a
+  // press may remove its own target (a photo that opens full-screen).
+  const resolved = new Map<Aim, { x: number; y: number }>();
+  const located = (aim: Aim): { x: number; y: number } => {
+    const point = resolved.get(aim) ?? locate(aim);
+    resolved.set(aim, point);
+    return point;
+  };
+
   root.render(take.view(0));
   renderer.flush();
   const origin = renderer.clockPause();
@@ -116,13 +125,17 @@ export const capture = (
   for (let frame = 0; frame < take.frames; frame += 1) {
     root.render(take.view(frame));
     renderer.flush();
+    // A measured layout (a grid sized by `onLayout`) appears once its layout
+    // events are delivered, on the paint after.
+    renderer.dispatchNativeEvents();
+    renderer.flush();
     for (const { keys } of Arr.filter(
       take.keys ?? [],
       (k) => k.frame === frame,
     ))
       renderer.simulateKeystrokes(keys);
     Option.map(
-      pointerAt(take.pointer ?? [], frame, locate),
+      pointerAt(take.pointer ?? [], frame, located),
       ({ x, y, down }) => {
         renderer.nativeSimulateMouseMove(x, y, held ? 0 : undefined);
         if (down && !held) renderer.nativeSimulateMouseDown(x, y, 0);
