@@ -1,74 +1,38 @@
 <template>
   <style>
-    #root {
-      position: absolute;
-      inset: 0;
-      background: #f2f2f7;
-      overflow: hidden;
-      font-family: Inter, sans-serif;
-    }
-    #root .row {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 76px;
-    }
-    #root .word {
-      font-size: 124px;
-      font-weight: 700;
-      letter-spacing: -0.04em;
-      color: #1d1d1f;
-      opacity: 0;
-    }
+    #root { position: absolute; inset: 0; background: #f2f2f7; overflow: hidden; font-family: Inter, sans-serif; }
+    #root .cap { position: absolute; left: 0; right: 0; top: 118px; text-align: center; }
+    #root .cap span { display: inline-block; font-size: 84px; font-weight: 700; letter-spacing: -0.035em; color: #1d1d1f; }
+    #root .cursor { position: absolute; left: 0; top: 0; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25)); }
+    #root .cursor svg { display: block; width: 100%; height: auto; }
+    #root video { position: absolute; left: 0; top: 0; }
+    #root .row { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 76px; }
+    #root .word { font-size: 124px; font-weight: 700; letter-spacing: -0.04em; color: #1d1d1f; opacity: 0; }
   </style>
-  <div
-    id="root"
-    data-composition-id="stack"
-    data-width="1920"
-    data-height="1080"
-  >
+  <div id="root" data-composition-id="stack" data-width="1920" data-height="1080">
     <div class="row">
-      <span id="w-gpui" class="word">GPUI</span>
-      <span id="w-react" class="word">React</span>
-      <span id="w-shadcn" class="word">shadcn</span>
-      <span id="w-tailwind" class="word">Tailwind</span>
+      <span id="k-gpui" class="word">GPUI</span>
+      <span id="k-react" class="word">React</span>
+      <span id="k-shadcn" class="word">shadcn</span>
+      <span id="k-tailwind" class="word">Tailwind</span>
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    // Each word is pressed in like a key: it lands low and small, then springs
-    // up (sound: cap-0..3, one frame after each landing).
-    ["#w-gpui", "#w-react", "#w-shadcn", "#w-tailwind"].forEach((word, i) => {
-      const at = 0.25 + i * 0.45;
-      tl.fromTo(
-        word,
-        { opacity: 0, y: 14, scale: 0.92 },
-        { opacity: 1, duration: 0.05 },
-        at,
-      );
-      tl.fromTo(
-        word,
-        { y: 14, scale: 0.92 },
-        { y: 0, scale: 1, duration: 0.42, ease: "back.out(1.6)" },
-        at + 0.05,
-      );
+    // Each word is pressed in like a key, on its beat.
+    ["#k-gpui", "#k-react", "#k-shadcn", "#k-tailwind"].forEach((word, i) => {
+      const at = i * 0.5769;
+      tl.fromTo(word, { opacity: 0 }, { opacity: 1, duration: 0.04 }, at);
+      tl.fromTo(word, { y: 14, scale: 0.92 }, { y: 0, scale: 1, duration: 0.4, ease: "back.out(1.6)" }, at + 0.04);
     });
-    tl.to(
-      ".word",
-      {
-        opacity: 0,
-        filter: "blur(8px)",
-        duration: 0.22,
-        ease: "power2.in",
-        stagger: 0.03,
-      },
-      2.2,
-    );
+    tl.to(".word", { opacity: 0, filter: "blur(8px)", duration: 0.2, ease: "power2.in", stagger: 0.03 }, 4.295);
+    // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
+    document.querySelectorAll("#root .cap").forEach((el) => {
+      const start = Number(el.dataset.start);
+      const end = start + Number(el.dataset.duration);
+      tl.fromTo(el.querySelector("span"), { opacity: 0.3, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" }, start);
+      tl.to(el.querySelector("span"), { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" }, end - 0.2);
+    });
     window.__timelines["stack"] = tl;
   </script>
 </template>

@@ -1,135 +1,45 @@
 <template>
   <style>
-    #root {
-      position: absolute;
-      inset: 0;
-      background: #f2f2f7;
-      overflow: hidden;
-      font-family: Inter, sans-serif;
-    }
-    #root .mark {
-      position: absolute;
-      left: 876px;
-      top: 416px;
-      width: 168px;
-      height: 168px;
-    }
-    #root .mark img {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-    #root .word {
-      position: absolute;
-      left: 790px;
-      top: 418px;
-      font-size: 136px;
-      font-weight: 700;
-      letter-spacing: -0.045em;
-      color: #1d1d1f;
-      line-height: 164px;
-      white-space: nowrap;
-    }
-    #root .url {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 650px;
-      text-align: center;
-      font-size: 46px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #5f4bdb;
-    }
-    #root .cursor {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 60px;
-      transform-origin: 8% 6%;
-      filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.22));
-    }
-    #root .cursor svg {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
+    #root { position: absolute; inset: 0; background: #f2f2f7; overflow: hidden; font-family: Inter, sans-serif; }
+    #root .cap { position: absolute; left: 0; right: 0; top: 118px; text-align: center; }
+    #root .cap span { display: inline-block; font-size: 84px; font-weight: 700; letter-spacing: -0.035em; color: #1d1d1f; }
+    #root .cursor { position: absolute; left: 0; top: 0; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25)); }
+    #root .cursor svg { display: block; width: 100%; height: auto; }
+    #root video { position: absolute; left: 0; top: 0; }
+    #root .mark { position: absolute; left: 876px; top: 416px; width: 168px; height: 168px; background: #1d1d1f; -webkit-mask: url("assets/logo-outline.svg") center / contain no-repeat; mask: url("assets/logo-outline.svg") center / contain no-repeat; }
+    #root .word { position: absolute; left: 790px; top: 418px; font-size: 136px; font-weight: 700; letter-spacing: -0.045em; color: #1d1d1f; line-height: 164px; white-space: nowrap; }
+    #root .url { position: absolute; left: 0; right: 0; top: 650px; text-align: center; font-size: 46px; font-weight: 700; letter-spacing: -0.02em; color: #5f4bdb; }
+    #root .credit { position: absolute; left: 0; right: 0; top: 930px; text-align: center; font-size: 30px; color: #6e6e73; }
+    #root .credit u { color: #1d1d1f; text-underline-offset: 5px; }
+    #root .cursor { width: 60px; }
   </style>
   <div id="root" data-composition-id="end" data-width="1920" data-height="1080">
-    <div id="e-mark" class="mark">
-      <img src="assets/logo.svg" alt="GPUIxUI" />
-    </div>
+    <div id="e-mark" class="mark"></div>
     <div id="e-word" class="word">GPUIxUI</div>
     <div id="e-url" class="url">gpuixui.sudokw.com</div>
-    <div id="e-cur" class="cursor">
-      <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-        <path
-          d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
-          fill="#000"
-          stroke="#fff"
-          stroke-width="1.8"
-          stroke-linejoin="round"
-        />
-      </svg>
-    </div>
+    <div id="e-credit" class="credit">Made with ☕ by <u>@sudo_kw</u></div>
+    <div id="e-cur" class="cursor"><svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z" fill="#000" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    // The mark arrives alone; the cursor presses it (0.6 s, the film's deepest
-    // press) and it springs back; then it moves left as the wordmark wipes in.
-    tl.fromTo(
-      "#e-mark",
-      { opacity: 0, scale: 0.9, filter: "blur(8px)", x: 0 },
-      {
-        opacity: 1,
-        scale: 1,
-        filter: "blur(0px)",
-        duration: 0.35,
-        ease: "expo.out",
-      },
-      0.0,
-    );
-    tl.fromTo(
-      "#e-cur",
-      { x: 1300, y: 860, opacity: 0, scale: 1 },
-      { x: 975, y: 515, opacity: 1, duration: 0.45, ease: "power3.out" },
-      0.1,
-    );
-    tl.to(
-      ["#e-mark", "#e-cur"],
-      { scale: 0.9, duration: 0.066, ease: "power2.out" },
-      0.6,
-    );
-    tl.to("#e-mark", { scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 0.72);
-    tl.to("#e-cur", { scale: 1, duration: 0.13 }, 0.72);
-    tl.to(
-      "#e-cur",
-      { x: 1120, y: 760, opacity: 0, duration: 0.45, ease: "power2.in" },
-      0.95,
-    );
-    tl.to("#e-mark", { x: -270, duration: 0.5, ease: "power3.inOut" }, 0.85);
-    tl.fromTo(
-      "#e-word",
-      { opacity: 1, clipPath: "inset(0 100% 0 0)", x: 24 },
-      {
-        clipPath: "inset(0 0% 0 0)",
-        x: 24,
-        duration: 0.55,
-        ease: "power3.inOut",
-      },
-      1.25,
-    );
-    tl.fromTo(
-      "#e-url",
-      { opacity: 0, color: "#9a9aa0" },
-      { opacity: 1, duration: 0.3, ease: "power2.out" },
-      1.6,
-    );
-    tl.to(
-      "#e-url",
-      { color: "#5f4bdb", duration: 0.5, ease: "power2.inOut" },
-      1.75,
-    );
+    tl.fromTo("#e-mark", { opacity: 0, scale: 0.9, filter: "blur(8px)", x: 0 }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.3, ease: "expo.out" }, 0);
+    tl.fromTo("#e-cur", { x: 1300, y: 860, opacity: 0, scale: 1 }, { x: 975, y: 515, opacity: 1, duration: 0.42, ease: "power3.out" }, 0.1);
+    tl.to(["#e-mark", "#e-cur"], { scale: 0.9, duration: 0.066, ease: "power2.out" }, 0.577);
+    tl.to("#e-mark", { scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 0.697);
+    tl.to("#e-cur", { scale: 1, duration: 0.12 }, 0.697);
+    tl.to("#e-cur", { x: 1120, y: 760, opacity: 0, duration: 0.42, ease: "power2.in" }, 0.927);
+    tl.to("#e-mark", { x: -270, duration: 0.5, ease: "power3.inOut" }, 0.827);
+    tl.fromTo("#e-word", { opacity: 1, clipPath: "inset(0 100% 0 0)", x: 24 }, { clipPath: "inset(0 0% 0 0)", x: 24, duration: 0.55, ease: "power3.inOut" }, 1.197);
+    tl.fromTo("#e-url", { opacity: 0, color: "#9a9aa0" }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 1.731);
+    tl.to("#e-url", { color: "#5f4bdb", duration: 0.45, ease: "power2.inOut" }, 1.881);
+    tl.fromTo("#e-credit", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 2.308);
+    // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
+    document.querySelectorAll("#root .cap").forEach((el) => {
+      const start = Number(el.dataset.start);
+      const end = start + Number(el.dataset.duration);
+      tl.fromTo(el.querySelector("span"), { opacity: 0.3, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" }, start);
+      tl.to(el.querySelector("span"), { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" }, end - 0.2);
+    });
     window.__timelines["end"] = tl;
   </script>
 </template>

@@ -1,0 +1,34 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; background: #f2f2f7; overflow: hidden; font-family: Inter, sans-serif; }
+    #root .cap { position: absolute; left: 0; right: 0; top: 118px; text-align: center; }
+    #root .cap span { display: inline-block; font-size: 84px; font-weight: 700; letter-spacing: -0.035em; color: #1d1d1f; }
+    #root .cursor { position: absolute; left: 0; top: 0; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25)); }
+    #root .cursor svg { display: block; width: 100%; height: auto; }
+    #root video { position: absolute; left: 0; top: 0; }
+    #root .win { position: absolute; left: 335px; top: 285px; width: 1250px; height: 795px; border-radius: 12px; overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25); }
+    #root video { width: 1250px; height: 795px; }
+    #root .cursor { width: 32px; }
+  </style>
+  <div id="root" data-composition-id="agent" data-width="1920" data-height="1080">
+    <div id="a-win" class="win">
+      <video id="a-take" class="clip" data-start="0" data-duration="2.308" data-media-start="0.07" data-track-index="1" muted playsinline src="assets/footage/agent.mp4"></video>
+      <div id="a-cur" class="cursor"><svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z" fill="#000" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+    </div>
+    <div id="a-cap0" class="cap clip" data-start="0.100" data-duration="2.208" data-track-index="9"><span>and a chat to ship with</span></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#a-win", { opacity: 0, filter: "blur(8px)", scale: 0.97 }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.28, ease: "expo.out" }, 0.0);
+    [[795.2,681.6,0],[792.5,682.3,0],[773.7,687.1,0],[722.6,700.3,0],[623.1,725.9,0],[523.6,751.5,0],[472.5,764.7,0],[453.7,769.5,0],[451.0,770.2,0],[451.0,770.2,0],[451.0,770.2,1],[451.0,770.2,1],[451.0,770.2,0],[451.0,770.2,0],[451.1,770.2,0],[451.4,770.2,0],[452.0,770.2,0],[453.0,770.2,0],[454.5,770.2,0],[456.6,770.2,0],[459.4,770.2,0],[462.9,770.2,0],[467.3,770.2,0],[472.8,770.2,0],[479.3,770.2,0],[486.9,770.2,0],[495.9,770.2,0],[506.2,770.2,0],[518.0,770.2,0],[531.3,770.2,0],[546.4,770.2,0],[563.2,770.2,0],[580.0,770.2,0],[595.0,770.2,0],[608.4,770.2,0],[620.2,770.2,0],[630.5,770.2,0],[639.4,770.2,0],[647.1,770.2,0],[653.6,770.2,0],[659.0,770.2,0],[663.4,770.2,0],[667.0,770.2,0],[669.7,770.2,0],[671.8,770.2,0],[673.3,770.2,0],[674.3,770.2,0],[674.9,770.2,0],[675.2,770.2,0],[675.3,770.2,0],[675.4,770.2,0],[675.4,770.2,0],[675.4,770.2,0],[675.4,770.2,0],[675.4,770.2,1],[675.4,770.2,1],[675.4,770.2,1],[675.4,770.2,0],[675.4,770.2,0],[675.5,769.9,0],[675.9,769.2,0],[676.5,767.8,0],[677.7,765.6,0],[679.3,762.2,0],[681.7,757.5,0],[684.8,751.3,0],[688.6,743.7,0],[691.7,737.5,0],[694.1,732.8,0],[695.8,729.4,0],[696.9,727.1,0],[697.6,725.8,0],[697.9,725.1,0],[698.1,724.8,0],[698.1,724.8,0]].forEach(([x, y, down], frame) => tl.set("#a-cur", { x, y, scale: down ? 0.86 : 1 }, -0.07 + frame / 30));
+    tl.to("#a-win", { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" }, 2.118);
+    // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
+    document.querySelectorAll("#root .cap").forEach((el) => {
+      const start = Number(el.dataset.start);
+      const end = start + Number(el.dataset.duration);
+      tl.fromTo(el.querySelector("span"), { opacity: 0.3, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" }, start);
+      tl.to(el.querySelector("span"), { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" }, end - 0.2);
+    });
+    window.__timelines["agent"] = tl;
+  </script>
+</template>

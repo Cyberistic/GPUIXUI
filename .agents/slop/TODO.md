@@ -24855,11 +24855,12 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` Take runner: real input through GPUI hit testing, stepped motion clock (`apps/playground/src/film`)
 `[x]` Takes: macro Switch / Slider / Button, Settings across three looks, terminal mode, Omarchy desktop
 `[x]` Tactile sound kit (`media/launch/sound/kit.sh`) and the 33 s HyperFrames cut (`media/launch`)
-`[ ]` Music bed under the tactile layer (needs a track or a HeyGen sign-in)
+`[x]` Music: an original piano score (`media/launch/sound/piano.ts`, Salamander Grand Piano CC BY 3.0)
 `[x]` Site mark restored to the Gon favicon mark (traced SVG; nav, landing, 404, dashboard)
 `[x]` Blocks hoisted into `@gpuixui/blocks` (`examples/blocks`, plan 728 Part A); sample people are Hunter × Hunter
 `[x]` `desktop` block: XP-era and Aero-era desktops, behaviour-tested, docs page from native captures (plan 062)
-`[ ]` Launch film v2: faster cut, more blocks, a 3D tiled pan, a 90° rotate, music (plan 064)
+`[x]` Launch film v2: faster cut, more blocks, a 3D tiled pan, a 90° rotate, music (plan 064)
+`[x]` The outline mark (`logo-outline.svg`) and the landing's maker line
 `[ ]` Docs blocks read their source from the compiled blocks instead of uncompiled strings (plan 728 Part A)
 
 ---

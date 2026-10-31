@@ -1,217 +1,52 @@
 <template>
   <style>
-    #root {
-      position: absolute;
-      inset: 0;
-      background: #f2f2f7;
-      overflow: hidden;
-      font-family: Inter, sans-serif;
-    }
-    #root .window {
-      position: absolute;
-      left: 240px;
-      top: 290px;
-      width: 1440px;
-      height: 860px;
-      border-radius: 14px;
-      overflow: hidden;
-      background: #242424;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
-    }
-    #root .bar {
-      height: 38px;
-      background: #1b1b1b;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding-left: 16px;
-    }
-    #root .bar i {
-      width: 12px;
-      height: 12px;
-      border-radius: 6px;
-      display: block;
-    }
-    #root .bar b {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 10px;
-      text-align: center;
-      font:
-        500 14px Inter,
-        sans-serif;
-      color: #9a9a9a;
-    }
-    #root .prompt {
-      position: absolute;
-      left: 28px;
-      top: 62px;
-      font:
-        400 30px "JetBrains Mono",
-        monospace;
-      color: #e6e6e6;
-      white-space: pre;
-    }
-    #root .prompt em {
-      font-style: normal;
-      color: #78aeed;
-    }
-    #root video {
-      position: absolute;
-      left: 0;
-      top: 38px;
-      width: 1440px;
-      height: 810px;
-    }
-    #root .cap {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 118px;
-      text-align: center;
-    }
-    #root .cap span {
-      display: inline-block;
-      font-size: 84px;
-      font-weight: 700;
-      letter-spacing: -0.035em;
-      color: #1d1d1f;
-    }
-    #root .cursor {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 44px;
-      transform-origin: 8% 6%;
-      filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
-    }
-    #root .cursor svg {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
+    #root { position: absolute; inset: 0; background: #f2f2f7; overflow: hidden; font-family: Inter, sans-serif; }
+    #root .cap { position: absolute; left: 0; right: 0; top: 118px; text-align: center; }
+    #root .cap span { display: inline-block; font-size: 84px; font-weight: 700; letter-spacing: -0.035em; color: #1d1d1f; }
+    #root .cursor { position: absolute; left: 0; top: 0; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25)); }
+    #root .cursor svg { display: block; width: 100%; height: auto; }
+    #root video { position: absolute; left: 0; top: 0; }
+    #root .window { position: absolute; left: 240px; top: 290px; width: 1440px; height: 860px; border-radius: 14px; overflow: hidden; background: #2c2c2c; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28); }
+    #root .bar { height: 38px; background: #1b1b1b; display: flex; align-items: center; gap: 8px; padding-left: 16px; }
+    #root .bar i { width: 12px; height: 12px; border-radius: 6px; display: block; }
+    #root .bar b { position: absolute; left: 0; right: 0; top: 10px; text-align: center; font: 500 14px Inter, sans-serif; color: #9a9a9a; }
+    #root .prompt { position: absolute; left: 28px; top: 62px; font: 400 30px "JetBrains Mono", monospace; color: #e6e6e6; white-space: pre; }
+    #root .prompt em { font-style: normal; color: #78aeed; }
+    #root video { top: 38px; width: 1440px; height: 810px; }
+    #root .cursor { width: 44px; }
   </style>
-  <div
-    id="root"
-    data-composition-id="terminal"
-    data-width="1920"
-    data-height="1080"
-  >
+  <div id="root" data-composition-id="terminal" data-width="1920" data-height="1080">
     <div id="t-window" class="window">
-      <div class="bar">
-        <i style="background: #ff5f57"></i><i style="background: #febc2e"></i
-        ><i style="background: #28c840"></i
-        ><b data-layout-ignore>~/app — nub run terminal</b>
-      </div>
-      <div id="t-prompt" class="prompt">
-        <em>~/app ❯ </em><span id="t-typed"></span>
-      </div>
-      <video
-        id="t-take"
-        class="clip"
-        data-start="1.3"
-        data-duration="2.2"
-        data-media-start="0.667"
-        data-track-index="1"
-        muted
-        playsinline
-        src="assets/footage/terminal.mp4"
-      ></video>
+      <div class="bar"><i style="background: #ff5f57"></i><i style="background: #febc2e"></i><i style="background: #28c840"></i><b data-layout-ignore>~/GPUIXUI/examples/blocks</b></div>
+      <div id="t-prompt" class="prompt"><em>~/GPUIXUI/examples/blocks ❯ </em><span id="t-typed"></span></div>
+      <video id="t-take" class="clip" data-start="1.0" data-duration="1.308" data-media-start="1.30" data-track-index="1" muted playsinline src="assets/footage/terminal.mp4"></video>
     </div>
-    <div id="t-cur" class="cursor">
-      <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-        <path
-          d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
-          fill="#000"
-          stroke="#fff"
-          stroke-width="1.8"
-          stroke-linejoin="round"
-        />
-      </svg>
-    </div>
-    <div
-      id="t-cap"
-      class="cap clip"
-      data-start="1.25"
-      data-duration="2.1"
-      data-track-index="2"
-    >
-      <span>and in your terminal</span>
-    </div>
+    <div id="t-cur" class="cursor"><svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z" fill="#000" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+    <div id="t-cap0" class="cap clip" data-start="0.150" data-duration="2.158" data-track-index="9"><span>and in your terminal</span></div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    // In: the window arrives on the same ground the Settings window left.
-    tl.fromTo(
-      "#t-window",
-      { opacity: 0, scale: 0.94, filter: "blur(8px)" },
-      {
-        opacity: 1,
-        scale: 1,
-        filter: "blur(0px)",
-        duration: 0.35,
-        ease: "expo.out",
-      },
-      0,
-    );
-    // The command, one character a keystroke (sound: key-0..3).
-    const command = "nub run terminal";
+    tl.fromTo("#t-window", { opacity: 0, filter: "blur(8px)", scale: 0.97 }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.28, ease: "expo.out" }, 0.0);
+    const command = "nub run dev settings --terminal";
     const typed = document.querySelector("#t-typed");
-    [...command].forEach((_, i) =>
-      tl.call(
-        () => (typed.textContent = command.slice(0, i + 1)),
-        null,
-        0.25 + i * 0.045,
-      ),
-    );
     tl.call(() => (typed.textContent = ""), null, 0);
+    [...command].forEach((_, i) => tl.call(() => (typed.textContent = command.slice(0, i + 1)), null, 0.1 + i * 0.018));
     tl.set("#t-prompt", { opacity: 1 }, 0);
-    tl.set("#t-prompt", { opacity: 0 }, 1.3);
-    // The cursor comes in for the Dark mode switch: pressed 2.6, released 2.73
-    // (the terminal repaints at 2.7; see apps/playground/src/film/terminal-take.ts).
-    const target = { x: 1580.2, y: 538.2 };
-    tl.fromTo(
-      "#t-cur",
-      { x: 1760, y: 1000, scale: 1, opacity: 0 },
-      {
-        x: target.x,
-        y: target.y,
-        opacity: 1,
-        duration: 0.6,
-        ease: "power3.inOut",
-      },
-      1.9,
-    );
-    tl.to("#t-cur", { scale: 0.86, duration: 0.066 }, 2.6);
-    tl.to("#t-cur", { scale: 1, duration: 0.13 }, 2.73);
-    tl.to(
-      "#t-cur",
-      {
-        x: target.x + 40,
-        y: target.y + 70,
-        duration: 0.6,
-        ease: "power2.inOut",
-      },
-      2.9,
-    );
-    // Out: a blur swap into the Omarchy desktop.
-    tl.to(
-      ["#t-window", "#t-cur"],
-      { opacity: 0, filter: "blur(8px)", duration: 0.22, ease: "power2.in" },
-      3.28,
-    );
-    tl.fromTo(
-      "#t-cap span",
-      { opacity: 0.3, filter: "blur(6px)" },
-      { opacity: 1, filter: "blur(0px)", duration: 0.35, ease: "power4.out" },
-      1.25,
-    );
-    tl.to(
-      "#t-cap span",
-      { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" },
-      3.13,
-    );
+    tl.set("#t-prompt", { opacity: 0 }, 1.0);
+    // The repaint lands at 1.73 (beat 3); terminal-take.ts measured it.
+    // The Dark mode switch: (967, 150) in the 1024 px terminal frame, at 1440/1024.
+    const target = { x: 1599.8, y: 538.9 };
+    tl.fromTo("#t-cur", { x: 1760, y: 1000, opacity: 0, scale: 1 }, { x: target.x, y: target.y, opacity: 1, duration: 0.5, ease: "power3.inOut" }, 1.0);
+    tl.to("#t-cur", { scale: 0.86, duration: 0.066 }, 1.63);
+    tl.to("#t-cur", { scale: 1, duration: 0.12 }, 1.76);
+    tl.to("#t-window, #t-cur", { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" }, 2.118);
+    // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
+    document.querySelectorAll("#root .cap").forEach((el) => {
+      const start = Number(el.dataset.start);
+      const end = start + Number(el.dataset.duration);
+      tl.fromTo(el.querySelector("span"), { opacity: 0.3, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" }, start);
+      tl.to(el.querySelector("span"), { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" }, end - 0.2);
+    });
     window.__timelines["terminal"] = tl;
   </script>
 </template>
