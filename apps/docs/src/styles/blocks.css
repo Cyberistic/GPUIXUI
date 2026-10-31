@@ -852,20 +852,10 @@
 }
 
 .gx-dash-logo-mark {
-  position: relative;
   width: 22px;
   height: 22px;
   flex: none;
-  border: 2px solid var(--dash-accent);
-  border-radius: 6px;
-}
-
-.gx-dash-logo-mark::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: 2px;
-  background: var(--dash-accent);
+  background: url("/logo.svg") center / contain no-repeat;
 }
 
 .gx-dash-logo-name {
