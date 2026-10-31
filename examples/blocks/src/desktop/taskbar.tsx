@@ -15,9 +15,16 @@ import { gradient } from "./wallpaper.js";
 export const MARK = fileURLToPath(new URL("./gon.png", import.meta.url));
 
 /** The bar's height per look. */
-export const taskbarHeight: Readonly<Record<DesktopLook, number>> = { luna: 30, aero: 40 };
+export const taskbarHeight: Readonly<Record<DesktopLook, number>> = {
+  luna: 30,
+  aero: 40,
+};
 
-const row: StyleDesc = { display: "flex", flexDirection: "row", alignItems: "center" };
+const row: StyleDesc = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+};
 
 export interface TaskbarProps {
   readonly look: DesktopLook;
@@ -29,8 +36,22 @@ export interface TaskbarProps {
   readonly onWindow: (id: WindowId) => void;
 }
 
-const Luna = ({ width, windows, active, menuOpen, onStart, onWindow }: TaskbarProps) => (
-  <div style={{ ...row, width, height: 30, background: gradient(180, "#3C81F3", "#1F55D2") }}>
+const Luna = ({
+  width,
+  windows,
+  active,
+  menuOpen,
+  onStart,
+  onWindow,
+}: TaskbarProps) => (
+  <div
+    style={{
+      ...row,
+      width,
+      height: 30,
+      background: gradient(180, "#3C81F3", "#1F55D2"),
+    }}
+  >
     <div
       testId="start"
       onClick={onStart}
@@ -42,11 +63,22 @@ const Luna = ({ width, windows, active, menuOpen, onStart, onWindow }: TaskbarPr
         paddingRight: 18,
         borderTopRightRadius: 12,
         borderBottomRightRadius: 12,
-        background: menuOpen ? gradient(180, "#2C7D2C", "#3E9C3E") : gradient(180, "#4FB34F", "#2D8A2D"),
+        background: menuOpen
+          ? gradient(180, "#2C7D2C", "#3E9C3E")
+          : gradient(180, "#4FB34F", "#2D8A2D"),
       }}
     >
       <img src={MARK} objectFit="contain" style={{ width: 20, height: 20 }} />
-      <text style={{ fontFamily: LUNA_TITLE, fontSize: 17, fontWeight: 700, color: "#FFFFFF" }}>start</text>
+      <text
+        style={{
+          fontFamily: LUNA_TITLE,
+          fontSize: 17,
+          fontWeight: 700,
+          color: "#FFFFFF",
+        }}
+      >
+        start
+      </text>
     </div>
     <div style={{ ...row, flexGrow: 1, gap: 3, paddingLeft: 8 }}>
       {Arr.map(windows, ([id, icon]) => (
@@ -61,11 +93,16 @@ const Luna = ({ width, windows, active, menuOpen, onStart, onWindow }: TaskbarPr
             height: 24,
             paddingLeft: 7,
             borderRadius: 3,
-            background: id === active ? gradient(180, "#1A4CB5", "#1E57C9") : gradient(180, "#4E93F8", "#2E6BE0"),
+            background:
+              id === active
+                ? gradient(180, "#1A4CB5", "#1E57C9")
+                : gradient(180, "#4E93F8", "#2E6BE0"),
           }}
         >
           <Icon name={icon} size={14} color="#FFFFFF" />
-          <text style={{ fontFamily: LUNA_UI, fontSize: 11, color: "#FFFFFF" }}>{titles[id]}</text>
+          <text style={{ fontFamily: LUNA_UI, fontSize: 11, color: "#FFFFFF" }}>
+            {titles[id]}
+          </text>
         </div>
       ))}
     </div>
@@ -83,15 +120,41 @@ const Luna = ({ width, windows, active, menuOpen, onStart, onWindow }: TaskbarPr
     >
       <Icon name="volume-2" size={14} color="#FFFFFF" />
       <Icon name="shield" size={14} color="#FFFFFF" />
-      <text style={{ fontFamily: LUNA_UI, fontSize: 11, color: "#FFFFFF" }}>{clock.time}</text>
+      <text style={{ fontFamily: LUNA_UI, fontSize: 11, color: "#FFFFFF" }}>
+        {clock.time}
+      </text>
     </div>
   </div>
 );
 
-const Aero = ({ width, windows, active, menuOpen, onStart, onWindow }: TaskbarProps) => (
-  <div style={{ ...row, width, height: 40, gap: 4, background: "#16253ACC", borderTopWidth: 1, borderColor: "#FFFFFF40" }}>
+const Aero = ({
+  width,
+  windows,
+  active,
+  menuOpen,
+  onStart,
+  onWindow,
+}: TaskbarProps) => (
+  <div
+    style={{
+      ...row,
+      width,
+      height: 40,
+      gap: 4,
+      background: "#16253ACC",
+      borderTopWidth: 1,
+      borderColor: "#FFFFFF40",
+    }}
+  >
     <div
-      style={{ position: "absolute", left: 0, top: 0, width, height: 18, background: gradient(180, "#FFFFFF30", "#FFFFFF08") }}
+      style={{
+        position: "absolute",
+        left: 0,
+        top: 0,
+        width,
+        height: 18,
+        background: gradient(180, "#FFFFFF30", "#FFFFFF08"),
+      }}
     />
     <div
       testId="start"
@@ -106,8 +169,18 @@ const Aero = ({ width, windows, active, menuOpen, onStart, onWindow }: TaskbarPr
         borderRadius: 19,
         borderWidth: 1,
         borderColor: "#BFE3FFAA",
-        background: menuOpen ? gradient(180, "#5FB6FF", "#1A64C8") : gradient(180, "#3E8EE6", "#0E3F91"),
-        boxShadow: [{ offsetX: 0, offsetY: 0, blurRadius: 10, spreadRadius: 0, color: "#6FC3FF88" }],
+        background: menuOpen
+          ? gradient(180, "#5FB6FF", "#1A64C8")
+          : gradient(180, "#3E8EE6", "#0E3F91"),
+        boxShadow: [
+          {
+            offsetX: 0,
+            offsetY: 0,
+            blurRadius: 10,
+            spreadRadius: 0,
+            color: "#6FC3FF88",
+          },
+        ],
       }}
     >
       <img src={MARK} objectFit="contain" style={{ width: 24, height: 24 }} />
@@ -125,18 +198,29 @@ const Aero = ({ width, windows, active, menuOpen, onStart, onWindow }: TaskbarPr
           borderRadius: 4,
           borderWidth: 1,
           borderColor: id === active ? "#FFFFFF88" : "#FFFFFF33",
-          background: id === active ? gradient(180, "#FFFFFF55", "#FFFFFF18") : gradient(180, "#FFFFFF26", "#FFFFFF08"),
+          background:
+            id === active
+              ? gradient(180, "#FFFFFF55", "#FFFFFF18")
+              : gradient(180, "#FFFFFF26", "#FFFFFF08"),
         }}
       >
         <Icon name={icon} size={22} color="#FFFFFF" />
       </div>
     ))}
     <div style={{ flexGrow: 1 }} />
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingRight: 14 }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        paddingRight: 14,
+      }}
+    >
       <text style={{ fontSize: 11, color: "#FFFFFF" }}>{clock.time}</text>
       <text style={{ fontSize: 11, color: "#FFFFFF" }}>{clock.date}</text>
     </div>
   </div>
 );
 
-export const Taskbar = (props: TaskbarProps) => (props.look === "luna" ? <Luna {...props} /> : <Aero {...props} />);
+export const Taskbar = (props: TaskbarProps) =>
+  props.look === "luna" ? <Luna {...props} /> : <Aero {...props} />;

@@ -1,3 +1,4 @@
+import desktopSource from "../../../../../examples/blocks/src/desktop/desktop.tsx?raw";
 import type { ReactNode } from "react";
 import { SignInPageRender, signInPageSource } from "./auth-blocks";
 import { CommandCentreRender, commandCentreSource } from "./command-centre";
@@ -58,6 +59,32 @@ export interface Block {
   readonly render: () => ReactNode;
   readonly source: string;
 }
+
+/**
+ * The desktop block's screen is the native window itself: these are captures of
+ * `DesktopBlock` rendered by GPUix (`apps/playground/src/film/takes.tsx`,
+ * `desktop-luna` / `desktop-aero`), not an HTML reproduction.
+ */
+const DesktopRender = () => (
+  <div className="gx-block-desktop">
+    {(
+      [
+        ["luna", "The XP-era look, Start menu open"],
+        ["aero", "The Aero-era look, Start menu open"],
+      ] as const
+    ).map(([look, caption]) => (
+      <figure key={look} className="gx-block-desktop-shot">
+        <img
+          alt={`${caption}: captured from the native window`}
+          height={1000}
+          src={`/blocks/desktop-${look}.webp`}
+          width={1600}
+        />
+        <figcaption>{caption} — captured from the native window</figcaption>
+      </figure>
+    ))}
+  </div>
+);
 
 const SettingsRender = () => (
   <div className="gx-block-settings">
@@ -229,6 +256,21 @@ export const blocks: Readonly<Record<string, Block>> = {
     ],
     render: DashboardManagementRender,
     source: dashboardManagementSource,
+  },
+  "desktop-01": {
+    name: "desktop-01",
+    slug: "desktop",
+    title: "Desktop",
+    description:
+      "A whole XP-era or Aero-era desktop — wallpaper, shortcuts, windows in the era's chrome, the taskbar and the Start menu — with library components themed by the look inside.",
+    packages: [
+      "@gpuixui/components",
+      "@gpuixui/icons",
+      "@gpuixui/primitives",
+      "@gpuixui/tokens",
+    ],
+    render: DesktopRender,
+    source: desktopSource,
   },
   "settings-01": {
     name: "settings-01",

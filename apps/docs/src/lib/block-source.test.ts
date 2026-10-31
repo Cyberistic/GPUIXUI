@@ -35,8 +35,9 @@ const sourceBlocks = (): ReadonlyArray<{ name: string; source: string }> => {
 };
 
 /**
- * The value a named source constant holds, or `undefined` when the registry
- * imports it from another module (the dashboard's lives in `dashboard.tsx`).
+ * The value a named source constant holds: a literal in the registry, one in
+ * another docs module (the dashboard's lives in `dashboard.tsx`), or a compiled
+ * block's whole file imported with `?raw`; `undefined` when none resolves.
  */
 const sourceText = (constant: string): string | undefined => {
   const declared = new RegExp(
@@ -44,6 +45,15 @@ const sourceText = (constant: string): string | undefined => {
     "m",
   ).exec(registry);
   if (declared?.[1] !== undefined) return declared[1];
+
+  // A compiled block (`examples/blocks`, plan 728) is imported whole with `?raw`.
+  const raw = new RegExp(`import ${constant} from "([^"]+)\\?raw"`).exec(
+    registry,
+  );
+  if (raw?.[1] !== undefined) {
+    const path = new URL(`../components/docs/${raw[1]}`, import.meta.url);
+    return existsSync(path) ? readFileSync(path, "utf8") : undefined;
+  }
 
   const imported = new RegExp(
     `import \\{[\\s\\S]*?\\b${constant}\\b[\\s\\S]*?\\} from "(\\./[^"]+)"`,

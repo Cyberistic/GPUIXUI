@@ -20,7 +20,12 @@ export interface Shortcut {
 export const user = { name: "Gon Freecss", title: "Rookie Hunter" } as const;
 
 export const shortcuts: ReadonlyArray<Shortcut> = [
-  { id: "license", label: "Hunter License", icon: "badge-check", tint: "#2F6FD6" },
+  {
+    id: "license",
+    label: "Hunter License",
+    icon: "badge-check",
+    tint: "#2F6FD6",
+  },
   { id: "greed", label: "Greed Island", icon: "folder", tint: "#E3A82B" },
   { id: "arena", label: "Heavens Arena", icon: "grid", tint: "#3A9A4A" },
   { id: "mail", label: "Hunter Mail", icon: "mail", tint: "#7A5BD6" },
@@ -36,8 +41,18 @@ export interface Program {
 
 /** The Start menu's left column: pinned programs first, then recent ones. */
 export const pinned: ReadonlyArray<Program> = [
-  { label: "Hunter Site", detail: "The Association", icon: "external-link", tint: "#2F6FD6" },
-  { label: "Hunter Mail", detail: "Killua, Kurapika, Leorio", icon: "mail", tint: "#7A5BD6" },
+  {
+    label: "Hunter Site",
+    detail: "The Association",
+    icon: "external-link",
+    tint: "#2F6FD6",
+  },
+  {
+    label: "Hunter Mail",
+    detail: "Killua, Kurapika, Leorio",
+    icon: "mail",
+    tint: "#7A5BD6",
+  },
 ];
 
 export const recent: ReadonlyArray<Program> = [

@@ -235,4 +235,4 @@ Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` �
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [060](./060-launch-film-feel.md) | Launch film "Feel it": real takes, native blocks, sound as haptics | media | playground, tokens | landed — superseded by 064 for v2 |
-| [062](./062-desktop-block.md) | The `desktop` block: XP-era and Aero-era desktops from the library | blocks | 728 Part A, tokens `retro` | in progress |
+| [062](./062-desktop-block.md) | The `desktop` block: XP-era and Aero-era desktops from the library | blocks | 728 Part A, tokens `retro` | landed |

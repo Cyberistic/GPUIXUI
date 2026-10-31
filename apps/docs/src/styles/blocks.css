@@ -8382,3 +8382,27 @@ button.gx-sb-row {
   background: var(--material-sidebar);
   backdrop-filter: blur(30px) saturate(1.8);
 }
+
+/* The desktop block: two captures of the native window. */
+.gx-block-desktop {
+  display: grid;
+  gap: 20px;
+}
+
+.gx-block-desktop-shot {
+  margin: 0;
+}
+
+.gx-block-desktop-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.gx-block-desktop-shot figcaption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}

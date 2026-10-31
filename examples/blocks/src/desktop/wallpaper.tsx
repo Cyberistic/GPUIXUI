@@ -9,7 +9,11 @@ import * as Arr from "effect/Array";
 import type { DesktopLook } from "./data.js";
 
 /** A two-stop linear gradient, `angle` in CSS degrees (180 runs top to bottom). */
-export const gradient = (angle: number, from: string, to: string): LinearGradientBackground => ({
+export const gradient = (
+  angle: number,
+  from: string,
+  to: string,
+): LinearGradientBackground => ({
   type: "linear-gradient",
   angle,
   stops: [
@@ -18,11 +22,26 @@ export const gradient = (angle: number, from: string, to: string): LinearGradien
   ],
 });
 
-const fill = (style: StyleDesc): StyleDesc => ({ position: "absolute", ...style });
+const fill = (style: StyleDesc): StyleDesc => ({
+  position: "absolute",
+  ...style,
+});
 
 /** A circle of `size` centred at (`x`, `y`). */
-const disc = (x: number, y: number, size: number, style: StyleDesc): StyleDesc =>
-  fill({ left: x - size / 2, top: y - size / 2, width: size, height: size, borderRadius: size / 2, ...style });
+const disc = (
+  x: number,
+  y: number,
+  size: number,
+  style: StyleDesc,
+): StyleDesc =>
+  fill({
+    left: x - size / 2,
+    top: y - size / 2,
+    width: size,
+    height: size,
+    borderRadius: size / 2,
+    ...style,
+  });
 
 /** Clouds: rounded runs of white, wider than tall. */
 const clouds: ReadonlyArray<readonly [number, number, number, number]> = [
@@ -35,7 +54,15 @@ const clouds: ReadonlyArray<readonly [number, number, number, number]> = [
 
 const Hill = ({ width, height }: { width: number; height: number }) => (
   <>
-    <div style={fill({ left: 0, top: 0, width, height, background: gradient(180, "#1D5FD0", "#9CCBF6") })} />
+    <div
+      style={fill({
+        left: 0,
+        top: 0,
+        width,
+        height,
+        background: gradient(180, "#1D5FD0", "#9CCBF6"),
+      })}
+    />
     {Arr.map(clouds, ([x, y, w, h], i) => (
       <div
         key={i}
@@ -49,23 +76,63 @@ const Hill = ({ width, height }: { width: number; height: number }) => (
         })}
       />
     ))}
-    <div style={disc(width * 0.62, height * 0.62 + width * 1.5, width * 3.1, { background: gradient(180, "#4F9A2E", "#2F6E17") })} />
-    <div style={disc(width * 0.4, height * 0.58 + width * 1.4, width * 2.9, { background: gradient(180, "#7FC444", "#3E8A1E") })} />
+    <div
+      style={disc(width * 0.62, height * 0.62 + width * 1.5, width * 3.1, {
+        background: gradient(180, "#4F9A2E", "#2F6E17"),
+      })}
+    />
+    <div
+      style={disc(width * 0.4, height * 0.58 + width * 1.4, width * 2.9, {
+        background: gradient(180, "#7FC444", "#3E8A1E"),
+      })}
+    />
   </>
 );
 
 const Bloom = ({ width, height }: { width: number; height: number }) => (
   <>
-    <div style={fill({ left: 0, top: 0, width, height, background: gradient(160, "#0B2F6B", "#2A7FD4") })} />
-    <div style={disc(width * 0.78, height * 0.18, width * 0.9, { background: gradient(180, "#9FD3FF55", "#9FD3FF00") })} />
-    <div style={disc(width * 0.2, height * 0.95, width * 0.8, { background: gradient(0, "#4FB0FF66", "#4FB0FF00") })} />
-    <div style={disc(width * 0.55, height * 0.55, width * 0.35, { background: gradient(135, "#FFFFFF2E", "#FFFFFF00") })} />
+    <div
+      style={fill({
+        left: 0,
+        top: 0,
+        width,
+        height,
+        background: gradient(160, "#0B2F6B", "#2A7FD4"),
+      })}
+    />
+    <div
+      style={disc(width * 0.78, height * 0.18, width * 0.9, {
+        background: gradient(180, "#9FD3FF55", "#9FD3FF00"),
+      })}
+    />
+    <div
+      style={disc(width * 0.2, height * 0.95, width * 0.8, {
+        background: gradient(0, "#4FB0FF66", "#4FB0FF00"),
+      })}
+    />
+    <div
+      style={disc(width * 0.55, height * 0.55, width * 0.35, {
+        background: gradient(135, "#FFFFFF2E", "#FFFFFF00"),
+      })}
+    />
   </>
 );
 
 /** The ground for `look`, filling a `width` × `height` desktop. */
-export const Wallpaper = ({ look, width, height }: { look: DesktopLook; width: number; height: number }) => (
+export const Wallpaper = ({
+  look,
+  width,
+  height,
+}: {
+  look: DesktopLook;
+  width: number;
+  height: number;
+}) => (
   <div style={fill({ left: 0, top: 0, width, height, overflow: "hidden" })}>
-    {look === "luna" ? <Hill width={width} height={height} /> : <Bloom width={width} height={height} />}
+    {look === "luna" ? (
+      <Hill width={width} height={height} />
+    ) : (
+      <Bloom width={width} height={height} />
+    )}
   </div>
 );

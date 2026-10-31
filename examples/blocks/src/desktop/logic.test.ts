@@ -4,7 +4,13 @@
  * and a close that reopened a closed menu.
  */
 import { describe, expect, it } from "vitest";
-import { active, closeMenu, raise, toggleMenu, type DesktopState } from "./logic.js";
+import {
+  active,
+  closeMenu,
+  raise,
+  toggleMenu,
+  type DesktopState,
+} from "./logic.js";
 
 const start: DesktopState = { order: ["explorer", "license"], menuOpen: true };
 

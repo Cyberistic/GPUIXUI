@@ -17,7 +17,11 @@ export const LUNA_TITLE = "Trebuchet MS";
 /** Luna's UI type. */
 export const LUNA_UI = "Tahoma";
 
-const row: StyleDesc = { display: "flex", flexDirection: "row", alignItems: "center" };
+const row: StyleDesc = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+};
 
 export interface EraWindowProps {
   readonly look: DesktopLook;
@@ -45,15 +49,40 @@ const lunaCaption = (mark: string, close: boolean, active: boolean) => (
       borderWidth: 1,
       borderColor: "#FFFFFF",
       background: close
-        ? gradient(180, active ? "#E9896B" : "#D9A99A", active ? "#C23B12" : "#B9806E")
-        : gradient(180, active ? "#4C8CF7" : "#9DB6EC", active ? "#1A56D6" : "#7E98DA"),
+        ? gradient(
+            180,
+            active ? "#E9896B" : "#D9A99A",
+            active ? "#C23B12" : "#B9806E",
+          )
+        : gradient(
+            180,
+            active ? "#4C8CF7" : "#9DB6EC",
+            active ? "#1A56D6" : "#7E98DA",
+          ),
     }}
   >
-    <text style={{ fontFamily: LUNA_UI, fontSize: 13, fontWeight: 700, color: "#FFFFFF" }}>{mark}</text>
+    <text
+      style={{
+        fontFamily: LUNA_UI,
+        fontSize: 13,
+        fontWeight: 700,
+        color: "#FFFFFF",
+      }}
+    >
+      {mark}
+    </text>
   </div>
 );
 
-const LunaWindow = ({ title, icon, active, width, height, onPress, children }: EraWindowProps) => (
+const LunaWindow = ({
+  title,
+  icon,
+  active,
+  width,
+  height,
+  onPress,
+  children,
+}: EraWindowProps) => (
   <div style={{ width, height, display: "flex", flexDirection: "column" }}>
     <div
       onMouseDown={onPress}
@@ -62,7 +91,11 @@ const LunaWindow = ({ title, icon, active, width, height, onPress, children }: E
         borderTopLeftRadius: 8,
         borderTopRightRadius: 8,
         overflow: "hidden",
-        background: gradient(180, active ? "#0A5FE8" : "#7E9BE0", active ? "#0442C4" : "#9AB0E6"),
+        background: gradient(
+          180,
+          active ? "#0A5FE8" : "#7E9BE0",
+          active ? "#0442C4" : "#9AB0E6",
+        ),
       }}
     >
       <div
@@ -72,10 +105,16 @@ const LunaWindow = ({ title, icon, active, width, height, onPress, children }: E
           top: 0,
           right: 0,
           height: 11,
-          background: gradient(180, active ? "#5FA6FFCC" : "#C9D6F4AA", "#5FA6FF00"),
+          background: gradient(
+            180,
+            active ? "#5FA6FFCC" : "#C9D6F4AA",
+            "#5FA6FF00",
+          ),
         }}
       />
-      <div style={{ ...row, height: 30, paddingLeft: 6, paddingRight: 5, gap: 5 }}>
+      <div
+        style={{ ...row, height: 30, paddingLeft: 6, paddingRight: 5, gap: 5 }}
+      >
         <Icon name={icon} size={16} color="#FFFFFF" />
         <text
           style={{
@@ -129,15 +168,35 @@ const aeroCaption = (mark: string, close: boolean, active: boolean) => (
       borderWidth: 1,
       borderColor: "#2C3E57AA",
       background: close
-        ? gradient(180, active ? "#E79B88" : "#D9C6C2", active ? "#C4381D" : "#B8A39E")
+        ? gradient(
+            180,
+            active ? "#E79B88" : "#D9C6C2",
+            active ? "#C4381D" : "#B8A39E",
+          )
         : gradient(180, "#F4F8FDDD", "#C3D5EAAA"),
     }}
   >
-    <text style={{ fontSize: 11, fontWeight: 700, color: close ? "#FFFFFF" : "#2B3D55" }}>{mark}</text>
+    <text
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        color: close ? "#FFFFFF" : "#2B3D55",
+      }}
+    >
+      {mark}
+    </text>
   </div>
 );
 
-const AeroWindow = ({ title, icon, active, width, height, onPress, children }: EraWindowProps) => (
+const AeroWindow = ({
+  title,
+  icon,
+  active,
+  width,
+  height,
+  onPress,
+  children,
+}: EraWindowProps) => (
   <div
     onMouseDown={onPress}
     style={{
@@ -150,7 +209,15 @@ const AeroWindow = ({ title, icon, active, width, height, onPress, children }: E
       borderWidth: 1,
       borderColor: "#1A2638CC",
       background: active ? "#8DB6E38C" : "#B9CCE08C",
-      boxShadow: [{ offsetX: 0, offsetY: 8, blurRadius: 24, spreadRadius: 0, color: "#00000055" }],
+      boxShadow: [
+        {
+          offsetX: 0,
+          offsetY: 8,
+          blurRadius: 24,
+          spreadRadius: 0,
+          color: "#00000055",
+        },
+      ],
     }}
   >
     <div
@@ -165,7 +232,9 @@ const AeroWindow = ({ title, icon, active, width, height, onPress, children }: E
     />
     <div style={{ ...row, height: 30, paddingLeft: 9, gap: 7 }}>
       <Icon name={icon} size={16} color="#1E395B" />
-      <text style={{ flexGrow: 1, fontSize: 12, color: "#10233F" }}>{title}</text>
+      <text style={{ flexGrow: 1, fontSize: 12, color: "#10233F" }}>
+        {title}
+      </text>
       <div style={{ ...row, alignSelf: "flex-start", marginRight: 6 }}>
         {Arr.map(
           [
@@ -197,7 +266,14 @@ const AeroWindow = ({ title, icon, active, width, height, onPress, children }: E
 /** A window placed at (`x`, `y`) on the desktop. A press on its painted
  * chrome raises it: a press stops at the first element that paints a fill. */
 export const EraWindow = (props: EraWindowProps) => (
-  <div testId={props.testId} style={{ position: "absolute", left: props.x, top: props.y }}>
-    {props.look === "luna" ? <LunaWindow {...props} /> : <AeroWindow {...props} />}
+  <div
+    testId={props.testId}
+    style={{ position: "absolute", left: props.x, top: props.y }}
+  >
+    {props.look === "luna" ? (
+      <LunaWindow {...props} />
+    ) : (
+      <AeroWindow {...props} />
+    )}
   </div>
 );
