@@ -752,3 +752,29 @@ describe("value controls", () => {
     expect(sliderThumbStyle(spec, testTheme).boxShadow).toBeUndefined();
   });
 });
+
+/**
+ * The AppKit interaction (plan 724). Bug guarded: every control painted the
+ * web's hover wash on macOS, where a button, a row and a toggle do not answer
+ * a pointer crossing them — only the press darkens.
+ */
+describe("the AppKit interaction", () => {
+  const appkit: PrimitiveTheme = { ...testTheme, interaction: "appkit" };
+
+  it("paints no hover on an AppKit control, and keeps its press", () => {
+    for (const variant of BUTTON_VARIANTS) {
+      const style = controlStyle(
+        spec({ variant: buttonVariants[variant] }),
+        appkit,
+      );
+      expect(style.hover, variant).toBeUndefined();
+      expect(style.active, variant).toBeDefined();
+    }
+  });
+
+  it("keeps the pointer wash for every other theme", () => {
+    expect(
+      controlStyle(spec({ variant: buttonVariants.ghost }), testTheme).hover,
+    ).toBeDefined();
+  });
+});

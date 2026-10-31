@@ -171,7 +171,16 @@ export interface Theme {
   readonly window?: WindowBackground;
   /** The reader asked the OS for less transparency: materials paint opaque. */
   readonly reduceTransparency?: boolean;
+  /**
+   * How controls answer the pointer. `"pointer"` (absent) is the web's: a wash
+   * on hover. `"appkit"` is the Mac's: no hover wash on a control or a row, and
+   * a menu's highlighted row in the accent fill (plan 724).
+   */
+  readonly interaction?: Interaction;
 }
+
+/** How a theme's controls answer the pointer; see {@link Theme.interaction}. */
+export type Interaction = "pointer" | "appkit";
 
 /** The colours a platform's own switch paints, in one mode. */
 export interface SwitchColors {
@@ -305,6 +314,8 @@ export interface ThemeOverrides {
   readonly window?: WindowBackground;
   /** Paint every material as its opaque role (the OS's Reduce Transparency). */
   readonly reduceTransparency?: boolean;
+  /** How controls answer the pointer. */
+  readonly interaction?: Interaction;
 }
 
 /**
@@ -791,6 +802,7 @@ export function extendTheme(
     materials: overrides.materials ?? base.materials,
     window: overrides.window ?? base.window,
     reduceTransparency: overrides.reduceTransparency ?? base.reduceTransparency,
+    interaction: overrides.interaction ?? base.interaction,
   };
 }
 
@@ -1168,6 +1180,10 @@ export function themeOverrides(
     theme.reduceTransparency === base.reduceTransparency
       ? undefined
       : theme.reduceTransparency;
+  const interaction =
+    theme.interaction == null || theme.interaction === base.interaction
+      ? undefined
+      : theme.interaction;
   const diff = {
     ...(name === undefined ? {} : { name }),
     ...(isEmptyGroup(colors) ? {} : { colors }),
@@ -1185,6 +1201,7 @@ export function themeOverrides(
     ...(materials === undefined ? {} : { materials }),
     ...(window === undefined ? {} : { window }),
     ...(reduceTransparency === undefined ? {} : { reduceTransparency }),
+    ...(interaction === undefined ? {} : { interaction }),
   };
   // The mirror of `EveryGroupOverridable`: a group a `Theme` gains must also be
   // one this diff can name, or the round trip silently loses it.
@@ -1398,6 +1415,7 @@ export function applyStyle(base: Theme, style: PlatformStyleSource): Theme {
   const themed = extendTheme(base, {
     name: styleName(base, style),
     typography: {
+      ...style.type,
       sans: nameOf(style.sans),
       mono: nameOf(style.mono),
     },
@@ -1425,6 +1443,11 @@ export function applyStyle(base: Theme, style: PlatformStyleSource): Theme {
         ? "blurred"
         : undefined
       : base.window,
+    interaction: applies
+      ? style.interaction === "appkit"
+        ? "appkit"
+        : undefined
+      : base.interaction,
   };
 }
 

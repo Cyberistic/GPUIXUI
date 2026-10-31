@@ -142,19 +142,32 @@ export const menuRowStyle = (
         Match.exhaustive,
       );
 
+  // An AppKit menu highlights its row in the accent with the accent's ink —
+  // a destructive row too, whose red would not read on it — and the highlight
+  // follows the pointer (`Theme.interaction`, plan 724).
+  const appkit = theme.interaction === "appkit";
+  const pointerWash = { backgroundColor: theme.colors.hover };
+  const accentWash = {
+    backgroundColor: theme.colors.primary,
+    color: theme.colors.primaryForeground,
+  };
+  const highlight = appkit ? accentWash : pointerWash;
+
   return {
     ...overlaySurfaceStyle(MENU_ITEM, className, theme),
     height: controlHeight(theme, "sm"),
-    backgroundColor: active ? theme.colors.hover : undefined,
     // The 50% fade composited a disabled label into its own fill, which a
     // high-contrast theme asks 3:1 of; the `disabled`/`disabledForeground` pair
     // is the one `contrastPairs` measures on the popover.
     ...(color === undefined ? {} : { color }),
+    ...(active && !disabled ? highlight : {}),
     cursor: disabled ? "not-allowed" : "pointer",
-    hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
+    hover: disabled ? undefined : highlight,
     active: disabled
       ? undefined
-      : { backgroundColor: pressWash(theme, "hover") },
+      : appkit
+        ? accentWash
+        : { backgroundColor: pressWash(theme, "hover") },
   };
 };
 

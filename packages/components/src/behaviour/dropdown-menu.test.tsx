@@ -40,6 +40,7 @@ import {
   contrastFloorsFor,
   contrastRatio,
   decorativeFloor,
+  extendTheme,
   getTheme,
   platformNames,
   platformTheme,
@@ -688,8 +689,12 @@ describe("DropdownMenu", () => {
     // Light · macOS sits 1.037:1 from the `hover` wash the highlighted row is
     // already wearing — under the 1.05:1 perceptibility floor — so the row a
     // reader pressed did not answer. The wash is derived against the one it
-    // replaces, the way a list row's press is derived against `accent`.
-    const macOSLight = platformTheme(lightTheme, "darwin");
+    // replaces, the way a list row's press is derived against `accent`. The
+    // palette is macOS's under the pointer interaction: AppKit's own menu
+    // highlights in the accent instead (plan 724, the case below).
+    const macOSLight = extendTheme(platformTheme(lightTheme, "darwin"), {
+      interaction: "pointer",
+    });
     const menu = renderComponent(
       <FileActions onSelect={vi.fn()} />,
       macOSLight,
@@ -718,6 +723,22 @@ describe("DropdownMenu", () => {
     expect(
       contrastRatio(macOSLight.colors.active, macOSLight.colors.hover) ?? 0,
     ).toBeLessThan(decorativeFloor);
+  });
+
+  it("highlights an AppKit row in the accent with the accent's ink", () => {
+    const mac = platformTheme(lightTheme, "darwin");
+    const menu = renderComponent(<FileActions onSelect={vi.fn()} />, mac);
+    clickCentreOf(menu, "trigger");
+    hoverCentreOf(menu, "rename");
+
+    const style = menu.renderer.findByTestId("rename")?.style;
+
+    menu.unmount();
+
+    expect(style?.hover).toMatchObject({
+      backgroundColor: mac.colors.primary,
+      color: mac.colors.primaryForeground,
+    });
   });
 
   it("toggles a checkbox row once while Enter is held", () => {

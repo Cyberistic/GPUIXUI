@@ -986,9 +986,13 @@ describe("decorative surfaces", () => {
       ),
       hover:
         variants.includes('backgroundColor: colorRole(theme, "hover")') &&
+        // A pointer theme's row hovers in `hover`; an AppKit row hovers in the
+        // accent, `primary`, which `filledRoles` already holds the veil and the
+        // shadow to (plan 724).
         row.includes(
-          "hover: disabled ? undefined : { backgroundColor: theme.colors.hover }",
-        ),
+          "const pointerWash = { backgroundColor: theme.colors.hover }",
+        ) &&
+        row.includes("hover: disabled ? undefined : highlight"),
     } as const;
     return painted[wash];
   };

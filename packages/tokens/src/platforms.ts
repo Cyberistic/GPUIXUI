@@ -19,11 +19,13 @@ import type { MaterialFills, WindowBackground } from "./materials.js";
 import type { StoredSeries } from "./series.js";
 import { darkSyntax, type StoredSyntax, type SyntaxColors } from "./syntax.js";
 import type {
+  Interaction,
   SwitchColors,
   SwitchMetrics,
   ThemeContrast,
   ThemeMode,
   ThemeOverrides,
+  TypographyOverrides,
 } from "./theme.js";
 
 /** GPUI's system UI font sentinel; it resolves to each platform's own UI font. */
@@ -94,6 +96,13 @@ export interface PlatformStyle extends PlatformType {
    */
   readonly materials?: Readonly<Partial<Record<ThemeMode, MaterialFills>>>;
   readonly window?: WindowBackground;
+  /** How the platform's controls answer the pointer (`Theme.interaction`). */
+  readonly interaction?: Interaction;
+  /**
+   * The text roles the platform sizes differently, merged field by field: the
+   * Mac's body is 13 points, its small text 11. Families stay `sans`/`mono`.
+   */
+  readonly type?: Omit<TypographyOverrides, "sans" | "mono">;
   /**
    * The categorical scale the look paints its data marks in, per mode. A mode it
    * omits — and every style that declares none — resolves the base theme's scale
@@ -190,6 +199,10 @@ export interface PlatformStyleSource {
   readonly materials?: Partial<Record<ThemeMode, MaterialFills>> | null;
   /** The window background; anything but `"blurred"` is opaque. */
   readonly window?: unknown;
+  /** The interaction model; anything but `"appkit"` is the pointer's. */
+  readonly interaction?: unknown;
+  /** The text roles the style resizes. */
+  readonly type?: Omit<TypographyOverrides, "sans" | "mono"> | null;
 }
 
 /**
@@ -270,6 +283,14 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     // blur shows through (plan 721). Text on a material is held to the floors on
     // the opaque role, the worst case a translucent surface cannot promise.
     window: "blurred",
+    interaction: "appkit",
+    // AppKit's text: a 13-point body, 12-point labels, 11-point small text.
+    type: {
+      body: { fontSize: 13, lineHeight: 16 },
+      bodyStrong: { fontSize: 13, lineHeight: 16 },
+      label: { fontSize: 12, lineHeight: 15 },
+      caption: { fontSize: 11, lineHeight: 14 },
+    },
     materials: {
       light: {
         sidebar: "#E9E9EF99",

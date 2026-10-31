@@ -1095,6 +1095,7 @@ describe("the extension mechanism", () => {
     "materials",
     "window",
     "reduceTransparency",
+    "interaction",
   ] as const satisfies readonly Exclude<keyof Theme, "mode" | "contrast">[];
 
   type ListedGroup = (typeof overridableGroups)[number];
@@ -1159,6 +1160,7 @@ describe("the extension mechanism", () => {
     materials: () => ({ materials: { sidebar: "#10101080" } }),
     window: () => ({ window: "blurred" }),
     reduceTransparency: () => ({ reduceTransparency: true }),
+    interaction: () => ({ interaction: "appkit" }),
   } satisfies Record<ListedGroup, (base: Theme) => ThemeOverrides>;
 
   it("carries every group when nothing is overridden", () => {

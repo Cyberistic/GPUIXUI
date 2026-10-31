@@ -171,7 +171,9 @@ export const controlStyle = (
     style.hover = { backgroundColor: style.backgroundColor };
     style.active = { backgroundColor: style.backgroundColor };
   } else {
-    style.hover = variant.hover(theme);
+    // AppKit controls do not answer a pointer crossing them; the press still
+    // darkens (`Theme.interaction`, plan 724).
+    if (theme.interaction !== "appkit") style.hover = variant.hover(theme);
     style.active = variant.active(theme);
   }
   if (spec.square === true) {

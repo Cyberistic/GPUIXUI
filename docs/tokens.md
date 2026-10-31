@@ -3867,6 +3867,23 @@ so `extendTheme` and `themeOverrides` reach them like any other.
 The blur itself is composited behind the window, so an app-side capture cannot
 show it: confirm the look by eye on macOS.
 
+## Interaction
+
+`Theme.interaction` says how controls answer the pointer. Absent (or
+`"pointer"`) is the web's: a wash on hover. The darwin style sets `"appkit"`
+(plan 724): no control or row paints a hover wash — the press still darkens —
+and a menu's highlighted row takes the accent, `primary`, with
+`primaryForeground` ink, a destructive row included, and follows the pointer.
+`extendTheme(theme, { interaction: "pointer" })` puts a macOS palette back on
+the web's model.
+
+The darwin style also sizes AppKit's text: a 13-point body (`body`,
+`bodyStrong`), 12-point `label` and 11-point `caption`, through the platform
+style's `type` group, which merges into the typography field by field.
+Control **heights stay at the compact density** (24 / 28 / 32), not AppKit's
+19 / 22 / 28: the library holds every control to the 24-point target floor
+(`targetSize.minimum`, WCAG 2.5.8), and the floor outranks the look.
+
 ## Spacing
 
 | Token | Pixels |
