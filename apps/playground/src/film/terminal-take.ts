@@ -1,12 +1,13 @@
 /**
- * The film's terminal take: `terminal.js` run by GPUix's terminal platform in a
- * pty, its kitty-graphics frames decoded and resampled to 30 fps.
+ * The film's terminal take: the command the film types, `nub run dev settings
+ * --terminal` in `examples/blocks`, run in a pty by GPUix's terminal platform; its
+ * kitty-graphics frames decoded and resampled to 30 fps.
  *
  * The pty answers no pixel-size query, so the harness sends the in-band resize
  * kitty terminals send (`CSI 48 ; rows ; cols ; height ; width t`) with a
- * 2048×1152 pixel area. One click (an SGR-pixel press and release, the
+ * 1024×576 pixel area. One click (an SGR-pixel press and release, the
  * terminal's own report) lands on the Dark mode switch, found in the first
- * painted frame by the look's own switch paint. Every synchronized-update
+ * painted frame by the Linux look's own off-switch paint. Every synchronized-update
  * batch the platform writes is one frame; its arrival time places it.
  *
  *   nub apps/playground/dist/film/terminal-take.js <outDir>
@@ -20,16 +21,16 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { deflateSync, inflateSync } from "node:zlib";
 import { parseKittyStream, type KittyFrame } from "../terminal/kitty.js";
 import { FPS, type PointerSample } from "./take.js";
-import { terminalTheme } from "./terminal-app.js";
+import { lightTheme, platformTheme } from "@gpuixui/tokens";
 
-const SIZE = { width: 2048, height: 1152, columns: 128, rows: 36 } as const;
+const SIZE = { width: 1024, height: 576, columns: 128, rows: 36 } as const;
 /** Seconds of footage after the first full-size frame, and the click in it. */
 const LENGTH = 3.4;
 const CLICK_AT = 1.2;
 const END_OF_BATCH = "\x1b[?2026l";
 
 /** The Dark mode switch: the switch-on paint in the band above the sound card. */
-const BAND = { x: 0, y: 0, width: 2048, height: 360 } as const;
+const BAND = { x: 0, y: 0, width: 1024, height: 180 } as const;
 
 const switchIn = (frame: KittyFrame): Option.Option<{ x: number; y: number }> =>
   Option.flatMap(
@@ -37,8 +38,8 @@ const switchIn = (frame: KittyFrame): Option.Option<{ x: number; y: number }> =>
     (band) =>
       Option.flatMap(
         Option.flatMapNullishOr(
-          Option.fromNullishOr(terminalTheme(true).switch),
-          (paint) => Pixels.hexToRgba(paint.on),
+          Option.fromNullishOr(platformTheme(lightTheme, "linux").switch),
+          (paint) => Pixels.hexToRgba(paint.off),
         ),
         (on) =>
           Option.map(
@@ -64,9 +65,9 @@ interface Recording {
   readonly target: Option.Option<{ x: number; y: number }>;
 }
 
-const record = (main: string) =>
+const record = () =>
   Effect.callback<Recording>((resume) => {
-    const command = `cat | /usr/bin/script -q /dev/null /bin/sh -c 'stty rows ${SIZE.rows} cols ${SIZE.columns}; exec nub ${main}'`;
+    const command = `cd ${BLOCKS} && cat | /usr/bin/script -q /dev/null /bin/sh -c 'stty rows ${SIZE.rows} cols ${SIZE.columns}; exec nub run dev settings --terminal'`;
     const child = spawn("/bin/sh", ["-c", command], {
       stdio: ["pipe", "pipe", "inherit"],
     });
@@ -155,7 +156,8 @@ const framesOf = (bytes: Buffer, arrivals: ReadonlyArray<Arrival>) => {
 };
 
 const [, , outDir = ""] = process.argv;
-const main = new URL("./terminal.js", import.meta.url).pathname;
+/** The blocks package: the film runs the command it types, in this directory. */
+const BLOCKS = new URL("../../../../examples/blocks", import.meta.url).pathname;
 
 Effect.runPromise(
   Effect.gen(function* () {
@@ -165,7 +167,7 @@ Effect.runPromise(
       firstFull,
       clickMs,
       target: found,
-    } = yield* record(main);
+    } = yield* record();
     if (Option.isNone(found))
       return yield* Effect.logError(
         "terminal take: no Dark mode switch painted; nothing was clicked",

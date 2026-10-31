@@ -70,7 +70,11 @@ const blocks: Readonly<Record<string, ComponentType>> = {
   ),
   inbox: Inbox,
   kanban: Kanban,
-  settings: () => <SettingsApp initialLook={flags.includes("--terminal") ? "linux" : "darwin"} />,
+  settings: () => (
+    <SettingsApp
+      initialLook={flags.includes("--terminal") ? "linux" : "darwin"}
+    />
+  ),
 };
 
 const program = Option.match(R.get(blocks, slug), {

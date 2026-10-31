@@ -5,6 +5,8 @@
  * it was (or drops it in a column the pointer was not over). The desktop: a
  * Start button that does not open the menu, a taskbar button that does not
  * bring its window to the front, and a menu a press on the desktop leaves open.
+ * Stats: a range control that leaves the numbers on the old range. SettingsApp:
+ * a Dark mode switch that changes nothing (its handlers were no-ops in main.tsx).
  */
 import { createTestRoot } from "@gpuix/react/testing";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
@@ -14,7 +16,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DesktopBlock } from "./desktop/desktop.js";
 import { Inbox } from "./inbox/inbox.js";
 import { Kanban } from "./kanban/kanban.js";
-import { Settings, type Look } from "./settings/settings.js";
+import { Settings, SettingsApp, type Look } from "./settings/settings.js";
+import { Stats } from "./stats/stats.js";
 
 // The first mount in a file loads the native binding and its fonts: measured at
 // 7.3 s cold against vitest's 5 s default.
@@ -138,4 +141,32 @@ describe("Desktop", () => {
       expect(order(r)).toEqual(["window-license", "window-explorer"]);
     });
   }
+});
+
+describe("Stats", () => {
+  it("swaps every number when the range changes", () => {
+    const r = mount(<Stats />);
+    const bouts = () => r.findByTestId("tile-Bouts");
+    const text = () => r.getAllText();
+    expect(text()).toContain("128");
+    const month = centre(r, "range-month");
+    r.nativeSimulateClick(month.x, month.y);
+    r.flush();
+    expect(bouts()).toBeDefined();
+    expect(text()).toContain("512");
+    expect(text()).not.toContain("128");
+  });
+});
+
+describe("SettingsApp", () => {
+  it("repaints in the dark theme when Dark mode is pressed", () => {
+    const r = mount(<SettingsApp />);
+    const before = r.findByTestId("settings")?.style.backgroundColor;
+    const dark = centre(r, "dark");
+    r.nativeSimulateClick(dark.x, dark.y);
+    r.flush();
+    expect(r.findByTestId("settings")?.style.backgroundColor).not.toEqual(
+      before,
+    );
+  });
 });

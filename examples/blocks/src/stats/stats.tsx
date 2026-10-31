@@ -22,7 +22,13 @@ export const Stats = () => {
       direction="column"
       gap="lg"
       testId="stats"
-      style={{ flexGrow: 1, width: "100%", height: "100%", padding: theme.spacing.xl, backgroundColor: theme.colors.background }}
+      style={{
+        flexGrow: 1,
+        width: "100%",
+        height: "100%",
+        padding: theme.spacing.xl,
+        backgroundColor: theme.colors.background,
+      }}
     >
       <Stack direction="row" align="center" justify="between">
         <Stack direction="column" gap="2xs">
@@ -42,7 +48,11 @@ export const Stats = () => {
       </Stack>
       <Stack direction="row" gap="md">
         {Arr.map(data.tiles, (tile) => (
-          <Card key={tile.label} variant="outline" style={{ flexGrow: 1, flexBasis: 0, padding: theme.spacing.lg }}>
+          <Card
+            key={tile.label}
+            variant="outline"
+            style={{ flexGrow: 1, flexBasis: 0, padding: theme.spacing.lg }}
+          >
             <Stack direction="column" gap="xs">
               <Text role="caption" tone="muted">
                 {tile.label}
@@ -61,13 +71,25 @@ export const Stats = () => {
         ))}
       </Stack>
       <Stack direction="row" gap="md" style={{ flexGrow: 1, minHeight: 0 }}>
-        <Card variant="outline" style={{ flexGrow: 3, flexBasis: 0, padding: theme.spacing.lg }}>
+        <Card
+          variant="outline"
+          style={{ flexGrow: 3, flexBasis: 0, padding: theme.spacing.lg }}
+        >
           <Stack direction="column" gap="sm">
             <Text role="label">Bout wins</Text>
-            <BarChart series={data.wins} labels={data.labels} width={460} height={190} legend />
+            <BarChart
+              series={data.wins}
+              labels={data.labels}
+              width={460}
+              height={190}
+              legend
+            />
           </Stack>
         </Card>
-        <Card variant="outline" style={{ flexGrow: 2, flexBasis: 0, padding: theme.spacing.lg }}>
+        <Card
+          variant="outline"
+          style={{ flexGrow: 2, flexBasis: 0, padding: theme.spacing.lg }}
+        >
           <Stack direction="column" gap="sm">
             <Text role="label">Nen types</Text>
             <DonutChart data={nenTypes} size={150} legend />
@@ -77,7 +99,12 @@ export const Stats = () => {
       <Card variant="outline" style={{ padding: theme.spacing.lg }}>
         <Stack direction="column" gap="sm">
           <Text role="label">Aura output</Text>
-          <LineChart series={[{ key: "aura", label: "Aura", values: data.aura }]} labels={data.labels} width={900} height={120} />
+          <LineChart
+            series={[{ key: "aura", label: "Aura", values: data.aura }]}
+            labels={data.labels}
+            width={900}
+            height={120}
+          />
         </Stack>
       </Card>
     </Stack>
