@@ -11,20 +11,11 @@ import { describe, expect, it } from "vitest";
  * `--dim: #a1a1a1` — **2.59:1** on the page — and its secondary paragraphs in
  * `--muted: #737373` — **4.29:1** on the `--bg-soft` panels they sit on, under
  * the 4.5 floor — so the first page a reader sees taught less than the library
- * asks of every component. The fixed dark terminal illustration had the same
- * shape: its session and status text painted **3.00:1** and its line-number
- * gutter **2.20:1** on the frame behind them.
+ * asks of every component.
  *
  * The values are the library's own (`@gpuixui/tokens`), so the landing is held
- * to the contract the components are. The editor moment is two fixed pictures —
- * a terminal and a VS Code window, both always dark — so their palettes are
- * declared once each and measured in those two places.
- *
- * The VS Code window reproduces another product's palette on purpose: its UI
- * text is held to the secondary floor, its syntax tokens to the same floor, and
- * the gutter is exempt because VS Code paints it below even that — it is
- * decoration repeated on every line, and the whole stage is `aria-hidden`, so no
- * reader is asked to read it as page text.
+ * to the contract the components are. The terminal and VS Code illustrations
+ * this guard also measured left the page with plan 727.
  */
 
 const css = readFileSync(
@@ -56,12 +47,6 @@ const schemes: Readonly<
 
 const schemeNames = ["light", "dark"] as const;
 
-/** The terminal's fixed palette: the frame is dark in both schemes. */
-const terminal = variables(".landing-term");
-
-/** The reproduced VS Code window's palette, declared on the window. */
-const vscode = variables(".landing-vscode");
-
 interface Pair {
   readonly text: string;
   readonly surface: string;
@@ -90,67 +75,6 @@ const pairs: ReadonlyArray<Pair> = [
     floor: contrastFloors.secondary,
   },
 ];
-
-/** The terminal illustration's text, against the frame it is painted on. */
-const terminalPairs: ReadonlyArray<Pair> = [
-  { text: "--term-ink", surface: "--term-bg", floor: contrastFloors.body },
-  { text: "--term-ink", surface: "--term-bar", floor: contrastFloors.body },
-  {
-    text: "--term-label",
-    surface: "--term-bar",
-    floor: contrastFloors.secondary,
-  },
-  {
-    text: "--term-label",
-    surface: "--term-bg",
-    floor: contrastFloors.secondary,
-  },
-  { text: "--term-path", surface: "--term-bg", floor: contrastFloors.body },
-  { text: "--term-prompt", surface: "--term-bg", floor: contrastFloors.body },
-  { text: "--term-out", surface: "--term-bg", floor: contrastFloors.body },
-];
-
-/** The VS Code window's UI text, on the chrome it sits on. */
-const vscodePairs: ReadonlyArray<Pair> = [
-  { text: "--vsc-ink", surface: "--vsc-bg", floor: contrastFloors.body },
-  { text: "--vsc-ink", surface: "--vsc-bar", floor: contrastFloors.body },
-  { text: "--vsc-dim", surface: "--vsc-bar", floor: contrastFloors.secondary },
-  { text: "--vsc-dim", surface: "--vsc-bg", floor: contrastFloors.secondary },
-  { text: "--vsc-bright", surface: "--vsc-bg", floor: contrastFloors.body },
-  {
-    text: "--vsc-bright",
-    surface: "--vsc-select",
-    floor: contrastFloors.secondary,
-  },
-  // The accent is a fill, not text: the only label it carries is the badge's
-  // count, painted in white.
-  {
-    text: "--vsc-bright",
-    surface: "--vsc-accent",
-    floor: contrastFloors.secondary,
-  },
-  {
-    text: "--vsc-typescript",
-    surface: "--vsc-bar",
-    floor: contrastFloors.secondary,
-  },
-  { text: "--vsc-json", surface: "--vsc-bar", floor: contrastFloors.secondary },
-];
-
-/** The syntax palette the editor paints, on the editor's own fill. */
-const syntaxPairs: ReadonlyArray<Pair> = [
-  "--vsc-keyword",
-  "--vsc-string",
-  "--vsc-tag",
-  "--vsc-name",
-  "--vsc-call",
-  "--vsc-number",
-  "--vsc-punct",
-].map((text) => ({
-  text,
-  surface: "--vsc-bg",
-  floor: contrastFloors.secondary,
-}));
 
 /** The colour roles, i.e. every variable but the two families. */
 const colourRoles = (palette: Readonly<Record<string, string>>): string[] =>
@@ -215,23 +139,6 @@ describe("the landing's palette", () => {
       expect(below(schemes[scheme], pairs, `${scheme}: `)).toEqual([]);
     },
   );
-
-  it("clears the floors in the fixed terminal illustration", () => {
-    expect(Object.keys(terminal).length).toBeGreaterThan(7);
-    expect(below(terminal, terminalPairs, "terminal: ")).toEqual([]);
-  });
-
-  it("clears the floors in the reproduced VS Code window", () => {
-    // The window is a picture of another product, so its values are measured
-    // rather than replaced: a token under the floor would be a token a reader
-    // cannot read in the screenshot the landing ships.
-    expect(Object.keys(vscode).length).toBeGreaterThan(18);
-    expect(below(vscode, vscodePairs, "vscode: ")).toEqual([]);
-    expect(below(vscode, syntaxPairs, "syntax: ")).toEqual([]);
-    // VS Code's own gutter colour, kept for fidelity and exempt by design: it
-    // is decoration repeated on every line, not prose.
-    expect(vscode["--vsc-gutter"]).toBe("#6e7681");
-  });
 
   it("paints text through a role, never a literal", () => {
     // The two schemes are the only place a text colour is chosen: a raw hex on

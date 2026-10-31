@@ -124,6 +124,7 @@ src/components/mdx.tsx              The MDX component registry
 src/components/highlighted-code.tsx A render-time code block, in the library's syntax palette
 src/components/landing/landing.tsx  The landing page composition
 src/components/landing/hero.tsx     The hero: one line, the calls to action, the native film loop
+src/components/landing/feel.tsx     The five recorded interaction loops
 src/components/landing/proof.tsx    The measured numbers, read from the bench's proof.json
 src/components/landing/blocks-strip.tsx The block tiles, each linking to its page
 src/components/landing/deck.tsx     The three-desktop deck and the Omarchy strip under it

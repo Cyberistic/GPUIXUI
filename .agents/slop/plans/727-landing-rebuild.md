@@ -5,7 +5,7 @@
 | Owner | `docs-site` (`apps/docs/src/components/landing`, `src/styles/landing.css`) |
 | Depends on | `722` (window anatomy), `728` + at least three `729` blocks (the footage), `730` (numbers), `726` (effects out of the core) |
 | Supersedes | `434` (the "Hunter License" landing), deleted when this plan was written |
-| Status | planned |
+| Status | landed 2026-10-31 |
 
 ## Why
 

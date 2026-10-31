@@ -4,6 +4,7 @@ import { HighlightedCode } from "@/components/highlighted-code";
 import { mainContentId } from "../skip-link";
 import { BlocksStrip } from "./blocks-strip";
 import { Desktops } from "./deck";
+import { Feel } from "./feel";
 import { Hero } from "./hero";
 import { Proof } from "./proof";
 import { demos } from "../docs/demos";
@@ -17,6 +18,7 @@ export function Landing() {
         <main id={mainContentId} tabIndex={-1}>
           <Hero />
           <Proof />
+          <Feel />
           <BlocksStrip />
           <CodeAndComponent />
           <Desktops />

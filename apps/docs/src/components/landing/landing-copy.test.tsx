@@ -15,6 +15,7 @@ import raw from "../../lib/proof.json";
 import { landingBlocks } from "./blocks-strip";
 import { Hero, heroMedia } from "./hero";
 import { Landing } from "./landing";
+import { feelClips } from "./feel";
 import { proofFigures } from "./proof";
 
 const at = (path: string) => fileURLToPath(new URL(path, import.meta.url));
@@ -33,6 +34,19 @@ describe("the landing", () => {
       (path) => statSync(publicFile(path)).size,
     );
     expect(Math.max(...sizes)).toBeLessThanOrEqual(3 * 1024 * 1024);
+  });
+
+  it("plays five recorded feel loops, each with its poster, within budget", () => {
+    const page = renderToStaticMarkup(<Landing />);
+    for (const clip of feelClips) {
+      expect(page).toContain(`/media/landing/feel-${clip.id}.mp4`);
+      for (const ext of ["mp4", "jpg"]) {
+        const size = statSync(
+          publicFile(`/media/landing/feel-${clip.id}.${ext}`),
+        ).size;
+        expect(size).toBeLessThanOrEqual(800 * 1024);
+      }
+    }
   });
 
   it("prints only the numbers the bench wrote", () => {
