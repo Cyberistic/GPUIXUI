@@ -27,7 +27,15 @@ import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import type { ComponentType } from "react";
 import { DesktopBlock } from "./desktop/desktop.js";
+import { Agent } from "./agent/agent.js";
+import { CalendarBlock } from "./calendar/calendar.js";
 import { Inbox } from "./inbox/inbox.js";
+import { Launcher } from "./launcher/launcher.js";
+import { MenuBar } from "./menubar/menubar.js";
+import { Notes } from "./notes/notes.js";
+import { Preferences } from "./preferences/preferences.js";
+import { Viewer } from "./viewer/viewer.js";
+import { Welcome } from "./welcome/welcome.js";
 import { Kanban } from "./kanban/kanban.js";
 import { Pipeline } from "./pipeline/pipeline.js";
 import { Settings } from "./settings/settings.js";
@@ -36,6 +44,14 @@ const [slug = "pipeline", ...flags] = process.argv.slice(2);
 
 const blocks: Readonly<Record<string, ComponentType>> = {
   pipeline: Pipeline,
+  notes: Notes,
+  preferences: Preferences,
+  launcher: Launcher,
+  menubar: MenuBar,
+  agent: Agent,
+  calendar: CalendarBlock,
+  welcome: Welcome,
+  viewer: Viewer,
   desktop: () => (
     <DesktopBlock
       look={flags.includes("--aero") ? "aero" : "luna"}

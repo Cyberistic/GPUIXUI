@@ -1,0 +1,18 @@
+---
+title: Calendar
+description: A week view: calendars with switches, the week's events in hourly rows, overlaps side by side.
+---
+
+<BlockPreview name="calendar-01" />
+
+Run it natively:
+
+```sh
+nub run --filter @gpuixui/blocks dev -- calendar
+```
+
+## Composition
+
+`CalendarBlock` in `@gpuixui/blocks/calendar`, inside the shell's native window where it has one:
+calendar `Switch`es, ‹ Today › and a Day/Week/Month `SegmentedControl`, and events laid out by the pure `layoutDay` rule. Its rules are pure and tested in `examples/blocks/src/mac-blocks.logic.test.ts`,
+and its primary interaction runs on the real renderer in `src/mac-blocks.test.tsx`.

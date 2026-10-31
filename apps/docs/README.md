@@ -40,6 +40,14 @@ blocks/kanban.mdx            A project task board: sidebar, four counted columns
 blocks/settings-dialog.mdx   A modal settings window: section nav, switch, font-size slider, layouts
 blocks/notification-centre.mdx A notification centre: filters, four row bodies, unread dots
 blocks/command-centre.mdx    A command palette over a dimmed page: filter, highlight, run line
+blocks/notes.mdx             Notes: the Mac-app block, from its native capture
+blocks/preferences.mdx       Preferences: the Mac-app block, from its native capture
+blocks/launcher.mdx          Launcher: the Mac-app block, from its native capture
+blocks/menubar.mdx           Menu bar: the Mac-app block, from its native capture
+blocks/agent.mdx             Agent: the Mac-app block, from its native capture
+blocks/calendar.mdx          Calendar: the Mac-app block, from its native capture
+blocks/welcome.mdx           Welcome: the Mac-app block, from its native capture
+blocks/viewer.mdx            Viewer: the Mac-app block, from its native capture
 blocks/pipeline.mdx          A release pipeline in a native Mac window, from the compiled block
 blocks/file-manager.mdx      A three-pane browser: folders, image tiles and file facts
 blocks/email-inbox.mdx       A four-pane mail client with a filterable list

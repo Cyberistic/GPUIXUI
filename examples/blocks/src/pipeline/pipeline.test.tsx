@@ -91,4 +91,17 @@ describe("the pipeline block", () => {
       ),
     ).toBe(5);
   });
+
+  it("chooses a card pressed on the board", () => {
+    // Bug guarded: the card sat in a click wrapper, and a press on the card's
+    // own fill never reached it.
+    const r = mount();
+    press(r, "segment-board");
+    press(r, "card-w9");
+    press(r, "segment-list");
+    press(r, "segment-Idea");
+    expect(r.findByTestId("work-w9")?.style.backgroundColor).toBe(
+      theme.colors.selected,
+    );
+  });
 });

@@ -4,7 +4,7 @@
 | ----- | ----- |
 | Owner | `docs-site` + `examples/blocks` |
 | Depends on | `728` Part A (the block contract), `722`, `724`, `725` |
-| Status | planned |
+| Status | landed 2026-10-31 |
 
 ## Why
 

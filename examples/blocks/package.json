@@ -9,13 +9,22 @@
     "./kanban": "./src/kanban/kanban.tsx",
     "./inbox": "./src/inbox/inbox.tsx",
     "./desktop": "./src/desktop/desktop.tsx",
-    "./pipeline": "./src/pipeline/pipeline.tsx"
+    "./pipeline": "./src/pipeline/pipeline.tsx",
+    "./notes": "./src/notes/notes.tsx",
+    "./preferences": "./src/preferences/preferences.tsx",
+    "./launcher": "./src/launcher/launcher.tsx",
+    "./menubar": "./src/menubar/menubar.tsx",
+    "./agent": "./src/agent/agent.tsx",
+    "./calendar": "./src/calendar/calendar.tsx",
+    "./welcome": "./src/welcome/welcome.tsx",
+    "./viewer": "./src/viewer/viewer.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "dev": "nub src/main.tsx",
-    "bench": "nub src/bench/run.ts"
+    "bench": "nub src/bench/run.ts",
+    "capture": "nub src/capture.tsx"
   },
   "dependencies": {
     "@gpuix/react": "catalog:",

@@ -1,0 +1,18 @@
+---
+title: Launcher
+description: The ⌘K command HUD: a large search field, ranked results with their shortcuts and an action footer.
+---
+
+<BlockPreview name="launcher-01" />
+
+Run it natively:
+
+```sh
+nub run --filter @gpuixui/blocks dev -- launcher
+```
+
+## Composition
+
+`Launcher` in `@gpuixui/blocks/launcher`, inside the shell's native window where it has one:
+an `Input`, results ranked by prefix within their group, ↑/↓ and ↵, on the `hud` material — a centred panel until overlay windows (plan 706) land. Its rules are pure and tested in `examples/blocks/src/mac-blocks.logic.test.ts`,
+and its primary interaction runs on the real renderer in `src/mac-blocks.test.tsx`.

@@ -1,0 +1,18 @@
+---
+title: Menu bar
+description: A menu-bar extra's popover: a status line, toggles, a sync progress and a footer.
+---
+
+<BlockPreview name="menubar-01" />
+
+Run it natively:
+
+```sh
+nub run --filter @gpuixui/blocks dev -- menubar
+```
+
+## Composition
+
+`MenuBar` in `@gpuixui/blocks/menubar`, inside the shell's native window where it has one:
+`Switch` rows driving the status line, a `Progress` and two ghost `Button`s, on the `popover` material — in its own window until the tray (plan 702) and overlay windows (706) land. Its rules are pure and tested in `examples/blocks/src/mac-blocks.logic.test.ts`,
+and its primary interaction runs on the real renderer in `src/mac-blocks.test.tsx`.

@@ -106,15 +106,15 @@ const Board = ({
           {Arr.map(
             Arr.filter(items, (item) => item.stage === stage),
             (item) => (
-              <div key={item.id} onClick={() => onChoose(item.id)}>
-                <Card
-                  testId={`card-${item.id}`}
-                  style={{ padding: theme.spacing.md, gap: 4 }}
-                >
-                  <Text>{item.title}</Text>
-                  <Text tone="muted">{item.owner}</Text>
-                </Card>
-              </div>
+              <Card
+                key={item.id}
+                testId={`card-${item.id}`}
+                onClick={() => onChoose(item.id)}
+                style={{ padding: theme.spacing.md, gap: 4 }}
+              >
+                <Text>{item.title}</Text>
+                <Text tone="muted">{item.owner}</Text>
+              </Card>
             ),
           )}
         </Stack>
