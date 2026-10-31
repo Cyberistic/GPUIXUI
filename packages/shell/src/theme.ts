@@ -13,10 +13,16 @@ import { useTheme as useTokenTheme } from "@gpuixui/tokens/react";
 export {
   currentPlatform,
   disabledOpacity,
+  materialFill,
   statusTone,
   textStyle,
 } from "@gpuixui/tokens";
-export type { StatusTone, TextRole, Theme } from "@gpuixui/tokens";
+export type {
+  PlatformName,
+  StatusTone,
+  TextRole,
+  Theme,
+} from "@gpuixui/tokens";
 
 /** The theme the tree is rendered in. */
 export const useTheme = (): Theme => useTokenTheme();

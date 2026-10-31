@@ -1,20 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { Effect, Exit } from "effect";
-import {
-  TITLE_BAR_HEIGHT,
-  TRAFFIC_LIGHT_INSET,
-  pickedPaths,
-  titleBarPadding,
-} from "./logic.js";
+import { pickedPaths } from "./logic.js";
 import { FilePanelError, windowActions, type WindowHost } from "./window.js";
 
 /**
- * The native surface's two pure facts.
+ * The native surface's window verbs and the path prompt's answer.
  *
- * Bug guarded: the bar has to leave the window's traffic lights their box. A
- * bar that pads only 12 points paints the app's title under the close button,
- * which is a window that looks broken on every macOS machine and perfect on
- * every screenshot that cropped the lights away.
+ * Bug guarded: a cancelled prompt read as an empty pick, so a caller reported
+ * "0 files" for a reader who chose nothing.
  */
 
 const host = (overrides: Partial<WindowHost> = {}): WindowHost => ({
@@ -25,29 +18,6 @@ const host = (overrides: Partial<WindowHost> = {}): WindowHost => ({
   setTitle: vi.fn(),
   pickPaths: vi.fn(async () => ["/tmp/a"]),
   ...overrides,
-});
-
-describe("the title bar's geometry", () => {
-  it("reserves the traffic lights when the window has no titlebar", () => {
-    expect(titleBarPadding("native")).toEqual({
-      paddingLeft: TRAFFIC_LIGHT_INSET,
-      paddingRight: 12,
-      height: TITLE_BAR_HEIGHT.comfortable,
-    });
-  });
-
-  it("does not reserve them for a window that keeps the system bar", () => {
-    expect(titleBarPadding("none", "compact")).toEqual({
-      paddingLeft: 12,
-      paddingRight: 12,
-      height: TITLE_BAR_HEIGHT.compact,
-    });
-  });
-
-  it("keeps the inset wide enough for three lights and their gap", () => {
-    // Three 12-point lights at 20 points from the edge end at 20 + 36 + 16.
-    expect(TRAFFIC_LIGHT_INSET).toBeGreaterThanOrEqual(72);
-  });
 });
 
 describe("a path prompt's answer", () => {

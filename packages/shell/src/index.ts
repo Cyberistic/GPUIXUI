@@ -48,16 +48,28 @@ export {
   type ToolbarItemSpec,
 } from "./toolbar/logic.js";
 
-export { TitleBar } from "./platform/title-bar.js";
-export type { TitleBarProps } from "./platform/title-bar.js";
+export { pickedPaths, type PickedPaths } from "./platform/logic.js";
+
+export { Window, WindowToolbar } from "./window/window.js";
+export type { WindowProps, WindowToolbarProps } from "./window/window.js";
+export { SourceList, SOURCE_ROW_HEIGHT } from "./window/source-list.js";
+export type {
+  SourceListItem,
+  SourceListProps,
+  SourceListSection,
+} from "./window/source-list.js";
 export {
-  TITLE_BAR_HEIGHT,
+  hasTrafficLights,
+  moveSelection,
+  nativeWindowOptions,
+  toolbarInset,
+  TOOLBAR_HEIGHT,
   TRAFFIC_LIGHT_INSET,
-  pickedPaths,
-  titleBarPadding,
-  type PickedPaths,
-  type TitleBarDensity,
-} from "./platform/logic.js";
+  TRAFFIC_LIGHT_X,
+  type NativeWindowOptions,
+  type SourceListKey,
+  type ToolbarStyle,
+} from "./window/logic.js";
 export {
   FilePanelError,
   useWindowActions,

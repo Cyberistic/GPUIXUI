@@ -11,21 +11,16 @@ theme, while a file panel, zoom button and title bar lights come from the system
 
 | Surface | Entry | What the OS owns |
 | --- | --- | --- |
-| Title bar | `TitleBar` | the row the traffic lights float over, and the 78-point inset they need |
+| Window | `Window`, `SourceList`, `nativeWindowOptions` | the traffic lights over the app's own sidebar and toolbar, and the blur behind them |
 | Window verbs | `useWindowActions` | minimise, zoom, fullscreen, rename, activate |
 | Path picker | `window.pickPaths` | the system's open panel, and its cancel |
 
-The window is opened with `titlebarTransparent`, `trafficLightX` / `trafficLightY`
-and `windowBackground: "blurred"`:
+The window is opened with `nativeWindowOptions`, which sets
+`titlebarTransparent`, `trafficLightX` / `trafficLightY` and the theme's
+`windowBackground` on macOS, and nothing elsewhere:
 
 ```tsx
-render(<App />, {
-  title: "Files",
-  titlebarTransparent: true,
-  trafficLightX: 20,
-  trafficLightY: 14,
-  windowBackground: "blurred",
-});
+render(<App />, { title: "Files", ...nativeWindowOptions(theme, currentPlatform) });
 ```
 
 ## What stays painted

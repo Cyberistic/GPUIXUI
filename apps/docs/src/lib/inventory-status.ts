@@ -189,6 +189,18 @@ export const laneRows: ReadonlyArray<{
       "the shipped Tabs plus the caller's drag state; the page teaches the move between strips, the one-process window and the portal route a detached tab cannot take",
   },
   {
+    row: "Native window",
+    file: "apps/docs/content/docs/platform/native-window.mdx",
+    reason:
+      "the window is the OS's surface the app paints its chrome under, so it is taught in the Platform section beside the window's verbs",
+  },
+  {
+    row: "Source list",
+    file: "apps/docs/content/docs/platform/native-window.mdx",
+    reason:
+      "the sidebar list exists to sit under the window's traffic lights, so the Window page teaches both",
+  },
+  {
     row: "Syntax highlighting",
     file: "docs/gpuix-capabilities.md",
     reason:

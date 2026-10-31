@@ -11,8 +11,8 @@ import {
 import { IconGalleryView } from "./icon-gallery";
 import {
   FilePanelDemo,
-  TitleBarDemo,
-  titleBarDemoSource,
+  WindowDemo,
+  windowDemoSource,
   windowActionsSource,
 } from "./platform-demos";
 import { usePreviewInteractive } from "./preview-surface";
@@ -3204,9 +3204,9 @@ export const demos: Readonly<Record<string, Demo>> = {
   "drawer-sides": { render: SheetDrawing, source: drawerSidesSource },
   "drawer-workflow": { render: DrawerDrawing, source: drawerWorkflowSource },
   "sidebar-demo": { render: SidebarDemo, source: sidebarDemoSource },
-  "platform-title-bar": {
-    render: TitleBarDemo,
-    source: titleBarDemoSource,
+  "platform-window": {
+    render: WindowDemo,
+    source: windowDemoSource,
   },
   "platform-file-panel": {
     render: FilePanelDemo,

@@ -5,7 +5,7 @@
 | Owner | `shell` (`packages/shell`) |
 | Depends on | `721` |
 | Feeds | `728`, `729`, `727`, the launch film (`apps/playground/src/film`) |
-| Status | planned |
+| Status | landed 2026-10-31 |
 
 ## Why
 
