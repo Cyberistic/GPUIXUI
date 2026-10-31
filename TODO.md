@@ -24862,12 +24862,12 @@ green; the site deployed and all 195 sitemap pages answer 200.
 
 ## Native Mac — materials, window, blocks and the landing (plans 721–730, 2026-10-31)
 
-`[ ]` `[███░░░░░░░]` 3/11
+`[ ]` `[████░░░░░░]` 4/11
 
 `[x]` Write the native-Mac plan set (721–730), index it, retire plan 434 (Hunter landing)
 `[x]` 721 — macOS materials: measure a translucent fill in a blurred window, then the material roles
 `[x]` 722 — `Window` and `SourceList` in `@gpuixui/shell`; `TitleBar` folded in
-`[ ]` 723 — system accent, appearance and Reduce Transparency (record the runtime gap)
+`[x]` 723 — system accent, appearance and Reduce Transparency (record the runtime gap)
 `[ ]` 724 — HIG pass: darwin sizes, hover policy, menus, sheets, focus
 `[ ]` 725 — `SegmentedControl`, `PopUpButton`, `Disclosure`, `PathControl`, `InsetGroup`
 `[ ]` 726 — `@gpuixui/fx`: move the decorative effects out of `@gpuixui/components`

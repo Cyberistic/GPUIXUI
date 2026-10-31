@@ -4,7 +4,7 @@
 | ----- | ----- |
 | Owner | `shell` (reader) + `tokens-theme` (theme input) |
 | Depends on | `721`, `433` Recipe B's `watchSystemTheme` (landed) |
-| Status | planned — **runtime gap**: no API in `@gpuix/native@0.11.0` |
+| Status | landed 2026-10-31 — **runtime gap**: no API in `@gpuix/native@0.11.0` |
 
 ## Why
 

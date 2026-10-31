@@ -74,6 +74,13 @@ export const capabilities = {
     workaround:
       "Use `markdown`/`code`/`diff` surfaces; embedded web content needs a runtime change.",
   },
+  systemAppearance: {
+    supported: false,
+    reason:
+      "No accent colour, Light/Dark choice or Reduce Transparency reaches the app.",
+    workaround:
+      "Read them at the app boundary with `@gpuixui/shell`'s `readAppearance` / `watchAppearance` (`defaults`), and apply `appearanceOverrides`.",
+  },
   terminal: { supported: true },
   headlessDialog: { supported: true },
   tabNavigation: { supported: true },
@@ -90,6 +97,7 @@ export const unsupportedFeatures = [
   "globalShortcut",
   "tray",
   "nativeView",
+  "systemAppearance",
 ] as const satisfies ReadonlyArray<CapabilityKey>;
 
 /** A capability the runtime does not provide. */
