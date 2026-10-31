@@ -545,7 +545,7 @@ describe("the primitives docs page contract", () => {
     // Two rows carry this label — the capability map's and the Tier 1
     // inventory's — and only the latter is the component record.
     const catalogue = readFileSync(
-      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      fileURLToPath(new URL(".agents/slop/COMPONENTS.md", repoRoot)),
       "utf8",
     );
     const row = Arr.findFirst(
@@ -1187,7 +1187,7 @@ describe("the primitives docs page contract", () => {
     const number = source("src/components/NumberField.tsx");
     const evidence = source("runtime/labelling.runtime.test.tsx");
     const catalogue = readFileSync(
-      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      fileURLToPath(new URL(".agents/slop/COMPONENTS.md", repoRoot)),
       "utf8",
     );
     const row = Option.getOrElse(
@@ -1648,7 +1648,7 @@ describe("the primitives docs page contract", () => {
     };
     const measured = probeRecord(record);
     const catalogue = readFileSync(
-      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      fileURLToPath(new URL(".agents/slop/COMPONENTS.md", repoRoot)),
       "utf8",
     );
     const row = (label: string): string =>
@@ -1754,7 +1754,7 @@ describe("the primitives docs page contract", () => {
     const verticalEnd = vertical - (rows * rowHeight + field);
     const sideEnd = side - columns * column;
     const catalogue = readFileSync(
-      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      fileURLToPath(new URL(".agents/slop/COMPONENTS.md", repoRoot)),
       "utf8",
     );
     const row = Option.getOrElse(
@@ -1835,7 +1835,7 @@ describe("the primitives docs page contract", () => {
     // a re-run that moves a count moves the row with it.
     const counts = ["196", "270", "168", "98", "274", "282"];
     const catalogue = readFileSync(
-      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      fileURLToPath(new URL(".agents/slop/COMPONENTS.md", repoRoot)),
       "utf8",
     );
     const row = Option.getOrElse(
@@ -1898,7 +1898,7 @@ describe("the primitives docs page contract", () => {
     // The bug guarded: completed plans are deleted (`.agents/slop/plans/README.md`),
     // but this workstream still sent readers to four completed plans for the
     // Tier 1 runtime evidence and the binding recipe. A citation to a deleted
-    // plan is a dead end; the evidence lives in `COMPONENTS.md`, the suite each
+    // plan is a dead end; the evidence lives in `.agents/slop/COMPONENTS.md`, the suite each
     // `src/inventory.ts` record names, `docs/gpuix-capabilities.md` and
     // `apps/playground/README.md`.
     const missing = [
@@ -2008,7 +2008,7 @@ describe("the primitives docs page contract", () => {
     const measured = probeRecord(record, "`button-activation-lifecycle`");
     const checks = /(\d+) checks/.exec(measured)?.[1] ?? "";
     const catalogue = readFileSync(
-      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      fileURLToPath(new URL(".agents/slop/COMPONENTS.md", repoRoot)),
       "utf8",
     );
     const row = Option.getOrElse(
@@ -2064,7 +2064,7 @@ describe("the primitives docs page contract", () => {
       "utf8",
     );
     const catalogue = readFileSync(
-      fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+      fileURLToPath(new URL(".agents/slop/COMPONENTS.md", repoRoot)),
       "utf8",
     );
     const paneHeight = Number(

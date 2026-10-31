@@ -16,7 +16,7 @@ import {
  * The inventory parse behind the composition pages.
  *
  * `/data-display` and `/workspace` render their rows
- * from `COMPONENTS.md`, so the parser is the seam that keeps a page honest. The
+ * from `.agents/slop/COMPONENTS.md`, so the parser is the seam that keeps a page honest. The
  * guards below check the parts that would fail silently: a row lost to a
  * malformed cell, a lane naming a row that was renamed, a status the page does
  * not know how to group, and the inline Markdown a note carries.
@@ -27,7 +27,10 @@ import {
  */
 
 const inventory = parseInventory(
-  readFileSync(new URL("../../../../COMPONENTS.md", import.meta.url), "utf8"),
+  readFileSync(
+    new URL("../../../../.agents/slop/COMPONENTS.md", import.meta.url),
+    "utf8",
+  ),
 );
 
 const laneNames = [
@@ -200,7 +203,7 @@ describe("the real inventory", () => {
     // plan 600 rows were reported as Tier 5. The document's own headings are
     // the ground truth: read the two table bodies and compare names.
     const source = readFileSync(
-      new URL("../../../../COMPONENTS.md", import.meta.url),
+      new URL("../../../../.agents/slop/COMPONENTS.md", import.meta.url),
       "utf8",
     );
     const section = (heading: string, next: string): ReadonlyArray<string> => {

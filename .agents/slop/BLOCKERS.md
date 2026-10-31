@@ -49,4 +49,4 @@ correctly for a Background session; a `LaunchDaemon` (system domain) rather than
 agent; `cron` with Full Disk Access granted; a `tmux`/`setsid` keep-alive with a watchdog
 that re-execs the daemon; and any combination. Prove it with evidence (a tick that fires
 after the session that installed it is gone). Record the chosen mechanism and why the
-others failed in `.agents/slop/plans/` and `PLAN.md`.
+others failed in `.agents/slop/plans/` and `.agents/slop/PLAN.md`.

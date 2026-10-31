@@ -210,7 +210,7 @@ const collapsibleRoot: PartsContract = {
   hint: "Put CollapsibleTrigger and CollapsibleContent directly inside Collapsible.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const collapsibleMeta = {
   name: "Collapsible sections",
   tier: 2,

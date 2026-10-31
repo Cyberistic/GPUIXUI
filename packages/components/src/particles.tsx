@@ -264,7 +264,7 @@ export const Particles = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 600). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const particlesMeta = {
   name: "Particles",
   tier: 5,

@@ -52,7 +52,7 @@ const read = (path: string): string =>
 const catalogue = read("../../../docs/tokens.md");
 const designSystem = read("../../../docs/design-system.md");
 const readme = read("../README.md");
-const inventory = read("../../../COMPONENTS.md");
+const inventory = read("../../../.agents/slop/COMPONENTS.md");
 const primitivePaint = read(
   "../../../packages/primitives/src/core/selection.ts",
 );
@@ -86,7 +86,7 @@ const painter = (name: string): string => {
     : primitivePaint.slice(start, primitivePaint.indexOf("\n};", start));
 };
 
-/** A `COMPONENTS.md` row, by its first cell. */
+/** A `.agents/slop/COMPONENTS.md` row, by its first cell. */
 const inventoryRow = (name: string): string => {
   const start = inventory.indexOf(`| ${name} |`);
   return start === -1

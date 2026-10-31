@@ -10,7 +10,7 @@
  * and each entry holds only geometry.
  *
  * Geometry follows the Lucide 24x24 grid (ISC licence, attributed in
- * `LICENSES/`). `registry.test.ts` enforces the structure, so a stray colour
+ * `.agents/slop/LICENSES/`). `registry.test.ts` enforces the structure, so a stray colour
  * literal or an off-grid icon fails the suite rather than shipping.
  */
 

@@ -118,7 +118,7 @@ The geometry is copied from [Lucide](https://lucide.dev)
 `lucide-static@1.61.0`, on its 24x24 grid. Lucide licenses the set under ISC and
 the icons it inherits from Feather under MIT, so both notices travel with the
 geometry: they are reproduced in full in
-[`LICENSES/lucide.md`](../../LICENSES/lucide.md). No colour, wrapper attribute,
+[`.agents/slop/LICENSES/lucide.md`](../../.agents/slop/LICENSES/lucide.md). No colour, wrapper attribute,
 icon font, sprite, logo or brand mark is copied. `sort-desc` (the mirror of
 `sort-asc`) and `star-filled` (Lucide's `star` filled) are the package's own.
 

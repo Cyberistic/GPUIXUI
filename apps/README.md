@@ -8,7 +8,7 @@ Two applications, deliberately different runtimes:
   real runtime, hosts the native smoke tests, and is how a component is proven
   to work before its inventory row may say `done`.
 
-`MISSION.md` requires both. Neither exists yet: their shells are Phase B
+`.agents/slop/MISSION.md` requires both. Neither exists yet: their shells are Phase B
 deliverables, and the plans for them are written first. Each directory's README
 states exactly what Phase B must create, so nothing here pretends to be an app
 that does not run.

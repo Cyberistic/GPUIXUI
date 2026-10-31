@@ -34,13 +34,13 @@ const sourceFiles = {
  */
 const inventorySurface = (): Record<string, string> => {
   const file = readFileSync(
-    new URL("../../../COMPONENTS.md", import.meta.url),
+    new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
     "utf8",
   );
   const row = file
     .split("\n")
     .find((line) => line.startsWith("| Custom fonts |"));
-  return row === undefined ? {} : { "COMPONENTS.md": row };
+  return row === undefined ? {} : { ".agents/slop/COMPONENTS.md": row };
 };
 
 const surfaces = (): Record<string, string> => ({
@@ -162,7 +162,9 @@ describe("registration order", () => {
   ];
 
   it("records the capability in the inventory", () => {
-    expect(Object.keys(inventorySurface())).toEqual(["COMPONENTS.md"]);
+    expect(Object.keys(inventorySurface())).toEqual([
+      ".agents/slop/COMPONENTS.md",
+    ]);
   });
 
   it("no longer promises that text is re-shaped after registration", () => {

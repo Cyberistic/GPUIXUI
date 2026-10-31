@@ -549,7 +549,7 @@ describe("filled action fills", () => {
     expect(page("../../../docs/tokens.md")).toContain(
       "a control keeps the resting fill",
     );
-    expect(page("../../../COMPONENTS.md")).toContain(
+    expect(page("../../../.agents/slop/COMPONENTS.md")).toContain(
       "both helpers delegate to `filledFeedback`",
     );
   });

@@ -256,7 +256,7 @@ const shortcutsGroup: PartsContract = {
   hint: "Put KeyboardShortcut rows directly inside KeyboardShortcutsGroup.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const keyboardShortcutsMeta = {
   name: "Keyboard shortcuts / keycap display",
   tier: 2,

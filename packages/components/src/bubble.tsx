@@ -454,7 +454,7 @@ const bubbleRoot: PartsContract = {
   hint: "Put BubbleContent, BubbleActions and BubbleReactions directly inside it.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md`. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`. */
 export const bubbleMeta = {
   name: "Bubble",
   tier: 2,

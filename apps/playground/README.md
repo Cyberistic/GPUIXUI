@@ -194,7 +194,7 @@ The artifact is a build product (gitignored). A fresh checkout has no binding
 and reports exit `2` until the script is run. Its provenance: same version, same
 source revision, same Rust code as the published package; only the
 shader-compilation feature differs. Confirming with the **published** binary on
-an Apple Silicon CI runner is the gold standard, tracked in `TODO.md`.
+an Apple Silicon CI runner is the gold standard, tracked in `.agents/slop/TODO.md`.
 
 ## The theme gallery (plan `150`)
 
@@ -244,7 +244,7 @@ Two honest notes:
   cannot see this app's `@gpuix/react` install. At runtime nub transpiles the
   entry correctly; the mapping is typecheck-only and `tsconfig.json` (which nub
   reads) stays clean. The durable fix belongs in `packages/tokens` and is
-  tracked in `TODO.md`.
+  tracked in `.agents/slop/TODO.md`.
 
 ## The modal contract (plan `155`)
 
@@ -1109,7 +1109,7 @@ every Tab. That is the runtime, not the probe: `renderer.rs`'s
 `input`/`textarea`, "text fields do not count: typing is keyboard input too, and
 dimming the window while someone types is noise". The focus target is therefore a
 fourth action, which is also what the token catalogue's "every other focusable
-dims" claim quietly assumes; the token pages do not say it yet (`TODO.md`).
+dims" claim quietly assumes; the token pages do not say it yet (`.agents/slop/TODO.md`).
 
 Negative controls, measured: forcing the filled action into the cue fails
 `a filled action keeps every pixel of its fill — expected 66008, got 0`; giving
@@ -1176,8 +1176,8 @@ paint still costs a fallback frame, so the documented order stays the right one.
 What this measures is that the fallback is **not permanent** — a repaint re-lays
 the text out against the family the renderer now knows. `packages/tokens` says
 the opposite in four places (the `fonts.ts` header, `docs/tokens.md`, the package
-README and the `COMPONENTS.md` row); the correction is recorded as an interlock
-in `TODO.md` because those files are not this workstream's.
+README and the `.agents/slop/COMPONENTS.md` row); the correction is recorded as an interlock
+in `.agents/slop/TODO.md` because those files are not this workstream's.
 
 The capture pair is `.artifacts/live/late-before.png` and `late-after.png`: the
 first two samples are ordinary text, the face sample becomes a solid rectangle
@@ -1277,7 +1277,7 @@ object's `text` **does not reach an `<input>`'s value**: the platform default
 paints instead, which is near-black on a dark fill. The library's own fields set
 `color` from their recipe, so a shipped field is readable — the last row reads
 that ink back — while a consumer following the token page's bare
-`<input theme=…>` snippet is not. That sentence is an interlock row in `TODO.md`
+`<input theme=…>` snippet is not. That sentence is an interlock row in `.agents/slop/TODO.md`
 (owner: tokens-theme and docs-site).
 
 The exact-colour counts work because a `<text>` and the runtime's own hint have
@@ -2302,7 +2302,7 @@ reports no resize (`resizes=0`) while the probe-local divider in
 divider's own `highlight` layer: it is `position: "absolute"` over the whole
 6px control, and the runtime's hit test stops at a positioned child even when
 it declares `pointerEvents: "none"` — the rule `press-routing-lifecycle`
-measured. The dock owner has the fix in `TODO.md` → Interlocks (*`Divider`'s
+measured. The dock owner has the fix in `.agents/slop/TODO.md` → Interlocks (*`Divider`'s
 pointer path*); when it lands, this probe gains the drag rows. Evidence:
 `.artifacts/live/dock-split-keyboard.png`.
 
@@ -2388,7 +2388,7 @@ Evidence: `.artifacts/live/pointer-capture.png`.
 The consequence for the library: both shipped sliders **do** capture — the
 `RangeSlider` drag is measured above, not inferred from the `Slider`'s — so the
 limitation their source headers, `docs/slider.mdx`, `docs/range-slider.mdx`, the
-`number-field.mdx` aside and the two `COMPONENTS.md` rows stated — "no pointer
+`number-field.mdx` aside and the two `.agents/slop/COMPONENTS.md` rows stated — "no pointer
 capture; a drag that leaves the track stops" — was wrong. `primitives` retracted
 it in those surfaces and added the headless twin
 (`runtime/value.runtime.test.tsx`); this probe pins the window behaviour so a
@@ -2596,7 +2596,7 @@ click, not a selection range.
 ### `select-lifecycle` — measured on 0.11.0 here
 
 The runtime's `Select` is the one overlay surface a window had never painted:
-`COMPONENTS.md` says a select's "open state, positioning and dismissal are the
+`.agents/slop/COMPONENTS.md` says a select's "open state, positioning and dismissal are the
 runtime's", and every proof for it was a `TestRenderer` case. The probe mounts
 the runtime's own parts (`@gpuix/react/select`) rather than the shipped wrapper,
 because the wrapper passes a **root** `testId` only — its trigger and its rows
@@ -4115,7 +4115,7 @@ What it settles:
    the height.
 
 The capability record's **`aspectRatio`** row owes this page (docs-site owns
-that file; the row in `TODO.md` → Interlocks records it).
+that file; the row in `.agents/slop/TODO.md` → Interlocks records it).
 
 ### `image-box` — measured on 0.11.0 here
 
@@ -4159,7 +4159,7 @@ What it settles:
    shape — convenient for a single image, wrong for a grid of thumbnails.
 
 The capability record's **Image painting** row owes this page (docs-site owns
-that file; the row in `TODO.md` → Interlocks records it).
+that file; the row in `.agents/slop/TODO.md` → Interlocks records it).
 
 ### `elevation-paint` — measured on 0.11.0 here
 
@@ -5421,7 +5421,7 @@ cells` (`expected "grid-focus-after", got "gridfocus-r1c0"`), and wrapping
 passes a `<code>`, `<diff>` and `<markdown>` host the scale's own metrics — the
 code role's size and leading, the caption's for a fenced card's language strip —
 and every claim about it was a read of the pinned Rust source (`MetricsOverride`
-is `camelCase`), including `COMPONENTS.md`'s. A brand that rescales its
+is `camelCase`), including `.agents/slop/COMPONENTS.md`'s. A brand that rescales its
 `codeBlock` role was promised a paint nobody had looked at. The probe gives the
 seam a theme whose roles cannot be mistaken for the runtime's own
 (`codeBlock` **20/24** against 12.5/18, the caption **18** against 11) and reads
@@ -6300,7 +6300,7 @@ The three rules a plan needs:
    app-level shortcut has to check the recorder's state itself if it must not
    fire while a chord is being recorded. The probe asserts the measured answer;
    the component's own prose is the components workstream's to correct (recorded
-   in `TODO.md` → Interlocks).
+   in `.agents/slop/TODO.md` → Interlocks).
 
 25 checks, `--only hotkey-recorder-lifecycle`, green on 0.11.0 here (two runs,
 8.1 s and 8.8 s). Fixture `src/live/hotkey-recorder.ts` (the ids, the chord the
@@ -6842,7 +6842,7 @@ Three rules the window settles:
 menu: opening it leaves the focus on the trigger, the trigger owns no Escape
 rule, and the surface's own handler never hears the key. The keyboard route is
 the trigger's own `enter`, which toggles the menu; the fix (focus the surface on
-open, or handle Escape on the bar) is recorded in `TODO.md` → Interlocks for the
+open, or handle Escape on the bar) is recorded in `.agents/slop/TODO.md` → Interlocks for the
 shell workstream.
 
 **The press is a pointer's: park, enter, press.** A trigger that follows the
@@ -6854,7 +6854,7 @@ then arrives *after* the press: measured on this tree, the panel stays shut —
 `AppMenu` writes the state it read at render (`hoverOpen(state, …)`), which
 overwrites the open the press just set. A functional update
 (`setState((current) => hoverOpen(current, …))`) opens the same no-move press, so
-the stale read is the component's and is recorded in `TODO.md` → Interlocks for
+the stale read is the component's and is recorded in `.agents/slop/TODO.md` → Interlocks for
 the shell workstream. The probe measures the gesture a pointer makes, and
 `app-chrome.test.ts` holds every menubar press to it.
 
@@ -7488,7 +7488,7 @@ reports `{ ...node, size: … }` — the split node. Only the node the caller pa
 as the root is the whole tree; every nested group replaces it. The probe pins
 the measured behaviour rather than hiding it, so a component fix updates these
 checks, the `Tabbed panels` and `Nested panel arrangements` rows, and this
-table together; the gap is recorded for the dock owner in `TODO.md` →
+table together; the gap is recorded for the dock owner in `.agents/slop/TODO.md` →
 Interlocks with the same evidence.
 
 **Two address limits, read from the source.** The component derives its parts'
@@ -7648,7 +7648,7 @@ automation protocol's text locator is a contains match, which finds both a row
 and the text it paints. The probe therefore lists four of the five groups as
 `RadioGroupItem` children and names the text each row paints
 (`radio-row-<group>-<value>`), while the keys group stays data-driven so both
-option paths are mounted. The missing per-row address is recorded in `TODO.md`
+option paths are mounted. The missing per-row address is recorded in `.agents/slop/TODO.md`
 for the primitives workstream.
 
 | Step | Measured |

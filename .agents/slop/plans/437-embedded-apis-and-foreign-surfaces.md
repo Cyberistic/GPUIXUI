@@ -6,7 +6,7 @@
 | Phase | A (capability spec) → feeds E (specialised components) and the runtime workstream |
 | Owner | research / runtime seam owner |
 | Depends on | `020` (GPUix capability map), `130` (Tier 3/4 feasibility), `203` (capability doc), `530` (zIndex), `537` (gpui-ce verdict), `435b` (Fumadocs Editor), `reference-research.md` |
-| Feeds | the runtime `Surface` seam, `packages/data-grid` (table), `packages/editor` (text core), `packages/tw` unsupported set, the extra-mile backlog in `TODO.md` |
+| Feeds | the runtime `Surface` seam, `packages/data-grid` (table), `packages/editor` (text core), `packages/tw` unsupported set, the extra-mile backlog in `.agents/slop/TODO.md` |
 
 This plan answers three questions the owner posed, with evidence, and does **no**
 implementation. It is the specification the weaker executors build against:
@@ -168,7 +168,7 @@ is an OS child window. The contract therefore has an explicit
 or the runtime guarantees overlays by construction. If neither exists, the
 honest rule is: **a native view must never sit under a menu it can occlude.**
 
-### 2.5 Honest limits (state these in the component's docs and `COMPONENTS.md`)
+### 2.5 Honest limits (state these in the component's docs and `.agents/slop/COMPONENTS.md`)
 
 1. A native surface **breaks GPU compositing purity** — that is the point, and
    it costs a window-composition step per platform.
@@ -254,7 +254,7 @@ change (binding or renderer), so it is a seam ask, not a component.
 | 8 | **Plugin sandbox** | a typed host-surface description (the `shell` crate's model, translated) | JS/QuickJS host, `process`/`storage`/`capability` | extensible apps (the owner's plugin ambition) |
 | 9 | **Action system** | the command registry + keybinding layer over the existing accelerator model | none (window `onKeyDown` suffices) | the command palette, menus, shortcuts |
 | 10 | **RTL / a11y completeness** | direction token + logical helpers (plan `435c`); a11y *usage* | binding patch: `aria-checked`/`aria-valuenow`/`aria-labelledby` (plan `537` §7.1 P0.4) | RTL locales, screen-reader parity |
-| 11 | **Release engineering** | update feed config, signing metadata, provenance (`LICENSES/`) | **partially present**: `checkUpdate`/`AvailableUpdate` already in `@gpuix/native` (`index.d.ts:13-33, 425-441`); crash reporting + code-signing still missing | distribution |
+| 11 | **Release engineering** | update feed config, signing metadata, provenance (`.agents/slop/LICENSES/`) | **partially present**: `checkUpdate`/`AvailableUpdate` already in `@gpuix/native` (`index.d.ts:13-33, 425-441`); crash reporting + code-signing still missing | distribution |
 
 Note on #11: auto-update is the one runtime capability that **already exists**
 in the published binding (`AvailableUpdate.downloadAndInstall()`, signed-bundle
@@ -293,7 +293,7 @@ plumbing, not component work.
 6. A `Surface` seam issue against `@gpuix/native` (native-view attach +
    composition overlay + scale factor + focus), phrased as a capability gap with
    this plan's §1 evidence — never naming this product's private domain.
-7. The extra-mile backlog (§5) moves into `TODO.md` as tracked items, split by
+7. The extra-mile backlog (§5) moves into `.agents/slop/TODO.md` as tracked items, split by
    owner.
 
 ### STOP conditions
@@ -325,8 +325,8 @@ plumbing, not component work.
 | `packages/charts/` (or `packages/data-grid/src/charts/`) | **create** — `@tanstack/charts` → `setImagePixels` rasteriser |
 | `package.json` (workspace catalog) | add `@tanstack/table-core`, `@tanstack/charts` |
 | `docs/` (docs-site) | a `Surface` page + a Table + a Charts page, raster labelled |
-| `COMPONENTS.md` | rows for `Surface`, Table, Charts with the honest-limit notes |
-| `LICENSES/` | MIT notices for `table-core` and `@tanstack/charts` |
+| `.agents/slop/COMPONENTS.md` | rows for `Surface`, Table, Charts with the honest-limit notes |
+| `.agents/slop/LICENSES/` | MIT notices for `table-core` and `@tanstack/charts` |
 
 ```sh
 nub run check        # exit 0

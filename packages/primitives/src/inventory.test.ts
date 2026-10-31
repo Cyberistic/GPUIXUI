@@ -1,7 +1,7 @@
 /**
  * The Tier 1 inventory check.
  *
- * The `COMPONENTS.md` foundational table is the document a reader and the
+ * The `.agents/slop/COMPONENTS.md` foundational table is the document a reader and the
  * release gate trust, and it had drifted to `todo` for every row while all
  * twenty-seven components were built, documented and runtime-verified. This
  * suite makes that drift impossible: each row has a record in `inventory.ts`,
@@ -36,10 +36,10 @@ interface Row {
   readonly notes: string;
 }
 
-/** The Tier 1 rows of `COMPONENTS.md`, parsed from its markdown table. */
+/** The Tier 1 rows of `.agents/slop/COMPONENTS.md`, parsed from its markdown table. */
 const tier1Rows = (): ReadonlyArray<Row> => {
   const markdown = readFileSync(
-    fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+    fileURLToPath(new URL(".agents/slop/COMPONENTS.md", repoRoot)),
     "utf8",
   );
   const start = markdown.indexOf("## Tier 1");
@@ -197,7 +197,7 @@ const announceProblems = ({
           : [`${name}: ${source} declares no aria-valuetext`]),
         ...claimProblems(name, meta.limitations.join(" ")),
         ...Option.match(rowFor(meta), {
-          onNone: () => [`${name}: no COMPONENTS.md row`],
+          onNone: () => [`${name}: no .agents/slop/COMPONENTS.md row`],
           onSome: (row) => claimProblems(name, row.notes),
         }),
       ],
@@ -234,7 +234,7 @@ const tooltipProblems = (): ReadonlyArray<string> =>
           ? []
           : ["Tooltips: the record does not state the window's measured gap"]),
         ...Option.match(rowFor(meta), {
-          onNone: () => ["Tooltips: no COMPONENTS.md row"],
+          onNone: () => ["Tooltips: no .agents/slop/COMPONENTS.md row"],
           onSome: (row) => [
             ...(row.notes.includes("tooltip-lifecycle")
               ? []
@@ -268,7 +268,7 @@ const otpAlphabetProblems = (): ReadonlyArray<string> =>
           ? []
           : ["OTP Field: src/core/otp.ts no longer keeps letters"]),
         ...Option.match(rowFor(meta), {
-          onNone: () => ["OTP Field: no COMPONENTS.md row"],
+          onNone: () => ["OTP Field: no .agents/slop/COMPONENTS.md row"],
           onSome: (row) => [
             ...(row.notes.includes("digit-only")
               ? [
@@ -320,7 +320,7 @@ const switchPendingProblems = (): ReadonlyArray<string> =>
               "Switches: the page does not teach disabling the switch in flight",
             ]),
         ...Option.match(rowFor(switches), {
-          onNone: () => ["Switches: no COMPONENTS.md row"],
+          onNone: () => ["Switches: no .agents/slop/COMPONENTS.md row"],
           onSome: (row) => [
             ...(row.notes.includes("busy toggle")
               ? ["Switches: the row promises the Toggle's busy state"]
@@ -342,7 +342,7 @@ const switchPendingProblems = (): ReadonlyArray<string> =>
             onNone: () => ["Toggle: no record"],
             onSome: (toggle) =>
               Option.match(rowFor(toggle), {
-                onNone: () => ["Toggle: no COMPONENTS.md row"],
+                onNone: () => ["Toggle: no .agents/slop/COMPONENTS.md row"],
                 onSome: (row) =>
                   row.notes.includes("busy toggle")
                     ? []
@@ -464,10 +464,10 @@ describe("Tier 1 inventory", () => {
     expect(sourceOf("src/components/Button.tsx")).toContain("declined");
   });
 
-  it("agrees with its COMPONENTS.md row", () => {
+  it("agrees with its .agents/slop/COMPONENTS.md row", () => {
     const problems = Arr.flatMap(inventory, (meta) =>
       Option.match(rowFor(meta), {
-        onNone: () => [`${meta.name}: no COMPONENTS.md row`],
+        onNone: () => [`${meta.name}: no .agents/slop/COMPONENTS.md row`],
         onSome: (row) => [
           ...(row.status === meta.status
             ? []
@@ -525,7 +525,7 @@ describe("Tier 1 inventory", () => {
   it("does not deny a part the package exports", () => {
     // The bug guarded: the Radio groups record said "Options are data: no
     // compound RadioGroupItem and no rich option content" while the part had
-    // shipped, the page documented it and the COMPONENTS.md row described it —
+    // shipped, the page documented it and the .agents/slop/COMPONENTS.md row described it —
     // so the record every suite reads told a caller a capability was missing.
     // A record may name an exported part only as something that exists.
     const exported = HashSet.fromIterable(R.keys(primitiveExports));

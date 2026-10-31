@@ -7,7 +7,7 @@
 | Owner | runtime owner; reviewed by primitives/components |
 | Depends on | none (Zed's own code; port, do not vendor the fork) |
 | Source | `references/fc-gpui` (Apache-2.0) `crates/gpui/src/window/a11y.rs`, `crates/gpui/src/elements/div.rs:1210-1378`; upstream `remorses/zed` at the pin; `remorses/gpuix` fork |
-| Feeds | the 24 unfiled aria gaps in `COMPONENTS.md` (`aria-current`, `aria-modal`, `aria-haspopup`, `aria-describedby`, `aria-invalid`, `aria-valuenow`, …) |
+| Feeds | the 24 unfiled aria gaps in `.agents/slop/COMPONENTS.md` (`aria-current`, `aria-modal`, `aria-haspopup`, `aria-describedby`, `aria-invalid`, `aria-valuenow`, …) |
 
 ---
 ## Goal
@@ -17,7 +17,7 @@ Make GPUix publish a real accessibility tree, so a binding can set `role` and th
 
 ## Why
 
-`docs/gpuix-capabilities.md` and every `COMPONENTS.md` partial row cite the same
+`docs/gpuix-capabilities.md` and every `.agents/slop/COMPONENTS.md` partial row cite the same
 root cause: the pinned GPUix has no `accesskit` tree, so a role is dropped and a
 state is worked around (`aria-selected` for `aria-current`, `aria-description`
 for `aria-describedby`, `aria-valuetext` for `aria-valuenow`). fc-gpui carries
@@ -42,7 +42,7 @@ work.
    keys the renderer already accepts, forwarding to the new builders.
 4. In `@gpuix/react`/`@gpuix/solid`, type the attributes on `Props`; delete the
    `ariaSelected` substitutions from the primitives as each real attribute lands.
-5. Update `docs/gpuix-capabilities.md`, the ARIA table, `COMPONENTS.md` rows and
+5. Update `docs/gpuix-capabilities.md`, the ARIA table, `.agents/slop/COMPONENTS.md` rows and
    the primitives' `docs/*.mdx` limitations that cite the absence.
 
 ## Tests

@@ -72,14 +72,14 @@ const dimSurfaces = (): Record<string, string> => {
   const read = (path: string): string =>
     readFileSync(new URL(path, import.meta.url), "utf8");
   const flatten = (text: string): string => text.replace(/\s+/g, " ");
-  const inventory = read("../../../COMPONENTS.md")
+  const inventory = read("../../../.agents/slop/COMPONENTS.md")
     .split("\n")
     .find((line) => line.startsWith("| Keyboard focus dim |"));
   return {
     "docs/tokens.md": flatten(read("../../../docs/tokens.md")),
     "docs/design-system.md": flatten(read("../../../docs/design-system.md")),
     "README.md": flatten(read("../README.md")),
-    "COMPONENTS.md": flatten(inventory ?? ""),
+    ".agents/slop/COMPONENTS.md": flatten(inventory ?? ""),
   };
 };
 
@@ -130,7 +130,7 @@ describe("the dim the gate and the actions have adopted", () => {
 
   it("states the opt-out as landed in both packages, not as an owed interlock", () => {
     // The page closed the paragraph with "That adoption is an interlock row in
-    // `TODO.md`" after both packages had declared the opt-out. The claim is read
+    // `.agents/slop/TODO.md`" after both packages had declared the opt-out. The claim is read
     // against the sources: the primitives export the rule, merge it for a
     // variant that paints a fill, and every field host declares it — and the
     // components package re-states the same rule for its own parts.

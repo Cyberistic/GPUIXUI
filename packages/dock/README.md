@@ -17,7 +17,7 @@ as `@gpuixui/data` lives beside it.
 ## What the runtime forces
 
 Measured on the pinned `@gpuix/native@0.11.0`; the evidence is in
-`COMPONENTS.md`'s Tier 4 rows and `docs/gpuix-capabilities.md`.
+`.agents/slop/COMPONENTS.md`'s Tier 4 rows and `docs/gpuix-capabilities.md`.
 
 | Rule | Evidence | What this package does |
 | ---- | -------- | ---------------------- |

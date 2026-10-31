@@ -268,7 +268,7 @@ describe("the published hint seam", () => {
   // faces the same fixed `#8F8F8F` and paints its own hinted hosts. It can
   // only call this seam if the package publishes it, so a root that stops
   // exporting one of the parts leaves that package with a second copy (the
-  // two-copy state `TODO.md` → Interlocks records).
+  // two-copy state `.agents/slop/TODO.md` → Interlocks records).
   it("publishes the frame, the hint and its element from the package root", () => {
     expect(publishedFieldHelp).toBe(fieldHelp);
     expect(publishedFieldHint).toBe(fieldHint);
@@ -359,7 +359,7 @@ describe("the published hint seam", () => {
   // The root barrel re-exports every primitive, so reaching this seam through
   // it loads the whole Tier 1 package: `@gpuixui/components` measured 52
   // modules / 416 KiB to paint one line of text, which is why the copy it
-  // already had was kept (`TODO.md` → Interlocks). The subpath is the route
+  // already had was kept (`.agents/slop/TODO.md` → Interlocks). The subpath is the route
   // that makes the shared frame cheaper than the copy.
   it("loads the seam from its subpath without the package barrel", () => {
     expect(Arr.sort(Object.keys(hintSubpath), Order.String)).toEqual([

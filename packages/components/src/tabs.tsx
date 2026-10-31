@@ -825,7 +825,7 @@ const tabsList: PartsContract = {
   hint: "Put TabsTrigger directly inside TabsList; put TabsContent beside it.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const tabsMeta = {
   name: "Tabs",
   tier: 2,

@@ -356,7 +356,7 @@ describe("the palette a desktop hands over", () => {
     const catalogue = read("../../../docs/tokens.md");
     const design = read("../../../docs/design-system.md");
     const readme = read("../README.md");
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
     const seam = read("./system-theme.ts");
     const colour = read("./color.ts");
 
@@ -437,7 +437,7 @@ describe("the palette a desktop hands over", () => {
     const catalogue = read("../../../docs/tokens.md");
     const design = read("../../../docs/design-system.md");
     const readme = read("../README.md");
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
     expect(paletteMode({ ...nightPalette, mode: "Dark" })).toBe("dark");
 
@@ -570,7 +570,7 @@ describe("following a palette", () => {
     const pages = [
       read("../../../docs/tokens.md"),
       read("../README.md"),
-      read("../../../COMPONENTS.md"),
+      read("../../../.agents/slop/COMPONENTS.md"),
     ];
     pages.forEach((page) => {
       expect(flat(page), "the in-place rewrite rule").toContain(
@@ -1048,7 +1048,7 @@ describe("following a palette", () => {
     // and it printed 22 while the suite had grown to 26. The count is read from
     // the file itself, so a case added here moves the row or fails this one.
     const source = read("./system-theme.test.ts");
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
     const cases = source
       .split("\n")
       .filter((line) => /^ {2}it\b/.test(line)).length;

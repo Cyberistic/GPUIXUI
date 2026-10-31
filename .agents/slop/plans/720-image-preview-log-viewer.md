@@ -36,7 +36,7 @@ changes.
   log toolbar/row rules on theme variables (`--row-height`).
 - Tests: `apps/docs/src/components/docs/media-demo.test.tsx`,
   `apps/docs/src/components/docs/log-viewer-demo.test.tsx`.
-- `TODO.md`, the plan index, and the two package READMEs if they name the seam.
+- `.agents/slop/TODO.md`, the plan index, and the two package READMEs if they name the seam.
 
 ## Implementation
 

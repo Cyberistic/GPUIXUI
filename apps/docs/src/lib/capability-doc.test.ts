@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 /**
  * The capability record, held to the code that encodes it.
  *
- * `docs/gpuix-capabilities.md` is what component plans and `COMPONENTS.md`
+ * `docs/gpuix-capabilities.md` is what component plans and `.agents/slop/COMPONENTS.md`
  * cite. A row can drift from `@gpuixui/runtime`'s `capabilities` matrix, and a
  * probe citation can name a probe no playground registry declares. Both are
  * read from disk here. The site's runtime page is a summary of this record; it

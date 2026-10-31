@@ -30,7 +30,7 @@ export type {
   ToggleItemState,
 } from "@gpuixui/primitives/toggle-group";
 
-/** Inventory record, mirrored into `COMPONENTS.md`'s Toggle group row. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Toggle group row. */
 export const toggleGroupMeta = {
   name: "Toggle group",
   tier: 1,

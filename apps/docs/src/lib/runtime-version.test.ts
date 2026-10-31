@@ -65,7 +65,7 @@ const pages = (dir: URL, slug = ""): ReadonlyArray<[string, string]> =>
  * README a visitor lands on before the site.
  */
 const documents = [
-  "COMPONENTS.md",
+  ".agents/slop/COMPONENTS.md",
   "README.md",
   "docs/gpuix-capabilities.md",
 ].map((path) => [path, readFileSync(new URL(path, root), "utf8")] as const);

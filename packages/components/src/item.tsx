@@ -320,7 +320,7 @@ const itemContract: PartsContract = {
   hint: "Put ItemMedia, ItemContent and ItemActions directly inside Item.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const itemMeta = {
   name: "Item",
   tier: 2,

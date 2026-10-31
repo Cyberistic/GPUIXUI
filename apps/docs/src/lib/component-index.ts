@@ -21,7 +21,7 @@ export interface ComponentPage {
 }
 
 /**
- * The `COMPONENTS.md` row a page reports: its status and its GPUix verdict.
+ * The `.agents/slop/COMPONENTS.md` row a page reports: its status and its GPUix verdict.
  *
  * The row, not the page, decides whether a component is shipped and how much of
  * it the runtime supports. The index and the page's status strip read the same
@@ -54,7 +54,7 @@ export interface ComponentEntry {
   readonly url: string;
   /** The sidebar section the page belongs to, e.g. `Primitives` or `Data display`. */
   readonly section: string;
-  /** The inventory row the page reports, when `COMPONENTS.md` has one. */
+  /** The inventory row the page reports, when `.agents/slop/COMPONENTS.md` has one. */
   readonly verdict: PageVerdict | undefined;
   /** The compound parts the page documents, e.g. `DialogFooter`. */
   readonly parts: ReadonlyArray<string>;

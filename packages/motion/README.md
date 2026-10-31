@@ -629,9 +629,9 @@ not fake `transform` with a decorative placeholder.
 ## Licences
 
 - Spring / timeline / sequence math ported from open-gpui `crates/motion`
-  (Apache-2.0) — see `LICENSES/open-gpui.md`.
+  (Apache-2.0) — see `.agents/slop/LICENSES/open-gpui.md`.
 - Easing variants and the `Inertia`/`MotionValue` API borrowed from
-  `gpui-ce-motion` (MIT OR Apache-2.0) — see `LICENSES/gpui-motion.md`.
+  `gpui-ce-motion` (MIT OR Apache-2.0) — see `.agents/slop/LICENSES/gpui-motion.md`.
 
 `NOTICE` beside this README carries the copyright lines and MIT text those two
 records oblige the port to redistribute.

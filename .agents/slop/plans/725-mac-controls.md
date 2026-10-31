@@ -29,7 +29,7 @@ new render primitive.
 For every control: `packages/components/src/<name>.tsx`, a behaviour test
 `<name>.test.tsx`, `packages/components/docs/<name>.mdx`, a demo in
 `apps/docs/src/components/docs/<name>-demo.tsx` registered in `demos.tsx`, a
-row in `COMPONENTS.md`, an entry in `inventory.ts`. Copy the shape of
+row in `.agents/slop/COMPONENTS.md`, an entry in `inventory.ts`. Copy the shape of
 `toggle-group.tsx` + its test — it is the closest existing pattern.
 
 ### `SegmentedControl`

@@ -421,7 +421,7 @@ const dropdownContent: PartsContract = {
   hint: "Put rows, groups, labels, separators and submenus directly inside DropdownMenuContent.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const dropdownMenuMeta = {
   name: "Dropdown menus",
   tier: 2,

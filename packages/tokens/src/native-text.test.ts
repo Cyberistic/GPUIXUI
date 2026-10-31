@@ -644,7 +644,7 @@ describe("nativeTextTheme", () => {
       readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
     const catalogue = read("../../../docs/tokens.md");
     const readme = read("../README.md");
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
     [
       "| `metrics.mdBlockGap` / `mdTableCellPadding` | `spacing.lg` — a document's block gap / a cell's inset |",
@@ -1590,7 +1590,7 @@ describe("the fence a document host paints", () => {
       "utf8",
     ).replace(/\s+/g, " ");
     const inventory = readFileSync(
-      new URL("../../../COMPONENTS.md", import.meta.url),
+      new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
     const readme = readFileSync(
@@ -1622,7 +1622,7 @@ describe("the fence a document host paints", () => {
       "utf8",
     ).replace(/\s+/g, " ");
     const inventory = readFileSync(
-      new URL("../../../COMPONENTS.md", import.meta.url),
+      new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
     const record = readFileSync(
@@ -1954,7 +1954,7 @@ describe("a theme a store gave back", () => {
     const catalogue = read("../../../docs/tokens.md");
     const designSystem = read("../../../docs/design-system.md");
     const readme = read("../README.md");
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
     expect(catalogue).toContain(
       "**A role a stored theme lost is dropped, not thrown on.**",

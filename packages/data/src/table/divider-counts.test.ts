@@ -1,7 +1,7 @@
 /**
  * Holds the divider count the data lane prints to the styles it ships.
  *
- * The bug this guards: `COMPONENTS.md`'s Tier 3 `Tables` row and the table's own
+ * The bug this guards: `.agents/slop/COMPONENTS.md`'s Tier 3 `Tables` row and the table's own
  * JSDoc said the raw `border` role is under the 1.05:1 floor on **20 of the
  * 80** (the source said **17 of the 64**) wash placements, while the tokens
  * contract measures **22 of the 90** over the **eighteen** shipped,
@@ -42,7 +42,7 @@ import { describe, expect, it } from "vitest";
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-const inventory = read("../../../../COMPONENTS.md");
+const inventory = read("../../../../.agents/slop/COMPONENTS.md");
 const table = read("./table.tsx");
 const page = read("../../docs/table-selection.mdx");
 const behaviour = read("../behaviour/table.test.tsx");

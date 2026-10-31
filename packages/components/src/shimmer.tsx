@@ -252,7 +252,7 @@ export const Shimmer = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md`'s animated-primitives table. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s animated-primitives table. */
 export const shimmerMeta = {
   name: "Shimmer",
   tier: 2,

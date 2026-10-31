@@ -105,5 +105,5 @@ Committed `3078b3c7` and `c10e081a`.
 Measured at the same time: `ps aux` lists exactly one `swarm:docs-site` session,
 `git status --short apps/docs` was clean between each of that turn's commits, and
 no other process had an `apps/docs` file open for writing. The supervisor's
-overlap — the root cause on `TODO.md`'s blocker row — is unchanged, so the row
+overlap — the root cause on `.agents/slop/TODO.md`'s blocker row — is unchanged, so the row
 stays open; only the half-landed change it left behind is resolved.

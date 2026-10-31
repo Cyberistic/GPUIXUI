@@ -4,7 +4,7 @@ import { gitConfig } from "./shared";
 /**
  * The inventory row a package page reports.
  *
- * `COMPONENTS.md` is the only place a component's status and its GPUix support
+ * `.agents/slop/COMPONENTS.md` is the only place a component's status and its GPUix support
  * verdict are decided. A page that does not say either lets a reader assume the
  * component is shipped and whole, so every mounted package page carries a strip
  * generated from its row. The page title is the join: most titles match their
@@ -37,7 +37,7 @@ export interface PageRef {
  * than one row because it documents a composition: the table page teaches the
  * column menu, the resize strip and the filter field beside the grid, and the
  * dock page teaches its tabs, its nesting and its persistence. Every name here
- * must be a `COMPONENTS.md` row, and every shipped row must be published by
+ * must be a `.agents/slop/COMPONENTS.md` row, and every shipped row must be published by
  * some page — `inventory-status.test.ts` holds both directions.
  */
 export const pageRows: Readonly<Record<string, ReadonlyArray<string>>> = {
@@ -209,7 +209,7 @@ export const laneRows: ReadonlyArray<{
 ];
 
 /** The inventory document, the source the strip reads. */
-export const inventoryUrl = `https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/COMPONENTS.md`;
+export const inventoryUrl = `https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/.agents/slop/COMPONENTS.md`;
 
 /** What a page's status strip shows: its row, or nothing and the reason. */
 export type PageStatus =
@@ -294,7 +294,10 @@ export const statusForPage = (
   const rows = rowsForPage(inventory, ref);
   const [row] = rows;
   if (row === undefined) {
-    return { kind: "none", reason: "COMPONENTS.md has no row for this page" };
+    return {
+      kind: "none",
+      reason: ".agents/slop/COMPONENTS.md has no row for this page",
+    };
   }
   // A page in either alias table names its rows on purpose; one that matched
   // several by itself is ambiguous and must be aliased rather than silently

@@ -16,7 +16,7 @@
  * `@gpuix/native@0.11.0` publishes `-darwin-arm64`, `-linux-x64-gnu`,
  * `-win32-x64-msvc` and `-win32-arm64-msvc` only, and the failure chain on this
  * Intel Mac names `@gpuix/native-darwin-x64` and
- * `./gpuix-native.darwin-x64.node`. `TODO.md` → Blockers, ADR 0001/0002.
+ * `./gpuix-native.darwin-x64.node`. `.agents/slop/TODO.md` → Blockers, ADR 0001/0002.
  */
 
 import { describe, expect, it } from "@effect/vitest";

@@ -572,14 +572,14 @@ retained (`runtime/address.runtime.test.tsx`).
 | a list revealing its own highlight | absent (`scrollIntoView` scrolls to a scroller's **direct child**, and `Select` never scrolls for its highlight) | a `Select` row brings itself into view after commit from the row's and the list's painted boxes (`core/scroll.ts`'s `revealScroll`), so a row past the 320px cap and a row inside a group are both revealed |
 | fade mask | absent | no edge fade: the scroller paints a hard edge |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning; the step indicators tick at `@gpuixui/motion`'s `motionLevels.step` (120 ms), read rather than copied. A blank `label` is decoration (`role="presentation"`) rather than an unnamed status node |
-| `./button` | published (headless) | `Button` keeps this package's contract — the recipe, `loading`, `StateStyle<ButtonState>` — because `buttonProps` would regress four measured behaviours (no `loading`/`Spinner` or `"Loading"` description, no `focused` in its `style` callback, a disabled button kept in the tab order, no held-key guard on the Space release), so adoption was **evaluated and declined**; the comparison is on `docs/button.mdx` and in `TODO.md` §Salvage |
+| `./button` | published (headless) | `Button` keeps this package's contract — the recipe, `loading`, `StateStyle<ButtonState>` — because `buttonProps` would regress four measured behaviours (no `loading`/`Spinner` or `"Loading"` description, no `focused` in its `style` callback, a disabled button kept in the tab order, no held-key guard on the Space release), so adoption was **evaluated and declined**; the comparison is on `docs/button.mdx` and in `.agents/slop/TODO.md` §Salvage |
 
 `packages/icons` supplies the icons; `@gpuixui/tokens` supplies the themes.
 
 ### The painted hint is a published seam
 
 GPUix shapes an empty host's placeholder itself, in a fixed `#8F8F8F` that no
-theme value reaches (`COMPONENTS.md` → Text inputs). The fields therefore hand
+theme value reaches (`.agents/slop/COMPONENTS.md` → Text inputs). The fields therefore hand
 the host no `placeholder` and paint the words instead, through one seam
 published from the **`@gpuixui/primitives/hint`** subpath so a second package
 facing the same runtime paints the same hint rather than keeping a copy:
@@ -620,7 +620,7 @@ Every Tier 1 component has a page and a composed example beside the source:
 - `runtime/examples.runtime.test.tsx` — mounts every example in the real
   renderer, so an example cannot rot into source that has never run.
 
-`src/inventory.ts` + `src/inventory.test.ts` hold the `COMPONENTS.md` Tier 1
+`src/inventory.ts` + `src/inventory.test.ts` hold the `.agents/slop/COMPONENTS.md` Tier 1
 table to the code: every row has a record, every path a record names exists, a
 `done` row has a test, and a row and its record agree on status and GPUix
 support. Flip a row back to `todo` and the suite fails — the table had drifted
@@ -659,7 +659,7 @@ runner prints the file and test counts; no count is copied here to drift.
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.
 
-What it observed, per component, is in `COMPONENTS.md`, and each Tier 1 record
+What it observed, per component, is in `.agents/slop/COMPONENTS.md`, and each Tier 1 record
 in `src/inventory.ts` names the runtime suite that measured it. Capability
 verdicts and their probes are in `docs/gpuix-capabilities.md` and
 `apps/playground/README.md`.

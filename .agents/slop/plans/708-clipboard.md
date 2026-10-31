@@ -16,7 +16,7 @@ Let an app write text (and read it) through the OS clipboard.
 
 ## Why
 
-`COMPONENTS.md` records the clipboard gap as unfiled; fc-gpui ships Zed's
+`.agents/slop/COMPONENTS.md` records the clipboard gap as unfiled; fc-gpui ships Zed's
 `ClipboardItem` API, and our bridge has none.
 
 ## Work

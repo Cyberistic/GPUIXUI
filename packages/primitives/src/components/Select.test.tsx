@@ -422,7 +422,7 @@ describe("Select", () => {
     // recipe that moved the label to a role the wash erases would pass the
     // tokens gate. The pair is measured here off the painted style, in both
     // shipped palettes; adding it to `contrastPairs` is the tokens-side row in
-    // `TODO.md`.
+    // `.agents/slop/TODO.md`.
     Arr.forEach([lightTheme, darkTheme], (theme) => {
       const painted = selectItemStyle(theme)({ ...rest, selected: true });
       const ratio = expectSome(

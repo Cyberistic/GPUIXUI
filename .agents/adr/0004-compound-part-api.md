@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-17
 - Deciders: components workstream
-- Related: plan `200`, `docs/component-api.md`; `LICENSES/base-gpui.md`
+- Related: plan `200`, `docs/component-api.md`; `.agents/slop/LICENSES/base-gpui.md`
 
 ## Context
 

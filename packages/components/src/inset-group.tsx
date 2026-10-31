@@ -146,7 +146,7 @@ export const InsetGroupRow = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md`'s Inset group row. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Inset group row. */
 export const insetGroupMeta = {
   name: "Inset group",
   tier: 2,

@@ -196,7 +196,7 @@ describe("a theme mode this release does not ship", () => {
       "packages/tokens/README.md": read("../README.md"),
       "packages/tokens/src/mode.ts": read("./mode.ts"),
       "packages/tokens/src/luminance.ts": read("./luminance.ts"),
-      "COMPONENTS.md": read("../../../COMPONENTS.md"),
+      ".agents/slop/COMPONENTS.md": read("../../../.agents/slop/COMPONENTS.md"),
     };
     Object.entries(surfaces).forEach(([name, text]) => {
       expect(text, name).toContain(
@@ -546,7 +546,9 @@ describe("extendTheme", () => {
         "docs/tokens.md": read("../../../docs/tokens.md"),
         "docs/design-system.md": read("../../../docs/design-system.md"),
         "packages/tokens/README.md": read("../README.md"),
-        "COMPONENTS.md": read("../../../COMPONENTS.md"),
+        ".agents/slop/COMPONENTS.md": read(
+          "../../../.agents/slop/COMPONENTS.md",
+        ),
         "packages/tokens/src/theme.ts": read("./theme.ts"),
       };
 
@@ -815,7 +817,7 @@ describe("restoreTheme", () => {
       "docs/design-system.md": read("../../../docs/design-system.md"),
       "packages/tokens/README.md": read("../README.md"),
       "packages/tokens/src/theme.ts": read("./theme.ts"),
-      "COMPONENTS.md": read("../../../COMPONENTS.md"),
+      ".agents/slop/COMPONENTS.md": read("../../../.agents/slop/COMPONENTS.md"),
     };
 
     Object.entries(surfaces).forEach(([name, text]) => {
@@ -825,7 +827,9 @@ describe("restoreTheme", () => {
     // The stored density box is the same defect one group down: the rule that a
     // complete box replaces the base's has to be taught where it is decided.
     expect(surfaces["docs/tokens.md"]).toContain("whole box");
-    expect(surfaces["COMPONENTS.md"]).toContain("whole density box");
+    expect(surfaces[".agents/slop/COMPONENTS.md"]).toContain(
+      "whole density box",
+    );
     // The absence one value up — a store that kept no theme at all. Every
     // surface that teaches the seam says what it answers, because the
     // documented order (report, then restore) is what crashed.
@@ -1040,7 +1044,7 @@ describe("a partial a store handed back", () => {
       "docs/design-system.md": read("../../../docs/design-system.md"),
       "packages/tokens/README.md": read("../README.md"),
       "packages/tokens/src/theme.ts": read("./theme.ts"),
-      "COMPONENTS.md": read("../../../COMPONENTS.md"),
+      ".agents/slop/COMPONENTS.md": read("../../../.agents/slop/COMPONENTS.md"),
     };
 
     Object.entries(surfaces).forEach(([name, text]) => {
@@ -1062,7 +1066,7 @@ describe("a partial a store handed back", () => {
     );
     // The catalogue names the two failures the rule retires, so a reader can
     // tell an absence they fixed from a cast they worked around.
-    expect(surfaces["COMPONENTS.md"]).toContain(
+    expect(surfaces[".agents/slop/COMPONENTS.md"]).toContain(
       "Cannot convert undefined or null to object",
     );
   });

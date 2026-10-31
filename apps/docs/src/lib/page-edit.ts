@@ -5,7 +5,7 @@ import { gitConfig } from "./shared";
 /**
  * The Markdown file a docs page renders.
  *
- * `MISSION.md` makes a page part of a component's definition, so the reader who
+ * `.agents/slop/MISSION.md` makes a page part of a component's definition, so the reader who
  * finds a wrong sentence is the one who can fix it — but only if the page says
  * which file it is. The path is derived from the same `origin` and `path` the
  * loader hands the frame, so it cannot drift from the page beside it.

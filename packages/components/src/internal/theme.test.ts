@@ -332,12 +332,14 @@ describe("the sweeps the seam's documentation prints", () => {
     const claim = `${under} of the ${everyStyle.length * softRoles.length}`;
 
     expect(claim).toBe("28 of the 72");
-    ["alert.tsx", "internal/theme.ts", "../../../COMPONENTS.md"].forEach(
-      (file) => {
-        expect(prose(file), file).toContain(claim);
-        expect(prose(file), file).not.toContain("29 of the 64");
-      },
-    );
+    [
+      "alert.tsx",
+      "internal/theme.ts",
+      "../../../.agents/slop/COMPONENTS.md",
+    ].forEach((file) => {
+      expect(prose(file), file).toContain(claim);
+      expect(prose(file), file).not.toContain("29 of the 64");
+    });
   });
 
   it("prints the dark placements the designed wash buries", () => {
@@ -361,7 +363,7 @@ describe("the sweeps the seam's documentation prints", () => {
     [
       "internal/theme.ts",
       "behaviour/selection.test.tsx",
-      "../../../COMPONENTS.md",
+      "../../../.agents/slop/COMPONENTS.md",
     ].forEach((file) => {
       expect(prose(file), file).toContain(claim);
       expect(prose(file), file).not.toContain("30 of the 32");

@@ -58,7 +58,10 @@ const packageReadme = readFileSync(
   new URL("packages/data/README.md", repository),
   "utf8",
 );
-const inventory = readFileSync(new URL("COMPONENTS.md", repository), "utf8");
+const inventory = readFileSync(
+  new URL(".agents/slop/COMPONENTS.md", repository),
+  "utf8",
+);
 const chartsPage = readFileSync(
   new URL("packages/data/docs/charts.mdx", repository),
   "utf8",

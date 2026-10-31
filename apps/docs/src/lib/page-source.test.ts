@@ -7,7 +7,7 @@ import { pageSourceIndex } from "./page-source";
 import { pageSources, unresolvedPageSources } from "./page-source-data";
 
 /**
- * `MISSION.md` asks every component page for copyable source. The pages the
+ * `.agents/slop/MISSION.md` asks every component page for copyable source. The pages the
  * packages ship are Markdown the site mounts, so the site resolves the module a
  * page documents at build time and prints that file's own text.
  *

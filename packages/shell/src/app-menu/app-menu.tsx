@@ -2,7 +2,7 @@
  * AppMenu: the in-window application menu bar.
  *
  * The pinned runtime installs a fixed macOS menu bar and publishes no API to add
- * to it (`COMPONENTS.md`, "Application menus"), so the chrome is caller-drawn:
+ * to it (`.agents/slop/COMPONENTS.md`, "Application menus"), so the chrome is caller-drawn:
  * a `role="menubar"` row of buttons whose dropdowns are `FloatingLayer`s
  * anchored below the button that opened them. The navigation rules — Left/Right
  * between menus, Up/Down within a dropdown, Escape closing and returning focus

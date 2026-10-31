@@ -85,7 +85,7 @@ describe("the shipped split probe", () => {
     const prose = dockSection.replace(/\s+/g, " ");
     expect(prose).toContain('position: "absolute"');
     expect(prose).toContain("resizes=0");
-    expect(prose).toContain("TODO.md");
+    expect(prose).toContain(".agents/slop/TODO.md");
     expect(prose).toContain("DIVIDER_STEP");
     expect(prose).toContain("Home");
     expect(prose).toContain("End");

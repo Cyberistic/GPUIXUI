@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-21
 - Deciders: the `@gpuixui/tw` components wave
-- Related: ADR 0004 (compound-part API), the `tw-primitives` migration in `TODO.md`
+- Related: ADR 0004 (compound-part API), the `tw-primitives` migration in `.agents/slop/TODO.md`
 
 ## Context
 

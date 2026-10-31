@@ -128,7 +128,7 @@ const fieldsetRoot: PartsContract = {
   hint: "Fieldset renders its legend itself; put Field, or any other control, inside it.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const fieldsetMeta = {
   name: "Fieldset",
   tier: 2,

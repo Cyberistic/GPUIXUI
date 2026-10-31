@@ -73,7 +73,7 @@ export const Disclosure = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md`'s Disclosure row. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Disclosure row. */
 export const disclosureMeta = {
   name: "Disclosure",
   tier: 2,

@@ -869,7 +869,7 @@ const comboboxContent: PartsContract = {
   hint: "Put ComboboxInput, ComboboxList and ComboboxEmpty directly inside ComboboxContent.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const comboboxMeta = {
   name: "Comboboxes",
   tier: 2,

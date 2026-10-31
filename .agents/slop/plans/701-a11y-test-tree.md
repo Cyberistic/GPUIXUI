@@ -40,7 +40,7 @@ bug the aria budget keeps finding.
 
 ## Acceptance
 
-At least one assertion per component lane reads the tree; `COMPONENTS.md` rows
+At least one assertion per component lane reads the tree; `.agents/slop/COMPONENTS.md` rows
 that claim a role cite the tree test.
 
 ## STOP

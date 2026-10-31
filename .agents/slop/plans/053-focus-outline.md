@@ -4,7 +4,7 @@
 **Phase:** F (truth pass after the 0.11 upgrade), not a new feature.
 **Files owned by this plan:** `packages/tokens/src/styles.ts`, `focus.test.ts`,
 `packages/tokens/README.md`, `docs/tokens.md`, `docs/design-system.md`,
-`COMPONENTS.md` (design-system rows), `TODO.md` (this workstream + interlocks),
+`.agents/slop/COMPONENTS.md` (design-system rows), `.agents/slop/TODO.md` (this workstream + interlocks),
 `.agents/slop/plans/README.md` (index row only).
 **Adoption files are another workstream's:** every `focusRing(...)` call site and
 the manual focus tracking it forced — the rows below name them. Do not edit them
@@ -34,13 +34,13 @@ The consequences today:
 3. The docs and several source comments claim "GPUix 0.10.0 has no `outline*` and
    no `focusVisible`, and paints one shadow". All three claims are false against
    the pinned 0.11.0 and must stop being repeated (the pinned version is named in
-   `PLAN.md`; the claims are in this plan's owned docs plus, for the source
+   `.agents/slop/PLAN.md`; the claims are in this plan's owned docs plus, for the source
    comments, the adopting packages).
 
 ## Probe first (STOP gate)
 
 Do these in the playground before changing `focusRing`. Owner: `playground`
-(cross-team row in `TODO.md`).
+(cross-team row in `.agents/slop/TODO.md`).
 
 1. A control whose style carries
    `{ focusVisible: { outlineWidth: 2, outlineColor: colors.ring, outlineOffset: 0 } }`:
@@ -122,7 +122,7 @@ added **beside** the shadow, not as a replacement.
    focus section, the runtime-constraint table, the limitations list and the
    elevation "one shadow" sentences. **Done.**
 5. Record the adoption interlock (components/primitives) with the exact call
-   sites; do not edit them here. **Done** — `TODO.md` → Interlocks.
+   sites; do not edit them here. **Done** — `.agents/slop/TODO.md` → Interlocks.
 6. Verification: `nub run --filter @gpuixui/tokens test`, then a scoped
    `nub apps/playground/dist/smoke/run.js --only focus-ring` once the playground
    scenario exists, and, for the adoption, the two packages' behaviour suites.

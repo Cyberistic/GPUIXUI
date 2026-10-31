@@ -89,11 +89,11 @@ explicitly so it is not re-litigated.
 | `packages/testing/src/state.ts` | **create** — `runCommands(runtime, commands)` driving a runtime without a renderer |
 | `packages/testing/src/state.test.ts` | **create** |
 | `.agents/adr/0001-component-state-model.md` | **create** — §5 |
-| `PLAN.md` §4 | decision row pointing at the ADR |
+| `.agents/slop/PLAN.md` §4 | decision row pointing at the ADR |
 
 Do **not** rewrite plans `110–117`; their components adopt the convention when
 implemented. If a landed component violates it, that is a follow-up task in
-`TODO.md`, not a rewrite here.
+`.agents/slop/TODO.md`, not a rewrite here.
 
 ## 4. Commands and expected results
 
@@ -184,5 +184,5 @@ Stop and report if:
 - The convention is documented in `docs/component-api.md`.
 - `runtime.ts`, `runtime.test.ts`, `testing/src/state.ts` and its test exist and
   pass; both tests fail when the reducer is broken.
-- ADR `0001` is filed and `PLAN.md` §4 points at it.
+- ADR `0001` is filed and `.agents/slop/PLAN.md` §4 points at it.
 - Nothing in the tree claims a runtime interaction was verified.

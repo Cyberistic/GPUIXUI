@@ -172,7 +172,7 @@ const linksOf = (page: Page): ReadonlyArray<Link> => {
 };
 
 /**
- * Links that are dead today, with the owner that fixes them. `TODO.md` →
+ * Links that are dead today, with the owner that fixes them. `.agents/slop/TODO.md` →
  * Interlocks carries the task; the guard fails when an entry here no longer
  * matches a dead link, so a fix must delete its row.
  *

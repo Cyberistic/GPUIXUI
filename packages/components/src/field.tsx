@@ -351,7 +351,7 @@ const fieldRoot: PartsContract = {
   hint: "Field renders its label and message itself; put only the control inside it.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const fieldMeta = {
   name: "Inline validation",
   tier: 2,

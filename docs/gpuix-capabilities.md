@@ -1,9 +1,9 @@
 # GPUix capabilities — what the pinned runtime provides, what it does not
 
-`MISSION.md` forbids presenting a capability the runtime lacks as if it worked.
+`.agents/slop/MISSION.md` forbids presenting a capability the runtime lacks as if it worked.
 This document is the durable record: one row per capability, the verdict, the
 evidence, and the strongest honest alternative. Component plans and
-`COMPONENTS.md`'s **GPUix support** column cite this file instead of restating a
+`.agents/slop/COMPONENTS.md`'s **GPUix support** column cite this file instead of restating a
 verdict, and the guide links a reader here for the runtime's limits.
 
 **Pinned runtime:** `@gpuix/react` / `@gpuix/native` **0.11.0**, Apache-2.0. The

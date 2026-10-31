@@ -378,7 +378,7 @@ const tagInputRoot: PartsContract = {
   hint: "Put TagInputChip and TagInputField directly inside TagInput.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const tagInputMeta = {
   name: "Tag / token input",
   tier: 2,

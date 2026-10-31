@@ -2374,7 +2374,7 @@ on those four strips. The shipped field rests on the decorative `border` role
 instead (1.19:1 on the light page) and reaches `borderStrong` only on hover, in
 `fieldVariant` (`packages/primitives/src/core/variants.ts`) and `FieldInput`
 (`packages/components/src/field.tsx`); §Limitations records the deviation and
-`TODO.md` → Interlocks the adoption. `field-boundary.test.ts` reads both painters
+`.agents/slop/TODO.md` → Interlocks the adoption. `field-boundary.test.ts` reads both painters
 so the page cannot describe a field the library does not ship.
 
 A field's own fill carries a third text role beside the value and the
@@ -4361,7 +4361,7 @@ target: the glyph is an `<Icon>`, whose style declares `pointerEvents: "none"`
 so a press lands on the row it sits in, and the row is built at
 `density.rowHeight` — the height `target.test.ts` and `invalidNumbers` hold to
 the floor. `TreeView`, `VirtualTree` and the files package's `FileTree` all
-paint that row; `docs/design-system.md` §6 and the `COMPONENTS.md` row state the
+paint that row; `docs/design-system.md` §6 and the `.agents/slop/COMPONENTS.md` row state the
 same split.
 
 ## Focus
@@ -5513,7 +5513,7 @@ cannot go untested. Evidence:
   `borderStrong` only on hover, so a resting field inside a card is an edge at
   1.26:1. The tokens ship and measure the boundary (`borderStrong` on `input`
   and on the four strips a field sits on); adopting it is the primitives and
-  components workstreams', recorded in `TODO.md` → Interlocks.
+  components workstreams', recorded in `.agents/slop/TODO.md` → Interlocks.
 - `avatarSize` is a fixed scale, not a theme group. Adding a group to `Theme` is a
   breaking change for a hand-built theme literal, so a brand-specific diameter
   stays a component decision for now.
@@ -5524,4 +5524,4 @@ cannot go untested. Evidence:
   A selectable run belongs on a content tone.
 - No font family is bundled: `registerFonts` is consumer-only, so there is no
   redistribution licence to review yet. Shipping one needs the same review
-  `LICENSES/` gives every other asset.
+  `.agents/slop/LICENSES/` gives every other asset.

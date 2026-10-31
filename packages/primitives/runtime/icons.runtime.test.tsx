@@ -9,7 +9,7 @@
  * `packages/icons/src/*.test.ts` proves the icon *data*; this proves the three
  * claims that only a painted frame can: that GPUix paints the raw `<svg
  * source>` markup at all, that `style.width` sizes it, and that `style.color`
- * tints it. `COMPONENTS.md` carried the last two as "unverified on screen"
+ * tints it. `.agents/slop/COMPONENTS.md` carried the last two as "unverified on screen"
  * until this suite existed.
  *
  * The tint is checked at the level of **painted pixels**, not props: the frame

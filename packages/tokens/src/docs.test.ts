@@ -37,9 +37,9 @@ const read = (path: string): string =>
 const catalogue = read("../../../docs/tokens.md");
 const readme = read("../README.md");
 const designSystem = read("../../../docs/design-system.md");
-const inventory = read("../../../COMPONENTS.md");
+const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
-/** One `COMPONENTS.md` row, by its first cell. */
+/** One `.agents/slop/COMPONENTS.md` row, by its first cell. */
 const inventoryRow = (name: string): string => {
   const start = inventory.indexOf(`| ${name} |`);
   const end = inventory.indexOf("\n", start);
@@ -473,7 +473,7 @@ describe("the control ring's claim", () => {
  * Guards the catalogue's statement that the two ring seams **delegate** to
  * `controlFocusRing`. The page said they were "where that rule was first
  * written" and that "a seam that has not delegated to it yet is tracked in
- * `TODO.md`" — true while the helper was new, false the moment both packages
+ * `.agents/slop/TODO.md`" — true while the helper was new, false the moment both packages
  * adopted it: a reader went looking for a task that no longer existed, and a
  * seam that regressed to its own copy of the rule would have kept the page
  * green. Both directions are read here, so the sentence and the sources move
@@ -490,7 +490,7 @@ describe("the ring seams delegate", () => {
 
     expect(focus).toContain("delegate");
     expect(focus).not.toContain("has not delegated");
-    expect(focus).not.toContain("tracked in `TODO.md`");
+    expect(focus).not.toContain("tracked in `.agents/slop/TODO.md`");
   });
 
   it("holds that sentence to the sources", () => {
@@ -504,11 +504,11 @@ describe("the ring seams delegate", () => {
   it("says the same thing in the helper's own JSDoc", () => {
     // The published API doc is the other place a consumer reads the rule, and it
     // said the two packages "decide the same rule in their own ring seam today"
-    // with the adoption "tracked in TODO.md" long after both delegated.
+    // with the adoption "tracked in .agents/slop/TODO.md" long after both delegated.
     const source = read("../src/styles.ts");
 
     expect(source).toContain("both **delegate**");
-    expect(source).not.toContain("tracked in `TODO.md`");
+    expect(source).not.toContain("tracked in `.agents/slop/TODO.md`");
   });
 });
 
@@ -1025,7 +1025,7 @@ describe("the resolvers refuse an axis they do not ship", () => {
     expect(pages[2]).toContain("a density group the theme lost is no box");
 
     const inventory = readFileSync(
-      new URL("../../../COMPONENTS.md", import.meta.url),
+      new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
     expect(inventory).toContain("**The pair is total on the group as well**");
@@ -1523,7 +1523,7 @@ describe("the verification section's contracts", () => {
 
   it("names the native gallery that paints the tokens, not a TODO row", () => {
     // The page named the gallery as the native proof and sent a reader to
-    // `TODO.md` for it, although the four scenarios had landed and the
+    // `.agents/slop/TODO.md` for it, although the four scenarios had landed and the
     // playground README records them. A proof that exists cannot read as
     // future work: the page cites the gallery, and the gallery is four
     // scenarios registered in the playground.

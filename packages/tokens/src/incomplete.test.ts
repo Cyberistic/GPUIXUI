@@ -514,7 +514,7 @@ describe("an absent colour group", () => {
     // The inventory records the pair as the seam it is, so a reader checking a
     // stored theme finds both names beside the others.
     const inventory = readFileSync(
-      new URL("../../../COMPONENTS.md", import.meta.url),
+      new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
 
@@ -1375,7 +1375,7 @@ describe("a shadow a store wrote", () => {
 
     const page = read("docs/tokens.md");
     const system = read("docs/design-system.md");
-    const inventory = read("COMPONENTS.md");
+    const inventory = read(".agents/slop/COMPONENTS.md");
     const readme = read("packages/tokens/README.md");
 
     // Every surface states the rule, and the paint path beside it.
@@ -1517,7 +1517,7 @@ describe("an optional table a store nulled", () => {
     const catalogue = read("../../../docs/tokens.md");
     const designSystem = read("../../../docs/design-system.md");
     const readme = read("../README.md");
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
     // The rule where each table is taught, and the mechanism where it is described.
     expect(catalogue).toContain(
@@ -1664,7 +1664,7 @@ describe("a role a store wrote as null", () => {
     const catalogue = read("../../../docs/tokens.md");
     const designSystem = read("../../../docs/design-system.md");
     const readme = read("../README.md");
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
     expect(catalogue).toContain("keeps only the strings");
     expect(catalogue).toContain("the runtime paints its own outline");
@@ -1749,7 +1749,7 @@ describe("the shape a store hands back", () => {
       catalogue: read("../../../docs/tokens.md"),
       designSystem: read("../../../docs/design-system.md"),
       readme: read("../README.md"),
-      inventory: read("../../../COMPONENTS.md"),
+      inventory: read("../../../.agents/slop/COMPONENTS.md"),
     };
 
     for (const [surface, text] of Object.entries(surfaces)) {

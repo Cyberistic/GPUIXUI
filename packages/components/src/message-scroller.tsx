@@ -8,7 +8,7 @@
  * tail sentinel's laid-out position relative to the viewport, because GPUix
  * reports a scroll offset but no content height. The viewport renders every row
  * (`<virtual-list>` takes a count, not compound children), and the limitation is
- * recorded in `COMPONENTS.md` and the page.
+ * recorded in `.agents/slop/COMPONENTS.md` and the page.
  *
  * **The frame owns its height.** The viewport grows inside the root
  * (`flex: 1 1 0; min-height: 0`), and the jump control floats over its bottom
@@ -645,7 +645,7 @@ const messageScrollerContent: PartsContract = {
   hint: "Put MessageScrollerItem directly inside it.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md`. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`. */
 export const messageScrollerMeta = {
   name: "Message scroller",
   tier: 2,

@@ -48,7 +48,7 @@ const read = (path: string): string =>
 const probe = read("./dock-layout-probe.tsx");
 const component = read("../../../../packages/dock/src/dock-layout.tsx");
 const readiness = read("../../../../packages/dock/README.md");
-const inventory = read("../../../../COMPONENTS.md");
+const inventory = read("../../../../.agents/slop/COMPONENTS.md");
 const readme = read("../../README.md");
 
 /** The probe's README section, so a value printed elsewhere cannot pass. */
@@ -60,7 +60,7 @@ const section = (() => {
   return readme.slice(start, end === -1 ? undefined : end);
 })();
 
-/** The COMPONENTS.md row named `title`. */
+/** The .agents/slop/COMPONENTS.md row named `title`. */
 const row = (title: string): string => {
   const start = inventory.indexOf(`| ${title} |`);
   if (start === -1) return "";
@@ -200,7 +200,7 @@ describe("the probe that paints it", () => {
     expect(section).toContain("still reports a node");
     expect(section).toContain("dock-layout-rest");
     expect(section).toContain("clickText");
-    expect(section).toContain("TODO.md");
+    expect(section).toContain(".agents/slop/TODO.md");
   });
 
   it("is the evidence the Tier 4 rows cite", () => {

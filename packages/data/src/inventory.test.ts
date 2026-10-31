@@ -10,7 +10,7 @@
  *
  * Every number is read from the suite the row names, by the two-space `it(`
  * convention `@gpuixui/components`' inventory guard already applies. The sweep
- * covers every data-owned row in `COMPONENTS.md` (each names `@gpuixui/data`),
+ * covers every data-owned row in `.agents/slop/COMPONENTS.md` (each names `@gpuixui/data`),
  * so a new path-qualified count joins the contract by being written down.
  *
  * `node:fs` is deliberate and test-only, the shape `readme.test.ts` and the
@@ -47,7 +47,7 @@ const countCases = (path: string): number =>
     .split("\n")
     .filter((line) => TEST_CASE.test(line)).length;
 
-const inventory = read(repoRoot, "COMPONENTS.md");
+const inventory = read(repoRoot, ".agents/slop/COMPONENTS.md");
 
 /** The inventory rows that own the data lane. */
 const dataRows = inventory

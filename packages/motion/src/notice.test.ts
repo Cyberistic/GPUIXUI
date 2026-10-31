@@ -1,9 +1,9 @@
 /**
  * The motion port owes a NOTICE, not only a licence record.
  *
- * `LICENSES/open-gpui.md` records that a TypeScript port of `crates/motion`
+ * `.agents/slop/LICENSES/open-gpui.md` records that a TypeScript port of `crates/motion`
  * "must carry both NOTICE copyright lines" (Apache-2.0, section 4(d)), and
- * `LICENSES/gpui-motion.md` records the MIT attribution the borrowed API
+ * `.agents/slop/LICENSES/gpui-motion.md` records the MIT attribution the borrowed API
  * surface sits under. For a release the repository shipped neither: the
  * records stated the obligation and `packages/motion/NOTICE` did not exist, so
  * a redistribution of the package would have travelled without the notice it
@@ -25,9 +25,9 @@ const read = (path: string): string =>
 
 const notice = read("../NOTICE");
 const readme = read("../README.md");
-const licenceRecords = read("../../../LICENSES/README.md");
-const openGpui = read("../../../LICENSES/open-gpui.md");
-const gpuiMotion = read("../../../LICENSES/gpui-motion.md");
+const licenceRecords = read("../../../.agents/slop/LICENSES/README.md");
+const openGpui = read("../../../.agents/slop/LICENSES/open-gpui.md");
+const gpuiMotion = read("../../../.agents/slop/LICENSES/gpui-motion.md");
 
 /** The quoted copyright lines an Apollo-style NOTICE list requires. */
 const quotedNoticeLines = (record: string): ReadonlyArray<string> =>

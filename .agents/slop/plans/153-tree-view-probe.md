@@ -9,7 +9,7 @@
 
 `tree` is already a declared capability in `@gpuixui/testing`, but **no scenario
 covers it**: the Tier 3 "Tree views" and Tier 4 "File trees" rows in
-`COMPONENTS.md` carry `?` for GPUix support. A tree is the last Tier 3 primitive
+`.agents/slop/COMPONENTS.md` carry `?` for GPUix support. A tree is the last Tier 3 primitive
 that has had no native measurement at all.
 
 The composition is pure React (indentation, expand/collapse state, keyboard
@@ -67,9 +67,9 @@ helpers use `Arr`/`Option`; no GPUix type is imported. The expansion state is
 
 - `apps/playground/README.md`: scenario list and count (17), structure line,
   the measured facts (indentation, expand/collapse repaint, keyboard delivery).
-- `COMPONENTS.md`: evidence table gains a `tree` row; the Tier 3 "Tree views"
+- `.agents/slop/COMPONENTS.md`: evidence table gains a `tree` row; the Tier 3 "Tree views"
   row's GPUix-support cell becomes the probe verdict; suite count 17.
-- `TODO.md`: tick the item, update the progress bar.
+- `.agents/slop/TODO.md`: tick the item, update the progress bar.
 - `.agents/slop/plans/README.md`: index this plan.
 - Plan `130` §8: point the data-grid/docking plans at this probe.
 
@@ -101,7 +101,7 @@ Stop and report with evidence if:
   measured that they do for its rows; if a tree row differs, record the exact
   gesture and stop rather than moving the handler to the window level.
 - **A change outside this workstream is needed** (for example a new host
-  method): add it to `TODO.md`, do not edit another package.
+  method): add it to `.agents/slop/TODO.md`, do not edit another package.
 
 ## 6. Test plan
 
@@ -122,7 +122,7 @@ rebuild focus, which is a runtime limitation, not a component bug.
 - `tree-view` is registered, green, and `tree` is a required probe capability.
 - The suite is **17/17 green on this host**, exit `0`.
 - The verdict and the keyboard limitation are recorded in plan `140` §4,
-  `COMPONENTS.md`, and the app README.
+  `.agents/slop/COMPONENTS.md`, and the app README.
 - The two-direction proof was run and recorded.
 - `nub run check`, `nub run lint`, `nub run test` pass.
 

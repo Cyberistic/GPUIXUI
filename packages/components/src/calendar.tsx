@@ -641,7 +641,7 @@ export const Calendar = (props: CalendarProps) => {
 /** The mode a calendar runs in, for a caller that keeps it as data. */
 export type { CalendarMode };
 
-/** Inventory record, mirrored into `COMPONENTS.md`. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`. */
 export const calendarMeta = {
   name: "Calendar",
   tier: 2,

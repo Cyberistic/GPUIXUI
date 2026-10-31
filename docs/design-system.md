@@ -415,7 +415,7 @@ control that still rests on the decorative role** — `fieldVariant` in
 `packages/components/src/field.tsx` both paint `border` (1.19:1 on the light
 page) and reach `borderStrong` only on hover — so a resting field inside a card
 is a fill that matches the card and an edge a reader has to look for. The tokens
-ship and measure the boundary; the adoption is `TODO.md` → Interlocks.
+ship and measure the boundary; the adoption is `.agents/slop/TODO.md` → Interlocks.
 
 A field paints one of **two fills**, and the text inside it is measured against
 the fill it chose. A plain field paints `input`. A composite field — a search,

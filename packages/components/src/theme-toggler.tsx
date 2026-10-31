@@ -158,7 +158,7 @@ export const ThemeToggler = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 600). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const themeTogglerMeta = {
   name: "Theme toggler",
   tier: 5,

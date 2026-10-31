@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 One file per structural decision: `NNNN-kebab-title.md`, numbered in the order
-the decisions were accepted. `PLAN.md` §4 is the index of decisions; an ADR is
+the decisions were accepted. `.agents/slop/PLAN.md` §4 is the index of decisions; an ADR is
 written when a decision is structural enough that a future agent would otherwise
 re-litigate it.
 

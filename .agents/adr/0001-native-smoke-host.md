@@ -8,13 +8,13 @@
 - Deciders: playground workstream (swarm)
 - Related: `.agents/slop/plans/100-package-testing.md`,
   `.agents/slop/plans/110-native-smoke-test.md`,
-  `.agents/slop/plans/120-app-playground.md`, `PLAN.md` §5 (open questions)
+  `.agents/slop/plans/120-app-playground.md`, `.agents/slop/PLAN.md` §5 (open questions)
 
 ## Context
 
-`MISSION.md` requires a **real native smoke test early**: the biggest risk is
+`.agents/slop/MISSION.md` requires a **real native smoke test early**: the biggest risk is
 whether GPUix supports the layout, input, focus, overlay, scroll and panel
-primitives the component API needs, and every component row in `COMPONENTS.md`
+primitives the component API needs, and every component row in `.agents/slop/COMPONENTS.md`
 may only say `done` after an interaction is verified in the real runtime (or a
 verified compatible environment).
 
@@ -58,7 +58,7 @@ the hardware is not the obstacle; the prebuilt binary and the toolchain are.
    deliverable, but on this host it reports **exit 2 "unverified"** with the
    evidence above. It does not report success, and it does not silently skip.
 2. **No capability and no component may be marked verified/done on the strength
-   of a run that did not happen.** `COMPONENTS.md` records
+   of a run that did not happen.** `.agents/slop/COMPONENTS.md` records
    `unverified (no supported host — ADR 0001)` until a supported host runs the
    suite and the report is quoted.
 3. The suite runs on any of: **Apple Silicon macOS**, **x64 Windows**, or
@@ -81,7 +81,7 @@ the hardware is not the obstacle; the prebuilt binary and the toolchain are.
   the harness is written so a first run on a supported host is a single command.
 - Component plans get a precise contract ("this capability's verdict comes from
   scenario X") without a second test framework.
-- The blocker is recorded once, in an ADR and in `TODO.md`, instead of being
+- The blocker is recorded once, in an ADR and in `.agents/slop/TODO.md`, instead of being
   rediscovered by every agent that tries to render a window.
 
 **Harder**

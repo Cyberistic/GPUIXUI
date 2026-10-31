@@ -253,7 +253,7 @@ const stepperRoot: PartsContract = {
   hint: "Put StepperStep directly inside Stepper.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const stepperMeta = {
   name: "Stepper",
   tier: 2,

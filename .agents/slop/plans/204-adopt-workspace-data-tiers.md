@@ -75,9 +75,9 @@ Close with a **dependency order** for Tier 3–4: `split_pane` → `resizable` �
 | ---- | ------ |
 | `docs/workspace-semantics.md` | **create** — §2 |
 | `docs/README.md` | add the `workspace-semantics.md` row (Phase A/D) |
-| `PLAN.md` §4 | decision row: Tier 3–4 semantics follow this document; `<virtual-list>` is reused, not re-implemented |
-| `LICENSES/adabraka-ui.md` | MIT + `Copyright (c) 2025 Adabraka Team`; **semantics referenced, no source or asset copied** |
-| `TODO.md` | a Phase D task per §2's dependency order, and the detachable-tabs `unverified` item |
+| `.agents/slop/PLAN.md` §4 | decision row: Tier 3–4 semantics follow this document; `<virtual-list>` is reused, not re-implemented |
+| `.agents/slop/LICENSES/adabraka-ui.md` | MIT + `Copyright (c) 2025 Adabraka Team`; **semantics referenced, no source or asset copied** |
+| `.agents/slop/TODO.md` | a Phase D task per §2's dependency order, and the detachable-tabs `unverified` item |
 
 Do **not** create `packages/docking` or `packages/data-grid` here — this plan
 produces the semantics those plans consume.
@@ -121,7 +121,7 @@ Stop and report if:
 
 - `docs/workspace-semantics.md` exists, covers all nine pieces, and states each
   piece's GPUix provision honestly.
-- The dependency order is recorded and `TODO.md` has a Phase D task per step.
+- The dependency order is recorded and `.agents/slop/TODO.md` has a Phase D task per step.
 - `<virtual-list>` is reused, not re-implemented; detachable tabs are
   `unverified` with the reason.
 - No source and no asset copied.

@@ -14,7 +14,7 @@ import { sidebarPages } from "./sidebar-pages.test-util";
  *
  * It also has to say how to run what it lists. It once said the components'
  * examples were "not mounted in the playground yet — that registry is a tracked
- * task in TODO.md" long after `examples-mount` mounted all of them, so every
+ * task in .agents/slop/TODO.md" long after `examples-mount` mounted all of them, so every
  * command below is resolved to the manifest or the scenario registry on disk.
  */
 

@@ -503,7 +503,7 @@ const mentionList: PartsContract = {
   hint: "Put MentionInputItem rows directly inside MentionInputList.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const mentionInputMeta = {
   name: "Mention input",
   tier: 2,

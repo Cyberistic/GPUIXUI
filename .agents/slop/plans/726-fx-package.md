@@ -12,7 +12,7 @@
 (fireworks, particles, gravity stars, liquid/shine/ripple buttons…). About
 4 700 LOC of `src/*.tsx` alone is decorative. That dilutes the "native" story,
 grows the core's entry budget (`surface.budget.ts`) and puts a confetti cannon
-one import away from a `Button`. `MISSION.md` allows a package only with a real
+one import away from a `Button`. `.agents/slop/MISSION.md` allows a package only with a real
 responsibility: **decorative motion** is one, and it is separable.
 
 ## The split
@@ -57,7 +57,7 @@ A candidate with a consumer stays and is listed in the commit message.
    `rg -n "redirect" apps/docs/src`).
 4. Update `packages/components/src/inventory.ts`, `index.ts`,
    `surface.budget.ts` (lower the budget to the new measured value — run
-   `nub run --filter @gpuixui/components measure:surface`), `COMPONENTS.md`
+   `nub run --filter @gpuixui/components measure:surface`), `.agents/slop/COMPONENTS.md`
    (rows move to an "Effects" table), `README.md` layout table.
 5. Registry: the shadcn registry entries (`rg -n "registry" apps/docs/src/lib`)
    point at the new paths.

@@ -28,7 +28,7 @@ their **second consumer**, so they are hoisted (AGENTS.md §1), not duplicated:
 
 - `git mv apps/playground/src/blocks examples/blocks/src` and split each file
   into the layout below; update the film's three imports to
-  `@gpuixui/blocks/<slug>`. Coordinate through `TODO.md` → Launch film (the
+  `@gpuixui/blocks/<slug>`. Coordinate through `.agents/slop/TODO.md` → Launch film (the
   open "Docs blocks read their source from the compiled blocks" task is this
   step): **STOP** if the launch-film worktree has uncommitted changes under
   `apps/playground/src/blocks` (`git -C workspaces/launch-film status --short`).

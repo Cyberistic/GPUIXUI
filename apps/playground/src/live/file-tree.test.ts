@@ -49,8 +49,8 @@ const probe = read("./file-tree-probe.tsx");
 const fixture = read("./file-tree.ts");
 const component = read("../../../../packages/files/src/tree/file-tree.tsx");
 const page = read("../../../../packages/files/docs/file-tree.mdx");
-const inventory = read("../../../../COMPONENTS.md");
-const todo = read("../../../../TODO.md");
+const inventory = read("../../../../.agents/slop/COMPONENTS.md");
+const todo = read("../../../../.agents/slop/TODO.md");
 const readme = read("../../README.md");
 
 /** The probe's README section, so a value printed elsewhere cannot pass. */
@@ -62,7 +62,7 @@ const section = (() => {
   return readme.slice(start, end === -1 ? undefined : end);
 })();
 
-/** The COMPONENTS.md row named `title`. */
+/** The .agents/slop/COMPONENTS.md row named `title`. */
 const row = (title: string): string => {
   const start = inventory.indexOf(`| ${title} |`);
   if (start === -1) return "";

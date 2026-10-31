@@ -30,7 +30,7 @@ const page = readFileSync(new URL("../docs/icon.mdx", import.meta.url), "utf8");
 const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
 const iconSource = readFileSync(new URL("./Icon.tsx", import.meta.url), "utf8");
 const lucideRecord = readFileSync(
-  new URL("../../../LICENSES/lucide.md", import.meta.url),
+  new URL("../../../.agents/slop/LICENSES/lucide.md", import.meta.url),
   "utf8",
 );
 
@@ -148,10 +148,10 @@ describe("the icon page", () => {
   it("cites a provenance record that carries both notices", () => {
     // The claim that used to be false: the page said no third-party icon file
     // was copied while most of the geometry is Lucide's, and pointed at a
-    // `LICENSES/` directory with no Lucide record — an ISC/MIT notice the
+    // `.agents/slop/LICENSES/` directory with no Lucide record — an ISC/MIT notice the
     // release owed and did not carry. The record is cited from the README now
     // that the page's provenance section is pruned, and the notices stay whole.
-    expect(readme).toContain("LICENSES/lucide.md");
+    expect(readme).toContain(".agents/slop/LICENSES/lucide.md");
     expect(lucideRecord).toContain("lucide-static` `1.61.0`");
     expect(lucideRecord).toContain("## ISC License");
     expect(lucideRecord).toContain("Lucide Icons and Contributors");
@@ -167,7 +167,7 @@ describe("the icons README", () => {
     // The same retracted claim the page carried: most of the geometry *is*
     // Lucide's, so a README that denies it and points at a directory with no
     // Lucide record undoes the page's correction.
-    expect(readme).toContain("LICENSES/lucide.md");
+    expect(readme).toContain(".agents/slop/LICENSES/lucide.md");
     expect(readme).not.toContain("copied verbatim");
   });
 

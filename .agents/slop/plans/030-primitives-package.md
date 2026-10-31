@@ -226,7 +226,7 @@ require every variant to declare *some* feedback.
 ### 3.3 `core/variant.registry.ts`
 
 One table per component mapping `(variant, size, state)` → the semantic class
-names the docs site and `COMPONENTS.md` quote. The table is data: the docs app
+names the docs site and `.agents/slop/COMPONENTS.md` quote. The table is data: the docs app
 can read it, and a test asserts every declared variant resolves to a distinct,
 non-empty style (catching a variant that silently renders as the default).
 
@@ -325,7 +325,7 @@ Tests live beside the code as `src/**/*.test.ts`, run with
 **Runtime rendering is not testable on this machine** (plan 020 §3). Render,
 hit-test, focus-order and a11y-tree assertions for these components are a task
 for `packages/testing` + `apps/playground` (playground workstream) and are
-recorded in `TODO.md`. Until they run, every Tier 1 `COMPONENTS.md` row is `wip`
+recorded in `.agents/slop/TODO.md`. Until they run, every Tier 1 `.agents/slop/COMPONENTS.md` row is `wip`
 and says so.
 
 Prove a fix with `scripts/verify-two-directions.sh <test-file>` before ticking
@@ -336,7 +336,7 @@ anything: revert the source change, watch the test fail, restore, watch it pass.
 - `nub run check` is green from the worktree root.
 - Every Tier 1 component has: code, a `core` behaviour module with a real test,
   an example in `examples/`, a docs page (docs-site workstream), and a
-  `COMPONENTS.md` row that is honest about runtime verification.
+  `.agents/slop/COMPONENTS.md` row that is honest about runtime verification.
 - No colour/space/radius/font literal outside `core/metrics.ts` and fixtures.
 - No `any`, cast, `@ts-ignore`, `throw` in domain code, `console.*`, native
   string/array helpers, or imperative loop — `nub run lint` and the
@@ -346,9 +346,9 @@ anything: revert the source change, watch the test fail, restore, watch it pass.
 
 ## 8. Open items to record, not solve
 
-- `PLAN.md` §4: source-first exports (no `build` step) until a publish
+- `.agents/slop/PLAN.md` §4: source-first exports (no `build` step) until a publish
   requirement exists; the `PrimitiveTheme` port and the tokens contract.
-- `TODO.md`: runtime tests for Tier 1 (playground workstream);
+- `.agents/slop/TODO.md`: runtime tests for Tier 1 (playground workstream);
   `aria-checked`/`aria-valuenow` gaps (upstream GPUix); density in tokens.
 
 ---
@@ -396,16 +396,16 @@ green from the worktree root (`packages/primitives` 136 tests, `packages/icons`
   `state`, `layout`, `selection`, `loading`, `color` — each with a suite.
 - `components/`: all 19 Tier 1 components, plus `ThemeProvider` and
   `testing/element.ts`, the Schema-decoded element-tree reader the suites assert
-  through (D11 in `PLAN.md`).
+  through (D11 in `.agents/slop/PLAN.md`).
 - `examples/basic-app`: the Tier 1 set composed into one settings workflow.
 - `packages/primitives/README.md`: the theme port, density, the component list
   and the runtime-verification gap.
 
 What remains, and who owns it: **docs pages** (docs-site), **runtime
 verification** — render, hit-test, focus order, scroll offset, the a11y tree
-(playground, tracked in `TODO.md`), and the **tokens hand-off** (the example's
+(playground, tracked in `.agents/slop/TODO.md`), and the **tokens hand-off** (the example's
 `src/theme.ts` is a stand-in until `@gpuixui/tokens` lands). Every Tier 1
-`COMPONENTS.md` row is `wip` and says why.
+`.agents/slop/COMPONENTS.md` row is `wip` and says why.
 
 Proven in both directions: the RadioGroup arrow-select wiring
 (`src/components/selection.test.tsx` fails when `renderRadioGroup` stops calling

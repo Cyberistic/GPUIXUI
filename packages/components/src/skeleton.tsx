@@ -46,7 +46,7 @@ export const Skeleton = ({ animate, ...rest }: SkeletonProps) => (
   />
 );
 
-/** Inventory record, mirrored into `COMPONENTS.md`'s Skeletons row. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Skeletons row. */
 export const skeletonMeta = {
   name: "Skeletons",
   tier: 1,

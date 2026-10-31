@@ -3,7 +3,7 @@
  *
  * This suite fails when a component is marked `done` without a native behaviour
  * test, when a docs page or example named by a record does not exist, when a
- * `COMPONENTS.md` row disagrees with the record's status or GPUix support, when a
+ * `.agents/slop/COMPONENTS.md` row disagrees with the record's status or GPUix support, when a
  * finished Tier 2 row has no record (a `done (composed)` row excepted: it ships
  * a documented composition, not a component), when two records claim the same
  * name or docs page, when one Tier 2 component has two rows (a stray `todo` copy
@@ -54,13 +54,13 @@ const countBehaviourTests = (relative: string): number =>
     ),
   );
 
-/** The Tier 2 rows of `COMPONENTS.md`, parsed from its markdown table. */
+/** The Tier 2 rows of `.agents/slop/COMPONENTS.md`, parsed from its markdown table. */
 const rowsBetween = (
   startHeading: string,
   endHeading: string,
 ): ReadonlyArray<Row> => {
   const markdown = readFileSync(
-    fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
+    fileURLToPath(new URL(".agents/slop/COMPONENTS.md", repoRoot)),
     "utf8",
   );
   const start = markdown.indexOf(startHeading);
@@ -129,7 +129,7 @@ const readmeSection = (heading: string): string => {
   return end < 0 ? rest : rest.slice(0, end);
 };
 
-/** Every `COMPONENTS.md` row that belongs to this package's inventory. */
+/** Every `.agents/slop/COMPONENTS.md` row that belongs to this package's inventory. */
 const packageRows = (): ReadonlyArray<Row> => [
   ...tier2Rows(),
   ...animatedRows(),
@@ -194,7 +194,7 @@ describe("inventory", () => {
     expect(problems).toEqual([]);
   });
 
-  it("agrees with its COMPONENTS.md row", () => {
+  it("agrees with its .agents/slop/COMPONENTS.md row", () => {
     // A record's row is wherever its own table lives: the Tier 2 and animated
     // tables for this package's parts, and the Tier 5 target table for
     // `MultiStepForm`, the one specialised component here.
@@ -205,7 +205,7 @@ describe("inventory", () => {
         (candidate) => candidate.name === meta.name,
       );
       return Option.match(row, {
-        onNone: () => [`${meta.name}: no COMPONENTS.md row`],
+        onNone: () => [`${meta.name}: no .agents/slop/COMPONENTS.md row`],
         onSome: (found) => {
           if (found.status !== meta.status) {
             return [
@@ -282,7 +282,7 @@ describe("inventory", () => {
           (candidate) => candidate.name === meta.name,
         );
         return Option.match(row, {
-          onNone: () => [`${meta.name}: no COMPONENTS.md row`],
+          onNone: () => [`${meta.name}: no .agents/slop/COMPONENTS.md row`],
           onSome: (found) => {
             const claimed = Option.flatMap(
               Option.fromNullishOr(
@@ -327,7 +327,7 @@ describe("inventory", () => {
   it("records one blocked capability for every partial row", () => {
     // A partial verdict is only useful if a reader can see what is missing and
     // what the component does instead. The capability table at the end of
-    // `COMPONENTS.md` is the one place the gaps are explained, so every row
+    // `.agents/slop/COMPONENTS.md` is the one place the gaps are explained, so every row
     // carries exactly one `blocked by … (issue) — workaround` line rather than
     // a paragraph of measurements.
     const partialRows = Arr.filter(
@@ -882,10 +882,12 @@ describe("the measured target rows", () => {
   const oneRow = (name: string): Row => {
     const rows = rowsNamed(name);
     if (rows.length !== 1) {
-      throw new Error(`COMPONENTS.md: ${rows.length} rows named ${name}`);
+      throw new Error(
+        `.agents/slop/COMPONENTS.md: ${rows.length} rows named ${name}`,
+      );
     }
     return Option.getOrElse(Arr.head(rows), () => {
-      throw new Error(`COMPONENTS.md: no row named ${name}`);
+      throw new Error(`.agents/slop/COMPONENTS.md: no row named ${name}`);
     });
   };
 
@@ -920,7 +922,7 @@ describe("the measured target rows", () => {
     ];
     expect(
       missingClaims(
-        "COMPONENTS.md's Drawer row",
+        ".agents/slop/COMPONENTS.md's Drawer row",
         rowText(oneRow("Drawer")),
         claims,
       ),
@@ -950,7 +952,7 @@ describe("the measured target rows", () => {
     ];
     expect(
       missingClaims(
-        "COMPONENTS.md's Carousel row",
+        ".agents/slop/COMPONENTS.md's Carousel row",
         rowText(oneRow("Carousel")),
         claims,
       ),
@@ -978,7 +980,7 @@ describe("the measured target rows", () => {
     ];
     expect(
       missingClaims(
-        "COMPONENTS.md's Image zoom row",
+        ".agents/slop/COMPONENTS.md's Image zoom row",
         rowText(oneRow("Image zoom")),
         claims,
       ),
@@ -1008,7 +1010,7 @@ describe("the measured target rows", () => {
     ];
     expect(
       missingClaims(
-        "COMPONENTS.md's Color picker row",
+        ".agents/slop/COMPONENTS.md's Color picker row",
         rowText(oneRow("Color picker")),
         claims,
       ),
@@ -1042,7 +1044,7 @@ describe("the measured target rows", () => {
     ];
     expect(
       missingClaims(
-        "COMPONENTS.md's player row",
+        ".agents/slop/COMPONENTS.md's player row",
         rowText(oneRow("Video / audio player + waveform")),
         claims,
       ),
@@ -1087,7 +1089,7 @@ describe("the measured target rows", () => {
         (candidate) => candidate.name === "Video / audio player + waveform",
       ),
       () => {
-        throw new Error("COMPONENTS.md: no media row");
+        throw new Error(".agents/slop/COMPONENTS.md: no media row");
       },
     );
     expect(row.support).toContain("partial");
@@ -1129,7 +1131,7 @@ describe("the measured target rows", () => {
     const row = Option.getOrElse(
       Arr.head(rowsNamed("Lists / list items")),
       () => {
-        throw new Error("COMPONENTS.md: no Lists row");
+        throw new Error(".agents/slop/COMPONENTS.md: no Lists row");
       },
     );
     Arr.forEach(
@@ -1295,7 +1297,9 @@ describe("the measured target rows", () => {
         (candidate) => candidate.name === "Notification centre",
       ),
       () => {
-        throw new Error("COMPONENTS.md: no Notification centre row");
+        throw new Error(
+          ".agents/slop/COMPONENTS.md: no Notification centre row",
+        );
       },
     );
     expect(row.status).not.toBe("todo");
@@ -1326,7 +1330,7 @@ describe("the measured target rows", () => {
 
     const rows = rowsNamed("Keyboard navigation");
     const row = Option.getOrElse(Arr.head(rows), () => {
-      throw new Error("COMPONENTS.md: no Keyboard navigation row");
+      throw new Error(".agents/slop/COMPONENTS.md: no Keyboard navigation row");
     });
     expect(row.support).not.toBe("?");
     expect(row.support).toContain("measured");

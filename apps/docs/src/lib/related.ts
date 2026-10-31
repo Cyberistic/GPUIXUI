@@ -1,7 +1,7 @@
 /**
  * The related components a page points at.
  *
- * `MISSION.md` asks every component page for its related components. Neither
+ * `.agents/slop/MISSION.md` asks every component page for its related components. Neither
  * frame writes that list itself — a curated page would have to retype it, and a
  * package page is Markdown the site mounts — so the site answers it here and
  * `RelatedStrip` prints the answer at the end of both.

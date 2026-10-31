@@ -549,7 +549,7 @@ export const DiffViewer = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` by the owning workstream. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` by the owning workstream. */
 export const diffViewerMeta = {
   name: "Diff viewer",
   tier: 4,

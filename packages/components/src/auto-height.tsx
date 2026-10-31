@@ -218,7 +218,7 @@ export const AutoHeight = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 600). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const autoHeightMeta = {
   name: "Auto height",
   tier: 5,

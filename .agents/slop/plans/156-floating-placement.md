@@ -67,8 +67,8 @@ Steps:
 | `apps/playground/src/scenarios/floating.tsx` | new scenario |
 | `apps/playground/src/scenarios/index.ts` | register it; add `"floating"` to `CORE_CAPABILITIES` |
 | `apps/playground/README.md` | scenario count `19 → 20`; measured-facts row; structure line |
-| `COMPONENTS.md` | evidence table row for `floating`; notes on Popover / Dropdown / Context / Command menus cite it |
-| `TODO.md` | tick the item; progress bar |
+| `.agents/slop/COMPONENTS.md` | evidence table row for `floating`; notes on Popover / Dropdown / Context / Command menus cite it |
+| `.agents/slop/TODO.md` | tick the item; progress bar |
 | `.agents/slop/plans/README.md` | index this plan |
 | `.agents/slop/plans/140-…md` §4 | the `floating` row of measured facts |
 
@@ -101,7 +101,7 @@ Stop and report with the measured bounds if:
   near the bottom would open off-screen and the docs must say the component
   must flip itself.
 - **`align="center"` does not centre.** Record both centres.
-- **A change outside this workstream is needed**: record it in `TODO.md`.
+- **A change outside this workstream is needed**: record it in `.agents/slop/TODO.md`.
 
 ## 6. Test plan
 
@@ -118,7 +118,7 @@ Stop and report with the measured bounds if:
   capability.
 - The suite is **20/20 green on this host**, exit `0`.
 - The two-direction proof is recorded.
-- The measured geometry is in plan `140` §4, `COMPONENTS.md` and the app README.
+- The measured geometry is in plan `140` §4, `.agents/slop/COMPONENTS.md` and the app README.
 - `nub run check`, `nub run lint`, `nub run test` pass.
 
 ## 8. Outcome (executed on this host, 2026-10-17)

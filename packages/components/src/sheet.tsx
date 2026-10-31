@@ -33,7 +33,7 @@ export type {
 import { drawerMeta } from "./drawer.js";
 
 /**
- * Inventory record, mirrored into `COMPONENTS.md`.
+ * Inventory record, mirrored into `.agents/slop/COMPONENTS.md`.
  *
  * It carries the drawer's limitations — the surface is the same one — and adds
  * the fact a reader needs first: there is one implementation, not two.

@@ -26,7 +26,7 @@ const read = (path: string): string =>
 const page = read("../../docs/charts.mdx");
 const source = read("./chart.tsx");
 const recipe = read("./recipe.ts");
-const inventory = read("../../../../COMPONENTS.md");
+const inventory = read("../../../../.agents/slop/COMPONENTS.md");
 
 /** The value a recipe constant is declared with. */
 const recipeConstant = (name: string): string => {
@@ -42,7 +42,8 @@ const chartsRow = (): string => {
   const row = inventory
     .split("\n")
     .find((line) => line.startsWith("| Charts |"));
-  if (row === undefined) throw new Error("COMPONENTS.md has no Charts row");
+  if (row === undefined)
+    throw new Error(".agents/slop/COMPONENTS.md has no Charts row");
   return row;
 };
 

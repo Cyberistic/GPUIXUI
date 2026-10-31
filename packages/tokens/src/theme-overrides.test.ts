@@ -223,7 +223,7 @@ describe("an edit a consumer keeps", () => {
     const tokens = read("../../../docs/tokens.md");
     const design = read("../../../docs/design-system.md");
     const readme = read("../README.md");
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
     expect(tokens).toContain("#### Exporting an edit");
     expect(tokens).toContain("themeOverrides(theme, base)");

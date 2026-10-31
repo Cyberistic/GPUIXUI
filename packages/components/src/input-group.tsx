@@ -400,7 +400,7 @@ const inputGroupRoot: PartsContract = {
   hint: "Put InputGroupInput (or InputGroupTextarea) and its addons directly inside InputGroup.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const inputGroupMeta = {
   name: "Input group",
   tier: 2,

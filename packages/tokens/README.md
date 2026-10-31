@@ -1396,7 +1396,7 @@ textStyle(theme, "body").fontFamily; // "Inter"
 
 The library ships **no font family of its own** yet: a bundled face needs a
 licence review that permits redistribution, and that decision is recorded in
-`TODO.md`. A consumer registers their own typeface, which is the same route.
+`.agents/slop/TODO.md`. A consumer registers their own typeface, which is the same route.
 
 ## Native text hosts
 

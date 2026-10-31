@@ -391,7 +391,7 @@ number, so the two cannot drift.
 | `src/time-picker.tsx`, `src/time-picker/time.ts` | TimePicker: a 24-hour `HH:mm` field in two labelled segments, with clamped typing, arrow carry/wrap, `minuteStep` and an optional clear |
 | `src/toast.tsx`, `src/toast/*` | the toast provider, viewport and Effect store: a three-card peeking stack that unfolds on hover/focus, one-axis swipe, promise rows, and the stack-wide clock hold |
 | `src/shimmer.tsx`, `src/shimmer/logic.ts` | Shimmer: a travelling highlight inked into a text run per code point, or a row of two-stop gradient strips over children it cannot recolour, with a reduced-motion still |
-| `src/inventory.ts` | the component inventory records, checked against `COMPONENTS.md` |
+| `src/inventory.ts` | the component inventory records, checked against `.agents/slop/COMPONENTS.md` |
 | `src/auto-height.tsx` | AutoHeight: a reveal that tweens to its content's measured height (plan 600) |
 | `src/typing-text.tsx`, `src/typing-text/logic.ts` | TypingText: a code-point reveal on a real-time timer |
 | `src/counting-number.tsx`, `src/counting-number/logic.ts` | CountingNumber: a number interpolated by `@gpuixui/motion` and painted each frame |

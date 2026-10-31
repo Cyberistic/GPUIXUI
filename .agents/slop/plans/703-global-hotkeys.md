@@ -7,7 +7,7 @@
 | Owner | runtime owner |
 | Depends on | 700 (focus/keys not required, but the same platform seam) |
 | Source | `references/fc-gpui` (Apache-2.0) `platform/mac/global_hotkey.rs` (357), `platform/linux/global_hotkey.rs` (263), `platform/windows/global_hotkey.rs` (125); upstream `remorses/zed` at the pin; `remorses/gpuix` fork |
-| Feeds | the `Global / OS shortcut registration` gap in `COMPONENTS.md` |
+| Feeds | the `Global / OS shortcut registration` gap in `.agents/slop/COMPONENTS.md` |
 
 ---
 ## Goal
@@ -17,7 +17,7 @@ Register an OS-wide shortcut that fires while the app is unfocused.
 ## Why
 
 A tray app (plan 702) that cannot be summoned by a shortcut is half the feature;
-`COMPONENTS.md` records the gap as unfiled.
+`.agents/slop/COMPONENTS.md` records the gap as unfiled.
 
 ## Work
 

@@ -579,7 +579,9 @@ describe("a surface name this release does not ship", () => {
       " ",
     ),
     "packages/tokens/README.md": source("../README.md").replace(/\s+/g, " "),
-    "COMPONENTS.md": source("../../../COMPONENTS.md").replace(/\s+/g, " "),
+    ".agents/slop/COMPONENTS.md": source(
+      "../../../.agents/slop/COMPONENTS.md",
+    ).replace(/\s+/g, " "),
   });
 
   it("answers the anywhere-safe brand, not the unmeasured fill", () => {

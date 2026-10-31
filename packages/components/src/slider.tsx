@@ -127,7 +127,7 @@ export const Slider = (props: SliderProps) => {
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md`'s Slider row. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Slider row. */
 export const sliderMeta = {
   name: "Slider",
   tier: 1,

@@ -65,7 +65,7 @@ const trendCells = shippedStyles.flatMap((theme) => {
 
 /** The Tier 3 row that owns the sweep. */
 const statisticRow = readFileSync(
-  new URL("../../../../COMPONENTS.md", import.meta.url),
+  new URL("../../../../.agents/slop/COMPONENTS.md", import.meta.url),
   "utf8",
 )
   .split("\n")

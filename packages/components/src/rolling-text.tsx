@@ -171,7 +171,7 @@ export const RollingText = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 600). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const rollingTextMeta = {
   name: "Rolling text",
   tier: 5,

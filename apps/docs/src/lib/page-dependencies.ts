@@ -1,7 +1,7 @@
 /**
  * What a package page's component is built on.
  *
- * `MISSION.md` asks every component page to list the packages it needs. The
+ * `.agents/slop/MISSION.md` asks every component page to list the packages it needs. The
  * package pages are Markdown, so the site cannot generate a table into them —
  * and a hand-written list beside a component drifts the first time an import
  * moves. This module is the model the site renders instead: the workspace

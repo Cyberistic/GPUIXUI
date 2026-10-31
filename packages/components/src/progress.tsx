@@ -82,7 +82,7 @@ export const Progress = ({
   </PrimitiveProgress>
 );
 
-/** Inventory record, mirrored into `COMPONENTS.md`'s Progress row. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Progress row. */
 export const progressMeta = {
   name: "Progress",
   tier: 1,

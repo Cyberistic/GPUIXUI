@@ -72,7 +72,7 @@ const read = (path: string): string =>
 
 const catalogue = read("../../../docs/tokens.md");
 const designSystem = read("../../../docs/design-system.md");
-const inventory = read("../../../COMPONENTS.md");
+const inventory = read("../../../.agents/slop/COMPONENTS.md");
 const readme = read("../README.md");
 
 /** Every shipped, high-contrast, platform and authored style, named. */
@@ -128,7 +128,7 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("records the derived press beside the placement", () => {
-    // The table's own comment sent a reader to `TODO.md` for the two transitions
+    // The table's own comment sent a reader to `.agents/slop/TODO.md` for the two transitions
     // the derivation answers, so the placement read as a contract for a paint
     // nothing made. The source and the table have to agree.
     const source = readFileSync(
@@ -137,7 +137,7 @@ describe("the wash a pointer state paints", () => {
     );
 
     expect(source).toContain("derived by `pointerWash`");
-    expect(source).not.toContain("is recorded in `TODO.md`");
+    expect(source).not.toContain("is recorded in `.agents/slop/TODO.md`");
     expect(
       decorativeSurfaces.some(
         ({ surface, role, over }) =>
@@ -459,7 +459,7 @@ describe("the wash a pointer state paints", () => {
     [readme, inventory, catalogue, designSystem].forEach((document, index) => {
       const page = [
         "packages/tokens/README.md",
-        "COMPONENTS.md",
+        ".agents/slop/COMPONENTS.md",
         "docs/tokens.md",
         "docs/design-system.md",
       ][index];
@@ -472,7 +472,9 @@ describe("the wash a pointer state paints", () => {
     });
 
     [readme, inventory].forEach((document, index) => {
-      const page = ["packages/tokens/README.md", "COMPONENTS.md"][index];
+      const page = ["packages/tokens/README.md", ".agents/slop/COMPONENTS.md"][
+        index
+      ];
       const text = document.replace(/\s+/g, " ");
 
       expect(text.includes("`TableRow`"), `${page} TableRow`).toBe(true);
@@ -481,7 +483,7 @@ describe("the wash a pointer state paints", () => {
 
     expect(
       inventory.replace(/\s+/g, " ").includes("still the open half"),
-      "COMPONENTS.md still calls a primitives recipe the open half",
+      ".agents/slop/COMPONENTS.md still calls a primitives recipe the open half",
     ).toBe(false);
     expect(
       designSystem.replace(/\s+/g, " ").includes("both packages derive it"),
@@ -612,7 +614,7 @@ describe("the arithmetic the press prints", () => {
       ["docs/design-system.md", designSystem, `invisible in **${count}**`],
       ["packages/tokens/README.md", readme, `invisible in **${count}**`],
       [
-        "COMPONENTS.md",
+        ".agents/slop/COMPONENTS.md",
         inventory,
         `invisible in **${count}** of the ${spoken[styles]} shipped styles`,
       ],
@@ -646,7 +648,7 @@ describe("the arithmetic the press prints", () => {
         "docs/tokens.md",
         "docs/design-system.md",
         "packages/tokens/README.md",
-        "COMPONENTS.md",
+        ".agents/slop/COMPONENTS.md",
       ][page];
       const text = flat(document);
 

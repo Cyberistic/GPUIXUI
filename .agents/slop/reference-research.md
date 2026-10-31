@@ -361,7 +361,7 @@ runtime, and in adabraka's case a *forked* GPUI.
 | Keyboard semantics per component | 37 `## Keyboard interaction` sections; `activate_on_focus`, `loop_focus`, roving focus, RTL roving in `toggle_group/tests/rtl_roving.rs` | Our key handling + `tabIndex`/`onKeyDown` (GPUix has real focus handles) |
 | Theming token structure | `theme/tokens.rs` field list | A token package; matches our mission's semantic-role list almost exactly |
 | Accessibility model + honest gap list | `Role::TabList`/`Role::Tab`/`Role::TabPanel`, no `aria-controls` in the pinned GPUI | GPUix exposes `role` + `aria-*` (AccessKit), so roles port; relationship wiring is the same known gap |
-| Capability/limitation map | `GAP_ANALYSIS.md` §2 | Our Phase A capability map and COMPONENTS.md "GPUix support" column |
+| Capability/limitation map | `GAP_ANALYSIS.md` §2 | Our Phase A capability map and .agents/slop/COMPONENTS.md "GPUix support" column |
 | Test strategy | 1,000+ window-free runtime tests | Unit-test the state model, render-test separately |
 
 **The one case where a straight port *is* plausible — and it is not a Rust one.**
@@ -378,14 +378,14 @@ for base-gpui is attribution for *design* only.
 
 ---
 
-## 5. Gap analysis against `COMPONENTS.md` (90 rows)
+## 5. Gap analysis against `.agents/slop/COMPONENTS.md` (90 rows)
 
-`COMPONENTS.md` has 20 + 22 + 15 + 22 + 11 = 90 rows. Mapping below is by
+`.agents/slop/COMPONENTS.md` has 20 + 22 + 15 + 22 + 11 = 90 rows. Mapping below is by
 semantics; "covered" means a row exists that the component plausibly satisfies.
 
 ### 5a. base-gpui (37 components) — missing list
 
-**Genuinely missing — they have it, `COMPONENTS.md` has no row at all:**
+**Genuinely missing — they have it, `.agents/slop/COMPONENTS.md` has no row at all:**
 
 1. **Slider** — `SliderRoot/Control/Track/Indicator/Thumb/Label/Value`. We have no
    slider of any kind.
@@ -424,7 +424,7 @@ Tooltip→Tooltips.
 
 ### 5b. adabraka-ui — missing list
 
-**Genuinely missing — no row in `COMPONENTS.md`:**
+**Genuinely missing — no row in `.agents/slop/COMPONENTS.md`:**
 
 1. **Slider** (`components/slider.rs`, horizontal + vertical, `SliderSize`)
 2. **Range slider** (`components/range_slider.rs`, `RangeSliderState`)
@@ -460,7 +460,7 @@ Tooltip→Tooltips.
 - **Floating action button** (`components/floating_action_button.rs`) and
   **copy button** (`components/copy_button.rs`) → "Buttons".
 
-**Missing but out of scope / decorative** (no `COMPONENTS.md` row, and I do not
+**Missing but out of scope / decorative** (no `.agents/slop/COMPONENTS.md` row, and I do not
 recommend adding one): `aurora`, `meteors`, `noise`, `dot_pattern`, `confetti`,
 `particle_emitter`, `ripple`, `marquee`, `type_writer`, `text_reveal`,
 `text_highlight`, `gradient_text`, `gradient_border`, `glass_morphism` (also
@@ -548,7 +548,7 @@ guides already document every builder with an exact signature — that is a
 reviewed API design we would otherwise have to invent. Cost: **low–medium** —
 a reading/translation task (37 guides), no code copy, no licence obligation
 beyond attribution for design. Output: prop-type specs per component plus the
-"parts" decomposition recorded in PLAN.md/ADR.
+"parts" decomposition recorded in .agents/slop/PLAN.md/ADR.
 
 **2. base-gpui's runtime/context/parts state model → adopt as our state
 convention.**
@@ -572,7 +572,7 @@ instead of a blind spot. Cost: **low** — one token module plus a theme provide
 and light/dark sets; the work is naming discipline, not discovery.
 
 **4. adabraka-ui's GPUI capability map → adopt as the Phase A capability map and
-the `COMPONENTS.md` "GPUix support" evidence.**
+the `.agents/slop/COMPONENTS.md` "GPUix support" evidence.**
 Reason: the mission forbids faking unsupported capabilities, and this is a
 pre-researched, itemised list of exactly what the renderer underneath GPUix
 cannot do (backdrop blur, CSS filters, clip-path, blend modes, inset shadows,
@@ -626,7 +626,7 @@ the Tier 5 code/diff/markdown rows should start from these, not from scratch.
 3. **GPUix capability truth is unresolved.** `GAP_ANALYSIS.md` describes upstream
    GPUI; GPUix wraps GPUI and adds AccessKit roles, `tabIndex`/focus handles, and
    `<virtual-list>`. Every limit in §3 must be re-verified against GPUix 0.10.0
-   before it is recorded in `COMPONENTS.md`. GPUix's host-element list is only
+   before it is recorded in `.agents/slop/COMPONENTS.md`. GPUix's host-element list is only
    partly documented — `ElementType` comes from `@gpuix/native`
    (`packages/react/src/types/host.ts` imports it), so I could not enumerate the
    full intrinsic-element set; I confirmed `<virtual-list>`, `<code>`, `<diff>`,

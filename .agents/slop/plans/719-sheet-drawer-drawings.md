@@ -49,7 +49,7 @@ the component is still wrong, this plan records it instead of hiding it.
   grabber, panel and close control.
 - `apps/docs/README.md`; `apps/docs/content/docs/components/drawer.mdx`,
   `packages/components/docs/{drawer,sheet}.mdx` — one sentence each on the
-  first paint; `TODO.md`; this plan's index row.
+  first paint; `.agents/slop/TODO.md`; this plan's index row.
 
 ## Implementation
 

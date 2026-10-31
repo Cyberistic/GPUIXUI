@@ -1,7 +1,7 @@
 /**
  * The inventory lanes.
  *
- * `COMPONENTS.md` is the inventory's source of truth. The three composition
+ * `.agents/slop/COMPONENTS.md` is the inventory's source of truth. The three composition
  * pages (`/data-display`, `/workspace`) render their
  * rows straight from its tier tables, so a page cannot call a row shipped while
  * the inventory says `todo`. The parser keeps the table's four columns and
@@ -17,7 +17,7 @@
  */
 export type InventoryTier = number | "animated";
 
-/** One row of a `COMPONENTS.md` component table. */
+/** One row of a `.agents/slop/COMPONENTS.md` component table. */
 export interface InventoryRow {
   readonly tier: InventoryTier;
   readonly name: string;

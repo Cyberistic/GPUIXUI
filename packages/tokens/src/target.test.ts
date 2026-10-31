@@ -13,7 +13,7 @@
  * The adoption describe block below guards the other half: the pages taught a
  * **12px tree chevron** that no painter draws (the tree's chevron is a 16px
  * `Icon`, and its `pointerEvents: "none"` makes the *row* the target) and sent a
- * reader to a `TODO.md` row that no longer exists, while the inventory called a
+ * reader to a `.agents/slop/TODO.md` row that no longer exists, while the inventory called a
  * tree view "remaining" after one had shipped. Each page is read against the
  * painter, and every proof a page cites must measure the floor.
  *
@@ -145,7 +145,7 @@ describe("the target sizes' adoption", () => {
   it("teaches the drawn sizes a painter draws, not a chevron that is a target", () => {
     // The retracted claims: a "tree chevron at iconSize.xs (12px)" — no painter
     // draws a 12px chevron and the tree's is a 16px `Icon` — and a pointer to a
-    // `TODO.md` row that had already been resolved and removed.
+    // `.agents/slop/TODO.md` row that had already been resolved and removed.
     (
       [
         ["docs/tokens.md", catalogue],
@@ -154,7 +154,7 @@ describe("the target sizes' adoption", () => {
     ).forEach(([label, page]) => {
       expect(page, label).not.toMatch(/tree chevron at `iconSize\.xs`/);
       expect(page, label).not.toContain("12px chevron");
-      expect(page, label).not.toContain("TODO.md");
+      expect(page, label).not.toContain(".agents/slop/TODO.md");
     });
     expect(catalogue).toContain("rating star at 18px");
     expect(system).toContain("rating star's 18–20px glyph");
@@ -195,7 +195,7 @@ describe("the target sizes' adoption", () => {
 
   it("cannot call a landed tree remaining", () => {
     const row =
-      read("COMPONENTS.md")
+      read(".agents/slop/COMPONENTS.md")
         .split("\n")
         .find((line) => line.startsWith("| Target sizes ")) ?? "";
 

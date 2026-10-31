@@ -39,7 +39,7 @@ strength of the unit tests alone.
 - `packages/tokens/src/*.test.ts` — the existing test convention (vitest, co-located).
 - GPUix is pinned exact: `@gpuix/react` / `@gpuix/native` **0.10.0** (pre-1.0).
 - **No `registerFont` call exists anywhere**, there are no font files in the repository, and
-  `LICENSES/` has no font entry.
+  `.agents/slop/LICENSES/` has no font entry.
 - GPUix is pinned exact: `@gpuix/react` / `@gpuix/native` **0.10.0** (pre-1.0).
 
 ## Steps
@@ -75,7 +75,7 @@ is ideal). Verify each font's own licence file — do not assume.
 plus 3,274 Lucide-geometry icons and a sample MP3 with **no licence file under `assets/`**;
 they are not ours to copy.
 
-Place the files under `packages/tokens/fonts/` and add one `LICENSES/` entry per family: the
+Place the files under `packages/tokens/fonts/` and add one `.agents/slop/LICENSES/` entry per family: the
 family, its version, the licence, and the copyright line. Include the licence text itself.
 
 **STOP** if a candidate's licence does not permit redistribution — choose another. Never vendor
@@ -163,12 +163,12 @@ native runtime can produce.
       retry-after-throw, and the theme route); docs in `docs/tokens.md` §Fonts and
       `packages/tokens/README.md`.
 - [x] No bundled font files: this landed as a consumer-only delivery, so step 2 is
-      skipped and there is no `LICENSES/` entry to add. Recorded in the docs and
-      `COMPONENTS.md`.
+      skipped and there is no `.agents/slop/LICENSES/` entry to add. Recorded in the docs and
+      `.agents/slop/COMPONENTS.md`.
 - [x] This package's gates: `nub run --filter @gpuixui/tokens check-types` and
       `test` (231 tests) exit 0; repo lint and fmt are clean for the touched paths.
 - [ ] **Native smoke test passes — needs a window; the playground owns it.** The
-      cross-team row is in `TODO.md` → Interlocks, so the plan stays `blocked` on the
+      cross-team row is in `.agents/slop/TODO.md` → Interlocks, so the plan stays `blocked` on the
       visual half rather than claiming the face paints.
 
 **Landing note (2026-10-21).** The runtime is now `@gpuix/native@0.11.0`, whose
@@ -185,7 +185,7 @@ B1.
 - A candidate font's licence does not permit redistribution → pick another; never vendor it.
 - The native smoke test cannot run → the plan stays `blocked (B1)`; do not mark it done.
 - The registration API needs a change outside `packages/tokens` → record it as a task in
-  `TODO.md` rather than editing another workstream's paths.
+  `.agents/slop/TODO.md` rather than editing another workstream's paths.
 
 ## Maintenance notes
 

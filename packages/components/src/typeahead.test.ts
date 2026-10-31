@@ -11,7 +11,7 @@
  * could not advance on a repeated letter; and a typed `Enter` (whose `keyChar`
  * is a newline) was read as text instead of an activation. The window rule also
  * has to be reachable from another package: it lived in `src/internal/`, which a
- * tree could not import, so `@gpuixui/data` kept a copy (TODO.md tracks the
+ * tree could not import, so `@gpuixui/data` kept a copy (.agents/slop/TODO.md tracks the
  * adoption).
  */
 

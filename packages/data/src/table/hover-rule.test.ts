@@ -25,7 +25,7 @@ const read = (relative: string): string =>
 const tableSource = read("./table.tsx");
 const treeSource = read("../tree/tree-view.tsx");
 const readme = read("../../README.md");
-const inventory = read("../../../../COMPONENTS.md");
+const inventory = read("../../../../.agents/slop/COMPONENTS.md");
 const capabilityRecord = read("../../../../docs/gpuix-capabilities.md");
 
 /** One Tier 3 row, by its first cell. */

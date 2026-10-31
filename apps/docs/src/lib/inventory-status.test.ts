@@ -18,7 +18,7 @@ import {
 /**
  * The status strip is the page's claim about the inventory.
  *
- * Every mounted package page reports the `COMPONENTS.md` row that decides
+ * Every mounted package page reports the `.agents/slop/COMPONENTS.md` row that decides
  * whether its component is shipped and how much of it GPUix supports. The join
  * is the page title, and titles and row names disagree in punctuation, number
  * and vocabulary — so the aliases are checked against the inventory, every page

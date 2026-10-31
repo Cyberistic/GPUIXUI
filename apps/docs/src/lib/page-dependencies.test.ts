@@ -16,7 +16,7 @@ import {
 
 /**
  * The package page template asks every component page for its dependencies
- * (`MISSION.md`, `docs/preview-strategy.md`). The package pages are Markdown
+ * (`.agents/slop/MISSION.md`, `docs/preview-strategy.md`). The package pages are Markdown
  * the site mounts, so the site reads the component's own module and prints
  * what it imports — this guard holds that reading honest in both directions:
  * every workspace import the module makes is listed, and nothing else is.
