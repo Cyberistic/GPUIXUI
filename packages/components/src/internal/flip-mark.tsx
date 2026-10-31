@@ -52,7 +52,9 @@ const Mark = ({
         animate: frame(shown),
         transition: shown ? timing.enter : timing.exit,
       }}
-      style={{ position: "absolute", left: 0 }}
+      // A positioned box takes a press on 0.11.0; the glyph is never the
+      // target, so the trigger it sits in gets the press (plan 731).
+      style={{ position: "absolute", left: 0, pointerEvents: "none" }}
       testId={testId}
     >
       <Icon

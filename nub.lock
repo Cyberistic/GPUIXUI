@@ -360,6 +360,9 @@ importers:
       '@gpuixui/components':
         specifier: workspace:*
         version: link:../../packages/components
+      '@gpuixui/fx':
+        specifier: workspace:*
+        version: link:../../packages/fx
       '@gpuixui/icons':
         specifier: workspace:*
         version: link:../../packages/icons

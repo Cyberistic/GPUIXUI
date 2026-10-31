@@ -135,6 +135,9 @@ export const ColorChip = ({ hsva, size, testId }: ColorChipProps) => {
         height: size,
         flexShrink: 0,
         backgroundColor: toHex(hsva),
+        // A filled disc takes the press on 0.11.0; the trigger it sits in is
+        // the target, so a press on the colour opens the picker (plan 731).
+        pointerEvents: "none",
       })}
     />
   );

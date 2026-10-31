@@ -30,9 +30,7 @@ const account = () => ({
 
 describe("UserMenu", () => {
   it("opens from the identity row and paints every action", async () => {
-    const root = renderComponent(
-      <UserMenu user={user} {...account()} />,
-    );
+    const root = renderComponent(<UserMenu user={user} {...account()} />);
     expect(root.renderer.getAllText()).toContain("Benji van der Brand");
     expect(root.renderer.getAllText()).toContain("benji@example.com");
 
