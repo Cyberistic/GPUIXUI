@@ -141,7 +141,6 @@ component call sites adopt the outline in their own workstream.
 | `206` | Port **shadcn/ui's Message Scroller** behaviour — pinned follow, no yank, jump-to-latest, streaming rows | C | `200`, `201`, `203` | done — 11 rule + 10 native tests + 1 theme-matrix case (behaviour 437, unit 296); plain scroll viewport recorded as the limitation; both-direction proof |
 | `207` | Port **shadcn/ui's AI Elements `chat` + `message`** — conversation scaffold and message row (streaming, reasoning, tool calls, sources, retry) | C | `200`, `201`, `206` | done — `Message` four parts + four data slots and `Chat` three parts over `MessageScroller`, with `chat/logic.ts` as the shared status machine; 12 logic + 12 Message + 11 Chat native tests, recipes, two pages and two examples; Enter/Shift+Enter/Escape measured in a window before the composer was written. `LICENSES/` provenance is the licensing interlock row |
 | `433` | **Platform theme recipes** — reshape the Windows variant into XP (Luna) / 7 (Aero), and follow Omarchy's live system theme | E | `063`, `203`, `200` | Recipe A landed (`retroStyles`: Luna and Aero, `retro.test.ts`); Recipe B's tokens half landed (`paletteToTokens`/`paletteMode`/`watchSystemTheme` and `decodeOmarchyPalette`, `system-theme.test.ts`/`omarchy.test.ts`) — the docs page and the live Linux probe are open |
-| `434` | **Landing page** — a "Hunter License" identity over a stacked macOS / Windows / Linux hero, in the register of cap.so / klack | E | `063`, `433`, `423` | planned |
 | `435a` | **Pele** (Obsidian's design system) — recon, licence, and an inventory diff | A | `203`, `200` | planned |
 | `435b` | **Fumadocs Editor** — ship an MDX/rich-text editor as a component in the suite (not for authoring our docs) | C/E | `200`, `203` | planned |
 | `435c` | **RTL** — logical placement, a direction token, mirrored directional icons, and an RTL docs toggle | C/D | `063`, `200` | planned |
@@ -161,7 +160,7 @@ component call sites adopt the outline in their own workstream.
 | ---- | ----- | ----- | ---------- | ------ |
 | [440](./440-live-gpuix-web-surface.md) | A live GPUix surface in the docs site: the wasm browser build, cross-origin isolation, one mount per page load | F | `203` (capability record), the docs deploy middleware | **implemented** — `/live` boots the wasm build and mounts the screen through `@gpuix/react`'s reconciler; `live-surface-probe` and `live-route-probe` measured it, `src/lib/live-surface.test.ts` and `src/lib/gpuix-web.test.ts` hold the screen, the mount, the isolation and the policy together. `render()` is not used because it installs Node error handlers against a browser `process` shim; `createRoot` is. §6 records the outcome and the two browser-build gaps |
 
-> The earlier phase-E docs plans (`433` platform recipes, `434` landing, `435a–c`
+> The earlier phase-E docs plans (`433` platform recipes, `435a–c`
 > Pele / Editor / RTL) are listed in the reference-adoption table above; they
 > share this block but were numbered before the docs-site section existed.
 
@@ -182,12 +181,32 @@ component call sites adopt the outline in their own workstream.
 | [717](./717-file-tree-ai-elements.md) | FileTree on shadcn's AI Elements `file-tree`: parts, guides, one selected path | D | `610` | landed |
 | [718](./718-overlay-surface-fixes.md) | Overlay surfaces: sheet/drawer slide + redesign, popover sides, navigation-menu chevron, hover-card link trigger, one veil wash | D | — | implemented |
 | [719](./719-sheet-drawer-drawings.md) | The sheet and drawer drawings open on the surface, in a frame that is the window | D | `718` | landed |
-<<<<<<< HEAD
 | [720](./720-image-preview-log-viewer.md) | The image preview zooms with `ImageZoom`, and the log viewer is its surface | D | `006`, `203` | implemented |
-=======
 | [720](./720-slider-table-tag-fixes.md) | Three docs drawings: the dead slider, the clipped table, the grey chip | D | primitives, data, tw | implemented |
->>>>>>> origin/fix/slider-table-tag
 
+
+### Native Mac (block `721–730`, workstream `native-mac`)
+
+The product pass of 2026-10-31: the runtime already opens a vibrant window with a
+transparent titlebar (`docs/gpuix-capabilities.md:82`, `:144`) and nothing used
+it. Owner decisions: the Hunter identity is dropped; Mac first, Windows and Linux
+keep their looks. `727` supersedes `434` (deleted).
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [721](./721-macos-materials.md) | macOS materials: translucent surface roles, measured in a blurred window first | tokens | `063` | planned |
+| [722](./722-native-window.md) | `Window` + `SourceList`: sidebar under the lights, unified toolbar, inspector | shell | `721` | planned |
+| [723](./723-system-appearance.md) | Follow the system accent, appearance and Reduce Transparency (runtime gap, read at the boundary) | shell, tokens | `721`, `433` | planned |
+| [724](./724-hig-component-pass.md) | HIG pass: darwin sizes, hover policy, menus, sheets, focus — as tokens | primitives, components | `721`, `722` | planned |
+| [725](./725-mac-controls.md) | `SegmentedControl`, `PopUpButton`, `Disclosure`, `PathControl`, `InsetGroup` | components | `724` | planned |
+| [726](./726-fx-package.md) | `@gpuixui/fx`: decorative effects leave the core | components | — | planned |
+| [727](./727-landing-rebuild.md) | The landing, rebuilt on native captures and measured numbers | docs | `722`, `726`, `728`, `729`, `730` | planned |
+| [728](./728-pipeline-block.md) | The block contract (`examples/blocks`, compiled recipes) + the pipeline block replacing Hunter | docs, examples | `722`, `725` | planned |
+| [729](./729-native-blocks.md) | Eight Mac-app blocks: notes, settings, launcher, menubar, agent, calendar, welcome, viewer | docs, examples | `728` | planned |
+| [730](./730-measured-proof.md) | Measured proof: cold start, RSS, frame p99, install size | playground | `728` | planned |
+
+Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` → `727`.
+`726` runs any time before `727`.
 
 ## How to use a plan
 

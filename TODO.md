@@ -24856,5 +24856,22 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` Takes: macro Switch / Slider / Button, Settings across three looks, terminal mode, Omarchy desktop
 `[x]` Tactile sound kit (`media/launch/sound/kit.sh`) and the 33 s HyperFrames cut (`media/launch`)
 `[ ]` Music bed under the tactile layer (needs a track or a HeyGen sign-in)
-`[ ]` Docs blocks read their source from the compiled blocks instead of uncompiled strings
+`[ ]` Docs blocks read their source from the compiled blocks instead of uncompiled strings (plan 728 Part A)
 
+---
+
+## Native Mac — materials, window, blocks and the landing (plans 721–730, 2026-10-31)
+
+`[ ]` `[█░░░░░░░░░]` 1/11
+
+`[x]` Write the native-Mac plan set (721–730), index it, retire plan 434 (Hunter landing)
+`[ ]` 721 — macOS materials: measure a translucent fill in a blurred window, then the material roles
+`[ ]` 722 — `Window` and `SourceList` in `@gpuixui/shell`; `TitleBar` folded in
+`[ ]` 723 — system accent, appearance and Reduce Transparency (record the runtime gap)
+`[ ]` 724 — HIG pass: darwin sizes, hover policy, menus, sheets, focus
+`[ ]` 725 — `SegmentedControl`, `PopUpButton`, `Disclosure`, `PathControl`, `InsetGroup`
+`[ ]` 726 — `@gpuixui/fx`: move the decorative effects out of `@gpuixui/components`
+`[ ]` 728 — `examples/blocks` contract + the pipeline block; delete the Hunter block
+`[ ]` 729 — eight Mac-app blocks (notes, settings, launcher, menubar, agent, calendar, welcome, viewer)
+`[ ]` 730 — measured proof numbers (`apps/docs/src/lib/proof.json`)
+`[ ]` 727 — the landing rebuilt on native captures and measured numbers
