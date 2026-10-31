@@ -9,6 +9,38 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ---
 
+## Calculator example — fx-991ES Plus on GPUix
+
+`[x]` `[██████████]` 7/7
+
+`[x]` Land `@gpuixui/calc` — Effect-first engine, Casio parser/evaluator,
+      model seam for a later TI-84 (plans 740/741)
+`[x]` Land all 8 fx-991ES modes: COMP, CMPLX, STAT, BASE-N, EQN, MATRIX,
+      TABLE, VECTOR with the manual's worked examples in tests — 82 engine
+      tests green; `nub run --filter @gpuixui/calc test`
+`[x]` Land the native `examples/calculator` app — macOS window, light/dark,
+      full keypad, keyboard, ⌘K palette (plan 742) — 6 app logic tests and
+      12 native renderer tests green
+`[x]` Terminal support: `GPUIX_TERMINAL=1` / `--terminal` paints the same app —
+      verified in a pseudo-terminal: `[gpuix] mount complete` and `_Ga=T`
+      kitty-graphics frames
+`[x]` Native behavior suite: `1 + 2 = 3`, Natural fraction, SETUP/contrast/off, ⌘K det(MatA), appearance —
+      `nub run --filter @gpuixui/calculator test:native`
+`[x]` Docs: package README, app README, manual feature matrix, limitations
+`[x]` Natural Display: stacked fractions, √ with a vinculum, π coefficients,
+      two-term √ sums (`√6+2√3`) and rationalized denominators — 11 layout tests
+      (`nub run --filter @gpuixui/calc test`: 82) + native stacked-result cases
+`[x]` Natural Display input editor: structural fraction/radical/superscript
+      slots, caret in the slot, slot-aware ←/→ and DEL — 4 input layout tests +
+      3 native cases; screenshot `media/calculator-input.png`
+`[x]` Complex `Ans` keeps both parts — `1+i`, then `×2`, reads `2+2i`
+`[x]` SHIFT+MODE SETUP dialog with display/angle/Fix/Sci/Norm/fraction/complex/
+      STAT frequency/decimal/contrast; SHIFT+AC powers off and any key wakes it —
+      10 native renderer cases; screenshot `media/calculator-setup.png`
+`[x]` Run `nub run check`, `nub run lint`, `nub run test` and record the result
+
+---
+
 ## Harness — the supervisor that keeps the swarm alive
 
 `[x]` `[█████████░]` 6/8

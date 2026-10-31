@@ -64,6 +64,20 @@ Not adopted from the survey, deliberately: their deprecated toast element
 `vendor/` trees, and the process-global `App::set_tray_*` threading (our
 per-renderer command pump is the shape we keep).
 
+## Calculator workstream (block `740–749`)
+
+The owner's example: a Casio **fx-991ES Plus** with every mode it documents, a
+modern macOS frame, full keyboard control, ⌘K over every command, light/dark,
+and the same app in a terminal. `@gpuixui/calc` owns the model seam so a TI-84
+model is an addition, not a fork. Source of truth is the Casio manual linked
+from the plan; VERIFY is not part of this model and is recorded as absent.
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [740](./740-calculator-engine.md) | `@gpuixui/calc` — engine, parser, model seam | example | — | landed |
+| [741](./741-fx991es-model.md) | fx-991ES Plus model — every mode, key and command | example | 740 | landed |
+| [742](./742-calculator-app.md) | `examples/calculator` — the native app | example | 740, 741 | landed |
+
 ## The plan set
 
 Numbering is reserved per workstream so concurrent agents never collide:

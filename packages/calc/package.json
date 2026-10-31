@@ -1,0 +1,31 @@
+{
+  "name": "@gpuixui/calc",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The Effect-first calculator engine behind the fx-991ES Plus example — Casio modes, tokens, parsing and the model seam for a later TI-84.",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "effect": "catalog:",
+    "mathjs": "^15.2.0"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@gpuixui/config": "workspace:*",
+    "@types/node": "^26.1.1",
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

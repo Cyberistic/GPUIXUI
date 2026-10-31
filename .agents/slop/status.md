@@ -31,6 +31,18 @@ native behaviour cases and the headless `data-table-core` probe. Its four Tier 3
 inventory rows are `done`; columns, virtualisation, trees, charts and the data
 surfaces are the remaining phases in `.agents/slop/TODO.md`.
 
+**The calculator example is live**: `@gpuixui/calc` is the Effect-first engine
+(Casio parser/evaluator, the eight manual modes, 40 constants, 40 conversions, a
+model seam for a later TI-84), and `examples/calculator` wears it in a native
+macOS window and in a kitty/Ghostty terminal, with light/dark, a full keyboard
+map and ⌘K over every command. The Natural Display is native layout too:
+stacked fractions, √ with a vinculum, π coefficients and two-term √ sums. SETUP
+(SHIFT+MODE) covers display/angle/Fix/Sci/Norm/fraction/complex/STAT
+frequency/decimal/contrast; SHIFT+AC powers the LCD off. Evidence: 82 engine
+tests, 6 app logic tests and 12 real-renderer tests (`1 + 2 = 3`, a stacked 1/3,
+SETUP, contrast, SHIFT+AC off, matrix mode, ⌘K searching `det(MatA)`, the
+appearance repaint); screenshots in `examples/calculator/media/`.
+
 The design tokens and theming layer (light, dark, high-contrast, density) is
 landed. Tier 1, the rest of data presentation, workspace and specialised
 components are tracked in `.agents/slop/TODO.md`.
@@ -60,7 +72,9 @@ there. `apps/docs/README.md` §Prerendering is the contract.
 ```
 apps/docs          Fumadocs docs: landing at `/`, documentation at the root
 apps/playground    Native GPUix playground and smoke tests
+examples/calculator The fx-991ES Plus example: native window and terminal
 packages/config    Shared TypeScript and tooling configuration
+packages/calc      Calculator engine: Casio parser/evaluator, model seam
 packages/deploy    Alchemy stack: the docs site's Cloudflare resources
 packages/tokens     Design tokens, themes and the React theme provider
 packages/motion     Motion physics (springs, easing, timelines, inertia) + React hooks

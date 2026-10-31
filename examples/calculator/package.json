@@ -1,0 +1,35 @@
+{
+  "name": "@gpuixui/calculator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A native macOS-feeling Casio fx-991ES Plus, rendered by GPUix with every mode of the manual and a ⌘K command palette.",
+  "scripts": {
+    "dev": "nub src/main.tsx",
+    "terminal": "GPUIX_TERMINAL=1 nub src/main.tsx",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:native": "vitest run --config vitest.native.config.ts"
+  },
+  "dependencies": {
+    "@gpuix/react": "catalog:",
+    "@gpuixui/calc": "workspace:*",
+    "@gpuixui/components": "workspace:*",
+    "@gpuixui/icons": "workspace:*",
+    "@gpuixui/primitives": "workspace:*",
+    "@gpuixui/shell": "workspace:*",
+    "@gpuixui/tokens": "workspace:*",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@gpuixui/config": "workspace:*",
+    "@types/node": "^26.1.1",
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
