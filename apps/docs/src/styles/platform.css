@@ -377,3 +377,76 @@
 .gx-inset-switch[data-on] {
   background: var(--switch-on, var(--primary));
 }
+
+/* ---- the pipeline block (plan 728) -------------------------------------- */
+.gx-window-sidebar button.gx-window-row {
+  width: 100%;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.gx-pipeline-count {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-pipeline-layout {
+  width: 140px;
+}
+
+.gx-pipeline-stages {
+  width: auto;
+  margin: 12px;
+}
+
+.gx-pipeline-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 40px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.gx-pipeline-row[data-selected] {
+  background: var(--selected);
+}
+
+.gx-pipeline-owner {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--muted);
+  font-size: 9px;
+}
+
+.gx-pipeline-title {
+  flex: 1;
+}
+
+.gx-pipeline-project {
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  font-size: 11px;
+}
+
+.gx-pipeline-due {
+  color: var(--muted-foreground);
+}
+
+.gx-pipeline-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+
+.gx-pipeline-stages button {
+  padding: 0 8px;
+  white-space: nowrap;
+}

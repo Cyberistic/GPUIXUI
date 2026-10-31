@@ -3,22 +3,25 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The blocks: whole screens composed from the library, compiled — the recipe the docs print and the window the film captures.",
+  "description": "The blocks: whole screens composed from the library, compiled \u2014 the recipe the docs print and the window the film captures.",
   "exports": {
     "./settings": "./src/settings/settings.tsx",
     "./kanban": "./src/kanban/kanban.tsx",
     "./inbox": "./src/inbox/inbox.tsx",
-    "./desktop": "./src/desktop/desktop.tsx"
+    "./desktop": "./src/desktop/desktop.tsx",
+    "./pipeline": "./src/pipeline/pipeline.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev": "nub src/main.tsx"
   },
   "dependencies": {
     "@gpuix/react": "catalog:",
     "@gpuixui/components": "workspace:*",
     "@gpuixui/icons": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
+    "@gpuixui/shell": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "effect": "catalog:"
   },

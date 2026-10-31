@@ -35,6 +35,25 @@ const glyph = (root: ComponentTestRoot): unknown =>
   root.renderer.findByType("svg")[0]?.customProps?.["source"];
 
 describe("Disclosure", () => {
+  it("sets the title right after its triangle", () => {
+    // Bug guarded: the collapsible recipe's `justify-between` pushed the
+    // title to the header's far edge, away from its triangle.
+    page = renderComponent(
+      <div style={{ width: 300 }}>
+        <Section open />
+      </div>,
+    );
+    const triangle = page.renderer.findByType("svg")[0];
+    const bounds = page.renderer.getElementBounds(triangle?.id ?? -1);
+    const title = page.renderer
+      .findByType("text")
+      .map((text) => page?.renderer.getElementBounds(text.id))
+      .find((box) => box !== null && box !== undefined && box.y < 30);
+    expect(
+      (title?.x ?? 999) - ((bounds?.x ?? 0) + (bounds?.width ?? 0)),
+    ).toBeLessThanOrEqual(8);
+  });
+
   it("opens on a press and mounts its body", () => {
     page = renderComponent(<Section open={false} />);
     expect(page.renderer.findByTestId("body")).toBeUndefined();

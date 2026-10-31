@@ -1,0 +1,27 @@
+---
+title: Pipeline
+description: A release pipeline in a native Mac window
+---
+
+<BlockPreview name="pipeline-01" />
+
+Run it natively — the window opens vibrant on macOS, with the traffic lights
+over its sidebar:
+
+```sh
+nub run --filter @gpuixui/blocks dev -- pipeline
+```
+
+## Composition
+
+- `Window`, `WindowToolbar` and `SourceList` from `@gpuixui/shell` for the
+  window, the unified toolbar and the views and projects
+- `SegmentedControl` from `@gpuixui/components/segmented-control` for List/Board
+  and the stage strip
+- `Select` from `@gpuixui/primitives` for the sort, the Mac's pop-up button
+- `SearchInput` from `@gpuixui/components/search-input`
+- `Disclosure` and `InsetGroup` from `@gpuixui/components` for the inspector
+- `Avatar`, `Badge` and `Card` from `@gpuixui/components`
+
+The source below is the compiled block (`examples/blocks/src/pipeline`); the
+preview reads that block's own data and rules, so the two show the same work.

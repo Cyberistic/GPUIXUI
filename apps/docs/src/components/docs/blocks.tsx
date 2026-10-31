@@ -1,8 +1,8 @@
 import desktopSource from "../../../../../examples/blocks/src/desktop/desktop.tsx?raw";
+import pipelineSource from "../../../../../examples/blocks/src/pipeline/pipeline.tsx?raw";
 import type { ReactNode } from "react";
 import { SignInPageRender, signInPageSource } from "./auth-blocks";
 import { CommandCentreRender, commandCentreSource } from "./command-centre";
-import { HunterPipelineRender, hunterPipelineSource } from "./hunter-pipeline";
 import {
   ConversationsRender,
   conversationsPackages,
@@ -24,6 +24,7 @@ import {
   fileManagerSource,
 } from "./file-manager-block";
 import { KanbanRender, kanbanPackages, kanbanSource } from "./kanban-board";
+import { PipelineRender } from "./pipeline-block";
 import {
   SettingsDialogRender,
   settingsDialogPackages,
@@ -322,16 +323,22 @@ export const blocks: Readonly<Record<string, Block>> = {
     render: CommandCentreRender,
     source: commandCentreSource,
   },
-  "hunter-pipeline-01": {
-    name: "hunter-pipeline-01",
-    slug: "hunter-pipeline",
-    title: "Hunter pipeline",
+  "pipeline-01": {
+    name: "pipeline-01",
+    slug: "pipeline",
+    title: "Pipeline",
     description:
-      "A guild's whole app window: a note strip, the vault's tree and the docket it opens on — five readings, a six-stage strip, the dossiers staged and the ones a missing fact blocks, over the renown a fortnight gained.",
-    packages: ["@gpuixui/primitives", "@gpuixui/components"],
-    render: HunterPipelineRender,
-    source: hunterPipelineSource,
+      "A release pipeline in a native Mac window: projects in a source list under the traffic lights, a unified toolbar, the stage strip over the work, and an inspector for the chosen item.",
+    packages: [
+      "@gpuixui/shell",
+      "@gpuixui/components",
+      "@gpuixui/primitives",
+      "@gpuixui/tokens",
+    ],
+    render: PipelineRender,
+    source: pipelineSource,
   },
+
   "file-manager-01": {
     name: "file-manager-01",
     slug: "file-manager",

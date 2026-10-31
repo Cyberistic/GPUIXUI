@@ -5,7 +5,7 @@
 | Owner | `docs-site` + new private workspace `examples/blocks` |
 | Depends on | `722` (`Window`, `SourceList`), `725` (`SegmentedControl`, `PopUpButton`, `Disclosure`) |
 | Replaces | the Hunter pipeline block (`hunter-pipeline-01`) |
-| Status | planned |
+| Status | landed 2026-10-31 |
 
 ## Why
 

@@ -46,6 +46,9 @@ export const Disclosure = ({
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
+          // The collapsible recipe spreads its trigger (`justify-between`); a
+          // disclosure's title follows its triangle.
+          justifyContent: "flex-start",
           gap: 4,
           height: 24,
         }}
