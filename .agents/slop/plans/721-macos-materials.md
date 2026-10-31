@@ -5,7 +5,7 @@
 | Owner | `tokens-theme` (`packages/tokens`, `docs/tokens.md`) + one probe in `apps/playground` |
 | Depends on | `063` platform styles (landed), the `window-backdrop` probe (landed) |
 | Feeds | `722` (window recipe), `724`/`725` (components), `728`/`729` (blocks), `727` (landing) |
-| Status | planned |
+| Status | landed 2026-10-31 |
 
 ## Why
 

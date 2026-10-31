@@ -1,35 +1,39 @@
 /**
  * Browser drawings for the platform section.
  *
- * The native surface is the OS's: a titlebar the app paints under the traffic
- * lights, and the system's own path panel. A browser cannot mount either, so
- * these mirror the shipped geometry — the 78-point inset, the 38-point bar and
- * the panel's sidebar/list split — and read the preview surface's theme roles.
+ * The native surface is the OS's: a window whose chrome the app paints under the
+ * traffic lights, and the system's own path panel. A browser cannot mount
+ * either, so these mirror the shipped geometry and read the preview surface's
+ * theme roles.
  */
 
-/** The window's top row, with its traffic lights, over a themed app bar. */
-export const TitleBarDemo = () => (
+import { WindowFrame } from "./window-frame";
+
+/** The native window: a source list under the lights, a unified toolbar. */
+export const WindowDemo = () => (
   <div className="gx-demo gx-platform-scene">
-    <div className="gx-platform-window">
-      <div className="gx-platform-lights" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-      </div>
-      <div className="gx-platform-bar">
-        <span className="gx-platform-title">Files</span>
-        <span className="gx-platform-actions">
-          <span className="gx-platform-action" />
-          <span className="gx-platform-action" />
-        </span>
-      </div>
-      <div className="gx-platform-body">
-        <span className="gx-platform-line" />
-        <span className="gx-platform-line gx-platform-line-short" />
-      </div>
-    </div>
+    <WindowFrame
+      title="Inbox"
+      height={300}
+      sidebar={
+        <>
+          {["Inbox", "Drafts", "Sent"].map((item, index) => (
+            <span
+              className="gx-window-row"
+              data-selected={index === 0 ? "" : undefined}
+              key={item}
+            >
+              {item}
+            </span>
+          ))}
+          <span className="gx-window-section">Folders</span>
+          <span className="gx-window-row">Archive</span>
+        </>
+      }
+    />
     <p className="gx-platform-caption">
-      The lights float over the app&apos;s own bar; the bar reserves their box.
+      The sidebar runs under the lights and shows the desktop through it; the
+      content stays opaque.
     </p>
   </div>
 );
@@ -78,34 +82,50 @@ export const FilePanelDemo = () => (
   </div>
 );
 
-export const titleBarDemoSource = `import { TitleBar, useWindowActions } from "@gpuixui/shell";
+export const windowDemoSource = `import {
+  nativeWindowOptions,
+  SourceList,
+  Window,
+  WindowToolbar,
+} from "@gpuixui/shell";
+import { currentPlatform, lightTheme, platformTheme } from "@gpuixui/tokens";
 
-const Window = () => {
-  const window = useWindowActions();
+const theme = platformTheme(lightTheme, currentPlatform);
 
+const Mail = () => {
+  const [place, setPlace] = useState("inbox");
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <TitleBar
-        actions={
-          <Button size="sm" variant="ghost" onClick={window.minimize}>
-            Minimise
-          </Button>
-        }
-        title="Files"
-      />
+    <Window
+      sidebar={
+        <SourceList
+          label="Mailboxes"
+          value={place}
+          onValueChange={setPlace}
+          sections={[
+            { id: "mail", items: [
+              { id: "inbox", label: "Inbox", icon: "mail", count: 12 },
+              { id: "drafts", label: "Drafts", icon: "file" },
+            ] },
+            { id: "folders", title: "Folders", items: [
+              { id: "archive", label: "Archive", icon: "folder" },
+            ] },
+          ]}
+        />
+      }
+      toolbar={<WindowToolbar title="Inbox" />}
+    >
       {/* … */}
-    </div>
+    </Window>
   );
 };
 
-// The window opens with its own bar under the lights:
-render(<Window />, {
-  title: "Files",
-  titlebarTransparent: true,
-  trafficLightX: 20,
-  trafficLightY: 14,
+// A transparent titlebar, the theme's vibrant window and the lights on the
+// toolbar's line — nothing on Windows or Linux, which keep the system bar.
+render(<ThemeProvider theme={theme}><Mail /></ThemeProvider>, {
+  title: "Mail",
   width: 900,
   height: 600,
+  ...nativeWindowOptions(theme, currentPlatform),
 });`;
 
 export const windowActionsSource = `import { useWindowActions } from "@gpuixui/shell";

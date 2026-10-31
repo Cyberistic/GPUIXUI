@@ -61,6 +61,42 @@ export const BACKDROP_FILL_RGBA = new Pixels.Rgba({
   a: 255,
 });
 
+/**
+ * A second box, filled with a translucent white: the question a material asks
+ * (plan 721) is whether an app-side translucent fill survives over a window the
+ * app leaves to the desktop, or composites against the window's own surface.
+ */
+export const TRANSLUCENT_BOX = {
+  x: 200,
+  y: 40,
+  width: 120,
+  height: 80,
+} as const;
+
+/** The translucent box's fill: white at 0x66 (40%). */
+export const TRANSLUCENT_FILL = "#FFFFFF66";
+
+/**
+ * What the translucent box reads in `mode` (measured 2026-10-31, 0.11.0).
+ *
+ * An opaque window composites it over the window's own black surface; a
+ * transparent or blurred one keeps its alpha (the frame is premultiplied), so
+ * the window server blends the tint over the desktop: a material may carry one.
+ */
+export const translucentFill = (mode: WindowBackground): Pixels.Rgba =>
+  new Pixels.Rgba({
+    r: 102,
+    g: 102,
+    b: 102,
+    a: mode === "opaque" ? 255 : 102,
+  });
+
+/** Where the translucent box's centre sits. */
+export const translucentPoint: Point = {
+  x: TRANSLUCENT_BOX.x + TRANSLUCENT_BOX.width / 2,
+  y: TRANSLUCENT_BOX.y + TRANSLUCENT_BOX.height / 2,
+};
+
 /** Where the painted box's centre sits: the surface proof. */
 export const contentPoint: Point = {
   x: BACKDROP_BOX.x + BACKDROP_BOX.width / 2,

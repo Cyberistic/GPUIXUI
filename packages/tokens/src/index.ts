@@ -9,6 +9,7 @@ export * from "./focus-dim.js";
 export * from "./fonts.js";
 export * from "./highlight.js";
 export * from "./indicator.js";
+export * from "./materials.js";
 export * from "./native-text.js";
 export * from "./numbers.js";
 export * from "./omarchy.js";

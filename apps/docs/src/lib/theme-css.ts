@@ -6,6 +6,8 @@ import {
   elevationShadow,
   filledHover,
   filledPressed,
+  materialFill,
+  materialNames,
   seriesColors,
   switchMetricsAt,
   syntaxColors,
@@ -164,6 +166,14 @@ export const toCssVars = (theme: Theme): CssVars => ({
         ? []
         : [[`--elevation-${level}`, cssShadow(shadow)]];
     }),
+  ),
+  // A material is the fill a native window paints over its blur (plan 721); a
+  // drawing pairs it with `backdrop-filter` so the browser shows the same glass.
+  ...Object.fromEntries(
+    materialNames.map((name) => [
+      `--material-${name}`,
+      materialFill(theme, name),
+    ]),
   ),
   ...Object.fromEntries(
     Object.entries(syntaxColors(theme)).map(([role, value]) => [

@@ -149,3 +149,126 @@
   font-size: 12.5px;
   color: var(--muted-foreground);
 }
+
+/* ---- the native window (plan 722) ----------------------------------------
+   `@gpuixui/shell`'s Window, drawn: the sidebar from the top edge under the
+   lights, the unified 52-point toolbar over the content column, the content
+   opaque. A wallpaper behind the frame lets the material read as glass. */
+.gx-window {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 15% 20%, var(--series-1), transparent 55%),
+    radial-gradient(circle at 80% 90%, var(--series-2), transparent 50%),
+    var(--background);
+  box-shadow: var(--elevation-lg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--foreground);
+}
+
+.gx-window-lights {
+  position: absolute;
+  z-index: 1;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  gap: 8px;
+}
+
+.gx-window-lights i {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+}
+.gx-window-lights i:nth-child(1) {
+  background: #ff5f57;
+}
+.gx-window-lights i:nth-child(2) {
+  background: #febc2e;
+}
+.gx-window-lights i:nth-child(3) {
+  background: #28c840;
+}
+
+.gx-window-sidebar {
+  flex: 0 0 220px;
+  min-height: 0;
+  padding: 52px 10px 10px;
+  overflow: auto;
+  border-right: 1px solid var(--border);
+}
+
+.gx-window-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.gx-window-toolbar {
+  display: flex;
+  flex: 0 0 52px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--material-titlebar);
+  backdrop-filter: blur(30px) saturate(1.8);
+}
+
+.gx-window-toolbar:not([data-lights]) {
+  padding-left: 78px;
+}
+
+.gx-window-title {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gx-window-space {
+  flex: 1;
+}
+
+.gx-window-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.gx-window-content {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  background: var(--background);
+}
+
+.gx-window-inspector {
+  flex: 0 0 260px;
+  overflow: auto;
+  border-left: 1px solid var(--border);
+  background: var(--background);
+}
+
+.gx-window-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+}
+
+.gx-window-row[data-selected] {
+  background: var(--active);
+}
+
+.gx-window-section {
+  padding: 8px 8px 2px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+}
