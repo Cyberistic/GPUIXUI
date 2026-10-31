@@ -17,7 +17,7 @@ with show/hide, click-through and anchoring — without a second `GpuixRenderer`
 
 ## Why
 
-`COMPONENTS.md` records "a detached tab is a second process" because a second
+`.agents/slop/COMPONENTS.md` records "a detached tab is a second process" because a second
 renderer is refused. fc-gpui shows the useful half: window kinds on the one app,
 positioned by a pure anchor function. That fits our single-renderer bridge.
 

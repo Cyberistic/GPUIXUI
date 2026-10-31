@@ -80,7 +80,7 @@ export const Separator = ({
     </div>
   );
 
-/** Inventory record, mirrored into `COMPONENTS.md`'s Separators row. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Separators row. */
 export const separatorMeta = {
   name: "Separators",
   tier: 1,

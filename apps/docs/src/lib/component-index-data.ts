@@ -16,7 +16,7 @@ import { curatedPrimitiveTwins } from "./curated-twins";
  * page that shares its URL, and `buildIndex` keeps the first row. The packages'
  * files are read as the page count grows, so nothing has to be listed here.
  *
- * Each row carries the `COMPONENTS.md` verdict the page's status strip prints,
+ * Each row carries the `.agents/slop/COMPONENTS.md` verdict the page's status strip prints,
  * resolved through the same alias table, so the list can mark a component the
  * runtime supports only in part.
  */

@@ -59,7 +59,7 @@ the components package still does not depend on it at all
 
 Two implementations mean two activation contracts and two paint paths for the
 same control. The file's own header says it "stays until the Tier 2 parts are
-migrated onto it (plan 110 §7 and `TODO.md` → Interlocks)". `TODO.md` row
+migrated onto it (plan 110 §7 and `.agents/slop/TODO.md` → Interlocks)". `.agents/slop/TODO.md` row
 "`@gpuixui/primitives` exports in plan 110 §7" is that task.
 
 ## Hard prerequisites — do not start Phase 2 until both pass
@@ -75,7 +75,7 @@ and `buttonClass` in `packages/primitives/src/recipe/index.ts` asks for
 Check the **Button's** half only. `core/variants.ts` also holds the Toggle's
 `accent` on-state, which still lifts its alpha (`hover:bg-accent/90`,
 `active: bg-accent/80`) — a different control with its own tracked row
-(`COMPONENTS.md` → Action fills, `TODO.md` → Interlocks), not a Button
+(`.agents/slop/COMPONENTS.md` → Action fills, `.agents/slop/TODO.md` → Interlocks), not a Button
 regression. `packages/tw/src/recipes.ts`'s own `button` recipe still carries
 `hover:bg-primary/90`, but `Button` no longer compiles it.
 
@@ -90,7 +90,7 @@ grep -n "hover:fill-" packages/primitives/src/recipe/index.ts
 
 **R2 — primitives' `outline` edge must paint `borderStrong`.** `outline` in
 `packages/primitives/src/core/variants.ts` painted `theme.colors.border` (the
-primitives half of `TODO.md` row 1243); it now paints the measured boundary role.
+primitives half of `.agents/slop/TODO.md` row 1243); it now paints the measured boundary role.
 The stand-in's `secondary` look carries a measured 3:1 edge (commit `d54b24e2`),
 so the migration must not land on a decorative border.
 
@@ -145,7 +145,7 @@ Do **not** invent a wrapper prop or a second adapter around primitives' `Button`
 (the plan forbids it, and it would recreate the two implementations this plan
 deletes). The unblocking change belongs to `@gpuixui/primitives`: `Button` must
 forward `ref`, its `aria-*` set and the pointer handlers, i.e. accept the host
-props a trigger needs. That request is recorded in `TODO.md` → Interlocks; this
+props a trigger needs. That request is recorded in `.agents/slop/TODO.md` → Interlocks; this
 plan stays active and Phase 2 does not start until primitives ships it.
 
 ## Measured STOP — Phase 2 (2026-10-22)
@@ -204,7 +204,7 @@ and no Button subpath, so the only route is the root barrel. The hint row alread
 measured that route at **52 modules / 416 KiB** against the subpath's 5 / 51 —
 the whole Tier 1 package loaded to paint one control, which this package declined
 once. The unblocking change is `@gpuixui/primitives/button` (a declared export
-carrying `Button`, `IconButton` and their prop types), recorded in `TODO.md` →
+carrying `Button`, `IconButton` and their prop types), recorded in `.agents/slop/TODO.md` →
 Interlocks. Do not import the barrel and do not copy `renderButton`.
 
 Two workarounds were rejected rather than shipped: wrapping each adapter instance
@@ -236,7 +236,7 @@ condition "a call site needs a host prop primitives' `Button` cannot express".
 
 The unblocking change belongs to `@gpuixui/primitives`: let a disabled action
 paint the `-1` it always has (a one-line writer, plus its own case) or publish a
-prop that names the stop. Filed in `TODO.md` → Interlocks; Phase 2 does not start
+prop that names the stop. Filed in `.agents/slop/TODO.md` → Interlocks; Phase 2 does not start
 until it lands. Do not relax the three cases and do not wrap the action.
 
 ## Adapter landed — measured deltas (2026-10-23)
@@ -268,7 +268,7 @@ in-flight Tabs case), behaviour green on every file touched here (the Tabs file
 was mid-edit by its owner), and the headless probes `examples-mount`,
 `overlay-dialog`, `modal-focus-trap` and `focus-traversal` all pass.
 
-Two docs-site guards still read the retired painter and are recorded in `TODO.md`
+Two docs-site guards still read the retired painter and are recorded in `.agents/slop/TODO.md`
 → Interlocks: the curated pagination page's `radius.md` claim and
 `component-page-truth.test.ts`'s `tabIndex={disabled ? -1 : 0}` source assertion.
 
@@ -347,7 +347,7 @@ alias rule, `docs/component-api.md` §2). Update both docs pages' API tables and
   now lives in primitives' `Button.test.tsx` + `runtime/controls.runtime.test.tsx`,
   and each trigger keeps its own interaction case in its suite.
 - `grep -rn "internal/button" packages/components` → no match.
-- Update `COMPONENTS.md`'s trigger notes that say "the local button stand-in"
+- Update `.agents/slop/COMPONENTS.md`'s trigger notes that say "the local button stand-in"
   (`Rows`, `Dialogs`, `Dropdown menus`, `Context menus`, `Command menus`) and
   `docs/component-api.md` §7.
 
@@ -396,4 +396,4 @@ nub run check && nub run lint && nub run test         # gates, at the end
 One button implementation in the workspace; `packages/components` imports
 `Button` from `@gpuixui/primitives`; no `internal/button.tsx`; the two public
 prop types migrated with their docs; every trigger's existing interaction case
-still green in both themes; gates pass; `TODO.md` interlock row closed.
+still green in both themes; gates pass; `.agents/slop/TODO.md` interlock row closed.

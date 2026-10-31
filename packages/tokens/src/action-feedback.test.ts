@@ -60,7 +60,7 @@ const read = (path: string): string =>
 
 const catalogue = read("../../../docs/tokens.md");
 const designSystem = read("../../../docs/design-system.md");
-const inventory = read("../../../COMPONENTS.md");
+const inventory = read("../../../.agents/slop/COMPONENTS.md");
 const readme = read("../README.md");
 
 const section = (document: string, heading: string): string => {

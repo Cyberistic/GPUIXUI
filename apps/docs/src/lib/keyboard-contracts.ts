@@ -1,7 +1,7 @@
 /**
  * The keys each component handles, and what they do.
  *
- * `MISSION.md` asks every component page for its keyboard notes, and the
+ * `.agents/slop/MISSION.md` asks every component page for its keyboard notes, and the
  * template had no shape for them: the pages are Markdown this site mounts or
  * MDX it writes, so a hand-written list would drift the first time a handler
  * moved. This model is the authored half — the sentence a key is worth — and

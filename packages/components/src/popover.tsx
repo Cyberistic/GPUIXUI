@@ -314,7 +314,7 @@ const popoverRoot: PartsContract = {
   hint: "Put PopoverTrigger and PopoverContent directly inside Popover.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const popoverMeta = {
   name: "Popovers",
   tier: 2,

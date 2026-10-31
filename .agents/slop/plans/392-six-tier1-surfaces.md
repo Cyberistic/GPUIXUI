@@ -9,7 +9,7 @@ template in `docs/preview-strategy.md`.
 
 ## 1. Why
 
-Six concepts in `COMPONENTS.md`'s Tier 1 table had a primitive and no surface in
+Six concepts in `.agents/slop/COMPONENTS.md`'s Tier 1 table had a primitive and no surface in
 `@gpuixui/components`: a consumer of the composition library could not import
 `Progress`, `Slider`, `Separator`, `Skeleton`, `Toggle` or `ToggleGroup`
 without reaching the unstyled package or rebuilding the shadcn part structure,
@@ -65,7 +65,7 @@ half is the shape a shadcn page documents.
   and their six rows in `demos.tsx`.
 - `apps/docs/src/lib/related.ts` — each page joins its primitive's family.
 - `apps/docs/README.md` — six ledger rows.
-- `COMPONENTS.md` — the six Tier 1 rows gain the surface sentence and their
+- `.agents/slop/COMPONENTS.md` — the six Tier 1 rows gain the surface sentence and their
   native test count.
 - `docs/component-api.md` — §8 names the parts (`Progress*`, `Toggle group`) and
   says the executed table now reads Tier 1 as well as Tier 2.

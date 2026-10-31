@@ -1,5 +1,5 @@
 /**
- * The Tier 1 inventory: one record per row of `COMPONENTS.md`'s foundational
+ * The Tier 1 inventory: one record per row of `.agents/slop/COMPONENTS.md`'s foundational
  * table.
  *
  * The table is what a reader trusts and what the release gate reads, so it is
@@ -16,7 +16,7 @@
 
 /** One Tier 1 component's inventory record. */
 export interface PrimitiveMeta {
-  /** Exactly the label used in `COMPONENTS.md`. */
+  /** Exactly the label used in `.agents/slop/COMPONENTS.md`. */
   readonly name: string;
   readonly status: "todo" | "wip" | "done" | "blocked" | "unsupported";
   readonly gpuixSupport: "yes" | "partial" | "no";
@@ -36,7 +36,7 @@ const layoutRuntime = "runtime/layout.runtime.test.tsx";
 const layoutExample = "examples/layout.example.tsx";
 const formExample = "examples/form.example.tsx";
 
-/** Every Tier 1 component, in the order `COMPONENTS.md` lists them. */
+/** Every Tier 1 component, in the order `.agents/slop/COMPONENTS.md` lists them. */
 export const inventory: ReadonlyArray<PrimitiveMeta> = [
   {
     name: "Text / typography",

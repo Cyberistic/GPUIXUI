@@ -6,7 +6,7 @@ Applies to every Tier 1–2 component in `packages/components` and
 `packages/primitives`.
 
 This is the **public API spec**. It is a translation of `base-gpui`'s
-compound-part contract (MIT; see [`LICENSES/base-gpui.md`](../LICENSES/base-gpui.md))
+compound-part contract (MIT; see [`.agents/slop/LICENSES/base-gpui.md`](../.agents/slop/LICENSES/base-gpui.md))
 into React over GPUix 0.11.0. No Rust source is copied. Where GPUix lacks a
 capability, the contract says so instead of naming an API that would not work.
 
@@ -454,7 +454,7 @@ compliant as single parts.
 
 - `base-gpui` — MIT, `Copyright (c) 2026 Luke Tandjung`, commit `64b2233`;
   design reference only, no source copied
-  ([`LICENSES/base-gpui.md`](../LICENSES/base-gpui.md)).
+  ([`.agents/slop/LICENSES/base-gpui.md`](../.agents/slop/LICENSES/base-gpui.md)).
 - GPUix capability facts — plan `020` §1 and `docs/gpuix-capabilities.md`
   (plan `203`).
 - The per-component parts and keyboard rules — plans `110–119`, `030`, `053`,

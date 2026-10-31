@@ -2,7 +2,7 @@
 
 Plans exist for **multi-day work and runtime capability gaps only**. A task that
 fits in one turn is implemented directly, with a test that can fail. Completed
-plans are deleted, not archived: `TODO.md` and `COMPONENTS.md` carry the outcome,
+plans are deleted, not archived: `.agents/slop/TODO.md` and `.agents/slop/COMPONENTS.md` carry the outcome,
 and git history carries the rest. The index below lists only active work.
 
 Each plan is **self-contained for a weaker executor**. That means, at minimum:
@@ -19,7 +19,7 @@ Naming: `NNN-kebab-title.md`, numbered in dependency order. One plan per phase,
 one per package, plus a plan for each cross-cutting concern (native smoke test,
 licensing, docs site).
 
-**Number blocks.** Plans are counted across every worktree (see `PLAN.md` D7).
+**Number blocks.** Plans are counted across every worktree (see `.agents/slop/PLAN.md` D7).
 Blocks are reserved so concurrent workstreams do not collide:
 
 | Block | Reserved for |
@@ -83,7 +83,7 @@ Interlocks this workstream depends on and does not own:
 - `apps/playground` mounting the Tier 2 examples (recorded as a TODO task);
 - a decision on the GPUix version: 0.10.0 is the latest published release and is
   behind the reference clone, so it ships no `Dialog`, `Button` or
-  `DismissableLayer` (evidence in `TODO.md` → Blockers).
+  `DismissableLayer` (evidence in `.agents/slop/TODO.md` → Blockers).
 - **B3 — one writer per tree:** resolved in this worktree 2026-10-17 08:56 — the
   stale turn committed and stood down, and the count has read `1` since. The
   permanent fix (pinned `--session`, session counting in `agent_alive`) is still
@@ -119,7 +119,7 @@ Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 agent that owns its paths. `019` was motion tokens and is **cancelled before
 implementation**: durations, easings, springs and reduced-motion policy belong to
 `@gpuixui/motion`, so a second copy here would duplicate the package that owns
-them (`TODO.md` records the decision). 020–049 belongs to primitives, icons and
+them (`.agents/slop/TODO.md` records the decision). 020–049 belongs to primitives, icons and
 Phase C, so 051 takes the first free block — as the tokens workstream's
 docs-layering plan (050) does.
 052 is rescued from the abandoned `agent/fonts` branch (`6fc7641`), with its
@@ -134,12 +134,12 @@ component call sites adopt the outline in their own workstream.
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [201](./201-adopt-runtime-state-model.md) | Adopt `base-gpui`'s runtime / context / parts state model as our state convention | B | `200`, `020` | **components half done** — `core/runtime.ts` + test + doc §7 + ADR 0005; `packages/testing` helper pending |
-| `202` | Reconcile `adabraka-ui`'s `ThemeTokens` with `@gpuixui/tokens` | B | `010–014`, `020` | layering half landed — `docs/tokens.md` §Layering + `layering.test.ts` (the mount order, the topmost-layer dismissal, the scrim/elevation split, no numeric `z`); ring geometry shipped as `focusRing`/`keyboardFocusRing` (017/053) and motion moved to `@gpuixui/motion`; the `LICENSES/adabraka-ui.md` row is the licensing workstream's |
+| `202` | Reconcile `adabraka-ui`'s `ThemeTokens` with `@gpuixui/tokens` | B | `010–014`, `020` | layering half landed — `docs/tokens.md` §Layering + `layering.test.ts` (the mount order, the topmost-layer dismissal, the scrim/elevation split, no numeric `z`); ring geometry shipped as `focusRing`/`keyboardFocusRing` (017/053) and motion moved to `@gpuixui/motion`; the `.agents/slop/LICENSES/adabraka-ui.md` row is the licensing workstream's |
 | `203` | Adopt `adabraka-ui`'s GPUI limits map as `docs/gpuix-capabilities.md`, re-verified against GPUix 0.10.0 | A | `020`, `110` | planned |
 | `204` | Adopt `adabraka-ui`'s workspace and data tiers for Tier 3–4 | A/D | `203`, `020` | planned |
 | `205` | Implement the "not provided by GPUix" cluster | C/E | `200`, `201`, `203`, `030`, `110–117` | planned |
 | `206` | Port **shadcn/ui's Message Scroller** behaviour — pinned follow, no yank, jump-to-latest, streaming rows | C | `200`, `201`, `203` | done — 11 rule + 10 native tests + 1 theme-matrix case (behaviour 437, unit 296); plain scroll viewport recorded as the limitation; both-direction proof |
-| `207` | Port **shadcn/ui's AI Elements `chat` + `message`** — conversation scaffold and message row (streaming, reasoning, tool calls, sources, retry) | C | `200`, `201`, `206` | done — `Message` four parts + four data slots and `Chat` three parts over `MessageScroller`, with `chat/logic.ts` as the shared status machine; 12 logic + 12 Message + 11 Chat native tests, recipes, two pages and two examples; Enter/Shift+Enter/Escape measured in a window before the composer was written. `LICENSES/` provenance is the licensing interlock row |
+| `207` | Port **shadcn/ui's AI Elements `chat` + `message`** — conversation scaffold and message row (streaming, reasoning, tool calls, sources, retry) | C | `200`, `201`, `206` | done — `Message` four parts + four data slots and `Chat` three parts over `MessageScroller`, with `chat/logic.ts` as the shared status machine; 12 logic + 12 Message + 11 Chat native tests, recipes, two pages and two examples; Enter/Shift+Enter/Escape measured in a window before the composer was written. `.agents/slop/LICENSES/` provenance is the licensing interlock row |
 | `433` | **Platform theme recipes** — reshape the Windows variant into XP (Luna) / 7 (Aero), and follow Omarchy's live system theme | E | `063`, `203`, `200` | Recipe A landed (`retroStyles`: Luna and Aero, `retro.test.ts`); Recipe B's tokens half landed (`paletteToTokens`/`paletteMode`/`watchSystemTheme` and `decodeOmarchyPalette`, `system-theme.test.ts`/`omarchy.test.ts`) — the docs page and the live Linux probe are open |
 | `435a` | **Pele** (Obsidian's design system) — recon, licence, and an inventory diff | A | `203`, `200` | planned |
 | `435b` | **Fumadocs Editor** — ship an MDX/rich-text editor as a component in the suite (not for authoring our docs) | C/E | `200`, `203` | planned |
@@ -189,8 +189,8 @@ component call sites adopt the outline in their own workstream.
 
 The product pass of 2026-10-31: the runtime already opens a vibrant window with a
 transparent titlebar (`docs/gpuix-capabilities.md:82`, `:144`) and nothing used
-it. Owner decisions: the Hunter identity is dropped; Mac first, Windows and Linux
-keep their looks. `727` supersedes `434` (deleted).
+it. Owner decisions: Mac first, Windows and Linux keep their looks; the Hunter ×
+Hunter theme stays (confirmed 2026-10-31) — sample data uses its people and places. `727` supersedes `434` (deleted).
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -216,13 +216,13 @@ Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` �
 4. On a STOP condition, stop and report with the evidence. Do not improvise a
    workaround that the plan did not authorise.
 5. When done, update this table's status column and tick the matching task in
-   `TODO.md`.
+   `.agents/slop/TODO.md`.
 
 ### Motion workstream
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [600](./600-animated-primitives.md) | Animated primitives: gap analysis and phases | D | motion, tw, runtime | landed — every phase is recorded in `TODO.md` → Animated primitives; the file stays as the citation record its sources point at |
+| [600](./600-animated-primitives.md) | Animated primitives: gap analysis and phases | D | motion, tw, runtime | landed — every phase is recorded in `.agents/slop/TODO.md` → Animated primitives; the file stays as the citation record its sources point at |
 
 ### Data workstream
 

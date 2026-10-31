@@ -37,7 +37,7 @@ const readme = readFileSync(
 );
 
 const todo = readFileSync(
-  new URL("../../../../TODO.md", import.meta.url),
+  new URL("../../../../.agents/slop/TODO.md", import.meta.url),
   "utf8",
 );
 

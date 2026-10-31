@@ -127,7 +127,7 @@ export const Reveal = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 600). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const revealMeta = {
   name: "Reveal",
   tier: 5,

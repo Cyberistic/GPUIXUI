@@ -56,7 +56,7 @@ import type { PrimitiveTheme, RadiusStep } from "./theme.js";
  * rest: it changes the fixture and requires the resolved value to change, so a
  * resolver that quietly hard-codes a colour cannot pass.
  *
- * The `@gpuixui/tokens` block guards PLAN.md D17: the ring geometry and the
+ * The `@gpuixui/tokens` block guards .agents/slop/PLAN.md D17: the ring geometry and the
  * elevation rule come from the tokens package, not from a local copy. The
  * widened-border test fails if a local ring constant returns.
  */

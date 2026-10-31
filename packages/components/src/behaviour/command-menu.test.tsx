@@ -281,7 +281,7 @@ describe("CommandMenu", () => {
     // an entry with the query of a fresh open. The window half is the
     // playground's `command-palette` probe, which is red for a reason this
     // renderer cannot see (the leaving layer's hit box swallows the press) —
-    // see `TODO.md` → Interlocks.
+    // see `.agents/slop/TODO.md` → Interlocks.
     const perform = vi.fn();
     const palette = renderComponent(<OpenedPalette perform={perform} />);
     const opener = palette.renderer.findByTestId("palette-opener")?.id ?? -1;

@@ -32,7 +32,7 @@ const designSystem = readFileSync(
 );
 
 const inventory = readFileSync(
-  new URL("../../../COMPONENTS.md", import.meta.url),
+  new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
   "utf8",
 );
 
@@ -76,7 +76,7 @@ const layerOrder = [
   "**notice**",
 ] as const;
 
-/** The surface each layer names, and the `COMPONENTS.md` row it belongs to. */
+/** The surface each layer names, and the `.agents/slop/COMPONENTS.md` row it belongs to. */
 const surfaces = [
   { named: "DropdownMenu", row: "Dropdown menus" },
   { named: "Popover", row: "Popovers" },
@@ -108,7 +108,7 @@ describe("docs/tokens.md §Layering", () => {
     surfaces.forEach(({ named, row }) => {
       expect(
         inventory,
-        `COMPONENTS.md has no "${row}" row for §Layering to name`,
+        `.agents/slop/COMPONENTS.md has no "${row}" row for §Layering to name`,
       ).toContain(`| ${row} |`);
       expect(section, `§Layering no longer names ${named}`).toContain(named);
     });

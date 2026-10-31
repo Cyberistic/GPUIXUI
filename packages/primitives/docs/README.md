@@ -7,7 +7,7 @@ and the examples registry is what `apps/playground` mounts natively.
 
 Each page carries frontmatter, a paragraph saying what the component is, and the
 sections §Page contract lists below. Every claim is traceable to the source and
-to the suite each Tier 1 record in `src/inventory.ts` names; `COMPONENTS.md`
+to the suite each Tier 1 record in `src/inventory.ts` names; `.agents/slop/COMPONENTS.md`
 carries the same verdicts. A capability the pinned runtime does not have is
 written as a limitation with the alternative in use — never as a promise.
 
@@ -55,7 +55,7 @@ Each page opens with frontmatter (`title`, `description`) and carries the three
 required sections below, plus the optional section when it applies: the preview
 above them, one usage example, the API tables and at most three runtime limits.
 Measurement stories, verification citations, keyboard tables, theming prose and
-related links are not page content — they live in `COMPONENTS.md`, the inventory
+related links are not page content — they live in `.agents/slop/COMPONENTS.md`, the inventory
 record's `tests` list and the playground's probe records. A page cannot invent a
 section the table does not name, and a row cannot promise a section no page
 carries — `src/docs.test.ts` reads this table and every page together.
@@ -88,7 +88,7 @@ A keyboard rule, a supported `aria-*` and the roles a component paints belong in
 the section they inform — the API table's consequence or a limitation — rather
 than a heading of their own, so no page promises a section its component does
 not have. Every claim is traceable to the source and to the suite each Tier 1
-record in `src/inventory.ts` names; `COMPONENTS.md` carries the same verdicts. A
+record in `src/inventory.ts` names; `.agents/slop/COMPONENTS.md` carries the same verdicts. A
 capability the pinned runtime does not have is written as a limitation with the
 alternative in use — never as a promise.
 

@@ -1,6 +1,6 @@
 /**
  * Guards the design-system inventory the way `packages/primitives/src/
- * inventory.test.ts` guards the Tier 1 rows: `COMPONENTS.md` is the status a
+ * inventory.test.ts` guards the Tier 1 rows: `.agents/slop/COMPONENTS.md` is the status a
  * release is judged on, so a row that says `done` while naming no proof is a
  * claim no one can check.
  *
@@ -43,7 +43,7 @@ const packageDirs: ReadonlyArray<string> = [
 ];
 
 const components = readFileSync(
-  new URL("../../../COMPONENTS.md", import.meta.url),
+  new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
   "utf8",
 );
 

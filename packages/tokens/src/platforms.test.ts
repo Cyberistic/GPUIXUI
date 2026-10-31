@@ -550,10 +550,10 @@ describe("platform documentation", () => {
 
   /** The inventory records the capability in one table row. */
   const inventoryRow = (): Record<string, string> => {
-    const row = read("../../../COMPONENTS.md")
+    const row = read("../../../.agents/slop/COMPONENTS.md")
       .split("\n")
       .find((line) => line.startsWith("| Platform styles |"));
-    return row === undefined ? {} : { "COMPONENTS.md": row };
+    return row === undefined ? {} : { ".agents/slop/COMPONENTS.md": row };
   };
 
   const surfaces = (): Record<string, string> => ({
@@ -572,7 +572,7 @@ describe("platform documentation", () => {
   ];
 
   it("records the capability in the inventory", () => {
-    expect(Object.keys(inventoryRow())).toEqual(["COMPONENTS.md"]);
+    expect(Object.keys(inventoryRow())).toEqual([".agents/slop/COMPONENTS.md"]);
   });
 
   it("no longer calls the platform palette, radii or density unmeasured", () => {

@@ -1,7 +1,7 @@
 /**
  * The implementation behind a package page.
  *
- * `MISSION.md` asks every component page for copyable source, and the pages the
+ * `.agents/slop/MISSION.md` asks every component page for copyable source, and the pages the
  * packages ship are Markdown the site mounts: they can describe the component
  * but cannot embed it. This module is the model the site renders for them — the
  * module the page documents (`page-dependencies-source.ts` resolves it from the

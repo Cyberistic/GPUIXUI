@@ -1,6 +1,6 @@
-# LICENSES/ — licences and attribution
+# .agents/slop/LICENSES/ — licences and attribution
 
-The release inventory. `README.md`'s "Built on" table credits every project the
+The release inventory. `.agents/slop/status.md`'s "Built on" table credits every project the
 library stands on; the records here verify each one's licence, record where it
 was read from, and say whether we ship, derive from, or only reference it. The
 records render on `/docs/license`, so a file added here appears on the site
@@ -8,7 +8,7 @@ with no docs change.
 
 ## Mapping
 
-| `LICENSES/` file | `README.md` "Built on" row | Licence | Relationship |
+| `.agents/slop/LICENSES/` file | `status.md` "Built on" row | Licence | Relationship |
 | ---------------- | -------------------------- | ------- | ------------ |
 | `shadcn-ui.md` | shadcn/ui | MIT | derive — class recipes reused verbatim, docs anatomy |
 | `base-ui.md` | Base UI | MIT | reference-only — behaviour and parts model |

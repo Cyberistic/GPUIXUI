@@ -5,7 +5,7 @@
 This library exists to build AI-heavy desktop tools, so the conversation surface is one of
 the main behaviours to provide. Port the **behaviour** of **shadcn/ui's AI Elements
 `chat` and `message`** (https://ui.shadcn.com/docs/ai-elements/base/chat,
-https://ui.shadcn.com/docs/ai-elements/base/message) — credited in `LICENSES/` — not the
+https://ui.shadcn.com/docs/ai-elements/base/message) — credited in `.agents/slop/LICENSES/` — not the
 browser implementation. `message` is the row; `chat` is the conversation built on the
 Message scroller.
 
@@ -84,7 +84,7 @@ provides `<markdown>` for content and `<virtual-list>` for long histories.
 - [ ] Streaming, reasoning, tool calls, sources, error/retry behave as above.
 - [ ] Docs pages: a live streaming example, a reasoning/tool-call example, a retry-on-error
       example.
-- [ ] shadcn/ui AI Elements credited in `LICENSES/` and on both pages.
+- [ ] shadcn/ui AI Elements credited in `.agents/slop/LICENSES/` and on both pages.
 - [ ] Native smoke test passes — blocked by B1 until the playground runs.
 
 ## STOP conditions

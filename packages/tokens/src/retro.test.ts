@@ -317,10 +317,10 @@ describe("editing an authored look", () => {
  */
 describe("retro documentation", () => {
   const inventoryRow = (): Record<string, string> => {
-    const row = read("../../../COMPONENTS.md")
+    const row = read("../../../.agents/slop/COMPONENTS.md")
       .split("\n")
       .find((line) => line.startsWith("| Retro looks |"));
-    return row === undefined ? {} : { "COMPONENTS.md": row };
+    return row === undefined ? {} : { ".agents/slop/COMPONENTS.md": row };
   };
 
   const surfaces = (): Record<string, string> => ({
@@ -331,7 +331,7 @@ describe("retro documentation", () => {
   });
 
   it("records the looks in the inventory", () => {
-    expect(Object.keys(inventoryRow())).toEqual(["COMPONENTS.md"]);
+    expect(Object.keys(inventoryRow())).toEqual([".agents/slop/COMPONENTS.md"]);
   });
 
   it("names the table and the resolver in every surface", () => {
@@ -391,7 +391,8 @@ describe("retro documentation", () => {
     const unnamed = looks
       .map((name) => retroStyles[name].label)
       .filter(
-        (label) => !(inventoryRow()["COMPONENTS.md"] ?? "").includes(label),
+        (label) =>
+          !(inventoryRow()[".agents/slop/COMPONENTS.md"] ?? "").includes(label),
       );
     expect(unnamed).toEqual([]);
     const readme = read("../README.md");

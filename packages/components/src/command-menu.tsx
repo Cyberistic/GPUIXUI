@@ -545,7 +545,7 @@ const commandMenuRoot: PartsContract = {
   hint: "Put the input, list and empty state directly inside CommandMenu.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const commandMenuMeta = {
   name: "Command menus",
   tier: 2,

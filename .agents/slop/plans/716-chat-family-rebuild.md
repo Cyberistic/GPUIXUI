@@ -93,8 +93,8 @@ Rewrite:
 - `apps/docs/src/components/docs/chat-demo.tsx` + `demos.css` + test: the chat
   preview becomes the shadcn-shaped block (header with title/status/reset,
   scrolling transcript, composer) at a fixed height.
-- `COMPONENTS.md`, `packages/components/src/inventory.ts`,
-  `packages/components/src/index.ts`, `TODO.md`.
+- `.agents/slop/COMPONENTS.md`, `packages/components/src/inventory.ts`,
+  `packages/components/src/index.ts`, `.agents/slop/TODO.md`.
 
 ## Tests
 
@@ -130,5 +130,5 @@ Rewrite:
 ## Acceptance
 
 The four new files above exist, the four frames exist under
-`apps/playground/.artifacts/live/`, `COMPONENTS.md`/inventory/`TODO.md` are
+`apps/playground/.artifacts/live/`, `.agents/slop/COMPONENTS.md`/inventory/`.agents/slop/TODO.md` are
 current, and the two-direction runs are recorded in the report.

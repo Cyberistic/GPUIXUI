@@ -67,7 +67,7 @@ So the choice is genuinely structural:
 4. **The unverifiable interactions are named, not smoothed over**:
    focus/blur, wheel scrolling, live keyboard injection, `canvas`, and
    everything in 0.5.1's absent-API row above. Each gets a limitation record in
-   `COMPONENTS.md` and the docs, with the resolution being a supported host.
+   `.agents/slop/COMPONENTS.md` and the docs, with the resolution being a supported host.
 5. **The upgrade/verification path stays open and small**: the same suite, run
    on an Apple Silicon Mac, x64 Windows, or x64 Linux host
    (`.agents/slop/plans/110-native-smoke-test.md` §4), is the only thing that
@@ -89,17 +89,17 @@ So the choice is genuinely structural:
 - Per-component native verification still cannot happen here, so Phase B's exit
   condition ("at least one component running in GPUix") is met only in the
   legacy probe, not for the shipped components. This must be visible in
-  `TODO.md` and `COMPONENTS.md`.
+  `.agents/slop/TODO.md` and `.agents/slop/COMPONENTS.md`.
 - The playground cannot render components on this host; `dev` exits `2` with
   the evidence. A human can still run the legacy probe to see a real window.
 
 **Rejected alternatives**
 
 - *Target 0.5.1 to keep everything runnable*: rejected — no focus events means a
-  component library with fake focus states, which `MISSION.md` explicitly
+  component library with fake focus states, which `.agents/slop/MISSION.md` explicitly
   forbids.
 - *Target both versions behind an adapter*: rejected — two divergent prop
   surfaces (`onLayout`, `focusVisible`, `aria-*` vs not) would infect every
   component with conditionals for one host's sake.
 - *Use the shipped wasm renderer as native evidence*: rejected — a browser
-  canvas is not the native runtime (see ADR/decision D8 in `PLAN.md`).
+  canvas is not the native runtime (see ADR/decision D8 in `.agents/slop/PLAN.md`).

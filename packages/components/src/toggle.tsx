@@ -19,7 +19,7 @@
 export { Toggle } from "@gpuixui/primitives/toggle";
 export type { ToggleProps, ToggleVariant } from "@gpuixui/primitives/toggle";
 
-/** Inventory record, mirrored into `COMPONENTS.md`'s Toggle row. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Toggle row. */
 export const toggleMeta = {
   name: "Toggle",
   tier: 1,

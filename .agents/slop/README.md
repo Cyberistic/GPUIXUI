@@ -42,4 +42,4 @@ overlap and a duplicate tick starts nothing.
 
 
 Everything here is a working note. Anything that becomes a durable fact belongs
-in `PLAN.md`, `TODO.md`, `COMPONENTS.md`, `docs/`, or an ADR.
+in `.agents/slop/PLAN.md`, `.agents/slop/TODO.md`, `.agents/slop/COMPONENTS.md`, `docs/`, or an ADR.

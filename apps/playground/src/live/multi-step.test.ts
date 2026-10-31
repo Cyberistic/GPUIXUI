@@ -48,7 +48,7 @@ const read = (path: string): string =>
 
 const view = read("./scenarios.tsx");
 const readme = read("../../README.md");
-const todo = read("../../../../TODO.md");
+const todo = read("../../../../.agents/slop/TODO.md");
 
 /**
  * The checks `multiStepSteps` asserts.

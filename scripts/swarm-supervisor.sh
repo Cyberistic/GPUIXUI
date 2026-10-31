@@ -6,7 +6,7 @@
 #   1. records progress into .agents/slop/swarm-status.log;
 #   2. counts live agent sessions and starts new ones until at least MIN_AGENTS
 #      are running, all in the shared checkout on master, each pointed at
-#      MISSION.md and the next unclaimed task in its workstream.
+#      .agents/slop/MISSION.md and the next unclaimed task in its workstream.
 #
 # It is idempotent (a tick with MIN_AGENTS healthy agents starts nothing) and
 # crash-safe (a dead session is replaced on the next tick). It runs at most one
@@ -14,7 +14,7 @@
 # directory guards against a manual invocation racing the scheduled one.
 #
 # Each workstream is a persistent loop that runs `opencode run` repeatedly, so a
-# finished turn continues from the state the agent left in TODO.md rather than
+# finished turn continues from the state the agent left in .agents/slop/TODO.md rather than
 # leaving the swarm short-handed until the next tick.
 #
 # The model is not fixed here: every loop reads the active model from
@@ -130,15 +130,15 @@ plans_in() {
 
 todo_progress() {
   local done total
-  done=$(grep -c '^`\[x\]`' "$REPO/TODO.md" 2>/dev/null | tr -d ' ')
-  total=$(grep -c '^`\[' "$REPO/TODO.md" 2>/dev/null | tr -d ' ')
+  done=$(grep -c '^`\[x\]`' "$REPO/.agents/slop/TODO.md" 2>/dev/null | tr -d ' ')
+  total=$(grep -c '^`\[' "$REPO/.agents/slop/TODO.md" 2>/dev/null | tr -d ' ')
   echo "${done:-0}/${total:-0}"
 }
 
 component_progress() {
   local done total
-  done=$(awk -F'|' 'NF > 3 && $3 ~ /^ *done/ { n++ } END { print n + 0 }' "$REPO/COMPONENTS.md" 2>/dev/null)
-  total=$(awk -F'|' 'NF > 3 && $2 ~ /[A-Za-z]/ && $3 !~ /Status/ { n++ } END { print n + 0 }' "$REPO/COMPONENTS.md" 2>/dev/null)
+  done=$(awk -F'|' 'NF > 3 && $3 ~ /^ *done/ { n++ } END { print n + 0 }' "$REPO/.agents/slop/COMPONENTS.md" 2>/dev/null)
+  total=$(awk -F'|' 'NF > 3 && $2 ~ /[A-Za-z]/ && $3 !~ /Status/ { n++ } END { print n + 0 }' "$REPO/.agents/slop/COMPONENTS.md" 2>/dev/null)
   echo "${done:-0}/${total:-0}"
 }
 
@@ -167,8 +167,8 @@ write_runner() {
   cat >"$prompt" <<PROMPT
 You are the **$ws** agent of the GPUIXUI swarm, working in $REPO on **master**.
 
-Read these first, in order: MISSION.md, AGENTS.md, TODO.md, COMPONENTS.md.
-PLAN.md is background, not a gate.
+Read these first, in order: .agents/slop/MISSION.md, AGENTS.md, .agents/slop/TODO.md, .agents/slop/COMPONENTS.md.
+.agents/slop/PLAN.md is background, not a gate.
 
 **Implement and test now.** Claim the next unclaimed task in your workstream,
 write the code, and land a test that can fail without it. Write a plan only for
@@ -176,7 +176,7 @@ a multi-day change or a runtime capability gap; never for a task you can finish
 this turn. Do not create plan-per-task files.
 
 Done means: the code, a test that can fail, an example, a docs page, and a
-COMPONENTS.md row for a component; code, a test, and the TODO.md tick otherwise.
+.agents/slop/COMPONENTS.md row for a component; code, a test, and the .agents/slop/TODO.md tick otherwise.
 
 **Shared checkout.** The other agents write in this same directory on master.
 Own only your paths and never edit another workstream's files. Stage only your
@@ -202,10 +202,10 @@ paying for a full live run. Record the exact scenario ids you ran.
 Your workstream: $(workstream_scope "$ws")
 
 Own only the paths in your workstream. Another agent owns everything else; if
-you need a change outside your paths, record it as a task in TODO.md instead of
+you need a change outside your paths, record it as a task in .agents/slop/TODO.md instead of
 editing it. Commit often with meaningful messages. Never claim a test passed
 unless it ran.
-BLOCKERS: read ~/GPUIXUI/BLOCKERS.md first. If one applies to your workstream it takes priority over your queue: fix it, and plan only if it will not fit in a turn. If none applies, continue. Do not wait for a human.
+BLOCKERS: read ~/GPUIXUI/.agents/slop/BLOCKERS.md first. If one applies to your workstream it takes priority over your queue: fix it, and plan only if it will not fit in a turn. If none applies, continue. Do not wait for a human.
 Push: commit often with meaningful messages and push master at least once per coherent unit of work.
 PROMPT
 
@@ -220,13 +220,13 @@ For the next file (sorted):
 
 1. **Read it.**
 2. **Decide against master**, not against the plan's own claims:
-   - the capability already exists (grep \`packages/\`, \`apps/\`, \`TODO.md\`) — discard;
+   - the capability already exists (grep \`packages/\`, \`apps/\`, \`.agents/slop/TODO.md\`) — discard;
    - duplicate, superseded, or stale (pins an old GPUix, cites a deleted plan or
      workstream) — discard;
    - real, missing, and fits one turn — **implement it**: code plus a test that
      fails without it, then commit with \`scripts/swarm-commit.sh\`;
    - real but large, or it targets a live workstream's paths
-     (tokens/primitives/components/docs-site/playground) — add **one** TODO.md
+     (tokens/primitives/components/docs-site/playground) — add **one** .agents/slop/TODO.md
      row naming the gap, then discard. Do not edit another workstream's files.
 3. **Delete the queue file**, then append one line to
    \`.agents/slop/salvage-log.md\`:

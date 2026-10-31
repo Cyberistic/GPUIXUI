@@ -444,7 +444,7 @@ export const ColorPicker = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md`. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`. */
 export const colorPickerMeta = {
   name: "Color picker",
   tier: 2,

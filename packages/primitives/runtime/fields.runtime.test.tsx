@@ -7,10 +7,10 @@
  * what `simulateKeystrokes` plus `onChange` shows here.
  *
  * `Select` and `Tooltip` are thin wrappers over GPUix's own headless components
- * (PLAN.md D15), so this suite's job is the wrapper's contract: the trigger's
+ * (.agents/slop/PLAN.md D15), so this suite's job is the wrapper's contract: the trigger's
  * chrome, the popover's surface, and that the open/dismiss behaviour is really
  * the published one. One measured requirement of the reuse is asserted as a
- * requirement, not as success — see `COMPONENTS.md`.
+ * requirement, not as success — see `.agents/slop/COMPONENTS.md`.
  */
 
 import { expect, it } from "vitest";

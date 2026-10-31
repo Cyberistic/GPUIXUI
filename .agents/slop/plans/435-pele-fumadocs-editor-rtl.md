@@ -15,18 +15,18 @@ panes, and a theme that must not fight the user. Its component inventory is a se
 on ours, and it is closer to our register than a web marketing kit.
 
 **Recon first (do not assume the stack):**
-- Read the repository's README and licence. Record the licence in `LICENSES/` **before**
+- Read the repository's README and licence. Record the licence in `.agents/slop/LICENSES/` **before**
   adapting anything, and distinguish inspiration from copied source.
 - Note the language/framework. If it is React/TS, its component *shape* may be portable; if
   it is another stack, treat it as behaviour reference only.
 - Enumerate its components and tokens into the research file
-  (`.agents/slop/reference-research.md`), then diff against `COMPONENTS.md`.
+  (`.agents/slop/reference-research.md`), then diff against `.agents/slop/COMPONENTS.md`.
 
 **What to port:** component decomposition, token names/semantics, the dense-desktop layout
 patterns (sidebar + tabs + status bar + inspector), and any interaction detail we lack
 (settings panes, command palette, property editors). **Not** its branding or art.
 
-**Deliverable:** an inventory diff (covered / missing) added to `COMPONENTS.md`, plus a
+**Deliverable:** an inventory diff (covered / missing) added to `.agents/slop/COMPONENTS.md`, plus a
 short "what Pele taught us" section in the research file. No implementation in this step.
 
 **STOP:** if the licence does not permit adaptation, use it as behaviour reference only.
@@ -74,7 +74,7 @@ with the byte-for-byte guarantee stated as a contract, not a hope.
 
 **Evidence.** A round-trip test: open a real MDX document, change one sentence, assert the
 diff is one line and the untouched blocks are byte-identical. A docs page with a live demo
-(or a labelled browser surface). Licence recorded in `LICENSES/`.
+(or a labelled browser surface). Licence recorded in `.agents/slop/LICENSES/`.
 
 **Acceptance:** the editor is a documented component with typed parts and a live demo; the
 runtime boundary is stated; the round-trip contract is tested.

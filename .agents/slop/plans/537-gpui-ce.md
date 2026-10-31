@@ -8,7 +8,7 @@
 | Depends on | `020` (GPUix runtime capability), `524` (tw `unsupported` channel), `525` (transform branch), `140` (darwin-x64 binding) |
 | Sources | `gpui-ce/gpui-ce` @ `a8d3969d…` (**Apache-2.0**); `remorses/gpuix` @ `515df19` with zed submodule `2565b8a3…`; `0xErwin1/zed` transform branch `fc4c1586…`; published GPUix `0.10.0` |
 | Reference clone | `/Users/cyberistic/GPUIXUI/references/gpui-ce` (full clone, read-only; 292 MiB `.git`, 35 964 commits) |
-| Feeds | `packages/tw` `unsupported` set; `COMPONENTS.md` GPUix-support column; plan 525's fork decision; `PLAN.md` decision rows |
+| Feeds | `packages/tw` `unsupported` set; `.agents/slop/COMPONENTS.md` GPUix-support column; plan 525's fork decision; `.agents/slop/PLAN.md` decision rows |
 
 ---
 
@@ -127,7 +127,7 @@ There is no GPL/AGPL contamination in the files this plan would port.
 **Obligations if we copy any `gpui-ce` code** (Apache-2.0 §4):
 
 1. keep the Apache-2.0 licence text;
-2. add a `LICENSES/provenance.md` row: source repo, commit `a8d3969`, the exact
+2. add a `.agents/slop/LICENSES/provenance.md` row: source repo, commit `a8d3969`, the exact
    files, what changed, licence;
 3. retain copyright/attribution notices (Zed Industries for the base, gpui-ce
    contributors for their changes);
@@ -835,7 +835,7 @@ When a signal fires, re-run §3 against the new pins before §7.
 
 ### 10.2 Obligations
 
-1. Add a `LICENSES/provenance.md` row before the first copied line lands:
+1. Add a `.agents/slop/LICENSES/provenance.md` row before the first copied line lands:
    source URL, commit, files, what changed, licence.
 2. Keep the Apache-2.0 text; add a `NOTICE` entry naming Zed Industries (GPUI
    base) and the gpui-ce contributors (ported changes).
@@ -873,7 +873,7 @@ When a signal fires, re-run §3 against the new pins before §7.
 - [ ] P0.4 ARIA `checked`/`valuenow`/`min`/`max` mapping; AccessKit dump test.
 - [ ] P1 style-transition spike **only if** a component requirement exists;
       otherwise keep `transition-*` unsupported and document the limitation.
-- [ ] `LICENSES/provenance.md` row for any copied `gpui-ce` code.
+- [ ] `.agents/slop/LICENSES/provenance.md` row for any copied `gpui-ce` code.
 
 ---
 

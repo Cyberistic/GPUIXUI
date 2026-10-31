@@ -10,7 +10,7 @@ import { gitConfig } from "../../lib/shared";
  * The rows are generated from `packages/*\/examples/*.example.tsx`
  * (`examples-data.ts`), so the page cannot list an example that does not exist.
  * The source is a **reading** aid, not a preview: these are GPUix modules, and
- * a browser rendering of them would be the fake native preview MISSION.md
+ * a browser rendering of them would be the fake native preview .agents/slop/MISSION.md
  * forbids. It stays collapsed until a reader asks for it.
  */
 

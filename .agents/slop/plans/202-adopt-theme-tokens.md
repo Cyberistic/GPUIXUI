@@ -116,7 +116,7 @@ All paths relative to the **tokens-theme worktree**:
 | `packages/tokens/README.md` | document the two new groups and the layering rule |
 | `docs/tokens.md` | **create** (the Phase B doc already planned) — the public token catalogue, `## Layering`, and the deliberate omissions |
 | `docs/README.md` | `tokens.md` row (already planned for Phase B) |
-| `LICENSES/adabraka-ui.md` | MIT + `Copyright (c) 2025 Adabraka Team`; **token *structure* referenced, no asset or source copied** |
+| `.agents/slop/LICENSES/adabraka-ui.md` | MIT + `Copyright (c) 2025 Adabraka Team`; **token *structure* referenced, no asset or source copied** |
 
 **Do not touch** `packages/tokens/src/color.ts`, `typography.ts`, `scale.ts` or
 `elevation.ts` beyond re-exporting — they are landed and tested.
@@ -138,7 +138,7 @@ Stop and report if:
 - `packages/tokens` does not yet contain the fields §1 lists (the branch moved —
   re-read `src/color.ts`, `src/scale.ts`, `src/theme.ts` before adding anything);
 - a component needs a `z-index` to work — that is a GPUix capability gap, not a
-  token gap; record it in `COMPONENTS.md` and `docs/gpuix-capabilities.md`;
+  token gap; record it in `.agents/slop/COMPONENTS.md` and `docs/gpuix-capabilities.md`;
 - you are about to copy anything from `references/adabraka-ui/assets/` — **never
   copy its assets**: 3,274 icon files (1,637 SVG + 1,637 JSON, Lucide geometry),
   `Inter-*.ttf` / `JetBrainsMono-*.ttf`, and `assets/audio/sample.mp3` ship with
@@ -164,5 +164,5 @@ Stop and report if:
 - `docs/tokens.md` documents every public token, the layering model and the
   deliberate omissions (breakpoints, extra shadows, `z`).
 - No duplicate group, no `z` scale, no asset copied.
-- `LICENSES/adabraka-ui.md` records the MIT line and "structure referenced, no
+- `.agents/slop/LICENSES/adabraka-ui.md` records the MIT line and "structure referenced, no
   assets copied".

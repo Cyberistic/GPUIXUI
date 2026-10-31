@@ -6,11 +6,11 @@
 | Phase | F (docs polish) → feeds the preview policy in `docs/preview-strategy.md` |
 | Owner | `docs-site` |
 | Depends on | the 0.11.0 browser build (`@gpuix/native`'s `browser` export), the docs site's deploy middleware, plan `203` (capability record) |
-| Feeds | `docs/preview-strategy.md` §The paint is measured/§The live surface, `TODO.md` → Docs information architecture, `apps/docs/scripts/live-surface-probe.ts` |
+| Feeds | `docs/preview-strategy.md` §The paint is measured/§The live surface, `.agents/slop/TODO.md` → Docs information architecture, `apps/docs/scripts/live-surface-probe.ts` |
 
 ## 1. The finding this plan builds on
 
-`MISSION.md` names four preview strategies and asks for the strongest honest
+`.agents/slop/MISSION.md` names four preview strategies and asks for the strongest honest
 one. Strategy 1 — *embed a real GPUix surface* — was ruled out while the site
 was built, because `@gpuix/react` opens a native window through the `.node`
 binding. **That is no longer the whole story.** `@gpuix/native@0.11.0` ships a
@@ -233,7 +233,7 @@ paint from Node.
 - `/docs` stays non-isolated and keeps its labelled reproductions.
 - The guards in §3 Step 6 fail when the route, the headers, the single-mount
   rule or the label is removed.
-- `docs/preview-strategy.md` and `TODO.md` record the outcome honestly, with the
+- `docs/preview-strategy.md` and `.agents/slop/TODO.md` record the outcome honestly, with the
   evidence path.
 
 ## 6. Outcome (landed)

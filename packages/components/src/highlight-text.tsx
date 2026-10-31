@@ -211,7 +211,7 @@ export const HighlightText = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 600). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const highlightTextMeta = {
   name: "Highlight text",
   tier: 5,

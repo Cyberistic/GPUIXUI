@@ -1,4 +1,4 @@
-import markdown from "../../../../COMPONENTS.md?raw";
+import markdown from "../../../../.agents/slop/COMPONENTS.md?raw";
 import {
   laneView,
   parseInventory,
@@ -8,7 +8,7 @@ import {
 } from "./inventory";
 
 /**
- * `COMPONENTS.md`, parsed once for the composition pages.
+ * `.agents/slop/COMPONENTS.md`, parsed once for the composition pages.
  *
  * The file is imported as text rather than copied into the docs, so the pages
  * and the inventory are the same document. Its tier tables are the only input;

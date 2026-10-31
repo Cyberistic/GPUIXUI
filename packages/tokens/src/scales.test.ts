@@ -126,7 +126,7 @@ describe("the equal radius the Fluent 2 style aliases", () => {
     readFileSync(new URL(path, import.meta.url), "utf8");
   const catalogue = read("../../../docs/tokens.md");
   const designSystem = read("../../../docs/design-system.md");
-  const inventory = read("../../../COMPONENTS.md");
+  const inventory = read("../../../.agents/slop/COMPONENTS.md");
   const readme = read("../README.md");
   const inventoryRow = ((): string => {
     const start = inventory.indexOf("| Scale order |");
@@ -144,7 +144,7 @@ describe("the equal radius the Fluent 2 style aliases", () => {
     const pages = {
       "docs/tokens.md": flat(catalogue),
       "docs/design-system.md": flat(designSystem),
-      "COMPONENTS.md": flat(inventoryRow),
+      ".agents/slop/COMPONENTS.md": flat(inventoryRow),
     };
     Object.entries(pages).forEach(([name, text]) => {
       expect(text, name).toContain(winLadder());

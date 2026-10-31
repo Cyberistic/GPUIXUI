@@ -4,7 +4,7 @@
  * The bug this host has is "the native binding does not load", and
  * `detectRuntime` must report it as data. If it rethrew, dropped the loader's
  * message, or answered `RuntimeReady` on a rejected load, the smoke CLI would
- * crash before it could explain why, and `COMPONENTS.md` would learn nothing.
+ * crash before it could explain why, and `.agents/slop/COMPONENTS.md` would learn nothing.
  */
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";

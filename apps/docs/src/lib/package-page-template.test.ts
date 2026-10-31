@@ -6,7 +6,7 @@ import { packageCollections } from "./collection-routes";
 /**
  * The component page template, enforced on the pages a package writes.
  *
- * `MISSION.md` makes a page part of a component's definition, and
+ * `.agents/slop/MISSION.md` makes a page part of a component's definition, and
  * `docs/preview-strategy.md` records the template: a page carries its prop
  * documentation, the runtime's accessibility budget and limitations, the
  * evidence that the behaviour was measured, and where a reader goes next.

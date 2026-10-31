@@ -469,7 +469,7 @@ describe("the pages that teach the disabled state", () => {
         "composite hint on its `muted` toolbar at **1.96:1**",
       );
     });
-    const inventory = flat(read("../../../COMPONENTS.md"));
+    const inventory = flat(read("../../../.agents/slop/COMPONENTS.md"));
     expect(inventory).toContain("the four strips a field sits on");
     expect(inventory).toContain(
       "composite hint on its muted toolbar at 1.96:1",
@@ -513,7 +513,7 @@ describe("the pages that teach the disabled state", () => {
       ).toContain("`@gpuixui/tw`'s copyable `button` recipe");
     });
 
-    const inventory = read("../../../COMPONENTS.md")
+    const inventory = read("../../../.agents/slop/COMPONENTS.md")
       .split("\n")
       .find((line) => line.startsWith("| Contrast contract |"));
     expect(inventory, "the Contrast contract row").toBeDefined();

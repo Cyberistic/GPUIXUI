@@ -3,7 +3,7 @@ import { relatedFor, type RelatedPage } from "../../lib/related";
 /**
  * The related components a page cannot link itself.
  *
- * `MISSION.md` asks every component page for its related components. A curated
+ * `.agents/slop/MISSION.md` asks every component page for its related components. A curated
  * page would have to retype the list and a package page is Markdown the site
  * mounts, so the site prints the family from `src/lib/related.ts` at the end of
  * both frames.

@@ -55,7 +55,7 @@ const read = (path: string): string =>
 const catalogue = read("../../../docs/tokens.md");
 const designSystem = read("../../../docs/design-system.md");
 const readme = read("../README.md");
-const inventory = read("../../../COMPONENTS.md");
+const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
 /** One row of the inventory table, whitespace flattened. */
 const inventoryRow = (title: string): string =>
@@ -278,7 +278,7 @@ describe("the pair a theme can carry", () => {
       read("./highlight.ts"),
       catalogue,
       readme,
-      read("../../../COMPONENTS.md"),
+      read("../../../.agents/slop/COMPONENTS.md"),
     ];
 
     surfaces.forEach((page, at) => {
@@ -318,7 +318,7 @@ describe("the pair a theme can carry", () => {
     const printed = `${tightest.ratio.toFixed(3)}:1`;
     const surfaces: ReadonlyArray<readonly [string, string]> = [
       ["docs/tokens.md", section("## Find highlights")],
-      ["COMPONENTS.md", inventoryRow("Find highlights")],
+      [".agents/slop/COMPONENTS.md", inventoryRow("Find highlights")],
     ];
     surfaces.forEach(([name, page]) => {
       expect(page, name).toContain(printed);

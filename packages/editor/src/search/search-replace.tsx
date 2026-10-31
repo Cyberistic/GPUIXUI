@@ -265,7 +265,7 @@ export const SearchReplace = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` by the owning workstream. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` by the owning workstream. */
 export const searchReplaceMeta = {
   name: "Search and replace",
   tier: 4,

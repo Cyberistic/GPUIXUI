@@ -634,7 +634,7 @@ const drawerContent: PartsContract = {
   hint: "Put the header, title, description, footer and close control inside DrawerContent.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const drawerMeta = {
   name: "Drawer",
   tier: 2,

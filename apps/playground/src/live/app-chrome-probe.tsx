@@ -221,7 +221,7 @@ const expectReadout = (
  * `click` dispatches a down/up at the element's centre with **no** preceding
  * move, and a trigger that follows the pointer (`AppMenu` opens a sibling on
  * enter) then reads the entry after the press. A window can deliver that order
- * too, and the component's stale read is recorded in `TODO.md` → Interlocks;
+ * too, and the component's stale read is recorded in `.agents/slop/TODO.md` → Interlocks;
  * the press measured here is the gesture a pointer makes.
  */
 const pressTrigger = (

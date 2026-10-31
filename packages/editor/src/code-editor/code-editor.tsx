@@ -314,7 +314,7 @@ export const CodeEditor = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` by the owning workstream. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` by the owning workstream. */
 export const codeEditorMeta = {
   name: "Code editor",
   tier: 4,

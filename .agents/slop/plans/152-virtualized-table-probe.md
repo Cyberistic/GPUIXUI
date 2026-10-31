@@ -68,9 +68,9 @@ a required probe capability; the integrity check is unchanged.
 
 - `apps/playground/README.md`: the scenario list and count (16), the new
   structure line, and the measured facts from §5.
-- `COMPONENTS.md`: the `Virtualized tables` row's **GPUix support** cell becomes
+- `.agents/slop/COMPONENTS.md`: the `Virtualized tables` row's **GPUix support** cell becomes
   the probe verdict, and the evidence table's `table` row lists the scenarios.
-- `TODO.md`: tick the new item and update the progress bar.
+- `.agents/slop/TODO.md`: tick the new item and update the progress bar.
 - `.agents/slop/plans/README.md`: index this plan.
 - Plan `130` §8 (handoff): point the data-grid plan at this probe.
 
@@ -107,7 +107,7 @@ Stop and report with evidence if:
   click). This is a React defect in the probe, not a runtime fact; fix the
   probe's state handling before drawing a conclusion.
 - **The probe needs a change outside this workstream** (e.g. a new `SmokeHost`
-  method): add the task to `TODO.md` instead of editing another package.
+  method): add the task to `.agents/slop/TODO.md` instead of editing another package.
 
 ## 6. Test plan
 
@@ -122,7 +122,7 @@ Stop and report with evidence if:
 - `virtualized-table` is registered and green on this host; the suite is
   **16/16**, exit `0`.
 - The verdict (supported / partial / unsupported) is recorded in plan `140` §4,
-  `COMPONENTS.md`, and the app README with the measured numbers.
+  `.agents/slop/COMPONENTS.md`, and the app README with the measured numbers.
 - The two-direction proof was run and recorded.
 - `nub run check`, `nub run lint`, `nub run test` pass.
 

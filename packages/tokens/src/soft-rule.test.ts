@@ -49,7 +49,7 @@ const flat = (text: string): string => text.replaceAll(/\s+/g, " ");
 const catalogue = flat(read("../../../docs/tokens.md"));
 const designSystem = flat(read("../../../docs/design-system.md"));
 const packageReadme = flat(read("../README.md"));
-const inventory = flat(read("../../../COMPONENTS.md"));
+const inventory = flat(read("../../../.agents/slop/COMPONENTS.md"));
 const recipe = read("../../tw/src/recipes.ts");
 const painter = read("../../components/src/menu/item.tsx");
 

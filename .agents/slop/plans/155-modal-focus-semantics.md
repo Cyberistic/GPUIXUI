@@ -85,13 +85,13 @@ Steps:
 | `apps/playground/src/scenarios/overlay.tsx` | correct the header claim: the *node* has no focus method, the renderer does; point at `modal-focus-trap` |
 | `apps/playground/src/scenarios/tree.tsx` | same correction in its header comment and readout wording, if it still claims the runtime has no programmatic focus |
 | `apps/playground/README.md` | scenario count `18 → 19`, structure line, the new measured facts, delete the false "no programmatic focus" limitation |
-| `COMPONENTS.md` | evidence table gains `modal`; Tier 2 Dialog/Popover/Dropdown/Context/Command rows cite `modal-focus-trap` as the native evidence; suite count 19 |
-| `TODO.md` | tick the playground item; add the `156` cross-team item if the components package is still off `main` |
+| `.agents/slop/COMPONENTS.md` | evidence table gains `modal`; Tier 2 Dialog/Popover/Dropdown/Context/Command rows cite `modal-focus-trap` as the native evidence; suite count 19 |
+| `.agents/slop/TODO.md` | tick the playground item; add the `156` cross-team item if the components package is still off `main` |
 | `.agents/slop/plans/README.md` | index this plan; plan `156` |
 | `.agents/slop/plans/140-gpuix-native-darwin-x64-build.md` | §4: add the `modal` row of measured facts |
 
 No change outside `apps/playground`, `packages/testing` and the ledgers. If a
-change elsewhere is needed, record it in `TODO.md` and stop that part.
+change elsewhere is needed, record it in `.agents/slop/TODO.md` and stop that part.
 
 ## 4. Commands, and what each must produce
 
@@ -133,9 +133,9 @@ Stop and report with evidence if:
   renderer directly", recorded in the app README.
 - **Escape from a nested layer also closes the modal.** Record both readouts;
   the dismiss stack needs a component-level guard, and the limitation goes in
-  `COMPONENTS.md`.
+  `.agents/slop/COMPONENTS.md`.
 - **A change outside this workstream is needed** (other than the one-line
-  capability addition in `smoke.ts`): record it in `TODO.md`, do not edit other
+  capability addition in `smoke.ts`): record it in `.agents/slop/TODO.md`, do not edit other
   packages.
 
 ## 6. Test plan
@@ -153,7 +153,7 @@ Stop and report with evidence if:
   capability.
 - The suite is **19/19 green on this host**, exit `0`.
 - Both two-direction proofs were run and recorded.
-- The three measured facts are in plan `140` §4, `COMPONENTS.md` and the app
+- The three measured facts are in plan `140` §4, `.agents/slop/COMPONENTS.md` and the app
   README; the stale "no programmatic focus" claim is gone.
 - `nub run check`, `nub run lint`, `nub run test` pass.
 
@@ -162,7 +162,7 @@ Stop and report with evidence if:
 **19/19 green**, exit `0`; `modal-focus-trap` records 11 checks and
 `modal=verified`.
 
-Measured facts (also in plan `140` §4, `COMPONENTS.md` and the app README):
+Measured facts (also in plan `140` §4, `.agents/slop/COMPONENTS.md` and the app README):
 
 - **Component code can move native focus.** `useGpuix().renderer.focusElement`
   focused the modal content after open; `getFocusedElementId()` reported it, and

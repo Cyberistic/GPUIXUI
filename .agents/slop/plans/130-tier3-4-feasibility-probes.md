@@ -6,7 +6,7 @@
 | Phase | B (feasibility) → feeds D (data + workspace components) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120` |
-| Feeds | `packages/data-grid`, `packages/docking`, `packages/editor` plans; `COMPONENTS.md` Tier 3/4 rows |
+| Feeds | `packages/data-grid`, `packages/docking`, `packages/editor` plans; `.agents/slop/COMPONENTS.md` Tier 3/4 rows |
 
 ## 1. Goal
 
@@ -146,7 +146,7 @@ Verdicts remain `unverified` on this host: the suite exits `2` before running
 1. Write the three probes as scenarios in `apps/playground/src/scenarios/`
    following plan `120` §3.1, and register them (the registry integrity test
    covers `table` and `workspace`).
-2. Add one paragraph per Tier 3/4 inventory row to `COMPONENTS.md`'s
+2. Add one paragraph per Tier 3/4 inventory row to `.agents/slop/COMPONENTS.md`'s
    "GPUix support" cell: `probe-able (scenario <id>)`, `unsupported
    (evidence: README §<section>)`, or `partial (evidence …)`.
 3. Run the suite (on a supported host) and replace `probe-able` with
@@ -189,7 +189,7 @@ Verdicts remain `unverified` on this host: the suite exits `2` before running
 ## 7. Acceptance criteria
 
 - Three probes exist, registered, with numeric assertions.
-- `COMPONENTS.md` Tier 3/4 rows carry a support verdict with evidence; the
+- `.agents/slop/COMPONENTS.md` Tier 3/4 rows carry a support verdict with evidence; the
   `unsupported` ones name the upstream section.
 - The unsupported list (canvas/charts, multi-window detach, terminal surface,
   rich-text editing, native sticky headers, component-level persistence) is

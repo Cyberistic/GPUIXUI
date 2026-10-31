@@ -305,7 +305,7 @@ background = "#202020"
     const plan = read(
       "../../../.agents/slop/plans/433-platform-theme-recipes.md",
     );
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
     [catalogue, readme].forEach((page) => {
       expect(page).toContain("decodeOmarchyPalette");

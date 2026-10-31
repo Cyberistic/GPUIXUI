@@ -486,7 +486,7 @@ const contextMenuContent: PartsContract = {
   hint: "Put rows, groups, labels, separators and submenus directly inside ContextMenuContent.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const contextMenuMeta = {
   name: "Context menus",
   tier: 2,

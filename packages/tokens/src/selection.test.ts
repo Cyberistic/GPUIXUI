@@ -81,7 +81,7 @@ const everySurface = (): Readonly<Record<string, string>> => ({
   "docs/tokens.md": read("../../../docs/tokens.md"),
   "docs/design-system.md": read("../../../docs/design-system.md"),
   "packages/tokens/README.md": read("../README.md"),
-  "COMPONENTS.md": read("../../../COMPONENTS.md"),
+  ".agents/slop/COMPONENTS.md": read("../../../.agents/slop/COMPONENTS.md"),
 });
 
 /** A document's prose with its line wrapping flattened, so a sentence matches whole. */
@@ -529,7 +529,7 @@ describe("the tones the wash is painted on", () => {
     const catalogue = read("../../../docs/tokens.md");
     const design = read("../../../docs/design-system.md");
     const readme = read("../README.md");
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
     const under = placements.filter(({ washed, floor }) => washed < floor);
     const printed = `${under.length} of the ${placements.length} placements`;
@@ -831,7 +831,7 @@ describe("the wash a status message can carry", () => {
     const catalogue = read("../../../docs/tokens.md");
     const design = read("../../../docs/design-system.md");
     const readme = read("../README.md");
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
     const designed = styles.flatMap((theme) =>
       softTints.map((tint) => ({
         mode: theme.mode,
@@ -1005,7 +1005,7 @@ describe("the wash a theme cannot derive", () => {
     const catalogue = page("../../../docs/tokens.md");
     const design = page("../../../docs/design-system.md");
     const readme = page("../README.md");
-    const inventory = page("../../../COMPONENTS.md");
+    const inventory = page("../../../.agents/slop/COMPONENTS.md");
 
     expect(catalogue).toContain("lost a role this derivation moves");
     expect(catalogue).toContain("answers `undefined` rather than throwing");
@@ -1096,7 +1096,7 @@ describe("the floors a selection report uses", () => {
  *
  * A measured role is only a role if a host paints it, and the catalogue spent a
  * release telling a reader that setting `selectionColor` was "the component
- * packages' work, recorded in `TODO.md` → Interlocks" after both packages had
+ * packages' work, recorded in `.agents/slop/TODO.md` → Interlocks" after both packages had
  * done it. The page is read against the painters that put the role on a host, so
  * the sentence cannot outlive either state: a page that calls the work owed
  * fails while the hosts paint it, and a host that drops the wash fails while the
@@ -1127,7 +1127,9 @@ describe("the adoption both packages paint", () => {
     expect(text).toContain("`select-text`");
     expect(text).toContain("`messageSelection(theme, tone)`");
     expect(text).not.toContain("is the component packages' work");
-    expect(text).not.toContain("recorded in `TODO.md` → Interlocks;");
+    expect(text).not.toContain(
+      "recorded in `.agents/slop/TODO.md` → Interlocks;",
+    );
   });
 
   it("reads the seams the page names", () => {

@@ -1515,7 +1515,7 @@ describe("the status label on the wash a list row wears", () => {
     );
     expect(
       readFileSync(
-        new URL("../../../COMPONENTS.md", import.meta.url),
+        new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
         "utf8",
       ).replace(/\s+/g, " "),
     ).toContain(

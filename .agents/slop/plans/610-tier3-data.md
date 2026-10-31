@@ -98,7 +98,7 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
 ## 4. Rules
 
 - A component ships with code, a test that can fail, a docs page, an example and
-  a `COMPONENTS.md` row.
+  a `.agents/slop/COMPONENTS.md` row.
 - Anything the runtime cannot express is documented at the call site with the
   upstream issue number, and the fallback is measured — not asserted.
 - Virtualization and selection are proven on a 1,000-row fixture in the real
@@ -782,7 +782,7 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
   ids from their own sources (measured failing with the old id:
   `expected 'tree-readout' not to be 'tree-readout'`). The pair is green (2/2,
   3.6 s + 10.0 s); the runner-level mount marker for any two probes that share
-  an id is `TODO.md` → Interlocks.
+  an id is `.agents/slop/TODO.md` → Interlocks.
 
 - **A grid's saved state round-trips, and a sort it cannot run is not counted**:
   the record was read (`readGridState`, `useTable({ stored })`) while nothing
@@ -849,7 +849,7 @@ primitives in Phase 6 are stacked `<svg>` on GPUix.
 
 ## 5. Acceptance
 
-- The twenty data rows in `COMPONENTS.md` move from `todo` to `done` (or `?`
+- The twenty data rows in `.agents/slop/COMPONENTS.md` move from `todo` to `done` (or `?`
   with a measured limitation).
 - `/docs/data-display` links every component and states the runtime rules.
 - A live playground probe mounts the table at 1,000 rows and measures the

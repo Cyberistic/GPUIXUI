@@ -95,9 +95,9 @@ supported rows or by plan `020` §1.2 — do not copy them verbatim.
 | ---- | ------ |
 | `docs/gpuix-capabilities.md` | **create** — §2 above |
 | `docs/README.md` | `gpuix-capabilities.md` row already exists (Phase A) — confirm the path matches |
-| `PLAN.md` §5 | close the open question "Which GPUix primitives actually exist…" by pointing at this document + `020` §3 |
-| `LICENSES/adabraka-ui.md` | MIT + `Copyright (c) 2025 Adabraka Team`; **limits-table structure referenced, no source or asset copied** |
-| `COMPONENTS.md` | the "GPUix support" column cites this document as its evidence |
+| `.agents/slop/PLAN.md` §5 | close the open question "Which GPUix primitives actually exist…" by pointing at this document + `020` §3 |
+| `.agents/slop/LICENSES/adabraka-ui.md` | MIT + `Copyright (c) 2025 Adabraka Team`; **limits-table structure referenced, no source or asset copied** |
+| `.agents/slop/COMPONENTS.md` | the "GPUix support" column cites this document as its evidence |
 
 ## 5. Commands and expected results
 
@@ -140,5 +140,5 @@ Stop and report if:
 - `docs/gpuix-capabilities.md` exists with §2's five parts and §3's rows.
 - Every row carries a verdict, an evidence path, and (where one exists) a
   workaround; every uncertain row says `unverified`.
-- `COMPONENTS.md` and the component plans can cite it instead of restating facts.
+- `.agents/slop/COMPONENTS.md` and the component plans can cite it instead of restating facts.
 - No `adabraka` asset and no `GAP_ANALYSIS.md` prose was copied.

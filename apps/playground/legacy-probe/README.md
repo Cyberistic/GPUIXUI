@@ -10,7 +10,7 @@ real GPU output rather than documentation.
 
 Two rules keep it honest:
 
-- it never sets a `COMPONENTS.md` status — its verdicts are `verified on GPUix
+- it never sets a `.agents/slop/COMPONENTS.md` status — its verdicts are `verified on GPUix
   0.5.1 (legacy host)`, evidence about the runtime and the hardware;
 - it pins 0.5.1 exactly. Nothing in `apps/playground/src` imports it.
 

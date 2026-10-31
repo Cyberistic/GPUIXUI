@@ -54,7 +54,7 @@ mock. Reuse the film pipeline; do not write a new one.
    (`nub apps/playground/dist/film/takes.js <take> <outDir>`, plan `060`), framed
    by `film/frame.tsx`. Takes are real trees under real input on a stepped
    clock, so a loop is frame-accurate. Coordinate new takes with the
-   `launch-film` workstream through `TODO.md` → Launch film.
+   `launch-film` workstream through `.agents/slop/TODO.md` → Launch film.
 2. **Vibrancy loops** (the hero, the sidebar resize): an app capture **cannot**
    show the blur — it reads alpha 0 where the material is
    (`docs/gpuix-capabilities.md:82`) and has no OS chrome. Record these from the
@@ -125,7 +125,7 @@ evidence note).
 
 - The table above is the page; nothing else remains.
 - Size targets met; `nub run check`, `lint`, `test` green.
-- `TODO.md` updated.
+- `.agents/slop/TODO.md` updated.
 
 ## STOP
 

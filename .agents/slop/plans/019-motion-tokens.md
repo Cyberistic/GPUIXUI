@@ -3,7 +3,7 @@
 **Status: cancelled before implementation.** Motion — durations, easings,
 springs, stagger and reduced-motion policy — belongs to `@gpuixui/motion`, which
 now exists and owns it; a second copy in `@gpuixui/tokens` would be the
-duplication the package boundaries forbid. `TODO.md` records the decision. The
+duplication the package boundaries forbid. `.agents/slop/TODO.md` records the decision. The
 file stays because plan `439` names it as the overlap boundary; it is not in the
 plan index, which lists active work only.
 
@@ -15,7 +15,7 @@ plan index, which lists active work only.
 `packages/tokens/src/motion.example.ts` (new),
 `packages/tokens/src/theme.ts`, `packages/tokens/src/index.ts`,
 `packages/tokens/README.md`, `docs/tokens.md`, `docs/design-system.md`,
-`COMPONENTS.md` (design-system section only), `TODO.md` (this workstream only),
+`.agents/slop/COMPONENTS.md` (design-system section only), `.agents/slop/TODO.md` (this workstream only),
 this plan, `.agents/slop/plans/README.md` (index row only).
 
 This plan is self-contained. A weaker executor can deliver it by following the
@@ -25,7 +25,7 @@ steps in order.
 
 ## 1. Why
 
-`TODO.md` carries the last tokens-that-are-missing item: *"Add motion tokens
+`.agents/slop/TODO.md` carries the last tokens-that-are-missing item: *"Add motion tokens
 (durations/easings) once a component consumes them."* A component now does — and
 the durations are scattered literals in component source, which the design-system
 rule forbids ("tokens are the single source … no scattered literals"):
@@ -259,9 +259,9 @@ by the test.
   elevation; §12's non-goal "No motion tokens yet" is **deleted** and replaced by
   the rule (durations are tokens; motion exists only through `motion` props).
 - `packages/tokens/README.md`: a short `## Motion` section.
-- `COMPONENTS.md`: a design-system row `Motion tokens` (`done`, "yes (motion props
+- `.agents/slop/COMPONENTS.md`: a design-system row `Motion tokens` (`done`, "yes (motion props
   only: width, height, opacity, top/right/bottom/left, borderRadius)").
-- `TODO.md`: tick `Add motion tokens (durations/easings) once a component
+- `.agents/slop/TODO.md`: tick `Add motion tokens (durations/easings) once a component
   consumes them` (rewritten to name the consumers), plus a cross-team bullet:
   `primitives` replaces the `120`/`700` literals with `theme.motion.step` /
   `theme.motion.pulse`; overlay components use `motionTransition`.
@@ -301,7 +301,7 @@ Two-direction proof for the ms→seconds rule: change `duration` to
   point.
 - STOP if adding `motion` to `Theme` breaks a consumer outside `packages/tokens/**`
   (their port declares the groups it reads; an extra group must not break it).
-  Record it in `TODO.md` instead of editing their paths.
+  Record it in `.agents/slop/TODO.md` instead of editing their paths.
 - STOP if `theme.test.ts`'s existing "every group merges" style assertion needs a
   weakening to accommodate the new group.
 - STOP if any gate is red for a reason outside this plan.
@@ -315,7 +315,7 @@ Two-direction proof for the ms→seconds rule: change `duration` to
 - [ ] `motionTransition` converts milliseconds to the runtime's seconds and is
       tested in both directions.
 - [ ] `docs/tokens.md`, `docs/design-system.md`, `packages/tokens/README.md` and
-      `COMPONENTS.md` document the tokens; the design-system non-goal is gone.
-- [ ] `TODO.md` ticks the motion item and records the consumer interlock.
+      `.agents/slop/COMPONENTS.md` document the tokens; the design-system non-goal is gone.
+- [ ] `.agents/slop/TODO.md` ticks the motion item and records the consumer interlock.
 - [ ] `nub run check`, `nub run lint`, `nub run test` exit 0.
 - [ ] Committed on `agent/tokens-theme` and pushed.

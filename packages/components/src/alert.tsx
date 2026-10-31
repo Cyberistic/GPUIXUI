@@ -355,7 +355,7 @@ const alertContent: PartsContract = {
   hint: "Put AlertTitle, AlertDescription and AlertLink directly inside AlertContent.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const alertMeta = {
   name: "Alerts",
   tier: 2,

@@ -12,7 +12,7 @@
  *
  * The gesture's model — distance or flick, then a spring-back — follows Base
  * UI's `ToastRoot` (v1.9.0); the numbers, the one-axis constraint and this
- * module are ours (`LICENSES/base-ui.md`).
+ * module are ours (`.agents/slop/LICENSES/base-ui.md`).
  */
 
 /** How far a card must travel before the release dismisses it, in pixels. */

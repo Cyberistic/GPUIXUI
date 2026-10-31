@@ -532,7 +532,7 @@ const dialogHeader: PartsContract = {
   hint: "Put DialogTitle and DialogDescription directly inside DialogHeader.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const dialogMeta = {
   name: "Dialogs",
   tier: 2,

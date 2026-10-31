@@ -817,7 +817,7 @@ const navigationMenuContent: PartsContract = {
   hint: "Put NavigationMenuLink rows directly inside NavigationMenuContent.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const navigationMenuMeta = {
   name: "Navigation Menu",
   tier: 2,

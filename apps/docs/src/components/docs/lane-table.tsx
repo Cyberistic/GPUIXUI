@@ -3,7 +3,7 @@ import { summarize, supportLabel, type LaneName } from "../../lib/inventory";
 import { InventoryNote, InventoryStatus } from "./inventory-cells";
 
 /**
- * The lane's inventory, rendered from `COMPONENTS.md`.
+ * The lane's inventory, rendered from `.agents/slop/COMPONENTS.md`.
  *
  * A lane page does not restate its rows: it mounts this table, so a component
  * that ships is marked shipped here in the same commit that ticks its inventory
@@ -15,7 +15,7 @@ export function LaneTable({ lane }: { lane: LaneName }) {
   const view = laneData(lane);
   if (view.unmatched.length > 0) {
     throw new Error(
-      `LaneTable: the ${lane} lane names rows COMPONENTS.md does not have: ${view.unmatched.join(", ")}`,
+      `LaneTable: the ${lane} lane names rows .agents/slop/COMPONENTS.md does not have: ${view.unmatched.join(", ")}`,
     );
   }
 
@@ -25,8 +25,8 @@ export function LaneTable({ lane }: { lane: LaneName }) {
     <div className="not-prose my-6">
       <p className="m-0 mb-3 font-mono text-xs text-muted-foreground">
         {view.lane.title} · {total} rows in{" "}
-        <code className="text-foreground">COMPONENTS.md</code> · {shipped}{" "}
-        shipped · {pending} to build
+        <code className="text-foreground">.agents/slop/COMPONENTS.md</code> ·{" "}
+        {shipped} shipped · {pending} to build
       </p>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full border-collapse text-sm">

@@ -6,7 +6,7 @@ import { sidebarPages } from "./sidebar-pages.test-util";
 /**
  * The composition pages.
  *
- * MISSION.md names Layouts, Workspace and Data display as information-
+ * .agents/slop/MISSION.md names Layouts, Workspace and Data display as information-
  * architecture lanes, and the component inventory is the only honest source for
  * what each lane contains. A page must therefore mount the generated lane table
  * and sit in the sidebar; a hand-written copy of the inventory is what drifts.
@@ -136,7 +136,7 @@ describe("the composition pages", () => {
 
   it("name the inventory as the source of their status", () => {
     const silent = pages
-      .filter(({ file }) => !read(file).includes("COMPONENTS.md"))
+      .filter(({ file }) => !read(file).includes(".agents/slop/COMPONENTS.md"))
       .map(({ file }) => file);
 
     expect(silent).toEqual([]);

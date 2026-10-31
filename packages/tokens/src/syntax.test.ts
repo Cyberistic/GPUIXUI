@@ -309,7 +309,7 @@ describe("the syntax palette", () => {
     // and the three pages that teach the palette must cite it with the readings
     // it printed rather than promise a measurement.
     const catalogue = read("../../../docs/tokens.md");
-    const inventory = read("../../../COMPONENTS.md");
+    const inventory = read("../../../.agents/slop/COMPONENTS.md");
     const probe = read("../../../apps/playground/README.md");
     const measured = probe.slice(probe.indexOf("### `syntax-palette`"));
     expect(measured).not.toBe("");
@@ -356,7 +356,7 @@ describe("the syntax palette", () => {
 
     const pages = [
       ["docs/tokens.md", adoption],
-      ["COMPONENTS.md", row],
+      [".agents/slop/COMPONENTS.md", row],
       ["packages/tokens/README.md", read("../README.md")],
     ] as const;
     const readings = [light, dark, control];
@@ -371,7 +371,7 @@ describe("the syntax palette", () => {
       // The retracted promise: the detail page and the inventory row used to
       // send a reader to a probe that had not run.
       expect(text, page).not.toContain("not yet measured in a window");
-      expect(text, page).not.toContain("recorded in `TODO.md`");
+      expect(text, page).not.toContain("recorded in `.agents/slop/TODO.md`");
     });
   });
 
@@ -393,7 +393,7 @@ describe("the syntax palette", () => {
     // What genuinely stays the runtime's is the tokenizer and the numbers around
     // the code, and the row names those instead.
     const row =
-      read("../../../COMPONENTS.md")
+      read("../../../.agents/slop/COMPONENTS.md")
         .split("\n")
         .find((line) => line.startsWith("| Native text hosts |")) ?? "";
 

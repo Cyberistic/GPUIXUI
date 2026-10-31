@@ -45,7 +45,7 @@ const read = (relative: string): string =>
 const files: ReadonlyArray<string> = [
   ...sourcesUnder("docs/"),
   ...sourcesUnder("src/"),
-  "../../COMPONENTS.md",
+  "../../.agents/slop/COMPONENTS.md",
   "../../docs/component-api.md",
 ];
 

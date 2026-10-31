@@ -698,7 +698,7 @@ const messageFooter: PartsContract = {
   hint: "Put MessageActions directly inside it.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md`. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`. */
 export const messageMeta = {
   name: "Message",
   tier: 2,

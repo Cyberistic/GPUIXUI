@@ -120,8 +120,8 @@ End of plan (cross-cutting, once): the full headless suite
 ## Acceptance
 
 - Eight blocks, each green in its probe, each with a native capture and a page.
-- `COMPONENTS.md` unchanged except where a block exposed a component gap — that
-  gap is a new row in `TODO.md`, not a fix hidden in the block.
+- `.agents/slop/COMPONENTS.md` unchanged except where a block exposed a component gap — that
+  gap is a new row in `.agents/slop/TODO.md`, not a fix hidden in the block.
 - `nub run check`, `lint`, `test` green after every block commit.
 
 ## STOP

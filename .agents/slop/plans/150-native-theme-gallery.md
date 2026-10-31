@@ -17,7 +17,7 @@ themes (light, dark, high-contrast light, high-contrast dark) and a
 `ThemeProvider`. Every one of those is verified by unit tests that run on a
 plain host — but **the tests never touch GPUix**. MISSION's rule is that an
 interaction (here: "the token layer paints") is not complete until it is tested
-in the actual native runtime, and `COMPONENTS.md` currently says exactly that:
+in the actual native runtime, and `.agents/slop/COMPONENTS.md` currently says exactly that:
 the design-system rows are `wip` with "native visual proof pending the
 playground gallery".
 
@@ -141,12 +141,12 @@ capability.
 
 - `apps/playground/README.md`: the gallery, how to run it, what it proves, and
   the two new scenario ids.
-- `COMPONENTS.md`: the `theme` capability row moves from `planned` to
+- `.agents/slop/COMPONENTS.md`: the `theme` capability row moves from `planned` to
   `verified`; the design-system rows that say "native visual proof pending"
   point at the scenario instead.
-- `TODO.md`: tick the gallery item and the "wire the playground to
+- `.agents/slop/TODO.md`: tick the gallery item and the "wire the playground to
   `@gpuixui/tokens`" item; update the Phase B progress bar.
-- `PLAN.md`: one decision row (the two-column evidence vocabulary and the
+- `.agents/slop/PLAN.md`: one decision row (the two-column evidence vocabulary and the
   gallery's role as the docs' native evidence source).
 - `.agents/slop/plans/README.md`: this plan's status.
 
@@ -183,7 +183,7 @@ Stop and report with evidence rather than improvising if:
   its **source** (`src/react.tsx`, which contains JSX). The suite runs through
   `nub`, which transpiles TS/JSX; a plain `node dist/...` cannot. If a nub run
   fails to load it, do **not** copy the provider into the app and do not
-  hand-roll a parallel context: record the limitation in `TODO.md` as a task
+  hand-roll a parallel context: record the limitation in `.agents/slop/TODO.md` as a task
   for the `tokens` workstream (its exports need a runtime-loadable `react`
   entry) and implement the gallery with the theme passed explicitly to each
   probe, marking in the README that `ThemeProvider` itself is not yet
@@ -192,14 +192,14 @@ Stop and report with evidence rather than improvising if:
   `backgroundColor` differs from the token (for example an 8-digit
   `#RRGGBBAA` is rejected), do not normalise the token to make the check pass:
   record the exact role, the authored value and the reported value in plan
-  `140` §4 (the measured-facts section) and create a `TODO.md` task for the
+  `140` §4 (the measured-facts section) and create a `.agents/slop/TODO.md` task for the
   tokens workstream, then stop.
 - **`style` is not reported at all** for a painted element (the probe in §1
   says it is, but this is the runtime's behaviour, not ours): stop, record it,
   and fall back to a screenshot-based check only if a real decoder is available
   — never to a check that cannot fail.
 - **A tap of the `theme` capability needs a change outside this workstream**
-  (for example an export in `packages/tokens`): record it as a `TODO.md` task
+  (for example an export in `packages/tokens`): record it as a `.agents/slop/TODO.md` task
   instead of editing that package.
 
 ## 6. Test plan
@@ -226,7 +226,7 @@ half is proved by the CLI run in §4 — that is the run the `done` row cites.
 - The two-direction proof in §4 was executed and its output recorded in the
   commit message.
 - `nub run check`, `nub run lint`, `nub run test` pass.
-- `COMPONENTS.md`, `TODO.md`, `PLAN.md`, the app README and this index are
+- `.agents/slop/COMPONENTS.md`, `.agents/slop/TODO.md`, `.agents/slop/PLAN.md`, the app README and this index are
   updated to match what actually ran.
 
 ## 8. Outcome (executed on this host, 2026-10-17)
@@ -259,7 +259,7 @@ Deviations from this plan, and why:
   from this project needs `@gpuix/react/jsx-runtime` resolvable from a package
   that does not depend on it. The mapping must stay out of `tsconfig.json`
   because nub's runtime loader honours `paths` and would load the `.d.ts`. The
-  durable fix belongs in `packages/tokens`; recorded in `TODO.md` as a
+  durable fix belongs in `packages/tokens`; recorded in `.agents/slop/TODO.md` as a
   cross-team task.
 - `BoxShadowSnapshot` omits `inset`, matching `BoxShadow` in
   `@gpuix/native@0.10.0`; a runtime that reports an extra key is not a failure

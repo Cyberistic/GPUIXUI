@@ -118,8 +118,8 @@ Adaptation is **permitted** (Apache-2.0 §4 redistribution/derivative), with the
 usual conditions: retain the NOTICE/copyright, state changes, and do not reuse
 the `open-gpui` / `Open GPUI` / "Zed" trademarks in a way that implies
 endorsement. A TS port must carry both copyright lines in its header (and be
-listed under `LICENSES/`), exactly as the repo already does for the shadcn and
-base-gpui ports (`COMPONENTS.md:251-253`, `LICENSES/`).
+listed under `.agents/slop/LICENSES/`), exactly as the repo already does for the shadcn and
+base-gpui ports (`.agents/slop/COMPONENTS.md:251-253`, `.agents/slop/LICENSES/`).
 
 ### 1.4 Integration paths
 
@@ -156,7 +156,7 @@ engine. From `packages/tw/src/motion.ts:1-16,138-145`:
   (`motion.ts:143`).
 - **Correction (see §5):** `AnimatePresence` + `usePresence`/`useIsPresent` **do
   ship** in the pinned `@gpuix/react@0.10.0` (and `@gpuix/solid@0.10.0`). The
-  earlier draft misread `COMPONENTS.md:59-63`, which actually lists
+  earlier draft misread `.agents/slop/COMPONENTS.md:59-63`, which actually lists
   `AnimatePresence` as an *available* building block for toasts; the changelog,
   homepage, and Solid guide all document it (changelog `@gpuix/react@0.10.0`
   item 2, `@gpuix/solid@0.10.0` item 1; homepage "Animate unmount"). What is
@@ -273,18 +273,18 @@ large. The implemented modules and their purpose (one line each):
 | `rendering` | 3 | `RenderSurface` — host-drawn GPU frame surface abstraction |
 | `tooling` | 8 | component gallery, playground panel, a11y checker, screenshot harness |
 
-### 2.2 Diff vs our `COMPONENTS.md`
+### 2.2 Diff vs our `.agents/slop/COMPONENTS.md`
 
-GPUixUI already has (Tier 1 + Tier 2, `COMPONENTS.md:110-184`) the large majority
+GPUixUI already has (Tier 1 + Tier 2, `.agents/slop/COMPONENTS.md:110-184`) the large majority
 of Ely's *primitive/form/menu/overlay/feedback* layer — often with more real
 native-behaviour test coverage than Ely. The genuinely **missing / not-covered**
 clusters that Ely ships and we do not yet:
 
-- **Tier 3–4** (`COMPONENTS.md:186-231`): virtualized/sortable/resizable tables,
+- **Tier 3–4** (`.agents/slop/COMPONENTS.md:186-231`): virtualized/sortable/resizable tables,
   tree views, split panes, docking, command palette, editor tabs, inspectors —
   Ely's `tables`, `lists`, `layout` (SplitPane/Dock), `editor`, `navigation`
   (EditorTabs, CommandPalette), `shell` (ActivityBar, MenuBar, StatusBar).
-- **Tier 5** (`COMPONENTS.md:235-253`): terminal (`terminal`), charts (`charts`),
+- **Tier 5** (`.agents/slop/COMPONENTS.md:235-253`): terminal (`terminal`), charts (`charts`),
   rich-text/block editor (`documents`), canvas/design (`canvas`), agent/tool-call
   and generative panels (`agent`, `generative`), finance (`finance`) — all `todo`
   in ours, all present in Ely.
@@ -303,9 +303,9 @@ clusters that Ely ships and we do not yet:
   `control_height(size) = px_to_rems(base + density_delta)` (`theme/tokens.rs:83-95`),
   `radius(size) = px_to_rems(base * radius_scale)` (`tokens.rs:471-479`). This
   composes with our `@gpuixui/tokens` (which already has density/radii/elevation
-  — `COMPONENTS.md:17`) and is a cleaner density model than per-size literals.
+  — `.agents/slop/COMPONENTS.md:17`) and is a cleaner density model than per-size literals.
 - **Palette cross-fade** on mode switch (`theme/mod.rs:132-137,201-226`): ours is a
-  re-render (`COMPONENTS.md:18`). Ely fades `from.mix(&to, ease_in_out_cubic(t))`
+  re-render (`.agents/slop/COMPONENTS.md:18`). Ely fades `from.mix(&to, ease_in_out_cubic(t))`
   over ~280ms with a monotonic transition id to cancel stale fades. A cheap
   win *if* GPUix's opacity `motion` can animate the theme transition — probe
   first (STOP condition).
@@ -326,7 +326,7 @@ and `gpui_platform` (`Cargo.toml:20-22`); its components are GPUI entity/`cx`
 stateful, and its `motion` module imports `gpui::{App, Pixels}` and
 `ActiveTheme` (`motion/curve.rs:3-5`) — it is **not** renderer-neutral, unlike
 open-gpui `motion` (§1.2). GPUix's capability surface (no `transform`, no
-`fieldset`, no `aria-*` set, no terminal/media host element — `COMPONENTS.md:28-107`)
+`fieldset`, no `aria-*` set, no terminal/media host element — `.agents/slop/COMPONENTS.md:28-107`)
 means the Rust layout/rendering logic would not survive translation anyway.
 
 ### 2.4 Anything better than our current approach
@@ -348,7 +348,7 @@ means the Rust layout/rendering logic would not survive translation anyway.
 MIT (`LICENSE`), "Copyright (c) 2026 Ely GPUI Component contributors". Third
 parties called out in `README.md:66-69`: Lucide icons (ISC), Inter / JetBrains
 Mono / IBM Plex Sans / Noto Sans Hebrew fonts (SIL OFL 1.1). Any adopted *code,
-API, or token values* must carry the MIT notice (add to `LICENSES/`), and any
+API, or token values* must carry the MIT notice (add to `.agents/slop/LICENSES/`), and any
 copied *icons/fonts* must carry their own ISC/OFL notices. **We take no Rust
 source as a dependency** (§2.3); we only transcribe API shapes, token values and
 techniques, which MIT permits with attribution.
@@ -406,7 +406,7 @@ No new dependency is proposed. No Rust code is imported.
 | Finding | File |
 | ------- | ---- |
 | GPUix motion prop shape + transform gap | `packages/tw/src/motion.ts:1-16,109-145` |
-| Component inventory + status | `COMPONENTS.md:17-253` |
+| Component inventory + status | `.agents/slop/COMPONENTS.md:17-253` |
 | Native binding model (no extension seam) | `packages/testing/src/runtime.ts:43-58` |
 | Token package surface | `packages/tokens/src/index.ts` (see `theme.ts`, `elevation.ts`, `scale.ts`) |
 | Motion tokens plan (overlap boundary) | `.agents/slop/plans/019-motion-tokens.md` |
@@ -538,7 +538,7 @@ map 1:1 onto a React hook, which open-gpui's facade does not.
    surface + easing variants + `Inertia` from gpui-motion** (§5.2).
 4. No new npm dependency, no Rust import. Dual attribution: Apache-2.0
    (open-gpui, Zed + Open GPUI lines) and MIT (gpui-motion, "Copyright (c) 2026
-   1keep contributors") under `LICENSES/`.
+   1keep contributors") under `.agents/slop/LICENSES/`.
 
 **Revised first slice** (supersedes §1.6's list where it differs):
 

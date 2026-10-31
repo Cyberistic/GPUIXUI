@@ -473,7 +473,7 @@ const carouselTrack: PartsContract = {
   hint: "Put CarouselSlide directly inside CarouselTrack.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const carouselMeta = {
   name: "Carousel",
   tier: 2,

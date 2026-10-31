@@ -35,7 +35,7 @@ const limitations = codeBlockMeta.limitations.join("\n");
 /** The Code block row of the Tier 5 table. */
 const row = Option.getOrElse(
   Arr.findFirst(
-    read("COMPONENTS.md", repoRoot).split("\n"),
+    read(".agents/slop/COMPONENTS.md", repoRoot).split("\n"),
     Str.startsWith("| Code block |"),
   ),
   () => "",
@@ -44,7 +44,7 @@ const row = Option.getOrElse(
 /** Every record a consumer can read the tokenizer from. */
 const records: ReadonlyArray<readonly [string, string]> = [
   ["codeBlockMeta.limitations", limitations],
-  ["COMPONENTS.md", row],
+  [".agents/slop/COMPONENTS.md", row],
   ["docs/code-block.mdx", page],
 ];
 

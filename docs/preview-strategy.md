@@ -1,6 +1,6 @@
 # Preview strategy — what a component page shows, and how
 
-`MISSION.md` sets the constraint: the library renders through **GPUix**, the
+`.agents/slop/MISSION.md` sets the constraint: the library renders through **GPUix**, the
 documentation site runs in a **browser**, and a browser preview may not pretend
 to be the native surface. This file records the strategy the site uses, the
 theming rule that keeps a preview honest, and the template every component page
@@ -27,7 +27,7 @@ this site uses **3 for the paint and geometry, and 2 for the runtime**:
   playground — rather than trust the drawing.
 - Where the runtime lacks a capability (no `aria-checked`, no `transform`, no
   caret position), the page says so in **Limitations** instead of drawing
-  behaviour that does not exist. `COMPONENTS.md` carries the same evidence per
+  behaviour that does not exist. `.agents/slop/COMPONENTS.md` carries the same evidence per
   row.
 
 A preview is never the authority. If a preview and the component disagree, the
@@ -816,7 +816,7 @@ fails by name rather than shipping two pages again.
 
 ### The keyboard contract is generated, not written
 
-`MISSION.md` asks every component page for its **keyboard notes**, and no page
+`.agents/slop/MISSION.md` asks every component page for its **keyboard notes**, and no page
 carried one: the site said "every component … with its keyboard contract" on the
 index while not a single key was named on a component page. A hand-written list
 would drift the first time a handler moved, so the site reads the component's own
@@ -852,7 +852,7 @@ prints every note of every contract and holds the two mounts.
 
 ### The related line is generated, not written
 
-`MISSION.md` asks every component page for its related components, and that row
+`.agents/slop/MISSION.md` asks every component page for its related components, and that row
 was the one the package pages could not satisfy: a page is Markdown the site
 mounts, so it cannot resolve the URL of its siblings, and when the strip landed
 most of the mounted pages had no `## Related` section while this file claimed the
@@ -887,7 +887,7 @@ page the site serves with a reason and no family.
 
 ### The source block is generated, not written
 
-`MISSION.md` asks every component page for copyable source, and a package page
+`.agents/slop/MISSION.md` asks every component page for copyable source, and a package page
 is Markdown: it can describe the component but cannot embed it. Before this
 block, only the curated pages carried a source accordion — a reader of a package
 page could read behaviour, theming and API and still not see the file they would
@@ -1161,7 +1161,7 @@ they have their own contract.
 | Where a change goes | which package owns the next change in the lane |
 
 **The table is generated.** `src/lib/inventory.ts` parses the tier tables in
-`COMPONENTS.md`; `<LaneTable>` renders the rows the lane names and prints "N
+`.agents/slop/COMPONENTS.md`; `<LaneTable>` renders the rows the lane names and prints "N
 rows · N shipped · N to build" from the same parse. A lane page therefore cannot
 call a row shipped while the inventory says `todo`, and a new inventory row
 appears without a docs change. `src/lib/inventory.test.ts` holds the parse (a

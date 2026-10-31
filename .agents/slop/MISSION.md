@@ -1,4 +1,4 @@
-# MISSION.md — the source of truth
+# .agents/slop/MISSION.md — the source of truth
 
 > **Read this file before anything else.**
 >
@@ -7,7 +7,7 @@
 > self-contained for a weaker executor: exact files, exact commands, expected
 > results, STOP conditions, and a test plan. **No implementation work starts
 > until those plans exist and are indexed in `.agents/slop/plans/README.md`.**
-> `TODO.md` is the persistent source of truth so work resumes after context
+> `.agents/slop/TODO.md` is the persistent source of truth so work resumes after context
 > compaction or a restart.
 
 ---
@@ -62,18 +62,18 @@ identify the GPUix version and APIs; read GPUix's docs/examples; inspect GPUI
 Kit's implementations, dependencies and **licence**; study shadcn's organisation;
 review PanelUI; inspect Fumadocs' current setup and MDX conventions; identify
 build/test/type-check/packaging/native constraints. Record findings and produce
-an implementation plan with explicit acceptance criteria. Maintain **`PLAN.md`**
-(architecture, phases, decisions), **`TODO.md`** (granular tasks, dependencies,
-status — the source of truth for resuming after a restart), **`COMPONENTS.md`**
-(inventory, status, limitations) and **`LICENSES/`** (licences and attribution).
+an implementation plan with explicit acceptance criteria. Maintain **`.agents/slop/PLAN.md`**
+(architecture, phases, decisions), **`.agents/slop/TODO.md`** (granular tasks, dependencies,
+status — the source of truth for resuming after a restart), **`.agents/slop/COMPONENTS.md`**
+(inventory, status, limitations) and **`.agents/slop/LICENSES/`** (licences and attribution).
 Adapt to the existing repo rather than destroying it; if empty, establish a clean
 workspace. Don't spend the whole task researching.
 
 **Workspace architecture.** TypeScript-first monorepo; prefer the established
 package manager. A possible structure —
 `apps/{docs,playground}`, `packages/{tokens,primitives,components,icons,data-grid,docking,editor,testing}`,
-`examples/{basic-app,settings-app,workspace-app}`, plus `PLAN.md`, `TODO.md`,
-`COMPONENTS.md`, `LICENSES/`. Only introduce packages with a real
+`examples/{basic-app,settings-app,workspace-app}`, plus `.agents/slop/PLAN.md`, `.agents/slop/TODO.md`,
+`.agents/slop/COMPONENTS.md`, `.agents/slop/LICENSES/`. Only introduce packages with a real
 responsibility and implementation; no empty scaffolding. **Boundaries:** tokens
 must not depend on components; primitives must not depend on higher-level
 components; components may depend on tokens+primitives; specialised packages may
@@ -213,7 +213,7 @@ implementation; compare against requirements/references; run format, lint,
 type-check, tests and relevant builds; run the native playground/smoke tests;
 inspect screenshots/runtime output; find broken behaviour, missing
 functionality, inconsistent APIs, incomplete docs; update
-`TODO.md`/`PLAN.md`/`COMPONENTS.md`; fix the highest-priority issues; repeat.
+`.agents/slop/TODO.md`/`.agents/slop/PLAN.md`/`.agents/slop/COMPONENTS.md`; fix the highest-priority issues; repeat.
 **Do not stop** after a plan, a scaffolded monorepo, a few attractive
 components, a docs shell, or a first passing build. On a blocker: investigate
 the cause; check official docs and working examples; try a minimal
@@ -245,7 +245,7 @@ attribution summary; remaining limitations with reasons and evidence; the
 highest-value future improvements. Be honest about what was implemented, tested
 and left incomplete.
 
-**Three practical constraints the owner adds:** (1) `TODO.md` is the persistent
+**Three practical constraints the owner adds:** (1) `.agents/slop/TODO.md` is the persistent
 source of truth so work resumes after context compaction or a restart; (2) work
 to a **time/iteration budget** — finish complete components in priority order
 rather than generating dozens of half-finished ones; (3) require a **real native

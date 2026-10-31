@@ -375,8 +375,8 @@ describe("the roles a store cleared", () => {
         new URL("../README.md", import.meta.url),
         "utf8",
       ),
-      "COMPONENTS.md": readFileSync(
-        new URL("../../../COMPONENTS.md", import.meta.url),
+      ".agents/slop/COMPONENTS.md": readFileSync(
+        new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
         "utf8",
       ),
     };

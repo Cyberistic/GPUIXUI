@@ -78,7 +78,7 @@ export const llmsFullTxt = (
     "shows them. `/llms.txt` is the same list as an index, one line per page.",
     "The site is a browser application documenting a native library, so a browser",
     "preview is a labelled approximation of the component unless the page says it",
-    "mounts the real renderer (`/live`, the wasm build). `COMPONENTS.md` in the",
+    "mounts the real renderer (`/live`, the wasm build). `.agents/slop/COMPONENTS.md` in the",
     "repository — not a page's existence — is the status record for every",
     "component.",
     "",

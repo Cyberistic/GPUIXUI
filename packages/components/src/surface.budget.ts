@@ -61,7 +61,7 @@ export const surfaceBudget = {
   // CodeBlock's header now composes instead of holding its own acknowledgement.
   // 134 → 136 for PageTransition (`page-transition.tsx` and the view-swap state
   // 160 → 159 when the painted hint's local copy was deleted and the eight
-  // hinted hosts started importing `@gpuixui/primitives/hint` (`TODO.md` →
+  // hinted hosts started importing `@gpuixui/primitives/hint` (`.agents/slop/TODO.md` →
   // Interlocks): the rule has one implementation now. The graph does not get
   // cheaper — the primitives' seam joins it at 5 modules / 49 KiB beside
   // `@gpuixui/primitives`, which is the subpath's cost rather than the barrel's

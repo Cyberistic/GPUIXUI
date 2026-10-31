@@ -581,7 +581,7 @@ describe("the motion grammar", () => {
   });
 
   it("holds the Motion row to that grammar, and to the suites it cites", () => {
-    const inventory = readEntry("../../COMPONENTS.md");
+    const inventory = readEntry("../../.agents/slop/COMPONENTS.md");
     expect(inventory.failures).toEqual([]);
     const row = Option.getOrElse(
       Option.map(

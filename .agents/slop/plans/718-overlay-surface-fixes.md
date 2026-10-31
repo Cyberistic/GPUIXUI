@@ -36,7 +36,7 @@ and must mirror the component's constants.
 - `apps/docs/src/components/docs/{drawer,popover,hover-card,navigation-menu}-*`
 - `apps/docs/src/styles/demos.css`; `demos.tsx`
 - Docs rows: `packages/components/docs/{drawer,sheet,popover,navigation-menu,hover-card}.mdx`,
-  `COMPONENTS.md`, `docs/component-api.md`, `apps/docs/src/lib/related.ts`
+  `.agents/slop/COMPONENTS.md`, `docs/component-api.md`, `apps/docs/src/lib/related.ts`
 
 ## Test plan
 

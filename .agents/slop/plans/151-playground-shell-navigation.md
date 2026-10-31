@@ -73,9 +73,9 @@ already-required capability (`layout`), so `CORE_CAPABILITIES` is unchanged.
 
 - `apps/playground/README.md`: structure line for `scenarios/shell.tsx`, the
   scenario count, and a note that the shell itself is now driven by the suite.
-- `COMPONENTS.md`: the capability table's `layout` row lists both scenarios;
+- `.agents/slop/COMPONENTS.md`: the capability table's `layout` row lists both scenarios;
   the "What the suite settled" paragraph gains the flex `minHeight: 0` fact.
-- `TODO.md`: tick the item under the playground workstream and update the
+- `.agents/slop/TODO.md`: tick the item under the playground workstream and update the
   progress bar.
 - `.agents/slop/plans/README.md`: index this plan and its status.
 
@@ -110,7 +110,7 @@ Stop and report with evidence if:
   wheel until the clamp (and document the gesture) or record the runtime's
   bounds arithmetic as a limitation.
 - **Mounting the real `App` needs a change outside this workstream.** Record it
-  in `TODO.md`; do not edit another package.
+  in `.agents/slop/TODO.md`; do not edit another package.
 
 ## 6. Test plan
 
@@ -131,7 +131,7 @@ regression proof.
   `overflowY` (proved and recorded).
 - The suite is **15/15 green on this host**, exit `0`.
 - `nub run check`, `nub run lint`, `nub run test` pass.
-- README, `COMPONENTS.md`, `TODO.md` and the plan index match what ran.
+- README, `.agents/slop/COMPONENTS.md`, `.agents/slop/TODO.md` and the plan index match what ran.
 
 ## 8. Outcome (executed on this host, 2026-10-17)
 

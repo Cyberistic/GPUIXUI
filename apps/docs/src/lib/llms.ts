@@ -178,7 +178,7 @@ export const llmsTxt = (
     "This site is a browser application documenting a native library, so a browser",
     "preview is a labelled approximation of the component unless the page says it",
     "mounts the real renderer (`/live`, the wasm build). A page's API tables are held",
-    "to the props its component declares; `COMPONENTS.md` in the repository is the",
+    "to the props its component declares; `.agents/slop/COMPONENTS.md` in the repository is the",
     "status record for every component, and a page existing is not a claim that its",
     "component is finished.",
     "",

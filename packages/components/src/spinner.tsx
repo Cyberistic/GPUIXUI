@@ -43,7 +43,7 @@ export const Spinner = ({
   ...rest
 }: SpinnerProps): ReactElement => <PrimitiveSpinner {...rest} size={size} />;
 
-/** Inventory record, mirrored into `COMPONENTS.md`'s Loading indicators row. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Loading indicators row. */
 export const spinnerMeta = {
   name: "Loading indicators",
   tier: 1,

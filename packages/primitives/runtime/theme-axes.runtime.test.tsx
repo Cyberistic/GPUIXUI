@@ -2,7 +2,7 @@
  * The remaining theme axes, on screen: high contrast, density, platform type.
  *
  * Plan `042` proved the shipped light and dark palettes on a handful of
- * controls. Three capabilities in `COMPONENTS.md` were still values-only:
+ * controls. Three capabilities in `.agents/slop/COMPONENTS.md` were still values-only:
  *
  * - the high-contrast palettes had not been read on screen beyond a handful of
  *   controls;

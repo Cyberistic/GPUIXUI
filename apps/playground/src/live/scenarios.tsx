@@ -11992,7 +11992,7 @@ const splitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
  * The pointer half is **blocked by the component**, not by the runtime: a press
  * on the shipped divider focuses nothing and reports no resize, because its
  * absolutely positioned highlight layer takes the hit test. That is recorded for
- * the dock owner in `TODO.md` (`Divider`'s pointer path) and the probe measures
+ * the dock owner in `.agents/slop/TODO.md` (`Divider`'s pointer path) and the probe measures
  * the keyboard contract until it lands.
  */
 const DockSplitProbe = (): ReactNode => {
@@ -13528,7 +13528,7 @@ const ProbeSelect = ({
  * these parts and passes only a **root** `testId`, so a probe built on the
  * wrapper could not address the trigger or a row. The parts mounted here are
  * the ones the wrapper composes, and the measurement is of the behaviour both
- * share — the claim in `COMPONENTS.md` that open state, positioning and
+ * share — the claim in `.agents/slop/COMPONENTS.md` that open state, positioning and
  * dismissal "are the runtime's".
  */
 const SelectProbe = (): ReactNode => {
@@ -19237,7 +19237,7 @@ const NestedOverlayProbe = (): ReactNode => {
  * (`closes=1,1,3`, `dismissed=menu,popover,dialog,menu,menu`) because the guard
  * keys the gesture on the payload's identity and the runtime builds one payload
  * per handler. That is a defect in the component package, filed as an interlock
- * row in `TODO.md`; this probe will carry the press checks when it is fixed.
+ * row in `.agents/slop/TODO.md`; this probe will carry the press checks when it is fixed.
  */
 const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {

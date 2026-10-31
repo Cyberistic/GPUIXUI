@@ -118,7 +118,7 @@ const reachesMotion = (file: string): boolean => {
 
 /** One record's declaration, resolved from the collector's own imports. */
 interface RecordFile {
-  /** The record's `name`, as `COMPONENTS.md` spells it. */
+  /** The record's `name`, as `.agents/slop/COMPONENTS.md` spells it. */
   readonly name: string;
   /** The file that declares `export const …Meta`, which may be a re-export target. */
   readonly file: string;

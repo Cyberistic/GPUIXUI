@@ -7,10 +7,10 @@
 016-tokens-consumable-exports.md | discarded | tokens already resolves from source with consumable exports
 017-focus-ring-and-docs-truth.md | discarded | focusRing and keyboardFocusRing already ship, docs/claims corrected
 018-elevation-truth.md | discarded | elevationShadow already hoisted and BoxShadow.inset dropped
-019-motion-tokens.md | discarded | superseded: @gpuixui/motion owns easings/springs; TODO.md records the cancellation
+019-motion-tokens.md | discarded | superseded: @gpuixui/motion owns easings/springs; .agents/slop/TODO.md records the cancellation
 020-gpuix-runtime-capability.md | discarded | Phase A recon doc pinned at 0.10.0; the capability matrix now ships in @gpuixui/runtime and /docs/runtime
 021-primitives-consume-tokens.md | discarded | primitives core/theme.ts already imports @gpuixui/tokens directly
-022-swarm-single-writer.md | discarded | harness row already tracked in TODO.md (single live session per worktree); infrastructure is the coordinator's
+022-swarm-single-writer.md | discarded | harness row already tracked in .agents/slop/TODO.md (single live session per worktree); infrastructure is the coordinator's
 023-primitives-alpha-from-tokens.md | discarded | local core/color.ts is gone; alpha comes from tokens
 024-icons-size-scale-from-tokens.md | discarded | packages/icons/src/sizes.ts already derives ICON_SIZES from token iconSize
 025-fields-disabled.md | discarded | Input/TextArea already expose disabled with read-only, tab-order and guard behaviour
@@ -107,7 +107,7 @@
 089-density-metric-merge.md | discarded | mergeDensity already merges density groups per size
 089-disabled-tab-order-matrix.md | queued | real gap: no disabled tab-order matrix guard; folded into the state-aware row
 090-soft-status-border-role.md | queued | real gap: the soft status edge is alpha-mixed rather than a role; TODO row added
-090-tier1-component-api-contract.md | discarded | already tracked in TODO.md Phase C (primitives plans 040, nine ordered steps)
+090-tier1-component-api-contract.md | discarded | already tracked in .agents/slop/TODO.md Phase C (primitives plans 040, nine ordered steps)
 091-invalid-field-fill.md | discarded | invalid already repaints only the border and ring, not the surface
 091-selection-in-soft-surfaces.md | queued | real gap: selection inside soft status surfaces is unmeasured; folded into the contrast-coverage row
 092-control-boundary-soft-fills.md | queued | real gap: control boundaries on soft fills are unmeasured; folded into the contrast-coverage row
@@ -136,7 +136,7 @@
 115-tier2-feedback.md | discarded | Toast and Field already landed
 116-tier2-choice-inputs.md | discarded | SearchInput and Combobox already landed
 117-tier2-verification.md | discarded | inventory, theme matrix and completion gate already landed
-118-single-writer-components.md | discarded | blocker B3 resolved in this worktree and recorded in TODO.md
+118-single-writer-components.md | discarded | blocker B3 resolved in this worktree and recorded in .agents/slop/TODO.md
 119-tier2-date-picker.md | discarded | DatePicker and TimePicker already landed
 120-app-playground.md | discarded | apps/playground already ships the headless and live runners
 120-list-multi-select.md | discarded | List multiple selection already landed (TODO plan 120)
@@ -160,7 +160,7 @@
 137-list-item-click-forwarding.md | discarded | landed (TODO plan 137)
 138-combobox-pointer-coverage.md | discarded | landed (TODO plan 138)
 139-inventory-test-counts.md | discarded | landed (TODO plan 139)
-140-gpuix-native-darwin-x64-build.md | discarded | the darwin-x64 binding is built, installed and recorded in TODO.md
+140-gpuix-native-darwin-x64-build.md | discarded | the darwin-x64 binding is built, installed and recorded in .agents/slop/TODO.md
 150-native-theme-gallery.md | discarded | native theme gallery already exists in the playground (TODO cross-team row)
 151-playground-shell-navigation.md | discarded | the shell-navigation scenario already ships
 152-virtualized-table-probe.md | discarded | the virtualized-table scenario already ships
@@ -1330,5 +1330,5 @@ tokens-theme__052-register-font.md | discarded | duplicate of 052-register-font.
 tokens-theme__202-adopt-theme-tokens.md | discarded | duplicate of 202-adopt-theme-tokens.md, an active master plan
 tokens-theme__206-message-scroller.md | discarded | duplicate of 206-message-scroller.md, already discarded
 transform__524-shadcn-tailwind-conformance.md | discarded | duplicate of 524-shadcn-tailwind-conformance.md, an active master plan
-FINAL | 1332 plans processed | 2 landed | 225 discarded | 1105 queued into TODO.md backlog rows | queue empty 2026-10-21 (the 1 landed / 1106 queued split first written here was superseded when 173-horizontal-scroll landed; the tally now matches this log's own rows)
-VERIFIED 2026-10-21 23:08 | 0 queued files at start | 0 processed this session | counts recomputed by grep over this log rather than copied: 1334 lines after this one = 1330 plan verdict lines (0 implemented, 225 discarded, 1105 queued) + 2 landed lines (163-text-selection, 173-horizontal-scroll) + 1 FINAL + this one VERIFIED line | the queue directory is empty (`find -mindepth 1` returns nothing, re-checked immediately before logging), so no plan was read, discarded, implemented or queued, and no new plan was written | every queued slug was traced this session, not merely counted: 958 slugs reach TODO.md through the six aggregate sweep rows whose package counts match this log exactly (tokens 245, components 267, primitives 176, docs 175, playground 125, runtime 4 = 992 package-slots, 34 slugs cross-listed in both packages) and 147 slugs are named in individual per-gap rows | both landings re-confirmed on master by their real commits, 164a56de (text-selection) and 9853fbae (scroll-horizontal), with both scenarios in master's registry; earlier lines here cited 484dec19/fd3774d2, which live only on stale origin/agent/* branches and are not on master | the stale FINAL line's 1 landed / 1106 queued split was corrected to 2 landed / 1105 queued | the swarm then retired this workstream (7a5bf668 removed salvage from the supervisor's workstreams) and dropped the six aggregate sweep rows from TODO.md, so the 958 slugs they carried now live only in this log, which stays the record of every queued slug; they were not re-added, because that retirement was a deliberate operator decision | nothing to salvage; a new queue file is the only restart trigger | queue empty
+FINAL | 1332 plans processed | 2 landed | 225 discarded | 1105 queued into .agents/slop/TODO.md backlog rows | queue empty 2026-10-21 (the 1 landed / 1106 queued split first written here was superseded when 173-horizontal-scroll landed; the tally now matches this log's own rows)
+VERIFIED 2026-10-21 23:08 | 0 queued files at start | 0 processed this session | counts recomputed by grep over this log rather than copied: 1334 lines after this one = 1330 plan verdict lines (0 implemented, 225 discarded, 1105 queued) + 2 landed lines (163-text-selection, 173-horizontal-scroll) + 1 FINAL + this one VERIFIED line | the queue directory is empty (`find -mindepth 1` returns nothing, re-checked immediately before logging), so no plan was read, discarded, implemented or queued, and no new plan was written | every queued slug was traced this session, not merely counted: 958 slugs reach .agents/slop/TODO.md through the six aggregate sweep rows whose package counts match this log exactly (tokens 245, components 267, primitives 176, docs 175, playground 125, runtime 4 = 992 package-slots, 34 slugs cross-listed in both packages) and 147 slugs are named in individual per-gap rows | both landings re-confirmed on master by their real commits, 164a56de (text-selection) and 9853fbae (scroll-horizontal), with both scenarios in master's registry; earlier lines here cited 484dec19/fd3774d2, which live only on stale origin/agent/* branches and are not on master | the stale FINAL line's 1 landed / 1106 queued split was corrected to 2 landed / 1105 queued | the swarm then retired this workstream (7a5bf668 removed salvage from the supervisor's workstreams) and dropped the six aggregate sweep rows from .agents/slop/TODO.md, so the 958 slugs they carried now live only in this log, which stays the record of every queued slug; they were not re-added, because that retirement was a deliberate operator decision | nothing to salvage; a new queue file is the only restart trigger | queue empty

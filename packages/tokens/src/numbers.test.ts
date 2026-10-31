@@ -1557,7 +1557,7 @@ describe("a length a store wrote as something else", () => {
 
     const page = read("docs/tokens.md");
     const system = read("docs/design-system.md");
-    const inventory = read("COMPONENTS.md");
+    const inventory = read(".agents/slop/COMPONENTS.md");
 
     // Each surface states the rule the report now keeps, in its own terms.
     expect(page).toContain("A **value that is not a number**");

@@ -14,7 +14,7 @@ capability row was `unverified`. ADR 0002 added the 0.5.1 legacy probe, which
 runs here but never delivers focus/blur events — so it cannot verify a component
 library either.
 
-B1 (in `~/GPUIXUI/BLOCKERS.md`) said to try the documented alternatives,
+B1 (in `~/GPUIXUI/.agents/slop/BLOCKERS.md`) said to try the documented alternatives,
 including **build-from-source**. That avenue had been closed on the grounds that
 the Metal toolchain (`xcrun metal`) ships with Xcode, which this host lacks
 (Command Line Tools only). Re-reading the pinned source showed that premise is
@@ -72,7 +72,7 @@ runtime compiler (`MTLDevice.newLibraryWithSource`), which ships with macOS.
 - A fresh checkout does not have the binding: the build must be repeated (or the
   artifact obtained), which the suite reports honestly as exit `2` until then.
 - The locally-built artifact is not byte-identical to the published one, so a
-  `verified` verdict names its provenance in `COMPONENTS.md`.
+  `verified` verdict names its provenance in `.agents/slop/COMPONENTS.md`.
 
 **Rejected alternatives**
 

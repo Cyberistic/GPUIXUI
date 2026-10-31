@@ -76,7 +76,7 @@ guard that non-darwin looks did not move.
 ## Acceptance
 
 - Every row in the table is implemented or recorded as a limitation in
-  `COMPONENTS.md` with the evidence.
+  `.agents/slop/COMPONENTS.md` with the evidence.
 - No component reads `platform === "darwin"`; they read tokens.
 - `nub run check`, `lint`, `test` green.
 

@@ -331,7 +331,7 @@ describe("the ring's width rule", () => {
       ["docs/tokens.md", "../../../docs/tokens.md"],
       ["docs/design-system.md", "../../../docs/design-system.md"],
       ["packages/tokens/README.md", "../README.md"],
-      ["COMPONENTS.md", "../../../COMPONENTS.md"],
+      [".agents/slop/COMPONENTS.md", "../../../.agents/slop/COMPONENTS.md"],
     ] as const;
 
     pages.forEach(([path, url]) => {

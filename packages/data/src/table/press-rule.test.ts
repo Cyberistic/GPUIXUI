@@ -20,7 +20,7 @@ import * as Arr from "effect/Array";
 const source = readFileSync(new URL("./table.tsx", import.meta.url), "utf8");
 
 const inventory = readFileSync(
-  new URL("../../../../COMPONENTS.md", import.meta.url),
+  new URL("../../../../.agents/slop/COMPONENTS.md", import.meta.url),
   "utf8",
 );
 

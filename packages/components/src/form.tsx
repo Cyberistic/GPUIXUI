@@ -201,7 +201,7 @@ export const Form = <T,>({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const formMeta = {
   name: "Form",
   tier: 2,

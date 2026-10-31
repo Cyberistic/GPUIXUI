@@ -7,13 +7,13 @@
 | Feeds | the `motion` workstream and the components inventory |
 | Depends on | `@gpuixui/motion`, `@gpuixui/tw`, the runtime capability matrix |
 
-Phase 0 and every catalogue phase have landed: each row in `TODO.md` →
-*Animated primitives* and `COMPONENTS.md` → *Animated primitives* names the
+Phase 0 and every catalogue phase have landed: each row in `.agents/slop/TODO.md` →
+*Animated primitives* and `.agents/slop/COMPONENTS.md` → *Animated primitives* names the
 component, its proof and its limits, and the entries that need `transform` or a
 filter are declined there with measured evidence. The file is kept because
 component sources cite its §3 rule ("never animate `transform`; a scale or
 rotate degrades to fade + offset") and §2's catalogue; deleting it would turn
-those citations into dead ends. New motion work still starts from `TODO.md`, not
+those citations into dead ends. New motion work still starts from `.agents/slop/TODO.md`, not
 from this plan.
 
 The catalogue below is a **gap list of generic animated primitives** worth
@@ -108,7 +108,7 @@ Rules:
 ## 5. Acceptance
 
 - Every primitive lands with code, a test that can fail, a docs page, an example
-  and a `COMPONENTS.md` row.
+  and a `.agents/slop/COMPONENTS.md` row.
 - Phase 0 is proven by behaviour tests: a dialog/drawer/toast/accordion/tab entry
   and exit is measured on the real renderer, not asserted from intent.
 - `@gpuixui/motion` is imported by the surfaces Phase 0 touches.

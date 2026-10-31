@@ -8,7 +8,7 @@
 | Depends on | `020` (GPUix runtime capability), `524` (the `unsupported` channel), `140` (darwin-x64 binding) |
 | Sources | `0xErwin1/zed` @ `fc4c1586…` (**Apache-2.0** `crates/gpui`); `remorses/zed` `gpuix` @ `2565b8a3…`; `zed-industries/zed` main @ `56934ec0…` (2026-10-17); `remorses/gpuix` @ `515df19` |
 | Reference clone | `/Users/cyberistic/GPUIXUI/references/transform-zed` (treeless, read-only; §2) |
-| Feeds | `packages/tw`'s `unsupported` set; Dialog/Popover/Toast/menu motion; `COMPONENTS.md` GPUix-support column; a `PLAN.md` decision row |
+| Feeds | `packages/tw`'s `unsupported` set; Dialog/Popover/Toast/menu motion; `.agents/slop/COMPONENTS.md` GPUix-support column; a `.agents/slop/PLAN.md` decision row |
 
 ---
 
@@ -405,14 +405,14 @@ Apache-2.0 and publishable. No AGPL obligation exists.
 
 Apache-2.0 §4 requires, when redistributing:
 
-1. a copy of the licence (`LICENSES/` or the fork's `LICENSE-APACHE`);
+1. a copy of the licence (`.agents/slop/LICENSES/` or the fork's `LICENSE-APACHE`);
 2. prominent notices of the files changed — a `NOTICE`/provenance row naming
    the seven files and the merge;
 3. retention of copyright/attribution notices (Zed Industries for the base,
    Ignacio Perez for the branch);
 4. no trademark use (do not use the Zed or GPUI marks as our identity).
 
-Record in `LICENSES/provenance.md`:
+Record in `.agents/slop/LICENSES/provenance.md`:
 
 | Source | Commit | What changed | Licence |
 | ------ | ------ | ------------ | ------- |
@@ -434,8 +434,8 @@ Record in `LICENSES/provenance.md`:
 
 ### 5.4 Our repository's own licence
 
-`GPUIXUI` has no root `LICENSE` yet (only `LICENSES/README.md` and
-`LICENSES/base-gpui.md`). Apache-2.0 code can be redistributed inside an
+`GPUIXUI` has no root `LICENSE` yet (only `.agents/slop/LICENSES/README.md` and
+`.agents/slop/LICENSES/base-gpui.md`). Apache-2.0 code can be redistributed inside an
 MIT/Apache/GPL project with the notices above, but **the distribution licence
 must be decided before shipping a fork**. That is an owner decision, not this
 plan's.
@@ -598,7 +598,7 @@ if let Some(transform) = style.transform.and_then(TransformDesc::to_element_tran
 
 `apply_styles` is generic over `gpui::Styled`, so this compiles for `div` and
 `list`; it only *has an effect* on `div`/`text` (§3.5 item 6). Document that in
-the TS JSDoc and in the `COMPONENTS.md` GPUix-support column (plan 203's
+the TS JSDoc and in the `.agents/slop/COMPONENTS.md` GPUix-support column (plan 203's
 `docs/gpuix-capabilities.md` is not written yet).
 
 **`packages/native/js/host.ts`** (the hand-written public types; `@gpuix/react`
@@ -798,7 +798,7 @@ transition: { duration: 0.15, ease: "easeOut" }
 - `packages/tw` keeps `scale-*`, `zoom-*`, `rotate-*`, `origin-*` in
   `unsupported` (plan 524's channel) with the reason "GPUix 0.10.0 has no
   transform".
-- Document in the Dialog/Popover/Toast pages and `COMPONENTS.md`: the target
+- Document in the Dialog/Popover/Toast pages and `.agents/slop/COMPONENTS.md`: the target
   motion is a fade + short slide; zoom requires the transform runtime (plan
   525). This is the "strongest honest alternative" MISSION asks for.
 
@@ -863,7 +863,7 @@ When any signal fires, re-run §4 (the base will have moved) before §6.
       `loaded`).
 - [ ] `node apps/playground/dist/smoke/run.js --only transform` exits `0`; the
       report names the five checks.
-- [ ] `LICENSES/inventory.md`, `provenance.md`, `NOTICE` updated; a `PLAN.md`
+- [ ] `.agents/slop/LICENSES/inventory.md`, `provenance.md`, `NOTICE` updated; a `.agents/slop/PLAN.md`
       decision row records the fork-or-fallback outcome.
 
 ---

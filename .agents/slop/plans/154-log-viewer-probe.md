@@ -59,9 +59,9 @@ Append `logViewerScenario`; add `"log"` to `PROBE_CAPABILITIES`.
 
 - `apps/playground/README.md`: scenario list/count (18), structure line, the
   measured facts.
-- `COMPONENTS.md`: evidence table gains `log`; Tier 4 "Log viewers" support
+- `.agents/slop/COMPONENTS.md`: evidence table gains `log`; Tier 4 "Log viewers" support
   cell becomes the probe verdict; suite count 18.
-- `TODO.md`: tick the item; progress bar.
+- `.agents/slop/TODO.md`: tick the item; progress bar.
 - `.agents/slop/plans/README.md` and plan `140` §4: measured facts.
 - Plan `130` §8: point the log-viewer consumer at this probe.
 
@@ -93,7 +93,7 @@ Stop and report with evidence if:
 - **Appending re-anchors to the top.** Record it; it is a runtime limitation,
   not a probe bug, but confirm with a second append before concluding.
 - **A change outside this workstream is needed** (other than the one-line
-  capability addition in §3.1): record it in `TODO.md`, do not edit other
+  capability addition in §3.1): record it in `.agents/slop/TODO.md`, do not edit other
   packages.
 
 ## 6. Test plan
@@ -108,7 +108,7 @@ Stop and report with evidence if:
 
 - `log-viewer` is registered, green, and `log` is a required probe capability.
 - The suite is **18/18 green on this host**, exit `0`.
-- The verdict is recorded in plan `140` §4, `COMPONENTS.md` and the app README.
+- The verdict is recorded in plan `140` §4, `.agents/slop/COMPONENTS.md` and the app README.
 - The two-direction proof was run and recorded.
 - `nub run check`, `nub run lint`, `nub run test` pass.
 

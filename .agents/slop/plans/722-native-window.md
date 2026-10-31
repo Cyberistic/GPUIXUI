@@ -102,7 +102,7 @@ instead of re-implementing — report which in the commit message.
 
 - `packages/shell/docs/window.mdx`, `source-list.mdx` — page, anatomy, the
   `nativeWindowOptions` call, the measured limits from `docs/gpuix-capabilities.md:144`.
-- `COMPONENTS.md` — rows for `Window` and `SourceList`; the `Toolbars` row
+- `.agents/slop/COMPONENTS.md` — rows for `Window` and `SourceList`; the `Toolbars` row
   points at `Window.Toolbar`.
 - `apps/docs` HTML reproduction: `apps/docs/src/components/docs/window-frame.tsx`
   (new) — the same anatomy over `--material-*` and `.gx-material`, used by

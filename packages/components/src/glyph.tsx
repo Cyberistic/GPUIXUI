@@ -124,7 +124,7 @@ export const Glyph = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 600). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const glyphMeta = {
   name: "Glyph",
   tier: 5,

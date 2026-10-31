@@ -12,8 +12,8 @@ commands to run, expected results, STOP conditions, and a test plan. **No
 implementation work starts until those plans exist and are indexed in
 `.agents/slop/plans/README.md`.**
 
-Read `MISSION.md` before anything else. It is the source of truth for what this
-repo is. `TODO.md` is the source of truth for what is left to do and survives
+Read `.agents/slop/MISSION.md` before anything else. It is the source of truth for what this
+repo is. `.agents/slop/TODO.md` is the source of truth for what is left to do and survives
 context compaction and restarts.
 
 ## 1. General
@@ -27,16 +27,18 @@ context compaction and restarts.
 - Prefer reading documentation over exploring package source. Most packages
   ship a README that links to the docs.
 - If a repo is used as a reference and is not tiny, clone it into
-  `references/` (gitignored, linked from `README.md`). Reference clones live at
+  `references/` (gitignored, linked from `.agents/slop/status.md`). Reference clones live at
   the absolute path `~/GPUIXUI/references/` and are **read-only** — never edit
   them. Agent workspaces do not get a copy; read them by absolute path.
 - Agent state (plans, scratch, session logs, status) goes under `.agents/slop/`.
   Nothing else may write there.
 - Add `// TODO:` comments for work that is not finished, so `rg TODO` finds it.
-- Tick finished tasks in `TODO.md`. If the task is not there, add it and tick
+- Tick finished tasks in `.agents/slop/TODO.md`. If the task is not there, add it and tick
   it. Keep the progress bars current. Implementation details do not go in
-  `TODO.md` — only tasks worth tracking.
-- Keep `README.md` current: it is the ledger and overview of the project.
+  `.agents/slop/TODO.md` — only tasks worth tracking.
+- Keep `README.md` current: it is the project overview. The status ledger
+  (status, layout, what the library is built on, references, tooling) lives in
+  `.agents/slop/status.md`; keep it current too.
 
 ## 2. Development
 
@@ -93,7 +95,7 @@ context compaction and restarts.
 - Every component: one responsibility, typed public API, sensible defaults,
   predictable variants/sizes, correct interaction states, a test appropriate to
   its behaviour, a docs page, at least one working example, and an inventory
-  record in `COMPONENTS.md`.
+  record in `.agents/slop/COMPONENTS.md`.
 - An interaction is not complete until it is tested in the actual native
   runtime (or a verified compatible test environment).
 
@@ -127,7 +129,7 @@ explicit boundaries.
   shared checkout while an agent owns a workstream.
 - **The shared checkout's `main` is the integration branch.** A workstream
   merges its own branch into `main` once its plan set is complete and the gates
-  in §7 pass, so the plan index, `TODO.md` and `COMPONENTS.md` in the shared
+  in §7 pass, so the plan index, `.agents/slop/TODO.md` and `.agents/slop/COMPONENTS.md` in the shared
   checkout stay current for the next agent. Resolve conflicts in your own
   branch, never on `main`.
 - Commit often with meaningful messages. Small, reviewable commits.

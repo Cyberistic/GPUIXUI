@@ -9,7 +9,7 @@ single selected path, `expanded` / `defaultExpanded`, guide lines down each
 level, a chevron that turns with the folder, type icons and a monospace label.
 
 The checkbox was also a measured defect: its press reached the row as well, so
-it could not add a row to the selection (TODO.md → Interlocks). Replacing the
+it could not add a row to the selection (.agents/slop/TODO.md → Interlocks). Replacing the
 selection model with one selected path removes the gesture rather than patching
 it.
 
@@ -84,7 +84,7 @@ Update:
 - `apps/docs/src/components/docs/file-tree-demo.tsx` + test + `demos.css` —
   the drawing follows the new anatomy.
 - `apps/playground/src/live/file-tree*.ts(x)`, registry, README section.
-- `COMPONENTS.md`, `TODO.md`, `packages/files/README.md`.
+- `.agents/slop/COMPONENTS.md`, `.agents/slop/TODO.md`, `packages/files/README.md`.
 
 ## Tests
 

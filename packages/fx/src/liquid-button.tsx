@@ -165,7 +165,7 @@ export const LiquidButton = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 600). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const liquidButtonMeta = {
   name: "Liquid button",
   tier: 5,

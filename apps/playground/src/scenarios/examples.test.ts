@@ -46,7 +46,7 @@ const readme = readFileSync(
 );
 
 const components = readFileSync(
-  new URL("../../../../COMPONENTS.md", import.meta.url),
+  new URL("../../../../.agents/slop/COMPONENTS.md", import.meta.url),
   "utf8",
 );
 

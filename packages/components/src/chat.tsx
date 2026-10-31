@@ -632,7 +632,7 @@ const chatRoot: PartsContract = {
   hint: "Put ChatHeader, ChatMessages and ChatComposer directly inside ChatRoot.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md`. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`. */
 export const chatMeta = {
   name: "Chat",
   tier: 2,

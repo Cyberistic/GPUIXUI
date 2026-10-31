@@ -46,7 +46,7 @@ Direct evidence of the race in the working tree:
 - Whole-file `write` calls can erase a peer's newer edits; `edit` calls fail when
   the file changed underneath; `git commit` can capture a half-applied state and
   push a red `HEAD`.
-- The `TODO.md`/`COMPONENTS.md` truth files can end up inconsistent with the tree.
+- The `.agents/slop/TODO.md`/`.agents/slop/COMPONENTS.md` truth files can end up inconsistent with the tree.
 
 ## Recommended fix (harness — not this workstream's paths)
 

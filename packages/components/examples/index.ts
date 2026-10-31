@@ -3,7 +3,7 @@
  *
  * `apps/playground` mounts these in real GPUix. The browser docs site must not
  * render them as live components: they are GPUix host elements, not DOM, so a
- * browser render would be a fake native preview (MISSION.md's preview rules).
+ * browser render would be a fake native preview (.agents/slop/MISSION.md's preview rules).
  * The docs pages carry the same source as a code block.
  *
  * `src/examples.test.ts` holds the registry to the directory: every

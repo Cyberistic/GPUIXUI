@@ -3,7 +3,7 @@
  *
  * Each module owns its record, so the inventory cannot drift from the code it
  * describes; this file only collects them. `inventory.test.ts` checks the records
- * against the files on disk and the rows in `COMPONENTS.md` — the Tier 2 table
+ * against the files on disk and the rows in `.agents/slop/COMPONENTS.md` — the Tier 2 table
  * and the animated-primitives table plan 600 fills.
  */
 
@@ -89,7 +89,7 @@ import { userMenuMeta } from "./user-menu.js";
 
 /** One component's inventory record. */
 export interface ComponentMeta {
-  /** Exactly the label used in `COMPONENTS.md`. */
+  /** Exactly the label used in `.agents/slop/COMPONENTS.md`. */
   readonly name: string;
   readonly tier: 1 | 2 | 3 | 4 | 5;
   readonly status: "todo" | "wip" | "done" | "blocked" | "unsupported";

@@ -7,7 +7,7 @@
 | Owner | runtime owner |
 | Depends on | 702 (icon bytes, tray anchor), zed#15 |
 | Source | `references/fc-gpui` `crates/gpui-macos/src/mac/dock.rs:24`, `crates/gpui/src/app.rs:1461`, `crates/gpui/src/platform.rs:439`; `NSStatusItem.button.title`; SNI `XAyatanaLabel` |
-| Feeds | a menu-bar app that must show pending work while it has no window; the tray row in `COMPONENTS.md` |
+| Feeds | a menu-bar app that must show pending work while it has no window; the tray row in `.agents/slop/COMPONENTS.md` |
 
 ---
 ## Goal
@@ -54,7 +54,7 @@ their doc comment "taskbar overlay text" is aspirational. Do not copy that.
    `@gpuix/react` helpers that take a count and format `9+`; no hook (these are
    commands, not state).
 5. **Docs** — `docs/gpuix-capabilities.md` tray row gains the three calls with
-   their per-platform truth; `COMPONENTS.md` stops claiming "no tray badge".
+   their per-platform truth; `.agents/slop/COMPONENTS.md` stops claiming "no tray badge".
 
 ## Tests
 

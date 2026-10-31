@@ -979,7 +979,7 @@ const listItem: PartsContract = {
   hint: "Put ListItemTitle and ListItemDescription directly inside ListItem.",
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const listMeta = {
   name: "Lists / list items",
   tier: 2,

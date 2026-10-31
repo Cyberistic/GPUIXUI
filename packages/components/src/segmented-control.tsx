@@ -163,7 +163,7 @@ export const SegmentedControl = ({
   );
 };
 
-/** Inventory record, mirrored into `COMPONENTS.md`'s Segmented control row. */
+/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Segmented control row. */
 export const segmentedControlMeta = {
   name: "Segmented control",
   tier: 2,

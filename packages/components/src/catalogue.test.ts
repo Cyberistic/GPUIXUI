@@ -4,18 +4,18 @@
  * The bug this guards: plan 600 §2 names 47 animated primitives and §5 requires
  * every one to land with an inventory record — or, where the runtime cannot
  * paint it, to be declined with evidence. Fourteen names had no record a reader
- * of `COMPONENTS.md` could see: eight cannot be painted on
+ * of `.agents/slop/COMPONENTS.md` could see: eight cannot be painted on
  * `@gpuix/native@0.11.0` (`blur`, `zoom`, `tilt`, `flip-button`, `hole`,
  * `morphing-text`, `click`, `github-stars`) and six resolve to a primitive that
  * already ships (`fade` and `slide` to `Reveal`, `highlight` to `Highlight text`,
  * `icon-button` to the primitives' `IconButton`, `swapping-text` and
  * `scrolling-number` to their two implementations). The declines lived only in
- * `TODO.md` sub-bullets, which the inventory does not render, so the animated
+ * `.agents/slop/TODO.md` sub-bullets, which the inventory does not render, so the animated
  * table read complete while a reader could not tell a declined entry from work
  * nobody had started.
  *
  * Every catalogue name is placed here — a row, a shipped primitive, or a decline
- * whose reason names the runtime gap — and `COMPONENTS.md`'s recorded entries
+ * whose reason names the runtime gap — and `.agents/slop/COMPONENTS.md`'s recorded entries
  * are held to the same placements, so the plan, the code and the record cannot
  * drift apart.
  */
@@ -83,7 +83,7 @@ type Placement =
  * The placement of every catalogue name. `row` names an animated table row,
  * `covered` names the rows that already implement the idea, `published` names a
  * primitive another package ships, and `declined` names the gap that makes the
- * effect unrepresentable — the same clause `COMPONENTS.md` records.
+ * effect unrepresentable — the same clause `.agents/slop/COMPONENTS.md` records.
  */
 const placements: Readonly<Record<string, Placement>> = {
   "splitting-text": { _tag: "row", name: "Splitting text" },
@@ -150,9 +150,9 @@ interface Row {
   readonly status: string;
 }
 
-/** The animated primitives table, parsed from `COMPONENTS.md`. */
+/** The animated primitives table, parsed from `.agents/slop/COMPONENTS.md`. */
 const rows = (): ReadonlyArray<Row> => {
-  const markdown = read("COMPONENTS.md");
+  const markdown = read(".agents/slop/COMPONENTS.md");
   const heading = "## Animated primitives (plan 600)";
   const start = markdown.indexOf(heading);
   if (start < 0) throw new Error("catalogue: the animated table is gone");
@@ -167,7 +167,7 @@ const rows = (): ReadonlyArray<Row> => {
   });
 };
 
-/** One line of `COMPONENTS.md`'s declined-and-covered block. */
+/** One line of `.agents/slop/COMPONENTS.md`'s declined-and-covered block. */
 interface Recorded {
   readonly slug: string;
   readonly kind: "declined" | "covered";
@@ -178,7 +178,7 @@ const ENTRY = /^- `([a-z][a-z-]*)` — \*\*(declined|covered)\*\*(.*)$/;
 
 /** The entries the inventory records, one bullet each. */
 const recorded = (): ReadonlyArray<Recorded> =>
-  Arr.filterMap(Str.split("\n")(read("COMPONENTS.md")), (line) =>
+  Arr.filterMap(Str.split("\n")(read(".agents/slop/COMPONENTS.md")), (line) =>
     Option.match(Str.match(ENTRY)(line), {
       onNone: () => Result.failVoid,
       onSome: (match) =>
@@ -310,7 +310,7 @@ describe("the plan-600 catalogue", () => {
   });
 
   it("counts what the block records, so a reader is not told a stale total", () => {
-    const markdown = read("COMPONENTS.md");
+    const markdown = read(".agents/slop/COMPONENTS.md");
     const block = markdown.slice(
       markdown.indexOf("### Declined and covered catalogue entries"),
     );

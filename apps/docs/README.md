@@ -284,7 +284,7 @@ src/components/docs/package-source.tsx    The generated source block a package p
 src/components/docs/install.tsx           The nub / manual install tabs
 src/components/docs/copy-page.tsx         Copy the page as Markdown
 src/components/docs/edit-page.tsx         The footer link to the page's Markdown, on GitHub
-src/components/docs/status-strip.tsx      The generated COMPONENTS.md status and verdict
+src/components/docs/status-strip.tsx      The generated .agents/slop/COMPONENTS.md status and verdict
 src/components/docs/dependency-strip.tsx  The generated "Built on" line: the module's workspace imports, curated and package pages alike
 src/components/docs/keyboard-strip.tsx    The generated keyboard contract: the keys a component handles, read from its own modules
 src/components/docs/related-strip.tsx     The generated related-component links a package page ends with
@@ -450,10 +450,10 @@ src/lib/registry.ts                 The shadcn registry model: item names, depen
 src/lib/registry-source.ts          Reads the served pages and their modules to build the index and every item, at build time
 src/lib/virtual-modules.d.ts        The types of the build-time modules
 src/lib/fonts.ts                    The `.SystemUIFont` sentinel → CSS stack bridge for the previews
-src/lib/inventory.ts                Parses the tier tables and animated catalogue of COMPONENTS.md into rows and sections
+src/lib/inventory.ts                Parses the tier tables and animated catalogue of .agents/slop/COMPONENTS.md into rows and sections
 src/lib/inventory-data.ts           The parsed inventory, at build time
 src/lib/lane-pages.ts               The pages a lane's packages ship, grouped by package
-src/lib/inventory-status.ts         The page → COMPONENTS.md row join behind the status strip (title, plus the address two pages can share), both ways
+src/lib/inventory-status.ts         The page → .agents/slop/COMPONENTS.md row join behind the status strip (title, plus the address two pages can share), both ways
 src/lib/public-api.ts               Derives the entry points from each package's exports map
 src/lib/public-api-data.ts          The entry points, at build time
 src/lib/public-symbols.ts           The symbol index model: kinds, modules and summaries
@@ -613,7 +613,7 @@ cannot invent a suite, so a page without the heading is not a defect the site
 can fix.
 
 Every component page — the curated pages this site writes and the package pages
-it mounts — opens with a **status strip** generated from its `COMPONENTS.md` row
+it mounts — opens with a **status strip** generated from its `.agents/slop/COMPONENTS.md` row
 (`src/components/docs/status-strip.tsx`): the inventory's status and its GPUix
 support verdict, plus a link to the inventory. The join is the page title
 (`src/lib/inventory-status.ts`), which normalises punctuation and a trailing
@@ -670,12 +670,12 @@ No page restates what the code already says:
   `<ComponentPreview>` (`component-index.ts`), so the index cannot advertise a
   page that does not exist and a new page appears without a docs edit. A curated
   page shadows its package page, each tile renders that page's demo, and each
-  tile carries the `COMPONENTS.md` status and support verdict the page's status
+  tile carries the `.agents/slop/COMPONENTS.md` status and support verdict the page's status
   strip prints, so a component the runtime supports only in part is marked in
   the grid and `partial` is a query. The grid is three across on desktop, two on
   tablet and one on a phone.
 - **Lane pages** (`/workspace`, `/data-display`) get their rows from the tier
-  tables of `COMPONENTS.md` through `<LaneTable>`, so a page cannot call a row
+  tables of `.agents/slop/COMPONENTS.md` through `<LaneTable>`, so a page cannot call a row
   shipped while the inventory says `todo`.
 - **Guide** (`/getting-started`) is the one getting-started page: install, the
   first component, the four rules, the theme in seven lines and the way out.

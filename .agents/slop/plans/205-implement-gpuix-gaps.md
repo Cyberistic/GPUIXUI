@@ -8,7 +8,7 @@
 | Status | planned |
 
 This plan is self-contained. It is the **coverage and dependency order** for every
-`COMPONENTS.md` row that GPUix does not provide — the complement of the
+`.agents/slop/COMPONENTS.md` row that GPUix does not provide — the complement of the
 "Not provided by GPUix" section. It does **not** re-specify components that plans
 `110–117` already specify; it names them, fixes their order, and states the GPUix
 primitive each is built on.
@@ -17,7 +17,7 @@ primitive each is built on.
 
 ## 1. Scope
 
-`COMPONENTS.md`'s "Not provided by GPUix" section lists the rows that need real
+`.agents/slop/COMPONENTS.md`'s "Not provided by GPUix" section lists the rows that need real
 implementation. This plan groups them, gives the dependency order, and names the
 GPUix primitive each builds on. A row already owned by another plan is marked
 **`→ 1xx`** and left to that plan.
@@ -53,7 +53,7 @@ with `role` + `aria-selected` / `aria-valuetext` and record the gap.
 | A14 | Hotkey-recorder input | focused `div` + `KeyEvent` | A5 | — |
 | A15 | Color picker | Slider ×3 + inputs + swatches | A7, A10, `201` | — |
 
-**Color picker limitation (from `COMPONENTS.md`, unverified):** the
+**Color picker limitation (from `.agents/slop/COMPONENTS.md`, unverified):** the
 saturation/value square needs radial/multi-stop gradients, which GPUix does not
 support. Ship a swatch grid or a pre-rendered bitmap; do not fake the square.
 
@@ -93,7 +93,7 @@ Built on `<img>`, `<svg>`, `<virtual-list>`, `motion`, and — **unverified** �
 
 **STOP before building C8, C10 and C11.** They depend on a capability GPUix does
 not document. Record the evidence, the affected rows and the strongest honest
-alternative in `COMPONENTS.md` and `docs/gpuix-capabilities.md` — do not ship a
+alternative in `.agents/slop/COMPONENTS.md` and `docs/gpuix-capabilities.md` — do not ship a
 placeholder.
 
 ## 5. Group D — overlays and navigation
@@ -157,8 +157,8 @@ keyboard contract (030) + state model (201)
 | ---- | ------ |
 | `docs/implementation-order.md` | **create** — §2–§7 |
 | `docs/README.md` | add the `implementation-order.md` row |
-| `TODO.md` | one Phase C task per Group A/B row, one Phase D per E, one Phase E per C; plus the C8/C10/C11/C12 "documented limitation" tasks |
-| `COMPONENTS.md` | keep the "Not provided by GPUix" list in sync; a row moves to `wip` when its plan starts |
+| `.agents/slop/TODO.md` | one Phase C task per Group A/B row, one Phase D per E, one Phase E per C; plus the C8/C10/C11/C12 "documented limitation" tasks |
+| `.agents/slop/COMPONENTS.md` | keep the "Not provided by GPUix" list in sync; a row moves to `wip` when its plan starts |
 
 Do **not** create component source here. Each row's implementation is a plan of
 its own, per `AGENTS.md` §0.
@@ -178,7 +178,7 @@ Stop and report if:
 - a Group C or E6 row needs a capability `203` marks not supported — mark it
   `unverified`/`blocked`, cite the evidence, and do not build a placeholder;
 - a row's primitive turns out not to be published in 0.10.0 (re-verify against
-  `workspaces/*/node_modules/@gpuix/...`) — update `COMPONENTS.md` and stop;
+  `workspaces/*/node_modules/@gpuix/...`) — update `.agents/slop/COMPONENTS.md` and stop;
 - you are about to duplicate a row already specified by plans `110–117` or `204`.
 
 ## 11. Test plan
@@ -194,4 +194,4 @@ Stop and report if:
 - Every "Not provided by GPUix" row appears exactly once in Groups A–E, with a
   primitive, a dependency and a plan/owner.
 - The unverifiable rows are marked and evidenced, not promised.
-- `TODO.md` carries one trackable task per row; `docs/README.md` indexes the doc.
+- `.agents/slop/TODO.md` carries one trackable task per row; `docs/README.md` indexes the doc.

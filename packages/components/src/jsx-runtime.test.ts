@@ -12,7 +12,7 @@
  *
  * `@gpuixui/primitives`, `@gpuixui/icons` and `@gpuixui/data` hold the same rule
  * for their own files; `packages/dock`, `files` and `shell` are recorded in
- * `TODO.md` as their owners' work, so this walk covers the three packages this
+ * `.agents/slop/TODO.md` as their owners' work, so this walk covers the three packages this
  * lane writes.
  *
  * `node:fs` is the test-time repository boundary `docs.test.ts` already uses.
