@@ -1,28 +1,120 @@
 <template>
   <style>
-    #root { position: absolute; inset: 0; background: #f2f2f7; overflow: hidden; font-family: Inter, sans-serif; }
-    #root .cap { position: absolute; left: 0; right: 0; top: 118px; text-align: center; }
-    #root .cap span { display: inline-block; font-size: 84px; font-weight: 700; letter-spacing: -0.035em; color: #1d1d1f; }
-    #root .cursor { position: absolute; left: 0; top: 0; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25)); }
-    #root .cursor svg { display: block; width: 100%; height: auto; }
-    #root video { position: absolute; left: 0; top: 0; }
-    #root .screen { position: absolute; left: 160px; top: 290px; width: 1600px; height: 900px; border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25); }
-    #root video { width: 1600px; height: 900px; }
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #f2f2f7;
+      overflow: hidden;
+      font-family: Inter, sans-serif;
+    }
+    #root .cap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 118px;
+      text-align: center;
+    }
+    #root .cap span {
+      display: inline-block;
+      font-size: 84px;
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      color: #1d1d1f;
+    }
+    #root .cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 8% 6%;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+    }
+    #root .cursor svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root video {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    #root .screen {
+      position: absolute;
+      left: 160px;
+      top: 290px;
+      width: 1600px;
+      height: 900px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+    }
+    #root video {
+      width: 1600px;
+      height: 900px;
+    }
   </style>
-  <div id="root" data-composition-id="omarchy" data-width="1920" data-height="1080">
-    <div id="o-screen" class="screen"><video id="o-take" class="clip" data-start="0" data-duration="2.308" data-track-index="1" muted playsinline src="assets/footage/omarchy.mp4"></video></div>
-    <div id="o-cap0" class="cap clip" data-start="0.100" data-duration="2.208" data-track-index="9"><span>follows your omarchy theme</span></div>
+  <div
+    id="root"
+    data-composition-id="omarchy"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div id="o-screen" class="screen">
+      <video
+        id="o-take"
+        class="clip"
+        data-start="0"
+        data-duration="2.308"
+        data-track-index="1"
+        muted
+        playsinline
+        src="assets/footage/omarchy.mp4"
+      ></video>
+    </div>
+    <div
+      id="o-cap0"
+      class="cap clip"
+      data-start="0.100"
+      data-duration="2.208"
+      data-track-index="9"
+    >
+      <span>follows your omarchy theme</span>
+    </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.fromTo("#o-screen", { opacity: 0, filter: "blur(8px)", scale: 0.97 }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.28, ease: "expo.out" }, 0.0);
-    tl.to("#o-screen", { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" }, 2.118);
+    tl.fromTo(
+      "#o-screen",
+      { opacity: 0, filter: "blur(8px)", scale: 0.97 },
+      {
+        opacity: 1,
+        filter: "blur(0px)",
+        scale: 1,
+        duration: 0.28,
+        ease: "expo.out",
+      },
+      0.0,
+    );
+    tl.to(
+      "#o-screen",
+      { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" },
+      2.118,
+    );
     // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
     document.querySelectorAll("#root .cap").forEach((el) => {
       const start = Number(el.dataset.start);
       const end = start + Number(el.dataset.duration);
-      tl.fromTo(el.querySelector("span"), { opacity: 0.3, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" }, start);
-      tl.to(el.querySelector("span"), { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" }, end - 0.2);
+      tl.fromTo(
+        el.querySelector("span"),
+        { opacity: 0.3, filter: "blur(6px)" },
+        { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" },
+        start,
+      );
+      tl.to(
+        el.querySelector("span"),
+        { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" },
+        end - 0.2,
+      );
     });
     window.__timelines["omarchy"] = tl;
   </script>

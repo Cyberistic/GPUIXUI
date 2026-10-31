@@ -1,47 +1,277 @@
 <template>
   <style>
-    #root { position: absolute; inset: 0; background: #f2f2f7; overflow: hidden; font-family: Inter, sans-serif; }
-    #root .cap { position: absolute; left: 0; right: 0; top: 118px; text-align: center; }
-    #root .cap span { display: inline-block; font-size: 84px; font-weight: 700; letter-spacing: -0.035em; color: #1d1d1f; }
-    #root .cursor { position: absolute; left: 0; top: 0; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25)); }
-    #root .cursor svg { display: block; width: 100%; height: auto; }
-    #root video { position: absolute; left: 0; top: 0; }
-    #root .stage { position: absolute; left: 0; top: 330px; width: 1920px; height: 750px; overflow: hidden; perspective: 1700px; perspective-origin: 50% 20%; }
-    #root .plane { position: absolute; left: -260px; top: -40px; width: 2440px; display: grid; grid-template-columns: repeat(4, 580px); gap: 40px; transform-style: preserve-3d; transform-origin: 50% 50%; }
-    #root .tile { position: relative; width: 580px; height: 369px; border-radius: 12px; overflow: hidden; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3); background: #fff; }
-    #root .tile video { width: 580px; height: 369px; object-fit: cover; }
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #f2f2f7;
+      overflow: hidden;
+      font-family: Inter, sans-serif;
+    }
+    #root .cap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 118px;
+      text-align: center;
+    }
+    #root .cap span {
+      display: inline-block;
+      font-size: 84px;
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      color: #1d1d1f;
+    }
+    #root .cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 8% 6%;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+    }
+    #root .cursor svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root video {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    #root .stage {
+      position: absolute;
+      left: 0;
+      top: 330px;
+      width: 1920px;
+      height: 750px;
+      overflow: hidden;
+      perspective: 1700px;
+      perspective-origin: 50% 20%;
+    }
+    #root .plane {
+      position: absolute;
+      left: -260px;
+      top: -40px;
+      width: 2440px;
+      display: grid;
+      grid-template-columns: repeat(4, 580px);
+      gap: 40px;
+      transform-style: preserve-3d;
+      transform-origin: 50% 50%;
+    }
+    #root .tile {
+      position: relative;
+      width: 580px;
+      height: 369px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+      background: #fff;
+    }
+    #root .tile video {
+      width: 580px;
+      height: 369px;
+      object-fit: cover;
+    }
   </style>
-  <div id="root" data-composition-id="wall" data-width="1920" data-height="1080">
+  <div
+    id="root"
+    data-composition-id="wall"
+    data-width="1920"
+    data-height="1080"
+  >
     <div class="stage" data-layout-allow-overflow>
       <div id="w-plane" class="plane">
-        <div class="tile"><video id="w-pipeline" class="clip" data-start="0" data-duration="4.615" data-track-index="1" muted playsinline src="assets/footage/pipeline.mp4"></video></div>
-        <div class="tile"><video id="w-notes" class="clip" data-start="0" data-duration="4.615" data-track-index="2" muted playsinline src="assets/footage/notes.mp4"></video></div>
-        <div class="tile"><video id="w-calendar" class="clip" data-start="0" data-duration="4.615" data-track-index="3" muted playsinline src="assets/footage/calendar.mp4"></video></div>
-        <div class="tile"><video id="w-stats" class="clip" data-start="0" data-duration="4.615" data-track-index="4" muted playsinline src="assets/footage/stats.mp4"></video></div>
-        <div class="tile"><video id="w-agent" class="clip" data-start="0" data-duration="4.615" data-track-index="1" muted playsinline src="assets/footage/agent.mp4"></video></div>
-        <div class="tile"><video id="w-desktop-luna" class="clip" data-start="0" data-duration="4.615" data-track-index="2" muted playsinline src="assets/footage/desktop-luna.mp4"></video></div>
-        <div class="tile"><video id="w-viewer" class="clip" data-start="0" data-duration="4.615" data-track-index="3" muted playsinline src="assets/footage/viewer.mp4"></video></div>
-        <div class="tile"><video id="w-launcher" class="clip" data-start="0" data-duration="4.615" data-track-index="4" muted playsinline src="assets/footage/launcher.mp4"></video></div>
-        <div class="tile"><video id="w-welcome" class="clip" data-start="0" data-duration="4.615" data-track-index="1" muted playsinline src="assets/footage/welcome.mp4"></video></div>
-        <div class="tile"><video id="w-settings" class="clip" data-start="0" data-duration="4.615" data-track-index="2" muted playsinline src="assets/footage/settings.mp4"></video></div>
-        <div class="tile"><video id="w-omarchy" class="clip" data-start="0" data-duration="4.615" data-track-index="3" muted playsinline src="assets/footage/omarchy.mp4"></video></div>
-        <div class="tile"><video id="w-desktop-aero" class="clip" data-start="0" data-duration="4.615" data-track-index="4" muted playsinline src="assets/footage/desktop-aero.mp4"></video></div>
+        <div class="tile">
+          <video
+            id="w-pipeline"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="1"
+            muted
+            playsinline
+            src="assets/footage/pipeline.mp4"
+          ></video>
+        </div>
+        <div class="tile">
+          <video
+            id="w-notes"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/notes.mp4"
+          ></video>
+        </div>
+        <div class="tile">
+          <video
+            id="w-calendar"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="3"
+            muted
+            playsinline
+            src="assets/footage/calendar.mp4"
+          ></video>
+        </div>
+        <div class="tile">
+          <video
+            id="w-stats"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="4"
+            muted
+            playsinline
+            src="assets/footage/stats.mp4"
+          ></video>
+        </div>
+        <div class="tile">
+          <video
+            id="w-agent"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="1"
+            muted
+            playsinline
+            src="assets/footage/agent.mp4"
+          ></video>
+        </div>
+        <div class="tile">
+          <video
+            id="w-desktop-luna"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/desktop-luna.mp4"
+          ></video>
+        </div>
+        <div class="tile">
+          <video
+            id="w-viewer"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="3"
+            muted
+            playsinline
+            src="assets/footage/viewer.mp4"
+          ></video>
+        </div>
+        <div class="tile">
+          <video
+            id="w-launcher"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="4"
+            muted
+            playsinline
+            src="assets/footage/launcher.mp4"
+          ></video>
+        </div>
+        <div class="tile">
+          <video
+            id="w-welcome"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="1"
+            muted
+            playsinline
+            src="assets/footage/welcome.mp4"
+          ></video>
+        </div>
+        <div class="tile">
+          <video
+            id="w-settings"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/settings.mp4"
+          ></video>
+        </div>
+        <div class="tile">
+          <video
+            id="w-omarchy"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="3"
+            muted
+            playsinline
+            src="assets/footage/omarchy.mp4"
+          ></video>
+        </div>
+        <div class="tile">
+          <video
+            id="w-desktop-aero"
+            class="clip"
+            data-start="0"
+            data-duration="4.615"
+            data-track-index="4"
+            muted
+            playsinline
+            src="assets/footage/desktop-aero.mp4"
+          ></video>
+        </div>
       </div>
     </div>
-    <div id="w-cap0" class="cap clip" data-start="0.200" data-duration="4.365" data-track-index="9"><span>start from blocks</span></div>
+    <div
+      id="w-cap0"
+      class="cap clip"
+      data-start="0.200"
+      data-duration="4.365"
+      data-track-index="9"
+    >
+      <span>start from blocks</span>
+    </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
     // The plane tilts back and turns; the camera travels across it in one move.
-    tl.fromTo("#w-plane", { rotateX: 28, rotateY: -18, rotateZ: 6, x: 520, y: 40 }, { rotateX: 22, rotateY: -12, rotateZ: 4, x: -380, y: 20, duration: 4.615, ease: "power1.inOut" }, 0);
+    tl.fromTo(
+      "#w-plane",
+      { rotateX: 28, rotateY: -18, rotateZ: 6, x: 520, y: 40 },
+      {
+        rotateX: 22,
+        rotateY: -12,
+        rotateZ: 4,
+        x: -380,
+        y: 20,
+        duration: 4.615,
+        ease: "power1.inOut",
+      },
+      0,
+    );
     tl.fromTo("#w-plane", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0);
     tl.to("#w-plane", { opacity: 0, duration: 0.18, ease: "power2.in" }, 4.425);
     // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
     document.querySelectorAll("#root .cap").forEach((el) => {
       const start = Number(el.dataset.start);
       const end = start + Number(el.dataset.duration);
-      tl.fromTo(el.querySelector("span"), { opacity: 0.3, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" }, start);
-      tl.to(el.querySelector("span"), { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" }, end - 0.2);
+      tl.fromTo(
+        el.querySelector("span"),
+        { opacity: 0.3, filter: "blur(6px)" },
+        { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" },
+        start,
+      );
+      tl.to(
+        el.querySelector("span"),
+        { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" },
+        end - 0.2,
+      );
     });
     window.__timelines["wall"] = tl;
   </script>
