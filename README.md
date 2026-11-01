@@ -24,8 +24,8 @@
 GPUIxUI is a native UI component library for desktop apps, rendered on the GPU by
 [GPUix](https://github.com/remorses/gpuix) through React (no DOM or webview). It keeps the
 developer experience of [shadcn/ui](https://ui.shadcn.com): Base UI-style
-compound parts, Tailwind-style class styling, and components you install as
-source you own. One component tree wears a macOS, Windows or Linux look, follows
+primitives, TailwindCSS class styling, and components you install as
+source you own. One component gives you a macOS, Windows or Linux look, follows
 an Omarchy desktop theme, and can run in a terminal.
 
 ## Quick start
@@ -45,15 +45,28 @@ npx shadcn@latest add @sudokw/primitives-button
 ```
 
 The item installs the component, the `@gpuixui/*` runtime it imports and the npm
-packages, under `src/components/ui/gpuixui/`. The copied files need
-`"jsxImportSource": "@gpuix/react"` in the project's `tsconfig.json`, because the
-CLI drops each file's leading comment, where the source declares it. The
-[registry page](https://gpuixui.sudokw.com/registry) is the full walkthrough.
+packages, under `src/components/ui/gpuixui/`. More information on the
+[registry page](https://gpuixui.sudokw.com/registry).
 
 `@gpuix/native` ships prebuilt binaries for Apple Silicon, Linux x64 and
 Windows. On an Intel Mac, build it once with
 `sh apps/playground/scripts/build-native-binding.sh`.
 
+## References & Credits
+
+This library is built on top of [GPUIx](https://github.com/remorses/gpuix) which is built on top of Zed's [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui) while heavily references other work (is this distillation?). Throughout development, I kept pointing my agent at https://shoogle.dev/ and tried my best to keep track of all open-source libraries used as reference (or copied verbatim). Here is a list of the most important ones, you can find the rest [here](.agents/slop/LICENSES).
+
+List of libraries I tried to mimic or build on top of:
+1. Shadcn, obviously - [https://ui.shadcn.com/](https://github.com/shadcn-ui/ui)
+3. Base-ui - https://github.com/mui/base-ui
+4. TailwindCSS - https://github.com/tailwindlabs/tailwindcss
+5. Lucide Icons - https://github.com/lucide-icons/lucide
+6. Tanstack (Virtualizer, table, hotkeys..) - https://tanstack.com/
+
+List of heavily used references:
+1. Base-gpui - https://github.com/LukeTandjung/base-gpui
+2. GPUI motion - https://github.com/1bye/gpui-motion
+3. GPUI-Kit - https://gpui-kit.com/
 
 
 ## License
