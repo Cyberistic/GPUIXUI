@@ -1008,6 +1008,7 @@ const FUNCTION_TOKENS: Readonly<Record<string, InputToken>> = {
   tanh: TANH,
   "tanh⁻¹": TANH_INV,
   log: LOG,
+  logab: LOG,
   ln: LN,
   "√": SQRT,
   "∛": CBRT,
@@ -1074,7 +1075,7 @@ export const tokenForKey = (key: string): Option.Option<InputToken> => {
     return Option.some(operator(key));
   }
   if (key === "e10") return Option.some(EXP10);
-  if (key === "=") return Option.some(EQUALS);
+  if (key === "=" || key === "=sign") return Option.some(EQUALS);
   if (key in FUNCTION_TOKENS)
     return Option.some(FUNCTION_TOKENS[key]) as Option.Option<InputToken>;
   if (key in CONSTANT_TOKENS)
@@ -1094,44 +1095,72 @@ export const tokenForKey = (key: string): Option.Option<InputToken> => {
   return Option.none();
 };
 
-const SHIFT_KEYS: Readonly<Record<string, string>> = {
+/**
+ * What SHIFT and ALPHA make each key do: the legends printed on the fx-991ES
+ * Plus body (`models/fx991es.ts`). A value the session does not handle (the
+ * app's menus, or a printed-only legend) only clears the latch.
+ */
+export const SHIFT_KEYS: Readonly<Record<string, string>> = {
+  CALC: "SOLVE",
+  "∫": "d/dx",
+  "x⁻¹": "!",
+  logab: "Σ",
+  frac: "mixed",
+  "√": "∛",
+  "x²": "x³",
+  "^": "ⁿ√",
+  log: "10^",
+  ln: "e^",
+  "-": "∠",
+  "°": "°←",
+  hyp: "Abs",
   sin: "sin⁻¹",
   cos: "cos⁻¹",
   tan: "tan⁻¹",
   sinh: "sinh⁻¹",
   cosh: "cosh⁻¹",
   tanh: "tanh⁻¹",
-  "x²": "x³",
-  "x³": "x⁻¹",
-  "√": "∛",
-  log: "10^",
-  ln: "e^",
-  "M+": "M-",
-  "(": "%",
-  CALC: "SOLVE",
-  MODE: "SETUP",
-  AC: "OFF",
   RCL: "STO",
   ENG: "ENG←",
-  Ans: "Ans",
+  "(": "%",
+  ")": ",",
+  "S⇔D": "ab/c⇔d/c",
+  "M+": "M-",
+  MODE: "SETUP",
+  DEL: "INS",
+  AC: "OFF",
+  "7": "CONST",
+  "8": "CONV",
+  "9": "CLR",
+  "4": "MATRIX",
+  "5": "VECTOR",
+  "1": "STAT",
+  "2": "CMPLX",
+  "3": "BASE",
+  "×": "nPr",
+  "÷": "nCr",
+  "+": "Pol",
+  minus: "Rec",
+  "0": "Rnd",
+  ".": "Ran",
+  e10: "π",
+  Ans: "DRG▸",
 };
 
-const ALPHA_KEYS: Readonly<Record<string, string>> = {
-  sin: "E",
-  cos: "F",
-  tan: "X",
-  "(": "Y",
-  ")": "M",
-  ",": "I",
-  "7": "A",
-  "8": "B",
-  "9": "C",
-  "4": "D",
-  "5": "E",
-  "6": "F",
-  "1": "X",
-  "2": "Y",
-  "3": "M",
+export const ALPHA_KEYS: Readonly<Record<string, string>> = {
+  CALC: "=sign",
+  "∫": ":",
+  "-": "A",
+  "°": "B",
+  hyp: "C",
+  sin: "D",
+  cos: "E",
+  tan: "F",
+  ")": "X",
+  "S⇔D": "Y",
+  "M+": "M",
+  ".": "RanInt",
+  e10: "e",
 };
 
 /* ------------------------------------------------------------------ */
@@ -1392,14 +1421,15 @@ const handlePending = (
   key: string,
 ): CalculatorState | null => {
   if (!state.pendingStore && !state.pendingRecall) return null;
-  if (!/^[A-FXYM]$/.test(key)) {
+  const name = ALPHA_KEYS[key] ?? key;
+  if (!/^[A-FXYM]$/.test(name)) {
     return patch(state, { pendingStore: false, pendingRecall: false });
   }
   if (state.pendingRecall) {
     const inserted = insertToken(
       state.tokens,
       state.cursor,
-      variableToken(key),
+      variableToken(name),
     );
     return patch(state, {
       pendingRecall: false,
@@ -1415,7 +1445,7 @@ const handlePending = (
   return patch(state, {
     ...assignVariable(
       state,
-      key,
+      name,
       Option.getOrElse(value, () => 0),
     ),
     pendingStore: false,
@@ -1542,23 +1572,17 @@ export const press = (
 
   if (rawKey === "SHIFT")
     return Effect.succeed(patch(state, { shift: !state.shift, alpha: false }));
-  if (rawKey === "hyp")
-    return Effect.succeed(
-      patch(state, { hyp: !state.hyp, shift: false, alpha: false }),
-    );
   if (rawKey === "ALPHA")
     return Effect.succeed(patch(state, { alpha: !state.alpha, shift: false }));
-  if (rawKey === "ON")
-    return Effect.succeed(patch(state, { shift: false, alpha: false }));
-  if (rawKey === "MODE") return Effect.succeed(cycleMode(state));
-  if (rawKey === "AC") {
-    return Effect.succeed(
-      state.shift
-        ? patch(state, { shift: false, alpha: false })
-        : clearEntry(state),
-    );
-  }
-  if (rawKey === "DEL") {
+  if (rawKey === "hyp" && !state.shift && !state.alpha)
+    return Effect.succeed(patch(state, { hyp: !state.hyp }));
+
+  const key = shiftOrAlpha(state, rawKey);
+  const resetLatches = { shift: false, alpha: false };
+  if (key === "ON") return Effect.succeed(patch(state, resetLatches));
+  if (key === "MODE") return Effect.succeed(cycleMode(state));
+  if (key === "AC") return Effect.succeed(clearEntry(state));
+  if (key === "DEL") {
     const next =
       state.cursor > 0
         ? {
@@ -1571,20 +1595,17 @@ export const press = (
         : { tokens: state.tokens, cursor: state.cursor };
     return Effect.succeed(patch(clearEntry(state), next));
   }
-  if (rawKey === "=" || rawKey === "ENTER") return evaluateEquals(state);
-  if (rawKey === "left") {
+  if (key === "=" || key === "ENTER") return evaluateEquals(state);
+  if (key === "left" || key === "right") {
     return Effect.succeed(
-      patch(state, { cursor: moveInInput(state.tokens, state.cursor, -1) }),
+      patch(state, {
+        cursor: moveInInput(state.tokens, state.cursor, key === "left" ? -1 : 1),
+      }),
     );
   }
-  if (rawKey === "right") {
-    return Effect.succeed(
-      patch(state, { cursor: moveInInput(state.tokens, state.cursor, 1) }),
-    );
-  }
-  if (rawKey === "up" || rawKey === "down") {
+  if (key === "up" || key === "down") {
     if (Option.isSome(state.result) && state.history.length > 0) {
-      const index = rawKey === "up" ? state.history.length - 1 : 0;
+      const index = key === "up" ? state.history.length - 1 : 0;
       const entry = state.history[index];
       if (entry !== undefined) {
         return Effect.succeed(
@@ -1599,40 +1620,43 @@ export const press = (
     }
     return Effect.succeed(state);
   }
-  if (rawKey === "STO")
-    return Effect.succeed(patch(state, { pendingStore: true, shift: false }));
-  if (rawKey === "RCL")
-    return Effect.succeed(patch(state, { pendingRecall: true, shift: false }));
-  if (rawKey === "M+") {
+  if (key === "STO")
+    return Effect.succeed(patch(state, { pendingStore: true, ...resetLatches }));
+  if (key === "RCL")
+    return Effect.succeed(
+      patch(state, { pendingRecall: true, ...resetLatches }),
+    );
+  if (key === "M+" || key === "M-") {
+    const sign = key === "M+" ? 1 : -1;
     return Effect.succeed(
       Option.match(resultNumber(state), {
-        onNone: () => state,
-        onSome: (value) => patch(state, { memory: state.memory + value }),
+        onNone: () => patch(state, resetLatches),
+        onSome: (value) =>
+          patch(state, { memory: state.memory + sign * value, ...resetLatches }),
       }),
     );
   }
-  if (rawKey === "M-") {
+  if (key === "CALC") return startCalc(patch(state, resetLatches));
+  if (key === "SOLVE") return startSolve(patch(state, resetLatches));
+  if (key === "ENG" && state.mode === "CMPLX") {
     return Effect.succeed(
-      Option.match(resultNumber(state), {
-        onNone: () => state,
-        onSome: (value) => patch(state, { memory: state.memory - value }),
-      }),
+      insertMain(patch(state, resetLatches), "i") ?? state,
     );
   }
-  if (rawKey === "CALC")
-    return startCalc(patch(state, { shift: false, alpha: false }));
-  if (rawKey === "SOLVE")
-    return startSolve(patch(state, { shift: false, alpha: false }));
-  if (rawKey === "ENG" || rawKey === "ENG←") {
-    return Effect.succeed(patch(state, { engineering: !state.engineering }));
+  // ENG shows engineering notation; SHIFT ENG (←) returns to the normal form.
+  // TODO: step the exponent by 3 per press, as the device does.
+  if (key === "ENG" || key === "ENG←") {
+    return Effect.succeed(
+      patch(state, { engineering: key === "ENG", ...resetLatches }),
+    );
   }
-  if (rawKey === "frac") {
-    return Effect.succeed(insertFraction(state));
+  if (key === "S⇔D") {
+    return Effect.succeed(
+      patch(state, { showAlternate: !state.showAlternate, ...resetLatches }),
+    );
   }
-
-  const mapped = shiftOrAlpha(state, rawKey);
-  const resetLatches = { shift: false, alpha: false };
-  if (mapped === "10^") {
+  if (key === "frac") return Effect.succeed(insertFraction(state));
+  if (key === "10^") {
     const inserted = insertTokensAt(state, [
       digit("1"),
       digit("0"),
@@ -1640,13 +1664,13 @@ export const press = (
     ]);
     return Effect.succeed(patch(inserted, resetLatches));
   }
-  if (mapped === "e^") {
+  if (key === "e^") {
     const inserted = insertTokensAt(state, [E, operator("^")]);
     return Effect.succeed(patch(inserted, resetLatches));
   }
   const base =
-    state.mode === "BASE-N" && /^[A-F]$/.test(mapped)
-      ? HEX_DIGITS.find((held) => held.text === mapped)
+    state.mode === "BASE-N" && /^[A-F]$/.test(key)
+      ? HEX_DIGITS.find((held) => held.text === key)
       : undefined;
   if (base !== undefined) {
     const inserted = insertToken(state.tokens, state.cursor, base);
@@ -1654,13 +1678,13 @@ export const press = (
       patch(state, { ...inserted, ...resetLatches, error: Option.none() }),
     );
   }
-  const inserted = insertMain(patch(state, resetLatches), mapped);
+  const inserted = insertMain(patch(state, resetLatches), key);
   if (inserted !== null) {
     return Effect.succeed(
       state.hyp &&
         Arr.contains(
           ["sinh", "cosh", "tanh", "sinh⁻¹", "cosh⁻¹", "tanh⁻¹"],
-          mapped,
+          key,
         )
         ? patch(inserted, { hyp: false })
         : inserted,

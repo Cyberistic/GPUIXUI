@@ -88,8 +88,11 @@ export {
   fx991es,
   type ModelId,
 } from "./models/index.js";
+export { keypadKeys } from "./model.js";
 export type {
   CalculatorModel,
+  DirectionPad,
+  Keypad,
   KeypadKey,
   KeypadRow,
   ModelCapabilities,

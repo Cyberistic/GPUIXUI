@@ -72,6 +72,7 @@ import { EQUATION_KINDS, equationLabel } from "../modes/eqn.js";
 import { STAT_KINDS, type StatReadingId } from "../modes/stat.js";
 import type {
   CalculatorModel,
+  Keypad,
   KeypadKey,
   KeypadRow,
   ModelCapabilities,
@@ -87,88 +88,112 @@ const key = (
 
 const row = (...keys: ReadonlyArray<KeypadKey>): KeypadRow => ({ keys });
 
-const keypad: ReadonlyArray<KeypadRow> = [
-  row(
-    key("SHIFT", "SHIFT", "accent", { label: "Shift" }),
-    key("ALPHA", "ALPHA", "accent", { label: "Alpha" }),
-    key("MODE", "MODE", "control"),
-    key("ON", "ON", "control"),
-    key("left", "◀", "control", { label: "Cursor left" }),
-    key("right", "▶", "control", { label: "Cursor right" }),
-  ),
-  row(
-    key("CALC", "CALC", "control"),
-    key("∫", "∫dx", "function", { shift: "∫" }),
-    key("x⁻¹", "x⁻¹", "function", { shift: "x!" }),
-    key("log", "log", "function", { shift: "10ˣ" }),
-    key("ln", "ln", "function", { shift: "eˣ" }),
-    key("-", "(−)", "operator", { label: "Negative" }),
-  ),
-  row(
-    key("RCL", "RCL", "control"),
-    key("ENG", "ENG", "control", { shift: "←" }),
-    key("(", "(", "operator"),
-    key(")", ")", "operator"),
-    key(",", ",", "operator"),
-    key("M+", "M+", "control", { shift: "M−" }),
-  ),
-  row(
-    key("x²", "x²", "function", { shift: "x³" }),
-    key("x³", "x³", "function", { shift: "x⁻¹" }),
-    key("^", "xʸ", "operator"),
-    key("√", "√", "function", { shift: "∛" }),
-    key("frac", "a/b", "function", { label: "Fraction" }),
-    key("Abs", "Abs", "function"),
-  ),
-  row(
-    key("7", "7", "number"),
-    key("8", "8", "number"),
-    key("9", "9", "number"),
-    key("DEL", "DEL", "control"),
-    key("AC", "AC", "control"),
-    key("×", "×", "operator"),
-  ),
-  row(
-    key("4", "4", "number"),
-    key("5", "5", "number"),
-    key("6", "6", "number"),
-    key("+", "+", "operator"),
-    key("minus", "−", "operator"),
-    key("÷", "÷", "operator"),
-  ),
-  row(
-    key("1", "1", "number"),
-    key("2", "2", "number"),
-    key("3", "3", "number"),
-    key("sin", "sin", "function", { shift: "sin⁻¹" }),
-    key("cos", "cos", "function", { shift: "cos⁻¹" }),
-    key("tan", "tan", "function", { shift: "tan⁻¹" }),
-  ),
-  row(
-    key("0", "0", "number"),
-    key(".", ".", "number"),
-    key("e10", "×10ˣ", "number", { label: "Times ten to the power" }),
-    key("Ans", "Ans", "control"),
-    key("=", "=", "equals"),
-    key("M-", "M−", "control", { shift: "M+" }),
-  ),
-  row(
-    key("STO", "STO", "control"),
-    key("hyp", "hyp", "function"),
-    key("°", "°′″", "function", { shift: "′" }),
-    key("nPr", "nPr", "function", { shift: "nCr" }),
-    key("nCr", "nCr", "function"),
-    key("π", "π", "function"),
-  ),
-  row(
-    key("e", "e", "function"),
-    key("i", "i", "function"),
-    key("Σ", "Σ", "function"),
-    key("d/dx", "d/dx", "function"),
-    key("Pol", "Pol", "function"),
-    key("Rec", "Rec", "function"),
-  ),
-];
+/**
+ * The fx-991ES Plus body, key for key. `shift` and `alpha` are the legends
+ * printed above each key (gold left, red right); the session's latch maps give
+ * them their meaning, and `model.test.ts` holds the two in step.
+ */
+const keypad: Keypad = {
+  cluster: {
+    left: [
+      row(
+        key("SHIFT", "SHIFT", "control", { label: "Shift" }),
+        key("ALPHA", "ALPHA", "control", { label: "Alpha" }),
+      ),
+      row(
+        key("CALC", "CALC", "function", { shift: "SOLVE", alpha: "=" }),
+        key("∫", "∫▫", "function", {
+          shift: "d/dx",
+          alpha: ":",
+          label: "Integral",
+        }),
+      ),
+    ],
+    pad: {
+      up: key("up", "▲", "control", { label: "Replay up" }),
+      down: key("down", "▼", "control", { label: "Replay down" }),
+      left: key("left", "◀", "control", { label: "Cursor left" }),
+      right: key("right", "▶", "control", { label: "Cursor right" }),
+    },
+    right: [
+      row(
+        key("MODE", "MODE", "control", { shift: "SETUP" }),
+        key("ON", "ON", "control"),
+      ),
+      row(
+        key("x⁻¹", "x⁻¹", "function", { shift: "x!" }),
+        key("logab", "log▫▫", "function", {
+          shift: "Σ",
+          label: "Logarithm to a base",
+        }),
+      ),
+    ],
+  },
+  functions: [
+    row(
+      key("frac", "▫/▫", "function", { shift: "▫▫/▫", label: "Fraction" }),
+      key("√", "√▫", "function", { shift: "∛▫", label: "Square root" }),
+      key("x²", "x²", "function", { shift: "x³" }),
+      key("^", "x▫", "function", { shift: "▫√▫", label: "Power" }),
+      key("log", "log", "function", { shift: "10▫" }),
+      key("ln", "ln", "function", { shift: "e▫" }),
+    ),
+    row(
+      key("-", "(−)", "function", { shift: "∠", alpha: "A", label: "Negative" }),
+      key("°", "°′″", "function", { shift: "←", alpha: "B" }),
+      key("hyp", "hyp", "function", { shift: "Abs", alpha: "C" }),
+      key("sin", "sin", "function", { shift: "sin⁻¹", alpha: "D" }),
+      key("cos", "cos", "function", { shift: "cos⁻¹", alpha: "E" }),
+      key("tan", "tan", "function", { shift: "tan⁻¹", alpha: "F" }),
+    ),
+    row(
+      key("RCL", "RCL", "function", { shift: "STO" }),
+      key("ENG", "ENG", "function", { shift: "←" }),
+      key("(", "(", "function", { shift: "%" }),
+      key(")", ")", "function", { shift: ",", alpha: "X" }),
+      key("S⇔D", "S⇔D", "function", {
+        shift: "a b/c⇔d/c",
+        alpha: "Y",
+        label: "Standard or decimal",
+      }),
+      key("M+", "M+", "function", { shift: "M−", alpha: "M" }),
+    ),
+  ],
+  main: [
+    row(
+      key("7", "7", "number", { shift: "CONST" }),
+      key("8", "8", "number", { shift: "CONV" }),
+      key("9", "9", "number", { shift: "CLR" }),
+      key("DEL", "DEL", "accent", { shift: "INS" }),
+      key("AC", "AC", "accent", { shift: "OFF" }),
+    ),
+    row(
+      key("4", "4", "number", { shift: "MATRIX" }),
+      key("5", "5", "number", { shift: "VECTOR" }),
+      key("6", "6", "number"),
+      key("×", "×", "operator", { shift: "nPr" }),
+      key("÷", "÷", "operator", { shift: "nCr" }),
+    ),
+    row(
+      key("1", "1", "number", { shift: "STAT" }),
+      key("2", "2", "number", { shift: "CMPLX" }),
+      key("3", "3", "number", { shift: "BASE" }),
+      key("+", "+", "operator", { shift: "Pol" }),
+      key("minus", "−", "operator", { shift: "Rec", label: "Minus" }),
+    ),
+    row(
+      key("0", "0", "number", { shift: "Rnd" }),
+      key(".", ".", "number", { shift: "Ran#", alpha: "RanInt" }),
+      key("e10", "×10ˣ", "number", {
+        shift: "π",
+        alpha: "e",
+        label: "Times ten to the power",
+      }),
+      key("Ans", "Ans", "number", { shift: "DRG▸" }),
+      key("=", "=", "equals"),
+    ),
+  ],
+};
 
 const capabilities: ModelCapabilities = {
   naturalDisplay: true,

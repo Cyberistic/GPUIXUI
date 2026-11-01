@@ -9,7 +9,15 @@ import {
 } from "./input/keyboard.js";
 import { modelOf, models } from "./models/index.js";
 import { fx991es } from "./models/fx991es.js";
-import { initialState, press, runAction, setMode } from "./session.js";
+import { keypadKeys } from "./model.js";
+import {
+  ALPHA_KEYS,
+  initialState,
+  press,
+  runAction,
+  setMode,
+  SHIFT_KEYS,
+} from "./session.js";
 import { displayOf } from "./session.js";
 import { variableToken } from "./input/token.js";
 
@@ -42,14 +50,65 @@ describe("the fx-991ES Plus model", () => {
     ]);
   });
 
-  it("has unique keypad ids and a legend for every key", () => {
-    const ids = Arr.flatMap(fx991es.keypad, (row) =>
-      Arr.map(row.keys, (key) => key.id),
-    );
+  it("lays the keypad out as the device does", () => {
+    const { cluster, functions, main } = fx991es.keypad;
+    expect(Arr.map(cluster.left, (row) => row.keys.length)).toEqual([2, 2]);
+    expect(Arr.map(cluster.right, (row) => row.keys.length)).toEqual([2, 2]);
+    expect(Arr.map(functions, (row) => row.keys.length)).toEqual([6, 6, 6]);
+    expect(Arr.map(main, (row) => row.keys.length)).toEqual([5, 5, 5, 5]);
+    const ids = Arr.map(keypadKeys(fx991es.keypad), (key) => key.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids).toContain("SHIFT");
-    expect(ids).toContain("=");
-    expect(ids).toContain("sin");
+    expect(ids.length).toBe(2 * 4 + 4 + 18 + 20);
+  });
+
+  // The legends the session leaves to the app (menus) or does not implement yet.
+  // TODO: mixed fractions, INS, DRG▸, sexagesimal display and a b/c⇔d/c.
+  const APP_LEGENDS = ["MODE", "AC", "7", "8", "9", "4", "5", "1", "2", "3"];
+  const PRINTED_ONLY = ["frac", "°", "S⇔D", "DEL", "Ans"];
+
+  const differs = (latch: "SHIFT" | "ALPHA", id: string) => {
+    const start = keys(initialState(), ["2", "="]);
+    const plain = keys(start, [id]);
+    const latched = keys(start, [latch, id]);
+    return JSON.stringify(plain) !== JSON.stringify(latched);
+  };
+
+  it("gives every printed SHIFT legend its meaning", () => {
+    const keyed = Arr.filter(
+      keypadKeys(fx991es.keypad),
+      (key) => key.shift !== undefined,
+    );
+    for (const key of keyed) {
+      expect(SHIFT_KEYS[key.id], key.id).toBeDefined();
+      if (!APP_LEGENDS.includes(key.id) && !PRINTED_ONLY.includes(key.id))
+        expect(differs("SHIFT", key.id), key.id).toBe(true);
+    }
+  });
+
+  it("gives every printed ALPHA legend its meaning", () => {
+    const keyed = Arr.filter(
+      keypadKeys(fx991es.keypad),
+      (key) => key.alpha !== undefined,
+    );
+    expect(keyed.length).toBe(Object.keys(ALPHA_KEYS).length);
+    for (const key of keyed) {
+      expect(ALPHA_KEYS[key.id], key.id).toBeDefined();
+      expect(differs("ALPHA", key.id), key.id).toBe(true);
+    }
+  });
+
+  it("reads SHIFT RCL as STO and RCL then a lettered key as that variable", () => {
+    const stored = keys(initialState(), ["7", "=", "SHIFT", "RCL", "-"]);
+    expect(stored.variables.A).toBe(7);
+    const recalled = keys(stored, ["AC", "RCL", "-"]);
+    expect(recalled.tokens).toEqual([variableToken("A")]);
+  });
+
+  it("enters i from ENG in CMPLX, as the device does", () => {
+    const cmplx = setMode(initialState(), "CMPLX");
+    const entered = keys(cmplx, ["ENG"]);
+    expect(displayOf(entered).expression).toContain("i");
+    expect(entered.engineering).toBe(false);
   });
 
   it("offers every mode key and the full catalog with unique ids", () => {
