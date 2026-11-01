@@ -5,15 +5,8 @@
  *   nub apps/playground/dist/film/takes.js <take> <outDir>
  */
 import { Tabs, TabsList, TabsTrigger } from "@gpuixui/components/tabs";
-import {
-  Button,
-  Checkbox,
-  Input,
-  RadioGroup,
-  Slider,
-  Switch,
-  ToggleGroup,
-} from "@gpuixui/primitives";
+import { Card } from "@gpuixui/components/card";
+import { Slider, Stack, Switch, Text } from "@gpuixui/primitives";
 import {
   darkTheme,
   extendTheme,
@@ -22,6 +15,7 @@ import {
   type Theme,
 } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
+import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
@@ -39,7 +33,7 @@ import { Pipeline } from "@gpuixui/blocks/pipeline";
 import { Stats } from "@gpuixui/blocks/stats";
 import { Viewer } from "@gpuixui/blocks/viewer";
 import { Welcome } from "@gpuixui/blocks/welcome";
-import { magnify } from "./magnify.js";
+import { CalculatorApp } from "@gpuixui/slang/app";
 import { capture, type Take, type Waypoint } from "./take.js";
 
 const mac = platformTheme(lightTheme, "darwin");
@@ -54,15 +48,13 @@ const stage = (theme: Theme, child: ReactNode) => (
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: theme.colors.background,
+        backgroundColor: GROUND,
       }}
     >
       {child}
     </div>
   </ThemeProvider>
 );
-
-const macro = (k: number) => magnify(mac, k);
 
 /** A beat of the score (120 BPM) in frames: 15. */
 const BEAT = (30 * 60) / 120;
@@ -170,119 +162,88 @@ const desktop = (look: DesktopLook): Take => ({
   ],
 });
 
-/** An opening close-up: half a second (one beat) of one control at `k`×. */
+/**
+ * A close-up: one control in its card on the film's ground, at 1× for two
+ * seconds. The composition's camera pushes in (captures are 2×, so up to 2× is
+ * lossless); the recipes' fixed metrics never meet a scaled theme.
+ */
 const closeUp = (
-  k: number,
   child: ReactNode,
   pointer: ReadonlyArray<Waypoint>,
-  keys: Take["keys"] = [],
+  width = 420,
 ): Take => ({
   width: 960,
   height: 540,
-  frames: BEAT,
-  view: () => stage(macro(k), child),
+  frames: 60,
+  view: () =>
+    stage(
+      mac,
+      <Card variant="outline" style={{ padding: 24, width }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>{child}</div>
+      </Card>,
+    ),
   pointer,
-  keys,
 });
 
-/** A tap on `testId` on frame 5 of a close-up. */
+/** The pointer arrives, presses `testId` at 0.8 s, and drifts off. */
 const tap = (testId: string): ReadonlyArray<Waypoint> => [
-  { frame: 0, aim: { testId, dx: 70, dy: 60 } },
-  { frame: 4, aim: { testId } },
-  { frame: 5, aim: { testId }, down: true },
-  { frame: 7, aim: { testId } },
-  { frame: 14, aim: { testId, dx: 16, dy: 24 } },
+  { frame: 0, aim: { testId, dx: 140, dy: 110 } },
+  { frame: 20, aim: { testId } },
+  { frame: 24, aim: { testId }, down: true },
+  { frame: 27, aim: { testId } },
+  { frame: 59, aim: { testId, dx: 24, dy: 36 } },
 ];
 
 export const takes: Readonly<Record<string, Take>> = {
-  "cu-switch": closeUp(8, <Switch testId="c" label="Wi-Fi" />, tap("c")),
-  "cu-checkbox": closeUp(
-    9,
-    <Checkbox testId="c" label="Hunter License" />,
+  "cu-switch": closeUp(
+    <Stack direction="row" align="center" justify="between">
+      <Stack direction="column">
+        <Text role="label">Wi-Fi</Text>
+        <Text role="caption" tone="muted">
+          Whale Island
+        </Text>
+      </Stack>
+      <Switch testId="c" label="Wi-Fi" />
+    </Stack>,
+    tap("c"),
+    300,
+  ),
+  "cu-tabs": closeUp(
+    <Stack direction="row" align="center" justify="between">
+      <Text role="label">Venue</Text>
+      <Tabs defaultValue="arena">
+        <TabsList label="Venue">
+          <TabsTrigger value="arena">Arena</TabsTrigger>
+          <TabsTrigger value="island" testId="c">
+            Island
+          </TabsTrigger>
+          <TabsTrigger value="exam">Exam</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </Stack>,
     tap("c"),
   ),
   "cu-slider": closeUp(
-    6,
-    <Slider
-      testId="c"
-      label="Aura"
-      step={10}
-      defaultValue={20}
-      style={{ width: 760 }}
-    />,
+    <Stack direction="column" gap="sm">
+      <Text role="label">Aura</Text>
+      <Slider
+        testId="c"
+        label="Aura"
+        step={10}
+        defaultValue={20}
+        style={{ width: 372 }}
+      />
+    </Stack>,
     [
-      { frame: 0, aim: { testId: "c", dx: -220, dy: 80 } },
-      { frame: 2, aim: { testId: "c", dx: -228, dy: 0 } },
-      { frame: 3, aim: { testId: "c", dx: -228, dy: 0 }, down: true },
-      { frame: 12, aim: { testId: "c", dx: 230, dy: 0 }, down: true },
-      { frame: 13, aim: { testId: "c", dx: 230, dy: 0 } },
-      { frame: 14, aim: { testId: "c", dx: 236, dy: 20 } },
+      { frame: 0, aim: { testId: "c", dx: -60, dy: 90 } },
+      { frame: 16, aim: { testId: "c", dx: -108, dy: 0 } },
+      { frame: 20, aim: { testId: "c", dx: -108, dy: 0 }, down: true },
+      { frame: 44, aim: { testId: "c", dx: 108, dy: 0 }, down: true },
+      { frame: 47, aim: { testId: "c", dx: 108, dy: 0 } },
+      { frame: 59, aim: { testId: "c", dx: 130, dy: 40 } },
     ],
   ),
-  "cu-tabs": closeUp(
-    5,
-    <Tabs defaultValue="arena">
-      <TabsList label="Venue">
-        <TabsTrigger value="arena">Arena</TabsTrigger>
-        <TabsTrigger value="island" testId="c">
-          Island
-        </TabsTrigger>
-        <TabsTrigger value="exam">Exam</TabsTrigger>
-      </TabsList>
-    </Tabs>,
-    tap("c"),
-  ),
-  "cu-toggle": closeUp(
-    5,
-    <ToggleGroup
-      type="single"
-      label="Range"
-      defaultValue="day"
-      options={[
-        { value: "day", label: "Day" },
-        { value: "week", label: "Week" },
-        { value: "month", label: "Month" },
-      ]}
-      itemTestId={(value) => `c-${value}`}
-    />,
-    tap("c-month"),
-  ),
-  "cu-button": closeUp(
-    6,
-    <Button testId="c" variant="primary" size="lg">
-      Deploy
-    </Button>,
-    tap("c"),
-  ),
-  "cu-radio": closeUp(
-    6,
-    <RadioGroup
-      label="Nen type"
-      defaultValue="enhancer"
-      options={[
-        { value: "enhancer", label: "Enhancer" },
-        { value: "transmuter", label: "Transmuter" },
-      ]}
-      itemTestId={(value) => `c-${value}`}
-    />,
-    tap("c-transmuter"),
-  ),
-  "cu-input": closeUp(
-    6,
-    <Input testId="c" placeholder="Name" style={{ width: 520 }} />,
-    [
-      { frame: 0, aim: { testId: "c", dx: 120, dy: 60 } },
-      { frame: 1, aim: { testId: "c" } },
-      { frame: 2, aim: { testId: "c" }, down: true },
-      { frame: 3, aim: { testId: "c" } },
-      { frame: 14, aim: { testId: "c", dx: 60, dy: 40 } },
-    ],
-    [
-      { frame: 5, keys: "g" },
-      { frame: 7, keys: "o" },
-      { frame: 9, keys: "n" },
-    ],
-  ),
+
   pipeline: macApp(
     <Pipeline platform="darwin" />,
     pressAt("work-w1", 30, { x: 900, y: 600 }),
@@ -317,6 +278,49 @@ export const takes: Readonly<Record<string, Take>> = {
     [],
     false,
   ),
+  /** The blueprint: the same stats screen, its painted boxes written to `boxes.json`. */
+  blueprint: {
+    ...macApp(
+      <Window
+        theme={macWindow}
+        platform="darwin"
+        title="Heavens Arena"
+        width={1100}
+        height={700}
+      >
+        <Stats />
+      </Window>,
+      [],
+      [],
+      false,
+    ),
+    frames: 1,
+    boxes: true,
+  },
+  /** Slang, for the bento: 7 × 6 = on the keypad. */
+  slang: {
+    width: 1060,
+    height: 760,
+    frames: 75,
+    view: () => <CalculatorApp />,
+    pointer: [
+      { frame: 0, aim: { testId: "calc-key-7", dx: 80, dy: 60 } },
+      ...Arr.flatMap(
+        [
+          ["calc-key-7", 12],
+          ["calc-key-×", 30],
+          ["calc-key-6", 46],
+          ["calc-key-=", 62],
+        ] as const,
+        ([testId, frame]): ReadonlyArray<Waypoint> => [
+          { frame: frame - 4, aim: { testId } },
+          { frame, aim: { testId }, down: true },
+          { frame: frame + 3, aim: { testId } },
+        ],
+      ),
+      { frame: 74, aim: { testId: "calc-key-=", dx: 60, dy: 50 } },
+    ],
+  },
   launcher: macApp(
     <Launcher />,
     pressAt("launcher-query", 8, { x: 760, y: 400 }),
@@ -339,66 +343,6 @@ export const takes: Readonly<Record<string, Take>> = {
   ),
   "desktop-luna": desktop("luna"),
   "desktop-aero": desktop("aero"),
-  /** Shot 1: the first press. Down at 0.70 s, up at 0.83 s. */
-  switch: {
-    width: 960,
-    height: 540,
-    frames: 70,
-    view: () => stage(macro(8), <Switch testId="switch" label="Wi-Fi" />),
-    // Pressed on the intro's second tap (beat 2 of bar 0, frame 35).
-    pointer: [
-      { frame: 0, aim: { testId: "switch", dx: 150, dy: 120 } },
-      { frame: 30, aim: { testId: "switch", dx: -40, dy: 10 } },
-      { frame: 35, aim: { testId: "switch", dx: -40, dy: 10 }, down: true },
-      { frame: 39, aim: { testId: "switch", dx: -40, dy: 10 } },
-      { frame: 69, aim: { testId: "switch", dx: -20, dy: 40 } },
-    ],
-  },
-  /** Shot 2: a drag across ten detents, 0 → 80. */
-  slider: {
-    width: 960,
-    height: 540,
-    frames: 70,
-    view: () =>
-      stage(
-        macro(6),
-        <Slider
-          testId="slider"
-          label="Volume"
-          step={10}
-          defaultValue={0}
-          style={{ width: 760 }}
-        />,
-      ),
-    pointer: [
-      { frame: 0, aim: { testId: "slider", dx: -330, dy: 110 } },
-      { frame: 3, aim: { testId: "slider", dx: -366, dy: 0 } },
-      { frame: 5, aim: { testId: "slider", dx: -366, dy: 0 }, down: true },
-      { frame: 56, aim: { testId: "slider", dx: 226, dy: 0 }, down: true },
-      { frame: 58, aim: { testId: "slider", dx: 226, dy: 0 } },
-      { frame: 69, aim: { testId: "slider", dx: 240, dy: 60 } },
-    ],
-  },
-  /** Shot 3: one primary press. Down at 0.6 s, up at 0.9 s. */
-  button: {
-    width: 960,
-    height: 540,
-    frames: 44,
-    view: () =>
-      stage(
-        macro(6),
-        <Button testId="save" variant="primary" size="lg">
-          Save changes
-        </Button>,
-      ),
-    pointer: [
-      { frame: 0, aim: { testId: "save", dx: 260, dy: 160 } },
-      { frame: 13, aim: { testId: "save", dx: 60, dy: 20 } },
-      { frame: 17, aim: { testId: "save", dx: 60, dy: 20 }, down: true },
-      { frame: 24, aim: { testId: "save", dx: 60, dy: 20 } },
-      { frame: 43, aim: { testId: "save", dx: 80, dy: 50 } },
-    ],
-  },
   /** Shots 4–5: the pull-back to the block, then Windows (10.8 s) and Linux (12.4 s). */
   settings: {
     width: 1024,

@@ -1,0 +1,117 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #f4f2ee;
+      font-family: Inter, sans-serif;
+    }
+    #root video,
+    #root img.shot {
+      position: absolute;
+      display: block;
+    }
+    #root .cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 34px;
+      transform-origin: 8% 6%;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+    }
+    #root .cursor svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root .icon {
+      position: absolute;
+      left: 900px;
+      top: 420px;
+      width: 120px;
+      height: 120px;
+      border-radius: 28px;
+      background: #fff;
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.06),
+        0 10px 30px -10px rgba(30, 30, 60, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #root .icon i {
+      width: 78px;
+      height: 78px;
+      background: #5f4bdb;
+      -webkit-mask: url(assets/logo-outline.svg) center/contain no-repeat;
+      mask: url(assets/logo-outline.svg) center/contain no-repeat;
+    }
+    #root .window {
+      position: absolute;
+      left: 300px;
+      top: 230px;
+      width: 1640px;
+      height: 922px;
+      transform-origin: 660px 250px;
+      opacity: 0;
+    }
+    #root .window img {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <div
+    id="root"
+    data-composition-id="open"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div id="o-icon" class="icon"><i></i></div>
+    <div id="o-win" class="window">
+      <img class="shot" src="assets/footage/settings-0.png" alt="" />
+    </div>
+    <div id="o-cur" class="cursor">
+      <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+          fill="#000"
+          stroke="#fff"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.set("#o-cur", { x: 1180, y: 700 });
+    tl.to(
+      "#o-cur",
+      { x: 972, y: 492, duration: 0.7, ease: "power2.inOut" },
+      0.15,
+    );
+    tl.to("#o-cur", { scale: 0.86, duration: 0.06 }, 0.9).to(
+      "#o-cur",
+      { scale: 1, duration: 0.08 },
+      1.0,
+    );
+    tl.to("#o-icon", { scale: 0.92, duration: 0.08 }, 0.9).to(
+      "#o-icon",
+      { scale: 1, duration: 0.12 },
+      1.0,
+    );
+    tl.fromTo(
+      "#o-win",
+      { opacity: 0, scale: 0.08 },
+      { opacity: 1, scale: 1, duration: 0.9, ease: "power3.out" },
+      1.08,
+    );
+    tl.to("#o-icon", { opacity: 0, duration: 0.2 }, 1.1);
+    tl.to("#o-cur", { x: 1400, y: 820, opacity: 0, duration: 0.6 }, 1.2);
+    tl.to("#o-win", { x: -20, y: -8, duration: 1.8, ease: "none" }, 1.2);
+    tl.set({}, {}, 3);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["open"] = tl;
+  </script>
+</template>

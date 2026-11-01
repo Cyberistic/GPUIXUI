@@ -4,7 +4,7 @@
 | ----- | ----- |
 | Owner | `launch-film` workstream |
 | Depends on | 064 (v3), 065 (charts), 067 (tiling block) |
-| Status | in progress |
+| Status | landed |
 
 ## Owner notes (2026-11-01)
 

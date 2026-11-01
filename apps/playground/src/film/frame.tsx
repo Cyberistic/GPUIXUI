@@ -13,9 +13,9 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import type { ReactNode } from "react";
 
-/** The film's ground (SPEC): the macOS look's own page, so the macro takes,
- * painted on it, meet the composition without a seam. */
-export const GROUND = "#F2F2F7";
+/** The film's ground: Paper's warm page (plan 066), so a close-up painted on it
+ * meets the composition without a seam. */
+export const GROUND = "#F4F2EE";
 
 interface Chrome {
   readonly height: number;

@@ -1,0 +1,25 @@
+/**
+ * Mount one scene at 1920×1080. `?scene=bento` plays it in real time (for
+ * `film.mjs` rehearsal); `&record` installs the skill's virtual clock first, so
+ * `record.mjs` steps it one 30 fps frame at a time and every frame is the same
+ * on every render.
+ */
+import { installVirtualClock } from "../kit/clock";
+
+const params = new URLSearchParams(location.search);
+if (params.has("record")) installVirtualClock({ fps: 30 });
+
+const scenes = {
+  bento: () => import("../scenes/bento/index"),
+  assemble: () => import("../scenes/assemble/index"),
+} as const;
+
+const name = (params.get("scene") ?? "bento") as keyof typeof scenes;
+const [{ createRoot }, { createElement }, scene] = await Promise.all([
+  import("react-dom/client"),
+  import("react"),
+  scenes[name](),
+]);
+createRoot(document.getElementById("root")!).render(
+  createElement(scene.default),
+);

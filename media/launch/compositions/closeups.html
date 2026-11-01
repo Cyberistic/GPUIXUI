@@ -1,0 +1,332 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #f4f2ee;
+      font-family: Inter, sans-serif;
+    }
+    #root video,
+    #root img.shot {
+      position: absolute;
+      display: block;
+    }
+    #root .cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 34px;
+      transform-origin: 8% 6%;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+    }
+    #root .cursor svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root .cam {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: 960px 560px;
+    }
+    #root .cam video {
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+    }
+  </style>
+  <div
+    id="root"
+    data-composition-id="closeups"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div id="c-cam0" class="cam" style="opacity: 1">
+      <video
+        id="c-v0"
+        class="clip"
+        data-start="0"
+        data-duration="2.05"
+        data-track-index="1"
+        muted
+        playsinline
+        src="assets/footage/cu-switch.mp4"
+        style=""
+      ></video>
+      <div id="c-cur0" class="cursor" style="width: 44px">
+        <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+            fill="#000"
+            stroke="#fff"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+    </div>
+    <div id="c-cam1" class="cam" style="opacity: 0">
+      <video
+        id="c-v1"
+        class="clip"
+        data-start="1.8"
+        data-duration="2.05"
+        data-track-index="2"
+        muted
+        playsinline
+        src="assets/footage/cu-tabs.mp4"
+        style=""
+      ></video>
+      <div id="c-cur1" class="cursor" style="width: 44px">
+        <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+            fill="#000"
+            stroke="#fff"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+    </div>
+    <div id="c-cam2" class="cam" style="opacity: 0">
+      <video
+        id="c-v2"
+        class="clip"
+        data-start="3.6"
+        data-duration="1.8"
+        data-track-index="3"
+        muted
+        playsinline
+        src="assets/footage/cu-slider.mp4"
+        style=""
+      ></video>
+      <div id="c-cur2" class="cursor" style="width: 44px">
+        <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+            fill="#000"
+            stroke="#fff"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    tl.fromTo(
+      "#c-cam0",
+      { scale: 1.45 },
+      { scale: 1.62, duration: 2.05, ease: "none" },
+      0,
+    );
+    tl.set("#c-cam0", { opacity: 0 }, 2.05);
+    tl.set("#c-cur0", { x: 1452.0, y: 760.0, scale: 1 }, 0.0);
+    tl.set("#c-cur0", { x: 1451.9, y: 759.9, scale: 1 }, 0.033);
+    tl.set("#c-cur0", { x: 1450.9, y: 759.1, scale: 1 }, 0.067);
+    tl.set("#c-cur0", { x: 1448.2, y: 757.0, scale: 1 }, 0.1);
+    tl.set("#c-cur0", { x: 1443.0, y: 753.0, scale: 1 }, 0.133);
+    tl.set("#c-cur0", { x: 1434.5, y: 746.3, scale: 1 }, 0.167);
+    tl.set("#c-cur0", { x: 1421.8, y: 736.2, scale: 1 }, 0.2);
+    tl.set("#c-cur0", { x: 1404.0, y: 722.3, scale: 1 }, 0.233);
+    tl.set("#c-cur0", { x: 1380.3, y: 703.7, scale: 1 }, 0.267);
+    tl.set("#c-cur0", { x: 1349.9, y: 679.8, scale: 1 }, 0.3);
+    tl.set("#c-cur0", { x: 1312.0, y: 650.0, scale: 1 }, 0.333);
+    tl.set("#c-cur0", { x: 1274.1, y: 620.2, scale: 1 }, 0.367);
+    tl.set("#c-cur0", { x: 1243.7, y: 596.3, scale: 1 }, 0.4);
+    tl.set("#c-cur0", { x: 1220.0, y: 577.7, scale: 1 }, 0.433);
+    tl.set("#c-cur0", { x: 1202.2, y: 563.8, scale: 1 }, 0.467);
+    tl.set("#c-cur0", { x: 1189.5, y: 553.8, scale: 1 }, 0.5);
+    tl.set("#c-cur0", { x: 1181.0, y: 547.0, scale: 1 }, 0.533);
+    tl.set("#c-cur0", { x: 1175.8, y: 543.0, scale: 1 }, 0.567);
+    tl.set("#c-cur0", { x: 1173.1, y: 540.9, scale: 1 }, 0.6);
+    tl.set("#c-cur0", { x: 1172.1, y: 540.1, scale: 1 }, 0.633);
+    tl.set("#c-cur0", { x: 1172.0, y: 540.0, scale: 1 }, 0.667);
+    tl.set("#c-cur0", { x: 1172.0, y: 540.0, scale: 1 }, 0.7);
+    tl.set("#c-cur0", { x: 1172.0, y: 540.0, scale: 1 }, 0.733);
+    tl.set("#c-cur0", { x: 1172.0, y: 540.0, scale: 1 }, 0.767);
+    tl.set("#c-cur0", { x: 1172.0, y: 540.0, scale: 0.86 }, 0.8);
+    tl.set("#c-cur0", { x: 1172.0, y: 540.0, scale: 0.86 }, 0.833);
+    tl.set("#c-cur0", { x: 1172.0, y: 540.0, scale: 0.86 }, 0.867);
+    tl.set("#c-cur0", { x: 1172.0, y: 540.0, scale: 1 }, 0.9);
+    tl.set("#c-cur0", { x: 1172.0, y: 540.0, scale: 1 }, 0.933);
+    tl.set("#c-cur0", { x: 1172.0, y: 540.1, scale: 1 }, 0.967);
+    tl.set("#c-cur0", { x: 1172.2, y: 540.2, scale: 1 }, 1.0);
+    tl.set("#c-cur0", { x: 1172.4, y: 540.6, scale: 1 }, 1.033);
+    tl.set("#c-cur0", { x: 1172.7, y: 541.1, scale: 1 }, 1.067);
+    tl.set("#c-cur0", { x: 1173.3, y: 541.9, scale: 1 }, 1.1);
+    tl.set("#c-cur0", { x: 1174.0, y: 543.0, scale: 1 }, 1.133);
+    tl.set("#c-cur0", { x: 1175.0, y: 544.5, scale: 1 }, 1.167);
+    tl.set("#c-cur0", { x: 1176.3, y: 546.4, scale: 1 }, 1.2);
+    tl.set("#c-cur0", { x: 1177.9, y: 548.8, scale: 1 }, 1.233);
+    tl.set("#c-cur0", { x: 1179.8, y: 551.7, scale: 1 }, 1.267);
+    tl.set("#c-cur0", { x: 1182.1, y: 555.2, scale: 1 }, 1.3);
+    tl.set("#c-cur0", { x: 1184.9, y: 559.3, scale: 1 }, 1.333);
+    tl.set("#c-cur0", { x: 1188.1, y: 564.1, scale: 1 }, 1.367);
+    tl.set("#c-cur0", { x: 1191.8, y: 569.7, scale: 1 }, 1.4);
+    tl.set("#c-cur0", { x: 1196.0, y: 576.0, scale: 1 }, 1.433);
+    tl.set("#c-cur0", { x: 1200.2, y: 582.3, scale: 1 }, 1.467);
+    tl.set("#c-cur0", { x: 1203.9, y: 587.9, scale: 1 }, 1.5);
+    tl.set("#c-cur0", { x: 1207.1, y: 592.7, scale: 1 }, 1.533);
+    tl.set("#c-cur0", { x: 1209.9, y: 596.8, scale: 1 }, 1.567);
+    tl.set("#c-cur0", { x: 1212.2, y: 600.3, scale: 1 }, 1.6);
+    tl.set("#c-cur0", { x: 1214.1, y: 603.2, scale: 1 }, 1.633);
+    tl.set("#c-cur0", { x: 1215.7, y: 605.6, scale: 1 }, 1.667);
+    tl.set("#c-cur0", { x: 1217.0, y: 607.5, scale: 1 }, 1.7);
+    tl.set("#c-cur0", { x: 1218.0, y: 609.0, scale: 1 }, 1.733);
+    tl.set("#c-cur0", { x: 1218.7, y: 610.1, scale: 1 }, 1.767);
+    tl.set("#c-cur0", { x: 1219.3, y: 610.9, scale: 1 }, 1.8);
+    tl.set("#c-cur0", { x: 1219.6, y: 611.4, scale: 1 }, 1.833);
+    tl.set("#c-cur0", { x: 1219.8, y: 611.8, scale: 1 }, 1.867);
+    tl.set("#c-cur0", { x: 1220.0, y: 611.9, scale: 1 }, 1.9);
+    tl.set("#c-cur0", { x: 1220.0, y: 612.0, scale: 1 }, 1.933);
+    tl.set("#c-cur0", { x: 1220.0, y: 612.0, scale: 1 }, 1.967);
+    tl.to("#c-cam1", { opacity: 1, duration: 0.25 }, 1.8);
+    tl.fromTo(
+      "#c-cam1",
+      { scale: 1.45 },
+      { scale: 1.62, duration: 2.05, ease: "none" },
+      1.8,
+    );
+    tl.set("#c-cam1", { opacity: 0 }, 3.8499999999999996);
+    tl.set("#c-cur1", { x: 1411.0, y: 760.0, scale: 1 }, 1.8);
+    tl.set("#c-cur1", { x: 1410.9, y: 759.9, scale: 1 }, 1.833);
+    tl.set("#c-cur1", { x: 1409.9, y: 759.1, scale: 1 }, 1.867);
+    tl.set("#c-cur1", { x: 1407.2, y: 757.0, scale: 1 }, 1.9);
+    tl.set("#c-cur1", { x: 1402.0, y: 753.0, scale: 1 }, 1.933);
+    tl.set("#c-cur1", { x: 1393.5, y: 746.3, scale: 1 }, 1.967);
+    tl.set("#c-cur1", { x: 1380.8, y: 736.2, scale: 1 }, 2.0);
+    tl.set("#c-cur1", { x: 1363.0, y: 722.3, scale: 1 }, 2.033);
+    tl.set("#c-cur1", { x: 1339.3, y: 703.7, scale: 1 }, 2.067);
+    tl.set("#c-cur1", { x: 1308.9, y: 679.8, scale: 1 }, 2.1);
+    tl.set("#c-cur1", { x: 1271.0, y: 650.0, scale: 1 }, 2.133);
+    tl.set("#c-cur1", { x: 1233.1, y: 620.2, scale: 1 }, 2.167);
+    tl.set("#c-cur1", { x: 1202.7, y: 596.3, scale: 1 }, 2.2);
+    tl.set("#c-cur1", { x: 1179.0, y: 577.7, scale: 1 }, 2.233);
+    tl.set("#c-cur1", { x: 1161.2, y: 563.8, scale: 1 }, 2.267);
+    tl.set("#c-cur1", { x: 1148.5, y: 553.8, scale: 1 }, 2.3);
+    tl.set("#c-cur1", { x: 1140.0, y: 547.0, scale: 1 }, 2.333);
+    tl.set("#c-cur1", { x: 1134.8, y: 543.0, scale: 1 }, 2.367);
+    tl.set("#c-cur1", { x: 1132.1, y: 540.9, scale: 1 }, 2.4);
+    tl.set("#c-cur1", { x: 1131.1, y: 540.1, scale: 1 }, 2.433);
+    tl.set("#c-cur1", { x: 1131.0, y: 540.0, scale: 1 }, 2.467);
+    tl.set("#c-cur1", { x: 1131.0, y: 540.0, scale: 1 }, 2.5);
+    tl.set("#c-cur1", { x: 1131.0, y: 540.0, scale: 1 }, 2.533);
+    tl.set("#c-cur1", { x: 1131.0, y: 540.0, scale: 1 }, 2.567);
+    tl.set("#c-cur1", { x: 1131.0, y: 540.0, scale: 0.86 }, 2.6);
+    tl.set("#c-cur1", { x: 1131.0, y: 540.0, scale: 0.86 }, 2.633);
+    tl.set("#c-cur1", { x: 1131.0, y: 540.0, scale: 0.86 }, 2.667);
+    tl.set("#c-cur1", { x: 1131.0, y: 540.0, scale: 1 }, 2.7);
+    tl.set("#c-cur1", { x: 1131.0, y: 540.0, scale: 1 }, 2.733);
+    tl.set("#c-cur1", { x: 1131.0, y: 540.1, scale: 1 }, 2.767);
+    tl.set("#c-cur1", { x: 1131.2, y: 540.2, scale: 1 }, 2.8);
+    tl.set("#c-cur1", { x: 1131.4, y: 540.6, scale: 1 }, 2.833);
+    tl.set("#c-cur1", { x: 1131.7, y: 541.1, scale: 1 }, 2.867);
+    tl.set("#c-cur1", { x: 1132.3, y: 541.9, scale: 1 }, 2.9);
+    tl.set("#c-cur1", { x: 1133.0, y: 543.0, scale: 1 }, 2.933);
+    tl.set("#c-cur1", { x: 1134.0, y: 544.5, scale: 1 }, 2.967);
+    tl.set("#c-cur1", { x: 1135.3, y: 546.4, scale: 1 }, 3.0);
+    tl.set("#c-cur1", { x: 1136.9, y: 548.8, scale: 1 }, 3.033);
+    tl.set("#c-cur1", { x: 1138.8, y: 551.7, scale: 1 }, 3.067);
+    tl.set("#c-cur1", { x: 1141.1, y: 555.2, scale: 1 }, 3.1);
+    tl.set("#c-cur1", { x: 1143.9, y: 559.3, scale: 1 }, 3.133);
+    tl.set("#c-cur1", { x: 1147.1, y: 564.1, scale: 1 }, 3.167);
+    tl.set("#c-cur1", { x: 1150.8, y: 569.7, scale: 1 }, 3.2);
+    tl.set("#c-cur1", { x: 1155.0, y: 576.0, scale: 1 }, 3.233);
+    tl.set("#c-cur1", { x: 1159.2, y: 582.3, scale: 1 }, 3.267);
+    tl.set("#c-cur1", { x: 1162.9, y: 587.9, scale: 1 }, 3.3);
+    tl.set("#c-cur1", { x: 1166.1, y: 592.7, scale: 1 }, 3.333);
+    tl.set("#c-cur1", { x: 1168.9, y: 596.8, scale: 1 }, 3.367);
+    tl.set("#c-cur1", { x: 1171.2, y: 600.3, scale: 1 }, 3.4);
+    tl.set("#c-cur1", { x: 1173.1, y: 603.2, scale: 1 }, 3.433);
+    tl.set("#c-cur1", { x: 1174.7, y: 605.6, scale: 1 }, 3.467);
+    tl.set("#c-cur1", { x: 1176.0, y: 607.5, scale: 1 }, 3.5);
+    tl.set("#c-cur1", { x: 1177.0, y: 609.0, scale: 1 }, 3.533);
+    tl.set("#c-cur1", { x: 1177.7, y: 610.1, scale: 1 }, 3.567);
+    tl.set("#c-cur1", { x: 1178.3, y: 610.9, scale: 1 }, 3.6);
+    tl.set("#c-cur1", { x: 1178.6, y: 611.4, scale: 1 }, 3.633);
+    tl.set("#c-cur1", { x: 1178.8, y: 611.8, scale: 1 }, 3.667);
+    tl.set("#c-cur1", { x: 1179.0, y: 611.9, scale: 1 }, 3.7);
+    tl.set("#c-cur1", { x: 1179.0, y: 612.0, scale: 1 }, 3.733);
+    tl.set("#c-cur1", { x: 1179.0, y: 612.0, scale: 1 }, 3.767);
+    tl.to("#c-cam2", { opacity: 1, duration: 0.25 }, 3.6);
+    tl.fromTo(
+      "#c-cam2",
+      { scale: 1.45 },
+      { scale: 1.62, duration: 2.05, ease: "none" },
+      3.6,
+    );
+
+    tl.set("#c-cur2", { x: 842.0, y: 741.0, scale: 1 }, 3.6);
+    tl.set("#c-cur2", { x: 841.9, y: 740.8, scale: 1 }, 3.633);
+    tl.set("#c-cur2", { x: 841.3, y: 739.6, scale: 1 }, 3.667);
+    tl.set("#c-cur2", { x: 839.5, y: 736.3, scale: 1 }, 3.7);
+    tl.set("#c-cur2", { x: 836.0, y: 729.8, scale: 1 }, 3.733);
+    tl.set("#c-cur2", { x: 830.3, y: 719.0, scale: 1 }, 3.767);
+    tl.set("#c-cur2", { x: 821.8, y: 703.0, scale: 1 }, 3.8);
+    tl.set("#c-cur2", { x: 809.8, y: 680.7, scale: 1 }, 3.833);
+    tl.set("#c-cur2", { x: 794.0, y: 651.0, scale: 1 }, 3.867);
+    tl.set("#c-cur2", { x: 778.2, y: 621.3, scale: 1 }, 3.9);
+    tl.set("#c-cur2", { x: 766.3, y: 599.0, scale: 1 }, 3.933);
+    tl.set("#c-cur2", { x: 757.7, y: 583.0, scale: 1 }, 3.967);
+    tl.set("#c-cur2", { x: 752.0, y: 572.3, scale: 1 }, 4.0);
+    tl.set("#c-cur2", { x: 748.5, y: 565.7, scale: 1 }, 4.033);
+    tl.set("#c-cur2", { x: 746.8, y: 562.4, scale: 1 }, 4.067);
+    tl.set("#c-cur2", { x: 746.1, y: 561.2, scale: 1 }, 4.1);
+    tl.set("#c-cur2", { x: 746.0, y: 561.0, scale: 1 }, 4.133);
+    tl.set("#c-cur2", { x: 746.0, y: 561.0, scale: 1 }, 4.167);
+    tl.set("#c-cur2", { x: 746.0, y: 561.0, scale: 1 }, 4.2);
+    tl.set("#c-cur2", { x: 746.0, y: 561.0, scale: 1 }, 4.233);
+    tl.set("#c-cur2", { x: 746.0, y: 561.0, scale: 0.86 }, 4.267);
+    tl.set("#c-cur2", { x: 746.1, y: 561.0, scale: 0.86 }, 4.3);
+    tl.set("#c-cur2", { x: 747.0, y: 561.0, scale: 0.86 }, 4.333);
+    tl.set("#c-cur2", { x: 749.4, y: 561.0, scale: 0.86 }, 4.367);
+    tl.set("#c-cur2", { x: 754.0, y: 561.0, scale: 0.86 }, 4.4);
+    tl.set("#c-cur2", { x: 761.6, y: 561.0, scale: 0.86 }, 4.433);
+    tl.set("#c-cur2", { x: 773.0, y: 561.0, scale: 0.86 }, 4.467);
+    tl.set("#c-cur2", { x: 788.9, y: 561.0, scale: 0.86 }, 4.5);
+    tl.set("#c-cur2", { x: 810.0, y: 561.0, scale: 0.86 }, 4.533);
+    tl.set("#c-cur2", { x: 837.1, y: 561.0, scale: 0.86 }, 4.567);
+    tl.set("#c-cur2", { x: 871.0, y: 561.0, scale: 0.86 }, 4.6);
+    tl.set("#c-cur2", { x: 912.4, y: 561.0, scale: 0.86 }, 4.633);
+    tl.set("#c-cur2", { x: 962.0, y: 561.0, scale: 0.86 }, 4.667);
+    tl.set("#c-cur2", { x: 1011.6, y: 561.0, scale: 0.86 }, 4.7);
+    tl.set("#c-cur2", { x: 1053.0, y: 561.0, scale: 0.86 }, 4.733);
+    tl.set("#c-cur2", { x: 1086.9, y: 561.0, scale: 0.86 }, 4.767);
+    tl.set("#c-cur2", { x: 1114.0, y: 561.0, scale: 0.86 }, 4.8);
+    tl.set("#c-cur2", { x: 1135.1, y: 561.0, scale: 0.86 }, 4.833);
+    tl.set("#c-cur2", { x: 1151.0, y: 561.0, scale: 0.86 }, 4.867);
+    tl.set("#c-cur2", { x: 1162.4, y: 561.0, scale: 0.86 }, 4.9);
+    tl.set("#c-cur2", { x: 1170.0, y: 561.0, scale: 0.86 }, 4.933);
+    tl.set("#c-cur2", { x: 1174.6, y: 561.0, scale: 0.86 }, 4.967);
+    tl.set("#c-cur2", { x: 1177.0, y: 561.0, scale: 0.86 }, 5.0);
+    tl.set("#c-cur2", { x: 1177.9, y: 561.0, scale: 0.86 }, 5.033);
+    tl.set("#c-cur2", { x: 1178.0, y: 561.0, scale: 0.86 }, 5.067);
+    tl.set("#c-cur2", { x: 1178.0, y: 561.0, scale: 0.86 }, 5.1);
+    tl.set("#c-cur2", { x: 1178.0, y: 561.0, scale: 0.86 }, 5.133);
+    tl.set("#c-cur2", { x: 1178.0, y: 561.0, scale: 1 }, 5.167);
+    tl.set("#c-cur2", { x: 1178.1, y: 561.2, scale: 1 }, 5.2);
+    tl.set("#c-cur2", { x: 1178.8, y: 562.5, scale: 1 }, 5.233);
+    tl.set("#c-cur2", { x: 1180.8, y: 566.0, scale: 1 }, 5.267);
+    tl.set("#c-cur2", { x: 1184.5, y: 572.9, scale: 1 }, 5.3);
+    tl.set("#c-cur2", { x: 1190.7, y: 584.1, scale: 1 }, 5.333);
+    tl.set("#c-cur2", { x: 1200.0, y: 601.0, scale: 1 }, 5.367);
+    tl.set("#c-cur2", { x: 1209.3, y: 617.9, scale: 1 }, 5.4);
+    tl.set("#c-cur2", { x: 1215.5, y: 629.1, scale: 1 }, 5.433);
+    tl.set("#c-cur2", { x: 1219.3, y: 636.0, scale: 1 }, 5.467);
+    tl.set("#c-cur2", { x: 1221.2, y: 639.5, scale: 1 }, 5.5);
+    tl.set("#c-cur2", { x: 1221.9, y: 640.8, scale: 1 }, 5.533);
+    tl.set("#c-cur2", { x: 1222.0, y: 641.0, scale: 1 }, 5.567);
+    tl.set({}, {}, 5.4);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["closeups"] = tl;
+  </script>
+</template>

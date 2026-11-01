@@ -3,28 +3,20 @@
     #root {
       position: absolute;
       inset: 0;
-      background: #f2f2f7;
       overflow: hidden;
+      background: #f4f2ee;
       font-family: Inter, sans-serif;
     }
-    #root .cap {
+    #root video,
+    #root img.shot {
       position: absolute;
-      left: 0;
-      right: 0;
-      top: 118px;
-      text-align: center;
-    }
-    #root .cap span {
-      display: inline-block;
-      font-size: 84px;
-      font-weight: 700;
-      letter-spacing: -0.035em;
-      color: #1d1d1f;
+      display: block;
     }
     #root .cursor {
       position: absolute;
       left: 0;
       top: 0;
+      width: 34px;
       transform-origin: 8% 6%;
       filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
     }
@@ -33,78 +25,56 @@
       width: 100%;
       height: auto;
     }
-    #root video {
+    #root .term {
       position: absolute;
-      left: 0;
-      top: 0;
-    }
-    #root .window {
-      position: absolute;
-      left: 300px;
-      top: 290px;
-      width: 1320px;
-      height: 781px;
-      border-radius: 14px;
+      left: 269px;
+      top: 180px;
+      width: 1372.16px;
+      height: 827.84px;
+      border-radius: 16px;
       overflow: hidden;
-      background: #f2f2f7;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+      background: #1e1e1e;
+      box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.5);
     }
     #root .bar {
-      height: 38px;
-      background: #1b1b1b;
+      height: 56px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding-left: 16px;
+      gap: 9px;
+      padding-left: 20px;
+      background: #2a2a2a;
+      color: #b0b0b0;
+      font:
+        500 28px Inter,
+        sans-serif;
     }
     #root .bar i {
-      width: 12px;
-      height: 12px;
-      border-radius: 6px;
-      display: block;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      display: inline-block;
     }
-    #root .bar b {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 10px;
+    #root .bar span {
+      flex: 1;
       text-align: center;
-      font:
-        500 14px Inter,
-        sans-serif;
-      color: #9a9a9a;
+      margin-right: 90px;
     }
     #root .prompt {
       position: absolute;
-      left: 0;
-      top: 38px;
-      right: 0;
-      bottom: 0;
-      padding: 24px 28px;
-      background: #1e1e1e;
+      left: 28px;
+      top: 70px;
       font:
-        400 30px "JetBrains Mono",
+        500 30px "JetBrains Mono",
+        Menlo,
         monospace;
       color: #e6e6e6;
       white-space: pre;
     }
-    #root .prompt em {
-      font-style: normal;
-      color: #78aeed;
-    }
-    #root video,
-    #root .last {
-      position: absolute;
+    #root .term video {
+      top: 56px;
       left: 0;
-      top: 38px;
-      width: 1320px;
-      height: 743px;
-    }
-    #root .cap span {
-      font-size: 72px;
-    }
-    #root .cursor {
-      width: 44px;
+      width: 100%;
+      height: 771.84px;
     }
   </style>
   <div
@@ -113,125 +83,176 @@
     data-width="1920"
     data-height="1080"
   >
-    <div id="t-window" class="window">
+    <div class="term">
       <div class="bar">
         <i style="background: #ff5f57"></i><i style="background: #febc2e"></i
         ><i style="background: #28c840"></i
-        ><b data-layout-ignore>gon@whale-island — ssh</b>
+        ><span>gon@whale-island — nub run dev console --terminal</span>
+      </div>
+      <div id="t-prompt" class="prompt" data-layout-ignore>
+        $ <b id="t-typed" style="font-weight: 500"></b>
       </div>
       <video
-        id="t-take"
+        id="t-v"
         class="clip"
-        data-start="0.65"
-        data-duration="1.85"
-        data-media-start="1.333"
+        data-start="0.9"
+        data-duration="2.7"
         data-track-index="1"
         muted
         playsinline
         src="assets/footage/term-console.mp4"
+        style="opacity: 0"
       ></video>
-      <img
-        id="t-last"
-        class="last clip"
-        data-start="2.5"
-        data-duration="1.5"
-        data-track-index="2"
-        src="assets/footage/term-console-last.png"
-        alt=""
-      />
-      <div id="t-prompt" class="prompt">
-        <em>gon@whale-island ~/blocks ❯ </em><span id="t-typed"></span>
+      <div id="t-cur" class="cursor" style="top: 56px; opacity: 0">
+        <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+            fill="#000"
+            stroke="#fff"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+        </svg>
       </div>
-    </div>
-    <div id="t-cur" class="cursor">
-      <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-        <path
-          d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
-          fill="#000"
-          stroke="#fff"
-          stroke-width="1.8"
-          stroke-linejoin="round"
-        />
-      </svg>
-    </div>
-    <div
-      id="t-cap0"
-      class="cap clip"
-      data-start="0.150"
-      data-duration="3.800"
-      data-track-index="9"
-    >
-      <span>can you believe this is in a terminal through ssh?</span>
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.fromTo(
-      "#t-window",
-      { opacity: 0, filter: "blur(8px)", scale: 0.97 },
-      {
-        opacity: 1,
-        filter: "blur(0px)",
-        scale: 1,
-        duration: 0.28,
-        ease: "expo.out",
-      },
-      0.0,
+    tl.set("#t-typed", { textContent: "n" }, 0.1);
+    tl.set("#t-typed", { textContent: "nu" }, 0.122);
+    tl.set("#t-typed", { textContent: "nub" }, 0.144);
+    tl.set("#t-typed", { textContent: "nub " }, 0.166);
+    tl.set("#t-typed", { textContent: "nub r" }, 0.188);
+    tl.set("#t-typed", { textContent: "nub ru" }, 0.21);
+    tl.set("#t-typed", { textContent: "nub run" }, 0.232);
+    tl.set("#t-typed", { textContent: "nub run " }, 0.254);
+    tl.set("#t-typed", { textContent: "nub run d" }, 0.276);
+    tl.set("#t-typed", { textContent: "nub run de" }, 0.298);
+    tl.set("#t-typed", { textContent: "nub run dev" }, 0.32);
+    tl.set("#t-typed", { textContent: "nub run dev " }, 0.342);
+    tl.set("#t-typed", { textContent: "nub run dev c" }, 0.364);
+    tl.set("#t-typed", { textContent: "nub run dev co" }, 0.386);
+    tl.set("#t-typed", { textContent: "nub run dev con" }, 0.408);
+    tl.set("#t-typed", { textContent: "nub run dev cons" }, 0.43);
+    tl.set("#t-typed", { textContent: "nub run dev conso" }, 0.452);
+    tl.set("#t-typed", { textContent: "nub run dev consol" }, 0.474);
+    tl.set("#t-typed", { textContent: "nub run dev console" }, 0.496);
+    tl.set("#t-typed", { textContent: "nub run dev console " }, 0.518);
+    tl.set("#t-typed", { textContent: "nub run dev console -" }, 0.54);
+    tl.set("#t-typed", { textContent: "nub run dev console --" }, 0.562);
+    tl.set("#t-typed", { textContent: "nub run dev console --t" }, 0.584);
+    tl.set("#t-typed", { textContent: "nub run dev console --te" }, 0.606);
+    tl.set("#t-typed", { textContent: "nub run dev console --ter" }, 0.628);
+    tl.set("#t-typed", { textContent: "nub run dev console --term" }, 0.65);
+    tl.set("#t-typed", { textContent: "nub run dev console --termi" }, 0.672);
+    tl.set("#t-typed", { textContent: "nub run dev console --termin" }, 0.694);
+    tl.set("#t-typed", { textContent: "nub run dev console --termina" }, 0.716);
+    tl.set(
+      "#t-typed",
+      { textContent: "nub run dev console --terminal" },
+      0.738,
     );
-    const command = "nub run dev console --terminal";
-    const typed = document.querySelector("#t-typed");
-    tl.call(() => (typed.textContent = ""), null, 0);
-    [...command].forEach((_, i) =>
-      tl.call(
-        () => (typed.textContent = command.slice(0, i + 1)),
-        null,
-        0.08 + i * 0.015,
-      ),
-    );
-    tl.set("#t-prompt", { opacity: 1 }, 0);
-    tl.set("#t-prompt", { opacity: 0 }, 0.65);
-    // Taps drawn just before each measured repaint (terminal-take.ts).
-    tl.fromTo(
-      "#t-cur",
-      { x: 1100, y: 800, opacity: 0, scale: 1 },
-      { x: 666, y: 367, opacity: 1, duration: 0.45, ease: "power3.inOut" },
-      0.75,
-    );
-    tl.to("#t-cur", { scale: 0.86, duration: 0.05 }, 1.25);
-    tl.to("#t-cur", { scale: 1, duration: 0.1 }, 1.36);
-    tl.to(
-      "#t-cur",
-      { x: 1563, y: 367, duration: 0.22, ease: "power3.inOut" },
-      1.38,
-    );
-    tl.to("#t-cur", { scale: 0.86, duration: 0.05 }, 1.6);
-    tl.to("#t-cur", { scale: 1, duration: 0.1 }, 1.72);
-    tl.to(
-      "#t-cur",
-      { x: 1503, y: 627, duration: 0.6, ease: "power2.inOut" },
-      2.2,
-    );
-    tl.to(
-      "#t-window, #t-cur",
-      { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" },
-      3.81,
-    );
-    // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
-    document.querySelectorAll("#root .cap").forEach((el) => {
-      const start = Number(el.dataset.start);
-      const end = start + Number(el.dataset.duration);
-      tl.fromTo(
-        el.querySelector("span"),
-        { opacity: 0.3, filter: "blur(6px)" },
-        { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" },
-        start,
-      );
-      tl.to(
-        el.querySelector("span"),
-        { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" },
-        end - 0.2,
-      );
-    });
+    tl.set("#t-v", { opacity: 1 }, 0.9);
+    tl.set("#t-prompt", { opacity: 0 }, 0.9);
+    tl.set("#t-cur", { opacity: 1 }, 0.9);
+    tl.set("#t-cur", { x: 854.9, y: 485.1, scale: 1 }, 0.9);
+    tl.set("#t-cur", { x: 806.7, y: 439.5, scale: 1 }, 0.933);
+    tl.set("#t-cur", { x: 742.4, y: 379.2, scale: 1 }, 0.967);
+    tl.set("#t-cur", { x: 659.3, y: 301.5, scale: 1 }, 1.0);
+    tl.set("#t-cur", { x: 576.2, y: 223.8, scale: 1 }, 1.033);
+    tl.set("#t-cur", { x: 511.9, y: 163.5, scale: 1 }, 1.067);
+    tl.set("#t-cur", { x: 463.6, y: 117.9, scale: 1 }, 1.1);
+    tl.set("#t-cur", { x: 428.8, y: 84.4, scale: 1 }, 1.133);
+    tl.set("#t-cur", { x: 404.7, y: 63.0, scale: 1 }, 1.167);
+    tl.set("#t-cur", { x: 391.3, y: 49.6, scale: 1 }, 1.2);
+    tl.set("#t-cur", { x: 383.2, y: 42.9, scale: 0.86 }, 1.233);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 0.86 }, 1.267);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 0.86 }, 1.3);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 0.86 }, 1.333);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.367);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.4);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.433);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.467);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.5);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.533);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.567);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.6);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.633);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.667);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.7);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.733);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.767);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.8);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.833);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.867);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.9);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.933);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.967);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.0);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.033);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.067);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.1);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.133);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.167);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.2);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.233);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.267);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.3);
+    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.333);
+    tl.set("#t-cur", { x: 385.9, y: 40.2, scale: 1 }, 2.367);
+    tl.set("#t-cur", { x: 398.0, y: 40.2, scale: 1 }, 2.4);
+    tl.set("#t-cur", { x: 422.1, y: 40.2, scale: 1 }, 2.433);
+    tl.set("#t-cur", { x: 461.0, y: 40.2, scale: 1 }, 2.467);
+    tl.set("#t-cur", { x: 518.6, y: 40.2, scale: 1 }, 2.5);
+    tl.set("#t-cur", { x: 600.3, y: 40.2, scale: 1 }, 2.533);
+    tl.set("#t-cur", { x: 707.5, y: 40.2, scale: 1 }, 2.567);
+    tl.set("#t-cur", { x: 846.9, y: 40.2, scale: 1 }, 2.6);
+    tl.set("#t-cur", { x: 986.2, y: 40.2, scale: 1 }, 2.633);
+    tl.set("#t-cur", { x: 1093.4, y: 40.2, scale: 1 }, 2.667);
+    tl.set("#t-cur", { x: 1175.2, y: 40.2, scale: 1 }, 2.7);
+    tl.set("#t-cur", { x: 1232.8, y: 40.2, scale: 1 }, 2.733);
+    tl.set("#t-cur", { x: 1271.7, y: 40.2, scale: 1 }, 2.767);
+    tl.set("#t-cur", { x: 1295.8, y: 40.2, scale: 1 }, 2.8);
+    tl.set("#t-cur", { x: 1307.8, y: 40.2, scale: 0.86 }, 2.833);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 0.86 }, 2.867);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 0.86 }, 2.9);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 0.86 }, 2.933);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 2.967);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.0);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.033);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.067);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.1);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.133);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.167);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.2);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.233);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.267);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.3);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.333);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.367);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.4);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.433);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.467);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.5);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.533);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.567);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.6);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.633);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.667);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.7);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.733);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.767);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.8);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.833);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.867);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.9);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.933);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.967);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.0);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.033);
+    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.067);
+    tl.set({}, {}, 3.6);
+    window.__timelines = window.__timelines || {};
     window.__timelines["terminal"] = tl;
   </script>
 </template>

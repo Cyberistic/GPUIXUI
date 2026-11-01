@@ -3,10 +3,10 @@
  * a Standard MIDI File, rendered by `fluidsynth` with the Salamander Grand Piano
  * (CC BY 3.0, Alexander Holm) — see README §Sound.
  *
- * 120 BPM, D major opening on its relative minor (Bm – G – D – A). Fourteen
- * bars, cut for a film under thirty seconds: four of theme from the first beat,
- * four lifted an octave, two of climax in octaves, a bar of chord stabs (one per
- * beat, under the four words) and the final chord held for the mark. The playing
+ * 120 BPM, D major opening on its relative minor (Bm – G – D – A). Sixteen
+ * bars for the v4 film (plan 066): four of theme from the first beat, four
+ * lifted an octave, four of climax in octaves, a bar of chord stabs (one per
+ * beat, under the four words, 24–26 s) and the final chord held for the mark. The playing
  * is humanised with a fixed seed, so every render is the same file.
  *
  *   nub media/launch/sound/piano.ts media/launch/sound/piano.mid
@@ -182,13 +182,13 @@ const phrase = (
   }
 };
 
-// Theme and lift, four bars each from the first beat; then two bars of climax.
+// Theme, lift and climax, four bars each from the first beat.
 const sections: ReadonlyArray<
   readonly [ReadonlyArray<Phrase>, number, number, boolean]
 > = [
   [theme, 70, 54, false],
   [lift, 80, 60, false],
-  [climax.slice(0, 2), 94, 72, true],
+  [climax, 94, 72, true],
 ];
 let at = 0;
 for (const [bars, right, left, octaves] of sections) {
@@ -198,17 +198,19 @@ for (const [bars, right, left, octaves] of sections) {
   });
   at += bars.length;
 }
-// Bar 10: a stab on each beat — Bm, G, D, A — one under each word.
+// The bar after the sections: a stab on each beat — Bm, G, D, A — one under each word.
+const STAB = at;
 chords.forEach((chord, beat) => {
   for (const pitch of [chord.root, ...chord.tones, chord.tones[2] + 12])
-    notes.push([10 * 4 + beat, 0.8, pitch, 84]);
+    notes.push([STAB * 4 + beat, 0.8, pitch, 84]);
 });
-// Bars 11–13: the final D-major chord, held for the mark.
+// The next three bars: the final D-major chord, held for the mark.
 for (const pitch of [38, N.D3, N.A3, N.Fs4, N.A4, N.D5])
-  notes.push([11 * 4, 12, pitch, 70]);
+  notes.push([(STAB + 1) * 4, 12, pitch, 70]);
 
-/** Total length in beats: fourteen bars. */
-export const BEATS = 14 * 4;
+/** The whole piece, in bars and beats. */
+const BARS = STAB + 4;
+export const BEATS = BARS * 4;
 
 const vlq = (value: number): number[] => {
   const bytes = [value & 0x7f];
@@ -228,8 +230,8 @@ const track = (): number[] => {
     );
   }
   // The sustain pedal, re-pressed on every bar (and held through the ending).
-  for (let bar = 0; bar < 14; bar += 1) {
-    if (bar <= 11)
+  for (let bar = 0; bar < BARS; bar += 1) {
+    if (bar <= STAB + 1)
       events.push({ tick: tick(bar * 4) + 10, data: [0xb0, 64, 0] });
     events.push({ tick: tick(bar * 4) + 30, data: [0xb0, 64, 100] });
   }

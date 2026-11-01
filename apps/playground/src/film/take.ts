@@ -11,6 +11,7 @@
  */
 import { createTestRoot } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
+import * as Order from "effect/Order";
 import * as Option from "effect/Option";
 import { writeFileSync } from "node:fs";
 import type { ReactNode } from "react";
@@ -44,6 +45,18 @@ export interface Take {
     readonly frame: number;
     readonly keys: string;
   }>;
+  /** Write `boxes.json`: every painted box and text run on frame 0 (the blueprint). */
+  readonly boxes?: boolean;
+}
+
+/** A painted box or a run of text, in output pixels, as the blueprint draws it. */
+export interface BlueprintBox {
+  readonly kind: "box" | "text";
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly radius: number;
 }
 
 export interface PointerSample {
@@ -84,6 +97,51 @@ export const pointerAt = (
       });
     },
   );
+
+const painted = (style: Record<string, unknown>): boolean =>
+  (typeof style.backgroundColor === "string" &&
+    style.backgroundColor !== "transparent") ||
+  (typeof style.borderWidth === "number" && style.borderWidth > 0);
+
+/** Every painted box and text run, top to bottom, in output pixels. */
+const blueprint = (
+  renderer: ReturnType<typeof createTestRoot>["renderer"],
+): ReadonlyArray<BlueprintBox> => {
+  const of = (type: "div" | "text", kind: BlueprintBox["kind"]) =>
+    Arr.flatMap(renderer.findByType(type), (element) =>
+      Option.match(
+        Option.fromNullishOr(renderer.getElementBounds(element.id)),
+        {
+          onNone: (): ReadonlyArray<BlueprintBox> => [],
+          onSome: (b): ReadonlyArray<BlueprintBox> =>
+            b.width < 3 ||
+            b.height < 3 ||
+            (kind === "box" && !painted(element.style))
+              ? []
+              : [
+                  {
+                    kind,
+                    x: b.x * DEVICE_SCALE,
+                    y: b.y * DEVICE_SCALE,
+                    width: b.width * DEVICE_SCALE,
+                    height: b.height * DEVICE_SCALE,
+                    radius:
+                      typeof element.style.borderRadius === "number"
+                        ? element.style.borderRadius * DEVICE_SCALE
+                        : 0,
+                  },
+                ],
+        },
+      ),
+    );
+  return Arr.sort(
+    [...of("div", "box"), ...of("text", "text")],
+    Order.mapInput(
+      Order.Tuple([Order.Number, Order.Number]),
+      (b: BlueprintBox) => [b.y, b.x] as const,
+    ),
+  );
+};
 
 /** Capture `take` into `outDir` as `0000.png…` and `cursor.json`. */
 export const capture = (
@@ -149,6 +207,11 @@ export const capture = (
     renderer.captureScreenshot(
       `${outDir}/${String(frame).padStart(4, "0")}.png`,
     );
+    if (frame === 0 && take.boxes === true)
+      writeFileSync(
+        `${outDir}/boxes.json`,
+        JSON.stringify(blueprint(renderer)),
+      );
   }
   root.unmount();
   writeFileSync(`${outDir}/cursor.json`, JSON.stringify(samples));

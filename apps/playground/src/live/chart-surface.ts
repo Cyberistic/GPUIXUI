@@ -106,11 +106,11 @@ export const CHART_SURFACE_POINTS = {
   /** The stack's floor series and the series above it, same category. */
   stackedLower: { x: 37, y: 110 },
   stackedUpper: { x: 37, y: 70 },
-  /** One point inside each painted ring segment, at half the ring's width. */
+  /** One point inside each painted ring segment, on the ring's centre line. */
   donut: [
-    { key: "direct", point: { x: 123, y: 51 } },
-    { key: "search", point: { x: 27, y: 106 } },
-    { key: "social", point: { x: 34, y: 27 } },
+    { key: "direct", point: { x: 127, y: 49 } },
+    { key: "search", point: { x: 23, y: 109 } },
+    { key: "social", point: { x: 31, y: 23 } },
   ],
 } as const;
 
