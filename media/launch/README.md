@@ -48,7 +48,7 @@ for take in media/launch/takes/*/; do t=$(basename "$take")
     -pix_fmt yuv420p media/launch/assets/footage/$t.mp4
 done
 ffmpeg -sseof -0.05 -i media/launch/assets/footage/button.mp4 -frames:v 1 media/launch/assets/footage/button-last.png
-sh media/launch/sound/kit.sh ~/.claude/skills/media-use/audio/assets/sfx
+sh media/launch/sound/kit.sh <hyperframes bundled-sfx-dir>   # click.mp3, click-soft.mp3, …
 sh media/launch/sound/score.sh <SalamanderGrandPiano-V3+20200602.sf2>
 cd media/launch && npx hyperframes check && npx hyperframes render -o gpuixui-launch.mp4 --crf 14
 ```

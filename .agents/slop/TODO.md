@@ -24949,6 +24949,33 @@ green; the site deployed and all 195 sitemap pages answer 200.
       in every installed tree resolving to a shipped file or a declared npm
       package.
 
-`[ ]` Deploy the docs site — the runtime documents and the new
-      `/registry.json` exist only in the built assets, so production still
-      serves the registry that installs dangling `@gpuixui/*` imports.
+`[x]` Deployed the docs site (2026-11-01): live `/registry.json` lists 170 items
+      (161 components + 9 runtime) and `/gpuix-tokens.json` answers 200. A fresh
+      project ran `npx shadcn@latest add @sudokw/primitives-button` from the
+      directory, installed 91 files and type-checked with `tsc --noEmit`.
+      The deploy needs the account variables in
+      `/Users/cyberistic/Documents/Sudo/sudokw/.env` sourced first; alchemy's
+      `default` profile token only sees `bravenlab.com`.
+
+---
+
+## Docs prose pass (plan 750, 2026-11-01)
+
+`[x]` `[██████████]` 3/3
+
+`[x]` Cut every page to the `docs/VOICE.md` budget: each component page is ≤ 60
+      prose words with one compiling usage example, the composition tree, the API
+      table and 1–3 one-line limitations; block pages ≤ 120; guides ≤ 150.
+      Rationale, measurements, test counts, version stories and plan paths are
+      gone; the facts a consumer acts on moved into Limitations. Two page
+      contracts kept their strings (`dialog`/`drawer`/`toast`/the menu surfaces,
+      `conversations`, `dashboard`, `color-picker`, `collapsible`, `examples`).
+`[x]` `/platform/terminal`: `render(<App />, { terminal: true })`,
+      `GPUIX_TERMINAL=1`, the playground command, kitty/Ghostty, `isTerminal()`,
+      and the three real limits (no window automation, no embedded terminal host,
+      terminal grid wins over size options).
+`[x]` `/getting-started/omarchy`: developing on Arch/Hyprland (`nub install`,
+      playground, docs, gate, terminal run) and following the live palette —
+      `~/.local/state/omarchy/current/theme/colors.toml` →
+      `decodeOmarchyPalette` → `paletteToTokens` — with the measured-on-macOS
+      caveat stated on the page.

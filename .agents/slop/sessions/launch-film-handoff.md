@@ -6,7 +6,8 @@ worktree `workspaces/launch-film`) for a session that resumes it. Plan:
 
 ## Owner rules learned this session
 
-- Never add `Co-Authored-By: Claude …` to commits (memory `no-coauthor-trailer`).
+- Never add a co-author trailer to a commit: the commit's author is the
+  workstream (memory `no-coauthor-trailer`).
 - Hunter × Hunter names everywhere (memory `hunter-theme`).
 - Logo: the two-colour Gon (`apps/docs/public/logo.svg`) is the favicon and social
   image; the one-colour outline (`logo-outline.svg`) is the interface and film mark.

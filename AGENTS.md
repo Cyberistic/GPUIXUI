@@ -133,6 +133,8 @@ explicit boundaries.
   checkout stay current for the next agent. Resolve conflicts in your own
   branch, never on `main`.
 - Commit often with meaningful messages. Small, reviewable commits.
+- Never add a co-author trailer. A commit's author is the workstream; assistants
+  and agents are tools, not contributors.
 
 ## 7. Completion gate
 
