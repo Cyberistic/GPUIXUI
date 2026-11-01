@@ -175,10 +175,11 @@ function WeekBars() {
   const max = 12;
   const w = 300;
   const h = 116;
+  const gutter = 30;
   const plotTop = 8;
   const plotBottom = 82;
   const plotH = plotBottom - plotTop;
-  const slot = w / WEEK.length;
+  const slot = (w - gutter) / WEEK.length;
   const barW = slot * 0.42;
 
   return (
@@ -192,11 +193,11 @@ function WeekBars() {
         const y = plotTop + plotH - (value / max) * plotH;
         return (
           <g key={value}>
-            <line className="gx-dash-axis" x1="0" x2={w} y1={y} y2={y} />
+            <line className="gx-dash-axis" x1={gutter} x2={w} y1={y} y2={y} />
             <text
               className="gx-dash-axis-label"
               textAnchor="end"
-              x={w - 4}
+              x={gutter - 6}
               y={y + 3}
             >
               {value}h
@@ -206,7 +207,7 @@ function WeekBars() {
       })}
       {WEEK.map((value, i) => {
         const height = (value / max) * plotH;
-        const x = i * slot + (slot - barW) / 2;
+        const x = gutter + i * slot + (slot - barW) / 2;
         const y = plotTop + plotH - height;
         return (
           <g key={i}>
@@ -222,7 +223,7 @@ function WeekBars() {
             <text
               className="gx-dash-axis-label"
               textAnchor="middle"
-              x={i * slot + slot / 2}
+              x={gutter + i * slot + slot / 2}
               y={h - 6}
             >
               {DAYS[i]}

@@ -54,8 +54,8 @@ export function Stage() {
       <p className="landing-kicker">The stage</p>
       <h2 className="landing-h2">Press deploy. Watch it ship.</h2>
       <p className="landing-lead">
-        One window, one action. Progress, status rows and a toast are the
-        library&apos;s own parts — the same tree a native window draws.
+        One window, one action: a deploy button, three services, and the toast
+        that says it shipped.
       </p>
 
       <figure className="landing-stage" data-phase={phase}>

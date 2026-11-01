@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePrefersReducedMotion } from "./reduced-motion";
 
 /**
@@ -307,10 +307,9 @@ export function Terminal() {
       <p className="landing-kicker">Render your apps in a terminal</p>
       <h2 className="landing-h2">One frame, from prompt to editor.</h2>
       <p className="landing-lead">
-        Read the <a href="/platform/terminal">Terminal guide</a> to run all your
-        apps in a kitty image protocol supported terminal. Everything below,
-        including the file tree and the collapsible sidebar, is the library
-        running in that frame — not a second GUI.
+        Read the <a href="/platform/terminal">Terminal guide</a> to run your
+        apps in a kitty-compatible terminal. The editor below runs in that
+        frame, file tree and sidebar included.
       </p>
 
       <div className="landing-moment" data-stage={stage}>
@@ -354,49 +353,56 @@ export function Terminal() {
 
           <div className="landing-editor" data-sidebar={sidebar}>
             <div className="landing-vscode landing-editor-pane">
-              <Explorer file={file} onFile={setFile} />
-              <div className="landing-vscode-main">
-                <div className="landing-vscode-tabs">
-                  {FILE_NAMES.map((name) => (
-                    <button
-                      className="landing-vscode-tab"
-                      data-active={name === file}
-                      key={name}
-                      onClick={() => setFile(name)}
-                      type="button"
-                    >
-                      <TsGlyph />
-                      {name}
-                      <i className="landing-vscode-close">×</i>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="landing-vscode-trail">
-                  <span>src</span>
-                  <i>›</i>
-                  <span>app</span>
-                  <i>›</i>
-                  <span data-current="true">{file}</span>
-                </div>
-
-                <div className="landing-vscode-editor">
-                  <div className="landing-vscode-code">
-                    {lines.map((line, index) => (
-                      <div className="landing-vscode-line" key={index}>
-                        <span className="landing-vscode-num">{index + 1}</span>
-                        <span className="landing-vscode-tokens">
-                          {line.map(([role, text], at) => (
-                            <span className={`vsc-tok-${role}`} key={at}>
-                              {text}
-                            </span>
-                          ))}
-                        </span>
-                      </div>
+              <div className="landing-vscode-body">
+                <ActivityBar />
+                <Explorer file={file} onFile={setFile} />
+                <div className="landing-vscode-main">
+                  <div className="landing-vscode-tabs">
+                    {FILE_NAMES.map((name) => (
+                      <button
+                        className="landing-vscode-tab"
+                        data-active={name === file}
+                        key={name}
+                        onClick={() => setFile(name)}
+                        type="button"
+                      >
+                        <TsGlyph />
+                        {name}
+                        <i className="landing-vscode-close">×</i>
+                      </button>
                     ))}
                   </div>
+
+                  <div className="landing-vscode-trail">
+                    <span>src</span>
+                    <i>›</i>
+                    <span>app</span>
+                    <i>›</i>
+                    <span data-current="true">{file}</span>
+                  </div>
+
+                  <div className="landing-vscode-editor">
+                    <div className="landing-vscode-code">
+                      {lines.map((line, index) => (
+                        <div className="landing-vscode-line" key={index}>
+                          <span className="landing-vscode-num">
+                            {index + 1}
+                          </span>
+                          <span className="landing-vscode-tokens">
+                            {line.map(([role, text], at) => (
+                              <span className={`vsc-tok-${role}`} key={at}>
+                                {text}
+                              </span>
+                            ))}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <Minimap lines={lines} />
                 </div>
               </div>
+              <StatusBar lines={lines.length} />
             </div>
           </div>
         </div>
@@ -471,6 +477,104 @@ function Explorer({
           package.json
         </span>
       </div>
+    </div>
+  );
+}
+
+/** The VS Code chrome: an activity bar, a minimap and a status bar. */
+function ActivityBar() {
+  const glyph = (path: ReactNode) => (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="15"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.4"
+      viewBox="0 0 24 24"
+      width="15"
+    >
+      {path}
+    </svg>
+  );
+  return (
+    <div aria-hidden="true" className="landing-vscode-activity">
+      <span className="landing-vscode-action" data-active="true">
+        {glyph(
+          <>
+            <path d="M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V8Z" />
+            <path d="M14 3v5h5" />
+          </>,
+        )}
+      </span>
+      <span className="landing-vscode-action">
+        {glyph(
+          <>
+            <circle cx="10.5" cy="10.5" r="6" />
+            <path d="m15 15 5 5" />
+          </>,
+        )}
+      </span>
+      <span className="landing-vscode-action">
+        {glyph(
+          <>
+            <circle cx="7" cy="5" r="2" />
+            <circle cx="7" cy="19" r="2" />
+            <circle cx="17" cy="7" r="2" />
+            <path d="M7 7v10M17 9c0 4-6 3-6 8" />
+          </>,
+        )}
+      </span>
+      <span className="landing-vscode-action">
+        {glyph(
+          <>
+            <path d="M6 4.5 19 12 6 19.5Z" />
+          </>,
+        )}
+      </span>
+      <span className="landing-vscode-action">
+        {glyph(
+          <>
+            <rect height="7" rx="1" width="7" x="3" y="3" />
+            <rect height="7" rx="1" width="7" x="14" y="10" />
+            <path d="M6.5 14v7M3 17.5h7" />
+          </>,
+        )}
+      </span>
+    </div>
+  );
+}
+
+function Minimap({ lines }: { lines: ReadonlyArray<ReadonlyArray<Token>> }) {
+  return (
+    <div aria-hidden="true" className="landing-vscode-minimap">
+      {lines.map((line, index) => (
+        <span
+          key={index}
+          style={{
+            width: `${Math.min(100, line.map(([, text]) => text).join("").length * 1.4)}%`,
+          }}
+        />
+      ))}
+      <i className="landing-vscode-slider" />
+    </div>
+  );
+}
+
+function StatusBar({ lines }: { lines: number }) {
+  return (
+    <div className="landing-vscode-status">
+      <span className="landing-vscode-status-left">
+        main* <i className="landing-vscode-status-gap" />⊗ 0 △ 0
+      </span>
+      <span className="landing-vscode-status-right">
+        Ln 1, Col 1<span>{lines} lines</span>
+        <span>Spaces: 2</span>
+        <span>UTF-8</span>
+        <span>LF</span>
+        <span>TypeScript React</span>
+      </span>
     </div>
   );
 }

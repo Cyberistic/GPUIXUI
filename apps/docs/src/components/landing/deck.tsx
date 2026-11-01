@@ -97,8 +97,7 @@ export function Hero() {
       </h1>
 
       <p className="landing-sub">
-        Components that run on GPUix, styled to feel at home on macOS, Windows
-        11 and Linux — with the source in your hands.
+        Native components for macOS, Windows and Linux. Source included.
       </p>
 
       <LandingFormula />

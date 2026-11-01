@@ -54,9 +54,9 @@ describe("the landing's copy", () => {
     expect(code).toContain("It&#x27;s just shadcn!");
   });
 
-  it("asks the dashboard to be a native app, with a platform switch", () => {
+  it("asks the dashboard to be a native app, with no preview switch", () => {
     expect(dashboard).toContain("Build native-looking apps.");
-    expect(dashboard).toContain("Choose platform");
+    expect(dashboard).not.toContain("Choose platform");
     expect(dashboard).not.toContain(
       "Browser preview of the native composition",
     );

@@ -1,17 +1,14 @@
-import { useState, type CSSProperties } from "react";
 import { useTheme } from "fumadocs-ui/provider/base";
 import { flushSync } from "react-dom";
-import { lightTheme, platformTheme, type PlatformName } from "@gpuixui/tokens";
 import { HighlightedCode } from "@/components/highlighted-code";
-import { toCssVars } from "../../lib/theme-css";
 import { mainContentId } from "../skip-link";
-import { Hero, PlatformSwitch } from "./deck";
+import { Hero } from "./deck";
 import { Lineage } from "./lineage";
 import { Stage } from "./stage";
 import { Terminal } from "./terminal";
 import { demos } from "../docs/demos";
 import { DashboardRender } from "../docs/dashboard";
-import { navLinks, platforms, repo } from "./data";
+import { navLinks, repo } from "./data";
 
 export function Landing() {
   return (
@@ -121,22 +118,7 @@ function MoonIcon() {
   );
 }
 
-/** The library's platform name for a landing card. */
-const platformOfDesktop: Readonly<Record<string, PlatformName>> = {
-  macos: "darwin",
-  windows: "win32",
-  linux: "linux",
-};
-
 export function Dashboard() {
-  const [top, setTop] = useState(0);
-  const platform = platforms[top]?.id ?? "macos";
-  const style = {
-    ...toCssVars(
-      platformTheme(lightTheme, platformOfDesktop[platform] ?? "darwin"),
-    ),
-  } as CSSProperties;
-
   return (
     <section
       className="landing-section landing-dashboard-section"
@@ -145,14 +127,10 @@ export function Dashboard() {
       <p className="landing-kicker">The product</p>
       <h2 className="landing-h2">Build native-looking apps.</h2>
       <p className="landing-lead">
-        A dashboard composed from the library&apos;s parts — cards, badges,
-        progress, search and charts. Switch the platform to wear each
-        desktop&apos;s own metrics: the same tree, restyled.
+        Cards, badges, progress and charts from the same package you install.
+        The window below is the shipped composition.
       </p>
-      <div className="landing-switch-row">
-        <PlatformSwitch onChange={setTop} value={top} />
-      </div>
-      <div className="landing-dashboard" style={style}>
+      <div className="landing-dashboard">
         <DashboardRender />
       </div>
     </section>
@@ -196,10 +174,7 @@ export function CodeAndComponent() {
 function Footer() {
   return (
     <footer className="landing-footer">
-      <span>
-        GPUIxUI — shadcn/ui&apos;s composition, Base UI&apos;s behaviour and
-        Tailwind&apos;s syntax, drawn by GPUI.
-      </span>
+      <span>GPUIxUI — native components for GPUix.</span>
       <a href={repo} rel="noopener noreferrer" target="_blank">
         source
       </a>
