@@ -141,3 +141,24 @@ runs only inside the gitignored `.media/`.
   sending, Slang computing.
 - **Words**: four lines on a ground band, none over the montage.
 - **Mix**: score 0.28, haptics 0.9, mastered to −18 LUFS.
+
+## v4.1 (owner, 2026-11-01): "static cuts, the sidebar collapse, and make the
+## platform switch visible"
+
+- **Opening**: four close-ups (Switch, Tabs, Slider, Checkbox) at 1.2 s each.
+  Each shot is one static framing — the camera push is gone, so the cut is the
+  only motion, and every press has ~0.7 s to settle before its cut.
+- **Platforms**: each shot is named under the line (`macOS`, `Windows`,
+  `Linux`) for exactly its own cut, so the switch is read, not inferred. The
+  Settings take holds the macOS look for the shot (its Look presses moved to
+  1.5 s / 2.4 s / 3.2 s of a 4 s take); Aero is Windows, the tiling block Linux.
+- **Terminal**: the scene starts at the take's first frame — `ssh` typed at the
+  local prompt, the login banner, `nub run dev console --terminal` typed, its
+  output, then the app painting below the shell history. The take is pressed
+  early (`deploy@0.5`) so its toasts are up, then the sidebar trigger
+  (`sidebar-trigger@1.5`); the collapse and the toasts paint on the terminal's
+  own repaint cadence, which is the whole ~2 s the platform gives it.
+  Terminal mode only repaints on input (`terminal-take.ts` TODO), so the
+  collapse is one painted frame, not a spring — the film shows it instead of
+  cutting past it.
+- **App shots**: the agent and Slang shots shrink to leave a bottom margin.

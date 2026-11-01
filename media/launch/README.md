@@ -9,19 +9,20 @@ of cuts. Plan: `.agents/slop/plans/066-launch-film-v4.md`.
 
 | Time | Line | Shot | Source |
 | --- | --- | --- | --- |
-| 0–3 s | native apps, now in react | the mark pressed, Settings opens out of it | `settings` |
-| 3–8.4 s | with the components you know / drawn by the gpu, every frame | Switch, Tabs, Slider close-ups at 1×, pushed in | `cu-*` |
-| 8.4–12.4 s | composed into blocks | a stageshow bento of real footage | `stage-bento` |
-| 12.4–16.4 s | put together in seconds | the stats block's blueprint, its real cards falling into place | `stage-assemble` (`blueprint`) |
-| 16.4–20.4 s | on every desktop | Settings across looks, the Aero desktop, the Linux tiling block | `settings`, `desktop-aero`, `tiling` |
-| 20.4–24 s | can you believe this is in a terminal through ssh? | the console block in a terminal | `term-console` |
+| 0–4.8 s | — | four close-ups, 1.2 s each, static framings cut on the settle: Switch, Tabs, Slider, Checkbox | `cu-*` |
+| 4.8–8.4 s | every component you need | a field of live components in columns sliding opposite ways; the camera pulls back | stage of takes |
+| 8.4–11 s | — | the stats block's blueprint, its real cards falling into place | `stage-assemble` (`blueprint`) |
+| 11–15 s | one tree, every platform | macOS (Settings), Windows (the Aero desktop), Linux (the tiling block), each named under the line as the cut lands | `settings`, `desktop-aero`, `tiling` |
+| 15–19.45 s | real apps, built with it | a chat typed and sent, Slang computing | `agent`, `slang` |
+| 19.45–24 s | can you believe this is in a terminal through ssh? | the ssh session: the command, its output, the app painting below the shell, the sidebar collapsing, Deploy's toasts | `term-console` |
 | 24–26 s | — | GPUI · React · shadcn · Tailwind on the chord stabs | — |
 | 26–30 s | — | the mark, the URL, "Made with ☕ by @sudo_kw" | — |
 
 Takes are the real tree under real input (`apps/playground/src/film/take.ts`) or
 the real terminal stream (`terminal-take.ts`); the two stage shots are
 stageshow recordings of real takes (`stage/README.md`). The film draws the
-ground, the lines, the cursor, the terminal window and the end card.
+ground, the lines, the platform names, the cursor, the terminal window and the
+end card.
 
 ## Build
 
@@ -31,7 +32,7 @@ for take in cu-switch cu-tabs cu-slider settings stats blueprint slang desktop-a
   nub apps/playground/dist/film/takes.js $take media/launch/takes/$take
 done
 nub apps/playground/dist/film/terminal-take.js media/launch/takes/term-console console \
-  sidebar-trigger@0.4 deploy@2.0
+  deploy@0.5 sidebar-trigger@1.5
 sh media/launch/stage/setup.sh            # then record the two stage shots (stage/README.md)
 sh media/launch/sound/kit.sh ~/.claude/skills/media-use/audio/assets/sfx
 sh media/launch/sound/score.sh <SalamanderGrandPiano-V3+20200602.sf2>

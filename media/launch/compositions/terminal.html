@@ -27,54 +27,81 @@
     }
     #root .term {
       position: absolute;
-      left: 269px;
-      top: 180px;
-      width: 1372.16px;
-      height: 827.84px;
-      border-radius: 16px;
+      left: 371px;
+      top: 190px;
+      width: 1178px;
+      height: 840px;
+      border-radius: 14px;
       overflow: hidden;
-      background: #1e1e1e;
-      box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.5);
+      background: #141518;
+      box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.55);
     }
     #root .bar {
-      height: 56px;
+      height: 50px;
       display: flex;
       align-items: center;
-      gap: 9px;
+      gap: 10px;
       padding-left: 20px;
-      background: #2a2a2a;
-      color: #b0b0b0;
+      background: #232427;
+      color: #a9a9b0;
       font:
         500 28px Inter,
         sans-serif;
     }
     #root .bar i {
-      width: 13px;
-      height: 13px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       display: inline-block;
     }
     #root .bar span {
       flex: 1;
       text-align: center;
-      margin-right: 90px;
+      margin-right: 86px;
     }
-    #root .prompt {
+    #root .hist {
       position: absolute;
-      left: 28px;
-      top: 70px;
+      left: 0;
+      top: 50px;
+      width: 100%;
+      padding: 12px 28px 0;
       font:
-        500 30px "JetBrains Mono",
+        500 22px/28px "JetBrains Mono",
         Menlo,
         monospace;
-      color: #e6e6e6;
-      white-space: pre;
+      color: #e8e8ea;
     }
-    #root .term video {
-      top: 56px;
+    #root .hist .dim {
+      color: #8b8b93;
+    }
+    #root .hist .off {
+      opacity: 0;
+    }
+    #root .hist b {
+      font-weight: 600;
+      color: #8ab4ff;
+    }
+    #root .caret {
+      display: inline-block;
+      width: 10px;
+      height: 20px;
+      margin-left: 2px;
+      vertical-align: -3px;
+      background: #c9c9d2;
+    }
+    #root .frame {
+      position: absolute;
       left: 0;
+      top: 178px;
+      width: 1178px;
+      height: 662px;
+      overflow: hidden;
+    }
+    #root .frame video {
+      left: 0;
+      top: 0;
       width: 100%;
-      height: 771.84px;
+      height: 100%;
     }
   </style>
   <div
@@ -86,171 +113,188 @@
     <div class="term">
       <div class="bar">
         <i style="background: #ff5f57"></i><i style="background: #febc2e"></i
-        ><i style="background: #28c840"></i
-        ><span>gon@whale-island — nub run dev console --terminal</span>
+        ><i style="background: #28c840"></i><span>gon@whale-island — ssh</span>
       </div>
-      <div id="t-prompt" class="prompt" data-layout-ignore>
-        $ <b id="t-typed" style="font-weight: 500"></b>
+      <div class="hist" data-layout-ignore>
+        <div class="ln">
+          <b>gon@macbook ~ %</b> <span id="t-ssh"></span
+          ><span id="t-caret1" class="caret"></span>
+        </div>
+        <div id="t-login" class="ln dim off">
+          Last login: Sun Nov 1 19:41:07 2026 from 10.0.0.2
+        </div>
+        <div id="t-runline" class="ln off">
+          <b>gon@whale-island ~ %</b> <span id="t-run"></span
+          ><span id="t-caret3" class="caret"></span>
+        </div>
+        <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
       </div>
-      <video
-        id="t-v"
-        class="clip"
-        data-start="1.2"
-        data-duration="3.2"
-        data-track-index="1"
-        muted
-        playsinline
-        src="assets/footage/term-console.mp4"
-        style="opacity: 0"
-      ></video>
-      <div id="t-cur" class="cursor" style="top: 56px; opacity: 0">
-        <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
-            fill="#000"
-            stroke="#fff"
-            stroke-width="1.8"
-            stroke-linejoin="round"
-          />
-        </svg>
+      <div class="frame">
+        <video
+          id="t-v"
+          class="clip"
+          data-start="1.55"
+          data-duration="3"
+          data-track-index="1"
+          muted
+          playsinline
+          src="assets/footage/term-console.mp4"
+          style="opacity: 0"
+        ></video>
+        <div id="t-cur" class="cursor" style="opacity: 0">
+          <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+              fill="#000"
+              stroke="#fff"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
       </div>
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.set("#t-typed", { textContent: "n" }, 0.1);
-    tl.set("#t-typed", { textContent: "nu" }, 0.122);
-    tl.set("#t-typed", { textContent: "nub" }, 0.144);
-    tl.set("#t-typed", { textContent: "nub " }, 0.166);
-    tl.set("#t-typed", { textContent: "nub r" }, 0.188);
-    tl.set("#t-typed", { textContent: "nub ru" }, 0.21);
-    tl.set("#t-typed", { textContent: "nub run" }, 0.232);
-    tl.set("#t-typed", { textContent: "nub run " }, 0.254);
-    tl.set("#t-typed", { textContent: "nub run d" }, 0.276);
-    tl.set("#t-typed", { textContent: "nub run de" }, 0.298);
-    tl.set("#t-typed", { textContent: "nub run dev" }, 0.32);
-    tl.set("#t-typed", { textContent: "nub run dev " }, 0.342);
-    tl.set("#t-typed", { textContent: "nub run dev c" }, 0.364);
-    tl.set("#t-typed", { textContent: "nub run dev co" }, 0.386);
-    tl.set("#t-typed", { textContent: "nub run dev con" }, 0.408);
-    tl.set("#t-typed", { textContent: "nub run dev cons" }, 0.43);
-    tl.set("#t-typed", { textContent: "nub run dev conso" }, 0.452);
-    tl.set("#t-typed", { textContent: "nub run dev consol" }, 0.474);
-    tl.set("#t-typed", { textContent: "nub run dev console" }, 0.496);
-    tl.set("#t-typed", { textContent: "nub run dev console " }, 0.518);
-    tl.set("#t-typed", { textContent: "nub run dev console -" }, 0.54);
-    tl.set("#t-typed", { textContent: "nub run dev console --" }, 0.562);
-    tl.set("#t-typed", { textContent: "nub run dev console --t" }, 0.584);
-    tl.set("#t-typed", { textContent: "nub run dev console --te" }, 0.606);
-    tl.set("#t-typed", { textContent: "nub run dev console --ter" }, 0.628);
-    tl.set("#t-typed", { textContent: "nub run dev console --term" }, 0.65);
-    tl.set("#t-typed", { textContent: "nub run dev console --termi" }, 0.672);
-    tl.set("#t-typed", { textContent: "nub run dev console --termin" }, 0.694);
-    tl.set("#t-typed", { textContent: "nub run dev console --termina" }, 0.716);
-    tl.set(
-      "#t-typed",
-      { textContent: "nub run dev console --terminal" },
-      0.738,
-    );
-    tl.set("#t-v", { opacity: 1 }, 1.2);
-    tl.set("#t-prompt", { opacity: 0 }, 1.2);
-    tl.set("#t-cur", { opacity: 1 }, 1.2);
-    tl.set("#t-cur", { x: 854.9, y: 485.1, scale: 1 }, 1.2);
-    tl.set("#t-cur", { x: 806.7, y: 439.5, scale: 1 }, 1.233);
-    tl.set("#t-cur", { x: 742.4, y: 379.2, scale: 1 }, 1.267);
-    tl.set("#t-cur", { x: 659.3, y: 301.5, scale: 1 }, 1.3);
-    tl.set("#t-cur", { x: 576.2, y: 223.8, scale: 1 }, 1.333);
-    tl.set("#t-cur", { x: 511.9, y: 163.5, scale: 1 }, 1.367);
-    tl.set("#t-cur", { x: 463.6, y: 117.9, scale: 1 }, 1.4);
-    tl.set("#t-cur", { x: 428.8, y: 84.4, scale: 1 }, 1.433);
-    tl.set("#t-cur", { x: 404.7, y: 63.0, scale: 1 }, 1.467);
-    tl.set("#t-cur", { x: 391.3, y: 49.6, scale: 1 }, 1.5);
-    tl.set("#t-cur", { x: 383.2, y: 42.9, scale: 0.86 }, 1.533);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 0.86 }, 1.567);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 0.86 }, 1.6);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 0.86 }, 1.633);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.667);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.7);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.733);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.767);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.8);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.833);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.867);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.9);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.933);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 1.967);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.0);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.033);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.067);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.1);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.133);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.167);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.2);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.233);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.267);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.3);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.333);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.367);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.4);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.433);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.467);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.5);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.533);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.567);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.6);
-    tl.set("#t-cur", { x: 380.6, y: 40.2, scale: 1 }, 2.633);
-    tl.set("#t-cur", { x: 385.9, y: 40.2, scale: 1 }, 2.667);
-    tl.set("#t-cur", { x: 398.0, y: 40.2, scale: 1 }, 2.7);
-    tl.set("#t-cur", { x: 422.1, y: 40.2, scale: 1 }, 2.733);
-    tl.set("#t-cur", { x: 461.0, y: 40.2, scale: 1 }, 2.767);
-    tl.set("#t-cur", { x: 518.6, y: 40.2, scale: 1 }, 2.8);
-    tl.set("#t-cur", { x: 600.3, y: 40.2, scale: 1 }, 2.833);
-    tl.set("#t-cur", { x: 707.5, y: 40.2, scale: 1 }, 2.867);
-    tl.set("#t-cur", { x: 846.9, y: 40.2, scale: 1 }, 2.9);
-    tl.set("#t-cur", { x: 986.2, y: 40.2, scale: 1 }, 2.933);
-    tl.set("#t-cur", { x: 1093.4, y: 40.2, scale: 1 }, 2.967);
-    tl.set("#t-cur", { x: 1175.2, y: 40.2, scale: 1 }, 3.0);
-    tl.set("#t-cur", { x: 1232.8, y: 40.2, scale: 1 }, 3.033);
-    tl.set("#t-cur", { x: 1271.7, y: 40.2, scale: 1 }, 3.067);
-    tl.set("#t-cur", { x: 1295.8, y: 40.2, scale: 1 }, 3.1);
-    tl.set("#t-cur", { x: 1307.8, y: 40.2, scale: 0.86 }, 3.133);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 0.86 }, 3.167);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 0.86 }, 3.2);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 0.86 }, 3.233);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.267);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.3);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.333);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.367);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.4);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.433);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.467);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.5);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.533);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.567);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.6);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.633);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.667);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.7);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.733);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.767);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.8);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.833);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.867);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.9);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.933);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 3.967);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.0);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.033);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.067);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.1);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.133);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.167);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.2);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.233);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.267);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.3);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.333);
-    tl.set("#t-cur", { x: 1313.2, y: 40.2, scale: 1 }, 4.367);
+    tl.set("#t-ssh", { textContent: "s" }, 0.1);
+    tl.set("#t-ssh", { textContent: "ss" }, 0.12);
+    tl.set("#t-ssh", { textContent: "ssh" }, 0.14);
+    tl.set("#t-ssh", { textContent: "ssh " }, 0.16);
+    tl.set("#t-ssh", { textContent: "ssh g" }, 0.18);
+    tl.set("#t-ssh", { textContent: "ssh go" }, 0.2);
+    tl.set("#t-ssh", { textContent: "ssh gon" }, 0.22);
+    tl.set("#t-ssh", { textContent: "ssh gon@" }, 0.24);
+    tl.set("#t-ssh", { textContent: "ssh gon@w" }, 0.26);
+    tl.set("#t-ssh", { textContent: "ssh gon@wh" }, 0.28);
+    tl.set("#t-ssh", { textContent: "ssh gon@wha" }, 0.3);
+    tl.set("#t-ssh", { textContent: "ssh gon@whal" }, 0.32);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale" }, 0.34);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-" }, 0.36);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-i" }, 0.38);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-is" }, 0.4);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-isl" }, 0.42);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-isla" }, 0.44);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-islan" }, 0.46);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-island" }, 0.48);
+    tl.set("#t-caret1", { opacity: 0 }, 0.56);
+    tl.set("#t-login", { opacity: 1 }, 0.56);
+    tl.set("#t-runline", { opacity: 1 }, 0.62);
+    tl.set("#t-run", { textContent: "n" }, 0.62);
+    tl.set("#t-run", { textContent: "nu" }, 0.64);
+    tl.set("#t-run", { textContent: "nub" }, 0.66);
+    tl.set("#t-run", { textContent: "nub " }, 0.68);
+    tl.set("#t-run", { textContent: "nub r" }, 0.7);
+    tl.set("#t-run", { textContent: "nub ru" }, 0.72);
+    tl.set("#t-run", { textContent: "nub run" }, 0.74);
+    tl.set("#t-run", { textContent: "nub run " }, 0.76);
+    tl.set("#t-run", { textContent: "nub run d" }, 0.78);
+    tl.set("#t-run", { textContent: "nub run de" }, 0.8);
+    tl.set("#t-run", { textContent: "nub run dev" }, 0.82);
+    tl.set("#t-run", { textContent: "nub run dev " }, 0.84);
+    tl.set("#t-run", { textContent: "nub run dev c" }, 0.86);
+    tl.set("#t-run", { textContent: "nub run dev co" }, 0.88);
+    tl.set("#t-run", { textContent: "nub run dev con" }, 0.9);
+    tl.set("#t-run", { textContent: "nub run dev cons" }, 0.92);
+    tl.set("#t-run", { textContent: "nub run dev conso" }, 0.94);
+    tl.set("#t-run", { textContent: "nub run dev consol" }, 0.96);
+    tl.set("#t-run", { textContent: "nub run dev console" }, 0.98);
+    tl.set("#t-run", { textContent: "nub run dev console " }, 1.0);
+    tl.set("#t-run", { textContent: "nub run dev console -" }, 1.02);
+    tl.set("#t-run", { textContent: "nub run dev console --" }, 1.04);
+    tl.set("#t-run", { textContent: "nub run dev console --t" }, 1.06);
+    tl.set("#t-run", { textContent: "nub run dev console --te" }, 1.08);
+    tl.set("#t-run", { textContent: "nub run dev console --ter" }, 1.1);
+    tl.set("#t-run", { textContent: "nub run dev console --term" }, 1.12);
+    tl.set("#t-run", { textContent: "nub run dev console --termi" }, 1.14);
+    tl.set("#t-run", { textContent: "nub run dev console --termin" }, 1.16);
+    tl.set("#t-run", { textContent: "nub run dev console --termina" }, 1.18);
+    tl.set("#t-run", { textContent: "nub run dev console --terminal" }, 1.2);
+    tl.set("#t-caret3", { opacity: 0 }, 1.3);
+    tl.set("#t-ready", { opacity: 1 }, 1.3);
+    tl.set("#t-v", { opacity: 1 }, 1.55);
+    tl.set("#t-cur", { opacity: 1 }, 1.55);
+    tl.set("#t-cur", { x: 810.7, y: 474.9, scale: 1 }, 1.55);
+    tl.set("#t-cur", { x: 818.8, y: 463.4, scale: 1 }, 1.583);
+    tl.set("#t-cur", { x: 832.6, y: 445.0, scale: 1 }, 1.617);
+    tl.set("#t-cur", { x: 852.1, y: 416.3, scale: 1 }, 1.65);
+    tl.set("#t-cur", { x: 880.9, y: 377.2, scale: 1 }, 1.683);
+    tl.set("#t-cur", { x: 917.7, y: 325.4, scale: 1 }, 1.717);
+    tl.set("#t-cur", { x: 966.0, y: 258.8, scale: 1 }, 1.75);
+    tl.set("#t-cur", { x: 1014.3, y: 192.0, scale: 1 }, 1.783);
+    tl.set("#t-cur", { x: 1051.1, y: 140.3, scale: 1 }, 1.817);
+    tl.set("#t-cur", { x: 1079.8, y: 101.2, scale: 1 }, 1.85);
+    tl.set("#t-cur", { x: 1099.4, y: 72.4, scale: 1 }, 1.883);
+    tl.set("#t-cur", { x: 1113.2, y: 54.0, scale: 1 }, 1.917);
+    tl.set("#t-cur", { x: 1121.3, y: 42.5, scale: 1 }, 1.95);
+    tl.set("#t-cur", { x: 1124.7, y: 36.8, scale: 0.86 }, 1.983);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 0.86 }, 2.017);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 0.86 }, 2.05);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 0.86 }, 2.083);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.117);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.15);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.183);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.217);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.25);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.283);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.317);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.35);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.383);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.417);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.45);
+    tl.set("#t-cur", { x: 1127.0, y: 34.5, scale: 1 }, 2.483);
+    tl.set("#t-cur", { x: 1122.4, y: 34.5, scale: 1 }, 2.517);
+    tl.set("#t-cur", { x: 1112.0, y: 34.5, scale: 1 }, 2.55);
+    tl.set("#t-cur", { x: 1091.3, y: 34.5, scale: 1 }, 2.583);
+    tl.set("#t-cur", { x: 1058.0, y: 34.5, scale: 1 }, 2.617);
+    tl.set("#t-cur", { x: 1008.5, y: 34.5, scale: 1 }, 2.65);
+    tl.set("#t-cur", { x: 938.4, y: 34.5, scale: 1 }, 2.683);
+    tl.set("#t-cur", { x: 846.4, y: 34.5, scale: 1 }, 2.717);
+    tl.set("#t-cur", { x: 726.8, y: 34.5, scale: 1 }, 2.75);
+    tl.set("#t-cur", { x: 607.2, y: 34.5, scale: 1 }, 2.783);
+    tl.set("#t-cur", { x: 515.2, y: 34.5, scale: 1 }, 2.817);
+    tl.set("#t-cur", { x: 445.0, y: 34.5, scale: 1 }, 2.85);
+    tl.set("#t-cur", { x: 395.6, y: 34.5, scale: 1 }, 2.883);
+    tl.set("#t-cur", { x: 362.3, y: 34.5, scale: 1 }, 2.917);
+    tl.set("#t-cur", { x: 341.5, y: 34.5, scale: 1 }, 2.95);
+    tl.set("#t-cur", { x: 331.2, y: 34.5, scale: 1 }, 2.983);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.017);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.05);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.083);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.117);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.15);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.183);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.217);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.25);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.283);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.317);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.35);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.383);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.417);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.45);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 0.86 }, 3.483);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 0.86 }, 3.517);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 0.86 }, 3.55);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 0.86 }, 3.583);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.617);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.65);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.683);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.717);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.75);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.783);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.817);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.85);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.883);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.917);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.95);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 3.983);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 4.017);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 4.05);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 4.083);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 4.117);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 4.15);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 4.183);
+    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 4.217);
     tl.set({}, {}, 4.55);
     window.__timelines = window.__timelines || {};
     window.__timelines["terminal"] = tl;
