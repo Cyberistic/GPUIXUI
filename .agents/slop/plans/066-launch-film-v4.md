@@ -82,3 +82,46 @@ frames. Score: re-use `sound/piano.ts`, retimed if needed.
 
 - Any take that shows a broken component (like the v3 Tabs) is fixed in the
   library or dropped, never shipped.
+
+## Stageshow (owner, 2026-11-01: "just use the skill of stageshow")
+
+Two shots are built with the stageshow skill (`~/GPUIXUI/references/benjitaylor-skills/stageshow`,
+MIT), following its SKILL.md workflow: plan, film the closest gold, copy its
+structure, rehearse with `scripts/film.mjs --gate`. Every product picture inside
+a stage is **real GPUix footage** (a take's frames, played on the stage's own
+clock); the stage draws only the page, the tiles, the copy and the motion. No
+component is drawn in DOM and presented as the library.
+
+### Bento (9–13 s) — gold `bento` (hero and strip)
+
+| Tile | Span | Kind | The one thing | Words |
+| --- | --- | --- | --- | --- |
+| Blocks | 2 × 1 | Hero UI | the stats block, Month pressed, window off the right edge | **Every block, native.** Painted by GPUI, written in React. |
+| Count | 1 × 1 | Stat (dark) | the real component count, counting up | "components" + one line |
+| Switch | 1 × 1 | Component | the Wi-Fi switch close-up, pressed | **shadcn's API.** The props you know. |
+| Slang | 1 × 1 | Component | Slang's keypad, 7 × 6 = 42 | **Slang.** A calculator built on it. |
+| Platforms | 1 × 1 | Diagram | macOS, Windows, Linux, Terminal chips, lines drawing into one GPUI node | **One tree, everywhere.** |
+
+One window in the grid (the hero's). Tiles play one beat each, 110 ms apart.
+
+### Assemble (13–17 s) — gold `subscriptions` (`Fly`)
+
+The stats screen's blueprint (`boxes.json`: every painted box, blue outlines on
+the paper ground) draws in reading order; then the screen's real cards, cropped
+from its native frame, fly in from below the stage with `Fly` and land in their
+slots one by one (KPI row, bars, ring, line), 160 ms apart; the payoff holds.
+The film then cuts on the beat to the live stats take.
+
+### Files
+
+```
+media/launch/stage/
+  setup.sh          copy the skill into .media/stageshow, npm ci, link our scenes
+  scenes/bento/     index.tsx + bento.css
+  scenes/assemble/  index.tsx + assemble.css
+  record/           index.html + main.tsx: installVirtualClock(30 fps), one scene at 1920×1080
+  record.mjs        playwright-core: step the clock a frame, screenshot, repeat
+```
+
+`npm ci` in the copied skill is its documented install (its own lockfile); it
+runs only inside the gitignored `.media/`.
