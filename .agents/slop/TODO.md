@@ -24979,3 +24979,18 @@ green; the site deployed and all 195 sitemap pages answer 200.
       `~/.local/state/omarchy/current/theme/colors.toml` →
       `decodeOmarchyPalette` → `paletteToTokens` — with the measured-on-macOS
       caveat stated on the page.
+
+## History rewrite (2026-11-01)
+
+`[x]` Remove the 49 `Co-Authored-By: Claude` trailers from public history. The
+      account was never on GitHub's contributors list (it lists `Cyberistic` and
+      `benjivdbrand`), but every one of those commits displayed the trailer.
+      Rewrote those 49 messages — and the hash of every descendant — in a mirror
+      clone with `git filter-repo`, then force-pushed `master` and
+      `agent/launch-film` (the only refs that carried them). The four local
+      branches that contain the range (`master`, `agent/launch-film`,
+      `agent/calculator`, `agent/repo-cleanup`) now point at the rewritten
+      commits; trees are byte-identical, so every working tree and uncommitted
+      change survived. Backup before the rewrite:
+      `/tmp/gpuiui-pre-rewrite.bundle`. Trailer text now lives only in local
+      stashes, which are never pushed.
