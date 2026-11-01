@@ -1273,8 +1273,6 @@
   text-underline-offset: 2px;
 }
 
-
-
 .landing-recipe:hover {
   border-color: var(--accent);
 }
@@ -1313,21 +1311,22 @@
 }
 
 /* ---- the stage: one window, one action ---- */
+/* The stage crops the window at its foot instead of framing it whole: a
+   product shot, not a screenshot pasted into a card. */
 .landing-stage {
   position: relative;
-  margin: 32px 0 0;
-  padding: 44px 24px 72px;
+  height: 360px;
+  margin: 40px 0 0;
   overflow: hidden;
-  border: 1px solid var(--line-strong);
-  border-radius: 20px;
-  background:
-    radial-gradient(80% 70% at 20% 0%, var(--accent-soft, #1d2a44) 0%, transparent 60%),
-    linear-gradient(160deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
 .landing-stage-window {
-  width: min(560px, 100%);
-  margin: 0 auto;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(720px, 100%);
+  margin: 0;
+  transform: translateX(-50%);
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: 12px;
@@ -1376,7 +1375,9 @@
   font-size: 10px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 
 .landing-stage-status[data-state="building"] {
@@ -1503,8 +1504,8 @@
 
 .landing-stage-toast {
   position: absolute;
-  right: 28px;
-  bottom: 24px;
+  right: max(24px, calc(50% - 336px));
+  bottom: 90px;
   display: flex;
   gap: 6px;
   align-items: center;
@@ -2480,7 +2481,6 @@
     grid-template-columns: 1fr;
   }
 
-  
   .landing-code {
     grid-template-columns: 1fr;
   }
