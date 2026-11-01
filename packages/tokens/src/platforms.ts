@@ -452,18 +452,22 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     syntax: { dark: platformDarkSyntax },
     // Fluent 2's switch: a 40×20px track with a 12px knob at a 4px inset. The
     // off state is a transparent track whose 1px outline is the control's
-    // edge; the white knob carries the state on Fluent's elevation.
+    // edge. WinUI's knob is the secondary text colour while off (`#9E000000`
+    // and `#C5FFFFFF` over the card) and the on-accent text colour once on:
+    // white on the light accent, black on the dark one.
     switch: {
       light: {
         on: "#0078D4",
         off: "transparent",
         knob: "#FFFFFF",
+        knobOff: "#616161",
         edge: "#8A8A8A",
       },
       dark: {
         on: "#4CC2FF",
         off: "transparent",
-        knob: "#FFFFFF",
+        knob: "#000000",
+        knobOff: "#CFCFCF",
         edge: "#8A8A8A",
       },
     },

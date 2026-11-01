@@ -33,7 +33,12 @@
  * held by the gate rather than by a contract a consumer has to remember to run.
  */
 
-import { isPaintableColor, themeColors, type ColourSource } from "./color.js";
+import {
+  isPaintableColor,
+  themeColors,
+  type ColourSource,
+  type ThemeColors,
+} from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import { isControlSize, type ControlSize } from "./scale.js";
@@ -347,6 +352,31 @@ const trackEdge = (
     : declared(paint, "on");
 
 /**
+ * The knob against what is behind it. A transparent off track shows the strip
+ * the switch stands on, so its knob is read on each of those strips (the worst
+ * one counts) — reading it on the track's outline passed a white knob on a
+ * white card. The off knob is `knobOff` when the style paints one.
+ */
+const knobRatio = (
+  paint: Partial<SwitchColors>,
+  track: "on" | "off",
+  colors: Partial<ThemeColors>,
+): number | undefined => {
+  const knob =
+    track === "off"
+      ? (declared(paint, "knobOff") ?? declared(paint, "knob"))
+      : declared(paint, "knob");
+  if (track === "on" || declared(paint, "off") !== "transparent")
+    return contrastRatio(knob, trackEdge(paint, track));
+  const ratios = switchSurfaces.map((surface) =>
+    contrastRatio(knob, colors[surface]),
+  );
+  return ratios.includes(undefined)
+    ? undefined
+    : Math.min(...ratios.filter((ratio) => ratio !== undefined));
+};
+
+/**
  * Every placement a declared switch paints: the knob on each track it can sit
  * in, and each track on the four strips a switch stands on.
  */
@@ -364,7 +394,7 @@ export const switchPlacements: readonly SwitchPlacement[] = [
 /** A declared switch value the renderer cannot paint. */
 export interface InvalidSwitchColor {
   /** Which of the three values, or the off track's optional outline. */
-  readonly slot: SwitchPaintRole | "edge";
+  readonly slot: SwitchPaintRole | OptionalSwitchSlot;
   /**
    * The value as the theme carries it, or `undefined` when the slot is absent —
    * a stored theme older than the slot, which is a different thing from a typo
@@ -442,21 +472,26 @@ const declaredSwitch = (
  */
 const declared = (
   paint: Partial<SwitchColors>,
-  slot: SwitchPaintRole | "edge",
+  slot: SwitchPaintRole | OptionalSwitchSlot,
 ): string | undefined => {
   const value: unknown = paint[slot];
   return typeof value === "string" ? value : undefined;
 };
 
-/** The off track's outline, when the platform draws one, has to paint too. */
-const edgeFailures = (
+/** The slots a style may leave out: the off outline and the off knob. */
+const optionalSwitchSlots = ["edge", "knobOff"] as const;
+type OptionalSwitchSlot = (typeof optionalSwitchSlots)[number];
+
+/** An optional slot a style declares has to paint too. */
+const optionalFailures = (
   paint: Partial<SwitchColors>,
-): ReadonlyArray<InvalidSwitchColor> => {
-  const value: unknown = paint.edge;
-  return value === undefined || isPaintableColor(value)
-    ? []
-    : [{ slot: "edge", value: typeof value === "string" ? value : undefined }];
-};
+): ReadonlyArray<InvalidSwitchColor> =>
+  optionalSwitchSlots.flatMap((slot): ReadonlyArray<InvalidSwitchColor> => {
+    const value: unknown = paint[slot];
+    return value === undefined || isPaintableColor(value)
+      ? []
+      : [{ slot, value: typeof value === "string" ? value : undefined }];
+  });
 
 /** The declared values the renderer cannot paint, in `switchPaintRoles` order. */
 const paintFailures = (
@@ -468,7 +503,7 @@ const paintFailures = (
         ? []
         : [{ slot, value: declared(paint, slot) }],
   ),
-  ...edgeFailures(paint),
+  ...optionalFailures(paint),
 ];
 
 /**
@@ -505,21 +540,15 @@ export function switchFailures(
     paint: paintFailures(paint),
     placements: switchPlacements.flatMap(
       (placement): ReadonlyArray<SwitchPlacementFailure> => {
-        const [top, under] =
+        const ratio =
           placement.slot === "knob"
-            ? [
-                declared(paint, "knob"),
-                // A transparent off track has no fill to read the knob
-                // against; its outline is the surface the knob sits on.
-                trackEdge(paint, placement.over),
-              ]
-            : [
+            ? knobRatio(paint, placement.over, themeColors(theme))
+            : contrastRatio(
                 // An off track whose fill is transparent is carried by its
                 // outline, so that is the silhouette measured on the strip.
                 trackEdge(paint, placement.slot),
                 themeColors(theme)[placement.over],
-              ];
-        const ratio = contrastRatio(top, under);
+              );
         return ratio !== undefined && ratio >= floor
           ? []
           : [{ ...placement, ratio, floor }];

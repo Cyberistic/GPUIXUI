@@ -298,6 +298,7 @@ describe("the Apple platform style", () => {
       on: "#0078D4",
       off: "transparent",
       knob: "#FFFFFF",
+      knobOff: "#616161",
       edge: "#8A8A8A",
     });
     expect(platformStyles.win32.switchMetrics).toEqual({
@@ -321,6 +322,18 @@ describe("the Apple platform style", () => {
     });
     expect(platformStyles.default.switch).toBeUndefined();
   });
+
+  // Regression: the Windows off knob was white on a transparent track, so on a
+  // white card the switch read as an empty outline.
+  it.each(["darwin", "linux", "win32"] as const)(
+    "paints a %s switch that can be found in both modes",
+    (platform) => {
+      for (const base of [lightTheme, darkTheme])
+        expect(
+          switchFailures(platformTheme(base, platform)).placements,
+        ).toEqual([]);
+    },
+  );
 
   it("clears the switch when an authored look is applied over the platform", () => {
     // Luna recolours the chrome; leaving Apple's green toggle in its window
