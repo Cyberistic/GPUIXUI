@@ -1,62 +1,159 @@
 /**
- * The desktops section: the same pipeline block captured from the native
- * renderer in the macOS, Windows 11 and Linux styles — real GPUix frames, not
- * HTML reproductions — behind a platform switch, with the Omarchy claims under
- * it. Omarchy is not a fourth desktop: it is Linux following your own theme.
+ * The hero deck: one platform window per desktop in `landingPlatformOrder`,
+ * each running the **conversations block** in its own dress — macOS Messages,
+ * Windows 11 Fluent and Linux Breeze — so each card is recognisably its
+ * desktop.
+ *
+ * macOS and Windows show on the light palette, Linux on the dark one. The
+ * shuffle pauses on hover; the stack is a clean fan with no rotation.
+ *
+ * Omarchy is not a fourth desktop: it is the Linux desktop following your own
+ * theme, so its claims sit under the deck as four small cards instead of a
+ * fourth window.
  */
-import { useState } from "react";
-import { omarchyCards, platforms } from "./data";
-import type { OmarchyIcon } from "./data";
+import { Fragment, useEffect, useState, type CSSProperties } from "react";
+import {
+  darkTheme,
+  lightTheme,
+  platformTheme,
+  type PlatformName,
+  type Theme,
+} from "@gpuixui/tokens";
+import { toCssVars } from "../../lib/theme-css";
+import { BlockIcon } from "../docs/block-icons";
+import { ConversationWindow } from "../docs/conversations-block";
+import {
+  platforms,
+  omarchyCards,
+  countWord,
+  landingLookCount,
+  repo,
+} from "./data";
+import type { OmarchyIcon, Platform } from "./data";
+import { usePrefersReducedMotion } from "./reduced-motion";
 
-/** The captures `nub run --filter @gpuixui/blocks capture` wrote, by platform. */
-const shotOf: Readonly<Record<(typeof platforms)[number]["id"], string>> = {
-  macos: "/media/landing/desktop-darwin.webp",
-  windows: "/media/landing/desktop-win32.webp",
-  linux: "/media/landing/desktop-linux.webp",
+const SHUFFLE_MS = 1600;
+
+/** The library's platform name for a landing card. */
+const platformOfDesktop: Readonly<Record<Platform["id"], PlatformName>> = {
+  macos: "darwin",
+  windows: "win32",
+  linux: "linux",
 };
 
-export function Desktops() {
-  const [shown, setShown] = useState<(typeof platforms)[number]["id"]>("macos");
+/** The theme a card paints: Linux on the dark palette, the others on light. */
+const desktopTheme = (id: Platform["id"]): Theme =>
+  platformTheme(id === "linux" ? darkTheme : lightTheme, platformOfDesktop[id]);
+
+/** The card the shuffle raises next; a pure function so the wrap is testable. */
+export const nextDesktop = (top: number): number =>
+  (top + 1) % platforms.length;
+
+/**
+ * The recipe line: the five things GPUIxUI is made of, read as one equation.
+ *
+ * The hero says what the library looks like; this says what it is built from,
+ * so a reader who knows shadcn or Base UI can place it before scrolling.
+ */
+export function LandingFormula() {
+  const parts = ["GPUI", "React", "shadcn", "Base UI", "Tailwind"] as const;
+
   return (
-    <section className="landing-section landing-desktops" id="desktops">
-      <p className="landing-kicker">Every desktop</p>
-      <h2 className="landing-h2">The same tree, at home everywhere.</h2>
-      <p className="landing-lead">
-        Mac first — and the same components wear Windows 11 and Linux, or follow
-        your Omarchy theme.
-      </p>
-      <div className="landing-switch" role="tablist" aria-label="Desktop">
-        {platforms.map((platform) => (
-          <button
-            aria-selected={platform.id === shown}
-            className="landing-switch-option"
-            data-active={platform.id === shown}
-            key={platform.id}
-            onClick={() => setShown(platform.id)}
-            role="tab"
-            type="button"
-          >
-            <span>{platform.label}</span>
-          </button>
-        ))}
-      </div>
-      <figure className="landing-desktop-shot">
-        <img
-          alt={`The pipeline block in the ${shown} style, captured from the native renderer`}
-          height={700}
-          src={shotOf[shown]}
-          width={1100}
-        />
-        <figcaption>
-          Captured from the GPUix renderer, offscreen — no window server, so no
-          blur or window buttons.
-        </figcaption>
-      </figure>
-      <OmarchyStrip />
-    </section>
+    <p className="landing-formula">
+      {parts.map((part, index) => (
+        <Fragment key={part}>
+          {index > 0 ? (
+            <span aria-hidden="true" className="landing-formula-op">
+              +
+            </span>
+          ) : null}
+          <span className="landing-formula-part">{part}</span>
+        </Fragment>
+      ))}
+      <span aria-hidden="true" className="landing-formula-op">
+        =
+      </span>
+      <span className="landing-formula-result">GPUIxUI</span>
+    </p>
   );
 }
 
+export function Hero() {
+  const [top, setTop] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const reduced = usePrefersReducedMotion();
+
+  useEffect(() => {
+    if (paused || reduced) return;
+    const timer = setInterval(() => setTop(nextDesktop), SHUFFLE_MS);
+    return () => clearInterval(timer);
+  }, [paused, reduced]);
+
+  const select = (index: number) => {
+    setTop(index);
+    setPaused(true);
+  };
+
+  return (
+    <header className="landing-hero">
+      <h1 className="landing-title">
+        One library.
+        <br />
+        {countWord(landingLookCount)} native <em>looks</em>.
+      </h1>
+
+      <p className="landing-sub">
+        Components that run on GPUix, styled to feel at home on macOS, Windows
+        11 and Linux — with the source in your hands.
+      </p>
+
+      <LandingFormula />
+
+      <div className="landing-actions">
+        <a className="landing-btn landing-btn-primary" href="/getting-started">
+          Get started
+        </a>
+        <a
+          className="landing-btn landing-btn-ghost"
+          href={repo}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          GitHub
+        </a>
+      </div>
+
+      <div className="landing-switch-row">
+        <PlatformSwitch onChange={select} value={top} />
+      </div>
+
+      <div
+        className="landing-deck"
+        onBlur={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        {platforms.map((platform, index) => (
+          <PlatformMini
+            key={platform.id}
+            platform={platform}
+            position={(index - top + platforms.length) % platforms.length}
+          />
+        ))}
+      </div>
+
+      <OmarchyStrip />
+    </header>
+  );
+}
+
+/**
+ * The four claims Omarchy makes, under the deck.
+ *
+ * They sit where the fourth desktop stood: same width as the deck, four small
+ * cards in one row on a desktop and two columns on a phone.
+ */
 function OmarchyStrip() {
   return (
     <div className="landing-omarchy">
@@ -131,3 +228,229 @@ function OmarchyGlyph({ name }: { name: OmarchyIcon }) {
  * The desktop's app tiles. Decorative only: the dock and taskbar are
  * illustration, not controls.
  */
+const DOCK_TONES = [
+  "sky",
+  "teal",
+  "amber",
+  "rose",
+  "violet",
+  "green",
+  "graphite",
+  "orange",
+  "blue",
+] as const;
+
+const WINDOW_TONES = ["blue", "green", "amber", "sky"] as const;
+
+/** One platform desktop, with the conversations block floating on it. */
+function PlatformMini({
+  platform,
+  position,
+}: {
+  platform: Platform;
+  position: number;
+}) {
+  const style = { ...toCssVars(desktopTheme(platform.id)) } as CSSProperties;
+
+  return (
+    <div
+      className={`landing-window landing-desktop landing-desktop-${platform.chrome}`}
+      data-desktop={platform.id}
+      data-pos={position}
+      style={style}
+    >
+      <span
+        aria-hidden="true"
+        className={`landing-wall landing-wall-${platform.chrome}`}
+      />
+      {platform.id === "macos" ? <MacMenuBar /> : null}
+      {platform.id === "linux" ? <LinuxPanel /> : null}
+
+      <div className="landing-desktop-stage">
+        <ConversationWindow platform={platform.id} />
+      </div>
+
+      {platform.id === "windows" ? <WindowsTaskbar /> : null}
+      {platform.id === "linux" ? <LinuxDock /> : null}
+      {platform.id === "macos" ? <MacDock /> : null}
+    </div>
+  );
+}
+
+/** macOS: the thin menu bar and the translucent dock. */
+function MacMenuBar() {
+  return (
+    <div aria-hidden="true" className="landing-menubar">
+      <span className="landing-menubar-left">
+        <AppleGlyph />
+        <b>Finder</b>
+        <span className="landing-menubar-menu">File</span>
+        <span className="landing-menubar-menu">Edit</span>
+        <span className="landing-menubar-menu">View</span>
+      </span>
+      <span className="landing-menubar-right">
+        <WifiGlyph />
+        <BatteryGlyph />
+        <span>Mon 9:41 AM</span>
+      </span>
+    </div>
+  );
+}
+
+function MacDock() {
+  return (
+    <div aria-hidden="true" className="landing-dock landing-dock-mac">
+      {DOCK_TONES.map((tone) => (
+        <i className="landing-dock-tile" data-tone={tone} key={tone} />
+      ))}
+      <span className="landing-dock-sep" />
+      <i className="landing-dock-tile" data-tone="trash" />
+    </div>
+  );
+}
+
+/** Windows 11: the centred acrylic taskbar. */
+function WindowsTaskbar() {
+  return (
+    <div aria-hidden="true" className="landing-taskbar">
+      <span className="landing-taskbar-start">
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+      <span className="landing-taskbar-search">
+        <BlockIcon name="search" size={11} />
+        <span>Search</span>
+      </span>
+      <span className="landing-taskbar-apps">
+        {WINDOW_TONES.map((tone) => (
+          <i className="landing-dock-tile" data-tone={tone} key={tone} />
+        ))}
+      </span>
+      <span className="landing-taskbar-clock">
+        <b>10:32 AM</b>
+        <span>10/26/2026</span>
+      </span>
+    </div>
+  );
+}
+
+/** Linux: the top panel and the floating dock. */
+function LinuxPanel() {
+  return (
+    <div aria-hidden="true" className="landing-lnx-panel">
+      <span className="landing-lnx-panel-left">
+        <b>Applications</b>
+        <span>Tour</span>
+      </span>
+      <span className="landing-lnx-panel-clock">Sat, Nov 6 · 10:46 AM</span>
+      <span className="landing-lnx-panel-tray">
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+    </div>
+  );
+}
+
+function LinuxDock() {
+  return (
+    <div aria-hidden="true" className="landing-dock landing-dock-lnx">
+      {DOCK_TONES.slice(0, 8).map((tone) => (
+        <i className="landing-dock-tile" data-tone={tone} key={tone} />
+      ))}
+      <span className="landing-dock-sep" />
+      <i className="landing-dock-tile" data-tone="trash" />
+    </div>
+  );
+}
+
+/** The menu bar's marks; the desktop is decoration, not iconography. */
+function AppleGlyph() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-menubar-glyph"
+      viewBox="0 0 24 24"
+    >
+      <path
+        d="M15.5 8.5c-1 0-2 .6-2.7.6-.8 0-1.7-.6-2.8-.6-1.4 0-2.7.8-3.4 2.1-1.5 2.5-.4 6.3 1 8.3.7 1 1.6 2.1 2.8 2.1 1.1 0 1.5-.7 2.9-.7 1.3 0 1.7.7 2.9.7 1.2 0 2-1.1 2.7-2.1.5-.8.9-1.6 1.1-2.5-2.3-.9-2.7-4.2-.4-5.5-.8-1.4-2.2-2.4-3.6-2.4ZM14.6 6.8c.6-.8 1-1.8.9-2.8-1 .1-2.1.6-2.8 1.4-.6.7-1 1.7-.9 2.7 1 0 2.1-.5 2.8-1.3Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function WifiGlyph() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-menubar-glyph"
+      viewBox="0 0 24 24"
+    >
+      <path
+        d="M4 9a12 12 0 0 1 16 0M7 12.5a8 8 0 0 1 10 0M10 16a3.5 3.5 0 0 1 4 0"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function BatteryGlyph() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-menubar-glyph"
+      viewBox="0 0 26 24"
+    >
+      <rect
+        fill="none"
+        height="10"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        width="18"
+        x="2"
+        y="7"
+      />
+      <rect fill="currentColor" height="6" rx="1" width="12" x="4" y="9" />
+      <rect fill="currentColor" height="4" rx="1" width="2" x="21" y="10" />
+    </svg>
+  );
+}
+
+function PlatformSwitch({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (index: number) => void;
+}) {
+  return (
+    <fieldset className="landing-switch">
+      <legend className="landing-sr">Choose platform</legend>
+      {platforms.map((platform, index) => (
+        <label
+          className="landing-switch-option"
+          data-active={index === value}
+          key={platform.id}
+        >
+          <input
+            checked={index === value}
+            name="platform"
+            onChange={() => onChange(index)}
+            type="radio"
+            value={platform.id}
+          />
+          <span>{platform.label}</span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}

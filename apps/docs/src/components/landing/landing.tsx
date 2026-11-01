@@ -1,14 +1,15 @@
 import { useTheme } from "fumadocs-ui/provider/base";
 import { flushSync } from "react-dom";
+import { retroNames, retroStyles, type RetroName } from "@gpuixui/tokens";
 import { HighlightedCode } from "@/components/highlighted-code";
 import { mainContentId } from "../skip-link";
-import { BlocksStrip } from "./blocks-strip";
-import { Desktops } from "./deck";
-import { Feel } from "./feel";
-import { Hero } from "./hero";
-import { Proof } from "./proof";
+import { Hero } from "./deck";
+import { Lineage } from "./lineage";
+import { Terminal } from "./terminal";
 import { demos } from "../docs/demos";
-import { navLinks, repo } from "./data";
+import { DashboardManagementRender } from "../docs/dashboard-management";
+import { DashboardRender } from "../docs/dashboard";
+import { countWord, navLinks, repo } from "./data";
 
 export function Landing() {
   return (
@@ -17,12 +18,12 @@ export function Landing() {
         <Nav />
         <main id={mainContentId} tabIndex={-1}>
           <Hero />
-          <Proof />
-          <Feel />
-          <BlocksStrip />
+          <Dashboard />
+          <Management />
+          <Terminal />
+          <Lineage />
+          <Defaults />
           <CodeAndComponent />
-          <Desktops />
-          <RunItLive />
           <Footer />
         </main>
       </div>
@@ -119,25 +120,111 @@ function MoonIcon() {
   );
 }
 
-function RunItLive() {
+/**
+ * The management console, the second full-window composition on the page.
+ *
+ * It is the same recipe the blocks page documents, rendered in the browser: the
+ * landing has no native host, so the preview is HTML over the theme's roles.
+ */
+export function Management() {
   return (
-    <section className="landing-section landing-live" id="live">
-      <h2 className="landing-h2">Run the renderer in this tab.</h2>
+    <section
+      className="landing-section landing-management-section"
+      id="management"
+    >
+      <p className="landing-kicker">The console</p>
+      <h2 className="landing-h2">Every deploy, one screen.</h2>
       <p className="landing-lead">
-        GPUix&apos;s own WebAssembly build paints a library control in your
-        browser — the real renderer, not a reproduction.
+        A management console composed from the same parts — service health,
+        deploys, toasts, an API-key table and a context menu. The recipe lives
+        on the <a href="/blocks/dashboard-management">blocks page</a>.
       </p>
-      <a className="landing-btn landing-btn-ghost" href="/live">
-        Open the live surface (19 MB)
-      </a>
+      <div className="landing-dashboard landing-management">
+        <DashboardManagementRender />
+      </div>
+      <p className="landing-dashboard-caption">
+        Browser preview of the native composition · the shipped window renders
+        through GPUix, not the DOM.
+      </p>
+    </section>
+  );
+}
+
+function Dashboard() {
+  return (
+    <section
+      className="landing-section landing-dashboard-section"
+      id="dashboard"
+    >
+      <p className="landing-kicker">The product</p>
+      <h2 className="landing-h2">One window, every stat.</h2>
+      <p className="landing-lead">
+        A dashboard composed from the library's parts — cards, badges, progress,
+        search and charts. This is a browser rendering of the same{" "}
+        <code>@gpuixui/*</code> tree the native runtime draws; the recipe lives
+        on the <a href="/blocks/dashboard">blocks page</a>.
+      </p>
+      <div className="landing-dashboard">
+        <DashboardRender />
+      </div>
+      <p className="landing-dashboard-caption">
+        Browser preview of the native composition · the shipped window renders
+        through GPUix, not the DOM.
+      </p>
+    </section>
+  );
+}
+
+/** What each authored look repaints, in the order `retroNames` names them. */
+const lookBodies: Readonly<Record<RetroName, string>> = {
+  luna: "The 2001 beige, its blue selection and warm chrome.",
+  aero: "Glass-blue greys and a highlight that reads on every surface.",
+  omarchy: "Tokyo Night ink and Flexoki paper, read from your active theme.",
+};
+
+const recipes = retroNames.map((look) => ({
+  id: look,
+  name: retroStyles[look].label,
+  body: lookBodies[look],
+  facts: `${retroStyles[look].density} · ${retroStyles[look].radius.md}px corners · ${retroStyles[look].mono}`,
+  href: "https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md#authored-looks",
+}));
+
+export function Defaults() {
+  return (
+    <section className="landing-section" id="platforms">
+      <p className="landing-kicker">Defaults, then make them yours</p>
+      <h2 className="landing-h2">
+        {countWord(retroNames.length)} authored looks, one starting point.
+      </h2>
+      <p className="landing-lead">
+        Each platform ships its own default — the same component in native
+        chrome and type. The library also ships authored looks over that base:
+        copy their values, edit them and ship your own style.
+      </p>
+
+      <div className="landing-recipes">
+        {recipes.map((item) => (
+          <a
+            className="landing-panel landing-recipe"
+            data-look={item.id}
+            href={item.href}
+            key={item.id}
+          >
+            <h3>{item.name}</h3>
+            <p>{item.body}</p>
+            <span className="landing-stat">{item.facts}</span>
+          </a>
+        ))}
+      </div>
     </section>
   );
 }
 
 function CodeAndComponent() {
-  const demo = demos["segmented-control-demo"];
+  const demo = demos["tabs-demo"];
   if (demo === undefined) {
-    throw new Error('CodeAndComponent: no demo named "segmented-control-demo"');
+    throw new Error('CodeAndComponent: no demo named "tabs-demo"');
   }
   // A demo is an element, not a call: `demo.render()` would run its hooks as
   // this section's own.
@@ -148,8 +235,9 @@ function CodeAndComponent() {
       <p className="landing-kicker">Code, rendered</p>
       <h2 className="landing-h2">The code and the component.</h2>
       <p className="landing-lead">
-        The API you read is the API you ship. A Mac segmented control — the
-        arrows select as they move — next to the component it renders.
+        The API you read is the API you ship. A Tabs composition — compound
+        parts, typed triggers, keyboard navigation — next to the component it
+        renders.
       </p>
 
       <div className="landing-code">
@@ -164,18 +252,12 @@ function CodeAndComponent() {
       </div>
 
       <p className="landing-code-caption">
-        <a href="/components/segmented-control">Segmented control</a> — browser
+        <a href="/components/tabs">Tabs</a> — a compound-part component; browser
         preview of the native geometry and palette.
       </p>
     </section>
   );
 }
-
-/** The maker's line at the very bottom of the landing. */
-export const credit = {
-  handle: "@sudo_kw",
-  href: "https://sudokw.com",
-} as const;
 
 function Footer() {
   return (
@@ -185,14 +267,8 @@ function Footer() {
         Tailwind&apos;s syntax, drawn by GPUI.
       </span>
       <a href={repo} rel="noopener noreferrer" target="_blank">
-        Source
+        source
       </a>
-      <p className="landing-credit">
-        Made with ☕ by{" "}
-        <a href={credit.href} rel="noopener noreferrer" target="_blank">
-          {credit.handle}
-        </a>
-      </p>
     </footer>
   );
 }

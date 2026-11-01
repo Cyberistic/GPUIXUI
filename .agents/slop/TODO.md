@@ -24994,3 +24994,13 @@ green; the site deployed and all 195 sitemap pages answer 200.
       change survived. Backup before the rewrite:
       `/tmp/gpuiui-pre-rewrite.bundle`. Trailer text now lives only in local
       stashes, which are never pushed.
+
+## Landing restored (2026-11-01)
+
+`[x]` Put back the landing that preceded the plan-727 rebuild
+      (`7e643c375^`): hero deck, dashboard and management sections, terminal,
+      lineage, defaults and the code/component pair, with the old stylesheet.
+      The rebuild's `hero`, `proof`, `feel` and `blocks-strip` modules are gone.
+      The footer's reference list stays retired (commit `96f44be72`), and the
+      reader-facing sentence now says what the library is built on. Landing
+      tests 32/32 and `check-types` clean; deployed.
