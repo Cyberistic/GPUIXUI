@@ -127,7 +127,8 @@ export type {
   CheckboxItemState,
 } from "./CheckboxGroup.js";
 
-export type { GroupItemProps, GroupOption } from "./group.js";
+export type { GroupItemProps, GroupOption, TypeAhead } from "./group.js";
+export { useTypeAhead } from "./group.js";
 
 export { Switch, SwitchThumb } from "./Switch.js";
 export type { SwitchProps, SwitchState, SwitchThumbProps } from "./Switch.js";

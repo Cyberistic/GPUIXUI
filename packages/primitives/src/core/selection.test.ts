@@ -404,6 +404,16 @@ describe("a stored switch paint", () => {
     );
   });
 
+  it("paints the off knob a declared switch table carries", () => {
+    // The bug guarded: the knob was one colour in both states, so Windows'
+    // white knob vanished on the transparent off track over a white card.
+    const windows = platformTheme(lightTheme, "win32");
+    expect(switchThumbStyle(spec(), windows).backgroundColor).toBe("#616161");
+    expect(
+      switchThumbStyle(spec({ state: "checked" }), windows).backgroundColor,
+    ).toBe("#FFFFFF");
+  });
+
   it("keeps the edge a declared switch table carries", () => {
     // The bug guarded: the seam rebuilt a declared table from `on`/`off`/`knob`
     // and dropped `edge`, so a style whose boundary *is* the edge lost it —

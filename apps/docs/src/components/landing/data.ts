@@ -69,11 +69,3 @@ export const navLinks = [
   { label: "Blocks", href: "/blocks/all" },
   { label: "Live", href: "/live" },
 ] as const;
-
-export const attribution = [
-  "shadcn/ui",
-  "base-gpui",
-  "adabraka-ui",
-  "GPUI Kit",
-  "Omarchy",
-] as const;

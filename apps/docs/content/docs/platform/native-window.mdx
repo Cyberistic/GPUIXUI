@@ -32,7 +32,9 @@ render(<App />, { title: "Mail", ...nativeWindowOptions(theme, currentPlatform) 
 | Prop | Type | Default | Consequence |
 | --- | --- | --- | --- |
 | `sidebar` | `ReactNode` | none | runs under the lights; without one the toolbar reserves their 78-point box |
-| `sidebarWidth` | `number` | `220` | fixed; compose a `SplitPane` (`/dock/split-pane`) for a resizable one |
+| `sidebarWidth` | `number` | `220` | the starting width; drag the sidebar's hairline or focus it and use ←/→/Home/End |
+| `sidebarMinWidth` / `sidebarMaxWidth` | `number` | `180` / `360` | the drag's bounds; equal bounds fix the width |
+| `onSidebarWidthChange` | `(width) => void` | none | reports each new width, to persist it |
 | `toolbar` | `ReactNode` | none | usually a `WindowToolbar` |
 | `toolbarStyle` | `"unified" \| "compact"` | `"unified"` | 52 or 38 points tall |
 | `inspector` | `ReactNode` | none | a trailing opaque pane, `inspectorWidth` wide (260) |
@@ -42,7 +44,9 @@ render(<App />, { title: "Mail", ...nativeWindowOptions(theme, currentPlatform) 
 
 `SourceList` is the sidebar's list: 28-point rows with an icon, a label and a
 count, titled sections, and one tab stop. ↑/↓/Home/End move the choice and stop
-at either end. As on macOS, a row paints **no hover wash**, and the chosen row is
+at either end, and typing a label's first letters jumps to it. A titled section
+with `collapsible` folds from its header (`defaultCollapsed` starts it folded);
+a folded section's rows leave the keyboard's path too. As on macOS, a row paints **no hover wash**, and the chosen row is
 emphasized (the accent fill) only while the list holds focus.
 
 ## Following the Mac

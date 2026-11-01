@@ -68,6 +68,7 @@ import { colorRole, controlSize } from "../core/theme.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
 import { Icon } from "@gpuixui/icons";
+import { elevationShadow } from "@gpuixui/tokens";
 import {
   selectContentClass,
   selectItemClass,
@@ -253,7 +254,49 @@ export interface SelectProps
   readonly itemTestId?: (value: string) => string;
 }
 
-/** The trigger is the field chrome with the value pushed to the far edge. */
+/**
+ * The trigger's open affordance (plan 731). The web's select ends in a down
+ * chevron; AppKit's pop-up button in the up/down pair on an accent capsule. It
+ * is a picture, never the target: the press is the trigger's.
+ */
+export const SelectIndicator = ({
+  theme,
+}: {
+  readonly theme: PrimitiveTheme;
+}) => {
+  // A role a stored theme lost paints no mark rather than the runtime's own.
+  const capsule = colorRole(theme, "primary");
+  const ink = colorRole(theme, "primaryForeground");
+  const quiet = colorRole(theme, "mutedForeground");
+  if (theme.interaction === "appkit") {
+    return capsule === undefined || ink === undefined ? null : (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 16,
+          height: 16,
+          flexShrink: 0,
+          borderRadius: 4,
+          backgroundColor: capsule,
+          pointerEvents: "none",
+        }}
+      >
+        <Icon name="chevrons-up-down" size="xs" color={ink} />
+      </div>
+    );
+  }
+  return quiet === undefined ? null : (
+    <Icon name="chevron-down" size="sm" color={quiet} />
+  );
+};
+
+/**
+ * The trigger is the field chrome with the value pushed to the far edge. On an
+ * AppKit theme it is a pop-up button instead: a raised face — the card fill and
+ * the small lift — rather than a sunken field.
+ */
 export const selectTriggerStyle = (
   spec: ControlSpec,
   theme: PrimitiveTheme,
@@ -269,6 +312,12 @@ export const selectTriggerStyle = (
   );
   return (state) => {
     let style = mergeStyle(resolved.style, keepContent);
+    if (theme.interaction === "appkit") {
+      style = mergeStyle(style, {
+        backgroundColor: colorRole(theme, "card"),
+        boxShadow: elevationShadow(theme, "sm"),
+      });
+    }
     // GPUix's `SelectValue` paints its fallback inside the trigger, so the
     // trigger's own colour is what a placeholder inherits. Without this an
     // empty select paints its hint in the value role and reads as chosen.
@@ -551,6 +600,7 @@ export const renderSelect = (
         style={selectTriggerStyle(spec, theme, triggerStyle)}
       >
         <SelectValue placeholder={placeholder} />
+        <SelectIndicator theme={theme} />
       </SelectTrigger>
       <SelectContent
         ref={scroller}

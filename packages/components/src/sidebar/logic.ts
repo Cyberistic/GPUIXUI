@@ -31,6 +31,13 @@ export const SIDEBAR_WIDTH = 256;
 /** shadcn's `3rem`, the icon rail. */
 export const SIDEBAR_WIDTH_ICON = 48;
 
+/** shadcn's `size-8`, one row in the icon rail. */
+export const SIDEBAR_ICON_ROW = 32;
+
+/** The side padding that centres an icon row in a rail `iconWidth` wide. */
+export const railPadding = (iconWidth: number): number =>
+  Math.max(0, (iconWidth - SIDEBAR_ICON_ROW) / 2);
+
 /** shadcn's `18rem`, the mobile sheet. */
 export const SIDEBAR_WIDTH_MOBILE = 288;
 

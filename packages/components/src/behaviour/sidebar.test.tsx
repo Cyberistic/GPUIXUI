@@ -305,9 +305,11 @@ describe("Sidebar", () => {
     expect(requireBounds(root, "user-menu-trigger").width).toBe(32);
 
     clickCentreOf(root, "user-menu-trigger");
+    // This workspace wires no menu action, so the open menu is its identity
+    // header alone (the menu paints only the rows a caller handles, #1).
     await waitFor(() => {
       settle(root);
-      requireBounds(root, "user-menu-upgrade");
+      requireBounds(root, "user-menu-content");
     });
     expect(
       root.renderer.findByTestId("user-menu-trigger")?.customProps,

@@ -129,6 +129,7 @@ import {
 import {
   collapsibleOf,
   isMobileWidth,
+  railPadding,
   sidebarGap,
   sidebarInsetBox,
   sidebarOffset,
@@ -136,6 +137,7 @@ import {
   sideOf,
   skeletonWidth,
   variantOf,
+  SIDEBAR_ICON_ROW,
   SIDEBAR_KEYBOARD_SHORTCUT,
   SIDEBAR_WIDTH,
   SIDEBAR_WIDTH_ICON,
@@ -219,6 +221,14 @@ const positiveWidth = (value: number | undefined, fallback: number): number =>
 /** Whether the panel is collapsed to icons. */
 const iconCollapsed = (context: SidebarContextValue): boolean =>
   context.state === "collapsed" && context.collapsible === "icon";
+
+/** In the icon rail a block's rows are centred from the rail's own width. */
+const useRailPadding = () => {
+  const context = useSidebar();
+  if (!iconCollapsed(context)) return undefined;
+  const pad = railPadding(context.iconWidth);
+  return { paddingLeft: pad, paddingRight: pad };
+};
 
 /** The layout a part paints from. */
 const layoutOf = (context: SidebarContextValue) => ({
@@ -771,12 +781,14 @@ export const SidebarHeader = ({
   ...rest
 }: SidebarHeaderProps) => {
   const theme = useTheme();
+  const rail = useRailPadding();
   return (
     <div
       {...rest}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(SIDEBAR_HEADER, className), theme), {
           flexShrink: 0,
+          ...rail,
         }),
         style,
       )}
@@ -797,12 +809,14 @@ export const SidebarFooter = ({
   ...rest
 }: SidebarFooterProps) => {
   const theme = useTheme();
+  const rail = useRailPadding();
   return (
     <div
       {...rest}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(SIDEBAR_FOOTER, className), theme), {
           flexShrink: 0,
+          ...rail,
         }),
         style,
       )}
@@ -876,11 +890,12 @@ export const SidebarGroup = ({
   ...rest
 }: SidebarGroupProps) => {
   const theme = useTheme();
+  const rail = useRailPadding();
   return (
     <div
       {...rest}
       style={mergeStyles(
-        recipeStyle(cn(SIDEBAR_GROUP, className), theme),
+        mergeStyles(recipeStyle(cn(SIDEBAR_GROUP, className), theme), rail),
         style,
       )}
     />
@@ -1131,7 +1146,12 @@ export const SidebarMenuButton = ({
             ? theme.colors.accentForeground
             : theme.colors.cardForeground,
           ...(icon
-            ? { width: 32, height: 32, padding: 8, justifyContent: "center" }
+            ? {
+                width: SIDEBAR_ICON_ROW,
+                height: SIDEBAR_ICON_ROW,
+                padding: 8,
+                justifyContent: "center",
+              }
             : {}),
           ...disabledFade(disabled),
           hover: disabled

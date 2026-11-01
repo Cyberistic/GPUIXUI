@@ -7,6 +7,7 @@
  * menu-bar switch that leaves the status line stale; an agent whose Send adds
  * nothing; a calendar switch that keeps the calendar's events; a welcome whose
  * Continue does not advance; a viewer whose thumbnail does not open the HUD.
+ * Plan 731: overlapping events split into equal slivers instead of cascading.
  */
 import { createTestRoot } from "@gpuix/react/testing";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
@@ -16,6 +17,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Agent } from "./agent/agent.js";
 import { CalendarBlock } from "./calendar/calendar.js";
 import { Launcher } from "./launcher/launcher.js";
+import { License } from "./license/license.js";
 import { MenuBar } from "./menubar/menubar.js";
 import { Notes } from "./notes/notes.js";
 import { Preferences } from "./preferences/preferences.js";
@@ -98,6 +100,9 @@ describe("the Mac-app blocks", () => {
     press(r, "send");
     expect(has(r, "turn-t3")).toBe(true);
     expect(has(r, "turn-t4")).toBe(true);
+    // The reply streams: Send is Stop until the last word lands.
+    expect(has(r, "stop")).toBe(true);
+    expect(has(r, "send")).toBe(false);
   });
 
   it("calendar: switching a calendar off hides its events", () => {
@@ -106,6 +111,22 @@ describe("the Mac-app blocks", () => {
     press(r, "calendar-arena");
     expect(has(r, "event-e3")).toBe(false);
     expect(has(r, "event-e1")).toBe(true);
+  });
+
+  it("calendar: an overlapping event cascades, keeping most of the column", () => {
+    const r = mount(<CalendarBlock platform="darwin" />);
+    const box = (id: string) => {
+      const b = r.getElementBounds(r.findByTestId(id)?.id ?? -1);
+      expect(b, id).not.toBeNull();
+      return b!;
+    };
+    const day = box("day-0");
+    const first = box("event-e1");
+    const second = box("event-e2");
+    // e2 overlaps e1: it starts a third of the way in and lies over it.
+    expect(second.x).toBeGreaterThan(first.x);
+    expect(second.width).toBeGreaterThan(day.width / 2);
+    expect(first.width).toBeGreaterThan(day.width * 0.9);
   });
 
   it("welcome: Continue advances, and Import calls the app", () => {
@@ -118,6 +139,16 @@ describe("the Mac-app blocks", () => {
     expect(has(r, "step-3")).toBe(true);
     press(r, "continue");
     expect(has(r, "step-3")).toBe(true);
+  });
+
+  it("license: a hunter opens their licence, stars and all", () => {
+    const r = mount(<License platform="darwin" />);
+    expect(has(r, "stars-0")).toBe(true);
+    press(r, "hunter-ging");
+    expect(has(r, "stars-2")).toBe(true);
+    press(r, "source-Gourmet");
+    expect(has(r, "hunter-menchi")).toBe(true);
+    expect(has(r, "hunter-gon")).toBe(false);
   });
 
   it("viewer: a thumbnail opens the photo under its HUD", () => {

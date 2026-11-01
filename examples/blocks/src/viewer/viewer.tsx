@@ -15,6 +15,83 @@ import { useState } from "react";
 import { albums, photos } from "./data.js";
 import { neighbour } from "./logic.js";
 
+/**
+ * A photo, drawn: a sky in the theme's series colour, a sun and two hills.
+ * Original artwork from shapes — the recipe is the layout and the HUD, and a
+ * consumer's pictures take the scene's place. Every shape is a picture, never
+ * the press target.
+ */
+const Scene = ({
+  sky,
+  variant,
+  width,
+  height,
+  radius,
+}: {
+  readonly sky: string;
+  readonly variant: number;
+  readonly width: number;
+  readonly height: number;
+  readonly radius: number;
+}) => {
+  const sun = Math.round(height * 0.22);
+  const shape = (
+    left: number,
+    top: number,
+    w: number,
+    h: number,
+    fill: string,
+  ) => (
+    <div
+      style={{
+        position: "absolute",
+        left: Math.round(left),
+        top: Math.round(top),
+        width: Math.round(w),
+        height: Math.round(h),
+        borderRadius: 9999,
+        backgroundColor: fill,
+        pointerEvents: "none",
+      }}
+    />
+  );
+  return (
+    <div
+      style={{
+        position: "relative",
+        width,
+        height,
+        overflow: "hidden",
+        borderRadius: radius,
+        backgroundColor: sky,
+        pointerEvents: "none",
+      }}
+    >
+      {shape(
+        width * (0.15 + (variant % 3) * 0.25),
+        height * 0.16,
+        sun,
+        sun,
+        "#FFFFFFCC",
+      )}
+      {shape(
+        -width * 0.2,
+        height * 0.6,
+        width * 0.9,
+        height * 0.8,
+        "#0000002E",
+      )}
+      {shape(
+        width * (0.3 + (variant % 2) * 0.1),
+        height * 0.68,
+        width,
+        height * 0.85,
+        "#00000047",
+      )}
+    </div>
+  );
+};
+
 export const Viewer = ({ platform }: { readonly platform?: PlatformName }) => {
   const theme = useTheme();
   const tints = seriesColors(theme);
@@ -65,10 +142,20 @@ export const Viewer = ({ platform }: { readonly platform?: PlatformName }) => {
           testId="open-photo"
           style={{
             position: "relative",
+            display: "flex",
             flexGrow: 1,
-            backgroundColor: tints[current.value.tint],
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: theme.colors.background,
           }}
         >
+          <Scene
+            sky={tints[current.value.tint] ?? theme.colors.muted}
+            variant={Number(current.value.id.slice(1))}
+            width={760}
+            height={500}
+            radius={theme.radius.lg}
+          />
           <Stack
             direction="row"
             gap="sm"
@@ -142,19 +229,25 @@ export const Viewer = ({ platform }: { readonly platform?: PlatformName }) => {
                 width: 160,
               }}
             >
+              {/* The scene is a picture, not a target: the press is the
+                  thumbnail's, which a hit on the scene would not reach. */}
               <div
                 style={{
-                  height: 110,
-                  // The swatch is a picture, not a target: the press is the
-                  // thumbnail's, which a hit on this box would not reach.
-                  pointerEvents: "none",
                   borderRadius: theme.radius.md,
-                  backgroundColor: tints[photo.tint],
+                  pointerEvents: "none",
                   ...(photo.id === chosen
                     ? { borderWidth: 3, borderColor: theme.colors.primary }
                     : {}),
                 }}
-              />
+              >
+                <Scene
+                  sky={tints[photo.tint] ?? theme.colors.muted}
+                  variant={Number(photo.id.slice(1))}
+                  width={160}
+                  height={110}
+                  radius={theme.radius.md}
+                />
+              </div>
               <Text tone="muted">{photo.caption}</Text>
             </div>
           ))}

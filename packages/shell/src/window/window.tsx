@@ -8,9 +8,9 @@
  *
  * The parts are slots rather than children so the window knows where the lights
  * float: over the sidebar when there is one, otherwise over the toolbar, which
- * then leaves them their box. A resizable sidebar is a `SplitPane` from
- * `@gpuixui/dock` composed in the sidebar slot's place; the window itself takes
- * fixed widths.
+ * then leaves them their box. The sidebar resizes from its trailing hairline
+ * as AppKit's does: the dock's `Divider` floats over the seam, so a drag or the
+ * arrows move it between its bounds and nothing new paints.
  *
  * Open it with {@link nativeWindowOptions}: the runtime reserves no titlebar
  * (`docs/gpuix-capabilities.md` §Window chrome), so without a transparent
@@ -19,8 +19,15 @@
 
 import { isTerminal, type Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { Divider, dragSize, resizeByKey, sizeBounds } from "@gpuixui/dock";
 import { ToolbarScope } from "@gpuixui/primitives";
-import { createContext, useContext, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   currentPlatform,
   materialFill,
@@ -49,8 +56,14 @@ const WindowContext = createContext<WindowChrome>({
 export interface WindowProps extends Omit<Props, "children"> {
   /** The source list, or any sidebar; it runs under the traffic lights. */
   readonly sidebar?: ReactNode;
-  /** The sidebar's width. Defaults to AppKit's 220. */
+  /** The sidebar's starting width. Defaults to AppKit's 220. */
   readonly sidebarWidth?: number;
+  /** The narrowest the sidebar drags to. Defaults to 180. */
+  readonly sidebarMinWidth?: number;
+  /** The widest the sidebar drags to. Defaults to 360; equal bounds fix it. */
+  readonly sidebarMaxWidth?: number;
+  /** Reports the sidebar's width after a drag step or a key, to persist it. */
+  readonly onSidebarWidthChange?: (width: number) => void;
   /** The toolbar row, usually a {@link WindowToolbar}. */
   readonly toolbar?: ReactNode;
   /** The toolbar's height step. Defaults to the unified 52-point bar. */
@@ -69,6 +82,9 @@ export interface WindowProps extends Omit<Props, "children"> {
 export const Window = ({
   sidebar,
   sidebarWidth = 220,
+  sidebarMinWidth = 180,
+  sidebarMaxWidth = 360,
+  onSidebarWidthChange,
   toolbar,
   toolbarStyle = "unified",
   inspector,
@@ -82,6 +98,13 @@ export const Window = ({
   const lights = hasTrafficLights(platform, isTerminal());
   const height = TOOLBAR_HEIGHT[toolbarStyle];
   const hairline = theme.borderWidth.thin;
+  const bounds = sizeBounds(sidebarMinWidth, sidebarMaxWidth);
+  const [width, setWidth] = useState(sidebarWidth);
+  const dragStart = useRef(width);
+  const resize = (next: number): void => {
+    setWidth(next);
+    onSidebarWidthChange?.(next);
+  };
 
   return (
     <WindowContext.Provider
@@ -113,7 +136,8 @@ export const Window = ({
             style={{
               display: "flex",
               flexDirection: "column",
-              width: sidebarWidth,
+              position: "relative",
+              width,
               flexShrink: 0,
               minHeight: 0,
               paddingTop: height,
@@ -123,6 +147,22 @@ export const Window = ({
             }}
           >
             {sidebar}
+            {bounds.min === bounds.max ? null : (
+              <Divider
+                seam
+                orientation="horizontal"
+                label="Sidebar width"
+                valueText={`${Math.round(width)} px`}
+                testId="window-sidebar-divider"
+                onDragStart={() => {
+                  dragStart.current = width;
+                }}
+                onDragDelta={(delta) =>
+                  resize(dragSize(dragStart.current, delta, bounds))
+                }
+                onKey={(key) => resize(resizeByKey(width, key, bounds))}
+              />
+            )}
           </div>
         )}
         <div

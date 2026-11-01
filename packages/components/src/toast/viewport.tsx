@@ -211,7 +211,19 @@ const useToastStack = (
       (toast): StackEntry => ({ toast, present: true }),
     );
     const merged = [...kept, ...appended];
-    setEntries(merged);
+    // `toasts` can be a fresh array on every render (the store's snapshot);
+    // writing an equal stack back would schedule another render and loop until
+    // React's update-depth guard fires.
+    setEntries((list) =>
+      list.length === merged.length &&
+      list.every(
+        (entry, index) =>
+          entry.toast === merged[index]?.toast &&
+          entry.present === merged[index]?.present,
+      )
+        ? list
+        : merged,
+    );
     Arr.forEach(merged, (entry) => {
       if (entry.present) return;
       const id = entry.toast.id;
