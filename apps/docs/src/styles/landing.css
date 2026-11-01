@@ -141,7 +141,8 @@
   flex: none;
   width: 22px;
   height: 22px;
-  background: url("/logo.svg") center / contain no-repeat;
+  background: currentColor;
+  mask: url("/logo-outline.svg") center / contain no-repeat;
 }
 
 .landing-nav-links {
@@ -771,21 +772,21 @@
 /* Windows 11 taskbar */
 .landing-taskbar {
   position: absolute;
-  bottom: 10px;
-  left: 50%;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 2;
   display: flex;
   gap: 8px;
   align-items: center;
-  width: min(560px, calc(100% - 24px));
+  width: 100%;
   height: 40px;
-  padding: 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 10px;
+  padding: 0 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 0;
   background: rgba(245, 248, 252, 0.62);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
   color: var(--foreground);
-  transform: translateX(-50%);
   backdrop-filter: blur(18px);
 }
 
@@ -1271,16 +1272,7 @@
   text-underline-offset: 2px;
 }
 
-.landing-recipes {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 16px;
-}
 
-.landing-recipe {
-  display: block;
-}
 
 .landing-recipe:hover {
   border-color: var(--accent);
@@ -1317,6 +1309,233 @@
   flex: 1;
   min-height: 340px;
   border-radius: 0;
+}
+
+/* ---- the stage: one window, one action ---- */
+.landing-stage {
+  position: relative;
+  margin: 32px 0 0;
+  padding: 44px 24px 72px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 20px;
+  background:
+    radial-gradient(80% 70% at 20% 0%, var(--accent-soft, #1d2a44) 0%, transparent 60%),
+    linear-gradient(160deg, var(--bg) 0%, var(--bg-soft) 100%);
+}
+
+.landing-stage-window {
+  width: min(560px, 100%);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--bg-soft);
+  box-shadow: 0 30px 70px -24px rgb(0 0 0 / 55%);
+}
+
+.landing-stage-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.landing-stage-lights {
+  display: flex;
+  gap: 6px;
+}
+
+.landing-stage-lights i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+
+.landing-stage-title {
+  overflow: hidden;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-stage-status {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.landing-stage-status[data-state="building"] {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--accent-text);
+}
+
+.landing-stage-status[data-state="live"],
+.landing-stage-status[data-state="toast"] {
+  background: color-mix(in srgb, var(--success, #3fb950) 24%, transparent);
+  color: var(--success, #3fb950);
+}
+
+.landing-stage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.landing-stage-branch {
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.landing-stage-rows {
+  margin: 0;
+  padding: 0 10px 4px;
+  list-style: none;
+}
+
+.landing-stage-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+.landing-stage-row + .landing-stage-row {
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.landing-stage-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: background 0.3s ease;
+}
+
+.landing-stage[data-phase="building"] .landing-stage-dot {
+  background: var(--accent);
+}
+
+.landing-stage[data-phase="live"] .landing-stage-dot,
+.landing-stage[data-phase="toast"] .landing-stage-dot {
+  background: var(--success, #3fb950);
+}
+
+.landing-stage-name {
+  font-family: var(--mono);
+}
+
+.landing-stage-meta {
+  margin-left: auto;
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.landing-stage-progress {
+  height: 3px;
+  margin: 10px 18px 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.landing-stage-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.6s ease;
+}
+
+.landing-stage-progress[data-state="building"] span {
+  width: 62%;
+}
+
+.landing-stage-progress[data-state="live"] span,
+.landing-stage-progress[data-state="toast"] span {
+  width: 100%;
+  background: var(--success, #3fb950);
+}
+
+.landing-stage-foot {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 18px 18px;
+}
+
+.landing-stage-button {
+  padding: 7px 14px;
+  font-size: 12px;
+}
+
+.landing-stage-hint {
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+
+.landing-stage-toast {
+  position: absolute;
+  right: 28px;
+  bottom: 24px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  box-shadow: var(--shadow);
+  color: var(--muted);
+  font-size: 12px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.landing-stage-toast b {
+  color: var(--foreground);
+}
+
+.landing-stage[data-phase="toast"] .landing-stage-toast {
+  opacity: 1;
+  transform: none;
+}
+
+.landing-stage-caption {
+  margin: 14px 0 0;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .landing-code-caption {
@@ -1362,7 +1581,10 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: min(700px, calc(100% - 56px));
+  display: flex;
+  flex-direction: column;
+  width: min(780px, calc(100% - 56px));
+  height: 470px;
   overflow: hidden;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 12px;
@@ -1378,9 +1600,8 @@
     transform 0.45s ease;
 }
 
-.landing-moment[data-stage="editor"] .landing-term {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(1.03);
+.landing-term[data-stage="editor"] .landing-term-cmd {
+  width: max-content !important;
 }
 
 .landing-term-bar {
@@ -1405,11 +1626,16 @@
 
 .landing-term-body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   justify-content: center;
   gap: 2px;
-  min-height: 170px;
+  min-height: 0;
   padding: 18px 20px;
+}
+
+.landing-term[data-stage="editor"] .landing-term-body {
+  display: none;
 }
 
 .landing-term-line {
@@ -1519,9 +1745,90 @@
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.landing-moment[data-stage="editor"] .landing-vscode {
+/* The editor replaces the shell's body inside the same frame: one window, not
+   a second one. */
+.landing-editor {
+  display: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.landing-term[data-stage="editor"] .landing-editor {
+  display: flex;
+}
+
+.landing-editor-pane {
+  position: static;
+  inset: auto;
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   opacity: 1;
   transform: none;
+  font-family: var(--mono);
+}
+
+.landing-editor .landing-vscode-explorer {
+  width: 200px;
+  transition: width 0.28s ease;
+}
+
+.landing-editor[data-sidebar="false"] .landing-vscode-explorer {
+  width: 0;
+  border-right: 0;
+}
+
+.landing-term-sidebar {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--term-label);
+  cursor: pointer;
+}
+
+.landing-term:not([data-stage="editor"]) .landing-term-sidebar {
+  visibility: hidden;
+}
+
+.landing-term-sidebar:hover {
+  background: rgb(255 255 255 / 8%);
+  color: var(--term-ink);
+}
+
+.landing-editor .landing-vscode-row {
+  width: 100%;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.landing-editor .landing-vscode-row[data-kind="root"],
+.landing-editor .landing-vscode-row[data-kind="json"] {
+  cursor: default;
+}
+
+.landing-editor .landing-vscode-tab {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
 }
 
 .landing-vscode-title {
@@ -1977,6 +2284,10 @@
   grid-template-columns: repeat(3, 1fr);
 }
 
+.landing-graph-leaf-row {
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .landing-graph-node {
   display: flex;
   flex-direction: column;
@@ -2158,10 +2469,7 @@
     grid-template-columns: 1fr;
   }
 
-  .landing-recipes {
-    grid-template-columns: 1fr;
-  }
-
+  
   .landing-code {
     grid-template-columns: 1fr;
   }
@@ -2295,6 +2603,10 @@
     margin: 0 4px;
   }
 
+  .landing-graph-leaf-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .landing-graph-node {
     padding: 12px 6px;
   }
@@ -2317,20 +2629,11 @@
     transition: none;
   }
 
-  /* The editor is the last frame of the sequence: show it at once, without the
-     terminal's type-out or the window's scale. */
-  .landing-moment .landing-vscode {
-    opacity: 1;
-    transform: none;
-  }
-
-  .landing-moment .landing-term {
-    opacity: 0;
-  }
-
+  /* The editor is the last frame of the sequence: it replaces the shell inside
+     the same frame, so only its own motion is dropped. */
   .landing-term,
   .landing-term-out,
-  .landing-vscode {
+  .landing-editor .landing-vscode-explorer {
     transition: none;
   }
 
@@ -2342,7 +2645,11 @@
   .landing-btn,
   .landing-nav-links a,
   .landing-nav-cta,
-  .landing-theme-toggle {
+  .landing-theme-toggle,
+  .landing-stage-progress span,
+  .landing-stage-toast,
+  .landing-stage-dot,
+  .landing-stage-status {
     transition: none;
   }
 }

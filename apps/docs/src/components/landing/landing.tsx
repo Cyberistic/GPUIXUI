@@ -1,15 +1,17 @@
+import { useState, type CSSProperties } from "react";
 import { useTheme } from "fumadocs-ui/provider/base";
 import { flushSync } from "react-dom";
-import { retroNames, retroStyles, type RetroName } from "@gpuixui/tokens";
+import { lightTheme, platformTheme, type PlatformName } from "@gpuixui/tokens";
 import { HighlightedCode } from "@/components/highlighted-code";
+import { toCssVars } from "../../lib/theme-css";
 import { mainContentId } from "../skip-link";
-import { Hero } from "./deck";
+import { Hero, PlatformSwitch } from "./deck";
 import { Lineage } from "./lineage";
+import { Stage } from "./stage";
 import { Terminal } from "./terminal";
 import { demos } from "../docs/demos";
-import { DashboardManagementRender } from "../docs/dashboard-management";
 import { DashboardRender } from "../docs/dashboard";
-import { countWord, navLinks, repo } from "./data";
+import { navLinks, platforms, repo } from "./data";
 
 export function Landing() {
   return (
@@ -18,11 +20,10 @@ export function Landing() {
         <Nav />
         <main id={mainContentId} tabIndex={-1}>
           <Hero />
-          <Dashboard />
-          <Management />
-          <Terminal />
           <Lineage />
-          <Defaults />
+          <Dashboard />
+          <Stage />
+          <Terminal />
           <CodeAndComponent />
           <Footer />
         </main>
@@ -120,108 +121,45 @@ function MoonIcon() {
   );
 }
 
-/**
- * The management console, the second full-window composition on the page.
- *
- * It is the same recipe the blocks page documents, rendered in the browser: the
- * landing has no native host, so the preview is HTML over the theme's roles.
- */
-export function Management() {
-  return (
-    <section
-      className="landing-section landing-management-section"
-      id="management"
-    >
-      <p className="landing-kicker">The console</p>
-      <h2 className="landing-h2">Every deploy, one screen.</h2>
-      <p className="landing-lead">
-        A management console composed from the same parts — service health,
-        deploys, toasts, an API-key table and a context menu. The recipe lives
-        on the <a href="/blocks/dashboard-management">blocks page</a>.
-      </p>
-      <div className="landing-dashboard landing-management">
-        <DashboardManagementRender />
-      </div>
-      <p className="landing-dashboard-caption">
-        Browser preview of the native composition · the shipped window renders
-        through GPUix, not the DOM.
-      </p>
-    </section>
-  );
-}
+/** The library's platform name for a landing card. */
+const platformOfDesktop: Readonly<Record<string, PlatformName>> = {
+  macos: "darwin",
+  windows: "win32",
+  linux: "linux",
+};
 
-function Dashboard() {
+export function Dashboard() {
+  const [top, setTop] = useState(0);
+  const platform = platforms[top]?.id ?? "macos";
+  const style = {
+    ...toCssVars(
+      platformTheme(lightTheme, platformOfDesktop[platform] ?? "darwin"),
+    ),
+  } as CSSProperties;
+
   return (
     <section
       className="landing-section landing-dashboard-section"
       id="dashboard"
     >
       <p className="landing-kicker">The product</p>
-      <h2 className="landing-h2">One window, every stat.</h2>
+      <h2 className="landing-h2">Build native-looking apps.</h2>
       <p className="landing-lead">
-        A dashboard composed from the library's parts — cards, badges, progress,
-        search and charts. This is a browser rendering of the same{" "}
-        <code>@gpuixui/*</code> tree the native runtime draws; the recipe lives
-        on the <a href="/blocks/dashboard">blocks page</a>.
+        A dashboard composed from the library&apos;s parts — cards, badges,
+        progress, search and charts. Switch the platform to wear each
+        desktop&apos;s own metrics: the same tree, restyled.
       </p>
-      <div className="landing-dashboard">
+      <div className="landing-switch-row">
+        <PlatformSwitch onChange={setTop} value={top} />
+      </div>
+      <div className="landing-dashboard" style={style}>
         <DashboardRender />
       </div>
-      <p className="landing-dashboard-caption">
-        Browser preview of the native composition · the shipped window renders
-        through GPUix, not the DOM.
-      </p>
     </section>
   );
 }
 
-/** What each authored look repaints, in the order `retroNames` names them. */
-const lookBodies: Readonly<Record<RetroName, string>> = {
-  luna: "The 2001 beige, its blue selection and warm chrome.",
-  aero: "Glass-blue greys and a highlight that reads on every surface.",
-  omarchy: "Tokyo Night ink and Flexoki paper, read from your active theme.",
-};
-
-const recipes = retroNames.map((look) => ({
-  id: look,
-  name: retroStyles[look].label,
-  body: lookBodies[look],
-  facts: `${retroStyles[look].density} · ${retroStyles[look].radius.md}px corners · ${retroStyles[look].mono}`,
-  href: "https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md#authored-looks",
-}));
-
-export function Defaults() {
-  return (
-    <section className="landing-section" id="platforms">
-      <p className="landing-kicker">Defaults, then make them yours</p>
-      <h2 className="landing-h2">
-        {countWord(retroNames.length)} authored looks, one starting point.
-      </h2>
-      <p className="landing-lead">
-        Each platform ships its own default — the same component in native
-        chrome and type. The library also ships authored looks over that base:
-        copy their values, edit them and ship your own style.
-      </p>
-
-      <div className="landing-recipes">
-        {recipes.map((item) => (
-          <a
-            className="landing-panel landing-recipe"
-            data-look={item.id}
-            href={item.href}
-            key={item.id}
-          >
-            <h3>{item.name}</h3>
-            <p>{item.body}</p>
-            <span className="landing-stat">{item.facts}</span>
-          </a>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function CodeAndComponent() {
+export function CodeAndComponent() {
   const demo = demos["tabs-demo"];
   if (demo === undefined) {
     throw new Error('CodeAndComponent: no demo named "tabs-demo"');
@@ -233,12 +171,8 @@ function CodeAndComponent() {
   return (
     <section className="landing-section" id="code">
       <p className="landing-kicker">Code, rendered</p>
-      <h2 className="landing-h2">The code and the component.</h2>
-      <p className="landing-lead">
-        The API you read is the API you ship. A Tabs composition — compound
-        parts, typed triggers, keyboard navigation — next to the component it
-        renders.
-      </p>
+      <h2 className="landing-h2">Your agent already knows the syntax.</h2>
+      <p className="landing-lead">It&apos;s just shadcn!</p>
 
       <div className="landing-code">
         <HighlightedCode lang="tsx" code={demo.source} />

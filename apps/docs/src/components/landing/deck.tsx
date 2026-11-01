@@ -22,13 +22,7 @@ import {
 import { toCssVars } from "../../lib/theme-css";
 import { BlockIcon } from "../docs/block-icons";
 import { ConversationWindow } from "../docs/conversations-block";
-import {
-  platforms,
-  omarchyCards,
-  countWord,
-  landingLookCount,
-  repo,
-} from "./data";
+import { platforms, omarchyCards, repo } from "./data";
 import type { OmarchyIcon, Platform } from "./data";
 import { usePrefersReducedMotion } from "./reduced-motion";
 
@@ -97,9 +91,9 @@ export function Hero() {
   return (
     <header className="landing-hero">
       <h1 className="landing-title">
-        One library.
+        Super fast GPU apps
         <br />
-        {countWord(landingLookCount)} native <em>looks</em>.
+        on Mac, Windows &amp; Linux
       </h1>
 
       <p className="landing-sub">
@@ -425,7 +419,7 @@ function BatteryGlyph() {
   );
 }
 
-function PlatformSwitch({
+export function PlatformSwitch({
   value,
   onChange,
 }: {

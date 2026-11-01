@@ -25004,3 +25004,20 @@ green; the site deployed and all 195 sitemap pages answer 200.
       The footer's reference list stays retired (commit `96f44be72`), and the
       reader-facing sentence now says what the library is built on. Landing
       tests 32/32 and `check-types` clean; deployed.
+
+## Landing pass (2026-11-01)
+
+`[x]` Rework the restored landing to the owner's brief: monotone navbar mark,
+      "Super fast GPU apps on Mac, Windows & Linux" hero, lineage second with
+      "Write once, run everywhere" and a Terminal leaf (its stack caption gone),
+      authored-looks section removed, "Your agent already knows the syntax" /
+      "It's just shadcn!", dashboard renamed "Build native-looking apps" with a
+      platform switch and no browser-preview caption, and the management console
+      replaced by a stage — one window, a Deploy action, progress and a toast.
+      Conversations now all carry threads, macOS gets the same rail as the other
+      dresses, the Greed Island attachment is `greed-island.webp`, and the
+      Windows taskbar runs the full width. The terminal section reads "Render
+      your apps in a terminal", links the Terminal guide, and opens the editor
+      **inside** the same frame with a working file tree, file tabs and a
+      collapsible sidebar. Landing tests 32/32; `check-types` and the production
+      build clean; deployed.

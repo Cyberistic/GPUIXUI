@@ -5,90 +5,73 @@ import { describe, expect, it } from "vitest";
 import { Terminal } from "./terminal";
 
 /**
- * The editor moment, held to its shape.
+ * The terminal moment, held to its shape.
  *
- * The block used to be a static two-pane picture: a kitty frame beside a code
- * sample. It now types the documented install command, prints the shell's
- * answer, and opens a VS Code window on `src/app/page.tsx` — so the cases below
- * hold the sequence's three parts in one render (typing, the command's output,
- * the editor), the command to the page that documents it, and the VS Code chrome
- * the claim rests on. They assert structure, not a screenshot: the colours are
- * measured in `landing-theme.test.ts` and looked at in the screenshots.
+ * The block types the documented command and then opens the editor **inside
+ * the same frame** — a second window beside the terminal would claim the app
+ * runs in a GUI, which is the opposite of what the section says. The cases hold
+ * one frame, the documented command and guide link, and the editor controls
+ * that prove the file tree and sidebar are real: file presses, tabs and a
+ * collapse toggle.
  */
 
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 
 const markup = renderToStaticMarkup(<Terminal />);
+const source = read("./terminal.tsx");
 const css = read("../../styles/landing.css");
 const record = read("../../../../../docs/gpuix-capabilities.md");
 
 const count = (pattern: RegExp): number => markup.match(pattern)?.length ?? 0;
 
-describe("the editor moment", () => {
-  it("mounts the whole sequence, starting in the terminal", () => {
-    // The stage opens on the terminal, and the editor it opens is already in
-    // the DOM (the stylesheet reveals it), so the last frame is the server's
-    // markup and not a client-only mount.
-    expect(markup).toContain('data-stage="typing"');
+describe("the terminal moment", () => {
+  it("mounts one frame, not a terminal beside an editor", () => {
     expect(count(/class="landing-term"/g)).toBe(1);
-    expect(count(/class="landing-vscode"/g)).toBe(1);
-    expect(markup).toContain('class="landing-term-out"');
+    expect(count(/class="landing-editor"/g)).toBe(1);
+    // The editor is inside the terminal's markup, so the frame is one window.
+    expect(markup.indexOf('class="landing-term"')).toBeLessThan(
+      markup.indexOf('class="landing-editor"'),
+    );
+    expect(markup).not.toContain('class="landing-vscode-title"');
+    expect(markup).toContain('data-stage="typing"');
   });
 
   it("types the command the capability record documents", () => {
-    // A landing command that no page documents is an invented CLI. This one is
-    // read out of the page a reader is sent to.
     expect(record).toContain("GPUIX_TERMINAL=1 code GPUIXUI");
     expect(markup).toContain("GPUIX_TERMINAL=1 code GPUIXUI");
     expect(markup).toContain("opening GPUIXUI — terminal mode");
-    expect(markup).toContain('href="/getting-started"');
+    expect(markup).toContain('href="/platform/terminal"');
   });
 
   it("waits for the reader to reach it before typing", () => {
-    // The sequence used to start on mount, so a reader who scrolled to the
-    // block found an editor and never saw the command. The first frame is the
-    // empty prompt, and the observer is what arms the typing.
-    const source = read("./terminal.tsx");
-
-    expect(markup).toContain('data-stage="typing"');
     expect(source).toContain("new IntersectionObserver");
     expect(source).toContain("threshold: 0.3");
     expect(source).toContain("if (!armed) return undefined;");
     expect(markup).toContain('style="width:0ch"');
   });
 
-  it("reproduces the VS Code window, not a generic editor", () => {
-    // Title bar with the three traffic lights, activity bar, explorer, tabs,
-    // breadcrumbs, minimap and status bar: one mark for each.
-    expect(count(/class="landing-vscode-lights"/g)).toBe(1);
-    expect(count(/data-light=/g)).toBe(3);
-    expect(count(/class="landing-vscode-body"/g)).toBe(1);
-    expect(count(/class="landing-vscode-action/g)).toBe(7);
-    expect(markup).toContain('data-active="true"');
-    expect(count(/class="landing-vscode-explorer"/g)).toBe(1);
-    expect(count(/class="landing-vscode-row"/g)).toBe(8);
-    expect(count(/class="landing-vscode-tab"/g)).toBe(2);
-    expect(count(/class="landing-vscode-minimap"/g)).toBe(1);
-    expect(markup).toContain(">Explorer<");
-    expect(markup).toContain("Ln 15, Col 22");
-    expect(markup).toContain(">TypeScript React<");
+  it("makes the file tree and the sidebar real controls", () => {
+    expect(count(/class="landing-vscode-row"/g)).toBeGreaterThan(4);
+    expect(markup).toContain('aria-label="Collapse sidebar"');
+    expect(markup).toContain('aria-expanded="true"');
+    expect(markup).toContain('data-sidebar="true"');
+    // One tab per file, each a button that switches the buffer.
+    for (const name of ["page.tsx", "button.tsx", "theme.ts"]) {
+      expect(markup).toContain(`>${name}<`);
+    }
+    expect(css).toContain("transition: width 0.28s ease");
+    expect(css).toContain('[data-sidebar="false"]');
   });
 
-  it("opens src/app/page.tsx on the library's own components", () => {
-    expect(markup).toContain("page.tsx — gpuixui");
-    expect(count(/data-current="true"/g)).toBe(3);
+  it("opens the library's own components in the code pane", () => {
+    expect(markup).toContain('data-current="true">page.tsx');
+    expect(markup).toContain('data-current="true"');
     expect(markup).toContain('data-kind="tsx"');
-    expect(markup).toContain(">src<");
-    expect(markup).toContain(">app<");
-    for (const name of ["Button", "Input", "Stack", "Text", "ThemeProvider"]) {
+    for (const name of ["Button", "Stack", "ThemeProvider"]) {
       expect(markup).toContain(`<span class="vsc-tok-tag">${name}</span>`);
     }
-    expect(markup).toContain("@gpuixui/primitives");
-    // The look count is still one number: the editor prints the deck's count.
-    expect(markup).toContain("One set, three native looks.");
-    // Every role the token table names has a colour rule, so a new role cannot
-    // silently paint the editor's default ink.
+    expect(markup).toContain("@/gpuixui");
     for (const role of [
       "keyword",
       "tag",
@@ -101,26 +84,17 @@ describe("the editor moment", () => {
     ]) {
       expect(markup).toContain(`class="vsc-tok-${role}"`);
     }
-    // The number role has no literal in this sample, but the table defines it,
-    // so the stylesheet must still paint it.
-    for (const role of ["num"]) expect(css).toContain(`.vsc-tok-${role}`);
   });
 
-  it("keeps the film out of the accessibility tree and offers a replay", () => {
-    // Both windows are pictures; the reader's control is the button under them.
-    expect(markup).toContain('aria-hidden="true" class="landing-term"');
-    expect(markup).toContain('aria-hidden="true" class="landing-vscode"');
+  it("offers one replay and drops the motion when asked", () => {
     expect(markup).toContain('aria-label="Replay the terminal animation"');
-    expect(count(/type="button"/g)).toBe(1);
+    const reduced = css.slice(css.lastIndexOf("prefers-reduced-motion"));
+    expect(reduced).toContain(".landing-editor .landing-vscode-explorer");
+    expect(reduced).toContain("transition: none");
   });
 
-  it("shows the editor at once when the reader asks for less motion", () => {
-    const reduced = css.slice(css.lastIndexOf("prefers-reduced-motion"));
-
-    expect(reduced).toContain(".landing-moment .landing-vscode");
-    expect(reduced).toContain("opacity: 1");
-    expect(reduced).toContain("transform: none");
-    expect(reduced).toContain(".landing-term-caret");
-    expect(reduced).toContain("animation: none");
+  it("no longer claims three native looks in the editor sample", () => {
+    expect(markup).not.toContain("One set, three native looks.");
+    expect(source).not.toContain("landingLookCount");
   });
 });

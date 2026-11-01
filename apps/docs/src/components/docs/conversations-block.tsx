@@ -36,7 +36,7 @@ export interface ConversationMessage {
   readonly text: string;
   /** The grey timestamp a message carries. */
   readonly at?: string;
-  /** The photo attachment, drawn as a soft dune gradient. */
+  /** The photo attachment painted from `greed-island.webp`. */
   readonly photo?: boolean;
   /** The grey receipt under an outgoing message. */
   readonly read?: boolean;
@@ -137,7 +137,11 @@ export const conversations: ReadonlyArray<Conversation> = [
     initials: "LP",
     preview: "Kurapika reacted ❤️ to “The auction is tonight!”",
     when: "Sunday",
-    messages: [],
+    messages: [
+      { id: "leorio-1", mine: false, text: "The auction is tonight!" },
+      { id: "leorio-2", mine: true, text: "I'll bring the briefcase." },
+      { id: "leorio-3", mine: false, text: "Kurapika is already there." },
+    ],
   },
   {
     id: "kurapika",
@@ -167,7 +171,14 @@ export const conversations: ReadonlyArray<Conversation> = [
     initials: "GF",
     preview: "Hope the little ones aren't tiring you out!",
     when: "Saturday",
-    messages: [],
+    messages: [
+      {
+        id: "ging-1",
+        mine: false,
+        text: "Hope the little ones aren't tiring you out!",
+      },
+      { id: "ging-2", mine: true, text: "They keep me busy." },
+    ],
   },
   {
     id: "hisoka",
@@ -175,7 +186,10 @@ export const conversations: ReadonlyArray<Conversation> = [
     initials: "HM",
     preview: "See you tomorrow! 🃏",
     when: "Saturday",
-    messages: [],
+    messages: [
+      { id: "hisoka-1", mine: false, text: "See you tomorrow! 🃏" },
+      { id: "hisoka-2", mine: true, text: "Not if I see you first." },
+    ],
   },
   {
     id: "knov",
@@ -183,7 +197,14 @@ export const conversations: ReadonlyArray<Conversation> = [
     initials: "KN",
     preview: "Cool… I'll be by just before 7 to drop off the cake 🎂",
     when: "Friday",
-    messages: [],
+    messages: [
+      {
+        id: "knov-1",
+        mine: false,
+        text: "Cool… I'll be by just before 7 to drop off the cake 🎂",
+      },
+      { id: "knov-2", mine: true, text: "Perfect, I'll clear the table." },
+    ],
   },
 ];
 
@@ -311,33 +332,31 @@ export function ConversationsSurface({
       </div>
 
       <div className="gx-conv-body">
-        {platform === "macos" ? null : (
-          <nav aria-label="Sections" className="gx-conv-rail">
-            <button
-              aria-current="true"
-              aria-label="Messages"
-              className="gx-conv-rail-item"
-              data-active="true"
-              type="button"
-            >
-              <ChatGlyph />
-            </button>
-            <button
-              aria-label="People"
-              className="gx-conv-rail-item"
-              type="button"
-            >
-              <PeopleGlyph />
-            </button>
-            <button
-              aria-label="Settings"
-              className="gx-conv-rail-item"
-              type="button"
-            >
-              <GearGlyph />
-            </button>
-          </nav>
-        )}
+        <nav aria-label="Sections" className="gx-conv-rail">
+          <button
+            aria-current="true"
+            aria-label="Messages"
+            className="gx-conv-rail-item"
+            data-active="true"
+            type="button"
+          >
+            <ChatGlyph />
+          </button>
+          <button
+            aria-label="People"
+            className="gx-conv-rail-item"
+            type="button"
+          >
+            <PeopleGlyph />
+          </button>
+          <button
+            aria-label="Settings"
+            className="gx-conv-rail-item"
+            type="button"
+          >
+            <GearGlyph />
+          </button>
+        </nav>
 
         <aside
           aria-label="Conversations"

@@ -1,11 +1,11 @@
 const GRAPH_DESCRIPTION =
-  "shadcn/ui (component composition), Base UI (component behaviour) and Tailwind (utility syntax) feed GPUixUI components, which render through the GPUix native renderer — a GPU renderer with no DOM — onto macOS, Windows 11 and Linux/Arch.";
+  "GPUixUI components render through the GPUix native renderer — a GPU renderer with no DOM — onto macOS, Windows 11, Linux/Arch and a terminal.";
 
 export function Lineage() {
   return (
     <section className="landing-section" id="lineage">
       <p className="landing-kicker">The lineage</p>
-      <h2 className="landing-h2">Composition, behaviour, syntax.</h2>
+      <h2 className="landing-h2">Write once, run everywhere.</h2>
 
       <figure className="landing-graph" aria-label={GRAPH_DESCRIPTION}>
         <div aria-hidden="true" className="landing-graph-body">
@@ -33,21 +33,13 @@ export function Lineage() {
 
           <Connector kind="fork" />
 
-          <div className="landing-graph-row">
+          <div className="landing-graph-row landing-graph-leaf-row">
             <GraphNode className="landing-graph-leaf" name="macOS" />
             <GraphNode className="landing-graph-leaf" name="Windows 11" />
             <GraphNode className="landing-graph-leaf" name="Linux / Arch" />
+            <GraphNode className="landing-graph-leaf" name="Terminal" />
           </div>
         </div>
-
-        <figcaption className="landing-graph-caption">
-          shadcn/ui composition, Base UI behaviour and Tailwind syntax — on
-          native platforms, through GPUix.
-          <span className="landing-graph-foot">
-            Tailwind&apos;s utility syntax is mapped to native styles, not the
-            CSS engine.
-          </span>
-        </figcaption>
 
         <p className="landing-sr">{GRAPH_DESCRIPTION}</p>
       </figure>

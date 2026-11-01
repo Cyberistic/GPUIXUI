@@ -1,34 +1,26 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { countWord, landingLookCount } from "./data";
+import { useEffect, useRef, useState } from "react";
 import { usePrefersReducedMotion } from "./reduced-motion";
 
 /**
- * The editor moment: a terminal types the documented install command, the shell
- * answers, and a VS Code window opens on `src/app/page.tsx` rendering GPUIxUI
- * components.
+ * The terminal moment: a terminal types the command that runs GPUIxUI in
+ * place, and the app it opens **inside the same frame** — a code editor drawn
+ * with the library's file tree and a collapsible sidebar.
  *
- * The window is a browser reproduction of VS Code's own chrome and palette —
- * Dark Modern's activity bar, explorer, tabs, breadcrumbs, gutter, minimap and
- * status bar — because the claim is "this is VS Code, with your components", and
- * a generic editor would not make it. The editor keeps VS Code's palette rather
- * than the page's theme for the same reason: an editor that repaints with the
- * docs surface would stop looking like the editor the reader has open.
- *
- * One state machine drives the sequence and the stylesheet carries every beat, so
- * `prefers-reduced-motion` is one CSS block plus a jump to the last stage.
+ * The size is the claim: the editor is not a second window, so both stages
+ * share one frame and the editor replaces the shell's body. The tree and the
+ * sidebar are real controls: a file press switches the open buffer, and the
+ * explorer collapses with a width transition (dropped under reduced motion).
  */
 
-/** The launch command the guide documents: GPUIXUI, in the terminal. */
+/** The command the Terminal guide documents. */
 const COMMAND = "GPUIX_TERMINAL=1 code GPUIXUI";
 
-/** One typed character, the shell's pause, then the editor. */
 const TYPE_MS = 32;
 const ANSWER_MS = 260;
 const OPEN_MS = 900;
 
 type Stage = "typing" | "running" | "editor";
 
-/** The syntax roles this file paints; each one is a class in `landing.css`. */
 type TokenRole =
   | "keyword"
   | "tag"
@@ -42,203 +34,208 @@ type TokenRole =
 
 type Token = readonly [TokenRole, string];
 
+type FileName = "page.tsx" | "button.tsx" | "theme.ts";
+
 /** The open file, tokenised so the editor paints VS Code's Dark+ colours. */
-const CODE: ReadonlyArray<ReadonlyArray<Token>> = [
-  [
-    ["keyword", "import"],
-    ["plain", " "],
-    ["punct", "{ "],
-    ["plain", "useState"],
-    ["punct", " }"],
-    ["plain", " "],
-    ["keyword", "from"],
-    ["plain", " "],
-    ["string", '"react"'],
-    ["punct", ";"],
-  ],
-  [
-    ["keyword", "import"],
-    ["plain", " "],
-    ["punct", "{ "],
-    ["plain", "Button"],
-    ["punct", ", "],
-    ["plain", "Input"],
-    ["punct", ", "],
-    ["plain", "Stack"],
-    ["punct", ", "],
-    ["plain", "Text"],
-    ["punct", " }"],
-    ["plain", " "],
-    ["keyword", "from"],
-    ["plain", " "],
-    ["string", '"@gpuixui/primitives"'],
-    ["punct", ";"],
-  ],
-  [
-    ["keyword", "import"],
-    ["plain", " "],
-    ["punct", "{ "],
-    ["plain", "themes"],
-    ["punct", " }"],
-    ["plain", " "],
-    ["keyword", "from"],
-    ["plain", " "],
-    ["string", '"@gpuixui/tokens"'],
-    ["punct", ";"],
-  ],
-  [
-    ["keyword", "import"],
-    ["plain", " "],
-    ["punct", "{ "],
-    ["plain", "ThemeProvider"],
-    ["punct", " }"],
-    ["plain", " "],
-    ["keyword", "from"],
-    ["plain", " "],
-    ["string", '"@gpuixui/tokens/react"'],
-    ["punct", ";"],
-  ],
-  [],
-  [
-    ["keyword", "export"],
-    ["plain", " "],
-    ["keyword", "function"],
-    ["plain", " "],
-    ["fn", "Page"],
-    ["punct", "() {"],
-  ],
-  [
-    ["plain", "  "],
-    ["keyword", "const"],
-    ["plain", " ["],
-    ["var", "name"],
-    ["punct", ", "],
-    ["fn", "setName"],
-    ["punct", "] = "],
-    ["fn", "useState"],
-    ["punct", "("],
-    ["string", '"Atlas"'],
-    ["punct", ");"],
-  ],
-  [],
-  [
-    ["plain", "  "],
-    ["keyword", "return"],
-    ["plain", " ("],
-  ],
-  [
-    ["plain", "    "],
-    ["punct", "<"],
-    ["tag", "ThemeProvider"],
-    ["plain", " "],
-    ["attr", "theme"],
-    ["punct", "={"],
-    ["var", "themes"],
-    ["punct", "."],
-    ["plain", "dark"],
-    ["punct", "}>"],
-  ],
-  [
-    ["plain", "      "],
-    ["punct", "<"],
-    ["tag", "Stack"],
-    ["plain", " "],
-    ["attr", "direction"],
-    ["punct", '="'],
-    ["string", "column"],
-    ["punct", '" '],
-    ["attr", "gap"],
-    ["punct", '="'],
-    ["string", "md"],
-    ["punct", '">'],
-  ],
-  [
-    ["plain", "        "],
-    ["punct", "<"],
-    ["tag", "Text"],
-    ["plain", " "],
-    ["attr", "role"],
-    ["punct", '="'],
-    ["string", "h2"],
-    ["punct", '">'],
-    ["plain", "Projects"],
-    ["punct", "</"],
-    ["tag", "Text"],
-    ["punct", ">"],
-  ],
-  [
-    ["plain", "        "],
-    ["punct", "<"],
-    ["tag", "Text"],
-    ["plain", " "],
-    ["attr", "role"],
-    ["punct", '="'],
-    ["string", "body"],
-    ["punct", '">'],
+const FILES: Readonly<Record<FileName, ReadonlyArray<ReadonlyArray<Token>>>> = {
+  "page.tsx": [
     [
-      "plain",
-      `One set, ${countWord(landingLookCount).toLowerCase()} native looks.`,
+      ["keyword", "import"],
+      ["plain", " { "],
+      ["plain", "Stack"],
+      ["punct", ", "],
+      ["plain", "Button"],
+      ["plain", " } "],
+      ["keyword", "from"],
+      ["plain", " "],
+      ["string", '"@/gpuixui"'],
+      ["punct", ";"],
     ],
-    ["punct", "</"],
-    ["tag", "Text"],
-    ["punct", ">"],
+    [
+      ["keyword", "import"],
+      ["plain", " { ThemeProvider } "],
+      ["keyword", "from"],
+      ["plain", " "],
+      ["string", '"@/gpuixui/tokens"'],
+      ["punct", ";"],
+    ],
+    [],
+    [
+      ["keyword", "export default"],
+      ["keyword", " function"],
+      ["plain", " "],
+      ["fn", "Page"],
+      ["punct", "() {"],
+    ],
+    [
+      ["plain", "  "],
+      ["keyword", "const"],
+      ["plain", " [name, setName] = "],
+      ["fn", "useState"],
+      ["punct", "("],
+      ["string", '""'],
+      ["punct", ");"],
+    ],
+    [],
+    [
+      ["plain", "  "],
+      ["keyword", "return"],
+      ["plain", " ("],
+    ],
+    [
+      ["plain", "    "],
+      ["punct", "<"],
+      ["tag", "ThemeProvider"],
+      ["plain", " "],
+      ["attr", "theme"],
+      ["punct", "={"],
+      ["var", "dark"],
+      ["punct", "} />"],
+    ],
+    [
+      ["plain", "      "],
+      ["punct", "<"],
+      ["tag", "Stack"],
+      ["plain", " "],
+      ["attr", "gap"],
+      ["punct", '="'],
+      ["string", "md"],
+      ["punct", '">'],
+    ],
+    [
+      ["plain", "        "],
+      ["punct", "<"],
+      ["tag", "Button"],
+      ["plain", " "],
+      ["attr", "variant"],
+      ["punct", '="'],
+      ["string", "primary"],
+      ["punct", '">'],
+      ["plain", "Save changes"],
+      ["punct", "</"],
+      ["tag", "Button"],
+      ["punct", ">"],
+    ],
+    [
+      ["plain", "      "],
+      ["punct", "</"],
+      ["tag", "Stack"],
+      ["punct", ">"],
+    ],
+    [
+      ["plain", "    "],
+      ["punct", "</"],
+      ["tag", "ThemeProvider"],
+      ["punct", ">"],
+    ],
+    [
+      ["plain", "  "],
+      ["punct", ");"],
+    ],
+    [["punct", "}"]],
   ],
-  [
-    ["plain", "        "],
-    ["punct", "<"],
-    ["tag", "Input"],
-    ["plain", " "],
-    ["attr", "label"],
-    ["punct", '="'],
-    ["string", "Project name"],
-    ["punct", '" '],
-    ["attr", "value"],
-    ["punct", "={"],
-    ["var", "name"],
-    ["punct", "} "],
-    ["attr", "onValueChange"],
-    ["punct", "={"],
-    ["var", "setName"],
-    ["punct", "} />"],
+  "button.tsx": [
+    [
+      ["keyword", "import"],
+      ["plain", " { "],
+      ["plain", "Button"],
+      ["plain", " } "],
+      ["keyword", "from"],
+      ["plain", " "],
+      ["string", '"@/gpuixui"'],
+      ["punct", ";"],
+    ],
+    [],
+    [
+      ["keyword", "export"],
+      ["keyword", " function"],
+      ["plain", " "],
+      ["fn", "Save"],
+      ["punct", "() {"],
+    ],
+    [
+      ["plain", "  "],
+      ["keyword", "return"],
+      ["plain", " ("],
+    ],
+    [
+      ["plain", "    "],
+      ["punct", "<"],
+      ["tag", "Button"],
+    ],
+    [
+      ["plain", "      "],
+      ["attr", "variant"],
+      ["punct", '="'],
+      ["string", "primary"],
+      ["punct", '"'],
+    ],
+    [
+      ["plain", "      "],
+      ["attr", "onActivate"],
+      ["punct", "={"],
+      ["var", "save"],
+      ["punct", "}"],
+    ],
+    [
+      ["plain", "    "],
+      ["punct", ">"],
+    ],
+    [["plain", "      Save changes"]],
+    [
+      ["plain", "    "],
+      ["punct", "</"],
+      ["tag", "Button"],
+      ["punct", ">"],
+    ],
+    [
+      ["plain", "  "],
+      ["punct", ");"],
+    ],
+    [["punct", "}"]],
   ],
-  [
-    ["plain", "        "],
-    ["punct", "<"],
-    ["tag", "Button"],
-    ["plain", " "],
-    ["attr", "variant"],
-    ["punct", '="'],
-    ["string", "primary"],
-    ["punct", '">'],
-    ["plain", "Save changes"],
-    ["punct", "</"],
-    ["tag", "Button"],
-    ["punct", ">"],
+  "theme.ts": [
+    [
+      ["keyword", "import"],
+      ["plain", " { "],
+      ["plain", "platformTheme"],
+      ["punct", ", "],
+      ["plain", "darkTheme"],
+      ["plain", " } "],
+      ["keyword", "from"],
+      ["plain", " "],
+      ["string", '"@gpuixui/tokens"'],
+      ["punct", ";"],
+    ],
+    [],
+    [
+      ["keyword", "export"],
+      ["keyword", " const"],
+      ["plain", " "],
+      ["var", "theme"],
+      ["plain", " = "],
+      ["fn", "platformTheme"],
+      ["punct", "("],
+    ],
+    [
+      ["plain", "  "],
+      ["var", "darkTheme"],
+      ["punct", ","],
+    ],
+    [
+      ["plain", "  "],
+      ["string", '"win32"'],
+      ["punct", ","],
+    ],
+    [["plain", ");"]],
   ],
-  [
-    ["plain", "      "],
-    ["punct", "</"],
-    ["tag", "Stack"],
-    ["punct", ">"],
-  ],
-  [
-    ["plain", "    "],
-    ["punct", "</"],
-    ["tag", "ThemeProvider"],
-    ["punct", ">"],
-  ],
-  [
-    ["plain", "  "],
-    ["punct", ");"],
-  ],
-  [["punct", "}"]],
-];
+};
 
-/** The line the editor's cursor and current-line highlight sit on. */
-const CURSOR_LINE = 15;
-
-const lineText = (line: ReadonlyArray<Token>): string =>
-  line.map(([, text]) => text).join("");
+const FILE_NAMES = [
+  "page.tsx",
+  "button.tsx",
+  "theme.ts",
+] as const satisfies ReadonlyArray<FileName>;
 
 export function Terminal() {
   const reduced = usePrefersReducedMotion();
@@ -255,6 +252,8 @@ export function Terminal() {
   const [typed, setTyped] = useState(0);
   const [stage, setStage] = useState<Stage>("typing");
   const [take, setTake] = useState(0);
+  const [file, setFile] = useState<FileName>("page.tsx");
+  const [sidebar, setSidebar] = useState(true);
 
   useEffect(() => {
     if (reduced) {
@@ -301,26 +300,114 @@ export function Terminal() {
     return () => timers.forEach(clearTimeout);
   }, [armed, reduced, take]);
 
+  const lines = FILES[file];
+
   return (
     <section className="landing-section" id="terminal" ref={section}>
-      <p className="landing-kicker">From the terminal to the editor</p>
-      <h2 className="landing-h2">One command, then your editor.</h2>
+      <p className="landing-kicker">Render your apps in a terminal</p>
+      <h2 className="landing-h2">One frame, from prompt to editor.</h2>
       <p className="landing-lead">
-        Add the package and open your app: the components are the ones you
-        already write. shadcn&rsquo;s composition and React&rsquo;s syntax,
-        rendered through GPUix.
+        Read the <a href="/platform/terminal">Terminal guide</a> to run all your
+        apps in a kitty image protocol supported terminal. Everything below,
+        including the file tree and the collapsible sidebar, is the library
+        running in that frame — not a second GUI.
       </p>
 
       <div className="landing-moment" data-stage={stage}>
-        <TerminalWindow stage={stage} typed={typed} />
-        <VsCodeWindow />
+        <div className="landing-term" data-stage={stage}>
+          <div className="landing-term-bar">
+            <span className="landing-term-tab">
+              {stage === "editor" ? `${file} — gpuixui` : "gpuixui — zsh"}
+            </span>
+            <span className="landing-term-session">kitty</span>
+            <button
+              aria-expanded={sidebar}
+              aria-label={sidebar ? "Collapse sidebar" : "Expand sidebar"}
+              className="landing-term-sidebar"
+              disabled={stage !== "editor"}
+              onClick={() => setSidebar((open) => !open)}
+              type="button"
+            >
+              <ChevronGlyph />
+            </button>
+          </div>
+
+          <div className="landing-term-body">
+            <span className="landing-term-line">
+              <span className="landing-term-path">~/gpuixui</span>{" "}
+              <span className="landing-term-prompt">❯</span>{" "}
+              <span
+                className="landing-term-cmd"
+                style={{ width: `${typed}ch` }}
+              >
+                {COMMAND}
+              </span>
+              <span
+                className="landing-term-caret"
+                data-on={stage === "typing"}
+              />
+            </span>
+            <span className="landing-term-out">
+              opening GPUIXUI — terminal mode
+            </span>
+          </div>
+
+          <div className="landing-editor" data-sidebar={sidebar}>
+            <div className="landing-vscode landing-editor-pane">
+              <Explorer file={file} onFile={setFile} />
+              <div className="landing-vscode-main">
+                <div className="landing-vscode-tabs">
+                  {FILE_NAMES.map((name) => (
+                    <button
+                      className="landing-vscode-tab"
+                      data-active={name === file}
+                      key={name}
+                      onClick={() => setFile(name)}
+                      type="button"
+                    >
+                      <TsGlyph />
+                      {name}
+                      <i className="landing-vscode-close">×</i>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="landing-vscode-trail">
+                  <span>src</span>
+                  <i>›</i>
+                  <span>app</span>
+                  <i>›</i>
+                  <span data-current="true">{file}</span>
+                </div>
+
+                <div className="landing-vscode-editor">
+                  <div className="landing-vscode-code">
+                    {lines.map((line, index) => (
+                      <div className="landing-vscode-line" key={index}>
+                        <span className="landing-vscode-num">{index + 1}</span>
+                        <span className="landing-vscode-tokens">
+                          {line.map(([role, text], at) => (
+                            <span className={`vsc-tok-${role}`} key={at}>
+                              {text}
+                            </span>
+                          ))}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="landing-moment-foot">
         <p className="landing-terminal-caption">
-          A browser drawing of VS Code — its Dark Modern chrome and palette —
-          with <code>src/app/page.tsx</code> open. The command is the one{" "}
-          <a href="/getting-started">the guide</a> documents.
+          The editor is drawn inside the terminal frame: the library&apos;s file
+          tree, a collapsible sidebar and its code pane, running where the shell
+          was. The command is the one <a href="/platform/terminal">the guide</a>{" "}
+          documents.
         </p>
         <button
           aria-label="Replay the terminal animation"
@@ -336,219 +423,58 @@ export function Terminal() {
   );
 }
 
-/** The terminal: kitty's dark frame, the prompt, and the shell's answer. */
-function TerminalWindow({ stage, typed }: { stage: Stage; typed: number }) {
-  return (
-    <div aria-hidden="true" className="landing-term">
-      <div className="landing-term-bar">
-        <span className="landing-term-tab">gpuixui — zsh</span>
-        <span className="landing-term-session">kitty</span>
-      </div>
-      <div className="landing-term-body">
-        <span className="landing-term-line">
-          <span className="landing-term-path">~/gpuixui</span>{" "}
-          <span className="landing-term-prompt">❯</span>{" "}
-          <span className="landing-term-cmd" style={{ width: `${typed}ch` }}>
-            {COMMAND}
-          </span>
-          <span className="landing-term-caret" data-on={stage === "typing"} />
-        </span>
-        <span className="landing-term-out">
-          opening GPUIXUI — terminal mode
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/** VS Code's window: title bar, activity bar, explorer, editor group, status bar. */
-function VsCodeWindow() {
-  return (
-    <div aria-hidden="true" className="landing-vscode">
-      <div className="landing-vscode-title">
-        <span className="landing-vscode-lights">
-          <i data-light="close" />
-          <i data-light="minimise" />
-          <i data-light="zoom" />
-        </span>
-        <span className="landing-vscode-window">page.tsx — gpuixui</span>
-      </div>
-
-      <div className="landing-vscode-body">
-        <ActivityBar />
-        <Explorer />
-        <div className="landing-vscode-main">
-          <div className="landing-vscode-tabs">
-            {TABS.map((tab) => (
-              <span
-                className="landing-vscode-tab"
-                data-active={tab.active}
-                key={tab.name}
-              >
-                <TsGlyph />
-                {tab.name}
-                <i className="landing-vscode-close">×</i>
-              </span>
-            ))}
-          </div>
-
-          <div className="landing-vscode-trail">
-            <span>src</span>
-            <i>›</i>
-            <span>app</span>
-            <i>›</i>
-            <span data-current="true">page.tsx</span>
-          </div>
-
-          <div className="landing-vscode-editor">
-            <div className="landing-vscode-code">
-              {CODE.map((line, index) => (
-                <div
-                  className="landing-vscode-line"
-                  data-current={index + 1 === CURSOR_LINE}
-                  key={index}
-                >
-                  <span className="landing-vscode-num">{index + 1}</span>
-                  <span className="landing-vscode-tokens">
-                    {line.map(([role, text], at) => (
-                      <span className={`vsc-tok-${role}`} key={at}>
-                        {text}
-                      </span>
-                    ))}
-                    {index + 1 === CURSOR_LINE ? (
-                      <i className="landing-vscode-caret" />
-                    ) : null}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="landing-vscode-minimap">
-              {CODE.map((line, index) => (
-                <span
-                  data-current={index + 1 === CURSOR_LINE}
-                  key={index}
-                  style={{
-                    width: `${Math.min(100, lineText(line).length * 1.4)}%`,
-                  }}
-                />
-              ))}
-              <i className="landing-vscode-slider" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="landing-vscode-status">
-        <span className="landing-vscode-status-left">
-          <BranchGlyph />
-          main*
-          <i className="landing-vscode-status-gap" />⊗ 0{" "}
-          <span aria-hidden="true">△</span> 0
-        </span>
-        <span className="landing-vscode-status-right">
-          Ln {CURSOR_LINE}, Col 22
-          <span>Spaces: 2</span>
-          <span>UTF-8</span>
-          <span>LF</span>
-          <span>TypeScript React</span>
-        </span>
-      </div>
-    </div>
-  );
-}
-
-const TABS = [
-  { name: "page.tsx", active: true },
-  { name: "button.tsx", active: false },
-] as const;
-
-const TREE = [
-  { name: "gpuixui", depth: 0, kind: "root" },
-  { name: "app", depth: 1, kind: "open" },
-  { name: "page.tsx", depth: 2, kind: "tsx", active: true },
-  { name: "layout.tsx", depth: 2, kind: "tsx" },
-  { name: "components", depth: 1, kind: "open" },
-  { name: "button.tsx", depth: 2, kind: "tsx" },
-  { name: "package.json", depth: 1, kind: "json" },
-  { name: "tsconfig.json", depth: 1, kind: "json" },
-] as const;
-
-function ActivityBar() {
-  return (
-    <div className="landing-vscode-activity">
-      {ACTIVITY.map((item) => (
-        <span
-          className="landing-vscode-action"
-          data-active={item.active === true}
-          key={item.label}
-          title={item.label}
-        >
-          {item.glyph}
-          {item.badge === undefined ? null : (
-            <i className="landing-vscode-badge">{item.badge}</i>
-          )}
-        </span>
-      ))}
-      <span className="landing-vscode-action landing-vscode-action-foot">
-        <PersonGlyph />
-      </span>
-      <span className="landing-vscode-action landing-vscode-action-foot">
-        <GearGlyph />
-      </span>
-    </div>
-  );
-}
-
-interface ActivityItem {
-  readonly label: string;
-  readonly glyph: ReactNode;
-  readonly active?: boolean;
-  readonly badge?: string;
-}
-
-const ACTIVITY: ReadonlyArray<ActivityItem> = [
-  { label: "Explorer", glyph: <FilesGlyph />, active: true },
-  { label: "Search", glyph: <SearchGlyph /> },
-  { label: "Source Control", glyph: <BranchGlyph />, badge: "2" },
-  { label: "Run and Debug", glyph: <PlayGlyph /> },
-  { label: "Extensions", glyph: <BlocksGlyph /> },
-];
-
-/** The explorer: the section header and the tree, with the open file selected. */
-function Explorer() {
+/** The explorer: a collapsible file tree whose files switch the open buffer. */
+function Explorer({
+  file,
+  onFile,
+}: {
+  file: FileName;
+  onFile: (file: FileName) => void;
+}) {
   return (
     <div className="landing-vscode-explorer">
       <div className="landing-vscode-section">
         <span>Explorer</span>
-        <i>…</i>
       </div>
       <div className="landing-vscode-tree">
-        {TREE.map((row) => (
-          <span
+        <span className="landing-vscode-row" data-kind="root">
+          <ChevronGlyph />
+          gpuixui
+        </span>
+        <button
+          className="landing-vscode-row"
+          data-kind="open"
+          onClick={() => onFile("page.tsx")}
+          type="button"
+        >
+          <ChevronGlyph />
+          app
+        </button>
+        {FILE_NAMES.map((name) => (
+          <button
             className="landing-vscode-row"
-            data-active={row.kind === "tsx" && row.name === "page.tsx"}
-            data-kind={row.kind}
-            key={row.name}
-            style={{ paddingLeft: `${8 + row.depth * 12}px` }}
+            data-active={name === file}
+            data-kind="tsx"
+            key={name}
+            onClick={() => onFile(name)}
+            style={{ paddingLeft: "32px" }}
+            type="button"
           >
-            {row.kind === "root" || row.kind === "open" ? (
-              <ChevronGlyph />
-            ) : (
-              <span className="landing-vscode-indent" />
-            )}
-            {row.kind === "tsx" ? <TsGlyph /> : null}
-            {row.kind === "json" ? (
-              <i className="landing-vscode-json">{"{}"}</i>
-            ) : null}
-            {row.name}
-          </span>
+            <span className="landing-vscode-indent" />
+            <TsGlyph />
+            {name}
+          </button>
         ))}
+        <span className="landing-vscode-row" data-kind="json">
+          <span className="landing-vscode-indent" />
+          <i className="landing-vscode-json">{"{}"}</i>
+          package.json
+        </span>
       </div>
     </div>
   );
 }
 
-/** The replay mark: one turn of the arrow, so the button reads as a reset. */
 function ReplayGlyph() {
   return (
     <svg
@@ -568,92 +494,10 @@ function ReplayGlyph() {
   );
 }
 
-const glyph = (children: ReactNode) => (
-  <svg
-    fill="none"
-    height="20"
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="1.4"
-    viewBox="0 0 24 24"
-    width="20"
-  >
-    {children}
-  </svg>
-);
-
-function FilesGlyph() {
-  return glyph(
-    <>
-      <path d="M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V8Z" />
-      <path d="M14 3v5h5" />
-    </>,
-  );
-}
-
-function SearchGlyph() {
-  return glyph(
-    <>
-      <circle cx="10.5" cy="10.5" r="6" />
-      <path d="m15 15 5 5" />
-    </>,
-  );
-}
-
-function BranchGlyph() {
-  return glyph(
-    <>
-      <circle cx="7" cy="5" r="2" />
-      <circle cx="7" cy="19" r="2" />
-      <circle cx="17" cy="7" r="2" />
-      <path d="M7 7v10M17 9c0 4-6 3-6 8" />
-    </>,
-  );
-}
-
-function PlayGlyph() {
-  return glyph(
-    <>
-      <path d="M6 4.5 19 12 6 19.5Z" />
-      <circle cx="17.5" cy="17.5" r="3.5" />
-    </>,
-  );
-}
-
-function BlocksGlyph() {
-  return glyph(
-    <>
-      <rect height="7" rx="1" width="7" x="3" y="3" />
-      <rect height="7" rx="1" width="7" x="14" y="10" />
-      <path d="M6.5 14v7M3 17.5h7" />
-      <path d="M17.5 3v7M14 6.5h7" />
-    </>,
-  );
-}
-
-function PersonGlyph() {
-  return glyph(
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="10" r="3" />
-      <path d="M6.5 19a6 6 0 0 1 11 0" />
-    </>,
-  );
-}
-
-function GearGlyph() {
-  return glyph(
-    <>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" />
-    </>,
-  );
-}
-
 function ChevronGlyph() {
   return (
     <svg
+      aria-hidden="true"
       fill="none"
       height="12"
       stroke="currentColor"
