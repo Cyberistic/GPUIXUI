@@ -122,139 +122,282 @@ const video = (
 
 /* ------------------------------------------------------------ scenes */
 
-// 0–3: the mark as an app icon, pressed; the Settings window opens out of it.
-const open: Scene = {
-  id: "open",
-  start: 0,
-  duration: 3,
-  css: `#root .icon { position:absolute; left:900px; top:420px; width:120px; height:120px; border-radius:28px; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 10px 30px -10px rgba(30,30,60,.25); display:flex; align-items:center; justify-content:center; }
-    #root .icon i { width:78px; height:78px; background:${ACCENT}; -webkit-mask:url(assets/logo-outline.svg) center/contain no-repeat; mask:url(assets/logo-outline.svg) center/contain no-repeat; }
-    #root .window { position:absolute; left:300px; top:230px; width:1640px; height:922px; transform-origin:660px 250px; opacity:0; }
-    #root .window img { width:100%; height:100%; }`,
-  body: `    <div id="o-icon" class="icon"><i></i></div>
-    <div id="o-win" class="window"><img class="shot" src="${still("settings")}" alt=""></div>
-    <div id="o-cur" class="cursor">${CURSOR}</div>`,
-  script: `tl.set("#o-cur",{x:1180,y:700});
-    tl.to("#o-cur",{x:972,y:492,duration:0.7,ease:"power2.inOut"},0.15);
-    tl.to("#o-cur",{scale:0.86,duration:0.06},0.9).to("#o-cur",{scale:1,duration:0.08},1.0);
-    tl.to("#o-icon",{scale:0.92,duration:0.08},0.9).to("#o-icon",{scale:1,duration:0.12},1.0);
-    tl.fromTo("#o-win",{opacity:0,scale:0.08},{opacity:1,scale:1,duration:0.9,ease:"power3.out"},1.08);
-    tl.to("#o-icon",{opacity:0,duration:0.2},1.1);
-    tl.to("#o-cur",{x:1400,y:820,opacity:0,duration:0.6},1.2);
-    tl.to("#o-win",{x:-20,y:-8,duration:1.8,ease:"none"},1.2);`,
-};
-
-// 3–8.4: three close-ups, 1.8 s each, pushed in on their card, crossfaded.
-const CLOSE = ["cu-switch", "cu-tabs", "cu-slider"] as const;
-const closeups: Scene = {
-  id: "closeups",
-  start: 3,
-  duration: 5.4,
-  css: `#root .cam { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:960px 560px; }
-    #root .cam video { left:0; top:0; width:1920px; height:1080px; }`,
-  body: CLOSE.map(
-    (
-      take,
-      i,
-    ) => `    <div id="c-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0}">
-      ${video(`c-v${i}`, footage(take), i * 1.8, 1.8 + (i < 2 ? 0.25 : 0), "", 1 + i)}
-      <div id="c-cur${i}" class="cursor" style="width:44px"></div>
-    </div>`,
-  )
-    .join("\n")
-    .replace(
-      /<div id="c-cur(\d)" class="cursor" style="width:44px"><\/div>/g,
-      (_, n) =>
-        `<div id="c-cur${n}" class="cursor" style="width:44px">${CURSOR}</div>`,
-    ),
-  script: CLOSE.map((take, i) => {
-    const t = i * 1.8;
-    return `${i > 0 ? `tl.to("#c-cam${i}",{opacity:1,duration:0.25},${t});` : ""}
-    tl.fromTo("#c-cam${i}",{scale:1.45},{scale:1.62,duration:2.05,ease:"none"},${t});
-    ${i < 2 ? `tl.set("#c-cam${i}",{opacity:0},${t + 2.05});` : ""}
-    ${cursorTrack(`c-cur${i}`, cursorOf(take), t, 1)}`;
-  }).join("\n    "),
-};
-
-// 8.4–12.4 and 12.4–16.4: the two stage recordings (stageshow), full frame.
-const stageScene = (
+/** A take's cursor over one clip of it: frames `mediaStart … +duration`, placed at `start`. */
+const cursorClip = (
   id: string,
   take: string,
   start: number,
+  mediaStart: number,
   duration: number,
-): Scene => ({
-  id,
-  start,
-  duration,
-  css: `#root video { left:0; top:0; width:1920px; height:1080px; }`,
-  body: `    ${video(`${id}-v`, footage(take), 0, duration, "")}`,
-  script: "",
-});
-const bento = stageScene("bento", "stage-bento", 8.4, 4);
-const assemble = stageScene("assemble", "stage-assemble", 12.4, 4);
+  k: number,
+): string =>
+  cursorTrack(
+    id,
+    cursorOf(take).filter(
+      (s) =>
+        s.frame / FPS >= mediaStart && s.frame / FPS < mediaStart + duration,
+    ),
+    start - mediaStart,
+    k,
+  );
 
-// 16.4–20.4: one tree, every desktop — Settings switching looks, the Aero
-// desktop's Start menu, the Linux tiling desktop changing palette.
-const DESKS = [
-  // The Settings take draws its own window on the film's ground; the desktops are whole screens.
-  {
-    take: "settings",
-    length: 1.3,
-    width: 2048,
-    height: 1152,
-    scale: 0.8,
-    top: 160,
-    framed: false,
-  },
-  {
-    take: "desktop-aero",
-    length: 1.1,
-    width: 2560,
-    height: 1600,
-    scale: 0.58,
-    top: 175,
-    framed: true,
-  },
-  {
-    take: "tiling",
-    length: 1.6,
-    width: 2560,
-    height: 1440,
-    scale: 0.58,
-    top: 190,
-    framed: true,
-  },
+const clip = (
+  id: string,
+  src: string,
+  start: number,
+  duration: number,
+  mediaStart: number,
+  style = "",
+  track = 1,
+) =>
+  video(id, src, start, duration, style, track).replace(
+    "<video ",
+    `<video data-media-start="${mediaStart}" `,
+  );
+
+// 0–3.6: six controls, one per 0.6 s, each cut on its press — the v3 opening at 1×.
+const MONTAGE = [
+  "cu-switch",
+  "cu-checkbox",
+  "cu-tabs",
+  "cu-toggle",
+  "cu-slider",
+  "cu-button",
 ] as const;
-const desktops: Scene = {
-  id: "desktops",
-  start: 16.4,
-  duration: 4,
-  css: `#root .screen { position:absolute; border-radius:20px; overflow:hidden; box-shadow:0 0 0 1px rgba(0,0,0,.08),0 30px 80px -30px rgba(30,30,60,.35); }
-    #root .plain { position:absolute; }
-    #root .screen video, #root .plain video { left:0; top:0; width:100%; height:100%; }`,
-  body: DESKS.map((d, i) => {
-    const t = DESKS.slice(0, i).reduce((sum, x) => sum + x.length, 0);
-    const w = d.width * d.scale;
-    return `    <div id="d-s${i}" class="${d.framed ? "screen" : "plain"}" style="opacity:${i === 0 ? 1 : 0};left:${(1920 - w) / 2}px;top:${d.top}px;width:${w}px;height:${d.height * d.scale}px">
-      ${video(`d-v${i}`, footage(d.take), t, d.length + 0.2, "", 1 + i)}
-      <div id="d-cur${i}" class="cursor">${CURSOR}</div>
-    </div>`;
-  }).join("\n"),
-  script: DESKS.map((d, i) => {
-    const t = DESKS.slice(0, i).reduce((sum, x) => sum + x.length, 0);
-    return `${i > 0 ? `tl.to("#d-s${i}",{opacity:1,duration:0.2},${t});` : ""}
-    ${i < DESKS.length - 1 ? `tl.set("#d-s${i}",{opacity:0},${t + d.length + 0.2});` : ""}
-    ${cursorTrack(`d-cur${i}`, cursorOf(d.take), t, d.scale)}`;
+const BEAT_CUT = 0.6;
+const PRESS_AT = 0.8; // every close-up presses on its frame 24
+const LEAD_IN = 0.55; // each clip starts this far into its take, so the press lands 0.25 s in
+const montage: Scene = {
+  id: "montage",
+  start: 0,
+  duration: MONTAGE.length * BEAT_CUT,
+  css: `#root .cam { position:absolute; inset:0; transform-origin:960px 540px; }
+    #root .cam video { left:0; top:0; width:1920px; height:1080px; }`,
+  body: MONTAGE.map(
+    (
+      take,
+      i,
+    ) => `    <div id="m-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0}">
+      ${clip(`m-v${i}`, footage(take), i * BEAT_CUT, BEAT_CUT, LEAD_IN, "", 1 + (i % 2))}
+      <div id="m-cur${i}" class="cursor" style="width:46px">${CURSOR}</div>
+    </div>`,
+  ).join("\n"),
+  script: MONTAGE.map((take, i) => {
+    const t = i * BEAT_CUT;
+    return `${i > 0 ? `tl.set("#m-cam${i}",{opacity:1},${t});` : ""}tl.set("#m-cam${i}",{opacity:0},${t + BEAT_CUT});
+    tl.fromTo("#m-cam${i}",{scale:${i % 2 ? 1.95 : 1.7}},{scale:${i % 2 ? 1.8 : 1.85},duration:${BEAT_CUT},ease:"power1.out"},${t});
+    ${cursorClip(`m-cur${i}`, take, t, LEAD_IN, BEAT_CUT, 1)}`;
   }).join("\n    "),
 };
 
-// 20.4–24: the console block in a terminal, the command typed first.
+// 3.6–8.4: a field of live components in columns sliding opposite ways; the
+// camera starts on one being typed into and keeps pulling back to reveal more.
+const GRID = { cols: 9, rows: 9, w: 520, h: 340, gap: 44 };
+const COMPONENTS = [
+  "cu-switch",
+  "cu-tabs",
+  "cu-toggle",
+  "cu-slider",
+  "cu-button",
+  "cu-radio",
+  "cu-checkbox",
+] as const;
+const BLOCKS = [
+  "stats",
+  "pipeline",
+  "notes",
+  "calendar",
+  "viewer",
+  "welcome",
+  "launcher",
+  "agent",
+  "settings",
+  "tiling",
+  "desktop-aero",
+  "slang",
+  "desktop-luna",
+] as const;
+const lastFrame = (take: string): number =>
+  Number(
+    execFileSync("sh", [
+      "-c",
+      `ls "${at(`takes/${take}`)}" | grep png | tail -1`,
+    ])
+      .toString()
+      .slice(0, 4),
+  );
+const tileOf = (col: number, row: number): { take: string; live: boolean } => {
+  const dc = col - 4;
+  const dr = row - 4;
+  if (dc === 0 && dr === 0) return { take: "cu-input", live: true };
+  const ring = Math.max(Math.abs(dc), Math.abs(dr));
+  const n = (col * 7 + row * 3) % 97;
+  if (ring === 1)
+    return {
+      take: COMPONENTS[(col * 3 + row) % COMPONENTS.length]!,
+      live: true,
+    };
+  return (col + row) % 2 === 0
+    ? { take: BLOCKS[n % BLOCKS.length]!, live: false }
+    : { take: COMPONENTS[n % COMPONENTS.length]!, live: false };
+};
+const GRID_LENGTH = 4.8;
+const grid: Scene = {
+  id: "grid",
+  start: 3.6,
+  duration: GRID_LENGTH,
+  css: `#root .cam { position:absolute; left:960px; top:540px; width:0; height:0; }
+    #root .col { position:absolute; top:0; }
+    #root .tile { position:absolute; width:${GRID.w}px; height:${GRID.h}px; border-radius:24px; overflow:hidden; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 10px 30px -14px rgba(30,30,60,.25); }
+    #root .tile img, #root .tile video { position:absolute; }
+    #root .tile img.cover { inset:0; width:100%; height:100%; object-fit:cover; }`,
+  body: `    <div id="g-cam" class="cam">
+${Array.from({ length: GRID.cols }, (_, col) => {
+  const x = (col - 4) * (GRID.w + GRID.gap) - GRID.w / 2;
+  const tiles = Array.from({ length: GRID.rows }, (_, row) => {
+    const { take, live } = tileOf(col, row);
+    const y = (row - 4) * (GRID.h + GRID.gap) - GRID.h / 2;
+    const component = take.startsWith("cu-");
+    const end = still(take, lastFrame(take));
+    const media = component
+      ? `<img src="${end}" alt="" style="left:-220px;top:-100px;width:960px;height:540px">${live ? clip(`g-v${col}-${row}`, footage(take), 0, GRID_LENGTH, 0.3, "left:-220px;top:-100px;width:960px;height:540px", 1 + ((col * GRID.rows + row) % 8)) : ""}`
+      : `<img class="cover" src="${end}" alt="">`;
+    return `        <div class="tile" style="left:0;top:${y}px">${media}</div>`;
+  }).join("\n");
+  return `      <div id="g-col${col}" class="col" style="left:${x}px">\n${tiles}\n      </div>`;
+}).join("\n")}
+    </div>`,
+  script: `const cam = { z: Math.log(2.75) };
+    const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
+    zoom();
+    tl.to(cam, { z: Math.log(0.36), duration: ${GRID_LENGTH}, ease: "power1.inOut", onUpdate: zoom }, 0);
+    ${Array.from({ length: GRID.cols }, (_, col) => {
+      const d = col - 4;
+      if (d === 0) return "";
+      const way = Math.abs(d) % 2 === 1 ? -1 : 1;
+      return `tl.fromTo("#g-col${col}",{y:${-way * 340}},{y:${way * 340},duration:${GRID_LENGTH},ease:"none"},0);`;
+    }).join("")}`,
+};
+
+// 8.4–19.45: what it builds, cut on the actions — the dashboard assembled, one
+// tree across looks and desktops, a chat typed and sent, a calculator used.
+interface Shot {
+  readonly take: string;
+  readonly mediaStart: number;
+  readonly length: number;
+  readonly width: number;
+  readonly height: number;
+  readonly scale: number;
+  readonly framed: boolean;
+  readonly push: readonly [number, number];
+  readonly cursor: boolean;
+}
+const SHOTS: ReadonlyArray<Shot> = [
+  {
+    take: "stage-assemble",
+    mediaStart: 1.2,
+    length: 2.6,
+    width: 1920,
+    height: 1080,
+    scale: 1,
+    framed: false,
+    push: [1, 1.06],
+    cursor: false,
+  },
+  {
+    take: "settings",
+    mediaStart: 0.25,
+    length: 1.75,
+    width: 2048,
+    height: 1152,
+    scale: 0.76,
+    framed: false,
+    push: [1.16, 1],
+    cursor: true,
+  },
+  {
+    take: "desktop-aero",
+    mediaStart: 0.3,
+    length: 1,
+    width: 2560,
+    height: 1600,
+    scale: 0.53,
+    framed: true,
+    push: [1.08, 1],
+    cursor: true,
+  },
+  {
+    take: "tiling",
+    mediaStart: 0.2,
+    length: 1.3,
+    width: 2560,
+    height: 1440,
+    scale: 0.6,
+    framed: true,
+    push: [1.08, 1],
+    cursor: true,
+  },
+  {
+    take: "agent",
+    mediaStart: 0.1,
+    length: 2.4,
+    width: 2200,
+    height: 1400,
+    scale: 0.64,
+    framed: false,
+    push: [1, 1.08],
+    cursor: true,
+  },
+  {
+    take: "slang",
+    mediaStart: 0.2,
+    length: 2,
+    width: 2120,
+    height: 1520,
+    scale: 0.58,
+    framed: true,
+    push: [1.06, 1],
+    cursor: true,
+  },
+];
+/** Below the line's band: a shot fits the frame under it, centred there. */
+const BAND = 170;
+const shotStart = (i: number) =>
+  SHOTS.slice(0, i).reduce((sum, shot) => sum + shot.length, 0);
+const SHOWCASE = 8.4;
+const showcase: Scene = {
+  id: "showcase",
+  start: SHOWCASE,
+  duration: shotStart(SHOTS.length),
+  css: `#root .cam { position:absolute; inset:0; transform-origin:960px 625px; }
+    #root .frame { position:absolute; overflow:hidden; }
+    #root .frame.framed { border-radius:20px; box-shadow:0 0 0 1px rgba(0,0,0,.08),0 30px 80px -30px rgba(30,30,60,.35); }
+    #root .frame video { left:0; top:0; width:100%; height:100%; }`,
+  body: SHOTS.map((shot, i) => {
+    const w = shot.width * shot.scale;
+    const h = shot.height * shot.scale;
+    return `    <div id="s-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0}">
+      <div class="frame${shot.framed ? " framed" : ""}" style="left:${(1920 - w) / 2}px;top:${shot.scale === 1 ? 0 : BAND + (1080 - BAND - h) / 2}px;width:${w}px;height:${h}px">
+        ${clip(`s-v${i}`, footage(shot.take), shotStart(i), shot.length, shot.mediaStart, "", 1 + (i % 2))}
+        ${shot.cursor ? `<div id="s-cur${i}" class="cursor">${CURSOR}</div>` : ""}
+      </div>
+    </div>`;
+  }).join("\n"),
+  script: SHOTS.map((shot, i) => {
+    const t = shotStart(i);
+    return `${i > 0 ? `tl.set("#s-cam${i}",{opacity:1},${t.toFixed(3)});` : ""}tl.set("#s-cam${i}",{opacity:0},${(t + shot.length).toFixed(3)});
+    tl.fromTo("#s-cam${i}",{scale:${shot.push[0]}},{scale:${shot.push[1]},duration:${shot.length},ease:"power2.out"},${t.toFixed(3)});
+    ${shot.cursor ? cursorClip(`s-cur${i}`, shot.take, t, shot.mediaStart, shot.length, shot.scale) : ""}`;
+  }).join("\n    "),
+};
+
+// 19.45–24: the console block in a terminal, the command typed first.
 const TERM = { x: 269, y: 236, scale: 1.34 };
 const COMMAND = "nub run dev console --terminal";
 const terminal: Scene = {
   id: "terminal",
-  start: 20.4,
-  duration: 3.6,
+  start: 19.45,
+  duration: 4.55,
   css: `#root .term { position:absolute; left:${TERM.x}px; top:${TERM.y - 56}px; width:${1024 * TERM.scale}px; height:${576 * TERM.scale + 56}px; border-radius:16px; overflow:hidden; background:#1e1e1e; box-shadow:0 30px 80px -30px rgba(0,0,0,.5); }
     #root .bar { height:56px; display:flex; align-items:center; gap:9px; padding-left:20px; background:#2a2a2a; color:#b0b0b0; font:500 28px Inter, sans-serif; }
     #root .bar i { width:13px; height:13px; border-radius:50%; display:inline-block; }
@@ -264,15 +407,15 @@ const terminal: Scene = {
   body: `    <div class="term">
       <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>gon@whale-island — ${COMMAND}</span></div>
       <div id="t-prompt" class="prompt" data-layout-ignore>$ <b id="t-typed" style="font-weight:500"></b></div>
-      ${video("t-v", footage("term-console"), 0.9, 2.7, "opacity:0")}
+      ${video("t-v", footage("term-console"), 1.2, 3.2, "opacity:0")}
       <div id="t-cur" class="cursor" style="top:56px"></div>
     </div>`.replace(
     `<div id="t-cur" class="cursor" style="top:56px"></div>`,
     `<div id="t-cur" class="cursor" style="top:56px;opacity:0">${CURSOR}</div>`,
   ),
   script: `${[...COMMAND].map((_, i) => `tl.set("#t-typed",{textContent:${JSON.stringify(COMMAND.slice(0, i + 1))}},${(0.1 + i * 0.022).toFixed(3)});`).join("")}
-    tl.set("#t-v",{opacity:1},0.9); tl.set("#t-prompt",{opacity:0},0.9); tl.set("#t-cur",{opacity:1},0.9);
-    ${cursorTrack("t-cur", cursorOf("term-console"), 0.9, TERM.scale)}`,
+    tl.set("#t-v",{opacity:1},1.2); tl.set("#t-prompt",{opacity:0},1.2); tl.set("#t-cur",{opacity:1},1.2);
+    ${cursorTrack("t-cur", cursorOf("term-console"), 1.2, TERM.scale)}`,
 };
 
 // 24–26: the stack, one word per chord stab (the score's bar 12).
@@ -311,64 +454,77 @@ const end: Scene = {
     tl.from("#e-credit",{opacity:0,duration:0.5},1.6);`,
 };
 
-const scenes = [
-  open,
-  closeups,
-  bento,
-  assemble,
-  desktops,
-  terminal,
-  stack,
-  end,
-];
+const scenes = [montage, grid, showcase, terminal, stack, end];
 const LENGTH = 30;
 
 /* ------------------------------------------------------------ lines and sound */
 
-/** One centred lowercase line at a time, Paper's way: grey to ink, never sliding. */
+/** Few words: the pictures carry the film, a line names what they show. */
 const LINES: ReadonlyArray<readonly [number, number, string]> = [
-  [1.2, 3.0, "native apps, now in react"],
-  [3.0, 5.7, "with the components you know"],
-  [5.7, 8.4, "drawn by the gpu, every frame"],
-  [8.4, 12.4, "composed into blocks"],
-  [12.4, 16.4, "put together in seconds"],
-  [16.4, 20.4, "on every desktop"],
-  [20.4, 24.0, "can you believe this is in a terminal through ssh?"],
+  [5.9, 8.4, "every component you need"],
+  [
+    SHOWCASE + shotStart(1),
+    SHOWCASE + shotStart(4),
+    "one tree, every platform",
+  ],
+  [
+    SHOWCASE + shotStart(4),
+    SHOWCASE + shotStart(6),
+    "real apps, built with it",
+  ],
+  [19.45, 24, "can you believe this is in a terminal through ssh?"],
 ];
 
 /** Every cue sits one frame after the picture that causes it. */
+const F = 1 / FPS;
+const shotAt = (i: number, takeSeconds: number) =>
+  SHOWCASE + shotStart(i) + takeSeconds - SHOTS[i]!.mediaStart + F;
+const MONTAGE_SOUNDS = [
+  "press",
+  "cap-0",
+  "cap-1",
+  "cap-2",
+  "detent-4",
+  "thud",
+] as const;
 const CUES: ReadonlyArray<readonly [number, string]> = [
-  [0.93, "press"],
-  [1.12, "air"],
-  ...CLOSE.map(
-    (_, i) =>
-      [
-        3 + i * 1.8 + 24 / FPS + 1 / FPS,
-        ["press", "cap-1", "detent-2"][i]!,
-      ] as const,
+  ...MONTAGE.map(
+    (take, i) =>
+      [i * BEAT_CUT + PRESS_AT - LEAD_IN + F, MONTAGE_SOUNDS[i]!] as const,
+  ).filter(([, sound]) => sound !== "detent-4"),
+  ...[20, 24, 28, 32, 36].map(
+    (frame, n) =>
+      [4 * BEAT_CUT + frame / FPS - LEAD_IN + F, `detent-${n + 2}`] as const,
   ),
-  ...[0, 1, 2, 3, 4, 5].map(
-    (n) => [3 + 3.6 + (20 + n * 4) / FPS, `detent-${n + 3}`] as const,
+  [3.6, "air"],
+  ...[26, 29, 32].map(
+    (frame, n) => [3.6 + frame / FPS - 0.3 + F, `key-${n}`] as const,
   ),
-  [8.4 + 0.67 + 25 / FPS, "press"],
-  ...[12, 30, 46, 62].map(
-    (f, n) => [8.4 + 0.78 + f / FPS, `key-${n}`] as const,
-  ),
-  [8.4 + 0.89, "air"],
+  [3.6 + PRESS_AT - 0.3 + F, "press"],
   ...[0, 1, 2, 3, 4, 5, 6].map(
-    (i) => [12.4 + 2.15 + i * 0.16, "land"] as const,
+    (i) => [shotAt(0, 2.15 + i * 0.16), "land"] as const,
   ),
-  [12.4 + 3.33, "glass-1"],
-  [16.4 + 16 / FPS, "look-win"],
-  [16.4 + 31 / FPS, "look-linux"],
-  [16.4 + 1.3 + 25 / FPS, "press"],
-  [16.4 + 2.4 + 13 / FPS, "press"],
-  [16.4 + 2.4 + 31 / FPS, "glass-2"],
+  [shotAt(0, 3.33), "glass-1"],
+  [shotAt(1, 0.5), "look-win"],
+  [shotAt(1, 1.0), "look-linux"],
+  [shotAt(1, 1.5), "look-mac"],
+  [shotAt(2, 0.8), "press"],
+  [shotAt(3, 0.4), "press"],
+  [shotAt(3, 1.0), "glass-2"],
+  [shotAt(4, 0.1), "press"],
+  ...Array.from(
+    { length: 12 },
+    (_, n) => [shotAt(4, (6 + n * 3) / FPS), `key-${n % 4}`] as const,
+  ),
+  [shotAt(4, 1.5), "press"],
+  ...[12, 30, 46, 62].map(
+    (frame, n) => [shotAt(5, frame / FPS), `key-${n}`] as const,
+  ),
   ...[0, 4, 8, 12, 16, 20, 24, 28].map(
-    (n, i) => [20.4 + 0.1 + n * 0.022, `key-${i % 4}`] as const,
+    (n, i) => [19.45 + 0.1 + n * 0.022, `key-${i % 4}`] as const,
   ),
-  [20.4 + 0.9 + 13 / FPS, "press"],
-  [20.4 + 0.9 + 61 / FPS, "press"],
+  [19.45 + 1.2 + 13 / FPS, "press"],
+  [19.45 + 1.2 + 61 / FPS, "press"],
   [26.1, "mark"],
 ];
 
@@ -398,7 +554,8 @@ const index = `<!doctype html>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1920px; height: 1080px; overflow: hidden; background: ${GROUND}; }
-      .line { position: absolute; left: 0; right: 0; top: 70px; text-align: center; font: 600 64px Inter, sans-serif; letter-spacing: -0.025em; color: ${INK}; }
+      .line { position: absolute; left: 0; right: 0; top: 0; height: 230px; padding-top: 62px; text-align: center; font: 600 64px Inter, sans-serif; letter-spacing: -0.025em; color: ${INK};
+        background: linear-gradient(${GROUND} 62%, rgba(244, 242, 238, 0)); }
     </style>
   </head>
   <body>
@@ -406,8 +563,8 @@ const index = `<!doctype html>
     <div id="root" data-composition-id="main" data-start="0" data-duration="${LENGTH}" data-width="1920" data-height="1080">
 ${scenes.map((s) => `      <div id="${s.id}" data-composition-id="${s.id}" data-composition-src="compositions/${s.id}.html" data-start="${s.start}" data-duration="${s.duration}" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>`).join("\n")}
 ${LINES.map(([start, stop, text], i) => `      <div id="line-${i}" class="line clip" data-start="${start}" data-duration="${(stop - start).toFixed(2)}" data-track-index="9">${text}</div>`).join("\n")}
-      <audio id="score" class="clip" data-start="0" data-duration="${LENGTH}" data-track-index="19" data-volume="0.55" data-fade-out="1.5" src="assets/music/score.wav"></audio>
-${CUES.map(([time, sound], i) => `      <audio id="sfx-${String(i).padStart(2, "0")}" class="clip" data-start="${time.toFixed(3)}" data-duration="${lengthOf(sound).toFixed(3)}" data-track-index="${20 + (i % 8)}" data-volume="0.55" src="assets/sfx/${sound}.wav"></audio>`).join("\n")}
+      <audio id="score" class="clip" data-start="0" data-duration="${LENGTH}" data-track-index="19" data-volume="0.28" data-fade-out="1.5" src="assets/music/score.wav"></audio>
+${CUES.map(([time, sound], i) => `      <audio id="sfx-${String(i).padStart(2, "0")}" class="clip" data-start="${time.toFixed(3)}" data-duration="${lengthOf(sound).toFixed(3)}" data-track-index="${20 + (i % 8)}" data-volume="0.9" src="assets/sfx/${sound}.wav"></audio>`).join("\n")}
     </div>
     <script>
       const tl = gsap.timeline({ paused: true });

@@ -6,7 +6,17 @@
  */
 import { Tabs, TabsList, TabsTrigger } from "@gpuixui/components/tabs";
 import { Card } from "@gpuixui/components/card";
-import { Slider, Stack, Switch, Text } from "@gpuixui/primitives";
+import {
+  Button,
+  Checkbox,
+  Input,
+  RadioGroup,
+  Slider,
+  Stack,
+  Switch,
+  Text,
+  ToggleGroup,
+} from "@gpuixui/primitives";
 import {
   darkTheme,
   extendTheme,
@@ -171,6 +181,7 @@ const closeUp = (
   child: ReactNode,
   pointer: ReadonlyArray<Waypoint>,
   width = 420,
+  keys: Take["keys"] = [],
 ): Take => ({
   width: 960,
   height: 540,
@@ -183,6 +194,7 @@ const closeUp = (
       </Card>,
     ),
   pointer,
+  keys,
 });
 
 /** The pointer arrives, presses `testId` at 0.8 s, and drifts off. */
@@ -222,6 +234,74 @@ export const takes: Readonly<Record<string, Take>> = {
       </Tabs>
     </Stack>,
     tap("c"),
+  ),
+  "cu-checkbox": closeUp(
+    <Stack direction="row" align="center" gap="sm">
+      <Checkbox testId="c" label="Hunter License" />
+      <Text role="label">Hunter License</Text>
+    </Stack>,
+    tap("c"),
+    300,
+  ),
+  "cu-toggle": closeUp(
+    <Stack direction="row" align="center" justify="between">
+      <Text role="label">Range</Text>
+      <ToggleGroup
+        type="single"
+        label="Range"
+        defaultValue="day"
+        options={[
+          { value: "day", label: "Day" },
+          { value: "week", label: "Week" },
+          { value: "month", label: "Month" },
+        ]}
+        itemTestId={(value) => `c-${value}`}
+      />
+    </Stack>,
+    tap("c-month"),
+  ),
+  "cu-button": closeUp(
+    <Stack direction="row" align="center" justify="between">
+      <Stack direction="column">
+        <Text role="label">Greed Island</Text>
+        <Text role="caption" tone="muted">
+          Ready to deploy
+        </Text>
+      </Stack>
+      <Button testId="c" variant="primary">
+        Deploy
+      </Button>
+    </Stack>,
+    tap("c"),
+  ),
+  "cu-radio": closeUp(
+    <RadioGroup
+      label="Nen type"
+      defaultValue="enhancer"
+      options={[
+        { value: "enhancer", label: "Enhancer" },
+        { value: "transmuter", label: "Transmuter" },
+      ]}
+      itemTestId={(value) => `c-${value}`}
+    />,
+    tap("c-transmuter"),
+    300,
+  ),
+  "cu-input": closeUp(
+    <Input testId="c" placeholder="Hunter name" />,
+    [
+      { frame: 0, aim: { testId: "c", dx: 140, dy: 90 } },
+      { frame: 16, aim: { testId: "c" } },
+      { frame: 20, aim: { testId: "c" }, down: true },
+      { frame: 23, aim: { testId: "c" } },
+      { frame: 59, aim: { testId: "c", dx: 60, dy: 40 } },
+    ],
+    360,
+    [
+      { frame: 26, keys: "g" },
+      { frame: 29, keys: "o" },
+      { frame: 32, keys: "n" },
+    ],
   ),
   "cu-slider": closeUp(
     <Stack direction="column" gap="sm">

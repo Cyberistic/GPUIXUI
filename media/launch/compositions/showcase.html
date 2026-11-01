@@ -1,0 +1,548 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #f4f2ee;
+      font-family: Inter, sans-serif;
+    }
+    #root video,
+    #root img.shot {
+      position: absolute;
+      display: block;
+    }
+    #root .cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 34px;
+      transform-origin: 8% 6%;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+    }
+    #root .cursor svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root .cam {
+      position: absolute;
+      inset: 0;
+      transform-origin: 960px 625px;
+    }
+    #root .frame {
+      position: absolute;
+      overflow: hidden;
+    }
+    #root .frame.framed {
+      border-radius: 20px;
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.08),
+        0 30px 80px -30px rgba(30, 30, 60, 0.35);
+    }
+    #root .frame video {
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <div
+    id="root"
+    data-composition-id="showcase"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div id="s-cam0" class="cam" style="opacity: 1">
+      <div
+        class="frame"
+        style="left: 0px; top: 0px; width: 1920px; height: 1080px"
+      >
+        <video
+          data-media-start="1.2"
+          id="s-v0"
+          class="clip"
+          data-start="0"
+          data-duration="2.6"
+          data-track-index="1"
+          muted
+          playsinline
+          src="assets/footage/stage-assemble.mp4"
+          style=""
+        ></video>
+      </div>
+    </div>
+    <div id="s-cam1" class="cam" style="opacity: 0">
+      <div
+        class="frame"
+        style="
+          left: 181.76px;
+          top: 187.24px;
+          width: 1556.48px;
+          height: 875.52px;
+        "
+      >
+        <video
+          data-media-start="0.25"
+          id="s-v1"
+          class="clip"
+          data-start="2.6"
+          data-duration="1.75"
+          data-track-index="2"
+          muted
+          playsinline
+          src="assets/footage/settings.mp4"
+          style=""
+        ></video>
+        <div id="s-cur1" class="cursor">
+          <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+              fill="#000"
+              stroke="#fff"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div id="s-cam2" class="cam" style="opacity: 0">
+      <div
+        class="frame framed"
+        style="
+          left: 281.5999999999999px;
+          top: 201px;
+          width: 1356.8000000000002px;
+          height: 848px;
+        "
+      >
+        <video
+          data-media-start="0.3"
+          id="s-v2"
+          class="clip"
+          data-start="4.35"
+          data-duration="1"
+          data-track-index="1"
+          muted
+          playsinline
+          src="assets/footage/desktop-aero.mp4"
+          style=""
+        ></video>
+        <div id="s-cur2" class="cursor">
+          <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+              fill="#000"
+              stroke="#fff"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div id="s-cam3" class="cam" style="opacity: 0">
+      <div
+        class="frame framed"
+        style="left: 192px; top: 193px; width: 1536px; height: 864px"
+      >
+        <video
+          data-media-start="0.2"
+          id="s-v3"
+          class="clip"
+          data-start="5.35"
+          data-duration="1.3"
+          data-track-index="2"
+          muted
+          playsinline
+          src="assets/footage/tiling.mp4"
+          style=""
+        ></video>
+        <div id="s-cur3" class="cursor">
+          <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+              fill="#000"
+              stroke="#fff"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div id="s-cam4" class="cam" style="opacity: 0">
+      <div
+        class="frame"
+        style="left: 256px; top: 177px; width: 1408px; height: 896px"
+      >
+        <video
+          data-media-start="0.1"
+          id="s-v4"
+          class="clip"
+          data-start="6.65"
+          data-duration="2.4"
+          data-track-index="1"
+          muted
+          playsinline
+          src="assets/footage/agent.mp4"
+          style=""
+        ></video>
+        <div id="s-cur4" class="cursor">
+          <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+              fill="#000"
+              stroke="#fff"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div id="s-cam5" class="cam" style="opacity: 0">
+      <div
+        class="frame framed"
+        style="
+          left: 345.20000000000005px;
+          top: 184.20000000000005px;
+          width: 1229.6px;
+          height: 881.5999999999999px;
+        "
+      >
+        <video
+          data-media-start="0.2"
+          id="s-v5"
+          class="clip"
+          data-start="9.05"
+          data-duration="2"
+          data-track-index="2"
+          muted
+          playsinline
+          src="assets/footage/slang.mp4"
+          style=""
+        ></video>
+        <div id="s-cur5" class="cursor">
+          <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+              fill="#000"
+              stroke="#fff"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.set("#s-cam0", { opacity: 0 }, 2.6);
+    tl.fromTo(
+      "#s-cam0",
+      { scale: 1 },
+      { scale: 1.06, duration: 2.6, ease: "power2.out" },
+      0.0,
+    );
+
+    tl.set("#s-cam1", { opacity: 1 }, 2.6);
+    tl.set("#s-cam1", { opacity: 0 }, 4.35);
+    tl.fromTo(
+      "#s-cam1",
+      { scale: 1.16 },
+      { scale: 1, duration: 1.75, ease: "power2.out" },
+      2.6,
+    );
+    tl.set("#s-cur1", { x: 1267.5, y: 282.6, scale: 1 }, 2.617);
+    tl.set("#s-cur1", { x: 1259.7, y: 276.1, scale: 1 }, 2.65);
+    tl.set("#s-cur1", { x: 1255.7, y: 272.7, scale: 1 }, 2.683);
+    tl.set("#s-cur1", { x: 1254.2, y: 271.5, scale: 1 }, 2.717);
+    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 2.75);
+    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 2.783);
+    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 2.817);
+    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 0.86 }, 2.85);
+    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 0.86 }, 2.883);
+    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 0.86 }, 2.917);
+    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 2.95);
+    tl.set("#s-cur1", { x: 1254.5, y: 271.3, scale: 1 }, 2.983);
+    tl.set("#s-cur1", { x: 1258.1, y: 271.3, scale: 1 }, 3.017);
+    tl.set("#s-cur1", { x: 1267.8, y: 271.3, scale: 1 }, 3.05);
+    tl.set("#s-cur1", { x: 1286.8, y: 271.3, scale: 1 }, 3.083);
+    tl.set("#s-cur1", { x: 1314.7, y: 271.3, scale: 1 }, 3.117);
+    tl.set("#s-cur1", { x: 1333.6, y: 271.3, scale: 1 }, 3.15);
+    tl.set("#s-cur1", { x: 1343.4, y: 271.3, scale: 1 }, 3.183);
+    tl.set("#s-cur1", { x: 1347.0, y: 271.3, scale: 1 }, 3.217);
+    tl.set("#s-cur1", { x: 1347.5, y: 271.3, scale: 1 }, 3.25);
+    tl.set("#s-cur1", { x: 1346.8, y: 271.9, scale: 1 }, 3.283);
+    tl.set("#s-cur1", { x: 1343.6, y: 274.6, scale: 1 }, 3.317);
+    tl.set("#s-cur1", { x: 1342.9, y: 275.1, scale: 0.86 }, 3.35);
+    tl.set("#s-cur1", { x: 1342.9, y: 275.1, scale: 0.86 }, 3.383);
+    tl.set("#s-cur1", { x: 1342.9, y: 275.1, scale: 0.86 }, 3.417);
+    tl.set("#s-cur1", { x: 1342.9, y: 275.1, scale: 1 }, 3.45);
+    tl.set("#s-cur1", { x: 1343.0, y: 275.6, scale: 1 }, 3.483);
+    tl.set("#s-cur1", { x: 1343.4, y: 278.8, scale: 1 }, 3.517);
+    tl.set("#s-cur1", { x: 1344.4, y: 287.5, scale: 1 }, 3.55);
+    tl.set("#s-cur1", { x: 1346.4, y: 304.5, scale: 1 }, 3.583);
+    tl.set("#s-cur1", { x: 1349.3, y: 329.4, scale: 1 }, 3.617);
+    tl.set("#s-cur1", { x: 1351.3, y: 346.3, scale: 1 }, 3.65);
+    tl.set("#s-cur1", { x: 1352.4, y: 355.1, scale: 1 }, 3.683);
+    tl.set("#s-cur1", { x: 1352.7, y: 358.3, scale: 1 }, 3.717);
+    tl.set("#s-cur1", { x: 1352.8, y: 358.7, scale: 1 }, 3.75);
+    tl.set("#s-cur1", { x: 1352.3, y: 361.9, scale: 1 }, 3.783);
+    tl.set("#s-cur1", { x: 1350.2, y: 376.8, scale: 1 }, 3.817);
+    tl.set("#s-cur1", { x: 1349.8, y: 380.0, scale: 0.86 }, 3.85);
+    tl.set("#s-cur1", { x: 1349.8, y: 380.0, scale: 0.86 }, 3.883);
+    tl.set("#s-cur1", { x: 1349.8, y: 380.0, scale: 0.86 }, 3.917);
+    tl.set("#s-cur1", { x: 1349.8, y: 380.0, scale: 1 }, 3.95);
+    tl.set("#s-cur1", { x: 1349.9, y: 380.2, scale: 1 }, 3.983);
+    tl.set("#s-cur1", { x: 1350.9, y: 381.5, scale: 1 }, 4.017);
+    tl.set("#s-cur1", { x: 1353.5, y: 384.9, scale: 1 }, 4.05);
+    tl.set("#s-cur1", { x: 1358.5, y: 391.7, scale: 1 }, 4.083);
+    tl.set("#s-cur1", { x: 1366.9, y: 402.8, scale: 1 }, 4.117);
+    tl.set("#s-cur1", { x: 1378.2, y: 418.0, scale: 1 }, 4.15);
+    tl.set("#s-cur1", { x: 1386.6, y: 429.1, scale: 1 }, 4.183);
+    tl.set("#s-cur1", { x: 1391.7, y: 435.9, scale: 1 }, 4.217);
+    tl.set("#s-cur1", { x: 1394.3, y: 439.3, scale: 1 }, 4.25);
+    tl.set("#s-cur1", { x: 1395.2, y: 440.6, scale: 1 }, 4.283);
+    tl.set("#s-cur1", { x: 1395.4, y: 440.8, scale: 1 }, 4.317);
+    tl.set("#s-cam2", { opacity: 1 }, 4.35);
+    tl.set("#s-cam2", { opacity: 0 }, 5.35);
+    tl.fromTo(
+      "#s-cam2",
+      { scale: 1.08 },
+      { scale: 1, duration: 1, ease: "power2.out" },
+      4.35,
+    );
+    tl.set("#s-cur2", { x: 481.2, y: 732.7, scale: 1 }, 4.35);
+    tl.set("#s-cur2", { x: 384.3, y: 752.9, scale: 1 }, 4.383);
+    tl.set("#s-cur2", { x: 287.3, y: 773.0, scale: 1 }, 4.417);
+    tl.set("#s-cur2", { x: 209.7, y: 789.2, scale: 1 }, 4.45);
+    tl.set("#s-cur2", { x: 149.2, y: 801.8, scale: 1 }, 4.483);
+    tl.set("#s-cur2", { x: 103.8, y: 811.2, scale: 1 }, 4.517);
+    tl.set("#s-cur2", { x: 71.2, y: 818.0, scale: 1 }, 4.55);
+    tl.set("#s-cur2", { x: 49.4, y: 822.6, scale: 1 }, 4.583);
+    tl.set("#s-cur2", { x: 36.2, y: 825.3, scale: 1 }, 4.617);
+    tl.set("#s-cur2", { x: 29.4, y: 826.7, scale: 1 }, 4.65);
+    tl.set("#s-cur2", { x: 26.9, y: 827.3, scale: 1 }, 4.683);
+    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.717);
+    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.75);
+    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.783);
+    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.817);
+    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 0.86 }, 4.85);
+    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 0.86 }, 4.883);
+    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.917);
+    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.95);
+    tl.set("#s-cur2", { x: 26.6, y: 827.3, scale: 1 }, 4.983);
+    tl.set("#s-cur2", { x: 26.8, y: 827.3, scale: 1 }, 5.017);
+    tl.set("#s-cur2", { x: 27.2, y: 827.3, scale: 1 }, 5.05);
+    tl.set("#s-cur2", { x: 27.9, y: 827.3, scale: 1 }, 5.083);
+    tl.set("#s-cur2", { x: 28.9, y: 827.3, scale: 1 }, 5.117);
+    tl.set("#s-cur2", { x: 30.3, y: 827.3, scale: 1 }, 5.15);
+    tl.set("#s-cur2", { x: 32.2, y: 827.3, scale: 1 }, 5.183);
+    tl.set("#s-cur2", { x: 34.7, y: 827.3, scale: 1 }, 5.217);
+    tl.set("#s-cur2", { x: 37.7, y: 827.3, scale: 1 }, 5.25);
+    tl.set("#s-cur2", { x: 41.4, y: 827.3, scale: 1 }, 5.283);
+    tl.set("#s-cur2", { x: 45.9, y: 827.3, scale: 1 }, 5.317);
+    tl.set("#s-cam3", { opacity: 1 }, 5.35);
+    tl.set("#s-cam3", { opacity: 0 }, 6.65);
+    tl.fromTo(
+      "#s-cam3",
+      { scale: 1.08 },
+      { scale: 1, duration: 1.3, ease: "power2.out" },
+      5.35,
+    );
+    tl.set("#s-cur3", { x: 1282.9, y: 325.5, scale: 1 }, 5.35);
+    tl.set("#s-cur3", { x: 1272.3, y: 302.4, scale: 1 }, 5.383);
+    tl.set("#s-cur3", { x: 1266.8, y: 290.6, scale: 1 }, 5.417);
+    tl.set("#s-cur3", { x: 1264.8, y: 286.2, scale: 1 }, 5.45);
+    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.483);
+    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.517);
+    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 0.86 }, 5.55);
+    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 0.86 }, 5.583);
+    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.617);
+    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.65);
+    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.683);
+    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.717);
+    tl.set("#s-cur3", { x: 1264.6, y: 285.7, scale: 1 }, 5.75);
+    tl.set("#s-cur3", { x: 1264.7, y: 285.8, scale: 1 }, 5.783);
+    tl.set("#s-cur3", { x: 1264.8, y: 285.9, scale: 1 }, 5.817);
+    tl.set("#s-cur3", { x: 1265.0, y: 286.1, scale: 1 }, 5.85);
+    tl.set("#s-cur3", { x: 1265.3, y: 286.4, scale: 1 }, 5.883);
+    tl.set("#s-cur3", { x: 1265.7, y: 286.8, scale: 1 }, 5.917);
+    tl.set("#s-cur3", { x: 1266.1, y: 287.2, scale: 1 }, 5.95);
+    tl.set("#s-cur3", { x: 1266.6, y: 287.7, scale: 1 }, 5.983);
+    tl.set("#s-cur3", { x: 1267.2, y: 288.3, scale: 1 }, 6.017);
+    tl.set("#s-cur3", { x: 1268.0, y: 289.1, scale: 1 }, 6.05);
+    tl.set("#s-cur3", { x: 1268.8, y: 289.9, scale: 1 }, 6.083);
+    tl.set("#s-cur3", { x: 1269.8, y: 290.9, scale: 1 }, 6.117);
+    tl.set("#s-cur3", { x: 1271.0, y: 292.1, scale: 1 }, 6.15);
+    tl.set("#s-cur3", { x: 1272.3, y: 293.4, scale: 1 }, 6.183);
+    tl.set("#s-cur3", { x: 1273.7, y: 294.8, scale: 1 }, 6.217);
+    tl.set("#s-cur3", { x: 1275.3, y: 296.4, scale: 1 }, 6.25);
+    tl.set("#s-cur3", { x: 1277.1, y: 298.2, scale: 1 }, 6.283);
+    tl.set("#s-cur3", { x: 1279.1, y: 300.2, scale: 1 }, 6.317);
+    tl.set("#s-cur3", { x: 1281.3, y: 302.4, scale: 1 }, 6.35);
+    tl.set("#s-cur3", { x: 1283.7, y: 304.8, scale: 1 }, 6.383);
+    tl.set("#s-cur3", { x: 1285.9, y: 307.0, scale: 1 }, 6.417);
+    tl.set("#s-cur3", { x: 1287.9, y: 309.0, scale: 1 }, 6.45);
+    tl.set("#s-cur3", { x: 1289.7, y: 310.8, scale: 1 }, 6.483);
+    tl.set("#s-cur3", { x: 1291.3, y: 312.4, scale: 1 }, 6.517);
+    tl.set("#s-cur3", { x: 1292.7, y: 313.8, scale: 1 }, 6.55);
+    tl.set("#s-cur3", { x: 1294.0, y: 315.1, scale: 1 }, 6.583);
+    tl.set("#s-cur3", { x: 1295.2, y: 316.3, scale: 1 }, 6.617);
+    tl.set("#s-cam4", { opacity: 1 }, 6.65);
+    tl.set("#s-cam4", { opacity: 0 }, 9.05);
+    tl.fromTo(
+      "#s-cam4",
+      { scale: 1 },
+      { scale: 1.08, duration: 2.4, ease: "power2.out" },
+      6.65,
+    );
+    tl.set("#s-cur4", { x: 508.2, y: 867.8, scale: 0.86 }, 6.65);
+    tl.set("#s-cur4", { x: 508.2, y: 867.8, scale: 1 }, 6.683);
+    tl.set("#s-cur4", { x: 508.2, y: 867.8, scale: 1 }, 6.717);
+    tl.set("#s-cur4", { x: 508.3, y: 867.8, scale: 1 }, 6.75);
+    tl.set("#s-cur4", { x: 508.7, y: 867.8, scale: 1 }, 6.783);
+    tl.set("#s-cur4", { x: 509.5, y: 867.8, scale: 1 }, 6.817);
+    tl.set("#s-cur4", { x: 510.9, y: 867.8, scale: 1 }, 6.85);
+    tl.set("#s-cur4", { x: 512.8, y: 867.8, scale: 1 }, 6.883);
+    tl.set("#s-cur4", { x: 515.6, y: 867.8, scale: 1 }, 6.917);
+    tl.set("#s-cur4", { x: 519.3, y: 867.8, scale: 1 }, 6.95);
+    tl.set("#s-cur4", { x: 524.0, y: 867.8, scale: 1 }, 6.983);
+    tl.set("#s-cur4", { x: 529.8, y: 867.8, scale: 1 }, 7.017);
+    tl.set("#s-cur4", { x: 537.0, y: 867.8, scale: 1 }, 7.05);
+    tl.set("#s-cur4", { x: 545.6, y: 867.8, scale: 1 }, 7.083);
+    tl.set("#s-cur4", { x: 555.8, y: 867.8, scale: 1 }, 7.117);
+    tl.set("#s-cur4", { x: 567.6, y: 867.8, scale: 1 }, 7.15);
+    tl.set("#s-cur4", { x: 581.3, y: 867.8, scale: 1 }, 7.183);
+    tl.set("#s-cur4", { x: 596.9, y: 867.8, scale: 1 }, 7.217);
+    tl.set("#s-cur4", { x: 614.6, y: 867.8, scale: 1 }, 7.25);
+    tl.set("#s-cur4", { x: 634.6, y: 867.8, scale: 1 }, 7.283);
+    tl.set("#s-cur4", { x: 654.5, y: 867.8, scale: 1 }, 7.317);
+    tl.set("#s-cur4", { x: 672.2, y: 867.8, scale: 1 }, 7.35);
+    tl.set("#s-cur4", { x: 687.8, y: 867.8, scale: 1 }, 7.383);
+    tl.set("#s-cur4", { x: 701.5, y: 867.8, scale: 1 }, 7.417);
+    tl.set("#s-cur4", { x: 713.3, y: 867.8, scale: 1 }, 7.45);
+    tl.set("#s-cur4", { x: 723.5, y: 867.8, scale: 1 }, 7.483);
+    tl.set("#s-cur4", { x: 732.1, y: 867.8, scale: 1 }, 7.517);
+    tl.set("#s-cur4", { x: 739.3, y: 867.8, scale: 1 }, 7.55);
+    tl.set("#s-cur4", { x: 745.2, y: 867.8, scale: 1 }, 7.583);
+    tl.set("#s-cur4", { x: 749.9, y: 867.8, scale: 1 }, 7.617);
+    tl.set("#s-cur4", { x: 753.5, y: 867.8, scale: 1 }, 7.65);
+    tl.set("#s-cur4", { x: 756.3, y: 867.8, scale: 1 }, 7.683);
+    tl.set("#s-cur4", { x: 758.3, y: 867.8, scale: 1 }, 7.717);
+    tl.set("#s-cur4", { x: 759.6, y: 867.8, scale: 1 }, 7.75);
+    tl.set("#s-cur4", { x: 760.4, y: 867.8, scale: 1 }, 7.783);
+    tl.set("#s-cur4", { x: 760.8, y: 867.8, scale: 1 }, 7.817);
+    tl.set("#s-cur4", { x: 760.9, y: 867.8, scale: 1 }, 7.85);
+    tl.set("#s-cur4", { x: 761.0, y: 867.8, scale: 1 }, 7.883);
+    tl.set("#s-cur4", { x: 761.0, y: 867.8, scale: 1 }, 7.917);
+    tl.set("#s-cur4", { x: 761.0, y: 867.8, scale: 1 }, 7.95);
+    tl.set("#s-cur4", { x: 761.0, y: 867.8, scale: 1 }, 7.983);
+    tl.set("#s-cur4", { x: 761.0, y: 867.8, scale: 1 }, 8.017);
+    tl.set("#s-cur4", { x: 761.0, y: 867.8, scale: 0.86 }, 8.05);
+    tl.set("#s-cur4", { x: 761.0, y: 867.8, scale: 0.86 }, 8.083);
+    tl.set("#s-cur4", { x: 761.0, y: 867.8, scale: 0.86 }, 8.117);
+    tl.set("#s-cur4", { x: 761.0, y: 867.8, scale: 1 }, 8.15);
+    tl.set("#s-cur4", { x: 761.0, y: 867.8, scale: 1 }, 8.183);
+    tl.set("#s-cur4", { x: 761.0, y: 867.7, scale: 1 }, 8.217);
+    tl.set("#s-cur4", { x: 761.1, y: 867.5, scale: 1 }, 8.25);
+    tl.set("#s-cur4", { x: 761.3, y: 867.1, scale: 1 }, 8.283);
+    tl.set("#s-cur4", { x: 761.7, y: 866.4, scale: 1 }, 8.317);
+    tl.set("#s-cur4", { x: 762.2, y: 865.3, scale: 1 }, 8.35);
+    tl.set("#s-cur4", { x: 763.0, y: 863.8, scale: 1 }, 8.383);
+    tl.set("#s-cur4", { x: 763.9, y: 861.9, scale: 1 }, 8.417);
+    tl.set("#s-cur4", { x: 765.2, y: 859.3, scale: 1 }, 8.45);
+    tl.set("#s-cur4", { x: 766.8, y: 856.2, scale: 1 }, 8.483);
+    tl.set("#s-cur4", { x: 768.7, y: 852.3, scale: 1 }, 8.517);
+    tl.set("#s-cur4", { x: 771.0, y: 847.7, scale: 1 }, 8.55);
+    tl.set("#s-cur4", { x: 773.8, y: 842.2, scale: 1 }, 8.583);
+    tl.set("#s-cur4", { x: 776.5, y: 836.8, scale: 1 }, 8.617);
+    tl.set("#s-cur4", { x: 778.8, y: 832.1, scale: 1 }, 8.65);
+    tl.set("#s-cur4", { x: 780.7, y: 828.3, scale: 1 }, 8.683);
+    tl.set("#s-cur4", { x: 782.3, y: 825.1, scale: 1 }, 8.717);
+    tl.set("#s-cur4", { x: 783.6, y: 822.6, scale: 1 }, 8.75);
+    tl.set("#s-cur4", { x: 784.6, y: 820.6, scale: 1 }, 8.783);
+    tl.set("#s-cur4", { x: 785.3, y: 819.2, scale: 1 }, 8.817);
+    tl.set("#s-cur4", { x: 785.8, y: 818.1, scale: 1 }, 8.85);
+    tl.set("#s-cur4", { x: 786.2, y: 817.4, scale: 1 }, 8.883);
+    tl.set("#s-cur4", { x: 786.4, y: 817.0, scale: 1 }, 8.917);
+    tl.set("#s-cur4", { x: 786.5, y: 816.7, scale: 1 }, 8.95);
+    tl.set("#s-cur4", { x: 786.6, y: 816.7, scale: 1 }, 8.983);
+    tl.set("#s-cur4", { x: 786.6, y: 816.6, scale: 1 }, 9.017);
+    tl.set("#s-cam5", { opacity: 1 }, 9.05);
+    tl.set("#s-cam5", { opacity: 0 }, 11.05);
+    tl.fromTo(
+      "#s-cam5",
+      { scale: 1.06 },
+      { scale: 1, duration: 2, ease: "power2.out" },
+      9.05,
+    );
+    tl.set("#s-cur5", { x: 223.6, y: 595.7, scale: 1 }, 9.05);
+    tl.set("#s-cur5", { x: 218.5, y: 591.9, scale: 1 }, 9.083);
+    tl.set("#s-cur5", { x: 217.8, y: 591.3, scale: 1 }, 9.117);
+    tl.set("#s-cur5", { x: 217.8, y: 591.3, scale: 1 }, 9.15);
+    tl.set("#s-cur5", { x: 217.8, y: 591.3, scale: 1 }, 9.183);
+    tl.set("#s-cur5", { x: 217.8, y: 591.3, scale: 1 }, 9.217);
+    tl.set("#s-cur5", { x: 217.8, y: 591.3, scale: 0.86 }, 9.25);
+    tl.set("#s-cur5", { x: 217.8, y: 591.3, scale: 0.86 }, 9.283);
+    tl.set("#s-cur5", { x: 217.8, y: 591.3, scale: 0.86 }, 9.317);
+    tl.set("#s-cur5", { x: 217.8, y: 591.3, scale: 1 }, 9.35);
+    tl.set("#s-cur5", { x: 218.5, y: 591.5, scale: 1 }, 9.383);
+    tl.set("#s-cur5", { x: 223.3, y: 593.0, scale: 1 }, 9.417);
+    tl.set("#s-cur5", { x: 236.4, y: 596.9, scale: 1 }, 9.45);
+    tl.set("#s-cur5", { x: 262.0, y: 604.6, scale: 1 }, 9.483);
+    tl.set("#s-cur5", { x: 304.1, y: 617.2, scale: 1 }, 9.517);
+    tl.set("#s-cur5", { x: 361.2, y: 634.4, scale: 1 }, 9.55);
+    tl.set("#s-cur5", { x: 403.3, y: 647.1, scale: 1 }, 9.583);
+    tl.set("#s-cur5", { x: 428.8, y: 654.7, scale: 1 }, 9.617);
+    tl.set("#s-cur5", { x: 441.9, y: 658.7, scale: 1 }, 9.65);
+    tl.set("#s-cur5", { x: 446.8, y: 660.1, scale: 1 }, 9.683);
+    tl.set("#s-cur5", { x: 447.5, y: 660.3, scale: 1 }, 9.717);
+    tl.set("#s-cur5", { x: 447.5, y: 660.3, scale: 1 }, 9.75);
+    tl.set("#s-cur5", { x: 447.5, y: 660.3, scale: 1 }, 9.783);
+    tl.set("#s-cur5", { x: 447.5, y: 660.3, scale: 1 }, 9.817);
+    tl.set("#s-cur5", { x: 447.5, y: 660.3, scale: 0.86 }, 9.85);
+    tl.set("#s-cur5", { x: 447.5, y: 660.3, scale: 0.86 }, 9.883);
+    tl.set("#s-cur5", { x: 447.5, y: 660.3, scale: 0.86 }, 9.917);
+    tl.set("#s-cur5", { x: 447.5, y: 660.3, scale: 1 }, 9.95);
+    tl.set("#s-cur5", { x: 447.0, y: 660.3, scale: 1 }, 9.983);
+    tl.set("#s-cur5", { x: 444.1, y: 660.3, scale: 1 }, 10.017);
+    tl.set("#s-cur5", { x: 436.1, y: 660.3, scale: 1 }, 10.05);
+    tl.set("#s-cur5", { x: 420.6, y: 660.3, scale: 1 }, 10.083);
+    tl.set("#s-cur5", { x: 397.8, y: 660.3, scale: 1 }, 10.117);
+    tl.set("#s-cur5", { x: 382.3, y: 660.3, scale: 1 }, 10.15);
+    tl.set("#s-cur5", { x: 374.3, y: 660.3, scale: 1 }, 10.183);
+    tl.set("#s-cur5", { x: 371.3, y: 660.3, scale: 1 }, 10.217);
+    tl.set("#s-cur5", { x: 370.9, y: 660.3, scale: 1 }, 10.25);
+    tl.set("#s-cur5", { x: 370.9, y: 660.3, scale: 1 }, 10.283);
+    tl.set("#s-cur5", { x: 370.9, y: 660.3, scale: 1 }, 10.317);
+    tl.set("#s-cur5", { x: 370.9, y: 660.3, scale: 1 }, 10.35);
+    tl.set("#s-cur5", { x: 370.9, y: 660.3, scale: 0.86 }, 10.383);
+    tl.set("#s-cur5", { x: 370.9, y: 660.3, scale: 0.86 }, 10.417);
+    tl.set("#s-cur5", { x: 370.9, y: 660.3, scale: 0.86 }, 10.45);
+    tl.set("#s-cur5", { x: 370.9, y: 660.3, scale: 1 }, 10.483);
+    tl.set("#s-cur5", { x: 371.8, y: 661.1, scale: 1 }, 10.517);
+    tl.set("#s-cur5", { x: 377.6, y: 666.4, scale: 1 }, 10.55);
+    tl.set("#s-cur5", { x: 393.6, y: 680.8, scale: 1 }, 10.583);
+    tl.set("#s-cur5", { x: 424.7, y: 708.8, scale: 1 }, 10.617);
+    tl.set("#s-cur5", { x: 470.3, y: 749.9, scale: 1 }, 10.65);
+    tl.set("#s-cur5", { x: 501.3, y: 777.9, scale: 1 }, 10.683);
+    tl.set("#s-cur5", { x: 517.3, y: 792.3, scale: 1 }, 10.717);
+    tl.set("#s-cur5", { x: 523.2, y: 797.6, scale: 1 }, 10.75);
+    tl.set("#s-cur5", { x: 524.0, y: 798.4, scale: 1 }, 10.783);
+    tl.set("#s-cur5", { x: 524.0, y: 798.4, scale: 1 }, 10.817);
+    tl.set("#s-cur5", { x: 524.0, y: 798.4, scale: 1 }, 10.85);
+    tl.set("#s-cur5", { x: 524.0, y: 798.4, scale: 1 }, 10.883);
+    tl.set("#s-cur5", { x: 524.0, y: 798.4, scale: 0.86 }, 10.917);
+    tl.set("#s-cur5", { x: 524.0, y: 798.4, scale: 0.86 }, 10.95);
+    tl.set("#s-cur5", { x: 524.0, y: 798.4, scale: 0.86 }, 10.983);
+    tl.set("#s-cur5", { x: 524.0, y: 798.4, scale: 1 }, 11.017);
+    tl.set({}, {}, 11.049999999999999);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["showcase"] = tl;
+  </script>
+</template>

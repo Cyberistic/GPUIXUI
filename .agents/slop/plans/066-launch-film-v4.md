@@ -125,3 +125,19 @@ media/launch/stage/
 
 `npm ci` in the copied skill is its documented install (its own lockfile); it
 runs only inside the gitignored `.media/`.
+
+## v5 (owner, 2026-11-01): "the earlier version was better, especially the start;
+## this feels like a presentation, not a launch video; lower the music, let the
+## haptics speak; scenes should show what is possible"
+
+- **Opening**: v3's montage back, at 1× — six controls, 0.6 s each, hard-cut as
+  each press lands (`data-media-start` puts the press 0.25 s into its clip).
+- **Grid** replaces the static bento (owner: "a bunch of components in a grid
+  moving in opposite directions, and it keeps zooming out to reveal more"):
+  nine columns of live tiles, alternate columns sliding opposite ways, the
+  camera pulling back exponentially from one input being typed into.
+- **Showcase**: hard cuts on actions with camera pushes — the assemble, Settings
+  across looks, Aero's Start, Linux's palette change, the agent typing and
+  sending, Slang computing.
+- **Words**: four lines on a ground band, none over the montage.
+- **Mix**: score 0.28, haptics 0.9, mastered to −18 LUFS.

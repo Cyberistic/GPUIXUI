@@ -37,6 +37,7 @@ sh media/launch/sound/kit.sh ~/.claude/skills/media-use/audio/assets/sfx
 sh media/launch/sound/score.sh <SalamanderGrandPiano-V3+20200602.sf2>
 nub media/launch/build.ts                 # encodes footage, writes index.html and compositions/
 cd media/launch && npx hyperframes check && npx hyperframes render -o gpuixui-launch.mp4 --crf 14
+ffmpeg -i gpuixui-launch.mp4 -c:v copy -af loudnorm=I=-18:TP=-1:LRA=11 -c:a aac -b:a 256k master.mp4  # the mastered file
 ```
 
 ## Sound

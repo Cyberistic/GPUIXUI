@@ -1,0 +1,677 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #f4f2ee;
+      font-family: Inter, sans-serif;
+    }
+    #root video,
+    #root img.shot {
+      position: absolute;
+      display: block;
+    }
+    #root .cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 34px;
+      transform-origin: 8% 6%;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+    }
+    #root .cursor svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root .cam {
+      position: absolute;
+      left: 960px;
+      top: 540px;
+      width: 0;
+      height: 0;
+    }
+    #root .col {
+      position: absolute;
+      top: 0;
+    }
+    #root .tile {
+      position: absolute;
+      width: 520px;
+      height: 340px;
+      border-radius: 24px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.06),
+        0 10px 30px -14px rgba(30, 30, 60, 0.25);
+    }
+    #root .tile img,
+    #root .tile video {
+      position: absolute;
+    }
+    #root .tile img.cover {
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+  <div
+    id="root"
+    data-composition-id="grid"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div id="g-cam" class="cam">
+      <div id="g-col0" class="col" style="left: -2516px">
+        <div class="tile" style="left: 0; top: -1706px">
+          <img class="cover" src="assets/footage/stats-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -1322px">
+          <img
+            src="assets/footage/cu-slider-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -938px">
+          <img class="cover" src="assets/footage/launcher-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -554px">
+          <img
+            src="assets/footage/cu-toggle-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -170px">
+          <img class="cover" src="assets/footage/desktop-luna-89.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 214px">
+          <img
+            src="assets/footage/cu-tabs-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 598px">
+          <img class="cover" src="assets/footage/welcome-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 982px">
+          <img
+            src="assets/footage/cu-switch-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 1366px">
+          <img class="cover" src="assets/footage/slang-74.png" alt="" />
+        </div>
+      </div>
+      <div id="g-col1" class="col" style="left: -1952px">
+        <div class="tile" style="left: 0; top: -1706px">
+          <img
+            src="assets/footage/cu-switch-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -1322px">
+          <img class="cover" src="assets/footage/desktop-aero-89.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -938px">
+          <img
+            src="assets/footage/cu-checkbox-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -554px">
+          <img class="cover" src="assets/footage/calendar-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -170px">
+          <img
+            src="assets/footage/cu-radio-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 214px">
+          <img class="cover" src="assets/footage/tiling-59.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 598px">
+          <img
+            src="assets/footage/cu-button-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 982px">
+          <img class="cover" src="assets/footage/notes-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 1366px">
+          <img
+            src="assets/footage/cu-slider-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+      </div>
+      <div id="g-col2" class="col" style="left: -1388px">
+        <div class="tile" style="left: 0; top: -1706px">
+          <img class="cover" src="assets/footage/pipeline-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -1322px">
+          <img
+            src="assets/footage/cu-slider-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -938px">
+          <img class="cover" src="assets/footage/agent-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -554px">
+          <img
+            src="assets/footage/cu-toggle-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -170px">
+          <img class="cover" src="assets/footage/stats-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 214px">
+          <img
+            src="assets/footage/cu-tabs-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 598px">
+          <img class="cover" src="assets/footage/launcher-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 982px">
+          <img
+            src="assets/footage/cu-switch-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 1366px">
+          <img class="cover" src="assets/footage/desktop-luna-89.png" alt="" />
+        </div>
+      </div>
+      <div id="g-col3" class="col" style="left: -824px">
+        <div class="tile" style="left: 0; top: -1706px">
+          <img
+            src="assets/footage/cu-switch-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -1322px">
+          <img class="cover" src="assets/footage/slang-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -938px">
+          <img
+            src="assets/footage/cu-checkbox-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -554px">
+          <img
+            src="assets/footage/cu-radio-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          /><video
+            data-media-start="0.3"
+            id="g-v3-3"
+            class="clip"
+            data-start="0"
+            data-duration="4.8"
+            data-track-index="7"
+            muted
+            playsinline
+            src="assets/footage/cu-radio.mp4"
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          ></video>
+        </div>
+        <div class="tile" style="left: 0; top: -170px">
+          <img
+            src="assets/footage/cu-checkbox-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          /><video
+            data-media-start="0.3"
+            id="g-v3-4"
+            class="clip"
+            data-start="0"
+            data-duration="4.8"
+            data-track-index="8"
+            muted
+            playsinline
+            src="assets/footage/cu-checkbox.mp4"
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          ></video>
+        </div>
+        <div class="tile" style="left: 0; top: 214px">
+          <img
+            src="assets/footage/cu-switch-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          /><video
+            data-media-start="0.3"
+            id="g-v3-5"
+            class="clip"
+            data-start="0"
+            data-duration="4.8"
+            data-track-index="1"
+            muted
+            playsinline
+            src="assets/footage/cu-switch.mp4"
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          ></video>
+        </div>
+        <div class="tile" style="left: 0; top: 598px">
+          <img
+            src="assets/footage/cu-button-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 982px">
+          <img class="cover" src="assets/footage/calendar-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 1366px">
+          <img
+            src="assets/footage/cu-slider-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+      </div>
+      <div id="g-col4" class="col" style="left: -260px">
+        <div class="tile" style="left: 0; top: -1706px">
+          <img class="cover" src="assets/footage/notes-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -1322px">
+          <img
+            src="assets/footage/cu-slider-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -938px">
+          <img class="cover" src="assets/footage/settings-59.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -554px">
+          <img
+            src="assets/footage/cu-tabs-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          /><video
+            data-media-start="0.3"
+            id="g-v4-3"
+            class="clip"
+            data-start="0"
+            data-duration="4.8"
+            data-track-index="8"
+            muted
+            playsinline
+            src="assets/footage/cu-tabs.mp4"
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          ></video>
+        </div>
+        <div class="tile" style="left: 0; top: -170px">
+          <img
+            src="assets/footage/cu-input-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          /><video
+            data-media-start="0.3"
+            id="g-v4-4"
+            class="clip"
+            data-start="0"
+            data-duration="4.8"
+            data-track-index="1"
+            muted
+            playsinline
+            src="assets/footage/cu-input.mp4"
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          ></video>
+        </div>
+        <div class="tile" style="left: 0; top: 214px">
+          <img
+            src="assets/footage/cu-slider-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          /><video
+            data-media-start="0.3"
+            id="g-v4-5"
+            class="clip"
+            data-start="0"
+            data-duration="4.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/cu-slider.mp4"
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          ></video>
+        </div>
+        <div class="tile" style="left: 0; top: 598px">
+          <img class="cover" src="assets/footage/agent-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 982px">
+          <img
+            src="assets/footage/cu-switch-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 1366px">
+          <img class="cover" src="assets/footage/stats-74.png" alt="" />
+        </div>
+      </div>
+      <div id="g-col5" class="col" style="left: 304px">
+        <div class="tile" style="left: 0; top: -1706px">
+          <img
+            src="assets/footage/cu-switch-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -1322px">
+          <img class="cover" src="assets/footage/desktop-luna-89.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -938px">
+          <img
+            src="assets/footage/cu-checkbox-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -554px">
+          <img
+            src="assets/footage/cu-button-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          /><video
+            data-media-start="0.3"
+            id="g-v5-3"
+            class="clip"
+            data-start="0"
+            data-duration="4.8"
+            data-track-index="1"
+            muted
+            playsinline
+            src="assets/footage/cu-button.mp4"
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          ></video>
+        </div>
+        <div class="tile" style="left: 0; top: -170px">
+          <img
+            src="assets/footage/cu-radio-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          /><video
+            data-media-start="0.3"
+            id="g-v5-4"
+            class="clip"
+            data-start="0"
+            data-duration="4.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/cu-radio.mp4"
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          ></video>
+        </div>
+        <div class="tile" style="left: 0; top: 214px">
+          <img
+            src="assets/footage/cu-checkbox-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          /><video
+            data-media-start="0.3"
+            id="g-v5-5"
+            class="clip"
+            data-start="0"
+            data-duration="4.8"
+            data-track-index="3"
+            muted
+            playsinline
+            src="assets/footage/cu-checkbox.mp4"
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          ></video>
+        </div>
+        <div class="tile" style="left: 0; top: 598px">
+          <img
+            src="assets/footage/cu-button-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 982px">
+          <img class="cover" src="assets/footage/viewer-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 1366px">
+          <img
+            src="assets/footage/cu-slider-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+      </div>
+      <div id="g-col6" class="col" style="left: 868px">
+        <div class="tile" style="left: 0; top: -1706px">
+          <img class="cover" src="assets/footage/calendar-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -1322px">
+          <img
+            src="assets/footage/cu-slider-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -938px">
+          <img class="cover" src="assets/footage/tiling-59.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -554px">
+          <img
+            src="assets/footage/cu-toggle-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -170px">
+          <img class="cover" src="assets/footage/notes-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 214px">
+          <img
+            src="assets/footage/cu-tabs-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 598px">
+          <img class="cover" src="assets/footage/settings-59.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 982px">
+          <img
+            src="assets/footage/cu-switch-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 1366px">
+          <img class="cover" src="assets/footage/pipeline-74.png" alt="" />
+        </div>
+      </div>
+      <div id="g-col7" class="col" style="left: 1432px">
+        <div class="tile" style="left: 0; top: -1706px">
+          <img
+            src="assets/footage/cu-switch-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -1322px">
+          <img class="cover" src="assets/footage/stats-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -938px">
+          <img
+            src="assets/footage/cu-checkbox-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -554px">
+          <img class="cover" src="assets/footage/launcher-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -170px">
+          <img
+            src="assets/footage/cu-radio-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 214px">
+          <img class="cover" src="assets/footage/desktop-luna-89.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 598px">
+          <img
+            src="assets/footage/cu-button-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 982px">
+          <img class="cover" src="assets/footage/welcome-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 1366px">
+          <img
+            src="assets/footage/cu-slider-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+      </div>
+      <div id="g-col8" class="col" style="left: 1996px">
+        <div class="tile" style="left: 0; top: -1706px">
+          <img class="cover" src="assets/footage/viewer-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -1322px">
+          <img
+            src="assets/footage/cu-slider-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -938px">
+          <img class="cover" src="assets/footage/desktop-aero-89.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: -554px">
+          <img
+            src="assets/footage/cu-toggle-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: -170px">
+          <img class="cover" src="assets/footage/calendar-74.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 214px">
+          <img
+            src="assets/footage/cu-tabs-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 598px">
+          <img class="cover" src="assets/footage/tiling-59.png" alt="" />
+        </div>
+        <div class="tile" style="left: 0; top: 982px">
+          <img
+            src="assets/footage/cu-switch-59.png"
+            alt=""
+            style="left: -220px; top: -100px; width: 960px; height: 540px"
+          />
+        </div>
+        <div class="tile" style="left: 0; top: 1366px">
+          <img class="cover" src="assets/footage/notes-74.png" alt="" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const cam = { z: Math.log(2.75) };
+    const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
+    zoom();
+    tl.to(
+      cam,
+      {
+        z: Math.log(0.36),
+        duration: 4.8,
+        ease: "power1.inOut",
+        onUpdate: zoom,
+      },
+      0,
+    );
+    tl.fromTo(
+      "#g-col0",
+      { y: -340 },
+      { y: 340, duration: 4.8, ease: "none" },
+      0,
+    );
+    tl.fromTo(
+      "#g-col1",
+      { y: 340 },
+      { y: -340, duration: 4.8, ease: "none" },
+      0,
+    );
+    tl.fromTo(
+      "#g-col2",
+      { y: -340 },
+      { y: 340, duration: 4.8, ease: "none" },
+      0,
+    );
+    tl.fromTo(
+      "#g-col3",
+      { y: 340 },
+      { y: -340, duration: 4.8, ease: "none" },
+      0,
+    );
+    tl.fromTo(
+      "#g-col5",
+      { y: 340 },
+      { y: -340, duration: 4.8, ease: "none" },
+      0,
+    );
+    tl.fromTo(
+      "#g-col6",
+      { y: -340 },
+      { y: 340, duration: 4.8, ease: "none" },
+      0,
+    );
+    tl.fromTo(
+      "#g-col7",
+      { y: 340 },
+      { y: -340, duration: 4.8, ease: "none" },
+      0,
+    );
+    tl.fromTo(
+      "#g-col8",
+      { y: -340 },
+      { y: 340, duration: 4.8, ease: "none" },
+      0,
+    );
+    tl.set({}, {}, 4.8);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["grid"] = tl;
+  </script>
+</template>
