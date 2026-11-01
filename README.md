@@ -41,8 +41,14 @@ nub run dev:playground   # the native playground window
 Add a component to your own app with the shadcn CLI:
 
 ```sh
-npx shadcn@latest add https://gpuixui.sudokw.com/primitives-button.json
+npx shadcn@latest add @sudokw/primitives-button
 ```
+
+The item installs the source, the `@gpuixui/*` runtime it imports and the npm
+packages, under `src/components/ui/gpuixui/`. The copied files need
+`"jsxImportSource": "@gpuix/react"` in the project's `tsconfig.json`, because the
+CLI drops each file's leading comment, where the source declares it. The
+[registry page](https://gpuixui.sudokw.com/registry) has the full walkthrough.
 
 `@gpuix/native` ships prebuilt binaries for Apple Silicon, Linux x64 and
 Windows. On an Intel Mac, build it once with
