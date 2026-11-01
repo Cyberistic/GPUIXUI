@@ -561,11 +561,22 @@ const knownPlatform = (name: string): PlatformName =>
   isPlatformName(name) ? name : "default";
 
 /**
+ * The host's operating system, when the runtime has one.
+ *
+ * Declared rather than taken from `@types/node`: the library renders in hosts
+ * that ship no Node types — a browser, a bundled app — and `platform` is the
+ * only field it reads.
+ */
+declare const process: { readonly platform?: string } | undefined;
+
+/**
  * The platform the code runs on, or `default` when it is not one the library
  * knows — a browser, for example.
  */
 export const currentPlatform: PlatformName =
-  typeof process === "undefined" ? "default" : knownPlatform(process.platform);
+  typeof process === "undefined" || process.platform === undefined
+    ? "default"
+    : knownPlatform(process.platform);
 
 /** The platform's monospace family. */
 export const systemMonoFamily: string = platformTypes[currentPlatform].mono;
