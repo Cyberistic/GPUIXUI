@@ -3,17 +3,17 @@
  * a Standard MIDI File, rendered by `fluidsynth` with the Salamander Grand Piano
  * (CC BY 3.0, Alexander Holm) — see README §Sound.
  *
- * 104 BPM, D major opening on its relative minor (Bm – G – D – A). Eighteen
- * bars: two of intro (single high notes over a quiet arpeggio), four of theme,
- * four lifted an octave, four of climax in octaves, two of a rising arpeggio and
- * two held on the final chord for the mark. The playing is humanised with a
- * fixed seed, so every render is the same file.
+ * 120 BPM, D major opening on its relative minor (Bm – G – D – A). Fourteen
+ * bars, cut for a film under thirty seconds: four of theme from the first beat,
+ * four lifted an octave, two of climax in octaves, a bar of chord stabs (one per
+ * beat, under the four words) and the final chord held for the mark. The playing
+ * is humanised with a fixed seed, so every render is the same file.
  *
  *   nub media/launch/sound/piano.ts media/launch/sound/piano.mid
  */
 import { writeFileSync } from "node:fs";
 
-export const BPM = 104;
+export const BPM = 120;
 const PPQ = 480;
 
 /** A note: start and length in beats, MIDI pitch, velocity 1–127. */
@@ -182,38 +182,33 @@ const phrase = (
   }
 };
 
-// Intro: quiet arpeggios, a single F#5 on beats one and three, like two taps.
-for (const bar of [0, 1]) {
-  notes.push(...arpeggio(bar, chords[bar]!, 40));
-  notes.push(
-    [bar * 4, 1.5, N.Fs5, 52],
-    [bar * 4 + 2, 1.5, bar === 0 ? N.Fs5 : N.D5, 46],
-  );
-}
-// Theme, lift, climax: four bars each over the progression.
+// Theme and lift, four bars each from the first beat; then two bars of climax.
 const sections: ReadonlyArray<
   readonly [ReadonlyArray<Phrase>, number, number, boolean]
 > = [
-  [theme, 64, 50, false],
-  [lift, 76, 58, false],
-  [climax, 92, 70, true],
+  [theme, 70, 54, false],
+  [lift, 80, 60, false],
+  [climax.slice(0, 2), 94, 72, true],
 ];
-sections.forEach(([bars, right, left, octaves], s) => {
+let at = 0;
+for (const [bars, right, left, octaves] of sections) {
   bars.forEach((p, i) => {
-    const bar = 2 + s * 4 + i;
-    notes.push(...arpeggio(bar, chords[i]!, left));
-    phrase(bar, p, right, octaves);
+    notes.push(...arpeggio(at + i, chords[i]!, left));
+    phrase(at + i, p, right, octaves);
   });
+  at += bars.length;
+}
+// Bar 10: a stab on each beat — Bm, G, D, A — one under each word.
+chords.forEach((chord, beat) => {
+  for (const pitch of [chord.root, ...chord.tones, chord.tones[2] + 12])
+    notes.push([10 * 4 + beat, 0.8, pitch, 84]);
 });
-// Ending: a rising D-major arpeggio, then the chord held for the mark.
-[N.D3, N.A3, N.D4, N.Fs4, N.A4, N.D5, N.Fs5, N.A5].forEach((pitch, i) =>
-  notes.push([14 * 4 + i, 8 - i, pitch, 58 + i * 2]),
-);
+// Bars 11–13: the final D-major chord, held for the mark.
 for (const pitch of [38, N.D3, N.A3, N.Fs4, N.A4, N.D5])
-  notes.push([16 * 4, 8, pitch, 66]);
+  notes.push([11 * 4, 12, pitch, 70]);
 
-/** Total length in beats: eighteen bars. */
-export const BEATS = 18 * 4;
+/** Total length in beats: fourteen bars. */
+export const BEATS = 14 * 4;
 
 const vlq = (value: number): number[] => {
   const bytes = [value & 0x7f];
@@ -233,8 +228,8 @@ const track = (): number[] => {
     );
   }
   // The sustain pedal, re-pressed on every bar (and held through the ending).
-  for (let bar = 0; bar < 18; bar += 1) {
-    if (bar <= 15)
+  for (let bar = 0; bar < 14; bar += 1) {
+    if (bar <= 11)
       events.push({ tick: tick(bar * 4) + 10, data: [0xb0, 64, 0] });
     events.push({ tick: tick(bar * 4) + 30, data: [0xb0, 64, 100] });
   }
