@@ -3,7 +3,7 @@
 <h1 align="center">GPUIxUI</h1>
 
 <p align="center">
-  <strong>One library. Three native looks.</strong><br>
+  <strong>Build super fast GPU-powered for Mac, Windows, Linux & your terminal</strong><br>
   GPUI + React + shadcn + Base UI + Tailwind = GPUIxUI
 </p>
 
@@ -22,15 +22,15 @@
 ## What it is
 
 GPUIxUI is a native UI component library for desktop apps, rendered on the GPU by
-[GPUix](https://github.com/remorses/gpuix) through React — no DOM, no webview. It keeps the
+[GPUix](https://github.com/remorses/gpuix) through React (no DOM or webview). It keeps the
 developer experience of [shadcn/ui](https://ui.shadcn.com): Base UI-style
-compound parts, Tailwind-style class recipes, and components you install as
+compound parts, Tailwind-style class styling, and components you install as
 source you own. One component tree wears a macOS, Windows or Linux look, follows
-an Omarchy desktop theme, and can paint into a kitty or Ghostty terminal.
+an Omarchy desktop theme, and can run in a terminal.
 
 ## Quick start
 
-Requires Node 24.18.0 (`.node-version`) and [nub](https://nub.dev).
+Requires Node 24.18.0 (`.node-version`).
 
 ```sh
 nub install
@@ -48,38 +48,8 @@ npx shadcn@latest add https://gpuixui.sudokw.com/primitives-button.json
 Windows. On an Intel Mac, build it once with
 `sh apps/playground/scripts/build-native-binding.sh`.
 
-## Repository
 
-| Path | What it is |
-| --- | --- |
-| `apps/docs` | The documentation site (Fumadocs on TanStack Start) |
-| `apps/playground` | The native playground and the smoke suites |
-| `packages/*` | The library: tokens, primitives, components, data, shell, dock, editor and more |
-| `examples/blocks` | Whole screens composed from the library |
-| `media/launch` | The launch film, cut from real native windows |
-
-## Development
-
-```sh
-nub run check   # tests-can-fail gate, exports, lint, format, type-check
-nub run lint
-nub run test
-```
-
-## Documentation
-
-Everything is documented at **[gpuixui.sudokw.com](https://gpuixui.sudokw.com)**:
-installation, theming, every component with its API and keyboard notes, and the
-blocks.
-
-## Contributing
-
-Contributions follow the repository rules in [`AGENTS.md`](AGENTS.md): Effect-first
-domain code, tokens as the single source of style, tests that can fail, and every
-component verified in the native runtime. Read it before opening a change.
 
 ## License
 
-MIT, as declared by the public package [`@sudokw/gpuixui`](npm/gpuixui).
-Third-party licences and attribution are recorded in
-[`.agents/slop/LICENSES/`](.agents/slop/LICENSES/).
+MIT
