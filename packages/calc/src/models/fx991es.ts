@@ -139,7 +139,11 @@ const keypad: Keypad = {
       key("ln", "ln", "function", { shift: "e▫" }),
     ),
     row(
-      key("-", "(−)", "function", { shift: "∠", alpha: "A", label: "Negative" }),
+      key("-", "(−)", "function", {
+        shift: "∠",
+        alpha: "A",
+        label: "Negative",
+      }),
       key("°", "°′″", "function", { shift: "←", alpha: "B" }),
       key("hyp", "hyp", "function", { shift: "Abs", alpha: "C" }),
       key("sin", "sin", "function", { shift: "sin⁻¹", alpha: "D" }),

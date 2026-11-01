@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./app": "./src/App.tsx"
+  },
   "description": "A native macOS-feeling Casio fx-991ES Plus, rendered by GPUix with every mode of the manual and a ⌘K command palette.",
   "scripts": {
     "dev": "nub src/main.tsx",

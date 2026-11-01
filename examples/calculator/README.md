@@ -1,15 +1,15 @@
 # Calculator — a native fx-991ES Plus
 
-A macOS-feeling Casio **fx-991ES Plus**, rendered by GPUix through
-`@gpuixui/*`, with every mode in the manual, full keyboard control, a ⌘K
-palette over every function/constant/setup command, light and dark appearance,
-and the same tree in a kitty/Ghostty terminal.
+The Casio **fx-991ES Plus** as you know it, rendered by GPUix through
+`@gpuixui/*`: the graphite body, the grey-green LCD, the familiar key grid with
+its gold SHIFT and red ALPHA legends, every mode in the manual, full keyboard
+control, a ⌘K palette over every function, constant and setup command, and a
+side panel (history, the mode's editor, the catalogue) that folds away. The
+same tree runs in a kitty/Ghostty terminal.
 
-![The calculator in the light appearance](./media/calculator-light.png)
+![The calculator: 1 ÷ 3 in the Natural Display](./media/calculator-natural.png)
 
-![The Natural Display input slot: 1 over 3](./media/calculator-input.png)
-
-![1 ÷ 3 in the Natural Display](./media/calculator-natural.png)
+![The same app in a 1024×576 terminal](./media/calculator-terminal.png)
 
 ![SETUP, opened with SHIFT + MODE](./media/calculator-setup.png)
 
@@ -29,46 +29,42 @@ The mount is `src/main.tsx` — the only file that executes anything. Window
 options come from `nativeWindowOptions(theme, currentPlatform)`; the app owns the
 appearance and restyles every token-driven surface.
 
+## The device
+
+The keypad is `fx991es.keypad`, laid out as the body is: SHIFT, ALPHA, CALC
+and ∫ left of the round replay pad, MODE, ON, x⁻¹ and log▫▫ right of it, three
+rows of small function keys, four rows of large keys. Every legend printed
+above a key does what it says: SHIFT RCL is STO, SHIFT hyp is Abs, ALPHA (−) is
+A, RCL then (−) recalls A, and in CMPLX the ENG key enters `i`.
+
+- **MODE** lists `1:COMP … 8:VECTOR` on the LCD; a digit picks, AC leaves.
+- **SHIFT MODE** (SETUP) and **SHIFT 9** (CLR) open SETUP and its resets.
+- **SHIFT 7 / 8** (CONST, CONV) open the catalogue; **SHIFT 1–5** open the
+  STAT, CMPLX, BASE-N, MATRIX or VECTOR panel.
+- **SHIFT AC** powers the LCD off; any key wakes it.
+
+Printed but not yet wired (`// TODO:` in `packages/calc/src/model.test.ts`):
+mixed fractions (SHIFT ▫/▫), INS, DRG▸, the sexagesimal `←` and a b/c⇔d/c.
+ENG and SHIFT ENG switch engineering notation on and off rather than stepping
+the exponent.
+
+The device keeps its physical colours in light and dark; the window around it
+follows the theme. It is laid out in one unit fitted to the space it gets, so a
+small window or a terminal shows the whole device.
+
 ## Controls
 
 | Input | Action |
 | ----- | ------ |
 | digits, `.` `+` `−` `×` `÷` `^` `( )` `,` | entry |
-| Enter | `=` |
-| Escape | AC |
-| Backspace | DEL |
-| arrows | cursor / history at a result / editor movement |
-| `a/b` | insert a stacked fraction; `→`/`←` move between slots |
-| `√` | insert a radical slot; `^` a superscript slot |
-| `s` `c` `t` | sin cos tan; Shift for inverses |
-| `l` `g` `r` `p` `e` `i` | ln, log, √, π, e, i |
+| Enter / Escape / Backspace | `=` / AC / DEL |
+| arrows | cursor; history at a result; editor movement |
+| `s` `c` `t` `l` `g` `r` `p` `e` `i` | sin cos tan ln log √ π e i (Shift for inverses) |
 | `a`–`f` `x` `y` `m` | variables / independent memory |
-| `h` | hyp latch, then sin/cos/tan for hyperbolic; Shift+hyp for inverses |
 | ⌘K | search every mode, function, constant, conversion and setup command |
 | ⌘1…⌘8 | COMP · CMPLX · STAT · BASE-N · EQN · MATRIX · TABLE · VECTOR |
-| ⌘⇧L | light/dark appearance |
-| ⌘, | SETUP |
-| ⌘⇧Q | power the LCD off (any key wakes) |
-| ⌘H | focus the history inspector |
-
-The on-screen **SHIFT** and **ALPHA** keys latch for one keypress, exactly as
-the display indicators say. **hyp** latches a hyperbolic menu; the next sin/cos/tan
-picks it.
-
-## What the window shows
-
-- **Toolbar** — model name, appearance switch, ⌘K.
-- **Mode rail** — the manual's eight modes; the active mode is the primary
-  button.
-- **LCD** — status indicators (SHIFT, ALPHA, M, STO, RCL, STAT, CMPLX, MAT, VCT,
-  angle, FIX/SCI, Math, history), the entry with a caret, and the result. Matrix,
-  vector, table and STAT results use the result rows.
-- **Keypad** — painted from `fx991es.keypad`; the app owns no second layout.
-- **Inspector** — history (click to replay), the mode's editor (STAT grid, EQN
-  coefficients, MATRIX/VECTOR cells, TABLE range, BASE-N switch), and the
-  manual's 40 constants and 40 conversions in the Catalog tab.
-- **Status bar** — mode, angle, number format, display format, memory, and the
-  palette hint.
+| ⌘H | fold the side panel away or bring it back |
+| ⌘⇧L / ⌘, / ⌘⇧Q | appearance / SETUP / power off |
 
 ## Coverage and honesty
 
@@ -87,9 +83,12 @@ mode-by-mode matrix and the limitations. The important ones:
 - STAT frequency, all seven regressions, estimates and P/Q/R/t are implemented;
   the inspector shows the first eight data rows at a time and the editor scrolls
   by keyboard.
-- The TERMINAL run was verified in a pseudo-terminal: the renderer reported
-  `[gpuix] mount complete` and transmitted frames with `_Ga=T` kitty graphics.
-  No window server is touched in that mode.
+- The terminal run is verified in a pseudo-terminal by the film's rig
+  (`nub apps/playground/dist/film/terminal-take.js <out> calculator
+  'calc-key-7@1' …`): it runs `nub run terminal`, sends the in-band 1024×576
+  resize and SGR mouse presses, and decodes the kitty frames.
+  `SHIFT sin 1 ÷ 2 ) =` painted `sin⁻¹(1÷2)` and `30`
+  (`media/calculator-terminal.png`); the panel toggle folded the panel away.
 
 ## Tests
 

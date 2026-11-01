@@ -2,8 +2,10 @@
  * The calculator in the real GPUix renderer.
  *
  * The claims this guards: the window, the keypad and the display mount; a
- * pointer press on `1 + 2 =` paints `3`; the mode rail switches to the matrix
- * editor; and the appearance switch repaints the body. The first mount loads the
+ * pointer press on `1 + 2 =` paints `3`; MODE opens the device's menu and a
+ * digit picks the matrix mode; the side panel folds away and comes back; the
+ * whole device fits a 1024×576 terminal; and the appearance switch repaints
+ * the window around the device. The first mount loads the
  * native binding and fonts, so the timeout is generous.
  */
 
@@ -16,9 +18,11 @@ vi.setConfig({ testTimeout: 30_000 });
 let unmount = () => {};
 afterEach(() => unmount());
 
-const mount = () => {
-  const root = createTestRoot({ width: 1060, height: 760 });
+const mount = (size = { width: 1060, height: 760 }) => {
+  const root = createTestRoot(size);
   root.render(<CalculatorApp />);
+  root.renderer.flush();
+  root.renderer.dispatchNativeEvents();
   root.renderer.flush();
   unmount = root.unmount;
   return root.renderer;
@@ -60,12 +64,51 @@ describe("the calculator app", () => {
     expect(renderer.getAllText()).toContain("3");
   });
 
-  it("switches to the matrix mode from the mode rail", () => {
+  it("opens the MODE menu on the LCD and picks MATRIX with 6", () => {
     const renderer = mount();
-    click(renderer, "calc-mode-MATRIX");
-    expect(renderer.findByTestId("calc-inspector")).toBeDefined();
+    click(renderer, "calc-key-MODE");
+    expect(renderer.findByTestId("calc-mode-menu")).toBeDefined();
+    expect(renderer.getAllText()).toContain("6:MATRIX");
+    click(renderer, "calc-key-6");
+    expect(renderer.findByTestId("calc-mode-menu")).toBeUndefined();
+    click(renderer, "calc-tab-mode");
     const texts = renderer.getAllText();
     expect(texts.some((text) => text.includes("MatA"))).toBe(true);
+  });
+
+  it("opens the catalogue with SHIFT 7 (CONST)", () => {
+    const renderer = mount();
+    click(renderer, "calc-panel-toggle");
+    expect(renderer.findByTestId("calc-inspector")).toBeUndefined();
+    click(renderer, "calc-key-SHIFT");
+    click(renderer, "calc-key-7");
+    expect(renderer.findByTestId("calc-inspector")).toBeDefined();
+    expect(renderer.getAllText()).toContain("Catalogue");
+  });
+
+  it("folds the side panel away and brings it back", () => {
+    const renderer = mount();
+    expect(renderer.findByTestId("calc-inspector")).toBeDefined();
+    click(renderer, "calc-panel-toggle");
+    expect(renderer.findByTestId("calc-inspector")).toBeUndefined();
+    click(renderer, "calc-panel-toggle");
+    expect(renderer.findByTestId("calc-inspector")).toBeDefined();
+  });
+
+  it("fits the whole device in a 1024×576 terminal and still takes presses", () => {
+    const renderer = mount({ width: 1024, height: 576 });
+    renderer.dispatchNativeEvents();
+    renderer.flush();
+    const body = renderer.findByTestId("calculator-body");
+    const bounds =
+      body === undefined ? null : renderer.getElementBounds(body.id);
+    expect(bounds).not.toBeNull();
+    expect((bounds?.y ?? 0) + (bounds?.height ?? 0)).toBeLessThanOrEqual(576);
+    click(renderer, "calc-key-7");
+    click(renderer, "calc-key-×");
+    click(renderer, "calc-key-6");
+    click(renderer, "calc-key-=");
+    expect(renderer.getAllText()).toContain("42");
   });
 
   it("edits a fraction slot with DEL and re-evaluates it", () => {
@@ -167,12 +210,12 @@ describe("the calculator app", () => {
     expect(renderer.getAllText()).toContain("det(MatA)");
   });
 
-  it("repaints the calculator body when the appearance changes", () => {
+  it("repaints the window around the device when the appearance changes", () => {
     const renderer = mount();
-    const before = renderer.findByTestId("calculator-body")?.style;
+    const before = renderer.findByTestId("calculator-stage")?.style;
     expect(before).toBeDefined();
     click(renderer, "calc-appearance");
-    const after = renderer.findByTestId("calculator-body")?.style;
+    const after = renderer.findByTestId("calculator-stage")?.style;
     expect(after).not.toEqual(before);
   });
 });

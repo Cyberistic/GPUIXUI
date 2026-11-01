@@ -77,6 +77,7 @@ from the plan; VERIFY is not part of this model and is recorded as absent.
 | [740](./740-calculator-engine.md) | `@gpuixui/calc` — engine, parser, model seam | example | — | landed |
 | [741](./741-fx991es-model.md) | fx-991ES Plus model — every mode, key and command | example | 740 | landed |
 | [742](./742-calculator-app.md) | `examples/calculator` — the native app | example | 740, 741 | landed |
+| [743](./743-fx991es-device-ui.md) | The fx-991ES Plus device UI: real keypad, LCD, MODE menu, folding panel, terminal fit | example | 742 | landed |
 
 ## The plan set
 

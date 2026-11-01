@@ -13,6 +13,7 @@ import {
   type Mode,
 } from "@gpuixui/calc";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as Str from "effect/String";
 
 export interface PaletteEntry {
@@ -147,3 +148,59 @@ export const statusItems = (
 /** The mode a `⌘1`…`⌘8` chord names. */
 export const modeForShortcut = (index: number): Mode | null =>
   MODES[index - 1]?.mode ?? null;
+
+/** The MODE menu as the LCD lists it. */
+export const modeMenu: ReadonlyArray<string> = Arr.map(
+  MODES,
+  (mode) => `${mode.index}:${mode.label}`,
+);
+
+/** While the MODE menu is open, a digit 1–8 picks its mode; any other key closes it. */
+export const modeMenuPick = (key: string): Option.Option<Mode> =>
+  /^[1-8]$/.test(key)
+    ? Option.fromNullishOr(modeForShortcut(Number(key)))
+    : Option.none();
+
+export type InspectorTab = "history" | "mode" | "catalog";
+
+/** What SHIFT opens from a number key: the device's menus, as the app's panels. */
+export type ShiftMenu =
+  | {
+      readonly _tag: "panel";
+      readonly tab: InspectorTab;
+      readonly mode: Option.Option<Mode>;
+    }
+  | { readonly _tag: "setup" };
+
+const SHIFT_MODES: Readonly<Record<string, Mode>> = {
+  "1": "STAT",
+  "2": "CMPLX",
+  "3": "BASE-N",
+  "4": "MATRIX",
+  "5": "VECTOR",
+};
+
+/** SHIFT 7/8 (CONST, CONV) open the catalogue; SHIFT 9 (CLR) SETUP's resets; SHIFT 1–5 the mode's panel. */
+export const shiftMenu = (key: string): Option.Option<ShiftMenu> => {
+  if (key === "7" || key === "8")
+    return Option.some({ _tag: "panel", tab: "catalog", mode: Option.none() });
+  if (key === "9") return Option.some({ _tag: "setup" });
+  return Option.map(Option.fromNullishOr(SHIFT_MODES[key]), (mode) => ({
+    _tag: "panel" as const,
+    tab: "mode" as const,
+    mode: Option.some(mode),
+  }));
+};
+
+/** The device's design size; the frame fits a unit `u` to the space it gets. */
+export const DEVICE = { width: 340, height: 620 } as const;
+
+/** The unit that fits the whole device in a `width` × `height` stage. */
+export const deviceUnit = (width: number, height: number): number =>
+  Math.min(
+    1.3,
+    Math.max(
+      0.55,
+      Math.min((width - 24) / DEVICE.width, (height - 24) / DEVICE.height),
+    ),
+  );

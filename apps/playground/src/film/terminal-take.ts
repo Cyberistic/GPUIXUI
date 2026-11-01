@@ -1,7 +1,8 @@
 /**
- * The film's terminal takes: the command the film types, `nub run dev <block>
- * --terminal` in `examples/blocks`, run in a pty by GPUix's terminal platform; its
- * kitty-graphics frames decoded and resampled to 30 fps.
+ * The film's terminal takes: the command the film types (`nub run dev <block>
+ * --terminal` in `examples/blocks`, or the calculator's own `terminal` script),
+ * run in a pty by GPUix's terminal platform; its kitty-graphics frames decoded
+ * and resampled to 30 fps.
  *
  * The pty answers no pixel-size query, so the harness sends the in-band resize
  * kitty terminals send (`CSI 48 ; rows ; cols ; height ; width t`) with a
@@ -11,7 +12,7 @@
  * hand would, reported as SGR motion. Every synchronized-update batch the
  * platform writes is one frame; its arrival time places it.
  *
- *   nub apps/playground/dist/film/terminal-take.js <outDir> <block> <[~]testId@seconds>…
+ *   nub apps/playground/dist/film/terminal-take.js <outDir> <program> <[~]testId@seconds>…
  *
  * A hover stop (`~testId`) moves the pointer there without pressing.
  *
@@ -23,6 +24,7 @@
 import { createTestRoot } from "@gpuix/react/testing";
 import { Console } from "@gpuixui/blocks/console";
 import { SettingsApp } from "@gpuixui/blocks/settings";
+import { CalculatorApp } from "@gpuixui/calculator/app";
 import { Pixels } from "@gpuixui/testing";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -72,10 +74,32 @@ const pointerAt = (
   return from;
 };
 
-/** The blocks the film runs in a terminal, as `main.tsx --terminal` renders them. */
-const blocks: Readonly<Record<string, ReactNode>> = {
-  settings: createElement(SettingsApp, { initialLook: "linux" }),
-  console: createElement(Console),
+interface Program {
+  /** The tree as the terminal run renders it, laid out to measure each click. */
+  readonly tree: ReactNode;
+  /** Where the command runs, relative to the repo root, and the command. */
+  readonly dir: string;
+  readonly command: string;
+}
+
+const block = (tree: ReactNode, name: string): Program => ({
+  tree,
+  dir: "examples/blocks",
+  command: `nub run dev ${name} --terminal`,
+});
+
+/** The programs the film runs in a terminal. */
+const programs: Readonly<Record<string, Program>> = {
+  settings: block(
+    createElement(SettingsApp, { initialLook: "linux" }),
+    "settings",
+  ),
+  console: block(createElement(Console), "console"),
+  calculator: {
+    tree: createElement(CalculatorApp),
+    dir: "examples/calculator",
+    command: "nub run terminal",
+  },
 };
 
 interface Click {
@@ -131,14 +155,18 @@ interface Arrival {
   readonly end: number;
 }
 
-const record = (block: string, clicks: ReadonlyArray<Click>, length: number) =>
+const record = (
+  program: Program,
+  clicks: ReadonlyArray<Click>,
+  length: number,
+) =>
   Effect.callback<{
     bytes: Buffer;
     arrivals: ReadonlyArray<Arrival>;
     firstFull: number;
     sent: ReadonlyArray<number>;
   }>((resume) => {
-    const command = `cd ${BLOCKS} && cat | /usr/bin/script -q /dev/null /bin/sh -c 'stty rows ${SIZE.rows} cols ${SIZE.columns}; exec nub run dev ${block} --terminal'`;
+    const command = `cd ${ROOT}${program.dir} && cat | /usr/bin/script -q /dev/null /bin/sh -c 'stty rows ${SIZE.rows} cols ${SIZE.columns}; exec ${program.command}'`;
     const child = spawn("/bin/sh", ["-c", command], {
       stdio: ["pipe", "pipe", "inherit"],
     });
@@ -225,23 +253,23 @@ const framesOf = (bytes: Buffer, arrivals: ReadonlyArray<Arrival>) => {
   return stamped;
 };
 
-/** The blocks package: the film runs the command it types, in this directory. */
-const BLOCKS = new URL("../../../../examples/blocks", import.meta.url).pathname;
-const [, , outDir = "", block = "", ...specs] = process.argv;
+/** The repo root: each program runs the command the film types, in its directory. */
+const ROOT = new URL("../../../../", import.meta.url).pathname;
+const [, , outDir = "", name = "", ...specs] = process.argv;
 
 Effect.runPromise(
   Effect.gen(function* () {
-    const tree = blocks[block];
-    if (tree === undefined)
+    const program = programs[name];
+    if (program === undefined)
       return yield* Effect.logError(
-        `terminal take: no block "${block}" (${Object.keys(blocks).join(", ")})`,
+        `terminal take: no program "${name}" (${Object.keys(programs).join(", ")})`,
       );
     const wanted = Arr.map(
       specs,
       (spec) => spec.replace(/^~/, "").split("@") as [string, string],
     );
     const points = measure(
-      tree,
+      program.tree,
       Arr.map(wanted, ([testId]) => testId),
     );
     const clicks: Click[] = [];
@@ -259,7 +287,11 @@ Effect.runPromise(
       });
     }
     const length = Math.max(...Arr.map(clicks, (c) => c.at)) + TAIL;
-    const { bytes, arrivals, firstFull } = yield* record(block, clicks, length);
+    const { bytes, arrivals, firstFull } = yield* record(
+      program,
+      clicks,
+      length,
+    );
     const stamped = framesOf(bytes, arrivals);
     yield* Effect.logInfo(
       `${stamped.length} painted frames, first at ${Math.round(firstFull)} ms`,

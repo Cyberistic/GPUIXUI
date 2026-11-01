@@ -4,7 +4,7 @@
 | ----- | ----- |
 | Owner | `calculator` workstream |
 | Depends on | 740, 741, 742 |
-| Status | in progress |
+| Status | landed |
 
 ## Brief (owner, 2026-11-01)
 

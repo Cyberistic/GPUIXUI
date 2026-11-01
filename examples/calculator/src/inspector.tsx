@@ -703,6 +703,7 @@ export const Inspector = ({
           key={id}
           variant={tab === id ? "primary" : "ghost"}
           size="sm"
+          testId={`calc-tab-${id}`}
           onActivate={() => onTab(id)}
         >
           {label}

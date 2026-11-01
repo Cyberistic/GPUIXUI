@@ -1,7 +1,8 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * The calculator app: one native window, the fx-991ES Plus keypad, the LCD, a
- * mode-aware inspector, and the ⌘K palette over every command in the model.
+ * The calculator app: one native window holding the fx-991ES Plus as the device
+ * is — body, LCD and keypad — beside a panel (history, the mode's editor, the
+ * catalogue) that folds away, and the ⌘K palette over every model command.
  *
  * The app is a composition of the library, not a second design system. Every
  * colour comes from `@gpuixui/tokens` except the LCD's physical ink; every
@@ -12,7 +13,6 @@ import {
   calculatorKeyOf,
   defaultModel,
   displayOf,
-  type CalculatorState,
   type CommandAction,
 } from "@gpuixui/calc";
 import { useCalculator } from "@gpuixui/calc/react";
@@ -33,19 +33,26 @@ import {
 } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import { useMemo, useState } from "react";
-import type { KeyEvent } from "@gpuix/react";
+import type { EventPayload, KeyEvent } from "@gpuix/react";
 import {
+  DEVICE,
+  deviceUnit,
   modeForShortcut,
+  modeMenu,
+  modeMenuPick,
   paletteEntries,
   paletteMatches,
+  shiftMenu,
   statusItems,
+  type InspectorTab,
 } from "./app-logic.js";
 import { Display } from "./display.js";
 import { Inspector } from "./inspector.js";
 import { Keypad } from "./keypad.js";
 import { SetupSheet } from "./setup-sheet.js";
-import { bodyPaint } from "./theme.js";
+import { device } from "./theme.js";
 
 const model = defaultModel;
 
@@ -54,13 +61,14 @@ export interface CalculatorAppProps {
   readonly initialDark?: boolean;
 }
 
-type InspectorTab = "history" | "mode" | "catalog";
-
 export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
   const [dark, setDark] = useState(initialDark);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [recents, setRecents] = useState<ReadonlyArray<string>>([]);
-  const [tab, setTab] = useState<InspectorTab>("mode");
+  const [tab, setTab] = useState<InspectorTab>("history");
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [u, setU] = useState(1);
   const [setupOpen, setSetupOpen] = useState(false);
   const [poweredOff, setPoweredOff] = useState(false);
   const [contrast, setContrast] = useState(6);
@@ -83,7 +91,10 @@ export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
       paletteEntries(model, {
         runEngine,
         toggleAppearance: () => setDark((current) => !current),
-        showHistory: () => setTab("history"),
+        showHistory: () => {
+          setTab("history");
+          setPanelOpen(true);
+        },
       }),
     // `run` is stable for the store; the callbacks only close over setters.
     [run],
@@ -98,9 +109,29 @@ export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
       setPoweredOff(false);
       return;
     }
+    if (menuOpen) {
+      setMenuOpen(false);
+      Option.map(modeMenuPick(key), (mode) => run({ _tag: "mode", mode }));
+      return;
+    }
+    if (!state.shift && key === "MODE") {
+      setMenuOpen(true);
+      return;
+    }
     if (state.shift && key === "MODE") {
       press("SHIFT");
       setSetupOpen(true);
+      return;
+    }
+    const menu = state.shift ? shiftMenu(key) : Option.none();
+    if (Option.isSome(menu)) {
+      press("SHIFT");
+      if (menu.value._tag === "setup") setSetupOpen(true);
+      else {
+        Option.map(menu.value.mode, (mode) => run({ _tag: "mode", mode }));
+        setTab(menu.value.tab);
+        setPanelOpen(true);
+      }
       return;
     }
     if (state.shift && key === "AC") {
@@ -132,6 +163,11 @@ export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
     ) {
       event.preventDefault();
       setPoweredOff(true);
+      return;
+    }
+    if (modifiers?.cmd === true && key.toLowerCase() === "h") {
+      event.preventDefault();
+      setPanelOpen((open) => !open);
       return;
     }
     if (modifiers?.cmd === true && key.toLowerCase() === "k") {
@@ -171,7 +207,10 @@ export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
     }
   };
 
-  const body = bodyPaint(theme);
+  const fit = (event: EventPayload) => {
+    if (event.width !== undefined && event.height !== undefined)
+      setU(deviceUnit(event.width, event.height));
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -199,6 +238,21 @@ export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
               }
               actions={
                 <Stack direction="row" gap="2xs" align="center">
+                  <Button
+                    testId="calc-panel-toggle"
+                    variant={panelOpen ? "secondary" : "ghost"}
+                    size="sm"
+                    square
+                    label={panelOpen ? "Hide the panel" : "Show the panel"}
+                    tabIndex={-1}
+                    onActivate={() => setPanelOpen((open) => !open)}
+                  >
+                    <Icon
+                      name="panel-right"
+                      color={theme.colors.foreground}
+                      size="sm"
+                    />
+                  </Button>
                   <Button
                     testId="calc-appearance"
                     variant="ghost"
@@ -246,8 +300,6 @@ export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
               minHeight: 0,
             }}
           >
-            <ModeRail state={state} theme={theme} run={run} />
-
             <div
               style={{
                 display: "flex",
@@ -257,63 +309,76 @@ export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
               }}
             >
               <div
-                testId="calculator-body"
+                testId="calculator-stage"
+                onLayout={fit}
                 style={{
                   display: "flex",
-                  flexDirection: "column",
-                  flexBasis: 486,
-                  flexGrow: 0,
-                  flexShrink: 1,
-                  minWidth: 400,
-                  gap: theme.spacing.sm,
-                  padding: theme.spacing.md,
-                  backgroundColor: body.background,
-                  borderRightWidth: theme.borderWidth.thin,
-                  borderColor: body.border,
+                  flexGrow: 1,
+                  flexBasis: 0,
+                  minWidth: 0,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: theme.colors.muted,
                 }}
               >
-                <Display
-                  display={display}
-                  dark={dark}
-                  theme={theme}
-                  contrast={contrast}
-                  poweredOff={poweredOff}
-                />
-                <Keypad
-                  rows={model.keypad}
-                  shift={state.shift}
-                  alpha={state.alpha}
-                  hyp={state.hyp}
-                  theme={theme}
-                  press={pressKey}
-                />
                 <div
+                  testId="calculator-body"
                   style={{
                     display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: theme.spacing.sm,
+                    flexDirection: "column",
+                    width: DEVICE.width * u,
+                    gap: 10 * u,
+                    padding: 18 * u,
+                    borderRadius: 24 * u,
+                    backgroundColor: device.body,
+                    borderWidth: Math.max(1, 2 * u),
+                    borderColor: device.bodyEdge,
                   }}
                 >
-                  <Text role="caption" tone="muted">
-                    Enter = evaluate · Esc AC · ⌘K every command
-                  </Text>
-                  <Text role="caption" tone="muted">
-                    {state.setup.angle}
-                  </Text>
+                  <DeviceHeader u={u} theme={theme} />
+                  <Display
+                    display={display}
+                    theme={theme}
+                    contrast={contrast}
+                    poweredOff={poweredOff}
+                    menu={menuOpen ? Option.some(modeMenu) : Option.none()}
+                    u={u}
+                  />
+                  <div style={{ height: 2 * u }} />
+                  <Keypad
+                    keypad={model.keypad}
+                    shift={state.shift}
+                    alpha={state.alpha}
+                    hyp={state.hyp}
+                    theme={theme}
+                    u={u}
+                    press={pressKey}
+                  />
                 </div>
               </div>
 
-              <Inspector
-                state={state}
-                theme={theme}
-                dark={dark}
-                run={run}
-                press={pressKey}
-                tab={tab}
-                onTab={setTab}
-              />
+              {panelOpen ? (
+                <div
+                  style={{
+                    display: "flex",
+                    flexBasis: 420,
+                    flexShrink: 1,
+                    minWidth: 300,
+                    borderLeftWidth: theme.borderWidth.thin,
+                    borderColor: theme.colors.border,
+                  }}
+                >
+                  <Inspector
+                    state={state}
+                    theme={theme}
+                    dark={dark}
+                    run={run}
+                    press={pressKey}
+                    tab={tab}
+                    onTab={setTab}
+                  />
+                </div>
+              ) : null}
             </div>
 
             <StatusBar
@@ -360,46 +425,67 @@ export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
   );
 };
 
-const ModeRail = ({
-  state,
+/** The model line and the solar panel above the LCD. */
+const DeviceHeader = ({
+  u,
   theme,
-  run,
 }: {
-  readonly state: CalculatorState;
+  readonly u: number;
   readonly theme: Theme;
-  readonly run: (action: CommandAction) => void;
 }) => (
   <div
-    testId="calculator-modes"
     style={{
       display: "flex",
       flexDirection: "row",
-      gap: 2,
-      paddingLeft: theme.spacing.lg,
-      paddingRight: theme.spacing.lg,
-      paddingTop: theme.spacing.sm,
-      paddingBottom: theme.spacing.sm,
-      backgroundColor: theme.colors.background,
-      borderBottomWidth: theme.borderWidth.thin,
-      borderColor: theme.colors.border,
       alignItems: "center",
+      justifyContent: "space-between",
+      height: 26 * u,
     }}
   >
-    {Arr.map(model.modes, (mode) => (
-      <Button
-        key={mode.mode}
-        variant={state.mode === mode.mode ? "primary" : "ghost"}
-        size="sm"
-        tabIndex={-1}
-        onActivate={() => run({ _tag: "mode", mode: mode.mode })}
-        testId={`calc-mode-${mode.mode}`}
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <text
+        style={{
+          fontFamily: theme.typography.sans,
+          fontSize: 11 * u,
+          lineHeight: 13 * u,
+          fontWeight: 700,
+          color: device.model,
+        }}
       >
-        {mode.label}
-      </Button>
-    ))}
-    <div style={{ flexGrow: 1 }} />
-    <Text role="caption" tone="muted">
-      8 modes · every command in ⌘K
-    </Text>
+        fx-991ES PLUS
+      </text>
+      <text
+        style={{
+          fontFamily: theme.typography.sans,
+          fontSize: 7 * u,
+          lineHeight: 9 * u,
+          fontWeight: 600,
+          color: device.model,
+        }}
+      >
+        NATURAL-V.P.A.M.
+      </text>
+    </div>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        gap: u,
+        padding: 2 * u,
+        borderRadius: 3 * u,
+        backgroundColor: device.solar,
+      }}
+    >
+      {Arr.map(Arr.range(1, 4), (cell) => (
+        <div
+          key={cell}
+          style={{
+            width: 18 * u,
+            height: 16 * u,
+            backgroundColor: device.solarCell,
+          }}
+        />
+      ))}
+    </div>
   </div>
 );

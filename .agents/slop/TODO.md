@@ -11,7 +11,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Calculator example — fx-991ES Plus on GPUix
 
-`[x]` `[██████████]` 7/7
+`[x]` `[██████████]` 9/9
 
 `[x]` Land `@gpuixui/calc` — Effect-first engine, Casio parser/evaluator,
       model seam for a later TI-84 (plans 740/741)
@@ -38,6 +38,12 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
       STAT frequency/decimal/contrast; SHIFT+AC powers off and any key wakes it —
       10 native renderer cases; screenshot `media/calculator-setup.png`
 `[x]` Run `nub run check`, `nub run lint`, `nub run test` and record the result
+`[x]` The device as the owner knows it (plan 743): the real fx-991ES Plus key
+      grid with gold SHIFT and red ALPHA legends that do what they say, the
+      grey-green LCD, MODE menu on the LCD, a side panel that folds away (⌘H) —
+      87 engine, 9 logic and 15 native tests
+`[x]` Calculator in the terminal, verified in a pty: `SHIFT sin 1 ÷ 2 ) =` paints
+      `30` at 1024×576 (`media/calculator-terminal.png`)
 
 ---
 

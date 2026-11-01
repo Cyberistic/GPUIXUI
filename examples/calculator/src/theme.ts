@@ -1,111 +1,53 @@
 /**
- * The calculator's own physical colours.
+ * The calculator's physical colours.
  *
- * Every application surface reads a semantic role from `@gpuixui/tokens`. The
- * LCD is the exception a real device forces: a calculator's display is dark in
- * both themes, with a fixed ink. These are the only literals in the app, and
- * they are named here once.
+ * The window around the calculator reads semantic roles from `@gpuixui/tokens`
+ * and follows light and dark. The device does not: an fx-991ES Plus is a
+ * graphite body with a reflective LCD, black function keys, light number keys,
+ * gold SHIFT legends and red ALPHA legends in any room. These are the only
+ * literals in the app, named here once.
  */
 
-import type { Theme } from "@gpuixui/tokens";
+import type { Tone } from "@gpuixui/calc";
 
-export interface LcdPalette {
-  readonly panel: string;
-  readonly ink: string;
-  readonly dim: string;
-  readonly edge: string;
-  readonly glow: string;
-}
-
-export const lcdPalette = (dark: boolean): LcdPalette =>
-  dark
-    ? {
-        panel: "#0A1711",
-        ink: "#B8F7CF",
-        dim: "#5C8C6F",
-        edge: "#1E3A2B",
-        glow: "#0F2419",
-      }
-    : {
-        panel: "#0D1C15",
-        ink: "#D6FFE6",
-        dim: "#6B9B7D",
-        edge: "#234233",
-        glow: "#12271C",
-      };
-
-export type KeyTone =
-  | "number"
-  | "operator"
-  | "function"
-  | "control"
-  | "equals"
-  | "accent";
+export const device = {
+  body: "#2B2E36",
+  bodyEdge: "#16181D",
+  bezel: "#1D1F25",
+  model: "#C9CDD3",
+  solar: "#3A2E29",
+  solarCell: "#4C3C33",
+  pad: "#BFC4CB",
+  padEdge: "#8B9098",
+  padInk: "#2B2E36",
+  shift: "#E9B949",
+  alpha: "#E5534B",
+  /** The reflective LCD: grey-green glass, dark segments. */
+  lcd: "#C3CCB6",
+  lcdEdge: "#8E9784",
+  lcdInk: "#1B201C",
+} as const;
 
 export interface KeyPaint {
   readonly background: string;
-  readonly foreground: string;
-  readonly border: string;
-  readonly hover: string;
+  readonly edge: string;
+  readonly ink: string;
 }
 
-/** The keycaps, derived from semantic roles rather than invented shades. */
-export const keyPaint = (
-  theme: Theme,
-  tone: KeyTone,
-  active: boolean,
-): KeyPaint => {
-  if (tone === "equals") {
-    return {
-      background: theme.colors.primary,
-      foreground: theme.colors.primaryForeground,
-      border: theme.colors.primary,
-      hover: theme.colors.primary,
-    };
-  }
-  if (tone === "accent" || active) {
-    return {
-      background: theme.colors.accent,
-      foreground: theme.colors.accentForeground,
-      border: theme.colors.primary,
-      hover: theme.colors.primary,
-    };
-  }
-  if (tone === "operator") {
-    return {
-      background: theme.colors.secondary,
-      foreground: theme.colors.secondaryForeground,
-      border: theme.colors.border,
-      hover: theme.colors.accent,
-    };
-  }
-  if (tone === "control") {
-    return {
-      background: theme.colors.muted,
-      foreground: theme.colors.mutedForeground,
-      border: theme.colors.border,
-      hover: theme.colors.accent,
-    };
-  }
-  if (tone === "function") {
-    return {
-      background: theme.colors.card,
-      foreground: theme.colors.cardForeground,
-      border: theme.colors.border,
-      hover: theme.colors.accent,
-    };
-  }
-  return {
-    background: theme.colors.background,
-    foreground: theme.colors.foreground,
-    border: theme.colors.border,
-    hover: theme.colors.accent,
-  };
+const keys: Readonly<Record<"small" | "number" | "clear", KeyPaint>> = {
+  small: { background: "#1A1C21", edge: "#0B0C0F", ink: "#F2F3F5" },
+  number: { background: "#E3E5E8", edge: "#9EA3AA", ink: "#15171B" },
+  clear: { background: "#4F86C6", edge: "#2F5F96", ink: "#FFFFFF" },
 };
 
-/** The calculator body's surface, which is not a window pane. */
-export const bodyPaint = (theme: Theme) => ({
-  background: theme.colors.card,
-  border: theme.colors.border,
-  shadow: theme.elevation.md,
-});
+/** A key's cap, by the tone the model gives it. */
+export const keyPaint = (tone: Tone): KeyPaint =>
+  tone === "accent"
+    ? keys.clear
+    : tone === "number" || tone === "operator" || tone === "equals"
+      ? keys.number
+      : keys.small;
+
+/** The ink a control key's own label wears: SHIFT gold, ALPHA red. */
+export const labelInk = (id: string, paint: KeyPaint): string =>
+  id === "SHIFT" ? device.shift : id === "ALPHA" ? device.alpha : paint.ink;

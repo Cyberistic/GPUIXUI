@@ -259,6 +259,9 @@ importers:
       '@gpuixui/blocks':
         specifier: workspace:*
         version: link:../../examples/blocks
+      '@gpuixui/calculator':
+        specifier: workspace:*
+        version: link:../../examples/calculator
       '@gpuixui/components':
         specifier: workspace:*
         version: link:../../packages/components

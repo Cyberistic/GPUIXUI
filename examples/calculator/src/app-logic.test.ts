@@ -1,6 +1,12 @@
 import { defaultModel, initialState } from "@gpuixui/calc";
 import { describe, expect, it } from "vitest";
+import * as Option from "effect/Option";
 import {
+  DEVICE,
+  deviceUnit,
+  modeMenu,
+  modeMenuPick,
+  shiftMenu,
   modeForShortcut,
   paletteEntries,
   paletteMatches,
@@ -76,5 +82,41 @@ describe("the calculator app's palette", () => {
       "M —",
     ]);
     expect(items.right.some((item) => item.label.includes("⌘K"))).toBe(true);
+  });
+});
+
+describe("the device's menus and fit", () => {
+  it("lists the eight modes as the LCD does and picks one by digit", () => {
+    expect(modeMenu).toEqual([
+      "1:COMP",
+      "2:CMPLX",
+      "3:STAT",
+      "4:BASE-N",
+      "5:EQN",
+      "6:MATRIX",
+      "7:TABLE",
+      "8:VECTOR",
+    ]);
+    expect(modeMenuPick("6")).toEqual(Option.some("MATRIX"));
+    expect(modeMenuPick("9")).toEqual(Option.none());
+    expect(modeMenuPick("AC")).toEqual(Option.none());
+  });
+
+  it("opens SHIFT's number-key menus as panels", () => {
+    expect(shiftMenu("7")).toEqual(
+      Option.some({ _tag: "panel", tab: "catalog", mode: Option.none() }),
+    );
+    expect(shiftMenu("4")).toEqual(
+      Option.some({ _tag: "panel", tab: "mode", mode: Option.some("MATRIX") }),
+    );
+    expect(shiftMenu("9")).toEqual(Option.some({ _tag: "setup" }));
+    expect(shiftMenu("6")).toEqual(Option.none());
+  });
+
+  it("fits the whole device to the space it gets", () => {
+    const u = deviceUnit(600, 480);
+    expect(DEVICE.height * u).toBeLessThanOrEqual(480);
+    expect(DEVICE.width * u).toBeLessThanOrEqual(600);
+    expect(deviceUnit(4000, 4000)).toBe(1.3);
   });
 });

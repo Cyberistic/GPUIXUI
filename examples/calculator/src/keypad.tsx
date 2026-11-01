@@ -1,160 +1,304 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * The keypad, painted from the model's key table.
+ * The keypad, painted from the model's key table in the device's own geometry:
+ * the top cluster around the round replay pad, three rows of small function
+ * keys, four rows of large main keys. Each key wears the legends printed above
+ * it on the body — SHIFT in gold on the left, ALPHA in red on the right.
  *
- * There is no second layout in the app: `fx991es.keypad` is the authority, and
- * a TI-84 model will paint its own rows through the same component. Every key is
- * a real `Button` with an accessible name, but sits out of the Tab order —
- * 60 stops would make the calculator hostile to keyboard users, and the whole
- * calculator is already reachable from the computer keyboard and ⌘K.
+ * Every length is a multiple of `u`, the unit the device frame fits to the space
+ * it is given (GPUix has no transform to scale a finished tree). Keys are real
+ * `Button`s with accessible names, out of the Tab order: the whole calculator is
+ * reachable from the computer keyboard and ⌘K.
  */
 
-import type { KeypadKey, KeypadRow } from "@gpuixui/calc";
+import type {
+  DirectionPad,
+  Keypad as KeypadModel,
+  KeypadKey,
+  KeypadRow,
+} from "@gpuixui/calc";
 import { Button } from "@gpuixui/primitives";
 import type { Theme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
-import { keyPaint } from "./theme.js";
+import { device, keyPaint, labelInk } from "./theme.js";
 
 export interface KeypadProps {
-  readonly rows: ReadonlyArray<KeypadRow>;
+  readonly keypad: KeypadModel;
   readonly shift: boolean;
   readonly alpha: boolean;
   readonly hyp: boolean;
   readonly theme: Theme;
+  /** The device unit: 1 at the design size. */
+  readonly u: number;
   readonly press: (key: string) => void;
 }
 
-const legend = (
-  text: string,
-  color: string,
-  size: number,
-  weight: number,
-  mono: string,
-) => (
+type Size = "small" | "large";
+
+const CAP = {
+  small: { height: 24, font: 11 },
+  large: { height: 38, font: 17 },
+};
+const LEGEND = 9;
+const GAP = { small: 8, large: 10 };
+
+interface KeyProps {
+  readonly held: KeypadKey;
+  readonly size: Size;
+  readonly latched: boolean;
+  readonly theme: Theme;
+  readonly u: number;
+  readonly press: (key: string) => void;
+}
+
+const Legend = ({
+  text,
+  color,
+  u,
+  font,
+}: {
+  readonly text: string;
+  readonly color: string;
+  readonly u: number;
+  readonly font: string;
+}) => (
   <text
     style={{
-      fontFamily: mono,
-      fontSize: size,
-      lineHeight: size + 3,
-      fontWeight: weight,
+      fontFamily: font,
+      fontSize: LEGEND * u,
+      lineHeight: (LEGEND + 2) * u,
+      fontWeight: 600,
       color,
-      textAlign: "center",
+      whiteSpace: "nowrap",
     }}
   >
     {text}
   </text>
 );
 
-const Key = ({
-  held,
-  shift,
-  alpha,
-  hyp,
-  theme,
-  press,
-}: {
-  readonly held: KeypadKey;
-  readonly shift: boolean;
-  readonly alpha: boolean;
-  readonly hyp: boolean;
-  readonly theme: Theme;
-  readonly press: (key: string) => void;
-}) => {
-  const active =
-    (held.id === "SHIFT" && shift) ||
-    (held.id === "ALPHA" && alpha) ||
-    (held.id === "hyp" && hyp);
-  const paint = keyPaint(theme, held.tone ?? "function", active);
-  const mono = theme.typography.mono;
-  const upper = shift ? held.shift : alpha ? held.alpha : undefined;
+const Key = ({ held, size, latched, theme, u, press }: KeyProps) => {
+  const paint = keyPaint(held.tone ?? "function");
+  const font = theme.typography.sans;
+  const cap = CAP[size];
   return (
-    <Button
-      variant="secondary"
-      size="sm"
-      fullWidth
-      testId={`calc-key-${held.id}`}
-      label={held.label ?? held.primary}
-      tabIndex={-1}
-      onActivate={() => press(held.id)}
+    <div
       style={{
-        height: 38,
-        padding: 0,
-        borderRadius: theme.radius.md,
-        backgroundColor: paint.background,
-        borderWidth: theme.borderWidth.thin,
-        borderColor: paint.border,
-        boxShadow: {
-          offsetX: 0,
-          offsetY: 1,
-          blurRadius: 2,
-          spreadRadius: 0,
-          color: paint.border,
-        },
+        display: "flex",
+        flexDirection: "column",
+        flexGrow: 1,
+        flexBasis: 0,
+        minWidth: 0,
+        gap: u,
       }}
     >
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 0,
-          width: "100%",
+          flexDirection: "row",
+          justifyContent:
+            held.shift !== undefined && held.alpha !== undefined
+              ? "space-between"
+              : "center",
+          height: (LEGEND + 2) * u,
+          paddingLeft: u,
+          paddingRight: u,
         }}
       >
-        {upper === undefined
-          ? null
-          : legend(upper, theme.colors.mutedForeground, 8, 500, mono)}
-        {legend(held.primary, paint.foreground, 13, 500, mono)}
+        {held.shift === undefined ? null : (
+          <Legend text={held.shift} color={device.shift} u={u} font={font} />
+        )}
+        {held.alpha === undefined ? null : (
+          <Legend text={held.alpha} color={device.alpha} u={u} font={font} />
+        )}
       </div>
-    </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        fullWidth
+        testId={`calc-key-${held.id}`}
+        label={held.label ?? held.primary}
+        tabIndex={-1}
+        onActivate={() => press(held.id)}
+        style={{
+          height: cap.height * u,
+          padding: 0,
+          borderRadius: (size === "small" ? 7 : 8) * u,
+          backgroundColor: paint.background,
+          borderWidth: Math.max(1, 1.5 * u),
+          borderColor: latched ? labelInk(held.id, paint) : paint.edge,
+          boxShadow: {
+            offsetX: 0,
+            offsetY: 2 * u,
+            blurRadius: 0,
+            spreadRadius: 0,
+            color: device.bodyEdge,
+          },
+        }}
+      >
+        <text
+          style={{
+            fontFamily: font,
+            fontSize: cap.font * u,
+            lineHeight: (cap.font + 4) * u,
+            fontWeight: size === "large" ? 500 : 600,
+            color: labelInk(held.id, paint),
+            textAlign: "center",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {held.primary}
+        </text>
+      </Button>
+    </div>
   );
 };
 
-export const Keypad = ({
+const Rows = ({
   rows,
-  shift,
-  alpha,
-  hyp,
-  theme,
-  press,
-}: KeypadProps) => (
+  size,
+  ...rest
+}: { readonly rows: ReadonlyArray<KeypadRow>; readonly size: Size } & Omit<
+  KeyProps,
+  "held" | "size" | "latched"
+> & { readonly latchedIds: ReadonlyArray<string> }) => (
   <div
-    testId="calc-keypad"
     style={{
       display: "flex",
       flexDirection: "column",
-      gap: 3,
+      gap: (size === "small" ? 4 : 6) * rest.u,
+      flexGrow: 1,
+      flexBasis: 0,
+      minWidth: 0,
     }}
   >
-    {Arr.map(rows, (row, rowIndex) => (
+    {Arr.map(rows, (row, index) => (
       <div
-        key={`row-${rowIndex}`}
+        key={index}
         style={{
           display: "flex",
           flexDirection: "row",
-          gap: 3,
-          alignItems: "stretch",
+          gap: GAP[size] * rest.u,
         }}
       >
         {Arr.map(row.keys, (held) => (
-          <div
+          <Key
             key={held.id}
-            style={{ display: "flex", flexGrow: held.span ?? 1, flexBasis: 0 }}
-          >
-            <div style={{ display: "flex", flexGrow: 1 }}>
-              <Key
-                held={held}
-                shift={shift}
-                alpha={alpha}
-                hyp={hyp}
-                theme={theme}
-                press={press}
-              />
-            </div>
-          </div>
+            held={held}
+            size={size}
+            latched={Arr.contains(rest.latchedIds, held.id)}
+            theme={rest.theme}
+            u={rest.u}
+            press={rest.press}
+          />
         ))}
       </div>
     ))}
   </div>
 );
+
+/** The round replay pad: a silver cap with four presses under it. */
+const Pad = ({
+  pad,
+  u,
+  press,
+}: {
+  readonly pad: DirectionPad;
+  readonly u: number;
+  readonly press: (key: string) => void;
+}) => {
+  const arm = (held: KeypadKey, w: number, h: number) => (
+    <Button
+      variant="ghost"
+      size="sm"
+      testId={`calc-key-${held.id}`}
+      label={held.label ?? held.primary}
+      tabIndex={-1}
+      onActivate={() => press(held.id)}
+      style={{
+        width: w * u,
+        height: h * u,
+        padding: 0,
+        backgroundColor: device.pad,
+        borderRadius: 4 * u,
+      }}
+    >
+      <text
+        style={{ fontSize: 9 * u, lineHeight: 11 * u, color: device.padInk }}
+      >
+        {held.primary}
+      </text>
+    </Button>
+  );
+  return (
+    <div
+      style={{
+        width: 84 * u,
+        height: 66 * u,
+        marginTop: 8 * u,
+        borderRadius: 33 * u,
+        backgroundColor: device.pad,
+        borderWidth: Math.max(1, 1.5 * u),
+        borderColor: device.padEdge,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingTop: 3 * u,
+        paddingBottom: 3 * u,
+      }}
+    >
+      {arm(pad.up, 30, 18)}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          width: 76 * u,
+        }}
+      >
+        {arm(pad.left, 22, 20)}
+        {arm(pad.right, 22, 20)}
+      </div>
+      {arm(pad.down, 30, 18)}
+    </div>
+  );
+};
+
+export const Keypad = ({
+  keypad,
+  shift,
+  alpha,
+  hyp,
+  theme,
+  u,
+  press,
+}: KeypadProps) => {
+  const latchedIds = [
+    ...(shift ? ["SHIFT"] : []),
+    ...(alpha ? ["ALPHA"] : []),
+    ...(hyp ? ["hyp"] : []),
+  ];
+  const common = { theme, u, press, latchedIds };
+  return (
+    <div
+      testId="calc-keypad"
+      style={{ display: "flex", flexDirection: "column", gap: 6 * u }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: 8 * u,
+          alignItems: "flex-start",
+        }}
+      >
+        <Rows rows={keypad.cluster.left} size="small" {...common} />
+        <Pad pad={keypad.cluster.pad} u={u} press={press} />
+        <Rows rows={keypad.cluster.right} size="small" {...common} />
+      </div>
+      <Rows rows={keypad.functions} size="small" {...common} />
+      <div style={{ height: 4 * u }} />
+      <Rows rows={keypad.main} size="large" {...common} />
+    </div>
+  );
+};

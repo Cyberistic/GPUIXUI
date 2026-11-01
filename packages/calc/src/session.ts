@@ -1599,7 +1599,11 @@ export const press = (
   if (key === "left" || key === "right") {
     return Effect.succeed(
       patch(state, {
-        cursor: moveInInput(state.tokens, state.cursor, key === "left" ? -1 : 1),
+        cursor: moveInInput(
+          state.tokens,
+          state.cursor,
+          key === "left" ? -1 : 1,
+        ),
       }),
     );
   }
@@ -1621,7 +1625,9 @@ export const press = (
     return Effect.succeed(state);
   }
   if (key === "STO")
-    return Effect.succeed(patch(state, { pendingStore: true, ...resetLatches }));
+    return Effect.succeed(
+      patch(state, { pendingStore: true, ...resetLatches }),
+    );
   if (key === "RCL")
     return Effect.succeed(
       patch(state, { pendingRecall: true, ...resetLatches }),
@@ -1632,16 +1638,17 @@ export const press = (
       Option.match(resultNumber(state), {
         onNone: () => patch(state, resetLatches),
         onSome: (value) =>
-          patch(state, { memory: state.memory + sign * value, ...resetLatches }),
+          patch(state, {
+            memory: state.memory + sign * value,
+            ...resetLatches,
+          }),
       }),
     );
   }
   if (key === "CALC") return startCalc(patch(state, resetLatches));
   if (key === "SOLVE") return startSolve(patch(state, resetLatches));
   if (key === "ENG" && state.mode === "CMPLX") {
-    return Effect.succeed(
-      insertMain(patch(state, resetLatches), "i") ?? state,
-    );
+    return Effect.succeed(insertMain(patch(state, resetLatches), "i") ?? state);
   }
   // ENG shows engineering notation; SHIFT ENG (←) returns to the normal form.
   // TODO: step the exponent by 3 per press, as the device does.
