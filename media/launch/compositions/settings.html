@@ -1,31 +1,180 @@
 <template>
   <style>
-    #root { position: absolute; inset: 0; background: #f2f2f7; overflow: hidden; font-family: Inter, sans-serif; }
-    #root .cap { position: absolute; left: 0; right: 0; top: 118px; text-align: center; }
-    #root .cap span { display: inline-block; font-size: 84px; font-weight: 700; letter-spacing: -0.035em; color: #1d1d1f; }
-    #root .cursor { position: absolute; left: 0; top: 0; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25)); }
-    #root .cursor svg { display: block; width: 100%; height: auto; }
-    #root video { position: absolute; left: 0; top: 0; }
-    #root .camera { position: absolute; left: 192px; top: 218px; width: 1920px; height: 1080px; transform: scale(0.8); transform-origin: 0 0; }
-    #root video { width: 1920px; height: 1080px; }
-    #root .cursor { width: 40px; }
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #f2f2f7;
+      overflow: hidden;
+      font-family: Inter, sans-serif;
+    }
+    #root .cap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 118px;
+      text-align: center;
+    }
+    #root .cap span {
+      display: inline-block;
+      font-size: 84px;
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      color: #1d1d1f;
+    }
+    #root .cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 8% 6%;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+    }
+    #root .cursor svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root video {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    #root .camera {
+      position: absolute;
+      left: 192px;
+      top: 218px;
+      width: 1920px;
+      height: 1080px;
+      transform: scale(0.8);
+      transform-origin: 0 0;
+    }
+    #root video {
+      width: 1920px;
+      height: 1080px;
+    }
+    #root .cursor {
+      width: 40px;
+    }
   </style>
-  <div id="root" data-composition-id="settings" data-width="1920" data-height="1080">
+  <div
+    id="root"
+    data-composition-id="settings"
+    data-width="1920"
+    data-height="1080"
+  >
     <div id="s-camera" class="camera">
-      <video id="s-take" class="clip" data-start="0" data-duration="2" data-track-index="1" muted playsinline src="assets/footage/settings.mp4"></video>
-      <div id="s-cur" class="cursor"><svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z" fill="#000" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+      <video
+        id="s-take"
+        class="clip"
+        data-start="0"
+        data-duration="2"
+        data-track-index="1"
+        muted
+        playsinline
+        src="assets/footage/settings.mp4"
+      ></video>
+      <div id="s-cur" class="cursor">
+        <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+            fill="#000"
+            stroke="#fff"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
     </div>
-    <div id="s-cap0" class="cap clip" data-start="0.100" data-duration="1.900" data-track-index="9"><span>one tree, every platform</span></div>
+    <div
+      id="s-cap0"
+      class="cap clip"
+      data-start="0.100"
+      data-duration="1.900"
+      data-track-index="9"
+    >
+      <span>one tree, every platform</span>
+    </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    [[1659.4,428.4,0],[1659.1,428.2,0],[1657.3,426.7,0],[1652.3,422.6,0],[1642.7,414.5,0],[1626.8,401.3,0],[1603.1,381.6,0],[1579.4,361.8,0],[1563.5,348.6,0],[1553.9,340.5,0],[1549.0,336.4,0],[1547.1,334.9,0],[1546.9,334.7,0],[1546.9,334.7,0],[1546.9,334.7,0],[1546.9,334.7,1],[1546.9,334.7,1],[1546.9,334.7,1],[1546.9,334.7,0],[1547.5,334.7,0],[1551.9,334.7,0],[1564.0,334.7,0],[1587.4,334.7,0],[1621.7,334.7,0],[1645.1,334.7,0],[1657.1,334.7,0],[1661.6,334.7,0],[1662.2,334.7,0],[1661.4,335.4,0],[1657.4,338.7,0],[1656.6,339.4,1],[1656.6,339.4,1],[1656.6,339.4,1],[1656.6,339.4,0],[1656.6,339.9,0],[1657.1,343.9,0],[1658.4,354.7,0],[1660.8,375.6,0],[1664.5,406.3,0],[1666.9,427.2,0],[1668.2,438.0,0],[1668.7,441.9,0],[1668.8,442.5,0],[1668.2,446.4,0],[1665.6,464.9,0],[1665.0,468.8,1],[1665.0,468.8,1],[1665.0,468.8,1],[1665.0,468.8,0],[1665.2,469.0,0],[1666.4,470.6,0],[1669.6,474.8,0],[1675.8,483.2,0],[1686.1,496.9,0],[1700.1,515.6,0],[1710.4,529.3,0],[1716.7,537.7,0],[1719.9,541.9,0],[1721.1,543.5,0],[1721.2,543.8,0]].forEach(([x, y, down], frame) => tl.set("#s-cur", { x, y, scale: down ? 0.86 : 1 }, 0.0 + frame / 30));
+    [
+      [1659.4, 428.4, 0],
+      [1659.1, 428.2, 0],
+      [1657.3, 426.7, 0],
+      [1652.3, 422.6, 0],
+      [1642.7, 414.5, 0],
+      [1626.8, 401.3, 0],
+      [1603.1, 381.6, 0],
+      [1579.4, 361.8, 0],
+      [1563.5, 348.6, 0],
+      [1553.9, 340.5, 0],
+      [1549.0, 336.4, 0],
+      [1547.1, 334.9, 0],
+      [1546.9, 334.7, 0],
+      [1546.9, 334.7, 0],
+      [1546.9, 334.7, 0],
+      [1546.9, 334.7, 1],
+      [1546.9, 334.7, 1],
+      [1546.9, 334.7, 1],
+      [1546.9, 334.7, 0],
+      [1547.5, 334.7, 0],
+      [1551.9, 334.7, 0],
+      [1564.0, 334.7, 0],
+      [1587.4, 334.7, 0],
+      [1621.7, 334.7, 0],
+      [1645.1, 334.7, 0],
+      [1657.1, 334.7, 0],
+      [1661.6, 334.7, 0],
+      [1662.2, 334.7, 0],
+      [1661.4, 335.4, 0],
+      [1657.4, 338.7, 0],
+      [1656.6, 339.4, 1],
+      [1656.6, 339.4, 1],
+      [1656.6, 339.4, 1],
+      [1656.6, 339.4, 0],
+      [1656.6, 339.9, 0],
+      [1657.1, 343.9, 0],
+      [1658.4, 354.7, 0],
+      [1660.8, 375.6, 0],
+      [1664.5, 406.3, 0],
+      [1666.9, 427.2, 0],
+      [1668.2, 438.0, 0],
+      [1668.7, 441.9, 0],
+      [1668.8, 442.5, 0],
+      [1668.2, 446.4, 0],
+      [1665.6, 464.9, 0],
+      [1665.0, 468.8, 1],
+      [1665.0, 468.8, 1],
+      [1665.0, 468.8, 1],
+      [1665.0, 468.8, 0],
+      [1665.2, 469.0, 0],
+      [1666.4, 470.6, 0],
+      [1669.6, 474.8, 0],
+      [1675.8, 483.2, 0],
+      [1686.1, 496.9, 0],
+      [1700.1, 515.6, 0],
+      [1710.4, 529.3, 0],
+      [1716.7, 537.7, 0],
+      [1719.9, 541.9, 0],
+      [1721.1, 543.5, 0],
+      [1721.2, 543.8, 0],
+    ].forEach(([x, y, down], frame) =>
+      tl.set("#s-cur", { x, y, scale: down ? 0.86 : 1 }, 0.0 + frame / 30),
+    );
     // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
     document.querySelectorAll("#root .cap").forEach((el) => {
       const start = Number(el.dataset.start);
       const end = start + Number(el.dataset.duration);
-      tl.fromTo(el.querySelector("span"), { opacity: 0.3, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" }, start);
-      tl.to(el.querySelector("span"), { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" }, end - 0.2);
+      tl.fromTo(
+        el.querySelector("span"),
+        { opacity: 0.3, filter: "blur(6px)" },
+        { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" },
+        start,
+      );
+      tl.to(
+        el.querySelector("span"),
+        { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" },
+        end - 0.2,
+      );
     });
     window.__timelines["settings"] = tl;
   </script>
