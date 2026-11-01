@@ -9,6 +9,7 @@
     "./kanban": "./src/kanban/kanban.tsx",
     "./inbox": "./src/inbox/inbox.tsx",
     "./desktop": "./src/desktop/desktop.tsx",
+    "./tiling": "./src/tiling/tiling.tsx",
     "./pipeline": "./src/pipeline/pipeline.tsx",
     "./notes": "./src/notes/notes.tsx",
     "./preferences": "./src/preferences/preferences.tsx",

@@ -21,6 +21,7 @@ import { Inbox } from "./inbox/inbox.js";
 import { Kanban } from "./kanban/kanban.js";
 import { Settings, SettingsApp, type Look } from "./settings/settings.js";
 import { Stats } from "./stats/stats.js";
+import { TilingDesktop } from "./tiling/tiling.js";
 
 // The first mount in a file loads the native binding and its fonts: measured at
 // 7.3 s cold against vitest's 5 s default.
@@ -196,5 +197,32 @@ describe("Console", () => {
     r.nativeSimulateClick(deploy.x, deploy.y);
     r.flush();
     expect(r.getAllText()).toContain("Greed Island is live");
+  });
+});
+
+describe("TilingDesktop", () => {
+  it("moves the accent border to the tile pressed", () => {
+    const r = mount(<TilingDesktop />);
+    const border = (id: string) =>
+      r.findByTestId(`tile-${id}`)?.style.borderColor;
+    const accent = border("settings");
+    expect(border("terminal")).not.toEqual(accent);
+    const terminal = centre(r, "tile-terminal");
+    r.nativeSimulateClick(terminal.x, terminal.y);
+    r.flush();
+    expect(border("terminal")).toEqual(accent);
+    expect(border("settings")).not.toEqual(accent);
+    expect(r.getAllText()).toContain("Alacritty — fastfetch");
+  });
+
+  it("re-themes the whole desktop from one Omarchy palette", () => {
+    const r = mount(<TilingDesktop palette="tokyo-night" />);
+    const bar = () => r.findByTestId("tiling-bar")?.style.backgroundColor;
+    const dark = bar();
+    unmount();
+    const light = mount(<TilingDesktop palette="rose-pine" />);
+    expect(light.findByTestId("tiling-bar")?.style.backgroundColor).not.toEqual(
+      dark,
+    );
   });
 });

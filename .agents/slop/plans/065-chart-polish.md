@@ -5,7 +5,7 @@
 | Owner | `launch-film` workstream |
 | Package | `packages/data` (`src/chart/`) |
 | Blocks | 066 (the film's dashboard), 067 |
-| Status | in progress |
+| Status | landed |
 
 ## Why (owner, 2026-11-01)
 

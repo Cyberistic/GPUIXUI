@@ -37,6 +37,7 @@ import type { ComponentType } from "react";
 import { DesktopBlock } from "./desktop/desktop.js";
 import { Agent } from "./agent/agent.js";
 import { Console } from "./console/console.js";
+import { TilingDesktop } from "./tiling/tiling.js";
 import { CalendarBlock } from "./calendar/calendar.js";
 import { Inbox } from "./inbox/inbox.js";
 import { Launcher } from "./launcher/launcher.js";
@@ -63,6 +64,7 @@ const blocks: Readonly<Record<string, ComponentType>> = {
   menubar: MenuBar,
   agent: Agent,
   console: Console,
+  tiling: TilingDesktop,
   calendar: CalendarBlock,
   welcome: Welcome,
   viewer: Viewer,

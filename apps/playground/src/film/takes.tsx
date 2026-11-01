@@ -29,7 +29,7 @@ import { mkdirSync } from "node:fs";
 import { useState, type ReactNode } from "react";
 import { Settings, type Look } from "@gpuixui/blocks/settings";
 import { GROUND, Lights, Window } from "./frame.js";
-import { OmarchyDesktop, omarchyLooks, type OmarchyLook } from "./omarchy.js";
+import { TilingDesktop } from "@gpuixui/blocks/tiling";
 import { Agent } from "@gpuixui/blocks/agent";
 import { CalendarBlock } from "@gpuixui/blocks/calendar";
 import { DesktopBlock, type DesktopLook } from "@gpuixui/blocks/desktop";
@@ -66,10 +66,6 @@ const macro = (k: number) => magnify(mac, k);
 
 /** A beat of the score (120 BPM) in frames: 15. */
 const BEAT = (30 * 60) / 120;
-
-/** The Omarchy shot's theme, one new `colors.toml` per beat. */
-const omarchyAt = (frame: number): OmarchyLook =>
-  omarchyLooks[Math.min(3, Math.floor(frame / BEAT))] ?? "tokyo-night";
 
 /** The Settings block in its window, restyled by its own Look control. */
 const SettingsWindow = () => {
@@ -423,12 +419,25 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 59, aim: { testId: "dark", dx: 30, dy: 40 } },
     ],
   },
-  /** Shots 7–8: four Omarchy themes, then a card dragged to Done. */
-  omarchy: {
+  /** Linux: the tiling block in tokyo-night; the terminal is focused, then rose-pine (light) lands. */
+  tiling: {
     width: 1280,
     height: 720,
     frames: 4 * BEAT,
-    view: (frame) => <OmarchyDesktop look={omarchyAt(frame)} />,
+    view: (frame) => (
+      <TilingDesktop palette={frame < 2 * BEAT ? "tokyo-night" : "rose-pine"} />
+    ),
+    pointer: [
+      { frame: 0, aim: { testId: "tile-terminal", dx: 120, dy: 160 } },
+      { frame: 10, aim: { testId: "tile-terminal", dx: 60, dy: 30 } },
+      {
+        frame: 12,
+        aim: { testId: "tile-terminal", dx: 60, dy: 30 },
+        down: true,
+      },
+      { frame: 14, aim: { testId: "tile-terminal", dx: 60, dy: 30 } },
+      { frame: 59, aim: { testId: "tile-terminal", dx: 90, dy: 60 } },
+    ],
   },
 };
 

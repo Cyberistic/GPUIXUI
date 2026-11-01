@@ -6,7 +6,7 @@
 | Package | `examples/blocks` (`src/tiling/`) |
 | Depends on | 728 Part A (block contract), tokens `decodeOmarchyPalette` |
 | Blocks | 066 (the film's Linux shot) |
-| Status | in progress |
+| Status | landed |
 
 ## Why (owner, 2026-11-01)
 
@@ -29,15 +29,16 @@ says Linux is the tiling itself.
 - **Theme**: the palette is an Omarchy `colors.toml` decoded by
   `decodeOmarchyPalette` → `paletteToTokens`, so switching palette re-themes the
   bar, gaps, borders and every block inside at once. Ships tokyo-night,
-  catppuccin, gruvbox and rose-pine from `media/launch/assets/omarchy/`.
+  catppuccin, kanagawa and rose-pine (Dawn, light) as data in `src/tiling/data.ts`.
 
 Files: `src/tiling/{data.ts,logic.ts,logic.test.ts,bar.tsx,tiling.tsx}`, an
 `exports["./tiling"]`, a `main.tsx` entry, a `blocks.test.tsx` case.
 
 ## Test plan
 
-- `logic.test.ts`: `layoutTiles(size, gaps, count)` gives a master of half the
-  width and an even stack, with gaps on every side; `nextFocus` wraps.
+- `logic.test.ts`: `nextFocus` wraps; every palette decodes to its own theme.
+  (The master/stack geometry is flex with the theme's gap, so it needs no
+  arithmetic of its own.)
 - `blocks.test.tsx`: clicking a stack tile moves the accent border to it;
   switching palette changes the bar's background.
 
