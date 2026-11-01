@@ -48,6 +48,7 @@ blocks/agent.mdx             Agent: the Mac-app block, from its native capture
 blocks/calendar.mdx          Calendar: the Mac-app block, from its native capture
 blocks/welcome.mdx           Welcome: the Mac-app block, from its native capture
 blocks/viewer.mdx            Viewer: the Mac-app block, from its native capture
+blocks/license.mdx           Hunter License: the registry, a licence card and its privileges
 blocks/pipeline.mdx          A release pipeline in a native Mac window, from the compiled block
 blocks/file-manager.mdx      A three-pane browser: folders, image tiles and file facts
 blocks/email-inbox.mdx       A four-pane mail client with a filterable list

@@ -87,7 +87,7 @@
             id="w-pipeline"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="1"
             muted
             playsinline
@@ -99,7 +99,7 @@
             id="w-notes"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="2"
             muted
             playsinline
@@ -111,7 +111,7 @@
             id="w-calendar"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="3"
             muted
             playsinline
@@ -123,7 +123,7 @@
             id="w-stats"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="4"
             muted
             playsinline
@@ -135,7 +135,7 @@
             id="w-agent"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="1"
             muted
             playsinline
@@ -147,7 +147,7 @@
             id="w-desktop-luna"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="2"
             muted
             playsinline
@@ -159,7 +159,7 @@
             id="w-viewer"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="3"
             muted
             playsinline
@@ -171,7 +171,7 @@
             id="w-launcher"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="4"
             muted
             playsinline
@@ -183,7 +183,7 @@
             id="w-welcome"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="1"
             muted
             playsinline
@@ -195,7 +195,7 @@
             id="w-settings"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="2"
             muted
             playsinline
@@ -207,7 +207,7 @@
             id="w-omarchy"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="3"
             muted
             playsinline
@@ -219,7 +219,7 @@
             id="w-desktop-aero"
             class="clip"
             data-start="0"
-            data-duration="4.615"
+            data-duration="2"
             data-track-index="4"
             muted
             playsinline
@@ -231,32 +231,30 @@
     <div
       id="w-cap0"
       class="cap clip"
-      data-start="0.200"
-      data-duration="4.365"
+      data-start="0.100"
+      data-duration="1.900"
       data-track-index="9"
     >
-      <span>start from blocks</span>
+      <span>React components, rendered by GPUI</span>
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    // The plane tilts back and turns; the camera travels across it in one move.
     tl.fromTo(
       "#w-plane",
-      { rotateX: 28, rotateY: -18, rotateZ: 6, x: 520, y: 40 },
+      { rotateX: 28, rotateY: -18, rotateZ: 6, x: 420, y: 40 },
       {
         rotateX: 22,
         rotateY: -12,
         rotateZ: 4,
-        x: -380,
+        x: -300,
         y: 20,
-        duration: 4.615,
+        duration: 2,
         ease: "power1.inOut",
       },
       0,
     );
-    tl.fromTo("#w-plane", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0);
-    tl.to("#w-plane", { opacity: 0, duration: 0.18, ease: "power2.in" }, 4.425);
+    tl.fromTo("#w-plane", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0);
     // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
     document.querySelectorAll("#root .cap").forEach((el) => {
       const start = Number(el.dataset.start);

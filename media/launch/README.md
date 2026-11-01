@@ -1,9 +1,8 @@
-# Launch film — "Feel it" (v2)
+# Launch film (v3)
 
-`gpuixui-launch.mp4`: 42 seconds, 1920×1080, 30 fps. An Apple-style launch for
-gpuixui.sudokw.com, cut to an original piano score, with a designed tactile sound on
-every press. Plan: `.agents/slop/plans/064-launch-film-v2.md` (v1 and the reference
-analysis: `060`).
+`gpuixui-launch.mp4`: 27.5 seconds, 1920×1080, 30 fps, cut to an original piano score
+at 120 BPM (a beat every 15 frames) with a designed tactile sound on every press.
+Plan: `.agents/slop/plans/064-launch-film-v2.md`, v3 section.
 
 ## Every frame of product is the product
 
@@ -11,18 +10,24 @@ Each shot is a real GPUIxUI tree under real input (`apps/playground/src/film/tak
 GPUI hit testing, the motion clock paused and stepped per frame), or the real
 terminal-mode stream:
 
-| Bars (104 BPM) | Shot | Take |
+| Time | Shot | Take |
 | --- | --- | --- |
-| 0–2 | Switch, Slider, Button close-ups, rendered at 6–8× | `switch`, `slider`, `button` |
-| 2–5 | pull-back into Settings; its Look control restyles it: macOS, Windows, Linux | `settings` |
-| 6 | `nub run dev settings --terminal`, typed and run: the block in the terminal, Dark mode pressed | `terminal` (`terminal-take.ts` runs that exact command) |
-| 7–8 | the XP-era and Aero-era desktop block: Start opens, a window is raised | `desktop-luna`, `desktop-aero` |
-| 9 | Omarchy, one real `colors.toml` per beat | `omarchy` |
-| 10–11 | twelve blocks on one tilted wall, the camera travelling across | the block takes |
-| 12 | the stats window turns a quarter, then Month is pressed | `stats` |
-| 13 | the agent chat: typed, sent | `agent` |
-| 14–15 | GPUI · React · shadcn · Tailwind, a word per beat | — |
-| 16–17 | the outline mark pressed, wordmark, URL, "Made with ☕ by @sudo_kw" | — |
+| 0–4 s | eight controls, one press per beat: Switch, Checkbox, Slider, Tabs, ToggleGroup, Button, RadioGroup, Input | `cu-*` |
+| 4–6 s | Settings: Windows, Linux, Dark mode on beats 1–3 | `settings` |
+| 6–10 s | the console block in a terminal: the sidebar collapses, toasts arrive | `term-console` (`terminal-take.ts`: `nub run dev console --terminal`) |
+| 10–12 s | the XP-era and Aero-era desktop block, Start pressed | `desktop-luna`, `desktop-aero` |
+| 12–14 s | Omarchy, one real `colors.toml` per beat | `omarchy` |
+| 14–16 s | twelve blocks on one tilted wall | the block takes |
+| 16–18 s | stats, Month pressed | `stats` |
+| 18–20 s | the agent chat, typed and sent | `agent` |
+| 20–22 s | GPUI · React · shadcn · Tailwind, on the score's chord stabs | — |
+| 22–27.5 s | the outline mark, wordmark, URL, "Made with ☕ by @sudo_kw" | — |
+
+The terminal shot's frames are the real terminal-mode stream. Terminal mode paints a
+sidebar's collapse only with the next committing press (TODO in `terminal-take.ts`),
+so the take presses Deploy right after the trigger, and the film draws each tap
+just before its measured repaint. The ssh line is the owner's own test; the take
+runs the same command in a local pty.
 
 Drawn by the film, not the library: window frames and traffic lights (an offscreen
 capture has no OS chrome), the terminal window, captions, the cursor, the end card.
@@ -56,7 +61,7 @@ display; re-paste them if a take's pointer changes.
 - **Score:** `sound/piano.ts` (an original piece, written as notes) rendered by
   `sound/score.sh` with fluidsynth and the Salamander Grand Piano.
 - **Tactile kit:** `sound/kit.sh`, one sound per kind of press, placed one frame
-  after its picture (67 cues in `index.html`).
+  after its picture (58 cues in `index.html`, mixed at 0.5× under the score at 0.55).
 
 ## Credits
 

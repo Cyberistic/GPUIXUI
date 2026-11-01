@@ -8,7 +8,7 @@ import { Feel } from "./feel";
 import { Hero } from "./hero";
 import { Proof } from "./proof";
 import { demos } from "../docs/demos";
-import { attribution, navLinks, repo } from "./data";
+import { navLinks, repo } from "./data";
 
 export function Landing() {
   return (
@@ -184,12 +184,9 @@ function Footer() {
         GPUIxUI — shadcn/ui&apos;s composition, Base UI&apos;s behaviour and
         Tailwind&apos;s syntax, drawn by GPUI.
       </span>
-      <span>
-        {attribution.join(" · ")} ·{" "}
-        <a href={repo} rel="noopener noreferrer" target="_blank">
-          source
-        </a>
-      </span>
+      <a href={repo} rel="noopener noreferrer" target="_blank">
+        Source
+      </a>
       <p className="landing-credit">
         Made with ☕ by{" "}
         <a href={credit.href} rel="noopener noreferrer" target="_blank">

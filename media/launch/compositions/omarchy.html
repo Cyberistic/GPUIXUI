@@ -64,7 +64,7 @@
         id="o-take"
         class="clip"
         data-start="0"
-        data-duration="2.308"
+        data-duration="2"
         data-track-index="1"
         muted
         playsinline
@@ -75,10 +75,10 @@
       id="o-cap0"
       class="cap clip"
       data-start="0.100"
-      data-duration="2.208"
+      data-duration="1.900"
       data-track-index="9"
     >
-      <span>follows your omarchy theme</span>
+      <span>follows your desktop theme</span>
     </div>
   </div>
   <script>
@@ -94,11 +94,6 @@
         ease: "expo.out",
       },
       0.0,
-    );
-    tl.to(
-      "#o-screen",
-      { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" },
-      2.118,
     );
     // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
     document.querySelectorAll("#root .cap").forEach((el) => {

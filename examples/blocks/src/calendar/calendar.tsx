@@ -1,7 +1,9 @@
 /**
  * Calendar — a week view (plan 729): calendars with switches in the sidebar,
  * ‹ Today › and a Day/Week/Month switch in the toolbar, and the week's events
- * placed in hourly rows, overlapping events side by side (`layoutDay`).
+ * placed on an hour grid. Overlapping events cascade as Calendar.app draws
+ * them: a later lane starts part-way in and lies over the earlier one, so every
+ * event keeps most of the column instead of an equal sliver (`layoutDay`).
  */
 import { SegmentedControl } from "@gpuixui/components/segmented-control";
 import { Button, Stack, Switch, Text } from "@gpuixui/primitives";
@@ -15,8 +17,14 @@ import { layoutDay, visible, weekStart } from "./logic.js";
 
 const FIRST_HOUR = 8;
 const HOURS = 11;
-const ROW = 40;
+const ROW = 48;
+const GUTTER = 48;
+const HEADER = 24;
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+
+/** `9.5` → `9:30`. */
+const hourLabel = (hour: number): string =>
+  `${Math.floor(hour)}:${String(Math.round((hour % 1) * 60)).padStart(2, "0")}`;
 
 export const CalendarBlock = ({
   platform,
@@ -30,11 +38,23 @@ export const CalendarBlock = ({
     Arr.map(calendars, (c) => c.id),
   );
   const shown = visible(events, on);
-  const fill = (id: CalendarId) => {
+  // The bar, the wash and the ink of a calendar's events: its tone's family,
+  // or the accent's for the primary calendar.
+  const paint = (id: CalendarId) => {
     const tone = calendars.find((c) => c.id === id)?.tone ?? "primary";
-    return tone === "primary"
-      ? theme.colors.primary
-      : statusTone(theme, tone).foreground;
+    if (tone === "primary") {
+      return {
+        bar: theme.colors.primary,
+        wash: theme.colors.accent,
+        ink: theme.colors.accentForeground,
+      };
+    }
+    const family = statusTone(theme, tone);
+    return {
+      bar: family.foreground,
+      wash: family.background,
+      ink: family.foreground,
+    };
   };
 
   return (
@@ -112,8 +132,29 @@ export const CalendarBlock = ({
     >
       <Stack
         direction="row"
-        style={{ flexGrow: 1, paddingLeft: 48, paddingTop: 8 }}
+        style={{ flexGrow: 1, paddingTop: 8, position: "relative" }}
       >
+        {Arr.map(Arr.range(0, HOURS - 1), (hour) => (
+          <div
+            key={hour}
+            style={{
+              position: "absolute",
+              top: 8 + HEADER + hour * ROW,
+              left: 0,
+              right: 0,
+              height: ROW,
+              paddingLeft: 6,
+              borderTopWidth: theme.borderWidth.thin,
+              borderColor: theme.colors.border,
+              pointerEvents: "none",
+            }}
+          >
+            <Text role="caption" tone="muted">
+              {hourLabel(FIRST_HOUR + hour)}
+            </Text>
+          </div>
+        ))}
+        <div style={{ width: GUTTER, flexShrink: 0 }} />
         {Arr.map(DAYS, (day, index) => (
           <div
             key={day}
@@ -122,55 +163,82 @@ export const CalendarBlock = ({
               position: "relative",
               flexGrow: 1,
               flexBasis: 0,
-              height: HOURS * ROW + 24,
+              height: HOURS * ROW + HEADER,
               borderLeftWidth: theme.borderWidth.thin,
               borderColor: theme.colors.border,
             }}
           >
-            <Text tone="muted" style={{ paddingLeft: 6 }}>
+            <Text tone="muted" style={{ paddingLeft: 6, height: HEADER }}>
               {day}
             </Text>
             {Arr.map(
               layoutDay(Arr.filter(shown, (event) => event.day === index)),
-              ({ event, lane, lanes }) => (
-                // The runtime takes `left` in points only, so a lane is one of
-                // `lanes` equal flex cells across a full-width row.
-                <div
-                  key={event.id}
-                  style={{
-                    position: "absolute",
-                    top: 24 + (event.start - FIRST_HOUR) * ROW,
-                    height: (event.end - event.start) * ROW - 2,
-                    left: 0,
-                    width: "100%",
-                    display: "flex",
-                    flexDirection: "row",
-                  }}
-                >
-                  {Arr.map(Arr.range(0, lanes - 1), (cell) =>
-                    cell === lane ? (
+              ({ event, lane, lanes }) => {
+                const { bar, wash, ink } = paint(event.calendar);
+                // The runtime takes `left` in points only, so the cascade is
+                // flex: `lane` parts of inset, then `lanes` parts of event.
+                return (
+                  <div
+                    key={event.id}
+                    style={{
+                      position: "absolute",
+                      top: HEADER + (event.start - FIRST_HOUR) * ROW + 1,
+                      height: (event.end - event.start) * ROW - 2,
+                      left: 0,
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "row",
+                    }}
+                  >
+                    <div style={{ flexGrow: lane, flexBasis: 0 }} />
+                    <div
+                      style={{
+                        display: "flex",
+                        flexGrow: lanes,
+                        flexBasis: 0,
+                        minWidth: 0,
+                        marginRight: 2,
+                        // A later lane lies over an earlier one; a hairline of the
+                        // window's own colour keeps their edges apart.
+                        ...(lane === 0
+                          ? {}
+                          : {
+                              padding: 1,
+                              borderRadius: theme.radius.sm,
+                              backgroundColor: theme.colors.background,
+                            }),
+                      }}
+                    >
                       <div
-                        key={cell}
                         testId={`event-${event.id}`}
                         style={{
                           flexGrow: 1,
-                          flexBasis: 0,
+                          minWidth: 0,
                           paddingLeft: 6,
+                          paddingRight: 4,
+                          paddingTop: 2,
                           borderLeftWidth: 3,
-                          borderColor: fill(event.calendar),
-                          backgroundColor: theme.colors.accent,
+                          borderColor: bar,
+                          backgroundColor: wash,
                           borderRadius: theme.radius.sm,
                           overflow: "hidden",
                         }}
                       >
-                        <Text>{event.title}</Text>
+                        <Text role="caption" style={{ color: ink }}>
+                          {hourLabel(event.start)}
+                        </Text>
+                        <Text
+                          role="caption"
+                          clamp={2}
+                          style={{ color: ink, fontWeight: 600 }}
+                        >
+                          {event.title}
+                        </Text>
                       </div>
-                    ) : (
-                      <div key={cell} style={{ flexGrow: 1, flexBasis: 0 }} />
-                    ),
-                  )}
-                </div>
-              ),
+                    </div>
+                  </div>
+                );
+              },
             )}
           </div>
         ))}

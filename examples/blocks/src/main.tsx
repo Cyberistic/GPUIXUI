@@ -28,6 +28,7 @@ import {
   platformTheme,
 } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
+import { MotionProvider } from "@gpuixui/motion/react";
 import { Effect } from "effect";
 import * as Duration from "effect/Duration";
 import * as Option from "effect/Option";
@@ -35,9 +36,11 @@ import * as R from "effect/Record";
 import type { ComponentType } from "react";
 import { DesktopBlock } from "./desktop/desktop.js";
 import { Agent } from "./agent/agent.js";
+import { Console } from "./console/console.js";
 import { CalendarBlock } from "./calendar/calendar.js";
 import { Inbox } from "./inbox/inbox.js";
 import { Launcher } from "./launcher/launcher.js";
+import { License } from "./license/license.js";
 import { MenuBar } from "./menubar/menubar.js";
 import { Notes } from "./notes/notes.js";
 import { Preferences } from "./preferences/preferences.js";
@@ -53,11 +56,13 @@ const [slug = "pipeline", ...flags] = process.argv
 
 const blocks: Readonly<Record<string, ComponentType>> = {
   pipeline: Pipeline,
+  license: License,
   notes: Notes,
   preferences: Preferences,
   launcher: Launcher,
   menubar: MenuBar,
   agent: Agent,
+  console: Console,
   calendar: CalendarBlock,
   welcome: Welcome,
   viewer: Viewer,
@@ -88,11 +93,17 @@ const program = Option.match(R.get(blocks, slug), {
         flags.includes("--dark") ? darkTheme : lightTheme,
         currentPlatform,
       );
+      // TODO: the terminal platform paints on commits, not on the motion clock,
+      // so an animation's middle frames never reach the terminal; until it
+      // drives frames, a terminal run takes the reduced (instant) motion.
+      const terminal = flags.includes("--terminal");
       render(
-        <ThemeProvider theme={theme}>
-          <Block />
-        </ThemeProvider>,
-        flags.includes("--terminal")
+        <MotionProvider preference={terminal ? "reduced" : "animated"}>
+          <ThemeProvider theme={theme}>
+            <Block />
+          </ThemeProvider>
+        </MotionProvider>,
+        terminal
           ? { terminal: true }
           : {
               title: slug,

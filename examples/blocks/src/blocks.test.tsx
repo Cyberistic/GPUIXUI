@@ -7,12 +7,15 @@
  * bring its window to the front, and a menu a press on the desktop leaves open.
  * Stats: a range control that leaves the numbers on the old range. SettingsApp:
  * a Dark mode switch that changes nothing (its handlers were no-ops in main.tsx).
+ * Console: a sidebar trigger that does not collapse the sidebar, and a Deploy
+ * button that raises no toast (the toasts once never painted: two root children).
  */
 import { createTestRoot } from "@gpuix/react/testing";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import { useState, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { Console } from "./console/console.js";
 import { DesktopBlock } from "./desktop/desktop.js";
 import { Inbox } from "./inbox/inbox.js";
 import { Kanban } from "./kanban/kanban.js";
@@ -168,5 +171,30 @@ describe("SettingsApp", () => {
     expect(r.findByTestId("settings")?.style.backgroundColor).not.toEqual(
       before,
     );
+  });
+});
+
+describe("Console", () => {
+  it("collapses the sidebar and raises the deploy toasts", () => {
+    const r = mount(<Console />);
+    const width = () => {
+      const sidebar = r.findByTestId("sidebar");
+      return sidebar === undefined
+        ? null
+        : r.getElementBounds(sidebar.id)?.width;
+    };
+    const open = width();
+    const trigger = centre(r, "sidebar-trigger");
+    r.nativeSimulateClick(trigger.x, trigger.y);
+    r.flush();
+    r.clockFastForward(1_000);
+    r.dispatchNativeEvents();
+    r.flush();
+    expect(width()).toBeLessThan(open ?? 0);
+    expect(r.getAllText()).not.toContain("Greed Island is live");
+    const deploy = centre(r, "deploy");
+    r.nativeSimulateClick(deploy.x, deploy.y);
+    r.flush();
+    expect(r.getAllText()).toContain("Greed Island is live");
   });
 });

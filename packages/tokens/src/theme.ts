@@ -191,6 +191,11 @@ export interface SwitchColors {
   /** The knob that slides between the two tracks. */
   readonly knob: string;
   /**
+   * The knob on the off track, when it is not {@link knob}: Windows paints it in
+   * its secondary text colour on a transparent track, and white only once on.
+   */
+  readonly knobOff?: string;
+  /**
    * The outline an off track draws when its fill is not the silhouette —
    * Windows' transparent track, whose 1px border is the control's edge. An on
    * track always takes its own fill as the edge.
@@ -1035,6 +1040,7 @@ const sameSwitch = (
   left.on === right.on &&
   left.off === right.off &&
   left.knob === right.knob &&
+  left.knobOff === right.knobOff &&
   left.edge === right.edge;
 
 /** Whether two switch boxes carry the same five numbers. */

@@ -18,7 +18,9 @@
     "./calendar": "./src/calendar/calendar.tsx",
     "./welcome": "./src/welcome/welcome.tsx",
     "./viewer": "./src/viewer/viewer.tsx",
-    "./stats": "./src/stats/stats.tsx"
+    "./stats": "./src/stats/stats.tsx",
+    "./console": "./src/console/console.tsx",
+    "./license": "./src/license/license.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
@@ -31,7 +33,9 @@
     "@gpuix/react": "catalog:",
     "@gpuixui/components": "workspace:*",
     "@gpuixui/data": "workspace:*",
+    "@gpuixui/fx": "workspace:*",
     "@gpuixui/icons": "workspace:*",
+    "@gpuixui/motion": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/shell": "workspace:*",
     "@gpuixui/tokens": "workspace:*",

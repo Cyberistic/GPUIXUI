@@ -29,8 +29,10 @@ const Panel = ({
   readonly detail: string;
   readonly onOpen: () => void;
 }) => (
-  <Magnetic onClick={onOpen} style={{ width: 200 }}>
-    <Card>
+  // The press is the card's: its fill would take a press meant for the
+  // magnetic wrapper (plan 731).
+  <Magnetic style={{ width: 200 }}>
+    <Card onClick={onOpen}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{detail}</CardDescription>

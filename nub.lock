@@ -283,6 +283,9 @@ importers:
       '@gpuixui/media':
         specifier: workspace:*
         version: link:../../packages/media
+      '@gpuixui/motion':
+        specifier: workspace:*
+        version: link:../../packages/motion
       '@gpuixui/primitives':
         specifier: workspace:*
         version: link:../../packages/primitives
@@ -363,9 +366,15 @@ importers:
       '@gpuixui/data':
         specifier: workspace:*
         version: link:../../packages/data
+      '@gpuixui/fx':
+        specifier: workspace:*
+        version: link:../../packages/fx
       '@gpuixui/icons':
         specifier: workspace:*
         version: link:../../packages/icons
+      '@gpuixui/motion':
+        specifier: workspace:*
+        version: link:../../packages/motion
       '@gpuixui/primitives':
         specifier: workspace:*
         version: link:../../packages/primitives
@@ -991,6 +1000,9 @@ importers:
       '@gpuix/react':
         specifier: 'catalog:'
         version: 0.11.0(react@19.3.1)
+      '@gpuixui/dock':
+        specifier: workspace:*
+        version: link:../dock
       '@gpuixui/icons':
         specifier: workspace:*
         version: link:../icons

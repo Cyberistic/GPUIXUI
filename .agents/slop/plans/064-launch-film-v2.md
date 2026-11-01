@@ -63,3 +63,28 @@ floor), `LineChart` (aura output across the week), `DonutChart` (Nen types) and
 
 `npx hyperframes check` clean, REVIEW.md, `gpuixui-launch.mp4` rendered;
 `nub run check`, `nub run lint` and `nub run test` all green.
+
+## v3 (owner, 2026-11-01): under 30 seconds
+
+"Lower the sound, up the pace, way more interactions in the first few seconds with
+different components, keep the whole thing under 30 seconds … focus on prose for
+building GPU powered apps … a 20–30 second quick video showcasing everything, with
+the haptic sounds."
+
+The score is re-cut at 120 BPM: a beat is 15 frames, a bar 60, 14 bars (≈27 s). The
+same melody, with no quiet intro.
+
+| Bars | Time (s) | Film | Line |
+| ---- | -------- | ---- | ---- |
+| 0–1 | 0–4 | eight components, one press per beat: Switch, Checkbox, Slider, Tabs, ToggleGroup, Button, RadioGroup, Input | native apps, drawn by the GPU |
+| 2 | 4–6 | Settings: macOS → Windows → Linux, a press per beat | one tree, every platform |
+| 3 | 6–8 | the terminal: the real command, Dark mode on beat 3 | even in your terminal |
+| 4 | 8–10 | XP-era desktop (1 s), Aero-era desktop (1 s) | — |
+| 5 | 10–12 | Omarchy, a theme per beat | follows your desktop theme |
+| 6–7 | 12–16 | the tilted wall of blocks | React components, rendered by GPUI |
+| 8 | 16–18 | stats turned a quarter, Month pressed | — |
+| 9 | 18–20 | the agent chat, typed and sent | ship AI apps natively |
+| 10 | 20–22 | GPUI · React · shadcn · Tailwind, a word per beat | — |
+| 11–13 | 22–27 | outline mark pressed, wordmark, URL, maker's line | gpuixui.sudokw.com |
+
+Mix: score at 0.55, tactile cues at 0.5×, target about −19 LUFS.

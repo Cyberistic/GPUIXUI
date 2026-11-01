@@ -56,6 +56,11 @@ export interface AvatarProps extends Props {
    * `pointerEvents` is not inherited on 0.11.0: the disc paints a fill and takes
    * the press itself, so an avatar inside a button or a row would swallow the
    * activation. Both boxes declare it here.
+   *
+   * Defaults to **on** unless the avatar is given a press handler of its own
+   * (plan 731): an avatar is an identity mark inside a row, a card or a menu
+   * trigger far more often than it is a control, and every block that forgot
+   * the flag had initials a press could not get through.
    */
   readonly clickThrough?: boolean;
   /** A Tailwind class string, joined after the recipe so it wins conflicts. */
@@ -88,11 +93,16 @@ export const Avatar = ({
   src,
   size = "md",
   status: statusProp,
-  clickThrough = false,
+  clickThrough: requestedClickThrough,
   className,
   style,
   ...rest
 }: AvatarProps) => {
+  const clickThrough =
+    requestedClickThrough ??
+    (rest.onClick === undefined &&
+      rest.onMouseDown === undefined &&
+      rest.onMouseUp === undefined);
   const theme = useTheme();
   const diameter = avatarPixels(size);
   // A stored presence state the union does not name is no dot, not a thrown
@@ -119,11 +129,12 @@ export const Avatar = ({
         style,
       )}
     >
+      {/* The disc and the dot are never the target: the root is, so a press
+          reaches the avatar's own handler or, click-through, its row. */}
       <div
-        style={mergeStyles(
-          recipeStyle(AVATAR_DISC, theme),
-          clickThrough ? { pointerEvents: "none" } : undefined,
-        )}
+        style={mergeStyles(recipeStyle(AVATAR_DISC, theme), {
+          pointerEvents: "none",
+        })}
       >
         {src === undefined ? (
           <text
@@ -158,7 +169,7 @@ export const Avatar = ({
             backgroundColor: statusFill(theme, status),
             borderWidth: theme.borderWidth.strong,
             borderColor: theme.colors.card,
-            ...(clickThrough ? { pointerEvents: "none" as const } : {}),
+            pointerEvents: "none",
           }}
         />
       )}

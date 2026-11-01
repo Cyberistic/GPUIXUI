@@ -40,13 +40,13 @@
     }
     #root .window {
       position: absolute;
-      left: 240px;
+      left: 300px;
       top: 290px;
-      width: 1440px;
-      height: 860px;
+      width: 1320px;
+      height: 781px;
       border-radius: 14px;
       overflow: hidden;
-      background: #2c2c2c;
+      background: #f2f2f7;
       box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
     }
     #root .bar {
@@ -76,8 +76,12 @@
     }
     #root .prompt {
       position: absolute;
-      left: 28px;
-      top: 62px;
+      left: 0;
+      top: 38px;
+      right: 0;
+      bottom: 0;
+      padding: 24px 28px;
+      background: #1e1e1e;
       font:
         400 30px "JetBrains Mono",
         monospace;
@@ -88,10 +92,16 @@
       font-style: normal;
       color: #78aeed;
     }
-    #root video {
+    #root video,
+    #root .last {
+      position: absolute;
+      left: 0;
       top: 38px;
-      width: 1440px;
-      height: 810px;
+      width: 1320px;
+      height: 743px;
+    }
+    #root .cap span {
+      font-size: 72px;
     }
     #root .cursor {
       width: 44px;
@@ -107,22 +117,31 @@
       <div class="bar">
         <i style="background: #ff5f57"></i><i style="background: #febc2e"></i
         ><i style="background: #28c840"></i
-        ><b data-layout-ignore>~/GPUIXUI/examples/blocks</b>
-      </div>
-      <div id="t-prompt" class="prompt">
-        <em>~/GPUIXUI/examples/blocks ❯ </em><span id="t-typed"></span>
+        ><b data-layout-ignore>gon@whale-island — ssh</b>
       </div>
       <video
         id="t-take"
         class="clip"
-        data-start="1.0"
-        data-duration="1.308"
-        data-media-start="1.30"
+        data-start="0.65"
+        data-duration="1.85"
+        data-media-start="1.333"
         data-track-index="1"
         muted
         playsinline
-        src="assets/footage/terminal.mp4"
+        src="assets/footage/term-console.mp4"
       ></video>
+      <img
+        id="t-last"
+        class="last clip"
+        data-start="2.5"
+        data-duration="1.5"
+        data-track-index="2"
+        src="assets/footage/term-console-last.png"
+        alt=""
+      />
+      <div id="t-prompt" class="prompt">
+        <em>gon@whale-island ~/blocks ❯ </em><span id="t-typed"></span>
+      </div>
     </div>
     <div id="t-cur" class="cursor">
       <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
@@ -139,10 +158,10 @@
       id="t-cap0"
       class="cap clip"
       data-start="0.150"
-      data-duration="2.158"
+      data-duration="3.800"
       data-track-index="9"
     >
-      <span>and in your terminal</span>
+      <span>can you believe this is in a terminal through ssh?</span>
     </div>
   </div>
   <script>
@@ -159,39 +178,43 @@
       },
       0.0,
     );
-    const command = "nub run dev settings --terminal";
+    const command = "nub run dev console --terminal";
     const typed = document.querySelector("#t-typed");
     tl.call(() => (typed.textContent = ""), null, 0);
     [...command].forEach((_, i) =>
       tl.call(
         () => (typed.textContent = command.slice(0, i + 1)),
         null,
-        0.1 + i * 0.018,
+        0.08 + i * 0.015,
       ),
     );
     tl.set("#t-prompt", { opacity: 1 }, 0);
-    tl.set("#t-prompt", { opacity: 0 }, 1.0);
-    // The repaint lands at 1.73 (beat 3); terminal-take.ts measured it.
-    // The Dark mode switch: (967, 150) in the 1024 px terminal frame, at 1440/1024.
-    const target = { x: 1599.8, y: 538.9 };
+    tl.set("#t-prompt", { opacity: 0 }, 0.65);
+    // Taps drawn just before each measured repaint (terminal-take.ts).
     tl.fromTo(
       "#t-cur",
-      { x: 1760, y: 1000, opacity: 0, scale: 1 },
-      {
-        x: target.x,
-        y: target.y,
-        opacity: 1,
-        duration: 0.5,
-        ease: "power3.inOut",
-      },
-      1.0,
+      { x: 1100, y: 800, opacity: 0, scale: 1 },
+      { x: 666, y: 367, opacity: 1, duration: 0.45, ease: "power3.inOut" },
+      0.75,
     );
-    tl.to("#t-cur", { scale: 0.86, duration: 0.066 }, 1.63);
-    tl.to("#t-cur", { scale: 1, duration: 0.12 }, 1.76);
+    tl.to("#t-cur", { scale: 0.86, duration: 0.05 }, 1.25);
+    tl.to("#t-cur", { scale: 1, duration: 0.1 }, 1.36);
+    tl.to(
+      "#t-cur",
+      { x: 1563, y: 367, duration: 0.22, ease: "power3.inOut" },
+      1.38,
+    );
+    tl.to("#t-cur", { scale: 0.86, duration: 0.05 }, 1.6);
+    tl.to("#t-cur", { scale: 1, duration: 0.1 }, 1.72);
+    tl.to(
+      "#t-cur",
+      { x: 1503, y: 627, duration: 0.6, ease: "power2.inOut" },
+      2.2,
+    );
     tl.to(
       "#t-window, #t-cur",
       { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" },
-      2.118,
+      3.81,
     );
     // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
     document.querySelectorAll("#root .cap").forEach((el) => {

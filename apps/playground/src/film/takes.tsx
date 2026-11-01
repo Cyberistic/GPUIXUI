@@ -4,7 +4,16 @@
  *
  *   nub apps/playground/dist/film/takes.js <take> <outDir>
  */
-import { Button, Slider, Switch } from "@gpuixui/primitives";
+import { Tabs, TabsList, TabsTrigger } from "@gpuixui/components/tabs";
+import {
+  Button,
+  Checkbox,
+  Input,
+  RadioGroup,
+  Slider,
+  Switch,
+  ToggleGroup,
+} from "@gpuixui/primitives";
 import {
   darkTheme,
   extendTheme,
@@ -55,8 +64,8 @@ const stage = (theme: Theme, child: ReactNode) => (
 
 const macro = (k: number) => magnify(mac, k);
 
-/** A beat of the score (104 BPM) in frames. */
-const BEAT = (30 * 60) / 104;
+/** A beat of the score (120 BPM) in frames: 15. */
+const BEAT = (30 * 60) / 120;
 
 /** The Omarchy shot's theme, one new `colors.toml` per beat. */
 const omarchyAt = (frame: number): OmarchyLook =>
@@ -136,10 +145,14 @@ const pressAt = (
   { frame: 74, aim: { x: from.x - 80, y: from.y - 60 } },
 ];
 
-/** `text` typed one character every two frames from `frame`. */
-const typing = (text: string, frame: number): NonNullable<Take["keys"]> =>
+/** `text` typed one character every `every` frames from `frame`. */
+const typing = (
+  text: string,
+  frame: number,
+  every = 2,
+): NonNullable<Take["keys"]> =>
   [...text].map((char, i) => ({
-    frame: frame + i * 2,
+    frame: frame + i * every,
     keys: char === " " ? "space" : char,
   }));
 
@@ -161,7 +174,119 @@ const desktop = (look: DesktopLook): Take => ({
   ],
 });
 
+/** An opening close-up: half a second (one beat) of one control at `k`×. */
+const closeUp = (
+  k: number,
+  child: ReactNode,
+  pointer: ReadonlyArray<Waypoint>,
+  keys: Take["keys"] = [],
+): Take => ({
+  width: 960,
+  height: 540,
+  frames: BEAT,
+  view: () => stage(macro(k), child),
+  pointer,
+  keys,
+});
+
+/** A tap on `testId` on frame 5 of a close-up. */
+const tap = (testId: string): ReadonlyArray<Waypoint> => [
+  { frame: 0, aim: { testId, dx: 70, dy: 60 } },
+  { frame: 4, aim: { testId } },
+  { frame: 5, aim: { testId }, down: true },
+  { frame: 7, aim: { testId } },
+  { frame: 14, aim: { testId, dx: 16, dy: 24 } },
+];
+
 export const takes: Readonly<Record<string, Take>> = {
+  "cu-switch": closeUp(8, <Switch testId="c" label="Wi-Fi" />, tap("c")),
+  "cu-checkbox": closeUp(
+    9,
+    <Checkbox testId="c" label="Hunter License" />,
+    tap("c"),
+  ),
+  "cu-slider": closeUp(
+    6,
+    <Slider
+      testId="c"
+      label="Aura"
+      step={10}
+      defaultValue={20}
+      style={{ width: 760 }}
+    />,
+    [
+      { frame: 0, aim: { testId: "c", dx: -220, dy: 80 } },
+      { frame: 2, aim: { testId: "c", dx: -228, dy: 0 } },
+      { frame: 3, aim: { testId: "c", dx: -228, dy: 0 }, down: true },
+      { frame: 12, aim: { testId: "c", dx: 230, dy: 0 }, down: true },
+      { frame: 13, aim: { testId: "c", dx: 230, dy: 0 } },
+      { frame: 14, aim: { testId: "c", dx: 236, dy: 20 } },
+    ],
+  ),
+  "cu-tabs": closeUp(
+    5,
+    <Tabs defaultValue="arena">
+      <TabsList label="Venue">
+        <TabsTrigger value="arena">Arena</TabsTrigger>
+        <TabsTrigger value="island" testId="c">
+          Island
+        </TabsTrigger>
+        <TabsTrigger value="exam">Exam</TabsTrigger>
+      </TabsList>
+    </Tabs>,
+    tap("c"),
+  ),
+  "cu-toggle": closeUp(
+    5,
+    <ToggleGroup
+      type="single"
+      label="Range"
+      defaultValue="day"
+      options={[
+        { value: "day", label: "Day" },
+        { value: "week", label: "Week" },
+        { value: "month", label: "Month" },
+      ]}
+      itemTestId={(value) => `c-${value}`}
+    />,
+    tap("c-month"),
+  ),
+  "cu-button": closeUp(
+    6,
+    <Button testId="c" variant="primary" size="lg">
+      Deploy
+    </Button>,
+    tap("c"),
+  ),
+  "cu-radio": closeUp(
+    6,
+    <RadioGroup
+      label="Nen type"
+      defaultValue="enhancer"
+      options={[
+        { value: "enhancer", label: "Enhancer" },
+        { value: "transmuter", label: "Transmuter" },
+      ]}
+      itemTestId={(value) => `c-${value}`}
+    />,
+    tap("c-transmuter"),
+  ),
+  "cu-input": closeUp(
+    6,
+    <Input testId="c" placeholder="Name" style={{ width: 520 }} />,
+    [
+      { frame: 0, aim: { testId: "c", dx: 120, dy: 60 } },
+      { frame: 1, aim: { testId: "c" } },
+      { frame: 2, aim: { testId: "c" }, down: true },
+      { frame: 3, aim: { testId: "c" } },
+      { frame: 14, aim: { testId: "c", dx: 60, dy: 40 } },
+    ],
+    [
+      { frame: 5, keys: "g" },
+      { frame: 7, keys: "o" },
+      { frame: 9, keys: "n" },
+    ],
+  ),
   pipeline: macApp(
     <Pipeline platform="darwin" />,
     pressAt("work-w1", 30, { x: 900, y: 600 }),
@@ -206,15 +331,15 @@ export const takes: Readonly<Record<string, Take>> = {
     <Agent platform="darwin" />,
     [
       { frame: 0, aim: { x: 700, y: 600 } },
-      { frame: 8, aim: { testId: "composer" } },
-      { frame: 10, aim: { testId: "composer" }, down: true },
-      { frame: 12, aim: { testId: "composer" } },
-      { frame: 50, aim: { testId: "send" } },
-      { frame: 54, aim: { testId: "send" }, down: true },
-      { frame: 57, aim: { testId: "send" } },
+      { frame: 1, aim: { testId: "composer" } },
+      { frame: 3, aim: { testId: "composer" }, down: true },
+      { frame: 4, aim: { testId: "composer" } },
+      { frame: 40, aim: { testId: "send" } },
+      { frame: 45, aim: { testId: "send" }, down: true },
+      { frame: 48, aim: { testId: "send" } },
       { frame: 74, aim: { testId: "send", dx: 20, dy: -40 } },
     ],
-    typing("add a retry test", 16),
+    typing("add a retry test", 6, 1),
   ),
   "desktop-luna": desktop("luna"),
   "desktop-aero": desktop("aero"),
@@ -282,28 +407,27 @@ export const takes: Readonly<Record<string, Take>> = {
   settings: {
     width: 1024,
     height: 576,
-    frames: 234,
+    frames: 4 * BEAT,
     view: () => <SettingsWindow />,
     pointer: [
-      { frame: 0, aim: { testId: "save", dx: 12, dy: 6 } },
-      { frame: 28, aim: { testId: "save", dx: 12, dy: 6 } },
-      { frame: 40, aim: { testId: "sounds" } },
-      { frame: 43, aim: { testId: "sounds" }, down: true },
-      { frame: 46, aim: { testId: "sounds" } },
-      { frame: 88, aim: { testId: "look-win32" } },
-      { frame: 95, aim: { testId: "look-win32" }, down: true },
-      { frame: 98, aim: { testId: "look-win32" } },
-      { frame: 156, aim: { testId: "look-linux" } },
-      { frame: 164, aim: { testId: "look-linux" }, down: true },
-      { frame: 167, aim: { testId: "look-linux" } },
-      { frame: 233, aim: { testId: "look-linux", dx: 30, dy: 40 } },
+      { frame: 0, aim: { testId: "look-win32", dx: 60, dy: 50 } },
+      { frame: 12, aim: { testId: "look-win32" } },
+      { frame: 15, aim: { testId: "look-win32" }, down: true },
+      { frame: 18, aim: { testId: "look-win32" } },
+      { frame: 27, aim: { testId: "look-linux" } },
+      { frame: 30, aim: { testId: "look-linux" }, down: true },
+      { frame: 33, aim: { testId: "look-linux" } },
+      { frame: 42, aim: { testId: "dark" } },
+      { frame: 45, aim: { testId: "dark" }, down: true },
+      { frame: 48, aim: { testId: "dark" } },
+      { frame: 59, aim: { testId: "dark", dx: 30, dy: 40 } },
     ],
   },
   /** Shots 7–8: four Omarchy themes, then a card dragged to Done. */
   omarchy: {
     width: 1280,
     height: 720,
-    frames: 70,
+    frames: 4 * BEAT,
     view: (frame) => <OmarchyDesktop look={omarchyAt(frame)} />,
   },
 };

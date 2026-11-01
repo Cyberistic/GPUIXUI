@@ -11,7 +11,9 @@
  *   only while the list holds focus, and a quiet `active` wash otherwise — so
  *   the emphasized row is also the list's visible focus;
  * - the list is **one tab stop** (the chosen row) and ↑/↓/Home/End move the
- *   choice, stopping at either end.
+ *   choice, stopping at either end; typing a label's first letters jumps to it;
+ * - a titled section can **fold**: its header is a disclosure, and a folded
+ *   section's rows leave the keyboard's path as well as the screen.
  */
 
 import {
@@ -21,12 +23,12 @@ import {
   type PublicInstance,
 } from "@gpuix/react";
 import { Icon, type IconName } from "@gpuixui/icons";
-import { isPlainKey } from "@gpuixui/primitives";
+import { isPlainKey, useTypeAhead } from "@gpuixui/primitives";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useEffect, useRef, useState } from "react";
 import { textStyle, useTheme } from "../theme.js";
-import { moveSelection, type SourceListKey } from "./logic.js";
+import { moveSelection, visibleIds, type SourceListKey } from "./logic.js";
 
 /** The row height AppKit's medium sidebar uses. */
 export const SOURCE_ROW_HEIGHT = 28;
@@ -45,6 +47,10 @@ export interface SourceListSection {
   readonly id: string;
   /** The section's header; omitted for a list's leading, untitled group. */
   readonly title?: string;
+  /** Whether the titled header folds the section away. */
+  readonly collapsible?: boolean;
+  /** Start folded. Needs `collapsible`. */
+  readonly defaultCollapsed?: boolean;
   readonly items: ReadonlyArray<SourceListItem>;
 }
 
@@ -79,9 +85,38 @@ export const SourceList = ({
   const renderer = useGpuix().renderer;
   const [focused, setFocused] = useState(false);
   const rows = useRef(new Map<string, PublicInstance>());
-  const ids = Arr.flatMap(sections, (section) =>
-    Arr.map(section.items, (item) => item.id),
+  const [folded, setFolded] = useState<ReadonlySet<string>>(
+    () =>
+      new Set(
+        Arr.map(
+          Arr.filter(
+            sections,
+            (section) =>
+              section.collapsible === true && section.defaultCollapsed === true,
+          ),
+          (section) => section.id,
+        ),
+      ),
   );
+  const ids = visibleIds(sections, folded);
+  const labels = new Map(
+    Arr.flatMap(sections, (section) =>
+      Arr.map(section.items, (item) => [item.id, item.label] as const),
+    ),
+  );
+  const typeAhead = useTypeAhead(
+    Arr.map(ids, (id) => ({ value: id, label: labels.get(id) ?? "" })),
+    () => false,
+  );
+  // The chosen row is the tab stop while it shows; folded away, the first row
+  // that shows takes it, so the list never loses its stop.
+  const stop = Arr.contains(ids, value) ? Option.some(value) : Arr.head(ids);
+  const toggle = (id: string): void =>
+    setFolded((current) => {
+      const next = new Set(current);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
 
   // The tab stop moves with the choice; focus follows once the new stop has
   // rendered, or the runtime focuses the row that is leaving it.
@@ -101,7 +136,22 @@ export const SourceList = ({
 
   const onKeyDown = (event: KeyEvent): void =>
     Option.match(
-      Option.flatMap(keyOf(event), (key) => moveSelection(ids, value, key)),
+      Option.orElse(
+        Option.flatMap(keyOf(event), (key) => moveSelection(ids, value, key)),
+        () =>
+          isPlainKey(event.modifiers)
+            ? Option.flatMap(
+                typeAhead(
+                  Option.getOrElse(
+                    Arr.findFirstIndex(ids, (id) => id === value),
+                    () => -1,
+                  ),
+                  event.key ?? "",
+                ),
+                (index) => Arr.get(ids, index),
+              )
+            : Option.none(),
+      ),
       { onNone: () => undefined, onSome: choose },
     );
 
@@ -126,20 +176,47 @@ export const SourceList = ({
           style={{ display: "flex", flexDirection: "column", gap: 2 }}
         >
           {section.title === undefined ? null : (
-            <text
+            <div
+              {...(section.collapsible === true
+                ? {
+                    role: "button",
+                    "aria-expanded": !folded.has(section.id),
+                    testId: `source-section-${section.id}`,
+                    onClick: () => toggle(section.id),
+                  }
+                : {})}
               style={{
-                ...textStyle(theme, "caption"),
-                fontWeight: 600,
-                color: theme.colors.mutedForeground,
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
                 paddingLeft: 8,
+                paddingRight: 8,
                 paddingTop: 8,
                 paddingBottom: 2,
               }}
             >
-              {section.title}
-            </text>
+              <text
+                style={{
+                  ...textStyle(theme, "caption"),
+                  fontWeight: 600,
+                  color: theme.colors.mutedForeground,
+                  flexGrow: 1,
+                }}
+              >
+                {section.title}
+              </text>
+              {section.collapsible === true ? (
+                <Icon
+                  name={
+                    folded.has(section.id) ? "chevron-right" : "chevron-down"
+                  }
+                  size={theme.iconSize.sm}
+                  color={theme.colors.mutedForeground}
+                />
+              ) : null}
+            </div>
           )}
-          {Arr.map(section.items, (item) => {
+          {Arr.map(folded.has(section.id) ? [] : section.items, (item) => {
             const chosen = item.id === value;
             const emphasized = chosen && focused;
             const ink = emphasized
@@ -150,7 +227,7 @@ export const SourceList = ({
                 key={item.id}
                 role="option"
                 aria-selected={chosen}
-                tabIndex={chosen ? 0 : -1}
+                tabIndex={Option.contains(stop, item.id) ? 0 : -1}
                 testId={`source-${item.id}`}
                 ref={(instance: PublicInstance | null) => {
                   if (instance === null) rows.current.delete(item.id);

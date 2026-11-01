@@ -16,6 +16,9 @@
  * keyboard control).
  */
 
+export { Divider } from "./divider.js";
+export type { DividerProps } from "./divider.js";
+
 export { SplitPane } from "./split-pane.js";
 export type { SplitPaneProps } from "./split-pane.js";
 

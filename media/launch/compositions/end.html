@@ -127,16 +127,16 @@
     tl.to(
       ["#e-mark", "#e-cur"],
       { scale: 0.9, duration: 0.066, ease: "power2.out" },
-      0.577,
+      0.5,
     );
-    tl.to("#e-mark", { scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 0.697);
-    tl.to("#e-cur", { scale: 1, duration: 0.12 }, 0.697);
+    tl.to("#e-mark", { scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 0.62);
+    tl.to("#e-cur", { scale: 1, duration: 0.12 }, 0.62);
     tl.to(
       "#e-cur",
       { x: 1120, y: 760, opacity: 0, duration: 0.42, ease: "power2.in" },
-      0.927,
+      0.85,
     );
-    tl.to("#e-mark", { x: -270, duration: 0.5, ease: "power3.inOut" }, 0.827);
+    tl.to("#e-mark", { x: -270, duration: 0.5, ease: "power3.inOut" }, 0.75);
     tl.fromTo(
       "#e-word",
       { opacity: 1, clipPath: "inset(0 100% 0 0)", x: 24 },
@@ -146,24 +146,24 @@
         duration: 0.55,
         ease: "power3.inOut",
       },
-      1.197,
+      1.12,
     );
     tl.fromTo(
       "#e-url",
       { opacity: 0, color: "#9a9aa0" },
       { opacity: 1, duration: 0.3, ease: "power2.out" },
-      1.731,
+      1.5,
     );
     tl.to(
       "#e-url",
       { color: "#5f4bdb", duration: 0.45, ease: "power2.inOut" },
-      1.881,
+      1.65,
     );
     tl.fromTo(
       "#e-credit",
       { opacity: 0 },
       { opacity: 1, duration: 0.4, ease: "power2.out" },
-      2.308,
+      2.0,
     );
     // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
     document.querySelectorAll("#root .cap").forEach((el) => {

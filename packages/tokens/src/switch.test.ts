@@ -265,6 +265,29 @@ describe("a paint that cannot be found", () => {
     ).toEqual([{ slot: "knob", over: "off", ratio: 1 }]);
   });
 
+  // Regression: a transparent off track was read on its own outline, so a white
+  // knob passed while it painted white on a white card.
+  it("reads an off knob on the strip behind a transparent track", () => {
+    const paint = {
+      on: "#0078D4",
+      off: "transparent",
+      knob: "#FFFFFF",
+      edge: "#8A8A8A",
+    };
+    const report = switchFailures({ colors: lightTheme.colors, switch: paint });
+
+    expect(
+      report.placements.map(({ slot, over, ratio }) => ({ slot, over, ratio })),
+    ).toEqual([{ slot: "knob", over: "off", ratio: 1 }]);
+    // The off knob a style paints is the one measured there.
+    expect(
+      switchFailures({
+        colors: lightTheme.colors,
+        switch: { ...paint, knobOff: "#616161" },
+      }).placements,
+    ).toEqual([]);
+  });
+
   it("reports a track painted in the strip it stands on", () => {
     const report = switchFailures({
       colors: lightTheme.colors,

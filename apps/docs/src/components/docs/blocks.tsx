@@ -1,4 +1,5 @@
 import desktopSource from "../../../../../examples/blocks/src/desktop/desktop.tsx?raw";
+import licenseSource from "../../../../../examples/blocks/src/license/license.tsx?raw";
 import notesSource from "../../../../../examples/blocks/src/notes/notes.tsx?raw";
 import preferencesSource from "../../../../../examples/blocks/src/preferences/preferences.tsx?raw";
 import launcherSource from "../../../../../examples/blocks/src/launcher/launcher.tsx?raw";
@@ -352,6 +353,16 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
     render: CommandCentreRender,
     source: commandCentreSource,
+  },
+  "license-01": {
+    name: "license-01",
+    slug: "license",
+    title: "Hunter License",
+    description:
+      "The Hunter Association's registry as a Mac app: hunters by specialty under the traffic lights, the chosen hunter's licence card with its rank in stars, and its privileges as switches.",
+    packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
+    render: () => <CaptureRender slug="license" title="Hunter License" />,
+    source: licenseSource,
   },
   "notes-01": {
     name: "notes-01",

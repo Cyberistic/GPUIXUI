@@ -22,7 +22,8 @@
     "@gpuixui/tokens": "workspace:*",
     "@gpuixui/tw": "workspace:*",
     "effect": "catalog:",
-    "@gpuix/native": "catalog:"
+    "@gpuix/native": "catalog:",
+    "@gpuixui/dock": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.2.0"

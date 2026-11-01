@@ -37,7 +37,7 @@ import type { ControlSize, PrimitiveTheme } from "./theme.js";
 import { pressWash } from "./pointer.js";
 
 /** One slot of the paint a platform's own switch declares. */
-type SwitchSlot = "on" | "off" | "knob" | "edge";
+type SwitchSlot = "on" | "off" | "knob" | "knobOff" | "edge";
 
 /** A declared switch paint, as a store wrote it: an open record. */
 const DeclaredSwitch = Schema.Record(Schema.String, Schema.Unknown);
@@ -85,7 +85,14 @@ const declaredPaint = (source: SwitchPaintTheme): Option.Option<SwitchColors> =>
         }),
         (slots) => {
           const edge = Option.getOrUndefined(declaredColour(paint, "edge"));
-          return edge === undefined ? slots : { ...slots, edge };
+          const knobOff = Option.getOrUndefined(
+            declaredColour(paint, "knobOff"),
+          );
+          return {
+            ...slots,
+            ...(edge === undefined ? {} : { edge }),
+            ...(knobOff === undefined ? {} : { knobOff }),
+          };
         },
       ),
     ),
@@ -465,15 +472,18 @@ export const switchTrackPaint = (
   };
 };
 
-/** The knob's paint, which follows the track's declaration. */
+/** The knob's paint, which follows the track's declaration and its state. */
 export const switchThumbPaint = (
+  spec: SelectionSpec,
   source: SwitchPaintTheme,
 ): StyleDesc | undefined => {
   const theme = switchTheme(source);
   return theme.switch === undefined
     ? undefined
     : {
-        backgroundColor: theme.switch.knob,
+        backgroundColor: filled(spec)
+          ? theme.switch.knob
+          : (theme.switch.knobOff ?? theme.switch.knob),
         boxShadow: elevationShadow(theme, "sm"),
       };
 };
@@ -556,7 +566,7 @@ export const switchThumbStyle = (
   source: SwitchPaintTheme,
 ): StyleDesc => {
   const theme = switchTheme(source);
-  const paint = switchThumbPaint(source);
+  const paint = switchThumbPaint(spec, source);
   const box = switchBox(spec.size, source);
   return {
     position: "absolute",

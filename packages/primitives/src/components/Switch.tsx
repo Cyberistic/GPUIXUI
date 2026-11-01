@@ -185,7 +185,7 @@ export const renderSwitchThumb = (
       },
       // A platform's own knob paint is a colour, not a class: the recipe's
       // accent fill stays the resting paint for every other theme.
-      switchThumbPaint(theme),
+      switchThumbPaint(spec, theme),
     ),
     props.style,
   );
