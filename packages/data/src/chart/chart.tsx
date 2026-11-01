@@ -42,8 +42,11 @@ import {
   chartScale,
   donutSegments,
   groupedBarMarks,
-  linePath,
+  areaPath,
+  insetLine,
+  lineMarks,
   seriesColour,
+  tickRules,
   seriesDescription,
   seriesName,
   stackedBarMarks,
@@ -261,6 +264,43 @@ const ChartLayer = ({
 );
 
 /**
+ * A decorative layer under the series: a line's area wash or the tick rules.
+ * It carries no name, because the series layer above it already reads out.
+ */
+const ChartWash = ({
+  marks,
+  box,
+  colour,
+  opacity,
+}: {
+  readonly marks: ReadonlyArray<ChartMark>;
+  readonly box: ChartBox;
+  readonly colour: string;
+  readonly opacity: number;
+}) =>
+  marks.length === 0 ? null : (
+    <svg
+      source={chartMarkup(marks, box)}
+      style={{
+        position: "absolute",
+        left: 0,
+        top: 0,
+        width: box.width,
+        height: box.height,
+        color: colour,
+        opacity,
+        pointerEvents: "none",
+      }}
+    />
+  );
+
+/** A line's area wash, as a share of its colour. */
+const WASH_OPACITY = 0.14;
+
+/** A line's stroke width, and the room it keeps from the plot's edges. */
+const LINE_WIDTH = 2.5;
+
+/**
  * A series chart's shared frame: axis, plot, labels and legend.
  *
  * A series keeps its layer while it has a labelled slot, even when no value in
@@ -279,6 +319,7 @@ const ChartFrame = ({
   className,
   testId,
   marks,
+  wash,
   scaleOf = chartScale,
   style,
   ...rest
@@ -307,6 +348,13 @@ const ChartFrame = ({
     box: ChartBox,
     scale: number,
   ) => ReadonlyArray<ReadonlyArray<ChartMark>>;
+  /** A wash painted under each series (a line's area), in the same shape as `marks`. */
+  readonly wash?: (
+    series: ReadonlyArray<ChartSeries>,
+    labels: ReadonlyArray<string>,
+    box: ChartBox,
+    scale: number,
+  ) => ReadonlyArray<ReadonlyArray<ChartMark>>;
 }) => {
   const theme = useTheme();
   const box = chartBox(width, height, {
@@ -323,6 +371,7 @@ const ChartFrame = ({
   const scale = scaleOf(rows, categories.length);
   const palette = seriesColors(theme);
   const layers = marks(rows, categories, box, scale);
+  const washes = wash?.(rows, categories, box, scale) ?? [];
   const slot = barSlot(categories.length, box.width).slot;
   const tickValues = axisTicks(scale, ticks);
   // The labels take their precision from the distance between neighbours, not
@@ -376,6 +425,23 @@ const ChartFrame = ({
             height: box.height,
           }}
         >
+          {axis ? (
+            <ChartWash
+              marks={tickRules(tickValues, scale, box)}
+              box={box}
+              colour={themeColors(theme).border}
+              opacity={1}
+            />
+          ) : null}
+          {Arr.map(washes, (marks, index) => (
+            <ChartWash
+              key={`wash-${index}`}
+              marks={marks}
+              box={box}
+              colour={seriesColour(palette, index)}
+              opacity={WASH_OPACITY}
+            />
+          ))}
           {Arr.map(rows, (one, index) =>
             // A series paints a layer while it has a labelled slot, even if no
             // value in it draws: a bar chart of zeros shows no bar, but the
@@ -492,10 +558,24 @@ export const LineChart = (props: LineChartProps) => (
     {...props}
     marks={(series, labels, box, scale) =>
       Arr.map(series, (one) =>
-        Option.match(linePath(one.values, box, scale, labels.length), {
-          onNone: () => [],
-          onSome: (d): ReadonlyArray<ChartMark> => [{ kind: "path", d }],
-        }),
+        lineMarks(
+          insetLine(one.values, box, scale, labels.length, LINE_WIDTH),
+          LINE_WIDTH,
+        ),
+      )
+    }
+    wash={(series, labels, box, scale) =>
+      Arr.map(series, (one) =>
+        Option.match(
+          areaPath(
+            insetLine(one.values, box, scale, labels.length, LINE_WIDTH),
+            box,
+          ),
+          {
+            onNone: () => [],
+            onSome: (d): ReadonlyArray<ChartMark> => [{ kind: "path", d }],
+          },
+        ),
       )
     }
   />
@@ -658,7 +738,8 @@ export const Sparkline = ({
   const scale = chartScale([
     { key: "sparkline", label: "sparkline", values: points },
   ]);
-  const d = linePath(points, box, scale);
+  const line = insetLine(points, box, scale, points.length, 2);
+  const colour = chosenColour(color, seriesColour(seriesColors(theme), 0));
   return (
     <div
       {...rest}
@@ -672,6 +753,15 @@ export const Sparkline = ({
           height: box.height,
         }}
       >
+        <ChartWash
+          marks={Option.match(areaPath(line, box), {
+            onNone: () => [],
+            onSome: (d): ReadonlyArray<ChartMark> => [{ kind: "path", d }],
+          })}
+          box={box}
+          colour={colour}
+          opacity={WASH_OPACITY}
+        />
         <ChartLayer
           chartTestId={testId}
           seriesKey="sparkline"
@@ -680,13 +770,8 @@ export const Sparkline = ({
             DEFAULT_SPARKLINE_LABEL,
           )}
           description={seriesDescription(points)}
-          colour={chosenColour(color, seriesColour(seriesColors(theme), 0))}
-          marks={Option.match(d, {
-            onNone: () => [],
-            onSome: (path): ReadonlyArray<ChartMark> => [
-              { kind: "path", d: path },
-            ],
-          })}
+          colour={colour}
+          marks={lineMarks(line, 2, false)}
           box={box}
         />
       </div>

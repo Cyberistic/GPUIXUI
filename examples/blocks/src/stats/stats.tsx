@@ -82,6 +82,7 @@ export const Stats = () => {
               labels={data.labels}
               width={460}
               height={190}
+              ticks={5}
               legend
             />
           </Stack>

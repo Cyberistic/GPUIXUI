@@ -34,6 +34,8 @@ import {
   drawableValue,
   groupedBarMarks,
   linePath,
+  monotonePath,
+  areaPath,
   niceCeiling,
   seriesColour,
   seriesDescription,
@@ -309,8 +311,11 @@ describe("the line and ring marks", () => {
   it("runs a path through every point, over the labelled slots", () => {
     // The points stand at the centre of each of the three category slots
     // (`200 / 3` wide), which is where the labels and the bars are centred.
+    // Collinear points: the curve's handles lie on the line, so it stays straight.
     const path = linePath([100, 50, 0], box, 100);
-    expect(Option.getOrElse(path, () => "")).toBe("M33.33 0L100 50L166.67 100");
+    expect(Option.getOrElse(path, () => "")).toBe(
+      "M33.33 0C55.56 16.67 77.78 33.33 100 50C122.22 66.67 144.44 83.33 166.67 100",
+    );
     // One point paints a short run rather than a zero-length path.
     expect(Option.getOrElse(linePath([50], box, 100), () => "")).toBe(
       "M100 50h1",
@@ -322,13 +327,13 @@ describe("the line and ring marks", () => {
     // Two values against four labels used to span the whole plot (`0 … 200`),
     // drawing the second point under the fourth label; they belong in the first
     // two of four 50px slots.
-    expect(Option.getOrElse(linePath([10, 20], box, 100, 4), () => "")).toBe(
-      "M25 90L75 80",
+    expect(Option.getOrElse(linePath([10, 20], box, 100, 4), () => "")).toMatch(
+      /^M25 90C.* 75 80$/,
     );
     // A value past the last label draws nowhere — the rule `barMarks` follows.
     expect(
       Option.getOrElse(linePath([1, 2, 3, 4], box, 100, 2), () => ""),
-    ).toBe("M50 99L150 98");
+    ).toMatch(/^M50 99C.* 150 98$/);
   });
 
   it("paints one ring segment per positive value", () => {
@@ -336,7 +341,7 @@ describe("the line and ring marks", () => {
     expect(marks).toHaveLength(2);
     expect(
       Arr.every(marks, (mark) =>
-        mark.kind === "path"
+        mark.kind === "stroke"
           ? mark.d.startsWith("M") && mark.d.includes("A")
           : false,
       ),
@@ -344,6 +349,63 @@ describe("the line and ring marks", () => {
     // A full ring is two halves: an arc from an angle to itself paints nothing.
     expect(donutMarks([100], box)).toHaveLength(2);
     expect(donutMarks([0, 0], box)).toEqual([]);
+  });
+});
+
+describe("the landing's chart style (plan 065)", () => {
+  // The bug: every path was filled, so an open line painted the sliver between
+  // its first and last points, and bars and the ring had hard corners.
+  it("paints a line as a round-capped stroke and a bar with a radius", () => {
+    const svg = chartMarkup(
+      [
+        { kind: "stroke", d: "M0 0L10 10", width: 2.5 },
+        ...barMarks([50], box, 100),
+      ],
+      box,
+    );
+    expect(svg).toContain('fill="none" stroke="#000" stroke-width="2.5"');
+    expect(svg).toContain('stroke-linecap="round"');
+    expect(svg).toMatch(/<rect [^>]*rx="[1-9]/);
+  });
+
+  it("curves through every point without overshooting a peak", () => {
+    const points = [
+      { x: 0, y: 50 },
+      { x: 10, y: 0 },
+      { x: 20, y: 0 },
+      { x: 30, y: 80 },
+    ];
+    const d = monotonePath(points);
+    for (const point of points) expect(d).toContain(`${point.x} ${point.y}`);
+    // The flat run between the two peaks keeps flat handles: y never leaves 0.
+    const flat = d.split("C")[2] ?? "";
+    expect(flat.split(" ").filter((_, i) => i % 2 === 1)).toEqual([
+      "0",
+      "0",
+      "0",
+    ]);
+  });
+
+  it("closes a line's area down to the floor", () => {
+    const area = areaPath(
+      [
+        { x: 10, y: 40 },
+        { x: 90, y: 20 },
+      ],
+      box,
+    );
+    expect(Option.getOrElse(area, () => "")).toMatch(/L90 100L10 100Z$/);
+    expect(areaPath([], box)).toEqual(Option.none());
+  });
+
+  it("leaves a gap between ring slices", () => {
+    const [first, second] = donutMarks([50, 50], box);
+    const ends = (mark: ChartMark | undefined) =>
+      mark?.kind === "stroke" ? mark.d : "";
+    // Two halves that met would share an end point; a gap means they do not.
+    const endOf = (d: string) => d.split(" ").slice(-2).join(" ");
+    const startOf = (d: string) => d.slice(1).split("A")[0] ?? "";
+    expect(endOf(ends(first))).not.toBe(startOf(ends(second)));
   });
 });
 

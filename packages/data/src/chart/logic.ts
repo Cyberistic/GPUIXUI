@@ -69,8 +69,21 @@ export type ChartMark =
       readonly y: number;
       readonly width: number;
       readonly height: number;
+      /** Corner radius; a bar's top and foot round alike, as the landing's do. */
+      readonly radius?: number;
     }
-  | { readonly kind: "path"; readonly d: string };
+  | { readonly kind: "path"; readonly d: string }
+  /** An open path drawn as a line, `width` thick: round caps unless `cap` is `"butt"`. */
+  | {
+      readonly kind: "stroke";
+      readonly d: string;
+      readonly width: number;
+      readonly cap?: "round" | "butt";
+    };
+
+/** A bar's corner radius: soft, never more than a quarter of its width or half its height. */
+export const barRadius = (width: number, height: number): number =>
+  Math.max(0, Math.min(6, width / 4, height / 2));
 
 /** A value the chart can draw: finite and not negative. */
 export const drawableValue = (value: number): number =>
@@ -299,6 +312,7 @@ export const barMarks = (
       y: box.height - one.height,
       width: barWidth,
       height: one.height,
+      radius: barRadius(barWidth, one.height),
     }),
   );
 };
@@ -319,6 +333,8 @@ export const groupedBarMarks = (
   const count = categoryCount(series, categories);
   const { slot } = barSlot(count, box.width);
   const width = series.length === 0 ? 0 : (slot * 0.8) / series.length;
+  // Side-by-side series keep a sliver of ground between them.
+  const gap = series.length > 1 ? width * 0.12 : 0;
   return Arr.map(series, (one, seriesIndex) =>
     Arr.map(
       Arr.filter(
@@ -330,10 +346,11 @@ export const groupedBarMarks = (
       ),
       (candidate): ChartMark => ({
         kind: "rect",
-        x: candidate.index * slot + slot * 0.1 + seriesIndex * width,
+        x: candidate.index * slot + slot * 0.1 + seriesIndex * width + gap / 2,
         y: box.height - candidate.height,
-        width,
+        width: width - gap,
         height: candidate.height,
+        radius: barRadius(width - gap, candidate.height),
       }),
     ),
   );
@@ -411,55 +428,164 @@ const num = (value: number): string =>
  * A single value paints a half-pixel run rather than a zero-length path, which
  * some rasterisers drop; an empty series paints nothing.
  */
+export const linePoints = (
+  values: ReadonlyArray<number>,
+  box: ChartBox,
+  scale: number,
+  categories: number = values.length,
+): ReadonlyArray<{ readonly x: number; readonly y: number }> => {
+  const painted = paintedValues(values, categories);
+  const { slot } = barSlot(
+    Option.getOrElse(paintedSlots(categories), () => values.length),
+    box.width,
+  );
+  return Arr.map(painted, (value, index) => ({
+    x: index * slot + slot / 2,
+    y: box.height - barHeight(value, box, scale),
+  }));
+};
+
+type Point = { readonly x: number; readonly y: number };
+
+/**
+ * A smooth curve through every point that never overshoots one: a monotone
+ * cubic (Fritsch–Carlson), so a peak stays the peak and a flat run stays flat.
+ */
+export const monotonePath = (points: ReadonlyArray<Point>): string => {
+  const at = (index: number): Point => points[index] ?? { x: 0, y: 0 };
+  const head = `M${num(at(0).x)} ${num(at(0).y)}`;
+  if (points.length < 2) return `${head}h1`;
+  const slopes = Arr.makeBy(points.length - 1, (index) => {
+    const dx = at(index + 1).x - at(index).x;
+    return dx === 0 ? 0 : (at(index + 1).y - at(index).y) / dx;
+  });
+  const slope = (index: number): number => slopes[index] ?? 0;
+  const raw = Arr.makeBy(points.length, (index) =>
+    index === 0
+      ? slope(0)
+      : index === points.length - 1
+        ? slope(index - 1)
+        : slope(index - 1) * slope(index) <= 0
+          ? 0
+          : (slope(index - 1) + slope(index)) / 2,
+  );
+  // Limit each segment's tangents so the curve stays inside its two values.
+  const setPair = (
+    m: ReadonlyArray<number>,
+    index: number,
+    a: number,
+    b: number,
+  ) =>
+    Arr.map(m, (value, at) =>
+      at === index ? a : at === index + 1 ? b : value,
+    );
+  const tangents = Arr.reduce(
+    slopes,
+    raw as ReadonlyArray<number>,
+    (m, d, index) => {
+      if (d === 0) return setPair(m, index, 0, 0);
+      const a = (m[index] ?? 0) / d;
+      const b = (m[index + 1] ?? 0) / d;
+      const t = 3 / Math.sqrt(a * a + b * b);
+      return t >= 1 ? m : setPair(m, index, t * a * d, t * b * d);
+    },
+  );
+  const curves = Arr.makeBy(points.length - 1, (index) => {
+    const from = at(index);
+    const to = at(index + 1);
+    const h = (to.x - from.x) / 3;
+    const m0 = tangents[index] ?? 0;
+    const m1 = tangents[index + 1] ?? 0;
+    return `C${num(from.x + h)} ${num(from.y + m0 * h)} ${num(to.x - h)} ${num(to.y - m1 * h)} ${num(to.x)} ${num(to.y)}`;
+  });
+  return head + Arr.join(curves, "");
+};
+
+/** The smooth line through a series' points; `None` for a series with none. */
 export const linePath = (
   values: ReadonlyArray<number>,
   box: ChartBox,
   scale: number,
   categories: number = values.length,
 ): Option.Option<string> => {
-  const painted = paintedValues(values, categories);
-  if (painted.length === 0) return Option.none();
-  const { slot } = barSlot(
-    Option.getOrElse(paintedSlots(categories), () => values.length),
-    box.width,
-  );
-  const points = Arr.map(painted, (value, index) => ({
-    x: index * slot + slot / 2,
-    y: box.height - barHeight(value, box, scale),
-  }));
-  const path = Arr.join(
-    Arr.map(
-      points,
-      (point, index) =>
-        `${index === 0 ? "M" : "L"}${num(point.x)} ${num(point.y)}`,
-    ),
-    "",
-  );
-  return Option.some(painted.length === 1 ? `${path}h1` : path);
+  const points = linePoints(values, box, scale, categories);
+  return points.length === 0
+    ? Option.none()
+    : Option.some(monotonePath(points));
 };
+
+/**
+ * A line's points kept `pad` inside the plot's top and floor, so a round cap at
+ * the ceiling or on a zero is drawn whole instead of half-clipped.
+ */
+export const insetLine = (
+  values: ReadonlyArray<number>,
+  box: ChartBox,
+  scale: number,
+  categories: number,
+  pad: number,
+): ReadonlyArray<Point> =>
+  Arr.map(
+    linePoints(
+      values,
+      { width: box.width, height: Math.max(1, box.height - pad * 2) },
+      scale,
+      categories,
+    ),
+    (point) => ({ x: point.x, y: point.y + pad }),
+  );
+
+/** A line's marks: the stroke, and a dot on its last point unless `dot` is off. */
+export const lineMarks = (
+  points: ReadonlyArray<Point>,
+  width: number,
+  dot = true,
+): ReadonlyArray<ChartMark> =>
+  points.length === 0
+    ? []
+    : [
+        { kind: "stroke", d: monotonePath(points), width },
+        ...Option.match(dot ? Arr.last(points) : Option.none(), {
+          onNone: (): ReadonlyArray<ChartMark> => [],
+          onSome: (end): ReadonlyArray<ChartMark> => [
+            {
+              kind: "stroke",
+              d: `M${num(end.x)} ${num(end.y)}h0.01`,
+              width: width * 2.4,
+            },
+          ],
+        }),
+      ];
+
+/** A hairline at each tick, from the floor (0) to the ceiling (`scale`). */
+export const tickRules = (
+  ticks: ReadonlyArray<number>,
+  scale: number,
+  box: ChartBox,
+): ReadonlyArray<ChartMark> =>
+  Arr.map(ticks, (tick) => ({
+    kind: "rect" as const,
+    x: 0,
+    y: Math.min(
+      box.height - 1,
+      box.height - (scale > 0 ? (tick / scale) * box.height : 0),
+    ),
+    width: box.width,
+    height: 1,
+  }));
+
+/** The area under a line: its curve closed down to the plot's floor. */
+export const areaPath = (
+  points: ReadonlyArray<Point>,
+  box: ChartBox,
+): Option.Option<string> =>
+  Option.map(
+    Option.all({ first: Arr.head(points), last: Arr.last(points) }),
+    ({ first, last }) =>
+      `${monotonePath(points)}L${num(last.x)} ${num(box.height)}L${num(first.x)} ${num(box.height)}Z`,
+  );
 
 /** The ring segment between two angles, in radians. */
-const arcPath = (
-  cx: number,
-  cy: number,
-  outer: number,
-  inner: number,
-  start: number,
-  end: number,
-): string => {
-  const point = (radius: number, angle: number): string =>
-    `${num(cx + radius * Math.cos(angle))} ${num(cy + radius * Math.sin(angle))}`;
-  const span = end - start;
-  const large = span > Math.PI ? 1 : 0;
-  return [
-    `M${point(outer, start)}`,
-    `A${num(outer)} ${num(outer)} 0 ${large} 1 ${point(outer, end)}`,
-    `L${point(inner, end)}`,
-    `A${num(inner)} ${num(inner)} 0 ${large} 0 ${point(inner, start)}`,
-    "Z",
-  ].join("");
-};
-
 /**
  * Ring segments, one entry per **datum**, in data order.
  *
@@ -479,41 +605,31 @@ export const donutSegments = (
   const size = Math.min(box.width, box.height);
   const cx = box.width / 2;
   const cy = box.height / 2;
-  const outer = size / 2;
-  const inner = outer * 0.6;
-  const start = -Math.PI / 2;
+  const width = size * DONUT_THICKNESS;
+  const radius = size / 2 - width / 2;
   const full = Math.PI * 2;
-
+  const shown = Arr.filter(drawable, (value) => value > 0).length;
+  const inset = shown > 1 ? DONUT_PAD / 2 : 0;
+  const arc = (start: number, end: number): ChartMark => ({
+    kind: "stroke",
+    width,
+    cap: "butt",
+    d: `M${num(cx + radius * Math.cos(start))} ${num(cy + radius * Math.sin(start))}A${num(radius)} ${num(radius)} 0 ${end - start > Math.PI ? 1 : 0} 1 ${num(cx + radius * Math.cos(end))} ${num(cy + radius * Math.sin(end))}`,
+  });
   const [, segments] = Arr.mapAccum(
     drawable,
-    start,
+    -Math.PI / 2,
     (angle, value): readonly [number, ReadonlyArray<ChartMark>] => {
       if (value <= 0) return [angle, []];
       const span = (value / total) * full;
-      if (span >= full - 1e-9) {
+      if (span >= full - 1e-9)
         return [
           angle + full,
-          [
-            {
-              kind: "path",
-              d: arcPath(cx, cy, outer, inner, angle, angle + Math.PI),
-            },
-            {
-              kind: "path",
-              d: arcPath(cx, cy, outer, inner, angle + Math.PI, angle + full),
-            },
-          ],
+          [arc(angle, angle + Math.PI), arc(angle + Math.PI, angle + full)],
         ];
-      }
-      return [
-        angle + span,
-        [
-          {
-            kind: "path",
-            d: arcPath(cx, cy, outer, inner, angle, angle + span),
-          },
-        ],
-      ];
+      const middle = angle + span / 2;
+      const half = Math.max(0.0001, span / 2 - inset);
+      return [angle + span, [arc(middle - half, middle + half)]];
     },
   );
   return segments;
@@ -580,11 +696,17 @@ export const chartMarkup = (
 ): string => {
   const shapes = Arr.map(marks, (mark) =>
     mark.kind === "rect"
-      ? `<rect x="${num(mark.x)}" y="${num(mark.y)}" width="${num(mark.width)}" height="${num(mark.height)}" fill="#000"/>`
-      : `<path d="${mark.d}" fill="#000"/>`,
+      ? `<rect x="${num(mark.x)}" y="${num(mark.y)}" width="${num(mark.width)}" height="${num(mark.height)}" rx="${num(mark.radius ?? 0)}" fill="#000"/>`
+      : mark.kind === "stroke"
+        ? `<path d="${mark.d}" fill="none" stroke="#000" stroke-width="${num(mark.width)}" stroke-linecap="${mark.cap ?? "round"}" stroke-linejoin="round"/>`
+        : `<path d="${mark.d}" fill="#000"/>`,
   );
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${num(box.width)}" height="${num(box.height)}" viewBox="0 0 ${num(box.width)} ${num(box.height)}">${Arr.join(shapes, "")}</svg>`;
 };
+
+/** The ring's thickness as a share of the donut's size, and the gap between slices (radians). */
+export const DONUT_THICKNESS = 0.13;
+export const DONUT_PAD = 0.04;
 
 /** The colour a series paints: the categorical scale, cycling. */
 export const seriesColour = (

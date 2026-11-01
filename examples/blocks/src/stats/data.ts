@@ -104,6 +104,5 @@ export const nenTypes = [
   { key: "transmuter", label: "Transmuter", value: 22 },
   { key: "emitter", label: "Emitter", value: 18 },
   { key: "conjurer", label: "Conjurer", value: 12 },
-  { key: "manipulator", label: "Manipulator", value: 9 },
-  { key: "specialist", label: "Specialist", value: 5 },
+  { key: "manipulator", label: "Manipulator", value: 14 },
 ] as const;

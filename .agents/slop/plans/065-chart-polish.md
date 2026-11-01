@@ -36,7 +36,7 @@ series route the module header documents (one tinted mask per series).
 3. Bars get `barRadius(width) = min(6, width / 4)`; grouped bars keep a gap
    of a fifth of a bar between series.
 4. `donutSegments` draws each slice as a stroked arc on the ring's centre line
-   (thickness `0.16 × size`), separated by a `padAngle` of 0.035 rad, round caps.
+   (thickness `0.13 × size`), separated by a `padAngle` of 0.04 rad, flat ends.
 5. `Sparkline` paints the same curve at 2 px with its area at 0.14.
 6. Cartesian charts draw a hairline at each tick in `border` (one extra `<svg>`
    behind the series).
