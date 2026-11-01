@@ -11,7 +11,12 @@ import {
   indexJson,
   itemJson,
   importsOf,
+  installTarget,
   itemName,
+  packageOfModule,
+  rewriteWorkspaceImports,
+  runtimeItemAddress,
+  runtimeItemName,
   type RegistryItem,
   type RegistryItemFile,
 } from "./registry";
@@ -123,10 +128,6 @@ const byStem = (
         left.localeCompare(right),
     )[0];
 
-/** The package a module belongs to, e.g. `components`. */
-const packageOf = (module: string): string | undefined =>
-  /^packages\/([^/]+)\/src\//.exec(module)?.[1];
-
 /** A curated page names its module; a package page's module is resolved for it. */
 const moduleOf = (
   root: string,
@@ -160,53 +161,150 @@ const metadataOf = (
   };
 };
 
-/** A relative specifier resolved to the file TypeScript compiles it to. */
-const resolveImport = (from: string, specifier: string): string | undefined => {
-  if (!specifier.startsWith(".")) return undefined;
-  const base = join(dirname(from), specifier.replace(/\.jsx?$/, ""));
-  return [".ts", ".tsx", "/index.ts", "/index.tsx"]
-    .map((suffix) => base + suffix)
-    .find(existsSync);
+/** One export a package publishes: its specifier pattern and its file target. */
+interface ExportPattern {
+  readonly pattern: string;
+  readonly target: string;
+}
+
+/**
+ * The paths a package's `exports` map publishes.
+ *
+ * A component imports `@gpuixui/tw`, `@gpuixui/motion/react/presence` and the
+ * like; those specifiers resolve through the package manifest, so the registry
+ * reads the same map a bundler would instead of guessing a file name.
+ */
+const exportPatterns = (
+  read: (path: string) => string,
+  packageName: string,
+): ReadonlyArray<ExportPattern> => {
+  const manifest = JSON.parse(read(`packages/${packageName}/package.json`)) as {
+    exports?: Readonly<
+      Record<string, string | { default?: string; types?: string }>
+    >;
+  };
+  return Object.entries(manifest.exports ?? {}).flatMap(([pattern, entry]) => {
+    const target =
+      typeof entry === "string" ? entry : (entry.default ?? entry.types);
+    return target === undefined ? [] : [{ pattern, target }];
+  });
 };
 
-/** The module and every same-package file its relative imports need. */
+/** The part of a key a wildcard export pattern captures. */
+const wildcardValue = (pattern: string, key: string): string | undefined => {
+  const star = pattern.indexOf("*");
+  if (star === -1) return undefined;
+  const head = pattern.slice(0, star);
+  const tail = pattern.slice(star + 1);
+  return key.startsWith(head) && key.endsWith(tail)
+    ? key.slice(head.length, key.length - tail.length)
+    : undefined;
+};
+
+/** The repository file a `@gpuixui/<package>[/<subpath>]` specifier names. */
+const workspaceModule = (
+  read: (path: string) => string,
+  specifier: string,
+): string | undefined => {
+  const [scope, packageName, ...subpath] = specifier.split("/");
+  if (scope !== "@gpuixui" || packageName === undefined) return undefined;
+  const key = subpath.length === 0 ? "." : `./${subpath.join("/")}`;
+  const patterns = exportPatterns(read, packageName);
+  const exact = patterns.find((entry) => entry.pattern === key);
+  const wildcard = patterns.flatMap((entry) => {
+    const star = wildcardValue(entry.pattern, key);
+    return star === undefined ? [] : [{ ...entry, star }];
+  })[0];
+  const target =
+    exact?.target ??
+    (wildcard === undefined
+      ? undefined
+      : wildcard.target.replace("*", wildcard.star));
+  return target === undefined
+    ? undefined
+    : `packages/${packageName}/${target.replace(/^\.\//, "")}`;
+};
+
+/** The repository file a specifier in a source names, if the workspace ships it. */
+const resolveImport = (
+  repo: string,
+  read: (path: string) => string,
+  from: string,
+  specifier: string,
+): string | undefined => {
+  const workspace = workspaceModule(read, specifier);
+  if (workspace !== undefined) return workspace;
+  if (!specifier.startsWith(".")) return undefined;
+  const base = join(repo, dirname(from), specifier.replace(/\.jsx?$/, ""));
+  const found = [".ts", ".tsx", "/index.ts", "/index.tsx"]
+    .map((suffix) => base + suffix)
+    .find(existsSync);
+  return found === undefined ? undefined : repoRelative(repo, found);
+};
+
+/**
+ * The module and every workspace file its imports need, across packages.
+ *
+ * `@gpuixui/*` is followed through the package manifests, so a component that
+ * borrows `@gpuixui/primitives` ships what it borrows — as its own files when
+ * they share a package, as a runtime item when they do not.
+ */
 const closureOf = (
-  root: string,
+  repo: string,
   module: string,
   read: (path: string) => string,
 ): ReadonlyArray<string> => {
-  const packageDir = `packages/${packageOf(module) ?? ""}/src/`;
   const found = new Set<string>();
 
   const visit = (path: string): void => {
-    const key = repoRelative(root, path);
-    if (found.has(key)) return;
-    found.add(key);
-    for (const specifier of importsOf(read(key))) {
-      const imported = resolveImport(path, specifier);
-      if (
-        imported !== undefined &&
-        repoRelative(root, imported).startsWith(packageDir)
-      )
-        visit(imported);
+    if (found.has(path)) return;
+    found.add(path);
+    for (const specifier of importsOf(read(path))) {
+      const imported = resolveImport(repo, read, path, specifier);
+      if (imported !== undefined) visit(imported);
     }
   };
 
-  visit(join(root, module));
+  visit(module);
   return [...found].toSorted();
 };
 
-/** The shadcn file entry for one repository path. */
+/** The runtime packages a set of files borrow from, outside their own package. */
+const borrowedPackages = (
+  read: (path: string) => string,
+  own: string,
+  files: ReadonlyArray<string>,
+): ReadonlyArray<string> =>
+  [
+    ...new Set(
+      files.flatMap((path) =>
+        importsOf(read(path)).flatMap((specifier) => {
+          const imported = workspaceModule(read, specifier);
+          const owner =
+            imported === undefined ? undefined : packageOfModule(imported);
+          return owner === undefined || owner === own ? [] : [owner];
+        }),
+      ),
+    ),
+  ].toSorted();
+
+/** The shadcn file entry for one repository path, with its content on disk. */
 const fileEntry = (
+  repo: string,
   path: string,
-  content: string,
-  packageName: string,
-): RegistryItemFile => ({
-  path,
-  target: `@ui/${path.slice(`packages/${packageName}/src/`.length)}`,
-  type: path.endsWith(".tsx") ? "registry:component" : "registry:lib",
-  content,
-});
+  read: (path: string) => string,
+): RegistryItemFile => {
+  const target = installTarget(path);
+  return {
+    path,
+    target,
+    type: path.endsWith(".tsx") ? "registry:component" : "registry:lib",
+    content: rewriteWorkspaceImports(read(path), target, (specifier) => {
+      const imported = resolveImport(repo, read, path, specifier);
+      return imported === undefined ? undefined : installTarget(imported);
+    }),
+  };
+};
 
 /** One served page whose module resolved to a package. */
 interface ResolvedPage {
@@ -228,6 +326,48 @@ const reader = (repo: string): ((path: string) => string) => {
     const source = readFileSync(join(repo, path), "utf8");
     texts.set(path, source);
     return source;
+  };
+};
+
+/**
+ * The version every npm package in the workspace pins.
+ *
+ * The root catalog wins because it is exact (`effect: 4.0.5`, `@gpuix/react:
+ * 0.11.0`); a package only a manifest declares keeps the range it names. The
+ * registry installs what the source was written against, never `latest`.
+ */
+const workspaceVersions = (
+  repo: string,
+  read: (path: string) => string,
+): Readonly<Record<string, string>> => {
+  const root = JSON.parse(read("package.json")) as {
+    workspaces?: { catalog?: Readonly<Record<string, string>> };
+  };
+  const declared = readdirSync(join(repo, "packages"), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .flatMap((entry) => {
+      const path = `packages/${entry.name}/package.json`;
+      if (!existsSync(join(repo, path))) return [];
+      const manifest = JSON.parse(read(path)) as {
+        dependencies?: Readonly<Record<string, string>>;
+        optionalDependencies?: Readonly<Record<string, string>>;
+        peerDependencies?: Readonly<Record<string, string>>;
+      };
+      return [
+        ...Object.entries(manifest.dependencies ?? {}),
+        ...Object.entries(manifest.optionalDependencies ?? {}),
+        ...Object.entries(manifest.peerDependencies ?? {}),
+      ];
+    });
+
+  return {
+    ...Object.fromEntries(
+      declared.filter(
+        ([, version]) =>
+          !version.startsWith("catalog:") && !version.startsWith("workspace:"),
+      ),
+    ),
+    ...root.workspaces?.catalog,
   };
 };
 
@@ -257,7 +397,8 @@ const resolvedPages = (
   }>(
     (index, page) => {
       const module = moduleOf(repo, page, read, resolved);
-      const packageName = module === undefined ? undefined : packageOf(module);
+      const packageName =
+        module === undefined ? undefined : packageOfModule(module);
       if (module === undefined || packageName === undefined) {
         return page.origin === "package"
           ? { ...index, unresolved: [...index.unresolved, page.url] }
@@ -281,6 +422,11 @@ export interface RegistryDocument {
 /**
  * Every item, in page order, the documents that serve them, and the pages no
  * module resolved for.
+ *
+ * A page item ships its own package's files. Every package it borrows from is
+ * a runtime item named in `registryDependencies`, whose files are the union of
+ * everything the pages need from that package — so a component installs the
+ * runtime once, not once per component.
  */
 export const readRegistry = (
   root: string | URL,
@@ -295,25 +441,65 @@ export const readRegistry = (
 } => {
   const repo = rootOf(root);
   const read = reader(repo);
+  const versions = workspaceVersions(repo, read);
   const { pages, unresolved } = resolvedPages(repo, read);
+  const closures = pages.map(({ module }) => closureOf(repo, module, read));
 
-  const items = pages.map(({ page, module, packageName }): RegistryItem => {
-    const { title, description } = metadataOf(read(page.file));
-    return {
-      name: itemName(packageName, page.slug),
-      url: page.url,
-      title,
-      description,
-      type: "registry:component",
-      files: closureOf(repo, module, read).map((path) =>
-        fileEntry(path, read(path), packageName),
-      ),
-    };
+  const componentItems = pages.map(
+    ({ page, packageName }, index): RegistryItem => {
+      const { title, description } = metadataOf(read(page.file));
+      const files = (closures[index] ?? []).filter(
+        (path) => packageOfModule(path) === packageName,
+      );
+      return {
+        name: itemName(packageName, page.slug),
+        kind: "component",
+        url: page.url,
+        title,
+        description,
+        type: "registry:component",
+        registryDependencies: borrowedPackages(read, packageName, files).map(
+          runtimeItemAddress,
+        ),
+        files: files.map((path) => fileEntry(repo, path, read)),
+      };
+    },
+  );
+
+  const runtimeFiles = new Map<string, Set<string>>();
+  pages.forEach(({ packageName }, index) => {
+    for (const path of closures[index] ?? []) {
+      const owner = packageOfModule(path);
+      if (owner === undefined || owner === packageName) continue;
+      const files = runtimeFiles.get(owner) ?? new Set<string>();
+      files.add(path);
+      runtimeFiles.set(owner, files);
+    }
   });
+
+  const runtimeItems = [...runtimeFiles.entries()]
+    .toSorted(([left], [right]) => left.localeCompare(right))
+    .map(([packageName, files]): RegistryItem => {
+      const sorted = [...files].toSorted();
+      return {
+        name: runtimeItemName(packageName),
+        kind: "runtime",
+        url: "/registry",
+        title: `Runtime: ${packageName}`,
+        description: `The \`@gpuixui/${packageName}\` modules the component items import. Installed automatically with the component; not a component itself.`,
+        type: "registry:lib",
+        registryDependencies: borrowedPackages(read, packageName, sorted).map(
+          runtimeItemAddress,
+        ),
+        files: sorted.map((path) => fileEntry(repo, path, read)),
+      };
+    });
+
+  const items = [...componentItems, ...runtimeItems];
 
   const entries = items.map((item) => ({
     name: item.name,
-    json: itemJson(item),
+    json: itemJson(item, versions),
   }));
   const index = indexJson(items);
 
