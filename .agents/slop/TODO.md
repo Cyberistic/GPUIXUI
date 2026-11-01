@@ -24926,3 +24926,32 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` 730 — measured proof numbers (`apps/docs/src/lib/proof.json`)
 `[x]` 727 — the landing rebuilt on native captures and measured numbers
 `[~]` 731 — launch quality pass: account menu, press routing, `Select` pop-up, deeper Mac blocks, Hunter License block, resizable sidebar, source-list folding and type-ahead, calendar cascade done; by-eye pass in real windows pending
+
+---
+
+## shadcn directory install (2026-11-01)
+
+`[x]` `[██████████]` 2/2 + a deploy
+
+`[x]` Make `npx shadcn@latest add @sudokw/<item>` install a tree that builds.
+      The components import private `@gpuixui/*`, so each item now rewrites every
+      workspace specifier to `@ui/gpuixui/<package>/…` and names one
+      `gpuix-<package>` runtime item in `registryDependencies`; the CLI writes
+      that runtime once per project. The CLI also strips each file's leading
+      comment, so the JSX runtime is a documented project setting
+      (`"jsxImportSource": "@gpuix/react"`) rather than the source pragma.
+      Every dependency is pinned to the workspace's version (`@tanstack/hotkeys`
+      was installed at `latest`, 0.22, whose signature the keyboard source no
+      longer matched). Verified with the real CLI against the generated
+      documents: all 161 component items installed 452 files, and `tsc --noEmit`
+      passed on the whole tree with no `@types/node` installed
+      (`packages/tokens/src/platforms.ts` now declares the one host field it
+      reads). `apps/docs/src/lib/registry.test.ts` holds the install closed: one
+      item per served page, one runtime per borrowed package, content identical
+      apart from the specifier rewrite, every dependency pinned, and every import
+      in every installed tree resolving to a shipped file or a declared npm
+      package.
+
+`[ ]` Deploy the docs site — the runtime documents and the new
+      `/registry.json` exist only in the built assets, so production still
+      serves the registry that installs dangling `@gpuixui/*` imports.

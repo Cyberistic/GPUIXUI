@@ -540,6 +540,23 @@ describe("currentPlatform", () => {
   it("resolves the monospace family the process should use", () => {
     expect(systemMonoFamily).toBe(platformTypes[currentPlatform].mono);
   });
+
+  it("carries its own declaration for the one host field it reads", () => {
+    // The registry installs this file's source into a consumer, and that
+    // project's tsconfig only sets `jsxImportSource: "@gpuix/react"` — no
+    // `types: ["node"]`. Reading the global `process` through Node's ambient
+    // declaration would leave the consumer's first `tsc` failing on a file it
+    // did not write, so the module declares the one field it reads. Deleting
+    // that declaration returns the error, and this names the reason.
+    const source = readFileSync(
+      new URL("./platforms.ts", import.meta.url),
+      "utf8",
+    );
+    expect(source).toContain(
+      "declare const process: { readonly platform?: string } | undefined;",
+    );
+    expect(source).toContain('typeof process === "undefined"');
+  });
 });
 
 /**
