@@ -372,6 +372,7 @@ const ChartFrame = ({
   const palette = seriesColors(theme);
   const layers = marks(rows, categories, box, scale);
   const washes = wash?.(rows, categories, box, scale) ?? [];
+  const rule = themeColors(theme).border;
   const slot = barSlot(categories.length, box.width).slot;
   const tickValues = axisTicks(scale, ticks);
   // The labels take their precision from the distance between neighbours, not
@@ -425,11 +426,11 @@ const ChartFrame = ({
             height: box.height,
           }}
         >
-          {axis ? (
+          {axis && rule !== undefined ? (
             <ChartWash
               marks={tickRules(tickValues, scale, box)}
               box={box}
-              colour={themeColors(theme).border}
+              colour={rule}
               opacity={1}
             />
           ) : null}

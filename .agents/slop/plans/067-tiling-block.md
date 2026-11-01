@@ -20,18 +20,19 @@ says Linux is the tiling itself.
 
 - **Bar** (Waybar-like) across the top: workspaces `1–5` (the active one
   filled), the focused window's title centred, a clock and battery on the right.
-- **Tiles**: a master/stack layout with the theme's gaps — the master tile on
-  the left holds the `console` block's deploy view; the stack on the right holds
-  a terminal pane (prompt, `nub run dev stats --terminal`, output lines) over
-  the `stats` block's tiles. Every tile is a window with a 2 px border; the
-  focused tile's border is the palette's accent, the others its `border`.
+- **Tiles**: a master/stack layout with the theme's gaps. The master holds the
+  `settings` block in the Linux look (the platform shapes the controls, the
+  palette colours them); the stack holds a terminal (fastfetch's summary, a
+  `git log --oneline`, the palette's swatches) over a btop monitor (six cores
+  as `Sparkline`s and memory as a `DonutChart`). Every tile has a strong
+  border; the focused tile's is the palette's accent, the others its `border`.
 - **Focus** moves on click (`tile-<id>` test ids) and with `Super+←/→`.
 - **Theme**: the palette is an Omarchy `colors.toml` decoded by
   `decodeOmarchyPalette` → `paletteToTokens`, so switching palette re-themes the
   bar, gaps, borders and every block inside at once. Ships tokyo-night,
   catppuccin, kanagawa and rose-pine (Dawn, light) as data in `src/tiling/data.ts`.
 
-Files: `src/tiling/{data.ts,logic.ts,logic.test.ts,bar.tsx,tiling.tsx}`, an
+Files: `src/tiling/{data.ts,logic.ts,logic.test.ts,tiling.tsx}`, an
 `exports["./tiling"]`, a `main.tsx` entry, a `blocks.test.tsx` case.
 
 ## Test plan
