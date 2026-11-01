@@ -1,0 +1,37 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; background: #f2f2f7; overflow: hidden; font-family: Inter, sans-serif; }
+    #root .cap { position: absolute; left: 0; right: 0; top: 118px; text-align: center; }
+    #root .cap span { display: inline-block; font-size: 84px; font-weight: 700; letter-spacing: -0.035em; color: #1d1d1f; }
+    #root .cursor { position: absolute; left: 0; top: 0; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25)); }
+    #root .cursor svg { display: block; width: 100%; height: auto; }
+    #root video { position: absolute; left: 0; top: 0; }
+    #root video { width: 1920px; height: 1080px; }
+    #root .cursor { width: 100px; }
+  </style>
+  <div id="root" data-composition-id="montage" data-width="1920" data-height="1080">
+    <video id="m-0" class="clip" data-start="0.0" data-duration="0.5" data-track-index="1" muted playsinline src="assets/footage/cu-switch.mp4"></video>
+    <video id="m-1" class="clip" data-start="0.5" data-duration="0.5" data-track-index="1" muted playsinline src="assets/footage/cu-checkbox.mp4"></video>
+    <video id="m-2" class="clip" data-start="1.0" data-duration="0.5" data-track-index="1" muted playsinline src="assets/footage/cu-slider.mp4"></video>
+    <video id="m-3" class="clip" data-start="1.5" data-duration="0.5" data-track-index="1" muted playsinline src="assets/footage/cu-tabs.mp4"></video>
+    <video id="m-4" class="clip" data-start="2.0" data-duration="0.5" data-track-index="1" muted playsinline src="assets/footage/cu-toggle.mp4"></video>
+    <video id="m-5" class="clip" data-start="2.5" data-duration="0.5" data-track-index="1" muted playsinline src="assets/footage/cu-button.mp4"></video>
+    <video id="m-6" class="clip" data-start="3.0" data-duration="0.5" data-track-index="1" muted playsinline src="assets/footage/cu-radio.mp4"></video>
+    <video id="m-7" class="clip" data-start="3.5" data-duration="0.5" data-track-index="1" muted playsinline src="assets/footage/cu-input.mp4"></video>
+    <div id="m-cur" class="cursor"><svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z" fill="#000" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+    <div id="m-cap0" class="cap clip" data-start="0.250" data-duration="3.700" data-track-index="9"><span>native apps, drawn by the GPU</span></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    [[[[1100,660,0],[1091.2,652.5,0],[1030,600,0],[968.8,547.5,0],[960,540,0],[960,540,1],[960,540,1],[960,540,0],[960.4,540.6,0],[963.0,544.5,0],[970.1,555.1,0],[981.9,572.9,0],[989.0,583.5,0],[991.6,587.4,0],[992,588,0]], 0.0], [[[1100,660,0],[1091.2,652.5,0],[1030,600,0],[968.8,547.5,0],[960,540,0],[960,540,1],[960,540,1],[960,540,0],[960.4,540.6,0],[963.0,544.5,0],[970.1,555.1,0],[981.9,572.9,0],[989.0,583.5,0],[991.6,587.4,0],[992,588,0]], 0.5], [[[520,700,0],[512,620,0],[504,540,0],[504,540,1],[509.0,540,1],[544.2,540,1],[639.7,540,1],[825.7,540,1],[1098.3,540,1],[1284.3,540,1],[1379.8,540,1],[1415.0,540,1],[1420,540,1],[1420,540,0],[1432,580,0]], 1.0], [[[1103,660,0],[1094.2,652.5,0],[1033,600,0],[971.8,547.5,0],[963,540,0],[963,540,1],[963,540,1],[963,540,0],[963.4,540.6,0],[966.0,544.5,0],[973.1,555.1,0],[984.9,572.9,0],[992.0,583.5,0],[994.6,587.4,0],[995,588,0]], 1.5], [[[1545,660,0],[1536.2,652.5,0],[1475,600,0],[1413.8,547.5,0],[1405,540,0],[1405,540,1],[1405,540,1],[1405,540,0],[1405.4,540.6,0],[1408.0,544.5,0],[1415.1,555.1,0],[1426.9,572.9,0],[1434.0,583.5,0],[1436.6,587.4,0],[1437,588,0]], 2.0], [[[1100,660,0],[1091.2,652.5,0],[1030,600,0],[968.8,547.5,0],[960,540,0],[960,540,1],[960,540,1],[960,540,0],[960.4,540.6,0],[963.0,544.5,0],[970.1,555.1,0],[981.9,572.9,0],[989.0,583.5,0],[991.6,587.4,0],[992,588,0]], 2.5], [[[1100,792,0],[1091.2,784.5,0],[1030,732,0],[968.8,679.5,0],[960,672,0],[960,672,1],[960,672,1],[960,672,0],[960.4,672.6,0],[963.0,676.5,0],[970.1,687.1,0],[981.9,704.9,0],[989.0,715.5,0],[991.6,719.4,0],[992,720,0]], 3.0], [[[1200,660,0],[960,540,0],[960,540,1],[960,540,0],[960.4,540.2,0],[962.9,541.9,0],[969.7,546.5,0],[983.1,555.4,0],[1005.1,570.1,0],[1034.9,589.9,0],[1056.9,604.6,0],[1070.3,613.5,0],[1077.1,618.1,0],[1079.6,619.8,0],[1080,620,0]], 3.5]].forEach(([path, start]) =>
+      path.forEach(([x, y, down], frame) => tl.set("#m-cur", { x, y, scale: down ? 0.86 : 1 }, start + frame / 30)));
+    // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
+    document.querySelectorAll("#root .cap").forEach((el) => {
+      const start = Number(el.dataset.start);
+      const end = start + Number(el.dataset.duration);
+      tl.fromTo(el.querySelector("span"), { opacity: 0.3, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" }, start);
+      tl.to(el.querySelector("span"), { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" }, end - 0.2);
+    });
+    window.__timelines["montage"] = tl;
+  </script>
+</template>

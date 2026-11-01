@@ -283,6 +283,9 @@ importers:
       '@gpuixui/media':
         specifier: workspace:*
         version: link:../../packages/media
+      '@gpuixui/motion':
+        specifier: workspace:*
+        version: link:../../packages/motion
       '@gpuixui/primitives':
         specifier: workspace:*
         version: link:../../packages/primitives
@@ -366,6 +369,9 @@ importers:
       '@gpuixui/icons':
         specifier: workspace:*
         version: link:../../packages/icons
+      '@gpuixui/motion':
+        specifier: workspace:*
+        version: link:../../packages/motion
       '@gpuixui/primitives':
         specifier: workspace:*
         version: link:../../packages/primitives

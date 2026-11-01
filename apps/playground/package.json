@@ -23,6 +23,7 @@
     "@gpuixui/fx": "workspace:*",
     "@gpuixui/icons": "workspace:*",
     "@gpuixui/media": "workspace:*",
+    "@gpuixui/motion": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/shell": "workspace:*",
     "@gpuixui/testing": "workspace:*",

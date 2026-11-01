@@ -1,65 +1,15 @@
 <template>
   <style>
-    #root {
-      position: absolute;
-      inset: 0;
-      background: #f2f2f7;
-      overflow: hidden;
-      font-family: Inter, sans-serif;
-    }
-    #root .cap {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 118px;
-      text-align: center;
-    }
-    #root .cap span {
-      display: inline-block;
-      font-size: 84px;
-      font-weight: 700;
-      letter-spacing: -0.035em;
-      color: #1d1d1f;
-    }
-    #root .cursor {
-      position: absolute;
-      left: 0;
-      top: 0;
-      transform-origin: 8% 6%;
-      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
-    }
-    #root .cursor svg {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-    #root video {
-      position: absolute;
-      left: 0;
-      top: 0;
-    }
-    #root .row {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 76px;
-    }
-    #root .word {
-      font-size: 124px;
-      font-weight: 700;
-      letter-spacing: -0.04em;
-      color: #1d1d1f;
-      opacity: 0;
-    }
+    #root { position: absolute; inset: 0; background: #f2f2f7; overflow: hidden; font-family: Inter, sans-serif; }
+    #root .cap { position: absolute; left: 0; right: 0; top: 118px; text-align: center; }
+    #root .cap span { display: inline-block; font-size: 84px; font-weight: 700; letter-spacing: -0.035em; color: #1d1d1f; }
+    #root .cursor { position: absolute; left: 0; top: 0; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25)); }
+    #root .cursor svg { display: block; width: 100%; height: auto; }
+    #root video { position: absolute; left: 0; top: 0; }
+    #root .row { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 76px; }
+    #root .word { font-size: 124px; font-weight: 700; letter-spacing: -0.04em; color: #1d1d1f; opacity: 0; }
   </style>
-  <div
-    id="root"
-    data-composition-id="stack"
-    data-width="1920"
-    data-height="1080"
-  >
+  <div id="root" data-composition-id="stack" data-width="1920" data-height="1080">
     <div class="row">
       <span id="k-gpui" class="word">GPUI</span>
       <span id="k-react" class="word">React</span>
@@ -69,43 +19,18 @@
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    // Each word is pressed in like a key, on its beat.
     ["#k-gpui", "#k-react", "#k-shadcn", "#k-tailwind"].forEach((word, i) => {
-      const at = i * 0.5769;
+      const at = i * 0.5;
       tl.fromTo(word, { opacity: 0 }, { opacity: 1, duration: 0.04 }, at);
-      tl.fromTo(
-        word,
-        { y: 14, scale: 0.92 },
-        { y: 0, scale: 1, duration: 0.4, ease: "back.out(1.6)" },
-        at + 0.04,
-      );
+      tl.fromTo(word, { y: 14, scale: 0.92 }, { y: 0, scale: 1, duration: 0.35, ease: "back.out(1.6)" }, at + 0.04);
     });
-    tl.to(
-      ".word",
-      {
-        opacity: 0,
-        filter: "blur(8px)",
-        duration: 0.2,
-        ease: "power2.in",
-        stagger: 0.03,
-      },
-      4.295,
-    );
+    tl.to(".word", { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in", stagger: 0.025 }, 1.75);
     // Lines arrive grey-to-ink with a 6 px blur, hold still, leave with a blur.
     document.querySelectorAll("#root .cap").forEach((el) => {
       const start = Number(el.dataset.start);
       const end = start + Number(el.dataset.duration);
-      tl.fromTo(
-        el.querySelector("span"),
-        { opacity: 0.3, filter: "blur(6px)" },
-        { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" },
-        start,
-      );
-      tl.to(
-        el.querySelector("span"),
-        { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" },
-        end - 0.2,
-      );
+      tl.fromTo(el.querySelector("span"), { opacity: 0.3, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power4.out" }, start);
+      tl.to(el.querySelector("span"), { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" }, end - 0.2);
     });
     window.__timelines["stack"] = tl;
   </script>
