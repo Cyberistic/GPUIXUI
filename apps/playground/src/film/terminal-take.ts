@@ -1,6 +1,6 @@
 /**
  * The film's terminal takes: the command the film types (`nub run dev <block>
- * --terminal` in `examples/blocks`, or the calculator's own `terminal` script),
+ * --terminal` in `examples/blocks`, or Slang's own `terminal` script),
  * run in a pty by GPUix's terminal platform; its kitty-graphics frames decoded
  * and resampled to 30 fps.
  *
@@ -24,7 +24,7 @@
 import { createTestRoot } from "@gpuix/react/testing";
 import { Console } from "@gpuixui/blocks/console";
 import { SettingsApp } from "@gpuixui/blocks/settings";
-import { CalculatorApp } from "@gpuixui/calculator/app";
+import { CalculatorApp } from "@gpuixui/slang/app";
 import { Pixels } from "@gpuixui/testing";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -95,9 +95,9 @@ const programs: Readonly<Record<string, Program>> = {
     "settings",
   ),
   console: block(createElement(Console), "console"),
-  calculator: {
+  slang: {
     tree: createElement(CalculatorApp),
-    dir: "examples/calculator",
+    dir: "examples/slang",
     command: "nub run terminal",
   },
 };

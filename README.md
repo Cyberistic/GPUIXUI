@@ -56,19 +56,20 @@ Windows. On an Intel Mac, build it once with
 | `apps/playground` | The native playground and the smoke suites |
 | `packages/*` | The library: tokens, primitives, components, data, shell, dock, editor and more |
 | `examples/blocks` | Whole screens composed from the library |
-| `examples/calculator` | The fx-991ES Plus example: `@gpuixui/calc` + a native macOS calculator window, terminal-ready |
+| `examples/slang` | Slang, the fx-991ES Plus calculator app: `@gpuixui/calc` in a native window or a terminal |
 | `media/launch` | The launch film, cut from real native windows |
 
-## The calculator example
+## Slang
 
-`examples/calculator` is a native Casio fx-991ES Plus: the eight modes in the
-manual, its keypad, 40 constants and 40 conversions, light/dark, full keyboard
-control and ⌘K over every command — the same tree in a native window or a
-kitty/Ghostty terminal.
+<img src="examples/slang/media/logo.svg" width="48" alt="Slang" align="left">
+
+[`examples/slang`](examples/slang) is **Slang**, the fx-991ES Plus scientific
+calculator as a native app: the device's own key grid and LCD, the eight modes
+in the manual, ⌘K over every command, in a window or a kitty/Ghostty terminal.
 
 ```sh
-nub run --filter @gpuixui/calculator dev
-nub run --filter @gpuixui/calculator terminal
+nub run --filter @gpuixui/slang dev
+nub run --filter @gpuixui/slang terminal
 ```
 
 The engine is [`@gpuixui/calc`](packages/calc); its model seam is where a TI-84

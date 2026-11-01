@@ -3,7 +3,7 @@
  * renderer. Tooling boundary only: this file writes files and executes the
  * renderer; the app itself has no Node access.
  *
- *   nub run --filter @gpuixui/calculator capture
+ *   nub run --filter @gpuixui/slang capture
  */
 
 import { createTestRoot } from "@gpuix/react/testing";
@@ -19,9 +19,7 @@ const capture = (dark: boolean): void => {
     root.renderer.clockFastForward(1_000);
     root.renderer.flush();
   });
-  root.renderer.captureScreenshot(
-    `media/calculator-${dark ? "dark" : "light"}.png`,
-  );
+  root.renderer.captureScreenshot(`media/slang-${dark ? "dark" : "light"}.png`);
   root.unmount();
 };
 
@@ -47,7 +45,7 @@ const captureFraction = (): void => {
   for (const key of ["calc-key-1", "calc-key-÷", "calc-key-3", "calc-key-="]) {
     click(key);
   }
-  root.renderer.captureScreenshot("media/calculator-natural.png");
+  root.renderer.captureScreenshot("media/slang-natural.png");
   root.unmount();
 };
 
@@ -75,7 +73,7 @@ const captureSetup = (): void => {
   click("calc-key-MODE");
   root.renderer.clockFastForward(1_000);
   root.renderer.flush();
-  root.renderer.captureScreenshot("media/calculator-setup.png");
+  root.renderer.captureScreenshot("media/slang-setup.png");
   root.unmount();
 };
 
@@ -105,7 +103,7 @@ const captureInput = (): void => {
   ]) {
     click(key);
   }
-  root.renderer.captureScreenshot("media/calculator-input.png");
+  root.renderer.captureScreenshot("media/slang-input.png");
   root.unmount();
 };
 

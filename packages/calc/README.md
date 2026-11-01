@@ -1,6 +1,6 @@
 # @gpuixui/calc
 
-The Effect-first calculator engine behind the [`examples/calculator`](../../examples/calculator)
+The Effect-first calculator engine behind the Slang app ([`examples/slang`](../../examples/slang))
 app: a Casio **fx-991ES Plus** with every mode the manual documents, and a model
 seam so a TI-84 is a second adapter rather than a second app.
 

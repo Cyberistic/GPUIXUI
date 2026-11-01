@@ -1,18 +1,19 @@
 {
-  "name": "@gpuixui/calculator",
+  "name": "@gpuixui/slang",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "exports": {
     "./app": "./src/App.tsx"
   },
-  "description": "A native macOS-feeling Casio fx-991ES Plus, rendered by GPUix with every mode of the manual and a ⌘K command palette.",
+  "description": "Slang — the fx-991ES Plus scientific calculator as a native GPU-rendered app, in a window or a terminal.",
   "scripts": {
     "dev": "nub src/main.tsx",
     "terminal": "GPUIX_TERMINAL=1 nub src/main.tsx",
     "check-types": "tsc --noEmit",
     "test": "vitest run",
-    "test:native": "vitest run --config vitest.native.config.ts"
+    "test:native": "vitest run --config vitest.native.config.ts",
+    "capture": "nub src/capture.tsx"
   },
   "dependencies": {
     "@gpuix/react": "catalog:",

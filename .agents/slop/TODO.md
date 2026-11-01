@@ -11,7 +11,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Calculator example — fx-991ES Plus on GPUix
 
-`[x]` `[██████████]` 9/9
+`[x]` `[██████████]` 10/10
 
 `[x]` Land `@gpuixui/calc` — Effect-first engine, Casio parser/evaluator,
       model seam for a later TI-84 (plans 740/741)
@@ -43,7 +43,9 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
       grey-green LCD, MODE menu on the LCD, a side panel that folds away (⌘H) —
       87 engine, 9 logic and 15 native tests
 `[x]` Calculator in the terminal, verified in a pty: `SHIFT sin 1 ÷ 2 ) =` paints
-      `30` at 1024×576 (`media/calculator-terminal.png`)
+      `30` at 1024×576 (`media/slang-terminal.png`)
+`[x]` Name the app **Slang**: `examples/slang` (`@gpuixui/slang`), its logo
+      (`media/logo.svg`, in the toolbar), and a full README
 
 ---
 

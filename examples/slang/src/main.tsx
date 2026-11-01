@@ -17,8 +17,8 @@ const terminal =
   argv.includes("--terminal") || process.env.GPUIX_TERMINAL === "1";
 
 render(<CalculatorApp initialDark={dark} />, {
-  title: "Calculator",
-  appName: "Calculator",
+  title: "Slang",
+  appName: "Slang",
   width: 1060,
   height: 760,
   minWidth: 860,

@@ -1,6 +1,6 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * The calculator app: one native window holding the fx-991ES Plus as the device
+ * Slang, the calculator app: one native window holding the fx-991ES Plus as the device
  * is — body, LCD and keypad — beside a panel (history, the mode's editor, the
  * catalogue) that folds away, and the ⌘K palette over every model command.
  *
@@ -34,6 +34,7 @@ import {
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { fileURLToPath } from "node:url";
 import { useMemo, useState } from "react";
 import type { EventPayload, KeyEvent } from "@gpuix/react";
 import {
@@ -53,6 +54,9 @@ import { Inspector } from "./inspector.js";
 import { Keypad } from "./keypad.js";
 import { SetupSheet } from "./setup-sheet.js";
 import { device } from "./theme.js";
+
+/** The app's mark: `media/logo.svg`, rendered at 128 px. */
+const LOGO = fileURLToPath(new URL("./logo.png", import.meta.url));
 
 const model = defaultModel;
 
@@ -230,11 +234,19 @@ export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
           onKeyDown={onKeyDown}
           toolbar={
             <WindowToolbar
-              title="Calculator"
+              title="Slang"
               leading={
-                <Text role="caption" tone="muted">
-                  {model.label}
-                </Text>
+                <Stack direction="row" gap="xs" align="center">
+                  <img
+                    testId="slang-logo"
+                    src={LOGO}
+                    objectFit="contain"
+                    style={{ width: 18, height: 18 }}
+                  />
+                  <Text role="caption" tone="muted">
+                    {model.label}
+                  </Text>
+                </Stack>
               }
               actions={
                 <Stack direction="row" gap="2xs" align="center">
