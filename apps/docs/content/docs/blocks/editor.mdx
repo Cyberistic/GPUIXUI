@@ -1,0 +1,27 @@
+---
+title: Editor
+description: "A code editor: the explorer, the open file painted token by token, and a status bar — press a file to open it."
+---
+
+<BlockPreview name="editor-01" />
+
+Run it natively:
+
+```sh
+nub run --filter @gpuixui/blocks dev -- editor
+```
+
+## Composition
+
+`Editor` in `@gpuixui/blocks/editor`:
+
+- `Window` from `@gpuixui/shell` with the file tree as its sidebar;
+- the code is painted one `highlight(line)` pass at a time: keywords, strings,
+  comments, call names and punctuation get their own colour, and the tokens join
+  back to the line (the round-trip is tested);
+- the status bar carries the language, line/column, indentation and the file's
+  line count, so a press on a file changes the tab, the code and the status line
+  together.
+
+The press is held on the real renderer in `src/blocks.test.tsx`; the paint's
+round-trip and the open-file rule in `src/editor/logic.test.ts`.

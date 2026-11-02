@@ -1,0 +1,26 @@
+---
+title: Music
+description: "A player: album art, a seeded waveform, the transport and the queue — press a row to play it."
+---
+
+<BlockPreview name="music-01" />
+
+Run it natively:
+
+```sh
+nub run --filter @gpuixui/blocks dev -- music
+```
+
+## Composition
+
+`Music` in `@gpuixui/blocks/music`:
+
+- the album art is a two-stop gradient picked per track, drawn here;
+- the waveform is `waveform(seed, bars)` — a seeded shape, so the same track
+  draws the same bars on every render (tested, including its range);
+- the transport is a press target that toggles play and pause; the queue's rows
+  are press targets that make the row the playing track, changing the art, the
+  title, the waveform and the time together.
+
+Nothing streams: the times are the tracks' own lengths and the scrubber is the
+position, not a clock.

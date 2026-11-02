@@ -22,6 +22,10 @@ import { Kanban } from "./kanban/kanban.js";
 import { Settings, SettingsApp, type Look } from "./settings/settings.js";
 import { Stats } from "./stats/stats.js";
 import { TilingDesktop } from "./tiling/tiling.js";
+import { MacosDesktop } from "./macos/macos.js";
+import { Editor } from "./editor/editor.js";
+import { Music } from "./music/music.js";
+import { Monitor } from "./monitor/monitor.js";
 
 // The first mount in a file loads the native binding and its fonts: measured at
 // 7.3 s cold against vitest's 5 s default.
@@ -45,6 +49,18 @@ const centre = (r: Renderer, testId: string) => {
   const b = element === undefined ? null : r.getElementBounds(element.id);
   expect(b, testId).not.toBeNull();
   return { x: b!.x + b!.width / 2, y: b!.y + b!.height / 2, width: b!.width };
+};
+
+/** The text a testId's subtree paints; a `<text>` node's glyphs live in it. */
+const textOf = (r: Renderer, testId: string): string => {
+  const element = r.findByTestId(testId);
+  if (element === undefined) return "";
+  const collect = (id: number): string => {
+    const node = r.getElement(id);
+    if (node === undefined) return "";
+    return `${node.text ?? ""}${node.children.map(collect).join("")}`;
+  };
+  return collect(element.id);
 };
 
 const parentColumn = (r: Renderer, testId: string) => {
@@ -145,6 +161,65 @@ describe("Desktop", () => {
       expect(order(r)).toEqual(["window-license", "window-explorer"]);
     });
   }
+});
+
+describe("Editor", () => {
+  it("opens the file pressed: the status line follows the press", () => {
+    const r = mount(<Editor />);
+    expect(textOf(r, "editor-status")).toContain("TypeScript JSX");
+    const file = centre(r, "file-package.json");
+    r.nativeSimulateClick(file.x, file.y);
+    r.flush();
+    expect(textOf(r, "editor-status")).toContain("JSON");
+  });
+});
+
+describe("Music", () => {
+  it("plays the row pressed and pauses on the transport", () => {
+    const r = mount(<Music />);
+    expect(textOf(r, "now-title")).toBe("Snowfall");
+    const row = centre(r, "track-cobalt");
+    r.nativeSimulateClick(row.x, row.y);
+    r.flush();
+    expect(textOf(r, "now-title")).toBe("Cobalt");
+  });
+});
+
+describe("Monitor", () => {
+  it("re-labels the window when a range is pressed", () => {
+    const r = mount(<Monitor />);
+    expect(textOf(r, "monitor-range")).toBe("last 1 min");
+    const range = centre(r, "range-5m");
+    r.nativeSimulateClick(range.x, range.y);
+    r.flush();
+    expect(textOf(r, "monitor-range")).toBe("last 5 min");
+  });
+});
+
+describe("MacosDesktop", () => {
+  it("opens a menu, closes it on the same press, and closes on the desktop", () => {
+    const r = mount(<MacosDesktop />);
+    expect(r.findByTestId("menu-item-0")).toBeUndefined();
+
+    const view = centre(r, "menu-View");
+    r.nativeSimulateClick(view.x, view.y);
+    r.flush();
+    expect(r.findByTestId("menu-item-0")).toBeDefined();
+
+    r.nativeSimulateClick(view.x, view.y);
+    r.flush();
+    expect(r.findByTestId("menu-item-0")).toBeUndefined();
+
+    const file = centre(r, "menu-File");
+    r.nativeSimulateClick(file.x, file.y);
+    r.flush();
+    expect(r.findByTestId("menu-item-0")).toBeDefined();
+
+    const backdrop = centre(r, "desktop-backdrop");
+    r.nativeSimulateClick(backdrop.x, backdrop.y + 200);
+    r.flush();
+    expect(r.findByTestId("menu-item-0")).toBeUndefined();
+  });
 });
 
 describe("Stats", () => {

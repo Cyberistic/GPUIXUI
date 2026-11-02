@@ -38,6 +38,10 @@ import { DesktopBlock } from "./desktop/desktop.js";
 import { Agent } from "./agent/agent.js";
 import { Console } from "./console/console.js";
 import { TilingDesktop } from "./tiling/tiling.js";
+import { MacosDesktop } from "./macos/macos.js";
+import { Editor } from "./editor/editor.js";
+import { Music } from "./music/music.js";
+import { Monitor } from "./monitor/monitor.js";
 import { CalendarBlock } from "./calendar/calendar.js";
 import { Inbox } from "./inbox/inbox.js";
 import { Launcher } from "./launcher/launcher.js";
@@ -65,6 +69,10 @@ const blocks: Readonly<Record<string, ComponentType>> = {
   agent: Agent,
   console: Console,
   tiling: TilingDesktop,
+  macos: MacosDesktop,
+  editor: Editor,
+  music: Music,
+  monitor: Monitor,
   calendar: CalendarBlock,
   welcome: Welcome,
   viewer: Viewer,

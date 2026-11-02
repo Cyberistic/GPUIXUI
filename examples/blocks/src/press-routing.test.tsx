@@ -25,6 +25,10 @@ import { Kanban } from "./kanban/kanban.js";
 import { Launcher } from "./launcher/launcher.js";
 import { License } from "./license/license.js";
 import { MenuBar } from "./menubar/menubar.js";
+import { MacosDesktop } from "./macos/macos.js";
+import { Editor } from "./editor/editor.js";
+import { Music } from "./music/music.js";
+import { Monitor } from "./monitor/monitor.js";
 import { Notes } from "./notes/notes.js";
 import { Pipeline } from "./pipeline/pipeline.js";
 import { Preferences } from "./preferences/preferences.js";
@@ -43,6 +47,10 @@ const screens: Readonly<Record<string, ComponentType>> = {
   "block:launcher": () => <Launcher />,
   "block:license": License,
   "block:menubar": MenuBar,
+  "block:macos": MacosDesktop,
+  "block:editor": Editor,
+  "block:music": Music,
+  "block:monitor": Monitor,
   "block:notes": Notes,
   "block:pipeline": Pipeline,
   "block:preferences": Preferences,

@@ -1,4 +1,8 @@
 import desktopSource from "../../../../../examples/blocks/src/desktop/desktop.tsx?raw";
+import macosSource from "../../../../../examples/blocks/src/macos/macos.tsx?raw";
+import editorSource from "../../../../../examples/blocks/src/editor/editor.tsx?raw";
+import musicSource from "../../../../../examples/blocks/src/music/music.tsx?raw";
+import monitorSource from "../../../../../examples/blocks/src/monitor/monitor.tsx?raw";
 import licenseSource from "../../../../../examples/blocks/src/license/license.tsx?raw";
 import notesSource from "../../../../../examples/blocks/src/notes/notes.tsx?raw";
 import preferencesSource from "../../../../../examples/blocks/src/preferences/preferences.tsx?raw";
@@ -79,16 +83,20 @@ export interface Block {
 const CaptureRender = ({
   slug,
   title,
+  width = 1100,
+  height = 700,
 }: {
   readonly slug: string;
   readonly title: string;
+  readonly width?: number;
+  readonly height?: number;
 }) => (
   <figure className="gx-block-desktop-shot">
     <img
       alt={`${title}: captured from the native renderer`}
-      height={700}
+      height={height}
       src={`/blocks/${slug}.webp`}
-      width={1100}
+      width={width}
     />
     <figcaption>
       {title} — captured from the native renderer, offscreen (no window server,
@@ -413,6 +421,53 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
     render: () => <CaptureRender slug="agent" title="Agent" />,
     source: agentSource,
+  },
+  "macos-01": {
+    name: "macos-01",
+    slug: "macos",
+    title: "macOS desktop",
+    description:
+      "A whole macOS desktop: the wallpaper drawn from gradients, the menu bar with its menus, the dock, and a floating window layer for real windows.",
+    packages: ["@gpuixui/shell", "@gpuixui/icons", "@gpuixui/tokens"],
+    render: () => (
+      <CaptureRender
+        slug="macos"
+        title="macOS desktop"
+        width={1280}
+        height={800}
+      />
+    ),
+    source: macosSource,
+  },
+  "editor-01": {
+    name: "editor-01",
+    slug: "editor",
+    title: "Editor",
+    description:
+      "A code editor: the explorer, the open file painted token by token, and a status bar — press a file to open it.",
+    packages: ["@gpuixui/shell", "@gpuixui/icons", "@gpuixui/primitives"],
+    render: () => <CaptureRender slug="editor" title="Editor" />,
+    source: editorSource,
+  },
+  "music-01": {
+    name: "music-01",
+    slug: "music",
+    title: "Music",
+    description:
+      "A player: album art, a seeded waveform, the transport and the queue — press a row to play it.",
+    packages: ["@gpuixui/shell", "@gpuixui/icons", "@gpuixui/primitives"],
+    render: () => <CaptureRender slug="music" title="Music" />,
+    source: musicSource,
+  },
+  "monitor-01": {
+    name: "monitor-01",
+    slug: "monitor",
+    title: "Hardware monitor",
+    description:
+      "Temperatures as sparklines, one bar per core and memory as a ring, over a 1 / 5 / 15-minute window.",
+    packages: ["@gpuixui/shell", "@gpuixui/data", "@gpuixui/primitives"],
+    render: () => <CaptureRender slug="monitor" title="Hardware monitor" />,
+    source: monitorSource,
   },
   "calendar-01": {
     name: "calendar-01",

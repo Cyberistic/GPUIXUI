@@ -64,7 +64,7 @@
           id="s-v0"
           class="clip"
           data-start="0"
-          data-duration="2.3"
+          data-duration="2"
           data-track-index="1"
           muted
           playsinline
@@ -82,8 +82,8 @@
           data-media-start="0.15"
           id="s-v1"
           class="clip"
-          data-start="2.3"
-          data-duration="1.2"
+          data-start="2"
+          data-duration="0.9"
           data-track-index="2"
           muted
           playsinline
@@ -101,8 +101,8 @@
           data-media-start="1.6"
           id="s-v2"
           class="clip"
-          data-start="3.5"
-          data-duration="1"
+          data-start="2.9"
+          data-duration="0.9"
           data-track-index="1"
           muted
           playsinline
@@ -131,8 +131,8 @@
           data-media-start="2.95"
           id="s-v3"
           class="clip"
-          data-start="4.5"
-          data-duration="1.3"
+          data-start="3.8"
+          data-duration="0.9"
           data-track-index="2"
           muted
           playsinline
@@ -154,48 +154,26 @@
     </div>
     <div id="s-cam4" class="cam" style="opacity: 0">
       <div
-        class="frame"
-        style="left: 344px; top: 233px; width: 1232px; height: 784px"
+        class="frame framed"
+        style="left: 480px; top: 325px; width: 960px; height: 600px"
       >
-        <video
-          data-media-start="0.1"
-          id="s-v4"
-          class="clip"
-          data-start="5.8"
-          data-duration="2.4"
-          data-track-index="1"
-          muted
-          playsinline
-          src="assets/footage/agent.mp4"
-          style=""
-        ></video>
-        <div id="s-cur4" class="cursor">
-          <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
-              fill="#000"
-              stroke="#fff"
-              stroke-width="1.8"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </div>
+        <img class="shot" src="assets/footage/chat-mac-0.png" alt="" />
       </div>
     </div>
     <div id="s-cam5" class="cam" style="opacity: 0">
       <div
         class="frame framed"
-        style="left: 513px; top: 199px; width: 894px; height: 853px"
+        style="left: 480px; top: 325px; width: 960px; height: 600px"
       >
-        <img class="shot" src="assets/footage/slang-app-history.png" alt="" />
+        <img class="shot" src="assets/footage/chat-win-0.png" alt="" />
       </div>
     </div>
     <div id="s-cam6" class="cam" style="opacity: 0">
       <div
         class="frame framed"
-        style="left: 513px; top: 199px; width: 894px; height: 853px"
+        style="left: 480px; top: 325px; width: 960px; height: 600px"
       >
-        <img class="shot" src="assets/footage/slang-app-latex.png" alt="" />
+        <img class="shot" src="assets/footage/chat-linux-0.png" alt="" />
       </div>
     </div>
     <div id="s-cam7" class="cam" style="opacity: 0">
@@ -203,222 +181,220 @@
         class="frame framed"
         style="left: 513px; top: 199px; width: 894px; height: 853px"
       >
-        <img class="shot" src="assets/footage/slang-app-ti84.png" alt="" />
+        <img class="shot" src="assets/footage/slang-app-history.png" alt="" />
+      </div>
+    </div>
+    <div id="s-cam8" class="cam" style="opacity: 0">
+      <div
+        class="frame framed"
+        style="left: 344px; top: 233px; width: 1232px; height: 784px"
+      >
+        <video
+          data-media-start="0"
+          id="s-v8"
+          class="clip"
+          data-start="7.7"
+          data-duration="0.9"
+          data-track-index="1"
+          muted
+          playsinline
+          src="assets/footage/editor.mp4"
+          style=""
+        ></video>
+      </div>
+    </div>
+    <div id="s-cam9" class="cam" style="opacity: 0">
+      <div
+        class="frame framed"
+        style="left: 344px; top: 233px; width: 1232px; height: 784px"
+      >
+        <video
+          data-media-start="0"
+          id="s-v9"
+          class="clip"
+          data-start="8.6"
+          data-duration="0.9"
+          data-track-index="2"
+          muted
+          playsinline
+          src="assets/footage/music.mp4"
+          style=""
+        ></video>
+      </div>
+    </div>
+    <div id="s-cam10" class="cam" style="opacity: 0">
+      <div
+        class="frame framed"
+        style="left: 344px; top: 233px; width: 1232px; height: 784px"
+      >
+        <video
+          data-media-start="0"
+          id="s-v10"
+          class="clip"
+          data-start="9.5"
+          data-duration="0.95"
+          data-track-index="1"
+          muted
+          playsinline
+          src="assets/footage/monitor.mp4"
+          style=""
+        ></video>
       </div>
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.set("#s-cam0", { opacity: 0 }, 2.3);
+    tl.set("#s-cam0", { opacity: 0 }, 2.0);
     tl.fromTo(
       "#s-cam0",
       { scale: 1 },
-      { scale: 1, duration: 2.3, ease: "power2.out" },
+      { scale: 1, duration: 2, ease: "power2.out" },
       0.0,
     );
 
-    tl.set("#s-cam1", { opacity: 1 }, 2.3);
-    tl.set("#s-cam1", { opacity: 0 }, 3.5);
+    tl.set("#s-cam1", { opacity: 1 }, 2.0);
+    tl.set("#s-cam1", { opacity: 0 }, 2.9);
     tl.fromTo(
       "#s-cam1",
       { scale: 1 },
-      { scale: 1, duration: 1.2, ease: "power2.out" },
-      2.3,
+      { scale: 1, duration: 0.9, ease: "power2.out" },
+      2.0,
     );
 
-    tl.set("#s-cam2", { opacity: 1 }, 3.5);
-    tl.set("#s-cam2", { opacity: 0 }, 4.5);
+    tl.set("#s-cam2", { opacity: 1 }, 2.9);
+    tl.set("#s-cam2", { opacity: 0 }, 3.8);
     tl.fromTo(
       "#s-cam2",
       { scale: 1 },
-      { scale: 1, duration: 1, ease: "power2.out" },
-      3.5,
+      { scale: 1, duration: 0.9, ease: "power2.out" },
+      2.9,
     );
-    tl.set("#s-cur2", { x: 1254.3, y: 271.3, scale: 1 }, 3.5);
-    tl.set("#s-cur2", { x: 1254.7, y: 271.3, scale: 1 }, 3.533);
-    tl.set("#s-cur2", { x: 1255.3, y: 271.3, scale: 1 }, 3.567);
-    tl.set("#s-cur2", { x: 1256.2, y: 271.3, scale: 1 }, 3.6);
-    tl.set("#s-cur2", { x: 1257.6, y: 271.3, scale: 1 }, 3.633);
-    tl.set("#s-cur2", { x: 1259.3, y: 271.3, scale: 1 }, 3.667);
-    tl.set("#s-cur2", { x: 1261.6, y: 271.3, scale: 1 }, 3.7);
-    tl.set("#s-cur2", { x: 1264.4, y: 271.3, scale: 1 }, 3.733);
-    tl.set("#s-cur2", { x: 1267.8, y: 271.3, scale: 1 }, 3.767);
-    tl.set("#s-cur2", { x: 1272.0, y: 271.3, scale: 1 }, 3.8);
-    tl.set("#s-cur2", { x: 1276.9, y: 271.3, scale: 1 }, 3.833);
-    tl.set("#s-cur2", { x: 1282.6, y: 271.3, scale: 1 }, 3.867);
-    tl.set("#s-cur2", { x: 1289.1, y: 271.3, scale: 1 }, 3.9);
-    tl.set("#s-cur2", { x: 1296.6, y: 271.3, scale: 1 }, 3.933);
-    tl.set("#s-cur2", { x: 1304.9, y: 271.3, scale: 1 }, 3.967);
-    tl.set("#s-cur2", { x: 1312.4, y: 271.3, scale: 1 }, 4.0);
-    tl.set("#s-cur2", { x: 1318.9, y: 271.3, scale: 1 }, 4.033);
-    tl.set("#s-cur2", { x: 1324.6, y: 271.3, scale: 1 }, 4.067);
-    tl.set("#s-cur2", { x: 1329.5, y: 271.3, scale: 1 }, 4.1);
-    tl.set("#s-cur2", { x: 1333.6, y: 271.3, scale: 1 }, 4.133);
-    tl.set("#s-cur2", { x: 1337.1, y: 271.3, scale: 1 }, 4.167);
-    tl.set("#s-cur2", { x: 1339.9, y: 271.3, scale: 1 }, 4.2);
-    tl.set("#s-cur2", { x: 1342.2, y: 271.3, scale: 1 }, 4.233);
-    tl.set("#s-cur2", { x: 1343.9, y: 271.3, scale: 1 }, 4.267);
-    tl.set("#s-cur2", { x: 1345.2, y: 271.3, scale: 1 }, 4.3);
-    tl.set("#s-cur2", { x: 1346.2, y: 271.3, scale: 1 }, 4.333);
-    tl.set("#s-cur2", { x: 1346.8, y: 271.3, scale: 1 }, 4.367);
-    tl.set("#s-cur2", { x: 1347.2, y: 271.3, scale: 1 }, 4.4);
-    tl.set("#s-cur2", { x: 1347.4, y: 271.3, scale: 1 }, 4.433);
-    tl.set("#s-cur2", { x: 1347.5, y: 271.3, scale: 1 }, 4.467);
-    tl.set("#s-cam3", { opacity: 1 }, 4.5);
-    tl.set("#s-cam3", { opacity: 0 }, 5.8);
+    tl.set("#s-cur2", { x: 1254.3, y: 271.3, scale: 1 }, 2.9);
+    tl.set("#s-cur2", { x: 1254.7, y: 271.3, scale: 1 }, 2.933);
+    tl.set("#s-cur2", { x: 1255.3, y: 271.3, scale: 1 }, 2.967);
+    tl.set("#s-cur2", { x: 1256.2, y: 271.3, scale: 1 }, 3.0);
+    tl.set("#s-cur2", { x: 1257.6, y: 271.3, scale: 1 }, 3.033);
+    tl.set("#s-cur2", { x: 1259.3, y: 271.3, scale: 1 }, 3.067);
+    tl.set("#s-cur2", { x: 1261.6, y: 271.3, scale: 1 }, 3.1);
+    tl.set("#s-cur2", { x: 1264.4, y: 271.3, scale: 1 }, 3.133);
+    tl.set("#s-cur2", { x: 1267.8, y: 271.3, scale: 1 }, 3.167);
+    tl.set("#s-cur2", { x: 1272.0, y: 271.3, scale: 1 }, 3.2);
+    tl.set("#s-cur2", { x: 1276.9, y: 271.3, scale: 1 }, 3.233);
+    tl.set("#s-cur2", { x: 1282.6, y: 271.3, scale: 1 }, 3.267);
+    tl.set("#s-cur2", { x: 1289.1, y: 271.3, scale: 1 }, 3.3);
+    tl.set("#s-cur2", { x: 1296.6, y: 271.3, scale: 1 }, 3.333);
+    tl.set("#s-cur2", { x: 1304.9, y: 271.3, scale: 1 }, 3.367);
+    tl.set("#s-cur2", { x: 1312.4, y: 271.3, scale: 1 }, 3.4);
+    tl.set("#s-cur2", { x: 1318.9, y: 271.3, scale: 1 }, 3.433);
+    tl.set("#s-cur2", { x: 1324.6, y: 271.3, scale: 1 }, 3.467);
+    tl.set("#s-cur2", { x: 1329.5, y: 271.3, scale: 1 }, 3.5);
+    tl.set("#s-cur2", { x: 1333.6, y: 271.3, scale: 1 }, 3.533);
+    tl.set("#s-cur2", { x: 1337.1, y: 271.3, scale: 1 }, 3.567);
+    tl.set("#s-cur2", { x: 1339.9, y: 271.3, scale: 1 }, 3.6);
+    tl.set("#s-cur2", { x: 1342.2, y: 271.3, scale: 1 }, 3.633);
+    tl.set("#s-cur2", { x: 1343.9, y: 271.3, scale: 1 }, 3.667);
+    tl.set("#s-cur2", { x: 1345.2, y: 271.3, scale: 1 }, 3.7);
+    tl.set("#s-cur2", { x: 1346.2, y: 271.3, scale: 1 }, 3.733);
+    tl.set("#s-cur2", { x: 1346.8, y: 271.3, scale: 1 }, 3.767);
+    tl.set("#s-cam3", { opacity: 1 }, 3.8);
+    tl.set("#s-cam3", { opacity: 0 }, 4.7);
     tl.fromTo(
       "#s-cam3",
       { scale: 1 },
-      { scale: 1, duration: 1.3, ease: "power2.out" },
-      4.5,
+      { scale: 1, duration: 0.9, ease: "power2.out" },
+      3.8,
     );
-    tl.set("#s-cur3", { x: 1342.9, y: 275.1, scale: 1 }, 4.517);
-    tl.set("#s-cur3", { x: 1343.0, y: 275.2, scale: 1 }, 4.55);
-    tl.set("#s-cur3", { x: 1343.1, y: 275.3, scale: 1 }, 4.583);
-    tl.set("#s-cur3", { x: 1343.2, y: 275.5, scale: 1 }, 4.617);
-    tl.set("#s-cur3", { x: 1343.4, y: 275.7, scale: 1 }, 4.65);
-    tl.set("#s-cur3", { x: 1343.7, y: 276.1, scale: 1 }, 4.683);
-    tl.set("#s-cur3", { x: 1344.0, y: 276.6, scale: 1 }, 4.717);
-    tl.set("#s-cur3", { x: 1344.5, y: 277.2, scale: 1 }, 4.75);
-    tl.set("#s-cur3", { x: 1345.1, y: 278.0, scale: 1 }, 4.783);
-    tl.set("#s-cur3", { x: 1345.8, y: 278.9, scale: 1 }, 4.817);
-    tl.set("#s-cur3", { x: 1346.6, y: 280.1, scale: 1 }, 4.85);
-    tl.set("#s-cur3", { x: 1347.6, y: 281.4, scale: 1 }, 4.883);
-    tl.set("#s-cur3", { x: 1348.8, y: 283.0, scale: 1 }, 4.917);
-    tl.set("#s-cur3", { x: 1350.1, y: 284.8, scale: 1 }, 4.95);
-    tl.set("#s-cur3", { x: 1351.7, y: 286.8, scale: 1 }, 4.983);
-    tl.set("#s-cur3", { x: 1353.4, y: 289.1, scale: 1 }, 5.017);
-    tl.set("#s-cur3", { x: 1355.4, y: 291.8, scale: 1 }, 5.05);
-    tl.set("#s-cur3", { x: 1357.6, y: 294.7, scale: 1 }, 5.083);
-    tl.set("#s-cur3", { x: 1360.0, y: 298.0, scale: 1 }, 5.117);
-    tl.set("#s-cur3", { x: 1362.8, y: 301.6, scale: 1 }, 5.15);
-    tl.set("#s-cur3", { x: 1365.7, y: 305.5, scale: 1 }, 5.183);
-    tl.set("#s-cur3", { x: 1368.7, y: 309.5, scale: 1 }, 5.217);
-    tl.set("#s-cur3", { x: 1371.4, y: 313.1, scale: 1 }, 5.25);
-    tl.set("#s-cur3", { x: 1373.8, y: 316.3, scale: 1 }, 5.283);
-    tl.set("#s-cur3", { x: 1376.0, y: 319.3, scale: 1 }, 5.317);
-    tl.set("#s-cur3", { x: 1378.0, y: 321.9, scale: 1 }, 5.35);
-    tl.set("#s-cur3", { x: 1379.7, y: 324.2, scale: 1 }, 5.383);
-    tl.set("#s-cur3", { x: 1381.3, y: 326.3, scale: 1 }, 5.417);
-    tl.set("#s-cur3", { x: 1382.6, y: 328.1, scale: 1 }, 5.45);
-    tl.set("#s-cur3", { x: 1383.8, y: 329.6, scale: 1 }, 5.483);
-    tl.set("#s-cur3", { x: 1384.8, y: 331.0, scale: 1 }, 5.517);
-    tl.set("#s-cur3", { x: 1385.7, y: 332.1, scale: 1 }, 5.55);
-    tl.set("#s-cur3", { x: 1386.4, y: 333.1, scale: 1 }, 5.583);
-    tl.set("#s-cur3", { x: 1387.0, y: 333.8, scale: 1 }, 5.617);
-    tl.set("#s-cur3", { x: 1387.4, y: 334.5, scale: 1 }, 5.65);
-    tl.set("#s-cur3", { x: 1387.8, y: 334.9, scale: 1 }, 5.683);
-    tl.set("#s-cur3", { x: 1388.1, y: 335.3, scale: 1 }, 5.717);
-    tl.set("#s-cur3", { x: 1388.3, y: 335.6, scale: 1 }, 5.75);
-    tl.set("#s-cur3", { x: 1388.4, y: 335.7, scale: 1 }, 5.783);
-    tl.set("#s-cam4", { opacity: 1 }, 5.8);
-    tl.set("#s-cam4", { opacity: 0 }, 8.2);
+    tl.set("#s-cur3", { x: 1342.9, y: 275.1, scale: 1 }, 3.817);
+    tl.set("#s-cur3", { x: 1343.0, y: 275.2, scale: 1 }, 3.85);
+    tl.set("#s-cur3", { x: 1343.1, y: 275.3, scale: 1 }, 3.883);
+    tl.set("#s-cur3", { x: 1343.2, y: 275.5, scale: 1 }, 3.917);
+    tl.set("#s-cur3", { x: 1343.4, y: 275.7, scale: 1 }, 3.95);
+    tl.set("#s-cur3", { x: 1343.7, y: 276.1, scale: 1 }, 3.983);
+    tl.set("#s-cur3", { x: 1344.0, y: 276.6, scale: 1 }, 4.017);
+    tl.set("#s-cur3", { x: 1344.5, y: 277.2, scale: 1 }, 4.05);
+    tl.set("#s-cur3", { x: 1345.1, y: 278.0, scale: 1 }, 4.083);
+    tl.set("#s-cur3", { x: 1345.8, y: 278.9, scale: 1 }, 4.117);
+    tl.set("#s-cur3", { x: 1346.6, y: 280.1, scale: 1 }, 4.15);
+    tl.set("#s-cur3", { x: 1347.6, y: 281.4, scale: 1 }, 4.183);
+    tl.set("#s-cur3", { x: 1348.8, y: 283.0, scale: 1 }, 4.217);
+    tl.set("#s-cur3", { x: 1350.1, y: 284.8, scale: 1 }, 4.25);
+    tl.set("#s-cur3", { x: 1351.7, y: 286.8, scale: 1 }, 4.283);
+    tl.set("#s-cur3", { x: 1353.4, y: 289.1, scale: 1 }, 4.317);
+    tl.set("#s-cur3", { x: 1355.4, y: 291.8, scale: 1 }, 4.35);
+    tl.set("#s-cur3", { x: 1357.6, y: 294.7, scale: 1 }, 4.383);
+    tl.set("#s-cur3", { x: 1360.0, y: 298.0, scale: 1 }, 4.417);
+    tl.set("#s-cur3", { x: 1362.8, y: 301.6, scale: 1 }, 4.45);
+    tl.set("#s-cur3", { x: 1365.7, y: 305.5, scale: 1 }, 4.483);
+    tl.set("#s-cur3", { x: 1368.7, y: 309.5, scale: 1 }, 4.517);
+    tl.set("#s-cur3", { x: 1371.4, y: 313.1, scale: 1 }, 4.55);
+    tl.set("#s-cur3", { x: 1373.8, y: 316.3, scale: 1 }, 4.583);
+    tl.set("#s-cur3", { x: 1376.0, y: 319.3, scale: 1 }, 4.617);
+    tl.set("#s-cur3", { x: 1378.0, y: 321.9, scale: 1 }, 4.65);
+    tl.set("#s-cur3", { x: 1379.7, y: 324.2, scale: 1 }, 4.683);
+    tl.set("#s-cam4", { opacity: 1 }, 4.7);
+    tl.set("#s-cam4", { opacity: 0 }, 5.4);
     tl.fromTo(
       "#s-cam4",
       { scale: 1 },
-      { scale: 1.08, duration: 2.4, ease: "power2.out" },
-      5.8,
+      { scale: 1, duration: 0.7, ease: "power2.out" },
+      4.7,
     );
-    tl.set("#s-cur4", { x: 444.6, y: 759.4, scale: 0.86 }, 5.8);
-    tl.set("#s-cur4", { x: 444.6, y: 759.4, scale: 1 }, 5.833);
-    tl.set("#s-cur4", { x: 444.7, y: 759.4, scale: 1 }, 5.867);
-    tl.set("#s-cur4", { x: 444.8, y: 759.4, scale: 1 }, 5.9);
-    tl.set("#s-cur4", { x: 445.2, y: 759.4, scale: 1 }, 5.933);
-    tl.set("#s-cur4", { x: 445.9, y: 759.4, scale: 1 }, 5.967);
-    tl.set("#s-cur4", { x: 447.0, y: 759.4, scale: 1 }, 6.0);
-    tl.set("#s-cur4", { x: 448.7, y: 759.4, scale: 1 }, 6.033);
-    tl.set("#s-cur4", { x: 451.1, y: 759.4, scale: 1 }, 6.067);
-    tl.set("#s-cur4", { x: 454.3, y: 759.4, scale: 1 }, 6.1);
-    tl.set("#s-cur4", { x: 458.5, y: 759.4, scale: 1 }, 6.133);
-    tl.set("#s-cur4", { x: 463.6, y: 759.4, scale: 1 }, 6.167);
-    tl.set("#s-cur4", { x: 469.9, y: 759.4, scale: 1 }, 6.2);
-    tl.set("#s-cur4", { x: 477.4, y: 759.4, scale: 1 }, 6.233);
-    tl.set("#s-cur4", { x: 486.3, y: 759.4, scale: 1 }, 6.267);
-    tl.set("#s-cur4", { x: 496.7, y: 759.4, scale: 1 }, 6.3);
-    tl.set("#s-cur4", { x: 508.6, y: 759.4, scale: 1 }, 6.333);
-    tl.set("#s-cur4", { x: 522.3, y: 759.4, scale: 1 }, 6.367);
-    tl.set("#s-cur4", { x: 537.8, y: 759.4, scale: 1 }, 6.4);
-    tl.set("#s-cur4", { x: 555.2, y: 759.4, scale: 1 }, 6.433);
-    tl.set("#s-cur4", { x: 572.7, y: 759.4, scale: 1 }, 6.467);
-    tl.set("#s-cur4", { x: 588.2, y: 759.4, scale: 1 }, 6.5);
-    tl.set("#s-cur4", { x: 601.8, y: 759.4, scale: 1 }, 6.533);
-    tl.set("#s-cur4", { x: 613.8, y: 759.4, scale: 1 }, 6.567);
-    tl.set("#s-cur4", { x: 624.2, y: 759.4, scale: 1 }, 6.6);
-    tl.set("#s-cur4", { x: 633.1, y: 759.4, scale: 1 }, 6.633);
-    tl.set("#s-cur4", { x: 640.6, y: 759.4, scale: 1 }, 6.667);
-    tl.set("#s-cur4", { x: 646.9, y: 759.4, scale: 1 }, 6.7);
-    tl.set("#s-cur4", { x: 652.0, y: 759.4, scale: 1 }, 6.733);
-    tl.set("#s-cur4", { x: 656.1, y: 759.4, scale: 1 }, 6.767);
-    tl.set("#s-cur4", { x: 659.3, y: 759.4, scale: 1 }, 6.8);
-    tl.set("#s-cur4", { x: 661.7, y: 759.4, scale: 1 }, 6.833);
-    tl.set("#s-cur4", { x: 663.5, y: 759.4, scale: 1 }, 6.867);
-    tl.set("#s-cur4", { x: 664.6, y: 759.4, scale: 1 }, 6.9);
-    tl.set("#s-cur4", { x: 665.3, y: 759.4, scale: 1 }, 6.933);
-    tl.set("#s-cur4", { x: 665.7, y: 759.4, scale: 1 }, 6.967);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.0);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.033);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.067);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.1);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.133);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.167);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 0.86 }, 7.2);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 0.86 }, 7.233);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 0.86 }, 7.267);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.3);
-    tl.set("#s-cur4", { x: 665.8, y: 759.3, scale: 1 }, 7.333);
-    tl.set("#s-cur4", { x: 665.9, y: 759.3, scale: 1 }, 7.367);
-    tl.set("#s-cur4", { x: 666.0, y: 759.1, scale: 1 }, 7.4);
-    tl.set("#s-cur4", { x: 666.2, y: 758.7, scale: 1 }, 7.433);
-    tl.set("#s-cur4", { x: 666.5, y: 758.1, scale: 1 }, 7.467);
-    tl.set("#s-cur4", { x: 666.9, y: 757.2, scale: 1 }, 7.5);
-    tl.set("#s-cur4", { x: 667.6, y: 755.9, scale: 1 }, 7.533);
-    tl.set("#s-cur4", { x: 668.5, y: 754.1, scale: 1 }, 7.567);
-    tl.set("#s-cur4", { x: 669.6, y: 751.9, scale: 1 }, 7.6);
-    tl.set("#s-cur4", { x: 670.9, y: 749.2, scale: 1 }, 7.633);
-    tl.set("#s-cur4", { x: 672.6, y: 745.8, scale: 1 }, 7.667);
-    tl.set("#s-cur4", { x: 674.6, y: 741.7, scale: 1 }, 7.7);
-    tl.set("#s-cur4", { x: 677.0, y: 737.0, scale: 1 }, 7.733);
-    tl.set("#s-cur4", { x: 679.4, y: 732.2, scale: 1 }, 7.767);
-    tl.set("#s-cur4", { x: 681.5, y: 728.1, scale: 1 }, 7.8);
-    tl.set("#s-cur4", { x: 683.1, y: 724.8, scale: 1 }, 7.833);
-    tl.set("#s-cur4", { x: 684.5, y: 722.0, scale: 1 }, 7.867);
-    tl.set("#s-cur4", { x: 685.6, y: 719.8, scale: 1 }, 7.9);
-    tl.set("#s-cur4", { x: 686.5, y: 718.1, scale: 1 }, 7.933);
-    tl.set("#s-cur4", { x: 687.1, y: 716.8, scale: 1 }, 7.967);
-    tl.set("#s-cur4", { x: 687.6, y: 715.8, scale: 1 }, 8.0);
-    tl.set("#s-cur4", { x: 687.9, y: 715.2, scale: 1 }, 8.033);
-    tl.set("#s-cur4", { x: 688.1, y: 714.8, scale: 1 }, 8.067);
-    tl.set("#s-cur4", { x: 688.2, y: 714.6, scale: 1 }, 8.1);
-    tl.set("#s-cur4", { x: 688.2, y: 714.6, scale: 1 }, 8.133);
-    tl.set("#s-cur4", { x: 688.2, y: 714.6, scale: 1 }, 8.167);
-    tl.set("#s-cam5", { opacity: 1 }, 8.2);
-    tl.set("#s-cam5", { opacity: 0 }, 8.95);
+
+    tl.set("#s-cam5", { opacity: 1 }, 5.4);
+    tl.set("#s-cam5", { opacity: 0 }, 6.1);
     tl.fromTo(
       "#s-cam5",
-      { scale: 1.04 },
-      { scale: 1, duration: 0.75, ease: "power2.out" },
-      8.2,
+      { scale: 1 },
+      { scale: 1, duration: 0.7, ease: "power2.out" },
+      5.4,
     );
 
-    tl.set("#s-cam6", { opacity: 1 }, 8.95);
-    tl.set("#s-cam6", { opacity: 0 }, 9.7);
+    tl.set("#s-cam6", { opacity: 1 }, 6.1);
+    tl.set("#s-cam6", { opacity: 0 }, 6.8);
     tl.fromTo(
       "#s-cam6",
-      { scale: 1.04 },
-      { scale: 1, duration: 0.75, ease: "power2.out" },
-      8.95,
+      { scale: 1 },
+      { scale: 1, duration: 0.7, ease: "power2.out" },
+      6.1,
     );
 
-    tl.set("#s-cam7", { opacity: 1 }, 9.7);
-    tl.set("#s-cam7", { opacity: 0 }, 10.45);
+    tl.set("#s-cam7", { opacity: 1 }, 6.8);
+    tl.set("#s-cam7", { opacity: 0 }, 7.7);
     tl.fromTo(
       "#s-cam7",
-      { scale: 1.04 },
-      { scale: 1, duration: 0.75, ease: "power2.out" },
-      9.7,
+      { scale: 1.03 },
+      { scale: 1, duration: 0.9, ease: "power2.out" },
+      6.8,
     );
 
-    tl.set({}, {}, 10.45);
+    tl.set("#s-cam8", { opacity: 1 }, 7.7);
+    tl.set("#s-cam8", { opacity: 0 }, 8.6);
+    tl.fromTo(
+      "#s-cam8",
+      { scale: 1.03 },
+      { scale: 1, duration: 0.9, ease: "power2.out" },
+      7.7,
+    );
+
+    tl.set("#s-cam9", { opacity: 1 }, 8.6);
+    tl.set("#s-cam9", { opacity: 0 }, 9.5);
+    tl.fromTo(
+      "#s-cam9",
+      { scale: 1.03 },
+      { scale: 1, duration: 0.9, ease: "power2.out" },
+      8.6,
+    );
+
+    tl.set("#s-cam10", { opacity: 1 }, 9.5);
+    tl.set("#s-cam10", { opacity: 0 }, 10.45);
+    tl.fromTo(
+      "#s-cam10",
+      { scale: 1.03 },
+      { scale: 1, duration: 0.95, ease: "power2.out" },
+      9.5,
+    );
+
+    tl.set({}, {}, 10.450000000000001);
     window.__timelines = window.__timelines || {};
     window.__timelines["showcase"] = tl;
   </script>

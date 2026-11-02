@@ -25,6 +25,10 @@
     "email-inbox",
     "conversations",
     "sidebar",
-    "desktop"
+    "desktop",
+    "macos",
+    "editor",
+    "music",
+    "monitor"
   ]
 }

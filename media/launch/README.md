@@ -11,10 +11,10 @@ of cuts. Plan: `.agents/slop/plans/066-launch-film-v4.md`.
 | --- | --- | --- | --- |
 | 0–4.8 s | — | four close-ups, 1.2 s each, static framings cut on the settle: the Switch (drawn at 4× its metrics so the macro is sharp), then Tabs, Slider, Checkbox | `cu-*` |
 | 4.8–9 s | every component you need | **twenty different** blocks and components in one wall, camera pulling back; the line starts under the wall, holds, then swaps places with it (Paper's move) | one of each take |
-| 9–11.3 s | — | the stats block's real cards falling onto bare paper while the camera drones over the build, then the whole screen settles | `stage-assemble` |
-| 11.3–14.8 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux — named under the line as each cut lands | `settings` |
-| 14.8–17.2 s | real apps, built with it | a chat typed and sent | `agent` |
-| 17.2–19.45 s | real apps, built with it | Slang's three calculators (fx-991, LaTeX, TI-84) | Slang stills |
+| 9–11 s | — | the stats block's real cards falling onto bare paper while the camera drones over the build | `stage-assemble` |
+| 11–13.7 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux | `settings` |
+| 13.7–15.8 s | real apps, built with it | **the same chat window on each platform's desktop** — macOS, Aero, the tiling block — flipping | `chat-mac`, `chat-win`, `chat-linux` |
+| 15.8–19.45 s | real apps, built with it | Slang's fx-991, the editor, the music player, the hardware monitor | Slang still, `editor`, `music`, `monitor` |
 | 19.45–24 s | can you believe this is in a terminal through ssh? | the ssh session; the app takes the whole terminal over, its sidebar collapsing and Deploy's toasts rising | `console-term` |
 
 Takes are the real tree under real input (`apps/playground/src/film/take.ts`);
@@ -35,7 +35,7 @@ frames.
 
 ```sh
 nub run --filter playground build
-for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang console-term desktop-aero tiling; do
+for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang console-term desktop-aero tiling chat-mac chat-win chat-linux editor music monitor; do
   nub apps/playground/dist/film/takes.js $take media/launch/takes/$take
 done
 # Slang's own captures (its `src/capture.tsx`), as the film's three stills

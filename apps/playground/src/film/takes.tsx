@@ -22,6 +22,7 @@ import {
   extendTheme,
   lightTheme,
   platformTheme,
+  type PlatformName,
   type Theme,
 } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -45,6 +46,10 @@ import { Viewer } from "@gpuixui/blocks/viewer";
 import { Welcome } from "@gpuixui/blocks/welcome";
 import { CalculatorApp } from "@gpuixui/slang/app";
 import { Console } from "@gpuixui/blocks/console";
+import { MacosDesktop } from "@gpuixui/blocks/macos";
+import { Editor } from "@gpuixui/blocks/editor";
+import { Music } from "@gpuixui/blocks/music";
+import { Monitor } from "@gpuixui/blocks/monitor";
 import { capture, type Take, type Waypoint } from "./take.js";
 
 const mac = platformTheme(lightTheme, "darwin");
@@ -128,6 +133,43 @@ const macApp = (
   ),
   pointer,
   keys,
+});
+
+/** The theme a floating Mac-style window wears on a desktop. */
+const desktopWindow = (look: PlatformName): Theme =>
+  extendTheme(platformTheme(lightTheme, look), { window: "opaque" });
+
+/** The chat block over a desktop, for the three-OS flip. */
+const chatOn = (look: PlatformName, desktop: ReactNode): Take => ({
+  width: 1280,
+  height: 800,
+  frames: 30,
+  view: () => (
+    <div
+      style={{
+        position: "relative",
+        width: 1280,
+        height: 800,
+        display: "flex",
+      }}
+    >
+      {desktop}
+      <div
+        style={{
+          position: "absolute",
+          left: 250,
+          top: 66,
+          width: 780,
+          height: 600,
+        }}
+      >
+        <ThemeProvider theme={desktopWindow(look)}>
+          <Agent platform={look} />
+        </ThemeProvider>
+      </div>
+    </div>
+  ),
+  pointer: [{ frame: 0, aim: { x: 900, y: 700 } }],
 });
 
 /** A press on `testId` at `frame`, arriving from `from` and settling near it. */
@@ -458,6 +500,42 @@ export const takes: Readonly<Record<string, Take>> = {
     typing("hunter", 16),
     false,
   ),
+  editor: macApp(
+    <Editor />,
+    [{ frame: 0, aim: { x: 900, y: 620 } }],
+    [],
+    false,
+  ),
+  music: macApp(<Music />, [{ frame: 0, aim: { x: 900, y: 620 } }], [], false),
+  monitor: macApp(
+    <Monitor />,
+    [{ frame: 0, aim: { x: 900, y: 620 } }],
+    [],
+    false,
+  ),
+  "chat-mac": {
+    width: 1280,
+    height: 800,
+    frames: 30,
+    view: () => (
+      <MacosDesktop width={1280} height={800}>
+        <div
+          style={{
+            position: "absolute",
+            left: 250,
+            top: 50,
+            width: 780,
+            height: 600,
+          }}
+        >
+          <Agent platform="darwin" />
+        </div>
+      </MacosDesktop>
+    ),
+    pointer: [{ frame: 0, aim: { x: 900, y: 700 } }],
+  },
+  "chat-win": chatOn("win32", <DesktopBlock look="aero" />),
+  "chat-linux": chatOn("linux", <TilingDesktop palette="tokyo-night" />),
   agent: macApp(
     <Agent platform="darwin" />,
     [
