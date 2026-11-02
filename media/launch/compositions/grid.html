@@ -57,6 +57,34 @@
       height: 100%;
       object-fit: cover;
     }
+    #root .cap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 800px;
+      text-align: center;
+      font:
+        600 64px Inter,
+        sans-serif;
+      letter-spacing: -0.025em;
+      color: #1d1d1f;
+    }
+    #root .cap-band {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 330px;
+      pointer-events: none;
+    }
+    #root .cap-band.down {
+      bottom: 0;
+      background: linear-gradient(rgba(244, 242, 238, 0), #f4f2ee 55%);
+    }
+    #root .cap-band.up {
+      top: 0;
+      opacity: 0;
+      background: linear-gradient(#f4f2ee 55%, rgba(244, 242, 238, 0));
+    }
   </style>
   <div
     id="root"
@@ -606,6 +634,9 @@
         </div>
       </div>
     </div>
+    <div id="g-band-b" class="cap-band down"></div>
+    <div id="g-band-t" class="cap-band up"></div>
+    <div id="g-cap" class="cap">every component you need</div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
@@ -670,6 +701,18 @@
       { y: 340, duration: 3.6000000000000005, ease: "none" },
       0,
     );
+    // Paper's swap: the line sits under the field, then the two exchange
+    // places — the line rises to the band, the field slides down past it.
+    tl.fromTo(
+      "#g-cap",
+      { opacity: 0 },
+      { opacity: 1, duration: 0.3, ease: "power2.out" },
+      1.0,
+    );
+    tl.to("#g-cap", { y: -744, duration: 0.62, ease: "power2.inOut" }, 2.45);
+    tl.to("#g-cam", { y: 330, duration: 0.62, ease: "power2.inOut" }, 2.45);
+    tl.to("#g-band-t", { opacity: 1, duration: 0.5, ease: "none" }, 2.45);
+    tl.to("#g-band-b", { opacity: 0, duration: 0.5, ease: "none" }, 2.45);
     tl.set({}, {}, 3.6000000000000005);
     window.__timelines = window.__timelines || {};
     window.__timelines["grid"] = tl;

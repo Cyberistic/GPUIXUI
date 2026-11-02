@@ -1,6 +1,5 @@
-/* The assemble shot: Paper's ground, a blueprint in one blue, real cards. */
+/* The assemble shot: Paper's ground, real cards, one slow drone move. */
 .gpuixui-assemble {
-  --blue: 59, 130, 246;
   width: 1920px;
   height: 1080px;
   background: #f4f2ee;
@@ -9,23 +8,12 @@
     background: transparent;
     overflow: hidden;
   }
-  & .ga-box,
-  & .ga-text,
-  & .ga-real {
+  /* The camera: a slow pull back and down, the way a drone settles over a site. */
+  & .ga-world {
     position: absolute;
-    opacity: 0;
-    transition: opacity 320ms cubic-bezier(0.2, 0, 0, 1);
-  }
-  & .ga-box {
-    box-sizing: border-box;
-    border: 1.5px solid rgba(var(--blue), 0.65);
-    background: rgba(var(--blue), 0.035);
-  }
-  & .ga-text {
-    background: rgba(var(--blue), 0.22);
-  }
-  & [data-on] {
-    opacity: 1;
+    inset: 0;
+    transform-origin: 50% 45%;
+    animation: ga-drone 6s cubic-bezier(0.33, 0, 0.2, 1) both;
   }
   & .ga-card {
     box-shadow:
@@ -33,10 +21,24 @@
       0 18px 40px -18px rgba(30, 30, 60, 0.35);
   }
   & .ga-real {
+    position: absolute;
+    opacity: 0;
     border-radius: 15px;
-    transition-duration: 450ms;
+    transition: opacity 450ms cubic-bezier(0.2, 0, 0, 1);
     box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.06),
       0 24px 60px -24px rgba(30, 30, 60, 0.3);
+  }
+  & .ga-real[data-on] {
+    opacity: 1;
+  }
+}
+
+@keyframes ga-drone {
+  from {
+    transform: scale(1.14) translate3d(28px, -36px, 0) rotate(0.6deg);
+  }
+  to {
+    transform: scale(1.02) translate3d(0, 8px, 0) rotate(0deg);
   }
 }

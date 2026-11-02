@@ -20,6 +20,11 @@
  * press (a hover or a press on plain text does not), though a toast's arrival
  * paints alone. Measured here 2026-11-01; the collapse likely waits on a layout
  * event the terminal platform delivers with input. A runtime fix is owed.
+ *
+ * Measured again 2026-11-02: a whole take emits three batches, and pulsing
+ * kitty keys, wheel events or a same-size in-band resize adds none — the
+ * platform paints only when the app marks a state change on input, so no
+ * spring can be recorded in terminal mode.
  */
 import { createTestRoot } from "@gpuix/react/testing";
 import { Console } from "@gpuixui/blocks/console";

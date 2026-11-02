@@ -10,11 +10,12 @@ of cuts. Plan: `.agents/slop/plans/066-launch-film-v4.md`.
 | Time | Line | Shot | Source |
 | --- | --- | --- | --- |
 | 0–4.8 s | — | four close-ups, 1.2 s each, static framings cut on the settle: the Switch alone (the thumbnail), then Tabs, Slider, Checkbox | `cu-*` |
-| 4.8–8.4 s | every component you need | a field of live components in columns sliding opposite ways; the camera pulls back | stage of takes |
-| 8.4–11.3 s | — | the stats block's blueprint, its real cards falling into place | `stage-assemble` (`blueprint`) |
+| 4.8–8.4 s | every component you need | a field of live components in columns sliding opposite ways, camera pulling back; the line starts under the field and swaps places with it (Paper's move) | stage of takes |
+| 8.4–11.3 s | — | the stats block's real cards falling onto bare paper while the camera drones over the build, then the whole screen settles | `stage-assemble` |
 | 11.3–14.8 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux — named under the line as each cut lands | `settings` |
-| 14.8–19.45 s | real apps, built with it | a chat typed and sent, Slang computing | `agent`, `slang` |
-| 19.45–24 s | can you believe this is in a terminal through ssh? | the ssh session: the command, its output, the app painting below the shell, the sidebar collapsing, Deploy's toasts | `term-console` |
+| 14.8–19.45 s | real apps, built with it | a chat typed and sent; Slang's three calculators (fx-991, LaTeX, TI-84) | `agent`, Slang stills |
+| 19.45–20.95 s | real apps, built with it | the console in a window: the sidebar collapses, Deploy raises its toasts — the springs a terminal cannot paint | `console-window` |
+| 20.95–24 s | can you believe this is in a terminal through ssh? | the ssh session: the command, its output, then the app taking the whole terminal over, collapsed with its toast | `term-console` |
 | 24–26 s | — | GPUI · React · shadcn · Tailwind on the chord stabs | — |
 | 26–30 s | — | the mark, the URL, "Made with ☕ by @sudo_kw" | — |
 
@@ -28,9 +29,13 @@ end card.
 
 ```sh
 nub run --filter playground build
-for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang desktop-aero tiling; do
+for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang console-window desktop-aero tiling; do
   nub apps/playground/dist/film/takes.js $take media/launch/takes/$take
 done
+# Slang's own captures (its `src/capture.tsx`), as the film's three stills
+cp ~/Documents/slang/media/slang-result.png media/launch/takes/slang-app-result.png
+cp ~/Documents/slang/media/slang-latex.png media/launch/takes/slang-app-latex.png
+cp ~/Documents/slang/media/slang-ti84-graph.png media/launch/takes/slang-app-ti84.png
 nub apps/playground/dist/film/terminal-take.js media/launch/takes/term-console console \
   deploy@0.5 sidebar-trigger@1.5
 sh media/launch/stage/setup.sh            # then record the two stage shots (stage/README.md)

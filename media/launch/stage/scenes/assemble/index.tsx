@@ -1,10 +1,8 @@
 /**
- * The film's assemble shot (plan 066), on the stageshow skill's `Fly` as its
- * gold `subscriptions` uses it. The stats block's blueprint (`boxes.json`, every
- * box and text run the native renderer painted on its first frame) draws in
- * reading order; the screen's seven real cards, cropped from that same native
- * frame, fall in from above and land in their slots one by one; then the whole
- * real frame settles over the blueprint and holds.
+ * The film's assemble shot (plan 066, v4.3): the stats block's own cards fall
+ * in from above and land on bare paper — no blueprint, no outlines — while the
+ * camera makes one slow drone move over the build; the whole real frame then
+ * settles over the cards and holds.
  */
 import { Fly, Stage } from "../../kit";
 import type { Act, Rect } from "../../kit";
@@ -38,21 +36,19 @@ const cards = all.filter(
   (b) => b.kind === "box" && b.width > 250 && b.height > 120 && b.width < 2100,
 );
 
-type State = { drawn: boolean; flown: number; real: boolean };
-const initial: State = { drawn: false, flown: 0, real: false };
-const poster: State = { drawn: true, flown: cards.length, real: true };
+type State = { flown: number; real: boolean };
+const initial: State = { flown: 0, real: false };
+const poster: State = { flown: cards.length, real: true };
 
 async function script(a: Act<State>) {
   await a.wait(200);
-  await a.set({ drawn: true });
-  await a.wait(1200);
   for (let i = 1; i <= cards.length; i += 1) {
     await a.set({ flown: i });
-    await a.wait(160);
+    await a.wait(150);
   }
-  await a.wait(800);
+  await a.wait(700);
   await a.set({ real: true });
-  await a.wait(1200);
+  await a.wait(1000);
 }
 
 /** A card: its own pixels from the native frame, at its slot's size. */
@@ -83,25 +79,7 @@ export default function Assemble() {
         className="ga-stage"
       >
         {(s) => (
-          <>
-            {all.map((b, i) => {
-              const r = place(b);
-              return (
-                <span
-                  key={i}
-                  className={b.kind === "box" ? "ga-box" : "ga-text"}
-                  data-on={s.drawn || undefined}
-                  style={{
-                    left: r.x,
-                    top: b.kind === "box" ? r.y : r.y + r.height * 0.3,
-                    width: r.width,
-                    height: b.kind === "box" ? r.height : r.height * 0.4,
-                    borderRadius: b.kind === "box" ? b.radius * SCALE : 3,
-                    transitionDelay: `${i * 9}ms`,
-                  }}
-                />
-              );
-            })}
+          <div className="ga-world" data-real={s.real || undefined}>
             {cards.map((box, i) => {
               const to = place(box);
               const from = {
@@ -133,7 +111,7 @@ export default function Assemble() {
                 height: FRAME.height * SCALE,
               }}
             />
-          </>
+          </div>
         )}
       </Stage>
     </div>

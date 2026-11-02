@@ -181,3 +181,28 @@ runs only inside the gitignored `.media/`.
   the grid tiles.
 - **Retime**: assemble 2.9 s, macOS 1.2 s, Windows 1.0 s, Linux 1.3 s,
   agent 2.4 s, Slang 2.25 s.
+
+## v4.3 (owner, 2026-11-02): "quality, a drone over the falling blocks, the
+## terminal full-screen with its springs shown, and Paper's text swap"
+
+- **Close-ups**: the montage crops are back under 1.5 and the close-up footage
+  is encoded at CRF 8, so the control is framed, not magnified — the checkbox
+  and its check read sharp.
+- **Assemble**: the blueprint outlines are gone — the stats block's cards fall
+  onto bare paper while one slow drone move (scale 1.14 → 1.02, a 0.6° settle)
+  carries the camera, then the whole screen settles over them.
+- **Platforms**: unchanged (one window, three looks); the assemble now cuts
+  straight into that switch.
+- **Terminal**: the app takes the *whole* screen when it opens (the shell
+  history clears, as a TUI does) instead of sitting below it.
+- **The springs**: terminal mode paints only on input — measured again: three
+  batches for a whole take, and keys, wheel and resize pulses add none — so a
+  native `console-window` take carries the sidebar collapse and the toasts
+  (19.45–20.95 s), and the terminal then shows that same screen, collapsed
+  with its toast, filling the window. No animation is faked in the terminal.
+- **Paper's swap**: "every component you need" starts under the field, then the
+  line and the field exchange places — the line rises to the band, the field
+  slides down under a crossfading paper gradient.
+- **Slang**: the new app (`~/Documents/slang`) replaces the old calculator take:
+  three of its own captures (fx-991 result, LaTeX, TI-84 graph) cut in a
+  0.75 s triptych.

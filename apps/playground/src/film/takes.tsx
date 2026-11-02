@@ -44,6 +44,7 @@ import { Stats } from "@gpuixui/blocks/stats";
 import { Viewer } from "@gpuixui/blocks/viewer";
 import { Welcome } from "@gpuixui/blocks/welcome";
 import { CalculatorApp } from "@gpuixui/slang/app";
+import { Console } from "@gpuixui/blocks/console";
 import { capture, type Take, type Waypoint } from "./take.js";
 
 const mac = platformTheme(lightTheme, "darwin");
@@ -337,6 +338,21 @@ export const takes: Readonly<Record<string, Take>> = {
     ],
   ),
 
+  "console-window": macApp(
+    <Console />,
+    [
+      { frame: 0, aim: { x: 700, y: 420 } },
+      { frame: 8, aim: { testId: "sidebar-trigger" } },
+      { frame: 12, aim: { testId: "sidebar-trigger" }, down: true },
+      { frame: 15, aim: { testId: "sidebar-trigger" } },
+      { frame: 26, aim: { testId: "deploy" } },
+      { frame: 30, aim: { testId: "deploy" }, down: true },
+      { frame: 33, aim: { testId: "deploy" } },
+      { frame: 74, aim: { testId: "deploy", dx: 30, dy: 40 } },
+    ],
+    [],
+    false,
+  ),
   pipeline: macApp(
     <Pipeline platform="darwin" />,
     pressAt("work-w1", 30, { x: 900, y: 600 }),

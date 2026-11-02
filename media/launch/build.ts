@@ -22,7 +22,8 @@ const ACCENT = "#5F4BDB";
 
 /* ------------------------------------------------------------ footage */
 
-const footage = (take: string): string => {
+/** Encode a take's frames; `crf` is the quality (lower is cleaner). */
+const footage = (take: string, crf = 14): string => {
   const out = at(`assets/footage/${take}.mp4`);
   const first = at(`takes/${take}/0000.png`);
   if (!existsSync(first))
@@ -41,12 +42,19 @@ const footage = (take: string): string => {
       "-c:v",
       "libx264",
       "-crf",
-      "14",
+      String(crf),
       "-pix_fmt",
       "yuv420p",
       out,
     ]);
   return `assets/footage/${take}.mp4`;
+};
+
+/** A still beside the takes (the Slang app's own captures), copied for the film. */
+const stillOf = (name: string): string => {
+  const out = `assets/footage/${name}`;
+  execFileSync("cp", [at(`takes/${name}`), at(out)]);
+  return out;
 };
 
 const still = (take: string, frame = 0): string => {
@@ -158,11 +166,13 @@ const clip = (
 // 0–4.8: four controls, each held 1.2 s and cut only once its press has
 // settled. Every shot is a static framing: the cut is the only motion. The
 // first is the switch alone, pushed in — the film's thumbnail.
+// Crops stay near 1: the take is already the control at 2× device pixels, and
+// anything past 1.5 magnifies the capture instead of framing it.
 const MONTAGE = [
-  { take: "cu-switch-solo", crop: 4, sound: "press" },
-  { take: "cu-tabs", crop: 1.72, sound: "cap-0" },
-  { take: "cu-slider", crop: 1.95, sound: "cap-1" },
-  { take: "cu-checkbox", crop: 1.8, sound: "cap-2" },
+  { take: "cu-switch-solo", crop: 2.6, sound: "press" },
+  { take: "cu-tabs", crop: 1.45, sound: "cap-0" },
+  { take: "cu-slider", crop: 1.5, sound: "cap-1" },
+  { take: "cu-checkbox", crop: 1.5, sound: "cap-2" },
 ] as const;
 const BEAT_CUT = 1.2;
 const PRESS_AT = 0.8; // every close-up presses on its frame 24
@@ -178,7 +188,7 @@ const montage: Scene = {
   body: MONTAGE.map(
     ({ take, crop }, i) =>
       `    <div id="m-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0};transform:scale(${crop})">
-      ${clip(`m-v${i}`, footage(take), i * BEAT_CUT, BEAT_CUT, LEAD_IN, "", 1 + (i % 2))}
+      ${clip(`m-v${i}`, footage(take, 8), i * BEAT_CUT, BEAT_CUT, LEAD_IN, "", 1 + (i % 2))}
       <div id="m-cur${i}" class="cursor" style="width:${Math.round(CURSOR_WIDTH / crop)}px">${CURSOR}</div>
     </div>`,
   ).join("\n"),
@@ -254,7 +264,11 @@ const grid: Scene = {
     #root .col { position:absolute; top:0; }
     #root .tile { position:absolute; width:${GRID.w}px; height:${GRID.h}px; border-radius:24px; overflow:hidden; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 10px 30px -14px rgba(30,30,60,.25); }
     #root .tile img, #root .tile video { position:absolute; }
-    #root .tile img.cover { inset:0; width:100%; height:100%; object-fit:cover; }`,
+    #root .tile img.cover { inset:0; width:100%; height:100%; object-fit:cover; }
+    #root .cap { position:absolute; left:0; right:0; top:800px; text-align:center; font:600 64px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
+    #root .cap-band { position:absolute; left:0; right:0; height:330px; pointer-events:none; }
+    #root .cap-band.down { bottom:0; background:linear-gradient(rgba(244,242,238,0), ${GROUND} 55%); }
+    #root .cap-band.up { top:0; opacity:0; background:linear-gradient(${GROUND} 55%, rgba(244,242,238,0)); }`,
   body: `    <div id="g-cam" class="cam">
 ${Array.from({ length: GRID.cols }, (_, col) => {
   const x = (col - 4) * (GRID.w + GRID.gap) - GRID.w / 2;
@@ -270,7 +284,10 @@ ${Array.from({ length: GRID.cols }, (_, col) => {
   }).join("\n");
   return `      <div id="g-col${col}" class="col" style="left:${x}px">\n${tiles}\n      </div>`;
 }).join("\n")}
-    </div>`,
+    </div>
+    <div id="g-band-b" class="cap-band down"></div>
+    <div id="g-band-t" class="cap-band up"></div>
+    <div id="g-cap" class="cap">every component you need</div>`,
   script: `const cam = { z: Math.log(2.75) };
     const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
     zoom();
@@ -280,21 +297,30 @@ ${Array.from({ length: GRID.cols }, (_, col) => {
       if (d === 0) return "";
       const way = Math.abs(d) % 2 === 1 ? -1 : 1;
       return `tl.fromTo("#g-col${col}",{y:${-way * 340}},{y:${way * 340},duration:${GRID_LENGTH},ease:"none"},0);`;
-    }).join("")}`,
+    }).join("")}
+    // Paper's swap: the line sits under the field, then the two exchange
+    // places — the line rises to the band, the field slides down past it.
+    tl.fromTo("#g-cap",{opacity:0},{opacity:1,duration:0.3,ease:"power2.out"},1.0);
+    tl.to("#g-cap",{y:-744,duration:0.62,ease:"power2.inOut"},2.45);
+    tl.to("#g-cam",{y:330,duration:0.62,ease:"power2.inOut"},2.45);
+    tl.to("#g-band-t",{opacity:1,duration:0.5,ease:"none"},2.45);
+    tl.to("#g-band-b",{opacity:0,duration:0.5,ease:"none"},2.45);`,
 };
 
 // 8.4–19.45: what it builds, cut on the actions — the dashboard assembled, one
 // tree across looks and desktops, a chat typed and sent, a calculator used.
 interface Shot {
-  readonly take: string;
-  readonly mediaStart: number;
+  /** A take's footage, played from `mediaStart` — or a still, when `still` is set. */
+  readonly take?: string;
+  readonly mediaStart?: number;
+  readonly still?: string;
   readonly length: number;
   readonly width: number;
   readonly height: number;
   readonly scale: number;
   readonly framed: boolean;
   readonly push: readonly [number, number];
-  readonly cursor: boolean;
+  readonly cursor?: boolean;
   /** The platform this shot shows; the film names it under the line. */
   readonly platform?: string;
 }
@@ -307,7 +333,7 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 1080,
     scale: 1,
     framed: false,
-    push: [1, 1.06],
+    push: [1, 1],
     cursor: false,
   },
   // One window, three platforms: the same Settings screen restyled. No camera
@@ -359,15 +385,44 @@ const SHOTS: ReadonlyArray<Shot> = [
     push: [1, 1.08],
     cursor: true,
   },
+  // Slang (the new app): its three calculators, one still each.
   {
-    take: "slang",
-    mediaStart: 0.2,
-    length: 2.25,
-    width: 2120,
-    height: 1520,
+    still: stillOf("slang-app-result.png"),
+    length: 0.75,
+    width: 1720,
+    height: 1640,
     scale: 0.52,
     framed: true,
-    push: [1.06, 1],
+    push: [1.04, 1],
+  },
+  {
+    still: stillOf("slang-app-latex.png"),
+    length: 0.75,
+    width: 1720,
+    height: 1640,
+    scale: 0.52,
+    framed: true,
+    push: [1.04, 1],
+  },
+  {
+    still: stillOf("slang-app-ti84.png"),
+    length: 0.75,
+    width: 1720,
+    height: 1640,
+    scale: 0.52,
+    framed: true,
+    push: [1.04, 1],
+  },
+  // The console in a window: the one place its springs can be recorded.
+  {
+    take: "console-window",
+    mediaStart: 0.1,
+    length: 1.5,
+    width: 2200,
+    height: 1400,
+    scale: 0.56,
+    framed: true,
+    push: [1, 1.04],
     cursor: true,
   },
 ];
@@ -382,33 +437,61 @@ const showcase: Scene = {
   css: `#root .cam { position:absolute; inset:0; transform-origin:960px 625px; }
     #root .frame { position:absolute; overflow:hidden; }
     #root .frame.framed { border-radius:20px; box-shadow:0 0 0 1px rgba(0,0,0,.08),0 30px 80px -30px rgba(30,30,60,.35); }
-    #root .frame video { left:0; top:0; width:100%; height:100%; }`,
+    #root .frame video, #root .frame img { left:0; top:0; width:100%; height:100%; }`,
   body: SHOTS.map((shot, i) => {
     const w = Math.round(shot.width * shot.scale);
     const h = Math.round(shot.height * shot.scale);
     const left = Math.round((1920 - w) / 2);
     const top = shot.scale === 1 ? 0 : Math.round(BAND + (1080 - BAND - h) / 2);
+    const media =
+      shot.still === undefined
+        ? clip(
+            `s-v${i}`,
+            footage(shot.take ?? ""),
+            shotStart(i),
+            shot.length,
+            shot.mediaStart ?? 0,
+            "",
+            1 + (i % 2),
+          )
+        : `<img class="shot" src="${shot.still}" alt="">`;
+    const cursor =
+      shot.cursor === true
+        ? `<div id="s-cur${i}" class="cursor">${CURSOR}</div>`
+        : "";
     return `    <div id="s-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0}">
       <div class="frame${shot.framed ? " framed" : ""}" style="left:${left}px;top:${top}px;width:${w}px;height:${h}px">
-        ${clip(`s-v${i}`, footage(shot.take), shotStart(i), shot.length, shot.mediaStart, "", 1 + (i % 2))}
-        ${shot.cursor ? `<div id="s-cur${i}" class="cursor">${CURSOR}</div>` : ""}
+        ${media}
+        ${cursor}
       </div>
     </div>`;
   }).join("\n"),
   script: SHOTS.map((shot, i) => {
     const t = shotStart(i);
+    const follow =
+      shot.take !== undefined && shot.cursor === true
+        ? cursorClip(
+            `s-cur${i}`,
+            shot.take,
+            t,
+            shot.mediaStart ?? 0,
+            shot.length,
+            shot.scale,
+          )
+        : "";
     return `${i > 0 ? `tl.set("#s-cam${i}",{opacity:1},${t.toFixed(3)});` : ""}tl.set("#s-cam${i}",{opacity:0},${(t + shot.length).toFixed(3)});
     tl.fromTo("#s-cam${i}",{scale:${shot.push[0]}},{scale:${shot.push[1]},duration:${shot.length},ease:"power2.out"},${t.toFixed(3)});
-    ${shot.cursor ? cursorClip(`s-cur${i}`, shot.take, t, shot.mediaStart, shot.length, shot.scale) : ""}`;
+    ${follow}`;
   }).join("\n    "),
 };
 
-// 19.45–24: the console block in a terminal, reached over ssh — the local
-// prompt, the login, the command, its output, then the app painting below the
-// shell, where the sidebar collapses and Deploy raises its toasts.
-const TERM = { x: 371, y: 190, scale: 1.15, bar: 50, hist: 128 };
+// The console in a terminal, reached over ssh — the local prompt, the login,
+// the command, its output, then the app taking the whole screen over.
+const TERM = { x: 371, y: 184, scale: 1.15, bar: 50 };
 const TERM_W = Math.round(1024 * TERM.scale);
-const TERM_VIDEO_H = Math.round(576 * TERM.scale);
+const TERM_SCREEN_H = Math.round(576 * TERM.scale);
+const TERMINAL = SHOWCASE + shotStart(SHOTS.length);
+const TERMINAL_LENGTH = 24 - TERMINAL;
 const SSH = "ssh gon@whale-island";
 const RUN = "nub run dev console --terminal";
 const TYPE_AT = 0.1; // the first keystroke
@@ -416,10 +499,9 @@ const CHAR = 0.02; // seconds per character
 const T_LOGIN = TYPE_AT + SSH.length * CHAR + 0.06;
 const T_RUN = T_LOGIN + 0.06;
 const T_READY = T_RUN + RUN.length * CHAR + 0.08;
-const T_APP = 1.55; // the app's first frame, after the command's output
-const T_DEPLOY = T_APP + 0.5; // the take's Deploy press, frame 15
-const T_TOGGLE = T_APP + 1.5; // the take's sidebar trigger, frame 45
-const T_LAST = T_APP + 3; // the take's last frame, held to the cut
+const T_APP = 1.55; // the app's first frame: it takes the screen
+/** The take's frame 61 — the sidebar already collapsed, the toast up. */
+const T_APP_MEDIA = 2.05;
 const typed = (id: string, text: string, from: number): string =>
   [...text]
     .map(
@@ -429,29 +511,29 @@ const typed = (id: string, text: string, from: number): string =>
     .join("");
 const terminal: Scene = {
   id: "terminal",
-  start: 19.45,
-  duration: 4.55,
-  css: `#root .term { position:absolute; left:${TERM.x}px; top:${TERM.y}px; width:${TERM_W}px; height:${TERM.bar + TERM.hist + TERM_VIDEO_H}px; border-radius:14px; overflow:hidden; background:#141518; box-shadow:0 30px 80px -30px rgba(0,0,0,.55); }
+  start: TERMINAL,
+  duration: TERMINAL_LENGTH,
+  css: `#root .term { position:absolute; left:${TERM.x}px; top:${TERM.y}px; width:${TERM_W}px; height:${TERM.bar + TERM_SCREEN_H}px; border-radius:14px; overflow:hidden; background:#141518; box-shadow:0 30px 80px -30px rgba(0,0,0,.55); }
     #root .bar { height:${TERM.bar}px; display:flex; align-items:center; gap:10px; padding-left:20px; background:#232427; color:#a9a9b0; font:500 28px Inter, sans-serif; }
     #root .bar i { width:12px; height:12px; border-radius:50%; display:inline-block; }
     #root .bar span { flex:1; text-align:center; margin-right:86px; }
-    #root .hist { position:absolute; left:0; top:${TERM.bar}px; width:100%; padding:12px 28px 0; font:500 22px/28px "JetBrains Mono", Menlo, monospace; color:#e8e8ea; }
+    #root .hist { position:absolute; left:0; top:${TERM.bar}px; width:100%; padding:16px 28px 0; font:500 22px/30px "JetBrains Mono", Menlo, monospace; color:#e8e8ea; }
     #root .hist .dim { color:#8b8b93; }
     #root .hist .off { opacity:0; }
     #root .hist b { font-weight:600; color:#8ab4ff; }
     #root .caret { display:inline-block; width:10px; height:20px; margin-left:2px; vertical-align:-3px; background:#c9c9d2; }
-    #root .frame { position:absolute; left:0; top:${TERM.bar + TERM.hist}px; width:${TERM_W}px; height:${TERM_VIDEO_H}px; overflow:hidden; }
+    #root .frame { position:absolute; left:0; top:${TERM.bar}px; width:${TERM_W}px; height:${TERM_SCREEN_H}px; overflow:hidden; }
     #root .frame video { left:0; top:0; width:100%; height:100%; }`,
   body: `    <div class="term">
       <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>gon@whale-island — ssh</span></div>
-      <div class="hist" data-layout-ignore>
+      <div id="t-hist" class="hist" data-layout-ignore>
         <div class="ln"><b>gon@macbook ~ %</b> <span id="t-ssh"></span><span id="t-caret1" class="caret"></span></div>
         <div id="t-login" class="ln dim off">Last login: Sun Nov 1 19:41:07 2026 from 10.0.0.2</div>
         <div id="t-runline" class="ln off"><b>gon@whale-island ~ %</b> <span id="t-run"></span><span id="t-caret3" class="caret"></span></div>
         <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
       </div>
       <div class="frame">
-        ${video("t-v", footage("term-console"), T_APP, T_LAST - T_APP, "opacity:0")}
+        ${clip("t-v", footage("term-console", 8), T_APP, TERMINAL_LENGTH - T_APP, T_APP_MEDIA, "opacity:0")}
         <div id="t-cur" class="cursor" style="opacity:0">${CURSOR}</div>
       </div>
     </div>`,
@@ -462,8 +544,15 @@ const terminal: Scene = {
     ${typed("t-run", RUN, T_RUN)}
     tl.set("#t-caret3",{opacity:0},${T_READY.toFixed(2)});
     tl.set("#t-ready",{opacity:1},${T_READY.toFixed(2)});
-    tl.set("#t-v",{opacity:1},${T_APP.toFixed(2)}); tl.set("#t-cur",{opacity:1},${T_APP.toFixed(2)});
-    ${cursorTrack("t-cur", cursorOf("term-console"), T_APP, TERM.scale)}`,
+    tl.set("#t-hist",{opacity:0},${T_APP.toFixed(2)}); tl.set("#t-v",{opacity:1},${T_APP.toFixed(2)}); tl.set("#t-cur",{opacity:1},${T_APP.toFixed(2)});
+    ${cursorTrack(
+      "t-cur",
+      cursorOf("term-console").filter(
+        (sample) => sample.frame / FPS >= T_APP_MEDIA,
+      ),
+      T_APP - T_APP_MEDIA,
+      TERM.scale,
+    )}`,
 };
 
 // 24–26: the stack, one word per chord stab (the score's bar 12).
@@ -509,18 +598,13 @@ const LENGTH = 30;
 
 /** Few words: the pictures carry the film, a line names what they show. */
 const LINES: ReadonlyArray<readonly [number, number, string]> = [
-  [5.9, 8.4, "every component you need"],
   [
     SHOWCASE + shotStart(1),
     SHOWCASE + shotStart(4),
     "one tree, every platform",
   ],
-  [
-    SHOWCASE + shotStart(4),
-    SHOWCASE + shotStart(6),
-    "real apps, built with it",
-  ],
-  [19.45, 24, "can you believe this is in a terminal through ssh?"],
+  [SHOWCASE + shotStart(4), TERMINAL, "real apps, built with it"],
+  [TERMINAL, 24, "can you believe this is in a terminal through ssh?"],
 ];
 
 /** The platform each shot shows, named under the line as the cut lands. */
@@ -545,7 +629,7 @@ const shot = (i: number): Shot => {
   return found;
 };
 const shotAt = (i: number, takeSeconds: number) =>
-  SHOWCASE + shotStart(i) + takeSeconds - shot(i).mediaStart + F;
+  SHOWCASE + shotStart(i) + takeSeconds - (shot(i).mediaStart ?? 0) + F;
 const platformCue = (i: number, sound: string): readonly [number, string] => [
   SHOWCASE + shotStart(i) + F,
   sound,
@@ -584,13 +668,10 @@ const CUES: ReadonlyArray<readonly [number, string]> = [
     (_, n) => [shotAt(4, (6 + n * 3) / FPS), `key-${n % 4}`] as const,
   ),
   [shotAt(4, 1.5), "press"],
-  ...[12, 30, 46, 62].map(
-    (frame, n) => [shotAt(5, frame / FPS), `key-${n}`] as const,
-  ),
-  ...keyCues(SSH, 19.45 + TYPE_AT),
-  ...keyCues(RUN, 19.45 + T_RUN),
-  [19.45 + T_TOGGLE, "press"],
-  [19.45 + T_DEPLOY, "thud"],
+  [shotAt(8, 0.4), "press"],
+  [shotAt(8, 1.0), "thud"],
+  ...keyCues(SSH, TERMINAL + TYPE_AT),
+  ...keyCues(RUN, TERMINAL + T_RUN),
   [26.1, "mark"],
 ];
 
