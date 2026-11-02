@@ -24907,6 +24907,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` Launch film v4.1: static-cut opening (four 1.2 s close-ups, no camera drift), platform captions under the line on each hard cut (macOS / Windows / Linux), and a terminal scene that shows the ssh session, the command's output, the sidebar collapsing and Deploy's toasts
 `[x]` Launch film v4.2: the solo Switch as frame 0 (no card, 4× push), the pointer holding still after a press, and the platform section showing the *same* Settings window in macOS / Windows / Linux
 `[x]` Launch film v4.3: close-ups framed at ≤1.5× (CRF 8 footage), the assemble as a drone over bare paper, the app filling the whole terminal with its springs shown in a window take, Paper's text/field swap in the grid, and the new Slang app's three calculators
+`[x]` Launch film v4.4: a 20-tile wall with no repeats, the switch drawn at 4× its metrics, a macOS terminal chrome, the console's animations inside the terminal, and Slang's fx-991 still without the clipped fraction
 `[ ]` Docs blocks read their source from the compiled blocks instead of uncompiled strings (plan 728 Part A)
 
 ---

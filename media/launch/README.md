@@ -9,35 +9,41 @@ of cuts. Plan: `.agents/slop/plans/066-launch-film-v4.md`.
 
 | Time | Line | Shot | Source |
 | --- | --- | --- | --- |
-| 0–4.8 s | — | four close-ups, 1.2 s each, static framings cut on the settle: the Switch alone (the thumbnail), then Tabs, Slider, Checkbox | `cu-*` |
-| 4.8–8.4 s | every component you need | a field of live components in columns sliding opposite ways, camera pulling back; the line starts under the field and swaps places with it (Paper's move) | stage of takes |
-| 8.4–11.3 s | — | the stats block's real cards falling onto bare paper while the camera drones over the build, then the whole screen settles | `stage-assemble` |
+| 0–4.8 s | — | four close-ups, 1.2 s each, static framings cut on the settle: the Switch (drawn at 4× its metrics so the macro is sharp), then Tabs, Slider, Checkbox | `cu-*` |
+| 4.8–9 s | every component you need | **twenty different** blocks and components in one wall, camera pulling back; the line starts under the wall, holds, then swaps places with it (Paper's move) | one of each take |
+| 9–11.3 s | — | the stats block's real cards falling onto bare paper while the camera drones over the build, then the whole screen settles | `stage-assemble` |
 | 11.3–14.8 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux — named under the line as each cut lands | `settings` |
-| 14.8–19.45 s | real apps, built with it | a chat typed and sent; Slang's three calculators (fx-991, LaTeX, TI-84) | `agent`, Slang stills |
-| 19.45–20.95 s | real apps, built with it | the console in a window: the sidebar collapses, Deploy raises its toasts — the springs a terminal cannot paint | `console-window` |
-| 20.95–24 s | can you believe this is in a terminal through ssh? | the ssh session: the command, its output, then the app taking the whole terminal over, collapsed with its toast | `term-console` |
-| 24–26 s | — | GPUI · React · shadcn · Tailwind on the chord stabs | — |
-| 26–30 s | — | the mark, the URL, "Made with ☕ by @sudo_kw" | — |
+| 14.8–17.2 s | real apps, built with it | a chat typed and sent | `agent` |
+| 17.2–19.45 s | real apps, built with it | Slang's three calculators (fx-991, LaTeX, TI-84) | Slang stills |
+| 19.45–24 s | can you believe this is in a terminal through ssh? | the ssh session; the app takes the whole terminal over, its sidebar collapsing and Deploy's toasts rising | `console-term` |
 
-Takes are the real tree under real input (`apps/playground/src/film/take.ts`) or
-the real terminal stream (`terminal-take.ts`); the two stage shots are
-stageshow recordings of real takes (`stage/README.md`). The film draws the
-ground, the lines, the platform names, the cursor, the terminal window and the
-end card.
+Takes are the real tree under real input (`apps/playground/src/film/take.ts`);
+the stage shot is a stageshow recording of real takes (`stage/README.md`). The
+film draws the ground, the lines, the platform names, the cursor, the terminal
+window and the end card.
+
+The terminal paints only on input — measured: three batches for a whole take,
+and kitty-key, wheel and in-band-resize pulses add none (`terminal-take.ts`
+carries the note) — so the app area inside the terminal is that same tree
+rendered by the window renderer at the terminal's own 1024×576 and darwin
+theme (`console-term`). The chrome, the ssh session and the cursor are the
+film's; the sidebar and toast animations are the component's, which is the only
+way they can appear inside that frame until the platform drives its own
+frames.
 
 ## Build
 
 ```sh
 nub run --filter playground build
-for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang console-window desktop-aero tiling; do
+for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang console-term desktop-aero tiling; do
   nub apps/playground/dist/film/takes.js $take media/launch/takes/$take
 done
 # Slang's own captures (its `src/capture.tsx`), as the film's three stills
 cp ~/Documents/slang/media/slang-result.png media/launch/takes/slang-app-result.png
 cp ~/Documents/slang/media/slang-latex.png media/launch/takes/slang-app-latex.png
 cp ~/Documents/slang/media/slang-ti84-graph.png media/launch/takes/slang-app-ti84.png
-nub apps/playground/dist/film/terminal-take.js media/launch/takes/term-console console \
-  deploy@0.5 sidebar-trigger@1.5
+# the app area inside the terminal: the same tree at the terminal's 1024×576
+nub apps/playground/dist/film/takes.js console-term media/launch/takes/console-term
 sh media/launch/stage/setup.sh            # then record the two stage shots (stage/README.md)
 sh media/launch/sound/kit.sh ~/.claude/skills/media-use/audio/assets/sfx
 sh media/launch/sound/score.sh <SalamanderGrandPiano-V3+20200602.sf2>

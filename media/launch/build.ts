@@ -205,17 +205,8 @@ const montage: Scene = {
 
 // 3.6–8.4: a field of live components in columns sliding opposite ways; the
 // camera starts on one being typed into and keeps pulling back to reveal more.
-const GRID = { cols: 9, rows: 9, w: 520, h: 340, gap: 44 };
-const COMPONENTS = [
-  "cu-switch",
-  "cu-tabs",
-  "cu-toggle",
-  "cu-slider",
-  "cu-button",
-  "cu-radio",
-  "cu-checkbox",
-] as const;
-const BLOCKS = [
+// One of each: twenty different blocks and components, never a repeat.
+const WALL = [
   "stats",
   "pipeline",
   "notes",
@@ -223,13 +214,21 @@ const BLOCKS = [
   "viewer",
   "welcome",
   "launcher",
+  "cu-input",
   "agent",
   "settings",
   "tiling",
   "desktop-aero",
   "slang",
   "desktop-luna",
+  "cu-switch",
+  "cu-tabs",
+  "cu-slider",
+  "cu-checkbox",
+  "cu-toggle",
+  "cu-button",
 ] as const;
+const GRID = { cols: 5, rows: 4, w: 560, h: 370, gap: 40 };
 const lastFrame = (take: string): number =>
   Number(
     execFileSync("sh", [
@@ -239,22 +238,7 @@ const lastFrame = (take: string): number =>
       .toString()
       .slice(0, 4),
   );
-const tileOf = (col: number, row: number): { take: string; live: boolean } => {
-  const dc = col - 4;
-  const dr = row - 4;
-  if (dc === 0 && dr === 0) return { take: "cu-input", live: true };
-  const ring = Math.max(Math.abs(dc), Math.abs(dr));
-  const n = (col * 7 + row * 3) % 97;
-  if (ring === 1)
-    return {
-      take: COMPONENTS[(col * 3 + row) % COMPONENTS.length]!,
-      live: true,
-    };
-  return (col + row) % 2 === 0
-    ? { take: BLOCKS[n % BLOCKS.length]!, live: false }
-    : { take: COMPONENTS[n % COMPONENTS.length]!, live: false };
-};
-const SHOWCASE = 8.4;
+const SHOWCASE = 9;
 const GRID_LENGTH = SHOWCASE - 4 * BEAT_CUT;
 const grid: Scene = {
   id: "grid",
@@ -271,14 +255,14 @@ const grid: Scene = {
     #root .cap-band.up { top:0; opacity:0; background:linear-gradient(${GROUND} 55%, rgba(244,242,238,0)); }`,
   body: `    <div id="g-cam" class="cam">
 ${Array.from({ length: GRID.cols }, (_, col) => {
-  const x = (col - 4) * (GRID.w + GRID.gap) - GRID.w / 2;
+  const x = (col - 2) * (GRID.w + GRID.gap) - GRID.w / 2;
   const tiles = Array.from({ length: GRID.rows }, (_, row) => {
-    const { take, live } = tileOf(col, row);
-    const y = (row - 4) * (GRID.h + GRID.gap) - GRID.h / 2;
+    const take = WALL[row * GRID.cols + col]!;
+    const y = (row - 1.5) * (GRID.h + GRID.gap) - GRID.h / 2;
     const component = take.startsWith("cu-");
     const end = still(take, lastFrame(take));
     const media = component
-      ? `<img src="${end}" alt="" style="left:-220px;top:-100px;width:960px;height:540px">${live ? clip(`g-v${col}-${row}`, footage(take), 0, GRID_LENGTH, 0.3, "left:-220px;top:-100px;width:960px;height:540px", 1 + ((col * GRID.rows + row) % 8)) : ""}`
+      ? `<img src="${end}" alt="" style="left:-220px;top:-100px;width:960px;height:540px">${row === 1 || row === 2 ? clip(`g-v${col}-${row}`, footage(take), 0, GRID_LENGTH, 0.3, "left:-220px;top:-100px;width:960px;height:540px", 1 + ((col * GRID.rows + row) % 8)) : ""}`
       : `<img class="cover" src="${end}" alt="">`;
     return `        <div class="tile" style="left:0;top:${y}px">${media}</div>`;
   }).join("\n");
@@ -288,23 +272,22 @@ ${Array.from({ length: GRID.cols }, (_, col) => {
     <div id="g-band-b" class="cap-band down"></div>
     <div id="g-band-t" class="cap-band up"></div>
     <div id="g-cap" class="cap">every component you need</div>`,
-  script: `const cam = { z: Math.log(2.75) };
+  script: `const cam = { z: Math.log(1.6) };
     const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
     zoom();
-    tl.to(cam, { z: Math.log(0.36), duration: ${GRID_LENGTH}, ease: "power1.inOut", onUpdate: zoom }, 0);
+    tl.to(cam, { z: Math.log(0.62), duration: 2.75, ease: "power1.inOut", onUpdate: zoom }, 0);
     ${Array.from({ length: GRID.cols }, (_, col) => {
-      const d = col - 4;
-      if (d === 0) return "";
-      const way = Math.abs(d) % 2 === 1 ? -1 : 1;
-      return `tl.fromTo("#g-col${col}",{y:${-way * 340}},{y:${way * 340},duration:${GRID_LENGTH},ease:"none"},0);`;
+      const way = col % 2 === 0 ? -1 : 1;
+      return `tl.fromTo("#g-col${col}",{y:${-way * 60}},{y:${way * 30},duration:${GRID_LENGTH},ease:"none"},0);`;
     }).join("")}
     // Paper's swap: the line sits under the field, then the two exchange
     // places — the line rises to the band, the field slides down past it.
-    tl.fromTo("#g-cap",{opacity:0},{opacity:1,duration:0.3,ease:"power2.out"},1.0);
-    tl.to("#g-cap",{y:-744,duration:0.62,ease:"power2.inOut"},2.45);
-    tl.to("#g-cam",{y:330,duration:0.62,ease:"power2.inOut"},2.45);
-    tl.to("#g-band-t",{opacity:1,duration:0.5,ease:"none"},2.45);
-    tl.to("#g-band-b",{opacity:0,duration:0.5,ease:"none"},2.45);`,
+    tl.fromTo("#g-cap",{opacity:0},{opacity:1,duration:0.3,ease:"power2.out"},0.9);
+    tl.to("#g-cap",{y:-744,duration:0.62,ease:"power2.inOut"},2.75);
+    tl.to("#g-cam",{y:130,duration:0.62,ease:"power2.inOut"},2.75);
+    tl.to(cam,{z:Math.log(0.5),duration:0.62,ease:"power2.inOut",onUpdate:zoom},2.75);
+    tl.to("#g-band-t",{opacity:1,duration:0.5,ease:"none"},2.75);
+    tl.to("#g-band-b",{opacity:0,duration:0.5,ease:"none"},2.75);`,
 };
 
 // 8.4–19.45: what it builds, cut on the actions — the dashboard assembled, one
@@ -327,8 +310,8 @@ interface Shot {
 const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "stage-assemble",
-    mediaStart: 1.2,
-    length: 2.9,
+    mediaStart: 1.4,
+    length: 2.3,
     width: 1920,
     height: 1080,
     scale: 1,
@@ -387,7 +370,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   },
   // Slang (the new app): its three calculators, one still each.
   {
-    still: stillOf("slang-app-result.png"),
+    still: stillOf("slang-app-history.png"),
     length: 0.75,
     width: 1720,
     height: 1640,
@@ -412,18 +395,6 @@ const SHOTS: ReadonlyArray<Shot> = [
     scale: 0.52,
     framed: true,
     push: [1.04, 1],
-  },
-  // The console in a window: the one place its springs can be recorded.
-  {
-    take: "console-window",
-    mediaStart: 0.1,
-    length: 1.5,
-    width: 2200,
-    height: 1400,
-    scale: 0.56,
-    framed: true,
-    push: [1, 1.04],
-    cursor: true,
   },
 ];
 /** Below the line's band: a shot fits the frame under it, centred there. */
@@ -487,7 +458,7 @@ const showcase: Scene = {
 
 // The console in a terminal, reached over ssh — the local prompt, the login,
 // the command, its output, then the app taking the whole screen over.
-const TERM = { x: 371, y: 184, scale: 1.15, bar: 50 };
+const TERM = { x: 371, y: 187, scale: 1.15, bar: 44 };
 const TERM_W = Math.round(1024 * TERM.scale);
 const TERM_SCREEN_H = Math.round(576 * TERM.scale);
 const TERMINAL = SHOWCASE + shotStart(SHOTS.length);
@@ -499,9 +470,7 @@ const CHAR = 0.02; // seconds per character
 const T_LOGIN = TYPE_AT + SSH.length * CHAR + 0.06;
 const T_RUN = T_LOGIN + 0.06;
 const T_READY = T_RUN + RUN.length * CHAR + 0.08;
-const T_APP = 1.55; // the app's first frame: it takes the screen
-/** The take's frame 61 — the sidebar already collapsed, the toast up. */
-const T_APP_MEDIA = 2.05;
+const T_APP = 1.6; // the app takes the screen
 const typed = (id: string, text: string, from: number): string =>
   [...text]
     .map(
@@ -513,11 +482,11 @@ const terminal: Scene = {
   id: "terminal",
   start: TERMINAL,
   duration: TERMINAL_LENGTH,
-  css: `#root .term { position:absolute; left:${TERM.x}px; top:${TERM.y}px; width:${TERM_W}px; height:${TERM.bar + TERM_SCREEN_H}px; border-radius:14px; overflow:hidden; background:#141518; box-shadow:0 30px 80px -30px rgba(0,0,0,.55); }
-    #root .bar { height:${TERM.bar}px; display:flex; align-items:center; gap:10px; padding-left:20px; background:#232427; color:#a9a9b0; font:500 28px Inter, sans-serif; }
+  css: `#root .term { position:absolute; left:${TERM.x}px; top:${TERM.y}px; width:${TERM_W}px; height:${TERM.bar + TERM_SCREEN_H}px; border-radius:12px; overflow:hidden; background:#0d0e10; border:1px solid rgba(0,0,0,.18); box-shadow:0 40px 90px -40px rgba(20,20,40,.55), 0 12px 30px -18px rgba(20,20,40,.35); }
+    #root .bar { position:relative; height:${TERM.bar}px; display:flex; align-items:center; gap:8px; padding-left:18px; background:linear-gradient(#fbfbfb, #ececed); border-bottom:1px solid #d7d7d9; color:#4b4b4f; font:500 26px Inter, sans-serif; }
     #root .bar i { width:12px; height:12px; border-radius:50%; display:inline-block; }
-    #root .bar span { flex:1; text-align:center; margin-right:86px; }
-    #root .hist { position:absolute; left:0; top:${TERM.bar}px; width:100%; padding:16px 28px 0; font:500 22px/30px "JetBrains Mono", Menlo, monospace; color:#e8e8ea; }
+    #root .bar span { position:absolute; left:0; right:0; text-align:center; font-weight:500; }
+    #root .hist { position:absolute; left:0; top:${TERM.bar}px; width:100%; padding:18px 28px 0; font:500 22px/30px "JetBrains Mono", Menlo, monospace; color:#e8e8ea; }
     #root .hist .dim { color:#8b8b93; }
     #root .hist .off { opacity:0; }
     #root .hist b { font-weight:600; color:#8ab4ff; }
@@ -533,7 +502,7 @@ const terminal: Scene = {
         <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
       </div>
       <div class="frame">
-        ${clip("t-v", footage("term-console", 8), T_APP, TERMINAL_LENGTH - T_APP, T_APP_MEDIA, "opacity:0")}
+        ${clip("t-v", footage("console-term", 8), T_APP, TERMINAL_LENGTH - T_APP, 0, "opacity:0")}
         <div id="t-cur" class="cursor" style="opacity:0">${CURSOR}</div>
       </div>
     </div>`,
@@ -545,14 +514,7 @@ const terminal: Scene = {
     tl.set("#t-caret3",{opacity:0},${T_READY.toFixed(2)});
     tl.set("#t-ready",{opacity:1},${T_READY.toFixed(2)});
     tl.set("#t-hist",{opacity:0},${T_APP.toFixed(2)}); tl.set("#t-v",{opacity:1},${T_APP.toFixed(2)}); tl.set("#t-cur",{opacity:1},${T_APP.toFixed(2)});
-    ${cursorTrack(
-      "t-cur",
-      cursorOf("term-console").filter(
-        (sample) => sample.frame / FPS >= T_APP_MEDIA,
-      ),
-      T_APP - T_APP_MEDIA,
-      TERM.scale,
-    )}`,
+    ${cursorTrack("t-cur", cursorOf("console-term"), T_APP, TERM.scale)}`,
 };
 
 // 24–26: the stack, one word per chord stab (the score's bar 12).
@@ -668,10 +630,10 @@ const CUES: ReadonlyArray<readonly [number, string]> = [
     (_, n) => [shotAt(4, (6 + n * 3) / FPS), `key-${n % 4}`] as const,
   ),
   [shotAt(4, 1.5), "press"],
-  [shotAt(8, 0.4), "press"],
-  [shotAt(8, 1.0), "thud"],
   ...keyCues(SSH, TERMINAL + TYPE_AT),
   ...keyCues(RUN, TERMINAL + T_RUN),
+  [TERMINAL + T_APP + 0.5, "press"],
+  [TERMINAL + T_APP + 1.2, "thud"],
   [26.1, "mark"],
 ];
 

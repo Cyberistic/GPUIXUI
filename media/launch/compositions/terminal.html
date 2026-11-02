@@ -28,24 +28,29 @@
     #root .term {
       position: absolute;
       left: 371px;
-      top: 184px;
+      top: 187px;
       width: 1178px;
-      height: 712px;
-      border-radius: 14px;
+      height: 706px;
+      border-radius: 12px;
       overflow: hidden;
-      background: #141518;
-      box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.55);
+      background: #0d0e10;
+      border: 1px solid rgba(0, 0, 0, 0.18);
+      box-shadow:
+        0 40px 90px -40px rgba(20, 20, 40, 0.55),
+        0 12px 30px -18px rgba(20, 20, 40, 0.35);
     }
     #root .bar {
-      height: 50px;
+      position: relative;
+      height: 44px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding-left: 20px;
-      background: #232427;
-      color: #a9a9b0;
+      gap: 8px;
+      padding-left: 18px;
+      background: linear-gradient(#fbfbfb, #ececed);
+      border-bottom: 1px solid #d7d7d9;
+      color: #4b4b4f;
       font:
-        500 28px Inter,
+        500 26px Inter,
         sans-serif;
     }
     #root .bar i {
@@ -55,16 +60,18 @@
       display: inline-block;
     }
     #root .bar span {
-      flex: 1;
+      position: absolute;
+      left: 0;
+      right: 0;
       text-align: center;
-      margin-right: 86px;
+      font-weight: 500;
     }
     #root .hist {
       position: absolute;
       left: 0;
-      top: 50px;
+      top: 44px;
       width: 100%;
-      padding: 16px 28px 0;
+      padding: 18px 28px 0;
       font:
         500 22px/30px "JetBrains Mono",
         Menlo,
@@ -92,7 +99,7 @@
     #root .frame {
       position: absolute;
       left: 0;
-      top: 50px;
+      top: 44px;
       width: 1178px;
       height: 662px;
       overflow: hidden;
@@ -131,15 +138,15 @@
       </div>
       <div class="frame">
         <video
-          data-media-start="2.05"
+          data-media-start="0"
           id="t-v"
           class="clip"
-          data-start="1.55"
-          data-duration="1.5"
+          data-start="1.6"
+          data-duration="2.95"
           data-track-index="1"
           muted
           playsinline
-          src="assets/footage/term-console.mp4"
+          src="assets/footage/console-term.mp4"
           style="opacity: 0"
         ></video>
         <div id="t-cur" class="cursor" style="opacity: 0">
@@ -213,29 +220,100 @@
     tl.set("#t-run", { textContent: "nub run dev console --terminal" }, 1.2);
     tl.set("#t-caret3", { opacity: 0 }, 1.3);
     tl.set("#t-ready", { opacity: 1 }, 1.3);
-    tl.set("#t-hist", { opacity: 0 }, 1.55);
-    tl.set("#t-v", { opacity: 1 }, 1.55);
-    tl.set("#t-cur", { opacity: 1 }, 1.55);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.567);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.6);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.633);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.667);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.7);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.733);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.767);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.8);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.833);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.867);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.9);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.933);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 1.967);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 2.0);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 2.033);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 2.067);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 2.1);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 2.133);
-    tl.set("#t-cur", { x: 326.6, y: 34.5, scale: 1 }, 2.167);
-    tl.set({}, {}, 3.0500000000000007);
+    tl.set("#t-hist", { opacity: 0 }, 1.6);
+    tl.set("#t-v", { opacity: 1 }, 1.6);
+    tl.set("#t-cur", { opacity: 1 }, 1.6);
+    tl.set("#t-cur", { x: 1610.0, y: 966.0, scale: 1 }, 1.6);
+    tl.set("#t-cur", { x: 1602.5, y: 959.0, scale: 1 }, 1.633);
+    tl.set("#t-cur", { x: 1550.2, y: 909.9, scale: 1 }, 1.667);
+    tl.set("#t-cur", { x: 1408.2, y: 776.8, scale: 1 }, 1.7);
+    tl.set("#t-cur", { x: 1131.6, y: 517.5, scale: 1 }, 1.733);
+    tl.set("#t-cur", { x: 855.0, y: 258.2, scale: 1 }, 1.767);
+    tl.set("#t-cur", { x: 713.0, y: 125.1, scale: 1 }, 1.8);
+    tl.set("#t-cur", { x: 660.7, y: 76.0, scale: 1 }, 1.833);
+    tl.set("#t-cur", { x: 653.2, y: 69.0, scale: 1 }, 1.867);
+    tl.set("#t-cur", { x: 653.2, y: 69.0, scale: 1 }, 1.9);
+    tl.set("#t-cur", { x: 653.2, y: 69.0, scale: 1 }, 1.933);
+    tl.set("#t-cur", { x: 653.2, y: 69.0, scale: 1 }, 1.967);
+    tl.set("#t-cur", { x: 653.2, y: 69.0, scale: 1 }, 2.0);
+    tl.set("#t-cur", { x: 653.2, y: 69.0, scale: 1 }, 2.033);
+    tl.set("#t-cur", { x: 653.2, y: 69.0, scale: 1 }, 2.067);
+    tl.set("#t-cur", { x: 653.2, y: 69.0, scale: 0.86 }, 2.1);
+    tl.set("#t-cur", { x: 653.2, y: 69.0, scale: 0.86 }, 2.133);
+    tl.set("#t-cur", { x: 653.2, y: 69.0, scale: 0.86 }, 2.167);
+    tl.set("#t-cur", { x: 653.2, y: 69.0, scale: 1 }, 2.2);
+    tl.set("#t-cur", { x: 656.9, y: 69.0, scale: 1 }, 2.233);
+    tl.set("#t-cur", { x: 682.8, y: 69.0, scale: 1 }, 2.267);
+    tl.set("#t-cur", { x: 753.2, y: 69.0, scale: 1 }, 2.3);
+    tl.set("#t-cur", { x: 890.4, y: 69.0, scale: 1 }, 2.333);
+    tl.set("#t-cur", { x: 1116.4, y: 69.0, scale: 1 }, 2.367);
+    tl.set("#t-cur", { x: 1453.6, y: 69.0, scale: 1 }, 2.4);
+    tl.set("#t-cur", { x: 1790.8, y: 69.0, scale: 1 }, 2.433);
+    tl.set("#t-cur", { x: 2016.8, y: 69.0, scale: 1 }, 2.467);
+    tl.set("#t-cur", { x: 2153.9, y: 69.0, scale: 1 }, 2.5);
+    tl.set("#t-cur", { x: 2224.4, y: 69.0, scale: 1 }, 2.533);
+    tl.set("#t-cur", { x: 2250.3, y: 69.0, scale: 1 }, 2.567);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 1 }, 2.6);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 1 }, 2.633);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 1 }, 2.667);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 1 }, 2.7);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 1 }, 2.733);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 1 }, 2.767);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 0.86 }, 2.8);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 0.86 }, 2.833);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 0.86 }, 2.867);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 1 }, 2.9);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 1 }, 2.933);
+    tl.set("#t-cur", { x: 2254.0, y: 69.0, scale: 1 }, 2.967);
+    tl.set("#t-cur", { x: 2254.1, y: 69.1, scale: 1 }, 3.0);
+    tl.set("#t-cur", { x: 2254.1, y: 69.2, scale: 1 }, 3.033);
+    tl.set("#t-cur", { x: 2254.3, y: 69.4, scale: 1 }, 3.067);
+    tl.set("#t-cur", { x: 2254.5, y: 69.6, scale: 1 }, 3.1);
+    tl.set("#t-cur", { x: 2254.8, y: 70.0, scale: 1 }, 3.133);
+    tl.set("#t-cur", { x: 2255.1, y: 70.5, scale: 1 }, 3.167);
+    tl.set("#t-cur", { x: 2255.6, y: 71.1, scale: 1 }, 3.2);
+    tl.set("#t-cur", { x: 2256.2, y: 71.9, scale: 1 }, 3.233);
+    tl.set("#t-cur", { x: 2256.9, y: 72.9, scale: 1 }, 3.267);
+    tl.set("#t-cur", { x: 2257.8, y: 74.1, scale: 1 }, 3.3);
+    tl.set("#t-cur", { x: 2258.9, y: 75.5, scale: 1 }, 3.333);
+    tl.set("#t-cur", { x: 2260.1, y: 77.1, scale: 1 }, 3.367);
+    tl.set("#t-cur", { x: 2261.5, y: 78.9, scale: 1 }, 3.4);
+    tl.set("#t-cur", { x: 2263.0, y: 81.1, scale: 1 }, 3.433);
+    tl.set("#t-cur", { x: 2264.8, y: 83.5, scale: 1 }, 3.467);
+    tl.set("#t-cur", { x: 2266.9, y: 86.2, scale: 1 }, 3.5);
+    tl.set("#t-cur", { x: 2269.1, y: 89.2, scale: 1 }, 3.533);
+    tl.set("#t-cur", { x: 2271.7, y: 92.6, scale: 1 }, 3.567);
+    tl.set("#t-cur", { x: 2274.4, y: 96.3, scale: 1 }, 3.6);
+    tl.set("#t-cur", { x: 2277.5, y: 100.3, scale: 1 }, 3.633);
+    tl.set("#t-cur", { x: 2280.9, y: 104.8, scale: 1 }, 3.667);
+    tl.set("#t-cur", { x: 2284.5, y: 109.7, scale: 1 }, 3.7);
+    tl.set("#t-cur", { x: 2288.5, y: 115.0, scale: 1 }, 3.733);
+    tl.set("#t-cur", { x: 2292.5, y: 120.3, scale: 1 }, 3.767);
+    tl.set("#t-cur", { x: 2296.1, y: 125.2, scale: 1 }, 3.8);
+    tl.set("#t-cur", { x: 2299.5, y: 129.7, scale: 1 }, 3.833);
+    tl.set("#t-cur", { x: 2302.6, y: 133.7, scale: 1 }, 3.867);
+    tl.set("#t-cur", { x: 2305.3, y: 137.4, scale: 1 }, 3.9);
+    tl.set("#t-cur", { x: 2307.9, y: 140.8, scale: 1 }, 3.933);
+    tl.set("#t-cur", { x: 2310.1, y: 143.8, scale: 1 }, 3.967);
+    tl.set("#t-cur", { x: 2312.2, y: 146.5, scale: 1 }, 4.0);
+    tl.set("#t-cur", { x: 2314.0, y: 148.9, scale: 1 }, 4.033);
+    tl.set("#t-cur", { x: 2315.5, y: 151.1, scale: 1 }, 4.067);
+    tl.set("#t-cur", { x: 2316.9, y: 152.9, scale: 1 }, 4.1);
+    tl.set("#t-cur", { x: 2318.1, y: 154.5, scale: 1 }, 4.133);
+    tl.set("#t-cur", { x: 2319.2, y: 155.9, scale: 1 }, 4.167);
+    tl.set("#t-cur", { x: 2320.1, y: 157.1, scale: 1 }, 4.2);
+    tl.set("#t-cur", { x: 2320.8, y: 158.1, scale: 1 }, 4.233);
+    tl.set("#t-cur", { x: 2321.4, y: 158.9, scale: 1 }, 4.267);
+    tl.set("#t-cur", { x: 2321.9, y: 159.5, scale: 1 }, 4.3);
+    tl.set("#t-cur", { x: 2322.2, y: 160.0, scale: 1 }, 4.333);
+    tl.set("#t-cur", { x: 2322.5, y: 160.4, scale: 1 }, 4.367);
+    tl.set("#t-cur", { x: 2322.7, y: 160.6, scale: 1 }, 4.4);
+    tl.set("#t-cur", { x: 2322.9, y: 160.8, scale: 1 }, 4.433);
+    tl.set("#t-cur", { x: 2322.9, y: 160.9, scale: 1 }, 4.467);
+    tl.set("#t-cur", { x: 2323.0, y: 161.0, scale: 1 }, 4.5);
+    tl.set("#t-cur", { x: 2323.0, y: 161.0, scale: 1 }, 4.533);
+    tl.set("#t-cur", { x: 2323.0, y: 161.0, scale: 1 }, 4.567);
+    tl.set({}, {}, 4.550000000000001);
     window.__timelines = window.__timelines || {};
     window.__timelines["terminal"] = tl;
   </script>

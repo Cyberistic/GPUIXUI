@@ -198,12 +198,25 @@ const closeUp = (
   keys,
 });
 
+/**
+ * The switch at 4× its shipped metrics. A camera crop would upscale the 2×
+ * capture and soften the knob; the same primitive drawn larger keeps every
+ * pixel the renderer has, which is what a macro shot wants.
+ */
+const macroSwitch = extendTheme(mac, {
+  switchMetrics: { width: 152, height: 88, knob: 80, inset: 4, border: 0 },
+});
+
 /** A control alone on the paper: no card, no label — the film's opening. */
-const solo = (child: ReactNode, pointer: ReadonlyArray<Waypoint>): Take => ({
+const solo = (
+  child: ReactNode,
+  pointer: ReadonlyArray<Waypoint>,
+  theme: Theme = mac,
+): Take => ({
   width: 960,
   height: 540,
   frames: 60,
-  view: () => stage(mac, child),
+  view: () => stage(theme, child),
   pointer,
 });
 
@@ -218,8 +231,9 @@ const tap = (testId: string): ReadonlyArray<Waypoint> => [
 
 export const takes: Readonly<Record<string, Take>> = {
   "cu-switch-solo": solo(
-    <Switch testId="c" label="Wi-Fi" size="lg" />,
+    <Switch testId="c" label="Wi-Fi" />,
     tap("c"),
+    macroSwitch,
   ),
   "cu-switch": closeUp(
     <Stack direction="row" align="center" justify="between">
@@ -338,21 +352,29 @@ export const takes: Readonly<Record<string, Take>> = {
     ],
   ),
 
-  "console-window": macApp(
-    <Console />,
-    [
+  /** The console at the terminal's own 1024×576, in the terminal's theme. */
+  "console-term": {
+    width: 1024,
+    height: 576,
+    frames: 90,
+    view: () => (
+      <ThemeProvider theme={platformTheme(lightTheme, "darwin")}>
+        <div style={{ width: 1024, height: 576, display: "flex" }}>
+          <Console />
+        </div>
+      </ThemeProvider>
+    ),
+    pointer: [
       { frame: 0, aim: { x: 700, y: 420 } },
       { frame: 8, aim: { testId: "sidebar-trigger" } },
-      { frame: 12, aim: { testId: "sidebar-trigger" }, down: true },
-      { frame: 15, aim: { testId: "sidebar-trigger" } },
-      { frame: 26, aim: { testId: "deploy" } },
-      { frame: 30, aim: { testId: "deploy" }, down: true },
-      { frame: 33, aim: { testId: "deploy" } },
-      { frame: 74, aim: { testId: "deploy", dx: 30, dy: 40 } },
+      { frame: 15, aim: { testId: "sidebar-trigger" }, down: true },
+      { frame: 18, aim: { testId: "sidebar-trigger" } },
+      { frame: 30, aim: { testId: "deploy" } },
+      { frame: 36, aim: { testId: "deploy" }, down: true },
+      { frame: 39, aim: { testId: "deploy" } },
+      { frame: 89, aim: { testId: "deploy", dx: 30, dy: 40 } },
     ],
-    [],
-    false,
-  ),
+  },
   pipeline: macApp(
     <Pipeline platform="darwin" />,
     pressAt("work-w1", 30, { x: 900, y: 600 }),

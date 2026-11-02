@@ -206,3 +206,26 @@ runs only inside the gitignored `.media/`.
 - **Slang**: the new app (`~/Documents/slang`) replaces the old calculator take:
   three of its own captures (fx-991 result, LaTeX, TI-84 graph) cut in a
   0.75 s triptych.
+
+## v4.4 (owner, 2026-11-02): "no repeats in the grid, a sharp switch, a macOS
+## terminal, and the animations inside it"
+
+- **Grid**: twenty **different** takes in one 5×4 wall (no repeats), camera
+  1.6 → 0.62 and then a second move to 0.5 as the line swaps in, so the wall
+  ends fully visible under the line. The line holds 1.85 s under the wall
+  before the swap.
+- **Switch**: `cu-switch-solo` draws the primitive at 4× its shipped
+  `switchMetrics` (152×88) instead of cropping a 2× capture, so the macro
+  keeps the renderer's pixels; the montage crop is 2.6 of that.
+- **Terminal chrome**: light macOS title bar (44 pt, traffic lights, centred
+  title, hairline border), not the old dark bar.
+- **Terminal animations**: the platform paints only on input (re-measured;
+  no pulse helps), so the app area is `console-term` — the same tree at the
+  terminal's 1024×576 and darwin theme, rendered by the window renderer — and
+  the sidebar collapse and the toasts play. Documented in the README.
+- **Slang**: the fx-991 still is `slang-history` (1024, no clipped fraction);
+  `slang-result` clips a fraction at its display's bottom edge in the app.
+- **Not done here**: the desktop flip (Windows / Linux / macOS with the chat
+  block) needs a macOS desktop block, and the image-2/3 ideas (code editor,
+  music player, browser, photos, hardware monitor, analytics) are new library
+  blocks with their own docs, tests and inventory rows — the next plan.
