@@ -197,16 +197,29 @@ const closeUp = (
   keys,
 });
 
-/** The pointer arrives, presses `testId` at 0.8 s, and drifts off. */
+/** A control alone on the paper: no card, no label — the film's opening. */
+const solo = (child: ReactNode, pointer: ReadonlyArray<Waypoint>): Take => ({
+  width: 960,
+  height: 540,
+  frames: 60,
+  view: () => stage(mac, child),
+  pointer,
+});
+
+/** The pointer arrives, presses `testId` at 0.8 s, and stays on it. */
 const tap = (testId: string): ReadonlyArray<Waypoint> => [
   { frame: 0, aim: { testId, dx: 140, dy: 110 } },
   { frame: 20, aim: { testId } },
   { frame: 24, aim: { testId }, down: true },
   { frame: 27, aim: { testId } },
-  { frame: 59, aim: { testId, dx: 24, dy: 36 } },
+  { frame: 59, aim: { testId } },
 ];
 
 export const takes: Readonly<Record<string, Take>> = {
+  "cu-switch-solo": solo(
+    <Switch testId="c" label="Wi-Fi" size="lg" />,
+    tap("c"),
+  ),
   "cu-switch": closeUp(
     <Stack direction="row" align="center" justify="between">
       <Stack direction="column">
@@ -320,7 +333,7 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 20, aim: { testId: "c", dx: -108, dy: 0 }, down: true },
       { frame: 44, aim: { testId: "c", dx: 108, dy: 0 }, down: true },
       { frame: 47, aim: { testId: "c", dx: 108, dy: 0 } },
-      { frame: 59, aim: { testId: "c", dx: 130, dy: 40 } },
+      { frame: 59, aim: { testId: "c", dx: 108, dy: 0 } },
     ],
   ),
 
@@ -423,23 +436,21 @@ export const takes: Readonly<Record<string, Take>> = {
   ),
   "desktop-luna": desktop("luna"),
   "desktop-aero": desktop("aero"),
-  /** The same tree across looks: macOS held, then Windows and Linux pressed. */
+  /** The same tree across looks: macOS held 1.4 s, then Windows, then Linux. */
   settings: {
     width: 1024,
     height: 576,
-    frames: 8 * BEAT,
+    frames: 132,
     view: () => <SettingsWindow />,
     pointer: [
       { frame: 0, aim: { testId: "look-win32", dx: 60, dy: 50 } },
       { frame: 20, aim: { testId: "look-win32" } },
-      { frame: 45, aim: { testId: "look-win32" }, down: true },
-      { frame: 48, aim: { testId: "look-win32" } },
-      { frame: 66, aim: { testId: "look-linux" } },
-      { frame: 72, aim: { testId: "look-linux" }, down: true },
-      { frame: 75, aim: { testId: "look-linux" } },
-      { frame: 96, aim: { testId: "dark" }, down: true },
-      { frame: 99, aim: { testId: "dark" } },
-      { frame: 119, aim: { testId: "dark", dx: 30, dy: 40 } },
+      { frame: 42, aim: { testId: "look-win32" }, down: true },
+      { frame: 45, aim: { testId: "look-win32" } },
+      { frame: 78, aim: { testId: "look-linux" } },
+      { frame: 84, aim: { testId: "look-linux" }, down: true },
+      { frame: 87, aim: { testId: "look-linux" } },
+      { frame: 131, aim: { testId: "look-linux", dx: 30, dy: 40 } },
     ],
   },
   /** Linux: the tiling block in tokyo-night; the terminal is focused, then rose-pine (light) lands. */

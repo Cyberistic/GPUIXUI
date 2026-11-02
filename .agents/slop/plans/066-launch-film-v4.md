@@ -162,3 +162,22 @@ runs only inside the gitignored `.media/`.
   collapse is one painted frame, not a spring — the film shows it instead of
   cutting past it.
 - **App shots**: the agent and Slang shots shrink to leave a bottom margin.
+
+## v4.2 (owner, 2026-11-02): "first frame just the switch, the pointer stays
+## after a click, and the same component in three platforms"
+
+- **First frame**: `cu-switch-solo` — the Switch alone on the paper (no card,
+  no label), `size="lg"`, cut in at a 4× camera push. Frame 0 is the off state
+  and the only thing on screen.
+- **Pointer**: `tap` and the slider's path end on the control they pressed, so
+  no shot carries the old drift down and away; the close-up takes were
+  re-recorded.
+- **Platforms**: the section is the *same* Settings window three times, not
+  three different blocks: one take whose own Look control restyles it, cut
+  into `macOS` (0.15–1.35 s), `Windows` (1.6–2.6 s) and `Linux` (2.95–4.25 s)
+  of the take, with no camera move so the cut is the only change. The Settings
+  take is 4.4 s (presses at 1.4 / 2.8 s); cursor on the chosen pill for the
+  Windows and Linux cuts, none on macOS. The old Aero and tiling shots stay in
+  the grid tiles.
+- **Retime**: assemble 2.9 s, macOS 1.2 s, Windows 1.0 s, Linux 1.3 s,
+  agent 2.4 s, Slang 2.25 s.

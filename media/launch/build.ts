@@ -156,9 +156,10 @@ const clip = (
   );
 
 // 0–4.8: four controls, each held 1.2 s and cut only once its press has
-// settled. Every shot is a static framing: the cut is the only motion.
+// settled. Every shot is a static framing: the cut is the only motion. The
+// first is the switch alone, pushed in — the film's thumbnail.
 const MONTAGE = [
-  { take: "cu-switch", crop: 1.9, sound: "press" },
+  { take: "cu-switch-solo", crop: 4, sound: "press" },
   { take: "cu-tabs", crop: 1.72, sound: "cap-0" },
   { take: "cu-slider", crop: 1.95, sound: "cap-1" },
   { take: "cu-checkbox", crop: 1.8, sound: "cap-2" },
@@ -166,6 +167,8 @@ const MONTAGE = [
 const BEAT_CUT = 1.2;
 const PRESS_AT = 0.8; // every close-up presses on its frame 24
 const LEAD_IN = 0.55; // each clip starts this far into its take, so the press lands 0.25 s in
+/** On-screen pointer width: the camera crops otherwise scale the pointer too. */
+const CURSOR_WIDTH = 87;
 const montage: Scene = {
   id: "montage",
   start: 0,
@@ -176,7 +179,7 @@ const montage: Scene = {
     ({ take, crop }, i) =>
       `    <div id="m-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0};transform:scale(${crop})">
       ${clip(`m-v${i}`, footage(take), i * BEAT_CUT, BEAT_CUT, LEAD_IN, "", 1 + (i % 2))}
-      <div id="m-cur${i}" class="cursor" style="width:46px">${CURSOR}</div>
+      <div id="m-cur${i}" class="cursor" style="width:${Math.round(CURSOR_WIDTH / crop)}px">${CURSOR}</div>
     </div>`,
   ).join("\n"),
   script: MONTAGE.map(({ take }, i) => {
@@ -299,7 +302,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "stage-assemble",
     mediaStart: 1.2,
-    length: 2.6,
+    length: 2.9,
     width: 1920,
     height: 1080,
     scale: 1,
@@ -307,46 +310,48 @@ const SHOTS: ReadonlyArray<Shot> = [
     push: [1, 1.06],
     cursor: false,
   },
+  // One window, three platforms: the same Settings screen restyled. No camera
+  // move, so the cut is the only change the eye reads.
   {
     take: "settings",
-    mediaStart: 0.25,
-    length: 1.1,
+    mediaStart: 0.15,
+    length: 1.2,
     width: 2048,
     height: 1152,
     scale: 0.76,
     framed: false,
-    push: [1.16, 1],
-    cursor: true,
+    push: [1, 1],
+    cursor: false,
     platform: "macOS",
   },
   {
-    take: "desktop-aero",
-    mediaStart: 0.3,
-    length: 1.2,
-    width: 2560,
-    height: 1600,
-    scale: 0.53,
-    framed: true,
-    push: [1.08, 1],
+    take: "settings",
+    mediaStart: 1.6,
+    length: 1,
+    width: 2048,
+    height: 1152,
+    scale: 0.76,
+    framed: false,
+    push: [1, 1],
     cursor: true,
     platform: "Windows",
   },
   {
-    take: "tiling",
-    mediaStart: 0.2,
-    length: 1.7,
-    width: 2560,
-    height: 1440,
-    scale: 0.6,
-    framed: true,
-    push: [1.08, 1],
+    take: "settings",
+    mediaStart: 2.95,
+    length: 1.3,
+    width: 2048,
+    height: 1152,
+    scale: 0.76,
+    framed: false,
+    push: [1, 1],
     cursor: true,
     platform: "Linux",
   },
   {
     take: "agent",
     mediaStart: 0.1,
-    length: 2.35,
+    length: 2.4,
     width: 2200,
     height: 1400,
     scale: 0.56,
@@ -357,7 +362,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "slang",
     mediaStart: 0.2,
-    length: 2.1,
+    length: 2.25,
     width: 2120,
     height: 1520,
     scale: 0.52,
@@ -573,9 +578,6 @@ const CUES: ReadonlyArray<readonly [number, string]> = [
   platformCue(1, "look-mac"),
   platformCue(2, "look-win"),
   platformCue(3, "look-linux"),
-  [shotAt(2, 0.8), "press"],
-  [shotAt(3, 0.4), "press"],
-  [shotAt(3, 1.0), "glass-2"],
   [shotAt(4, 0.1), "press"],
   ...Array.from(
     { length: 12 },

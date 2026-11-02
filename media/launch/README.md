@@ -9,11 +9,11 @@ of cuts. Plan: `.agents/slop/plans/066-launch-film-v4.md`.
 
 | Time | Line | Shot | Source |
 | --- | --- | --- | --- |
-| 0–4.8 s | — | four close-ups, 1.2 s each, static framings cut on the settle: Switch, Tabs, Slider, Checkbox | `cu-*` |
+| 0–4.8 s | — | four close-ups, 1.2 s each, static framings cut on the settle: the Switch alone (the thumbnail), then Tabs, Slider, Checkbox | `cu-*` |
 | 4.8–8.4 s | every component you need | a field of live components in columns sliding opposite ways; the camera pulls back | stage of takes |
-| 8.4–11 s | — | the stats block's blueprint, its real cards falling into place | `stage-assemble` (`blueprint`) |
-| 11–15 s | one tree, every platform | macOS (Settings), Windows (the Aero desktop), Linux (the tiling block), each named under the line as the cut lands | `settings`, `desktop-aero`, `tiling` |
-| 15–19.45 s | real apps, built with it | a chat typed and sent, Slang computing | `agent`, `slang` |
+| 8.4–11.3 s | — | the stats block's blueprint, its real cards falling into place | `stage-assemble` (`blueprint`) |
+| 11.3–14.8 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux — named under the line as each cut lands | `settings` |
+| 14.8–19.45 s | real apps, built with it | a chat typed and sent, Slang computing | `agent`, `slang` |
 | 19.45–24 s | can you believe this is in a terminal through ssh? | the ssh session: the command, its output, the app painting below the shell, the sidebar collapsing, Deploy's toasts | `term-console` |
 | 24–26 s | — | GPUI · React · shadcn · Tailwind on the chord stabs | — |
 | 26–30 s | — | the mark, the URL, "Made with ☕ by @sudo_kw" | — |
@@ -28,7 +28,7 @@ end card.
 
 ```sh
 nub run --filter playground build
-for take in cu-switch cu-tabs cu-slider settings stats blueprint slang desktop-aero tiling; do
+for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang desktop-aero tiling; do
   nub apps/playground/dist/film/takes.js $take media/launch/takes/$take
 done
 nub apps/playground/dist/film/terminal-take.js media/launch/takes/term-console console \

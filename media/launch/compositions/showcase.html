@@ -63,7 +63,7 @@
           id="s-v0"
           class="clip"
           data-start="0"
-          data-duration="2.6"
+          data-duration="2.9"
           data-track-index="1"
           muted
           playsinline
@@ -78,45 +78,34 @@
         style="left: 182px; top: 187px; width: 1556px; height: 876px"
       >
         <video
-          data-media-start="0.25"
+          data-media-start="0.15"
           id="s-v1"
           class="clip"
-          data-start="2.6"
-          data-duration="1.1"
+          data-start="2.9"
+          data-duration="1.2"
           data-track-index="2"
           muted
           playsinline
           src="assets/footage/settings.mp4"
           style=""
         ></video>
-        <div id="s-cur1" class="cursor">
-          <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
-              fill="#000"
-              stroke="#fff"
-              stroke-width="1.8"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </div>
       </div>
     </div>
     <div id="s-cam2" class="cam" style="opacity: 0">
       <div
-        class="frame framed"
-        style="left: 282px; top: 201px; width: 1357px; height: 848px"
+        class="frame"
+        style="left: 182px; top: 187px; width: 1556px; height: 876px"
       >
         <video
-          data-media-start="0.3"
+          data-media-start="1.6"
           id="s-v2"
           class="clip"
-          data-start="3.7"
-          data-duration="1.2"
+          data-start="4.1"
+          data-duration="1"
           data-track-index="1"
           muted
           playsinline
-          src="assets/footage/desktop-aero.mp4"
+          src="assets/footage/settings.mp4"
           style=""
         ></video>
         <div id="s-cur2" class="cursor">
@@ -134,19 +123,19 @@
     </div>
     <div id="s-cam3" class="cam" style="opacity: 0">
       <div
-        class="frame framed"
-        style="left: 192px; top: 193px; width: 1536px; height: 864px"
+        class="frame"
+        style="left: 182px; top: 187px; width: 1556px; height: 876px"
       >
         <video
-          data-media-start="0.2"
+          data-media-start="2.95"
           id="s-v3"
           class="clip"
-          data-start="4.9"
-          data-duration="1.7"
+          data-start="5.1"
+          data-duration="1.3"
           data-track-index="2"
           muted
           playsinline
-          src="assets/footage/tiling.mp4"
+          src="assets/footage/settings.mp4"
           style=""
         ></video>
         <div id="s-cur3" class="cursor">
@@ -171,8 +160,8 @@
           data-media-start="0.1"
           id="s-v4"
           class="clip"
-          data-start="6.6"
-          data-duration="2.35"
+          data-start="6.4"
+          data-duration="2.4"
           data-track-index="1"
           muted
           playsinline
@@ -201,8 +190,8 @@
           data-media-start="0.2"
           id="s-v5"
           class="clip"
-          data-start="8.95"
-          data-duration="2.1"
+          data-start="8.8"
+          data-duration="2.25"
           data-track-index="2"
           muted
           playsinline
@@ -225,310 +214,265 @@
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.set("#s-cam0", { opacity: 0 }, 2.6);
+    tl.set("#s-cam0", { opacity: 0 }, 2.9);
     tl.fromTo(
       "#s-cam0",
       { scale: 1 },
-      { scale: 1.06, duration: 2.6, ease: "power2.out" },
+      { scale: 1.06, duration: 2.9, ease: "power2.out" },
       0.0,
     );
 
-    tl.set("#s-cam1", { opacity: 1 }, 2.6);
-    tl.set("#s-cam1", { opacity: 0 }, 3.7);
+    tl.set("#s-cam1", { opacity: 1 }, 2.9);
+    tl.set("#s-cam1", { opacity: 0 }, 4.1);
     tl.fromTo(
       "#s-cam1",
-      { scale: 1.16 },
-      { scale: 1, duration: 1.1, ease: "power2.out" },
-      2.6,
+      { scale: 1 },
+      { scale: 1, duration: 1.2, ease: "power2.out" },
+      2.9,
     );
-    tl.set("#s-cur1", { x: 1321.9, y: 327.9, scale: 1 }, 2.617);
-    tl.set("#s-cur1", { x: 1312.0, y: 319.6, scale: 1 }, 2.65);
-    tl.set("#s-cur1", { x: 1299.6, y: 309.3, scale: 1 }, 2.683);
-    tl.set("#s-cur1", { x: 1287.2, y: 299.0, scale: 1 }, 2.717);
-    tl.set("#s-cur1", { x: 1277.3, y: 290.8, scale: 1 }, 2.75);
-    tl.set("#s-cur1", { x: 1269.6, y: 284.4, scale: 1 }, 2.783);
-    tl.set("#s-cur1", { x: 1263.8, y: 279.5, scale: 1 }, 2.817);
-    tl.set("#s-cur1", { x: 1259.7, y: 276.1, scale: 1 }, 2.85);
-    tl.set("#s-cur1", { x: 1256.9, y: 273.8, scale: 1 }, 2.883);
-    tl.set("#s-cur1", { x: 1255.2, y: 272.3, scale: 1 }, 2.917);
-    tl.set("#s-cur1", { x: 1254.4, y: 271.6, scale: 1 }, 2.95);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.4, scale: 1 }, 2.983);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.017);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.05);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.083);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.117);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.15);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.183);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.217);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.25);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.283);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.317);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.35);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.383);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.417);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.45);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.483);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.517);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.55);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.583);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.617);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.65);
-    tl.set("#s-cur1", { x: 1254.0, y: 271.3, scale: 1 }, 3.683);
-    tl.set("#s-cam2", { opacity: 1 }, 3.7);
-    tl.set("#s-cam2", { opacity: 0 }, 4.9);
+
+    tl.set("#s-cam2", { opacity: 1 }, 4.1);
+    tl.set("#s-cam2", { opacity: 0 }, 5.1);
     tl.fromTo(
       "#s-cam2",
-      { scale: 1.08 },
-      { scale: 1, duration: 1.2, ease: "power2.out" },
-      3.7,
+      { scale: 1 },
+      { scale: 1, duration: 1, ease: "power2.out" },
+      4.1,
     );
-    tl.set("#s-cur2", { x: 481.2, y: 732.7, scale: 1 }, 3.7);
-    tl.set("#s-cur2", { x: 384.3, y: 752.9, scale: 1 }, 3.733);
-    tl.set("#s-cur2", { x: 287.3, y: 773.0, scale: 1 }, 3.767);
-    tl.set("#s-cur2", { x: 209.7, y: 789.2, scale: 1 }, 3.8);
-    tl.set("#s-cur2", { x: 149.2, y: 801.8, scale: 1 }, 3.833);
-    tl.set("#s-cur2", { x: 103.8, y: 811.2, scale: 1 }, 3.867);
-    tl.set("#s-cur2", { x: 71.2, y: 818.0, scale: 1 }, 3.9);
-    tl.set("#s-cur2", { x: 49.4, y: 822.6, scale: 1 }, 3.933);
-    tl.set("#s-cur2", { x: 36.2, y: 825.3, scale: 1 }, 3.967);
-    tl.set("#s-cur2", { x: 29.4, y: 826.7, scale: 1 }, 4.0);
-    tl.set("#s-cur2", { x: 26.9, y: 827.3, scale: 1 }, 4.033);
-    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.067);
-    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.1);
-    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.133);
-    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.167);
-    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 0.86 }, 4.2);
-    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 0.86 }, 4.233);
-    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.267);
-    tl.set("#s-cur2", { x: 26.5, y: 827.3, scale: 1 }, 4.3);
-    tl.set("#s-cur2", { x: 26.6, y: 827.3, scale: 1 }, 4.333);
-    tl.set("#s-cur2", { x: 26.8, y: 827.3, scale: 1 }, 4.367);
-    tl.set("#s-cur2", { x: 27.2, y: 827.3, scale: 1 }, 4.4);
-    tl.set("#s-cur2", { x: 27.9, y: 827.3, scale: 1 }, 4.433);
-    tl.set("#s-cur2", { x: 28.9, y: 827.3, scale: 1 }, 4.467);
-    tl.set("#s-cur2", { x: 30.3, y: 827.3, scale: 1 }, 4.5);
-    tl.set("#s-cur2", { x: 32.2, y: 827.3, scale: 1 }, 4.533);
-    tl.set("#s-cur2", { x: 34.7, y: 827.3, scale: 1 }, 4.567);
-    tl.set("#s-cur2", { x: 37.7, y: 827.3, scale: 1 }, 4.6);
-    tl.set("#s-cur2", { x: 41.4, y: 827.3, scale: 1 }, 4.633);
-    tl.set("#s-cur2", { x: 45.9, y: 827.3, scale: 1 }, 4.667);
-    tl.set("#s-cur2", { x: 51.1, y: 827.3, scale: 1 }, 4.7);
-    tl.set("#s-cur2", { x: 57.2, y: 827.3, scale: 1 }, 4.733);
-    tl.set("#s-cur2", { x: 63.4, y: 827.3, scale: 1 }, 4.767);
-    tl.set("#s-cur2", { x: 68.6, y: 827.3, scale: 1 }, 4.8);
-    tl.set("#s-cur2", { x: 73.1, y: 827.3, scale: 1 }, 4.833);
-    tl.set("#s-cur2", { x: 76.8, y: 827.3, scale: 1 }, 4.867);
-    tl.set("#s-cam3", { opacity: 1 }, 4.9);
-    tl.set("#s-cam3", { opacity: 0 }, 6.6);
+    tl.set("#s-cur2", { x: 1254.3, y: 271.3, scale: 1 }, 4.1);
+    tl.set("#s-cur2", { x: 1254.7, y: 271.3, scale: 1 }, 4.133);
+    tl.set("#s-cur2", { x: 1255.3, y: 271.3, scale: 1 }, 4.167);
+    tl.set("#s-cur2", { x: 1256.2, y: 271.3, scale: 1 }, 4.2);
+    tl.set("#s-cur2", { x: 1257.6, y: 271.3, scale: 1 }, 4.233);
+    tl.set("#s-cur2", { x: 1259.3, y: 271.3, scale: 1 }, 4.267);
+    tl.set("#s-cur2", { x: 1261.6, y: 271.3, scale: 1 }, 4.3);
+    tl.set("#s-cur2", { x: 1264.4, y: 271.3, scale: 1 }, 4.333);
+    tl.set("#s-cur2", { x: 1267.8, y: 271.3, scale: 1 }, 4.367);
+    tl.set("#s-cur2", { x: 1272.0, y: 271.3, scale: 1 }, 4.4);
+    tl.set("#s-cur2", { x: 1276.9, y: 271.3, scale: 1 }, 4.433);
+    tl.set("#s-cur2", { x: 1282.6, y: 271.3, scale: 1 }, 4.467);
+    tl.set("#s-cur2", { x: 1289.1, y: 271.3, scale: 1 }, 4.5);
+    tl.set("#s-cur2", { x: 1296.6, y: 271.3, scale: 1 }, 4.533);
+    tl.set("#s-cur2", { x: 1304.9, y: 271.3, scale: 1 }, 4.567);
+    tl.set("#s-cur2", { x: 1312.4, y: 271.3, scale: 1 }, 4.6);
+    tl.set("#s-cur2", { x: 1318.9, y: 271.3, scale: 1 }, 4.633);
+    tl.set("#s-cur2", { x: 1324.6, y: 271.3, scale: 1 }, 4.667);
+    tl.set("#s-cur2", { x: 1329.5, y: 271.3, scale: 1 }, 4.7);
+    tl.set("#s-cur2", { x: 1333.6, y: 271.3, scale: 1 }, 4.733);
+    tl.set("#s-cur2", { x: 1337.1, y: 271.3, scale: 1 }, 4.767);
+    tl.set("#s-cur2", { x: 1339.9, y: 271.3, scale: 1 }, 4.8);
+    tl.set("#s-cur2", { x: 1342.2, y: 271.3, scale: 1 }, 4.833);
+    tl.set("#s-cur2", { x: 1343.9, y: 271.3, scale: 1 }, 4.867);
+    tl.set("#s-cur2", { x: 1345.2, y: 271.3, scale: 1 }, 4.9);
+    tl.set("#s-cur2", { x: 1346.2, y: 271.3, scale: 1 }, 4.933);
+    tl.set("#s-cur2", { x: 1346.8, y: 271.3, scale: 1 }, 4.967);
+    tl.set("#s-cur2", { x: 1347.2, y: 271.3, scale: 1 }, 5.0);
+    tl.set("#s-cur2", { x: 1347.4, y: 271.3, scale: 1 }, 5.033);
+    tl.set("#s-cur2", { x: 1347.5, y: 271.3, scale: 1 }, 5.067);
+    tl.set("#s-cam3", { opacity: 1 }, 5.1);
+    tl.set("#s-cam3", { opacity: 0 }, 6.4);
     tl.fromTo(
       "#s-cam3",
-      { scale: 1.08 },
-      { scale: 1, duration: 1.7, ease: "power2.out" },
-      4.9,
+      { scale: 1 },
+      { scale: 1, duration: 1.3, ease: "power2.out" },
+      5.1,
     );
-    tl.set("#s-cur3", { x: 1282.9, y: 325.5, scale: 1 }, 4.9);
-    tl.set("#s-cur3", { x: 1272.3, y: 302.4, scale: 1 }, 4.933);
-    tl.set("#s-cur3", { x: 1266.8, y: 290.6, scale: 1 }, 4.967);
-    tl.set("#s-cur3", { x: 1264.8, y: 286.2, scale: 1 }, 5.0);
-    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.033);
-    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.067);
-    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 0.86 }, 5.1);
-    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 0.86 }, 5.133);
-    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.167);
-    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.2);
-    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.233);
-    tl.set("#s-cur3", { x: 1264.5, y: 285.6, scale: 1 }, 5.267);
-    tl.set("#s-cur3", { x: 1264.6, y: 285.7, scale: 1 }, 5.3);
-    tl.set("#s-cur3", { x: 1264.7, y: 285.8, scale: 1 }, 5.333);
-    tl.set("#s-cur3", { x: 1264.8, y: 285.9, scale: 1 }, 5.367);
-    tl.set("#s-cur3", { x: 1265.0, y: 286.1, scale: 1 }, 5.4);
-    tl.set("#s-cur3", { x: 1265.3, y: 286.4, scale: 1 }, 5.433);
-    tl.set("#s-cur3", { x: 1265.7, y: 286.8, scale: 1 }, 5.467);
-    tl.set("#s-cur3", { x: 1266.1, y: 287.2, scale: 1 }, 5.5);
-    tl.set("#s-cur3", { x: 1266.6, y: 287.7, scale: 1 }, 5.533);
-    tl.set("#s-cur3", { x: 1267.2, y: 288.3, scale: 1 }, 5.567);
-    tl.set("#s-cur3", { x: 1268.0, y: 289.1, scale: 1 }, 5.6);
-    tl.set("#s-cur3", { x: 1268.8, y: 289.9, scale: 1 }, 5.633);
-    tl.set("#s-cur3", { x: 1269.8, y: 290.9, scale: 1 }, 5.667);
-    tl.set("#s-cur3", { x: 1271.0, y: 292.1, scale: 1 }, 5.7);
-    tl.set("#s-cur3", { x: 1272.3, y: 293.4, scale: 1 }, 5.733);
-    tl.set("#s-cur3", { x: 1273.7, y: 294.8, scale: 1 }, 5.767);
-    tl.set("#s-cur3", { x: 1275.3, y: 296.4, scale: 1 }, 5.8);
-    tl.set("#s-cur3", { x: 1277.1, y: 298.2, scale: 1 }, 5.833);
-    tl.set("#s-cur3", { x: 1279.1, y: 300.2, scale: 1 }, 5.867);
-    tl.set("#s-cur3", { x: 1281.3, y: 302.4, scale: 1 }, 5.9);
-    tl.set("#s-cur3", { x: 1283.7, y: 304.8, scale: 1 }, 5.933);
-    tl.set("#s-cur3", { x: 1285.9, y: 307.0, scale: 1 }, 5.967);
-    tl.set("#s-cur3", { x: 1287.9, y: 309.0, scale: 1 }, 6.0);
-    tl.set("#s-cur3", { x: 1289.7, y: 310.8, scale: 1 }, 6.033);
-    tl.set("#s-cur3", { x: 1291.3, y: 312.4, scale: 1 }, 6.067);
-    tl.set("#s-cur3", { x: 1292.7, y: 313.8, scale: 1 }, 6.1);
-    tl.set("#s-cur3", { x: 1294.0, y: 315.1, scale: 1 }, 6.133);
-    tl.set("#s-cur3", { x: 1295.2, y: 316.3, scale: 1 }, 6.167);
-    tl.set("#s-cur3", { x: 1296.2, y: 317.3, scale: 1 }, 6.2);
-    tl.set("#s-cur3", { x: 1297.0, y: 318.1, scale: 1 }, 6.233);
-    tl.set("#s-cur3", { x: 1297.8, y: 318.9, scale: 1 }, 6.267);
-    tl.set("#s-cur3", { x: 1298.4, y: 319.5, scale: 1 }, 6.3);
-    tl.set("#s-cur3", { x: 1298.9, y: 320.0, scale: 1 }, 6.333);
-    tl.set("#s-cur3", { x: 1299.3, y: 320.4, scale: 1 }, 6.367);
-    tl.set("#s-cur3", { x: 1299.7, y: 320.8, scale: 1 }, 6.4);
-    tl.set("#s-cur3", { x: 1300.0, y: 321.1, scale: 1 }, 6.433);
-    tl.set("#s-cur3", { x: 1300.2, y: 321.3, scale: 1 }, 6.467);
-    tl.set("#s-cur3", { x: 1300.3, y: 321.4, scale: 1 }, 6.5);
-    tl.set("#s-cur3", { x: 1300.4, y: 321.5, scale: 1 }, 6.533);
-    tl.set("#s-cur3", { x: 1300.5, y: 321.6, scale: 1 }, 6.567);
-    tl.set("#s-cam4", { opacity: 1 }, 6.6);
-    tl.set("#s-cam4", { opacity: 0 }, 8.95);
+    tl.set("#s-cur3", { x: 1342.9, y: 275.1, scale: 1 }, 5.117);
+    tl.set("#s-cur3", { x: 1343.0, y: 275.2, scale: 1 }, 5.15);
+    tl.set("#s-cur3", { x: 1343.1, y: 275.3, scale: 1 }, 5.183);
+    tl.set("#s-cur3", { x: 1343.2, y: 275.5, scale: 1 }, 5.217);
+    tl.set("#s-cur3", { x: 1343.4, y: 275.7, scale: 1 }, 5.25);
+    tl.set("#s-cur3", { x: 1343.7, y: 276.1, scale: 1 }, 5.283);
+    tl.set("#s-cur3", { x: 1344.0, y: 276.6, scale: 1 }, 5.317);
+    tl.set("#s-cur3", { x: 1344.5, y: 277.2, scale: 1 }, 5.35);
+    tl.set("#s-cur3", { x: 1345.1, y: 278.0, scale: 1 }, 5.383);
+    tl.set("#s-cur3", { x: 1345.8, y: 278.9, scale: 1 }, 5.417);
+    tl.set("#s-cur3", { x: 1346.6, y: 280.1, scale: 1 }, 5.45);
+    tl.set("#s-cur3", { x: 1347.6, y: 281.4, scale: 1 }, 5.483);
+    tl.set("#s-cur3", { x: 1348.8, y: 283.0, scale: 1 }, 5.517);
+    tl.set("#s-cur3", { x: 1350.1, y: 284.8, scale: 1 }, 5.55);
+    tl.set("#s-cur3", { x: 1351.7, y: 286.8, scale: 1 }, 5.583);
+    tl.set("#s-cur3", { x: 1353.4, y: 289.1, scale: 1 }, 5.617);
+    tl.set("#s-cur3", { x: 1355.4, y: 291.8, scale: 1 }, 5.65);
+    tl.set("#s-cur3", { x: 1357.6, y: 294.7, scale: 1 }, 5.683);
+    tl.set("#s-cur3", { x: 1360.0, y: 298.0, scale: 1 }, 5.717);
+    tl.set("#s-cur3", { x: 1362.8, y: 301.6, scale: 1 }, 5.75);
+    tl.set("#s-cur3", { x: 1365.7, y: 305.5, scale: 1 }, 5.783);
+    tl.set("#s-cur3", { x: 1368.7, y: 309.5, scale: 1 }, 5.817);
+    tl.set("#s-cur3", { x: 1371.4, y: 313.1, scale: 1 }, 5.85);
+    tl.set("#s-cur3", { x: 1373.8, y: 316.3, scale: 1 }, 5.883);
+    tl.set("#s-cur3", { x: 1376.0, y: 319.3, scale: 1 }, 5.917);
+    tl.set("#s-cur3", { x: 1378.0, y: 321.9, scale: 1 }, 5.95);
+    tl.set("#s-cur3", { x: 1379.7, y: 324.2, scale: 1 }, 5.983);
+    tl.set("#s-cur3", { x: 1381.3, y: 326.3, scale: 1 }, 6.017);
+    tl.set("#s-cur3", { x: 1382.6, y: 328.1, scale: 1 }, 6.05);
+    tl.set("#s-cur3", { x: 1383.8, y: 329.6, scale: 1 }, 6.083);
+    tl.set("#s-cur3", { x: 1384.8, y: 331.0, scale: 1 }, 6.117);
+    tl.set("#s-cur3", { x: 1385.7, y: 332.1, scale: 1 }, 6.15);
+    tl.set("#s-cur3", { x: 1386.4, y: 333.1, scale: 1 }, 6.183);
+    tl.set("#s-cur3", { x: 1387.0, y: 333.8, scale: 1 }, 6.217);
+    tl.set("#s-cur3", { x: 1387.4, y: 334.5, scale: 1 }, 6.25);
+    tl.set("#s-cur3", { x: 1387.8, y: 334.9, scale: 1 }, 6.283);
+    tl.set("#s-cur3", { x: 1388.1, y: 335.3, scale: 1 }, 6.317);
+    tl.set("#s-cur3", { x: 1388.3, y: 335.6, scale: 1 }, 6.35);
+    tl.set("#s-cur3", { x: 1388.4, y: 335.7, scale: 1 }, 6.383);
+    tl.set("#s-cam4", { opacity: 1 }, 6.4);
+    tl.set("#s-cam4", { opacity: 0 }, 8.8);
     tl.fromTo(
       "#s-cam4",
       { scale: 1 },
-      { scale: 1.08, duration: 2.35, ease: "power2.out" },
-      6.6,
+      { scale: 1.08, duration: 2.4, ease: "power2.out" },
+      6.4,
     );
-    tl.set("#s-cur4", { x: 444.6, y: 759.4, scale: 0.86 }, 6.6);
-    tl.set("#s-cur4", { x: 444.6, y: 759.4, scale: 1 }, 6.633);
-    tl.set("#s-cur4", { x: 444.7, y: 759.4, scale: 1 }, 6.667);
-    tl.set("#s-cur4", { x: 444.8, y: 759.4, scale: 1 }, 6.7);
-    tl.set("#s-cur4", { x: 445.2, y: 759.4, scale: 1 }, 6.733);
-    tl.set("#s-cur4", { x: 445.9, y: 759.4, scale: 1 }, 6.767);
-    tl.set("#s-cur4", { x: 447.0, y: 759.4, scale: 1 }, 6.8);
-    tl.set("#s-cur4", { x: 448.7, y: 759.4, scale: 1 }, 6.833);
-    tl.set("#s-cur4", { x: 451.1, y: 759.4, scale: 1 }, 6.867);
-    tl.set("#s-cur4", { x: 454.3, y: 759.4, scale: 1 }, 6.9);
-    tl.set("#s-cur4", { x: 458.5, y: 759.4, scale: 1 }, 6.933);
-    tl.set("#s-cur4", { x: 463.6, y: 759.4, scale: 1 }, 6.967);
-    tl.set("#s-cur4", { x: 469.9, y: 759.4, scale: 1 }, 7.0);
-    tl.set("#s-cur4", { x: 477.4, y: 759.4, scale: 1 }, 7.033);
-    tl.set("#s-cur4", { x: 486.3, y: 759.4, scale: 1 }, 7.067);
-    tl.set("#s-cur4", { x: 496.7, y: 759.4, scale: 1 }, 7.1);
-    tl.set("#s-cur4", { x: 508.6, y: 759.4, scale: 1 }, 7.133);
-    tl.set("#s-cur4", { x: 522.3, y: 759.4, scale: 1 }, 7.167);
-    tl.set("#s-cur4", { x: 537.8, y: 759.4, scale: 1 }, 7.2);
-    tl.set("#s-cur4", { x: 555.2, y: 759.4, scale: 1 }, 7.233);
-    tl.set("#s-cur4", { x: 572.7, y: 759.4, scale: 1 }, 7.267);
-    tl.set("#s-cur4", { x: 588.2, y: 759.4, scale: 1 }, 7.3);
-    tl.set("#s-cur4", { x: 601.8, y: 759.4, scale: 1 }, 7.333);
-    tl.set("#s-cur4", { x: 613.8, y: 759.4, scale: 1 }, 7.367);
-    tl.set("#s-cur4", { x: 624.2, y: 759.4, scale: 1 }, 7.4);
-    tl.set("#s-cur4", { x: 633.1, y: 759.4, scale: 1 }, 7.433);
-    tl.set("#s-cur4", { x: 640.6, y: 759.4, scale: 1 }, 7.467);
-    tl.set("#s-cur4", { x: 646.9, y: 759.4, scale: 1 }, 7.5);
-    tl.set("#s-cur4", { x: 652.0, y: 759.4, scale: 1 }, 7.533);
-    tl.set("#s-cur4", { x: 656.1, y: 759.4, scale: 1 }, 7.567);
-    tl.set("#s-cur4", { x: 659.3, y: 759.4, scale: 1 }, 7.6);
-    tl.set("#s-cur4", { x: 661.7, y: 759.4, scale: 1 }, 7.633);
-    tl.set("#s-cur4", { x: 663.5, y: 759.4, scale: 1 }, 7.667);
-    tl.set("#s-cur4", { x: 664.6, y: 759.4, scale: 1 }, 7.7);
-    tl.set("#s-cur4", { x: 665.3, y: 759.4, scale: 1 }, 7.733);
-    tl.set("#s-cur4", { x: 665.7, y: 759.4, scale: 1 }, 7.767);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.8);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.833);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.867);
+    tl.set("#s-cur4", { x: 444.6, y: 759.4, scale: 0.86 }, 6.4);
+    tl.set("#s-cur4", { x: 444.6, y: 759.4, scale: 1 }, 6.433);
+    tl.set("#s-cur4", { x: 444.7, y: 759.4, scale: 1 }, 6.467);
+    tl.set("#s-cur4", { x: 444.8, y: 759.4, scale: 1 }, 6.5);
+    tl.set("#s-cur4", { x: 445.2, y: 759.4, scale: 1 }, 6.533);
+    tl.set("#s-cur4", { x: 445.9, y: 759.4, scale: 1 }, 6.567);
+    tl.set("#s-cur4", { x: 447.0, y: 759.4, scale: 1 }, 6.6);
+    tl.set("#s-cur4", { x: 448.7, y: 759.4, scale: 1 }, 6.633);
+    tl.set("#s-cur4", { x: 451.1, y: 759.4, scale: 1 }, 6.667);
+    tl.set("#s-cur4", { x: 454.3, y: 759.4, scale: 1 }, 6.7);
+    tl.set("#s-cur4", { x: 458.5, y: 759.4, scale: 1 }, 6.733);
+    tl.set("#s-cur4", { x: 463.6, y: 759.4, scale: 1 }, 6.767);
+    tl.set("#s-cur4", { x: 469.9, y: 759.4, scale: 1 }, 6.8);
+    tl.set("#s-cur4", { x: 477.4, y: 759.4, scale: 1 }, 6.833);
+    tl.set("#s-cur4", { x: 486.3, y: 759.4, scale: 1 }, 6.867);
+    tl.set("#s-cur4", { x: 496.7, y: 759.4, scale: 1 }, 6.9);
+    tl.set("#s-cur4", { x: 508.6, y: 759.4, scale: 1 }, 6.933);
+    tl.set("#s-cur4", { x: 522.3, y: 759.4, scale: 1 }, 6.967);
+    tl.set("#s-cur4", { x: 537.8, y: 759.4, scale: 1 }, 7.0);
+    tl.set("#s-cur4", { x: 555.2, y: 759.4, scale: 1 }, 7.033);
+    tl.set("#s-cur4", { x: 572.7, y: 759.4, scale: 1 }, 7.067);
+    tl.set("#s-cur4", { x: 588.2, y: 759.4, scale: 1 }, 7.1);
+    tl.set("#s-cur4", { x: 601.8, y: 759.4, scale: 1 }, 7.133);
+    tl.set("#s-cur4", { x: 613.8, y: 759.4, scale: 1 }, 7.167);
+    tl.set("#s-cur4", { x: 624.2, y: 759.4, scale: 1 }, 7.2);
+    tl.set("#s-cur4", { x: 633.1, y: 759.4, scale: 1 }, 7.233);
+    tl.set("#s-cur4", { x: 640.6, y: 759.4, scale: 1 }, 7.267);
+    tl.set("#s-cur4", { x: 646.9, y: 759.4, scale: 1 }, 7.3);
+    tl.set("#s-cur4", { x: 652.0, y: 759.4, scale: 1 }, 7.333);
+    tl.set("#s-cur4", { x: 656.1, y: 759.4, scale: 1 }, 7.367);
+    tl.set("#s-cur4", { x: 659.3, y: 759.4, scale: 1 }, 7.4);
+    tl.set("#s-cur4", { x: 661.7, y: 759.4, scale: 1 }, 7.433);
+    tl.set("#s-cur4", { x: 663.5, y: 759.4, scale: 1 }, 7.467);
+    tl.set("#s-cur4", { x: 664.6, y: 759.4, scale: 1 }, 7.5);
+    tl.set("#s-cur4", { x: 665.3, y: 759.4, scale: 1 }, 7.533);
+    tl.set("#s-cur4", { x: 665.7, y: 759.4, scale: 1 }, 7.567);
+    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.6);
+    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.633);
+    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.667);
+    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.7);
+    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.733);
+    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.767);
+    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 0.86 }, 7.8);
+    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 0.86 }, 7.833);
+    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 0.86 }, 7.867);
     tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.9);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.933);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 7.967);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 0.86 }, 8.0);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 0.86 }, 8.033);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 0.86 }, 8.067);
-    tl.set("#s-cur4", { x: 665.8, y: 759.4, scale: 1 }, 8.1);
-    tl.set("#s-cur4", { x: 665.8, y: 759.3, scale: 1 }, 8.133);
-    tl.set("#s-cur4", { x: 665.9, y: 759.3, scale: 1 }, 8.167);
-    tl.set("#s-cur4", { x: 666.0, y: 759.1, scale: 1 }, 8.2);
-    tl.set("#s-cur4", { x: 666.2, y: 758.7, scale: 1 }, 8.233);
-    tl.set("#s-cur4", { x: 666.5, y: 758.1, scale: 1 }, 8.267);
-    tl.set("#s-cur4", { x: 666.9, y: 757.2, scale: 1 }, 8.3);
-    tl.set("#s-cur4", { x: 667.6, y: 755.9, scale: 1 }, 8.333);
-    tl.set("#s-cur4", { x: 668.5, y: 754.1, scale: 1 }, 8.367);
-    tl.set("#s-cur4", { x: 669.6, y: 751.9, scale: 1 }, 8.4);
-    tl.set("#s-cur4", { x: 670.9, y: 749.2, scale: 1 }, 8.433);
-    tl.set("#s-cur4", { x: 672.6, y: 745.8, scale: 1 }, 8.467);
-    tl.set("#s-cur4", { x: 674.6, y: 741.7, scale: 1 }, 8.5);
-    tl.set("#s-cur4", { x: 677.0, y: 737.0, scale: 1 }, 8.533);
-    tl.set("#s-cur4", { x: 679.4, y: 732.2, scale: 1 }, 8.567);
-    tl.set("#s-cur4", { x: 681.5, y: 728.1, scale: 1 }, 8.6);
-    tl.set("#s-cur4", { x: 683.1, y: 724.8, scale: 1 }, 8.633);
-    tl.set("#s-cur4", { x: 684.5, y: 722.0, scale: 1 }, 8.667);
-    tl.set("#s-cur4", { x: 685.6, y: 719.8, scale: 1 }, 8.7);
-    tl.set("#s-cur4", { x: 686.5, y: 718.1, scale: 1 }, 8.733);
-    tl.set("#s-cur4", { x: 687.1, y: 716.8, scale: 1 }, 8.767);
-    tl.set("#s-cur4", { x: 687.6, y: 715.8, scale: 1 }, 8.8);
-    tl.set("#s-cur4", { x: 687.9, y: 715.2, scale: 1 }, 8.833);
-    tl.set("#s-cur4", { x: 688.1, y: 714.8, scale: 1 }, 8.867);
-    tl.set("#s-cur4", { x: 688.2, y: 714.6, scale: 1 }, 8.9);
-    tl.set("#s-cur4", { x: 688.2, y: 714.6, scale: 1 }, 8.933);
-    tl.set("#s-cam5", { opacity: 1 }, 8.95);
+    tl.set("#s-cur4", { x: 665.8, y: 759.3, scale: 1 }, 7.933);
+    tl.set("#s-cur4", { x: 665.9, y: 759.3, scale: 1 }, 7.967);
+    tl.set("#s-cur4", { x: 666.0, y: 759.1, scale: 1 }, 8.0);
+    tl.set("#s-cur4", { x: 666.2, y: 758.7, scale: 1 }, 8.033);
+    tl.set("#s-cur4", { x: 666.5, y: 758.1, scale: 1 }, 8.067);
+    tl.set("#s-cur4", { x: 666.9, y: 757.2, scale: 1 }, 8.1);
+    tl.set("#s-cur4", { x: 667.6, y: 755.9, scale: 1 }, 8.133);
+    tl.set("#s-cur4", { x: 668.5, y: 754.1, scale: 1 }, 8.167);
+    tl.set("#s-cur4", { x: 669.6, y: 751.9, scale: 1 }, 8.2);
+    tl.set("#s-cur4", { x: 670.9, y: 749.2, scale: 1 }, 8.233);
+    tl.set("#s-cur4", { x: 672.6, y: 745.8, scale: 1 }, 8.267);
+    tl.set("#s-cur4", { x: 674.6, y: 741.7, scale: 1 }, 8.3);
+    tl.set("#s-cur4", { x: 677.0, y: 737.0, scale: 1 }, 8.333);
+    tl.set("#s-cur4", { x: 679.4, y: 732.2, scale: 1 }, 8.367);
+    tl.set("#s-cur4", { x: 681.5, y: 728.1, scale: 1 }, 8.4);
+    tl.set("#s-cur4", { x: 683.1, y: 724.8, scale: 1 }, 8.433);
+    tl.set("#s-cur4", { x: 684.5, y: 722.0, scale: 1 }, 8.467);
+    tl.set("#s-cur4", { x: 685.6, y: 719.8, scale: 1 }, 8.5);
+    tl.set("#s-cur4", { x: 686.5, y: 718.1, scale: 1 }, 8.533);
+    tl.set("#s-cur4", { x: 687.1, y: 716.8, scale: 1 }, 8.567);
+    tl.set("#s-cur4", { x: 687.6, y: 715.8, scale: 1 }, 8.6);
+    tl.set("#s-cur4", { x: 687.9, y: 715.2, scale: 1 }, 8.633);
+    tl.set("#s-cur4", { x: 688.1, y: 714.8, scale: 1 }, 8.667);
+    tl.set("#s-cur4", { x: 688.2, y: 714.6, scale: 1 }, 8.7);
+    tl.set("#s-cur4", { x: 688.2, y: 714.6, scale: 1 }, 8.733);
+    tl.set("#s-cur4", { x: 688.2, y: 714.6, scale: 1 }, 8.767);
+    tl.set("#s-cam5", { opacity: 1 }, 8.8);
     tl.set("#s-cam5", { opacity: 0 }, 11.05);
     tl.fromTo(
       "#s-cam5",
       { scale: 1.06 },
-      { scale: 1, duration: 2.1, ease: "power2.out" },
-      8.95,
+      { scale: 1, duration: 2.25, ease: "power2.out" },
+      8.8,
     );
-    tl.set("#s-cur5", { x: 200.5, y: 534.0, scale: 1 }, 8.95);
-    tl.set("#s-cur5", { x: 195.9, y: 530.6, scale: 1 }, 8.983);
-    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 1 }, 9.017);
-    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 1 }, 9.05);
-    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 1 }, 9.083);
-    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 1 }, 9.117);
-    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 0.86 }, 9.15);
-    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 0.86 }, 9.183);
-    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 0.86 }, 9.217);
-    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 1 }, 9.25);
-    tl.set("#s-cur5", { x: 195.9, y: 530.3, scale: 1 }, 9.283);
-    tl.set("#s-cur5", { x: 200.2, y: 531.6, scale: 1 }, 9.317);
-    tl.set("#s-cur5", { x: 212.0, y: 535.2, scale: 1 }, 9.35);
-    tl.set("#s-cur5", { x: 234.9, y: 542.0, scale: 1 }, 9.383);
-    tl.set("#s-cur5", { x: 272.6, y: 553.4, scale: 1 }, 9.417);
-    tl.set("#s-cur5", { x: 323.8, y: 568.8, scale: 1 }, 9.45);
-    tl.set("#s-cur5", { x: 361.6, y: 580.1, scale: 1 }, 9.483);
-    tl.set("#s-cur5", { x: 384.5, y: 587.0, scale: 1 }, 9.517);
-    tl.set("#s-cur5", { x: 396.2, y: 590.5, scale: 1 }, 9.55);
-    tl.set("#s-cur5", { x: 400.6, y: 591.8, scale: 1 }, 9.583);
-    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 1 }, 9.617);
-    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 1 }, 9.65);
-    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 1 }, 9.683);
-    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 1 }, 9.717);
-    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 0.86 }, 9.75);
-    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 0.86 }, 9.783);
-    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 0.86 }, 9.817);
-    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 1 }, 9.85);
-    tl.set("#s-cur5", { x: 400.8, y: 592.0, scale: 1 }, 9.883);
-    tl.set("#s-cur5", { x: 398.2, y: 592.0, scale: 1 }, 9.917);
-    tl.set("#s-cur5", { x: 391.0, y: 592.0, scale: 1 }, 9.95);
-    tl.set("#s-cur5", { x: 377.1, y: 592.0, scale: 1 }, 9.983);
-    tl.set("#s-cur5", { x: 356.6, y: 592.0, scale: 1 }, 10.017);
-    tl.set("#s-cur5", { x: 342.7, y: 592.0, scale: 1 }, 10.05);
-    tl.set("#s-cur5", { x: 335.6, y: 592.0, scale: 1 }, 10.083);
-    tl.set("#s-cur5", { x: 332.9, y: 592.0, scale: 1 }, 10.117);
-    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 1 }, 10.15);
-    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 1 }, 10.183);
-    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 1 }, 10.217);
-    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 1 }, 10.25);
-    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 0.86 }, 10.283);
-    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 0.86 }, 10.317);
-    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 0.86 }, 10.35);
-    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 1 }, 10.383);
-    tl.set("#s-cur5", { x: 333.3, y: 592.7, scale: 1 }, 10.417);
-    tl.set("#s-cur5", { x: 338.6, y: 597.5, scale: 1 }, 10.45);
-    tl.set("#s-cur5", { x: 352.9, y: 610.4, scale: 1 }, 10.483);
-    tl.set("#s-cur5", { x: 380.7, y: 635.5, scale: 1 }, 10.517);
-    tl.set("#s-cur5", { x: 421.6, y: 672.3, scale: 1 }, 10.55);
-    tl.set("#s-cur5", { x: 449.5, y: 697.4, scale: 1 }, 10.583);
-    tl.set("#s-cur5", { x: 463.8, y: 710.3, scale: 1 }, 10.617);
-    tl.set("#s-cur5", { x: 469.1, y: 715.1, scale: 1 }, 10.65);
-    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 1 }, 10.683);
-    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 1 }, 10.717);
-    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 1 }, 10.75);
-    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 1 }, 10.783);
-    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 0.86 }, 10.817);
-    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 0.86 }, 10.85);
-    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 0.86 }, 10.883);
-    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 1 }, 10.917);
-    tl.set("#s-cur5", { x: 470.2, y: 716.1, scale: 1 }, 10.95);
-    tl.set("#s-cur5", { x: 472.6, y: 718.1, scale: 1 }, 10.983);
-    tl.set("#s-cur5", { x: 479.1, y: 723.5, scale: 1 }, 11.017);
-    tl.set("#s-cur5", { x: 491.7, y: 734.0, scale: 1 }, 11.05);
-    tl.set({}, {}, 11.05);
+    tl.set("#s-cur5", { x: 200.5, y: 534.0, scale: 1 }, 8.8);
+    tl.set("#s-cur5", { x: 195.9, y: 530.6, scale: 1 }, 8.833);
+    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 1 }, 8.867);
+    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 1 }, 8.9);
+    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 1 }, 8.933);
+    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 1 }, 8.967);
+    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 0.86 }, 9.0);
+    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 0.86 }, 9.033);
+    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 0.86 }, 9.067);
+    tl.set("#s-cur5", { x: 195.3, y: 530.1, scale: 1 }, 9.1);
+    tl.set("#s-cur5", { x: 195.9, y: 530.3, scale: 1 }, 9.133);
+    tl.set("#s-cur5", { x: 200.2, y: 531.6, scale: 1 }, 9.167);
+    tl.set("#s-cur5", { x: 212.0, y: 535.2, scale: 1 }, 9.2);
+    tl.set("#s-cur5", { x: 234.9, y: 542.0, scale: 1 }, 9.233);
+    tl.set("#s-cur5", { x: 272.6, y: 553.4, scale: 1 }, 9.267);
+    tl.set("#s-cur5", { x: 323.8, y: 568.8, scale: 1 }, 9.3);
+    tl.set("#s-cur5", { x: 361.6, y: 580.1, scale: 1 }, 9.333);
+    tl.set("#s-cur5", { x: 384.5, y: 587.0, scale: 1 }, 9.367);
+    tl.set("#s-cur5", { x: 396.2, y: 590.5, scale: 1 }, 9.4);
+    tl.set("#s-cur5", { x: 400.6, y: 591.8, scale: 1 }, 9.433);
+    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 1 }, 9.467);
+    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 1 }, 9.5);
+    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 1 }, 9.533);
+    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 1 }, 9.567);
+    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 0.86 }, 9.6);
+    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 0.86 }, 9.633);
+    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 0.86 }, 9.667);
+    tl.set("#s-cur5", { x: 401.2, y: 592.0, scale: 1 }, 9.7);
+    tl.set("#s-cur5", { x: 400.8, y: 592.0, scale: 1 }, 9.733);
+    tl.set("#s-cur5", { x: 398.2, y: 592.0, scale: 1 }, 9.767);
+    tl.set("#s-cur5", { x: 391.0, y: 592.0, scale: 1 }, 9.8);
+    tl.set("#s-cur5", { x: 377.1, y: 592.0, scale: 1 }, 9.833);
+    tl.set("#s-cur5", { x: 356.6, y: 592.0, scale: 1 }, 9.867);
+    tl.set("#s-cur5", { x: 342.7, y: 592.0, scale: 1 }, 9.9);
+    tl.set("#s-cur5", { x: 335.6, y: 592.0, scale: 1 }, 9.933);
+    tl.set("#s-cur5", { x: 332.9, y: 592.0, scale: 1 }, 9.967);
+    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 1 }, 10.0);
+    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 1 }, 10.033);
+    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 1 }, 10.067);
+    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 1 }, 10.1);
+    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 0.86 }, 10.133);
+    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 0.86 }, 10.167);
+    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 0.86 }, 10.2);
+    tl.set("#s-cur5", { x: 332.5, y: 592.0, scale: 1 }, 10.233);
+    tl.set("#s-cur5", { x: 333.3, y: 592.7, scale: 1 }, 10.267);
+    tl.set("#s-cur5", { x: 338.6, y: 597.5, scale: 1 }, 10.3);
+    tl.set("#s-cur5", { x: 352.9, y: 610.4, scale: 1 }, 10.333);
+    tl.set("#s-cur5", { x: 380.7, y: 635.5, scale: 1 }, 10.367);
+    tl.set("#s-cur5", { x: 421.6, y: 672.3, scale: 1 }, 10.4);
+    tl.set("#s-cur5", { x: 449.5, y: 697.4, scale: 1 }, 10.433);
+    tl.set("#s-cur5", { x: 463.8, y: 710.3, scale: 1 }, 10.467);
+    tl.set("#s-cur5", { x: 469.1, y: 715.1, scale: 1 }, 10.5);
+    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 1 }, 10.533);
+    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 1 }, 10.567);
+    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 1 }, 10.6);
+    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 1 }, 10.633);
+    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 0.86 }, 10.667);
+    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 0.86 }, 10.7);
+    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 0.86 }, 10.733);
+    tl.set("#s-cur5", { x: 469.8, y: 715.8, scale: 1 }, 10.767);
+    tl.set("#s-cur5", { x: 470.2, y: 716.1, scale: 1 }, 10.8);
+    tl.set("#s-cur5", { x: 472.6, y: 718.1, scale: 1 }, 10.833);
+    tl.set("#s-cur5", { x: 479.1, y: 723.5, scale: 1 }, 10.867);
+    tl.set("#s-cur5", { x: 491.7, y: 734.0, scale: 1 }, 10.9);
+    tl.set("#s-cur5", { x: 510.3, y: 749.5, scale: 1 }, 10.933);
+    tl.set("#s-cur5", { x: 523.0, y: 760.1, scale: 1 }, 10.967);
+    tl.set("#s-cur5", { x: 529.5, y: 765.5, scale: 1 }, 11.0);
+    tl.set("#s-cur5", { x: 531.9, y: 767.5, scale: 1 }, 11.033);
+    tl.set({}, {}, 11.049999999999999);
     window.__timelines = window.__timelines || {};
     window.__timelines["showcase"] = tl;
   </script>
