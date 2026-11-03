@@ -1722,3 +1722,16 @@ The wall's grid was still mechanical. Two changes make it a composition:
 
 Measured on the render: the 6.4 s → 7.2 s frame delta is **23.99** and 7.2 s → 8.4 s
 **30.65** (the bob plus the caption swap), cuts **19/19**, cues **50/54** direct.
+
+### v6.4 — the terminal app gets the same surface
+
+The Settings app inside the terminal was still a flat pane. Its section cards now
+carry the same lit surface as the monitor and editor — a theme-derived two-stop
+gradient (`card → background`, 165°) with a soft accent glow — and the field labels
+are uppercase (`LOOK`, `DARK MODE`, `SOUND EFFECTS`, `VOLUME`), so the app reads as
+the same product family in all three states.
+
+Re-recorded the three terminal captures (`term-light-linux`, `term-dark`,
+`term-light-win`) through the restyled block, rebuilt and re-rendered:
+terminal state deltas **151.8 / 124.6 / 89.9** at 21.5 / 22.0 / 22.5, cuts **19/19**,
+cues **50/54** direct.

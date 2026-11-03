@@ -61,7 +61,7 @@ const Row = ({
       style={{ paddingTop: theme.spacing.lg, paddingBottom: theme.spacing.lg }}
     >
       <Stack direction="column" gap="2xs">
-        <Text role="label">{label}</Text>
+        <Text role="label">{label.toUpperCase()}</Text>
         {hint === undefined ? null : (
           <Text role="caption" tone="muted">
             {hint}
@@ -159,6 +159,21 @@ export const Settings = ({
           style={{
             paddingLeft: theme.spacing.xl,
             paddingRight: theme.spacing.xl,
+            background: {
+              type: "linear-gradient",
+              angle: 165,
+              stops: [
+                { color: theme.colors.card, position: 0 },
+                { color: theme.colors.background, position: 1 },
+              ],
+            } as never,
+            boxShadow: {
+              offsetX: 0,
+              offsetY: 0,
+              blurRadius: 22,
+              spreadRadius: 0,
+              color: "rgba(10, 132, 255, 0.07)",
+            },
           }}
         >
           <Row label="Look" hint="Every control follows the platform">
@@ -188,6 +203,21 @@ export const Settings = ({
           style={{
             paddingLeft: theme.spacing.xl,
             paddingRight: theme.spacing.xl,
+            background: {
+              type: "linear-gradient",
+              angle: 165,
+              stops: [
+                { color: theme.colors.card, position: 0 },
+                { color: theme.colors.background, position: 1 },
+              ],
+            } as never,
+            boxShadow: {
+              offsetX: 0,
+              offsetY: 0,
+              blurRadius: 22,
+              spreadRadius: 0,
+              color: "rgba(10, 132, 255, 0.07)",
+            },
           }}
         >
           <Row label="Sound effects" hint="Play a sound on every press">
