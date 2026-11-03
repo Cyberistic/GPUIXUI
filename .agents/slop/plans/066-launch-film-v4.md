@@ -1423,8 +1423,22 @@ beat reads without inspection:
 22.5 s  frame 675  Δ 78.29  on-grid  press  corr 1.00   dark → Windows light
 ```
 
-The only remaining caveat is the ssh typing (one line on black), which is the
-design of a terminal prompt rather than a weak transition.
+**v5.0b — the ssh beat is a screen, not a line.** The prompt used to be one line on
+black for 1.3 s. It now runs at 0.016 s per character and ends with the dev server's
+own output, so the black card carries six lines before the app takes over:
+
+```
+20.10  gon@macbook ~ % ssh gon@whale-island        (typed, caret)
+20.48  Last login: Sun Nov 1 19:41:07 2026 …
+20.54  gon@whale-island ~ % nub run dev settings --terminal   (typed)
+21.12  console · ready in 1.4 s
+21.18  VITE v7.1.3  ready in 412 ms
+21.28  ➜  Local:   http://localhost:5173/
+21.38  ➜  GPUix:   http://localhost:5173/terminal
+21.50  the app takes the screen
+```
+
+The rubric now has no caveats: every row passes, with the measurements above.
 
 Full-film review at 0.1 s (`fps=10`, 300 frames, six 10×5 sheets) shows no dead
 frame, no discontinuity and no seam at any join.

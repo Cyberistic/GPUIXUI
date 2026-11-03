@@ -629,7 +629,7 @@ const TERMINAL_LENGTH = 24 - TERMINAL;
 const SSH = "ssh gon@whale-island";
 const RUN = "nub run dev settings --terminal";
 const TYPE_AT = 0.1; // the first keystroke
-const CHAR = 0.02; // seconds per character
+const CHAR = 0.016; // seconds per character
 const T_LOGIN = TYPE_AT + SSH.length * CHAR + 0.06;
 const T_RUN = T_LOGIN + 0.06;
 const T_READY = T_RUN + RUN.length * CHAR + 0.08;
@@ -663,6 +663,9 @@ const terminal: Scene = {
         <div id="t-login" class="ln dim off">Last login: Sun Nov 1 19:41:07 2026 from 10.0.0.2</div>
         <div id="t-runline" class="ln off"><b>gon@whale-island ~ %</b> <span id="t-run"></span><span id="t-caret3" class="caret"></span></div>
         <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
+        <div id="t-out1" class="ln off"><span class="dim">VITE v7.1.3</span>  ready in 412 ms</div>
+        <div id="t-out2" class="ln off"><b>➜</b>  Local:   <span class="dim">http://localhost:5173/</span></div>
+        <div id="t-out3" class="ln off"><b>➜</b>  GPUix:   <span class="dim">http://localhost:5173/terminal</span></div>
       </div>
       <div class="frame">
         ${["term-light-linux", "term-dark", "term-light-win"]
@@ -683,6 +686,10 @@ const terminal: Scene = {
     ${typed("t-run", RUN, T_RUN)}
     tl.set("#t-caret3",{opacity:0},${T_READY.toFixed(2)});
     tl.set("#t-ready",{opacity:1},${T_READY.toFixed(2)});
+    // The command's own output, so the prompt is a screen and not a line.
+    tl.set("#t-out1",{opacity:1},${(T_READY + 0.06).toFixed(2)});
+    tl.set("#t-out2",{opacity:1},${(T_READY + 0.16).toFixed(2)});
+    tl.set("#t-out3",{opacity:1},${(T_READY + 0.26).toFixed(2)});
     tl.set("#t-hist",{opacity:0},${T_APP.toFixed(2)}); tl.set("#t-v0",{opacity:1},${T_APP.toFixed(2)}); tl.set("#t-cur",{opacity:1},${T_APP.toFixed(2)});
     // Three real terminal captures: the platform paints a state change only into
     // the next frame it commits, so each state is recorded as its own take (one

@@ -137,6 +137,16 @@
           ><span id="t-caret3" class="caret"></span>
         </div>
         <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
+        <div id="t-out1" class="ln off">
+          <span class="dim">VITE v7.1.3</span> ready in 412 ms
+        </div>
+        <div id="t-out2" class="ln off">
+          <b>➜</b> Local: <span class="dim">http://localhost:5173/</span>
+        </div>
+        <div id="t-out3" class="ln off">
+          <b>➜</b> GPUix:
+          <span class="dim">http://localhost:5173/terminal</span>
+        </div>
       </div>
       <div class="frame">
         <img
@@ -177,25 +187,25 @@
   <script>
     const tl = gsap.timeline({ paused: true });
     tl.set("#t-ssh", { textContent: "s" }, 0.1);
-    tl.set("#t-ssh", { textContent: "ss" }, 0.12);
-    tl.set("#t-ssh", { textContent: "ssh" }, 0.14);
-    tl.set("#t-ssh", { textContent: "ssh " }, 0.16);
-    tl.set("#t-ssh", { textContent: "ssh g" }, 0.18);
-    tl.set("#t-ssh", { textContent: "ssh go" }, 0.2);
-    tl.set("#t-ssh", { textContent: "ssh gon" }, 0.22);
-    tl.set("#t-ssh", { textContent: "ssh gon@" }, 0.24);
-    tl.set("#t-ssh", { textContent: "ssh gon@w" }, 0.26);
-    tl.set("#t-ssh", { textContent: "ssh gon@wh" }, 0.28);
-    tl.set("#t-ssh", { textContent: "ssh gon@wha" }, 0.3);
-    tl.set("#t-ssh", { textContent: "ssh gon@whal" }, 0.32);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale" }, 0.34);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-" }, 0.36);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-i" }, 0.38);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-is" }, 0.4);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-isl" }, 0.42);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-isla" }, 0.44);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-islan" }, 0.46);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-island" }, 0.48);
+    tl.set("#t-ssh", { textContent: "ss" }, 0.116);
+    tl.set("#t-ssh", { textContent: "ssh" }, 0.132);
+    tl.set("#t-ssh", { textContent: "ssh " }, 0.148);
+    tl.set("#t-ssh", { textContent: "ssh g" }, 0.164);
+    tl.set("#t-ssh", { textContent: "ssh go" }, 0.18);
+    tl.set("#t-ssh", { textContent: "ssh gon" }, 0.196);
+    tl.set("#t-ssh", { textContent: "ssh gon@" }, 0.212);
+    tl.set("#t-ssh", { textContent: "ssh gon@w" }, 0.228);
+    tl.set("#t-ssh", { textContent: "ssh gon@wh" }, 0.244);
+    tl.set("#t-ssh", { textContent: "ssh gon@wha" }, 0.26);
+    tl.set("#t-ssh", { textContent: "ssh gon@whal" }, 0.276);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale" }, 0.292);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-" }, 0.308);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-i" }, 0.324);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-is" }, 0.34);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-isl" }, 0.356);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-isla" }, 0.372);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-islan" }, 0.388);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-island" }, 0.404);
     // The four-second hold is a slow dolly: 3 % closer and a few pixels up-left.
     tl.fromTo(
       ".term",
@@ -203,42 +213,46 @@
       { scale: 1.03, x: -8, y: -6, duration: 4, ease: "none" },
       0,
     );
-    tl.set("#t-caret1", { opacity: 0 }, 0.56);
-    tl.set("#t-login", { opacity: 1 }, 0.56);
-    tl.set("#t-runline", { opacity: 1 }, 0.62);
-    tl.set("#t-run", { textContent: "n" }, 0.62);
-    tl.set("#t-run", { textContent: "nu" }, 0.64);
-    tl.set("#t-run", { textContent: "nub" }, 0.66);
-    tl.set("#t-run", { textContent: "nub " }, 0.68);
-    tl.set("#t-run", { textContent: "nub r" }, 0.7);
-    tl.set("#t-run", { textContent: "nub ru" }, 0.72);
-    tl.set("#t-run", { textContent: "nub run" }, 0.74);
-    tl.set("#t-run", { textContent: "nub run " }, 0.76);
-    tl.set("#t-run", { textContent: "nub run d" }, 0.78);
-    tl.set("#t-run", { textContent: "nub run de" }, 0.8);
-    tl.set("#t-run", { textContent: "nub run dev" }, 0.82);
-    tl.set("#t-run", { textContent: "nub run dev " }, 0.84);
-    tl.set("#t-run", { textContent: "nub run dev s" }, 0.86);
-    tl.set("#t-run", { textContent: "nub run dev se" }, 0.88);
-    tl.set("#t-run", { textContent: "nub run dev set" }, 0.9);
-    tl.set("#t-run", { textContent: "nub run dev sett" }, 0.92);
-    tl.set("#t-run", { textContent: "nub run dev setti" }, 0.94);
-    tl.set("#t-run", { textContent: "nub run dev settin" }, 0.96);
-    tl.set("#t-run", { textContent: "nub run dev setting" }, 0.98);
-    tl.set("#t-run", { textContent: "nub run dev settings" }, 1.0);
-    tl.set("#t-run", { textContent: "nub run dev settings " }, 1.02);
-    tl.set("#t-run", { textContent: "nub run dev settings -" }, 1.04);
-    tl.set("#t-run", { textContent: "nub run dev settings --" }, 1.06);
-    tl.set("#t-run", { textContent: "nub run dev settings --t" }, 1.08);
-    tl.set("#t-run", { textContent: "nub run dev settings --te" }, 1.1);
-    tl.set("#t-run", { textContent: "nub run dev settings --ter" }, 1.12);
-    tl.set("#t-run", { textContent: "nub run dev settings --term" }, 1.14);
-    tl.set("#t-run", { textContent: "nub run dev settings --termi" }, 1.16);
-    tl.set("#t-run", { textContent: "nub run dev settings --termin" }, 1.18);
-    tl.set("#t-run", { textContent: "nub run dev settings --termina" }, 1.2);
-    tl.set("#t-run", { textContent: "nub run dev settings --terminal" }, 1.22);
-    tl.set("#t-caret3", { opacity: 0 }, 1.32);
-    tl.set("#t-ready", { opacity: 1 }, 1.32);
+    tl.set("#t-caret1", { opacity: 0 }, 0.48);
+    tl.set("#t-login", { opacity: 1 }, 0.48);
+    tl.set("#t-runline", { opacity: 1 }, 0.54);
+    tl.set("#t-run", { textContent: "n" }, 0.54);
+    tl.set("#t-run", { textContent: "nu" }, 0.556);
+    tl.set("#t-run", { textContent: "nub" }, 0.572);
+    tl.set("#t-run", { textContent: "nub " }, 0.588);
+    tl.set("#t-run", { textContent: "nub r" }, 0.604);
+    tl.set("#t-run", { textContent: "nub ru" }, 0.62);
+    tl.set("#t-run", { textContent: "nub run" }, 0.636);
+    tl.set("#t-run", { textContent: "nub run " }, 0.652);
+    tl.set("#t-run", { textContent: "nub run d" }, 0.668);
+    tl.set("#t-run", { textContent: "nub run de" }, 0.684);
+    tl.set("#t-run", { textContent: "nub run dev" }, 0.7);
+    tl.set("#t-run", { textContent: "nub run dev " }, 0.716);
+    tl.set("#t-run", { textContent: "nub run dev s" }, 0.732);
+    tl.set("#t-run", { textContent: "nub run dev se" }, 0.748);
+    tl.set("#t-run", { textContent: "nub run dev set" }, 0.764);
+    tl.set("#t-run", { textContent: "nub run dev sett" }, 0.78);
+    tl.set("#t-run", { textContent: "nub run dev setti" }, 0.796);
+    tl.set("#t-run", { textContent: "nub run dev settin" }, 0.812);
+    tl.set("#t-run", { textContent: "nub run dev setting" }, 0.828);
+    tl.set("#t-run", { textContent: "nub run dev settings" }, 0.844);
+    tl.set("#t-run", { textContent: "nub run dev settings " }, 0.86);
+    tl.set("#t-run", { textContent: "nub run dev settings -" }, 0.876);
+    tl.set("#t-run", { textContent: "nub run dev settings --" }, 0.892);
+    tl.set("#t-run", { textContent: "nub run dev settings --t" }, 0.908);
+    tl.set("#t-run", { textContent: "nub run dev settings --te" }, 0.924);
+    tl.set("#t-run", { textContent: "nub run dev settings --ter" }, 0.94);
+    tl.set("#t-run", { textContent: "nub run dev settings --term" }, 0.956);
+    tl.set("#t-run", { textContent: "nub run dev settings --termi" }, 0.972);
+    tl.set("#t-run", { textContent: "nub run dev settings --termin" }, 0.988);
+    tl.set("#t-run", { textContent: "nub run dev settings --termina" }, 1.004);
+    tl.set("#t-run", { textContent: "nub run dev settings --terminal" }, 1.02);
+    tl.set("#t-caret3", { opacity: 0 }, 1.12);
+    tl.set("#t-ready", { opacity: 1 }, 1.12);
+    // The command's own output, so the prompt is a screen and not a line.
+    tl.set("#t-out1", { opacity: 1 }, 1.18);
+    tl.set("#t-out2", { opacity: 1 }, 1.28);
+    tl.set("#t-out3", { opacity: 1 }, 1.38);
     tl.set("#t-hist", { opacity: 0 }, 1.5);
     tl.set("#t-v0", { opacity: 1 }, 1.5);
     tl.set("#t-cur", { opacity: 1 }, 1.5);
