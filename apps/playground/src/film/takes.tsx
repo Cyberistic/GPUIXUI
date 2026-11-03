@@ -583,11 +583,11 @@ export const takes: Readonly<Record<string, Take>> = {
   /** The player is a small floating window; it hugs its content. */
   podcast: {
     width: 1100,
-    height: 560,
+    height: 700,
     frames: 75,
     view: () => (
       <ThemeProvider theme={macWindow}>
-        <div style={{ width: 1100, height: 560, display: "flex" }}>
+        <div style={{ width: 1100, height: 700, display: "flex" }}>
           <Podcast
             cover={
               new URL(

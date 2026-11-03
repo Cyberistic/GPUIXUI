@@ -405,7 +405,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     slug: "podcast",
     title: "Podcast",
     description:
-      "An episode player: show artwork, a seeded waveform, the transport and the season — press a row to play it.",
+      "An episode player over the show's full-bleed artwork: a seeded waveform, the transport and the season — press a row to play it.",
     packages: ["@gpuixui/shell", "@gpuixui/icons", "@gpuixui/primitives"],
     render: () => <LiveBlock slug="podcast" />,
     source: podcastSource,

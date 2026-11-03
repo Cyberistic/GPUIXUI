@@ -18,7 +18,7 @@ of cuts. Plan: `.agents/slop/plans/068-launch-film-v7.md` (the v4 history is
 | 8.5–10.5 s | — | the report dashboard: its range control is pressed and the chart re-reads | `dashboard` |
 | 10.5–13.5 s | Native on Mac, Windows & Linux | **the same Settings window** in three looks, cut still: macOS, Windows, Linux, each with its own toolbar | `settings` |
 | 13.5–16 s | your theme, live · omarchy | **five Omarchy themes**, each with its own wallpaper, cut a beat apart: Tokyo Night → Rosé Pine → Gruvbox → Catppuccin Latte → Everforest | `omarchy-*` stills |
-| 16–20 s | — | Slang’s fx-991, the editor, the hardware monitor, the podcast player | Slang still, `editor`, `monitor`, `podcast` |
+| 16–20 s | — | Slang’s fx-991, the editor, the hardware monitor, the podcast player (its artwork full-bleed behind the episode) | Slang still, `editor`, `monitor`, `podcast` |
 | 20–24 s | the same app, over ssh | the ssh session; the Settings block takes the whole terminal over, then its look moves to Windows and its dark mode comes on — three real terminal states, cut on the press beats | `term-light-linux`, `term-dark`, `term-light-win` |
 | 24–26 s | — | the stack | film |
 | 26–30 s | — | the end card | film |

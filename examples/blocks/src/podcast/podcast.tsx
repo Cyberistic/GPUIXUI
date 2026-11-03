@@ -1,26 +1,37 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * Podcast — an episode player in the Mac look: the show's artwork, the episode
- * and its waveform, the transport, and the rest of the season under it.
- * Pressing a row plays it; the transport toggles play.
+ * Podcast — an episode player over the show's own artwork: the cover fills the
+ * window, a scrim keeps the type readable, and the season sits on a translucent
+ * panel. Pressing a row plays it; the transport toggles play.
  *
- * The artwork is the caller's, because cover art is not ours to ship; the
- * waveform is seeded from the episode, so a render is always the same shape.
+ * The cover is the caller's, because artwork is not ours to ship. A host
+ * without one gets the same poster in the theme's own inks.
  */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
-import { Button, Text } from "@gpuixui/primitives";
 import { Window, WindowToolbar } from "@gpuixui/shell";
 import { useTheme } from "@gpuixui/tokens/react";
 import { useState } from "react";
 import { episodes, type Episode } from "./data.js";
 import { clock, episodeOf, transport, waveform } from "./logic.js";
 
-/** A two-stop fill, for the placeholder a caller without art gets. */
-const gradient = (from: string, to: string) => ({
+/**
+ * The poster's inks.
+ *
+ * A photograph over the whole window is not a theme surface, so its type cannot
+ * borrow the theme's ink: the scrim is dark in both modes and these are the
+ * colours readable on it.
+ */
+const INK = "#FFFFFF";
+const DIM = "#FFFFFFB8";
+const FAINT = "#FFFFFF4D";
+const PANEL = "#00000066";
+
+/** The two-stop fills the runtime accepts, as the typed tuple it reads. */
+const fill = (from: string, to: string, angle = 0) => ({
   type: "linear-gradient" as const,
-  angle: 150,
+  angle,
   stops: [
     { color: from, position: 0 },
     { color: to, position: 1 },
@@ -30,46 +41,12 @@ const gradient = (from: string, to: string) => ({
   ],
 });
 
-/** The artwork: the caller's cover, or a drawn field in the theme's own inks. */
-const Artwork = ({
-  cover,
-  size,
-}: {
-  readonly cover: string | undefined;
-  readonly size: number;
-}) => {
-  const theme = useTheme();
-  return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: 12,
-        overflow: "hidden",
-        pointerEvents: "none",
-        background: gradient(theme.colors.primary, theme.colors.background),
-        boxShadow: {
-          offsetX: 0,
-          offsetY: 12,
-          blurRadius: 30,
-          spreadRadius: -12,
-          color: "#1A103066",
-        },
-      }}
-    >
-      {cover === undefined ? null : (
-        <img alt="" src={cover} style={{ width: "100%", height: "100%" }} />
-      )}
-    </div>
-  );
-};
-
 export const Podcast = ({
   platform,
   cover,
 }: {
   readonly platform?: "darwin" | "win32" | "linux";
-  /** The show's artwork; the block draws a field in its own inks without one. */
+  /** The show's artwork: it fills the window. */
   readonly cover?: string;
 }) => {
   const theme = useTheme();
@@ -79,6 +56,10 @@ export const Podcast = ({
     Option.getOrUndefined(episodeOf(episodes, id)) ?? episodes[0];
   if (episode === undefined) return null;
   const queue = Arr.filter(episodes, (row) => row.id !== episode.id);
+  const index =
+    Arr.findFirstIndex(episodes, (row) => row.id === episode.id).pipe(
+      Option.getOrElse(() => 0),
+    ) + 1;
 
   return (
     <Window
@@ -97,38 +78,85 @@ export const Podcast = ({
         />
       }
     >
-      <div
-        style={{ display: "flex", flexDirection: "row", gap: 24, padding: 24 }}
-      >
-        <Artwork cover={cover} size={232} />
+      <div style={{ position: "relative", flexGrow: 1, overflow: "hidden" }}>
         <div
           style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: "100%",
+            height: "100%",
+            background: fill(theme.colors.secondary, theme.colors.background),
+          }}
+        />
+        {cover === undefined ? null : (
+          <img
+            alt=""
+            src={cover}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: "100%",
+              height: "100%",
+            }}
+          />
+        )}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "#0A0C1247",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: "100%",
+            height: 430,
+            background: fill("#0A0C12F2", "#0A0C1200", 180),
+          }}
+        />
+        <div
+          style={{
+            position: "relative",
             display: "flex",
             flexDirection: "column",
-            gap: 6,
-            flexGrow: 1,
+            gap: 14,
+            height: "100%",
+            padding: 28,
           }}
         >
-          <Text role="caption" tone="muted">
-            NOW PLAYING
-          </Text>
-          <text
-            testId="now-title"
-            style={{
-              fontSize: 27,
-              fontWeight: 700,
-              color: theme.colors.foreground,
-            }}
-          >
-            {episode.title}
-          </text>
-          <text style={{ fontSize: 14, color: theme.colors.mutedForeground }}>
-            {`${episode.show} · Episode ${String(
-              Arr.findFirstIndex(episodes, (row) => row.id === episode.id).pipe(
-                Option.getOrElse(() => 0),
-              ) + 1,
-            )}`}
-          </text>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <text
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: DIM,
+              }}
+            >
+              WHALE ISLAND RADIO
+            </text>
+            <text style={{ fontSize: 40, fontWeight: 700, color: INK }}>
+              Hunter × Hunter
+            </text>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <text
+              testId="now-title"
+              style={{ fontSize: 24, fontWeight: 700, color: INK }}
+            >
+              {episode.title}
+            </text>
+            <text style={{ fontSize: 13, color: DIM }}>
+              {`Episode ${String(index)} · ${clock(episode.seconds)}`}
+            </text>
+          </div>
           <div
             style={{
               display: "flex",
@@ -136,7 +164,6 @@ export const Podcast = ({
               alignItems: "flex-end",
               height: 34,
               gap: 2,
-              paddingTop: 10,
             }}
           >
             {Arr.map(waveform(episode.seed, 84), (height, i) => (
@@ -146,8 +173,7 @@ export const Podcast = ({
                   width: 3,
                   height: Math.round(height * 0.7),
                   borderRadius: 2,
-                  backgroundColor:
-                    i < 34 ? theme.colors.accent : theme.colors.mutedForeground,
+                  backgroundColor: i < 34 ? INK : FAINT,
                 }}
               />
             ))}
@@ -160,15 +186,13 @@ export const Podcast = ({
               gap: 10,
             }}
           >
-            <text style={{ fontSize: 11, color: theme.colors.mutedForeground }}>
-              24:10
-            </text>
+            <text style={{ fontSize: 11, color: DIM }}>24:10</text>
             <div
               style={{
                 flexGrow: 1,
                 height: 3,
                 borderRadius: 2,
-                backgroundColor: theme.colors.border,
+                backgroundColor: FAINT,
               }}
             >
               <div
@@ -176,11 +200,11 @@ export const Podcast = ({
                   width: "44%",
                   height: 3,
                   borderRadius: 2,
-                  backgroundColor: theme.colors.accent,
+                  backgroundColor: INK,
                 }}
               />
             </div>
-            <text style={{ fontSize: 11, color: theme.colors.mutedForeground }}>
+            <text style={{ fontSize: 11, color: DIM }}>
               {clock(episode.seconds)}
             </text>
           </div>
@@ -190,108 +214,96 @@ export const Podcast = ({
               flexDirection: "row",
               alignItems: "center",
               gap: 22,
-              paddingTop: 6,
             }}
           >
-            <Icon
-              name="refresh"
-              size={16}
-              color={theme.colors.mutedForeground}
-            />
-            <Icon
-              name="chevron-left"
-              size={20}
-              color={theme.colors.foreground}
-            />
-            <Button
+            <Icon name="refresh" size={16} color={DIM} />
+            <Icon name="chevron-left" size={20} color={INK} />
+            <div
               testId="transport"
-              variant="primary"
-              onActivate={() => setPlaying(transport)}
-              style={{ width: 46, height: 46, borderRadius: 23, padding: 0 }}
+              onClick={() => setPlaying(transport)}
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 26,
+                backgroundColor: INK,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
               <Icon
                 name={playing ? "pause" : "play"}
-                size={18}
-                color={theme.colors.primaryForeground}
+                size={20}
+                color="#0A0C12"
               />
-            </Button>
-            <Icon
-              name="chevron-right"
-              size={20}
-              color={theme.colors.foreground}
-            />
-            <Icon name="list" size={16} color={theme.colors.mutedForeground} />
+            </div>
+            <Icon name="chevron-right" size={20} color={INK} />
+            <Icon name="list" size={16} color={DIM} />
           </div>
-        </div>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          paddingLeft: 24,
-          paddingRight: 24,
-          paddingBottom: 18,
-          gap: 2,
-        }}
-      >
-        <Text role="caption" tone="muted">
-          THIS SEASON
-        </Text>
-        {Arr.map(queue, (row) => (
           <div
-            key={row.id}
-            testId={`episode-${row.id}`}
-            onClick={() => setId(row.id)}
             style={{
               display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              height: 50,
-              paddingLeft: 8,
-              paddingRight: 8,
-              borderRadius: 8,
-              backgroundColor: "#00000000",
+              flexDirection: "column",
+              gap: 2,
+              marginTop: 4,
+              padding: 6,
+              borderRadius: 12,
+              backgroundColor: PANEL,
             }}
           >
-            <div
+            <text
               style={{
-                width: 34,
-                height: 34,
-                borderRadius: 8,
-                overflow: "hidden",
-                pointerEvents: "none",
-                background: gradient(
-                  theme.colors.secondary,
-                  theme.colors.muted,
-                ),
+                fontSize: 10,
+                fontWeight: 600,
+                color: DIM,
+                paddingLeft: 8,
+                paddingTop: 4,
+                paddingBottom: 4,
               }}
             >
-              {cover === undefined ? null : (
-                <img
-                  alt=""
-                  src={cover}
-                  style={{ width: "100%", height: "100%", opacity: 0.9 }}
-                />
-              )}
-            </div>
-            <div
-              style={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
-            >
-              <text style={{ fontSize: 13, color: theme.colors.foreground }}>
-                {row.title}
-              </text>
-              <text
-                style={{ fontSize: 11, color: theme.colors.mutedForeground }}
-              >
-                {row.show}
-              </text>
-            </div>
-            <text style={{ fontSize: 11, color: theme.colors.mutedForeground }}>
-              {clock(row.seconds)}
+              THIS SEASON
             </text>
+            {Arr.map(queue, (row) => (
+              <div
+                key={row.id}
+                testId={`episode-${row.id}`}
+                onClick={() => setId(row.id)}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                  height: 38,
+                  paddingLeft: 8,
+                  paddingRight: 8,
+                  borderRadius: 8,
+                  backgroundColor: "#00000000",
+                }}
+              >
+                <div
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 11,
+                    backgroundColor: FAINT,
+                    pointerEvents: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Icon name="play" size={11} color={INK} />
+                </div>
+                <text style={{ flexGrow: 1, fontSize: 13, color: INK }}>
+                  {row.title}
+                </text>
+                <text style={{ fontSize: 11, color: DIM }}>
+                  {clock(row.seconds)}
+                </text>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </Window>
   );

@@ -198,3 +198,19 @@ transition style. The measured changes:
 
 Audits on the final render: **20/20** cuts on frame multiples of 15, **45/49**
 cues direct (the same four masked bursts), 30.000000 s, check 0 errors.
+
+## v7.5 — the podcast is a poster
+
+The player shipped as a card with a square cover; the brief was a full-bleed
+background. It is now a poster:
+
+- the caller's artwork fills the window (`cover`), with a uniform scrim plus a
+  top gradient band so the type reads over a bright sky;
+- the type is the poster's own white (documented in the block): a photograph over
+  the whole window is not a theme surface, so it cannot borrow the theme's ink;
+- the season sits on a translucent panel; the march of the tree, the transport
+  and the waveform are unchanged and still tested.
+- the cover is cropped to the window's content ratio (1481×900 → 1100×668), so
+  the runtime — which has no `objectFit` — never stretches it.
+
+The wall's podcast tile now reads as a photograph among the flat cards.

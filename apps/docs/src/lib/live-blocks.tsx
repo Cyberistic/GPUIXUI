@@ -105,7 +105,7 @@ export const liveBlocks: Readonly<Record<string, LiveBlock>> = {
   },
   podcast: {
     width: 1100,
-    height: 560,
+    height: 700,
     load: async () => {
       const { Podcast } = await import("@gpuixui/blocks/podcast");
       return () => (
