@@ -511,3 +511,13 @@ settles to its own size over the same 2 s `power1.inOut` as the pull-back.
   over the whole scene with `ease: "none"`, so the `ssh` typing and the three
   Settings presses ride a continuous move instead of sitting still. Measured from
   the render: the window's left edge runs **365 → 358 → 352 px** at 21 / 22 / 23 s.
+
+### v4.17 — the desktop flip joins the camera
+
+The three platform chat stills (13.5–15 s) were the last shots declared `push:
+[1, 1]` with no drift, so three 0.5 s cuts sat completely still between the moving
+settings beat and the moving apps beat. They now push 5 % with alternating drift:
+macOS [8, −6], Windows [−8, 6], Linux [8, 6] — the same language as everything
+around them. Measured on the macOS cut: the desktop card spans **1074 px at
+13.52 s → 1033 px at 13.95 s** and its centre falls from 966 to 960.5 as the
+drift resolves.

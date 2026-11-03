@@ -471,7 +471,8 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 800,
     scale: 0.75,
     framed: true,
-    push: [1, 1],
+    push: [1.05, 1],
+    drift: [8, -6],
     platform: "macOS",
   },
   {
@@ -481,7 +482,8 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 800,
     scale: 0.75,
     framed: true,
-    push: [1, 1],
+    push: [1.05, 1],
+    drift: [-8, 6],
     platform: "Windows",
   },
   {
@@ -491,7 +493,8 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 800,
     scale: 0.75,
     framed: true,
-    push: [1, 1],
+    push: [1.05, 1],
+    drift: [8, 6],
     platform: "Linux",
   },
   // The apps: Slang's fx-991, the editor, the monitor, the player, the tiling
