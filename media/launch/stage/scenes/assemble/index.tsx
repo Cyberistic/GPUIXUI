@@ -20,8 +20,10 @@ type Box = {
 };
 
 const FRAME = { width: 2200, height: 1400 };
-const SCALE = 0.62;
-const ORIGIN = { x: (1920 - FRAME.width * SCALE) / 2, y: 170 };
+const SCALE = 0.55;
+// The film's line band owns the top 230 px: the screen lands under it, so a
+// settled card never sits in the headline.
+const ORIGIN = { x: (1920 - FRAME.width * SCALE) / 2, y: 285 };
 const SHOT = framesOf("blueprint")[0];
 
 const place = (b: Box): Rect => ({

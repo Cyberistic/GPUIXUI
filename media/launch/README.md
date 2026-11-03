@@ -9,13 +9,18 @@ of cuts. Plan: `.agents/slop/plans/066-launch-film-v4.md`.
 
 | Time | Line | Shot | Source |
 | --- | --- | --- | --- |
-| 0–4.8 s | — | four close-ups, 1.2 s each, static framings cut on the settle: the Switch (drawn at 4× its metrics so the macro is sharp), then Tabs, Slider, Checkbox | `cu-*` |
-| 4.8–9 s | every component you need | **twenty different** blocks and components in one wall, camera pulling back; the line starts under the wall, holds, then swaps places with it (Paper's move) | one of each take |
-| 9–11 s | — | the stats block's real cards falling onto bare paper while the camera drones over the build | `stage-assemble` |
-| 11–13.7 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux | `settings` |
-| 13.7–15.8 s | real apps, built with it | **the same chat window on each platform's desktop** — macOS, Aero, the tiling block — flipping | `chat-mac`, `chat-win`, `chat-linux` |
-| 15.8–19.45 s | real apps, built with it | Slang's fx-991, the editor, the music player, the hardware monitor | Slang still, `editor`, `music`, `monitor` |
-| 19–24 s | can you believe this is in a terminal through ssh? | the ssh session; the Settings block takes the whole terminal over and its look, dark mode and volume are pressed there | `term-settings` |
+| 0–1 s | — | the Switch, camera pushing from 1.1× | `cu-switch-solo` |
+| 1–2 s | the components you know | Tabs, resuming the push at 1.33× | `cu-tabs` |
+| 2–3 s | — | Slider, 1.58× | `cu-slider` |
+| 3–4 s | — | Checkbox, 1.84× — the cut lands at 2.1×, the same scale the wall opens on | `cu-checkbox` |
+| 4–8.5 s | every component you need | **sixteen different** blocks in one bento wall (a 2×2 hero, wide panels, tall columns); it opens on the calculator tile and pulls back to the whole wall; the line starts under the wall, holds, then swaps places with it (Paper's move) | one of each take |
+| 8.5–10.5 s | compose them into blocks | the stats block's real cards falling onto bare paper, the screen landing under the line | `stage-assemble` |
+| 10.5–13.5 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux | `settings` |
+| 13.5–15 s | on every desktop | **the same chat window on each platform's desktop** — macOS on a photo, Aero, the tiling block — flipping | `chat-mac`, `chat-win`, `chat-linux` |
+| 15–20 s | real apps, built with it | Slang's fx-991, the editor, the hardware monitor, the music player, the Omarchy tiling desktop | Slang still, `editor`, `monitor`, `music`, `tiling` |
+| 20–24 s | can you believe this is in a terminal through ssh? | the ssh session; the Settings block takes the whole terminal over and its look, dark mode and volume are pressed there | `term-settings` |
+| 24–26 s | — | the stack | film |
+| 26–30 s | — | the end card | film |
 
 Takes are the real tree under real input (`apps/playground/src/film/take.ts`);
 the stage shot is a stageshow recording of real takes (`stage/README.md`). The

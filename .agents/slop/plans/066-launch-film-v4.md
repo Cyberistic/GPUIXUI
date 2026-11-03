@@ -356,3 +356,33 @@ whooshes: [4.0, 8.5, 10.5, 13.5, 15.0, 20.0, 24.0, 26.0]     ← the cuts
 assemble landings: [8.58, 8.73, 8.88, 9.03]                  ← the card hits
 terminal: 20.00 air · 22.20 press · 22.80 press · 23.40 thud · 24.00 air
 ```
+
+### v4.10 — the wall picks what reads, and the push carries through it
+
+- **Tiles are chosen by what they read at 300 px**, measured: the centre-crop
+  contrast (grey sd) of every take, so a tile could not be a pale card whose
+  content disappears. The wall is sixteen distinct takes now — a 2×2 hero
+  (stats), wide panels (music, desktop-luna, editor, slang, chat-mac, button),
+  a 2×2 kanban, tall columns (chat-win, desktop-aero), and singles (calendar,
+  monitor, viewer, launcher, chat-linux, welcome). No close-up cards: a 1920×1080
+  stage holding one small control always leaves most of a 3:2 tile as paper, and
+  the montage already carries the components in detail.
+- **Contrast ledger** (60 % centre crop, grey sd): license 93, slang 87, button 71,
+  desktop-aero 66, stats 50, music 48, desktop-luna 45, launcher 40, viewer 38,
+  monitor 21, welcome 18, calendar 15, tiling 14, editor 7.5 — versus the rejected
+  cu-switch-solo 2.7, slider 3.0, cu-checkbox 4.1, cu-input 4.2, inbox 6.8.
+  `omarchy` came off (it is the same kanban board as the kanban tile).
+- **The push carries into the wall.** The montage's four clips animate
+  1.1 → 1.33 → 1.58 → 1.84 → 2.1 with no easing (one move, not four zooms), and
+  the wall opens at exactly 2.1 — the scale hands over. The wall then opens *on
+  the calculator tile* (not on the seam) and pulls back to the whole wall over
+  3 s, drifting from the tile's centre to the wall's.
+- **The line sits on paper across the whole pull-back.** The bottom band is now
+  560 px tall with a near-solid stop at 44 %, so the caption is legible over the
+  zoomed wall instead of over tiles showing through a gradient.
+- **The assemble opens on landed cards**: in-point 1.7 s of the stage (the screen
+  lands under the line at y=285, scale 0.55), so the cut at 8.5 s shows three
+  cards landed and the chart arriving — never empty paper and never a card in
+  the headline.
+- `README.md`'s shot table now matches the timeline the film actually renders
+  (0–4, 4–8.5, 8.5–10.5, 10.5–13.5, 13.5–15, 15–20, 20–24, 24–26, 26–30).

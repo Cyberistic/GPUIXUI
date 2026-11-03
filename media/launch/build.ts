@@ -174,12 +174,14 @@ const clip = (
 // Crops stay near 1: the take is already the control at 2× device pixels, and
 // anything past 1.5 magnifies the capture instead of framing it.
 const MONTAGE = [
-  { take: "cu-switch-solo", crop: 1.45, sound: "press" },
-  { take: "cu-tabs", crop: 1.45, sound: "cap-0" },
-  { take: "cu-slider", crop: 1.5, sound: "cap-1" },
-  { take: "cu-checkbox", crop: 1.5, sound: "cap-2" },
+  { take: "cu-switch-solo", sound: "press" },
+  { take: "cu-tabs", sound: "cap-0" },
+  { take: "cu-slider", sound: "cap-1" },
+  { take: "cu-checkbox", sound: "cap-2" },
 ] as const;
 const BEAT_CUT = 1;
+/** The opening's camera, one continuous push: each clip resumes the last scale. */
+const PUSH = [1.1, 1.33, 1.58, 1.84, 2.1] as const;
 const PRESS_AT = 0.8; // every close-up presses on its frame 24
 const LEAD_IN = 0.42; // each clip starts this far into its take, so the press lands 0.38 s in
 /** On-screen pointer width: the camera crops otherwise scale the pointer too. */
@@ -191,10 +193,10 @@ const montage: Scene = {
   css: `#root .cam { position:absolute; inset:0; transform-origin:960px 540px; }
     #root .cam video { left:0; top:0; width:1920px; height:1080px; }`,
   body: MONTAGE.map(
-    ({ take, crop }, i) =>
-      `    <div id="m-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0};transform:scale(${i === 0 ? 1.1 : crop})">
+    ({ take }, i) =>
+      `    <div id="m-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0};transform:scale(${PUSH[i]})">
       ${clip(`m-v${i}`, footage(take, 8), i * BEAT_CUT, BEAT_CUT, LEAD_IN, "", 1 + (i % 2))}
-      <div id="m-cur${i}" class="cursor" style="width:${Math.round(CURSOR_WIDTH / crop)}px">${CURSOR}</div>
+      <div id="m-cur${i}" class="cursor" style="width:${Math.round(CURSOR_WIDTH / PUSH[i])}px">${CURSOR}</div>
     </div>`,
   ).join("\n"),
   script: MONTAGE.map(({ take }, i) => {
@@ -203,12 +205,9 @@ const montage: Scene = {
       i + 1 < MONTAGE.length
         ? `tl.set("#m-cam${i}",{opacity:0},${(t + BEAT_CUT).toFixed(1)});`
         : "";
-    // The opening is one carried move: the camera pushes into the switch and the
-    // cut lands mid-move, so the first four shots read as one gesture.
-    const push =
-      i === 0
-        ? `tl.fromTo("#m-cam0",{scale:1.1},{scale:1.45,duration:${BEAT_CUT},ease:"power1.in"},0);`
-        : "";
+    // One carried move: every clip resumes the scale the last one reached, so the
+    // four close-ups are a single push that hands over to the wall's pull-back.
+    const push = `tl.fromTo("#m-cam${i}",{scale:${PUSH[i]}},{scale:${PUSH[i + 1]},duration:${BEAT_CUT},ease:"none"},${t.toFixed(1)});`;
     return `${i > 0 ? `tl.set("#m-cam${i}",{opacity:1},${t.toFixed(1)});` : ""}${cut}
     ${push}
     ${cursorClip(`m-cur${i}`, take, t, LEAD_IN, BEAT_CUT, 1)}`;
@@ -219,6 +218,9 @@ const montage: Scene = {
 // camera starts on one being typed into and keeps pulling back to reveal more.
 // Every tile a different take, and a span that gives the wall a rhythm: a hero,
 // wide panels, two tall ones and a big block — a bento, not a contact sheet.
+// Tiles are picked for what they read at 300 px: a bold control or a dense
+// screen, never a pale card whose content disappears (measured: the palest
+// takes sit at 2.7–9 centre contrast, the chosen ones at 15–93).
 interface Cell {
   readonly take: string;
   readonly col: number;
@@ -228,24 +230,21 @@ interface Cell {
 }
 const WALL: ReadonlyArray<Cell> = [
   { take: "stats", col: 0, row: 0, w: 2, h: 2 },
-  { take: "cu-switch-solo", col: 2, row: 0, w: 1, h: 1 },
-  { take: "notes", col: 3, row: 0, w: 1, h: 1 },
-  { take: "tiling", col: 4, row: 0, w: 2, h: 1 },
+  { take: "music", col: 2, row: 0, w: 2, h: 1 },
+  { take: "desktop-luna", col: 4, row: 0, w: 2, h: 1 },
   { take: "editor", col: 2, row: 1, w: 2, h: 1 },
-  { take: "cu-tabs", col: 4, row: 1, w: 1, h: 1 },
-  { take: "desktop-aero", col: 5, row: 1, w: 1, h: 2 },
-  { take: "cu-slider", col: 0, row: 2, w: 1, h: 1 },
-  { take: "calendar", col: 1, row: 2, w: 1, h: 1 },
-  { take: "music", col: 2, row: 2, w: 1, h: 1 },
-  { take: "inbox", col: 3, row: 2, w: 1, h: 1 },
-  { take: "monitor", col: 4, row: 2, w: 1, h: 1 },
-  { take: "chat-win", col: 0, row: 3, w: 1, h: 2 },
-  { take: "cu-checkbox", col: 1, row: 3, w: 1, h: 1 },
-  { take: "kanban", col: 2, row: 3, w: 2, h: 2 },
-  { take: "viewer", col: 4, row: 3, w: 1, h: 1 },
-  { take: "preferences", col: 5, row: 3, w: 1, h: 1 },
-  { take: "cu-input", col: 1, row: 4, w: 1, h: 1 },
-  { take: "slang", col: 4, row: 4, w: 2, h: 1 },
+  { take: "calendar", col: 4, row: 1, w: 1, h: 1 },
+  { take: "monitor", col: 5, row: 1, w: 1, h: 1 },
+  { take: "chat-win", col: 0, row: 2, w: 1, h: 2 },
+  { take: "kanban", col: 1, row: 2, w: 2, h: 2 },
+  { take: "slang", col: 3, row: 2, w: 2, h: 1 },
+  { take: "desktop-aero", col: 5, row: 2, w: 1, h: 2 },
+  { take: "chat-mac", col: 3, row: 3, w: 2, h: 1 },
+  { take: "button", col: 0, row: 4, w: 2, h: 1 },
+  { take: "viewer", col: 2, row: 4, w: 1, h: 1 },
+  { take: "launcher", col: 3, row: 4, w: 1, h: 1 },
+  { take: "chat-linux", col: 4, row: 4, w: 1, h: 1 },
+  { take: "welcome", col: 5, row: 4, w: 1, h: 1 },
 ];
 const UNIT = { w: 300, h: 200, gap: 16 };
 const GRID = { cols: 6, rows: 5 };
@@ -268,6 +267,10 @@ const lastFrame = (take: string): number =>
       .toString()
       .slice(0, 4),
   );
+/** The tile the wall's pull-back starts on (the calculator), in wall pixels. */
+const FOCUS = cellBox(WALL[8]);
+const FOCUS_CX = FOCUS.x + Math.round(FOCUS.w / 2);
+const FOCUS_CY = FOCUS.y + Math.round(FOCUS.h / 2);
 const SHOWCASE = 8.5;
 const GRID_LENGTH = SHOWCASE - 4 * BEAT_CUT;
 const grid: Scene = {
@@ -276,31 +279,19 @@ const grid: Scene = {
   duration: GRID_LENGTH,
   css: `#root .cam { position:absolute; left:960px; top:540px; width:0; height:0; }
     #root .wall { position:absolute; left:0; top:0; width:${WALL_BOX.w}px; height:${WALL_BOX.h}px; }
-    #root .tile { position:absolute; width:${GRID.w}px; height:${GRID.h}px; border-radius:24px; overflow:hidden; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 10px 30px -14px rgba(30,30,60,.25); }
+    #root .tile { position:absolute; width:${UNIT.w}px; height:${UNIT.h}px; border-radius:24px; overflow:hidden; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 10px 30px -14px rgba(30,30,60,.25); }
     #root .tile img, #root .tile video { position:absolute; }
     #root .tile img.cover { inset:0; width:100%; height:100%; object-fit:cover; }
     #root .cap { position:absolute; left:0; right:0; top:800px; text-align:center; font:600 64px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
     #root .cap-band { position:absolute; left:0; right:0; height:330px; pointer-events:none; }
-    #root .cap-band.down { bottom:0; background:linear-gradient(rgba(244,242,238,0), ${GROUND} 28%); }
+    #root .cap-band.down { bottom:0; height:560px; background:linear-gradient(rgba(244,242,238,0) 26%, rgba(244,242,238,.94) 44%, ${GROUND} 58%); }
     #root .cap-band.up { top:0; opacity:0; background:linear-gradient(${GROUND} 55%, rgba(244,242,238,0)); }`,
   body: `    <div id="g-cam" class="cam">
       <div id="g-wall" class="wall">
-${WALL.map((cell, i) => {
+${WALL.map((cell) => {
   const box = cellBox(cell);
-  const component = cell.take.startsWith("cu-");
   const end = still(cell.take, lastFrame(cell.take));
-  // A close-up take is a 960×540 stage with one small control on it: the tile
-  // crops into the stage so the control fills the tile instead of floating in
-  // a white card.
-  const zoom = 2.2;
-  const mediaW = Math.round(box.w * zoom);
-  const mediaH = Math.round(box.h * zoom);
-  const mediaLeft = Math.round(-(960 - mediaW) / 2);
-  const mediaTop = Math.round(-(540 - mediaH) / 2);
-  const media = component
-    ? `<img src="${end}" alt="" style="left:${mediaLeft}px;top:${mediaTop}px;width:${mediaW}px;height:${mediaH}px">${i % 4 === 0 ? clip(`g-v${i}`, footage(cell.take), 0, GRID_LENGTH, 0.3, `left:${mediaLeft}px;top:${mediaTop}px;width:${mediaW}px;height:${mediaH}px`, 1 + (i % 8)) : ""}`
-    : `<img class="cover" src="${end}" alt="">`;
-  return `        <div class="tile" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px">${media}</div>`;
+  return `        <div class="tile" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover" src="${end}" alt=""></div>`;
 }).join("\n")}
       </div>
     </div>
@@ -309,7 +300,10 @@ ${WALL.map((cell, i) => {
     <div id="g-cap" class="cap">every component you need</div>`,
   script: `const cam = { z: Math.log(2.1) };
     const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
-    gsap.set("#g-wall", { x: ${-Math.round(WALL_BOX.w / 2)}, y: ${-Math.round(WALL_BOX.h / 2)} });
+    // It opens on one tile, not on the wall's seam: the montage's push lands on
+    // the calculator, and the pull-back reveals the wall around it.
+    gsap.set("#g-wall", { x: ${-FOCUS_CX}, y: ${-FOCUS_CY} });
+    gsap.to("#g-wall", { x: ${-Math.round(WALL_BOX.w / 2)}, y: ${-Math.round(WALL_BOX.h / 2)}, duration: 3, ease: "power1.inOut" }, 0);
     zoom();
     tl.to(cam, { z: Math.log(0.86), duration: 3, ease: "power1.inOut", onUpdate: zoom }, 0);
     tl.fromTo("#g-wall",{rotation:0},{rotation:0,duration:${GRID_LENGTH}},0);
@@ -341,7 +335,7 @@ interface Shot {
 const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "stage-assemble",
-    mediaStart: 1.35,
+    mediaStart: 1.7,
     length: 2,
     width: 1920,
     height: 1080,
@@ -700,10 +694,10 @@ const CUES: ReadonlyArray<readonly [number, string]> = [
   [4 * BEAT_CUT + PRESS_AT - 0.3 + F, "press"],
   // Each card lands at 0.95 s + 150 ms after the one before it (the stage's own
   // script), so the hit sits on the frame the card settles, not near it.
-  // The cards land at 0.95 s + 150 ms each; the shot opens at 1.35 s, so only the
+  // The cards land at 0.95 s + 150 ms each; the shot opens at 1.7 s, so only the
   // landings that are on screen get a hit (a hit for an off-screen landing would
   // sound on the previous scene).
-  ...[3, 4, 5, 6].map((i) => [shotAt(0, 0.95 + i * 0.15), "land"] as const),
+  ...[5, 6].map((i) => [shotAt(0, 0.95 + i * 0.15), "land"] as const),
   [shotAt(0, 1.95), "glass-1"],
   // The palette flip inside the tiling take, on its own frame.
   [shotAt(11, 0.6), "glass-2"],
