@@ -633,7 +633,7 @@ const CHAR = 0.02; // seconds per character
 const T_LOGIN = TYPE_AT + SSH.length * CHAR + 0.06;
 const T_RUN = T_LOGIN + 0.06;
 const T_READY = T_RUN + RUN.length * CHAR + 0.08;
-const T_APP = 1.6; // the app takes the screen
+const T_APP = 1.5; // the app takes the screen — on the beat grid
 const typed = (id: string, text: string, from: number): string =>
   [...text]
     .map(
@@ -688,8 +688,8 @@ const terminal: Scene = {
     // the next frame it commits, so each look is recorded as its own take (one
     // press before the first paint) and the film cuts between them — Linux light,
     // Windows light, Linux dark.
-    tl.set("#t-v0",{opacity:0},${(T_APP + 0.6).toFixed(2)}); tl.set("#t-v1",{opacity:1},${(T_APP + 0.6).toFixed(2)});
-    tl.set("#t-v1",{opacity:0},${(T_APP + 1.2).toFixed(2)}); tl.set("#t-v2",{opacity:1},${(T_APP + 1.2).toFixed(2)});
+    tl.set("#t-v0",{opacity:0},${(T_APP + 0.5).toFixed(2)}); tl.set("#t-v1",{opacity:1},${(T_APP + 0.5).toFixed(2)});
+    tl.set("#t-v1",{opacity:0},${(T_APP + 1.0).toFixed(2)}); tl.set("#t-v2",{opacity:1},${(T_APP + 1.0).toFixed(2)});
     ${cursorTrack("t-cur", cursorOf("term-app"), T_APP, TERM.scale / 2)}`,
 };
 
@@ -821,8 +821,8 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   // it actually paints (frame 61 of takes/term-settings at 30 fps). The two
   // "presses" that used to sit between them had no picture to land on.
   [TERMINAL + T_APP, "land"],
-  [TERMINAL + T_APP + 0.6, "press"],
-  [TERMINAL + T_APP + 1.2, "thud"],
+  [TERMINAL + T_APP + 0.5, "press"],
+  [TERMINAL + T_APP + 1.0, "thud"],
   // A cut is a whoosh: the scene starts and the showcase's shot boundaries, read
   // from the same table the compositions are written from.
   // Every cut is a whoosh: the scene starts at full level, and every shot

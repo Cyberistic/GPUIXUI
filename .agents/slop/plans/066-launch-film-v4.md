@@ -1388,3 +1388,30 @@ and every pixel of the terminal beat now comes from the terminal platform.
 Audited on the new render: cuts **19/19** on frame multiples of 15 with cues at
 ≤40 ms; terminal beat deltas 90.4 (takeover), 0.9 (chip), 78.7 (dark); cues **53/56**
 direct at lag ≤25 ms, the same three masked by simultaneous sounds.
+
+## Acceptance rubric (v5.0) — the nine points and the rhythm rules, checked on the shipped mp4
+
+| # | Criterion (from the original critique / huashu-motion) | Evidence | Verdict |
+| --- | --- | --- | --- |
+| 1 | No repeated components in the wall | `compositions/grid.html` references **16 unique** footage files, one per tile | **pass** |
+| 2 | Text holds long enough | `LINES` holds: 2.8 s, 2.0 s, 3.0 s, 1.5 s, 5.0 s, 4.0 s | **pass** |
+| 3 | Opening not oversized | the four clips push 1.1 → 1.33 → 1.58 → 1.84 → 2.1 with `ease: none`, cut mid-move | **pass** |
+| 4 | Sound on every placement, landing and transition | whooshes at **19/19** cuts (0 ms); **53/56** cues correlate directly at lag ≤25 ms, the 3 others masked by simultaneous sounds and grouped at 0–3 ms | **pass** |
+| 5 | No stray cursor at a frame corner | frame 0: **0** dark pixels in either 240×160 top corner | **pass** |
+| 6 | Desktop imagery inside its rounded frame | every desktop shot is a `.frame.framed` (radius 20, `overflow:hidden`); checked at 13.7 / 14.2 s | **pass** |
+| 7 | Real photographs as wallpapers | macOS = Maligne Lake, Windows = sea, Omarchy = tiling desktop (`assets/wallpaper`) | **pass** |
+| 8 | Omarchy scene restored | `tiling` take appears in the wall and as the last apps shot | **pass** |
+| 9 | Monitor matches the reference | load rings, temp/clock/fan bars, RAM ring, network/storage, top-processes table | **pass** |
+| 10 | Terminal shows the library | three real terminal captures — Linux light → Windows light → Linux dark — **all three now on the 0.5 s grid** (21.5 / 22.0 / 22.5), each with its cue at corr 0.99–1.00 | **pass** |
+| R1 | Hook (huashu) | the film opens on a switch turning on, cursor in frame | **pass** |
+| R2 | Route | controls → wall → block → platforms → desktops → apps → terminal → stack → card, one ladder | **pass** |
+| R3 | Carried cuts | the opening push and the per-shot drift carry the camera across every cut | **pass** |
+| R4 | Hits on landings | `land` cues sit on the cards' settle frames (8.53 / 8.68) and the app takeover (21.5) | **pass** |
+| R5 | Cuts on the beat | **19/19** scene and shot cuts on frame multiples of 15; the terminal's three state cuts moved from 21.6/22.2/22.8 (off-grid) to 21.5/22.0/22.5 | **pass (fixed this pass)** |
+
+Two honest caveats, not failures: the Windows-light state (22.0 s) is a chip-and-
+control-metrics change (frame delta 0.87) — legible at full size, subtle at thumbnail
+size; and the ssh typing at 20.0–21.4 s is a single line on black by design.
+
+Full-film review at 0.1 s (`fps=10`, 300 frames, six 10×5 sheets) shows no dead
+frame, no discontinuity and no seam at any join.
