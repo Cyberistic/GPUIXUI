@@ -564,7 +564,7 @@ export const takes: Readonly<Record<string, Take>> = {
     false,
   ),
   editor: macApp(
-    <Editor />,
+    <Editor dark />,
     [{ frame: 0, aim: { x: 900, y: 620 } }],
     [],
     false,

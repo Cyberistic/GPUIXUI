@@ -1693,3 +1693,17 @@ stage the user asked for is on the strip.
 
 Gates after the restyle: check types clean, lint clean, blocks 15 files / 75 tests,
 hyperframes 0 errors, 30.000000 s.
+
+### v6.2 — the editor gets the same night surface
+
+`Editor` gained a `dark` prop: it renders inside the dark theme and switches its
+syntax palette to one-dark's tokens (`#C678DD` keyword, `#98C379` string, `#5C6370`
+comment, `#61AFEF` fn, `#ABB2BF` punctuation, `#D7DAE0` plain). The film's editor take
+now records that variant (`<Editor dark />`), so the beat is a dark IDE with a
+readable, high-contrast token paint instead of pale grey code on white.
+
+The light variant is unchanged — the palette table keeps both, and the block's
+default is still the Mac look — so the docs page and the examples keep working.
+
+Gates: check types clean, lint clean, blocks 15 files / 75 tests, hyperframes 0
+errors, 30.000000 s.

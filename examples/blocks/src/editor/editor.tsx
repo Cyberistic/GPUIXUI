@@ -11,30 +11,68 @@ import * as Arr from "effect/Array";
 import { Icon } from "@gpuixui/icons";
 import { Text } from "@gpuixui/primitives";
 import { Window, WindowToolbar } from "@gpuixui/shell";
-import { useTheme } from "@gpuixui/tokens/react";
+import { darkTheme } from "@gpuixui/tokens";
+import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 import { useState } from "react";
 import { files, tree } from "./data.js";
 import { highlight, openFile, type Tone } from "./logic.js";
 
 const GUTTER = 46;
 
+/** The dark palette: one-dark's tokens, for the night surface. */
+const DARK_TONES: Readonly<Record<Tone, string>> = {
+  keyword: "#C678DD",
+  string: "#98C379",
+  comment: "#5C6370",
+  fn: "#61AFEF",
+  punctuation: "#ABB2BF",
+  plain: "#D7DAE0",
+};
+
+const LIGHT_TONES: Readonly<Record<Tone, string>> = {
+  keyword: "#A626A4",
+  string: "#3F8F3F",
+  comment: "#9AA0A6",
+  fn: "#3B6FD4",
+  punctuation: "#6B6B76",
+  plain: "",
+};
+
 export const Editor = ({
   platform,
+  dark = false,
 }: {
   readonly platform?: "darwin" | "win32" | "linux";
+  readonly dark?: boolean;
+}) =>
+  dark ? (
+    <ThemeProvider theme={darkTheme}>
+      <EditorBody platform={platform} dark />
+    </ThemeProvider>
+  ) : (
+    <EditorBody platform={platform} />
+  );
+
+const EditorBody = ({
+  platform,
+  dark = false,
+}: {
+  readonly platform?: "darwin" | "win32" | "linux";
+  readonly dark?: boolean;
 }) => {
   const theme = useTheme();
   const [open, setOpen] = useState(files[0]?.name ?? "");
   const file = Option.getOrUndefined(openFile(files, open));
 
+  const tones = dark ? DARK_TONES : LIGHT_TONES;
   const toneColour = (tone: Tone): string =>
     Match.value(tone).pipe(
-      Match.when("keyword", () => "#A626A4"),
-      Match.when("string", () => "#3F8F3F"),
-      Match.when("comment", () => "#9AA0A6"),
-      Match.when("fn", () => "#3B6FD4"),
-      Match.when("punctuation", () => "#6B6B76"),
-      Match.when("plain", () => theme.colors.foreground),
+      Match.when("keyword", () => tones.keyword),
+      Match.when("string", () => tones.string),
+      Match.when("comment", () => tones.comment),
+      Match.when("fn", () => tones.fn),
+      Match.when("punctuation", () => tones.punctuation),
+      Match.when("plain", () => (dark ? tones.plain : theme.colors.foreground)),
       Match.exhaustive,
     );
 
