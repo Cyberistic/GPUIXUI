@@ -23,6 +23,7 @@ import { carouselMeta } from "./carousel.js";
 import { cardMeta } from "./card.js";
 import { chatMeta } from "./chat.js";
 import { codeBlockMeta } from "./code-block.js";
+import { diagramMeta } from "./diagram.js";
 import { collapsibleMeta } from "./collapsible.js";
 import { colorPickerMeta } from "./color-picker.js";
 import { comboboxMeta } from "./combobox.js";
@@ -122,6 +123,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   cardMeta,
   chatMeta,
   codeBlockMeta,
+  diagramMeta,
   collapsibleMeta,
   colorPickerMeta,
   comboboxMeta,

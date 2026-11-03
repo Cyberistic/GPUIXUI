@@ -165,7 +165,9 @@ export const surfaceBudget = {
   // 215 → 175 when the sixteen decorative effects (their modules, logic,
   // stores and `internal/text-swap.ts`) moved to `@gpuixui/fx` (plan 726):
   // the core entry no longer carries a particle field or a kinetic headline.
-  modules: 175,
+  // 175 → 177 with the diagram (plan 753): `diagram.tsx` and `diagram/logic.ts`,
+  // a two-module family whose renderer is a dependency rather than a module.
+  modules: 177,
 
   /** Bytes those modules cost to read and parse; a ceiling, not the measurement. */
   // 722 KiB measured on 2026-10-22 with RippleButton and ShineButton; 732 KiB
@@ -301,12 +303,15 @@ export const surfaceBudget = {
   familyMotion: { modules: 5, bytes: 43 * 1024 },
   /** Packages the entry's own modules import. */
   // `@tanstack/form-core` joined with Form's validator seam and
-  // `@tanstack/highlight` with CodeBlock's tokenizer.
+  // `@tanstack/highlight` with CodeBlock's tokenizer. `pele` joined with the
+  // diagram's renderer (plan 753) — one module, and the reason a diagram is
+  // a drawing rather than a document.
   packages: [
     "@gpuix/react",
     "@tanstack/form-core",
     "@tanstack/highlight",
     "effect",
+    "pele",
     "react",
   ],
 } as const;

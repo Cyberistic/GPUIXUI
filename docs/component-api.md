@@ -427,6 +427,7 @@ the honest parts.
 | Hexagon | `Hexagon` (one part) | — | plan 600 |
 | Stars | `Stars` (one part) | — | plan 600 |
 | Code block | `CodeBlock` (one part) | — | plan 600 |
+| Diagram | `Diagram` (one part) | — | plan 753 |
 | Copy button | `CopyButton` (one part) | — | plan 600 |
 | Page transition | `PageTransition` (one part) | — | plan 600 |
 | Theme toggler | `ThemeToggler` (one part) | — | plan 600 |

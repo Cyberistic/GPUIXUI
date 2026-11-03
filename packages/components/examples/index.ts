@@ -34,6 +34,7 @@ import { ColorPickerExample } from "./color-picker.example.js";
 import { ComboboxExample } from "./combobox.example.js";
 import { CommandMenuExample } from "./command-menu.example.js";
 import { ConfirmDialogExample } from "./confirm-dialog.example.js";
+import { DiagramExample } from "./diagram.example.js";
 import { ContextMenuExample } from "./context-menu.example.js";
 import { CopyButtonExample } from "./copy-button.example.js";
 import { CountdownExample } from "./countdown.example.js";
@@ -116,6 +117,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "color-picker": ColorPickerExample,
   combobox: ComboboxExample,
   "command-menu": CommandMenuExample,
+  diagram: DiagramExample,
   "confirm-dialog": ConfirmDialogExample,
   "context-menu": ContextMenuExample,
   "copy-button": CopyButtonExample,

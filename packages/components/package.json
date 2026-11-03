@@ -26,6 +26,7 @@
   "dependencies": {
     "@gpuix/react": "catalog:",
     "@tanstack/form-core": "catalog:",
+    "pele": "catalog:",
     "@gpuixui/icons": "workspace:*",
     "@gpuixui/keyboard": "workspace:*",
     "@gpuixui/motion": "workspace:*",
