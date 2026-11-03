@@ -239,7 +239,7 @@ const MATCH_TILE: Cell = { take: "button", col: 3, row: 2, w: 2, h: 1 };
 const WALL: ReadonlyArray<Cell> = [
   { take: "stats", col: 0, row: 0, w: 2, h: 2 },
   { take: "music", col: 2, row: 0, w: 2, h: 1 },
-  { take: "desktop-luna", col: 4, row: 0, w: 2, h: 1 },
+  { take: "tiling", col: 4, row: 0, w: 2, h: 1 },
   { take: "editor", col: 2, row: 1, w: 2, h: 1, zoom: 1.5, focus: [0.5, 0.3] },
   {
     take: "license",
@@ -277,15 +277,7 @@ const WALL: ReadonlyArray<Cell> = [
   },
   { take: "notes", col: 3, row: 4, w: 1, h: 1, zoom: 1.6, focus: [0.4, 0.4] },
   { take: "chat-linux", col: 4, row: 4, w: 1, h: 1 },
-  {
-    take: "welcome",
-    col: 5,
-    row: 4,
-    w: 1,
-    h: 1,
-    zoom: 2.5,
-    focus: [0.44, 0.5],
-  },
+  { take: "desktop-luna", col: 5, row: 4, w: 1, h: 1 },
 ];
 const UNIT = { w: 300, h: 200, gap: 16 };
 /**

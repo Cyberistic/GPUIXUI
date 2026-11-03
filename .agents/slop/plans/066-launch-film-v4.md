@@ -1466,3 +1466,41 @@ desktop-luna, desktop-aero, music, settings). Driving every tile past the median
 would mean choosing tiles for noise instead of for what they show, which would make
 the wall worse. The ledger stays as the honest measurement it is — **min 2.4, median
 4.3, max 12.2** — with this experiment on record as the reason it does not move.
+
+### v5.2 — the wall's weak tiles replaced by denser takes (not crops)
+
+Cropping could not lift the flat tiles (v5.1), so the *content* was changed instead,
+each tile placed in the shape where its take reads best. Measured at tile size first
+(cover crop to the tile aspect, then the film's 0.83 scale, mean grey neighbour
+difference):
+
+```
+take         1x1    2x1          take         1x1    2x1
+chat-linux   8.8    2.2          settings     4.0    3.4
+monitor      7.3    4.2          music        3.6    2.5
+term-slang   6.3    2.9          button       3.1    2.8
+omarchy      5.9    3.8          notes        2.8    1.4
+desktop-luna 5.6    2.7          kanban       2.7    1.4
+license      5.5    4.4          welcome      1.1    1.5
+tiling       5.2    4.6
+```
+
+Two swaps followed from that table:
+
+- `desktop-luna` was in a **2×1** slot (2.7 detail); it now takes the **1×1** the
+  weakest tile held (5.6). `welcome` (1.1 at 1×1) is retired from the wall.
+- `tiling` (4.6 at 2×1 — the best wide take available) takes the freed 2×1.
+
+**Ledger before → after** (same render, same metric):
+
+```
+before  min 2.4 · median 4.3 · max 12.2 · under 4.0: kanban, button, luna, aero, music, settings
+after   min 2.4 · median 4.7 · max 10.7 · under 4.0: kanban, music, button, editor
+```
+
+The floor is still `kanban` (2.4) — a board of pale cards — and it is kept because
+the wall is meant to show a board, not to maximise edge energy. Everything else
+moved up, the median rose, and the worst previous tile (welcome) is gone.
+
+Audited on the same render: cuts **19/19** on frame multiples of 15; terminal states
+89.9 / 78.3 / 78.3 at 21.5 / 22.0 / 22.5; cues **53/56** direct at lag ≤25 ms.
