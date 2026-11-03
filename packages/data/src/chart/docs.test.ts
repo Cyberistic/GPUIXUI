@@ -24,7 +24,7 @@ const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
 const page = read("../../docs/charts.mdx");
-const source = read("./chart.tsx");
+const source = `${read("./chart.tsx")}\n${read("./frame.tsx")}`;
 const recipe = read("./recipe.ts");
 const inventory = read("../../../../.agents/slop/COMPONENTS.md");
 
@@ -57,13 +57,17 @@ interface Section {
 
 /** Every chart part the page must document, and the type behind it. */
 const sections: ReadonlyArray<Section> = [
-  {
-    heading: "`BarChart` · `StackedBar` · `LineChart`",
-    type: "ChartProps",
-  },
-  { heading: "`DonutChart`", type: "DonutChartProps" },
+  { heading: "`BarChart`", type: "BarChartProps" },
+  { heading: "`StackedBar`", type: "StackedBarProps" },
+  { heading: "`LineChart`", type: "LineChartProps" },
+  { heading: "`ComposedChart`", type: "ComposedChartProps" },
+  { heading: "`AreaChart`", type: "AreaChartProps" },
+  { heading: "`PieChart` · `DonutChart`", type: "PieChartProps" },
+  { heading: "`RadarChart`", type: "RadarChartProps" },
+  { heading: "`RadialChart`", type: "RadialChartProps" },
   { heading: "`Sparkline`", type: "SparklineProps" },
   { heading: "`ChartLegend`", type: "ChartLegendProps" },
+  { heading: "The shared frame", type: "ChartProps" },
 ];
 
 /** The runtime host props a chart takes from `Props`, documented once. */
@@ -121,7 +125,7 @@ const invented = (section: Section): ReadonlyArray<string> => {
 
 describe("the charts page's API tables", () => {
   it("documents every prop each chart part declares", () => {
-    expect(sections).toHaveLength(4);
+    expect(sections).toHaveLength(11);
     expect(
       Arr.length(
         Arr.flatMap(sections, (section) => declaredProps(section.type)),
@@ -142,9 +146,15 @@ describe("the charts page's API tables", () => {
       "`BarChart`",
       "`StackedBar`",
       "`LineChart`",
+      "`ComposedChart`",
+      "`AreaChart`",
+      "`PieChart`",
       "`DonutChart`",
+      "`RadarChart`",
+      "`RadialChart`",
       "`Sparkline`",
       "`ChartLegend`",
+      "The shared frame",
     ]);
     expect(
       Arr.filter(

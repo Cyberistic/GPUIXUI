@@ -216,12 +216,13 @@ describe("a chart's accessibility tree", () => {
       { label: "Revenue", description: "Q1 0, Q2 0" },
       { label: "Cost", description: "Q1 0, Q2 -4" },
     ]);
-    // The picture did not lie to meet the words: nothing is painted, because
-    // the geometry has no bar for a zero or a negative value.
-    Arr.forEach(["revenue", "cost"], (layer) => {
-      const node = root?.renderer.findByTestId(`chart-zero-layer-${layer}`);
-      expect(node?.customProps?.source).not.toContain("<rect");
-    });
+    // The picture does not lie to meet the words: a zero paints no bar, while
+    // a negative value stands below the zero line — the geometry draws it, so
+    // the tree names a series the plot really shows.
+    const revenue = root?.renderer.findByTestId("chart-zero-layer-revenue");
+    const cost = root?.renderer.findByTestId("chart-zero-layer-cost");
+    expect(revenue?.customProps?.source).not.toContain("<rect");
+    expect(cost?.customProps?.source).toContain("<rect");
   });
 
   it("reads a blank series label as the key the series is stored by", () => {

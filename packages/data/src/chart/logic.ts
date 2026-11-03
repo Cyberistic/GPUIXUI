@@ -17,6 +17,7 @@
  */
 
 import { spokenText } from "@gpuixui/primitives/core";
+import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
@@ -27,6 +28,13 @@ export interface ChartSeries {
   /** The series' name in the legend and in its image's accessible name. A blank label reads as `key`. */
   readonly label: string;
   readonly values: ReadonlyArray<number>;
+  /**
+   * The series' own colour, over the chart's palette.
+   *
+   * A stored preference as often as a literal: a blank one is absence and
+   * falls back to the palette, so a saved chart keeps painting.
+   */
+  readonly color?: string;
 }
 
 /** The plot's box, in pixels. */
@@ -69,8 +77,23 @@ export type ChartMark =
       readonly y: number;
       readonly width: number;
       readonly height: number;
+      /** The corner radius, when the bar is rounded. */
+      readonly rx?: number;
     }
-  | { readonly kind: "path"; readonly d: string };
+  | {
+      readonly kind: "path";
+      readonly d: string;
+      /** A stroke width, when the path is a line rather than a fill. */
+      readonly stroke?: number;
+      /** A dashed line, at the stroke's own weight. */
+      readonly dashed?: boolean;
+    }
+  | {
+      readonly kind: "circle";
+      readonly cx: number;
+      readonly cy: number;
+      readonly r: number;
+    };
 
 /** A value the chart can draw: finite and not negative. */
 export const drawableValue = (value: number): number =>
@@ -579,9 +602,23 @@ export const chartMarkup = (
   box: ChartBox,
 ): string => {
   const shapes = Arr.map(marks, (mark) =>
-    mark.kind === "rect"
-      ? `<rect x="${num(mark.x)}" y="${num(mark.y)}" width="${num(mark.width)}" height="${num(mark.height)}" fill="#000"/>`
-      : `<path d="${mark.d}" fill="#000"/>`,
+    Match.value(mark).pipe(
+      Match.when({ kind: "rect" }, (rect) => {
+        const corner = rect.rx === undefined ? "" : ` rx="${num(rect.rx)}"`;
+        return `<rect x="${num(rect.x)}" y="${num(rect.y)}" width="${num(rect.width)}" height="${num(rect.height)}"${corner} fill="#000"/>`;
+      }),
+      Match.when(
+        { kind: "circle" },
+        (circle) =>
+          `<circle cx="${num(circle.cx)}" cy="${num(circle.cy)}" r="${num(circle.r)}" fill="#000"/>`,
+      ),
+      Match.when({ kind: "path" }, (path) =>
+        path.stroke === undefined
+          ? `<path d="${path.d}" fill="#000"/>`
+          : `<path d="${path.d}" fill="none" stroke="#000" stroke-width="${num(path.stroke)}" stroke-linecap="round" stroke-linejoin="round"${path.dashed === true ? ` stroke-dasharray="${num(path.stroke * 2)} ${num(path.stroke * 1.6)}"` : ""}/>`,
+      ),
+      Match.exhaustive,
+    ),
   );
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${num(box.width)}" height="${num(box.height)}" viewBox="0 0 ${num(box.width)} ${num(box.height)}">${Arr.join(shapes, "")}</svg>`;
 };

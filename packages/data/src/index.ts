@@ -65,27 +65,89 @@ export { FrozenTable } from "./table/frozen.js";
 export type { FrozenTableProps } from "./table/frozen.js";
 
 export {
+  AreaChart,
+  BarChart,
   CHART_AXIS_WIDTH,
   ChartLegend,
+  ComposedChart,
   DEFAULT_CHART_HEIGHT,
   DEFAULT_CHART_WIDTH,
-  BarChart,
   DonutChart,
   LineChart,
+  PieChart,
+  RadarChart,
+  RadialChart,
   Sparkline,
   StackedBar,
 } from "./chart/chart.js";
 export type {
+  AreaChartProps,
   BarChartProps,
   ChartDatum,
   ChartLegendItem,
   ChartLegendProps,
   ChartProps,
+  ComposedChartProps,
   DonutChartProps,
   LineChartProps,
+  PieChartProps,
+  RadarChartProps,
+  RadialChartProps,
   SparklineProps,
   StackedBarProps,
 } from "./chart/chart.js";
+
+export {
+  ANIMATION_FRAME_MS,
+  DEFAULT_ANIMATION_DURATION,
+  easeOutCubic,
+  interpolateSeries,
+  interpolateValues,
+} from "./chart/animation.js";
+
+export { PointTooltip, paletteOf, seriesColourOf } from "./chart/frame.js";
+export type {
+  ChartFrameProps,
+  LegendShape,
+  PointZone,
+  LegendSide,
+  TooltipIndicator,
+  PaintContext,
+  PaintLayer,
+  ValueLabel,
+} from "./chart/frame.js";
+
+export {
+  areaBands,
+  areaPath,
+  barMarksInRange,
+  chartRange,
+  chartView,
+  chartWindow,
+  clipArea,
+  circlePath,
+  curvePath,
+  finite,
+  fullRing,
+  horizontalBarMarks,
+  niceBound,
+  pointMarks,
+  polygonPath,
+  radarCircleGrid,
+  radarGrid,
+  radarPoints,
+  radarSpokes,
+  radialArcs,
+  rangeTicks,
+  ringArc,
+  ringSegments,
+  scaleX,
+  scaleY,
+  seriesPoints,
+  valueLabel,
+  zeroY,
+} from "./chart/geometry.js";
+export type { ChartRange, Curve, Point } from "./chart/geometry.js";
 
 export {
   AXIS_STEP_LIMIT,

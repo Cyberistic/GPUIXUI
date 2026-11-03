@@ -1,21 +1,25 @@
 ---
 title: Charts
-description: Bar, stacked, line, donut and sparkline charts
+description: Bar, stacked, line, area, pie, donut, radar, radial and sparkline charts
 ---
+
+One `<svg>` per series, tinted through `style.color`. Axis, labels, legend and
+the hover readout are text and boxes beside the plot, so every chart inherits the
+surface it sits on. The paint is window-verified by `chart-surface-lifecycle`.
 
 ## Usage
 
-The runtime has no chart host and an `<svg>` paints as one tinted mask, so a
-chart is one layer per series, each tinted through `style.color`. The
-`chart-surface-lifecycle` probe measures the shipped components' paint in a real
-window.
-
 ```tsx
 import {
+  AreaChart,
   BarChart,
   ChartLegend,
+  ComposedChart,
   DonutChart,
   LineChart,
+  PieChart,
+  RadarChart,
+  RadialChart,
   Sparkline,
   StackedBar,
 } from "@gpuixui/data";
@@ -30,11 +34,257 @@ import {
   width={320}
   height={140}
 />;
+```
 
-<LineChart aria-label="Churn" labels={QUARTERS} series={[churn]} />;
-<StackedBar aria-label="Revenue and cost" labels={QUARTERS} series={[revenue, cost]} />;
-<DonutChart aria-label="Traffic by source" data={sources} size={160} />;
-<Sparkline aria-label="Revenue trend" values={revenue.values} />;
+Every cartesian chart shares the frame's options: `grid`, `tooltip`, `colors`,
+`legend`, `axis`, `xLabels`, `ticks` and `valueFormat`. Hovering a column shows
+each series' value; `tooltip={false}` turns it off.
+
+## API
+
+### `BarChart`
+
+```tsx
+<BarChart
+  aria-label="Signups by month"
+  labels={MONTHS}
+  series={[{ key: "signups", label: "Signups", values: SIGNUPS }]}
+  orientation="horizontal" // vertical by default
+  radius={4}
+  valueLabels
+  valueLabelFormat={(value, series) => `${series.label} ${value}`}
+/>;
+```
+
+Negative values stand below the axis; a zero paints no bar but keeps its slot.
+
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | bars grow up, or right from the axis |
+| `radius` | `number` | `3` | the bar's corner, clamped to half its width and height |
+| `valueLabels` | `boolean` | `false` | each bar's value prints above it |
+| `valueLabelFormat` | `(value, series, category) => string` | `valueFormat`, then the value | what a bar's label says |
+
+### `StackedBar`
+
+```tsx
+<StackedBar
+  aria-label="Revenue and cost"
+  labels={QUARTERS}
+  series={[revenue, cost]}
+  percent // each category reads as 100%
+/>;
+```
+
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `radius` | `number` | `3` | the segment's corner, clamped to the bar |
+| `percent` | `boolean` | `false` | values become shares of each category's total, on a 0–100 axis |
+
+### `LineChart`
+
+```tsx
+<LineChart
+  aria-label="Churn"
+  labels={QUARTERS}
+  series={[churn]}
+  curve="smooth" // linear, smooth or step
+  dots
+  showLabels
+  dotIcons={["check", "info", "bell", "circle"]}
+  lineWidth={2}
+/>;
+```
+
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `curve` | `"linear" \| "smooth" \| "step"` | `"linear"` | a spline through every point, or a held step |
+| `dots` | `boolean` | `false` | a dot paints on every point |
+| `dashed` | `boolean` | `false` | the line paints dashes |
+| `lineWidth` | `number` | `2` | the stroke's weight, in pixels |
+| `showLabels` | `boolean` | `false` | each point's value paints above it |
+| `dotIcons` | `IconName[]` | none | an icon per category paints on each point |
+| `pointTooltip` | `boolean` | `false` | a hit zone on every point shows that datum |
+| `dotIcons` | `IconName[]` | none | an icon per category paints on each point |
+
+### `ComposedChart`
+
+```tsx
+<ComposedChart
+  aria-label="Installs and conversion"
+  labels={MONTHS}
+  series={[installs, conversion]}
+  lineKeys={["conversion"]}
+/>;
+```
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `lineKeys` | `string[]` | `[]` | those series paint as lines; the rest paint as bars |
+| `radius` | `number` | `3` | the bar's corner, clamped to the bar |
+
+### `AreaChart`
+
+```tsx
+<AreaChart
+  aria-label="Revenue by quarter"
+  labels={QUARTERS}
+  series={[revenue, cost]}
+  stacked
+  gradient
+/>;
+```
+
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `curve` | `"linear" \| "smooth" \| "step"` | `"smooth"` | how the area's edge joins its points |
+| `stacked` | `boolean` | `false` | each series stands on the one before it |
+| `gradient` | `boolean` | `true` | the fill fades toward the axis in nested bands |
+| `fillOpacity` | `number` | `0.35` | the fill's top opacity |
+| `dots` | `boolean` | `false` | a dot paints on every point |
+| `lineWidth` | `number` | `2` | the edge's stroke weight |
+| `showLabels` | `boolean` | `false` | each point's value paints above it |
+| `pointTooltip` | `boolean` | `false` | a hit zone on every point shows that datum |
+| `dotIcons` | `IconName[]` | none | an icon per category paints on each point |
+
+### `PieChart` · `DonutChart`
+
+```tsx
+<PieChart
+  aria-label="Traffic by source"
+  data={sources}
+  size={160}
+  padAngle={0.03}
+  showLabels
+  stacked
+  labelPosition="outside"
+  labelFormat={(datum, share) => `${datum.label} ${Math.round(share * 100)}%`}
+  activeIndex={active} // controlled: set it from a press
+  onSliceActivate={(datum, index) => setActive(index)}
+/>;
+```
+
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `data` | `ChartDatum[]` | — | `{ key, label, value }` per slice |
+| `size` | `number` | `160` | the ring's square box |
+| `innerRadius` | `number` | `0` (`0.62` for `DonutChart`) | the hole's share of the radius |
+| `padAngle` | `number` | `0.02` | the gap between slices, in radians |
+| `legend` | `boolean` | `true` | paints the legend under the ring |
+| `legendValues` | `boolean` | `true` | each legend row prints its value |
+| `colors` | `string[]` | the theme scale | the palette override |
+| `valueFormat` | `(value: number) => string` | one decimal | how a value prints |
+| `centerLabel` | `string` | none | words in the ring's centre |
+| `showLabels` | `boolean` | `false` | each slice's label paints on its arc |
+| `labelPosition` | `"inside" \| "outside"` | `"inside"` | a label inside the arc, or outside with a leader line |
+| `labelFormat` | `(datum, share) => string` | the datum's label | what a slice's label says |
+| `activeIndex` | `number` | none | that slice stands proud of the ring |
+| `stacked` | `boolean` | `false` | each datum owns a concentric band instead of a slice |
+| `onSliceActivate` | `(datum, index) => void` | none | a press on a slice reports the datum |
+| `animate` | `boolean` | `false` | a data change tweens the ring's values |
+| `animationDuration` | `number` | `320` | how long that tween takes, in ms |
+| `className` | `string` | — | joined after the recipe |
+| `testId` | `string` | — | the ring's locator; a slice is `-layer-<key>` |
+
+### `RadarChart`
+
+```tsx
+<RadarChart
+  aria-label="Coverage by discipline"
+  labels={["Ship", "Review", "Test", "Design", "Docs"]}
+  series={[team]}
+  levels={4}
+  gridShape="circle"
+  gridFill
+  gridAt={[0.25, 0.5, 0.75, 1]}
+  radius={80}
+  dots
+  dotIcons={["check", "circle", "info", "bell", "eye"]}
+  axisLabelFormat={(label) => label.toUpperCase()}
+/>;
+```
+
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `levels` | `number` | `4` | the number of webs the grid draws |
+| `dots` | `boolean` | `false` | a dot paints on every corner |
+| `fillOpacity` | `number` | `0.25` | the series polygon's opacity |
+| `webs` | `boolean` | `true` | the webs and spokes paint |
+| `gridShape` | `"polygon" \| "circle"` | `"polygon"` | the web follows the axes, or rings at each level |
+| `gridFill` | `boolean` | `false` | the webs fill at a low opacity |
+| `fill` | `boolean` | `true` | the series polygon fills; `false` draws lines only |
+| `radius` | `number` | the box's half, less padding | the outer radius in pixels |
+| `gridAt` | `number[]` | even levels | the webs' radii, as fractions of the outer radius |
+| `dotIcons` | `IconName[]` | none | an icon per axis paints on every corner |
+| `axisLabelFormat` | `(label, index) => string` | the label as given | how an axis label prints |
+| `pointTooltip` | `boolean` | `false` | a hit zone on every corner shows that axis' datum |
+
+### `RadialChart`
+
+```tsx
+<RadialChart
+  aria-label="Storage by service"
+  data={storage}
+  max={100}
+  centerLabel="62%"
+  thickness={10}
+  track
+  grid
+  rounded
+  showLabels
+/>;
+```
+
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `data` | `ChartDatum[]` | — | one concentric ring per datum |
+| `size` | `number` | `160` | the plot's square box |
+| `max` | `number` | the largest datum | the value a full ring stands for |
+| `thickness` | `number` | `10` | one ring's thickness |
+| `gap` | `number` | `4` | the space between rings |
+| `track` | `boolean` | `false` | a muted ring behind each value |
+| `grid` | `boolean` | `false` | guide rings at each quarter of the radius |
+| `rounded` | `boolean` | `false` | each arc's ends round off with a cap |
+| `showLabels` | `boolean` | `false` | each ring's value prints at the end of its arc |
+| `animate` | `boolean` | `false` | a data change tweens the rings' values |
+| `animationDuration` | `number` | `320` | how long that tween takes, in ms |
+| `legend` | `boolean` | `true` | paints the legend under the rings |
+| `colors` | `string[]` | the theme scale | the palette override |
+| `valueFormat` | `(value: number) => string` | one decimal | how a value prints |
+| `centerLabel` | `string` | none | words at the rings' centre |
+| `className` | `string` | — | joined after the recipe |
+| `testId` | `string` | — | the chart's locator; a ring is `-layer-<key>` |
+
+### `Sparkline`
+
+```tsx
+<Sparkline aria-label="Revenue trend" values={revenue.values} width={120} height={32} />;
+```
+
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `values` | `number[]` | — | one point each, in paint order |
+| `width` | `number` | `120` | the plot's width |
+| `height` | `number` | `32` | the plot's height |
+| `color` | `string` | the first categorical swatch | the line's colour; a blank one is the default |
+| `curve` | `"linear" \| "smooth" \| "step"` | `"smooth"` | how the line joins its points |
+| `filled` | `boolean` | `false` | the line fills down to the floor |
+| `animate` | `boolean` | `false` | a data change tweens the line |
+| `animationDuration` | `number` | `320` | how long that tween takes, in ms |
+| `className` | `string` | — | joined after the recipe |
+| `testId` | `string` | — | the plot's locator |
+
+### `ChartLegend`
+
+```tsx
 <ChartLegend
   items={[
     { key: "revenue", label: "Revenue", color: series1 },
@@ -43,75 +293,227 @@ import {
 />;
 ```
 
-## API
-
-### `BarChart` · `StackedBar` · `LineChart`
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `series` | `ChartSeries[]` | — | `{ key, label, values }` per series; a blank label reads as `key` |
-| `labels` | `string[]` | — | one label per category |
-| `width` | `number` | `320` | the plot's width, in pixels |
-| `height` | `number` | `160` | the plot's height, in pixels |
-| `legend` | `boolean` | `series.length > 1` | paints the legend under the labels |
-| `axis` | `boolean` | `true` | paints the y-axis tick column |
-| `ticks` | `number` | `4` | how many steps the y axis divides into |
-| `className` | `string` | — | joined after the recipe |
-| `testId` | `string` | — | the chart's locator; the plot is `-plot`, the axis column `-axis`, a series layer `-layer-<key>` |
-| `aria-label` | `string` | — | the group's name |
-
-### `DonutChart`
-
-| Prop | Type | Default | Consequence |
-| ---- | ---- | ------- | ----------- |
-| `data` | `ChartDatum[]` | — | `{ key, label, value }` per slice; a blank label reads as `key` |
-| `size` | `number` | `160` | the ring's box, in pixels |
-| `legend` | `boolean` | `true` | paints the legend under the ring |
-| `className` | `string` | — | joined after the recipe |
-| `testId` | `string` | — | the chart's locator; a slice is `-layer-<key>` |
-| `aria-label` | `string` | — | the group's name |
-
-### `Sparkline`
-
-| Prop | Type | Default | Consequence |
-| ---- | ---- | ------- | ----------- |
-| `values` | `number[]` | — | one point each, in paint order |
-| `width` | `number` | `120` | the plot's width, in pixels |
-| `height` | `number` | `32` | the plot's height, in pixels |
-| `color` | `string` | the first categorical swatch | the line's colour; a blank one reads as the default |
-| `className` | `string` | — | joined after the recipe |
-| `testId` | `string` | — | the sparkline's locator |
-| `aria-label` | `string` | `Trend` | the single image's name; a blank name reads as `Trend` |
-
-### `ChartLegend`
-
-| Prop | Type | Default | Consequence |
-| ---- | ---- | ------- | ----------- |
-| `items` | `ChartLegendItem[]` | — | `{ key, label, color }` per series; a blank label reads as `key` |
+| `items` | `ChartLegendItem[]` | — | `{ key, label, color, value? }` per series |
+| `shape` | `"square" \| "dot" \| "line"` | `"square"` | the mark beside each row |
 | `testId` | `string` | — | the legend's locator; a swatch is `-swatch-<key>` |
-| `aria-label` | `string` | — | the legend's group name |
+
+### The shared frame
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `series` | `ChartSeries[]` | — | `{ key, label, values, color? }` per series; a blank label reads as `key` |
+| `labels` | `string[]` | — | one label per category |
+| `width` | `number` | `320` | the plot's width |
+| `height` | `number` | `160` | the plot's height |
+| `legend` | `boolean \| "top" \| "bottom"` | 2+ series, bottom | where the legend paints |
+| `legendShape` | `"square" \| "dot" \| "line"` | `"square"` | the mark beside each legend row |
+| `axis` | `boolean` | `true` | the y-axis tick column |
+| `grid` | `boolean` | `true` | the horizontal grid lines |
+| `xLabels` | `boolean` | `true` | the category labels |
+| `ticks` | `number` | `4` | the steps the axis divides its range into |
+| `colors` | `string[]` | the theme scale | the palette override |
+| `tooltip` | `boolean` | `true` | the hovered column's readout |
+| `tooltipIndicator` | `"dot" \| "line" \| "none" \| "icon"` | `"dot"` | the mark beside each readout row |
+| `tooltipIcons` | `IconName[]` | none | an icon per series, when the indicator is `"icon"` |
+| `labelFormat` | `(label: string) => string` | the label as given | how the hovered category's name prints |
+| `activeBand` | `boolean` | `false` | a wash behind the hovered column |
+| `domain` | `[number, number]` | all categories | the category window a brush leaves, as `[start, end)` indexes |
+| `view` | `[number, number]` | every category | the continuous window a zoom shows, in category units |
+| `zoom` | `boolean` | `false` | a navigation strip that pans on drag and zooms on the wheel |
+| `onViewChange` | `(view) => void` | none | reports each pan or zoom step |
+| `brush` | `boolean` | `false` | a brush strip under the plot reports a dragged window |
+| `onDomainChange` | `(domain) => void` | none | reports each drag step as `[start, end)` |
+| `animate` | `boolean` | `false` | a data change tweens its values |
+| `animationDuration` | `number` | `320` | how long that tween takes, in ms |
+| `valueFormat` | `(value: number) => string` | one decimal | how a value prints in the readout |
+| `className` | `string` | — | joined after the recipe |
+| `testId` | `string` | — | the chart's locator; a series layer is `-layer-<key>` |
+
+## Tooltip
+
+```tsx
+<BarChart
+  aria-label="Revenue"
+  labels={QUARTERS}
+  series={[revenue, cost]}
+  tooltipIndicator="line"
+  labelFormat={(label) => `Quarter ${label}`}
+  valueFormat={(value) => `${value}k`}
+  activeBand
+/>;
+```
+
+The readout follows the pointer inside a column. `tooltipIndicator` marks each
+row with a dot, a line or nothing; `labelFormat`
+rewrites the category's name and `valueFormat` rewrites every value.
+
+## Legend
+
+```tsx
+<BarChart
+  aria-label="Revenue"
+  labels={QUARTERS}
+  series={[revenue, cost]}
+  legend="top"
+  legendShape="line"
+/>;
+
+<ChartLegend
+  shape="dot"
+  items={[
+    { key: "revenue", label: "Revenue", color: series1, value: "181k" },
+    { key: "cost", label: "Cost", color: series2, value: "90k" },
+  ]}
+/>;
+```
+
+`legendShape` draws a square, a dot or a line before each row; a row with a
+`value` prints it after its label.
+
+## Zoom and pan
+
+```tsx
+<BarChart
+  aria-label="Revenue"
+  labels={QUARTERS}
+  series={[revenue]}
+  view={view} // controlled: drag the strip to pan, wheel to zoom
+  zoom
+  onViewChange={setView}
+/>;
+```
+
+`view` is a **continuous** window in category units: an edge of `1.5` puts
+category 1 half off the plot's left edge, and a span of two shows two
+categories. `zoom` paints the navigation strip; dragging it pans and the wheel
+zooms around the window's centre. Its **Reset** control returns `[0, labels]`.
+
+## Brush
+
+```tsx
+<BarChart
+  aria-label="Revenue"
+  labels={QUARTERS}
+  series={[revenue]}
+  domain={window} // controlled: the drag reports into it
+  brush
+  onDomainChange={setWindow}
+/>;
+```
+
+`brush` paints a strip under the plot; dragging across it reports
+`onDomainChange` for the categories it covers, and the controlled `domain` is
+what the plot paints. `domain` is the same window as `[start, end)` indexes;
+the chart paints only those categories and measures its axis over them. A stored window that is
+reversed, fractional or past the end is normalized to whole indexes inside the
+list, and a window that leaves nothing paints the whole chart.
+
+## Animation
+
+```tsx
+<BarChart
+  aria-label="Revenue"
+  labels={QUARTERS}
+  series={[revenue, cost]}
+  animate
+  animationDuration={320}
+/>;
+```
+
+`animate` tweens a data change from the values on screen to the new ones;
+`animationDuration` is that run in milliseconds. A chart with a
+`MotionProvider preference="reduced"` above it paints the new values at once —
+the resting frame is the same one the tween lands on.
+
+## Reference parity
+
+Every example shadcn's charts app ships, and the native chart that answers it.
+Every row is now **native**: a shipped component paints it. The status column
+stays so a future gap can be named honestly. **Live** mounts that row's chart
+through the real GPUix web build (`/live?scene=parity&only=<id>`).
+
+| Reference | Native | Option | Status | Live |
+| --------- | ------ | ------ | ------ | ---- |
+| `chart-area-axes` | AreaChart | `axis` | native | [live](/live?scene=parity&only=chart-area-axes) |
+| `chart-area-default` | AreaChart | `gradient` | native | [live](/live?scene=parity&only=chart-area-default) |
+| `chart-area-gradient` | AreaChart | `gradient` | native | [live](/live?scene=parity&only=chart-area-gradient) |
+| `chart-area-icons` | AreaChart | `dotIcons` | native — icons paint as a native overlay on each point | [live](/live?scene=parity&only=chart-area-icons) |
+| `chart-area-interactive` | AreaChart | `tooltip` | native | [live](/live?scene=parity&only=chart-area-interactive) |
+| `chart-area-legend` | AreaChart | `legend` | native | [live](/live?scene=parity&only=chart-area-legend) |
+| `chart-area-linear` | AreaChart | `curve` | native | [live](/live?scene=parity&only=chart-area-linear) |
+| `chart-area-stacked` | AreaChart | `stacked` | native | [live](/live?scene=parity&only=chart-area-stacked) |
+| `chart-area-stacked-expand` | AreaChart | `stacked` | native | [live](/live?scene=parity&only=chart-area-stacked-expand) |
+| `chart-area-step` | AreaChart | `curve` | native | [live](/live?scene=parity&only=chart-area-step) |
+| `chart-bar-active` | BarChart | `activeBand` | native | [live](/live?scene=parity&only=chart-bar-active) |
+| `chart-bar-default` | BarChart | `radius` | native | [live](/live?scene=parity&only=chart-bar-default) |
+| `chart-bar-horizontal` | BarChart | `orientation` | native | [live](/live?scene=parity&only=chart-bar-horizontal) |
+| `chart-bar-interactive` | BarChart | `tooltip` | native | [live](/live?scene=parity&only=chart-bar-interactive) |
+| `chart-bar-label` | BarChart | `valueLabels` | native | [live](/live?scene=parity&only=chart-bar-label) |
+| `chart-bar-label-custom` | BarChart | `valueLabelFormat` | native | [live](/live?scene=parity&only=chart-bar-label-custom) |
+| `chart-bar-mixed` | ComposedChart | `lineKeys` | native | [live](/live?scene=parity&only=chart-bar-mixed) |
+| `chart-bar-multiple` | BarChart | `series` | native | [live](/live?scene=parity&only=chart-bar-multiple) |
+| `chart-bar-negative` | BarChart | `series` | native | [live](/live?scene=parity&only=chart-bar-negative) |
+| `chart-bar-stacked` | StackedBar | `percent` | native | [live](/live?scene=parity&only=chart-bar-stacked) |
+| `chart-line-default` | LineChart | `lineWidth` | native | [live](/live?scene=parity&only=chart-line-default) |
+| `chart-line-dots` | LineChart | `dots` | native | [live](/live?scene=parity&only=chart-line-dots) |
+| `chart-line-dots-colors` | LineChart | `colors` | native | [live](/live?scene=parity&only=chart-line-dots-colors) |
+| `chart-line-dots-custom` | LineChart | `dotIcons` | native | [live](/live?scene=parity&only=chart-line-dots-custom) |
+| `chart-line-interactive` | LineChart | `tooltip` | native | [live](/live?scene=parity&only=chart-line-interactive) |
+| `chart-line-label` | LineChart | `showLabels` | native | [live](/live?scene=parity&only=chart-line-label) |
+| `chart-line-label-custom` | LineChart | `valueFormat` | native | [live](/live?scene=parity&only=chart-line-label-custom) |
+| `chart-line-linear` | LineChart | `curve` | native | [live](/live?scene=parity&only=chart-line-linear) |
+| `chart-line-multiple` | LineChart | `series` | native | [live](/live?scene=parity&only=chart-line-multiple) |
+| `chart-line-step` | LineChart | `curve` | native | [live](/live?scene=parity&only=chart-line-step) |
+| `chart-pie-donut` | DonutChart | `innerRadius` | native | [live](/live?scene=parity&only=chart-pie-donut) |
+| `chart-pie-donut-active` | DonutChart | `activeIndex` | native | [live](/live?scene=parity&only=chart-pie-donut-active) |
+| `chart-pie-donut-text` | DonutChart | `centerLabel` | native | [live](/live?scene=parity&only=chart-pie-donut-text) |
+| `chart-pie-interactive` | PieChart | `onSliceActivate` | native | [live](/live?scene=parity&only=chart-pie-interactive) |
+| `chart-pie-label` | PieChart | `showLabels` | native | [live](/live?scene=parity&only=chart-pie-label) |
+| `chart-pie-label-custom` | PieChart | `labelFormat` | native | [live](/live?scene=parity&only=chart-pie-label-custom) |
+| `chart-pie-label-list` | PieChart | `labelPosition` | native | [live](/live?scene=parity&only=chart-pie-label-list) |
+| `chart-pie-legend` | PieChart | `legendValues` | native | [live](/live?scene=parity&only=chart-pie-legend) |
+| `chart-pie-separator-none` | PieChart | `padAngle` | native | [live](/live?scene=parity&only=chart-pie-separator-none) |
+| `chart-pie-simple` | PieChart | `data` | native | [live](/live?scene=parity&only=chart-pie-simple) |
+| `chart-pie-stacked` | PieChart | `stacked` | native — each datum owns a concentric band | [live](/live?scene=parity&only=chart-pie-stacked) |
+| `chart-radar-default` | RadarChart | `fill` | native | [live](/live?scene=parity&only=chart-radar-default) |
+| `chart-radar-dots` | RadarChart | `dots` | native | [live](/live?scene=parity&only=chart-radar-dots) |
+| `chart-radar-grid-circle` | RadarChart | `gridShape` | native | [live](/live?scene=parity&only=chart-radar-grid-circle) |
+| `chart-radar-grid-circle-fill` | RadarChart | `gridFill` | native | [live](/live?scene=parity&only=chart-radar-grid-circle-fill) |
+| `chart-radar-grid-circle-no-lines` | RadarChart | `webs` | native | [live](/live?scene=parity&only=chart-radar-grid-circle-no-lines) |
+| `chart-radar-grid-custom` | RadarChart | `gridAt` | native | [live](/live?scene=parity&only=chart-radar-grid-custom) |
+| `chart-radar-grid-fill` | RadarChart | `gridFill` | native | [live](/live?scene=parity&only=chart-radar-grid-fill) |
+| `chart-radar-grid-none` | RadarChart | `webs` | native | [live](/live?scene=parity&only=chart-radar-grid-none) |
+| `chart-radar-icons` | RadarChart | `dotIcons` | native | [live](/live?scene=parity&only=chart-radar-icons) |
+| `chart-radar-label-custom` | RadarChart | `axisLabelFormat` | native | [live](/live?scene=parity&only=chart-radar-label-custom) |
+| `chart-radar-legend` | RadarChart | `legend` | native | [live](/live?scene=parity&only=chart-radar-legend) |
+| `chart-radar-lines-only` | RadarChart | `fill` | native | [live](/live?scene=parity&only=chart-radar-lines-only) |
+| `chart-radar-multiple` | RadarChart | `series` | native | [live](/live?scene=parity&only=chart-radar-multiple) |
+| `chart-radar-radius` | RadarChart | `radius` | native | [live](/live?scene=parity&only=chart-radar-radius) |
+| `chart-radial-grid` | RadialChart | `grid` | native | [live](/live?scene=parity&only=chart-radial-grid) |
+| `chart-radial-label` | RadialChart | `showLabels` | native | [live](/live?scene=parity&only=chart-radial-label) |
+| `chart-radial-shape` | RadialChart | `rounded` | native | [live](/live?scene=parity&only=chart-radial-shape) |
+| `chart-radial-simple` | RadialChart | `data` | native | [live](/live?scene=parity&only=chart-radial-simple) |
+| `chart-radial-stacked` | RadialChart | `data` | native | [live](/live?scene=parity&only=chart-radial-stacked) |
+| `chart-radial-text` | RadialChart | `centerLabel` | native | [live](/live?scene=parity&only=chart-radial-text) |
+| `chart-tooltip-advanced` | BarChart | `tooltip` | native | [live](/live?scene=parity&only=chart-tooltip-advanced) |
+| `chart-tooltip-default` | BarChart | `tooltip` | native | [live](/live?scene=parity&only=chart-tooltip-default) |
+| `chart-tooltip-formatter` | BarChart | `valueFormat` | native | [live](/live?scene=parity&only=chart-tooltip-formatter) |
+| `chart-tooltip-icons` | BarChart | `tooltipIcons` | native — each readout row paints its series' icon | [live](/live?scene=parity&only=chart-tooltip-icons) |
+| `chart-tooltip-indicator-line` | BarChart | `tooltipIndicator` | native | [live](/live?scene=parity&only=chart-tooltip-indicator-line) |
+| `chart-tooltip-indicator-none` | BarChart | `tooltipIndicator` | native | [live](/live?scene=parity&only=chart-tooltip-indicator-none) |
+| `chart-tooltip-label-custom` | BarChart | `labelFormat` | native | [live](/live?scene=parity&only=chart-tooltip-label-custom) |
+| `chart-tooltip-label-formatter` | BarChart | `labelFormat` | native | [live](/live?scene=parity&only=chart-tooltip-label-formatter) |
+| `chart-legend-default` | ChartLegend | `items` | native | [live](/live?scene=parity&only=chart-legend-default) |
+| `chart-legend-shapes` | ChartLegend | `shape` | native | [live](/live?scene=parity&only=chart-legend-shapes) |
 
 ## Limitations
 
-- A chart's lists are stored data: only a list paints, so a saved `series`,
-  `labels`, `data`, `values` or legend `items` a record wrote as `null` paints
-  the empty frame, and a series whose own `values` is `null` paints no layer.
-  An **entry** inside a stored list is data too: a `series`, `data` or `items`
-  list whose hole the store wrote (`[null, { … }]`) paints the records it can
-  read and drops the hole, and an entry that is not a keyed record is not a
-  series, a datum or a legend row (`recordsOf`). A `labels` entry that is not
-  text keeps its slot — filtering it would move every later value under the
-  wrong label — and reads as no words: the painted label is blank and the datum
-  is announced by its number alone (`Q1 3, 6`), never by the word `null`
-  (`textsOf`). `src/behaviour/chart-boundary.test.tsx`
-  and `src/behaviour/chart-a11y.test.tsx` hold both shapes.
 - One tint per layer: two colours inside one series need two layers.
-- A sparkline's `color` is data as often as a literal: a blank one takes the
-  theme's first categorical swatch, so a saved preference the store emptied
-  paints the line rather than an untinted layer the runtime drops.
-- No tooltips, hover readouts or zoom.
-- No animation between data sets.
-- A category label longer than its slot is clipped at the slot's edge, so two
-  neighbouring categories never paint over each other. The slot is the plot's
-  width divided by the number of labels: shorten the label or widen the plot to
-  read one in full. `src/behaviour/chart.test.tsx` holds the box.
+- A category label wider than its slot is clipped at the slot's edge, so two
+  neighbouring categories never paint over each other.
+- No zoom, pan or animation between data sets.
+- A hover readout is per category, not per mark: it names every series' value at
+  that column rather than the one shape under the pointer.
