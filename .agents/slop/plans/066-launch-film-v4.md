@@ -836,3 +836,54 @@ should make rather than a film pass.
 darwin theme, cut on the three pressing frames; cuts are 19/19 on the grid and
 54/57 cues correlate directly. The upstream defect only limits what a *terminal
 capture* can show, which is why it is recorded here rather than patched blindly.
+
+### v4.26 — the native fix, attempted: it builds, it patches, it does not change the paint
+
+The defect was attacked for real this time, not documented.
+
+**The build works.** `references/gpuix` was copied to a scratch tree, its `zed`
+submodule fetched at the pin (`f77e5cfe`, shallow), and the addon built with the
+repo's pinned toolchain (rustc 1.97.1):
+
+```
+$ cargo build --release --features test-support
+    Finished `release` profile [optimized] target(s) in 1m 38s
+```
+
+**The patch.** `packages/gpui-terminal/src/gpui_terminal.rs::pump_events` drained
+every queued message (up to `PUMP_BUDGET`) and painted once at the end. It now
+presents between messages:
+
+```rust
+Ok(message) => {
+    self.handle_message(message);
+    if let Some(deadline) = self.window().and_then(|window| window.run_frame_if_due()) {
+        self.wake_at(deadline);
+    }
+}
+```
+
+The resulting `libgpuix_native.dylib` was copied over
+`node_modules/.store/@gpuix+native-darwin-arm64@0.11.0/…/gpuix-native.darwin-arm64.node`,
+ad-hoc signed, and the recorder ran against it.
+
+**It changed nothing.** Two takes were recorded through the patched binary:
+
+```
+presses 0.6/1.2/1.8 s   90 frames   4 painted, first at 2843 ms   one visible change (frame 61)
+presses 3.4/4.0/4.6 s  174 frames   5 painted, first at 2705 ms   one visible change (frame 160)
+```
+
+Both still collapse to a single painted state, now *later* rather than per press:
+the presses land before the app's first paint (the terminal app needs ~2–2.8 s to
+boot), and the one paint that follows carries the final state. So the coalescing
+is **not** in `pump_events`; the next candidate is the input path — `tty.rs` reads
+one `TerminalEvent` per read, so several presses can arrive inside a single event
+and reach the app as one batch — and the JS frame loop that decides when to
+rebuild.
+
+**Left as found.** The pristine vendor binary was restored (hash matches the
+store's `.bak`), the experimental takes were deleted, and the film was re-recorded
+from the restored binary to confirm the environment is healthy (`3 painted frames,
+first at 2725 ms`). The film keeps `term-app`; nothing shipped from this
+experiment except this record.
