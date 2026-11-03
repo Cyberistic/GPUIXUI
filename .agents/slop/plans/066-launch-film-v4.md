@@ -330,3 +330,29 @@ end          start=26.00  len= 4.00  on-beat=True
 showcase shot starts: [0.0, 2.0, 3.0, 4.0, 7.5, 8.5, 9.5, 10.5]
 every shot start on the beat: True
 ```
+
+### v4.9b — every cue back on its picture, and the wall's tiles filled
+
+- **The terminal cue block follows the cut.** The whooshes were hard-coded to
+  the old times (4.8 / 9 / 11 / 13.7 / 15.8 / **19.45** / 24 / 26); they are read
+  from the timeline now — `4*BEAT_CUT, SHOWCASE, shotStart(1), shotStart(4),
+  shotStart(7), TERMINAL, 24, 26` — so the terminal whoosh sits on **20.00**.
+  The duplicate whoosh at 4.0 (one literal, one derived) is gone.
+- **The assemble's hits follow its in-point.** The shot opens at 1.35 s of the
+  stage, so the landing hits are the four that are on screen (8.58, 8.73, 8.88,
+  9.03); a hit for a landing behind the cut would sound on the previous scene.
+- **The wall's tiles are filled.** A close-up take is a 960×540 stage with one
+  small control; the tile crops into it at 2.2× so the control fills the tile,
+  and the switch tile uses `cu-switch-solo` (the switch alone, centred) because
+  the card take puts its control at the card's right edge.
+- **The caption band is solid under the line**: the bottom gradient reaches the
+  ground at 28% of its height instead of 55%, so the line sits on paper and the
+  tiles wash out behind it rather than showing through the text.
+
+Cue table read back from `index.html` (30 s, beat = 0.5 s):
+
+```
+whooshes: [4.0, 8.5, 10.5, 13.5, 15.0, 20.0, 24.0, 26.0]     ← the cuts
+assemble landings: [8.58, 8.73, 8.88, 9.03]                  ← the card hits
+terminal: 20.00 air · 22.20 press · 22.80 press · 23.40 thud · 24.00 air
+```

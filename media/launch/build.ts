@@ -228,7 +228,7 @@ interface Cell {
 }
 const WALL: ReadonlyArray<Cell> = [
   { take: "stats", col: 0, row: 0, w: 2, h: 2 },
-  { take: "cu-switch", col: 2, row: 0, w: 1, h: 1 },
+  { take: "cu-switch-solo", col: 2, row: 0, w: 1, h: 1 },
   { take: "notes", col: 3, row: 0, w: 1, h: 1 },
   { take: "tiling", col: 4, row: 0, w: 2, h: 1 },
   { take: "editor", col: 2, row: 1, w: 2, h: 1 },
@@ -281,7 +281,7 @@ const grid: Scene = {
     #root .tile img.cover { inset:0; width:100%; height:100%; object-fit:cover; }
     #root .cap { position:absolute; left:0; right:0; top:800px; text-align:center; font:600 64px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
     #root .cap-band { position:absolute; left:0; right:0; height:330px; pointer-events:none; }
-    #root .cap-band.down { bottom:0; background:linear-gradient(rgba(244,242,238,0), ${GROUND} 55%); }
+    #root .cap-band.down { bottom:0; background:linear-gradient(rgba(244,242,238,0), ${GROUND} 28%); }
     #root .cap-band.up { top:0; opacity:0; background:linear-gradient(${GROUND} 55%, rgba(244,242,238,0)); }`,
   body: `    <div id="g-cam" class="cam">
       <div id="g-wall" class="wall">
@@ -289,8 +289,16 @@ ${WALL.map((cell, i) => {
   const box = cellBox(cell);
   const component = cell.take.startsWith("cu-");
   const end = still(cell.take, lastFrame(cell.take));
+  // A close-up take is a 960×540 stage with one small control on it: the tile
+  // crops into the stage so the control fills the tile instead of floating in
+  // a white card.
+  const zoom = 2.2;
+  const mediaW = Math.round(box.w * zoom);
+  const mediaH = Math.round(box.h * zoom);
+  const mediaLeft = Math.round(-(960 - mediaW) / 2);
+  const mediaTop = Math.round(-(540 - mediaH) / 2);
   const media = component
-    ? `<img src="${end}" alt="" style="left:${Math.round(-(960 - box.w) / 2)}px;top:${Math.round(-(540 - box.h) / 2)}px;width:960px;height:540px">${i % 4 === 0 ? clip(`g-v${i}`, footage(cell.take), 0, GRID_LENGTH, 0.3, `left:${Math.round(-(960 - box.w) / 2)}px;top:${Math.round(-(540 - box.h) / 2)}px;width:960px;height:540px`, 1 + (i % 8)) : ""}`
+    ? `<img src="${end}" alt="" style="left:${mediaLeft}px;top:${mediaTop}px;width:${mediaW}px;height:${mediaH}px">${i % 4 === 0 ? clip(`g-v${i}`, footage(cell.take), 0, GRID_LENGTH, 0.3, `left:${mediaLeft}px;top:${mediaTop}px;width:${mediaW}px;height:${mediaH}px`, 1 + (i % 8)) : ""}`
     : `<img class="cover" src="${end}" alt="">`;
   return `        <div class="tile" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px">${media}</div>`;
 }).join("\n")}
@@ -333,7 +341,7 @@ interface Shot {
 const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "stage-assemble",
-    mediaStart: 0.6,
+    mediaStart: 1.35,
     length: 2,
     width: 1920,
     height: 1080,
@@ -686,19 +694,19 @@ const CUES: ReadonlyArray<readonly [number, string]> = [
     (frame, n) =>
       [2 * BEAT_CUT + frame / FPS - LEAD_IN + F, `detent-${n + 2}`] as const,
   ),
-  [4 * BEAT_CUT, "air"],
   ...[26, 29, 32].map(
     (frame, n) => [4 * BEAT_CUT + frame / FPS - 0.3 + F, `key-${n}`] as const,
   ),
   [4 * BEAT_CUT + PRESS_AT - 0.3 + F, "press"],
   // Each card lands at 0.95 s + 150 ms after the one before it (the stage's own
   // script), so the hit sits on the frame the card settles, not near it.
-  ...[0, 1, 2, 3, 4, 5, 6].map(
-    (i) => [shotAt(0, 0.95 + i * 0.15), "land"] as const,
-  ),
+  // The cards land at 0.95 s + 150 ms each; the shot opens at 1.35 s, so only the
+  // landings that are on screen get a hit (a hit for an off-screen landing would
+  // sound on the previous scene).
+  ...[3, 4, 5, 6].map((i) => [shotAt(0, 0.95 + i * 0.15), "land"] as const),
   [shotAt(0, 1.95), "glass-1"],
   // The palette flip inside the tiling take, on its own frame.
-  [shotAt(10, 0.6), "glass-2"],
+  [shotAt(11, 0.6), "glass-2"],
   platformCue(1, "look-mac"),
   platformCue(2, "look-win"),
   platformCue(3, "look-linux"),
@@ -710,7 +718,18 @@ const CUES: ReadonlyArray<readonly [number, string]> = [
   [TERMINAL + T_APP + 0.6, "press"],
   [TERMINAL + T_APP + 1.2, "press"],
   [TERMINAL + T_APP + 1.8, "thud"],
-  ...[4.8, 9, 11, 13.7, 15.8, 19.45, 24, 26].map((at) => [at, "air"] as const),
+  // A cut is a whoosh: the scene starts and the showcase's shot boundaries, read
+  // from the same table the compositions are written from.
+  ...[
+    4 * BEAT_CUT,
+    SHOWCASE,
+    SHOWCASE + shotStart(1),
+    SHOWCASE + shotStart(4),
+    SHOWCASE + shotStart(7),
+    TERMINAL,
+    24,
+    26,
+  ].map((at) => [at, "air"] as const),
   [26.1, "mark"],
 ];
 
