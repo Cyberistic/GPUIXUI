@@ -957,3 +957,36 @@ renderer at the terminal's 1024×576 and darwin theme); its three wipes are exac
 and audited. The upstream defect should be reported as *paint cadence* with the
 numbers above, not as reconciler batching. Store binary restored, probe takes and
 logs removed.
+
+### v4.29 — the present path timed: 0.4–1.3 ms, so the 2 s is not the renderer
+
+`kitty.rs::present` was instrumented with per-stage timings (encode → `write_all`,
+byte count, wall clock) plus an `input` stamp per `TerminalEvent`, built and
+swapped in, then a take recorded (`settings dark@1.0 look-win32@2.0`):
+
+```
+96 input events, 4 presents
+  present bytes=66397 write=1.0 ms   since_last_input=  0.0 ms
+  present bytes=66397 write=1.3 ms   since_last_input=  6.0 ms
+  present bytes=70106 write=0.6 ms   since_last_input=  4.0 ms
+  present bytes=68109 write=0.6 ms   since_last_input= 26.0 ms
+```
+
+**Verdict on the stage the instruction named: the present path is not slow.**
+A full 1024×576 frame is ~66–70 KB and takes **0.4–1.3 ms** to encode and write,
+and every present follows its input by **4–26 ms**. The TODO's "slow link blocks
+the main thread" is not what is happening here.
+
+What *is* slow is upstream of the present: a take with presses at 3.0 / 3.9 / 4.8 s
+paints its first change at **4.93 s** and its second at **5.03 s** — the state
+commits arrive ~1.9 s after the press and then land in a burst. So the app's
+commit is the deferred stage, not the renderer's encode.
+
+A take with presses at 1.0 / 2.0 s does contain two distinct states (Δ 202 at
+2.03 s, Δ 4.6 at 2.90 s), which is why earlier takes were inconsistent: whether a
+press appears depends on where it lands relative to that ~2 s commit cadence, not
+on whether the renderer can paint it.
+
+Store binary restored (hash matches `.bak`), probe takes and logs removed. Next
+target is the JS commit latency (~1.9 s), which is the `@gpuix/react` side after
+all — but the renderer is now cleared by measurement rather than assumption.
