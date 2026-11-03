@@ -887,3 +887,41 @@ store's `.bak`), the experimental takes were deleted, and the film was re-record
 from the restored binary to confirm the environment is healthy (`3 painted frames,
 first at 2725 ms`). The film keeps `term-app`; nothing shipped from this
 experiment except this record.
+
+### v4.27 — instrumented: the platform delivers and presents; the app is what collapses
+
+The `tty.rs`/`pump_events` hypothesis was tested with instrumentation rather than
+reasoning. The patched host (v4.26's build) was rebuilt with a probe that appends
+to `/tmp/gpui-terminal-probe.log` on every handled message and every presented
+frame, swapped into the store, and the recorder run twice.
+
+**Probe, presses before the app's first paint (0.6 / 1.2 / 1.8 s):**
+
+```
+handled runnable → presented        (boot)
+handled terminal ×14                (the input burst — three presses + motion)
+presented                           (one frame, carrying the final state)
+```
+
+**Probe, presses after the app is up (3.4 / 4.0 / 4.6 s):**
+
+```
+presented after 1 terminals × many  (one frame per input event — ~60/s of motion)
+…
+174 terminal events handled, 69 frames presented
+```
+
+So the reader already emits one `MainMessage::Terminal` per parsed event
+(`tty.rs` drains a `Vec` of events and sends each), and with the v4.26 patch the
+window presents between messages. **The platform path is cleared.**
+
+**The app is what collapses.** In the post-boot take, `cmp` says frames 100 and
+150 are byte-identical — the app re-presents an unchanged scene for every motion
+event — and the one state change lands at frame 160 (5.33 s), ~2 s after the first
+press. The presses reach the app (the dark theme does appear), it just renders
+them as a single late frame. That points at `@gpuix/react`'s reconciler scheduling
+in terminal mode, which is JavaScript in the store package, not the native host.
+
+**Left as found.** Vendor binary restored (hash matches the store's `.bak`),
+probe takes and logs deleted. The film keeps `term-app`. The next target is now
+named precisely, and it is a JS patch rather than a Rust rebuild.
