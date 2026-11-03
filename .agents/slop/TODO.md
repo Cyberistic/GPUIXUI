@@ -24911,6 +24911,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` `macos` desktop block: the drawn wallpaper, the menu bar and its menus, the dock, and a window layer — with docs, a capture and two behaviour cases (plan 744)
 `[x]` `editor`, `music`, `monitor` blocks: tokenised code with an explorer, a seeded player, and a sampled hardware monitor — docs, captures and behaviour cases each (plan 745)
 `[x]` Launch film v4.5: the three-OS chat flip (the same chat window on macOS, Aero and the tiling desktop) and the apps montage (Slang, editor, music, monitor)
+`[x]` Launch film v4.16: the three settings looks push 5 % with their own drift, and the terminal's 4 s hold is a 1.03 dolly (left edge 365→352 px across 21–23 s)
 `[x]` Launch film v4.15: the wall's settle is staggered by depth (0–0.32 s, all at rest by 1.8 s), and every apps shot pushes 5–7 % with a 8–14 px drift so the beat moves
 `[x]` Launch film v4.14: the wall gains depth — tiles start 2–7 % larger and settle with the 2 s pull-back (translation was tried and rejected for opening seams)
 `[x]` Launch film v4.13: the wall is measured tile by tile (detail, not just contrast), the flat `viewer` and one-row `launcher` are replaced by `settings` and `notes`, `chat-mac` crops onto its window, and the top band no longer washes the wall's first row

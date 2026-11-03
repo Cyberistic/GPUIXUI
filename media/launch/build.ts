@@ -432,7 +432,8 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 1152,
     scale: 0.76,
     framed: true,
-    push: [1, 1],
+    push: [1.05, 1],
+    drift: [-8, 6],
     cursor: false,
     platform: "macOS",
   },
@@ -444,7 +445,8 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 1152,
     scale: 0.76,
     framed: true,
-    push: [1, 1],
+    push: [1.05, 1],
+    drift: [8, -6],
     cursor: true,
     platform: "Windows",
   },
@@ -456,7 +458,8 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 1152,
     scale: 0.76,
     framed: true,
-    push: [1, 1],
+    push: [1.05, 1],
+    drift: [-6, -8],
     cursor: true,
     platform: "Linux",
   },
@@ -664,6 +667,8 @@ const terminal: Scene = {
       </div>
     </div>`,
   script: `${typed("t-ssh", SSH, TYPE_AT)}
+    // The four-second hold is a slow dolly: 3 % closer and a few pixels up-left.
+    tl.fromTo(".term",{scale:1,x:0,y:0},{scale:1.03,x:-8,y:-6,duration:${TERMINAL_LENGTH},ease:"none"},0);
     tl.set("#t-caret1",{opacity:0},${T_LOGIN.toFixed(2)});
     tl.set("#t-login",{opacity:1},${T_LOGIN.toFixed(2)});
     tl.set("#t-runline",{opacity:1},${T_RUN.toFixed(2)});

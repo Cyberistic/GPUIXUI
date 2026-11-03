@@ -185,6 +185,13 @@
     tl.set("#t-ssh", { textContent: "ssh gon@whale-isla" }, 0.44);
     tl.set("#t-ssh", { textContent: "ssh gon@whale-islan" }, 0.46);
     tl.set("#t-ssh", { textContent: "ssh gon@whale-island" }, 0.48);
+    // The four-second hold is a slow dolly: 3 % closer and a few pixels up-left.
+    tl.fromTo(
+      ".term",
+      { scale: 1, x: 0, y: 0 },
+      { scale: 1.03, x: -8, y: -6, duration: 4, ease: "none" },
+      0,
+    );
     tl.set("#t-caret1", { opacity: 0 }, 0.56);
     tl.set("#t-login", { opacity: 1 }, 0.56);
     tl.set("#t-runline", { opacity: 1 }, 0.62);

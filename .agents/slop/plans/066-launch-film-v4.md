@@ -498,3 +498,16 @@ settles to its own size over the same 2 s `power1.inOut` as the pull-back.
   the cursor follow never desyncs.
 - The wall at rest is unchanged, so the ledger holds: detail min 2.4 · median
   4.3 · max 12.2, none under 2.0.
+
+### v4.16 — the settings beat and the terminal hold join the camera
+
+- **The three `settings` looks move.** Each is `push 1.05 → 1` with its own drift:
+  macOS [−8, 6], Windows [8, −6], Linux [−6, −8]. This also corrects a v4.15
+  assumption: drift is *not* unsafe with a cursor — the cursor lives inside
+  `#s-cam${i}` (`.frame` holds the media and `#s-cur${i}`), so it moves with the
+  content and stays on the chip it presses (verified at 11.9 s on Windows and
+  12.9 s on Linux).
+- **The terminal's 4 s hold is a slow dolly**: `.term` goes 1 → 1.03 and −8, −6 px
+  over the whole scene with `ease: "none"`, so the `ssh` typing and the three
+  Settings presses ride a continuous move instead of sitting still. Measured from
+  the render: the window's left edge runs **365 → 358 → 352 px** at 21 / 22 / 23 s.
