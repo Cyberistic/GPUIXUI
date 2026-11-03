@@ -925,3 +925,35 @@ in terminal mode, which is JavaScript in the store package, not the native host.
 **Left as found.** Vendor binary restored (hash matches the store's `.bak`),
 probe takes and logs deleted. The film keeps `term-app`. The next target is now
 named precisely, and it is a JS patch rather than a Rust rebuild.
+
+### v4.28 — the JS patch was not reached: the take pipeline paints once every ~2 s
+
+Before patching `@gpuix/react` the take itself had to be shown to be healthy, and
+it is not. Three fresh recordings through the **vendor** binary (the store was
+restored first, hash matches `.bak`):
+
+```
+settings dark@6.0   216 frames   every sampled frame blank (mean 250)
+settings dark@1.0    66 frames   samples 250,250,…,49 — the app appears in the last
+settings dark@1.0    66 frames   identical
+recorder log         "3 painted frames, first at 2667–2803 ms" in every run
+```
+
+So the app's **first paint lands ~2.7 s after the process starts**, and the takes
+end shortly after; presses sent at 0.6/1.2/1.8 s all land before that first paint
+and are therefore applied into it — one frame, final state. That is the observed
+"coalescing". Paints that do happen are ~1.5–2 s apart (the 3.4/4.0/4.6 s take
+showed its single change 2.5 s after the first press), so three distinct states
+cannot fit a 2.4 s beat even when the inputs land after boot.
+
+That is consistent with what `terminal-take.ts` already recorded in 2026-11-01
+("the platform paints only when the app marks a state change on input, so no
+spring can be recorded in terminal mode") — the limit is the renderer's paint
+cadence, not a missing flush in the reconciler. Patching `@gpuix/react` would not
+change it: the app does commit, the renderer is what takes seconds per frame.
+
+**Consequence.** The film keeps `term-app` (the same block painted by the window
+renderer at the terminal's 1024×576 and darwin theme); its three wipes are exact
+and audited. The upstream defect should be reported as *paint cadence* with the
+numbers above, not as reconciler batching. Store binary restored, probe takes and
+logs removed.
