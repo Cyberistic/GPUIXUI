@@ -1093,3 +1093,32 @@ verify beyond "a take shows no frames".
 
 Store restored (`runtime.js` back to its pre-patch bytes: grep for the probe is 0),
 environment re-verified by recording a take.
+
+### v4.33 — the bridge works: clicks reach JS, but the chip presses miss
+
+Instrumented the napi `ThreadsafeFunction` in
+`packages/native/src/renderer.rs::event_callback_for_view` (event kind, element id,
+`tsf.call` status), rebuilt, swapped, recorded. Results:
+
+```
+one press (dark@1.0)          5 tsf calls: windowKeyDown, keyDown, focus,
+                              mouseMove(el 78), click(el 59) — all status=Ok
+three presses (3.0/4.0/5.0)   click(el 46), click(el 50), click(el 59) — all Ok
+two chip presses (3.0/4.0)    click(el 46), click(el 50) — all Ok, and the take
+                              shows NO visible change at all
+```
+
+So **v4.32's "the bridge is never called" was wrong** — my earlier `dispatch`
+instrumentation did not take effect on the live object; the tsf shows the bridge
+running and every call returning `Ok`. Clicks reach JS.
+
+What the takes then show is the real defect: the **dark-mode click produces a
+paint** (Δ 206 at 4.93 s) while the **two look-chip clicks produce none at all**,
+even though their clicks arrive with distinct element ids. The chip presses are
+landing on elements that are not the chips (the aim coordinates are off for those
+rows), while the dark switch is hit correctly.
+
+Store binary restored (hash matches `.bak`), probes removed. Remaining work is now
+a coordinate calibration for the chip aims — measurable by logging the hit
+element's bounds in `handle_mouse` and comparing with the aim point, not another
+architecture hunt.
