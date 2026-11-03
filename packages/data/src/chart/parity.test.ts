@@ -17,7 +17,7 @@ const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
 const source = read("./chart.tsx");
-const page = read("../../docs/charts.mdx");
+const page = read("../../docs/charts/charts.mdx");
 const demo = read("../../../../apps/docs/src/components/docs/charts-demo.tsx");
 
 const exported = new Set(

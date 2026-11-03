@@ -1,7 +1,7 @@
 /**
  * The charts page's API tables, held to the props the types declare.
  *
- * The bug this guards: `docs/charts.mdx` documented only the series charts'
+ * The bug this guards: `docs/charts/charts.mdx` documented only the series charts'
  * shared contract, so the page a consumer reads for `DonutChart`,
  * `Sparkline` and `ChartLegend` never named `data`, `size`, `values`, `color`,
  * `items` or their defaults — the three parts were exported, mounted by the
@@ -23,7 +23,7 @@ import { describe, expect, it } from "vitest";
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-const page = read("../../docs/charts.mdx");
+const page = read("../../docs/charts/charts.mdx");
 const source = `${read("./chart.tsx")}\n${read("./frame.tsx")}`;
 const recipe = read("./recipe.ts");
 const inventory = read("../../../../.agents/slop/COMPONENTS.md");

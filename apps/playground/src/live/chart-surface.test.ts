@@ -63,7 +63,7 @@ const inventory = readFileSync(
   "utf8",
 );
 const chartsPage = readFileSync(
-  new URL("packages/data/docs/charts.mdx", repository),
+  new URL("packages/data/docs/charts/charts.mdx", repository),
   "utf8",
 );
 
