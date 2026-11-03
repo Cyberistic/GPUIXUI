@@ -24911,6 +24911,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` `macos` desktop block: the drawn wallpaper, the menu bar and its menus, the dock, and a window layer — with docs, a capture and two behaviour cases (plan 744)
 `[x]` `editor`, `music`, `monitor` blocks: tokenised code with an explorer, a seeded player, and a sampled hardware monitor — docs, captures and behaviour cases each (plan 745)
 `[x]` Launch film v4.5: the three-OS chat flip (the same chat window on macOS, Aero and the tiling desktop) and the apps montage (Slang, editor, music, monitor)
+`[x]` Launch film v4.24: the terminal pointer lands inside each control it presses (aim points verified against the stills, post-press drift removed), cuts 19/19 and 54/57 cues re-audited
 `[x]` Launch film v4.23: the terminal beat shows three repaints again (look chip, dark mode, look chip) via the window renderer at the terminal's size/theme, with the platform's paint coalescing documented upstream; cuts 19/19 and 54/57 cues direct
 `[x]` Launch film v4.22: every cut whooshed (19/19, montage now quiet 0.35), the terminal's paint limit established by three recordings (the platform coalesces to one commit — documented, not faked), and all 55 cues audited against the render
 `[x]` Launch film v4.21: cuts measured in the render (19 cuts, all frame multiples of 15), every cut whooshed (8→16), and the terminal's takeover + repaint re-synced (land 21.60, thud 23.63)

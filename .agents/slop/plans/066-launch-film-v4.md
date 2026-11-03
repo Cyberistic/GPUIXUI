@@ -771,3 +771,31 @@ cues           54/57 direct at lag ≤25 ms; the three others are masked by
 The two chip repaints are small by nature (a highlight moving between two chips),
 which is why the 80×45 full-frame pass reads them as ~0.1; measured on the Look
 row at full resolution they are 3.4 and 1.8.
+
+### v4.24 — the terminal pointer lands on the control it presses
+
+The pointer was drawn from `term-app`'s cursor samples at half their 2× coordinate
+space, which put it on the right controls but left it drifting off after each
+press — at 23.6 s the tip sat ~40 px below the Linux chip it had just pressed.
+
+Measured rather than guessed: the take's aim points (resolved by the renderer from
+`testId`) are the control centres in 2× space — look-win32 (898, 92.5),
+dark (964, 145), look-linux (959.5, 92.5) in take pixels — and a 100 px grid over
+`takes/term-app/0042.png` confirms the chips at y ≈ 79–100 and the switch at
+y ≈ 132–151. The mapping was right; the **last waypoint** was the problem: it
+drifted `dx 30, dy 40` after the press. It now holds the chip (`dx 0, dy 0`), so
+the tip stays on the control for the rest of the beat.
+
+Verified by cropping each press out of the render:
+
+```
+22.2 s  Windows chip   tip on "d"/"o" of the chip, inside the highlight
+22.8 s  dark switch    tip on the switch knob
+23.4 s  Linux chip     tip inside the chip
+23.6 s  (after)        tip still inside the chip — no drift off
+```
+
+Re-ran both audits on the new render: **19/19** cuts spike on a frame multiple of
+15 with a cue at ≤40 ms (terminal: 21.60 Δ90.0 land, 22.20 press, 22.80 Δ82.8
+thud, 23.40 press — each at 0 ms); **54/57** cues correlate directly at lag
+≤25 ms, the three others masked by simultaneous sounds as before.

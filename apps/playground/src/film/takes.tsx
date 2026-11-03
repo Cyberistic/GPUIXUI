@@ -662,7 +662,7 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 42, aim: { testId: "look-linux" } },
       { frame: 51, aim: { testId: "look-linux" }, down: true },
       { frame: 54, aim: { testId: "look-linux" } },
-      { frame: 65, aim: { testId: "look-linux", dx: 30, dy: 40 } },
+      { frame: 65, aim: { testId: "look-linux" } },
     ],
   },
   settings: {
