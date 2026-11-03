@@ -105,24 +105,28 @@
       <div id="g-wall" class="wall">
         <div
           class="tile"
+          data-dz="1.050"
           style="left: 0px; top: 0px; width: 616px; height: 416px"
         >
           <img class="cover" src="assets/footage/stats-74.png" alt="" />
         </div>
         <div
           class="tile"
+          data-dz="1.061"
           style="left: 632px; top: 0px; width: 616px; height: 200px"
         >
           <img class="cover" src="assets/footage/music-74.png" alt="" />
         </div>
         <div
           class="tile"
+          data-dz="1.061"
           style="left: 1264px; top: 0px; width: 616px; height: 200px"
         >
           <img class="cover" src="assets/footage/desktop-luna-89.png" alt="" />
         </div>
         <div
           class="tile"
+          data-dz="1.040"
           style="left: 632px; top: 216px; width: 616px; height: 200px"
         >
           <img
@@ -141,6 +145,7 @@
         </div>
         <div
           class="tile"
+          data-dz="1.040"
           style="left: 1264px; top: 216px; width: 300px; height: 200px"
         >
           <img
@@ -159,42 +164,49 @@
         </div>
         <div
           class="tile"
+          data-dz="1.040"
           style="left: 1580px; top: 216px; width: 300px; height: 200px"
         >
           <img class="cover" src="assets/footage/monitor-74.png" alt="" />
         </div>
         <div
           class="tile"
+          data-dz="1.030"
           style="left: 0px; top: 432px; width: 300px; height: 416px"
         >
           <img class="cover" src="assets/footage/chat-win-29.png" alt="" />
         </div>
         <div
           class="tile"
+          data-dz="1.030"
           style="left: 316px; top: 432px; width: 616px; height: 416px"
         >
           <img class="cover" src="assets/footage/kanban-74.png" alt="" />
         </div>
         <div
           class="tile"
+          data-dz="1.040"
           style="left: 948px; top: 648px; width: 616px; height: 200px"
         >
           <img class="cover" src="assets/footage/slang-74.png" alt="" />
         </div>
         <div
           class="tile"
+          data-dz="1.030"
           style="left: 1580px; top: 432px; width: 300px; height: 416px"
         >
           <img class="cover" src="assets/footage/desktop-aero-89.png" alt="" />
         </div>
         <div
           class="tile"
+          data-dz="1.020"
           style="left: 948px; top: 432px; width: 616px; height: 200px"
         >
           <img class="cover" src="assets/footage/button-43.png" alt="" />
         </div>
         <div
           class="tile"
+          data-dz="1.061"
           style="left: 0px; top: 864px; width: 616px; height: 200px"
         >
           <img
@@ -213,6 +225,7 @@
         </div>
         <div
           class="tile"
+          data-dz="1.061"
           style="left: 632px; top: 864px; width: 300px; height: 200px"
         >
           <img
@@ -231,6 +244,7 @@
         </div>
         <div
           class="tile"
+          data-dz="1.061"
           style="left: 948px; top: 864px; width: 300px; height: 200px"
         >
           <img
@@ -249,12 +263,14 @@
         </div>
         <div
           class="tile"
+          data-dz="1.061"
           style="left: 1264px; top: 864px; width: 300px; height: 200px"
         >
           <img class="cover" src="assets/footage/chat-linux-29.png" alt="" />
         </div>
         <div
           class="tile"
+          data-dz="1.061"
           style="left: 1580px; top: 864px; width: 300px; height: 200px"
         >
           <img
@@ -291,6 +307,16 @@
       0,
     );
     zoom();
+    // Depth: the outer tiles start 7 % larger and settle to their own size as the
+    // camera pulls back, so the wall comes forward as a field, not a contact sheet.
+    gsap.utils.toArray("#g-wall .tile").forEach((tile) => {
+      tl.fromTo(
+        tile,
+        { scale: +tile.dataset.dz },
+        { scale: 1, duration: 2, ease: "power1.inOut" },
+        0,
+      );
+    });
     tl.to(
       cam,
       { z: Math.log(0.82), duration: 2, ease: "power1.inOut", onUpdate: zoom },

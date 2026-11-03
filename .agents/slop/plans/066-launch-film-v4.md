@@ -465,3 +465,18 @@ stats         234.9      44.1     4.0     chat-win      203.3      67.6     8.5
 editor        235.3      21.2     4.0     chat-mac      222.8      42.8    12.2
 ```
 detail min 2.4 · median 4.3 · max 12.2 · **no tile under 2.0**.
+
+### v4.14 — the wall comes forward instead of unzipping
+
+The wall opened as a flat field being zoomed out. It now has depth: every tile
+starts **2–7 % larger** (more the further it sits from the wall's middle) and
+settles to its own size over the same 2 s `power1.inOut` as the pull-back.
+
+- Translation was tried first and rejected: pushing tiles apart opened 40 px of
+  paper between neighbours at 2.1×, which read as a broken grid rather than
+  depth. Scaling keeps the tiles flush — while the camera is close they meet
+  with no gutters, and the gutters return exactly as the wall settles.
+- The match cut survives: the button card is 2 % larger at 4.05 s (1298 → 1324 px
+  wide against the outgoing 1240), same centre, same blue.
+- The settled frame is untouched (scale 1 by 6.0 s), so the ledger is unchanged:
+  detail min 2.4 · median 4.3 · max 12.2, no tile under 2.0.

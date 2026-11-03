@@ -337,6 +337,10 @@ const grid: Scene = {
 ${WALL.map((cell) => {
   const box = cellBox(cell);
   const end = still(cell.take, lastFrame(cell.take));
+  // Depth: a tile further from the wall's middle starts a little larger and
+  // settles to its own size, so the wall comes forward instead of unzipping.
+  const depth = Math.abs(box.y + box.h / 2 - WALL_BOX.h / 2) / (WALL_BOX.h / 2);
+  const dz = (1.02 + depth * 0.05).toFixed(3);
   const [fx, fy] = cell.focus ?? [0.5, 0.5];
   // A detail crop blows the screenshot up and centres the chosen point of it:
   // the image is `zoom` times the tile and offset so (fx, fy) lands in the middle.
@@ -348,7 +352,7 @@ ${WALL.map((cell) => {
   const detail = cell.zoom
     ? ` style="left:${left}px;top:${top}px;right:auto;bottom:auto;width:${width}px;height:${height}px"`
     : "";
-  return `        <div class="tile" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
+  return `        <div class="tile" data-dz="${dz}" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
 }).join("\n")}
       </div>
     </div>
@@ -363,6 +367,11 @@ ${WALL.map((cell) => {
     gsap.set("#g-wall", { x: ${-FOCUS_CX}, y: ${-FOCUS_CY} });
     tl.to("#g-wall", { x: ${-Math.round(WALL_BOX.w / 2)}, y: ${-Math.round(WALL_BOX.h / 2)}, duration: 3, ease: "power1.inOut" }, 0);
     zoom();
+    // Depth: the outer tiles start 7 % larger and settle to their own size as the
+    // camera pulls back, so the wall comes forward as a field, not a contact sheet.
+    gsap.utils.toArray("#g-wall .tile").forEach((tile) => {
+      tl.fromTo(tile, { scale: +tile.dataset.dz }, { scale: 1, duration: 2, ease: "power1.inOut" }, 0);
+    });
     tl.to(cam, { z: Math.log(0.82), duration: 2, ease: "power1.inOut", onUpdate: zoom }, 0);
     tl.fromTo("#g-wall",{rotation:0},{rotation:0,duration:${GRID_LENGTH}},0);
     // The wall gets the first two seconds to itself — the whole reveal, calculator
