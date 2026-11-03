@@ -18,7 +18,7 @@ const HERE = new URL(".", import.meta.url).pathname;
 const at = (path: string) => `${HERE}${path}`;
 const GROUND = "#FAFAFA";
 const INK = "#1D1D1F";
-const ACCENT = "#5F4BDB";
+const ACCENT = "#171717";
 
 /* ------------------------------------------------------------ footage */
 
@@ -237,63 +237,86 @@ interface Cell {
   readonly nudge?: readonly [number, number];
 }
 /** The tile the montage's last close-up cuts into: a card with one control. */
+/** The tile the montage's last close-up cuts into: the checkbox card. */
 const MATCH_TILE: Cell = {
-  take: "button",
-  col: 3,
-  row: 2,
+  take: "cu-checkbox",
+  col: 2,
+  row: 4,
   w: 2,
   h: 1,
-  zoom: 1.3,
+  zoom: 2.05,
   focus: [0.5, 0.5],
 };
 /**
- * The page's wall: six columns of real cards, composed so a row of wide screens
- * sits beside a column of tall ones. It is wider than the frame (every edge
- * bleeds) and runs past the fold, the reference's masonry rather than a bento
- * that ends inside the picture.
+ * The wall, composed rather than snapped: a bento of whole windows and single
+ * controls, with the blocks the landing page shows (pipeline, kanban, inbox,
+ * calendar, licence) beside the components. The gap between the rows is what
+ * makes the field read at a glance.
  */
 const WALL: ReadonlyArray<Cell> = [
   { take: "stats", col: 0, row: 0, w: 2, h: 2 },
-  { take: "dashboard", col: 2, row: 0, w: 2, h: 2 },
-  { take: "monitor", col: 4, row: 0, w: 1, h: 1 },
-  { take: "calendar", col: 5, row: 0, w: 1, h: 1, zoom: 1.5 },
+  { take: "podcast", col: 2, row: 0, w: 2, h: 1, nudge: [0, 4] },
+  {
+    take: "license",
+    col: 4,
+    row: 0,
+    w: 2,
+    h: 1,
+    zoom: 1.15,
+    focus: [0.5, 0.45],
+  },
   {
     take: "cu-tabs",
-    col: 4,
+    col: 2,
     row: 1,
     w: 2,
     h: 1,
     zoom: 2.15,
     focus: [0.5, 0.5],
   },
+  {
+    take: "calendar",
+    col: 4,
+    row: 1,
+    w: 1,
+    h: 1,
+    zoom: 1.7,
+    focus: [0.45, 0.4],
+  },
+  { take: "monitor", col: 5, row: 1, w: 1, h: 1, nudge: [4, -6] },
   { take: "kanban", col: 0, row: 2, w: 1, h: 2 },
-  { take: "editor", col: 1, row: 2, w: 2, h: 2, zoom: 1.15 },
+  { take: "omarchy", col: 1, row: 2, w: 2, h: 2, nudge: [-4, 3] },
+  {
+    take: "cu-slider",
+    col: 3,
+    row: 2,
+    w: 2,
+    h: 1,
+    zoom: 2.15,
+    focus: [0.5, 0.5],
+  },
+  { take: "desktop-aero", col: 5, row: 2, w: 1, h: 2 },
+  { take: "pipeline", col: 3, row: 3, w: 2, h: 1 },
+  { take: "inbox", col: 0, row: 4, w: 2, h: 1, nudge: [0, 4] },
   MATCH_TILE,
   {
     take: "cu-switch-solo",
-    col: 5,
-    row: 2,
+    col: 4,
+    row: 4,
     w: 1,
     h: 1,
     zoom: 2.4,
     focus: [0.5, 0.5],
   },
-  { take: "music", col: 3, row: 3, w: 2, h: 1 },
-  { take: "chat-win", col: 5, row: 3, w: 1, h: 1 },
-  { take: "welcome", col: 0, row: 4, w: 2, h: 1 },
-  { take: "pipeline", col: 2, row: 4, w: 2, h: 1 },
-  { take: "notes", col: 4, row: 4, w: 1, h: 1 },
-  { take: "license", col: 5, row: 4, w: 1, h: 1, zoom: 1.2 },
+  { take: "editor", col: 5, row: 4, w: 1, h: 1, zoom: 1.75, focus: [0.5, 0.3] },
 ];
-const UNIT = { w: 340, h: 230, gap: 16 };
+const UNIT = { w: 300, h: 200, gap: 16 };
 /**
  * Every film take is recorded at 2200×1400. A detail crop sizes the image to that
  * aspect as well, so `cover` has no slack and the focus point is exact.
  */
 const SCREEN_ASPECT = 2200 / 1400;
 const GRID = { cols: 6, rows: 5 };
-/** Where the wall's top edge sits once the camera has pulled back. */
-const PAGE_TOP = 372;
 const cellBox = (cell: Cell) => ({
   x: cell.col * (UNIT.w + UNIT.gap) + (cell.nudge?.[0] ?? 0),
   y: cell.row * (UNIT.h + UNIT.gap) + (cell.nudge?.[1] ?? 0),
@@ -325,23 +348,28 @@ const grid: Scene = {
   duration: GRID_LENGTH,
   css: `#root .cam { position:absolute; left:960px; top:540px; width:0; height:0; }
     #root .wall { position:absolute; left:0; top:0; width:${WALL_BOX.w}px; height:${WALL_BOX.h}px; }
-    #root .tile { position:absolute; border-radius:14px; overflow:hidden; background:#fff; border:1px solid rgba(17,17,18,.07); box-shadow:0 1px 2px rgba(17,17,18,.05), 0 18px 40px -26px rgba(17,17,18,.35); }
+    #root .tile { position:absolute; border-radius:24px; overflow:hidden; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 10px 30px -14px rgba(30,30,60,.25); }
     #root .tile img, #root .tile video { position:absolute; }
     #root .tile img.cover { left:-3%; top:-3%; width:106%; height:106%; object-fit:cover; }
-    #root .hero { position:absolute; left:0; right:0; top:0; height:${PAGE_TOP}px; display:flex; flex-direction:column; align-items:center; background:linear-gradient(${GROUND} 88%, rgba(250,250,250,0)); }
-    #root .eyebrow { margin-top:58px; font:600 19px Inter, sans-serif; letter-spacing:.18em; text-transform:uppercase; color:#767678; }
-    #root .headline { margin-top:14px; font:600 68px Inter, sans-serif; letter-spacing:-.035em; color:#111112; }
-    #root .sub { margin-top:16px; text-align:center; font:400 28px/38px Inter, sans-serif; color:#606066; }
-    #root .ctas { margin-top:22px; display:flex; gap:12px; }
-    #root .cta { height:46px; padding:0 26px; border-radius:999px; display:flex; align-items:center; font:600 20px Inter, sans-serif; }
-    #root .cta.solid { background:#111112; color:#fff; }
-    #root .cta.outline { border:1px solid rgba(17,17,18,.18); color:#111112; }`,
+    #root .cap { position:absolute; left:0; right:0; top:880px; text-align:center; font:600 64px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
+    #root .cap-band { position:absolute; left:0; right:0; height:330px; pointer-events:none; }
+    #root .cap-band.down { bottom:0; height:400px; background:linear-gradient(rgba(250,250,250,0) 30%, rgba(250,250,250,.96) 45%, ${GROUND} 58%); }
+    #root .cap-band.up { top:0; height:260px; opacity:0; background:linear-gradient(${GROUND} 46%, rgba(250,250,250,0) 78%); }`,
   body: `    <div id="g-cam" class="cam">
       <div id="g-wall" class="wall">
 ${WALL.map((cell) => {
   const box = cellBox(cell);
   const end = still(cell.take, lastFrame(cell.take));
+  // Depth: a tile further from the wall's middle starts a little larger and
+  // settles to its own size, so the wall comes forward instead of unzipping.
+  const depth = Math.abs(box.y + box.h / 2 - WALL_BOX.h / 2) / (WALL_BOX.h / 2);
+  const dz = (1.02 + depth * 0.05).toFixed(3);
+  // The further a tile sits from the wall's middle, the later it settles: half a
+  // beat of lag at the edges is what turns the scale change into parallax.
+  const dl = (depth * 0.32).toFixed(3);
   const [fx, fy] = cell.focus ?? [0.5, 0.5];
+  // A detail crop blows the screenshot up and centres the chosen point of it:
+  // the image is `zoom` times the tile and offset so (fx, fy) lands in the middle.
   const zoom = cell.zoom ?? 1;
   const width = Math.round(box.w * zoom);
   const height = Math.round(width / (cell.aspect ?? SCREEN_ASPECT));
@@ -350,28 +378,31 @@ ${WALL.map((cell) => {
   const detail = cell.zoom
     ? ` style="left:${left}px;top:${top}px;right:auto;bottom:auto;width:${width}px;height:${height}px"`
     : "";
-  return `        <div class="tile" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
+  return `        <div class="tile" data-dz="${dz}" data-dl="${dl}" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
 }).join("\n")}
       </div>
     </div>
-    <div id="g-hero" class="hero">
-      <div class="eyebrow" data-layout-ignore>GPUix × React</div>
-      <div class="headline">desktop ui that's actually native</div>
-      <div class="sub">Components and app blocks, painted by the GPU.</div>
-      <div class="ctas" data-layout-ignore><span class="cta solid">Get started</span><span class="cta outline">Browse blocks</span></div>
-    </div>`,
+    <div id="g-band-b" class="cap-band down"></div>
+    <div id="g-band-t" class="cap-band up"></div>
+    <div id="g-cap" class="cap">every component you need</div>`,
   script: `const cam = { z: Math.log(2.1) };
     const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
-    // It opens on one tile, not on the page's seam: the montage's last close-up
-    // is a card with one control on it, and the wall opens on the button card —
-    // same shape, same size, same place in the frame — then pulls back.
+    // It opens on one tile, not on the wall's seam: the montage's last close-up
+    // is the checkbox card, and the wall opens on that same card — same shape,
+    // same size, same place in the frame — then pulls back.
     gsap.set("#g-wall", { x: ${-FOCUS_CX}, y: ${-FOCUS_CY} });
-    tl.to("#g-wall", { x: ${-Math.round(WALL_BOX.w / 2)}, y: ${PAGE_TOP - 540}, duration: 2.9, ease: "power2.inOut" }, 0);
+    tl.to("#g-wall", { x: ${-Math.round(WALL_BOX.w / 2)}, y: ${-Math.round(WALL_BOX.h / 2)}, duration: 3, ease: "power1.inOut" }, 0);
     zoom();
-    tl.to(cam, { z: 0, duration: 2.9, ease: "power2.inOut", onUpdate: zoom }, 0);
-    // The page arrives a beat after the camera: the title block settles once the
-    // wall has given it room, and the cards drift inside their frames after that.
-    tl.fromTo("#g-hero", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 1.4);
+    // Depth: the outer tiles start 7 % larger and settle to their own size late,
+    // while the centre settles first — the wall comes forward as a field with
+    // parallax, not a contact sheet (every tile lands by 1.8 s, before the line).
+    gsap.utils.toArray("#g-wall .tile").forEach((tile) => {
+      const delay = +tile.dataset.dl;
+      tl.fromTo(tile, { scale: +tile.dataset.dz },
+        { scale: 1, duration: 1.8 - delay, ease: "power1.inOut" }, delay);
+    });
+    // The wall breathes inside its tiles: each picture drifts a few pixels on
+    // its own delay, so the field moves without a single gutter changing.
     gsap.utils.toArray("#g-wall .tile").forEach((tile, i) => {
       const img = tile.querySelector("img");
       if (!img) return;
@@ -381,7 +412,18 @@ ${WALL.map((cell) => {
         { x: dx * 7, y: dy * 6, duration: 1.8, ease: "sine.inOut", yoyo: true, repeat: 1 },
         2.2 + (i % 5) * 0.06);
     });
-    tl.fromTo("#g-wall",{rotation:0},{rotation:0,duration:${GRID_LENGTH}},0);`,
+    tl.to(cam, { z: Math.log(0.82), duration: 2, ease: "power1.inOut", onUpdate: zoom }, 0);
+    tl.fromTo("#g-wall",{rotation:0},{rotation:0,duration:${GRID_LENGTH}},0);
+    // The wall gets the first two seconds to itself, then the line rises out of
+    // the paper under it and the two swap.
+    tl.fromTo("#g-cap",{opacity:0},{opacity:1,duration:0.3,ease:"power2.out"},1.9);
+    tl.fromTo("#g-band-b",{opacity:0},{opacity:1,duration:0.3,ease:"none"},1.9);
+    tl.to("#g-cap",{y:-824,duration:0.5,ease:"power2.inOut"},3);
+    // The wall settles below the line: 88 px clears the top band and leaves a
+    // bottom margin inside the frame.
+    tl.to("#g-cam",{y:88,duration:0.5,ease:"power2.inOut"},3);
+    tl.to("#g-band-t",{opacity:1,duration:0.5,ease:"none"},3);
+    tl.to("#g-band-b",{opacity:0,duration:0.5,ease:"none"},3);`,
 };
 
 // 8.4–19.45: what it builds, cut on the actions — the dashboard assembled, one
@@ -423,12 +465,11 @@ const SHOTS: ReadonlyArray<Shot> = [
     take: "settings",
     mediaStart: 0.15,
     length: 1,
-    width: 2048,
-    height: 1152,
-    scale: 0.76,
+    width: 1760,
+    height: 940,
+    scale: 0.9,
     framed: true,
-    push: [1.05, 1],
-    drift: [-8, 6],
+    push: [1, 1],
     cursor: false,
     platform: "macOS",
   },
@@ -436,12 +477,11 @@ const SHOTS: ReadonlyArray<Shot> = [
     take: "settings",
     mediaStart: 1.6,
     length: 1,
-    width: 2048,
-    height: 1152,
-    scale: 0.76,
+    width: 1760,
+    height: 940,
+    scale: 0.9,
     framed: true,
-    push: [1.05, 1],
-    drift: [8, -6],
+    push: [1, 1],
     cursor: true,
     platform: "Windows",
   },
@@ -449,12 +489,11 @@ const SHOTS: ReadonlyArray<Shot> = [
     take: "settings",
     mediaStart: 2.95,
     length: 1,
-    width: 2048,
-    height: 1152,
-    scale: 0.76,
+    width: 1760,
+    height: 940,
+    scale: 0.9,
     framed: true,
-    push: [1.05, 1],
-    drift: [-6, -8],
+    push: [1, 1],
     cursor: true,
     platform: "Linux",
   },
@@ -467,8 +506,7 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 720,
     scale: 1.05,
     framed: true,
-    push: [1.03, 1],
-    drift: [6, 0],
+    push: [1, 1],
   },
   {
     still: still("omarchy-rose-pine", 0),
@@ -477,8 +515,7 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 720,
     scale: 1.05,
     framed: true,
-    push: [1.03, 1],
-    drift: [-6, 0],
+    push: [1, 1],
   },
   {
     still: still("omarchy-gruvbox", 0),
@@ -487,8 +524,7 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 720,
     scale: 1.05,
     framed: true,
-    push: [1.03, 1],
-    drift: [6, 0],
+    push: [1, 1],
   },
   {
     still: still("omarchy-catppuccin-latte", 0),
@@ -497,8 +533,7 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 720,
     scale: 1.05,
     framed: true,
-    push: [1.03, 1],
-    drift: [-6, 0],
+    push: [1, 1],
   },
   {
     still: still("omarchy-everforest", 0),
@@ -507,11 +542,10 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 720,
     scale: 1.05,
     framed: true,
-    push: [1.03, 1],
-    drift: [6, 0],
+    push: [1, 1],
   },
-  // The apps: Slang's fx-991, the editor, the monitor, the player. Each one
-  // pushes in and drifts a few pixels, so a beat of real screens reads as
+  // The apps: Slang's fx-991, the editor, the monitor, the podcast player. Each
+  // one pushes in and drifts a few pixels, so a beat of real screens reads as
   // camera work rather than stills.
   {
     still: stillOf("slang-app-history.png"),
@@ -541,19 +575,19 @@ const SHOTS: ReadonlyArray<Shot> = [
     length: 1,
     width: 2200,
     height: 1720,
-    scale: 0.75,
+    scale: 0.52,
     framed: true,
     push: [1.03, 1],
     drift: [10, 12],
     cursor: false,
   },
   {
-    take: "music",
+    take: "podcast",
     mediaStart: 0,
     length: 1,
-    width: 1280,
-    height: 972,
-    scale: 1.05,
+    width: 2200,
+    height: 1120,
+    scale: 0.75,
     framed: true,
     push: [1.03, 1],
     drift: [-10, -8],
@@ -731,13 +765,13 @@ const end: Scene = {
   start: 26,
   duration: 4,
   css: `#root .lockup { position:absolute; inset:0; }
-    #root .mark { position:absolute; left:50%; top:330px; width:190px; height:190px; margin-left:-95px; background:${ACCENT}; -webkit-mask:url(assets/logo-outline.svg) center/contain no-repeat; mask:url(assets/logo-outline.svg) center/contain no-repeat; }
+    #root .mark { position:absolute; left:50%; top:330px; width:190px; height:190px; margin-left:-95px; }
     #root .name { position:absolute; left:0; right:0; top:560px; text-align:center; font:600 92px Inter, sans-serif; letter-spacing:-0.035em; color:${INK}; }
     #root .url { position:absolute; left:0; right:0; top:690px; text-align:center; font:500 46px Inter, sans-serif; color:${ACCENT}; }
     #root .credit { position:absolute; left:0; right:0; top:950px; text-align:center; font:400 30px Inter, sans-serif; color:#6e6e73; }
     #root .credit u { color:${INK}; text-underline-offset:5px; }`,
   body: `    <div class="lockup">
-      <div id="e-mark" class="mark"></div>
+      <img id="e-mark" class="mark" src="assets/logo.png" alt="">
       <div id="e-name" class="name">GPUIxUI</div>
       <div id="e-url" class="url">gpuixui.sudokw.com</div>
       <div id="e-credit" class="credit">Made with ☕ by <u>@sudo_kw</u></div>
@@ -756,19 +790,14 @@ const LENGTH = 30;
 
 /** Few words: the pictures carry the film, a line names what they show. */
 const LINES: ReadonlyArray<readonly [number, number, string]> = [
-  // The story ladder: each line is the verb of the beat under it — the controls
-  // that already feel native, a whole block, the same tree on every platform,
-  // a desktop that follows its theme, apps that are not mockups, and the same
-  // app in a terminal.
-  [1.2, 4, "no browser in sight"],
-  [SHOWCASE, SHOWCASE + shotStart(1), "every block is a real screen"],
+  // Three lines, one per claim the pictures cannot make alone. The montage, the
+  // block, the apps and the theme flips carry themselves.
   [
     SHOWCASE + shotStart(1),
     SHOWCASE + shotStart(4),
-    "one tree, every platform",
+    "Native on Mac, Windows & Linux",
   ],
   [SHOWCASE + shotStart(4), SHOWCASE + shotStart(9), "your theme, live"],
-  [SHOWCASE + shotStart(9), TERMINAL, "apps, not mockups"],
   [TERMINAL, 24, "the same app, over ssh"],
 ];
 /** The platform each shot shows, named under the line as the cut lands. */

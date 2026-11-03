@@ -165,3 +165,36 @@ at lag ≤ 25 ms, the four masked being one detent inside the accelerating slide
 burst and three keys inside the two typing bursts (grouped reference: lag 0–3 ms,
 corr 0.99–1.00). The Omarchy beat's whooshes were removed so the glass ticks
 stand alone (they had been masking their own cue).
+
+## v7.4 — the review pass: the old wall, still cuts, the podcast
+
+The v7 wall was rejected against the older grid, and the cuts against the
+transition style. The measured changes:
+
+- **The wall is the v6.5 bento again**, with the giant button card replaced by
+  the blocks the landing page shows: `pipeline` takes its 2×1 slot, `kanban` and
+  `inbox` replace the two chat desktops, and `podcast` replaces the music player.
+  The opening still matches the montage: it cuts into the `cu-checkbox` tile
+  (zoom 1.6) instead of a button card.
+- **No bounce on the platform shots.** The three Settings stills are `push: [1,1]`
+  with no drift; measured, two frames 0.3 s apart inside a still differ by
+  **0.0–0.47** (the cursor's own samples), so the only change on a cut is the
+  window chrome and the controls. The take also lost the 1024×576 cream canvas:
+  the window is the whole capture, so there is one background, not two, and the
+  macOS traffic lights / Windows caption buttons / GNOME title bar are what the
+  cut shows.
+- **Textbook flips on Omarchy.** Same treatment: `push: [1,1]`, no drift. The
+  five stills are byte-identical inside their beats (**0.0** frame delta) and the
+  cuts measure **108.2 / 100.8 / 98.1 / 95.9 / 89.7**.
+- **The lines are gone** from the montage and the apps beat; the platform line is
+  `Native on Mac, Windows & Linux`, the Omarchy line is `your theme, live`.
+- **The music player became a podcast player**: `examples/blocks/src/podcast/`
+  (renamed from `music`, docs page and registry included), show *Whale Island
+  Radio*, five Hunter × Hunter episodes, the owner's artwork as the cover
+  (`~/Downloads/hxh-wp.jpg`, cropped square to `assets/podcast-cover.jpg`).
+- **The end card's mark is the real icon** (`logo.png`: green hair, peach face)
+  and the accent is the landing's near-black `#171717` — the film had been
+  tinting a logo it does not own in a purple the brand never used.
+
+Audits on the final render: **20/20** cuts on frame multiples of 15, **45/49**
+cues direct (the same four masked bursts), 30.000000 s, check 0 errors.

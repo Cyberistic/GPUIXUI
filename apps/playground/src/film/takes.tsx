@@ -48,7 +48,7 @@ import { CalculatorApp } from "@gpuixui/slang/app";
 import { Console } from "@gpuixui/blocks/console";
 import { MacosDesktop } from "@gpuixui/blocks/macos";
 import { Editor } from "@gpuixui/blocks/editor";
-import { Music } from "@gpuixui/blocks/music";
+import { Podcast } from "@gpuixui/blocks/podcast";
 import { Monitor } from "@gpuixui/blocks/monitor";
 import { Dashboard } from "@gpuixui/blocks/dashboard";
 import { Inbox } from "@gpuixui/blocks/inbox";
@@ -87,31 +87,20 @@ const SettingsWindow = () => {
   const [dark, setDark] = useState(false);
   const theme = platformTheme(dark ? darkTheme : lightTheme, look);
   return (
-    <div
-      style={{
-        width: 1024,
-        height: 576,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: GROUND,
-      }}
+    <Window
+      theme={theme}
+      platform={look}
+      title="Settings"
+      width={880}
+      height={470}
     >
-      <Window
-        theme={theme}
-        platform={look}
-        title="Settings"
-        width={880}
-        height={470}
-      >
-        <Settings
-          look={look}
-          onLookChange={setLook}
-          dark={dark}
-          onDarkChange={setDark}
-        />
-      </Window>
-    </div>
+      <Settings
+        look={look}
+        onLookChange={setLook}
+        dark={dark}
+        onDarkChange={setDark}
+      />
+    </Window>
   );
 };
 
@@ -592,18 +581,31 @@ export const takes: Readonly<Record<string, Take>> = {
     false,
   ),
   /** The player is a small floating window; it hugs its content. */
-  music: {
-    width: 640,
-    height: 486,
+  podcast: {
+    width: 1100,
+    height: 560,
     frames: 75,
     view: () => (
       <ThemeProvider theme={macWindow}>
-        <div style={{ width: 640, height: 486, display: "flex" }}>
-          <Music />
+        <div style={{ width: 1100, height: 560, display: "flex" }}>
+          <Podcast
+            cover={
+              new URL(
+                "../../../../media/launch/assets/podcast-cover.jpg",
+                import.meta.url,
+              ).pathname
+            }
+          />
         </div>
       </ThemeProvider>
     ),
-    pointer: [{ frame: 0, aim: { x: 560, y: 240 } }],
+    pointer: [
+      { frame: 0, aim: { x: 700, y: 600 } },
+      { frame: 30, aim: { testId: "episode-yorknew" } },
+      { frame: 38, aim: { testId: "episode-yorknew" }, down: true },
+      { frame: 41, aim: { testId: "episode-yorknew" } },
+      { frame: 74, aim: { testId: "episode-yorknew", dx: 30, dy: 40 } },
+    ],
   },
   "omarchy-tokyo": omarchy("tokyo-night", "tokyo-night"),
   "omarchy-catppuccin": omarchy("catppuccin", "catppuccin"),
@@ -714,8 +716,8 @@ export const takes: Readonly<Record<string, Take>> = {
     ],
   },
   settings: {
-    width: 1024,
-    height: 576,
+    width: 880,
+    height: 470,
     frames: 132,
     view: () => <SettingsWindow />,
     pointer: [

@@ -11,14 +11,14 @@ of cuts. Plan: `.agents/slop/plans/068-launch-film-v7.md` (the v4 history is
 | Time | Line | Shot | Source |
 | --- | --- | --- | --- |
 | 0–1 s | — | the Switch, camera pushing from 1.1× | `cu-switch-solo` |
-| 1–2 s | no browser in sight | Tabs, resuming the push at 1.33× | `cu-tabs` |
+| 1–2 s | — | Tabs, resuming the push at 1.33× | `cu-tabs` |
 | 2–3 s | — | Slider, 1.58× | `cu-slider` |
-| 3–4 s | — | Checkbox, 1.84× — the cut lands at 2.1×, the same scale the page opens on | `cu-checkbox` |
-| 4–8.5 s | (title block) | **the page**: a title, a one-line claim and two pills over a wall of **fifteen real cards** in six columns — the wall bleeds off both edges and past the fold; it opens on the button card the montage left, pulls back, and the page settles | one still of each take |
-| 8.5–10.5 s | every block is a real screen | the report dashboard: its range control is pressed and the chart re-reads | `dashboard` |
-| 10.5–13.5 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux | `settings` |
+| 3–4 s | — | Checkbox, 1.84× — the cut lands at 2.1×, the same scale the wall opens on | `cu-checkbox` |
+| 4–8.5 s | every component you need | **the wall**: fifteen real windows and single controls in one bento — the blocks the landing page shows (pipeline, kanban, inbox, calendar, licence) beside the components; it opens on the checkbox the montage left, then pulls back | one still of each take |
+| 8.5–10.5 s | — | the report dashboard: its range control is pressed and the chart re-reads | `dashboard` |
+| 10.5–13.5 s | Native on Mac, Windows & Linux | **the same Settings window** in three looks, cut still: macOS, Windows, Linux, each with its own toolbar | `settings` |
 | 13.5–16 s | your theme, live · omarchy | **five Omarchy themes**, each with its own wallpaper, cut a beat apart: Tokyo Night → Rosé Pine → Gruvbox → Catppuccin Latte → Everforest | `omarchy-*` stills |
-| 16–20 s | apps, not mockups | Slang’s fx-991, the editor, the hardware monitor, the music player | Slang still, `editor`, `monitor`, `music` |
+| 16–20 s | — | Slang’s fx-991, the editor, the hardware monitor, the podcast player | Slang still, `editor`, `monitor`, `podcast` |
 | 20–24 s | the same app, over ssh | the ssh session; the Settings block takes the whole terminal over, then its look moves to Windows and its dark mode comes on — three real terminal states, cut on the press beats | `term-light-linux`, `term-dark`, `term-light-win` |
 | 24–26 s | — | the stack | film |
 | 26–30 s | — | the end card | film |
@@ -41,7 +41,7 @@ frames.
 
 ```sh
 nub run --filter playground build
-for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang console-term desktop-aero tiling chat-mac chat-win chat-linux editor music monitor dashboard kanban notes pipeline welcome license; do
+for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang console-term desktop-aero tiling chat-mac chat-win chat-linux editor podcast dashboard kanban notes pipeline welcome license inbox; do
   nub apps/playground/dist/film/takes.js $take media/launch/takes/$take
 done
 # Slang's own captures (its `src/capture.tsx`), as the film's three stills
@@ -73,7 +73,8 @@ ffmpeg -i gpuixui-launch.mp4 -c:v copy -af loudnorm=I=-18:TP=-1:LRA=11 -c:a aac 
 
 ## Credits
 
-Piano samples: Salamander Grand Piano by Alexander Holm, CC BY 3.0
+Podcast artwork: the owner's own cover (`~/Downloads/hxh-wp.jpg`), cropped
+square. Piano samples: Salamander Grand Piano by Alexander Holm, CC BY 3.0
 (freepats.zenvoid.org). Omarchy palettes and theme wallpapers: basecamp/omarchy
 (MIT; each wallpaper's photographer is credited upstream, see
 `assets/wallpaper/SOURCES.md`). Stage shots: the stageshow skill (MIT, Benji
