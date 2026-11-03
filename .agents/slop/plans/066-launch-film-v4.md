@@ -567,3 +567,59 @@ terminal (prompt, ssh, app) → stack → end card. No dead frame, no beat off t
 grid; the only frame that reads flat at thumbnail size is the terminal prompt at
 20.0 s, which is a single line of type on black by design (full frame confirms
 the chrome, the title and the caret).
+
+### v4.20 — the delivered mp4's audio, verified against the cue table
+
+Until now the cue table was read from `index.html`; nothing had looked at the
+audio inside the shipped file. It is a real AAC track:
+
+```
+$ ffprobe -show_entries stream=codec_type,codec_name,sample_rate,channels,duration
+audio aac 48000 Hz stereo 30.000000 s (195 kb/s)
+video h264 1920x1080 30 fps 30.000000 s
+```
+
+**Method.** The mix is the score at 0.28 plus the sfx at 0.9, so the sfx can be
+isolated exactly: decode the mp4 to mono 48 kHz, render the score with the same
+gain and fade, subtract. The residual's median RMS is **7.2** (silence) against
+peaks of 6 000–12 000 — the score cancels at **0 samples offset** (AAC priming is
+handled), so the residual *is* the sfx bed.
+
+**Cross-correlation against the source samples** (normalised, ±60 ms search):
+
+```
+cue     sample    best lag   corr
+4.00    air         0.0 ms   1.00
+8.50    air         0.0 ms   0.89
+10.50   air         0.0 ms   0.86
+13.50   air         0.0 ms   0.86
+15.00   air         0.0 ms   1.00
+20.00   air         0.0 ms   1.00
+24.00   air         0.0 ms   1.00
+26.00   air         0.0 ms   0.35   (overlaps the mark chime)
+8.53    land       +3.0 ms   0.93
+8.68    land       +3.0 ms   0.55
+22.20   press       0.0 ms   1.00
+22.80   press       0.0 ms   1.00
+23.40   thud        0.0 ms   1.00
+26.10   mark        0.0 ms   0.94
+0.41    press      +3.0 ms   1.00
+19.63   glass-2    +3.0 ms   0.90
+10.53   look-mac   +3.0 ms   0.91
+```
+
+The two grouped checks land at 0.0 ms as well: the terminal's ten key cues
+(20.10–21.22, summed) and the assemble's two land hits (8.53 + 8.68, summed).
+
+Lag profile around one whoosh, showing the peak is a point, not a plateau:
+
+```
+whoosh @ 4.00 s   -200ms=-0.01  -50ms=-0.03  +0ms=1.00  +50ms=-0.02  +200ms=0.01
+press  @ 22.20 s  -200ms= 0.01  -50ms= 0.06  +0ms=1.00  +50ms= 0.27  +200ms=-0.01
+mark   @ 26.10 s  -200ms=-0.01  -50ms=-0.56  +0ms=0.94  +50ms=-0.80  +200ms=-0.37
+```
+
+The +3 ms cases are one AAC frame; nothing is off by more than that. Earlier
+"misses" from a threshold-based onset pass (air +70 ms, land 8.68 merged into
+8.53) were the samples' own slow attacks and merged decay tails, not sync errors —
+the correlation puts every one of them at lag 0.

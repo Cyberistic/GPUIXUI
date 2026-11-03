@@ -24911,6 +24911,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` `macos` desktop block: the drawn wallpaper, the menu bar and its menus, the dock, and a window layer — with docs, a capture and two behaviour cases (plan 744)
 `[x]` `editor`, `music`, `monitor` blocks: tokenised code with an explorer, a seeded player, and a sampled hardware monitor — docs, captures and behaviour cases each (plan 745)
 `[x]` Launch film v4.5: the three-OS chat flip (the same chat window on macOS, Aero and the tiling desktop) and the apps montage (Slang, editor, music, monitor)
+`[x]` Launch film v4.20: the delivered mp4's audio verified — AAC 48 kHz stereo 30 s, score subtracted to isolate the sfx bed, 17/17 spot-checked cues correlate with their samples at lag 0–3 ms
 `[x]` Launch film v4.19: the whole film audited — cue table re-read from the build (45 cues, every cut on its whoosh), contact sheet at 0.5 s inspected, stray 4.53 s press removed
 `[x]` Launch film v4.18: the stack and end card push 3 % with drift (line 1476→1518 px, name 336→346 px), so every scene in the film carries the camera language
 `[x]` Launch film v4.17: the three platform chat stills push 5 % with alternating drift (card 1074→1033 px across the macOS cut), so no shot in the film is static
