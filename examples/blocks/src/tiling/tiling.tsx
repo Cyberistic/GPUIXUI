@@ -28,12 +28,17 @@ import {
 } from "./data.js";
 import { nextFocus, paletteTheme, titleOf } from "./logic.js";
 
+/** The palettes the desktop can wear, by Omarchy theme name. */
+export type { PaletteName } from "./data.js";
+
 export interface TilingDesktopProps {
   readonly palette?: PaletteName;
   /** The focused tile, when the caller drives it; otherwise the desktop keeps its own. */
   readonly focus?: TileId;
   /** A wallpaper image behind the tiles; the palette's ground is the default. */
   readonly wallpaper?: string;
+  /** The band of wallpaper around the tiles, in pixels. Default `8`. */
+  readonly inset?: number;
 }
 
 const Bar = ({
@@ -313,6 +318,7 @@ export const TilingDesktop = ({
   palette = "tokyo-night",
   focus,
   wallpaper,
+  inset = 8,
 }: TilingDesktopProps) => {
   const theme = paletteTheme(palette);
   const [own, setOwn] = useState<TileId>("settings");
@@ -363,7 +369,7 @@ export const TilingDesktop = ({
             flexGrow: 1,
             minHeight: 0,
             gap,
-            padding: gap,
+            padding: inset,
           }}
         >
           <Tile

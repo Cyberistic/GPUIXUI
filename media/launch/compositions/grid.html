@@ -4,7 +4,7 @@
       position: absolute;
       inset: 0;
       overflow: hidden;
-      background: #f4f2ee;
+      background: #fafafa;
       font-family: Inter, sans-serif;
     }
     #root video,
@@ -36,19 +36,18 @@
       position: absolute;
       left: 0;
       top: 0;
-      width: 1880px;
-      height: 1064px;
+      width: 2120px;
+      height: 1214px;
     }
     #root .tile {
       position: absolute;
-      width: 300px;
-      height: 200px;
-      border-radius: 24px;
+      border-radius: 14px;
       overflow: hidden;
       background: #fff;
+      border: 1px solid rgba(17, 17, 18, 0.07);
       box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.06),
-        0 10px 30px -14px rgba(30, 30, 60, 0.25);
+        0 1px 2px rgba(17, 17, 18, 0.05),
+        0 18px 40px -26px rgba(17, 17, 18, 0.35);
     }
     #root .tile img,
     #root .tile video {
@@ -61,39 +60,64 @@
       height: 106%;
       object-fit: cover;
     }
-    #root .cap {
+    #root .hero {
       position: absolute;
       left: 0;
       right: 0;
-      top: 880px;
+      top: 0;
+      height: 372px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: linear-gradient(#fafafa 88%, rgba(250, 250, 250, 0));
+    }
+    #root .eyebrow {
+      margin-top: 58px;
+      font:
+        600 19px Inter,
+        sans-serif;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #767678;
+    }
+    #root .headline {
+      margin-top: 14px;
+      font:
+        600 68px Inter,
+        sans-serif;
+      letter-spacing: -0.035em;
+      color: #111112;
+    }
+    #root .sub {
+      margin-top: 16px;
       text-align: center;
       font:
-        600 64px Inter,
+        400 28px/38px Inter,
         sans-serif;
-      letter-spacing: -0.025em;
-      color: #1d1d1f;
+      color: #606066;
     }
-    #root .cap-band {
-      position: absolute;
-      left: 0;
-      right: 0;
-      height: 330px;
-      pointer-events: none;
+    #root .ctas {
+      margin-top: 22px;
+      display: flex;
+      gap: 12px;
     }
-    #root .cap-band.down {
-      bottom: 0;
-      height: 400px;
-      background: linear-gradient(
-        rgba(244, 242, 238, 0) 30%,
-        rgba(244, 242, 238, 0.96) 45%,
-        #f4f2ee 58%
-      );
+    #root .cta {
+      height: 46px;
+      padding: 0 26px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      font:
+        600 20px Inter,
+        sans-serif;
     }
-    #root .cap-band.up {
-      top: 0;
-      height: 260px;
-      opacity: 0;
-      background: linear-gradient(#f4f2ee 46%, rgba(244, 242, 238, 0) 78%);
+    #root .cta.solid {
+      background: #111112;
+      color: #fff;
+    }
+    #root .cta.outline {
+      border: 1px solid rgba(17, 17, 18, 0.18);
+      color: #111112;
     }
   </style>
   <div
@@ -106,71 +130,31 @@
       <div id="g-wall" class="wall">
         <div
           class="tile"
-          data-dz="1.050"
-          data-dl="0.195"
-          style="left: 0px; top: 0px; width: 616px; height: 416px"
+          style="left: 0px; top: 0px; width: 696px; height: 476px"
         >
           <img class="cover" src="assets/footage/stats-74.png" alt="" />
         </div>
         <div
           class="tile"
-          data-dz="1.060"
-          data-dl="0.257"
-          style="left: 632px; top: 4px; width: 616px; height: 200px"
+          style="left: 712px; top: 0px; width: 696px; height: 476px"
         >
-          <img class="cover" src="assets/footage/music-74.png" alt="" />
+          <img class="cover" src="assets/footage/dashboard-74.png" alt="" />
         </div>
         <div
           class="tile"
-          data-dz="1.061"
-          data-dl="0.260"
-          style="left: 1264px; top: 0px; width: 616px; height: 200px"
+          style="left: 1424px; top: 0px; width: 340px; height: 230px"
+        >
+          <img class="cover" src="assets/footage/monitor-74.png" alt="" />
+        </div>
+        <div
+          class="tile"
+          style="left: 1780px; top: 0px; width: 340px; height: 230px"
         >
           <img
             class="cover"
             style="
-              left: -46px;
-              top: -103px;
-              right: auto;
-              bottom: auto;
-              width: 708px;
-              height: 451px;
-            "
-            src="assets/footage/license-74.png"
-            alt=""
-          />
-        </div>
-        <div
-          class="tile"
-          data-dz="1.040"
-          data-dl="0.130"
-          style="left: 632px; top: 216px; width: 616px; height: 200px"
-        >
-          <img
-            class="cover"
-            style="
-              left: -354px;
-              top: -321px;
-              right: auto;
-              bottom: auto;
-              width: 1324px;
-              height: 843px;
-            "
-            src="assets/footage/cu-tabs-59.png"
-            alt=""
-          />
-        </div>
-        <div
-          class="tile"
-          data-dz="1.040"
-          data-dl="0.130"
-          style="left: 1264px; top: 216px; width: 300px; height: 200px"
-        >
-          <img
-            class="cover"
-            style="
-              left: -79px;
-              top: -30px;
+              left: -85px;
+              top: -47px;
               right: auto;
               bottom: auto;
               width: 510px;
@@ -182,71 +166,59 @@
         </div>
         <div
           class="tile"
-          data-dz="1.041"
-          data-dl="0.134"
-          style="left: 1584px; top: 210px; width: 300px; height: 200px"
-        >
-          <img class="cover" src="assets/footage/monitor-74.png" alt="" />
-        </div>
-        <div
-          class="tile"
-          data-dz="1.030"
-          data-dl="0.065"
-          style="left: 0px; top: 432px; width: 300px; height: 416px"
-        >
-          <img class="cover" src="assets/footage/chat-win-29.png" alt="" />
-        </div>
-        <div
-          class="tile"
-          data-dz="1.030"
-          data-dl="0.067"
-          style="left: 312px; top: 435px; width: 616px; height: 416px"
-        >
-          <img class="cover" src="assets/footage/omarchy-59.png" alt="" />
-        </div>
-        <div
-          class="tile"
-          data-dz="1.020"
-          data-dl="0.000"
-          style="left: 948px; top: 432px; width: 616px; height: 200px"
+          style="left: 1424px; top: 246px; width: 696px; height: 230px"
         >
           <img
             class="cover"
             style="
-              left: -354px;
-              top: -321px;
+              left: -400px;
+              top: -361px;
               right: auto;
               bottom: auto;
-              width: 1324px;
-              height: 843px;
+              width: 1496px;
+              height: 952px;
             "
-            src="assets/footage/cu-slider-59.png"
+            src="assets/footage/cu-tabs-59.png"
             alt=""
           />
         </div>
         <div
           class="tile"
-          data-dz="1.030"
-          data-dl="0.065"
-          style="left: 1580px; top: 432px; width: 300px; height: 416px"
+          style="left: 0px; top: 492px; width: 340px; height: 476px"
         >
-          <img class="cover" src="assets/footage/desktop-aero-89.png" alt="" />
+          <img class="cover" src="assets/footage/kanban-74.png" alt="" />
         </div>
         <div
           class="tile"
-          data-dz="1.040"
-          data-dl="0.130"
-          style="left: 948px; top: 648px; width: 616px; height: 200px"
+          style="left: 356px; top: 492px; width: 696px; height: 476px"
         >
           <img
             class="cover"
             style="
-              left: -92px;
-              top: -155px;
+              left: -52px;
+              top: -16px;
               right: auto;
               bottom: auto;
-              width: 801px;
-              height: 510px;
+              width: 800px;
+              height: 509px;
+            "
+            src="assets/footage/editor-74.png"
+            alt=""
+          />
+        </div>
+        <div
+          class="tile"
+          style="left: 1068px; top: 492px; width: 696px; height: 230px"
+        >
+          <img
+            class="cover"
+            style="
+              left: -104px;
+              top: -173px;
+              right: auto;
+              bottom: auto;
+              width: 905px;
+              height: 576px;
             "
             src="assets/footage/button-43.png"
             alt=""
@@ -254,47 +226,17 @@
         </div>
         <div
           class="tile"
-          data-dz="1.061"
-          data-dl="0.262"
-          style="left: 0px; top: 868px; width: 616px; height: 200px"
-        >
-          <img class="cover" src="assets/footage/chat-mac-29.png" alt="" />
-        </div>
-        <div
-          class="tile"
-          data-dz="1.061"
-          data-dl="0.260"
-          style="left: 632px; top: 864px; width: 616px; height: 200px"
+          style="left: 1780px; top: 492px; width: 340px; height: 230px"
         >
           <img
             class="cover"
             style="
-              left: -554px;
-              top: -449px;
+              left: -238px;
+              top: -144px;
               right: auto;
               bottom: auto;
-              width: 1725px;
-              height: 1098px;
-            "
-            src="assets/footage/cu-checkbox-59.png"
-            alt=""
-          />
-        </div>
-        <div
-          class="tile"
-          data-dz="1.061"
-          data-dl="0.260"
-          style="left: 1264px; top: 864px; width: 300px; height: 200px"
-        >
-          <img
-            class="cover"
-            style="
-              left: -210px;
-              top: -129px;
-              right: auto;
-              bottom: auto;
-              width: 720px;
-              height: 458px;
+              width: 816px;
+              height: 519px;
             "
             src="assets/footage/cu-switch-solo-59.png"
             alt=""
@@ -302,58 +244,91 @@
         </div>
         <div
           class="tile"
-          data-dz="1.061"
-          data-dl="0.260"
-          style="left: 1580px; top: 864px; width: 300px; height: 200px"
+          style="left: 1068px; top: 738px; width: 696px; height: 230px"
+        >
+          <img class="cover" src="assets/footage/music-74.png" alt="" />
+        </div>
+        <div
+          class="tile"
+          style="left: 1780px; top: 738px; width: 340px; height: 230px"
+        >
+          <img class="cover" src="assets/footage/chat-win-29.png" alt="" />
+        </div>
+        <div
+          class="tile"
+          style="left: 0px; top: 984px; width: 696px; height: 230px"
+        >
+          <img class="cover" src="assets/footage/welcome-74.png" alt="" />
+        </div>
+        <div
+          class="tile"
+          style="left: 712px; top: 984px; width: 696px; height: 230px"
+        >
+          <img class="cover" src="assets/footage/pipeline-74.png" alt="" />
+        </div>
+        <div
+          class="tile"
+          style="left: 1424px; top: 984px; width: 340px; height: 230px"
+        >
+          <img class="cover" src="assets/footage/notes-74.png" alt="" />
+        </div>
+        <div
+          class="tile"
+          style="left: 1780px; top: 984px; width: 340px; height: 230px"
         >
           <img
             class="cover"
             style="
-              left: -112px;
-              top: 0px;
+              left: -34px;
+              top: -15px;
               right: auto;
               bottom: auto;
-              width: 525px;
-              height: 334px;
+              width: 408px;
+              height: 260px;
             "
-            src="assets/footage/editor-74.png"
+            src="assets/footage/license-74.png"
             alt=""
           />
         </div>
       </div>
     </div>
-    <div id="g-band-b" class="cap-band down"></div>
-    <div id="g-band-t" class="cap-band up"></div>
-    <div id="g-cap" class="cap">every component you need</div>
+    <div id="g-hero" class="hero">
+      <div class="eyebrow" data-layout-ignore>GPUix × React</div>
+      <div class="headline">desktop ui that's actually native</div>
+      <div class="sub">Components and app blocks, painted by the GPU.</div>
+      <div class="ctas" data-layout-ignore>
+        <span class="cta solid">Get started</span
+        ><span class="cta outline">Browse blocks</span>
+      </div>
+    </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
     const cam = { z: Math.log(2.1) };
     const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
-    // It opens on one tile, not on the wall's seam: the montage's last close-up
+    // It opens on one tile, not on the page's seam: the montage's last close-up
     // is a card with one control on it, and the wall opens on the button card —
     // same shape, same size, same place in the frame — then pulls back.
-    gsap.set("#g-wall", { x: -1256, y: -748 });
+    gsap.set("#g-wall", { x: -1416, y: -607 });
     tl.to(
       "#g-wall",
-      { x: -940, y: -532, duration: 3, ease: "power1.inOut" },
+      { x: -1060, y: -168, duration: 2.9, ease: "power2.inOut" },
       0,
     );
     zoom();
-    // Depth: the outer tiles start 7 % larger and settle to their own size late,
-    // while the centre settles first — the wall comes forward as a field with
-    // parallax, not a contact sheet (every tile lands by 1.8 s, before the line).
-    gsap.utils.toArray("#g-wall .tile").forEach((tile) => {
-      const delay = +tile.dataset.dl;
-      tl.fromTo(
-        tile,
-        { scale: +tile.dataset.dz },
-        { scale: 1, duration: 1.8 - delay, ease: "power1.inOut" },
-        delay,
-      );
-    });
-    // The wall breathes inside its tiles: each picture drifts a few pixels on
-    // its own delay, so the field moves without a single gutter changing.
+    tl.to(
+      cam,
+      { z: 0, duration: 2.9, ease: "power2.inOut", onUpdate: zoom },
+      0,
+    );
+    // The page arrives a beat after the camera: the title block settles once the
+    // wall has given it room, and the cards drift inside their frames after that.
+    tl.fromTo(
+      "#g-hero",
+      { opacity: 0, y: 14 },
+      { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" },
+      1.4,
+    );
     gsap.utils.toArray("#g-wall .tile").forEach((tile, i) => {
       const img = tile.querySelector("img");
       if (!img) return;
@@ -373,32 +348,7 @@
         2.2 + (i % 5) * 0.06,
       );
     });
-    tl.to(
-      cam,
-      { z: Math.log(0.82), duration: 2, ease: "power1.inOut", onUpdate: zoom },
-      0,
-    );
     tl.fromTo("#g-wall", { rotation: 0 }, { rotation: 0, duration: 4.5 }, 0);
-    // The wall gets the first two seconds to itself — the whole reveal, calculator
-    // included — then the line rises out of the paper under it and the two swap.
-    tl.fromTo(
-      "#g-cap",
-      { opacity: 0 },
-      { opacity: 1, duration: 0.3, ease: "power2.out" },
-      1.9,
-    );
-    tl.fromTo(
-      "#g-band-b",
-      { opacity: 0 },
-      { opacity: 1, duration: 0.3, ease: "none" },
-      1.9,
-    );
-    tl.to("#g-cap", { y: -824, duration: 0.5, ease: "power2.inOut" }, 3);
-    // The wall settles below the line: 88 px clears the top band and leaves a
-    // bottom margin inside the frame.
-    tl.to("#g-cam", { y: 88, duration: 0.5, ease: "power2.inOut" }, 3);
-    tl.to("#g-band-t", { opacity: 1, duration: 0.5, ease: "none" }, 3);
-    tl.to("#g-band-b", { opacity: 0, duration: 0.5, ease: "none" }, 3);
     tl.set({}, {}, 4.5);
     window.__timelines = window.__timelines || {};
     window.__timelines["grid"] = tl;

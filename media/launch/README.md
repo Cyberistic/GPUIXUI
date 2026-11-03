@@ -1,24 +1,25 @@
-# Launch film (v4)
+# Launch film (v7)
 
 `gpuixui-launch.mp4`: 30 seconds, 1920×1080, 30 fps, cut to an original piano score
 at 120 BPM with a designed tactile sound on every press. Paper's pace and ground
 (`~/Documents/paper.mp4`): one lowercase line held at a time, crossfades instead
-of cuts. Plan: `.agents/slop/plans/066-launch-film-v4.md`.
+of cuts. Plan: `.agents/slop/plans/068-launch-film-v7.md` (the v4 history is
+`066-launch-film-v4.md`).
 
 ## Every frame of product is the product
 
 | Time | Line | Shot | Source |
 | --- | --- | --- | --- |
 | 0–1 s | — | the Switch, camera pushing from 1.1× | `cu-switch-solo` |
-| 1–2 s | the components you know | Tabs, resuming the push at 1.33× | `cu-tabs` |
+| 1–2 s | no browser in sight | Tabs, resuming the push at 1.33× | `cu-tabs` |
 | 2–3 s | — | Slider, 1.58× | `cu-slider` |
-| 3–4 s | — | Checkbox, 1.84× — the cut lands at 2.1×, the same scale the wall opens on | `cu-checkbox` |
-| 4–8.5 s | every component you need | **sixteen different** blocks in one bento wall (a 2×2 hero, wide panels, tall columns); it opens on the button card — the same white card and blue control the last close-up left on screen — then pulls back to the whole wall; the line starts under the wall, holds, then swaps places with it (Paper's move) | one of each take |
-| 8.5–10.5 s | compose them into blocks | the stats block's real cards falling onto bare paper, the screen landing under the line | `stage-assemble` |
+| 3–4 s | — | Checkbox, 1.84× — the cut lands at 2.1×, the same scale the page opens on | `cu-checkbox` |
+| 4–8.5 s | (title block) | **the page**: a title, a one-line claim and two pills over a wall of **fifteen real cards** in six columns — the wall bleeds off both edges and past the fold; it opens on the button card the montage left, pulls back, and the page settles | one still of each take |
+| 8.5–10.5 s | every block is a real screen | the report dashboard: its range control is pressed and the chart re-reads | `dashboard` |
 | 10.5–13.5 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux | `settings` |
-| 13.5–15 s | on every desktop | **the same chat window on each platform's desktop** — macOS on a photo, Aero, the tiling block — flipping | `chat-mac`, `chat-win`, `chat-linux` |
-| 15–20 s | real apps, built with it | Slang's fx-991, the editor, the hardware monitor, the music player, the Omarchy tiling desktop | Slang still, `editor`, `monitor`, `music`, `tiling` |
-| 20–24 s | can you believe this is in a terminal through ssh? | the ssh session; the Settings block takes the whole terminal over, then its look moves to Windows and its dark mode comes on — three real terminal states, cut on the press beats. Each look is its own capture (`term-light-linux`, `term-light-win`, `term-dark`) because the terminal platform paints a state change only into the next frame it commits, so one press is sent before each take's first paint | terminal takes |
+| 13.5–16 s | your theme, live · omarchy | **five Omarchy themes**, each with its own wallpaper, cut a beat apart: Tokyo Night → Rosé Pine → Gruvbox → Catppuccin Latte → Everforest | `omarchy-*` stills |
+| 16–20 s | apps, not mockups | Slang’s fx-991, the editor, the hardware monitor, the music player | Slang still, `editor`, `monitor`, `music` |
+| 20–24 s | the same app, over ssh | the ssh session; the Settings block takes the whole terminal over, then its look moves to Windows and its dark mode comes on — three real terminal states, cut on the press beats | `term-light-linux`, `term-dark`, `term-light-win` |
 | 24–26 s | — | the stack | film |
 | 26–30 s | — | the end card | film |
 
@@ -40,7 +41,7 @@ frames.
 
 ```sh
 nub run --filter playground build
-for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang console-term desktop-aero tiling chat-mac chat-win chat-linux editor music monitor; do
+for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang console-term desktop-aero tiling chat-mac chat-win chat-linux editor music monitor dashboard kanban notes pipeline welcome license; do
   nub apps/playground/dist/film/takes.js $take media/launch/takes/$take
 done
 # Slang's own captures (its `src/capture.tsx`), as the film's three stills
@@ -52,6 +53,10 @@ cp ~/Documents/slang/media/slang-ti84-graph.png media/launch/takes/slang-app-ti8
 nub apps/playground/dist/film/terminal-take.js media/launch/takes/term-settings settings \
   dark@0.6 look-win32@1.2 look-linux@1.8
 sh media/launch/stage/setup.sh            # then record the two stage shots (stage/README.md)
+# the five Omarchy themes: one still each, the desktop repainted by the palette file
+for theme in tokyo rose-pine gruvbox catppuccin-latte everforest; do
+  nub apps/playground/dist/film/takes.js omarchy-$theme media/launch/takes/omarchy-$theme
+done
 sh media/launch/sound/kit.sh ~/.claude/skills/media-use/audio/assets/sfx
 sh media/launch/sound/score.sh <SalamanderGrandPiano-V3+20200602.sf2>
 nub media/launch/build.ts                 # encodes footage, writes index.html and compositions/
@@ -69,6 +74,8 @@ ffmpeg -i gpuixui-launch.mp4 -c:v copy -af loudnorm=I=-18:TP=-1:LRA=11 -c:a aac 
 ## Credits
 
 Piano samples: Salamander Grand Piano by Alexander Holm, CC BY 3.0
-(freepats.zenvoid.org). Omarchy palettes: basecamp/omarchy (MIT). Stage shots: the stageshow skill
-(MIT, Benji Taylor).
+(freepats.zenvoid.org). Omarchy palettes and theme wallpapers: basecamp/omarchy
+(MIT; each wallpaper's photographer is credited upstream, see
+`assets/wallpaper/SOURCES.md`). Stage shots: the stageshow skill (MIT, Benji
+Taylor).
 Clicks: HyperFrames' bundled sound library.

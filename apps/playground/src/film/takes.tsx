@@ -34,7 +34,7 @@ import { mkdirSync } from "node:fs";
 import { useState, type ReactNode } from "react";
 import { Settings, type Look } from "@gpuixui/blocks/settings";
 import { GROUND, Lights, Window } from "./frame.js";
-import { TilingDesktop } from "@gpuixui/blocks/tiling";
+import { TilingDesktop, type PaletteName } from "@gpuixui/blocks/tiling";
 import { Agent } from "@gpuixui/blocks/agent";
 import { CalendarBlock } from "@gpuixui/blocks/calendar";
 import { DesktopBlock, type DesktopLook } from "@gpuixui/blocks/desktop";
@@ -50,6 +50,7 @@ import { MacosDesktop } from "@gpuixui/blocks/macos";
 import { Editor } from "@gpuixui/blocks/editor";
 import { Music } from "@gpuixui/blocks/music";
 import { Monitor } from "@gpuixui/blocks/monitor";
+import { Dashboard } from "@gpuixui/blocks/dashboard";
 import { Inbox } from "@gpuixui/blocks/inbox";
 import { Kanban } from "@gpuixui/blocks/kanban";
 import { License } from "@gpuixui/blocks/license";
@@ -172,6 +173,27 @@ const wallpaper = (name: string): string =>
     `../../../../media/launch/assets/wallpaper/${name}.jpg`,
     import.meta.url,
   ).pathname;
+
+/** A theme's own wallpaper, as Omarchy ships it with the palette. */
+const omarchyWallpaper = (name: string): string =>
+  new URL(
+    `../../../../media/launch/assets/wallpaper/omarchy-${name}.jpg`,
+    import.meta.url,
+  ).pathname;
+
+/** One still of the desktop in a theme: the palette file repaints the tree. */
+const omarchy = (palette: PaletteName, name: string): Take => ({
+  width: 1280,
+  height: 720,
+  frames: 1,
+  view: () => (
+    <TilingDesktop
+      palette={palette}
+      wallpaper={omarchyWallpaper(name)}
+      inset={56}
+    />
+  ),
+});
 
 /** The theme a floating Mac-style window wears on a desktop. */
 const desktopWindow = (look: PlatformName): Theme =>
@@ -582,6 +604,32 @@ export const takes: Readonly<Record<string, Take>> = {
       </ThemeProvider>
     ),
     pointer: [{ frame: 0, aim: { x: 560, y: 240 } }],
+  },
+  "omarchy-tokyo": omarchy("tokyo-night", "tokyo-night"),
+  "omarchy-catppuccin": omarchy("catppuccin", "catppuccin"),
+  "omarchy-gruvbox": omarchy("gruvbox", "gruvbox"),
+  "omarchy-rose-pine": omarchy("rose-pine", "rose-pine"),
+  "omarchy-catppuccin-latte": omarchy("catppuccin-latte", "catppuccin-latte"),
+  "omarchy-everforest": omarchy("everforest", "everforest"),
+  /** The report screen: a real dashboard, driven by its own controls. */
+  dashboard: {
+    width: 1400,
+    height: 900,
+    frames: 75,
+    view: () => (
+      <ThemeProvider theme={macWindow}>
+        <div style={{ width: 1400, height: 900, display: "flex" }}>
+          <Dashboard />
+        </div>
+      </ThemeProvider>
+    ),
+    pointer: [
+      { frame: 0, aim: { x: 1100, y: 300 } },
+      { frame: 20, aim: { testId: "range-30d" } },
+      { frame: 28, aim: { testId: "range-30d" }, down: true },
+      { frame: 31, aim: { testId: "range-30d" } },
+      { frame: 74, aim: { testId: "range-30d", dx: 40, dy: 60 } },
+    ],
   },
   /** The monitor is a tall dashboard; it gets its own window height. */
   monitor: {

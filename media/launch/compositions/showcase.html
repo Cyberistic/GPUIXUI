@@ -4,7 +4,7 @@
       position: absolute;
       inset: 0;
       overflow: hidden;
-      background: #f4f2ee;
+      background: #fafafa;
       font-family: Inter, sans-serif;
     }
     #root video,
@@ -57,11 +57,11 @@
   >
     <div id="s-cam0" class="cam" style="opacity: 1">
       <div
-        class="frame"
-        style="left: 0px; top: 0px; width: 1920px; height: 1080px"
+        class="frame framed"
+        style="left: 316px; top: 211px; width: 1288px; height: 828px"
       >
         <video
-          data-media-start="1.7"
+          data-media-start="0"
           id="s-v0"
           class="clip"
           data-start="0"
@@ -69,9 +69,20 @@
           data-track-index="1"
           muted
           playsinline
-          src="assets/footage/stage-assemble.mp4"
+          src="assets/footage/dashboard.mp4"
           style=""
         ></video>
+        <div id="s-cur0" class="cursor">
+          <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+              fill="#000"
+              stroke="#fff"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
       </div>
     </div>
     <div id="s-cam1" class="cam" style="opacity: 0">
@@ -156,28 +167,52 @@
     <div id="s-cam4" class="cam" style="opacity: 0">
       <div
         class="frame framed"
-        style="left: 480px; top: 325px; width: 960px; height: 600px"
+        style="left: 288px; top: 247px; width: 1344px; height: 756px"
       >
-        <img class="shot" src="assets/footage/chat-mac-0.png" alt="" />
+        <img class="shot" src="assets/footage/omarchy-tokyo-0.png" alt="" />
       </div>
     </div>
     <div id="s-cam5" class="cam" style="opacity: 0">
       <div
         class="frame framed"
-        style="left: 480px; top: 325px; width: 960px; height: 600px"
+        style="left: 288px; top: 247px; width: 1344px; height: 756px"
       >
-        <img class="shot" src="assets/footage/chat-win-0.png" alt="" />
+        <img class="shot" src="assets/footage/omarchy-rose-pine-0.png" alt="" />
       </div>
     </div>
     <div id="s-cam6" class="cam" style="opacity: 0">
       <div
         class="frame framed"
-        style="left: 480px; top: 325px; width: 960px; height: 600px"
+        style="left: 288px; top: 247px; width: 1344px; height: 756px"
       >
-        <img class="shot" src="assets/footage/chat-linux-0.png" alt="" />
+        <img class="shot" src="assets/footage/omarchy-gruvbox-0.png" alt="" />
       </div>
     </div>
     <div id="s-cam7" class="cam" style="opacity: 0">
+      <div
+        class="frame framed"
+        style="left: 288px; top: 247px; width: 1344px; height: 756px"
+      >
+        <img
+          class="shot"
+          src="assets/footage/omarchy-catppuccin-latte-0.png"
+          alt=""
+        />
+      </div>
+    </div>
+    <div id="s-cam8" class="cam" style="opacity: 0">
+      <div
+        class="frame framed"
+        style="left: 288px; top: 247px; width: 1344px; height: 756px"
+      >
+        <img
+          class="shot"
+          src="assets/footage/omarchy-everforest-0.png"
+          alt=""
+        />
+      </div>
+    </div>
+    <div id="s-cam9" class="cam" style="opacity: 0">
       <div
         class="frame framed"
         style="left: 186px; top: 170px; width: 1548px; height: 1476px"
@@ -185,16 +220,16 @@
         <img class="shot" src="assets/footage/slang-app-history.png" alt="" />
       </div>
     </div>
-    <div id="s-cam8" class="cam" style="opacity: 0">
+    <div id="s-cam10" class="cam" style="opacity: 0">
       <div
         class="frame framed"
         style="left: 25px; top: 170px; width: 1870px; height: 1190px"
       >
         <video
           data-media-start="0"
-          id="s-v8"
+          id="s-v10"
           class="clip"
-          data-start="7.5"
+          data-start="8.5"
           data-duration="1"
           data-track-index="1"
           muted
@@ -204,16 +239,16 @@
         ></video>
       </div>
     </div>
-    <div id="s-cam9" class="cam" style="opacity: 0">
+    <div id="s-cam11" class="cam" style="opacity: 0">
       <div
         class="frame framed"
         style="left: 135px; top: 170px; width: 1650px; height: 1290px"
       >
         <video
           data-media-start="0"
-          id="s-v9"
+          id="s-v11"
           class="clip"
-          data-start="8.5"
+          data-start="9.5"
           data-duration="1"
           data-track-index="2"
           muted
@@ -223,40 +258,21 @@
         ></video>
       </div>
     </div>
-    <div id="s-cam10" class="cam" style="opacity: 0">
+    <div id="s-cam12" class="cam" style="opacity: 0">
       <div
         class="frame framed"
         style="left: 288px; top: 170px; width: 1344px; height: 1021px"
       >
         <video
           data-media-start="0"
-          id="s-v10"
+          id="s-v12"
           class="clip"
-          data-start="9.5"
+          data-start="10.5"
           data-duration="1"
           data-track-index="1"
           muted
           playsinline
           src="assets/footage/music.mp4"
-          style=""
-        ></video>
-      </div>
-    </div>
-    <div id="s-cam11" class="cam" style="opacity: 0">
-      <div
-        class="frame framed"
-        style="left: 39px; top: 170px; width: 1843px; height: 1037px"
-      >
-        <video
-          data-media-start="0"
-          id="s-v11"
-          class="clip"
-          data-start="10.5"
-          data-duration="1"
-          data-track-index="2"
-          muted
-          playsinline
-          src="assets/footage/tiling.mp4"
           style=""
         ></video>
       </div>
@@ -267,11 +283,71 @@
     tl.set("#s-cam0", { opacity: 0 }, 2.0);
     tl.fromTo(
       "#s-cam0",
-      { scale: 1, x: 0, y: 0 },
+      { scale: 1.04, x: -10, y: 8 },
       { scale: 1, x: 0, y: 0, duration: 2, ease: "power2.out" },
       0.0,
     );
-
+    tl.set("#s-cur0", { x: 2024.0, y: 552.0, scale: 1 }, 0.0);
+    tl.set("#s-cur0", { x: 2024.0, y: 552.0, scale: 1 }, 0.0);
+    tl.set("#s-cur0", { x: 2024.1, y: 551.9, scale: 1 }, 0.033);
+    tl.set("#s-cur0", { x: 2025.2, y: 551.4, scale: 1 }, 0.067);
+    tl.set("#s-cur0", { x: 2028.0, y: 549.9, scale: 1 }, 0.1);
+    tl.set("#s-cur0", { x: 2033.5, y: 547.1, scale: 1 }, 0.133);
+    tl.set("#s-cur0", { x: 2042.5, y: 542.3, scale: 1 }, 0.167);
+    tl.set("#s-cur0", { x: 2055.9, y: 535.3, scale: 1 }, 0.2);
+    tl.set("#s-cur0", { x: 2074.6, y: 525.5, scale: 1 }, 0.233);
+    tl.set("#s-cur0", { x: 2099.6, y: 512.4, scale: 1 }, 0.267);
+    tl.set("#s-cur0", { x: 2131.6, y: 495.7, scale: 1 }, 0.3);
+    tl.set("#s-cur0", { x: 2171.7, y: 474.7, scale: 1 }, 0.333);
+    tl.set("#s-cur0", { x: 2211.7, y: 453.8, scale: 1 }, 0.367);
+    tl.set("#s-cur0", { x: 2243.7, y: 437.0, scale: 1 }, 0.4);
+    tl.set("#s-cur0", { x: 2268.7, y: 423.9, scale: 1 }, 0.433);
+    tl.set("#s-cur0", { x: 2287.4, y: 414.1, scale: 1 }, 0.467);
+    tl.set("#s-cur0", { x: 2300.9, y: 407.1, scale: 1 }, 0.5);
+    tl.set("#s-cur0", { x: 2309.9, y: 402.4, scale: 1 }, 0.533);
+    tl.set("#s-cur0", { x: 2315.3, y: 399.5, scale: 1 }, 0.567);
+    tl.set("#s-cur0", { x: 2318.1, y: 398.1, scale: 1 }, 0.6);
+    tl.set("#s-cur0", { x: 2319.2, y: 397.5, scale: 1 }, 0.633);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 1 }, 0.667);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 1 }, 0.7);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 1 }, 0.733);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 1 }, 0.767);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 1 }, 0.8);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 1 }, 0.833);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 1 }, 0.867);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 1 }, 0.9);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 0.86 }, 0.933);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 0.86 }, 0.967);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 0.86 }, 1.0);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 1 }, 1.033);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.4, scale: 1 }, 1.067);
+    tl.set("#s-cur0", { x: 2319.3, y: 397.5, scale: 1 }, 1.1);
+    tl.set("#s-cur0", { x: 2319.4, y: 397.6, scale: 1 }, 1.133);
+    tl.set("#s-cur0", { x: 2319.6, y: 397.8, scale: 1 }, 1.167);
+    tl.set("#s-cur0", { x: 2319.8, y: 398.1, scale: 1 }, 1.2);
+    tl.set("#s-cur0", { x: 2320.1, y: 398.6, scale: 1 }, 1.233);
+    tl.set("#s-cur0", { x: 2320.6, y: 399.3, scale: 1 }, 1.267);
+    tl.set("#s-cur0", { x: 2321.2, y: 400.3, scale: 1 }, 1.3);
+    tl.set("#s-cur0", { x: 2322.0, y: 401.5, scale: 1 }, 1.333);
+    tl.set("#s-cur0", { x: 2323.0, y: 403.0, scale: 1 }, 1.367);
+    tl.set("#s-cur0", { x: 2324.2, y: 404.8, scale: 1 }, 1.4);
+    tl.set("#s-cur0", { x: 2325.7, y: 407.0, scale: 1 }, 1.433);
+    tl.set("#s-cur0", { x: 2327.5, y: 409.6, scale: 1 }, 1.467);
+    tl.set("#s-cur0", { x: 2329.5, y: 412.7, scale: 1 }, 1.5);
+    tl.set("#s-cur0", { x: 2331.8, y: 416.2, scale: 1 }, 1.533);
+    tl.set("#s-cur0", { x: 2334.5, y: 420.2, scale: 1 }, 1.567);
+    tl.set("#s-cur0", { x: 2337.5, y: 424.7, scale: 1 }, 1.6);
+    tl.set("#s-cur0", { x: 2340.9, y: 429.8, scale: 1 }, 1.633);
+    tl.set("#s-cur0", { x: 2344.7, y: 435.5, scale: 1 }, 1.667);
+    tl.set("#s-cur0", { x: 2348.9, y: 441.9, scale: 1 }, 1.7);
+    tl.set("#s-cur0", { x: 2353.6, y: 448.9, scale: 1 }, 1.733);
+    tl.set("#s-cur0", { x: 2358.6, y: 456.4, scale: 1 }, 1.767);
+    tl.set("#s-cur0", { x: 2363.3, y: 463.4, scale: 1 }, 1.8);
+    tl.set("#s-cur0", { x: 2367.5, y: 469.7, scale: 1 }, 1.833);
+    tl.set("#s-cur0", { x: 2371.3, y: 475.4, scale: 1 }, 1.867);
+    tl.set("#s-cur0", { x: 2374.7, y: 480.6, scale: 1 }, 1.9);
+    tl.set("#s-cur0", { x: 2377.8, y: 485.1, scale: 1 }, 1.933);
+    tl.set("#s-cur0", { x: 2380.4, y: 489.1, scale: 1 }, 1.967);
     tl.set("#s-cam1", { opacity: 1 }, 2.0);
     tl.set("#s-cam1", { opacity: 0 }, 3.0);
     tl.fromTo(
@@ -363,7 +439,7 @@
     tl.set("#s-cam4", { opacity: 0 }, 5.5);
     tl.fromTo(
       "#s-cam4",
-      { scale: 1.05, x: 8, y: -6 },
+      { scale: 1.03, x: 6, y: 0 },
       { scale: 1, x: 0, y: 0, duration: 0.5, ease: "power2.out" },
       5.0,
     );
@@ -372,7 +448,7 @@
     tl.set("#s-cam5", { opacity: 0 }, 6.0);
     tl.fromTo(
       "#s-cam5",
-      { scale: 1.05, x: -8, y: 6 },
+      { scale: 1.03, x: -6, y: 0 },
       { scale: 1, x: 0, y: 0, duration: 0.5, ease: "power2.out" },
       5.5,
     );
@@ -381,52 +457,61 @@
     tl.set("#s-cam6", { opacity: 0 }, 6.5);
     tl.fromTo(
       "#s-cam6",
-      { scale: 1.05, x: 8, y: 6 },
+      { scale: 1.03, x: 6, y: 0 },
       { scale: 1, x: 0, y: 0, duration: 0.5, ease: "power2.out" },
       6.0,
     );
 
     tl.set("#s-cam7", { opacity: 1 }, 6.5);
-    tl.set("#s-cam7", { opacity: 0 }, 7.5);
+    tl.set("#s-cam7", { opacity: 0 }, 7.0);
     tl.fromTo(
       "#s-cam7",
-      { scale: 1.03, x: 12, y: 10 },
-      { scale: 1, x: 0, y: 0, duration: 1, ease: "power2.out" },
+      { scale: 1.03, x: -6, y: 0 },
+      { scale: 1, x: 0, y: 0, duration: 0.5, ease: "power2.out" },
       6.5,
     );
 
-    tl.set("#s-cam8", { opacity: 1 }, 7.5);
-    tl.set("#s-cam8", { opacity: 0 }, 8.5);
+    tl.set("#s-cam8", { opacity: 1 }, 7.0);
+    tl.set("#s-cam8", { opacity: 0 }, 7.5);
     tl.fromTo(
       "#s-cam8",
-      { scale: 1.03, x: -12, y: 8 },
+      { scale: 1.03, x: 6, y: 0 },
+      { scale: 1, x: 0, y: 0, duration: 0.5, ease: "power2.out" },
+      7.0,
+    );
+
+    tl.set("#s-cam9", { opacity: 1 }, 7.5);
+    tl.set("#s-cam9", { opacity: 0 }, 8.5);
+    tl.fromTo(
+      "#s-cam9",
+      { scale: 1.03, x: 12, y: 10 },
       { scale: 1, x: 0, y: 0, duration: 1, ease: "power2.out" },
       7.5,
     );
 
-    tl.set("#s-cam9", { opacity: 1 }, 8.5);
-    tl.set("#s-cam9", { opacity: 0 }, 9.5);
+    tl.set("#s-cam10", { opacity: 1 }, 8.5);
+    tl.set("#s-cam10", { opacity: 0 }, 9.5);
     tl.fromTo(
-      "#s-cam9",
-      { scale: 1.03, x: 10, y: 12 },
+      "#s-cam10",
+      { scale: 1.03, x: -12, y: 8 },
       { scale: 1, x: 0, y: 0, duration: 1, ease: "power2.out" },
       8.5,
     );
 
-    tl.set("#s-cam10", { opacity: 1 }, 9.5);
-    tl.set("#s-cam10", { opacity: 0 }, 10.5);
+    tl.set("#s-cam11", { opacity: 1 }, 9.5);
+    tl.set("#s-cam11", { opacity: 0 }, 10.5);
     tl.fromTo(
-      "#s-cam10",
-      { scale: 1.03, x: -10, y: -8 },
+      "#s-cam11",
+      { scale: 1.03, x: 10, y: 12 },
       { scale: 1, x: 0, y: 0, duration: 1, ease: "power2.out" },
       9.5,
     );
 
-    tl.set("#s-cam11", { opacity: 1 }, 10.5);
-    tl.set("#s-cam11", { opacity: 0 }, 11.5);
+    tl.set("#s-cam12", { opacity: 1 }, 10.5);
+    tl.set("#s-cam12", { opacity: 0 }, 11.5);
     tl.fromTo(
-      "#s-cam11",
-      { scale: 1.03, x: 10, y: -6 },
+      "#s-cam12",
+      { scale: 1.03, x: -10, y: -8 },
       { scale: 1, x: 0, y: 0, duration: 1, ease: "power2.out" },
       10.5,
     );

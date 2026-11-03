@@ -1,5 +1,5 @@
 /**
- * The tiling desktop's content: four real Omarchy themes and what the panes say.
+ * The tiling desktop's content: seven real Omarchy themes and what the panes say.
  *
  * Each palette is the theme's `colors.toml` as Omarchy ships it (MIT,
  * basecamp/omarchy), decoded by `decodeOmarchyPalette` — the same file an app
@@ -138,6 +138,105 @@ bright_green = "#286983"
 bright_cyan = "#d7827e"
 bright_blue = "#56949f"
 bright_magenta = "#907aa9"
+`,
+  gruvbox: `
+mode = "dark"
+
+accent = "#7daea3"
+selection = "#504945"
+muted = "#665c54"
+
+background = "#282828"
+dark_background = "#1e1e1e"
+darker_background = "#161616"
+lighter_background = "#3c3836"
+
+foreground = "#d4be98"
+dark_foreground = "#7c6f64"
+light_foreground = "#bdae93"
+bright_foreground = "#d4be98"
+
+red = "#ea6962"
+yellow = "#d8a657"
+orange = "#e1875c"
+green = "#a9b665"
+cyan = "#89b482"
+blue = "#7daea3"
+magenta = "#d3869b"
+brown = "#70432e"
+
+bright_red = "#ea6962"
+bright_yellow = "#d8a657"
+bright_green = "#a9b665"
+bright_cyan = "#89b482"
+bright_blue = "#7daea3"
+bright_magenta = "#d3869b"
+`,
+  everforest: `
+mode = "dark"
+
+accent = "#7fbbb3"
+selection = "#3d484d"
+muted = "#475258"
+
+background = "#2d353b"
+dark_background = "#21272c"
+darker_background = "#181d20"
+lighter_background = "#343f44"
+
+foreground = "#d3c6aa"
+dark_foreground = "#4f585e"
+light_foreground = "#9da9a0"
+bright_foreground = "#d3c6aa"
+
+red = "#e67e80"
+yellow = "#dbbc7f"
+orange = "#e09d7f"
+green = "#a7c080"
+cyan = "#83c092"
+blue = "#7fbbb3"
+magenta = "#d699b6"
+brown = "#704e3f"
+
+bright_red = "#e67e80"
+bright_yellow = "#dbbc7f"
+bright_green = "#a7c080"
+bright_cyan = "#83c092"
+bright_blue = "#7fbbb3"
+bright_magenta = "#d699b6"
+`,
+  "catppuccin-latte": `
+mode = "light"
+
+accent = "#1e66f5"
+selection = "#ccd0da"
+muted = "#acb0be"
+
+background = "#eff1f5"
+dark_background = "#e3e4e8"
+darker_background = "#d7d8dc"
+lighter_background = "#dce0e8"
+
+foreground = "#4c4f69"
+dark_foreground = "#9ca0b0"
+light_foreground = "#5c5f77"
+bright_foreground = "#4c4f69"
+
+red = "#d20f39"
+yellow = "#df8e1d"
+orange = "#d84e2b"
+green = "#40a02b"
+cyan = "#179299"
+blue = "#1e66f5"
+magenta = "#ea76cb"
+brown = "#6c2715"
+
+bright_red = "#d20f39"
+bright_yellow = "#df8e1d"
+bright_green = "#40a02b"
+bright_cyan = "#179299"
+bright_blue = "#1e66f5"
+bright_magenta = "#ea76cb"
 `,
 } as const;
 
