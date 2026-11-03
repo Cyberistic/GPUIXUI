@@ -1240,3 +1240,34 @@ It is also the first point where the film side has nothing left to measure: the
 remaining question is inside the renderer's scene/mutation application.
 
 Both probe files restored (grep for the probe: 0 in both), environment re-verified.
+
+### v4.38 — batches arrive dirty and paint; the painted chip still shows the old look
+
+Instrumented `renderer.apply_batch` (bytes, destroyed ids, `dirty`) and recorded a
+take with a chip press at 3.0 s and the dark switch at 4.5 s:
+
+```
+batch bytes=28124 destroyed=0 dirty=true      ← boot
+batch bytes=70    destroyed=0 dirty=true
+batch bytes=6546  destroyed=0 dirty=true      ← the chip commit
+batch bytes=9137  destroyed=0 dirty=true      ← the dark commit
+```
+
+Every batch is dirty, so the window invalidates and repaints — and the take proves
+it: the chip press produces a **non-zero** frame delta (0.13 at 2.90 s) while the
+dark press produces 206.8 at 4.93 s. My earlier "no frame change at all" came from a
+0.3 threshold on a 256-wide downsample; the chip repaint is real, it is just a chip
+highlight's worth of pixels.
+
+But cropping the Look row from the take shows what actually got painted: before the
+press Linux is filled and Windows plain; after it **Linux is still filled** and
+Windows has only gained a grey *hover*. Meanwhile the v4.37 probe logged
+`onValueChange next=win32` and `SettingsApp render look=win32` — the app's state and
+tree say Windows while the terminal paints Linux.
+
+So the pipeline runs end to end (input → handler → state → commit → batch → dirty →
+paint) and the paint is of the *previous* look. That is a style-resolution
+discrepancy in the renderer, not a dropped event: the tree updated, the frame
+rendered, and the chip's selected fill did not follow.
+
+Vendor binary restored (hash matches `.bak`), probe take and log removed.
