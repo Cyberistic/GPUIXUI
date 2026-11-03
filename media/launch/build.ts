@@ -413,7 +413,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   // The apps: Slang's fx-991, the editor, the player, the monitor.
   {
     still: stillOf("slang-app-history.png"),
-    length: 0.8,
+    length: 1,
     width: 1720,
     height: 1640,
     scale: 0.52,
@@ -423,7 +423,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "editor",
     mediaStart: 0,
-    length: 0.8,
+    length: 1,
     width: 2200,
     height: 1400,
     scale: 0.56,
@@ -434,7 +434,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "monitor",
     mediaStart: 0,
-    length: 0.8,
+    length: 1,
     width: 2200,
     height: 1720,
     scale: 0.56,
@@ -446,7 +446,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "music",
     mediaStart: 0,
-    length: 0.8,
+    length: 1,
     width: 1280,
     height: 972,
     scale: 0.74,
@@ -457,7 +457,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "tiling",
     mediaStart: 0,
-    length: 0.8,
+    length: 1,
     width: 2560,
     height: 1440,
     scale: 0.6,

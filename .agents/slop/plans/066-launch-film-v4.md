@@ -310,3 +310,23 @@ platform's materials win over the opaque override).
 - **Regression caught and fixed**: an earlier probe edit had truncated the takes
   map (lint found `solo`/`tap` unused); the file was restored from HEAD and only
   the wallpaper line re-applied — `nub run lint` is clean again.
+
+### v4.9a — the whole film on the beat grid
+
+The apps beat was five 0.8 s shots, which put its last four starts on a 0.4 s
+grid (7.3 / 8.1 / 8.9 / 9.7). Each app is now 1.0 s, so every shot start and
+every scene start is a multiple of 0.5 s, and the terminal moves to 20.0 s with
+4.0 s of screen (the ssh typing and the three Settings presses still fit).
+
+Measured from the generated files (`index.html` + `compositions/showcase.html`):
+
+```
+montage      start= 0.00  len= 4.00  on-beat=True
+grid         start= 4.00  len= 4.50  on-beat=True
+showcase     start= 8.50  len=11.50  on-beat=True
+terminal     start=20.00  len= 4.00  on-beat=True
+stack        start=24.00  len= 2.00  on-beat=True
+end          start=26.00  len= 4.00  on-beat=True
+showcase shot starts: [0.0, 2.0, 3.0, 4.0, 7.5, 8.5, 9.5, 10.5]
+every shot start on the beat: True
+```
