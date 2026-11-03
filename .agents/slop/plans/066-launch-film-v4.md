@@ -1297,3 +1297,34 @@ proves it runs with stale style.
 
 Restored: `ToggleGroup.tsx` byte-identical (grep 0), vendor binary in place (hash
 matches `.bak`), probe takes and logs removed.
+
+### v4.40 — the style arrives in the retained tree; the composed frame keeps the old fill
+
+`RetainedTree::set_style` — the function the 6.5 KB batch calls — was instrumented
+(id, background, whether the element accepted the change), the addon rebuilt and
+swapped, and a chip-only take recorded:
+
+```
+set_style id=85 bg=Some("#0078D4")  changed=true      ← Windows chip in the new look
+…
+set_style id=…  bg=Some("#CFE6F9")  changed=true      ← the selected fill, twice
+```
+
+`set_style` compares the incoming style with the element's current one and marks the
+element render-changed when they differ (`mark_render_changed`). The paint path reads
+that very field (`let style = animated_style.or(element.style)`), so both sides of the
+retained tree agree: the chip holds `#CFE6F9` after the click.
+
+And the take still shows Linux filled. So the loss is *after* the style is in the
+retained tree: either the gpui element built for the chip keeps the styles of the
+previous frame, or the terminal's frame production drops the changed pixels. The
+presenter's dirty-rect path is disabled by default here (`frame_edits: false` unless
+the terminal proves support), so the frame should be whole — which leaves the
+element-tree rebuild as the remaining suspect.
+
+That is where instrumentation from this side runs out: the next probe has to be
+inside the gpui element build/paint for one element between two frames, which needs
+the runtime's own debugging rather than another blind rebuild from the film branch.
+
+Vendor binary restored (hash matches `.bak`), probe take and log removed, no repo
+file left modified.
