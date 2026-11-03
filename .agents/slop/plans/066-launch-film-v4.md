@@ -229,3 +229,33 @@ runs only inside the gitignored `.media/`.
   block) needs a macOS desktop block, and the image-2/3 ideas (code editor,
   music player, browser, photos, hardware monitor, analytics) are new library
   blocks with their own docs, tests and inventory rows — the next plan.
+
+## v4.6 (owner, 2026-11-03): "10x the quality"
+
+Reference: the huashu-motion skill's director rules — a route, a hook in 3 s, carried
+cuts, hits on every landing, screenshots are source not shot.
+
+Landed here:
+
+- **Opening**: the switch is 1.45× (not 2.6×) and the clip starts 0.38 s before its
+  press, so the film opens already moving.
+- **Grid**: thirty **different** takes (every block we ship plus the close-ups), a
+  6×5 wall, gentler column drift, camera 2.05 → 0.72 with the line swap.
+- **Wallpapers**: real images (Wikimedia Commons — a Maligne Lake sunrise and a
+  sea-wave texture, licences in `assets/wallpaper/SOURCES.md`) behind the Windows
+  and Omarchy desktops; the macOS desktop keeps its drawn violet ground because
+  the Agent window's platform materials go translucent over a photo.
+- **Omarchy scene back**: the tiling desktop's palette flip (tokyo-night →
+  rose-pine) replaces the music shot, with a glass hit on the flip frame.
+- **Sound**: the assemble's `land` hits now sit on the stage's real landing frames
+  (0.95 s + 150 ms each, not a guessed 2.15 + 0.16), and every scene cut carries an
+  `air` whoosh.
+- **Defects**: a cursor now sits where its take left it at the cut instead of at
+  the frame's top-left corner, and the platform shots are framed, so a take cannot
+  spill past the film's rounded edge.
+
+Owed (not in this pass): the monitor rebuilt to the reference (ring gauges, RAM /
+network / storage cards, top processes), the music block reworked or dropped, a
+story spine (a route with carried cuts rather than beats), the terminal beat
+showing more of the library, and the macOS chat window's translucency (the
+platform's materials win over the opaque override).

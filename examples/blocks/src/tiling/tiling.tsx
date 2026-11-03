@@ -32,6 +32,8 @@ export interface TilingDesktopProps {
   readonly palette?: PaletteName;
   /** The focused tile, when the caller drives it; otherwise the desktop keeps its own. */
   readonly focus?: TileId;
+  /** A wallpaper image behind the tiles; the palette's ground is the default. */
+  readonly wallpaper?: string;
 }
 
 const Bar = ({
@@ -310,6 +312,7 @@ const Monitor = ({ theme }: { readonly theme: Theme }) => {
 export const TilingDesktop = ({
   palette = "tokyo-night",
   focus,
+  wallpaper,
 }: TilingDesktopProps) => {
   const theme = paletteTheme(palette);
   const [own, setOwn] = useState<TileId>("settings");
@@ -339,6 +342,19 @@ export const TilingDesktop = ({
           backgroundColor: theme.colors.background,
         }}
       >
+        {wallpaper === undefined ? null : (
+          <img
+            alt=""
+            src={wallpaper}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: "100%",
+              height: "100%",
+            }}
+          />
+        )}
         <Bar theme={theme} title={titleOf(focused)} />
         <div
           style={{

@@ -325,6 +325,8 @@ export interface DesktopBlockProps {
   readonly look: DesktopLook;
   readonly width?: number;
   readonly height?: number;
+  /** A wallpaper image; the drawn era ground is the default. */
+  readonly wallpaper?: string;
 }
 
 /** The desktop, as a window's whole content. */
@@ -332,6 +334,7 @@ export const DesktopBlock = ({
   look,
   width = 1280,
   height = 800,
+  wallpaper,
 }: DesktopBlockProps) => {
   const theme = desktopTheme(look);
   const [state, setState] = useState<DesktopState>({
@@ -346,7 +349,21 @@ export const DesktopBlock = ({
         testId="desktop"
         style={{ position: "relative", width, height, overflow: "hidden" }}
       >
-        <Wallpaper look={look} width={width} height={height} />
+        {wallpaper === undefined ? (
+          <Wallpaper look={look} width={width} height={height} />
+        ) : (
+          <img
+            alt=""
+            src={wallpaper}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width,
+              height,
+            }}
+          />
+        )}
         {/* A press stops at the first element that paints a fill, so the catcher
             that closes the menu paints one: fully transparent, over the ground. */}
         <div

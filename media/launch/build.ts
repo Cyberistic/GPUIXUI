@@ -138,16 +138,21 @@ const cursorClip = (
   mediaStart: number,
   duration: number,
   k: number,
-): string =>
-  cursorTrack(
-    id,
-    cursorOf(take).filter(
-      (s) =>
-        s.frame / FPS >= mediaStart && s.frame / FPS < mediaStart + duration,
-    ),
-    start - mediaStart,
-    k,
+): string => {
+  const samples = cursorOf(take).filter(
+    (sample) =>
+      sample.frame / FPS >= mediaStart &&
+      sample.frame / FPS < mediaStart + duration,
   );
+  const first = samples[0];
+  // A cursor sits where its take left it at the cut: without this it waits at
+  // the frame's top-left corner until its first sample.
+  const lead =
+    first === undefined
+      ? ""
+      : `tl.set("#${id}",{x:${(first.x * k).toFixed(1)},y:${(first.y * k).toFixed(1)},scale:1},${start.toFixed(3)});`;
+  return lead + cursorTrack(id, samples, start - mediaStart, k);
+};
 
 const clip = (
   id: string,
@@ -169,14 +174,14 @@ const clip = (
 // Crops stay near 1: the take is already the control at 2× device pixels, and
 // anything past 1.5 magnifies the capture instead of framing it.
 const MONTAGE = [
-  { take: "cu-switch-solo", crop: 2.6, sound: "press" },
+  { take: "cu-switch-solo", crop: 1.45, sound: "press" },
   { take: "cu-tabs", crop: 1.45, sound: "cap-0" },
   { take: "cu-slider", crop: 1.5, sound: "cap-1" },
   { take: "cu-checkbox", crop: 1.5, sound: "cap-2" },
 ] as const;
 const BEAT_CUT = 1.2;
 const PRESS_AT = 0.8; // every close-up presses on its frame 24
-const LEAD_IN = 0.55; // each clip starts this far into its take, so the press lands 0.25 s in
+const LEAD_IN = 0.42; // each clip starts this far into its take, so the press lands 0.38 s in
 /** On-screen pointer width: the camera crops otherwise scale the pointer too. */
 const CURSOR_WIDTH = 87;
 const montage: Scene = {
@@ -205,30 +210,40 @@ const montage: Scene = {
 
 // 3.6–8.4: a field of live components in columns sliding opposite ways; the
 // camera starts on one being typed into and keeps pulling back to reveal more.
-// One of each: twenty different blocks and components, never a repeat.
+// Every tile a different take: the wall is the library, not a pattern.
 const WALL = [
   "stats",
+  "cu-switch",
   "pipeline",
-  "notes",
   "calendar",
-  "viewer",
-  "welcome",
-  "launcher",
-  "cu-input",
-  "agent",
-  "settings",
   "tiling",
   "desktop-aero",
-  "slang",
-  "desktop-luna",
-  "cu-switch",
+  "inbox",
   "cu-tabs",
+  "editor",
+  "notes",
+  "agent",
+  "chat-mac",
+  "kanban",
   "cu-slider",
+  "music",
+  "viewer",
+  "settings",
+  "cu-input",
+  "monitor",
+  "desktop-luna",
+  "slang",
   "cu-checkbox",
+  "launcher",
+  "chat-win",
+  "license",
   "cu-toggle",
+  "menubar",
+  "preferences",
+  "chat-linux",
   "cu-button",
 ] as const;
-const GRID = { cols: 5, rows: 4, w: 560, h: 370, gap: 40 };
+const GRID = { cols: 6, rows: 5, w: 340, h: 240, gap: 24 };
 const lastFrame = (take: string): number =>
   Number(
     execFileSync("sh", [
@@ -255,14 +270,26 @@ const grid: Scene = {
     #root .cap-band.up { top:0; opacity:0; background:linear-gradient(${GROUND} 55%, rgba(244,242,238,0)); }`,
   body: `    <div id="g-cam" class="cam">
 ${Array.from({ length: GRID.cols }, (_, col) => {
-  const x = (col - 2) * (GRID.w + GRID.gap) - GRID.w / 2;
+  const x = (col - (GRID.cols - 1) / 2) * (GRID.w + GRID.gap) - GRID.w / 2;
   const tiles = Array.from({ length: GRID.rows }, (_, row) => {
     const take = WALL[row * GRID.cols + col]!;
-    const y = (row - 1.5) * (GRID.h + GRID.gap) - GRID.h / 2;
+    const y = (row - (GRID.rows - 1) / 2) * (GRID.h + GRID.gap) - GRID.h / 2;
     const component = take.startsWith("cu-");
     const end = still(take, lastFrame(take));
+    const live =
+      component && (row + col) % 3 === 0
+        ? clip(
+            `g-v${col}-${row}`,
+            footage(take),
+            0,
+            GRID_LENGTH,
+            0.3,
+            "left:-26px;top:-10px;width:392px;height:270px",
+            1 + ((col * GRID.rows + row) % 8),
+          )
+        : "";
     const media = component
-      ? `<img src="${end}" alt="" style="left:-220px;top:-100px;width:960px;height:540px">${row === 1 || row === 2 ? clip(`g-v${col}-${row}`, footage(take), 0, GRID_LENGTH, 0.3, "left:-220px;top:-100px;width:960px;height:540px", 1 + ((col * GRID.rows + row) % 8)) : ""}`
+      ? `<img src="${end}" alt="" style="left:-26px;top:-10px;width:392px;height:270px">${live}`
       : `<img class="cover" src="${end}" alt="">`;
     return `        <div class="tile" style="left:0;top:${y}px">${media}</div>`;
   }).join("\n");
@@ -272,20 +299,19 @@ ${Array.from({ length: GRID.cols }, (_, col) => {
     <div id="g-band-b" class="cap-band down"></div>
     <div id="g-band-t" class="cap-band up"></div>
     <div id="g-cap" class="cap">every component you need</div>`,
-  script: `const cam = { z: Math.log(1.6) };
+  script: `const cam = { z: Math.log(2.05) };
     const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
     zoom();
-    tl.to(cam, { z: Math.log(0.62), duration: 2.75, ease: "power1.inOut", onUpdate: zoom }, 0);
+    tl.to(cam, { z: Math.log(0.72), duration: 2.75, ease: "power1.inOut", onUpdate: zoom }, 0);
     ${Array.from({ length: GRID.cols }, (_, col) => {
       const way = col % 2 === 0 ? -1 : 1;
-      return `tl.fromTo("#g-col${col}",{y:${-way * 60}},{y:${way * 30},duration:${GRID_LENGTH},ease:"none"},0);`;
+      return `tl.fromTo("#g-col${col}",{y:${-way * 26}},{y:${way * 14},duration:${GRID_LENGTH},ease:"none"},0);`;
     }).join("")}
     // Paper's swap: the line sits under the field, then the two exchange
     // places — the line rises to the band, the field slides down past it.
-    tl.fromTo("#g-cap",{opacity:0},{opacity:1,duration:0.3,ease:"power2.out"},0.9);
+    tl.fromTo("#g-cap",{opacity:0},{opacity:1,duration:0.3,ease:"power2.out"},0.85);
     tl.to("#g-cap",{y:-744,duration:0.62,ease:"power2.inOut"},2.75);
-    tl.to("#g-cam",{y:130,duration:0.62,ease:"power2.inOut"},2.75);
-    tl.to(cam,{z:Math.log(0.5),duration:0.62,ease:"power2.inOut",onUpdate:zoom},2.75);
+    tl.to("#g-cam",{y:90,duration:0.62,ease:"power2.inOut"},2.75);
     tl.to("#g-band-t",{opacity:1,duration:0.5,ease:"none"},2.75);
     tl.to("#g-band-b",{opacity:0,duration:0.5,ease:"none"},2.75);`,
 };
@@ -310,7 +336,7 @@ interface Shot {
 const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "stage-assemble",
-    mediaStart: 1.4,
+    mediaStart: 0.6,
     length: 2,
     width: 1920,
     height: 1080,
@@ -327,7 +353,7 @@ const SHOTS: ReadonlyArray<Shot> = [
     width: 2048,
     height: 1152,
     scale: 0.76,
-    framed: false,
+    framed: true,
     push: [1, 1],
     cursor: false,
     platform: "macOS",
@@ -339,7 +365,7 @@ const SHOTS: ReadonlyArray<Shot> = [
     width: 2048,
     height: 1152,
     scale: 0.76,
-    framed: false,
+    framed: true,
     push: [1, 1],
     cursor: true,
     platform: "Windows",
@@ -351,7 +377,7 @@ const SHOTS: ReadonlyArray<Shot> = [
     width: 2048,
     height: 1152,
     scale: 0.76,
-    framed: false,
+    framed: true,
     push: [1, 1],
     cursor: true,
     platform: "Linux",
@@ -390,7 +416,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   // The apps: Slang's fx-991, the editor, the player, the monitor.
   {
     still: stillOf("slang-app-history.png"),
-    length: 0.9,
+    length: 0.85,
     width: 1720,
     height: 1640,
     scale: 0.52,
@@ -400,18 +426,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "editor",
     mediaStart: 0,
-    length: 0.9,
-    width: 2200,
-    height: 1400,
-    scale: 0.56,
-    framed: true,
-    push: [1.03, 1],
-    cursor: false,
-  },
-  {
-    take: "music",
-    mediaStart: 0,
-    length: 0.9,
+    length: 0.85,
     width: 2200,
     height: 1400,
     scale: 0.56,
@@ -422,12 +437,24 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "monitor",
     mediaStart: 0,
-    length: 0.95,
+    length: 0.85,
     width: 2200,
     height: 1400,
     scale: 0.56,
     framed: true,
     push: [1.03, 1],
+    cursor: false,
+  },
+  // The Omarchy desktop: the same tree, repainted by the palette file.
+  {
+    take: "tiling",
+    mediaStart: 0,
+    length: 1.1,
+    width: 2560,
+    height: 1440,
+    scale: 0.6,
+    framed: true,
+    push: [1.04, 1],
     cursor: false,
   },
 ];
@@ -651,10 +678,14 @@ const CUES: ReadonlyArray<readonly [number, string]> = [
     (frame, n) => [4 * BEAT_CUT + frame / FPS - 0.3 + F, `key-${n}`] as const,
   ),
   [4 * BEAT_CUT + PRESS_AT - 0.3 + F, "press"],
+  // Each card lands at 0.95 s + 150 ms after the one before it (the stage's own
+  // script), so the hit sits on the frame the card settles, not near it.
   ...[0, 1, 2, 3, 4, 5, 6].map(
-    (i) => [shotAt(0, 2.15 + i * 0.16), "land"] as const,
+    (i) => [shotAt(0, 0.95 + i * 0.15), "land"] as const,
   ),
-  [shotAt(0, 3.33), "glass-1"],
+  [shotAt(0, 1.95), "glass-1"],
+  // The palette flip inside the tiling take, on its own frame.
+  [shotAt(10, 0.6), "glass-2"],
   platformCue(1, "look-mac"),
   platformCue(2, "look-win"),
   platformCue(3, "look-linux"),
@@ -665,6 +696,7 @@ const CUES: ReadonlyArray<readonly [number, string]> = [
   ...keyCues(RUN, TERMINAL + T_RUN),
   [TERMINAL + T_APP + 0.5, "press"],
   [TERMINAL + T_APP + 1.2, "thud"],
+  ...[4.8, 9, 11, 13.7, 15.8, 19.45, 24, 26].map((at) => [at, "air"] as const),
   [26.1, "mark"],
 ];
 

@@ -341,14 +341,17 @@ export interface MacosDesktopProps {
   readonly children?: ReactNode;
   readonly width?: number;
   readonly height?: number;
+  /** A wallpaper image; the drawn ground is the default. */
+  readonly wallpaper?: string;
 }
 
 const Screen = ({
   children,
   width,
   height,
+  wallpaper,
 }: Required<Pick<MacosDesktopProps, "width" | "height">> &
-  Pick<MacosDesktopProps, "children">) => {
+  Pick<MacosDesktopProps, "children" | "wallpaper">) => {
   const [open, setOpen] = useState<string | undefined>(undefined);
   const [app, setApp] = useState("Finder");
   return (
@@ -356,7 +359,20 @@ const Screen = ({
       testId="macos-desktop"
       style={{ position: "relative", width, height, overflow: "hidden" }}
     >
-      <Wallpaper width={width} height={height} />
+      {wallpaper === undefined ? (
+        <Wallpaper width={width} height={height} />
+      ) : (
+        <img
+          alt=""
+          src={wallpaper}
+          style={fill({
+            left: 0,
+            top: 0,
+            width,
+            height,
+          })}
+        />
+      )}
       <MenuBar
         width={width}
         app={app}
@@ -389,6 +405,7 @@ export const MacosDesktop = ({
   children,
   width = 1280,
   height = 800,
+  wallpaper,
 }: MacosDesktopProps) => {
   // Opaque: the offscreen renderer has no window server, so a vibrant sidebar
   // would paint flat grey instead of the wallpaper through it.
@@ -397,7 +414,7 @@ export const MacosDesktop = ({
   });
   return (
     <ThemeProvider theme={theme}>
-      <Screen width={width} height={height}>
+      <Screen width={width} height={height} wallpaper={wallpaper}>
         {children}
       </Screen>
     </ThemeProvider>

@@ -50,6 +50,11 @@ import { MacosDesktop } from "@gpuixui/blocks/macos";
 import { Editor } from "@gpuixui/blocks/editor";
 import { Music } from "@gpuixui/blocks/music";
 import { Monitor } from "@gpuixui/blocks/monitor";
+import { Inbox } from "@gpuixui/blocks/inbox";
+import { Kanban } from "@gpuixui/blocks/kanban";
+import { License } from "@gpuixui/blocks/license";
+import { Preferences } from "@gpuixui/blocks/preferences";
+import { MenuBar } from "@gpuixui/blocks/menubar";
 import { capture, type Take, type Waypoint } from "./take.js";
 
 const mac = platformTheme(lightTheme, "darwin");
@@ -134,6 +139,13 @@ const macApp = (
   pointer,
   keys,
 });
+
+/** A wallpaper the film ships; the desktop blocks paint it instead of their ground. */
+const wallpaper = (name: string): string =>
+  new URL(
+    `../../../../media/launch/assets/wallpaper/${name}.jpg`,
+    import.meta.url,
+  ).pathname;
 
 /** The theme a floating Mac-style window wears on a desktop. */
 const desktopWindow = (look: PlatformName): Theme =>
@@ -500,6 +512,31 @@ export const takes: Readonly<Record<string, Take>> = {
     typing("hunter", 16),
     false,
   ),
+  inbox: macApp(<Inbox />, [{ frame: 0, aim: { x: 900, y: 620 } }], [], false),
+  kanban: macApp(
+    <Kanban />,
+    [{ frame: 0, aim: { x: 900, y: 620 } }],
+    [],
+    false,
+  ),
+  license: macApp(
+    <License />,
+    [{ frame: 0, aim: { x: 900, y: 620 } }],
+    [],
+    false,
+  ),
+  preferences: macApp(
+    <Preferences />,
+    [{ frame: 0, aim: { x: 900, y: 620 } }],
+    [],
+    false,
+  ),
+  menubar: macApp(
+    <MenuBar />,
+    [{ frame: 0, aim: { x: 900, y: 620 } }],
+    [],
+    false,
+  ),
   editor: macApp(
     <Editor />,
     [{ frame: 0, aim: { x: 900, y: 620 } }],
@@ -526,16 +563,24 @@ export const takes: Readonly<Record<string, Take>> = {
             top: 50,
             width: 780,
             height: 600,
+            borderRadius: 14,
+            backgroundColor: "#FFFFFF",
           }}
         >
-          <Agent platform="darwin" />
+          <Agent />
         </div>
       </MacosDesktop>
     ),
     pointer: [{ frame: 0, aim: { x: 900, y: 700 } }],
   },
-  "chat-win": chatOn("win32", <DesktopBlock look="aero" />),
-  "chat-linux": chatOn("linux", <TilingDesktop palette="tokyo-night" />),
+  "chat-win": chatOn(
+    "win32",
+    <DesktopBlock look="aero" wallpaper={wallpaper("windows")} />,
+  ),
+  "chat-linux": chatOn(
+    "linux",
+    <TilingDesktop palette="tokyo-night" wallpaper={wallpaper("omarchy")} />,
+  ),
   agent: macApp(
     <Agent platform="darwin" />,
     [
@@ -575,7 +620,7 @@ export const takes: Readonly<Record<string, Take>> = {
     height: 720,
     frames: 4 * BEAT,
     view: (frame) => (
-      <TilingDesktop palette={frame < 2 * BEAT ? "tokyo-night" : "rose-pine"} />
+      <TilingDesktop palette={frame < BEAT + 3 ? "tokyo-night" : "rose-pine"} />
     ),
     pointer: [
       { frame: 0, aim: { testId: "tile-terminal", dx: 120, dy: 160 } },
