@@ -679,3 +679,43 @@ first whoosh is the arrival at the wall.
 Re-verified in the delivered file: ten new cues correlate with their samples at
 **lag 0.0–3.0 ms** (11.50/12.50/14.00/14.50/16.00/17.00/18.00/19.00 air, 21.60
 land, 23.63 thud); peak sample 22 671 of 32 767 (69 %), **no clipped samples**.
+
+### v4.22 — every cut whooshed, and the terminal platform's paint limit
+
+- **The montage's three cuts are no longer silent.** `air` at 1.0 / 2.0 / 3.0 at
+  **0.35** (the scene starts stay 0.9, the showcase's shot boundaries 0.55), so the
+  opening keeps its carried-push feel while every cut still has its transition
+  sound: **19 cuts, 19 whooshes, 55 cues.**
+- **The terminal take cannot paint three repaints.** Three recordings were tried:
+
+  ```
+  term-a  dark@1.0 look-win32@2.0 look-linux@3.0   126 frames · paints at 61, 87, 121
+  term-b  look-win32@1.5 dark@3.0 look-linux@4.5   171 frames · first paint at frame 101
+  retry   dark@0.8 look-win32@1.6 look-linux@2.4   110 frames · first paint at frame 61
+  ```
+
+  In every case the **first** painted frame already shows the *final* state — the
+  app applied all three inputs before its first commit — and the frames after it
+  differ only by the pointer's chip hover (Δ 4.6 at 240×135). The platform
+  coalesces paints until a commit; `terminal-take.ts` documents the same class of
+  bug ("the collapse likely waits on a layout event … A runtime fix is owed").
+  So three visible repaints are not obtainable by recording, and the experimental
+  takes were deleted. The film keeps `takes/term-settings` (app painted from frame
+  0, one look change at 2.03 s) and its cues now point at what is actually on
+  screen: `land` on the takeover at 21.60, `thud` on the repaint at 23.63.
+- **The README stops overclaiming**: the terminal beat says the block takes the
+  terminal over and its look changes — one repaint, not three presses.
+
+**Full 55-cue audit against the new render** (score subtracted, each cue
+correlated with its own sample):
+
+```
+52 direct:  lag 0.0–3.0 ms, corr 0.36–1.00
+ 2.41 detent-3  masked by cap-1 at the same instant → grouped with it: lag 3.0 ms, corr 0.99
+20.10 key-0     masked by the whoosh tail (air is 0.575 s) → grouped with air + the
+20.20 key-1     first four keys: lag 0.0 ms, corr 1.00
+```
+
+Cut table re-run on the same render: **19/19** cuts show a picture spike (8.4×–748×
+against their neighbours) exactly on a frame that is a multiple of 15, with a
+sound at **0 ms**.

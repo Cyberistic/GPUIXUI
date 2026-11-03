@@ -819,6 +819,9 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   // boundary inside the showcase a little softer, because those come half a beat
   // apart. `shotStart(0)` is the showcase itself.
   ...[4 * BEAT_CUT, TERMINAL, 24, 26].map((at) => [at, "air"] as const),
+  // The montage's own three cuts, quiet: the opening is one carried push, so the
+  // whoosh is felt as a swish under the move rather than a hit on each card.
+  ...[1, 2, 3].map((at) => [at, "air", 0.35] as const),
   ...SHOTS.map((_, i) => [SHOWCASE + shotStart(i), "air", 0.55] as const),
   [26.1, "mark"],
 ];

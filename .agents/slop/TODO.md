@@ -24911,6 +24911,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` `macos` desktop block: the drawn wallpaper, the menu bar and its menus, the dock, and a window layer — with docs, a capture and two behaviour cases (plan 744)
 `[x]` `editor`, `music`, `monitor` blocks: tokenised code with an explorer, a seeded player, and a sampled hardware monitor — docs, captures and behaviour cases each (plan 745)
 `[x]` Launch film v4.5: the three-OS chat flip (the same chat window on macOS, Aero and the tiling desktop) and the apps montage (Slang, editor, music, monitor)
+`[x]` Launch film v4.22: every cut whooshed (19/19, montage now quiet 0.35), the terminal's paint limit established by three recordings (the platform coalesces to one commit — documented, not faked), and all 55 cues audited against the render
 `[x]` Launch film v4.21: cuts measured in the render (19 cuts, all frame multiples of 15), every cut whooshed (8→16), and the terminal's takeover + repaint re-synced (land 21.60, thud 23.63)
 `[x]` Launch film v4.20: the delivered mp4's audio verified — AAC 48 kHz stereo 30 s, score subtracted to isolate the sfx bed, 17/17 spot-checked cues correlate with their samples at lag 0–3 ms
 `[x]` Launch film v4.19: the whole film audited — cue table re-read from the build (45 cues, every cut on its whoosh), contact sheet at 0.5 s inspected, stray 4.53 s press removed
