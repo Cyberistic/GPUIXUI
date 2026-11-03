@@ -1271,3 +1271,29 @@ discrepancy in the renderer, not a dropped event: the tree updated, the frame
 rendered, and the chip's selected fill did not follow.
 
 Vendor binary restored (hash matches `.bak`), probe take and log removed.
+
+### v4.39 — the JS tree is right; the painted chip keeps the old fill
+
+Logged the ToggleGroup item render (value, pressed, computed background) and the
+batch stream together, then cropped the Look row from the take's last frame:
+
+```
+render  item=win32 pressed=true  bg="#CFE6F9"     ← after the click
+render  item=linux pressed=false bg=null
+batches 28124 / 70 / 6546 bytes, all dirty=true
+painted (last frame crop)   Linux still filled, Windows plain-but-hovered
+```
+
+So the React side is **correct**: the item re-renders pressed with the selection
+fill, a 6.5 KB batch is applied with `dirty=true`, the window invalidates, the frame
+paints — and the chip still shows the *previous* selection fill, while a hover that
+the renderer draws itself appears normally.
+
+That closes every layer that lives on the JS side of the boundary. The defect is now
+precisely: **a style mutation for an existing element is applied to the retained
+tree (dirty is set) but not reflected in the painted output, while renderer-owned
+overlays (hover) are.** A hover repaint proves the paint path runs; a style change
+proves it runs with stale style.
+
+Restored: `ToggleGroup.tsx` byte-identical (grep 0), vendor binary in place (hash
+matches `.bak`), probe takes and logs removed.
