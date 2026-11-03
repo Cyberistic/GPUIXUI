@@ -233,6 +233,8 @@ interface Cell {
   readonly focus?: readonly [number, number];
   /** Source width / height, when the take was not recorded at 2200×1400. */
   readonly aspect?: number;
+  /** A hand-placed offset, so the wall is composed rather than snapped. */
+  readonly nudge?: readonly [number, number];
 }
 /** The tile the montage's last close-up cuts into: a card with one control. */
 const MATCH_TILE: Cell = {
@@ -246,7 +248,7 @@ const MATCH_TILE: Cell = {
 };
 const WALL: ReadonlyArray<Cell> = [
   { take: "stats", col: 0, row: 0, w: 2, h: 2 },
-  { take: "music", col: 2, row: 0, w: 2, h: 1 },
+  { take: "music", col: 2, row: 0, w: 2, h: 1, nudge: [0, 6] },
   {
     take: "license",
     col: 4,
@@ -274,9 +276,9 @@ const WALL: ReadonlyArray<Cell> = [
     zoom: 1.7,
     focus: [0.45, 0.4],
   },
-  { take: "monitor", col: 5, row: 1, w: 1, h: 1 },
+  { take: "monitor", col: 5, row: 1, w: 1, h: 1, nudge: [4, -6] },
   { take: "chat-win", col: 0, row: 2, w: 1, h: 2 },
-  { take: "omarchy", col: 1, row: 2, w: 2, h: 2 },
+  { take: "omarchy", col: 1, row: 2, w: 2, h: 2, nudge: [-4, 3] },
   {
     take: "cu-slider",
     col: 3,
@@ -288,7 +290,7 @@ const WALL: ReadonlyArray<Cell> = [
   },
   { take: "desktop-aero", col: 5, row: 2, w: 1, h: 2 },
   MATCH_TILE,
-  { take: "chat-mac", col: 0, row: 4, w: 2, h: 1 },
+  { take: "chat-mac", col: 0, row: 4, w: 2, h: 1, nudge: [0, 4] },
   {
     take: "cu-checkbox",
     col: 2,
@@ -317,8 +319,8 @@ const UNIT = { w: 300, h: 200, gap: 16 };
 const SCREEN_ASPECT = 2200 / 1400;
 const GRID = { cols: 6, rows: 5 };
 const cellBox = (cell: Cell) => ({
-  x: cell.col * (UNIT.w + UNIT.gap),
-  y: cell.row * (UNIT.h + UNIT.gap),
+  x: cell.col * (UNIT.w + UNIT.gap) + (cell.nudge?.[0] ?? 0),
+  y: cell.row * (UNIT.h + UNIT.gap) + (cell.nudge?.[1] ?? 0),
   w: cell.w * UNIT.w + (cell.w - 1) * UNIT.gap,
   h: cell.h * UNIT.h + (cell.h - 1) * UNIT.gap,
 });
@@ -356,7 +358,7 @@ const grid: Scene = {
     #root .cap-band.up { top:0; height:260px; opacity:0; background:linear-gradient(${GROUND} 46%, rgba(244,242,238,0) 78%); }`,
   body: `    <div id="g-cam" class="cam">
       <div id="g-wall" class="wall">
-${WALL.map((cell) => {
+${WALL.map((cell, i) => {
   const box = cellBox(cell);
   const end = still(cell.take, lastFrame(cell.take));
   // Depth: a tile further from the wall's middle starts a little larger and
@@ -377,7 +379,9 @@ ${WALL.map((cell) => {
   const detail = cell.zoom
     ? ` style="left:${left}px;top:${top}px;right:auto;bottom:auto;width:${width}px;height:${height}px"`
     : "";
-  return `        <div class="tile" data-dz="${dz}" data-dl="${dl}" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
+  const bob = (i % 3) * 2 + 3;
+  const bobDelay = (i % 5) * 0.08;
+  return `        <div class="tile" data-dz="${dz}" data-dl="${dl}" data-bob="${bob}" data-bd="${bobDelay.toFixed(2)}" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
 }).join("\n")}
       </div>
     </div>

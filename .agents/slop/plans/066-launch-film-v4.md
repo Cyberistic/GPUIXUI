@@ -1707,3 +1707,18 @@ default is still the Mac look — so the docs page and the examples keep working
 
 Gates: check types clean, lint clean, blocks 15 files / 75 tests, hyperframes 0
 errors, 30.000000 s.
+
+### v6.3 — the wall is composed, not snapped
+
+The wall's grid was still mechanical. Two changes make it a composition:
+
+- **Hand-placed offsets.** A `Cell` gained `nudge`, applied in `cellBox`, so seven
+  tiles sit a few pixels off their slot (music +6 y, licence −4, tabs +5, monitor
+  +4/−6, chat-mac +4, omarchy −4/+3, switch −3/+5). The gutters now vary, which is
+  what makes a wall read as placed rather than generated.
+- **The wall breathes.** After the settle each tile lifts by its own 3–7 px on its
+  own delay (`data-bob` / `data-bd`, `sine.inOut`, one yoyo cycle over 2.4–4.2 s), so
+  the field keeps a slow independent motion instead of freezing at 6.0 s.
+
+Measured on the render: the 6.4 s → 7.2 s frame delta is **23.99** and 7.2 s → 8.4 s
+**30.65** (the bob plus the caption swap), cuts **19/19**, cues **50/54** direct.
