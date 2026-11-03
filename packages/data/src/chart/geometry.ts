@@ -1139,6 +1139,34 @@ export const candleMarks = (
 };
 
 /**
+ * One candle's marks, at its own slot.
+ *
+ * The slot is the **category's**, so a candle sits over its own label: a
+ * caller that paints one candle at a time says which category it is, and the
+ * geometry places it there.
+ */
+export const candleAtMarks = (
+  candle: Candle,
+  index: number,
+  categories: number,
+  box: ChartBox,
+  range: ChartRange,
+  width = 6,
+): ReadonlyArray<ChartMark> => {
+  const count = slotCount([], categories);
+  if (count === 0) return [];
+  const slot = box.width / count;
+  const bodyWidth = Math.max(1, Math.min(width, slot * 0.6));
+  return candleMarks(
+    candle,
+    (index + 0.5) * slot - bodyWidth / 2,
+    bodyWidth,
+    box,
+    range,
+  );
+};
+
+/**
  * The candles of a series, one per category.
  *
  * The candles are laid out over the categories, each in its own slot, so a

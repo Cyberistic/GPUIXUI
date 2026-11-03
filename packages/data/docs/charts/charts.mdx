@@ -119,6 +119,70 @@ Negative values stand below the axis; a zero paints no bar but keeps its slot.
 | `pointTooltip` | `boolean` | `false` | a hit zone on every point shows that datum |
 | `dotIcons` | `IconName[]` | none | an icon per category paints on each point |
 
+### `ScatterChart`
+
+```tsx
+<ScatterChart
+  aria-label="Response time against load"
+  labels={LOADS}
+  series={[{ key: "latency", label: "Latency", values: [12, 30, 58] }]}
+/>;
+```
+
+One point per datum, and no line between them: a point sits where its value
+sits, so a point outside the range is clipped to the plot's edge rather than
+drawing outside the frame. A datum with no number paints no point.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `radius` | `number` | `3` | each point's radius, in pixels |
+
+### `CandleChart`
+
+```tsx
+<CandleChart
+  aria-label="Daily prices"
+  labels={DAYS}
+  series={[]}
+  candles={[
+    { open: 10, high: 20, low: 5, close: 18 },
+    { open: 18, high: 19, low: 12, close: 13 },
+  ]}
+/>;
+```
+
+The open, high, low and close of each period. A candle that closed **above**
+its open paints in the `upColor` and one that closed at or below it in the
+`downColor`, so a reader who cannot separate two hues still reads the
+direction.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `candles` | `Candle[]` | — | the open, high, low and close of each period, one per category |
+| `width` | `number` | `6` | each candle's body width, in pixels |
+| `upColor` | `string` | the theme's `success` | the colour an up day paints |
+| `downColor` | `string` | the theme's `destructive` | the colour a down day paints |
+
+### `FunnelChart`
+
+```tsx
+<FunnelChart
+  aria-label="Signups"
+  labels={["Visit", "Sign up", "Buy"]}
+  series={[]}
+  stages={[100, 60, 20]}
+/>;
+```
+
+A stage per datum, each a share of the **first**. The stages are centred and
+narrow, so a funnel reads as a funnel rather than as bars of different widths
+stacked to one side.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `stages` | `number[]` | — | each stage's value; the first is the widest |
+| `stageLabels` | `string[]` | the categories | the names the stages answer to |
+
 ### `ComposedChart`
 
 ```tsx

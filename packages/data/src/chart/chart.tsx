@@ -53,8 +53,11 @@ import {
   areaBands,
   areaPath,
   barMarksInRange,
+  candleAtMarks,
+  candleUp,
   chartRange,
   curvePath,
+  funnelMarks,
   horizontalBarMarks,
   pointMarks,
   polygonPath,
@@ -64,6 +67,7 @@ import {
   radarSpokes,
   radialArcs,
   fullRing,
+  scatterMarks,
   chartView,
   chartWindow,
   radarCircleGridAt,
@@ -75,6 +79,7 @@ import {
   scaleY,
   seriesPoints,
   valueLabel,
+  type Candle,
   type ChartView,
   type Curve,
 } from "./geometry.js";
@@ -781,6 +786,214 @@ export interface LineChartProps extends ChartProps {
   /** A hit zone on every point shows that datum's readout. */
   readonly pointTooltip?: boolean;
 }
+
+/** {@link ScatterChart} props. */
+export interface ScatterChartProps extends ChartProps {
+  /** The radius of each point, in pixels. Defaults to `3`. */
+  readonly radius?: number;
+}
+
+/**
+ * Scatter: one point per datum, and no line between them.
+ *
+ * A point sits where its value sits, so a point outside the range is clipped
+ * to the plot's edge rather than drawing outside the frame. A datum with no
+ * number paints no point — the rule every mark follows.
+ */
+export const ScatterChart = ({ radius = 3, ...props }: ScatterChartProps) => {
+  const windowed = windowOf(
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
+    props.domain,
+  );
+  const rows = windowed.rows;
+  const labels = windowed.labels;
+  const range = chartRange(rows, labels.length);
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      domainLabels={labelsFor(props.labels, props.data)}
+      range={range}
+      paint={({ series, labels: slots, box }) =>
+        layersFor(
+          series,
+          Arr.map(series, (one) =>
+            scatterMarks(one.values, box, range, slots.length, radius),
+          ),
+        )
+      }
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
+
+/** {@link CandleChart} props. */
+export interface CandleChartProps extends ChartProps {
+  /**
+   * The candles, one per category.
+   *
+   * A candle is the open, high, low and close of a period, and a candle that
+   * closed above its open is an **up** day.
+   */
+  readonly candles: ReadonlyArray<Candle>;
+  /** The width of each candle's body, in pixels. Defaults to `6`. */
+  readonly width?: number;
+  /** The colour an up day paints. Defaults to the theme's positive role. */
+  readonly upColor?: string;
+  /** The colour a down day paints. Defaults to the theme's negative role. */
+  readonly downColor?: string;
+}
+
+/**
+ * Candle: the open, high, low and close of each period.
+ *
+ * A candle that closed above its open paints in the **up** colour and one
+ * that closed at or below it in the **down** colour, so a reader who cannot
+ * separate two hues still reads the direction.
+ */
+export const CandleChart = ({
+  candles,
+  width = 6,
+  upColor,
+  downColor,
+  ...props
+}: CandleChartProps) => {
+  const theme = useTheme();
+  const colors = themeColors(theme);
+  const windowed = windowOf(
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
+    props.domain,
+  );
+  const rows = windowed.rows;
+  const labels = windowed.labels;
+  const range = chartRange(
+    [
+      {
+        key: "close",
+        label: "Close",
+        values: Arr.map(candles, (one) => one.close),
+      },
+    ],
+    labels.length,
+  );
+  const up = upColor ?? colors.success ?? "#22c55e";
+  const down = downColor ?? colors.destructive ?? "#ef4444";
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      domainLabels={labelsFor(props.labels, props.data)}
+      range={range}
+      paint={({ box }) => [
+        {
+          key: "candles",
+          series: { key: "candles", label: "Candles", values: [] },
+          seriesIndex: 0,
+          // Each candle paints in the colour of **its own** direction: a
+          // candle that closed above its open is an up day and one that
+          // closed at or below it is a down day. A reader who cannot
+          // separate two hues still reads the direction.
+          marks: Arr.flatMap(candles, (candle, index) =>
+            // Each candle's own marks, so the colour follows **its**
+            // direction rather than the list's position.
+            Arr.map(
+              candleAtMarks(candle, index, labels.length, box, range, width),
+              (mark) => ({
+                ...mark,
+                fill: { color: candleUp(candle) ? up : down },
+              }),
+            ),
+          ),
+        },
+      ]}
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
+
+/** {@link FunnelChart} props. */
+export interface FunnelChartProps extends ChartProps {
+  /** The stages, one per category, each a share of the first. */
+  readonly stages: ReadonlyArray<number>;
+  /** The labels the stages answer to. */
+  readonly stageLabels?: ReadonlyArray<string>;
+}
+
+/**
+ * Funnel: a stage per datum, each a share of the first.
+ *
+ * The stages are centred and narrow, so a funnel reads as a funnel rather than
+ * as bars of different widths stacked to one side.
+ */
+export const FunnelChart = ({
+  stages,
+  stageLabels,
+  ...props
+}: FunnelChartProps) => {
+  const windowed = windowOf(
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
+    props.domain,
+  );
+  const rows = windowed.rows;
+  const labels = stageLabels ?? labelsFor(props.labels, props.data);
+  const range = chartRange(
+    [{ key: "stage", label: "Stage", values: stages }],
+    labels.length,
+  );
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      domainLabels={labelsFor(props.labels, props.data)}
+      range={range}
+      paint={({ box }) => [
+        {
+          key: "funnel",
+          series: { key: "funnel", label: "Funnel", values: stages },
+          seriesIndex: 0,
+          marks: funnelMarks(stages, box),
+        },
+      ]}
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
 
 /**
  * One path per series through its points, left to right.

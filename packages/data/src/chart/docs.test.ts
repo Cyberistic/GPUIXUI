@@ -61,6 +61,9 @@ const sections: ReadonlyArray<Section> = [
   { heading: "`StackedBar`", type: "StackedBarProps" },
   { heading: "`LineChart`", type: "LineChartProps" },
   { heading: "`ComposedChart`", type: "ComposedChartProps" },
+  { heading: "`ScatterChart`", type: "ScatterChartProps" },
+  { heading: "`CandleChart`", type: "CandleChartProps" },
+  { heading: "`FunnelChart`", type: "FunnelChartProps" },
   { heading: "`AreaChart`", type: "AreaChartProps" },
   { heading: "`PieChart` · `DonutChart`", type: "PieChartProps" },
   { heading: "`RadarChart`", type: "RadarChartProps" },
@@ -125,7 +128,7 @@ const invented = (section: Section): ReadonlyArray<string> => {
 
 describe("the charts page's API tables", () => {
   it("documents every prop each chart part declares", () => {
-    expect(sections).toHaveLength(11);
+    expect(sections).toHaveLength(14);
     expect(
       Arr.length(
         Arr.flatMap(sections, (section) => declaredProps(section.type)),
@@ -147,6 +150,9 @@ describe("the charts page's API tables", () => {
       "`StackedBar`",
       "`LineChart`",
       "`ComposedChart`",
+      "`ScatterChart`",
+      "`CandleChart`",
+      "`FunnelChart`",
       "`AreaChart`",
       "`PieChart`",
       "`DonutChart`",
