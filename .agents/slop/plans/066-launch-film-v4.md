@@ -990,3 +990,41 @@ on whether the renderer can paint it.
 Store binary restored (hash matches `.bak`), probe takes and logs removed. Next
 target is the JS commit latency (~1.9 s), which is the `@gpuix/react` side after
 all — but the renderer is now cleared by measurement rather than assumption.
+
+### v4.30 — instrumented the commit path: the commits are fast, and no click ever arrives
+
+The JS side was instrumented in the store (reversibly; all three files restored
+and diffed clean afterwards) and a take recorded with two presses:
+
+```
+[state] module loaded                 ← the patched module is live
+[commit] flushMutations 0.3 ms        ← resetAfterCommit → one applyBatch FFI call
+[commit] flushMutations 0.0 ms
+[tick] …                              ← none over 20 ms: the frame loop is idle-free
+[evt] …                               ← ZERO pointer events dispatched
+```
+
+Three conclusions, in order of surprise:
+
+1. **The commit is not slow.** `flushMutations` — the single FFI applyBatch that
+   pushes the whole mutation queue into Rust — takes **0.0–1.4 ms**.
+2. **The frame loop is not slow.** No `tick()` exceeded 20 ms across two takes.
+3. **The clicks never reach the app.** `dispatch(event)` in
+   `@gpuix/native/dist/renderer-state.js` is the only door from native input to
+   the React handlers, and in a take with two presses it is called **zero times**.
+   The one visible state change that earlier takes showed is therefore not a press
+   being applied late — it is a relayout/render that happens without any input.
+
+So the v4.29 "~1.9 s JS commit" reading is withdrawn: the two commits observed
+were the boot render and one relayout. The real defect is upstream of React —
+the terminal's pointer events are parsed (v4.27 probe: 174 `TerminalEvent`s) but
+never hit-test to a JS element, so no handler runs. That is a hit-test/coordinate
+defect in the terminal window, not a scheduler one.
+
+Caveat recorded honestly: the instrumentation is a store patch, so a dispatch path
+that bypasses `createRendererState` would be invisible to it; the module marker
+confirms the patched code was the live code path.
+
+**Restored:** `renderer-state.js`, `runtime.js`, `host-config.js` copied back from
+their pre-patch copies (grep for the probes: 0 hits), vendor `@gpuix/native`
+binary in place, take re-recorded to confirm the environment is healthy.
