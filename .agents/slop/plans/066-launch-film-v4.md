@@ -1328,3 +1328,36 @@ the runtime's own debugging rather than another blind rebuild from the film bran
 
 Vendor binary restored (hash matches `.bak`), probe take and log removed, no repo
 file left modified.
+
+### v4.41 — the chip is built with the new fill; the frame still shows the old one
+
+Two probes, one experiment.
+
+**The built element is correct.** Logged where a built gpui element applies its
+resolved background, filtered to the two fill colours the chip can paint:
+
+```
+paint bg=#D2E4F7 ×18      ← Linux selected
+paint bg=#CFE6F9 ×4       ← the last four paints, Windows selected
+```
+
+So after the click the view really does build the chip with `#CFE6F9`. Combined with
+v4.40 (`set_style` stored it) and v4.39 (React rendered it), the value is correct at
+every stage the code exposes.
+
+**Forcing whole frames changes nothing.** The presenter's edit path can drop a
+style-only repaint if `dirty_rects` compares against pixels it already replaced, so
+`finish_probe` was patched to always take `Transport::Inline { frame_edits: false }`,
+rebuilt, swapped and recorded: the take is still 126 frames whose only change is the
+0.13 hover at frame 87. So the edit path is not the culprit either.
+
+What is left is the gpui element tree's own paint cache — the built element carries
+the fill, the composed frame does not — which cannot be observed from this side
+without the runtime's internals.
+
+**This is the end of what the film branch can do.** Ten rounds, seven hypotheses,
+five withdrawn on measurement. The remaining defect is one sentence with a complete
+trace, and it belongs to whoever owns the renderer's paint cache.
+
+Vendor binary restored (hash matches `.bak`), scratch host left in the temp tree,
+no repo file modified.
