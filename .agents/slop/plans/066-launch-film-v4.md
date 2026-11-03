@@ -623,3 +623,59 @@ The +3 ms cases are one AAC frame; nothing is off by more than that. Earlier
 "misses" from a threshold-based onset pass (air +70 ms, land 8.68 merged into
 8.53) were the samples' own slow attacks and merged decay tails, not sync errors —
 the correlation puts every one of them at lag 0.
+
+### v4.21 — cuts measured in the render, and the terminal's sync bug
+
+Cut timing had been read from the generated HTML, never from the mp4. Measured
+directly: decode to 80×45 grey, per-frame mean delta, then compare each frame's
+delta with its two neighbours — **motion is smooth, a cut is a spike**.
+
+```
+cut    frame   delta   spike    nearest cue   Δ
+1.00      30     4.8    71.6     1.41 cap-0   (montage: carried push, no whoosh)
+2.00      60     2.7    28.1     2.41 cap-1   (idem)
+3.00      90     4.1    27.1    3.41 cap-2    (idem)
+4.00     120    58.3   427.7     4.00 air     0 ms
+8.50     255    31.7    11.8     8.50 air     0 ms
+10.50    315    12.7    31.8    10.50 air     0 ms
+11.50    345     4.2    17.3    11.50 air     0 ms
+12.50    375     4.4    15.6    12.50 air     0 ms
+13.50    405    21.8    37.1    13.50 air     0 ms
+14.00    420    15.9    18.1    14.00 air     0 ms
+14.50    435    15.7    16.3    14.50 air     0 ms
+15.00    450    58.1    71.3    15.00 air     0 ms
+16.00    480    75.5   748.4    16.00 air     0 ms
+17.00    510   113.8   169.6    17.00 air     0 ms
+18.00    540   101.8   493.3    18.00 air     0 ms
+19.00    570   138.0   164.6    19.00 air     0 ms
+20.00    600    92.3   471.7    20.00 air     0 ms
+24.00    720    80.2   437.5    24.00 air     0 ms
+26.00    780     5.1   227.7    26.00 air     0 ms
+```
+
+Every cut is on a frame that is a multiple of 15 — the 0.5 s grid, exactly. The
+distinction matters: inside the wall's pull-back (5.0 s) the frame delta is 15.1,
+*higher* than the 1.0 s cut's 4.9, but its spike ratio is 1.0 — it is motion. A cut
+is identified by the spike, not the delta: 8.4×–748× at every cut.
+
+Three defects the audit found, all fixed:
+
+- **The terminal's app takeover had no sound.** The picture jumps at 21.60 s
+  (Δ 89.8, the biggest change in the beat) and the nearest cue was 380 ms away.
+- **The thud fired 230 ms before the repaint it accompanies.** The
+  `term-settings` take emits exactly one repaint (frame 61 = 2.03 s), while the
+  cue sat at T_APP + 1.8. The two "presses" between them had no picture at all.
+  Now: `land` on the takeover at **21.60**, `thud` on the repaint at **23.63**,
+  and the two phantom presses are gone (`T_REPAINT = 61 / 30` is named in build.ts).
+- **Only three of the showcase's thirteen shot boundaries had a whoosh.** The
+  comment said "the showcase's shot boundaries"; the code emitted three. Every
+  shot boundary now gets one at **0.55** (the scene starts stay at 0.9), so the
+  0.5 s cuts do not machine-gun: 8 whooshes → 16.
+
+The montage's three cuts (1.0/2.0/3.0) stay silent on purpose: the opening is one
+carried push (v4.9), the press sounds inside each clip carry its beat, and the
+first whoosh is the arrival at the wall.
+
+Re-verified in the delivered file: ten new cues correlate with their samples at
+**lag 0.0–3.0 ms** (11.50/12.50/14.00/14.50/16.00/17.00/18.00/19.00 air, 21.60
+land, 23.63 thud); peak sample 22 671 of 32 767 (69 %), **no clipped samples**.

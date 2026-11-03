@@ -634,6 +634,8 @@ const T_LOGIN = TYPE_AT + SSH.length * CHAR + 0.06;
 const T_RUN = T_LOGIN + 0.06;
 const T_READY = T_RUN + RUN.length * CHAR + 0.08;
 const T_APP = 1.6; // the app takes the screen
+/** The terminal take's single repaint: frame 61 of `takes/term-settings` at 30 fps. */
+const T_REPAINT = 61 / 30;
 const typed = (id: string, text: string, from: number): string =>
   [...text]
     .map(
@@ -779,7 +781,8 @@ const keyCues = (
   Array.from(text, (_, i) => i)
     .filter((i) => i % 5 === 0)
     .map((i, n) => [from + i * CHAR, `key-${n % 4}`] as const);
-const CUES: ReadonlyArray<readonly [number, string]> = [
+/** A cue: when, which sample, and an optional level (0.9 is the default bed). */
+const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   ...MONTAGE.map(
     ({ sound }, i) => [i * BEAT_CUT + PRESS_AT - LEAD_IN + F, sound] as const,
   ),
@@ -805,21 +808,18 @@ const CUES: ReadonlyArray<readonly [number, string]> = [
   platformCue(6, "look-linux"),
   ...keyCues(SSH, TERMINAL + TYPE_AT),
   ...keyCues(RUN, TERMINAL + T_RUN),
-  [TERMINAL + T_APP + 0.6, "press"],
-  [TERMINAL + T_APP + 1.2, "press"],
-  [TERMINAL + T_APP + 1.8, "thud"],
+  // The app takes the terminal over, and the take's one repaint lands on the frame
+  // it actually paints (frame 61 of takes/term-settings at 30 fps). The two
+  // "presses" that used to sit between them had no picture to land on.
+  [TERMINAL + T_APP, "land"],
+  [TERMINAL + T_APP + T_REPAINT, "thud"],
   // A cut is a whoosh: the scene starts and the showcase's shot boundaries, read
   // from the same table the compositions are written from.
-  ...[
-    4 * BEAT_CUT,
-    SHOWCASE,
-    SHOWCASE + shotStart(1),
-    SHOWCASE + shotStart(4),
-    SHOWCASE + shotStart(7),
-    TERMINAL,
-    24,
-    26,
-  ].map((at) => [at, "air"] as const),
+  // Every cut is a whoosh: the scene starts at full level, and every shot
+  // boundary inside the showcase a little softer, because those come half a beat
+  // apart. `shotStart(0)` is the showcase itself.
+  ...[4 * BEAT_CUT, TERMINAL, 24, 26].map((at) => [at, "air"] as const),
+  ...SHOTS.map((_, i) => [SHOWCASE + shotStart(i), "air", 0.55] as const),
   [26.1, "mark"],
 ];
 
@@ -861,7 +861,7 @@ ${scenes.map((s) => `      <div id="${s.id}" data-composition-id="${s.id}" data-
 ${LINES.map(([start, stop, text], i) => `      <div id="line-${i}" class="line clip" data-start="${start}" data-duration="${(stop - start).toFixed(2)}" data-track-index="9">${text}</div>`).join("\n")}
 ${PLATFORMS.map(([start, stop, name], i) => `      <div id="platform-${i}" class="platform clip" data-start="${start.toFixed(2)}" data-duration="${(stop - start).toFixed(2)}" data-track-index="9">${name}</div>`).join("\n")}
       <audio id="score" class="clip" data-start="0" data-duration="${LENGTH}" data-track-index="19" data-volume="0.28" data-fade-out="1.5" src="assets/music/score.wav"></audio>
-${CUES.map(([time, sound], i) => `      <audio id="sfx-${String(i).padStart(2, "0")}" class="clip" data-start="${time.toFixed(3)}" data-duration="${lengthOf(sound).toFixed(3)}" data-track-index="${20 + (i % 8)}" data-volume="0.9" src="assets/sfx/${sound}.wav"></audio>`).join("\n")}
+${CUES.map(([time, sound, volume], i) => `      <audio id="sfx-${String(i).padStart(2, "0")}" class="clip" data-start="${time.toFixed(3)}" data-duration="${lengthOf(sound).toFixed(3)}" data-track-index="${20 + (i % 8)}" data-volume="${volume ?? 0.9}" src="assets/sfx/${sound}.wav"></audio>`).join("\n")}
     </div>
     <script>
       const tl = gsap.timeline({ paused: true });
