@@ -64,7 +64,7 @@
       position: absolute;
       left: 0;
       right: 0;
-      top: 800px;
+      top: 880px;
       text-align: center;
       font:
         600 64px Inter,
@@ -81,10 +81,10 @@
     }
     #root .cap-band.down {
       bottom: 0;
-      height: 560px;
+      height: 400px;
       background: linear-gradient(
-        rgba(244, 242, 238, 0) 26%,
-        rgba(244, 242, 238, 0.94) 44%,
+        rgba(244, 242, 238, 0) 30%,
+        rgba(244, 242, 238, 0.96) 45%,
         #f4f2ee 58%
       );
     }
@@ -127,9 +127,12 @@
           <img
             class="cover"
             style="
-              object-position: 36% 6%;
-              transform: scale(1.5);
-              transform-origin: 36% 6%;
+              left: -154px;
+              top: -76px;
+              right: auto;
+              bottom: auto;
+              width: 924px;
+              height: 588px;
             "
             src="assets/footage/editor-74.png"
             alt=""
@@ -142,11 +145,14 @@
           <img
             class="cover"
             style="
-              object-position: 50% 42%;
-              transform: scale(1.6);
-              transform-origin: 50% 42%;
+              left: -196px;
+              top: -65px;
+              right: auto;
+              bottom: auto;
+              width: 720px;
+              height: 458px;
             "
-            src="assets/footage/calendar-74.png"
+            src="assets/footage/license-74.png"
             alt=""
           />
         </div>
@@ -217,9 +223,12 @@
           <img
             class="cover"
             style="
-              object-position: 50% 52%;
-              transform: scale(1.7);
-              transform-origin: 50% 52%;
+              left: -180px;
+              top: -138px;
+              right: auto;
+              bottom: auto;
+              width: 750px;
+              height: 477px;
             "
             src="assets/footage/welcome-74.png"
             alt=""
@@ -247,18 +256,25 @@
     zoom();
     tl.to(
       cam,
-      { z: Math.log(0.86), duration: 3, ease: "power1.inOut", onUpdate: zoom },
+      { z: Math.log(0.86), duration: 2, ease: "power1.inOut", onUpdate: zoom },
       0,
     );
     tl.fromTo("#g-wall", { rotation: 0 }, { rotation: 0, duration: 4.5 }, 0);
-    // Paper's swap: the line sits under the field, then the two exchange places.
+    // The wall gets the first two seconds to itself — the whole reveal, calculator
+    // included — then the line rises out of the paper under it and the two swap.
     tl.fromTo(
       "#g-cap",
       { opacity: 0 },
       { opacity: 1, duration: 0.3, ease: "power2.out" },
-      1,
+      1.9,
     );
-    tl.to("#g-cap", { y: -744, duration: 0.5, ease: "power2.inOut" }, 3);
+    tl.fromTo(
+      "#g-band-b",
+      { opacity: 0 },
+      { opacity: 1, duration: 0.3, ease: "none" },
+      1.9,
+    );
+    tl.to("#g-cap", { y: -824, duration: 0.5, ease: "power2.inOut" }, 3);
     tl.to("#g-cam", { y: 60, duration: 0.5, ease: "power2.inOut" }, 3);
     tl.to("#g-band-t", { opacity: 1, duration: 0.5, ease: "none" }, 3);
     tl.to("#g-band-b", { opacity: 0, duration: 0.5, ease: "none" }, 3);

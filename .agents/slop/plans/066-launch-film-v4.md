@@ -408,3 +408,23 @@ terminal: 20.00 air · 22.20 press · 22.80 press · 23.40 thud · 24.00 air
     size (7.5 → legible dark type).
   - `calendar` 1.6× on the week grid; `welcome` 1.7× on the logo + 2FA buttons
     (18 → a legible card instead of a white rectangle).
+
+### v4.12 — the wall gets its first two seconds back, and the quiet tiles go
+
+- **The reveal is clean now.** The line's wash used to cover the wall from the
+  first frame of the beat, sitting over the calculator for ~2 s. The zoom now
+  finishes in 2 s (not 3), the caption and its band rise at 5.9 s, and the
+  caption rests lower (y = 880) on a shorter band (400 px, solid from 45 %), so it
+  clears the wall's third row: at 6.5 s the calculator is fully visible above the
+  line. The line's swap up is still at 7.0 s (y −824).
+- **The calendar tile is gone.** Its last frame is a mostly empty week grid
+  (measured 15) — the events are small, pale chips. Replaced with `license`: the
+  dark Hunter Association card, the licence details and the privileges rows
+  (measured 93, the densest take in the film), cropped 2.4× onto the card.
+- **Detail crops are exact now.** A zoomed image is sized to the source's own
+  aspect (2200×1400, `SCREEN_ASPECT`) rather than to the tile's, so `object-fit:
+  cover` has no slack and the focus point lands on the tile's centre. Before, the
+  vertical slack shifted the crop by ~0.24 of the frame — the editor showed lines
+  6–10 instead of the block, and the welcome dialog was cut off. The welcome tile
+  is 2.5× on the dialog (crown, "Bring your binder", Import cards, Import and
+  Continue, Step 2 of 3) — all of it inside the tile.
