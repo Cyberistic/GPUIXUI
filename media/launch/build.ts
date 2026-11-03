@@ -358,7 +358,7 @@ const grid: Scene = {
     #root .cap-band.up { top:0; height:260px; opacity:0; background:linear-gradient(${GROUND} 46%, rgba(244,242,238,0) 78%); }`,
   body: `    <div id="g-cam" class="cam">
       <div id="g-wall" class="wall">
-${WALL.map((cell, i) => {
+${WALL.map((cell) => {
   const box = cellBox(cell);
   const end = still(cell.take, lastFrame(cell.take));
   // Depth: a tile further from the wall's middle starts a little larger and
