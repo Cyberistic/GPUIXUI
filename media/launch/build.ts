@@ -416,7 +416,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   // The apps: Slang's fx-991, the editor, the player, the monitor.
   {
     still: stillOf("slang-app-history.png"),
-    length: 1,
+    length: 0.8,
     width: 1720,
     height: 1640,
     scale: 0.52,
@@ -426,7 +426,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "editor",
     mediaStart: 0,
-    length: 1,
+    length: 0.8,
     width: 2200,
     height: 1400,
     scale: 0.56,
@@ -437,19 +437,30 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "monitor",
     mediaStart: 0,
-    length: 1,
+    length: 0.8,
     width: 2200,
     height: 1720,
-    scale: 0.62,
+    scale: 0.56,
     framed: true,
     push: [1.03, 1],
     cursor: false,
   },
   // The Omarchy desktop: the same tree, repainted by the palette file.
   {
+    take: "music",
+    mediaStart: 0,
+    length: 0.8,
+    width: 1280,
+    height: 972,
+    scale: 0.74,
+    framed: true,
+    push: [1.03, 1],
+    cursor: false,
+  },
+  {
     take: "tiling",
     mediaStart: 0,
-    length: 1,
+    length: 0.8,
     width: 2560,
     height: 1440,
     scale: 0.6,
@@ -621,15 +632,20 @@ const LENGTH = 30;
 
 /** Few words: the pictures carry the film, a line names what they show. */
 const LINES: ReadonlyArray<readonly [number, number, string]> = [
+  // The story ladder: each line is the verb of the beat under it — the controls
+  // you know, all of them, composed into blocks, one tree on every platform and
+  // desktop, real apps, and the same tree in a terminal.
+  [1.2, 4, "the components you know"],
+  [8.5, 10.5, "compose them into blocks"],
   [
     SHOWCASE + shotStart(1),
     SHOWCASE + shotStart(4),
     "one tree, every platform",
   ],
-  [SHOWCASE + shotStart(4), TERMINAL, "real apps, built with it"],
-  [TERMINAL, 24, "can you believe this is in a terminal through ssh?"],
+  [SHOWCASE + shotStart(4), SHOWCASE + shotStart(7), "on every desktop"],
+  [SHOWCASE + shotStart(7), TERMINAL, "real apps, built with it"],
+  [TERMINAL, 24, "even in your terminal, through ssh"],
 ];
-
 /** The platform each shot shows, named under the line as the cut lands. */
 const PLATFORMS: ReadonlyArray<readonly [number, number, string]> =
   SHOTS.flatMap((shot, i) =>

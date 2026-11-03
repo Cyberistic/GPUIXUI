@@ -543,7 +543,20 @@ export const takes: Readonly<Record<string, Take>> = {
     [],
     false,
   ),
-  music: macApp(<Music />, [{ frame: 0, aim: { x: 900, y: 620 } }], [], false),
+  /** The player is a small floating window; it hugs its content. */
+  music: {
+    width: 640,
+    height: 486,
+    frames: 75,
+    view: () => (
+      <ThemeProvider theme={macWindow}>
+        <div style={{ width: 640, height: 486, display: "flex" }}>
+          <Music />
+        </div>
+      </ThemeProvider>
+    ),
+    pointer: [{ frame: 0, aim: { x: 560, y: 240 } }],
+  },
   /** The monitor is a tall dashboard; it gets its own window height. */
   monitor: {
     width: 1100,

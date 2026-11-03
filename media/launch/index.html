@@ -84,7 +84,7 @@
         data-composition-id="showcase"
         data-composition-src="compositions/showcase.html"
         data-start="8.5"
-        data-duration="10.5"
+        data-duration="10.500000000000002"
         data-track-index="1"
         data-track-kind="graphics"
         data-width="1920"
@@ -126,6 +126,24 @@
       <div
         id="line-0"
         class="line clip"
+        data-start="1.2"
+        data-duration="2.80"
+        data-track-index="9"
+      >
+        the components you know
+      </div>
+      <div
+        id="line-1"
+        class="line clip"
+        data-start="8.5"
+        data-duration="2.00"
+        data-track-index="9"
+      >
+        compose them into blocks
+      </div>
+      <div
+        id="line-2"
+        class="line clip"
         data-start="10.5"
         data-duration="3.00"
         data-track-index="9"
@@ -133,22 +151,31 @@
         one tree, every platform
       </div>
       <div
-        id="line-1"
+        id="line-3"
         class="line clip"
         data-start="13.5"
-        data-duration="5.50"
+        data-duration="1.50"
+        data-track-index="9"
+      >
+        on every desktop
+      </div>
+      <div
+        id="line-4"
+        class="line clip"
+        data-start="15"
+        data-duration="4.00"
         data-track-index="9"
       >
         real apps, built with it
       </div>
       <div
-        id="line-2"
+        id="line-5"
         class="line clip"
         data-start="19"
         data-duration="5.00"
         data-track-index="9"
       >
-        can you believe this is in a terminal through ssh?
+        even in your terminal, through ssh
       </div>
       <div
         id="platform-0"
@@ -415,7 +442,7 @@
       <audio
         id="sfx-22"
         class="clip"
-        data-start="18.633"
+        data-start="18.033"
         data-duration="0.151"
         data-track-index="26"
         data-volume="0.9"
@@ -689,16 +716,34 @@
         "#line-0",
         { opacity: 0.35 },
         { opacity: 1, duration: 0.35, ease: "power2.out" },
-        10.5,
+        1.2,
       );
       tl.fromTo(
         "#line-1",
         { opacity: 0.35 },
         { opacity: 1, duration: 0.35, ease: "power2.out" },
-        13.5,
+        8.5,
       );
       tl.fromTo(
         "#line-2",
+        { opacity: 0.35 },
+        { opacity: 1, duration: 0.35, ease: "power2.out" },
+        10.5,
+      );
+      tl.fromTo(
+        "#line-3",
+        { opacity: 0.35 },
+        { opacity: 1, duration: 0.35, ease: "power2.out" },
+        13.5,
+      );
+      tl.fromTo(
+        "#line-4",
+        { opacity: 0.35 },
+        { opacity: 1, duration: 0.35, ease: "power2.out" },
+        15,
+      );
+      tl.fromTo(
+        "#line-5",
         { opacity: 0.35 },
         { opacity: 1, duration: 0.35, ease: "power2.out" },
         19,

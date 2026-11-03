@@ -277,3 +277,18 @@ platform's materials win over the opaque override).
 - **Beat grid**: every cut now lands on a 0.5 s beat — montage 4 × 1.0 s, wall
   4–8.5 s, assemble 2.0 s, platforms 3 × 1.0 s, the three-OS flip 3 × 0.5 s, the
   apps 4 × 1.0 s, the terminal 19–24 s.
+
+## v4.8 (owner, 2026-11-03): the story ladder, the player rebuilt, the film on the beat
+
+- **Story ladder**: the lines now name the verb of each beat — "the components
+  you know" → the wall's "every component you need" → "compose them into blocks"
+  → "one tree, every platform" → "on every desktop" → "real apps, built with it"
+  → "even in your terminal, through ssh". One argument, seven rungs.
+- **Music**: rebuilt after the reference — a cover with a light, NOW PLAYING,
+  the title and artist, the waveform, the scrubber and the transport, then the
+  queue with a cover per row. It now opens as a small floating window that hugs
+  its content (640×486) instead of a 1100×700 card with an empty half; the
+  press-routing guard found the cover's highlight swallowing the row press, so
+  both are `pointerEvents: none`.
+- **Apps beat**: five 0.8 s shots — Slang, the editor, the monitor, the player,
+  the Omarchy desktop.

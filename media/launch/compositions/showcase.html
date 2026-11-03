@@ -193,8 +193,8 @@
           data-media-start="0"
           id="s-v8"
           class="clip"
-          data-start="7.5"
-          data-duration="1"
+          data-start="7.3"
+          data-duration="0.8"
           data-track-index="1"
           muted
           playsinline
@@ -206,14 +206,14 @@
     <div id="s-cam9" class="cam" style="opacity: 0">
       <div
         class="frame framed"
-        style="left: 278px; top: 92px; width: 1364px; height: 1066px"
+        style="left: 344px; top: 144px; width: 1232px; height: 963px"
       >
         <video
           data-media-start="0"
           id="s-v9"
           class="clip"
-          data-start="8.5"
-          data-duration="1"
+          data-start="8.1"
+          data-duration="0.8"
           data-track-index="2"
           muted
           playsinline
@@ -225,15 +225,34 @@
     <div id="s-cam10" class="cam" style="opacity: 0">
       <div
         class="frame framed"
-        style="left: 192px; top: 193px; width: 1536px; height: 864px"
+        style="left: 487px; top: 266px; width: 947px; height: 719px"
       >
         <video
           data-media-start="0"
           id="s-v10"
           class="clip"
-          data-start="9.5"
-          data-duration="1"
+          data-start="8.9"
+          data-duration="0.8"
           data-track-index="1"
+          muted
+          playsinline
+          src="assets/footage/music.mp4"
+          style=""
+        ></video>
+      </div>
+    </div>
+    <div id="s-cam11" class="cam" style="opacity: 0">
+      <div
+        class="frame framed"
+        style="left: 192px; top: 193px; width: 1536px; height: 864px"
+      >
+        <video
+          data-media-start="0"
+          id="s-v11"
+          class="clip"
+          data-start="9.7"
+          data-duration="0.8"
+          data-track-index="2"
           muted
           playsinline
           src="assets/footage/tiling.mp4"
@@ -367,42 +386,51 @@
     );
 
     tl.set("#s-cam7", { opacity: 1 }, 6.5);
-    tl.set("#s-cam7", { opacity: 0 }, 7.5);
+    tl.set("#s-cam7", { opacity: 0 }, 7.3);
     tl.fromTo(
       "#s-cam7",
       { scale: 1.03 },
-      { scale: 1, duration: 1, ease: "power2.out" },
+      { scale: 1, duration: 0.8, ease: "power2.out" },
       6.5,
     );
 
-    tl.set("#s-cam8", { opacity: 1 }, 7.5);
-    tl.set("#s-cam8", { opacity: 0 }, 8.5);
+    tl.set("#s-cam8", { opacity: 1 }, 7.3);
+    tl.set("#s-cam8", { opacity: 0 }, 8.1);
     tl.fromTo(
       "#s-cam8",
       { scale: 1.03 },
-      { scale: 1, duration: 1, ease: "power2.out" },
-      7.5,
+      { scale: 1, duration: 0.8, ease: "power2.out" },
+      7.3,
     );
 
-    tl.set("#s-cam9", { opacity: 1 }, 8.5);
-    tl.set("#s-cam9", { opacity: 0 }, 9.5);
+    tl.set("#s-cam9", { opacity: 1 }, 8.1);
+    tl.set("#s-cam9", { opacity: 0 }, 8.9);
     tl.fromTo(
       "#s-cam9",
       { scale: 1.03 },
-      { scale: 1, duration: 1, ease: "power2.out" },
-      8.5,
+      { scale: 1, duration: 0.8, ease: "power2.out" },
+      8.1,
     );
 
-    tl.set("#s-cam10", { opacity: 1 }, 9.5);
-    tl.set("#s-cam10", { opacity: 0 }, 10.5);
+    tl.set("#s-cam10", { opacity: 1 }, 8.9);
+    tl.set("#s-cam10", { opacity: 0 }, 9.7);
     tl.fromTo(
       "#s-cam10",
-      { scale: 1.04 },
-      { scale: 1, duration: 1, ease: "power2.out" },
-      9.5,
+      { scale: 1.03 },
+      { scale: 1, duration: 0.8, ease: "power2.out" },
+      8.9,
     );
 
-    tl.set({}, {}, 10.5);
+    tl.set("#s-cam11", { opacity: 1 }, 9.7);
+    tl.set("#s-cam11", { opacity: 0 }, 10.5);
+    tl.fromTo(
+      "#s-cam11",
+      { scale: 1.04 },
+      { scale: 1, duration: 0.8, ease: "power2.out" },
+      9.7,
+    );
+
+    tl.set({}, {}, 10.500000000000002);
     window.__timelines = window.__timelines || {};
     window.__timelines["showcase"] = tl;
   </script>
