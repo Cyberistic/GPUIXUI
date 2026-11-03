@@ -149,14 +149,14 @@
         <img
           id="t-v1"
           class="look"
-          src="assets/footage/term-light-win-80.png"
+          src="assets/footage/term-dark-80.png"
           alt=""
           style="opacity: 0"
         />
         <img
           id="t-v2"
           class="look"
-          src="assets/footage/term-dark-80.png"
+          src="assets/footage/term-light-win-80.png"
           alt=""
           style="opacity: 0"
         />
@@ -243,9 +243,10 @@
     tl.set("#t-v0", { opacity: 1 }, 1.5);
     tl.set("#t-cur", { opacity: 1 }, 1.5);
     // Three real terminal captures: the platform paints a state change only into
-    // the next frame it commits, so each look is recorded as its own take (one
-    // press before the first paint) and the film cuts between them — Linux light,
-    // Windows light, Linux dark.
+    // the next frame it commits, so each state is recorded as its own take (one
+    // press before the first paint) and the film cuts between them. The order puts
+    // a theme flip on both cuts — Linux light → Linux dark → Windows light — so
+    // each change reads at a glance instead of moving one chip.
     tl.set("#t-v0", { opacity: 0 }, 2.0);
     tl.set("#t-v1", { opacity: 1 }, 2.0);
     tl.set("#t-v1", { opacity: 0 }, 2.5);

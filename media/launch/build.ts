@@ -665,7 +665,7 @@ const terminal: Scene = {
         <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
       </div>
       <div class="frame">
-        ${["term-light-linux", "term-light-win", "term-dark"]
+        ${["term-light-linux", "term-dark", "term-light-win"]
           .map(
             (take, i) =>
               `<img id="t-v${i}" class="look" src="${still(take, 80)}" alt="" style="opacity:0">`,
@@ -685,9 +685,10 @@ const terminal: Scene = {
     tl.set("#t-ready",{opacity:1},${T_READY.toFixed(2)});
     tl.set("#t-hist",{opacity:0},${T_APP.toFixed(2)}); tl.set("#t-v0",{opacity:1},${T_APP.toFixed(2)}); tl.set("#t-cur",{opacity:1},${T_APP.toFixed(2)});
     // Three real terminal captures: the platform paints a state change only into
-    // the next frame it commits, so each look is recorded as its own take (one
-    // press before the first paint) and the film cuts between them — Linux light,
-    // Windows light, Linux dark.
+    // the next frame it commits, so each state is recorded as its own take (one
+    // press before the first paint) and the film cuts between them. The order puts
+    // a theme flip on both cuts — Linux light → Linux dark → Windows light — so
+    // each change reads at a glance instead of moving one chip.
     tl.set("#t-v0",{opacity:0},${(T_APP + 0.5).toFixed(2)}); tl.set("#t-v1",{opacity:1},${(T_APP + 0.5).toFixed(2)});
     tl.set("#t-v1",{opacity:0},${(T_APP + 1.0).toFixed(2)}); tl.set("#t-v2",{opacity:1},${(T_APP + 1.0).toFixed(2)});
     ${cursorTrack("t-cur", cursorOf("term-app"), T_APP, TERM.scale / 2)}`,
@@ -821,8 +822,8 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   // it actually paints (frame 61 of takes/term-settings at 30 fps). The two
   // "presses" that used to sit between them had no picture to land on.
   [TERMINAL + T_APP, "land"],
-  [TERMINAL + T_APP + 0.5, "press"],
-  [TERMINAL + T_APP + 1.0, "thud"],
+  [TERMINAL + T_APP + 0.5, "thud"],
+  [TERMINAL + T_APP + 1.0, "press"],
   // A cut is a whoosh: the scene starts and the showcase's shot boundaries, read
   // from the same table the compositions are written from.
   // Every cut is a whoosh: the scene starts at full level, and every shot

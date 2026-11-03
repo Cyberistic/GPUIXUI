@@ -1409,9 +1409,22 @@ direct at lag ≤25 ms, the same three masked by simultaneous sounds.
 | R4 | Hits on landings | `land` cues sit on the cards' settle frames (8.53 / 8.68) and the app takeover (21.5) | **pass** |
 | R5 | Cuts on the beat | **19/19** scene and shot cuts on frame multiples of 15; the terminal's three state cuts moved from 21.6/22.2/22.8 (off-grid) to 21.5/22.0/22.5 | **pass (fixed this pass)** |
 
-Two honest caveats, not failures: the Windows-light state (22.0 s) is a chip-and-
-control-metrics change (frame delta 0.87) — legible at full size, subtle at thumbnail
-size; and the ssh typing at 20.0–21.4 s is a single line on black by design.
+~~Two honest caveats: the Windows-light state (22.0 s) is a chip-and-control-metrics
+change (frame delta 0.87); the ssh typing is one line on black by design.~~
+
+**v5.0a — the middle terminal state now reads at a glance.** The chip-only change
+was fixed by reordering the three captures rather than recording a new one: Linux
+light → **Linux dark** → **Windows light**. Both cuts are now a theme flip, so the
+beat reads without inspection:
+
+```
+21.5 s  frame 645  Δ 90.31  on-grid  land   corr 0.99
+22.0 s  frame 660  Δ 78.32  on-grid  thud   corr 1.00   Linux light → dark
+22.5 s  frame 675  Δ 78.29  on-grid  press  corr 1.00   dark → Windows light
+```
+
+The only remaining caveat is the ssh typing (one line on black), which is the
+design of a terminal prompt rather than a weak transition.
 
 Full-film review at 0.1 s (`fps=10`, 300 frames, six 10×5 sheets) shows no dead
 frame, no discontinuity and no seam at any join.
