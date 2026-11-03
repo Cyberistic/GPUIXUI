@@ -1,12 +1,16 @@
 /**
  * Chart geometry, in pixels, as pure data.
  *
- * `@gpuix/native@0.11.0` has no chart host and no canvas, and an `<svg source>`
+ * `@gpuix/native@0.11.0` has no chart host and no canvas. An `<svg source>`
  * is rasterised into **one** tinted mask (`chart-raster` measured a five-layer
- * icon painting five colours as one). The route a chart takes is therefore
- * **stacked `<svg>` elements, one per series**, each carrying that series'
- * geometry in the same viewBox and tinted through `style.color`; the labels are
- * ordinary `<text>` beside the plot.
+ * icon painting five colours as one), so a chart painted that way is **one
+ * `<svg>` per series**, each carrying that series' geometry in the same
+ * viewBox and tinted through `style.color`.
+ *
+ * The **document** route is the one that paints in colour: `setImage` decodes
+ * SVG bytes through GPUI's own renderer, so one document carries every
+ * series' own fill, a real gradient and a mark at its own alpha. `chart/svg.ts`
+ * builds it, `chart/surface.tsx` pushes it.
  *
  * Everything here is deterministic arithmetic over the caller's numbers: a
  * value that is not finite reads as `0`, a negative value paints nothing, and a
@@ -17,10 +21,12 @@
  */
 
 import { spokenText } from "@gpuixui/primitives/core";
-import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
+import { flatMark, markMarkup, num, type ChartMark } from "./mark.js";
+
+export { type ChartMark } from "./mark.js";
 
 /** One series: a stable key, its label, and one value per category. */
 export interface ChartSeries {
@@ -69,33 +75,8 @@ export const chartBox = (
   height: paintableSide(height, fallback.height),
 });
 
-/** One painted shape, in the plot's pixel space. */
-export type ChartMark =
-  | {
-      readonly kind: "rect";
-      readonly x: number;
-      readonly y: number;
-      readonly width: number;
-      readonly height: number;
-      /** The corner radius, when the bar is rounded. */
-      readonly rx?: number;
-    }
-  | {
-      readonly kind: "path";
-      readonly d: string;
-      /** A stroke width, when the path is a line rather than a fill. */
-      readonly stroke?: number;
-      /** A dashed line, at the stroke's own weight. */
-      readonly dashed?: boolean;
-    }
-  | {
-      readonly kind: "circle";
-      readonly cx: number;
-      readonly cy: number;
-      readonly r: number;
-    };
-
-/** A value the chart can draw: finite and not negative. */
+/**
+ * A value the chart can draw: finite and not negative. */
 export const drawableValue = (value: number): number =>
   Number.isFinite(value) && value > 0 ? value : 0;
 
@@ -417,10 +398,6 @@ export const stackedBarMarks = (
   );
 };
 
-/** A number as the markup spells it: at most two decimals, no `NaN`. */
-const num = (value: number): string =>
-  Number.isFinite(value) ? `${Math.round(value * 100) / 100}` : "0";
-
 /**
  * The path through a series' points, left to right.
  *
@@ -596,30 +573,26 @@ export const seriesDescription = (
   );
 };
 
-/** The SVG document one series paints, tinted by the element's `color`. */
+/**
+ * The SVG document one series paints, tinted by the element's `color`.
+ *
+ * This is the **mask** route: the runtime rasterises an `<svg source>` through
+ * GPUI's icon element, so the whole document becomes one tint and every
+ * shape paints in it. A mark's own fill is therefore dropped — the element's
+ * `color` is the colour — and a mark's own stroke is kept, because a stroked
+ * shape keeps its coverage inside the mask.
+ */
 export const chartMarkup = (
   marks: ReadonlyArray<ChartMark>,
   box: ChartBox,
 ): string => {
-  const shapes = Arr.map(marks, (mark) =>
-    Match.value(mark).pipe(
-      Match.when({ kind: "rect" }, (rect) => {
-        const corner = rect.rx === undefined ? "" : ` rx="${num(rect.rx)}"`;
-        return `<rect x="${num(rect.x)}" y="${num(rect.y)}" width="${num(rect.width)}" height="${num(rect.height)}"${corner} fill="#000"/>`;
-      }),
-      Match.when(
-        { kind: "circle" },
-        (circle) =>
-          `<circle cx="${num(circle.cx)}" cy="${num(circle.cy)}" r="${num(circle.r)}" fill="#000"/>`,
-      ),
-      Match.when({ kind: "path" }, (path) =>
-        path.stroke === undefined
-          ? `<path d="${path.d}" fill="#000"/>`
-          : `<path d="${path.d}" fill="none" stroke="#000" stroke-width="${num(path.stroke)}" stroke-linecap="round" stroke-linejoin="round"${path.dashed === true ? ` stroke-dasharray="${num(path.stroke * 2)} ${num(path.stroke * 1.6)}"` : ""}/>`,
-      ),
-      Match.exhaustive,
-    ),
-  );
+  const shapes = Arr.map(marks, (mark) => {
+    const flat = flatMark(mark);
+    return markMarkup({
+      ...flat,
+      fill: flat.fill === undefined ? { color: "#000" } : flat.fill,
+    });
+  });
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${num(box.width)}" height="${num(box.height)}" viewBox="0 0 ${num(box.width)} ${num(box.height)}">${Arr.join(shapes, "")}</svg>`;
 };
 

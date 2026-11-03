@@ -34,6 +34,7 @@ import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { listOf, recordsOf, textsOf } from "../internal/list.js";
 import type { ChartBox, ChartMark, ChartSeries } from "./logic.js";
+import { lineStroke } from "./mark.js";
 import {
   chartBox,
   chartScale,
@@ -664,7 +665,7 @@ export const ComposedChart = ({
                 marks: Option.match(curvePath(points, "linear"), {
                   onNone: () => [],
                   onSome: (d): ReadonlyArray<ChartMark> => [
-                    { kind: "path" as const, d, stroke: 2 },
+                    { kind: "path" as const, d, stroke: lineStroke(2) },
                   ],
                 }),
               } satisfies PaintLayer,
@@ -754,7 +755,7 @@ export const LineChart = ({
             marks: Option.match(path, {
               onNone: () => [],
               onSome: (d): ReadonlyArray<ChartMark> => [
-                { kind: "path", d, stroke: lineWidth, dashed },
+                { kind: "path", d, stroke: lineStroke(lineWidth, dashed) },
               ],
             }),
           };
@@ -979,7 +980,7 @@ export const AreaChart = ({
                 marks: Option.match(line, {
                   onNone: () => [],
                   onSome: (d): ReadonlyArray<ChartMark> => [
-                    { kind: "path", d, stroke: lineWidth },
+                    { kind: "path", d, stroke: lineStroke(lineWidth) },
                   ],
                 }),
               } satisfies PaintLayer,
@@ -1321,7 +1322,7 @@ const Ring = ({
               Option.match(label, {
                 onNone: () => [],
                 onSome: (found): ReadonlyArray<ChartMark> => [
-                  { kind: "path", d: found.leader, stroke: 1 },
+                  { kind: "path", d: found.leader, stroke: lineStroke(1) },
                 ],
               }),
             ),
@@ -1617,7 +1618,7 @@ export const RadarChart = ({
                           radius,
                         ),
                       ],
-                      (d): ChartMark => ({ kind: "path", d, stroke: 1 }),
+                      (d): ChartMark => ({ kind: "path", d, stroke: lineStroke(1) }),
                     ),
                   } satisfies PaintLayer,
                   ...(gridFill
@@ -1664,7 +1665,7 @@ export const RadarChart = ({
                 marks: Option.match(outline, {
                   onNone: () => [],
                   onSome: (d): ReadonlyArray<ChartMark> => [
-                    { kind: "path", d, stroke: 2 },
+                    { kind: "path", d, stroke: lineStroke(2) },
                   ],
                 }),
               } satisfies PaintLayer,
@@ -1930,7 +1931,7 @@ export const RadialChart = ({
                     4 -
                     1,
                 ),
-                stroke: 1,
+                stroke: lineStroke(1),
               })),
             }}
             label=""
@@ -2171,7 +2172,7 @@ export const Sparkline = ({
             marks: Option.match(path, {
               onNone: () => [],
               onSome: (d): ReadonlyArray<ChartMark> => [
-                { kind: "path", d, stroke: 1.5 },
+                { kind: "path", d, stroke: lineStroke(1.5) },
               ],
             }),
           }}

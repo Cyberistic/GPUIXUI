@@ -957,3 +957,245 @@ export const rangeTicks = (
   const span = range.max - range.min;
   return Arr.makeBy(steps + 1, (index) => range.min + (span / steps) * index);
 };
+
+/**
+ * A range the caller pins, so a series that never nears zero is not pressed
+ * flat against the top of the plot.
+ *
+ * GPUI Kit's `y_domain`: a price or a balance has its own scale, and the
+ * chart draws against that rather than against a zero it never approaches.
+ * A range the caller cannot read — a `NaN`, an inverted pair, a span of
+ * nothing — is **no range**, and the chart measures its own.
+ */
+export const pinnedRange = (
+  range: readonly [number, number] | undefined,
+): Option.Option<ChartRange> => {
+  if (range === undefined) return Option.none();
+  const [low, high] = range;
+  if (!Number.isFinite(low) || !Number.isFinite(high)) return Option.none();
+  const min = Math.min(low, high);
+  const max = Math.max(low, high);
+  // A range with no span cannot divide a scale, and every value would sit on
+  // one line; the chart measures its own instead.
+  if (max - min <= 0) return Option.none();
+  return Option.some({ min, max });
+};
+
+/**
+ * The range a chart draws against: the caller's, else the data's own.
+ *
+ * This is the seam the `pinnedRange` prop reaches. A pinned range keeps the
+ * headroom the measured range would have left, so the plot's top is the
+ * caller's ceiling and not a rounded one above it.
+ */
+export const chartRangeWith = (
+  series: ReadonlyArray<ChartSeries>,
+  categories?: number,
+  pinned: readonly [number, number] | undefined = undefined,
+  stacked = false,
+): ChartRange =>
+  Option.getOrElse(
+    pinnedRange(pinned),
+    () => chartRange(series, categories, stacked),
+  );
+
+/**
+ * The horizontal rules a reference line draws.
+ *
+ * A reference line marks a value across the plot — a target, a budget, the
+ * previous close — and it is drawn darker than the grid so it reads as a
+ * different kind of rule.
+ */
+export const referenceLines = (
+  values: ReadonlyArray<number>,
+  box: ChartBox,
+  range: ChartRange,
+): ReadonlyArray<{ readonly y: number; readonly value: number }> =>
+  Arr.map(
+    Arr.filter(values, Number.isFinite),
+    (value) => ({ y: scaleY(value, box, range), value }),
+  );
+
+/**
+ * The vertical rules a grid draws, one per category.
+ *
+ * GPUI Kit's `grid_columns`: the vertical grid, the counterpart to the
+ * horizontal one the frame draws. A count the chart cannot read draws no
+ * rule, and a count past the categories is capped by them.
+ */
+export const verticalGrid = (
+  count: number,
+  box: ChartBox,
+): ReadonlyArray<{ readonly x: number; readonly width: number }> => {
+  const steps = Number.isFinite(count)
+    ? Math.min(64, Math.max(0, Math.floor(count)))
+    : 0;
+  if (steps === 0) return [];
+  const slot = box.width / steps;
+  return Arr.map(Arr.makeBy(steps, (index) => index), (index) => ({
+    x: index * slot,
+    width: Math.max(1, slot),
+  }));
+};
+
+/**
+ * A point per datum: a scatter plot's marks.
+ *
+ * A datum with no number paints nothing — the rule every mark follows — and
+ * a value outside the range is clipped to the plot's edge, so a point never
+ * draws outside the frame that holds it.
+ */
+export const scatterMarks = (
+  values: ReadonlyArray<number>,
+  box: ChartBox,
+  range: ChartRange,
+  categories?: number,
+  radius = 3,
+): ReadonlyArray<ChartMark> => {
+  const count = slotCount([], categories);
+  if (count === 0) return [];
+  const slot = box.width / count;
+  return Arr.map(
+    Arr.filter(
+      Arr.map(paintedValues(values, categories), (value, index) => ({
+        value,
+        x: (index + 0.5) * slot,
+      })),
+      (cell) => Number.isFinite(cell.value),
+    ),
+    (cell): ChartMark => ({
+      kind: "circle",
+      cx: cell.x,
+      cy: Math.max(0, Math.min(box.height, scaleY(cell.value, box, range))),
+      r: Math.max(1, radius),
+    }),
+  );
+};
+
+/**
+ * One candle's body and wick: the open, high, low and close of a period.
+ *
+ * A candle that closed above its open is an **up** day and a candle that
+ * closed at or below it is a **down** day, and the two paint in different
+ * roles — a reader who cannot separate two hues still reads the direction.
+ * A period whose four numbers are not finite paints nothing.
+ */
+export interface Candle {
+  /** The price the period opened at. */
+  readonly open: number;
+  /** The highest price the period reached. */
+  readonly high: number;
+  /** The lowest price the period reached. */
+  readonly low: number;
+  /** The price the period closed at. */
+  readonly close: number;
+}
+
+/** A candle's direction: an up day or a down day. */
+export const candleUp = (candle: Candle): boolean => candle.close > candle.open;
+
+/**
+ * The marks one candle paints: its wick, then its body.
+ *
+ * The wick runs from the high to the low and the body from the open to the
+ * close, so a body inside its own wick reads as a period that went further
+ * than it ended. A body of no height — a period that opened where it closed
+ * — paints a line of the minimum height rather than nothing, so the period is
+ * still on the plot.
+ */
+export const candleMarks = (
+  candle: Candle,
+  x: number,
+  width: number,
+  box: ChartBox,
+  range: ChartRange,
+): ReadonlyArray<ChartMark> => {
+  const numbers = [candle.open, candle.high, candle.low, candle.close];
+  if (Arr.some(numbers, (value) => !Number.isFinite(value))) return [];
+  const high = scaleY(candle.high, box, range);
+  const low = scaleY(candle.low, box, range);
+  const open = scaleY(candle.open, box, range);
+  const close = scaleY(candle.close, box, range);
+  const top = Math.min(open, close);
+  const bodyHeight = Math.max(1, Math.abs(close - open));
+  return [
+    {
+      kind: "rect",
+      x: x + width / 2 - 0.5,
+      y: Math.min(high, low),
+      width: 1,
+      height: Math.abs(low - high),
+    },
+    {
+      kind: "rect",
+      x,
+      y: top,
+      width,
+      height: bodyHeight,
+    },
+  ];
+};
+
+/**
+ * The candles of a series, one per category.
+ *
+ * The candles are laid out over the categories, each in its own slot, so a
+ * candle sits over its own label.
+ */
+export const candleSeriesMarks = (
+  candles: ReadonlyArray<Candle>,
+  box: ChartBox,
+  range: ChartRange,
+  categories?: number,
+  width = 6,
+): ReadonlyArray<ChartMark> => {
+  const count = slotCount([], categories);
+  if (count === 0) return [];
+  const painted = Arr.take(candles, count);
+  const slot = box.width / count;
+  const bodyWidth = Math.max(1, Math.min(width, slot * 0.6));
+  return Arr.flatMap(painted, (candle, index) =>
+    candleMarks(
+      candle,
+      (index + 0.5) * slot - bodyWidth / 2,
+      bodyWidth,
+      box,
+      range,
+    ),
+  );
+};
+
+/**
+ * A funnel's stages: one band per datum, each a share of the first.
+ *
+ * A funnel is read as a narrowing, so each stage is a share of the **first**
+ * stage's value — the widest one — and the stages are centred, so a funnel
+ * reads as a funnel rather than as bars of different widths stacked to one
+ * side.
+ */
+export const funnelMarks = (
+  values: ReadonlyArray<number>,
+  box: ChartBox,
+): ReadonlyArray<ChartMark> => {
+  const drawable = Arr.map(values, (value) =>
+    Number.isFinite(value) && value > 0 ? value : 0,
+  );
+  const first = Arr.head(drawable);
+  if (Option.isNone(first) || first.value <= 0) return [];
+  const widest = first.value;
+  const count = drawable.length;
+  const slot = box.height / count;
+  return Arr.map(
+    Arr.filter(
+      Arr.map(drawable, (value, index) => ({ value, index })),
+      (cell) => cell.value > 0,
+    ),
+    (cell): ChartMark => ({
+      kind: "rect",
+      x: (box.width - (cell.value / widest) * box.width) / 2,
+      y: cell.index * slot,
+      width: (cell.value / widest) * box.width,
+      height: Math.max(1, slot * 0.8),
+    }),
+  );
+};
