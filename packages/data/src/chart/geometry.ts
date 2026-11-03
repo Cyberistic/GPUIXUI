@@ -319,6 +319,29 @@ export const pointMarks = (
   );
 
 /**
+ * Dots at each painted point, with the **hovered** one larger.
+ *
+ * The emphasis is the cue every chart library gives: the point under the
+ * pointer grows, so a reader sees which value they are reading. The hovered
+ * point is the **only** one that grows, so the growth marks the datum rather
+ * than the chart.
+ */
+export const emphasisedPointMarks = (
+  points: ReadonlyArray<Point>,
+  radius: number,
+  hovered: number | undefined,
+): ReadonlyArray<ChartMark> =>
+  Arr.map(
+    points,
+    (point, index): ChartMark => ({
+      kind: "circle",
+      cx: point.x,
+      cy: point.y,
+      r: Math.max(1, index === hovered ? radius * 2 : radius),
+    }),
+  );
+
+/**
  * Bars from the zero line, up or down, with rounded corners.
  *
  * A negative value stands below the axis instead of a zero-height bar claiming

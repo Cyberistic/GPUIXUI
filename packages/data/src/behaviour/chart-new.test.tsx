@@ -7,7 +7,12 @@
  * the first.
  */
 import { afterEach, describe, expect, it } from "vitest";
-import { CandleChart, FunnelChart, ScatterChart } from "../chart/chart.js";
+import {
+  CandleChart,
+  FunnelChart,
+  LineChart,
+  ScatterChart,
+} from "../chart/chart.js";
 import { chartMarkupOf } from "../internal/interaction.js";
 import {
   renderData,
@@ -71,6 +76,82 @@ describe("the sharper chart types", () => {
     const up = candles[0] ?? "";
     const down = candles[candles.length - 1] ?? "";
     expect(up).not.toBe(down);
+  });
+
+  it("paints a crosshair at the hovered column, and none without a pointer", () => {
+    root = renderData(
+      <LineChart
+        aria-label="Churn"
+        labels={["Q1", "Q2", "Q3"]}
+        series={[{ key: "churn", label: "Churn", values: [3, 6, 4] }]}
+        crosshair
+        width={200}
+        height={100}
+        testId="crossed"
+      />,
+    );
+    settle(root);
+    // No pointer, no crosshair: the rule marks the datum the pointer names.
+    expect(root.renderer.findByTestId("crossed-crosshair")).toBeUndefined();
+
+    const zone = root.renderer.findByTestId("crossed-zone-1");
+    if (zone === undefined) throw new Error("behaviour: no zone 1");
+    const bounds = root.renderer.getElementBounds(zone.id);
+    if (bounds === null) throw new Error("behaviour: no zone bounds");
+    root.renderer.nativeSimulateMouseMove(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+    );
+    root.renderer.dispatchNativeEvents();
+
+    const crosshair = root.renderer.findByTestId("crossed-crosshair");
+    expect(crosshair).toBeDefined();
+    // The rule stands at the middle of the hovered column.
+    const rule = root.renderer.getElementBounds(crosshair?.id ?? 0);
+    const column = root.renderer.getElementBounds(zone.id);
+    if (rule === null || column === null)
+      throw new Error("behaviour: no bounds");
+    expect(rule.x).toBeGreaterThan(column.x);
+    expect(rule.x).toBeLessThan(column.x + column.width);
+  });
+
+  it("grows the point under the pointer, and only that one", () => {
+    root = renderData(
+      <LineChart
+        aria-label="Churn"
+        labels={["Q1", "Q2", "Q3"]}
+        series={[{ key: "churn", label: "Churn", values: [3, 6, 4] }]}
+        dots
+        width={200}
+        height={100}
+        testId="emphasised"
+      />,
+    );
+    settle(root);
+
+    const radiiOf = (): ReadonlyArray<number> => {
+      const source = chartMarkupOf(root, "emphasised-layer-churn-dots");
+      return [...source.matchAll(/<circle[^>]*r="([\d.]+)"/g)].map((match) =>
+        Number(match[1]),
+      );
+    };
+    const before = radiiOf();
+    expect(before.length).toBe(3);
+    expect(new Set(before).size).toBe(1);
+
+    const zone = root.renderer.findByTestId("emphasised-zone-1");
+    if (zone === undefined) throw new Error("behaviour: no zone 1");
+    const bounds = root.renderer.getElementBounds(zone.id);
+    if (bounds === null) throw new Error("behaviour: no zone bounds");
+    root.renderer.nativeSimulateMouseMove(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+    );
+    root.renderer.dispatchNativeEvents();
+
+    const after = radiiOf();
+    // One point grew; the other two did not.
+    expect(after.filter((radius) => radius > (before[0] ?? 0)).length).toBe(1);
   });
 
   it("paints a funnel's stages, each a share of the first", () => {

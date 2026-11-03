@@ -131,6 +131,14 @@ export interface PaintContext {
   readonly origin: Option.Option<Point>;
   /** The continuous window a zoom shows, when the caller named one. */
   readonly view?: ChartView;
+  /**
+   * The category the pointer is over, when it is over one.
+   *
+   * The type that paints it reads this to **emphasise** the hovered datum —
+   * a line's point grows under the pointer, which is the cue every chart
+   * library gives.
+   */
+  readonly hovered?: Option.Option<number>;
 }
 
 /** The frame's props: everything a type inherits and nothing it paints. */
@@ -163,6 +171,14 @@ export interface ChartFrameProps extends Omit<Props, "children"> {
   readonly labelFormat?: (label: string) => string;
   /** A wash paints behind the hovered column. Defaults to `false`. */
   readonly activeBand?: boolean;
+  /**
+   * A vertical rule paints at the hovered column.
+   *
+   * The crosshair is the cue a reader follows from the pointer to the value
+   * it names, and it is what a line chart's pointer cue is in every chart
+   * library: Recharts' `cursor`, GPUI Kit's crosshair.
+   */
+  readonly crosshair?: boolean;
   /** The category window the chart paints, as `[start, end)` indexes. */
   readonly domain?: readonly [number, number];
   /** The continuous window a zoom or pan shows, in category units. */
@@ -360,6 +376,7 @@ export const ChartFrame = ({
   tooltipIcons,
   labelFormat,
   activeBand = false,
+  crosshair = false,
   domain,
   view,
   zoom = false,
@@ -433,6 +450,7 @@ export const ChartFrame = ({
     palette,
     origin,
     view: shownView,
+    hovered,
   };
   const layers = paint(context);
   const legendBody =
@@ -510,6 +528,30 @@ export const ChartFrame = ({
                         height: box.height,
                         backgroundColor: themeColors(theme).muted,
                         opacity: 0.5,
+                        pointerEvents: "none",
+                      }}
+                    />
+                  ),
+                })
+              : undefined}
+            {crosshair
+              ? Option.match(hovered, {
+                  onNone: () => null,
+                  onSome: (index) => (
+                    <div
+                      testId={
+                        testId === undefined ? undefined : `${testId}-crosshair`
+                      }
+                      style={{
+                        position: "absolute",
+                        left: slot * index + slot / 2,
+                        top: 0,
+                        width: 1,
+                        height: box.height,
+                        backgroundColor:
+                          themeColors(theme).borderStrong ??
+                          themeColors(theme).border,
+                        opacity: 0.8,
                         pointerEvents: "none",
                       }}
                     />

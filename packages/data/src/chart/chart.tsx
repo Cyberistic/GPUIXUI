@@ -57,6 +57,7 @@ import {
   candleUp,
   chartRange,
   curvePath,
+  emphasisedPointMarks,
   funnelMarks,
   horizontalBarMarks,
   pointMarks,
@@ -294,6 +295,14 @@ export interface ChartProps extends Omit<Props, "children"> {
   readonly labelFormat?: (label: string) => string;
   /** A wash paints behind the hovered column. Defaults to `false`. */
   readonly activeBand?: boolean;
+  /**
+   * A vertical rule paints at the hovered column.
+   *
+   * The crosshair is the cue a reader follows from the pointer to the value
+   * it names, and it is what a line chart's pointer cue is in every chart
+   * library: Recharts' `cursor`, GPUI Kit's crosshair.
+   */
+  readonly crosshair?: boolean;
   /** The category window a brush leaves in the plot, as `[start, end)` indexes. */
   readonly domain?: readonly [number, number];
   /** The continuous window a zoom or pan shows, in category units. */
@@ -1028,7 +1037,7 @@ export const LineChart = ({
       domainLabels={labelsFor(props.labels, props.data)}
       view={props.view}
       range={range}
-      paint={({ series, labels, box }) =>
+      paint={({ series, labels, box, hovered }) =>
         Arr.flatMap(series, (one, seriesIndex) => {
           const points = seriesPoints(
             one.values,
@@ -1055,7 +1064,11 @@ export const LineChart = ({
                   ...line,
                   kind: "dots",
                   decorative: true,
-                  marks: pointMarks(points, lineWidth + 1.5),
+                  marks: emphasisedPointMarks(
+                    points,
+                    lineWidth + 1.5,
+                    Option.getOrUndefined(hovered ?? Option.none()),
+                  ),
                 },
                 line,
               ]
@@ -1213,7 +1226,7 @@ export const AreaChart = ({
       domainLabels={labelsFor(props.labels, props.data)}
       view={props.view}
       range={range}
-      paint={({ series, labels, box }) =>
+      paint={({ series, labels, box, hovered }) =>
         Arr.flatMap(series, (one, seriesIndex) => {
           const points = seriesPoints(
             one.values,
@@ -1284,7 +1297,11 @@ export const AreaChart = ({
                     seriesIndex,
                     kind: "dots",
                     decorative: true,
-                    marks: pointMarks(points, lineWidth + 1.5),
+                    marks: emphasisedPointMarks(
+                      points,
+                      lineWidth + 1.5,
+                      Option.getOrUndefined(hovered ?? Option.none()),
+                    ),
                   } satisfies PaintLayer,
                 ]
               : [],
