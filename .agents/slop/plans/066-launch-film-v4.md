@@ -428,3 +428,40 @@ terminal: 20.00 air · 22.20 press · 22.80 press · 23.40 thud · 24.00 air
   6–10 instead of the block, and the welcome dialog was cut off. The welcome tile
   is 2.5× on the dialog (crown, "Bring your binder", Import cards, Import and
   Continue, Step 2 of 3) — all of it inside the tile.
+
+### v4.13 — the wall measured tile by tile, and the two softest surfaces replaced
+
+Contrast (sd) alone cannot judge a bright surface: the old `viewer` tile scored
+**77.5** because it was a large flat blue block against a pale sidebar — high
+variance, no detail. The ledger therefore measures **detail** as well: the mean
+absolute grey-level difference to the right and lower neighbour, over the tile as
+it appears in the settled frame — i.e. exactly what the eye gets at 0.83 scale.
+
+- **`viewer` → `settings`** (detail 1.2 → 3.7). A flat blue page became the
+  Appearance panel: Look segmented control, Dark mode, Sound effects, Volume —
+  labels complete after the focus moved to 0.52.
+- **`chat-mac`** (1.3 → **12.2**, the highest in the wall). It was the blurred
+  lake wallpaper; the crop now sits on the window's top — Today / Retry failed
+  payments / Offline drafts / Exam timetable export plus the diff text.
+- **`launcher` → `notes`** (1.6 → 5.5). The launcher is a command palette with a
+  single result row on white; the notes app gives the middle pane's titles and
+  snippets.
+- **The top band was washing the wall's top row.** It was 330 px and solid to
+  181, so the stats title bar, the player and the XP menu bar all sat under it
+  after the swap. It is 260 px (solid to 120, gone by 203) and the wall settles
+  88 px lower, so its first row is crisp.
+
+Ledger at 8.2 s (per tile, sorted by detail):
+
+```
+tile           mean  contrast  detail     tile           mean  contrast  detail
+kanban        237.0      17.0     2.4     welcome       231.6      33.1     4.3
+button        189.8      70.6     2.4     slang         181.7      91.9     4.3
+music         205.8      64.4     3.4     license        81.0      86.0     4.9
+desktop-aero  178.1      75.7     3.5     notes         233.9      25.6     5.5
+desktop-luna  190.3      56.1     3.5     chat-linux    143.2     106.7     6.2
+settings      248.5      18.1     3.7     monitor        37.3      39.3     7.7
+stats         234.9      44.1     4.0     chat-win      203.3      67.6     8.5
+editor        235.3      21.2     4.0     chat-mac      222.8      42.8    12.2
+```
+detail min 2.4 · median 4.3 · max 12.2 · **no tile under 2.0**.

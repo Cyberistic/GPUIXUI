@@ -90,8 +90,9 @@
     }
     #root .cap-band.up {
       top: 0;
+      height: 260px;
       opacity: 0;
-      background: linear-gradient(#f4f2ee 55%, rgba(244, 242, 238, 0));
+      background: linear-gradient(#f4f2ee 46%, rgba(244, 242, 238, 0) 78%);
     }
   </style>
   <div
@@ -196,19 +197,55 @@
           class="tile"
           style="left: 0px; top: 864px; width: 616px; height: 200px"
         >
-          <img class="cover" src="assets/footage/chat-mac-29.png" alt="" />
+          <img
+            class="cover"
+            style="
+              left: -209px;
+              top: -72px;
+              right: auto;
+              bottom: auto;
+              width: 1232px;
+              height: 784px;
+            "
+            src="assets/footage/chat-mac-29.png"
+            alt=""
+          />
         </div>
         <div
           class="tile"
           style="left: 632px; top: 864px; width: 300px; height: 200px"
         >
-          <img class="cover" src="assets/footage/viewer-74.png" alt="" />
+          <img
+            class="cover"
+            style="
+              left: -224px;
+              top: -102px;
+              right: auto;
+              bottom: auto;
+              width: 720px;
+              height: 405px;
+            "
+            src="assets/footage/settings-131.png"
+            alt=""
+          />
         </div>
         <div
           class="tile"
           style="left: 948px; top: 864px; width: 300px; height: 200px"
         >
-          <img class="cover" src="assets/footage/launcher-74.png" alt="" />
+          <img
+            class="cover"
+            style="
+              left: -42px;
+              top: -22px;
+              right: auto;
+              bottom: auto;
+              width: 480px;
+              height: 305px;
+            "
+            src="assets/footage/notes-74.png"
+            alt=""
+          />
         </div>
         <div
           class="tile"
@@ -256,7 +293,7 @@
     zoom();
     tl.to(
       cam,
-      { z: Math.log(0.86), duration: 2, ease: "power1.inOut", onUpdate: zoom },
+      { z: Math.log(0.82), duration: 2, ease: "power1.inOut", onUpdate: zoom },
       0,
     );
     tl.fromTo("#g-wall", { rotation: 0 }, { rotation: 0, duration: 4.5 }, 0);
@@ -275,7 +312,9 @@
       1.9,
     );
     tl.to("#g-cap", { y: -824, duration: 0.5, ease: "power2.inOut" }, 3);
-    tl.to("#g-cam", { y: 60, duration: 0.5, ease: "power2.inOut" }, 3);
+    // The wall settles below the line: 88 px clears the top band and leaves a
+    // bottom margin inside the frame.
+    tl.to("#g-cam", { y: 88, duration: 0.5, ease: "power2.inOut" }, 3);
     tl.to("#g-band-t", { opacity: 1, duration: 0.5, ease: "none" }, 3);
     tl.to("#g-band-b", { opacity: 0, duration: 0.5, ease: "none" }, 3);
     tl.set({}, {}, 4.5);

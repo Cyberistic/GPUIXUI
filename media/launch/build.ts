@@ -231,6 +231,8 @@ interface Cell {
   readonly zoom?: number;
   /** The point of the source, in fractions, that the detail crop keeps. */
   readonly focus?: readonly [number, number];
+  /** Source width / height, when the take was not recorded at 2200×1400. */
+  readonly aspect?: number;
 }
 /** The tile the montage's last close-up cuts into: a card with one control. */
 const MATCH_TILE: Cell = { take: "button", col: 3, row: 2, w: 2, h: 1 };
@@ -254,9 +256,26 @@ const WALL: ReadonlyArray<Cell> = [
   { take: "slang", col: 3, row: 3, w: 2, h: 1 },
   { take: "desktop-aero", col: 5, row: 2, w: 1, h: 2 },
   MATCH_TILE,
-  { take: "chat-mac", col: 0, row: 4, w: 2, h: 1 },
-  { take: "viewer", col: 2, row: 4, w: 1, h: 1 },
-  { take: "launcher", col: 3, row: 4, w: 1, h: 1 },
+  {
+    take: "chat-mac",
+    col: 0,
+    row: 4,
+    w: 2,
+    h: 1,
+    zoom: 2,
+    focus: [0.42, 0.22],
+  },
+  {
+    take: "settings",
+    col: 2,
+    row: 4,
+    w: 1,
+    h: 1,
+    zoom: 2.4,
+    focus: [0.52, 0.5],
+    aspect: 2048 / 1152,
+  },
+  { take: "notes", col: 3, row: 4, w: 1, h: 1, zoom: 1.6, focus: [0.4, 0.4] },
   { take: "chat-linux", col: 4, row: 4, w: 1, h: 1 },
   {
     take: "welcome",
@@ -312,7 +331,7 @@ const grid: Scene = {
     #root .cap { position:absolute; left:0; right:0; top:880px; text-align:center; font:600 64px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
     #root .cap-band { position:absolute; left:0; right:0; height:330px; pointer-events:none; }
     #root .cap-band.down { bottom:0; height:400px; background:linear-gradient(rgba(244,242,238,0) 30%, rgba(244,242,238,.96) 45%, ${GROUND} 58%); }
-    #root .cap-band.up { top:0; opacity:0; background:linear-gradient(${GROUND} 55%, rgba(244,242,238,0)); }`,
+    #root .cap-band.up { top:0; height:260px; opacity:0; background:linear-gradient(${GROUND} 46%, rgba(244,242,238,0) 78%); }`,
   body: `    <div id="g-cam" class="cam">
       <div id="g-wall" class="wall">
 ${WALL.map((cell) => {
@@ -323,7 +342,7 @@ ${WALL.map((cell) => {
   // the image is `zoom` times the tile and offset so (fx, fy) lands in the middle.
   const zoom = cell.zoom ?? 1;
   const width = Math.round(box.w * zoom);
-  const height = Math.round(width / SCREEN_ASPECT);
+  const height = Math.round(width / (cell.aspect ?? SCREEN_ASPECT));
   const left = Math.round(box.w / 2 - fx * width);
   const top = Math.round(box.h / 2 - fy * height);
   const detail = cell.zoom
@@ -344,14 +363,16 @@ ${WALL.map((cell) => {
     gsap.set("#g-wall", { x: ${-FOCUS_CX}, y: ${-FOCUS_CY} });
     tl.to("#g-wall", { x: ${-Math.round(WALL_BOX.w / 2)}, y: ${-Math.round(WALL_BOX.h / 2)}, duration: 3, ease: "power1.inOut" }, 0);
     zoom();
-    tl.to(cam, { z: Math.log(0.86), duration: 2, ease: "power1.inOut", onUpdate: zoom }, 0);
+    tl.to(cam, { z: Math.log(0.82), duration: 2, ease: "power1.inOut", onUpdate: zoom }, 0);
     tl.fromTo("#g-wall",{rotation:0},{rotation:0,duration:${GRID_LENGTH}},0);
     // The wall gets the first two seconds to itself — the whole reveal, calculator
     // included — then the line rises out of the paper under it and the two swap.
     tl.fromTo("#g-cap",{opacity:0},{opacity:1,duration:0.3,ease:"power2.out"},1.9);
     tl.fromTo("#g-band-b",{opacity:0},{opacity:1,duration:0.3,ease:"none"},1.9);
     tl.to("#g-cap",{y:-824,duration:0.5,ease:"power2.inOut"},3);
-    tl.to("#g-cam",{y:60,duration:0.5,ease:"power2.inOut"},3);
+    // The wall settles below the line: 88 px clears the top band and leaves a
+    // bottom margin inside the frame.
+    tl.to("#g-cam",{y:88,duration:0.5,ease:"power2.inOut"},3);
     tl.to("#g-band-t",{opacity:1,duration:0.5,ease:"none"},3);
     tl.to("#g-band-b",{opacity:0,duration:0.5,ease:"none"},3);`,
 };
