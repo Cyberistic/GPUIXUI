@@ -1122,3 +1122,27 @@ Store binary restored (hash matches `.bak`), probes removed. Remaining work is n
 a coordinate calibration for the chip aims — measurable by logging the hit
 element's bounds in `handle_mouse` and comparing with the aim point, not another
 architecture hunt.
+
+### v4.34 — the aim is on the chip; the chip still does not take the press
+
+The chip-row calibration was done, and it cleared the coordinates as well.
+
+The take's **own** frame (1024×576) was cropped and measured: with the crop at
+(820, 40) scaled 3×, the Windows chip spans take x ≈ 843–920, y ≈ 73–102, i.e. its
+centre is **(881, 87)**. The recorded aim is **(882, 94)** — inside the chip. So
+the aim mapping for that row is correct; nothing to recalibrate.
+
+The take also shows the pointer's **hover** on the chip: at 3.3 s the Windows chip
+paints a grey hover fill while Linux stays selected. So a move over the chip
+repaints the app, but the press at that same point does not select it — the click
+event reaches JS (`click(el 46/50)`, status `Ok`) and the *state does not change*.
+
+An experiment measuring the aims under `darwin` instead of `linux` (the block's
+entry starts in Linux — visible in the take) made it worse, not better, and was
+reverted: the original `initialLook: "linux"` matches the runtime and the aims.
+
+So the defect has narrowed to the last possible place: the press reaches the
+element container but the chip's own press handler never runs — a hit-test
+depth/handler-targeting issue inside GPUIX's element tree, entirely within the
+pinned runtime, with no coordinate work left on this side. Every layer measurable
+from the film side has now been measured and cleared.
