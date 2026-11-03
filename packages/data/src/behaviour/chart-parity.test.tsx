@@ -9,6 +9,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 /** The fields this suite reads from a painted element. */
 interface Painted {
   readonly id: number;
@@ -21,6 +22,7 @@ import {
   ParityGallery,
 } from "../../examples/chart-parity.example.js";
 import { parity } from "../chart/parity.js";
+import { markupOf } from "../internal/markup.js";
 import {
   renderData,
   settle,
@@ -55,17 +57,25 @@ const descendants = (
   return found;
 };
 
-/** The marks a chart paints: a layer whose SVG document carries a shape. */
+/**
+ * The marks a chart paints: an element whose document carries a shape.
+ *
+ * The document route hands the markup over as a data URL, which the runtime
+ * decodes; the mask route hands it over as the markup itself. Either way the
+ * element that carries the marks is the one the shape is in.
+ */
 const marksOf = (tree: DataTestRoot, id: number): ReadonlyArray<string> =>
-  Arr.flatMap(descendants(tree, id), (element) => {
-    const source = element.customProps?.source;
-    return typeof source === "string" &&
-      (source.includes("<rect") ||
+  Arr.flatMap(descendants(tree, id), (element) =>
+    Option.match(markupOf(element), {
+      onNone: () => [],
+      onSome: (source) =>
+        source.includes("<rect") ||
         source.includes("<path") ||
-        source.includes("<circle"))
-      ? [source]
-      : [];
-  });
+        source.includes("<circle")
+          ? [source]
+          : [],
+    }),
+  );
 
 /** The words a chart paints, in paint order. */
 const wordsOf = (tree: DataTestRoot, id: number): ReadonlyArray<string> =>

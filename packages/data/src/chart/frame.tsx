@@ -503,6 +503,7 @@ export const ChartFrame = ({
               colours={Arr.map(layers, (layer) =>
                 seriesColourOf(palette, layer.series, layer.seriesIndex),
               )}
+              gridColour={themeColors(theme).border ?? "#000000"}
               grid={
                 grid
                   ? {

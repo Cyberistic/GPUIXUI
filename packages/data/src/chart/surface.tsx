@@ -8,28 +8,38 @@
  * one element per series, each a single colour, with no gradient and no
  * translucent mark over a mark beneath it.
  *
- * `ImgInstance.setImage` decodes **SVG bytes** through GPUI's own
- * `SvgRenderer` instead. One element then carries the chart's whole document:
- * every series in its own fill, a real gradient, a stroke at its own weight,
- * a mark at its own alpha. `chart-raster` measured the route — three fills
- * painted three colours inside one element — and `chart-surface-lifecycle`
- * measured that the element scales its image to its box, so a chart drawn at
- * its layout size follows a splitter.
+ * The document route is the one that paints in colour. The runtime publishes
+ * two ways to hand it SVG bytes:
+ *
+ * - **a data URL on the `<img>`'s `src`** — the runtime decodes the bytes
+ *   itself (`custom_elements/img.rs`: `decode_image_data_url` reads the
+ *   base64, `gpui::Image::from_bytes` decodes it, and the SVG renderer
+ *   rasterises it). This is declarative: the markup is a prop, so it is
+ *   inspectable, and the runtime paints it without a layout effect.
+ * - **`ImgInstance.setImage(bytes)`** — the imperative push, measured by
+ *   `chart-raster` to paint three colours in one element.
+ *
+ * The data URL is the route the surface takes, because the markup it carries
+ * is the chart's own document and the runtime can read it where it stands.
+ * The push stays as the fallback for a host whose `src` will not take the
+ * bytes.
  *
  * Two rules the route carries, both measured:
  *
- * - the bytes must be on the element **before** the frame that paints it, so
- *   the push is a **layout effect** and not a passive one;
- * - a resize re-scales the image with its box, so a chart does not re-push
- *   when only its size changed.
+ * - a resize re-scales the image with its box, so a chart drawn at its layout
+ *   size follows a splitter without re-encoding;
+ * - a transparent pixel composites onto the surface behind the element, so a
+ *   chart inherits the card it sits on instead of painting a surface of its
+ *   own.
  *
- * The `<svg source>` route stays as the **fallback**, for a host that cannot
+ * The `<svg source>` route stays as the **fallback** for a host that cannot
  * decode an image: the same document, painted as one mask per series. A
  * caller asks for the route it needs; the chart's geometry does not change.
  */
 
 import type { ImgInstance, Props } from "@gpuix/react";
 import { Effect } from "effect";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { useLayoutEffect, useRef } from "react";
@@ -49,6 +59,36 @@ export class ChartDecodeError extends Schema.TaggedError<ChartDecodeError>()(
   { reason: Schema.String },
   { description: "The chart's SVG could not be decoded by the runtime." },
 ) {}
+
+/**
+ * The chart's document as a **data URL** the runtime's `<img>` decodes.
+ *
+ * The bytes are base64, so the markup's own characters — a quote, a `<`, a
+ * newline — cannot break the URL. The MIME type is `image/svg+xml`, which is
+ * the format the runtime's decoder sniffs.
+ */
+export const documentDataUrl = (markup: string): string =>
+  `data:image/svg+xml;base64,${base64(markup)}`;
+
+/**
+ * A string as base64.
+ *
+ * `Buffer` is the runtime's own byte buffer, and it encodes base64 in one
+ * call. A runtime with no `Buffer` — a browser preview of the same document —
+ * falls back to the platform's own encoder.
+ */
+const base64 = (value: string): string => {
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(value, "utf8").toString("base64");
+  }
+  const bytes = new TextEncoder().encode(value);
+  return btoa(
+    Arr.join(
+      Arr.map(Array.from(bytes), (byte) => String.fromCharCode(byte)),
+      "",
+    ),
+  );
+};
 
 /**
  * The push of a chart's document onto an image.
@@ -112,6 +152,7 @@ export const ChartSurface = ({
   const instance = useRef<ImgInstance | null>(null);
   const markup = chartSvg(document);
   const box: ChartBox = document.box;
+  const source = render === "document" ? documentDataUrl(markup) : undefined;
 
   // The bytes must be on the element before the frame that paints it, so the
   // push is a layout effect. The decode is a native call, so it is lifted
@@ -132,7 +173,8 @@ export const ChartSurface = ({
     <img
       {...rest}
       ref={instance}
-      role={label === undefined ? undefined : "img"}
+      src={source}
+      role="none"
       aria-label={label}
       aria-description={description}
       testId={testId}

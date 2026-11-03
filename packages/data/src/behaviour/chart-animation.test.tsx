@@ -10,7 +10,9 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 import { MotionProvider } from "@gpuixui/motion/react";
+import { darkTheme, seriesColors } from "@gpuixui/tokens";
 import { BarChart } from "../chart/chart.js";
+import { seriesShapesOf } from "../internal/interaction.js";
 import {
   renderData,
   settle,
@@ -19,19 +21,26 @@ import {
 
 let root: DataTestRoot | undefined;
 
+/** The colour the first series paints in. */
+const colourAt = (index: number): string =>
+  seriesColors(darkTheme)[index] ?? "#000000";
+
 afterEach(() => {
   root?.unmount();
   root = undefined;
 });
 
 /** The height the first bar paints, in plot pixels. */
+/**
+ * The height of the first bar a series painted.
+ *
+ * The document carries the grid and every series, so the bar is the first
+ * shape in the **series' own colour** — the one thing that tells its bars
+ * from the grid's rules.
+ */
 const firstBarHeight = (tree: DataTestRoot, testId: string): number => {
-  const source = tree.renderer.findByTestId(`${testId}-layer-a`)?.customProps
-    ?.source;
-  if (typeof source !== "string") {
-    throw new Error(`behaviour: no SVG source on ${testId}`);
-  }
-  const match = /<rect[^>]*height="([\d.]+)"/.exec(source);
+  const shapes = seriesShapesOf(tree, testId, "a", colourAt(0));
+  const match = /<rect[^>]*height="([\d.]+)"/.exec(shapes.join(" "));
   if (match?.[1] === undefined)
     throw new Error(`behaviour: no bar in ${testId}`);
   return Number(match[1]);

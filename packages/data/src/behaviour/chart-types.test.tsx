@@ -27,7 +27,12 @@ import {
   RadarChart,
   RadialChart,
 } from "../chart/chart.js";
-import { paintedText, requireStyle } from "../internal/interaction.js";
+import {
+  chartMarkupOf,
+  paintedText,
+  requireStyle,
+  seriesShapesOf,
+} from "../internal/interaction.js";
 import {
   renderData,
   settle,
@@ -44,13 +49,8 @@ const mount = (): DataTestRoot => {
 
 const palette = seriesColors(darkTheme);
 
-const sourceOf = (tree: DataTestRoot, testId: string): string => {
-  const source = tree.renderer.findByTestId(testId)?.customProps?.source;
-  if (typeof source !== "string") {
-    throw new Error(`behaviour: no SVG source on "${testId}"`);
-  }
-  return source;
-};
+const sourceOf = (tree: DataTestRoot, testId: string): string =>
+  chartMarkupOf(tree, testId);
 
 afterEach(() => {
   root?.unmount();
@@ -222,10 +222,19 @@ describe("the sharper chart types", () => {
     );
     settle(root);
 
-    const source = sourceOf(root, "chart-negative-layer-delta");
+    // The document carries the grid's rules too, so the bars are counted by
+    // the colour the series paints in.
+    const shapes = seriesShapesOf(
+      root,
+      "chart-negative",
+      "delta",
+      palette[0] ?? "",
+    );
     // A -50..20 axis puts zero at y = 71.4; the negative bar starts there and
     // runs to the plot's floor, rather than painting nothing.
-    const rects = [...source.matchAll(/<rect x="([\d.]+)" y="([\d.]+)"/g)];
+    const rects = [
+      ...shapes.join(" ").matchAll(/<rect x="([\d.]+)" y="([\d.]+)"/g),
+    ];
     expect(rects.length).toBe(2);
     const tops = Arr.map(rects, (match) => Number(match[2]));
     expect(Math.min(...tops)).toBeLessThan(70);
@@ -440,8 +449,8 @@ describe("the sharper chart types", () => {
     expect(text).toContain("Q3");
     expect(text).not.toContain("Q1");
     expect(text).not.toContain("Q4");
-    const rects = sourceOf(root, "chart-window-layer-a").match(/<rect/g) ?? [];
-    expect(rects.length).toBe(2);
+    const shapes = seriesShapesOf(root, "chart-window", "a", palette[0] ?? "");
+    expect(shapes.filter((shape) => shape.startsWith("<rect")).length).toBe(2);
   });
 
   it("shows a line point's datum under the pointer", () => {
