@@ -245,3 +245,121 @@ as the fallback for a host that cannot decode an image.
 
 The interactivity does not change either way: the hit zones are the plot's
 children and the surface is behind them.
+
+---
+
+## 9. TanStack Charts — the one library that fits
+
+The request named Recharts, which cannot be used (§8). **TanStack Charts can.**
+
+### 9.1 What it is
+
+`https://github.com/TanStack/charts` — MIT, by Tanner Linsley, published
+`1.2.1`. It is **not** a DOM chart library. It is a **scene compiler**: a
+definition plus data plus a size compiles to a `ChartScene`, and a **renderer**
+walks the scene and paints it.
+
+The scene is renderer-neutral by construction. Its node kinds are
+`group`, `rule`, `polyline`, `area`, `dot`, `rect` and `label` — the portable
+primitives, each with a `SceneStyle` carrying `fill`, `fillOpacity`, `stroke`,
+`strokeWidth`, `opacity`, `strokeDasharray`. `ChartPoint` records sit beside
+the painted nodes, so **a datum keeps its identity without being an
+element** — which is exactly what makes per-mark interaction possible
+without per-mark DOM.
+
+### 9.2 Measured, in a DOM-free environment
+
+The proof ran in `vitest` with `environment: "node"` — `typeof document` and
+`typeof window` are `undefined`:
+
+| Claim | Measurement |
+| --- | --- |
+| The scene path imports and runs without a DOM | `scene.ts`, `runtime.ts`, `types.ts`, `mark.ts`, `svg-renderer.ts`, `nearest.ts`, `focus*.ts`, `interaction-cursor.ts`, `tooltip-model.ts` — **no** `document`, `window`, `HTMLElement`, `getBoundingClientRect` or `ResizeObserver` |
+| The DOM is confined to the renderers | only `canvas.ts`, `dom-types.ts`, `dom-text.ts` name them |
+| A multi-series scene builds | `barY` + `lineY` + `areaY` over three rows → a scene whose nodes are `rect`, `polyline` and `area` |
+| The scene serialises to an SVG document | `renderChartSvg(scene, { ariaLabel })` → one `<svg>` carrying `#2563eb` **and** `#60a5fa` — **two series, two colours, one element** |
+| The hit test is geometric | `nearestScenePoint(scene, x, y, maxDistance)` — a pure function over the scene, no DOM event |
+
+The rendered markup is ordinary SVG: `<g data-ts-key="marks">`,
+`<rect fill="#2563eb" x="44.85" y="131.21" width="129.34" height="105.79"/>`.
+
+### 9.3 The route, end to end
+
+```
+definition + data + size
+        │  createChartScene  (pure, DOM-free)
+        ▼
+   ChartScene  ──────────────► nearestScenePoint(scene, x, y)
+        │                              │
+        │  renderChartSvg              │  the pointer's answer
+        ▼                              ▼
+   one SVG string  ──────────► setImage(bytes)  ─► GPUix's SVG rasteriser
+        (colour, gradients)                    (one element, every fill its own)
+```
+
+The GPUix side is **already measured**: `chart-raster` pushed three coloured
+fills through `setImage` and they painted. So the runtime half is done.
+
+### 9.4 What it costs
+
+| Cost | Number |
+| --- | --- |
+| Bundle, "compact-scale line scene" | **34 kB** minified, **12 kB** gzip |
+| Bundle, "D3-scale line + static SVG" | **60 kB** minified, **22 kB** gzip |
+| Bundle, "representative marks" | **83 kB** minified, **30 kB** gzip |
+| Bundle, "React line consumer" | **109 kB** minified, **40 kB** gzip |
+
+The published baseline is `benchmarks/bundle-size/universal-baseline.json`.
+
+The `d3-*` dependencies are the bulk of it (`d3-scale`, `d3-shape`,
+`d3-force`, `d3-geo`, `d3-sankey`, `d3-hierarchy`, `d3-brush`, `d3-zoom`,
+`d3-contour`, `d3-delaunay`, `d3-hexbin`, `d3-selection`). A chart library
+that pulls in `d3-selection` — a **DOM selection** library — for a runtime
+with no DOM is the wrong shape, but the *scenes* it compiles do not need it.
+
+### 9.5 The decision
+
+**Take the architecture, not the dependency.**
+
+TanStack's design is the right one for this runtime and its implementation is
+MIT and proven DOM-free. But:
+
+- the package is **heavy** (12–40 kB gzip) for a desktop component library
+  whose charts are nine types;
+- it is **unreleased on `main`** for much of its surface, and the repo
+  carries `1.0-READINESS.md`, `API-FRICTION.md` and
+  `API-HARMONIZATION-ROADMAP.md` — the API is still moving;
+- the repo's own spike says a native renderer "cannot implement the current
+  public contract honestly", because `ChartRenderer.mount` takes an
+  `HTMLElement`.
+
+So the plan is:
+
+1. **Adopt the architecture.** The `ChartScene` model — renderer-neutral
+   nodes, `ChartPoint` identity beside the paint, a pure scene compiler and a
+   pure geometric hit test — is the design this package should have, and it
+   is what the `setImage` route makes possible.
+2. **Write the GPUix renderer against it**, as `packages/data/src/chart/scene.ts`
+   plus `renderer.tsx`: a scene visitor that turns a `ChartScene` into the
+   SVG document the surface pushes, and a `nearestScenePoint` equivalent for
+   the hit zones.
+3. **Do not depend on `@tanstack/charts`** yet. Re-implement the scene
+   compiler's *shape* — which is what this package already does in
+   `logic.ts` and `geometry.ts` — and re-evaluate the dependency once the
+   package settles past 1.0.
+
+The alternative — depend on `@tanstack/charts` and write only the renderer —
+is the **cheapest path to Recharts-grade output**, and it becomes a
+one-line change later if the compiler is good enough to keep. The plan
+records it as the first thing to try once the GPUix renderer is proven.
+
+### 9.6 What we learn from it, whatever we do
+
+| TanStack | What it tells us |
+| --- | --- |
+| `SceneNode` = group/rule/polyline/area/dot/rect/label | the mark model should be **these seven**, not rect/path/circle/ellipse |
+| `SceneStyle` carries the paint | the paint belongs on the mark, as this plan's `mark.ts` already does |
+| `ChartPoint` beside the nodes | a datum's identity is **not** the element — so a hit test can be geometric |
+| `nearestScenePoint(scene, x, y)` | the hover readout should **hit-test the scene**, not use a hit-zone grid |
+| `renderChartSvg(scene, options)` | one function, scene → document — this plan's `chartSvg` is the same shape |
+| focus is a **renderer-neutral guide** | the crosshair and the emphasis are **scene nodes**, not overlay divs |

@@ -37,6 +37,9 @@ import {
   type Point,
 } from "./geometry.js";
 import { DEFAULT_ANIMATION_DURATION, useAnimatedSeries } from "./animation.js";
+import { ChartPlot } from "./plot.js";
+import type { ChartRender } from "./surface.js";
+import type { ChartGradient } from "./svg.js";
 import { recipeStyle } from "../recipe.js";
 import { textStyle, themeColors, useTheme } from "../theme.js";
 import {
@@ -185,6 +188,22 @@ export interface ChartFrameProps extends Omit<Props, "children"> {
   readonly range?: ChartRange;
   /** The layered marks a type paints, in paint order. */
   readonly paint: (context: PaintContext) => ReadonlyArray<PaintLayer>;
+  /**
+   * The gradients the layers' fills use.
+   *
+   * A gradient belongs to the document, so the type that knows its fade
+   * names it here and the frame puts it in the document's `defs`.
+   */
+  readonly gradients?: (context: PaintContext) => ReadonlyArray<ChartGradient>;
+  /**
+   * The route the marks take to the frame.
+   *
+   * `"document"` paints one image carrying the chart's whole markup, so every
+   * series paints in its own colour and a fill can be a real gradient.
+   * `"mask"` paints one tinted element per series — the route a host that
+   * cannot decode an image needs.
+   */
+  readonly render?: ChartRender;
   /** The legend a type wants; the frame places it. */
   readonly legendNode?: (side: LegendSide) => ReactNode;
   /** Extra marks painted over the plot: axis labels, a centre label. */
@@ -344,6 +363,8 @@ export const ChartFrame = ({
   valueLabels,
   range,
   paint,
+  gradients,
+  render = "document",
   legendNode,
   overlay,
   className,
@@ -476,49 +497,45 @@ export const ChartFrame = ({
                   ),
                 })
               : undefined}
-            {grid ? (
-              <ChartMask
-                chartTestId={testId}
-                layer={{
-                  key: "grid",
-                  kind: "grid",
-                  series: { key: "grid", label: "grid", values: [] },
-                  seriesIndex: 0,
-                  decorative: true,
-                  opacity: 0.55,
-                  marks: Arr.map(tickValues, (value) => ({
-                    kind: "rect" as const,
-                    x: 0,
-                    y:
-                      box.height -
-                      ((value - measured.min) /
-                        Math.max(1e-9, measured.max - measured.min)) *
-                        box.height,
-                    width: box.width,
-                    height: 1,
-                  })),
-                }}
-                label=""
-                description=""
-                colour={themeColors(theme).border ?? "#000000"}
-                box={box}
-              />
-            ) : undefined}
-            {Arr.map(layers, (layer, layerIndex) => (
-              <ChartMask
-                key={`${layer.key}-${layerIndex}`}
-                chartTestId={testId}
-                layer={layer}
-                label={seriesName(layer.series.label, layer.series.key)}
-                description={seriesDescription(layer.series.values, categories)}
-                colour={seriesColourOf(
-                  palette,
-                  layer.series,
-                  layer.seriesIndex,
-                )}
-                box={box}
-              />
-            ))}
+            <ChartPlot
+              box={box}
+              layers={layers}
+              colours={Arr.map(layers, (layer) =>
+                seriesColourOf(palette, layer.series, layer.seriesIndex),
+              )}
+              grid={
+                grid
+                  ? {
+                      key: "grid",
+                      kind: "grid",
+                      series: { key: "grid", label: "grid", values: [] },
+                      seriesIndex: 0,
+                      decorative: true,
+                      opacity: 0.55,
+                      marks: Arr.map(tickValues, (value) => ({
+                        kind: "rect" as const,
+                        x: 0,
+                        y:
+                          box.height -
+                          ((value - measured.min) /
+                            Math.max(1e-9, measured.max - measured.min)) *
+                            box.height,
+                        width: box.width,
+                        height: 1,
+                      })),
+                    }
+                  : undefined
+              }
+              render={render}
+              gradients={gradients === undefined ? [] : gradients(context)}
+              testId={testId}
+              labels={Arr.map(layers, (layer) =>
+                seriesName(layer.series.label, layer.series.key),
+              )}
+              descriptions={Arr.map(layers, (layer) =>
+                seriesDescription(layer.series.values, categories),
+              )}
+            />
           </div>
           {valueLabels === undefined ? undefined : (
             <ValueLabels
