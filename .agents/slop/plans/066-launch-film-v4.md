@@ -386,3 +386,25 @@ terminal: 20.00 air · 22.20 press · 22.80 press · 23.40 thud · 24.00 air
   the headline.
 - `README.md`'s shot table now matches the timeline the film actually renders
   (0–4, 4–8.5, 8.5–10.5, 10.5–13.5, 13.5–15, 15–20, 20–24, 24–26, 26–30).
+
+### v4.11 — a real match cut, and the tile crop bug that hid it
+
+- **The wall's opening frame was never the tile it claimed.** The pull-back used
+  `gsap.to(...)` with a position argument, which is a *standalone* tween — GSAP
+  ignores the third argument — so it ran on wall-clock time from page load and was
+  finished before the scene began. Every opening frame was the wall's centre, no
+  matter what `FOCUS` said (which is why two different FOCUS values rendered
+  identical pixels). It is `tl.to(..., 0)` now.
+- **The cut is a match cut.** The montage's last close-up is a white card with one
+  blue control on it ("Hunter License"); the wall now opens on the **button card**
+  (same white card, same blue, same centre) at 2.1×: outgoing card 1240×305 at
+  (960, 537), incoming 1298×420 at (960, 540) — within 5 % on width, identical on
+  centre. The tile sits in the wall's middle row so the pull-back reveals tiles on
+  every side instead of empty paper.
+- **Detail crops for the three palest tiles** — `zoom` + `focus` on a tile keeps
+  the crop uniform (`object-fit: cover` plus `transform: scale`, origin on the
+  focus point, never a stretch):
+  - `editor` 1.5× on the code block: "import { Stack, Text } …" now reads at tile
+    size (7.5 → legible dark type).
+  - `calendar` 1.6× on the week grid; `welcome` 1.7× on the logo + 2FA buttons
+    (18 → a legible card instead of a white rectangle).

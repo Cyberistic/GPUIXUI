@@ -13,7 +13,7 @@ of cuts. Plan: `.agents/slop/plans/066-launch-film-v4.md`.
 | 1–2 s | the components you know | Tabs, resuming the push at 1.33× | `cu-tabs` |
 | 2–3 s | — | Slider, 1.58× | `cu-slider` |
 | 3–4 s | — | Checkbox, 1.84× — the cut lands at 2.1×, the same scale the wall opens on | `cu-checkbox` |
-| 4–8.5 s | every component you need | **sixteen different** blocks in one bento wall (a 2×2 hero, wide panels, tall columns); it opens on the calculator tile and pulls back to the whole wall; the line starts under the wall, holds, then swaps places with it (Paper's move) | one of each take |
+| 4–8.5 s | every component you need | **sixteen different** blocks in one bento wall (a 2×2 hero, wide panels, tall columns); it opens on the button card — the same white card and blue control the last close-up left on screen — then pulls back to the whole wall; the line starts under the wall, holds, then swaps places with it (Paper's move) | one of each take |
 | 8.5–10.5 s | compose them into blocks | the stats block's real cards falling onto bare paper, the screen landing under the line | `stage-assemble` |
 | 10.5–13.5 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux | `settings` |
 | 13.5–15 s | on every desktop | **the same chat window on each platform's desktop** — macOS on a photo, Aero, the tiling block — flipping | `chat-mac`, `chat-win`, `chat-linux` |

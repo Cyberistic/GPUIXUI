@@ -227,24 +227,54 @@ interface Cell {
   readonly row: number;
   readonly w: number;
   readonly h: number;
+  /** Detail crop: magnify the tile's content by this much (uniform, no stretch). */
+  readonly zoom?: number;
+  /** The point of the source, in fractions, that the detail crop keeps. */
+  readonly focus?: readonly [number, number];
 }
+/** The tile the montage's last close-up cuts into: a card with one control. */
+const MATCH_TILE: Cell = { take: "button", col: 3, row: 2, w: 2, h: 1 };
 const WALL: ReadonlyArray<Cell> = [
   { take: "stats", col: 0, row: 0, w: 2, h: 2 },
   { take: "music", col: 2, row: 0, w: 2, h: 1 },
   { take: "desktop-luna", col: 4, row: 0, w: 2, h: 1 },
-  { take: "editor", col: 2, row: 1, w: 2, h: 1 },
-  { take: "calendar", col: 4, row: 1, w: 1, h: 1 },
+  {
+    take: "editor",
+    col: 2,
+    row: 1,
+    w: 2,
+    h: 1,
+    zoom: 1.5,
+    focus: [0.36, 0.06],
+  },
+  {
+    take: "calendar",
+    col: 4,
+    row: 1,
+    w: 1,
+    h: 1,
+    zoom: 1.6,
+    focus: [0.5, 0.42],
+  },
   { take: "monitor", col: 5, row: 1, w: 1, h: 1 },
   { take: "chat-win", col: 0, row: 2, w: 1, h: 2 },
   { take: "kanban", col: 1, row: 2, w: 2, h: 2 },
-  { take: "slang", col: 3, row: 2, w: 2, h: 1 },
+  { take: "slang", col: 3, row: 3, w: 2, h: 1 },
   { take: "desktop-aero", col: 5, row: 2, w: 1, h: 2 },
-  { take: "chat-mac", col: 3, row: 3, w: 2, h: 1 },
-  { take: "button", col: 0, row: 4, w: 2, h: 1 },
+  MATCH_TILE,
+  { take: "chat-mac", col: 0, row: 4, w: 2, h: 1 },
   { take: "viewer", col: 2, row: 4, w: 1, h: 1 },
   { take: "launcher", col: 3, row: 4, w: 1, h: 1 },
   { take: "chat-linux", col: 4, row: 4, w: 1, h: 1 },
-  { take: "welcome", col: 5, row: 4, w: 1, h: 1 },
+  {
+    take: "welcome",
+    col: 5,
+    row: 4,
+    w: 1,
+    h: 1,
+    zoom: 1.7,
+    focus: [0.5, 0.52],
+  },
 ];
 const UNIT = { w: 300, h: 200, gap: 16 };
 const GRID = { cols: 6, rows: 5 };
@@ -267,8 +297,8 @@ const lastFrame = (take: string): number =>
       .toString()
       .slice(0, 4),
   );
-/** The tile the wall's pull-back starts on (the calculator), in wall pixels. */
-const FOCUS = cellBox(WALL[8]);
+/** The wall's opening frame: the match tile, centred exactly where it lands. */
+const FOCUS = cellBox(MATCH_TILE);
 const FOCUS_CX = FOCUS.x + Math.round(FOCUS.w / 2);
 const FOCUS_CY = FOCUS.y + Math.round(FOCUS.h / 2);
 const SHOWCASE = 8.5;
@@ -291,7 +321,11 @@ const grid: Scene = {
 ${WALL.map((cell) => {
   const box = cellBox(cell);
   const end = still(cell.take, lastFrame(cell.take));
-  return `        <div class="tile" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover" src="${end}" alt=""></div>`;
+  const [fx, fy] = cell.focus ?? [0.5, 0.5];
+  const detail = cell.zoom
+    ? ` style="object-position:${fx * 100}% ${fy * 100}%;transform:scale(${cell.zoom});transform-origin:${fx * 100}% ${fy * 100}%"`
+    : "";
+  return `        <div class="tile" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
 }).join("\n")}
       </div>
     </div>
@@ -300,10 +334,11 @@ ${WALL.map((cell) => {
     <div id="g-cap" class="cap">every component you need</div>`,
   script: `const cam = { z: Math.log(2.1) };
     const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
-    // It opens on one tile, not on the wall's seam: the montage's push lands on
-    // the calculator, and the pull-back reveals the wall around it.
+    // It opens on one tile, not on the wall's seam: the montage's last close-up
+    // is a card with one control on it, and the wall opens on the button card —
+    // same shape, same size, same place in the frame — then pulls back.
     gsap.set("#g-wall", { x: ${-FOCUS_CX}, y: ${-FOCUS_CY} });
-    gsap.to("#g-wall", { x: ${-Math.round(WALL_BOX.w / 2)}, y: ${-Math.round(WALL_BOX.h / 2)}, duration: 3, ease: "power1.inOut" }, 0);
+    tl.to("#g-wall", { x: ${-Math.round(WALL_BOX.w / 2)}, y: ${-Math.round(WALL_BOX.h / 2)}, duration: 3, ease: "power1.inOut" }, 0);
     zoom();
     tl.to(cam, { z: Math.log(0.86), duration: 3, ease: "power1.inOut", onUpdate: zoom }, 0);
     tl.fromTo("#g-wall",{rotation:0},{rotation:0,duration:${GRID_LENGTH}},0);

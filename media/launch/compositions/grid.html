@@ -124,13 +124,31 @@
           class="tile"
           style="left: 632px; top: 216px; width: 616px; height: 200px"
         >
-          <img class="cover" src="assets/footage/editor-74.png" alt="" />
+          <img
+            class="cover"
+            style="
+              object-position: 36% 6%;
+              transform: scale(1.5);
+              transform-origin: 36% 6%;
+            "
+            src="assets/footage/editor-74.png"
+            alt=""
+          />
         </div>
         <div
           class="tile"
           style="left: 1264px; top: 216px; width: 300px; height: 200px"
         >
-          <img class="cover" src="assets/footage/calendar-74.png" alt="" />
+          <img
+            class="cover"
+            style="
+              object-position: 50% 42%;
+              transform: scale(1.6);
+              transform-origin: 50% 42%;
+            "
+            src="assets/footage/calendar-74.png"
+            alt=""
+          />
         </div>
         <div
           class="tile"
@@ -152,7 +170,7 @@
         </div>
         <div
           class="tile"
-          style="left: 948px; top: 432px; width: 616px; height: 200px"
+          style="left: 948px; top: 648px; width: 616px; height: 200px"
         >
           <img class="cover" src="assets/footage/slang-74.png" alt="" />
         </div>
@@ -164,15 +182,15 @@
         </div>
         <div
           class="tile"
-          style="left: 948px; top: 648px; width: 616px; height: 200px"
+          style="left: 948px; top: 432px; width: 616px; height: 200px"
         >
-          <img class="cover" src="assets/footage/chat-mac-29.png" alt="" />
+          <img class="cover" src="assets/footage/button-43.png" alt="" />
         </div>
         <div
           class="tile"
           style="left: 0px; top: 864px; width: 616px; height: 200px"
         >
-          <img class="cover" src="assets/footage/button-43.png" alt="" />
+          <img class="cover" src="assets/footage/chat-mac-29.png" alt="" />
         </div>
         <div
           class="tile"
@@ -196,7 +214,16 @@
           class="tile"
           style="left: 1580px; top: 864px; width: 300px; height: 200px"
         >
-          <img class="cover" src="assets/footage/welcome-74.png" alt="" />
+          <img
+            class="cover"
+            style="
+              object-position: 50% 52%;
+              transform: scale(1.7);
+              transform-origin: 50% 52%;
+            "
+            src="assets/footage/welcome-74.png"
+            alt=""
+          />
         </div>
       </div>
     </div>
@@ -208,10 +235,11 @@
     const tl = gsap.timeline({ paused: true });
     const cam = { z: Math.log(2.1) };
     const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
-    // It opens on one tile, not on the wall's seam: the montage's push lands on
-    // the calculator, and the pull-back reveals the wall around it.
+    // It opens on one tile, not on the wall's seam: the montage's last close-up
+    // is a card with one control on it, and the wall opens on the button card —
+    // same shape, same size, same place in the frame — then pulls back.
     gsap.set("#g-wall", { x: -1256, y: -532 });
-    gsap.to(
+    tl.to(
       "#g-wall",
       { x: -940, y: -532, duration: 3, ease: "power1.inOut" },
       0,

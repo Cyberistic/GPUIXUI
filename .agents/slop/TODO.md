@@ -24911,6 +24911,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` `macos` desktop block: the drawn wallpaper, the menu bar and its menus, the dock, and a window layer — with docs, a capture and two behaviour cases (plan 744)
 `[x]` `editor`, `music`, `monitor` blocks: tokenised code with an explorer, a seeded player, and a sampled hardware monitor — docs, captures and behaviour cases each (plan 745)
 `[x]` Launch film v4.5: the three-OS chat flip (the same chat window on macOS, Aero and the tiling desktop) and the apps montage (Slang, editor, music, monitor)
+`[x]` Launch film v4.11: the montage cuts into the wall as a real match cut (card → card, same centre and size), and the three palest tiles carry detail crops (editor, calendar, welcome)
 `[x]` Launch film v4.10: the wall is sixteen tiles chosen by measured contrast, it opens on the calculator and pulls back, the montage's push carries 1.1→2.1 into it, the caption band stays solid under the line, and the assemble lands under the headline
 `[x]` Launch film v4.9b: every sound cue read from the timeline (the terminal whoosh now on the 20.0 cut), the assemble's land hits on its in-point, the wall's close-up tiles cropped to fill, and the caption band solid under the line
 `[x]` Launch film v4.9: the macOS desktop runs on a real photo (windows opaque), the wall is a bento of nineteen spanned tiles, and the opening is a carried camera push that lands on the cut
