@@ -1361,3 +1361,30 @@ trace, and it belongs to whoever owns the renderer's paint cache.
 
 Vendor binary restored (hash matches `.bak`), scratch host left in the temp tree,
 no repo file modified.
+
+### v4.42 — the terminal beat is three real terminal captures
+
+The defect was never that the platform cannot paint a state change — it is that it
+paints one only into the **next frame it commits**. A press sent *before* the app's
+first paint is therefore already in that first frame. Measured on the chip row:
+
+```
+take with look-win32@1.5   frame 61 (2.03 s) Δ 2.65, crop: Windows chip *filled*
+take with dark@1.5         frame 61, crop: the whole pane dark, Linux selected
+take with ~dark@1.5        frame 61, crop: Linux selected, light
+```
+
+So the film now uses three real terminal captures instead of the window-renderer
+still:
+
+- `term-light-linux` — Linux, light (`~dark` hover so the app paints at all)
+- `term-light-win` — Windows, light (one chip press before the first paint)
+- `term-dark` — Linux, dark (one dark press before the first paint)
+
+They are switched at `T_APP`, +0.6 s and +1.2 s, with `land` / `press` / `thud` on
+those beats. **`term-app` is no longer used by the film** — the workaround is gone,
+and every pixel of the terminal beat now comes from the terminal platform.
+
+Audited on the new render: cuts **19/19** on frame multiples of 15 with cues at
+≤40 ms; terminal beat deltas 90.4 (takeover), 0.9 (chip), 78.7 (dark); cues **53/56**
+direct at lag ≤25 ms, the same three masked by simultaneous sounds.

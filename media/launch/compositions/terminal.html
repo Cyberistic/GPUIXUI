@@ -142,28 +142,21 @@
         <img
           id="t-v0"
           class="look"
-          src="assets/footage/term-app-8.png"
+          src="assets/footage/term-light-linux-80.png"
           alt=""
           style="opacity: 0"
         />
         <img
           id="t-v1"
           class="look"
-          src="assets/footage/term-app-24.png"
+          src="assets/footage/term-light-win-80.png"
           alt=""
           style="opacity: 0"
         />
         <img
           id="t-v2"
           class="look"
-          src="assets/footage/term-app-42.png"
-          alt=""
-          style="opacity: 0"
-        />
-        <img
-          id="t-v3"
-          class="look"
-          src="assets/footage/term-app-60.png"
+          src="assets/footage/term-dark-80.png"
           alt=""
           style="opacity: 0"
         />
@@ -249,14 +242,14 @@
     tl.set("#t-hist", { opacity: 0 }, 1.6);
     tl.set("#t-v0", { opacity: 1 }, 1.6);
     tl.set("#t-cur", { opacity: 1 }, 1.6);
-    // The three presses, each on the frame the app repaints: the look chip, the
-    // dark switch, then the look chip again (takes/term-app, frames 24/42/60).
+    // Three real terminal captures: the platform paints a state change only into
+    // the next frame it commits, so each look is recorded as its own take (one
+    // press before the first paint) and the film cuts between them — Linux light,
+    // Windows light, Linux dark.
     tl.set("#t-v0", { opacity: 0 }, 2.2);
     tl.set("#t-v1", { opacity: 1 }, 2.2);
     tl.set("#t-v1", { opacity: 0 }, 2.8);
     tl.set("#t-v2", { opacity: 1 }, 2.8);
-    tl.set("#t-v2", { opacity: 0 }, 3.4);
-    tl.set("#t-v3", { opacity: 1 }, 3.4);
     tl.set("#t-cur", { x: 1101.7, y: 163.9, scale: 1 }, 1.6);
     tl.set("#t-cur", { x: 1100.4, y: 162.8, scale: 1 }, 1.633);
     tl.set("#t-cur", { x: 1091.5, y: 155.4, scale: 1 }, 1.667);

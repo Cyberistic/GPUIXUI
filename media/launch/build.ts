@@ -665,10 +665,10 @@ const terminal: Scene = {
         <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
       </div>
       <div class="frame">
-        ${["t-v0", "t-v1", "t-v2", "t-v3"]
+        ${["term-light-linux", "term-light-win", "term-dark"]
           .map(
-            (id, i) =>
-              `<img id="${id}" class="look" src="${still("term-app", [8, 24, 42, 60][i] ?? 0)}" alt="" style="opacity:0">`,
+            (take, i) =>
+              `<img id="t-v${i}" class="look" src="${still(take, 80)}" alt="" style="opacity:0">`,
           )
           .join("\n        ")}
         <div id="t-cur" class="cursor" style="opacity:0">${CURSOR}</div>
@@ -684,11 +684,12 @@ const terminal: Scene = {
     tl.set("#t-caret3",{opacity:0},${T_READY.toFixed(2)});
     tl.set("#t-ready",{opacity:1},${T_READY.toFixed(2)});
     tl.set("#t-hist",{opacity:0},${T_APP.toFixed(2)}); tl.set("#t-v0",{opacity:1},${T_APP.toFixed(2)}); tl.set("#t-cur",{opacity:1},${T_APP.toFixed(2)});
-    // The three presses, each on the frame the app repaints: the look chip, the
-    // dark switch, then the look chip again (takes/term-app, frames 24/42/60).
+    // Three real terminal captures: the platform paints a state change only into
+    // the next frame it commits, so each look is recorded as its own take (one
+    // press before the first paint) and the film cuts between them — Linux light,
+    // Windows light, Linux dark.
     tl.set("#t-v0",{opacity:0},${(T_APP + 0.6).toFixed(2)}); tl.set("#t-v1",{opacity:1},${(T_APP + 0.6).toFixed(2)});
     tl.set("#t-v1",{opacity:0},${(T_APP + 1.2).toFixed(2)}); tl.set("#t-v2",{opacity:1},${(T_APP + 1.2).toFixed(2)});
-    tl.set("#t-v2",{opacity:0},${(T_APP + 1.8).toFixed(2)}); tl.set("#t-v3",{opacity:1},${(T_APP + 1.8).toFixed(2)});
     ${cursorTrack("t-cur", cursorOf("term-app"), T_APP, TERM.scale / 2)}`,
 };
 
@@ -822,7 +823,6 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   [TERMINAL + T_APP, "land"],
   [TERMINAL + T_APP + 0.6, "press"],
   [TERMINAL + T_APP + 1.2, "thud"],
-  [TERMINAL + T_APP + 1.8, "press"],
   // A cut is a whoosh: the scene starts and the showcase's shot boundaries, read
   // from the same table the compositions are written from.
   // Every cut is a whoosh: the scene starts at full level, and every shot
