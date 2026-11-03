@@ -59,6 +59,12 @@
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
+    tl.fromTo(
+      ".words",
+      { scale: 1, x: 0, y: 0 },
+      { scale: 1.03, x: -10, y: -6, duration: 2, ease: "none" },
+      0,
+    );
     tl.to("#w0", { opacity: 1, duration: 0.18 }, 0.0);
     tl.to("#w1", { opacity: 1, duration: 0.18 }, 0.5);
     tl.to("#w2", { opacity: 1, duration: 0.18 }, 1.0);

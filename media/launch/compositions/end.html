@@ -25,6 +25,10 @@
       width: 100%;
       height: auto;
     }
+    #root .lockup {
+      position: absolute;
+      inset: 0;
+    }
     #root .mark {
       position: absolute;
       left: 50%;
@@ -76,13 +80,21 @@
     }
   </style>
   <div id="root" data-composition-id="end" data-width="1920" data-height="1080">
-    <div id="e-mark" class="mark"></div>
-    <div id="e-name" class="name">GPUIxUI</div>
-    <div id="e-url" class="url">gpuixui.sudokw.com</div>
-    <div id="e-credit" class="credit">Made with ☕ by <u>@sudo_kw</u></div>
+    <div class="lockup">
+      <div id="e-mark" class="mark"></div>
+      <div id="e-name" class="name">GPUIxUI</div>
+      <div id="e-url" class="url">gpuixui.sudokw.com</div>
+      <div id="e-credit" class="credit">Made with ☕ by <u>@sudo_kw</u></div>
+    </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
+    tl.fromTo(
+      ".lockup",
+      { scale: 1, x: 0, y: 0 },
+      { scale: 1.03, x: -8, y: -6, duration: 4, ease: "none" },
+      0,
+    );
     tl.from("#e-mark", { opacity: 0, duration: 0.5 }, 0.1);
     tl.from("#e-name", { opacity: 0.35, duration: 0.35 }, 0.5);
     tl.from("#e-url", { opacity: 0, duration: 0.5 }, 1.1);

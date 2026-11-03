@@ -692,10 +692,11 @@ const stack: Scene = {
     #root .words span { opacity:.18; margin:0 26px; }
     #root .words b { color:#c7c7cc; font-weight:600; }`,
   body: `    <div class="words">${WORDS.map((w, i) => `<span id="w${i}">${w}</span>`).join("<b>·</b>")}</div>`,
-  script: WORDS.map(
-    (_, i) =>
-      `tl.to("#w${i}",{opacity:1,duration:0.18},${(i * 0.5).toFixed(2)});`,
-  ).join(""),
+  script: `tl.fromTo(".words",{scale:1,x:0,y:0},{scale:1.03,x:-10,y:-6,duration:2,ease:"none"},0);
+    ${WORDS.map(
+      (_, i) =>
+        `tl.to("#w${i}",{opacity:1,duration:0.18},${(i * 0.5).toFixed(2)});`,
+    ).join("")}`,
 };
 
 // 26–30: the mark, the URL, the credit.
@@ -703,16 +704,20 @@ const end: Scene = {
   id: "end",
   start: 26,
   duration: 4,
-  css: `#root .mark { position:absolute; left:50%; top:330px; width:190px; height:190px; margin-left:-95px; background:${ACCENT}; -webkit-mask:url(assets/logo-outline.svg) center/contain no-repeat; mask:url(assets/logo-outline.svg) center/contain no-repeat; }
+  css: `#root .lockup { position:absolute; inset:0; }
+    #root .mark { position:absolute; left:50%; top:330px; width:190px; height:190px; margin-left:-95px; background:${ACCENT}; -webkit-mask:url(assets/logo-outline.svg) center/contain no-repeat; mask:url(assets/logo-outline.svg) center/contain no-repeat; }
     #root .name { position:absolute; left:0; right:0; top:560px; text-align:center; font:600 92px Inter, sans-serif; letter-spacing:-0.035em; color:${INK}; }
     #root .url { position:absolute; left:0; right:0; top:690px; text-align:center; font:500 46px Inter, sans-serif; color:${ACCENT}; }
     #root .credit { position:absolute; left:0; right:0; top:950px; text-align:center; font:400 30px Inter, sans-serif; color:#6e6e73; }
     #root .credit u { color:${INK}; text-underline-offset:5px; }`,
-  body: `    <div id="e-mark" class="mark"></div>
-    <div id="e-name" class="name">GPUIxUI</div>
-    <div id="e-url" class="url">gpuixui.sudokw.com</div>
-    <div id="e-credit" class="credit">Made with ☕ by <u>@sudo_kw</u></div>`,
-  script: `tl.from("#e-mark",{opacity:0,duration:0.5},0.1);
+  body: `    <div class="lockup">
+      <div id="e-mark" class="mark"></div>
+      <div id="e-name" class="name">GPUIxUI</div>
+      <div id="e-url" class="url">gpuixui.sudokw.com</div>
+      <div id="e-credit" class="credit">Made with ☕ by <u>@sudo_kw</u></div>
+    </div>`,
+  script: `tl.fromTo(".lockup",{scale:1,x:0,y:0},{scale:1.03,x:-8,y:-6,duration:4,ease:"none"},0);
+    tl.from("#e-mark",{opacity:0,duration:0.5},0.1);
     tl.from("#e-name",{opacity:0.35,duration:0.35},0.5);
     tl.from("#e-url",{opacity:0,duration:0.5},1.1);
     tl.from("#e-credit",{opacity:0,duration:0.5},1.6);`,

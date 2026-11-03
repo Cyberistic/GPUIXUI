@@ -521,3 +521,17 @@ macOS [8, −6], Windows [−8, 6], Linux [8, 6] — the same language as everyt
 around them. Measured on the macOS cut: the desktop card spans **1074 px at
 13.52 s → 1033 px at 13.95 s** and its centre falls from 966 to 960.5 as the
 drift resolves.
+
+### v4.18 — the closing beats move too
+
+The stack (24–26 s) and the end card (26–30 s) were the last scenes with no camera
+move. Both now push 3 % with a small drift, `ease: "none"`, over their whole
+duration:
+
+- **Stack**: `.words` goes 1 → 1.03 and −10, −6 px as the four words ink in one per
+  beat. Measured: the line spans **1476 px at 24.05 s → 1518 px at 25.9 s**.
+- **End card**: the mark, name, url and credit are wrapped in `.lockup` (so the
+  push keeps their spacing) which goes 1 → 1.03 and −8, −6 px over the four
+  seconds. Measured: "GPUIxUI" spans **336 px at 26.15 s → 346 px at 29.9 s**.
+
+Every scene in the film now carries the same camera language; no shot is static.
