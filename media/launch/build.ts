@@ -179,7 +179,7 @@ const MONTAGE = [
   { take: "cu-slider", crop: 1.5, sound: "cap-1" },
   { take: "cu-checkbox", crop: 1.5, sound: "cap-2" },
 ] as const;
-const BEAT_CUT = 1.2;
+const BEAT_CUT = 1;
 const PRESS_AT = 0.8; // every close-up presses on its frame 24
 const LEAD_IN = 0.42; // each clip starts this far into its take, so the press lands 0.38 s in
 /** On-screen pointer width: the camera crops otherwise scale the pointer too. */
@@ -253,7 +253,7 @@ const lastFrame = (take: string): number =>
       .toString()
       .slice(0, 4),
   );
-const SHOWCASE = 9;
+const SHOWCASE = 8.5;
 const GRID_LENGTH = SHOWCASE - 4 * BEAT_CUT;
 const grid: Scene = {
   id: "grid",
@@ -302,18 +302,18 @@ ${Array.from({ length: GRID.cols }, (_, col) => {
   script: `const cam = { z: Math.log(2.05) };
     const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
     zoom();
-    tl.to(cam, { z: Math.log(0.72), duration: 2.75, ease: "power1.inOut", onUpdate: zoom }, 0);
+    tl.to(cam, { z: Math.log(0.72), duration: 3, ease: "power1.inOut", onUpdate: zoom }, 0);
     ${Array.from({ length: GRID.cols }, (_, col) => {
       const way = col % 2 === 0 ? -1 : 1;
       return `tl.fromTo("#g-col${col}",{y:${-way * 26}},{y:${way * 14},duration:${GRID_LENGTH},ease:"none"},0);`;
     }).join("")}
     // Paper's swap: the line sits under the field, then the two exchange
     // places — the line rises to the band, the field slides down past it.
-    tl.fromTo("#g-cap",{opacity:0},{opacity:1,duration:0.3,ease:"power2.out"},0.85);
-    tl.to("#g-cap",{y:-744,duration:0.62,ease:"power2.inOut"},2.75);
-    tl.to("#g-cam",{y:90,duration:0.62,ease:"power2.inOut"},2.75);
-    tl.to("#g-band-t",{opacity:1,duration:0.5,ease:"none"},2.75);
-    tl.to("#g-band-b",{opacity:0,duration:0.5,ease:"none"},2.75);`,
+    tl.fromTo("#g-cap",{opacity:0},{opacity:1,duration:0.3,ease:"power2.out"},1);
+    tl.to("#g-cap",{y:-744,duration:0.5,ease:"power2.inOut"},3);
+    tl.to("#g-cam",{y:90,duration:0.5,ease:"power2.inOut"},3);
+    tl.to("#g-band-t",{opacity:1,duration:0.5,ease:"none"},3);
+    tl.to("#g-band-b",{opacity:0,duration:0.5,ease:"none"},3);`,
 };
 
 // 8.4–19.45: what it builds, cut on the actions — the dashboard assembled, one
@@ -349,7 +349,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "settings",
     mediaStart: 0.15,
-    length: 0.9,
+    length: 1,
     width: 2048,
     height: 1152,
     scale: 0.76,
@@ -361,7 +361,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "settings",
     mediaStart: 1.6,
-    length: 0.9,
+    length: 1,
     width: 2048,
     height: 1152,
     scale: 0.76,
@@ -373,7 +373,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "settings",
     mediaStart: 2.95,
-    length: 0.9,
+    length: 1,
     width: 2048,
     height: 1152,
     scale: 0.76,
@@ -385,7 +385,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   // The same chat window on each platform's desktop, flipped.
   {
     still: still("chat-mac", 0),
-    length: 0.7,
+    length: 0.5,
     width: 1280,
     height: 800,
     scale: 0.75,
@@ -395,7 +395,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   },
   {
     still: still("chat-win", 0),
-    length: 0.7,
+    length: 0.5,
     width: 1280,
     height: 800,
     scale: 0.75,
@@ -405,7 +405,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   },
   {
     still: still("chat-linux", 0),
-    length: 0.7,
+    length: 0.5,
     width: 1280,
     height: 800,
     scale: 0.75,
@@ -416,7 +416,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   // The apps: Slang's fx-991, the editor, the player, the monitor.
   {
     still: stillOf("slang-app-history.png"),
-    length: 0.85,
+    length: 1,
     width: 1720,
     height: 1640,
     scale: 0.52,
@@ -426,7 +426,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "editor",
     mediaStart: 0,
-    length: 0.85,
+    length: 1,
     width: 2200,
     height: 1400,
     scale: 0.56,
@@ -437,10 +437,10 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "monitor",
     mediaStart: 0,
-    length: 0.85,
+    length: 1,
     width: 2200,
-    height: 1400,
-    scale: 0.56,
+    height: 1720,
+    scale: 0.62,
     framed: true,
     push: [1.03, 1],
     cursor: false,
@@ -449,7 +449,7 @@ const SHOTS: ReadonlyArray<Shot> = [
   {
     take: "tiling",
     mediaStart: 0,
-    length: 1.1,
+    length: 1,
     width: 2560,
     height: 1440,
     scale: 0.6,
@@ -525,7 +525,7 @@ const TERM_SCREEN_H = Math.round(576 * TERM.scale);
 const TERMINAL = SHOWCASE + shotStart(SHOTS.length);
 const TERMINAL_LENGTH = 24 - TERMINAL;
 const SSH = "ssh gon@whale-island";
-const RUN = "nub run dev console --terminal";
+const RUN = "nub run dev settings --terminal";
 const TYPE_AT = 0.1; // the first keystroke
 const CHAR = 0.02; // seconds per character
 const T_LOGIN = TYPE_AT + SSH.length * CHAR + 0.06;
@@ -563,7 +563,7 @@ const terminal: Scene = {
         <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
       </div>
       <div class="frame">
-        ${clip("t-v", footage("console-term", 8), T_APP, TERMINAL_LENGTH - T_APP, 0, "opacity:0")}
+        ${clip("t-v", footage("term-settings", 8), T_APP, TERMINAL_LENGTH - T_APP, 0, "opacity:0")}
         <div id="t-cur" class="cursor" style="opacity:0">${CURSOR}</div>
       </div>
     </div>`,
@@ -575,7 +575,7 @@ const terminal: Scene = {
     tl.set("#t-caret3",{opacity:0},${T_READY.toFixed(2)});
     tl.set("#t-ready",{opacity:1},${T_READY.toFixed(2)});
     tl.set("#t-hist",{opacity:0},${T_APP.toFixed(2)}); tl.set("#t-v",{opacity:1},${T_APP.toFixed(2)}); tl.set("#t-cur",{opacity:1},${T_APP.toFixed(2)});
-    ${cursorTrack("t-cur", cursorOf("console-term"), T_APP, TERM.scale)}`,
+    ${cursorTrack("t-cur", cursorOf("term-settings"), T_APP, TERM.scale)}`,
 };
 
 // 24–26: the stack, one word per chord stab (the score's bar 12).
@@ -694,8 +694,9 @@ const CUES: ReadonlyArray<readonly [number, string]> = [
   platformCue(6, "look-linux"),
   ...keyCues(SSH, TERMINAL + TYPE_AT),
   ...keyCues(RUN, TERMINAL + T_RUN),
-  [TERMINAL + T_APP + 0.5, "press"],
-  [TERMINAL + T_APP + 1.2, "thud"],
+  [TERMINAL + T_APP + 0.6, "press"],
+  [TERMINAL + T_APP + 1.2, "press"],
+  [TERMINAL + T_APP + 1.8, "thud"],
   ...[4.8, 9, 11, 13.7, 15.8, 19.45, 24, 26].map((at) => [at, "air"] as const),
   [26.1, "mark"],
 ];

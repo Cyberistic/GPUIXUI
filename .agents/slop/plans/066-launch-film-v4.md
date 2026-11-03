@@ -259,3 +259,21 @@ network / storage cards, top processes), the music block reworked or dropped, a
 story spine (a route with carried cuts rather than beats), the terminal beat
 showing more of the library, and the macOS chat window's translucency (the
 platform's materials win over the opaque override).
+
+## v4.7 (owner, 2026-11-03): the monitor rebuilt, the terminal shows the library,
+## and every cut lands on a beat
+
+- **Monitor**: rebuilt to the reference — dark cards, a load ring per processor
+  (a `DonutChart` of load against the rest), temperature / clock / fan rows with
+  bars, RAM ring, network and drives, and a Top Processes table. The range
+  control moved into the toolbar because the content overflowed a 700-tall
+  window (measured: the chips sat at y = 888 in an 800 box, so their press never
+  landed); the block test holds the press again.
+- **Terminal**: the app in the terminal is the **Settings block**, not the deploy
+  list: the ssh session starts `nub run dev settings --terminal`, the window fills
+  the terminal, and the look, dark mode and volume are pressed there — each press
+  is a real repaint, so the restriction on the terminal platform is turned into a
+  demo of the library's controls.
+- **Beat grid**: every cut now lands on a 0.5 s beat — montage 4 × 1.0 s, wall
+  4–8.5 s, assemble 2.0 s, platforms 3 × 1.0 s, the three-OS flip 3 × 0.5 s, the
+  apps 4 × 1.0 s, the terminal 19–24 s.

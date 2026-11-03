@@ -15,7 +15,7 @@ of cuts. Plan: `.agents/slop/plans/066-launch-film-v4.md`.
 | 11–13.7 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux | `settings` |
 | 13.7–15.8 s | real apps, built with it | **the same chat window on each platform's desktop** — macOS, Aero, the tiling block — flipping | `chat-mac`, `chat-win`, `chat-linux` |
 | 15.8–19.45 s | real apps, built with it | Slang's fx-991, the editor, the music player, the hardware monitor | Slang still, `editor`, `music`, `monitor` |
-| 19.45–24 s | can you believe this is in a terminal through ssh? | the ssh session; the app takes the whole terminal over, its sidebar collapsing and Deploy's toasts rising | `console-term` |
+| 19–24 s | can you believe this is in a terminal through ssh? | the ssh session; the Settings block takes the whole terminal over and its look, dark mode and volume are pressed there | `term-settings` |
 
 Takes are the real tree under real input (`apps/playground/src/film/take.ts`);
 the stage shot is a stageshow recording of real takes (`stage/README.md`). The
@@ -42,8 +42,10 @@ done
 cp ~/Documents/slang/media/slang-result.png media/launch/takes/slang-app-result.png
 cp ~/Documents/slang/media/slang-latex.png media/launch/takes/slang-app-latex.png
 cp ~/Documents/slang/media/slang-ti84-graph.png media/launch/takes/slang-app-ti84.png
-# the app area inside the terminal: the same tree at the terminal's 1024×576
-nub apps/playground/dist/film/takes.js console-term media/launch/takes/console-term
+# the app area inside the terminal: the Settings block at 1024×576, its look and
+# dark switch pressed there, so each press repaints a real change
+nub apps/playground/dist/film/terminal-take.js media/launch/takes/term-settings settings \
+  dark@0.6 look-win32@1.2 look-linux@1.8
 sh media/launch/stage/setup.sh            # then record the two stage shots (stage/README.md)
 sh media/launch/sound/kit.sh ~/.claude/skills/media-use/audio/assets/sfx
 sh media/launch/sound/score.sh <SalamanderGrandPiano-V3+20200602.sf2>

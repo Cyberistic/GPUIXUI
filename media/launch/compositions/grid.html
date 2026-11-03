@@ -135,7 +135,7 @@
             id="g-v1-2"
             class="clip"
             data-start="0"
-            data-duration="4.2"
+            data-duration="4.5"
             data-track-index="8"
             muted
             playsinline
@@ -191,7 +191,7 @@
             id="g-v3-3"
             class="clip"
             data-start="0"
-            data-duration="4.2"
+            data-duration="4.5"
             data-track-index="3"
             muted
             playsinline
@@ -247,7 +247,7 @@
             id="g-v5-4"
             class="clip"
             data-start="0"
-            data-duration="4.2"
+            data-duration="4.5"
             data-track-index="6"
             muted
             playsinline
@@ -268,33 +268,28 @@
     zoom();
     tl.to(
       cam,
-      {
-        z: Math.log(0.72),
-        duration: 2.75,
-        ease: "power1.inOut",
-        onUpdate: zoom,
-      },
+      { z: Math.log(0.72), duration: 3, ease: "power1.inOut", onUpdate: zoom },
       0,
     );
-    tl.fromTo("#g-col0", { y: 26 }, { y: -14, duration: 4.2, ease: "none" }, 0);
-    tl.fromTo("#g-col1", { y: -26 }, { y: 14, duration: 4.2, ease: "none" }, 0);
-    tl.fromTo("#g-col2", { y: 26 }, { y: -14, duration: 4.2, ease: "none" }, 0);
-    tl.fromTo("#g-col3", { y: -26 }, { y: 14, duration: 4.2, ease: "none" }, 0);
-    tl.fromTo("#g-col4", { y: 26 }, { y: -14, duration: 4.2, ease: "none" }, 0);
-    tl.fromTo("#g-col5", { y: -26 }, { y: 14, duration: 4.2, ease: "none" }, 0);
+    tl.fromTo("#g-col0", { y: 26 }, { y: -14, duration: 4.5, ease: "none" }, 0);
+    tl.fromTo("#g-col1", { y: -26 }, { y: 14, duration: 4.5, ease: "none" }, 0);
+    tl.fromTo("#g-col2", { y: 26 }, { y: -14, duration: 4.5, ease: "none" }, 0);
+    tl.fromTo("#g-col3", { y: -26 }, { y: 14, duration: 4.5, ease: "none" }, 0);
+    tl.fromTo("#g-col4", { y: 26 }, { y: -14, duration: 4.5, ease: "none" }, 0);
+    tl.fromTo("#g-col5", { y: -26 }, { y: 14, duration: 4.5, ease: "none" }, 0);
     // Paper's swap: the line sits under the field, then the two exchange
     // places — the line rises to the band, the field slides down past it.
     tl.fromTo(
       "#g-cap",
       { opacity: 0 },
       { opacity: 1, duration: 0.3, ease: "power2.out" },
-      0.85,
+      1,
     );
-    tl.to("#g-cap", { y: -744, duration: 0.62, ease: "power2.inOut" }, 2.75);
-    tl.to("#g-cam", { y: 90, duration: 0.62, ease: "power2.inOut" }, 2.75);
-    tl.to("#g-band-t", { opacity: 1, duration: 0.5, ease: "none" }, 2.75);
-    tl.to("#g-band-b", { opacity: 0, duration: 0.5, ease: "none" }, 2.75);
-    tl.set({}, {}, 4.2);
+    tl.to("#g-cap", { y: -744, duration: 0.5, ease: "power2.inOut" }, 3);
+    tl.to("#g-cam", { y: 90, duration: 0.5, ease: "power2.inOut" }, 3);
+    tl.to("#g-band-t", { opacity: 1, duration: 0.5, ease: "none" }, 3);
+    tl.to("#g-band-b", { opacity: 0, duration: 0.5, ease: "none" }, 3);
+    tl.set({}, {}, 4.5);
     window.__timelines = window.__timelines || {};
     window.__timelines["grid"] = tl;
   </script>

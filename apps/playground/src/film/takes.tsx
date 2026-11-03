@@ -544,12 +544,20 @@ export const takes: Readonly<Record<string, Take>> = {
     false,
   ),
   music: macApp(<Music />, [{ frame: 0, aim: { x: 900, y: 620 } }], [], false),
-  monitor: macApp(
-    <Monitor />,
-    [{ frame: 0, aim: { x: 900, y: 620 } }],
-    [],
-    false,
-  ),
+  /** The monitor is a tall dashboard; it gets its own window height. */
+  monitor: {
+    width: 1100,
+    height: 860,
+    frames: 75,
+    view: () => (
+      <ThemeProvider theme={macWindow}>
+        <div style={{ width: 1100, height: 860, display: "flex" }}>
+          <Monitor />
+        </div>
+      </ThemeProvider>
+    ),
+    pointer: [{ frame: 0, aim: { x: 900, y: 780 } }],
+  },
   "chat-mac": {
     width: 1280,
     height: 800,
