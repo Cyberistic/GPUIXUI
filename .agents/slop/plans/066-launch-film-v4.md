@@ -1504,3 +1504,33 @@ moved up, the median rose, and the worst previous tile (welcome) is gone.
 
 Audited on the same render: cuts **19/19** on frame multiples of 15; terminal states
 89.9 / 78.3 / 78.3 at 21.5 / 22.0 / 22.5; cues **53/56** direct at lag ≤25 ms.
+
+### v5.3 — the wall's last three weak tiles reshaped (median 4.3 → 4.8)
+
+Three moves, each chosen from the tile-size table and verified on the render:
+
+- **`music` 2×1 → 1×1** (2.6 → 4.1). The player's wide panel was mostly empty at
+  616×200; a square crop keeps the cover, title and transport.
+- **`license` 1×1 → 2×1**, zoom 1.15 focus (0.5, 0.45) (4.7 at 1×1, 3.1 with a 1.5×
+  crop, **4.8** at 1.15). The licence screen's wide band is its densest region when
+  the crop is gentle.
+- **`editor` zoom 1.5 → 1.75** (3.6 → **4.3**). The code block reads at 1.75 without
+  cutting lines mid-word.
+
+**Ledger, 8.2 s frame**
+
+```
+kanban 2.4 · button 2.8 · slang 4.1 · music 4.1 · desktop-aero 4.2 · editor 4.3
+stats 4.5 · settings 4.7 · license 4.8 · notes 5.0 · tiling 5.1 · chat-linux 7.5
+desktop-luna 7.6 · chat-win 9.6 · monitor 9.9 · chat-mac 10.7
+
+min 2.4 · median 4.8 · under 4.0: kanban, button
+```
+
+Across v5.1–v5.3 the wall went from **six** sub-median tiles to **two**, and the
+median from 4.3 to 4.8. The two that remain are the board (`kanban`, a grid of pale
+cards) and the hero button (one filled pill) — both kept because the wall is meant
+to show them, not because they cannot be replaced.
+
+Audited on the same render: cuts **19/19**; terminal states 89.9 / 78.3 / 78.3 at
+21.5 / 22.0 / 22.5; cues **53/56** direct at lag ≤25 ms.
