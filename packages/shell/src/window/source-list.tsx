@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * SourceList: the sidebar's list of places, as AppKit draws it.
  *

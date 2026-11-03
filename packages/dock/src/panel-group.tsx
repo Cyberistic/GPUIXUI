@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `PanelGroup` — N panes in a row or column, built on the split divider.
  *

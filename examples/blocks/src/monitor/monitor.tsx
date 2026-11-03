@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Monitor — a hardware monitor in the Mac look: two temperature cards with
  * their last minute as a sparkline, one bar per core, and memory as a ring.

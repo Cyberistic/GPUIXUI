@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The desktop's ground, drawn here — no bitmap. Luna's is a blue sky over one
  * rolling green hill; Aero's is a deep blue field with soft blooms of light.

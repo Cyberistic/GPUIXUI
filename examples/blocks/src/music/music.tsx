@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Music — a player in the Mac look: the album art, the track and artist, the
  * waveform, the transport and the queue. Pressing a row plays it; the transport

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * No painted or positioned part swallows a press meant for its control
  * (plan 731).

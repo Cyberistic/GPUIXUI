@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The taskbar. Luna: a blue bar, the green Start button, a button per window,
  * the lighter tray with its clock. Aero: a dark glass bar, the round orb, the

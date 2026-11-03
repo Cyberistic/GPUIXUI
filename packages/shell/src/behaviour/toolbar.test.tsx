@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The toolbar in a window: its anatomy, its tab stop and its overflow.
  *

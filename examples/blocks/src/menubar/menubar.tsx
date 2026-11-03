@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Menu bar — a menu-bar extra's popover (plan 729): a status header, a list of
  * toggles, a sync progress and a footer, on the `popover` material.

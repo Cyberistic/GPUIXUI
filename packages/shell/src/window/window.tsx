@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Window: the anatomy every native block wears.
  *

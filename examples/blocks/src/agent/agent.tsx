@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Agent — an AI coding assistant window (plan 729): sessions in the source
  * list, the transcript and a composer in the content, and the files the

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The Start menu. Luna: a blue header with the user, a white column of
  * programs beside a pale-blue column of places, a blue footer with Log Off and

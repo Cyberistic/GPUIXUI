@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Status bar behaviour, in the real GPUix renderer.
  *

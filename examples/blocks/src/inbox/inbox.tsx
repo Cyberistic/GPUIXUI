@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Inbox — a thread list beside the open thread. A click on a thread opens it.
  */

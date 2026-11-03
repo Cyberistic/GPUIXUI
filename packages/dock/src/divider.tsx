@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The draggable, keyboard-operable divider between two panes.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Desktop — a whole XP-era or Aero-era desktop: the wallpaper, shortcuts down
  * the left, two windows, the taskbar and the Start menu. The chrome is drawn in

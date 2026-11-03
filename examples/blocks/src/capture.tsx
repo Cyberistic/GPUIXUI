@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Capture one block offscreen, for its docs preview and Blocks tile (plan 729).
  *

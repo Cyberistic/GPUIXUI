@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Viewer — a media viewer with a floating HUD (plan 729): albums in the source
  * list, a grid of the album, and the chosen photo full-size with a HUD bar of

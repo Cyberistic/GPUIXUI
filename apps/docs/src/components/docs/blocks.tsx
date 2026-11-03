@@ -52,6 +52,7 @@ import {
   dashboardManagementSource,
 } from "./dashboard-management";
 import { Sidebar01Render, sidebar01Source } from "./blocks/sidebar-01";
+import { LiveBlock } from "./live-block";
 
 /**
  * Block recipes for the docs. A block is a page-level composition of real
@@ -74,55 +75,10 @@ export interface Block {
   readonly source: string;
 }
 
-/**
- * The desktop block's screen is the native window itself: these are captures of
- * `DesktopBlock` rendered by GPUix (`apps/playground/src/film/takes.tsx`,
- * `desktop-luna` / `desktop-aero`), not an HTML reproduction.
- */
-/** A Mac-app block's preview: the offscreen capture of its compiled window. */
-const CaptureRender = ({
-  slug,
-  title,
-  width = 1100,
-  height = 700,
-}: {
-  readonly slug: string;
-  readonly title: string;
-  readonly width?: number;
-  readonly height?: number;
-}) => (
-  <figure className="gx-block-desktop-shot">
-    <img
-      alt={`${title}: captured from the native renderer`}
-      height={height}
-      src={`/blocks/${slug}.webp`}
-      width={width}
-    />
-    <figcaption>
-      {title} — captured from the native renderer, offscreen (no window server,
-      so no blur or traffic lights)
-    </figcaption>
-  </figure>
-);
-
 const DesktopRender = () => (
   <div className="gx-block-desktop">
-    {(
-      [
-        ["luna", "The XP-era look, Start menu open"],
-        ["aero", "The Aero-era look, Start menu open"],
-      ] as const
-    ).map(([look, caption]) => (
-      <figure key={look} className="gx-block-desktop-shot">
-        <img
-          alt={`${caption}: captured from the native window`}
-          height={1000}
-          src={`/blocks/desktop-${look}.webp`}
-          width={1600}
-        />
-        <figcaption>{caption} — captured from the native window</figcaption>
-      </figure>
-    ))}
+    <LiveBlock capture="desktop-luna" slug="desktop" variant="luna" />
+    <LiveBlock capture="desktop-aero" slug="desktop" variant="aero" />
   </div>
 );
 
@@ -369,7 +325,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "The Hunter Association's registry as a Mac app: hunters by specialty under the traffic lights, the chosen hunter's licence card with its rank in stars, and its privileges as switches.",
     packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="license" title="Hunter License" />,
+    render: () => <LiveBlock slug="license" />,
     source: licenseSource,
   },
   "notes-01": {
@@ -379,7 +335,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "A three-pane writing app: folders under the traffic lights, the folder's notes with live excerpts, and the editor.",
     packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="notes" title="Notes" />,
+    render: () => <LiveBlock slug="notes" />,
     source: notesSource,
   },
   "preferences-01": {
@@ -389,7 +345,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "A System-Settings-style window: a searchable source list of panes and a pane built from inset groups.",
     packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="preferences" title="Preferences" />,
+    render: () => <LiveBlock slug="preferences" />,
     source: preferencesSource,
   },
   "launcher-01": {
@@ -399,7 +355,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "The ⌘K command HUD: a large search field, ranked results with their shortcuts and an action footer.",
     packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="launcher" title="Launcher" />,
+    render: () => <LiveBlock slug="launcher" />,
     source: launcherSource,
   },
   "menubar-01": {
@@ -409,7 +365,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "A menu-bar extra's popover: a status line, toggles, a sync progress and a footer.",
     packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="menubar" title="Menu bar" />,
+    render: () => <LiveBlock slug="menubar" />,
     source: menubarSource,
   },
   "agent-01": {
@@ -419,7 +375,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "An AI coding assistant window: sessions, the transcript and composer, and the files the session touched.",
     packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="agent" title="Agent" />,
+    render: () => <LiveBlock slug="agent" />,
     source: agentSource,
   },
   "macos-01": {
@@ -429,14 +385,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "A whole macOS desktop: the wallpaper drawn from gradients, the menu bar with its menus, the dock, and a floating window layer for real windows.",
     packages: ["@gpuixui/shell", "@gpuixui/icons", "@gpuixui/tokens"],
-    render: () => (
-      <CaptureRender
-        slug="macos"
-        title="macOS desktop"
-        width={1280}
-        height={800}
-      />
-    ),
+    render: () => <LiveBlock slug="macos" />,
     source: macosSource,
   },
   "editor-01": {
@@ -446,7 +395,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "A code editor: the explorer, the open file painted token by token, and a status bar — press a file to open it.",
     packages: ["@gpuixui/shell", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="editor" title="Editor" />,
+    render: () => <LiveBlock slug="editor" />,
     source: editorSource,
   },
   "music-01": {
@@ -456,7 +405,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "A player: album art, a seeded waveform, the transport and the queue — press a row to play it.",
     packages: ["@gpuixui/shell", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="music" title="Music" />,
+    render: () => <LiveBlock slug="music" />,
     source: musicSource,
   },
   "monitor-01": {
@@ -466,7 +415,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "Temperatures as sparklines, one bar per core and memory as a ring, over a 1 / 5 / 15-minute window.",
     packages: ["@gpuixui/shell", "@gpuixui/data", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="monitor" title="Hardware monitor" />,
+    render: () => <LiveBlock slug="monitor" />,
     source: monitorSource,
   },
   "calendar-01": {
@@ -476,7 +425,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "A week view: calendars with switches, the week's events in hourly rows, overlaps side by side.",
     packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="calendar" title="Calendar" />,
+    render: () => <LiveBlock slug="calendar" />,
     source: calendarSource,
   },
   "welcome-01": {
@@ -486,7 +435,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "A first-run window: the app's mark, feature rows per step, Continue and Import….",
     packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="welcome" title="Welcome" />,
+    render: () => <LiveBlock slug="welcome" />,
     source: welcomeSource,
   },
   "viewer-01": {
@@ -496,7 +445,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "A media viewer: albums, a grid of thumbnails, and the open photo under a floating HUD.",
     packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="viewer" title="Viewer" />,
+    render: () => <LiveBlock slug="viewer" />,
     source: viewerSource,
   },
   "pipeline-01": {

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `Resizable` — the shadcn-shaped surface over the package's one resize control.
  *

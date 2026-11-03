@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * AppMenu pointer switching, in the real GPUix renderer.
  *

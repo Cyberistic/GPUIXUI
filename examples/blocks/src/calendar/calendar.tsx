@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Calendar — a week view (plan 729): calendars with switches in the sidebar,
  * ‹ Today › and a Day/Week/Month switch in the toolbar, and the week's events

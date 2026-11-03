@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Stats — Heavens Arena's numbers: four tiles with sparklines, bout wins by
  * fighter, aura output over the period, and the season's Nen types. The range

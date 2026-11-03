@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Welcome — a first-run window (plan 729): no sidebar, the app's mark, a few
  * feature rows per step, Continue, and an Import… the app wires to the

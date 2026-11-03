@@ -88,7 +88,7 @@ const liveImports = (): ReadonlyArray<string> =>
   appSources().filter((path) => read(path).includes("new glue.GpuixRenderer("));
 
 const saysMounted = (): boolean =>
-  policy.includes("**The site mounts it, on one route.**");
+  policy.includes("**The site mounts it, one surface per document.**");
 
 describe("the GPUix web build", () => {
   it("is a browser export of the version the workspace pins", () => {
@@ -164,7 +164,10 @@ describe("the GPUix web build", () => {
       mounts: mounted,
       saysMounted: saysMounted(),
     }).toEqual({
-      mounts: ["apps/docs/src/components/docs/live-surface.tsx"],
+      mounts: [
+        "apps/docs/src/routes/live.block.$slug.tsx",
+        "apps/docs/src/components/docs/live-surface.tsx",
+      ],
       saysMounted: true,
     });
   });

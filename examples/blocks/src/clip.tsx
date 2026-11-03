@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Record a short interaction loop from a block, offscreen (plan 727's "feel"
  * clips): real presses and keystrokes on the GPUix test renderer, one captured

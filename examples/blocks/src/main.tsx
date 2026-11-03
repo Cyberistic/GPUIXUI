@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Open one block as a real native window.
  *

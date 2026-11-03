@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * A window in its era's chrome. Luna: a glossy blue title bar with rounded top
  * corners, white-ringed caption buttons and the red close, a blue frame. Aero:

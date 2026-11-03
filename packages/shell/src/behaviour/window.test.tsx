@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The native window and its source list on the real renderer (plan 722).
  *

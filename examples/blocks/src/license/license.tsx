@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Hunter License — the Association's registry as a Mac app (plan 731).
  *

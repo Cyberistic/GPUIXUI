@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `DockLayout` — a named tree of split and tab groups, rendered from a schema.
  *

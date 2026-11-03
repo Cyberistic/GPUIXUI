@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Kanban — three columns of cards; a card is dragged to another column.
  *

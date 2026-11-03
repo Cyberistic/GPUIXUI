@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Toolbar: a horizontal action strip with a roving tab stop and an overflow menu.
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * AppMenu: the in-window application menu bar.
  *

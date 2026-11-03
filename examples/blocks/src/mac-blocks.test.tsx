@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The Mac-app blocks on the real GPUix renderer (plan 729): each mounts and
  * answers its primary interaction.

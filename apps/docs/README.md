@@ -115,6 +115,7 @@ src/router.tsx                      The router instance
 src/routes/__root.tsx               The document shell, icons and the Fumadocs provider
 src/routes/index.tsx                The landing page at /
 src/routes/live.tsx                 /live, the real GPUix surface (whole page)
+src/routes/live.block.$slug.tsx     /live/block/:slug, one real block per document (framed by the block pages)
 src/routes/$.tsx                    Every docs page, from either collection
 src/routes/docs/index.tsx           The old / root, a 301 to /
 src/routes/docs/$.tsx               The old /<path>, a 301 to /<path>
@@ -358,6 +359,9 @@ src/components/docs/blocks/sidebar-14.tsx The sidebar block 14's browser reprodu
 src/components/docs/blocks/sidebar-15.tsx The sidebar block 15's browser reproduction and recipe
 src/components/docs/blocks/sidebar-16.tsx The sidebar block 16's browser reproduction and recipe
 src/components/docs/live-surface.tsx      Boots the wasm renderer on /live, mounts the reconciler and reports what it painted
+src/components/docs/live-block.tsx        The block page's screen: an iframe onto the real block, the capture behind it
+src/lib/live-blocks.tsx                   The blocks the docs paints live, lazily: slug, design size and the mount
+src/lib/live-block-scene.tsx              The live block's theme wrapper, written with the reconciler's JSX pragma
 src/components/docs/scatter.ts              The decorative fields' deterministic point scatter
 src/components/docs/auto-height-demo.tsx   The auto height's expand/collapse preview and its source
 src/components/docs/avatar-group-demo.tsx  The facepile's overlap, ring and overflow chip
@@ -415,6 +419,7 @@ src/styles/blocks.css                     The block recipes' preview styles
 src/styles/landing.css                    The landing page's styles
 src/styles/platform.css                   The platform switch's own chrome
 src/styles/live.css                       The live surface's bar and its fallback sentence
+src/styles/live-block.css                 The live block's document: transparent, no scroll, its fallback sentence
 
 src/lib/docs-view.tsx               The shared docs layout and the two-collection page template
 src/lib/style-reference.ts          The class groups /themes prints, resolved by @gpuixui/tw

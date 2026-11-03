@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Console — the Hunter Association's deploy console: a sidebar that collapses to
  * icons, a list of deploys, and a Deploy button that raises toasts. Built to read

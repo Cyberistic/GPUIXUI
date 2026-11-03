@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Notes — a three-pane writing app (plan 729): folders in a source list under
  * the traffic lights, the folder's notes with a two-line excerpt, and the

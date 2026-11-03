@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Editor — a code editor in the Mac look: the explorer on the left, the open
  * file's code painted token by token in the centre, and a status bar under it.

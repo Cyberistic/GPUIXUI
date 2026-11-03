@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The pipeline block in the real GPUix renderer (plan 728).
  *

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * The blocks, in the real GPUix renderer. The bugs these guard: a block that
  * paints nothing, a Look control that does not restyle the tree, a thread click

@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Preferences — a System-Settings-style window (plan 729): a searchable source
  * list of panes, and a pane built only from inset groups of switches, selects

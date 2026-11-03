@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * `SplitPane` — two panes and the draggable divider between them.
  *

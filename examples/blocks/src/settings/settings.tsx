@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Settings — an Appearance pane: a sidebar of sections, the look, dark mode and
  * sound, and a save bar. The block is controlled: the host owns the look and the

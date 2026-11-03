@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Launcher — the ⌘K command HUD (plan 729): a large search field, grouped
  * results with their shortcuts, and an action footer, on the `hud` material.

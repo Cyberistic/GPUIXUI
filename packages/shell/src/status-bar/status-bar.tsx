@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * StatusBar: the bottom strip of the application chrome.
  *

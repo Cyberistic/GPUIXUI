@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * Pipeline — a release pipeline in a native Mac window (plan 728).
  *

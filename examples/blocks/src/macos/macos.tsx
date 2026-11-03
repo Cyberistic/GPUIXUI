@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 /**
  * macOS — a whole desktop in the current Mac look: the wallpaper drawn from
  * gradients, the menu bar with its menus, the dock's apps, and a floating
