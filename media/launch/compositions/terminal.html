@@ -104,7 +104,9 @@
       height: 662px;
       overflow: hidden;
     }
-    #root .frame video {
+    #root .frame video,
+    #root .frame img {
+      position: absolute;
       left: 0;
       top: 0;
       width: 100%;
@@ -137,18 +139,34 @@
         <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
       </div>
       <div class="frame">
-        <video
-          data-media-start="0"
-          id="t-v"
-          class="clip"
-          data-start="1.6"
-          data-duration="2.4"
-          data-track-index="1"
-          muted
-          playsinline
-          src="assets/footage/term-settings.mp4"
+        <img
+          id="t-v0"
+          class="look"
+          src="assets/footage/term-app-8.png"
+          alt=""
           style="opacity: 0"
-        ></video>
+        />
+        <img
+          id="t-v1"
+          class="look"
+          src="assets/footage/term-app-24.png"
+          alt=""
+          style="opacity: 0"
+        />
+        <img
+          id="t-v2"
+          class="look"
+          src="assets/footage/term-app-42.png"
+          alt=""
+          style="opacity: 0"
+        />
+        <img
+          id="t-v3"
+          class="look"
+          src="assets/footage/term-app-60.png"
+          alt=""
+          style="opacity: 0"
+        />
         <div id="t-cur" class="cursor" style="opacity: 0">
           <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -229,98 +247,82 @@
     tl.set("#t-caret3", { opacity: 0 }, 1.32);
     tl.set("#t-ready", { opacity: 1 }, 1.32);
     tl.set("#t-hist", { opacity: 0 }, 1.6);
-    tl.set("#t-v", { opacity: 1 }, 1.6);
+    tl.set("#t-v0", { opacity: 1 }, 1.6);
     tl.set("#t-cur", { opacity: 1 }, 1.6);
-    tl.set("#t-cur", { x: 805.0, y: 483.0, scale: 1 }, 1.6);
-    tl.set("#t-cur", { x: 805.0, y: 483.0, scale: 1 }, 1.633);
-    tl.set("#t-cur", { x: 806.1, y: 481.8, scale: 1 }, 1.667);
-    tl.set("#t-cur", { x: 810.7, y: 477.2, scale: 1 }, 1.7);
-    tl.set("#t-cur", { x: 817.6, y: 469.2, scale: 1 }, 1.733);
-    tl.set("#t-cur", { x: 830.3, y: 456.5, scale: 1 }, 1.767);
-    tl.set("#t-cur", { x: 849.8, y: 437.0, scale: 1 }, 1.8);
-    tl.set("#t-cur", { x: 875.1, y: 409.4, scale: 1 }, 1.833);
-    tl.set("#t-cur", { x: 910.8, y: 373.7, scale: 1 }, 1.867);
-    tl.set("#t-cur", { x: 955.6, y: 327.8, scale: 1 }, 1.9);
-    tl.set("#t-cur", { x: 999.3, y: 281.8, scale: 1 }, 1.933);
-    tl.set("#t-cur", { x: 1035.0, y: 246.1, scale: 1 }, 1.967);
-    tl.set("#t-cur", { x: 1060.3, y: 218.5, scale: 1 }, 2.0);
-    tl.set("#t-cur", { x: 1079.8, y: 198.9, scale: 1 }, 2.033);
-    tl.set("#t-cur", { x: 1092.5, y: 186.3, scale: 1 }, 2.067);
-    tl.set("#t-cur", { x: 1099.4, y: 178.3, scale: 1 }, 2.1);
-    tl.set("#t-cur", { x: 1104.0, y: 173.6, scale: 1 }, 2.133);
-    tl.set("#t-cur", { x: 1105.1, y: 172.5, scale: 1 }, 2.167);
-    tl.set("#t-cur", { x: 1105.1, y: 172.5, scale: 1 }, 2.2);
-    tl.set("#t-cur", { x: 1105.1, y: 172.5, scale: 1 }, 2.233);
-    tl.set("#t-cur", { x: 1105.1, y: 172.5, scale: 1 }, 2.267);
-    tl.set("#t-cur", { x: 1104.0, y: 171.3, scale: 1 }, 2.3);
-    tl.set("#t-cur", { x: 1101.7, y: 170.2, scale: 1 }, 2.333);
-    tl.set("#t-cur", { x: 1097.1, y: 166.8, scale: 1 }, 2.367);
-    tl.set("#t-cur", { x: 1091.3, y: 163.3, scale: 1 }, 2.4);
-    tl.set("#t-cur", { x: 1084.4, y: 157.5, scale: 1 }, 2.433);
-    tl.set("#t-cur", { x: 1074.1, y: 150.6, scale: 1 }, 2.467);
-    tl.set("#t-cur", { x: 1060.3, y: 140.3, scale: 1 }, 2.5);
-    tl.set("#t-cur", { x: 1046.5, y: 131.1, scale: 1 }, 2.533);
-    tl.set("#t-cur", { x: 1036.1, y: 124.2, scale: 1 }, 2.567);
-    tl.set("#t-cur", { x: 1029.3, y: 118.4, scale: 1 }, 2.6);
-    tl.set("#t-cur", { x: 1023.5, y: 115.0, scale: 1 }, 2.633);
-    tl.set("#t-cur", { x: 1018.9, y: 111.5, scale: 1 }, 2.667);
-    tl.set("#t-cur", { x: 1016.6, y: 110.4, scale: 1 }, 2.7);
-    tl.set("#t-cur", { x: 1015.4, y: 109.2, scale: 1 }, 2.733);
-    tl.set("#t-cur", { x: 1015.4, y: 109.2, scale: 1 }, 2.767);
-    tl.set("#t-cur", { x: 1015.4, y: 109.2, scale: 1 }, 2.8);
-    tl.set("#t-cur", { x: 1015.4, y: 109.2, scale: 1 }, 2.833);
-    tl.set("#t-cur", { x: 1015.4, y: 109.2, scale: 1 }, 2.867);
-    tl.set("#t-cur", { x: 1016.6, y: 109.2, scale: 1 }, 2.9);
-    tl.set("#t-cur", { x: 1018.9, y: 109.2, scale: 1 }, 2.933);
-    tl.set("#t-cur", { x: 1022.3, y: 109.2, scale: 1 }, 2.967);
-    tl.set("#t-cur", { x: 1028.1, y: 109.2, scale: 1 }, 3.0);
-    tl.set("#t-cur", { x: 1035.0, y: 109.2, scale: 1 }, 3.033);
-    tl.set("#t-cur", { x: 1044.2, y: 109.2, scale: 1 }, 3.067);
-    tl.set("#t-cur", { x: 1056.8, y: 109.2, scale: 1 }, 3.1);
-    tl.set("#t-cur", { x: 1069.5, y: 109.2, scale: 1 }, 3.133);
-    tl.set("#t-cur", { x: 1078.7, y: 109.2, scale: 1 }, 3.167);
-    tl.set("#t-cur", { x: 1085.6, y: 109.2, scale: 1 }, 3.2);
-    tl.set("#t-cur", { x: 1091.3, y: 109.2, scale: 1 }, 3.233);
-    tl.set("#t-cur", { x: 1094.8, y: 109.2, scale: 1 }, 3.267);
-    tl.set("#t-cur", { x: 1097.1, y: 109.2, scale: 1 }, 3.3);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.333);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.367);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.4);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.433);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.467);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.5);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 0.86 }, 3.533);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 0.86 }, 3.567);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 0.86 }, 3.6);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 0.86 }, 3.633);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.667);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.7);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.733);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.767);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.8);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.833);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.867);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.9);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.933);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 3.967);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.0);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.033);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.067);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.1);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.133);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.167);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.2);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.233);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.267);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.3);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.333);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.367);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.4);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.433);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.467);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.5);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.533);
-    tl.set("#t-cur", { x: 1098.3, y: 109.2, scale: 1 }, 4.567);
+    // The three presses, each on the frame the app repaints: the look chip, the
+    // dark switch, then the look chip again (takes/term-app, frames 24/42/60).
+    tl.set("#t-v0", { opacity: 0 }, 2.2);
+    tl.set("#t-v1", { opacity: 1 }, 2.2);
+    tl.set("#t-v1", { opacity: 0 }, 2.8);
+    tl.set("#t-v2", { opacity: 1 }, 2.8);
+    tl.set("#t-v2", { opacity: 0 }, 3.4);
+    tl.set("#t-v3", { opacity: 1 }, 3.4);
+    tl.set("#t-cur", { x: 1101.7, y: 163.9, scale: 1 }, 1.6);
+    tl.set("#t-cur", { x: 1100.4, y: 162.8, scale: 1 }, 1.633);
+    tl.set("#t-cur", { x: 1091.5, y: 155.4, scale: 1 }, 1.667);
+    tl.set("#t-cur", { x: 1067.2, y: 135.1, scale: 1 }, 1.7);
+    tl.set("#t-cur", { x: 1042.9, y: 114.9, scale: 1 }, 1.733);
+    tl.set("#t-cur", { x: 1034.0, y: 107.4, scale: 1 }, 1.767);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.8);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.833);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.867);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.9);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.933);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.967);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 2.0);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 2.033);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 2.067);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 0.86 }, 2.1);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 0.86 }, 2.133);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 0.86 }, 2.167);
+    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 2.2);
+    tl.set("#t-cur", { x: 1034.7, y: 108.1, scale: 1 }, 2.233);
+    tl.set("#t-cur", { x: 1049.1, y: 120.4, scale: 1 }, 2.267);
+    tl.set("#t-cur", { x: 1087.9, y: 153.8, scale: 1 }, 2.3);
+    tl.set("#t-cur", { x: 1126.7, y: 187.2, scale: 1 }, 2.333);
+    tl.set("#t-cur", { x: 1141.1, y: 199.5, scale: 1 }, 2.367);
+    tl.set("#t-cur", { x: 1143.1, y: 201.2, scale: 1 }, 2.4);
+    tl.set("#t-cur", { x: 1142.9, y: 201.1, scale: 1 }, 2.433);
+    tl.set("#t-cur", { x: 1141.6, y: 199.7, scale: 1 }, 2.467);
+    tl.set("#t-cur", { x: 1138.0, y: 196.1, scale: 1 }, 2.5);
+    tl.set("#t-cur", { x: 1131.0, y: 189.1, scale: 1 }, 2.533);
+    tl.set("#t-cur", { x: 1120.7, y: 178.9, scale: 1 }, 2.567);
+    tl.set("#t-cur", { x: 1113.7, y: 171.9, scale: 1 }, 2.6);
+    tl.set("#t-cur", { x: 1110.1, y: 168.3, scale: 1 }, 2.633);
+    tl.set("#t-cur", { x: 1108.8, y: 166.9, scale: 1 }, 2.667);
+    tl.set("#t-cur", { x: 1108.6, y: 166.8, scale: 0.86 }, 2.7);
+    tl.set("#t-cur", { x: 1108.6, y: 166.8, scale: 0.86 }, 2.733);
+    tl.set("#t-cur", { x: 1108.6, y: 166.8, scale: 0.86 }, 2.767);
+    tl.set("#t-cur", { x: 1108.6, y: 166.8, scale: 1 }, 2.8);
+    tl.set("#t-cur", { x: 1108.5, y: 165.6, scale: 1 }, 2.833);
+    tl.set("#t-cur", { x: 1107.8, y: 157.8, scale: 1 }, 2.867);
+    tl.set("#t-cur", { x: 1106.0, y: 136.6, scale: 1 }, 2.9);
+    tl.set("#t-cur", { x: 1104.2, y: 115.3, scale: 1 }, 2.933);
+    tl.set("#t-cur", { x: 1103.5, y: 107.5, scale: 1 }, 2.967);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.0);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.033);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.067);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.1);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.133);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.167);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.2);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.233);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.267);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 0.86 }, 3.3);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 0.86 }, 3.333);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 0.86 }, 3.367);
+    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.4);
+    tl.set("#t-cur", { x: 1103.5, y: 106.5, scale: 1 }, 3.433);
+    tl.set("#t-cur", { x: 1104.3, y: 107.5, scale: 1 }, 3.467);
+    tl.set("#t-cur", { x: 1106.2, y: 110.1, scale: 1 }, 3.5);
+    tl.set("#t-cur", { x: 1110.1, y: 115.2, scale: 1 }, 3.533);
+    tl.set("#t-cur", { x: 1116.4, y: 123.7, scale: 1 }, 3.567);
+    tl.set("#t-cur", { x: 1125.0, y: 135.1, scale: 1 }, 3.6);
+    tl.set("#t-cur", { x: 1131.3, y: 143.5, scale: 1 }, 3.633);
+    tl.set("#t-cur", { x: 1135.1, y: 148.6, scale: 1 }, 3.667);
+    tl.set("#t-cur", { x: 1137.1, y: 151.3, scale: 1 }, 3.7);
+    tl.set("#t-cur", { x: 1137.8, y: 152.2, scale: 1 }, 3.733);
+    tl.set("#t-cur", { x: 1137.9, y: 152.4, scale: 1 }, 3.767);
     tl.set({}, {}, 4);
     window.__timelines = window.__timelines || {};
     window.__timelines["terminal"] = tl;

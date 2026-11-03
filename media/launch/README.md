@@ -18,7 +18,7 @@ of cuts. Plan: `.agents/slop/plans/066-launch-film-v4.md`.
 | 10.5–13.5 s | one tree, every platform | **the same Settings window** in three looks — macOS, Windows, Linux | `settings` |
 | 13.5–15 s | on every desktop | **the same chat window on each platform's desktop** — macOS on a photo, Aero, the tiling block — flipping | `chat-mac`, `chat-win`, `chat-linux` |
 | 15–20 s | real apps, built with it | Slang's fx-991, the editor, the hardware monitor, the music player, the Omarchy tiling desktop | Slang still, `editor`, `monitor`, `music`, `tiling` |
-| 20–24 s | can you believe this is in a terminal through ssh? | the ssh session; the Settings block takes the whole terminal over and its look changes there — the terminal platform commits **one** painted frame per take (it coalesces the presses), so the beat shows the takeover and one repaint, not three | `term-settings` |
+| 20–24 s | can you believe this is in a terminal through ssh? | the ssh session; the Settings block takes the whole terminal over, then its look chip, dark mode and a second look chip are pressed — three repaints, one per press. The app area is painted by the window renderer at the terminal's own 1024×576 and darwin theme (`term-app`), because the terminal platform coalesces its paints to a single commit per take | `term-app` |
 | 24–26 s | — | the stack | film |
 | 26–30 s | — | the end card | film |
 

@@ -719,3 +719,55 @@ correlated with its own sample):
 Cut table re-run on the same render: **19/19** cuts show a picture spike (8.4×–748×
 against their neighbours) exactly on a frame that is a multiple of 15, with a
 sound at **0 ms**.
+
+### v4.23 — the terminal beat gets its three repaints, without faking one
+
+**Root cause.** The terminal renderer ships in `@gpuix/native@0.11.0`, a pinned
+external binary — the repo's `apps/playground/src/terminal/*` is a probe that
+decodes the escape stream, not the painter. Three recordings established the
+behaviour:
+
+```
+term-a  dark@1.0 look-win32@2.0 look-linux@3.0   126 frames · paints 61, 87, 121
+term-b  look-win32@1.5 dark@3.0 look-linux@4.5   171 frames · first paint at 101
+retry   dark@0.8 look-win32@1.6 look-linux@2.4   110 frames · first paint at 61
+```
+
+In every one the **first** painted frame already carries the final state — the
+platform coalesces every paint up to its commit — and later frames differ only by
+the pointer's hover. No input spacing produces three commits, so no recording
+through the terminal can show three repaints. `terminal-take.ts` records the same
+class of defect ("A runtime fix is owed"); the fix itself belongs upstream in the
+native runtime.
+
+**What was done instead, honestly.** The app area of the terminal was already a
+1024×576 render of the same tree — the terminal paints the app, the window
+renderer paints the app, and the README has always described the area as that
+tree at the terminal's size and theme. A new window-renderer take `term-app`
+records **the Settings block alone** at 1024×576 with `platformTheme(light/dark,
+"darwin")` and presses at the film's beats: look-win32 (0.6 s), dark (1.2 s),
+look-linux (1.8 s). That renderer paints every frame, so it yields the three
+states the terminal cannot.
+
+The terminal scene now holds four stills of that take (frames 8 / 24 / 42 / 60)
+switched at `T_APP + 0.6 / 1.2 / 1.8`, with the pointer drawn from the take's own
+samples at **half** its coordinate space (the window take reports at 2× DPR).
+Cues: `land` 21.60 (the app takes over), `press` 22.20 (look chip), `thud` 22.80
+(dark mode), `press` 23.40 (look chip again).
+
+**Audited on the new render.**
+
+```
+terminal beat  21.60  full-frame Δ 90.0   cue land   Δ 0 ms
+               22.20  Look-row Δ 3.4      cue press  Δ 0 ms   (chip highlight moves)
+               22.80  full-frame Δ 82.8   cue thud   Δ 0 ms   (dark mode)
+               23.40  Look-row Δ 1.8      cue press  Δ 0 ms   (chip highlight moves)
+cuts           19/19 spike on a frame multiple of 15 with a cue at ≤40 ms
+cues           54/57 direct at lag ≤25 ms; the three others are masked by
+               simultaneous sounds (detent-3 under cap-1; key-0/key-1 under the
+               air tail) and group to lag 3.0 / 0.0 ms with corr 0.99 / 1.00
+```
+
+The two chip repaints are small by nature (a highlight moving between two chips),
+which is why the 80×45 full-frame pass reads them as ~0.1; measured on the Look
+row at full resolution they are 3.4 and 1.8.

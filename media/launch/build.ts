@@ -571,7 +571,7 @@ const showcase: Scene = {
   css: `#root .cam { position:absolute; inset:0; transform-origin:960px 625px; }
     #root .frame { position:absolute; overflow:hidden; }
     #root .frame.framed { border-radius:20px; box-shadow:0 0 0 1px rgba(0,0,0,.08),0 30px 80px -30px rgba(30,30,60,.35); }
-    #root .frame video, #root .frame img { left:0; top:0; width:100%; height:100%; }`,
+    #root .frame video, #root .frame img { position:absolute; left:0; top:0; width:100%; height:100%; }`,
   body: SHOTS.map((shot, i) => {
     const w = Math.round(shot.width * shot.scale);
     const h = Math.round(shot.height * shot.scale);
@@ -634,8 +634,6 @@ const T_LOGIN = TYPE_AT + SSH.length * CHAR + 0.06;
 const T_RUN = T_LOGIN + 0.06;
 const T_READY = T_RUN + RUN.length * CHAR + 0.08;
 const T_APP = 1.6; // the app takes the screen
-/** The terminal take's single repaint: frame 61 of `takes/term-settings` at 30 fps. */
-const T_REPAINT = 61 / 30;
 const typed = (id: string, text: string, from: number): string =>
   [...text]
     .map(
@@ -657,7 +655,7 @@ const terminal: Scene = {
     #root .hist b { font-weight:600; color:#8ab4ff; }
     #root .caret { display:inline-block; width:10px; height:20px; margin-left:2px; vertical-align:-3px; background:#c9c9d2; }
     #root .frame { position:absolute; left:0; top:${TERM.bar}px; width:${TERM_W}px; height:${TERM_SCREEN_H}px; overflow:hidden; }
-    #root .frame video { left:0; top:0; width:100%; height:100%; }`,
+    #root .frame video, #root .frame img { position:absolute; left:0; top:0; width:100%; height:100%; }`,
   body: `    <div class="term">
       <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>gon@whale-island — ssh</span></div>
       <div id="t-hist" class="hist" data-layout-ignore>
@@ -667,7 +665,12 @@ const terminal: Scene = {
         <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
       </div>
       <div class="frame">
-        ${clip("t-v", footage("term-settings", 8), T_APP, TERMINAL_LENGTH - T_APP, 0, "opacity:0")}
+        ${["t-v0", "t-v1", "t-v2", "t-v3"]
+          .map(
+            (id, i) =>
+              `<img id="${id}" class="look" src="${still("term-app", [8, 24, 42, 60][i] ?? 0)}" alt="" style="opacity:0">`,
+          )
+          .join("\n        ")}
         <div id="t-cur" class="cursor" style="opacity:0">${CURSOR}</div>
       </div>
     </div>`,
@@ -680,8 +683,13 @@ const terminal: Scene = {
     ${typed("t-run", RUN, T_RUN)}
     tl.set("#t-caret3",{opacity:0},${T_READY.toFixed(2)});
     tl.set("#t-ready",{opacity:1},${T_READY.toFixed(2)});
-    tl.set("#t-hist",{opacity:0},${T_APP.toFixed(2)}); tl.set("#t-v",{opacity:1},${T_APP.toFixed(2)}); tl.set("#t-cur",{opacity:1},${T_APP.toFixed(2)});
-    ${cursorTrack("t-cur", cursorOf("term-settings"), T_APP, TERM.scale)}`,
+    tl.set("#t-hist",{opacity:0},${T_APP.toFixed(2)}); tl.set("#t-v0",{opacity:1},${T_APP.toFixed(2)}); tl.set("#t-cur",{opacity:1},${T_APP.toFixed(2)});
+    // The three presses, each on the frame the app repaints: the look chip, the
+    // dark switch, then the look chip again (takes/term-app, frames 24/42/60).
+    tl.set("#t-v0",{opacity:0},${(T_APP + 0.6).toFixed(2)}); tl.set("#t-v1",{opacity:1},${(T_APP + 0.6).toFixed(2)});
+    tl.set("#t-v1",{opacity:0},${(T_APP + 1.2).toFixed(2)}); tl.set("#t-v2",{opacity:1},${(T_APP + 1.2).toFixed(2)});
+    tl.set("#t-v2",{opacity:0},${(T_APP + 1.8).toFixed(2)}); tl.set("#t-v3",{opacity:1},${(T_APP + 1.8).toFixed(2)});
+    ${cursorTrack("t-cur", cursorOf("term-app"), T_APP, TERM.scale / 2)}`,
 };
 
 // 24–26: the stack, one word per chord stab (the score's bar 12).
@@ -812,7 +820,9 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   // it actually paints (frame 61 of takes/term-settings at 30 fps). The two
   // "presses" that used to sit between them had no picture to land on.
   [TERMINAL + T_APP, "land"],
-  [TERMINAL + T_APP + T_REPAINT, "thud"],
+  [TERMINAL + T_APP + 0.6, "press"],
+  [TERMINAL + T_APP + 1.2, "thud"],
+  [TERMINAL + T_APP + 1.8, "press"],
   // A cut is a whoosh: the scene starts and the showcase's shot boundaries, read
   // from the same table the compositions are written from.
   // Every cut is a whoosh: the scene starts at full level, and every shot

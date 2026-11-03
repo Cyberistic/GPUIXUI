@@ -114,6 +114,32 @@ const SettingsWindow = () => {
   );
 };
 
+/**
+ * The Settings block alone at the terminal's own 1024×576 and darwin theme: the
+ * app area of the terminal, painted by the window renderer. The terminal platform
+ * coalesces its paints to one commit per take (see `terminal-take.ts`), so a take
+ * recorded through it can only show a single state; this one paints every frame,
+ * which is what lets the film show look → dark → look inside the terminal.
+ */
+const TerminalSettings = () => {
+  const [look, setLook] = useState<Look>("darwin");
+  const [dark, setDark] = useState(false);
+  return (
+    <ThemeProvider
+      theme={platformTheme(dark ? darkTheme : lightTheme, "darwin")}
+    >
+      <div style={{ width: 1024, height: 576, display: "flex" }}>
+        <Settings
+          look={look}
+          onLookChange={setLook}
+          dark={dark}
+          onDarkChange={setDark}
+        />
+      </div>
+    </ThemeProvider>
+  );
+};
+
 /** The macOS look with an opaque window: what the offscreen renderer can paint
  * of a vibrant one (the blur is the window server's). */
 const macWindow = extendTheme(mac, { window: "opaque" });
@@ -619,6 +645,26 @@ export const takes: Readonly<Record<string, Take>> = {
   "desktop-luna": desktop("luna"),
   "desktop-aero": desktop("aero"),
   /** The same tree across looks: macOS held 1.4 s, then Windows, then Linux. */
+  /** The settings app alone, in the terminal's frame: three looks, three paints. */
+  "term-app": {
+    width: 1024,
+    height: 576,
+    frames: 66,
+    view: () => <TerminalSettings />,
+    pointer: [
+      { frame: 0, aim: { testId: "look-win32", dx: 60, dy: 50 } },
+      { frame: 6, aim: { testId: "look-win32" } },
+      { frame: 15, aim: { testId: "look-win32" }, down: true },
+      { frame: 18, aim: { testId: "look-win32" } },
+      { frame: 24, aim: { testId: "dark", dx: 30, dy: 30 } },
+      { frame: 33, aim: { testId: "dark" }, down: true },
+      { frame: 36, aim: { testId: "dark" } },
+      { frame: 42, aim: { testId: "look-linux" } },
+      { frame: 51, aim: { testId: "look-linux" }, down: true },
+      { frame: 54, aim: { testId: "look-linux" } },
+      { frame: 65, aim: { testId: "look-linux", dx: 30, dy: 40 } },
+    ],
+  },
   settings: {
     width: 1024,
     height: 576,
