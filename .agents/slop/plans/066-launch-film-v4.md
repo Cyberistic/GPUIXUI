@@ -1599,3 +1599,36 @@ min 4.1 · median 4.8 · max 10.6 · under 4.0: none
 Across v5.1 → v5.5: **six sub-median tiles → none**, floor 2.4 → 4.1, median 4.3 →
 4.8. Audited on the same render: cuts **19/19**; terminal 89.9 / 78.3 / 78.3; cues
 **53/56** direct at lag ≤25 ms.
+
+### v5.6 — the rubric re-run against the film as shipped after v5.5
+
+The rubric and the 0.1 s review had last been run at v5.0, before the terminal
+re-capture, the ssh rewrite and the wall reshaping. Re-run now, each row with the
+measurement it uses:
+
+| # | criterion | measurement on this render | verdict |
+| --- | --- | --- | --- |
+| 1 | no repeated wall tiles | 16 unique footage files in `grid.html` | pass |
+| 2 | text holds | `LINES` 2.8 / 2.0 / 3.0 / 1.5 / 5.0 / 4.0 s | pass |
+| 3 | opening not oversized | `PUSH` 1.1 → 1.33 → 1.58 → 1.84 → 2.1, cut mid-move | pass |
+| 4 | sound on placements/landings/transitions | 19/19 cuts carry a whoosh at 0 ms; 53/56 cues direct at lag ≤25 ms | pass |
+| 5 | no stray cursor | 0 dark pixels in both 240×160 top corners at frame 0 | pass |
+| 6 | imagery inside rounded frames | 11 `frame framed` shots in the showcase | pass |
+| 7 | real photo wallpapers | `macos.jpg`, `windows.jpg`, `omarchy.jpg`, three uses in the takes | pass |
+| 8 | Omarchy scene | `omarchy` in the wall (4.8) and `tiling` as the last apps shot | pass |
+| 9 | monitor fidelity | `monitor` tile 9.8 and the monitor shot in the apps beat | pass |
+| 10 | terminal shows the library | three real captures at 21.5/22.0/22.5 on-grid, cues 0.99–1.00 | pass |
+| R1 | hook | opens on the switch turning on with the cursor in frame | pass |
+| R2 | route | controls → wall → block → platforms → desktops → apps → terminal → stack → card | pass |
+| R3 | carried cuts | the opening push and per-shot drift carry every cut | pass |
+| R4 | hits on landings | `land` on 8.53 / 8.68 (cards) and 21.5 (app takeover) | pass |
+| R5 | cuts on the beat | 19/19 on frame multiples of 15; the terminal's three state cuts on-grid | pass |
+
+**0.1 s full-film review, re-cut from the current mp4** (300 frames, six 10×5
+sheets): the opening still reads switch → tabs → slider → checkbox → the button card
+at 4.0 s with its corners intact; the terminal sheet shows the new order light →
+**dark** → light-Windows with no seam; the stack and end card are unchanged. No dead
+frame and no discontinuity at any join.
+
+Wall ledger on the same render: **min 4.1 · median 4.8 · max 10.6, nothing under
+4.0.** Every rubric row holds after the v5.1–v5.5 changes.
