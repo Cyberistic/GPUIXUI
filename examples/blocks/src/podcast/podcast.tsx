@@ -1,12 +1,11 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * Music — a player in the Mac look, after Apple Music's now-playing panel: the
- * cover, the track and artist, the transport with its scrubber, and the queue
- * with a cover per row. Pressing a row plays it; the transport toggles play.
+ * Podcast — an episode player in the Mac look: the show's artwork, the episode
+ * and its waveform, the transport, and the rest of the season under it.
+ * Pressing a row plays it; the transport toggles play.
  *
- * The art is drawn per track (a two-stop gradient with a soft light), because
- * album artwork is not ours to ship; the waveform is seeded from the track, so a
- * render of a track is always the same shape.
+ * The artwork is the caller's, because cover art is not ours to ship; the
+ * waveform is seeded from the episode, so a render is always the same shape.
  */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -15,19 +14,13 @@ import { Button, Text } from "@gpuixui/primitives";
 import { Window, WindowToolbar } from "@gpuixui/shell";
 import { useTheme } from "@gpuixui/tokens/react";
 import { useState } from "react";
-import { tracks, type Track } from "./data.js";
-import { clock, trackOf, transport, waveform } from "./logic.js";
+import { episodes, type Episode } from "./data.js";
+import { clock, episodeOf, transport, waveform } from "./logic.js";
 
-const ART: Readonly<Record<string, readonly [string, string]>> = {
-  snowfall: ["#8C7BF0", "#2B1B57"],
-  cosmic: ["#F08C7B", "#5B1B3A"],
-  cobalt: ["#4C9BF0", "#12203F"],
-  drift: ["#3ED2C4", "#123F3B"],
-};
-
-const gradient = (from: string, to: string, angle = 150) => ({
+/** A two-stop fill, for the placeholder a caller without art gets. */
+const gradient = (from: string, to: string) => ({
   type: "linear-gradient" as const,
-  angle,
+  angle: 150,
   stops: [
     { color: from, position: 0 },
     { color: to, position: 1 },
@@ -37,68 +30,63 @@ const gradient = (from: string, to: string, angle = 150) => ({
   ],
 });
 
-/** The cover: the track's own gradient, with one soft light over it. */
-const Cover = ({
-  track,
+/** The artwork: the caller's cover, or a drawn field in the theme's own inks. */
+const Artwork = ({
+  cover,
   size,
 }: {
-  readonly track: Track;
+  readonly cover: string | undefined;
   readonly size: number;
 }) => {
-  const art = ART[track.id] ?? ["#8C7BF0", "#2B1B57"];
+  const theme = useTheme();
   return (
     <div
       style={{
         width: size,
         height: size,
-        borderRadius: 10,
+        borderRadius: 12,
         overflow: "hidden",
-        background: gradient(art[0], art[1]),
         pointerEvents: "none",
+        background: gradient(theme.colors.primary, theme.colors.background),
         boxShadow: {
           offsetX: 0,
-          offsetY: 10,
-          blurRadius: 28,
+          offsetY: 12,
+          blurRadius: 30,
           spreadRadius: -12,
           color: "#1A103066",
         },
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          left: size * 0.12,
-          top: -size * 0.35,
-          width: size * 0.9,
-          height: size * 0.9,
-          borderRadius: size * 0.45,
-          background: gradient("#FFFFFF4D", "#FFFFFF00", 180),
-          pointerEvents: "none",
-        }}
-      />
+      {cover === undefined ? null : (
+        <img alt="" src={cover} style={{ width: "100%", height: "100%" }} />
+      )}
     </div>
   );
 };
 
-export const Music = ({
+export const Podcast = ({
   platform,
+  cover,
 }: {
   readonly platform?: "darwin" | "win32" | "linux";
+  /** The show's artwork; the block draws a field in its own inks without one. */
+  readonly cover?: string;
 }) => {
   const theme = useTheme();
-  const [id, setId] = useState(tracks[0]?.id ?? "");
+  const [id, setId] = useState(episodes[0]?.id ?? "");
   const [playing, setPlaying] = useState(true);
-  const track = Option.getOrUndefined(trackOf(tracks, id)) ?? tracks[0];
-  if (track === undefined) return null;
-  const queue = Arr.filter(tracks, (row) => row.id !== track.id);
+  const episode: Episode | undefined =
+    Option.getOrUndefined(episodeOf(episodes, id)) ?? episodes[0];
+  if (episode === undefined) return null;
+  const queue = Arr.filter(episodes, (row) => row.id !== episode.id);
 
   return (
     <Window
-      testId="music"
+      testId="podcast"
       {...(platform === undefined ? {} : { platform })}
       toolbar={
         <WindowToolbar
-          title="Music"
+          title="Podcast"
           actions={
             <Icon
               name="volume-2"
@@ -110,9 +98,9 @@ export const Music = ({
       }
     >
       <div
-        style={{ display: "flex", flexDirection: "row", gap: 22, padding: 22 }}
+        style={{ display: "flex", flexDirection: "row", gap: 24, padding: 24 }}
       >
-        <Cover track={track} size={196} />
+        <Artwork cover={cover} size={232} />
         <div
           style={{
             display: "flex",
@@ -127,15 +115,19 @@ export const Music = ({
           <text
             testId="now-title"
             style={{
-              fontSize: 26,
+              fontSize: 27,
               fontWeight: 700,
               color: theme.colors.foreground,
             }}
           >
-            {track.title}
+            {episode.title}
           </text>
           <text style={{ fontSize: 14, color: theme.colors.mutedForeground }}>
-            {track.artist}
+            {`${episode.show} · Episode ${String(
+              Arr.findFirstIndex(episodes, (row) => row.id === episode.id).pipe(
+                Option.getOrElse(() => 0),
+              ) + 1,
+            )}`}
           </text>
           <div
             style={{
@@ -144,10 +136,10 @@ export const Music = ({
               alignItems: "flex-end",
               height: 34,
               gap: 2,
-              paddingTop: 8,
+              paddingTop: 10,
             }}
           >
-            {Arr.map(waveform(track.seed, 84), (height, i) => (
+            {Arr.map(waveform(episode.seed, 84), (height, i) => (
               <div
                 key={i}
                 style={{
@@ -169,7 +161,7 @@ export const Music = ({
             }}
           >
             <text style={{ fontSize: 11, color: theme.colors.mutedForeground }}>
-              1:24
+              24:10
             </text>
             <div
               style={{
@@ -189,7 +181,7 @@ export const Music = ({
               />
             </div>
             <text style={{ fontSize: 11, color: theme.colors.mutedForeground }}>
-              {clock(track.seconds)}
+              {clock(episode.seconds)}
             </text>
           </div>
           <div
@@ -198,11 +190,11 @@ export const Music = ({
               flexDirection: "row",
               alignItems: "center",
               gap: 22,
-              paddingTop: 4,
+              paddingTop: 6,
             }}
           >
             <Icon
-              name="sparkles"
+              name="refresh"
               size={16}
               color={theme.colors.mutedForeground}
             />
@@ -228,11 +220,7 @@ export const Music = ({
               size={20}
               color={theme.colors.foreground}
             />
-            <Icon
-              name="refresh"
-              size={16}
-              color={theme.colors.mutedForeground}
-            />
+            <Icon name="list" size={16} color={theme.colors.mutedForeground} />
           </div>
         </div>
       </div>
@@ -240,33 +228,53 @@ export const Music = ({
         style={{
           display: "flex",
           flexDirection: "column",
-          paddingLeft: 22,
-          paddingRight: 22,
-          paddingBottom: 16,
+          paddingLeft: 24,
+          paddingRight: 24,
+          paddingBottom: 18,
           gap: 2,
         }}
       >
         <Text role="caption" tone="muted">
-          UP NEXT
+          THIS SEASON
         </Text>
         {Arr.map(queue, (row) => (
           <div
             key={row.id}
-            testId={`track-${row.id}`}
+            testId={`episode-${row.id}`}
             onClick={() => setId(row.id)}
             style={{
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
               gap: 12,
-              height: 48,
+              height: 50,
               paddingLeft: 8,
               paddingRight: 8,
               borderRadius: 8,
               backgroundColor: "#00000000",
             }}
           >
-            <Cover track={row} size={34} />
+            <div
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 8,
+                overflow: "hidden",
+                pointerEvents: "none",
+                background: gradient(
+                  theme.colors.secondary,
+                  theme.colors.muted,
+                ),
+              }}
+            >
+              {cover === undefined ? null : (
+                <img
+                  alt=""
+                  src={cover}
+                  style={{ width: "100%", height: "100%", opacity: 0.9 }}
+                />
+              )}
+            </div>
             <div
               style={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
             >
@@ -276,7 +284,7 @@ export const Music = ({
               <text
                 style={{ fontSize: 11, color: theme.colors.mutedForeground }}
               >
-                {row.artist}
+                {row.show}
               </text>
             </div>
             <text style={{ fontSize: 11, color: theme.colors.mutedForeground }}>

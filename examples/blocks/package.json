@@ -12,7 +12,6 @@
     "./tiling": "./src/tiling/tiling.tsx",
     "./macos": "./src/macos/macos.tsx",
     "./editor": "./src/editor/editor.tsx",
-    "./music": "./src/music/music.tsx",
     "./monitor": "./src/monitor/monitor.tsx",
     "./pipeline": "./src/pipeline/pipeline.tsx",
     "./notes": "./src/notes/notes.tsx",
@@ -26,7 +25,8 @@
     "./stats": "./src/stats/stats.tsx",
     "./console": "./src/console/console.tsx",
     "./license": "./src/license/license.tsx",
-    "./dashboard": "./src/dashboard/dashboard.tsx"
+    "./dashboard": "./src/dashboard/dashboard.tsx",
+    "./podcast": "./src/podcast/podcast.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

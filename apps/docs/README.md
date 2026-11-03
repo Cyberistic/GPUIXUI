@@ -57,7 +57,7 @@ blocks/sidebar.mdx           All sixteen sidebar blocks on one page, grouped by 
 blocks/desktop.mdx           A whole XP-era or Aero-era desktop, from the library; the preview is the native capture
 blocks/macos.mdx             A macOS desktop: the drawn wallpaper, its menu bar and menus, the dock, and a window layer
 blocks/editor.mdx            A code editor: the explorer, tokenised code and a status bar, from its native capture
-blocks/music.mdx             A music player: art, a seeded waveform, the transport and the queue
+blocks/podcast.mdx           An episode player: art, a seeded waveform, the transport and the season
 blocks/monitor.mdx           A hardware monitor: sparklines, core bars and a memory ring over a sampled window
 components/index.mdx         The component grid: one preview tile per page, filter in the URL
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body

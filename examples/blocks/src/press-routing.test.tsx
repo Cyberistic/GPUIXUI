@@ -28,7 +28,7 @@ import { License } from "./license/license.js";
 import { MenuBar } from "./menubar/menubar.js";
 import { MacosDesktop } from "./macos/macos.js";
 import { Editor } from "./editor/editor.js";
-import { Music } from "./music/music.js";
+import { Podcast } from "./podcast/podcast.js";
 import { Monitor } from "./monitor/monitor.js";
 import { Notes } from "./notes/notes.js";
 import { Dashboard } from "./dashboard/dashboard.js";
@@ -51,7 +51,7 @@ const screens: Readonly<Record<string, ComponentType>> = {
   "block:menubar": MenuBar,
   "block:macos": MacosDesktop,
   "block:editor": Editor,
-  "block:music": Music,
+  "block:podcast": Podcast,
   "block:monitor": Monitor,
   "block:notes": Notes,
   "block:dashboard": Dashboard,

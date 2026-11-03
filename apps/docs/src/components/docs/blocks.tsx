@@ -1,7 +1,7 @@
 import desktopSource from "../../../../../examples/blocks/src/desktop/desktop.tsx?raw";
 import macosSource from "../../../../../examples/blocks/src/macos/macos.tsx?raw";
 import editorSource from "../../../../../examples/blocks/src/editor/editor.tsx?raw";
-import musicSource from "../../../../../examples/blocks/src/music/music.tsx?raw";
+import podcastSource from "../../../../../examples/blocks/src/podcast/podcast.tsx?raw";
 import monitorSource from "../../../../../examples/blocks/src/monitor/monitor.tsx?raw";
 import licenseSource from "../../../../../examples/blocks/src/license/license.tsx?raw";
 import notesSource from "../../../../../examples/blocks/src/notes/notes.tsx?raw";
@@ -400,15 +400,15 @@ export const blocks: Readonly<Record<string, Block>> = {
     render: () => <LiveBlock slug="editor" />,
     source: editorSource,
   },
-  "music-01": {
-    name: "music-01",
-    slug: "music",
-    title: "Music",
+  "podcast-01": {
+    name: "podcast-01",
+    slug: "podcast",
+    title: "Podcast",
     description:
-      "A player: album art, a seeded waveform, the transport and the queue — press a row to play it.",
+      "An episode player: show artwork, a seeded waveform, the transport and the season — press a row to play it.",
     packages: ["@gpuixui/shell", "@gpuixui/icons", "@gpuixui/primitives"],
-    render: () => <LiveBlock slug="music" />,
-    source: musicSource,
+    render: () => <LiveBlock slug="podcast" />,
+    source: podcastSource,
   },
   "monitor-01": {
     name: "monitor-01",

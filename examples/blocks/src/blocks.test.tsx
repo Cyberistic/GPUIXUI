@@ -25,7 +25,7 @@ import { Stats } from "./stats/stats.js";
 import { TilingDesktop } from "./tiling/tiling.js";
 import { MacosDesktop } from "./macos/macos.js";
 import { Editor } from "./editor/editor.js";
-import { Music } from "./music/music.js";
+import { Podcast } from "./podcast/podcast.js";
 import { Monitor } from "./monitor/monitor.js";
 import { Dashboard } from "./dashboard/dashboard.js";
 
@@ -176,14 +176,15 @@ describe("Editor", () => {
   });
 });
 
-describe("Music", () => {
+describe("Podcast", () => {
   it("plays the row pressed and pauses on the transport", () => {
-    const r = mount(<Music />);
-    expect(textOf(r, "now-title")).toBe("Snowfall");
-    const row = centre(r, "track-cobalt");
+    const r = mount(<Podcast />);
+    expect(textOf(r, "now-title")).toBe("The 287th Hunter Exam");
+    const row = centre(r, "episode-greed");
     r.nativeSimulateClick(row.x, row.y);
     r.flush();
-    expect(textOf(r, "now-title")).toBe("Cobalt");
+    expect(textOf(r, "now-title")).toBe("Greed Island");
+    expect(textOf(r, "now-title")).not.toBe("The 287th Hunter Exam");
   });
 });
 

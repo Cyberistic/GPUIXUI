@@ -103,12 +103,14 @@ export const liveBlocks: Readonly<Record<string, LiveBlock>> = {
       return () => <Monitor platform="darwin" />;
     },
   },
-  music: {
+  podcast: {
     width: 1100,
-    height: 700,
+    height: 560,
     load: async () => {
-      const { Music } = await import("@gpuixui/blocks/music");
-      return () => <Music platform="darwin" />;
+      const { Podcast } = await import("@gpuixui/blocks/podcast");
+      return () => (
+        <Podcast platform="darwin" cover="/blocks/podcast-cover.jpg" />
+      );
     },
   },
   notes: {
