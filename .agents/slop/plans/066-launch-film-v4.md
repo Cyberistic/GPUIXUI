@@ -1146,3 +1146,34 @@ element container but the chip's own press handler never runs — a hit-test
 depth/handler-targeting issue inside GPUIX's element tree, entirely within the
 pinned runtime, with no coordinate work left on this side. Every layer measurable
 from the film side has now been measured and cleared.
+
+### v4.35 — correction: the JS-side probes were unreliable, the Rust one was not
+
+Chasing the chip press one layer further exposed a methodology error worth
+recording. Both JS probes (v4.30's `dispatch`, v4.32's `createNativeRenderer`
+callback) wrapped `process.stderr.write` in `try { … } catch {}`. In the bundled
+ESM context that write can throw, and the catch swallowed it — so "zero lines"
+meant "the probe failed", not "the code path never ran". That is why v4.32's
+"the bridge is never called" contradicted the Rust `tsf` log (`status=Ok` for every
+event), and why v4.30's "zero dispatches" was equally unsound.
+
+**Withdrawn:** "the JS bridge is never called" (v4.32) and "JS dispatch is never
+called" (v4.30). The take that changes to dark after a click is proof the callback
+does run — the probe, not the runtime, was silent.
+
+**What remains, all from Rust-side logs that cannot fail silently:**
+
+- `window.rs::handle_mouse`: presses arrive at (882, 94) and (960, 149), pixel mouse
+  on, scale 1.0, dispatch returns a result.
+- `renderer.rs::event_callback_for_view`: every event reaches the napi
+  `ThreadsafeFunction` with `status=Ok`, kinds `click`/`mouseMove`/`focus`/keys,
+  element ids 46 / 50 / 59.
+- The dark press (el 59) **paints**; the two chip presses (el 46 / 50) do not.
+- The take's own pixels put the aim inside the Windows chip (843–920 × 73–102 for
+  aim 882,94) and the chip **paints its hover** under the same pointer.
+
+So the last standing hypothesis is handler targeting inside the chip: the press
+reaches an element in the chip's subtree whose id has no JS handler, while the
+hover path does reach the chip. Verifying that needs a JS probe that actually
+writes (a file, not stderr) — the correct next instrument, and the reason this
+round did not produce a fix.
