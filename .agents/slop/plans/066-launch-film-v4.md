@@ -1567,3 +1567,35 @@ and would break that cut, and every denser replacement duplicates another tile.
 
 Audited on the same render: cuts **19/19**; terminal 89.9 / 78.3 / 78.3; cues
 **53/56** direct at lag ≤25 ms.
+
+### v5.5 — the match tile keeps its cut and clears the median
+
+`button` was the wall's last sub-median tile (2.8), kept because the opening
+match-cuts onto it. The instruction offered two routes: move the match, or find a
+crop that keeps the card's corners. The second one works.
+
+Zoom trial, measured on the 8.2 s frame:
+
+```
+button zoom 1.00   2.8      card corners visible
+button zoom 1.15   3.6      card corners visible at 4.05 s
+button zoom 1.30   4.1      card corners still visible at 4.05 s   ← kept
+```
+
+At 1.3 the card still shows its rounded top-left corner inside the tile (cropped
+frame checked), and the close-up → wall cut still lands on the same white card with
+one blue control: the graphic match is unchanged, the tile is just denser.
+
+**Ledger, 8.2 s frame — every tile within 0.7 of the median or above**
+
+```
+music 4.1 · slang 4.1 · button 4.1 · desktop-aero 4.2 · stats 4.5 · editor 4.5
+settings 4.7 · license 4.7 · omarchy 4.8 · notes 5.2 · tiling 5.3 · chat-linux 6.9
+desktop-luna 7.2 · monitor 9.8 · chat-win 9.8 · chat-mac 10.6
+
+min 4.1 · median 4.8 · max 10.6 · under 4.0: none
+```
+
+Across v5.1 → v5.5: **six sub-median tiles → none**, floor 2.4 → 4.1, median 4.3 →
+4.8. Audited on the same render: cuts **19/19**; terminal 89.9 / 78.3 / 78.3; cues
+**53/56** direct at lag ≤25 ms.

@@ -235,7 +235,15 @@ interface Cell {
   readonly aspect?: number;
 }
 /** The tile the montage's last close-up cuts into: a card with one control. */
-const MATCH_TILE: Cell = { take: "button", col: 3, row: 2, w: 2, h: 1 };
+const MATCH_TILE: Cell = {
+  take: "button",
+  col: 3,
+  row: 2,
+  w: 2,
+  h: 1,
+  zoom: 1.3,
+  focus: [0.5, 0.5],
+};
 const WALL: ReadonlyArray<Cell> = [
   { take: "stats", col: 0, row: 0, w: 2, h: 2 },
   {
