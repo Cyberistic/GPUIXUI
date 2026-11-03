@@ -1212,3 +1212,31 @@ not a coordinate fix.
 
 Store file restored (`renderer-state.js` byte-identical, probe grep: 0), environment
 re-verified by recording a take.
+
+### v4.37 — the click chain completes and re-renders; the terminal still does not paint
+
+Instrumented the two hops above the runtime (both file-logging, both restored):
+
+```
+click index=1 disabled=false
+notify next=["win32"]
+onValueChange next=win32 isLook=true
+SettingsApp render look=win32 dark=false     ← the app re-rendered in the new look
+```
+
+and the take recorded across that press shows **no frame change at all**.
+
+So the v4.36 hypothesis ("the change handler sits on an ancestor that never runs") is
+**wrong as well** — the handler runs, the value changes, `SettingsApp` re-renders with
+`look=win32`. The break is *after* React commits: the new tree's mutations are
+applied to the retained tree, but the next `tick()` does not produce a different
+scene, so no frame reaches the terminal. The dark switch (which also re-renders)
+does repaint, so the difference is in what the re-render changes (a theme whose
+control metrics move) rather than in input.
+
+That is the fourth distinct hypothesis in this thread and the third one withdrawn:
+stacking on `pump_events` → bridge → hit-test/handler → **post-commit scene rebuild**.
+It is also the first point where the film side has nothing left to measure: the
+remaining question is inside the renderer's scene/mutation application.
+
+Both probe files restored (grep for the probe: 0 in both), environment re-verified.
