@@ -1028,3 +1028,37 @@ confirms the patched code was the live code path.
 **Restored:** `renderer-state.js`, `runtime.js`, `host-config.js` copied back from
 their pre-patch copies (grep for the probes: 0 hits), vendor `@gpuix/native`
 binary in place, take re-recorded to confirm the environment is healthy.
+
+### v4.31 — the clicks arrive with the right coordinates and never reach the app
+
+`window.rs::handle_mouse` was instrumented (raw event kind, raw x/y, whether the
+terminal reports pixel mouse, scale factor, the position handed to GPUI, and the
+dispatch result), the addon rebuilt and swapped, and a take recorded with two
+presses:
+
+```
+96 mouse events
+kind=Press(Left)   raw=(882.0,94.0)  pixel_mouse=true scale=1.00 pos=(882.0,94.0) result=Some(true)
+kind=Release(Left) raw=(882.0,94.0)  …                                          result=Some(true)
+kind=Press(Left)   raw=(960.0,149.0) …                                          result=Some(true)
+kind=Release(Left) raw=(960.0,149.0) …                                          result=Some(true)
+kind=Move(None)    raw=(882.0,94.0)  … (×33, the pointer resting on the chip)
+```
+
+So the coordinates are **exactly right**: pixel mouse is on, scale is 1.0, the
+frame is 1024×576 (verified from the take's PNG), and (882, 94) is the Windows
+chip in the layout the recorder measured. There is no coordinate or resize defect
+to fix — the hit test is never given a chance to miss.
+
+What the log does show is that the press is delivered to the platform's input
+callback and comes back **propagating** (`result=Some(true)`), while v4.30 proved
+`renderer-state.dispatch` in JS is called **zero times**. Combined: the native
+window hands the mouse event to its input callback, but the JS `onEvent` bridge
+never runs for it in terminal mode.
+
+That moves the defect one layer further and *narrows it to the JS↔native event
+bridge* (`@gpuix/native/dist/runtime.js`, `createNativeRenderer`'s callback), not
+the hit test, not the coordinates, not the scheduler, not the renderer.
+
+Store binary restored (hash matches `.bak`), probe take and log deleted,
+environment re-verified by recording a take.
