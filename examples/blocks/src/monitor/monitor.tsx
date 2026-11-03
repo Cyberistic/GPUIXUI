@@ -30,15 +30,35 @@ import { nextRange, rangeLabel, ring, samples } from "./logic.js";
 
 const CARD = 12;
 
-const card = (theme: Theme) => ({
+/** A two-stop surface: the cards are lit from the top-left, not flat. */
+const gradient = (from: string, to: string, angle = 160) => ({
+  type: "linear-gradient" as const,
+  angle,
+  stops: [
+    { color: from, position: 0 },
+    { color: to, position: 1 },
+  ] as [
+    { readonly color: string; readonly position: number },
+    { readonly color: string; readonly position: number },
+  ],
+});
+
+const card = (_theme: Theme) => ({
   display: "flex" as const,
   flexDirection: "column" as const,
   gap: 10,
   padding: 16,
   borderRadius: CARD,
   borderWidth: 1,
-  borderColor: theme.colors.border,
-  backgroundColor: theme.colors.card,
+  borderColor: "#2C3040",
+  background: gradient("#1A1D26", "#0E0F14"),
+  boxShadow: {
+    offsetX: 0,
+    offsetY: 0,
+    blurRadius: 26,
+    spreadRadius: 0,
+    color: "rgba(10, 132, 255, 0.08)",
+  },
 });
 
 const row = {
@@ -99,8 +119,13 @@ const Processor = ({
               color: theme.colors.foreground,
             }}
           >{`${sensor.load}%`}</text>
-          <text style={{ fontSize: 11, color: theme.colors.mutedForeground }}>
-            Load
+          <text
+            style={{
+              fontSize: 10,
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            LOAD
           </text>
         </div>
         <div
@@ -118,9 +143,12 @@ const Processor = ({
             >
               <div style={{ ...row, justifyContent: "space-between" }}>
                 <text
-                  style={{ fontSize: 13, color: theme.colors.mutedForeground }}
+                  style={{
+                    fontSize: 11,
+                    color: theme.colors.mutedForeground,
+                  }}
                 >
-                  {label}
+                  {label.toUpperCase()}
                 </text>
                 <text style={{ fontSize: 13, color: theme.colors.foreground }}>
                   {value}

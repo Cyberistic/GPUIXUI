@@ -1673,3 +1673,23 @@ to 1.02 over 1.6 s so the whole window with the running app is shown by 23.1.
 Audited after the pass: cuts **19/19**; cue correlation **50/54** direct, the four
 masked all inside the fast typing burst (sounds 80–96 ms apart) and the detent under
 its simultaneous cap; terminal state deltas 152 / 125 / 90 (the camera adds motion).
+
+### v6.1 — the monitor restyled, and the terminal sequence on a 0.2 s strip
+
+**The block the user pointed at.** The monitor was flat cards on a flat ground. It
+now uses a two-stop surface per card (`#1A1D26 → #0E0F14`), a brighter border
+(`#2C3040`), a soft accent glow (`rgba(10,132,255,.08)`, 26 px) and uppercase metric
+labels, so the dashboard reads as a product rather than a table. The gradient shape
+is the one the music cover already uses (`linear-gradient`, two typed stops) — the
+first attempt passed `boxShadow { x, y, blur, spread }` and the runtime rejected the
+batch (`did not match any variant of untagged enum BoxShadowValues`); the correct
+shape is `offsetX / offsetY / blurRadius / spreadRadius`.
+
+**The terminal sequence, verified on a 0.2 s strip** (`fps=5` over 20.0–23.6 s,
+6×3): prompt → `ssh` typing → login line → command typing → command complete and
+**Enter** (21.06, corr 1.00) → the dev-server output → the app takes the screen at
+1.32× → dark mode → Windows look → the camera pulls back to the whole window. Every
+stage the user asked for is on the strip.
+
+Gates after the restyle: check types clean, lint clean, blocks 15 files / 75 tests,
+hyperframes 0 errors, 30.000000 s.
