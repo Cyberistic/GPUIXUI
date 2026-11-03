@@ -55,6 +55,7 @@ import { Welcome } from "./welcome/welcome.js";
 import { Kanban } from "./kanban/kanban.js";
 import { Pipeline } from "./pipeline/pipeline.js";
 import { SettingsApp } from "./settings/settings.js";
+import { Dashboard } from "./dashboard/dashboard.js";
 
 const [slug = "pipeline", ...flags] = process.argv
   .slice(2)
@@ -86,6 +87,7 @@ const blocks: Readonly<Record<string, ComponentType>> = {
   ),
   inbox: Inbox,
   kanban: Kanban,
+  dashboard: Dashboard,
   settings: () => (
     <SettingsApp
       initialLook={flags.includes("--terminal") ? "linux" : "darwin"}

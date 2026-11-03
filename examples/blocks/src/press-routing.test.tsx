@@ -31,6 +31,7 @@ import { Editor } from "./editor/editor.js";
 import { Music } from "./music/music.js";
 import { Monitor } from "./monitor/monitor.js";
 import { Notes } from "./notes/notes.js";
+import { Dashboard } from "./dashboard/dashboard.js";
 import { Pipeline } from "./pipeline/pipeline.js";
 import { Preferences } from "./preferences/preferences.js";
 import { Viewer } from "./viewer/viewer.js";
@@ -53,6 +54,7 @@ const screens: Readonly<Record<string, ComponentType>> = {
   "block:music": Music,
   "block:monitor": Monitor,
   "block:notes": Notes,
+  "block:dashboard": Dashboard,
   "block:pipeline": Pipeline,
   "block:preferences": Preferences,
   "block:viewer": Viewer,

@@ -50,8 +50,11 @@ describe("a block page", () => {
     expect(stage).not.toContain("height: 520px");
   });
 
-  it("keeps the recipe in a disclosure under the screen", () => {
-    expect(markup).toContain("Hunter Association — Overview");
+  it("mounts the real block in the frame, with the recipe under it", () => {
+    // Bug guarded: the preview used to paint a hand-drawn copy of the block.
+    // It now mounts the native tree through the browser build, so the frame must
+    // name the live route rather than a picture of one.
+    expect(markup).toContain('src="/live/block/dashboard');
     expect(markup).toContain("Recipe — dashboard-01");
   });
 });

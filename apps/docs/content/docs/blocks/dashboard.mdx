@@ -1,6 +1,6 @@
 ---
 title: Dashboard
-description: An activity dashboard with stats and charts
+description: A report dashboard with a sidebar, KPIs, a range-driven chart and a selectable table
 ---
 
 <BlockPreview name="dashboard-01" />
@@ -9,20 +9,30 @@ description: An activity dashboard with stats and charts
 
 The block composes:
 
-- `Badge` from `@gpuixui/components/badge`, `Card` and its parts from
-  `@gpuixui/components/card`, `SearchInput` from `@gpuixui/components/search-input`
-- `BarChart`, `DonutChart` and `StackedBar` from `@gpuixui/data`
-- `Box`, `Button`, `Progress`, `Stack` and `Text` from `@gpuixui/primitives`
-- `Icon` from `@gpuixui/icons` — the nav's four rows are the glyphs the set
-  carries (`grid`, `folder`, `clock`, `settings`); it has no globe or report mark
+- `Sidebar`, `SidebarProvider`, `SidebarInset` and the menu parts from
+  `@gpuixui/components/sidebar` — the workspace switcher, Quick Create, both
+  nav groups and the account row
+- `Card` from `@gpuixui/components/card` for the four KPI tiles and the two
+  panels
+- `LineChart` from `@gpuixui/data` — the area wash is the chart's own
+- `Tabs` from `@gpuixui/components/tabs`, over `Table`, `TableHeader`,
+  `TableRow` and the cells from `@gpuixui/data`
+- `Badge` for the status pills, `ToggleGroup` for the range, `Checkbox` for the
+  rows, `Text`/`Stack`/`Button`/`Icon` for the rest
 
-## Charts
+## What moves
 
-`BarChart`, `DonutChart` and `StackedBar` are the package's, documented on
-[Charts](/data-display/charts). The runtime paints an `<svg source>` as **one tint**,
-so a multi-series chart is one stacked element per colour and the colours are
-the theme's own series.
+The range control swaps the chart's labels, values and total; the tab strip
+swaps the table's rows; the header checkbox selects every row the open tab holds
+and the footer counts what is chosen. All three are the block's own state, so
+the live preview can be driven rather than read.
 
-The preview is a browser reproduction, `stacked` the way the recipe is: its
-marks are drawn by hand in `--series-1` to `--series-5`, so the look switch
-repaints them together.
+The runtime paints an `<svg source>` as **one tint**, so a multi-series chart is
+one stacked element per colour. `LineChart` draws its line and its wash that
+way, in the theme's first categorical swatch.
+
+## Run it natively
+
+```sh
+nub run --filter @gpuixui/blocks dev -- dashboard
+```

@@ -13,6 +13,7 @@ import calendarSource from "../../../../../examples/blocks/src/calendar/calendar
 import welcomeSource from "../../../../../examples/blocks/src/welcome/welcome.tsx?raw";
 import viewerSource from "../../../../../examples/blocks/src/viewer/viewer.tsx?raw";
 import pipelineSource from "../../../../../examples/blocks/src/pipeline/pipeline.tsx?raw";
+import dashboardSource from "../../../../../examples/blocks/src/dashboard/dashboard.tsx?raw";
 import type { ReactNode } from "react";
 import { SignInPageRender, signInPageSource } from "./auth-blocks";
 import { CommandCentreRender, commandCentreSource } from "./command-centre";
@@ -21,11 +22,6 @@ import {
   conversationsPackages,
   conversationsSource,
 } from "./conversations-block";
-import {
-  DashboardRender,
-  dashboardPackages,
-  dashboardSource,
-} from "./dashboard";
 import {
   EmailInboxRender,
   emailInboxPackages,
@@ -222,9 +218,15 @@ export const blocks: Readonly<Record<string, Block>> = {
     slug: "dashboard",
     title: "Dashboard",
     description:
-      "An activity dashboard: sidebar nav, a day's time and token stats, and charts — bars, a donut and stacked bars.",
-    packages: [...dashboardPackages],
-    render: DashboardRender,
+      "A report dashboard: a workspace sidebar, four KPI tiles, a visitors chart whose range control swaps the data, and a document table you can select.",
+    packages: [
+      "@gpuixui/components",
+      "@gpuixui/data",
+      "@gpuixui/icons",
+      "@gpuixui/primitives",
+      "@gpuixui/tokens",
+    ],
+    render: () => <LiveBlock slug="dashboard" />,
     source: dashboardSource,
   },
   "sign-in-01": {

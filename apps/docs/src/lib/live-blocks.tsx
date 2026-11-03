@@ -47,6 +47,14 @@ export const liveBlocks: Readonly<Record<string, LiveBlock>> = {
       return () => <DesktopBlock look={look} />;
     },
   },
+  dashboard: {
+    width: 1400,
+    height: 900,
+    load: async () => {
+      const { Dashboard } = await import("@gpuixui/blocks/dashboard");
+      return () => <Dashboard />;
+    },
+  },
   editor: {
     width: 1100,
     height: 700,

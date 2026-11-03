@@ -27,6 +27,7 @@ import { MacosDesktop } from "./macos/macos.js";
 import { Editor } from "./editor/editor.js";
 import { Music } from "./music/music.js";
 import { Monitor } from "./monitor/monitor.js";
+import { Dashboard } from "./dashboard/dashboard.js";
 
 // The first mount in a file loads the native binding and its fonts: measured at
 // 7.3 s cold against vitest's 5 s default.
@@ -35,8 +36,8 @@ vi.setConfig({ testTimeout: 20_000 });
 let unmount = () => {};
 afterEach(() => unmount());
 
-const mount = (node: ReactNode) => {
-  const root = createTestRoot({ width: 1280, height: 800 });
+const mount = (node: ReactNode, width = 1280, height = 800) => {
+  const root = createTestRoot({ width, height });
   root.render(<ThemeProvider theme={lightTheme}>{node}</ThemeProvider>);
   root.renderer.flush();
   unmount = root.unmount;
@@ -235,6 +236,31 @@ describe("Stats", () => {
     expect(bouts()).toBeDefined();
     expect(text()).toContain("512");
     expect(text()).not.toContain("128");
+  });
+});
+
+describe("Dashboard", () => {
+  it("re-reads the chart, the table and the selection", () => {
+    const r = mount(<Dashboard />, 1400, 900);
+    const text = () => r.getAllText();
+    const total = () => textOf(r, "visitors-total");
+    expect(total()).toContain("18,412");
+    expect(text()).toContain("Cover page");
+    const week = centre(r, "range-7d");
+    r.nativeSimulateClick(week.x, week.y);
+    r.flush();
+    expect(total()).toContain("1,598");
+    expect(total()).not.toContain("18,412");
+    const past = centre(r, "tab-past");
+    r.nativeSimulateClick(past.x, past.y);
+    r.flush();
+    expect(text()).toContain("Lumen observation deck");
+    expect(text()).not.toContain("Cover page");
+    expect(text()).toContain("0 of 14 rows chosen");
+    const all = centre(r, "select-all");
+    r.nativeSimulateClick(all.x, all.y);
+    r.flush();
+    expect(text()).toContain("3 of 14 rows chosen");
   });
 });
 

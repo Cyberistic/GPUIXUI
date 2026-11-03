@@ -25,7 +25,8 @@
     "./viewer": "./src/viewer/viewer.tsx",
     "./stats": "./src/stats/stats.tsx",
     "./console": "./src/console/console.tsx",
-    "./license": "./src/license/license.tsx"
+    "./license": "./src/license/license.tsx",
+    "./dashboard": "./src/dashboard/dashboard.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
