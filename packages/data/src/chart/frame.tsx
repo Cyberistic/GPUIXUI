@@ -11,7 +11,7 @@
 import type { Props } from "@gpuix/react";
 import { Icon, isIconName, type IconName } from "@gpuixui/icons";
 import { mergeStyles } from "@gpuix/react/floating";
-import { seriesColors } from "@gpuixui/tokens";
+import { seriesColors, themeModeOf } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -40,6 +40,7 @@ import { DEFAULT_ANIMATION_DURATION, useAnimatedSeries } from "./animation.js";
 import { ChartPlot } from "./plot.js";
 import type { ChartRender } from "./surface.js";
 import type { ChartGradient } from "./svg.js";
+import { configSeriesColour, type ChartConfig } from "./config.js";
 import { recipeStyle } from "../recipe.js";
 import { textStyle, themeColors, useTheme } from "../theme.js";
 import {
@@ -204,6 +205,15 @@ export interface ChartFrameProps extends Omit<Props, "children"> {
    * cannot decode an image needs.
    */
   readonly render?: ChartRender;
+  /**
+   * The chart's config: the colours the series paint in.
+   *
+   * The config's colour is read in the **mode the theme is in**, so a table
+   * that names one colour per mode follows a light/dark switch. A series the
+   * config names no colour for paints in the theme's categorical scale, which
+   * is the rule every other series follows.
+   */
+  readonly config?: ChartConfig;
   /** The legend a type wants; the frame places it. */
   readonly legendNode?: (side: LegendSide) => ReactNode;
   /** Extra marks painted over the plot: axis labels, a centre label. */
@@ -365,6 +375,7 @@ export const ChartFrame = ({
   paint,
   gradients,
   render = "document",
+  config,
   legendNode,
   overlay,
   className,
@@ -374,6 +385,14 @@ export const ChartFrame = ({
 }: ChartFrameProps) => {
   const theme = useTheme();
   const palette = paletteOf(theme, colors);
+  // The config's colour is read in the **mode the theme is in**, so a table
+  // that names one colour per mode follows a light/dark switch. A series the
+  // config names no colour for paints in the theme's categorical scale.
+  const mode = themeModeOf(theme);
+  const colourOf = (series: ChartSeries, index: number): string =>
+    Option.getOrElse(configSeriesColour(config, series.key, mode), () =>
+      seriesColourOf(palette, series, index),
+    );
   const box = chartBox(width, height, {
     width: DEFAULT_CHART_WIDTH,
     height: DEFAULT_CHART_HEIGHT,
@@ -501,7 +520,7 @@ export const ChartFrame = ({
               box={box}
               layers={layers}
               colours={Arr.map(layers, (layer) =>
-                seriesColourOf(palette, layer.series, layer.seriesIndex),
+                colourOf(layer.series, layer.seriesIndex),
               )}
               gridColour={themeColors(theme).border ?? "#000000"}
               grid={

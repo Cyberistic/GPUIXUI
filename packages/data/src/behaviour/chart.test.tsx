@@ -488,4 +488,63 @@ describe("the charts", () => {
     expect(source).toContain("M25 50L75 0");
     expect(source).not.toContain("M0");
   });
+
+  it("paints the series a config and a data make, in the config's colours", () => {
+    // The config is shadcn's: a keyed table of label and colour, decoupled
+    // from the data. A chart that names one and a table of rows paints the
+    // series the two make — so one table can be shared by several charts and
+    // a theme can own the colours.
+    root = renderData(
+      <BarChart
+        aria-label="Visitors"
+        config={{
+          desktop: { label: "Desktop", color: "#2563eb" },
+          mobile: { label: "Mobile", color: "#60a5fa" },
+        }}
+        data={[
+          { month: "January", desktop: 186, mobile: 80 },
+          { month: "February", desktop: 305, mobile: 200 },
+        ]}
+        width={200}
+        height={100}
+        testId="chart-configured"
+      />,
+    );
+    settle(root);
+
+    // The two series the config names, each in its own colour.
+    expect(requireStyle(root, "chart-configured-layer-desktop").color).toBe(
+      "#2563eb",
+    );
+    expect(requireStyle(root, "chart-configured-layer-mobile").color).toBe(
+      "#60a5fa",
+    );
+    // The categories the data names, and the legend's own rows.
+    expect(paintedText(root)).toContain("January");
+    expect(paintedText(root)).toContain("February");
+    expect(
+      requireStyle(root, "chart-configured-legend-swatch-desktop")
+        .backgroundColor,
+    ).toBe("#2563eb");
+  });
+
+  it("keeps the caller's own series when no config is named", () => {
+    // The config is an addition, not a replacement: a chart that names none
+    // keeps the series it was given.
+    root = renderData(
+      <BarChart
+        aria-label="Revenue"
+        labels={["Q1"]}
+        series={[{ key: "revenue", label: "Revenue", values: [3] }]}
+        width={200}
+        height={100}
+        testId="chart-unconfigured"
+      />,
+    );
+    settle(root);
+
+    expect(requireStyle(root, "chart-unconfigured-layer-revenue").color).toBe(
+      colourAt(0),
+    );
+  });
 });

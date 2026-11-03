@@ -37,8 +37,12 @@ export interface ChartConfigEntry {
  * The table is `Record<string, ChartConfigEntry>`, so a key is a series'
  * identity — the same key the data names its field by, and the same key the
  * legend and the readout call it by.
+ *
+ * An entry may be **absent**: a table a store wrote can carry a hole where a
+ * series was, and the key is still there. The hole reads as an entry with no
+ * words, so the series keeps its slot and its name.
  */
-export type ChartConfig = Record<string, ChartConfigEntry>;
+export type ChartConfig = Record<string, ChartConfigEntry | undefined>;
 
 /**
  * The colour one entry paints in one mode.
@@ -165,6 +169,23 @@ export const seriesFromConfig = (
       Option.getOrElse(datumNumber(datum, key), () => 0),
     ),
   }));
+
+/**
+ * The colour one series paints, from the config.
+ *
+ * The config's colour is read in the **mode the theme is in**, so a table
+ * that names one colour per mode follows a light/dark switch. A series the
+ * config names no colour for paints in the caller's palette, which is the
+ * rule the theme's own categorical scale follows.
+ */
+export const configSeriesColour = (
+  config: ChartConfig | undefined,
+  key: string,
+  mode: ChartMode,
+): Option.Option<string> =>
+  Option.flatMap(Option.fromNullishOr(config), (table) =>
+    configColour(table[key], mode),
+  );
 
 /**
  * The categories a data table names.

@@ -315,6 +315,8 @@ Negative values stand below the axis; a zero paints no bar but keeps its slot.
 | ---- | ---- | ------- | ----------- |
 | `series` | `ChartSeries[]` | — | `{ key, label, values, color? }` per series; a blank label reads as `key` |
 | `labels` | `string[]` | — | one label per category |
+| `config` | `ChartConfig` | — | a keyed table of `{ label?, icon?, color?, theme? }` per series, decoupled from the data; a chart that names it **and** a `data` paints the series the two make |
+| `data` | `ChartRow[]` | — | one row per category, one field per series — the `dataKey` route; the first row's first string field names the category |
 | `width` | `number` | `320` | the plot's width |
 | `height` | `number` | `160` | the plot's height |
 | `legend` | `boolean \| "top" \| "bottom"` | 2+ series, bottom | where the legend paints |

@@ -28,12 +28,20 @@ import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon, isIconName, type IconName } from "@gpuixui/icons";
 import { iconStepValue, spokenText } from "@gpuixui/primitives/core";
+import { themeModeOf } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { listOf, recordsOf, textsOf } from "../internal/list.js";
 import type { ChartBox, ChartMark, ChartSeries } from "./logic.js";
+import {
+  categoriesFromData,
+  configSeriesColour,
+  seriesFromConfig,
+  type ChartConfig,
+  type ChartRow,
+} from "./config.js";
 import { lineStroke } from "./mark.js";
 import {
   chartBox,
@@ -221,9 +229,38 @@ export interface ChartProps extends Omit<Props, "children"> {
    * A saved chart writes `null` where it carried no series, so only a list is a
    * list: a chart with no series paints its frame and no layer.
    */
-  readonly series: ReadonlyArray<ChartSeries>;
-  /** One label per category, under the plot. */
-  readonly labels: ReadonlyArray<string>;
+  /**
+   * The series, painted in the theme's categorical order.
+   *
+   * A chart that names a `config` **and** a `data` paints the series the two
+   * make, and needs no `series` of its own — so the prop is optional beside a
+   * config. A chart that names neither paints nothing.
+   */
+  readonly series?: ReadonlyArray<ChartSeries>;
+  /**
+   * One label per category, under the plot.
+   *
+   * A chart that names a `data` reads the categories the data carries, so the
+   * prop is optional beside one.
+   */
+  readonly labels?: ReadonlyArray<string>;
+  /**
+   * The chart's **config**: a keyed table of label, icon and colour.
+   *
+   * The config is shadcn's `ChartConfig`, and it is **decoupled from the
+   * data**: one table can be shared by several charts, and a theme can own the
+   * colours. A chart that names a config **and** a `data` paints the series
+   * the config and the data make; a chart that names no config keeps the
+   * caller's own `series`.
+   */
+  readonly config?: ChartConfig;
+  /**
+   * The chart's data: one row per category, one field per series.
+   *
+   * A row is a record, and the series' key is the field it is read by — the
+   * `dataKey` route a Recharts chart takes.
+   */
+  readonly data?: ReadonlyArray<ChartRow>;
   /** The plot's width, in pixels. Defaults to `320`. */
   readonly width?: number;
   /** The plot's height, in pixels. Defaults to `160`. */
@@ -283,6 +320,43 @@ const seriesOf = (
     ...one,
     values: listOf(one.values),
   }));
+
+/**
+ * The series a chart paints: the caller's own, or the ones its **config**
+ * and its **data** make.
+ *
+ * The config is shadcn's `ChartConfig` — a keyed table of label, icon and
+ * colour, decoupled from the data — so one table can be shared by several
+ * charts and a theme can own the colours. A chart that names no config keeps
+ * the caller's own series, so the config is an addition rather than a
+ * replacement.
+ */
+const seriesFor = (
+  series: ReadonlyArray<ChartSeries> | undefined,
+  config: ChartConfig | undefined,
+  data: ReadonlyArray<ChartRow> | undefined,
+): ReadonlyArray<ChartSeries> =>
+  config === undefined || data === undefined
+    ? seriesOf(series)
+    : seriesFromConfig(config, data);
+
+/**
+ * The categories a chart paints: the caller's own, or the ones its data
+ * names.
+ *
+ * The data's **first** row carries the category, so a table of
+ * `{ month, desktop, mobile }` reads `January … June` under the plot. A
+ * chart that names no data keeps the caller's own `labels`.
+ */
+const labelsFor = (
+  labels: ReadonlyArray<string> | undefined,
+  data: ReadonlyArray<ChartRow> | undefined,
+): ReadonlyArray<string> => {
+  const own = labelsOf(labels);
+  if (data === undefined || data.length === 0) return own;
+  const fromData = categoriesFromData(data);
+  return fromData.length === 0 ? own : fromData;
+};
 
 /** The labels a saved chart hands over, at their own slots. */
 const labelsOf = (
@@ -422,8 +496,8 @@ export const BarChart = ({
   ...props
 }: BarChartProps) => {
   const windowed = windowOf(
-    seriesOf(props.series),
-    labelsOf(props.labels),
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
     props.domain,
   );
   const rows = windowed.rows;
@@ -436,7 +510,7 @@ export const BarChart = ({
       {...props}
       series={rows}
       labels={labels}
-      domainLabels={labelsOf(props.labels)}
+      domainLabels={labelsFor(props.labels, props.data)}
       range={range}
       grid={props.grid ?? !horizontal}
       paint={({ series, labels, box }) =>
@@ -463,6 +537,7 @@ export const BarChart = ({
         <LegendFor
           series={rows}
           colors={props.colors}
+          config={props.config}
           shape={props.legendShape}
           testId={
             props.testId === undefined ? undefined : `${props.testId}-legend`
@@ -510,8 +585,8 @@ export const StackedBar = ({
   ...props
 }: StackedBarProps) => {
   const windowed = windowOf(
-    seriesOf(props.series),
-    labelsOf(props.labels),
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
     props.domain,
   );
   const labels = windowed.labels;
@@ -526,7 +601,7 @@ export const StackedBar = ({
       {...props}
       series={rows}
       labels={labels}
-      domainLabels={labelsOf(props.labels)}
+      domainLabels={labelsFor(props.labels, props.data)}
       range={range}
       paint={({ series, labels: slots, box }) =>
         layersFor(
@@ -538,6 +613,7 @@ export const StackedBar = ({
         <LegendFor
           series={rows}
           colors={props.colors}
+          config={props.config}
           shape={props.legendShape}
           testId={
             props.testId === undefined ? undefined : `${props.testId}-legend`
@@ -616,8 +692,8 @@ export const ComposedChart = ({
   ...props
 }: ComposedChartProps) => {
   const windowed = windowOf(
-    seriesOf(props.series),
-    labelsOf(props.labels),
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
     props.domain,
   );
   const rows = windowed.rows;
@@ -631,7 +707,7 @@ export const ComposedChart = ({
       {...props}
       series={rows}
       labels={labels}
-      domainLabels={labelsOf(props.labels)}
+      domainLabels={labelsFor(props.labels, props.data)}
       view={props.view}
       range={range}
       paint={({ series, labels: slots, box }) => {
@@ -677,6 +753,7 @@ export const ComposedChart = ({
         <LegendFor
           series={rows}
           colors={props.colors}
+          config={props.config}
           shape={props.legendShape}
           testId={
             props.testId === undefined ? undefined : `${props.testId}-legend`
@@ -722,8 +799,8 @@ export const LineChart = ({
   ...props
 }: LineChartProps) => {
   const windowed = windowOf(
-    seriesOf(props.series),
-    labelsOf(props.labels),
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
     props.domain,
   );
   const rows = windowed.rows;
@@ -735,7 +812,7 @@ export const LineChart = ({
       {...props}
       series={rows}
       labels={labels}
-      domainLabels={labelsOf(props.labels)}
+      domainLabels={labelsFor(props.labels, props.data)}
       view={props.view}
       range={range}
       paint={({ series, labels, box }) =>
@@ -853,6 +930,7 @@ export const LineChart = ({
         <LegendFor
           series={rows}
           colors={props.colors}
+          config={props.config}
           shape={props.legendShape}
           testId={
             props.testId === undefined ? undefined : `${props.testId}-legend`
@@ -905,8 +983,8 @@ export const AreaChart = ({
   ...props
 }: AreaChartProps) => {
   const windowed = windowOf(
-    seriesOf(props.series),
-    labelsOf(props.labels),
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
     props.domain,
   );
   const labels = windowed.labels;
@@ -919,7 +997,7 @@ export const AreaChart = ({
       {...props}
       series={rows}
       labels={labels}
-      domainLabels={labelsOf(props.labels)}
+      domainLabels={labelsFor(props.labels, props.data)}
       view={props.view}
       range={range}
       paint={({ series, labels, box }) =>
@@ -1095,6 +1173,7 @@ export const AreaChart = ({
         <LegendFor
           series={rows}
           colors={props.colors}
+          config={props.config}
           shape={props.legendShape}
           testId={
             props.testId === undefined ? undefined : `${props.testId}-legend`
@@ -1131,20 +1210,29 @@ const cumulativeSeries = (
   }));
 };
 
-/** The legend a series chart paints, in its series' colours. */
+/**
+ * The legend a series chart paints, in its series' colours.
+ *
+ * The colour is the one the **plot** paints the series in, so the legend and
+ * the plot cannot disagree: the config's colour when it names one, and the
+ * theme's categorical scale otherwise.
+ */
 const LegendFor = ({
   series,
   colors,
+  config,
   shape,
   testId,
 }: {
   readonly series: ReadonlyArray<ChartSeries>;
   readonly colors: ReadonlyArray<string> | undefined;
+  readonly config?: ChartConfig;
   readonly shape?: LegendShape;
   readonly testId?: string;
 }) => {
   const theme = useTheme();
   const palette = paletteOf(theme, colors);
+  const mode = themeModeOf(theme);
   return (
     <ChartLegend
       shape={shape}
@@ -1152,7 +1240,9 @@ const LegendFor = ({
       items={Arr.map(series, (one, index) => ({
         key: one.key,
         label: one.label,
-        color: seriesColourOf(palette, one, index),
+        color: Option.getOrElse(configSeriesColour(config, one.key, mode), () =>
+          seriesColourOf(palette, one, index),
+        ),
       }))}
     />
   );
@@ -1573,8 +1663,8 @@ export const RadarChart = ({
   pointTooltip = false,
   ...props
 }: RadarChartProps) => {
-  const rows = seriesOf(props.series);
-  const labels = labelsOf(props.labels);
+  const rows = seriesFor(props.series, props.config, props.data);
+  const labels = labelsFor(props.labels, props.data);
   const axes = Math.max(3, labels.length);
   const max = chartScale(rows, axes);
   const range = { min: 0, max };
@@ -1778,6 +1868,7 @@ export const RadarChart = ({
         <LegendFor
           series={rows}
           colors={props.colors}
+          config={props.config}
           shape={props.legendShape}
           testId={
             props.testId === undefined ? undefined : `${props.testId}-legend`
