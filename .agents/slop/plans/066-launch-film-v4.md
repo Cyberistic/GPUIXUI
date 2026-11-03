@@ -1534,3 +1534,36 @@ to show them, not because they cannot be replaced.
 
 Audited on the same render: cuts **19/19**; terminal states 89.9 / 78.3 / 78.3 at
 21.5 / 22.0 / 22.5; cues **53/56** direct at lag ≤25 ms.
+
+### v5.4 — the board retired from the wall; one sub-median tile left
+
+`kanban` was the wall's floor (2.4). At 2×2 it measures 1.8 — it is a board of pale
+cards, and no crop fixes that (v5.1). Measured alternatives at 2×2:
+
+```
+monitor 4.9 · tiling 4.2 · slang 4.1 · term-slang 4.0 · omarchy 4.0
+license 3.8 · stats 3.8 · chat-mac 3.1 · settings 3.0 · pipeline 2.8
+notes 2.0 · kanban 1.8 · inbox 1.7 · editor 1.7 · preferences 1.5
+```
+
+Two moves: `tiling` takes the 2×2 (5.3 in place), and `omarchy` — the board *window*
+rather than the board block, so the wall keeps a board without repeating one — takes
+the wide slot tiling left (4.8).
+
+**Ledger, 8.2 s frame**
+
+```
+button 2.8 · music 4.0 · slang 4.1 · desktop-aero 4.2 · stats 4.5 · editor 4.5
+settings 4.7 · license 4.7 · omarchy 4.8 · notes 5.2 · tiling 5.3 · chat-linux 7.0
+desktop-luna 7.2 · chat-win 9.8 · monitor 9.8 · chat-mac 10.6
+
+min 2.8 · median 4.8 · under 4.0: button
+```
+
+Across v5.1 → v5.4: **six sub-median tiles → one**, floor 2.4 → 2.8, median 4.3 →
+4.8. `button` is the last one, kept because it is the tile the opening match-cuts
+onto (a close-up card with one control at 4.05 s); a zoom crops the card's corners
+and would break that cut, and every denser replacement duplicates another tile.
+
+Audited on the same render: cuts **19/19**; terminal 89.9 / 78.3 / 78.3; cues
+**53/56** direct at lag ≤25 ms.
