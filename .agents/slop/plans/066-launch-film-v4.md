@@ -1735,3 +1735,29 @@ Re-recorded the three terminal captures (`term-light-linux`, `term-dark`,
 `term-light-win`) through the restyled block, rebuilt and re-rendered:
 terminal state deltas **151.8 / 124.6 / 89.9** at 21.5 / 22.0 / 22.5, cuts **19/19**,
 cues **50/54** direct.
+
+### v6.5 — the wall beat measured: gutters, overlaps and the motion profile
+
+The v6.3 per-tile bob was never verified. Measured, and it was **not running at
+all** — the block had been dropped in an edit, so the wall froze after the 7.0 s
+swap (0.1 s deltas of 0.00 from 7.6 to 8.4). Three findings, in order:
+
+1. **Gutters.** From the composition's own boxes: **no overlaps**, minimum static
+   gutter **10 px**. Translating tiles by the bob would have eaten it (10 − 8 = 2 px
+   at the worst pair), so the bob was replaced by an **inner pan**: each tile's
+   picture drifts ±7/±6 px inside a 106 % oversize frame, so the field moves and
+   **every gutter stays exactly as measured**.
+2. **The motion profile, 0.1 s from 6.0 to 8.5 s** before/after:
+
+   ```
+   before  6.1:11.9 … 6.9:2.2 7.0:1.0 7.1:6.8 7.2:15.5 7.3:21.5 7.4:16.5 7.5:7.5
+           7.6:0.01 7.7:0.00 … 8.4:0.00   ← frozen for 0.9 s
+   after   6.1:11.9 … 6.9:2.2 7.0:1.0 7.1:6.8 7.2:15.5 7.3:21.5 7.4:16.5 7.5:7.5
+           7.6:0.52 7.7:0.50 7.8:0.38 7.9:0.28 8.0:0.19 8.1:0.11 8.2:0.13 8.3:0.21 8.4:0.31
+   ```
+
+   The 7.0–7.5 band is the caption/camera swap (peaks at 21.5); the 7.6–8.4 band is
+   the pan alone, distinct and continuous, dipping only at the sine's turning point.
+3. The pan runs 3.6 s from 6.2 s, so the wall is **still moving at the 8.5 s cut**.
+
+Cuts **19/19**, cues **50/54** direct on the same render.

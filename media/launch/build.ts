@@ -248,7 +248,7 @@ const MATCH_TILE: Cell = {
 };
 const WALL: ReadonlyArray<Cell> = [
   { take: "stats", col: 0, row: 0, w: 2, h: 2 },
-  { take: "music", col: 2, row: 0, w: 2, h: 1, nudge: [0, 6] },
+  { take: "music", col: 2, row: 0, w: 2, h: 1, nudge: [0, 4] },
   {
     take: "license",
     col: 4,
@@ -351,7 +351,7 @@ const grid: Scene = {
     #root .wall { position:absolute; left:0; top:0; width:${WALL_BOX.w}px; height:${WALL_BOX.h}px; }
     #root .tile { position:absolute; width:${UNIT.w}px; height:${UNIT.h}px; border-radius:24px; overflow:hidden; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 10px 30px -14px rgba(30,30,60,.25); }
     #root .tile img, #root .tile video { position:absolute; }
-    #root .tile img.cover { inset:0; width:100%; height:100%; object-fit:cover; }
+    #root .tile img.cover { left:-3%; top:-3%; width:106%; height:106%; object-fit:cover; }
     #root .cap { position:absolute; left:0; right:0; top:880px; text-align:center; font:600 64px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
     #root .cap-band { position:absolute; left:0; right:0; height:330px; pointer-events:none; }
     #root .cap-band.down { bottom:0; height:400px; background:linear-gradient(rgba(244,242,238,0) 30%, rgba(244,242,238,.96) 45%, ${GROUND} 58%); }
@@ -379,9 +379,7 @@ ${WALL.map((cell, i) => {
   const detail = cell.zoom
     ? ` style="left:${left}px;top:${top}px;right:auto;bottom:auto;width:${width}px;height:${height}px"`
     : "";
-  const bob = (i % 3) * 2 + 3;
-  const bobDelay = (i % 5) * 0.08;
-  return `        <div class="tile" data-dz="${dz}" data-dl="${dl}" data-bob="${bob}" data-bd="${bobDelay.toFixed(2)}" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
+  return `        <div class="tile" data-dz="${dz}" data-dl="${dl}" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
 }).join("\n")}
       </div>
     </div>
@@ -403,6 +401,17 @@ ${WALL.map((cell, i) => {
       const delay = +tile.dataset.dl;
       tl.fromTo(tile, { scale: +tile.dataset.dz },
         { scale: 1, duration: 1.8 - delay, ease: "power1.inOut" }, delay);
+    });
+    // The wall breathes inside its tiles: each picture drifts a few pixels on
+    // its own delay, so the field moves without a single gutter changing.
+    gsap.utils.toArray("#g-wall .tile").forEach((tile, i) => {
+      const img = tile.querySelector("img");
+      if (!img) return;
+      const dx = (i % 3) - 1;
+      const dy = ((i + 1) % 3) - 1;
+      tl.fromTo(img, { x: 0, y: 0 },
+        { x: dx * 7, y: dy * 6, duration: 1.8, ease: "sine.inOut", yoyo: true, repeat: 1 },
+        2.2 + (i % 5) * 0.06);
     });
     tl.to(cam, { z: Math.log(0.82), duration: 2, ease: "power1.inOut", onUpdate: zoom }, 0);
     tl.fromTo("#g-wall",{rotation:0},{rotation:0,duration:${GRID_LENGTH}},0);
