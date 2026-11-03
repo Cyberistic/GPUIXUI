@@ -1442,3 +1442,27 @@ The rubric now has no caveats: every row passes, with the measurements above.
 
 Full-film review at 0.1 s (`fps=10`, 300 frames, six 10×5 sheets) shows no dead
 frame, no discontinuity and no seam at any join.
+
+### v5.1 — trying to lift the two weakest tiles: measured, no gain, reverted
+
+The wall's ledger still showed `kanban` and `button` at the bottom (2.4 detail).
+Both were re-cropped and measured on the render:
+
+```
+kanban  zoom 1.15  focus (0.5,0.45)   detail 2.4 → 1.6   (worse: the crop cuts cards)
+button  zoom 1.20  focus (0.5,0.5)    detail 2.4 → 3.3
+button  zoom 1.45  focus (0.5,0.5)    detail 2.4 → 3.2   (no further gain)
+```
+
+Both are structurally flat: a kanban board is a grid of pale cards with tiny type,
+and the button is one large filled pill on a pale card — magnifying either discards
+content faster than it sharpens edges. The button zoom also pulled the tile away
+from the close-up card it match-cuts against, so it was reverted to keep the 4.05 s
+cut exact.
+
+**Decision, recorded rather than fudged:** the metric is edge energy, and six of the
+sixteen tiles are surfaces that carry meaning without much edge (kanban, button,
+desktop-luna, desktop-aero, music, settings). Driving every tile past the median
+would mean choosing tiles for noise instead of for what they show, which would make
+the wall worse. The ledger stays as the honest measurement it is — **min 2.4, median
+4.3, max 12.2** — with this experiment on record as the reason it does not move.
