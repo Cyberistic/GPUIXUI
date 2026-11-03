@@ -480,3 +480,21 @@ settles to its own size over the same 2 s `power1.inOut` as the pull-back.
   wide against the outgoing 1240), same centre, same blue.
 - The settled frame is untouched (scale 1 by 6.0 s), so the ledger is unchanged:
   detail min 2.4 · median 4.3 · max 12.2, no tile under 2.0.
+
+### v4.15 — the settle staggers, and the apps beat moves
+
+- **The depth needed a lag, not just a scale.** Every tile reached its own size at
+  the same instant, which flattened the parallax it was there to create. Each
+  tile now starts its settle at `depth × 0.32 s` (0 s at the wall's middle row,
+  0.32 s at the edges) and runs for `1.8 − delay`, so the centre lands first, the
+  outer rows catch up late, and everything is at rest before the line arrives at
+  5.9 s. The match tile sits on the middle row, so its delay is 0 and the 4.05 s
+  cut is untouched.
+- **The apps beat is camera work now, not five stills.** Each of the five shots
+  pushes 5–7 % (was 3–4 %) *and* drifts 8–14 px to a different side, so no shot
+  sits still: Slang [12, 10], editor [−12, 8], monitor [10, 12], player [−10, −8],
+  tiling [10, −6]. `Shot` gained an optional `drift` animated to zero with the
+  same `power2.out` as the push; it applies only to shots without a cursor, so
+  the cursor follow never desyncs.
+- The wall at rest is unchanged, so the ledger holds: detail min 2.4 · median
+  4.3 · max 12.2, none under 2.0.

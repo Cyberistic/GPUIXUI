@@ -106,6 +106,7 @@
         <div
           class="tile"
           data-dz="1.050"
+          data-dl="0.195"
           style="left: 0px; top: 0px; width: 616px; height: 416px"
         >
           <img class="cover" src="assets/footage/stats-74.png" alt="" />
@@ -113,6 +114,7 @@
         <div
           class="tile"
           data-dz="1.061"
+          data-dl="0.260"
           style="left: 632px; top: 0px; width: 616px; height: 200px"
         >
           <img class="cover" src="assets/footage/music-74.png" alt="" />
@@ -120,6 +122,7 @@
         <div
           class="tile"
           data-dz="1.061"
+          data-dl="0.260"
           style="left: 1264px; top: 0px; width: 616px; height: 200px"
         >
           <img class="cover" src="assets/footage/desktop-luna-89.png" alt="" />
@@ -127,6 +130,7 @@
         <div
           class="tile"
           data-dz="1.040"
+          data-dl="0.130"
           style="left: 632px; top: 216px; width: 616px; height: 200px"
         >
           <img
@@ -146,6 +150,7 @@
         <div
           class="tile"
           data-dz="1.040"
+          data-dl="0.130"
           style="left: 1264px; top: 216px; width: 300px; height: 200px"
         >
           <img
@@ -165,6 +170,7 @@
         <div
           class="tile"
           data-dz="1.040"
+          data-dl="0.130"
           style="left: 1580px; top: 216px; width: 300px; height: 200px"
         >
           <img class="cover" src="assets/footage/monitor-74.png" alt="" />
@@ -172,6 +178,7 @@
         <div
           class="tile"
           data-dz="1.030"
+          data-dl="0.065"
           style="left: 0px; top: 432px; width: 300px; height: 416px"
         >
           <img class="cover" src="assets/footage/chat-win-29.png" alt="" />
@@ -179,6 +186,7 @@
         <div
           class="tile"
           data-dz="1.030"
+          data-dl="0.065"
           style="left: 316px; top: 432px; width: 616px; height: 416px"
         >
           <img class="cover" src="assets/footage/kanban-74.png" alt="" />
@@ -186,6 +194,7 @@
         <div
           class="tile"
           data-dz="1.040"
+          data-dl="0.130"
           style="left: 948px; top: 648px; width: 616px; height: 200px"
         >
           <img class="cover" src="assets/footage/slang-74.png" alt="" />
@@ -193,6 +202,7 @@
         <div
           class="tile"
           data-dz="1.030"
+          data-dl="0.065"
           style="left: 1580px; top: 432px; width: 300px; height: 416px"
         >
           <img class="cover" src="assets/footage/desktop-aero-89.png" alt="" />
@@ -200,6 +210,7 @@
         <div
           class="tile"
           data-dz="1.020"
+          data-dl="0.000"
           style="left: 948px; top: 432px; width: 616px; height: 200px"
         >
           <img class="cover" src="assets/footage/button-43.png" alt="" />
@@ -207,6 +218,7 @@
         <div
           class="tile"
           data-dz="1.061"
+          data-dl="0.260"
           style="left: 0px; top: 864px; width: 616px; height: 200px"
         >
           <img
@@ -226,6 +238,7 @@
         <div
           class="tile"
           data-dz="1.061"
+          data-dl="0.260"
           style="left: 632px; top: 864px; width: 300px; height: 200px"
         >
           <img
@@ -245,6 +258,7 @@
         <div
           class="tile"
           data-dz="1.061"
+          data-dl="0.260"
           style="left: 948px; top: 864px; width: 300px; height: 200px"
         >
           <img
@@ -264,6 +278,7 @@
         <div
           class="tile"
           data-dz="1.061"
+          data-dl="0.260"
           style="left: 1264px; top: 864px; width: 300px; height: 200px"
         >
           <img class="cover" src="assets/footage/chat-linux-29.png" alt="" />
@@ -271,6 +286,7 @@
         <div
           class="tile"
           data-dz="1.061"
+          data-dl="0.260"
           style="left: 1580px; top: 864px; width: 300px; height: 200px"
         >
           <img
@@ -307,14 +323,16 @@
       0,
     );
     zoom();
-    // Depth: the outer tiles start 7 % larger and settle to their own size as the
-    // camera pulls back, so the wall comes forward as a field, not a contact sheet.
+    // Depth: the outer tiles start 7 % larger and settle to their own size late,
+    // while the centre settles first — the wall comes forward as a field with
+    // parallax, not a contact sheet (every tile lands by 1.8 s, before the line).
     gsap.utils.toArray("#g-wall .tile").forEach((tile) => {
+      const delay = +tile.dataset.dl;
       tl.fromTo(
         tile,
         { scale: +tile.dataset.dz },
-        { scale: 1, duration: 2, ease: "power1.inOut" },
-        0,
+        { scale: 1, duration: 1.8 - delay, ease: "power1.inOut" },
+        delay,
       );
     });
     tl.to(

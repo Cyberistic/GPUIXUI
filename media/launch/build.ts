@@ -341,6 +341,9 @@ ${WALL.map((cell) => {
   // settles to its own size, so the wall comes forward instead of unzipping.
   const depth = Math.abs(box.y + box.h / 2 - WALL_BOX.h / 2) / (WALL_BOX.h / 2);
   const dz = (1.02 + depth * 0.05).toFixed(3);
+  // The further a tile sits from the wall's middle, the later it settles: half a
+  // beat of lag at the edges is what turns the scale change into parallax.
+  const dl = (depth * 0.32).toFixed(3);
   const [fx, fy] = cell.focus ?? [0.5, 0.5];
   // A detail crop blows the screenshot up and centres the chosen point of it:
   // the image is `zoom` times the tile and offset so (fx, fy) lands in the middle.
@@ -352,7 +355,7 @@ ${WALL.map((cell) => {
   const detail = cell.zoom
     ? ` style="left:${left}px;top:${top}px;right:auto;bottom:auto;width:${width}px;height:${height}px"`
     : "";
-  return `        <div class="tile" data-dz="${dz}" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
+  return `        <div class="tile" data-dz="${dz}" data-dl="${dl}" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
 }).join("\n")}
       </div>
     </div>
@@ -367,10 +370,13 @@ ${WALL.map((cell) => {
     gsap.set("#g-wall", { x: ${-FOCUS_CX}, y: ${-FOCUS_CY} });
     tl.to("#g-wall", { x: ${-Math.round(WALL_BOX.w / 2)}, y: ${-Math.round(WALL_BOX.h / 2)}, duration: 3, ease: "power1.inOut" }, 0);
     zoom();
-    // Depth: the outer tiles start 7 % larger and settle to their own size as the
-    // camera pulls back, so the wall comes forward as a field, not a contact sheet.
+    // Depth: the outer tiles start 7 % larger and settle to their own size late,
+    // while the centre settles first — the wall comes forward as a field with
+    // parallax, not a contact sheet (every tile lands by 1.8 s, before the line).
     gsap.utils.toArray("#g-wall .tile").forEach((tile) => {
-      tl.fromTo(tile, { scale: +tile.dataset.dz }, { scale: 1, duration: 2, ease: "power1.inOut" }, 0);
+      const delay = +tile.dataset.dl;
+      tl.fromTo(tile, { scale: +tile.dataset.dz },
+        { scale: 1, duration: 1.8 - delay, ease: "power1.inOut" }, delay);
     });
     tl.to(cam, { z: Math.log(0.82), duration: 2, ease: "power1.inOut", onUpdate: zoom }, 0);
     tl.fromTo("#g-wall",{rotation:0},{rotation:0,duration:${GRID_LENGTH}},0);
@@ -399,6 +405,8 @@ interface Shot {
   readonly scale: number;
   readonly framed: boolean;
   readonly push: readonly [number, number];
+  /** A slow lateral drift, from this offset in px (relative to the shot) to 0. */
+  readonly drift?: readonly [number, number];
   readonly cursor?: boolean;
   /** The platform this shot shows; the film names it under the line. */
   readonly platform?: string;
@@ -483,7 +491,9 @@ const SHOTS: ReadonlyArray<Shot> = [
     push: [1, 1],
     platform: "Linux",
   },
-  // The apps: Slang's fx-991, the editor, the player, the monitor.
+  // The apps: Slang's fx-991, the editor, the monitor, the player, the tiling
+  // desktop. Each one pushes in and drifts a few pixels, so a 1 s beat of real
+  // screens reads as camera work rather than five stills.
   {
     still: stillOf("slang-app-history.png"),
     length: 1,
@@ -491,7 +501,8 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 1640,
     scale: 0.52,
     framed: true,
-    push: [1.03, 1],
+    push: [1.07, 1],
+    drift: [12, 10],
   },
   {
     take: "editor",
@@ -501,7 +512,8 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 1400,
     scale: 0.56,
     framed: true,
-    push: [1.03, 1],
+    push: [1.06, 1],
+    drift: [-12, 8],
     cursor: false,
   },
   {
@@ -512,7 +524,8 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 1720,
     scale: 0.56,
     framed: true,
-    push: [1.03, 1],
+    push: [1.06, 1],
+    drift: [10, 12],
     cursor: false,
   },
   // The Omarchy desktop: the same tree, repainted by the palette file.
@@ -524,7 +537,8 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 972,
     scale: 0.74,
     framed: true,
-    push: [1.03, 1],
+    push: [1.05, 1],
+    drift: [-10, -8],
     cursor: false,
   },
   {
@@ -535,7 +549,8 @@ const SHOTS: ReadonlyArray<Shot> = [
     height: 1440,
     scale: 0.6,
     framed: true,
-    push: [1.04, 1],
+    push: [1.06, 1],
+    drift: [10, -6],
     cursor: false,
   },
 ];
@@ -593,7 +608,7 @@ const showcase: Scene = {
           )
         : "";
     return `${i > 0 ? `tl.set("#s-cam${i}",{opacity:1},${t.toFixed(3)});` : ""}tl.set("#s-cam${i}",{opacity:0},${(t + shot.length).toFixed(3)});
-    tl.fromTo("#s-cam${i}",{scale:${shot.push[0]}},{scale:${shot.push[1]},duration:${shot.length},ease:"power2.out"},${t.toFixed(3)});
+    tl.fromTo("#s-cam${i}",{scale:${shot.push[0]},x:${shot.drift?.[0] ?? 0},y:${shot.drift?.[1] ?? 0}},{scale:${shot.push[1]},x:0,y:0,duration:${shot.length},ease:"power2.out"},${t.toFixed(3)});
     ${follow}`;
   }).join("\n    "),
 };
