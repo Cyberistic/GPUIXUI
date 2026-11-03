@@ -145,15 +145,17 @@ export const markMarkup = (mark: ChartMark): string => {
       const radius = shape.rx === undefined ? "" : ` rx="${num(shape.rx)}"`;
       return `<rect x="${num(shape.x)}" y="${num(shape.y)}" width="${num(shape.width)}" height="${num(shape.height)}"${radius} ${paint}/>`;
     }),
-    Match.when({ kind: "circle" }, (shape) =>
-      `<circle cx="${num(shape.cx)}" cy="${num(shape.cy)}" r="${num(shape.r)}" ${paint}/>`,
+    Match.when(
+      { kind: "circle" },
+      (shape) =>
+        `<circle cx="${num(shape.cx)}" cy="${num(shape.cy)}" r="${num(shape.r)}" ${paint}/>`,
     ),
-    Match.when({ kind: "ellipse" }, (shape) =>
-      `<ellipse cx="${num(shape.cx)}" cy="${num(shape.cy)}" rx="${num(shape.rx)}" ry="${num(shape.ry)}" ${paint}/>`,
+    Match.when(
+      { kind: "ellipse" },
+      (shape) =>
+        `<ellipse cx="${num(shape.cx)}" cy="${num(shape.cy)}" rx="${num(shape.rx)}" ry="${num(shape.ry)}" ${paint}/>`,
     ),
-    Match.when({ kind: "path" }, (shape) =>
-      `<path d="${shape.d}" ${paint}/>`,
-    ),
+    Match.when({ kind: "path" }, (shape) => `<path d="${shape.d}" ${paint}/>`),
     Match.exhaustive,
   );
 };
@@ -167,7 +169,8 @@ export const markMarkup = (mark: ChartMark): string => {
  */
 export const flatMark = (mark: ChartMark): ChartMark => ({
   ...mark,
-  fill: mark.fill === undefined ? undefined : { ...mark.fill, gradient: undefined },
+  fill:
+    mark.fill === undefined ? undefined : { ...mark.fill, gradient: undefined },
 });
 
 /**
@@ -186,10 +189,7 @@ export const FALLBACK_MARK_COLOUR = "#000000";
  * The dash is derived from the weight, so a dashed line's dashes scale with
  * its stroke rather than being a fixed pattern that a thin line drowns in.
  */
-export const lineStroke = (
-  width: number,
-  dashed = false,
-): MarkStroke => ({
+export const lineStroke = (width: number, dashed = false): MarkStroke => ({
   color: FALLBACK_MARK_COLOUR,
   width,
   dash: dashed ? `${num(width * 2)} ${num(width * 1.6)}` : undefined,
@@ -201,10 +201,7 @@ export const lineStroke = (
  * A fill with no colour takes the fallback, so a mark is never colourless by
  * accident.
  */
-export const solidFill = (
-  color: string,
-  opacity?: number,
-): MarkFill => ({
+export const solidFill = (color: string, opacity?: number): MarkFill => ({
   color,
   opacity,
 });

@@ -1618,7 +1618,11 @@ export const RadarChart = ({
                           radius,
                         ),
                       ],
-                      (d): ChartMark => ({ kind: "path", d, stroke: lineStroke(1) }),
+                      (d): ChartMark => ({
+                        kind: "path",
+                        d,
+                        stroke: lineStroke(1),
+                      }),
                     ),
                   } satisfies PaintLayer,
                   ...(gridFill

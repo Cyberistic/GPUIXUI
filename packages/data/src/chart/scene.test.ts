@@ -17,12 +17,7 @@
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import {
-  chartScene,
-  scenePointAt,
-  sceneRows,
-  sceneSvg,
-} from "./scene.js";
+import { chartScene, scenePointAt, sceneRows, sceneSvg } from "./scene.js";
 import type { ChartSeries } from "./logic.js";
 
 const series: ReadonlyArray<ChartSeries> = [
@@ -72,9 +67,8 @@ describe("the scene bridge", () => {
     const scene = chartScene(options);
     // Every painted datum keeps its identity beside the paint: the scene's
     // points are the chart's data, not a hit-test artefact.
-    const seriesPoints = Arr.filter(
-      scene.points,
-      (point) => point.markId.startsWith("bar-"),
+    const seriesPoints = Arr.filter(scene.points, (point) =>
+      point.markId.startsWith("bar-"),
     );
     expect(seriesPoints.length).toBe(6);
     // The points are grouped by the mark that owns them: the first series'

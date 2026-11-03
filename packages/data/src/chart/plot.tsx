@@ -111,4 +111,5 @@ export const ChartPlot = ({
 /** The marks a layer paints, for a caller that reads them directly. */
 export const layerMarkList = (
   layers: ReadonlyArray<PaintLayer>,
-): ReadonlyArray<ChartMark> => Arr.flatten(Arr.map(layers, (layer) => layer.marks));
+): ReadonlyArray<ChartMark> =>
+  Arr.flatten(Arr.map(layers, (layer) => layer.marks));

@@ -184,8 +184,6 @@ export const ChartMaskSurface = ({
  * can it decode an image? The default is the document route, because that is
  * the route that paints in colour.
  */
-export const rendersDocument = (
-  render: ChartRender | undefined,
-): boolean =>
+export const rendersDocument = (render: ChartRender | undefined): boolean =>
   Option.getOrElse(Option.fromNullishOr(render), () => "document" as const) ===
   "document";

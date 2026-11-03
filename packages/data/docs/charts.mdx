@@ -3,9 +3,18 @@ title: Charts
 description: Bar, stacked, line, area, pie, donut, radar, radial and sparkline charts
 ---
 
-One `<svg>` per series, tinted through `style.color`. Axis, labels, legend and
-the hover readout are text and boxes beside the plot, so every chart inherits the
-surface it sits on. The paint is window-verified by `chart-surface-lifecycle`.
+A chart is a **scene**, and the scene is compiled by
+[TanStack Charts](https://github.com/TanStack/charts). The compiler is a pure
+function over a definition and a size — no DOM, no `document`, no `window` —
+and the scene it returns carries every series' own colour, so one element
+paints the whole plot.
+
+The paint route is `setImage`: the chart's SVG document is decoded by the
+runtime's own renderer and painted as one image, which is why a chart can hold
+two colours in one element and a real gradient under an area. The axis,
+labels, legend and the hover readout are text and boxes beside the plot, so
+every chart inherits the surface it sits on. The paint is window-verified by
+`chart-surface-lifecycle`.
 
 ## Usage
 
@@ -509,11 +518,51 @@ through the real GPUix web build (`/live?scene=parity&only=<id>`).
 | `chart-legend-default` | ChartLegend | `items` | native | [live](/live?scene=parity&only=chart-legend-default) |
 | `chart-legend-shapes` | ChartLegend | `shape` | native | [live](/live?scene=parity&only=chart-legend-shapes) |
 
+## How a chart is painted
+
+A chart is **a scene**, and the scene is compiled by
+[TanStack Charts](https://github.com/TanStack/charts) — MIT, and the one chart
+library whose compiler runs without a DOM.
+
+| Stage | What it does |
+| --- | --- |
+| `sceneRows` | the caller's series become **flat** rows: one field per series, keyed by the series' own key |
+| `sceneDefinition` | the rows become a definition: the marks, the ticks and the scales |
+| `chartScene` | the definition and the plot's box compile to a `ChartScene` — a value, not a render |
+| `sceneSvg` | the scene serialises to **one SVG document** |
+| `ChartSurface` | the document is decoded by the runtime's own renderer and painted as one image |
+
+Two properties follow, and neither is available to a chart drawn as a stack of
+tinted masks:
+
+- **one element, every colour.** Two series paint in two colours inside one
+  element, because the document carries each shape's own fill;
+- **a real gradient.** A fade under an area is a `linearGradient`, not a stack
+  of nested bands.
+
+The hit test is **geometric**: the scene keeps a point for every datum beside
+the painted nodes, so the datum under the pointer is the nearest point, not a
+DOM event on a mark. That is what the hover readout asks.
+
+Only the **DOM-free** subpaths are used — `/scene`, `/line`, `/bar`, `/area`,
+`/tick`, `/svg` and `/scales/*`. TanStack's DOM renderers (`/canvas`, `/dom`,
+`/dom-text`) name `document`, `window`, `HTMLElement`,
+`getBoundingClientRect` and `ResizeObserver`, and this runtime has none of
+them. Importing by subpath keeps `d3-scale`, `d3-shape` and `d3-selection`
+out of the bundle as well: the shipped bundle carries **zero** d3 references.
+
+The scales come from `@tanstack/charts-scales`, a package with no dependencies
+of its own.
+
 ## Limitations
 
-- One tint per layer: two colours inside one series need two layers.
 - A category label wider than its slot is clipped at the slot's edge, so two
   neighbouring categories never paint over each other.
-- No zoom, pan or animation between data sets.
 - A hover readout is per category, not per mark: it names every series' value at
   that column rather than the one shape under the pointer.
+- The document route paints the marks as one image, so a mark is not an
+  accessibility element of its own; the series' values are announced by the
+  chart's own description, and the readout is a sibling of the image.
+- Zoom, pan and the brush paint their strips as the runtime's own boxes, not
+  as scene nodes.
+

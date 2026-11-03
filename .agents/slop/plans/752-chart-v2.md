@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | planned |
+| Status | in progress — the scene bridge lands; the frame's document route, the config seam and the new types are next |
 | Phase | D (data presentation) |
 | Depends on | `@gpuixui/data` chart module, `@gpuixui/tokens` series scale, `@gpuixui/motion` |
 | References | shadcn/ui v4 `apps/v4/registry/new-york-v4/ui/chart.tsx`, Recharts v3, GPUI Kit `component/chart`, `chart-raster` and `chart-surface-lifecycle` probes |
@@ -319,7 +319,34 @@ with no DOM is the wrong shape, but the *scenes* it compiles do not need it.
 
 ### 9.5 The decision
 
-**Take the architecture, not the dependency.**
+**Take the dependency.** The owner decided the charts are built on TanStack
+Charts, and the measurements support it: the scene path is DOM-free, the
+bundle carries no d3 when the subpaths are used, and the output is
+production-grade — axes, tick rules, tick labels, focus layers, per-series
+fills and real `fill-opacity` fades in one document.
+
+What ships:
+
+| Package | Why |
+| --- | --- |
+| `@tanstack/charts` `1.2.1` | the scene compiler, the marks, the ticks and the SVG serialiser |
+| `@tanstack/charts-scales` `1.2.1` | the band and linear scales, with **no dependencies of its own** |
+
+Both are imported **by subpath** — `/scene`, `/line`, `/bar`, `/area`, `/tick`,
+`/svg`, `/scales/band`, `/scales/linear` — so `d3-scale`, `d3-shape`,
+`d3-selection`, `d3-force`, `d3-geo` and the rest stay out of the bundle.
+Measured: a bundle of the scene path, the SVG renderer, the bar/line/area
+marks and the compact scales is **57 kB minified / 21 kB gzip** and carries
+**zero** d3 references; the minimal scene is **41 kB / 15 kB**.
+
+TanStack's DOM renderers (`/canvas`, `/dom`, `/dom-text`) are **not** used:
+they name `document`, `window`, `HTMLElement`, `getBoundingClientRect` and
+`ResizeObserver`, and this runtime has none of them.
+
+The earlier alternative — take the architecture, not the dependency — is
+recorded below because it is the fallback if the package's API keeps moving.
+
+#### The earlier alternative, for the record
 
 TanStack's design is the right one for this runtime and its implementation is
 MIT and proven DOM-free. But:
@@ -333,7 +360,7 @@ MIT and proven DOM-free. But:
   public contract honestly", because `ChartRenderer.mount` takes an
   `HTMLElement`.
 
-So the plan is:
+The earlier plan was:
 
 1. **Adopt the architecture.** The `ChartScene` model — renderer-neutral
    nodes, `ChartPoint` identity beside the paint, a pure scene compiler and a
@@ -348,10 +375,9 @@ So the plan is:
    `logic.ts` and `geometry.ts` — and re-evaluate the dependency once the
    package settles past 1.0.
 
-The alternative — depend on `@tanstack/charts` and write only the renderer —
-is the **cheapest path to Recharts-grade output**, and it becomes a
-one-line change later if the compiler is good enough to keep. The plan
-records it as the first thing to try once the GPUix renderer is proven.
+**That is what §9.5 reversed**, and the reversal is measured rather than
+assumed: the dependency costs 15–21 kB gzip with no d3, and the output is
+production-grade on the first run.
 
 ### 9.6 What we learn from it, whatever we do
 

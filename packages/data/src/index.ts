@@ -162,17 +162,10 @@ export type {
   SceneRow,
 } from "./chart/scene.js";
 
-export {
-  chartDocument,
-  layerMarks,
-} from "./chart/paint.js";
+export { chartDocument, layerMarks } from "./chart/paint.js";
 export type { LayerPaint } from "./chart/paint.js";
 
-export {
-  chartSvg,
-  defsMarkup,
-  gradientMarkup,
-} from "./chart/svg.js";
+export { chartSvg, defsMarkup, gradientMarkup } from "./chart/svg.js";
 export type { ChartDocument, ChartGradient } from "./chart/svg.js";
 
 export {

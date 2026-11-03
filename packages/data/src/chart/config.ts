@@ -113,8 +113,7 @@ export const configEntries = (
  */
 export const configKeys = (
   config: ChartConfig | undefined,
-): ReadonlyArray<string> =>
-  Arr.map(configEntries(config), ([key]) => key);
+): ReadonlyArray<string> => Arr.map(configEntries(config), ([key]) => key);
 
 /**
  * One row of a chart's data: a record of fields.
@@ -211,9 +210,8 @@ export const configColours = (
   );
 
 /** The config as a record, when a caller hands one over as stored data. */
-export const configOf = (
-  config: ChartConfig | undefined,
-): ChartConfig => Option.getOrElse(Option.fromNullishOr(config), () => ({}));
+export const configOf = (config: ChartConfig | undefined): ChartConfig =>
+  Option.getOrElse(Option.fromNullishOr(config), () => ({}));
 
 /** The config's own keys, for a caller that wants them as a set. */
 export const configKeySet = (

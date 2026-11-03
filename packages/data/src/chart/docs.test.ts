@@ -186,4 +186,27 @@ describe("the charts page's API tables", () => {
     expect(page).toContain("clipped at the slot's edge");
     expect(chartsRow()).toContain("clipped");
   });
+
+  it("names the scene compiler and the subpaths the chart depends on", () => {
+    // The page tells a consumer where the chart's geometry comes from. If the
+    // dependency changes, the page has to change with it — and it has to name
+    // the **DOM-free** subpaths, because TanStack's DOM renderers need a
+    // `document` this runtime does not have.
+    const bridge = read("./scene.ts");
+    expect(bridge).toContain("@tanstack/charts/scene");
+    expect(bridge).toContain("@tanstack/charts/scales/linear");
+    expect(page).toContain("TanStack Charts");
+    expect(page).toContain("/scales/*");
+    // The DOM renderers are named only to be ruled out.
+    expect(bridge).not.toContain("@tanstack/charts/canvas");
+    expect(bridge).not.toContain("@tanstack/charts/dom");
+  });
+
+  it("says that a chart is one element with every series' colour", () => {
+    // The claim the whole route rests on, and the one a consumer checking
+    // against Recharts would want stated plainly.
+    expect(page).toContain("every series' own colour");
+    expect(page).toContain("one element");
+    expect(page).toContain("real gradient");
+  });
 });

@@ -994,9 +994,8 @@ export const chartRangeWith = (
   pinned: readonly [number, number] | undefined = undefined,
   stacked = false,
 ): ChartRange =>
-  Option.getOrElse(
-    pinnedRange(pinned),
-    () => chartRange(series, categories, stacked),
+  Option.getOrElse(pinnedRange(pinned), () =>
+    chartRange(series, categories, stacked),
   );
 
 /**
@@ -1011,10 +1010,10 @@ export const referenceLines = (
   box: ChartBox,
   range: ChartRange,
 ): ReadonlyArray<{ readonly y: number; readonly value: number }> =>
-  Arr.map(
-    Arr.filter(values, Number.isFinite),
-    (value) => ({ y: scaleY(value, box, range), value }),
-  );
+  Arr.map(Arr.filter(values, Number.isFinite), (value) => ({
+    y: scaleY(value, box, range),
+    value,
+  }));
 
 /**
  * The vertical rules a grid draws, one per category.
@@ -1032,10 +1031,13 @@ export const verticalGrid = (
     : 0;
   if (steps === 0) return [];
   const slot = box.width / steps;
-  return Arr.map(Arr.makeBy(steps, (index) => index), (index) => ({
-    x: index * slot,
-    width: Math.max(1, slot),
-  }));
+  return Arr.map(
+    Arr.makeBy(steps, (index) => index),
+    (index) => ({
+      x: index * slot,
+      width: Math.max(1, slot),
+    }),
+  );
 };
 
 /**

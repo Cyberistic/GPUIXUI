@@ -50,7 +50,8 @@ export const layerMarks = (paint: LayerPaint): ReadonlyArray<ChartMark> =>
           ? undefined
           : {
               ...mark.fill,
-              color: mark.fill.color === "#000000" ? paint.colour : mark.fill.color,
+              color:
+                mark.fill.color === "#000000" ? paint.colour : mark.fill.color,
               opacity: mark.fill.opacity ?? alpha,
             },
       stroke:
@@ -59,7 +60,9 @@ export const layerMarks = (paint: LayerPaint): ReadonlyArray<ChartMark> =>
           : {
               ...mark.stroke,
               color:
-                mark.stroke.color === "#000000" ? paint.colour : mark.stroke.color,
+                mark.stroke.color === "#000000"
+                  ? paint.colour
+                  : mark.stroke.color,
             },
     };
   });
@@ -117,9 +120,7 @@ export const chartDocument = (
 ): ChartDocument => ({
   box,
   gradients,
-  marks: Arr.flatten(
-    Arr.map(layers, (paint) => layerMarks(paint)),
-  ),
+  marks: Arr.flatten(Arr.map(layers, (paint) => layerMarks(paint))),
 });
 
 /**

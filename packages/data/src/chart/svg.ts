@@ -93,15 +93,10 @@ export const gradientMarkup = (gradient: ChartGradient): string => {
  * A document with no gradient has no `defs` at all, rather than an empty
  * one — the markup a human reads should say what is in it.
  */
-export const defsMarkup = (
-  gradients: ReadonlyArray<ChartGradient>,
-): string =>
+export const defsMarkup = (gradients: ReadonlyArray<ChartGradient>): string =>
   gradients.length === 0
     ? ""
-    : `<defs>${Arr.join(
-        Arr.map(gradients, gradientMarkup),
-        "",
-      )}</defs>`;
+    : `<defs>${Arr.join(Arr.map(gradients, gradientMarkup), "")}</defs>`;
 
 /**
  * The whole chart as one SVG document.
@@ -120,10 +115,7 @@ export const chartSvg = (document: ChartDocument): string => {
   const width = document.box.width * scale;
   const height = document.box.height * scale;
   const viewBox = `0 0 ${num(document.box.width)} ${num(document.box.height)}`;
-  const body = Arr.join(
-    Arr.map(document.marks, markMarkup),
-    "",
-  );
+  const body = Arr.join(Arr.map(document.marks, markMarkup), "");
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${num(width)}" height="${num(height)}" viewBox="${viewBox}">`,
     defsMarkup(document.gradients ?? []),

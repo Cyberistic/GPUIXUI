@@ -179,12 +179,7 @@ const seriesMark = (
 export const sceneDefinition = (options: SceneChartOptions) => {
   const rows = sceneRows(options.series, options.labels);
   const marks = Arr.map(options.series, (one, index) =>
-    seriesMark(
-      options.kind,
-      rows,
-      one,
-      options.colours[index] ?? "#000000",
-    ),
+    seriesMark(options.kind, rows, one, options.colours[index] ?? "#000000"),
   );
   // The ticks are read against the **first** series' values: a tick rule sits
   // at a value, and the value axis is one scale. A chart with no series has
@@ -228,9 +223,7 @@ export const sceneDefinition = (options: SceneChartOptions) => {
  * The scene is a **value**: the same props always compile to the same scene,
  * so a caller can read the geometry out of it without a renderer.
  */
-export const chartScene = (
-  options: SceneChartOptions,
-): ChartScene<SceneRow> =>
+export const chartScene = (options: SceneChartOptions): ChartScene<SceneRow> =>
   createChartScene(sceneDefinition(options), {
     width: options.box.width,
     height: options.box.height,
