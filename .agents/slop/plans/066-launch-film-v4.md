@@ -1177,3 +1177,38 @@ reaches an element in the chip's subtree whose id has no JS handler, while the
 hover path does reach the chip. Verifying that needs a JS probe that actually
 writes (a file, not stderr) — the correct next instrument, and the reason this
 round did not produce a fix.
+
+### v4.36 — the press lands on the chip, finds a handler, runs it, and nothing changes
+
+The file-writing probe (this time `process.getBuiltinModule("fs")`, so it cannot be
+swallowed like the stderr probes) went into `dispatch` with the element bounds from
+the live renderer:
+
+```
+type=click id=46 at=(882,94) bounds=(843,77,79x36) found=true     ← Windows chip
+type=click id=50 at=(954,94) bounds=(930,79,53x32) found=true     ← Linux chip
+type=click id=59 at=(960,149) bounds=(943,138,40x24) found=true   ← dark switch
+```
+
+Two takes, chip presses only: **no frame changes at all** (delta > 0.3: none). The
+same take with the dark press paints (Δ 206). So:
+
+- the press lands inside the chip's own bounds (843–922 × 77–113 for the aim 882,94),
+- the element has a registered click handler (`types=click|focus|blur`, `found=true`),
+- the handler runs (dispatch returns true),
+- and the app still does not change.
+
+So this was never a coordinate, bridge or scheduling problem — the chip's click
+handler is not the one that changes the look. The value-change handler sits on the
+group (`Tabs`/`ToggleGroup`), which never runs because GPUIX dispatches a press to a
+single element. The same block *does* change looks in the window renderer, so the
+difference is which element the hit test resolves in the terminal window (wrapper vs
+trigger).
+
+The honest next step is therefore different from the one I was given: log the
+ancestor chain for the press and either dispatch to ancestors (add bubbling) or move
+the change handler onto the item. Both are component or runtime design decisions,
+not a coordinate fix.
+
+Store file restored (`renderer-state.js` byte-identical, probe grep: 0), environment
+re-verified by recording a take.
