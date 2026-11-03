@@ -1062,3 +1062,34 @@ the hit test, not the coordinates, not the scheduler, not the renderer.
 
 Store binary restored (hash matches `.bak`), probe take and log deleted,
 environment re-verified by recording a take.
+
+### v4.32 — the JS bridge is never called at all
+
+`createNativeRenderer`'s callback in `@gpuix/native/dist/runtime.js` — the single
+place the native renderer hands anything to JS — was instrumented to log every
+invocation (error?, event type, whether `options.onEvent` is a function), the file
+restored afterwards. A take with one press:
+
+```
+[bridge] …    ← zero lines
+```
+
+**The callback never fires.** Not for pointer events, not for errors, not for the
+initial render. Meanwhile the Rust side logs prove the platform *does* run its
+input callback and hands it a press at (882, 94) with `pixel_mouse=true`, scale
+1.0 — it comes back propagating. And `renderer-state.dispatch`, which is only
+reached from this callback, is never called (v4.30).
+
+So the chain is now: input parsed ✓ → platform callback invoked ✓ → **native→JS
+threadsafe callback never delivered** ✗ → JS dispatch ✗ → React handler ✗. The
+break is inside the addon's event delivery to Node, not anywhere above it.
+
+That is the sixth layer in six rounds, and each one has moved the defect deeper
+into the pinned `@gpuix/native` build while the film stays green with `term-app`.
+Diminishing returns are now explicit: the next step would be instrumenting the
+napi `ThreadsafeFunction` itself (does `tsf.call` return Ok? is the JS loop
+blocked?) — a change inside a compiled dependency whose correctness I cannot
+verify beyond "a take shows no frames".
+
+Store restored (`runtime.js` back to its pre-patch bytes: grep for the probe is 0),
+environment re-verified by recording a take.
