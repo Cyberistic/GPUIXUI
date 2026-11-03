@@ -799,3 +799,40 @@ Re-ran both audits on the new render: **19/19** cuts spike on a frame multiple o
 15 with a cue at ≤40 ms (terminal: 21.60 Δ90.0 land, 22.20 press, 22.80 Δ82.8
 thud, 23.40 press — each at 0 ms); **54/57** cues correlate directly at lag
 ≤25 ms, the three others masked by simultaneous sounds as before.
+
+### v4.25 — the terminal paint coalescing: where it lives, and why it is blocked here
+
+Investigated on request, to see whether the defect can be fixed in this repo.
+
+**It cannot, as the repo stands.** The terminal platform is Rust, not the JS in
+`apps/playground/src/terminal/`:
+
+- `@gpuix/native@0.11.0` ships only a compiled addon (`index.d.ts` exposes
+  `terminal?: boolean` and no repaint hook — there is no JS seam to call).
+- The renderer lives in the GPUix host at
+  `references/gpuix/packages/gpui-terminal/` (`window.rs`, `tty.rs`, `kitty.rs`,
+  `dispatcher.rs`; 3 587 lines). `window.rs::draw` presents one frame per paint,
+  so the coalescing is in the input → invalidate → frame scheduling path, not in
+  the presenter.
+- `patches/gpui/0001-transform.patch` — the only runtime patch in the repo —
+  patches a **Zed checkout** used to *build* that addon, and its README says it is
+  optional and "not a dependency of any package in this repository". The host
+  checkout under `references/` is read-only by repo rule.
+- There is no build step here for the addon: no `target/` in the reference, no
+  script that produces the `.node`, and the pinned binary lives inside the nub
+  store.
+
+**What a real fix costs.** Copy the host out of `references/`, patch the frame
+scheduling so each committing paint emits its own kitty batch, build the napi
+addon with the pinned toolchain (`channel = "1.97.1"`, cold — no cargo cache for
+this tree), then replace the binary in
+`node_modules/.store/@gpuix+native-darwin-arm64@0.11.0/…` and re-record
+`takes/term-settings` and the two audits. That is a dependency-build change for
+the whole repo, not a film change, and it is the kind of call a workstream owner
+should make rather than a film pass.
+
+**Meanwhile the beat is not broken.** The film shows the three repaints through
+`takes/term-app`, a real render of the same block at the terminal's 1024×576 and
+darwin theme, cut on the three pressing frames; cuts are 19/19 on the grid and
+54/57 cues correlate directly. The upstream defect only limits what a *terminal
+capture* can show, which is why it is recorded here rather than patched blindly.
