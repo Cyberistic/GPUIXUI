@@ -192,7 +192,7 @@ const montage: Scene = {
     #root .cam video { left:0; top:0; width:1920px; height:1080px; }`,
   body: MONTAGE.map(
     ({ take, crop }, i) =>
-      `    <div id="m-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0};transform:scale(${crop})">
+      `    <div id="m-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0};transform:scale(${i === 0 ? 1.1 : crop})">
       ${clip(`m-v${i}`, footage(take, 8), i * BEAT_CUT, BEAT_CUT, LEAD_IN, "", 1 + (i % 2))}
       <div id="m-cur${i}" class="cursor" style="width:${Math.round(CURSOR_WIDTH / crop)}px">${CURSOR}</div>
     </div>`,
@@ -203,47 +203,62 @@ const montage: Scene = {
       i + 1 < MONTAGE.length
         ? `tl.set("#m-cam${i}",{opacity:0},${(t + BEAT_CUT).toFixed(1)});`
         : "";
+    // The opening is one carried move: the camera pushes into the switch and the
+    // cut lands mid-move, so the first four shots read as one gesture.
+    const push =
+      i === 0
+        ? `tl.fromTo("#m-cam0",{scale:1.1},{scale:1.45,duration:${BEAT_CUT},ease:"power1.in"},0);`
+        : "";
     return `${i > 0 ? `tl.set("#m-cam${i}",{opacity:1},${t.toFixed(1)});` : ""}${cut}
+    ${push}
     ${cursorClip(`m-cur${i}`, take, t, LEAD_IN, BEAT_CUT, 1)}`;
   }).join("\n    "),
 };
 
 // 3.6–8.4: a field of live components in columns sliding opposite ways; the
 // camera starts on one being typed into and keeps pulling back to reveal more.
-// Every tile a different take: the wall is the library, not a pattern.
-const WALL = [
-  "stats",
-  "cu-switch",
-  "pipeline",
-  "calendar",
-  "tiling",
-  "desktop-aero",
-  "inbox",
-  "cu-tabs",
-  "editor",
-  "notes",
-  "agent",
-  "chat-mac",
-  "kanban",
-  "cu-slider",
-  "music",
-  "viewer",
-  "settings",
-  "cu-input",
-  "monitor",
-  "desktop-luna",
-  "slang",
-  "cu-checkbox",
-  "launcher",
-  "chat-win",
-  "license",
-  "cu-toggle",
-  "menubar",
-  "preferences",
-  "chat-linux",
-  "cu-button",
-] as const;
-const GRID = { cols: 6, rows: 5, w: 340, h: 240, gap: 24 };
+// Every tile a different take, and a span that gives the wall a rhythm: a hero,
+// wide panels, two tall ones and a big block — a bento, not a contact sheet.
+interface Cell {
+  readonly take: string;
+  readonly col: number;
+  readonly row: number;
+  readonly w: number;
+  readonly h: number;
+}
+const WALL: ReadonlyArray<Cell> = [
+  { take: "stats", col: 0, row: 0, w: 2, h: 2 },
+  { take: "cu-switch", col: 2, row: 0, w: 1, h: 1 },
+  { take: "notes", col: 3, row: 0, w: 1, h: 1 },
+  { take: "tiling", col: 4, row: 0, w: 2, h: 1 },
+  { take: "editor", col: 2, row: 1, w: 2, h: 1 },
+  { take: "cu-tabs", col: 4, row: 1, w: 1, h: 1 },
+  { take: "desktop-aero", col: 5, row: 1, w: 1, h: 2 },
+  { take: "cu-slider", col: 0, row: 2, w: 1, h: 1 },
+  { take: "calendar", col: 1, row: 2, w: 1, h: 1 },
+  { take: "music", col: 2, row: 2, w: 1, h: 1 },
+  { take: "inbox", col: 3, row: 2, w: 1, h: 1 },
+  { take: "monitor", col: 4, row: 2, w: 1, h: 1 },
+  { take: "chat-win", col: 0, row: 3, w: 1, h: 2 },
+  { take: "cu-checkbox", col: 1, row: 3, w: 1, h: 1 },
+  { take: "kanban", col: 2, row: 3, w: 2, h: 2 },
+  { take: "viewer", col: 4, row: 3, w: 1, h: 1 },
+  { take: "preferences", col: 5, row: 3, w: 1, h: 1 },
+  { take: "cu-input", col: 1, row: 4, w: 1, h: 1 },
+  { take: "slang", col: 4, row: 4, w: 2, h: 1 },
+];
+const UNIT = { w: 300, h: 200, gap: 16 };
+const GRID = { cols: 6, rows: 5 };
+const cellBox = (cell: Cell) => ({
+  x: cell.col * (UNIT.w + UNIT.gap),
+  y: cell.row * (UNIT.h + UNIT.gap),
+  w: cell.w * UNIT.w + (cell.w - 1) * UNIT.gap,
+  h: cell.h * UNIT.h + (cell.h - 1) * UNIT.gap,
+});
+const WALL_BOX = {
+  w: GRID.cols * UNIT.w + (GRID.cols - 1) * UNIT.gap,
+  h: GRID.rows * UNIT.h + (GRID.rows - 1) * UNIT.gap,
+};
 const lastFrame = (take: string): number =>
   Number(
     execFileSync("sh", [
@@ -260,7 +275,7 @@ const grid: Scene = {
   start: 4 * BEAT_CUT,
   duration: GRID_LENGTH,
   css: `#root .cam { position:absolute; left:960px; top:540px; width:0; height:0; }
-    #root .col { position:absolute; top:0; }
+    #root .wall { position:absolute; left:0; top:0; width:${WALL_BOX.w}px; height:${WALL_BOX.h}px; }
     #root .tile { position:absolute; width:${GRID.w}px; height:${GRID.h}px; border-radius:24px; overflow:hidden; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 10px 30px -14px rgba(30,30,60,.25); }
     #root .tile img, #root .tile video { position:absolute; }
     #root .tile img.cover { inset:0; width:100%; height:100%; object-fit:cover; }
@@ -269,49 +284,31 @@ const grid: Scene = {
     #root .cap-band.down { bottom:0; background:linear-gradient(rgba(244,242,238,0), ${GROUND} 55%); }
     #root .cap-band.up { top:0; opacity:0; background:linear-gradient(${GROUND} 55%, rgba(244,242,238,0)); }`,
   body: `    <div id="g-cam" class="cam">
-${Array.from({ length: GRID.cols }, (_, col) => {
-  const x = (col - (GRID.cols - 1) / 2) * (GRID.w + GRID.gap) - GRID.w / 2;
-  const tiles = Array.from({ length: GRID.rows }, (_, row) => {
-    const take = WALL[row * GRID.cols + col]!;
-    const y = (row - (GRID.rows - 1) / 2) * (GRID.h + GRID.gap) - GRID.h / 2;
-    const component = take.startsWith("cu-");
-    const end = still(take, lastFrame(take));
-    const live =
-      component && (row + col) % 3 === 0
-        ? clip(
-            `g-v${col}-${row}`,
-            footage(take),
-            0,
-            GRID_LENGTH,
-            0.3,
-            "left:-26px;top:-10px;width:392px;height:270px",
-            1 + ((col * GRID.rows + row) % 8),
-          )
-        : "";
-    const media = component
-      ? `<img src="${end}" alt="" style="left:-26px;top:-10px;width:392px;height:270px">${live}`
-      : `<img class="cover" src="${end}" alt="">`;
-    return `        <div class="tile" style="left:0;top:${y}px">${media}</div>`;
-  }).join("\n");
-  return `      <div id="g-col${col}" class="col" style="left:${x}px">\n${tiles}\n      </div>`;
+      <div id="g-wall" class="wall">
+${WALL.map((cell, i) => {
+  const box = cellBox(cell);
+  const component = cell.take.startsWith("cu-");
+  const end = still(cell.take, lastFrame(cell.take));
+  const media = component
+    ? `<img src="${end}" alt="" style="left:${Math.round(-(960 - box.w) / 2)}px;top:${Math.round(-(540 - box.h) / 2)}px;width:960px;height:540px">${i % 4 === 0 ? clip(`g-v${i}`, footage(cell.take), 0, GRID_LENGTH, 0.3, `left:${Math.round(-(960 - box.w) / 2)}px;top:${Math.round(-(540 - box.h) / 2)}px;width:960px;height:540px`, 1 + (i % 8)) : ""}`
+    : `<img class="cover" src="${end}" alt="">`;
+  return `        <div class="tile" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px">${media}</div>`;
 }).join("\n")}
+      </div>
     </div>
     <div id="g-band-b" class="cap-band down"></div>
     <div id="g-band-t" class="cap-band up"></div>
     <div id="g-cap" class="cap">every component you need</div>`,
-  script: `const cam = { z: Math.log(2.05) };
+  script: `const cam = { z: Math.log(2.1) };
     const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
+    gsap.set("#g-wall", { x: ${-Math.round(WALL_BOX.w / 2)}, y: ${-Math.round(WALL_BOX.h / 2)} });
     zoom();
-    tl.to(cam, { z: Math.log(0.72), duration: 3, ease: "power1.inOut", onUpdate: zoom }, 0);
-    ${Array.from({ length: GRID.cols }, (_, col) => {
-      const way = col % 2 === 0 ? -1 : 1;
-      return `tl.fromTo("#g-col${col}",{y:${-way * 26}},{y:${way * 14},duration:${GRID_LENGTH},ease:"none"},0);`;
-    }).join("")}
-    // Paper's swap: the line sits under the field, then the two exchange
-    // places — the line rises to the band, the field slides down past it.
+    tl.to(cam, { z: Math.log(0.86), duration: 3, ease: "power1.inOut", onUpdate: zoom }, 0);
+    tl.fromTo("#g-wall",{rotation:0},{rotation:0,duration:${GRID_LENGTH}},0);
+    // Paper's swap: the line sits under the field, then the two exchange places.
     tl.fromTo("#g-cap",{opacity:0},{opacity:1,duration:0.3,ease:"power2.out"},1);
     tl.to("#g-cap",{y:-744,duration:0.5,ease:"power2.inOut"},3);
-    tl.to("#g-cam",{y:90,duration:0.5,ease:"power2.inOut"},3);
+    tl.to("#g-cam",{y:60,duration:0.5,ease:"power2.inOut"},3);
     tl.to("#g-band-t",{opacity:1,duration:0.5,ease:"none"},3);
     tl.to("#g-band-b",{opacity:0,duration:0.5,ease:"none"},3);`,
 };

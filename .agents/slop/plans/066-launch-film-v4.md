@@ -292,3 +292,21 @@ platform's materials win over the opaque override).
   both are `pointerEvents: none`.
 - **Apps beat**: five 0.8 s shots — Slang, the editor, the monitor, the player,
   the Omarchy desktop.
+
+## v4.9 (owner, 2026-11-03): the macOS desktop runs on a photo, a bento wall,
+## and a carried opening
+
+- **macOS over a photo**: the translucent window was a *stale take* — the opaque
+  theme and the solid card were already right (a magenta ground behind the window
+  showed no bleed at all). Re-recorded `chat-mac` against the blurred Maligne Lake
+  wallpaper; the window is solid, so all three desktops now run on real images.
+- **Bento wall**: the grid is no longer a uniform 6×5. Nineteen tiles on a
+  6×5 unit grid with spans — a 2×2 hero (the stats screen), two 2×1 wide panels,
+  two 1×2 tall ones, a second 2×2 block, and singles between them; the camera
+  pulls back over the whole wall (2.1 → 0.86) and the line swap still follows.
+- **Carried opening**: the first close-up is a camera push (1.1 → 1.45 over the
+  beat) that lands mid-move on the cut, so the opening four shots read as one
+  gesture instead of four stills.
+- **Regression caught and fixed**: an earlier probe edit had truncated the takes
+  map (lint found `solo`/`tap` unused); the file was restored from HEAD and only
+  the wallpaper line re-applied — `nub run lint` is clean again.

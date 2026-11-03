@@ -24911,6 +24911,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` `macos` desktop block: the drawn wallpaper, the menu bar and its menus, the dock, and a window layer — with docs, a capture and two behaviour cases (plan 744)
 `[x]` `editor`, `music`, `monitor` blocks: tokenised code with an explorer, a seeded player, and a sampled hardware monitor — docs, captures and behaviour cases each (plan 745)
 `[x]` Launch film v4.5: the three-OS chat flip (the same chat window on macOS, Aero and the tiling desktop) and the apps montage (Slang, editor, music, monitor)
+`[x]` Launch film v4.9: the macOS desktop runs on a real photo (windows opaque), the wall is a bento of nineteen spanned tiles, and the opening is a carried camera push that lands on the cut
 `[x]` Launch film v4.8: a story ladder in the lines, the music player rebuilt (cover, queue with covers, a window that hugs its content), and the apps beat on five 0.8 s shots
 `[x]` Launch film v4.7: the monitor rebuilt to the reference (rings, temp/clock/fan, RAM/network/storage, top processes), the terminal beat now runs the Settings block and presses it, and every cut lands on a 0.5 s beat
 `[x]` Launch film v4.6: 30-tile grid of every block, real wallpapers on the Windows and Omarchy desktops, the Omarchy palette scene restored, new opening framing, landings/cut sound sync, cursor and frame-clip defects. Owed: monitor rebuild, music rework, story route, terminal richness (plan 066 v4.6)

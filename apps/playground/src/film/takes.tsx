@@ -576,7 +576,7 @@ export const takes: Readonly<Record<string, Take>> = {
     height: 800,
     frames: 30,
     view: () => (
-      <MacosDesktop width={1280} height={800}>
+      <MacosDesktop width={1280} height={800} wallpaper={wallpaper("macos")}>
         <div
           style={{
             position: "absolute",
