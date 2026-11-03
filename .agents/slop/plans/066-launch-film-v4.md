@@ -1632,3 +1632,44 @@ frame and no discontinuity at any join.
 
 Wall ledger on the same render: **min 4.1 · median 4.8 · max 10.6, nothing under
 4.0.** Every rubric row holds after the v5.1–v5.5 changes.
+
+## v6.0 — round one on the user's notes
+
+### 1. The wall carries components, not only screens
+
+"it needs lots of work and more components like calendar etc" — the wall was 16
+screens. It now mixes six **components** with the blocks, each cropped into the
+tile where its card fills the frame:
+
+```
+cu-tabs 2×1 zoom 2.15 · cu-slider 2×1 zoom 2.15 · cu-checkbox 2×1 zoom 2.8
+cu-switch-solo 1×1 zoom 2.4 · calendar 1×1 zoom 1.7 · editor 1×1 zoom 1.75
+```
+
+Measuring the close-up stages first showed every component card is **centred and
+0.44 of the stage wide**, so a 2×1 tile is its natural shape (3.08 vs 3.3) and the
+crop only needs to scale it to fill: `zoom = 1920 / (card width / 0.95)`.
+
+### 2. Fewer transition sounds, none in the opening
+
+The three montage whooshes at 1.0 / 2.0 / 3.0 s are gone, and the showcase's shot
+whooshes drop from 0.55 to 0.4. Scene cuts keep 0.9. Whooshes: 19 → **16**.
+
+### 3. The apps fill the frame
+
+"too zoomed out": every apps shot now hangs from under the line at
+`top = BAND + max(0, (1080 − BAND − h) / 2)` and is scaled to fill the width —
+editor 0.85, monitor 0.75, slang 0.9, music 1.05, tiling 0.72 — so the window is the
+frame, cropped at the bottom like a tight framing instead of floating in paper.
+
+### 4. The terminal is a camera move
+
+"zoom in, typing sounds with the keys following the command, enter starts the app,
+then you zoom out": the scene opens at **1.32× on the prompt** (origin 0 0, centred
+with x −188), types with the key cues, fires an **Enter press** on the command's last
+keystroke (`21.06`, corr 1.00), the app takes over at 21.5, and the camera pulls back
+to 1.02 over 1.6 s so the whole window with the running app is shown by 23.1.
+
+Audited after the pass: cuts **19/19**; cue correlation **50/54** direct, the four
+masked all inside the fast typing burst (sounds 80–96 ms apart) and the detent under
+its simultaneous cap; terminal state deltas 152 / 125 / 90 (the camera adds motion).

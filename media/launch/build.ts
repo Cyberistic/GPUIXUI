@@ -238,7 +238,7 @@ interface Cell {
 const MATCH_TILE: Cell = {
   take: "button",
   col: 3,
-  row: 2,
+  row: 3,
   w: 2,
   h: 1,
   zoom: 1.3,
@@ -246,46 +246,68 @@ const MATCH_TILE: Cell = {
 };
 const WALL: ReadonlyArray<Cell> = [
   { take: "stats", col: 0, row: 0, w: 2, h: 2 },
+  { take: "music", col: 2, row: 0, w: 2, h: 1 },
   {
     take: "license",
-    col: 2,
+    col: 4,
     row: 0,
     w: 2,
     h: 1,
     zoom: 1.15,
     focus: [0.5, 0.45],
   },
-  { take: "omarchy", col: 4, row: 0, w: 2, h: 1 },
-  { take: "editor", col: 2, row: 1, w: 2, h: 1, zoom: 1.75, focus: [0.5, 0.3] },
-  { take: "music", col: 4, row: 1, w: 1, h: 1 },
+  {
+    take: "cu-tabs",
+    col: 2,
+    row: 1,
+    w: 2,
+    h: 1,
+    zoom: 2.15,
+    focus: [0.5, 0.5],
+  },
+  {
+    take: "calendar",
+    col: 4,
+    row: 1,
+    w: 1,
+    h: 1,
+    zoom: 1.7,
+    focus: [0.45, 0.4],
+  },
   { take: "monitor", col: 5, row: 1, w: 1, h: 1 },
   { take: "chat-win", col: 0, row: 2, w: 1, h: 2 },
-  { take: "tiling", col: 1, row: 2, w: 2, h: 2 },
-  { take: "slang", col: 3, row: 3, w: 2, h: 1 },
+  { take: "omarchy", col: 1, row: 2, w: 2, h: 2 },
+  {
+    take: "cu-slider",
+    col: 3,
+    row: 2,
+    w: 2,
+    h: 1,
+    zoom: 2.15,
+    focus: [0.5, 0.5],
+  },
   { take: "desktop-aero", col: 5, row: 2, w: 1, h: 2 },
   MATCH_TILE,
+  { take: "chat-mac", col: 0, row: 4, w: 2, h: 1 },
   {
-    take: "chat-mac",
-    col: 0,
+    take: "cu-checkbox",
+    col: 2,
     row: 4,
     w: 2,
     h: 1,
-    zoom: 2,
-    focus: [0.42, 0.22],
+    zoom: 2.8,
+    focus: [0.5, 0.5],
   },
   {
-    take: "settings",
-    col: 2,
+    take: "cu-switch-solo",
+    col: 4,
     row: 4,
     w: 1,
     h: 1,
     zoom: 2.4,
-    focus: [0.52, 0.5],
-    aspect: 2048 / 1152,
+    focus: [0.5, 0.5],
   },
-  { take: "notes", col: 3, row: 4, w: 1, h: 1, zoom: 1.6, focus: [0.4, 0.4] },
-  { take: "chat-linux", col: 4, row: 4, w: 1, h: 1 },
-  { take: "desktop-luna", col: 5, row: 4, w: 1, h: 1 },
+  { take: "editor", col: 5, row: 4, w: 1, h: 1, zoom: 1.75, focus: [0.5, 0.3] },
 ];
 const UNIT = { w: 300, h: 200, gap: 16 };
 /**
@@ -505,9 +527,9 @@ const SHOTS: ReadonlyArray<Shot> = [
     length: 1,
     width: 1720,
     height: 1640,
-    scale: 0.52,
+    scale: 0.9,
     framed: true,
-    push: [1.07, 1],
+    push: [1.03, 1],
     drift: [12, 10],
   },
   {
@@ -516,9 +538,9 @@ const SHOTS: ReadonlyArray<Shot> = [
     length: 1,
     width: 2200,
     height: 1400,
-    scale: 0.56,
+    scale: 0.85,
     framed: true,
-    push: [1.06, 1],
+    push: [1.03, 1],
     drift: [-12, 8],
     cursor: false,
   },
@@ -528,9 +550,9 @@ const SHOTS: ReadonlyArray<Shot> = [
     length: 1,
     width: 2200,
     height: 1720,
-    scale: 0.56,
+    scale: 0.75,
     framed: true,
-    push: [1.06, 1],
+    push: [1.03, 1],
     drift: [10, 12],
     cursor: false,
   },
@@ -541,9 +563,9 @@ const SHOTS: ReadonlyArray<Shot> = [
     length: 1,
     width: 1280,
     height: 972,
-    scale: 0.74,
+    scale: 1.05,
     framed: true,
-    push: [1.05, 1],
+    push: [1.03, 1],
     drift: [-10, -8],
     cursor: false,
   },
@@ -553,9 +575,9 @@ const SHOTS: ReadonlyArray<Shot> = [
     length: 1,
     width: 2560,
     height: 1440,
-    scale: 0.6,
+    scale: 0.72,
     framed: true,
-    push: [1.06, 1],
+    push: [1.03, 1],
     drift: [10, -6],
     cursor: false,
   },
@@ -576,7 +598,12 @@ const showcase: Scene = {
     const w = Math.round(shot.width * shot.scale);
     const h = Math.round(shot.height * shot.scale);
     const left = Math.round((1920 - w) / 2);
-    const top = shot.scale === 1 ? 0 : Math.round(BAND + (1080 - BAND - h) / 2);
+    // A shot taller than the band hangs from the line instead of climbing
+    // through it: the crop goes off the bottom, like a tight framing.
+    const top =
+      shot.scale === 1
+        ? 0
+        : Math.round(BAND + Math.max(0, (1080 - BAND - h) / 2));
     const media =
       shot.still === undefined
         ? clip(
@@ -645,7 +672,7 @@ const terminal: Scene = {
   id: "terminal",
   start: TERMINAL,
   duration: TERMINAL_LENGTH,
-  css: `#root .term { position:absolute; left:${TERM.x}px; top:${TERM.y}px; width:${TERM_W}px; height:${TERM.bar + TERM_SCREEN_H}px; border-radius:12px; overflow:hidden; background:#0d0e10; border:1px solid rgba(0,0,0,.18); box-shadow:0 40px 90px -40px rgba(20,20,40,.55), 0 12px 30px -18px rgba(20,20,40,.35); }
+  css: `#root .term { position:absolute; transform-origin:0 0; left:${TERM.x}px; top:${TERM.y}px; width:${TERM_W}px; height:${TERM.bar + TERM_SCREEN_H}px; border-radius:12px; overflow:hidden; background:#0d0e10; border:1px solid rgba(0,0,0,.18); box-shadow:0 40px 90px -40px rgba(20,20,40,.55), 0 12px 30px -18px rgba(20,20,40,.35); }
     #root .bar { position:relative; height:${TERM.bar}px; display:flex; align-items:center; gap:8px; padding-left:18px; background:linear-gradient(#fbfbfb, #ececed); border-bottom:1px solid #d7d7d9; color:#4b4b4f; font:500 26px Inter, sans-serif; }
     #root .bar i { width:12px; height:12px; border-radius:50%; display:inline-block; }
     #root .bar span { position:absolute; left:0; right:0; text-align:center; font-weight:500; }
@@ -678,8 +705,10 @@ const terminal: Scene = {
       </div>
     </div>`,
   script: `${typed("t-ssh", SSH, TYPE_AT)}
-    // The four-second hold is a slow dolly: 3 % closer and a few pixels up-left.
-    tl.fromTo(".term",{scale:1,x:0,y:0},{scale:1.03,x:-8,y:-6,duration:${TERMINAL_LENGTH},ease:"none"},0);
+    // Zoomed into the prompt while it types, then pulled back to the whole window
+    // once the app has taken the screen over.
+    tl.set(".term",{scale:1.32,x:-188,y:-40},0);
+    tl.to(".term",{scale:1.02,x:0,y:0,duration:1.6,ease:"power2.inOut"},${T_APP.toFixed(2)});
     tl.set("#t-caret1",{opacity:0},${T_LOGIN.toFixed(2)});
     tl.set("#t-login",{opacity:1},${T_LOGIN.toFixed(2)});
     tl.set("#t-runline",{opacity:1},${T_RUN.toFixed(2)});
@@ -828,6 +857,8 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   // The app takes the terminal over, and the take's one repaint lands on the frame
   // it actually paints (frame 61 of takes/term-settings at 30 fps). The two
   // "presses" that used to sit between them had no picture to land on.
+  // Enter, on the keystroke that finishes the command.
+  [TERMINAL + T_RUN + RUN.length * CHAR + 0.02, "press"],
   [TERMINAL + T_APP, "land"],
   [TERMINAL + T_APP + 0.5, "thud"],
   [TERMINAL + T_APP + 1.0, "press"],
@@ -837,10 +868,7 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   // boundary inside the showcase a little softer, because those come half a beat
   // apart. `shotStart(0)` is the showcase itself.
   ...[4 * BEAT_CUT, TERMINAL, 24, 26].map((at) => [at, "air"] as const),
-  // The montage's own three cuts, quiet: the opening is one carried push, so the
-  // whoosh is felt as a swish under the move rather than a hit on each card.
-  ...[1, 2, 3].map((at) => [at, "air", 0.35] as const),
-  ...SHOTS.map((_, i) => [SHOWCASE + shotStart(i), "air", 0.55] as const),
+  ...SHOTS.map((_, i) => [SHOWCASE + shotStart(i), "air", 0.4] as const),
   [26.1, "mark"],
 ];
 
