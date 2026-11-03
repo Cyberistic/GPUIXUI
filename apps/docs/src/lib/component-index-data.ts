@@ -26,7 +26,9 @@ const siteFiles = import.meta.glob("../../content/docs/components/**/*.mdx", {
   import: "default",
 });
 
-const packageFiles = import.meta.glob("../../../../packages/*/docs/*.mdx", {
+// A package's docs may sit in a **subdirectory** — the charts live in
+// `packages/data/docs/charts` — so the glob reaches into them.
+const packageFiles = import.meta.glob("../../../../packages/*/docs/**/*.mdx", {
   eager: true,
   query: "?raw",
   import: "default",

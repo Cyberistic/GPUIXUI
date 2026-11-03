@@ -121,7 +121,11 @@ const moduleFor = (
     return bySubject.module;
   }
 
-  const named = componentModules(root, collection.dir.replace(/\/docs$/, ""))
+  // The modules a page's **package** ships, not the collection's directory:
+  // the charts live in `packages/data/docs/charts`, but their module is
+  // `packages/data/src/chart/chart.tsx`.
+  const packageDir = collection.dir.replace(/\/docs(\/.*)?$/, "");
+  const named = componentModules(root, packageDir)
     .filter((path) => stemOf(path) === wanted)
     .toSorted(
       (left, right) =>

@@ -15344,6 +15344,15 @@ button.gx-rating-star:focus-visible {
   color: var(--muted-foreground);
 }
 
+/* ---- The Diagram page's preview ------------------------------------------
+   Three drawings in one column: a flow, a sequence and the failure state. The
+   gap is the page's own, so the three read as one stack of examples. */
+.gx-diagram-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 /* ---- Mermaid diagrams, rendered by Pele ----------------------------------
    Pele reads `--pele-*` custom properties, so the figure hands it the preview's
    own roles and a theme switch re-themes the SVG without a second render. The

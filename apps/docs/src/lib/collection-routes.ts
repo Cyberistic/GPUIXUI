@@ -1,4 +1,5 @@
 import {
+  chartsDocsRoute,
   componentDocsRoute,
   dataDocsRoute,
   dockDocsRoute,
@@ -24,6 +25,7 @@ import {
 export type PackageOrigin =
   | "primitives"
   | "icons"
+  | "charts"
   | "components"
   | "data"
   | "editor"
@@ -87,7 +89,7 @@ const icons: PackageCollection = {
   dir: "packages/icons/docs",
   packageName: "@gpuixui/icons",
   route: iconDocsRoute,
-  section: "Icons",
+  section: "Graphics",
   kind: "icon set",
   index: {
     title: "Icon set",
@@ -103,6 +105,20 @@ const components: PackageCollection = {
   route: componentDocsRoute,
   section: "Components",
   kind: "component",
+};
+
+const charts: PackageCollection = {
+  origin: "charts",
+  dir: "packages/data/docs/charts",
+  packageName: "@gpuixui/data",
+  route: chartsDocsRoute,
+  section: "Graphics",
+  kind: "chart",
+  index: {
+    title: "Charts",
+    description:
+      "Bar, line, area, pie, radar and radial charts, drawn on the GPU.",
+  },
 };
 
 const data: PackageCollection = {
@@ -199,6 +215,7 @@ const fx: PackageCollection = {
 export const packageCollections = [
   primitives,
   icons,
+  charts,
   components,
   data,
   editor,
@@ -212,6 +229,7 @@ export const packageCollections = [
 export const collectionByOrigin = {
   primitives,
   icons,
+  charts,
   components,
   data,
   editor,
@@ -236,7 +254,7 @@ export const packageSections: ReadonlyArray<{
 }> = [
   { name: "Components", origins: ["components"] },
   { name: "Primitives", origins: ["primitives"] },
-  { name: "Icons", origins: ["icons"] },
+  { name: "Graphics", origins: ["charts", "icons"] },
   { name: "Data display", origins: ["data"] },
   { name: "Workspace", origins: ["dock", "editor", "files", "shell", "media"] },
   { name: "Effects", origins: ["fx"] },

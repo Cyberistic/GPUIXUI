@@ -303,7 +303,8 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       data("property-panel", "Property panels"),
       data("key-value", "Key-value displays"),
       data("stat-card", "Statistic / metric cards"),
-      data("charts", "Charts"),
+      page("Charts", "/graphics/charts/charts"),
+      component("diagram", "Diagrams"),
     ],
   },
   {
@@ -371,7 +372,7 @@ export const soloPages: ReadonlyArray<SoloPage> = [
     reason: "a provider, not a component — no sibling to choose between",
   },
   {
-    href: "/icons/icon",
+    href: "/graphics/icons/icon",
     reason: "the icon set is one page",
   },
 ];

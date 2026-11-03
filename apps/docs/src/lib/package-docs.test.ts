@@ -317,7 +317,9 @@ describe("the package docs collections", () => {
     expect(count, "the set's name list is empty").toBeGreaterThan(40);
 
     const index = read(new URL("primitives/", docsDir), "index.mdx");
-    const row = /^\| \[Icons\]\(\/icons\/icon\) \| (.+) \|$/m.exec(index);
+    const row = /^\| \[Icons\]\(\/graphics\/icons\/icon\) \| (.+) \|$/m.exec(
+      index,
+    );
     expect(row?.[1] ?? "").toContain(`${count} monochrome icons`);
 
     // The page it links prints the same number in the sentence a search

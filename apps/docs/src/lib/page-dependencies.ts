@@ -49,7 +49,7 @@ export interface PageDependencyIndex {
  * than link nowhere.
  */
 const sitePages: Readonly<Record<string, string>> = {
-  "@gpuixui/icons": "/icons/icon",
+  "@gpuixui/icons": "/graphics/icons/icon",
   "@gpuixui/tokens": "/getting-started",
 };
 
@@ -70,6 +70,15 @@ export const dependencyPackage = (specifier: string): string | undefined =>
 /** The page that documents a package, when the site mounts one. */
 export const packagePage = (packageName: string): string | undefined =>
   sitePages[packageName] ??
+  packageCollections.find(
+    (collection) =>
+      collection.packageName === packageName &&
+      // The package's **own** `docs` directory is its lane; a collection that
+      // sits inside it — the charts live in `packages/data/docs/charts` — is a
+      // page of that lane, not the lane itself.
+      collection.dir ===
+        `packages/${packageName.replace("@gpuixui/", "")}/docs`,
+  )?.route ??
   packageCollections.find(
     (collection) => collection.packageName === packageName,
   )?.route;

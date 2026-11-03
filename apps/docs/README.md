@@ -21,7 +21,8 @@ introduction.mdx             Introduction (served at /introduction)
 getting-started/index.mdx    The guide: install, the first component, the four rules, the theme, where next
 getting-started/omarchy.mdx  Developing on Arch/Hyprland, and following the Omarchy palette
 getting-started/prompt.mdx   One copyable build prompt, generated from the pages the site ships
-diagrams.mdx                 Mermaid fences at build time plus the mermaidcn renderer, zoom/pan and playground on Pele
+graphics/index.mdx            The Graphics category: the charts, the icons and the diagrams, and the one paint path they share
+graphics/diagrams.mdx        The Diagram component, the Mermaid fences it draws, the mermaidcn renderer, zoom/pan and playground on Pele
 themes.mdx                   The live token editor, the authored looks, the Aero look's generated CSS, and the compiled style/type/scale references
 workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
 platform/index.mdx            The native surface: what the OS owns and what the library paints
@@ -376,6 +377,7 @@ src/components/docs/auto-height-demo.tsx   The auto height's expand/collapse pre
 src/components/docs/avatar-group-demo.tsx  The facepile's overlap, ring and overflow chip
 src/components/docs/bubbles-demo.tsx       The bubbles field's rising scatter
 src/components/docs/code-block-demo.tsx    The code block's title bar, gutter and source
+src/components/docs/diagram-demo.tsx        The Diagram component's three drawings: a flow, a sequence and the failure state
 src/components/docs/code-editor-demo.tsx   The code editor's token layer, gutter, Tab rule and read-only state
 src/components/docs/code-editor-preview.ts The preview's tiny tokenizer for a tsx snippet
 src/components/docs/copy-button-demo.tsx   The copy button's acknowledge flip
@@ -550,7 +552,8 @@ is why the route column is the collection's root.
 | ---------- | ----- | ------- |
 | `content/docs` | `/` | the curated pages |
 | `packages/primitives/docs` | `/primitives/<name>` | Primitives |
-| `packages/icons/docs` | `/icons/<name>` | Icons |
+| `packages/icons/docs` | `/graphics/icons/<name>` | Graphics |
+| `packages/data/docs/charts` | `/graphics/charts/<name>` | Graphics |
 | `packages/components/docs` | `/components/<name>` | Components |
 | `packages/data/docs` | `/data-display/<name>` | Data display |
 | `packages/editor/docs` | `/editor/<name>` | Workspace |

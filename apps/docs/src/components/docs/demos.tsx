@@ -22,6 +22,7 @@ import {
 } from "./counting-number-demo";
 import { CodeEditorDemo, codeEditorDemoSource } from "./code-editor-demo";
 import { CropAreaDemo, cropAreaDemoSource } from "./crop-area-demo";
+import { DiagramDemo, diagramDemoSource } from "./diagram-demo";
 import { DiffViewerDemo, diffViewerDemoSource } from "./diff-viewer-demo";
 import { DropZoneDemo, dropZoneDemoSource } from "./drop-zone-demo";
 import { FileUploadDemo, fileUploadDemoSource } from "./file-upload-demo";
@@ -3574,6 +3575,7 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: mediaPlayerDemoSource,
   },
   "code-editor-demo": { render: CodeEditorDemo, source: codeEditorDemoSource },
+  "diagram-demo": { render: DiagramDemo, source: diagramDemoSource },
   "diff-viewer-demo": { render: DiffViewerDemo, source: diffViewerDemoSource },
   "markdown-editor-demo": {
     render: MarkdownEditorDemo,

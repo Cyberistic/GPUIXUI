@@ -90,7 +90,7 @@ describe("the dependency index", () => {
     );
     // A family page names no one subject and matches no stem; the first part
     // its own example imports answers, so the source block shows real code.
-    expect(index.pages["/data-display/charts"]?.module).toBe(
+    expect(index.pages["/graphics/charts/charts"]?.module).toBe(
       "packages/data/src/chart/chart.tsx",
     );
   });
@@ -147,7 +147,7 @@ describe("the dependency index", () => {
       index.pages["/components/dialog"]?.dependencies.find(
         (dependency) => dependency.packageName === "@gpuixui/icons",
       )?.url,
-    ).toBe("/icons/icon");
+    ).toBe("/graphics/icons/icon");
   });
 
   it("links every package the site mounts a collection for to that collection", () => {
@@ -164,7 +164,7 @@ describe("the dependency index", () => {
     expect(packageCollections.length).toBeGreaterThanOrEqual(9);
     // A collection's route documents its package; only the icon set documents
     // itself on a page below the route.
-    expect(packagePage("@gpuixui/icons")).toBe("/icons/icon");
+    expect(packagePage("@gpuixui/icons")).toBe("/graphics/icons/icon");
     expect(packagePage("@gpuixui/data")).toBe("/data-display");
     expect(packagePage("@gpuixui/media")).toBe("/media");
     expect(

@@ -606,7 +606,8 @@ cannot ship a page the site does not show and the two cannot drift:
 | Collection | Source | Route | Sidebar |
 | ---------- | ------ | ----- | ------- |
 | Primitives | `packages/primitives/docs` | `/primitives` | Primitives |
-| Icons | `packages/icons/docs` | `/icons` | Icons |
+| Icons | `packages/icons/docs` | `/graphics/icons` | Graphics |
+| Charts | `packages/data/docs/charts` | `/graphics/charts` | Graphics |
 | Components | `packages/components/docs` | `/components` | Components |
 | Data | `packages/data/docs` | `/data-display` | Data display |
 | Code surfaces | `packages/editor/docs` | `/editor` | Workspace |
@@ -665,9 +666,9 @@ measures its own pane space in `onLayout`, so the two convert a pixel gesture
 against the same rule and different numbers; the docking layout's divider does
 the same against its own 620px frame. The pages print that difference, and the
 split page prints the 220–380px bounds its drawing owns.
-The data lane draws fifteen surfaces — Property panels on its own page, the
+The data lane draws fourteen surfaces — Property panels on its own page, the
 sorting, selection, filtering-control, advanced-filter, virtualization,
-column-configuration, tree-view, virtual-tree, charts, key-value, data-toolbar,
+column-configuration, tree-view, virtual-tree, key-value, data-toolbar,
 expandable-rows and frozen-columns pages through the site's table, and the
 statistic card through it
 too: the

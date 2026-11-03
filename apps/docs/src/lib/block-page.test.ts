@@ -149,7 +149,7 @@ describe("the dashboard page's charts", () => {
         recipe.includes(part) && dashboard.includes(part) ? [] : [part],
       ),
     ).toEqual([]);
-    expect(dashboard).toContain("/data-display/charts");
+    expect(dashboard).toContain("/graphics/charts");
   });
 
   it("hands the recipe no placeholder geometry", () => {

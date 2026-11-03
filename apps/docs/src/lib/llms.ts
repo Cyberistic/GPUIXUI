@@ -88,7 +88,7 @@ export const llmsSectionOrder: ReadonlyArray<string> = [
   "Docs",
   "Components",
   "Primitives",
-  "Icons",
+  "Graphics",
   "Data display",
   "Workspace",
   "Effects",
@@ -104,6 +104,9 @@ const siteSections: ReadonlyArray<{ prefix: string; name: string }> = [
   { prefix: "/blocks", name: "Blocks" },
   { prefix: "/workspace", name: "Workspace" },
   { prefix: "/platform", name: "Platform" },
+  // The diagrams sit beside the charts and the icons, so a reader looking for
+  // "the things this library draws" finds all three in one place.
+  { prefix: "/graphics", name: "Graphics" },
 ];
 
 const sectionRules = [

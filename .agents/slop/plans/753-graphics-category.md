@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | planned |
+| Status | in progress — the `Graphics` category, the `Diagram` component and the pages land; the window probe is next |
 | Phase | F (integration and polish) |
 | Depends on | `@gpuixui/data` charts, `@gpuixui/icons`, the docs site's diagram fence |
 | References | shadcn/ui v4 `apps/v4/registry/new-york-v4/ui/chart.tsx`, [Pele](https://pele.run) |

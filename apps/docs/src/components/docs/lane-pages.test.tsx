@@ -181,7 +181,8 @@ describe("the lane page list", () => {
 
   it("groups only the lane's pages and drops a collection with none", () => {
     const rows = [
-      row("/data-display/charts", "Data display"),
+      row("/data-display/property-panel", "Data display"),
+      row("/graphics/charts/charts", "Graphics"),
       row("/components/dialog", "Components"),
       row("/workspace/dock-layout", "Workspace"),
     ];
@@ -194,6 +195,9 @@ describe("the lane page list", () => {
     expect(
       lanePageGroups(rows, "data-display").flatMap((g) => g.pages),
     ).toEqual([rows[0]]);
+    // The charts moved to the Graphics category, so the data lane has no page
+    // of its own for them and the lane drops the group.
+    expect(lanePageGroups([rows[1]], "data-display")).toEqual([]);
     expect(lanePageGroups([], "workspace")).toEqual([]);
     expect(lanePageTotal(groups)).toBe(1);
   });

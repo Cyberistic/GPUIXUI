@@ -3,6 +3,7 @@ import { defineDocs } from "fumadocs-mdx/macro";
 import { packageCollections, type PackageOrigin } from "./collection-routes";
 import { servedPages } from "./curated-twins";
 import {
+  chartsDocsRoute,
   componentDocsRoute,
   dataDocsRoute,
   dockDocsRoute,
@@ -52,6 +53,17 @@ const componentDocs = defineDocs({
 
 const dataDocs = defineDocs({
   dir: "../../packages/data/docs",
+  docs: {
+    // The charts live in their own directory so the Graphics category can
+    // mount them on their own route; the data lane mounts the rest.
+    files: ["**/*.mdx", "!charts/**"],
+    async: true,
+    postprocess: { includeProcessedMarkdown: true },
+  },
+});
+
+const chartsDocs = defineDocs({
+  dir: "../../packages/data/docs/charts",
   docs: {
     files: ["**/*.mdx"],
     async: true,
@@ -116,6 +128,7 @@ const fxDocs = defineDocs({
 export const docsByOrigin = {
   primitives: primitiveDocs,
   icons: iconDocs,
+  charts: chartsDocs,
   components: componentDocs,
   data: dataDocs,
   editor: editorDocs,
@@ -144,6 +157,11 @@ const componentSource = loader({
 const dataSource = loader({
   source: dataDocs.toFumadocsSource(),
   baseUrl: dataDocsRoute,
+});
+
+const chartsSource = loader({
+  source: chartsDocs.toFumadocsSource(),
+  baseUrl: chartsDocsRoute,
 });
 
 const editorSource = loader({
@@ -179,6 +197,7 @@ const fxSource = loader({
 export const sourceByOrigin = {
   primitives: primitiveSource,
   icons: iconSource,
+  charts: chartsSource,
   components: componentSource,
   data: dataSource,
   editor: editorSource,

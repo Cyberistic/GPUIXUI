@@ -73,7 +73,7 @@ const servedPages = (): ReadonlyArray<Page> => {
 const COMPONENT_LANES = [
   "/components",
   "/primitives",
-  "/icons",
+  "/graphics",
   "/data-display",
   "/editor",
   "/files",

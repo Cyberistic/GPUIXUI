@@ -94,7 +94,9 @@ describe("the index's URL mapping", () => {
     expect(pageUrl("packages/primitives/docs/slider.mdx")).toBe(
       "/primitives/slider",
     );
-    expect(pageUrl("packages/icons/docs/icon.mdx")).toBe("/icons/icon");
+    expect(pageUrl("packages/icons/docs/icon.mdx")).toBe(
+      "/graphics/icons/icon",
+    );
   });
 
   it("drops a section index and a file that is not a component page", () => {
@@ -145,7 +147,7 @@ describe("the index built from pages", () => {
     ]);
     expect(entries.map((row) => row.section)).toEqual([
       "Primitives",
-      "Icons",
+      "Graphics",
       "Components",
       "Components",
     ]);
@@ -588,7 +590,7 @@ describe("the real index", () => {
     const sections = [...new Set(componentIndex.map((row) => row.section))];
     expect(sections).toEqual([
       "Primitives",
-      "Icons",
+      "Graphics",
       "Components",
       "Data display",
       "Workspace",
