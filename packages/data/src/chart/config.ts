@@ -117,12 +117,12 @@ export const configKeys = (
   Arr.map(configEntries(config), ([key]) => key);
 
 /**
- * One datum of a chart's data: a record of fields.
+ * One row of a chart's data: a record of fields.
  *
  * The data is a table of records, the way a Recharts `data` prop is: one row
  * per category, one field per series.
  */
-export type ChartDatum = Record<string, unknown>;
+export type ChartRow = Record<string, unknown>;
 
 /**
  * The number one field of a datum carries.
@@ -132,7 +132,7 @@ export type ChartDatum = Record<string, unknown>;
  * geometry follows for a value that is not finite.
  */
 export const datumNumber = (
-  datum: ChartDatum | undefined,
+  datum: ChartRow | undefined,
   field: string,
 ): Option.Option<number> => {
   if (datum === undefined) return Option.none();
@@ -153,7 +153,7 @@ export const datumNumber = (
  */
 export const seriesFromConfig = (
   config: ChartConfig | undefined,
-  data: ReadonlyArray<ChartDatum>,
+  data: ReadonlyArray<ChartRow>,
 ): ReadonlyArray<{
   readonly key: string;
   readonly label: string;
@@ -176,7 +176,7 @@ export const seriesFromConfig = (
  * agrees on which field names the category.
  */
 export const categoriesFromData = (
-  data: ReadonlyArray<ChartDatum>,
+  data: ReadonlyArray<ChartRow>,
 ): ReadonlyArray<string> => {
   const first = data[0];
   if (first === undefined) return [];

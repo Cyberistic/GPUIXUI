@@ -150,6 +150,68 @@ export {
 export type { ChartRange, Curve, Point } from "./chart/geometry.js";
 
 export {
+  chartScene,
+  sceneDefinition,
+  scenePointAt,
+  sceneRows,
+  sceneSvg,
+} from "./chart/scene.js";
+export type {
+  SceneChartKind,
+  SceneChartOptions,
+  SceneRow,
+} from "./chart/scene.js";
+
+export {
+  chartDocument,
+  layerMarks,
+} from "./chart/paint.js";
+export type { LayerPaint } from "./chart/paint.js";
+
+export {
+  chartSvg,
+  defsMarkup,
+  gradientMarkup,
+} from "./chart/svg.js";
+export type { ChartDocument, ChartGradient } from "./chart/svg.js";
+
+export {
+  flatMark,
+  lineStroke,
+  markMarkup,
+  num,
+  solidFill,
+} from "./chart/mark.js";
+export type {
+  CircleMark,
+  EllipseMark,
+  MarkFill,
+  MarkStroke,
+  PathMark,
+  RectMark,
+} from "./chart/mark.js";
+
+export {
+  categoriesFromData,
+  configColour,
+  configColours,
+  configEntryOf,
+  configEntries,
+  configIcon,
+  configKeys,
+  configLabel,
+  configOf,
+  datumNumber,
+  seriesFromConfig,
+} from "./chart/config.js";
+export type {
+  ChartConfig,
+  ChartConfigEntry,
+  ChartMode,
+  ChartRow,
+} from "./chart/config.js";
+
+export {
   AXIS_STEP_LIMIT,
   axisTicks,
   barMarks,

@@ -23,6 +23,8 @@
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "@gpuixui/tw": "workspace:*",
+    "@tanstack/charts": "catalog:",
+    "@tanstack/charts-scales": "catalog:",
     "@tanstack/pacer": "catalog:",
     "@tanstack/table-core": "catalog:",
     "@tanstack/virtual-core": "catalog:",
