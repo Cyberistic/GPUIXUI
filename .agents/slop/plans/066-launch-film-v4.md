@@ -535,3 +535,35 @@ duration:
   seconds. Measured: "GPUIxUI" spans **336 px at 26.15 s → 346 px at 29.9 s**.
 
 Every scene in the film now carries the same camera language; no shot is static.
+
+### v4.19 — the whole film audited: cue table re-read, contact sheet inspected
+
+The cue table had not been read back since v4.9b, before the terminal dolly, the
+settings/apps drift, the desktop-flip push and the stack/end moves. Re-read from
+the generated `index.html` (45 `sfx` clips over 30 s):
+
+```
+whooshes     4.00 8.50 10.50 13.50 15.00 20.00 24.00 26.00   ← every cut, no extras
+land hits    8.53 8.68                                        ← the two cards still on
+                                                                screen at the 1.7 s in-point
+terminal     20.00 air · key 20.10–21.22 · press 22.20 · press 22.80 · thud 23.40 · 24.00 air
+stack/end    24.00 air · 26.00 air · 26.10 mark
+scenes       0.00 / 4.00 / 8.50 / 20.00 / 24.00 / 26.00 — all on the 0.5 s beat
+```
+
+Two defects the audit found and fixed:
+
+- a **stray `press` at 4.53 s** left over from an earlier wall design — nothing on
+  screen is pressed there (the wall is mid pull-back), so a click fired over a
+  moving card. Removed; the cut's whoosh at 4.00 already carries it.
+- a **duplicated comment** on the land-hit block (two paragraphs saying the same
+  thing) — collapsed to one.
+
+Contact sheet: `fps=2` over the whole film, 60 frames, 6×5 per sheet
+(`/tmp/sheetB1.png` 0–15 s, `/tmp/sheetB2.png` 15–30 s). Read left-to-right,
+top-to-bottom: switch → tabs → slider → checkbox → wall (button card match, pull
+back, line swap) → assemble → three Settings looks → three desktops → five apps →
+terminal (prompt, ssh, app) → stack → end card. No dead frame, no beat off the
+grid; the only frame that reads flat at thumbnail size is the terminal prompt at
+20.0 s, which is a single line of type on black by design (full frame confirms
+the chrome, the title and the caret).

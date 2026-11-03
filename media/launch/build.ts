@@ -790,12 +790,9 @@ const CUES: ReadonlyArray<readonly [number, string]> = [
   ...[26, 29, 32].map(
     (frame, n) => [4 * BEAT_CUT + frame / FPS - 0.3 + F, `key-${n}`] as const,
   ),
-  [4 * BEAT_CUT + PRESS_AT - 0.3 + F, "press"],
   // Each card lands at 0.95 s + 150 ms after the one before it (the stage's own
-  // script), so the hit sits on the frame the card settles, not near it.
-  // The cards land at 0.95 s + 150 ms each; the shot opens at 1.7 s, so only the
-  // landings that are on screen get a hit (a hit for an off-screen landing would
-  // sound on the previous scene).
+  // script); the shot opens at 1.7 s, so only the landings still on screen get a
+  // hit — a hit for an off-screen landing would sound on the previous scene.
   ...[5, 6].map((i) => [shotAt(0, 0.95 + i * 0.15), "land"] as const),
   [shotAt(0, 1.95), "glass-1"],
   // The palette flip inside the tiling take, on its own frame.
