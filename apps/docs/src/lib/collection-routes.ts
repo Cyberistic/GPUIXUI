@@ -1,3 +1,4 @@
+import { docsRoute } from "./shared";
 import {
   chartsDocsRoute,
   componentDocsRoute,
@@ -248,6 +249,64 @@ export const collectionByOrigin = {
  * five packages — the dock, code, file, chrome and media surfaces are one
  * destination in the sidebar even though each mounts under its own route.
  */
+/**
+ * Whether a collection owns a page.
+ *
+ * A collection serves only the pages **its own** directory holds. The charts
+ * live in `packages/data/docs/charts`, inside the data package's own docs
+ * directory, and the data collection's glob could not be made to leave them
+ * out — so the data lane listed the charts page under `/data-display` as
+ * well, at a URL that answered **404**.
+ *
+ * The owner is decided by the page's **path**, which is relative to the
+ * collection's own directory: a page at `charts/charts.mdx` sits in the
+ * charts collection's directory, so the charts collection owns it and the
+ * data collection does not.
+ */
+export const collectionOwns = (
+  origin: PackageOrigin,
+  path: string,
+): boolean => {
+  const collection = collectionByOrigin[origin];
+  const nested = packageCollections.filter(
+    (candidate) =>
+      candidate.origin !== origin &&
+      candidate.dir.startsWith(`${collection.dir}/`),
+  );
+  return !nested.some((candidate) =>
+    path.startsWith(`${candidate.dir.slice(collection.dir.length + 1)}/`),
+  );
+};
+
+/**
+ * The mounted collection that owns a route, and the slugs left over.
+ *
+ * A collection's route may be **nested**: the charts and the icons live under
+ * the Graphics section, so their routes are `/graphics/charts` and
+ * `/graphics/icons` rather than one segment. A matcher that read a single
+ * segment found neither, so `/graphics/charts` answered **404** while every
+ * page under it answered — and the build, which prerenders the route of every
+ * collection that ships a generated index, failed on it.
+ *
+ * So the matcher takes the **longest** route that prefixes the path, and the
+ * slugs under that route are what the collection is asked for.
+ */
+export const collectionAt = (slugs: ReadonlyArray<string>) => {
+  const path = `${docsRoute}/${slugs.join("/")}`;
+  const matches = packageCollections
+    .filter(
+      (collection) =>
+        path === collection.route || path.startsWith(`${collection.route}/`),
+    )
+    // The longest route wins: `/graphics/charts` is more specific than
+    // `/graphics`, and a collection owns only its own pages.
+    .toSorted((left, right) => right.route.length - left.route.length);
+  const collection = matches[0];
+  if (collection === undefined) return undefined;
+  const rest = path.slice(collection.route.length).split("/").filter(Boolean);
+  return { collection, rest };
+};
+
 export const packageSections: ReadonlyArray<{
   readonly name: string;
   readonly origins: ReadonlyArray<PackageOrigin>;

@@ -1,6 +1,10 @@
 import { loader } from "fumadocs-core/source";
 import { defineDocs } from "fumadocs-mdx/macro";
-import { packageCollections, type PackageOrigin } from "./collection-routes";
+import {
+  collectionOwns,
+  packageCollections,
+  type PackageOrigin,
+} from "./collection-routes";
 import { servedPages } from "./curated-twins";
 import {
   chartsDocsRoute,
@@ -218,11 +222,21 @@ export const packageSources = packageCollections.map(
  *
  * A primitive page a curated page in another section replaces is not listed
  * twice (`curated-twins.ts`).
+ *
+ * A collection serves only the files **its own** directory holds. The charts
+ * live in `packages/data/docs/charts`, inside the data package's own docs
+ * directory, and the data collection's glob could not be made to leave them
+ * out — so the data lane listed the charts page under `/data-display` as
+ * well, at a URL that answered **404**. The owner is decided by the
+ * directory, and the **longest** matching directory wins: the charts
+ * directory is inside the data one, so the charts collection owns the file.
  */
 export const sectionPages = (origins: ReadonlyArray<PackageOrigin>) =>
   origins.flatMap((origin) =>
-    servedPages(sourceByOrigin[origin].getPages()).map((page) => ({
-      name: page.data.title,
-      url: page.url,
-    })),
+    servedPages(sourceByOrigin[origin].getPages())
+      .filter((page) => collectionOwns(origin, page.path))
+      .map((page) => ({
+        name: page.data.title,
+        url: page.url,
+      })),
   );
