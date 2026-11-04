@@ -25281,6 +25281,15 @@ green; the site deployed and all 195 sitemap pages answer 200.
       from the pre-drift base plus only the TanStack Charts entries; this also
       fixed the four pre-existing playground failures.
 
+`[~]` **Merge into `master`** — the branch `agent/charts-v2` carries 15 commits
+      on top of `master` and is green, but the shared checkout
+      (`/Users/cyberistic/Documents/GPUIXUI`) holds **151 uncommitted files** of
+      another workstream (plan 751's charts, `mermaidcn`, the landing rework,
+      the editor tabs). Merging would disturb it, so the merge waits for a clean
+      shared checkout. Plan 751's chart work is already inside this branch
+      (baseline commit `d393fec6d`); the `mermaidcn` and editor-tabs work is
+      not, and must land first or be merged alongside.
+
 `[!]` The GPUix issue for **SVG primitives** is open upstream:
       https://github.com/remorses/gpuix/issues/130 — "Add support for SVG
       primitives", with a link to `https://www.w3.org/TR/SVG2/`. Until it
