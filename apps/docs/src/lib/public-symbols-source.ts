@@ -214,6 +214,274 @@ const atLineStart = (source: string, index: number): boolean => {
 };
 
 /**
+ * A regular-expression literal, and where it ends.
+ *
+ * The scanner reads the source the way the compiler does, and a **regex
+ * literal** is a fifth thing beside code, comments, strings and templates. Its
+ * brackets are pattern syntax, not code: `[^)]` holds a closing parenthesis
+ * that never closes anything, and `\(` holds an opening one.
+ *
+ * A regex is told from a division by what precedes it — a regex may follow
+ * `(`, `=`, `,`, `:`, `return` or an operator, and a division may not — so the
+ * scan looks back at the last code character.
+ */
+const isRegexStart = (source: string, index: number): boolean => {
+  let cursor = index - 1;
+  while (cursor >= 0) {
+    const char = source[cursor];
+    if (
+      char === undefined ||
+      char === " " ||
+      char === "\t" ||
+      char === "\n" ||
+      char === "\r"
+    ) {
+      cursor -= 1;
+      continue;
+    }
+    // A slash after something that can **end an expression** is a division:
+    // `a / b`, `(x + 1) / 2`, `foo() / bar`. A regex cannot follow one.
+    if (/[A-Za-z0-9_$)\]}]/.test(char)) return false;
+    // A **closing tag** — `</div>` — is not a regex: the `<` before the
+    // slash opens a tag, and the slash begins its name.
+    if (char === "<" || char === ">") return false;
+    return true;
+  }
+  return true;
+};
+
+/**
+ * The end of a regular-expression literal that starts at `index`.
+ *
+ * The literal ends at a slash that is not escaped and is not inside a
+ * character class. A **flag** may follow it.
+ */
+const skipRegex = (source: string, index: number): number => {
+  let cursor = index + 1;
+  let inClass = false;
+  while (cursor < source.length) {
+    const char = source[cursor];
+    if (char === "\\") {
+      cursor += 2;
+      continue;
+    }
+    if (char === "[") {
+      inClass = true;
+      cursor += 1;
+      continue;
+    }
+    if (char === "]") {
+      inClass = false;
+      cursor += 1;
+      continue;
+    }
+    if (char === "/" && !inClass) {
+      cursor += 1;
+      while (cursor < source.length && /[a-z]/.test(source[cursor] ?? "")) {
+        cursor += 1;
+      }
+      return cursor;
+    }
+    cursor += 1;
+  }
+  return source.length;
+};
+
+/**
+ * Whether the `<` at `index` opens a **JSX element**.
+ *
+ * A `<` is a tag when a name, a `/` or a `>` follows it. It is **not** a
+ * tag when it is a comparison — `a < b` — and not when it is a **generic
+ * type argument list** — `Partial<TextStyle>` — whose `<` follows a type
+ * name.
+ *
+ * The two are told apart by the code **before** the `<`: a generic follows
+ * the type it belongs to, so the `<` sits right after an identifier, while a
+ * tag follows an operator, a bracket or a keyword: `(`, `=`, `,`, `return`.
+ */
+const isJsxStart = (source: string, index: number): boolean => {
+  const next = source[index + 1];
+  if (next === undefined) return false;
+  // A closing tag — `</div>` — or an opening one.
+  if (next === "/") return true;
+  // A fragment — `<>`.
+  if (next === ">") return true;
+  if (!/[A-Za-z_$]/.test(next)) return false;
+  // A **generic type argument list** — `Partial<TextStyle>` — follows a type
+  // name, so the `<` sits right after an identifier or a `>`. A tag's `<`
+  // follows an operator, a bracket or a keyword: `(`, `=`, `,`, `return`, `?`.
+  let before = index - 1;
+  while (before >= 0) {
+    const char = source[before];
+    if (
+      char === undefined ||
+      char === " " ||
+      char === "\t" ||
+      char === "\n" ||
+      char === "\r"
+    ) {
+      before -= 1;
+      continue;
+    }
+    if (/[A-Za-z0-9_$>]/.test(char)) return false;
+    break;
+  }
+  // A tag's own `>` is found by reading the tag: an attribute may hold an
+  // expression, and that expression's `>` is not the tag's end. So the scan
+  // reads the tag's strings and expressions, and stops at the tag's `>`.
+  const close = tagEnd(source, index);
+  if (close === -1) return false;
+  const after = source.slice(close + 1).match(/^\s*(.)/)?.[1];
+  // A generic's `>` is followed by the generic's **use**: its parameter list
+  // (`(`). A type's `>` is followed by the type's use: a `;`, a `,` or a `)`.
+  // A tag's `>` is followed by the tag's body, which often opens with the
+  // next sibling's `<` — so a `<` after the `>` says nothing.
+  if (after === "(") return false;
+  if (after !== undefined && ";,)=".includes(after)) return false;
+  if (after === undefined) return false;
+  return true;
+};
+
+/**
+ * The `>` that ends the tag at `index`.
+ *
+ * The tag's attributes may hold an expression — `style={{ width: 1 }}` — and
+ * that expression's own `>` is not the tag's end. So the scan reads the
+ * tag's **strings** and **expressions** as it goes, and stops at the `>` that
+ * is the tag's own.
+ */
+const tagEnd = (source: string, index: number): number => {
+  let cursor = index + 1;
+  while (cursor < source.length) {
+    const char = source[cursor];
+    const next = source[cursor + 1];
+    if (char === "/" && next === "/") {
+      while (cursor < source.length && source[cursor] !== "\n") cursor += 1;
+      continue;
+    }
+    if (char === "/" && next === "*") {
+      const close = source.indexOf("*/", cursor + 2);
+      cursor = close === -1 ? source.length : close + 2;
+      continue;
+    }
+    if (char === "{") {
+      cursor = skipBalanced(source, cursor);
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      cursor = skipQuoted(source, cursor, char);
+      continue;
+    }
+    if (char === "`") {
+      cursor = skipTemplate(source, cursor);
+      continue;
+    }
+    if (char === ">") return cursor;
+    cursor += 1;
+  }
+  return -1;
+};
+
+/**
+ * The end of a **JSX element** that starts at `index`.
+ *
+ * JSX is the fifth thing beside code, comments, strings and templates, and
+ * it is the one that changes the shape of a statement: a tag's `{}` is an
+ * **expression**, not a block, and a tag's text may hold a `<` or a `{` that
+ * means nothing to the grammar. The scanner read those braces as blocks, so
+ * a component that returned JSX ended its export at the first `}` inside a
+ * tag — and every export after it was lost.
+ *
+ * So the scanner skips a JSX element whole. A tag ends at its own `>`; a
+ * nested tag is skipped in turn; an expression inside a tag is skipped as
+ * **code**, braces and all, so its own `}` cannot end anything.
+ */
+const skipJsx = (source: string, index: number): number => {
+  let cursor = index;
+  // The tags this element holds, so a nested element's close does not end
+  // the outer one.
+  const open: string[] = [];
+  while (cursor < source.length) {
+    const char = source[cursor];
+    if (char === "{") {
+      // An expression in a tag: its braces are balanced, so skip to its close.
+      cursor = skipBalanced(source, cursor);
+      continue;
+    }
+    if (char === "<") {
+      // A nested tag, or the close of one. The tag's own `>` is found by
+      // scanning it: an attribute may hold an expression, and that
+      // expression's own `>` is not the tag's end.
+      const close = tagEnd(source, cursor);
+      if (close === -1) return source.length;
+      const body = source.slice(cursor + 1, close);
+      const name = /^\/?([A-Za-z_$][\w.$]*)/.exec(body)?.[1];
+      if (body.startsWith("/")) {
+        // A closing tag: it closes the last tag this element opened.
+        open.pop();
+        cursor = close + 1;
+        if (open.length === 0) return cursor;
+        continue;
+      }
+      if (body.trimEnd().endsWith("/")) {
+        // A self-closing tag: it opens and closes at once.
+        cursor = close + 1;
+        if (open.length === 0) return cursor;
+        continue;
+      }
+      if (name !== undefined) open.push(name);
+      cursor = close + 1;
+      continue;
+    }
+    cursor += 1;
+  }
+  return source.length;
+};
+
+/**
+ * The end of the balanced group that starts at `index`.
+ *
+ * The group is delimited by braces, brackets or parentheses, and a string or
+ * a template inside it holds its own delimiters.
+ */
+const skipBalanced = (source: string, index: number): number => {
+  const open = source[index];
+  const close =
+    open === "{" ? "}" : open === "[" ? "]" : open === "(" ? ")" : "";
+  if (close === "") return index + 1;
+  let depth = 0;
+  let cursor = index;
+  while (cursor < source.length) {
+    const char = source[cursor];
+    const next = source[cursor + 1];
+    if (char === "/" && next === "/") {
+      while (cursor < source.length && source[cursor] !== "\n") cursor += 1;
+      continue;
+    }
+    if (char === "/" && next === "*") {
+      const close = source.indexOf("*/", cursor + 2);
+      cursor = close === -1 ? source.length : close + 2;
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      cursor = skipQuoted(source, cursor, char);
+      continue;
+    }
+    if (char === "`") {
+      cursor = skipTemplate(source, cursor);
+      continue;
+    }
+    if (char === open) depth += 1;
+    if (char === close) {
+      depth -= 1;
+      if (depth === 0) return cursor + 1;
+    }
+    cursor += 1;
+  }
+  return source.length;
+};
+
+/**
  * The code that follows `index`, with whitespace and comments skipped.
  *
  * A statement that closes a brace may still carry a `from` clause or another
@@ -254,10 +522,17 @@ const nextCode = (source: string, index: number): string => {
 export const scanExports = (source: string): ReadonlyArray<ScannedExport> => {
   const found: ScannedExport[] = [];
   let index = 0;
-  let depth = 0;
   let start = -1;
   let doc = "";
   let pendingDoc = "";
+  /**
+   * How many brackets the current statement holds open.
+   *
+   * A statement ends when its own brackets are all closed, so the count is
+   * what tells a `;` that ends the statement from a `;` that sits inside a
+   * parameter list, an array or an object literal.
+   */
+  let open = 0;
 
   while (index < source.length) {
     const char = source[index] ?? "";
@@ -289,9 +564,32 @@ export const scanExports = (source: string): ReadonlyArray<ScannedExport> => {
       continue;
     }
 
-    if (char === "{") depth += 1;
-    if (char === "}") depth -= 1;
+    // A **JSX element** is code, but its braces are expressions and its text
+    // is not grammar. The scanner skips it whole, so a component that returns
+    // JSX ends its export at the end of the element and not at the first `}`
+    // inside a tag.
+    if (char === "<") {
+      const isJsx = isJsxStart(source, index);
+      if (isJsx) {
+        index = skipJsx(source, index);
+        continue;
+      }
+    }
 
+    // A regex literal is code, but its brackets are pattern syntax: the
+    // scanner must not count them, or a character class holding a bracket
+    // leaves the depth off and swallows the rest of the module.
+    if (char === "/" && isRegexStart(source, index)) {
+      index = skipRegex(source, index);
+      continue;
+    }
+
+    // Every bracket counts, not only the braces: a parameter list's `(` and
+    // an array's `[` hold the braces they open. A scanner that counted only
+    // the braces closed a destructured parameter's list at the pattern's
+    // brace, and every export after it was lost with it.
+    if (char === "(" || char === "[" || char === "{") open += 1;
+    if (char === ")" || char === "]" || char === "}") open -= 1;
     if (start < 0) {
       const isExport =
         char === "e" &&
@@ -307,8 +605,11 @@ export const scanExports = (source: string): ReadonlyArray<ScannedExport> => {
       continue;
     }
 
-    const endsAtSemicolon = char === ";" && depth === 0;
-    const endsAtBrace = char === "}" && depth === 0;
+    // The statement ends at a `;` when no bracket is open, and at the `}`
+    // that closes the declaration's own body when the body is the only
+    // bracket left open.
+    const endsAtSemicolon = char === ";" && open === 0;
+    const endsAtBrace = char === "}" && open === 0;
     if (!endsAtSemicolon && !endsAtBrace) {
       index += 1;
       continue;
@@ -404,13 +705,31 @@ const assignmentOf = (text: string): number => {
   return -1;
 };
 
-/** The declarators of a `const`, `let` or `var` statement. */
+/**
+ * The declarators of a `const`, `let` or `var` statement.
+ *
+ * The split is on the commas **between** declarators, and a declarator's own
+ * name comes before its `=`. So the scan stops at the first top-level `=`: a
+ * comma after it belongs to the **initialiser**, not to another declarator.
+ *
+ * That matters because an initialiser is often a component's **JSX**, and the
+ * scanner is not a JSX parser: a `<div>` raises the angle counter and a
+ * `</div>` lowers it, but the text between them — a list of props, or a
+ * child's own comma — is read as code. A comma in a JSX body therefore
+ * reached the split and cut the declaration in half, and the export's name
+ * was lost with it.
+ *
+ * A `const` whose initialiser is a plain expression is unaffected: the `=` is
+ * still the first top-level one, and the declarators before it are the ones
+ * the statement publishes.
+ */
 const declarators = (text: string): ReadonlyArray<string> => {
   const body = text.replace(/^export\s+(?:const|let|var)\s+/, "");
   const parts: string[] = [];
   let depth = 0;
   let angle = 0;
   let current = "";
+  let assigned = false;
   for (let index = 0; index < body.length; index += 1) {
     const char = body[index] ?? "";
     const next = body[index + 1] ?? "";
@@ -418,7 +737,12 @@ const declarators = (text: string): ReadonlyArray<string> => {
     else if (char === ">" && next !== "=" && angle > 0) angle -= 1;
     else if (char === "(" || char === "[" || char === "{") depth += 1;
     else if (char === ")" || char === "]" || char === "}") depth -= 1;
-    if (char === "," && depth === 0 && angle === 0) {
+    // The **first** top-level `=` ends the declarator's name; after it the
+    // text is the initialiser, and a comma there is the initialiser's.
+    if (char === "=" && next !== "=" && depth === 0 && angle === 0) {
+      assigned = true;
+    }
+    if (char === "," && depth === 0 && angle === 0 && !assigned) {
       parts.push(current);
       current = "";
       continue;

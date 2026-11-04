@@ -129,8 +129,9 @@ describe("the sharper chart types", () => {
     );
     settle(root);
 
+    const mounted = root;
     const radiiOf = (): ReadonlyArray<number> => {
-      const source = chartMarkupOf(root, "emphasised-layer-churn-dots");
+      const source = chartMarkupOf(mounted, "emphasised-layer-churn-dots");
       return [...source.matchAll(/<circle[^>]*r="([\d.]+)"/g)].map((match) =>
         Number(match[1]),
       );
