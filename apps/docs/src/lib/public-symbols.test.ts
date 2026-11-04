@@ -363,6 +363,27 @@ describe("the page a symbol's module ships with", () => {
     ).toBe("/components/card");
   });
 
+  it("links a retired primitive page to the curated page that documents it", () => {
+    // Five primitives are documented in full under `/components` and their
+    // package address only answers with a 301. A symbol declared in one of
+    // them linked to the retired address, so every reader who followed it
+    // made a round trip to learn where the page had gone.
+    expect(
+      docsUrlFor(
+        "packages/primitives/src/components/Button.tsx",
+        collections,
+        pages,
+      ),
+    ).toBe("/components/button");
+    expect(
+      docsUrlFor(
+        "packages/primitives/src/components/Tooltip.tsx",
+        collections,
+        pages,
+      ),
+    ).toBe("/components/tooltip");
+  });
+
   it("refuses a helper, a bare index and a page the site does not mount", () => {
     expect(
       docsUrlFor("packages/primitives/src/core/style.ts", collections, pages),
