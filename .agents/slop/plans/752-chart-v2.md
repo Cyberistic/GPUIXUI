@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | in progress — the scene bridge lands; the frame's document route, the config seam and the new types are next |
+| Status | done — the scene bridge, the document route, the config seam, three new types, the crosshair and the emphasis all land |
 | Phase | D (data presentation) |
 | Depends on | `@gpuixui/data` chart module, `@gpuixui/tokens` series scale, `@gpuixui/motion` |
 | References | shadcn/ui v4 `apps/v4/registry/new-york-v4/ui/chart.tsx`, Recharts v3, GPUI Kit `component/chart`, `chart-raster` and `chart-surface-lifecycle` probes |

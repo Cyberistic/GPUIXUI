@@ -38,6 +38,7 @@ import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
 import { themeColors } from "@gpuixui/tokens";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useMemo, type ReactNode } from "react";
 import { recipeStyle } from "./internal/recipe.js";
@@ -142,16 +143,29 @@ export const themedDrawing = (
   svg: string,
   roles: Record<string, string>,
 ): string => {
+  // The **public** names first: each carries the theme's value and Pele's own
+  // fallback, so the whole `var(--pele-bg, #fff)` becomes the theme's colour.
   const baked = svg.replace(
     /var\((--pele-[a-z-]+)\s*,\s*[^)]*\)/g,
     (whole, name: string) => roles[name] ?? whole,
   );
-  // The internal names are what the drawing paints with; each stands for one
-  // public name, so the public value reaches the pixels.
+  // The **internal** names are what the drawing paints with: `var(--_fg)` and
+  // `var(--_l)`, defined in the same `style` attribute. A raster resolves
+  // neither — a custom property in a `style` attribute is CSS, and a picture
+  // is not CSS — so each reference becomes the value its own definition holds.
+  //
+  // The value is read from the **definition**, not from a table of names:
+  // Pele abbreviates them (`--pele-line` is `--_l`), and a table would have to
+  // know every abbreviation Pele uses.
+  const defined = new Map(
+    Arr.map(
+      [...baked.matchAll(/(--_[a-z-]+):([^;"]+)/g)],
+      (match) => [match[1] ?? "", (match[2] ?? "").trim()] as const,
+    ),
+  );
   return baked.replace(/var\((--_[a-z-]+)\)/g, (whole, name: string) => {
-    const publicName = `--pele${name.slice(3)}`;
-    const value = roles[publicName];
-    return value === undefined ? whole : value;
+    const value = defined.get(name);
+    return value === undefined || value === "" ? whole : value;
   });
 };
 

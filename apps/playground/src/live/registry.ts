@@ -379,6 +379,12 @@ export const liveRegistry = [
     capability: "content",
   },
   {
+    id: "chart-document-lifecycle",
+    title:
+      "Content: the shipped charts and the shipped diagram paint through one SVG document, so two series hold two colours inside one plot",
+    capability: "content",
+  },
+  {
     id: "window-chrome",
     title:
       "Window: the app's layout starts at the window's top edge, the reported insets carry no titlebar band in either titlebar mode, and an app insets its own chrome",

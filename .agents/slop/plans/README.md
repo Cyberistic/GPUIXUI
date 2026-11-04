@@ -248,10 +248,8 @@ Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` �
 | ---- | ----- | ----- | ---------- | ------ |
 | [610](./610-tier3-data.md) | Tier 3 data presentation: the `@gpuixui/data` package | D | components, primitives, tw, tokens, motion | done — phases 1–7, 3b, the selection column and the windowed tree landed |
 | [751](./751-native-charts.md) | Native charts: types, styling and the chart page | D | `@gpuixui/data` charts, tokens series | **landed** — area, pie, radar and radial types, signed/horizontal bars, grid, hover readout and a page per type |
-| [752](./752-chart-v2.md) | Charts v2: the multi-colour surface, the config seam and the missing types | D | data charts, tokens series, motion | planned — the `setImage` SVG route, `ChartConfig`, scatter/candle/funnel, a second axis and a reference line |
-| [753](./753-graphics-category.md) | Graphics: one category for charts, icons and diagrams | F | data charts, icons, Pele | planned — the `Graphics` sidebar section, the `Diagram` component on Pele, and the category's pages |
-| [752](./752-chart-v2.md) | Charts v2: the multi-colour surface, the config seam and the missing types | D | data charts, tokens series, motion | in progress — the scene bridge to TanStack Charts and the document route landed; the config seam and the missing types are next |
-| [753](./753-graphics-category.md) | Graphics: one category for charts, icons and diagrams | F | data charts, icons, Pele | planned — the `Graphics` sidebar section, the `Diagram` component on Pele, and the category's pages |
+| [752](./752-chart-v2.md) | Charts v2: the multi-colour surface, the config seam and the missing types | D | data charts, tokens series, motion | landed — the TanStack Charts scene bridge, the document route, `ChartConfig`, scatter/candle/funnel, the crosshair and the emphasis |
+| [753](./753-graphics-category.md) | Graphics: one category for charts, icons and diagrams | F | data charts, icons, Pele | landed — the `Graphics` section, the `Diagram` component, the pages and the document-route probe |
 
 ### Media
 

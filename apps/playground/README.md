@@ -48,7 +48,7 @@ read to its bottom, and
 `examples-mount`, which pages through every shipped example the docs quote.
 
 The **live** registry (`src/live/registry.ts`) is separate and shorter: the
-140 probes a real window can prove, of which thirty-one mount shipped
+141 probes a real window can prove, of which thirty-one mount shipped
 `@gpuixui/components` (the dialog and its fade, the drawer, the confirmation flow, the
 field's validation, the menu,
 the context menu, the toast system,
@@ -3358,6 +3358,51 @@ One negative control measured, exit `1`, restored green: tinting every layer
 with the first palette slot (the single-mask regression the probe exists to
 catch) fails
 `the bars plot paints the second series' tint: expected true, got false`.
+
+### `chart-document-lifecycle` — measured on 0.11.0 here
+
+**Do the shipped charts and the shipped diagram paint in colour, or only in the
+`TestRenderer` their behaviour suites mount them in?** The charts' marks travel
+as **one SVG document** on an `<img>`'s `src`, which the runtime decodes
+through its own renderer, so one element carries every series' own colour —
+the thing a one-tint `<svg source>` mask cannot do. The offscreen renderer
+reads markup, not pixels, so only a real frame can answer the question. This
+probe mounts the **shipped** `BarChart` and the **shipped** `Diagram` in a
+real window and counts paint out of each plot's own crop, so a tint that
+leaks into the legend or onto the page cannot stand in for a series. The
+palette is read from the probe's own `seriesColors(theme)` readout rather than
+restated, so a brand's categorical scale is measured too.
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/live/run.js --only chart-document-lifecycle
+```
+
+24 checks, green on 0.11.0 (295 ms). The fixture is `src/live/chart-document.ts` (the two
+series, the categories, the Mermaid source, the plot's sizes and the sample
+points) and its arithmetic — the sample points are the **centres** of the two
+bars in the first category — is held by `src/live/chart-document.test.ts`.
+
+| Question | Measurement |
+| -------- | ----------- |
+| Do two series hold two colours inside **one** plot? | The first series' tint and the second's are both counted inside the same plot's crop, and the two sampled points read the two tints — a chart painted as one tinted mask per series could not do this in one element |
+| Do the marks land where the geometry says? | The point at the centre of the first series' first bar reads that series' colour, and the point beside it reads the second's |
+| Does the **diagram** paint through the same route? | The drawing's own crop carries pixels of the theme's roles, which is what the drawing paints in — Pele's palette is baked into the document, because a raster cannot read a CSS variable |
+
+Two things the probe measured and the component had to fix:
+
+- **Pele writes its palette twice** — once as the public `--pele-*` custom
+  properties, each with Pele's own fallback, and once as the internal `--_*`
+  names the drawing paints with (`--pele-fg` is `--_fg`). A raster resolves
+  neither, so **both** have to become literal colours: the public ones from
+  the theme's roles, and the internal ones from the values their own
+  definitions hold. Substituting only the public names left every shape
+  painting `var(--_fg)`, which a raster resolves to nothing — the drawing came
+  out blank.
+- **The probe samples the drawing, not the column.** The `Diagram`'s root is
+  the column the drawing sits in, and its crop holds the page behind it, so
+  the count read the background. The drawing is the element that paints, so it
+  is the element the probe samples.
 
 ### `window-chrome` — measured on 0.11.0 here
 
@@ -8252,7 +8297,8 @@ narrower. Each deviation is deliberate and measured:
   `color-picker-lifecycle` and `mention-input-lifecycle` and
   `radio-group-lifecycle`, `ripple-lifecycle` and `typing-text-lifecycle` and
   `hotkey-recorder-lifecycle` and `diff-viewer-lifecycle` and
-  `switch-lifecycle` and `inline-edit-lifecycle` (82 probes, each run alone).
+  `switch-lifecycle` and `inline-edit-lifecycle` and
+  `chart-document-lifecycle` (83 probes, each run alone).
 - Every shipped example the docs quote mounts and paints: `examples-mount`
   pages through the components' registry, the shell package's three examples and
   the files package's three screens (four checks per page plus two for the run,
