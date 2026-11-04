@@ -18,6 +18,7 @@ with no docs change.
 | `open-gpui.md` | open-gpui | Apache-2.0 | ship — spring/sequence physics ported |
 | `gpui-motion.md` | gpui-motion | MIT | derive — motion API surface as a spec |
 | `tanstack.md` | TanStack | MIT | dependency — headless cores adopted |
+| `pele.md` | Pele | MIT | dependency — the DOM-free diagram renderer |
 | `panelui.md` | PanelUI | none (documentation) | reference-only — no public source repository |
 | `base-gpui.md` | *(design reference, not in the table)* | MIT | reference-only — compound-part contract |
 | `lucide.md` | *(icons, not in the table)* | ISC + MIT | ship — icon geometry |

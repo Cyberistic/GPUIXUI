@@ -25221,3 +25221,67 @@ green; the site deployed and all 195 sitemap pages answer 200.
       pointer moves, and the snapping transforms stay until the caller's order
       arrives (a layout effect clears them before paint) instead of animating
       after the tab has already been placed.
+## Charts v2 and the Graphics category (plans 752/753, 2026-11-04)
+
+`[x]` `[██████████]` 10/10
+
+`[x]` Record **why Recharts is unusable here** — it needs a DOM
+      (`document.createElementNS`, `getBoundingClientRect`, `ResizeObserver`),
+      per-mark pointer events and CSS. GPUix publishes twelve host elements;
+      `<svg source>` is a one-tint `gpui::svg()` icon with no `mouseMove`,
+      and `setImage` yields a `RenderImage` picture with no hit-testable marks.
+      Plan 752 §8 holds the measurement.
+`[x]` Adopt **TanStack Charts** — `createChartScene(definition, size)` is a
+      pure DOM-free function, `renderChartSvg(scene)` emits one document, and
+      `nearestScenePoint` is a pure geometric hit test. Measured in a node
+      environment: a two-series chart compiles and serialises with both
+      series' colours in one document. Bundle 57 kB minified / 21 kB gzip
+      (scene + SVG + bar/line/area + compact scales), 41 kB / 15 kB minimal,
+      with **zero d3 references** — the scales come from
+      `@tanstack/charts-scales`, not from d3.
+`[x]` Make the **document route** the default paint — the chart's `src` data
+      URL on an `<img>`, decoded by the runtime; the one-tint mask route stays
+      as `render="mask"`.
+`[x]` Keep the **accessibility tree** on the document route — a named element
+      per series (a transparent `<div role="img">`) so each series' name and
+      values are still announced; the document element itself is `role="none"`.
+`[x]` Land the **`ChartConfig` seam** — every cartesian chart takes `config`
+      and `data`; the colour is resolved in the theme's mode, and the legend
+      and the plot read the same colour.
+`[x]` Land the **missing types** — `ScatterChart`, `CandleChart` and
+      `FunnelChart`, with geometry, props, page tables and behaviour cases.
+`[x]` Land the **crosshair** and the **emphasised point** — only the hovered
+      point grows.
+`[x]` Land the **`Diagram` component** — Pele, shadcn-like, in
+      `@gpuixui/components` (`src/diagram.tsx` + `src/diagram/logic.ts`), with
+      a docs page, an example, an inventory row and a licence note. The theming
+      bug is fixed too: Pele writes its palette twice (the public `--pele-*`
+      and the internal `--_*`), and a raster resolves neither — both must
+      become literal colours.
+`[x]` Replace the **"Icons"** docs category with **"Graphics"** — charts,
+      icons and diagrams under one heading, mounted at
+      `/graphics/charts/charts` and `/graphics/icons/icon`.
+`[x]` Teach the **docs-site export scanner** to read a component — the scanner
+      could not read a component returning JSX, which is why `Diagram` was
+      never published. It now reads the five things the compiler reads: code,
+      comments, strings, templates, and beside them **regex literals** and
+      **JSX elements**. A statement ends when its own brackets are all closed,
+      so a parameter list's brace and an object literal's brace no longer end
+      it. Six regression tests cover the reading (a regex literal, a JSX body,
+      a division, a destructured parameter, an object literal that is an
+      argument, and a tag whose attributes hold a comment); three of them fail
+      on the previous scanner. Docs suite back to its pre-existing baseline.
+`[x]` Land the **document-route live probe** — `chart-document-lifecycle` in
+      `apps/playground`, 24 checks, green on 4 consecutive runs. It proves two
+      series hold two colours inside one plot and that the diagram paints
+      through the same route.
+`[x]` Repair the **lockfile drift** — `nub install` had re-resolved
+      `@effect/platform-node-shared` to 4.1.2, which is incompatible with
+      `effect@4.0.5` and broke the playground runner. `nub.lock` was rebuilt
+      from the pre-drift base plus only the TanStack Charts entries; this also
+      fixed the four pre-existing playground failures.
+
+`[!]` The GPUix issue for **SVG primitives** is open upstream:
+      https://github.com/remorses/gpuix/issues/130 — "Add support for SVG
+      primitives", with a link to `https://www.w3.org/TR/SVG2/`. Until it
+      lands, every chart and diagram paints through the document route.

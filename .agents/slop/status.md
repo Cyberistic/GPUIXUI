@@ -48,7 +48,7 @@ landed. Tier 1, the rest of data presentation, workspace and specialised
 components are tracked in `.agents/slop/TODO.md`.
 
 The docs site follows shadcn/ui's anatomy: a sectioned sidebar (the Guide,
-Components, Primitives, Icons, Data display, Workspace, Blocks, Examples,
+Components, Primitives, Graphics, Data display, Workspace, Blocks, Examples,
 Reference), a reusable component page with Preview/Code tabs, a `nub` install
 block, Usage, Composition and API reference, plus the "On this page" table of
 contents and the previous/next pager. Button, Dialog, Popover and
@@ -70,6 +70,14 @@ transcript's scrollbar over the avatar at the row's edge. The hero's people
 list is narrower than the block's (236px against 330px), so the thread beside
 it reads. `apps/docs/src/components/landing/css-rules.ts` reads the landing's
 own CSS for the guards that hold both.
+**Graphics** is one category for charts, icons and diagrams, so the three
+things a reader reaches for when they want to *draw* are found in one place:
+`/graphics/charts/charts`, `/graphics/icons/icon` and `/graphics/diagrams`. A
+chart is a **scene** compiled by TanStack Charts and painted through the
+runtime's **document route** — the SVG travels as a data URL on an `<img>` —
+and a diagram is a Mermaid source rendered by Pele and painted the same way.
+The one-tint mask route (`render="mask"`) remains for a chart that wants to
+tint per layer.
 
 Every docs page is prerendered at build time and served from Cloudflare's asset
 layer, so a page request never runs the Worker; only `/live` (which needs its
@@ -125,6 +133,8 @@ the licence is noted and attributed in `.agents/slop/LICENSES/`.
 | [gpui-motion](https://github.com/1bye/gpui-motion) | broader motion API surface — easing variants and inertia — borrowed as spec | MIT |
 | [TanStack](https://tanstack.com) | headless cores — Table (grid state), Virtual (windowing), Form (field state), Pacer (debounce/throttle), Hotkeys (accelerators) | MIT |
 | [mermaidcn](https://github.com/Riley1101/mermaidcn) | docs-only Mermaid renderer and playground API — rebuilt on Pele | MIT (declared in README) |
+| [TanStack](https://tanstack.com) | headless cores — Table (grid state), Virtual (windowing), Form (field state), Pacer (debounce/throttle), Hotkeys (accelerators), **Charts** (the DOM-free scene compiler) | MIT |
+| [Pele](https://pele.run) | the DOM-free Mermaid renderer the `Diagram` component draws with | MIT |
 
 ## References
 
