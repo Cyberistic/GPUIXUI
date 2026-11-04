@@ -62,6 +62,6 @@ Accordion
 
 ## Limitations
 
-- Each trigger publishes `aria-expanded`; the trigger names its own section.
-- **No `aria-controls`** in 0.11.0: the trigger-to-panel relationship is positional, so a panel cannot be referenced from its header.
-- The indicator's `aria-label` changes with the state, so a reader hears the action rather than a decorative glyph.
+- Each trigger publishes `aria-expanded` and names its own section.
+- **No `aria-controls`**: a panel cannot be referenced from its header.
+- The indicator's `aria-label` names the action, not a glyph.

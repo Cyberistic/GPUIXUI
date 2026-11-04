@@ -1,0 +1,310 @@
+/* mermaidcn, rebuilt on Pele: the renderer, the zoom/pan canvas and the
+   playground. Pele reads `--pele-*` custom properties, so the roles below are
+   the page's own; a named theme replaces them on the wrapper without a second
+   render. */
+
+.gx-mermaidcn {
+  --pele-bg: var(--card);
+  --pele-fg: var(--foreground);
+  --pele-muted: var(--muted-foreground);
+  --pele-line: var(--border-strong, var(--border));
+  --pele-surface: var(--muted);
+  --pele-surface-alt: var(--accent);
+  --pele-border: var(--border);
+  --pele-accent: var(--ring);
+  --pele-font: var(--font-sans);
+  --pele-radius: var(--radius);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.gx-mermaidcn-svg {
+  display: flex;
+  min-width: 0;
+  justify-content: center;
+}
+
+.gx-mermaidcn-svg > svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.gx-mermaidcn-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.gx-mermaidcn-badge {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--destructive) 12%, transparent);
+  color: var(--destructive);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.gx-mermaidcn-message {
+  max-width: 48ch;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* The editor: a gutter and a textarea that share a line height. */
+.gx-mermaidcn-editor {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--card);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 26px;
+}
+
+.gx-mermaidcn-gutter {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 40px;
+  padding: 12px 8px;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 11px;
+  user-select: none;
+}
+
+.gx-mermaidcn-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 12px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  line-height: inherit;
+  resize: none;
+  tab-size: 2;
+}
+
+.gx-mermaidcn-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+/* The playground frame. */
+.gx-mermaidcn-playground {
+  margin-block: 1.25rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow, 0 1px 2px rgb(0 0 0 / 6%));
+}
+
+.gx-mermaidcn-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 60%, transparent);
+}
+
+.gx-mermaidcn-spacer {
+  flex: 1;
+}
+
+.gx-mermaidcn-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-mermaidcn-field select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.gx-mermaidcn-theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-mermaidcn-theme i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 15%);
+}
+
+.gx-mermaidcn-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 480px;
+}
+
+.gx-mermaidcn-source {
+  border-right: 1px solid var(--border);
+}
+
+.gx-mermaidcn-preview {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--muted) 25%, transparent);
+}
+
+.gx-mermaidcn-canvas {
+  flex: 1;
+  min-height: 0;
+}
+
+.gx-mermaidcn-preview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 50%, transparent);
+}
+
+.gx-mermaidcn-preview-label {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.gx-mermaidcn-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gx-mermaidcn-control,
+.gx-mermaidcn-percent {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.gx-mermaidcn-control:hover,
+.gx-mermaidcn-percent:hover {
+  color: var(--foreground);
+}
+
+.gx-mermaidcn-percent {
+  min-width: 44px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gx-mermaidcn-control-wide {
+  padding-inline: 8px;
+}
+
+.gx-mermaidcn-field select:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+/* Zoom/pan: the canvas is the frame; the content moves inside it. */
+.gx-zoompan {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.gx-zoompan-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 260px;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.gx-zoompan-canvas:active {
+  cursor: grabbing;
+}
+
+.gx-zoompan-content {
+  display: inline-flex;
+  width: max-content;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.gx-zoompan-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+@media (max-width: 800px) {
+  .gx-mermaidcn-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gx-mermaidcn-source {
+    min-height: 320px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .gx-mermaidcn-preview {
+    min-height: 380px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-zoompan-content {
+    transition: none !important;
+  }
+}
+
+/* The single diagram on the page: the same frame the playground uses, without
+   the editor. */
+.gx-mermaidcn-example {
+  margin-block: 1.25rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.gx-mermaidcn-example .gx-zoompan-canvas {
+  min-height: 360px;
+}
+
+.gx-mermaidcn-example .gx-mermaidcn {
+  padding: 24px;
+}

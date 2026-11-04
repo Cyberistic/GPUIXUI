@@ -43,7 +43,7 @@ export const DeploymentWindow = () => {
         <TimePickerSegment segment="minutes" />
         <TimePickerClear />
       </TimePicker>
-      {/* `opens` is `HH:mm` or `null`; the app decides what "not set" means. */}
+      {/* `opens` is `HH:mm` or `null`. */}
       <Button disabled={opens === null} onClick={() => setSaved(opens)}>
         {saved === null ? "Save window" : `Saved ${saved}`}
       </Button>
@@ -75,7 +75,7 @@ TimePicker
 | `clearable` | `boolean` | `false` | renders the clear control while a time is set |
 | `disabled` | `boolean` | `false` | both segments become `readOnly`, leave the tab order, and no clear is rendered |
 | `testId` | `string` | `"time-picker"` | the base id of the parts: `-hours`, `-minutes`, `-clear` |
-| `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `className` | `string` | — | joined last |
 | `children` | `ReactNode` | none | the segments, separator and clear control, directly inside |
 
 ### `TimePickerSegment`
@@ -89,7 +89,7 @@ TimePicker
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `children` | `ReactNode` | `":"` | the painted separator; it takes no focus |
+| `children` | `ReactNode` | `":"` | the painted separator |
 
 ### `TimePickerClear`
 
@@ -101,4 +101,4 @@ TimePicker
 
 - The field is a labelled `role="group"`; each segment carries `aria-label="<label> hours"` / `"<label> minutes"` and announces its value natively.
 - Each segment **announces the format hint it paints**.
-- **No `aria-valuenow` and no spinbutton role** in `@gpuix/native@0.11.0`.
+- **No `aria-valuenow` and no spinbutton role**.

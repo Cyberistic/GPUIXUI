@@ -62,6 +62,15 @@ block (`/blocks/dashboard`) is the landing's product window: a six-card
 activity dashboard composed from the library, with `BarChart`, `DonutChart` and
 `StackedBar` from `@gpuixui/data`.
 
+The landing's showcase grid is a masonry: four columns, each its own stack, so
+every tile cascades to the next with a constant gap and no holes. A CSS grid
+shares its rows and leaves a hole under a short tile. The conversation row is a
+sibling of the columns and one column wide, because a narrow column puts the
+transcript's scrollbar over the avatar at the row's edge. The hero's people
+list is narrower than the block's (236px against 330px), so the thread beside
+it reads. `apps/docs/src/components/landing/css-rules.ts` reads the landing's
+own CSS for the guards that hold both.
+
 Every docs page is prerendered at build time and served from Cloudflare's asset
 layer, so a page request never runs the Worker; only `/live` (which needs its
 cross-origin isolation headers set per request) and `/api/search` are rendered
@@ -115,6 +124,7 @@ the licence is noted and attributed in `.agents/slop/LICENSES/`.
 | [open-gpui](https://github.com/Latias94/open-gpui) (`crates/motion`) | spring/sequence physics, ported to TS | Apache-2.0 |
 | [gpui-motion](https://github.com/1bye/gpui-motion) | broader motion API surface — easing variants and inertia — borrowed as spec | MIT |
 | [TanStack](https://tanstack.com) | headless cores — Table (grid state), Virtual (windowing), Form (field state), Pacer (debounce/throttle), Hotkeys (accelerators) | MIT |
+| [mermaidcn](https://github.com/Riley1101/mermaidcn) | docs-only Mermaid renderer and playground API — rebuilt on Pele | MIT (declared in README) |
 
 ## References
 
@@ -132,6 +142,8 @@ edited:
 - Netherite — https://github.com/Infatoshi/netherite (the C/CUDA Minecraft 1.7.10 engine; `apps/netherite` wraps its CLI in a GPUix terminal client; clone at `references/netherite`)
 - PanelUI — https://panelui.dev/docs/components (documentation only: no public
   source repository, so it is read as documentation and not cloned)
+- mermaidcn — https://github.com/Riley1101/mermaidcn (Mermaid renderer API,
+  theme names and playground shape; clone at `references/mermaidcn`)
 
 ## Tooling ledger
 

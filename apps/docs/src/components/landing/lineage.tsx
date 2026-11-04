@@ -1,13 +1,38 @@
+import { useEffect, useRef, useState } from "react";
+
 const GRAPH_DESCRIPTION =
   "GPUixUI components render through the GPUix native renderer — a GPU renderer with no DOM — onto macOS, Windows 11, Linux/Arch and a terminal.";
 
 export function Lineage() {
+  const figure = useRef<HTMLElement>(null);
+  const [seen, setSeen] = useState(false);
+
+  useEffect(() => {
+    const node = figure.current;
+    if (node === null) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        setSeen(true);
+        observer.disconnect();
+      },
+      { threshold: 0.25 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section className="landing-section" id="lineage">
-      <p className="landing-kicker">The lineage</p>
-      <h2 className="landing-h2">Write once, run everywhere.</h2>
+      <p className="landing-kicker">blazingly fast btw 🦀</p>
+      <h2 className="landing-h2">Build once, run on the GPU everywhere</h2>
 
-      <figure className="landing-graph" aria-label={GRAPH_DESCRIPTION}>
+      <figure
+        aria-label={GRAPH_DESCRIPTION}
+        className="landing-graph"
+        data-inview={seen || undefined}
+        ref={figure}
+      >
         <div aria-hidden="true" className="landing-graph-body">
           <div className="landing-graph-row">
             <GraphNode name="shadcn/ui" role="composition" />
@@ -38,6 +63,7 @@ export function Lineage() {
             <GraphNode className="landing-graph-leaf" name="Windows 11" />
             <GraphNode className="landing-graph-leaf" name="Linux / Arch" />
             <GraphNode className="landing-graph-leaf" name="Terminal" />
+            <GraphNode className="landing-graph-leaf" name="Web (WASM)" />
           </div>
         </div>
 
@@ -69,7 +95,7 @@ function Connector({ kind }: { kind: "converge" | "stem" | "fork" }) {
     kind === "converge"
       ? "M16.67 0V20 M50 0V20 M83.33 0V20 M16.67 20H83.33 M50 20V40"
       : kind === "fork"
-        ? "M50 0V20 M16.67 20H83.33 M16.67 20V40 M50 20V40 M83.33 20V40"
+        ? "M50 0V20 M10 20H90 M10 20V40 M30 20V40 M50 20V40 M70 20V40 M90 20V40"
         : "M50 0V40";
 
   return (

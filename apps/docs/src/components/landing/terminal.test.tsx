@@ -52,22 +52,39 @@ describe("the terminal moment", () => {
   });
 
   it("makes the file tree and the sidebar real controls", () => {
-    expect(count(/class="landing-vscode-row"/g)).toBeGreaterThan(4);
+    expect(markup).toContain("landing-term-tree");
+    expect(count(/class="gx-filetree"/g)).toBeGreaterThan(0);
+    // The tree logic is the package's, but the explorer keeps VS Code's chrome:
+    // no demo scene (border, dot field, 40px padding) around it.
+    expect(markup).not.toContain("gx-base gx-demo landing-term-tree");
+    expect(markup).toContain(">Explorer<");
+    expect(markup).toContain("landing-vscode-ts");
+    expect(css).toContain(".landing-term-tree .gx-filetree");
     expect(markup).toContain('aria-label="Collapse sidebar"');
     expect(markup).toContain('aria-expanded="true"');
     expect(markup).toContain('data-sidebar="true"');
-    // One tab per file, each a button that switches the buffer.
+    // One tab per file, each a role=tab that switches the buffer.
     for (const name of ["page.tsx", "button.tsx", "theme.ts"]) {
       expect(markup).toContain(`>${name}<`);
+      expect(markup).toContain(`data-reorder-tab="${name}"`);
+      expect(markup).toContain(`aria-label="Close ${name}"`);
     }
     expect(css).toContain("transition: width 0.28s ease");
     expect(css).toContain('[data-sidebar="false"]');
   });
 
+  it("lets the editor tabs reorder and close with the editor's motion", () => {
+    expect(markup).toContain('role="tablist"');
+    expect(markup).toContain('aria-label="Open editor files"');
+    expect(source).toContain("ReorderableTabs");
+    expect(markup).toContain("Close page.tsx");
+    expect(css).toContain('[data-dragging="true"]');
+    expect(css).toContain('[data-closing="true"]');
+  });
+
   it("opens the library's own components in the code pane", () => {
     expect(markup).toContain('data-current="true">page.tsx');
     expect(markup).toContain('data-current="true"');
-    expect(markup).toContain('data-kind="tsx"');
     for (const name of ["Button", "Stack", "ThemeProvider"]) {
       expect(markup).toContain(`<span class="vsc-tok-tag">${name}</span>`);
     }

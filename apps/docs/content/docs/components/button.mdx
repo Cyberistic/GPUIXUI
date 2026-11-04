@@ -35,19 +35,19 @@ import { Button } from "@gpuixui/primitives";
 | `square` | `boolean` | `false` | icon-only geometry |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
-| `tabIndex` | `number` | `0`, or `-1` while `disabled` | the action's Tab stop; a caller's value wins both ways, so a surface leaving names `-1` and a control focused from code keeps `0` |
+| `tabIndex` | `number` | `0`, or `-1` while `disabled` | the action's Tab stop; a caller's value wins both ways |
 | `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
 | `loadingLabel` | `string` | the provider's `loading.busy` (`Loading`) | the spinner's accessible name |
-| `reducedMotion` | `boolean` | the provider's preference (`false` when none) | lands the busy spinner at rest instead of animating it; the prop wins |
+| `reducedMotion` | `boolean` | the provider's preference (`false` when none) | lands the busy spinner at rest; the prop wins |
 | `leading` / `trailing` | `ReactNode` | none | icon or element beside the label |
 | `label` | `string` | none | accessible name; required for an icon-only button |
-| `onActivate` | `(event: EventPayload) => void` | none | click or activating key, with the event that caused it; not called while busy |
+| `onActivate` | `(event: EventPayload) => void` | none | click or activating key, with that event; not called while busy |
 | `onClick` | `(event) => void` | none | raw click, called before `onActivate` |
-| `onKeyDown` / `onKeyUp` | `(event: KeyEvent) => void` | none | composed **after** the activation, so an activating key runs first |
+| `onKeyDown` / `onKeyUp` | `(event: KeyEvent) => void` | none | composed **after** the activation |
 | `onFocus` / `onBlur` | `(event) => void` | none | composed before the button's own |
-| `onMouseEnter` / `onMouseLeave` / `aria-description` | the tooltip trigger pair and its words | none | a `Tooltip` forwards these, and the runtime delivers a hover only to the element itself, so the button carries them |
+| `onMouseEnter` / `onMouseLeave` / `aria-description` | the tooltip trigger pair and its words | none | a `Tooltip` forwards them; a hover lands on the element itself |
 | `ref` | `Ref<PublicInstance>` | none | the element itself, for a caller that focuses or measures it |
-| `className` | `string` | none | joined after the recipe, so it wins conflicts |
+| `className` | `string` | none | joined last |
 | `style` | `StyleDesc` | none | merged last |
 | `testId` | `string` | none | stable locator |
 | `children` | `ReactNode` | none | visible label |
@@ -56,4 +56,4 @@ import { Button } from "@gpuixui/primitives";
 
 - Role `button`; the name comes from `label` or the visible text.
 - `loading` sets `aria-description="Loading"` — the runtime declares no `aria-busy`.
-- There is no `aria-disabled`: a disabled button leaves the tab order and drops its handlers instead.
+- There is no `aria-disabled`: a disabled button leaves the tab order and drops its handlers.

@@ -5,14 +5,6 @@ description: "A first-run window: the app's mark, feature rows per step, Continu
 
 <BlockPreview name="welcome-01" />
 
-Run it natively:
-
-```sh
-nub run --filter @gpuixui/blocks dev -- welcome
-```
-
 ## Composition
 
-`Welcome` in `@gpuixui/blocks/welcome`, inside the shell's native window where it has one:
-a compact `Window` with no sidebar, `Icon` feature rows and two `Button`s; Import… is the app's callback to the system picker. Its rules are pure and tested in `examples/blocks/src/mac-blocks.logic.test.ts`,
-and its primary interaction runs on the real renderer in `src/mac-blocks.test.tsx`.
+`Welcome` in `@gpuixui/blocks/welcome`: a compact `Window` with no sidebar, `Icon` feature rows and two `Button`s; Import… opens the system picker.

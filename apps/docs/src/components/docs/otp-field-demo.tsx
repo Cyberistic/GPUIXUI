@@ -40,7 +40,12 @@ const Cell = ({
   </span>
 );
 
-export const OTPFieldDemo = () => {
+export const OTPFieldDemo = ({
+  showInvalid = true,
+}: {
+  /** Whether the refused code is drawn beside the working field. */
+  readonly showInvalid?: boolean;
+} = {}) => {
   const [code, setCode] = useState("48");
   const cells = otpCells(code, CODE_LENGTH);
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
@@ -105,15 +110,17 @@ export const OTPFieldDemo = () => {
             : "Six digits from your authenticator."}
         </span>
       </div>
-      <div className="gx-input-block">
-        <label className="gx-input-label">Invalid code</label>
-        <div className="gx-otp" role="group" aria-label="Invalid code">
-          {["1", "2", "3", "4", "5", "6"].map((digit, index) => (
-            <Cell invalid key={index} value={digit} />
-          ))}
+      {showInvalid ? (
+        <div className="gx-input-block">
+          <label className="gx-input-label">Invalid code</label>
+          <div className="gx-otp" role="group" aria-label="Invalid code">
+            {["1", "2", "3", "4", "5", "6"].map((digit, index) => (
+              <Cell invalid key={index} value={digit} />
+            ))}
+          </div>
+          <span className="gx-input-error">The code does not match.</span>
         </div>
-        <span className="gx-input-error">The code does not match.</span>
-      </div>
+      ) : null}
     </div>
   );
 };

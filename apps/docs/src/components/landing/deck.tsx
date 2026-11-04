@@ -88,6 +88,18 @@ export function Hero() {
     setPaused(true);
   };
 
+  // The showcase's theme tile names a platform; the deck is the page's
+  // platform surface, so it follows that choice instead of keeping its own.
+  useEffect(() => {
+    const onPlatform = (event: Event): void => {
+      const id = event instanceof CustomEvent ? String(event.detail) : "";
+      const index = platforms.findIndex((platform) => platform.id === id);
+      if (index >= 0) select(index);
+    };
+    window.addEventListener("landing-platform", onPlatform);
+    return () => window.removeEventListener("landing-platform", onPlatform);
+  }, []);
+
   return (
     <header className="landing-hero">
       <h1 className="landing-title">
@@ -95,10 +107,6 @@ export function Hero() {
         <br />
         on Mac, Windows &amp; Linux
       </h1>
-
-      <p className="landing-sub">
-        Native components for macOS, Windows and Linux. Source included.
-      </p>
 
       <LandingFormula />
 
@@ -165,10 +173,6 @@ function OmarchyStrip() {
           </li>
         ))}
       </ul>
-      <p className="landing-omarchy-note">
-        Omarchy re-applies the palette live whenever{" "}
-        <code>omarchy-theme-set</code> runs.
-      </p>
     </div>
   );
 }

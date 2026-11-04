@@ -5,23 +5,20 @@ description: The data lane's shipped surfaces
 
 **A hidden column leaves the search, and keeps its sort.**
 
-Rows are built from the [layout primitives](/primitives/stack) and the [Components](/components) they compose.
+Rows are built from the [layout primitives](/primitives/stack) and the [Components](/components).
 
 ## The lane
 
-Rows and statuses come from `.agents/slop/COMPONENTS.md`.
+Statuses come from `.agents/slop/COMPONENTS.md`.
 
 <LaneTable lane="data-display" />
 
 <ComponentPreview name="table-workflow" />
 
-The deploy table is the lane's gate in one frame: a header press sorts, a row
-press selects, the field filters, and the Columns menu hides a column — a
-hidden column leaves the query while it keeps its sort.
+A header press sorts, a row press selects, the field filters, and the Columns
+menu hides a column.
 
 ## What ships today
-
-Every page `@gpuixui/data` ships, generated from `packages/data/docs`:
 
 <LanePages lane="data-display" />
 

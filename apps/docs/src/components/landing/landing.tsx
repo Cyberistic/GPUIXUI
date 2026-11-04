@@ -4,10 +4,12 @@ import { HighlightedCode } from "@/components/highlighted-code";
 import { mainContentId } from "../skip-link";
 import { Hero } from "./deck";
 import { Lineage } from "./lineage";
-import { Stage } from "./stage";
 import { Terminal } from "./terminal";
 import { demos } from "../docs/demos";
-import { DashboardRender } from "../docs/dashboard";
+import { Showcase } from "./showcase";
+import { resolvePlatformTheme } from "@/lib/platform";
+import { previewFontStack } from "@/lib/fonts";
+import { toCssVars } from "@/lib/theme-css";
 import { navLinks, repo } from "./data";
 
 export function Landing() {
@@ -19,7 +21,6 @@ export function Landing() {
           <Hero />
           <Lineage />
           <Dashboard />
-          <Stage />
           <Terminal />
           <CodeAndComponent />
           <Footer />
@@ -118,21 +119,94 @@ function MoonIcon() {
   );
 }
 
+/**
+ * A shipped demo under the landing's own theme, platform and primary colour.
+ *
+ * The landing has no `PreviewSurface`, so this is the one place a scene carries
+ * the preview variables itself; it is scoped to the tile and never touches the
+ * page's own roles.
+ */
+/** The landing's preview roles, scoped to one tile. */
+export function LandingScene({
+  platform,
+  primary,
+  primaryForeground,
+  mode,
+  className,
+  children,
+}: {
+  readonly platform: string;
+  readonly primary: string;
+  readonly primaryForeground: string;
+  readonly mode: "light" | "dark";
+  readonly className?: string;
+  readonly children: React.ReactNode;
+}) {
+  const name =
+    platform === "windows"
+      ? "win32"
+      : platform === "linux"
+        ? "linux"
+        : "darwin";
+  const theme = resolvePlatformTheme(name, mode);
+  return (
+    <div
+      className={className === undefined ? "gx-demo" : `gx-demo ${className}`}
+      style={
+        {
+          ...toCssVars(theme),
+          "--font-sans": previewFontStack(theme, name),
+          "--primary": primary,
+          "--primary-foreground": primaryForeground,
+          "--ring": primary,
+          "--radius": `${theme.radius.md}px`,
+        } as React.CSSProperties
+      }
+    >
+      {children}
+    </div>
+  );
+}
+
+export function LandingDemo({
+  id,
+  platform,
+  primary,
+  primaryForeground,
+  mode,
+}: {
+  readonly id: string;
+  readonly platform: string;
+  readonly primary: string;
+  readonly primaryForeground: string;
+  readonly mode: "light" | "dark";
+}) {
+  const demo = demos[id];
+  if (demo === undefined) throw new Error(`LandingDemo: no demo named "${id}"`);
+  const Drawing = demo.render;
+  return (
+    <LandingScene
+      mode={mode}
+      platform={platform}
+      primary={primary}
+      primaryForeground={primaryForeground}
+    >
+      <Drawing />
+    </LandingScene>
+  );
+}
+
 export function Dashboard() {
   return (
     <section
-      className="landing-section landing-dashboard-section"
+      className="landing-section landing-showcase-section"
       id="dashboard"
     >
-      <p className="landing-kicker">The product</p>
-      <h2 className="landing-h2">Build native-looking apps.</h2>
+      <h2 className="landing-h2">All the components you need</h2>
       <p className="landing-lead">
-        Cards, badges, progress and charts from the same package you install.
-        The window below is the shipped composition.
+        Point your agent at <a href="/llms.txt">our components library</a>
       </p>
-      <div className="landing-dashboard">
-        <DashboardRender />
-      </div>
+      <Showcase />
     </section>
   );
 }
@@ -148,7 +222,6 @@ export function CodeAndComponent() {
 
   return (
     <section className="landing-section" id="code">
-      <p className="landing-kicker">Code, rendered</p>
       <h2 className="landing-h2">Your agent already knows the syntax.</h2>
       <p className="landing-lead">It&apos;s just shadcn!</p>
 
@@ -162,11 +235,6 @@ export function CodeAndComponent() {
           </div>
         </div>
       </div>
-
-      <p className="landing-code-caption">
-        <a href="/components/tabs">Tabs</a> — a compound-part component; browser
-        preview of the native geometry and palette.
-      </p>
     </section>
   );
 }
@@ -175,9 +243,21 @@ function Footer() {
   return (
     <footer className="landing-footer">
       <span>GPUIxUI — native components for GPUix.</span>
-      <a href={repo} rel="noopener noreferrer" target="_blank">
-        source
-      </a>
+      <span className="landing-footer-end">
+        <span>
+          Made with ☕ by{" "}
+          <a
+            href="https://sudokw.com"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            @sudo_kw
+          </a>
+        </span>
+        <a href={repo} rel="noopener noreferrer" target="_blank">
+          source
+        </a>
+      </span>
     </footer>
   );
 }

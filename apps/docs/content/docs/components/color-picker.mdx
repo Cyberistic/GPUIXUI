@@ -7,10 +7,6 @@ description: A swatch that opens the saturation, hue and alpha rails
 
 <ComponentPreview name="color-picker-states" />
 
-The picker is the library's own surface, not the platform's colour panel: every
-part is a primitive it ships, and what the runtime cannot do is stated below
-rather than approximated.
-
 ## Installation
 
 <Install packageName="@gpuixui/components" importName="ColorPicker" />
@@ -36,10 +32,6 @@ const [accent, setAccent] = useState("#2F6BFF");
 />;
 ```
 
-The picker reports; the app owns the value it reports into. `onValueChange`
-always hands back uppercase hex, with two alpha digits when the colour is not
-opaque — `#2F6BFF`, or `#2F6BFF80`.
-
 ## API reference
 
 ### `ColorPicker`
@@ -49,7 +41,7 @@ opaque — `#2F6BFF`, or `#2F6BFF80`.
 | `label` | `string` | — | the trigger and panel's name; a blank value reads as `"Color picker"` so the trigger and the `<label> hex value` field are always named |
 | `value` | `string` | — | the controlled colour; `undefined` is uncontrolled, and a stored value that is not text means uncontrolled |
 | `defaultValue` | `string` | `"#000000"` | the uncontrolled starting colour; a stored default that is not text paints `"#000000"` |
-| `onValueChange` | `(hex: string) => void` | — | every committed colour: an area drag, a rail move, a preset press or a valid typed hex |
+| `onValueChange` | `(hex: string) => void` | — | every committed colour, as uppercase hex with two alpha digits when not opaque |
 | `background` | `string` | the theme's page | the surface the contrast readout measures against; an unreadable value leaves the readout at `1.00:1` |
 | `swatches` | `ReadonlyArray<string>` | six theme roles | the preset row, in order; a stored value that is not a list paints the theme's defaults |
 | `disabled` | `boolean` | `false` | the trigger leaves the tab order and no part accepts a change |
@@ -59,12 +51,6 @@ opaque — `#2F6BFF`, or `#2F6BFF80`.
 
 ## Limitations
 
-- **No `transform`, no `clip-path`, no screen sampling**: the panel is anchored rather than grown out of the swatch, and the eyedropper is absent rather than a button that reports nothing.
-- **A gradient is exactly two stops, and there is no repeating gradient**: the area is three stacked fills, the hue rail six 60° ramps, and the alpha rail fades to the panel instead of a checkerboard.
-- **Hex is the only grammar**: `rgb()`, `hsl()` and `oklch()` entry is not parsed, and there is no `aria-valuenow` — the area and rails announce through `aria-valuetext`.
-
-## Related
-
-- **Popover** — the surface the picker opens.
-- **Slider** — the rails the hue and alpha channels use.
-- **Input** — the hex field.
+- **No screen sampling**: no `transform`, no `clip-path`, no eyedropper; the panel is anchored, not grown from the swatch.
+- **Two stops only**: no repeating gradient; the alpha rail fades rather than checkerboards.
+- **Hex only**: no `rgb()`, `hsl()` or `oklch()` entry and no `aria-valuenow`; the area and rails announce `aria-valuetext`.

@@ -21,6 +21,7 @@ with no docs change.
 | `panelui.md` | PanelUI | none (documentation) | reference-only — no public source repository |
 | `base-gpui.md` | *(design reference, not in the table)* | MIT | reference-only — compound-part contract |
 | `lucide.md` | *(icons, not in the table)* | ISC + MIT | ship — icon geometry |
+| `mermaidcn.md` | *(docs reference, not in the table)* | MIT (declared in README; no licence file) | reference-only — renderer API, theme names and playground shape, reimplemented on Pele |
 
 ## How a record is written
 

@@ -11284,14 +11284,23 @@ button.gx-rating-star:focus-visible {
 }
 
 /* The only flexible row. `flex-basis: 0` keeps a tall transcript from asking
-   the frame for more height; `overflow-y` is the scroller. */
+   the frame for more height; `overflow-y` is the scroller.
+
+   The transcript's right padding reserves the scrollbar's strip. A macOS
+   overlay scrollbar takes no space and draws over whatever is under it, so
+   the avatar on the right-hand rows sat in the strip it would cover; on a
+   platform with a classic scrollbar `scrollbar-gutter: stable` holds the same
+   space open, and the padding keeps the two from adding up. */
 .gx-chat-messages {
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
   min-height: 0;
+  padding-right: 10px;
   overflow-y: auto;
+  overflow-anchor: none;
   overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .gx-chat-content {
@@ -14961,7 +14970,9 @@ button.gx-rating-star:focus-visible {
   .gx-magnetic-card,
   .gx-imagezoom img,
   .gx-motiongrid-cell,
-  .gx-preview-picture {
+  .gx-preview-picture,
+  .gx-reorder-tab,
+  .gx-reorder-tab[data-dropping="true"] {
     transition: none;
   }
 }
@@ -15528,10 +15539,19 @@ button.gx-rating-star:focus-visible {
    keeps the open panel's height whether or not the panel is mounted, so the
    surface can run its exit over the box it already occupies and nothing below
    it moves. */
+.gx-cp-anchor {
+  position: relative;
+}
+
+/* The panel is a popover: it floats under the trigger rather than reserving a
+   434px slot in the page. */
 .gx-cp-panel-slot {
-  display: flex;
-  flex-direction: column;
-  min-height: 434px;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  width: max-content;
+  max-width: min(320px, 86vw);
 }
 
 /* ---- their newest recipes, appended so they win by order ---- */

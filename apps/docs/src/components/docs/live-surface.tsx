@@ -204,6 +204,36 @@ export function LiveSurface() {
       // Node `process` that the browser bundle does not carry. `createRoot` is
       // the same mount without that side effect, and the automation App gives
       // the probe the same locators the reconciler's tree carries.
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("scene") === "parity") {
+        const { ThemeProvider } = await import("@gpuixui/tokens/react");
+        const { PARITY_CHARTS, ParityGallery } =
+          await import("@gpuixui/data/examples");
+        const only = params.get("only");
+        const chosen =
+          only === null
+            ? undefined
+            : PARITY_CHARTS.find(
+                (row: { readonly id: string }) => row.id === only,
+              );
+        react
+          .createRoot(host)
+          .render(
+            <ThemeProvider theme={theme}>
+              {chosen === undefined ? <ParityGallery /> : chosen.view}
+            </ThemeProvider>,
+          );
+        report([
+          "status=painting",
+          "canvas=yes",
+          `scene=parity`,
+          `only=${only ?? "all"}`,
+          `text=${host.getAllText().join(",")}`,
+        ]);
+        setStatus({ kind: "painting" });
+        return;
+      }
+
       react.createRoot(host).render(
         <LiveScene
           box={sizeOf(host.getWindowSize())}

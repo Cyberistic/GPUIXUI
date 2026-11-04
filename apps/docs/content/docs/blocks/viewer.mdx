@@ -1,18 +1,10 @@
 ---
 title: Viewer
-description: "A media viewer: albums, a grid of thumbnails, and the open photo under a floating HUD."
+description: "A media viewer: albums, a thumbnail grid and the open photo under a HUD."
 ---
 
 <BlockPreview name="viewer-01" />
 
-Run it natively:
-
-```sh
-nub run --filter @gpuixui/blocks dev -- viewer
-```
-
 ## Composition
 
-`Viewer` in `@gpuixui/blocks/viewer`, inside the shell's native window where it has one:
-the albums' `SourceList`, a thumbnail grid, and a `hud`-material bar of ‹ › and the caption; Space and Escape as in Quick Look. Its rules are pure and tested in `examples/blocks/src/mac-blocks.logic.test.ts`,
-and its primary interaction runs on the real renderer in `src/mac-blocks.test.tsx`.
+`Viewer` in `@gpuixui/blocks/viewer`: the albums' `SourceList`, a thumbnail grid, and a `hud`-material bar of ‹ › and the caption, with Space and Escape as in Quick Look.

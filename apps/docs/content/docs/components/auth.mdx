@@ -3,50 +3,23 @@ title: Auth
 description: Sign in, sign up, reset and one-time codes
 ---
 
-<ComponentPreview name="auth-sign-in" />
-
-Four recipes rather than a component: each card composes `Card` and the
-primitives, owns one job and one status row, and ships with its handlers. The
-[sign-in page](/blocks/sign-in) is the page-level composition.
-
-## Examples
-
-Each example is a browser reproduction of the native parts plus the real
-`@gpuixui/*` source. A submission walks idle → loading → success or error, and
-every state lives in a reserved row, so the card never moves.
-
 ### Sign in
 
-The preview at the top of this page: email, password, a way to the reset card,
-the primary action, a divider and two OAuth buttons. Submit empty fields for the
-error state, or a well-formed address and password for the success state.
+<ComponentPreview name="auth-sign-in" />
 
 ### Sign up
-
-A name, email, password and confirmation, the terms checkbox and the footer that
-leads back. A short password, a mismatch and unticked terms each have their own
-message.
 
 <ComponentPreview name="auth-sign-up" />
 
 ### Forgot password
 
-One email field, the send action and an inline note that names the address the
-link went to.
-
 <ComponentPreview name="auth-forgot-password" />
 
 ### One-time code
 
-Six code cells, a verify action and a resend countdown. The preview accepts
-`123456`, so the error state is reachable too; Backspace moves focus one cell
-back.
-
 <ComponentPreview name="auth-one-time-code" />
 
 ## Installation
-
-The cards need the primitives and the card surface. Both are workspace packages:
 
 <Install packageName="@gpuixui/primitives" importName="Button" />
 
@@ -55,9 +28,6 @@ The cards need the primitives and the card surface. Both are workspace packages:
 <ComponentSource name="auth" file="apps/docs/src/components/docs/auth-blocks.tsx" />
 
 ## Usage
-
-A sign-in card is a `Card` with a header, a column of fields and a footer. The
-same shape carries all four recipes; only the fields and the callbacks change.
 
 ```tsx
 import { Button, Input, Label, Separator, Stack, Text } from "@gpuixui/primitives";
@@ -103,31 +73,20 @@ export function SignInCard() {
 
 | Part | Responsibility |
 | ---- | -------------- |
-| `Card` | the centred surface, one per card; `variant="outline"` at the fixed measure |
-| `CardHeader` / `CardTitle` / `CardDescription` | the mark, the title and the one sentence under it |
+| `Card` | the centred surface, `variant="outline"` |
+| `CardHeader` / `CardTitle` / `CardDescription` | the mark, the title and the sentence under it |
 | `CardContent` | the field column, the actions and the divider |
 | `CardFooter` | the route to the neighbouring card |
-| `Label` / `Input` | one named field; the label is visible, the placeholder is an example |
-| `Checkbox` | the terms gate on sign-up and the remembered session on sign-in |
-| `OTPField` | the six cells and their arrow, typing and Backspace contract |
-| `Separator` | the "or continue with" divider between the primary action and the providers |
+| `Label` / `Input` | one named field |
+| `Checkbox` | the terms gate and the remembered session |
+| `OTPField` | the six code cells |
+| `Separator` | the "or continue with" divider |
 | `Button` | the primary action, the providers, the links and the resend control |
 | `Text` | the footer sentence and the inline note |
 
-## Keyboard
-
-| Key | Contract |
-| --- | -------- |
-| `Tab` | walks the fields, the links, the primary action, both providers and the footer in that order |
-| `Enter` | submits the focused form; the primary action carries the busy state |
-| `Space` | toggles the focused checkbox; the terms gate is submitted with the form |
-| `Backspace` | in an empty one-time-code cell, moves focus to the previous cell |
-| `Tab` from a code cell | leaves the group; the cells are one tab stop each, not a roving group |
-
 ## API reference
 
-The cards are recipes: their parts' props are on each part's own page. What a
-recipe adds is its callback set, listed under [Recipes](#recipes).
+Each recipe adds its own callback set.
 
 ## Recipes
 
@@ -139,8 +98,18 @@ recipe adds is its callback set, listed under [Recipes](#recipes).
 | `OtpPage` | `onSubmit`, `onResend` |
 | `SignInPage` | the full page — navbar, form card and quote panel — over the same callbacks |
 
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| `Tab` | walks fields, links, the primary action, both providers and the footer in order |
+| `Enter` | submits the focused form; the primary action carries the busy state |
+| `Space` | toggles the focused checkbox; the terms gate is submitted with the form |
+| `Backspace` | in an empty one-time-code cell, moves focus to the previous cell |
+| `Tab` from a code cell | leaves the group; the cells are one tab stop each, not a roving group |
+
 ## Limitations
 
-- No `aria-describedby` and no error association beyond the visible label; a page that needs one renders the message beside the field and keeps the copy in the field's `description`.
-- The previews are HTML reproductions of the native geometry; in an app the cards render through GPUix.
-- The one-time-code cells are six tab stops, not a roving group.
+- No `aria-describedby` and no error association; render the message beside the field and keep the copy in its `description`.
+- The previews are HTML reproductions; the app renders through GPUix.
+- The one-time-code cells are six tab stops, not a roving group; `Backspace` moves focus one cell back.

@@ -1,4 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import * as HashSet from "effect/HashSet";
+import * as Option from "effect/Option";
+import type { TreeCursor } from "@gpuixui/data/tree/logic";
+import type { FileNode } from "@gpuixui/files/tree/logic";
+import { buildFileTree } from "@gpuixui/files/tree/logic";
+import { FileTreeFrame } from "../docs/file-tree-demo";
+import { ReorderableTabs, type ReorderableTab } from "../docs/reorderable-tabs";
+import { closedTabs } from "../docs/reorderable-tabs-logic";
 import { usePrefersReducedMotion } from "./reduced-motion";
 
 /**
@@ -237,6 +245,17 @@ const FILE_NAMES = [
   "theme.ts",
 ] as const satisfies ReadonlyArray<FileName>;
 
+const isFileName = (value: string): value is FileName =>
+  FILE_NAMES.some((name) => name === value);
+
+const fileNameOf = (id: string): FileName | null =>
+  FILE_NAMES.find((name) => name === id) ?? null;
+
+const fileTabs = (
+  order: ReadonlyArray<FileName>,
+): ReadonlyArray<ReorderableTab> =>
+  order.map((name) => ({ id: name, label: name }));
+
 export function Terminal() {
   const reduced = usePrefersReducedMotion();
   const section = useRef<HTMLElement | null>(null);
@@ -252,7 +271,8 @@ export function Terminal() {
   const [typed, setTyped] = useState(0);
   const [stage, setStage] = useState<Stage>("typing");
   const [take, setTake] = useState(0);
-  const [file, setFile] = useState<FileName>("page.tsx");
+  const [order, setOrder] = useState<ReadonlyArray<FileName>>(FILE_NAMES);
+  const [active, setActive] = useState<FileName | null>("page.tsx");
   const [sidebar, setSidebar] = useState(true);
 
   useEffect(() => {
@@ -284,6 +304,8 @@ export function Terminal() {
 
     setTyped(0);
     setStage("typing");
+    setOrder(FILE_NAMES);
+    setActive("page.tsx");
     const timers = new Set<ReturnType<typeof setTimeout>>();
     const after = (ms: number, run: () => void) => {
       timers.add(setTimeout(run, ms));
@@ -300,35 +322,58 @@ export function Terminal() {
     return () => timers.forEach(clearTimeout);
   }, [armed, reduced, take]);
 
-  const lines = FILES[file];
+  const lines = active === null ? [] : FILES[active];
+
+  /** Opening a closed file puts it back at the end of the strip and focuses it. */
+  const openFile = (name: FileName): void => {
+    setOrder((current) =>
+      current.includes(name) ? current : [...current, name],
+    );
+    setActive(name);
+  };
+
+  /** Closing a tab leaves the next tab (or the previous one) open. */
+  const closeFile = (id: string): void => {
+    const name = fileNameOf(id);
+    if (name === null) return;
+    const next = closedTabs(
+      order.map((entry) => ({ id: entry })),
+      name,
+    );
+    setOrder(
+      next.tabs.flatMap(({ id: kept }) => (isFileName(kept) ? [kept] : [])),
+    );
+    if (active === name) {
+      setActive(
+        next.active !== null && isFileName(next.active) ? next.active : null,
+      );
+    }
+  };
 
   return (
     <section className="landing-section" id="terminal" ref={section}>
-      <p className="landing-kicker">Render your apps in a terminal</p>
-      <h2 className="landing-h2">One frame, from prompt to editor.</h2>
+      <p className="landing-kicker">
+        ssh, animations, tmux.. through the kitty image protocol
+      </p>
+      <h2 className="landing-h2">Render your apps in a terminal</h2>
       <p className="landing-lead">
-        Read the <a href="/platform/terminal">Terminal guide</a> to run your
-        apps in a kitty-compatible terminal. The editor below runs in that
-        frame, file tree and sidebar included.
+        <a href="/platform/terminal">Check out the terminal guide</a>
       </p>
 
       <div className="landing-moment" data-stage={stage}>
+        <div aria-hidden="true" className="landing-moment-wallpaper" />
         <div className="landing-term" data-stage={stage}>
           <div className="landing-term-bar">
-            <span className="landing-term-tab">
-              {stage === "editor" ? `${file} — gpuixui` : "gpuixui — zsh"}
+            <span aria-hidden="true" className="landing-term-lights">
+              <i />
+              <i />
+              <i />
             </span>
-            <span className="landing-term-session">kitty</span>
-            <button
-              aria-expanded={sidebar}
-              aria-label={sidebar ? "Collapse sidebar" : "Expand sidebar"}
-              className="landing-term-sidebar"
-              disabled={stage !== "editor"}
-              onClick={() => setSidebar((open) => !open)}
-              type="button"
-            >
-              <ChevronGlyph />
-            </button>
+            <span className="landing-term-tab">
+              {stage === "editor"
+                ? `${active ?? "gpuixui"} — gpuixui`
+                : "gpuixui — zsh"}
+            </span>
           </div>
 
           <div className="landing-term-body">
@@ -354,135 +399,141 @@ export function Terminal() {
           <div className="landing-editor" data-sidebar={sidebar}>
             <div className="landing-vscode landing-editor-pane">
               <div className="landing-vscode-body">
-                <ActivityBar />
-                <Explorer file={file} onFile={setFile} />
+                <ActivityBar
+                  expanded={sidebar}
+                  onToggle={() => setSidebar((open) => !open)}
+                />
+                <Explorer active={active} onFile={openFile} />
                 <div className="landing-vscode-main">
-                  <div className="landing-vscode-tabs">
-                    {FILE_NAMES.map((name) => (
-                      <button
-                        className="landing-vscode-tab"
-                        data-active={name === file}
-                        key={name}
-                        onClick={() => setFile(name)}
-                        type="button"
-                      >
-                        <TsGlyph />
-                        {name}
-                        <i className="landing-vscode-close">×</i>
-                      </button>
-                    ))}
-                  </div>
+                  <ReorderableTabs
+                    active={active}
+                    className="landing-vscode-tabs"
+                    closeClassName="landing-vscode-close"
+                    label="Open editor files"
+                    onActivate={(id) => {
+                      const name = fileNameOf(id);
+                      if (name !== null) setActive(name);
+                    }}
+                    onClose={closeFile}
+                    onReorder={(next) =>
+                      setOrder(
+                        next.flatMap(({ id }) => (isFileName(id) ? [id] : [])),
+                      )
+                    }
+                    tabClassName="landing-vscode-tab"
+                    tabs={fileTabs(order).map((tab) => ({
+                      ...tab,
+                      leading: <TsGlyph />,
+                    }))}
+                  />
 
                   <div className="landing-vscode-trail">
                     <span>src</span>
                     <i>›</i>
                     <span>app</span>
                     <i>›</i>
-                    <span data-current="true">{file}</span>
+                    <span data-current="true">{active ?? "no file open"}</span>
                   </div>
 
                   <div className="landing-vscode-editor">
-                    <div className="landing-vscode-code">
-                      {lines.map((line, index) => (
-                        <div className="landing-vscode-line" key={index}>
-                          <span className="landing-vscode-num">
-                            {index + 1}
-                          </span>
-                          <span className="landing-vscode-tokens">
-                            {line.map(([role, text], at) => (
-                              <span className={`vsc-tok-${role}`} key={at}>
-                                {text}
-                              </span>
-                            ))}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                    {active === null ? (
+                      <p className="landing-vscode-empty">
+                        No file open. Pick one from the explorer.
+                      </p>
+                    ) : (
+                      <div className="landing-vscode-code">
+                        {lines.map((line, index) => (
+                          <div className="landing-vscode-line" key={index}>
+                            <span className="landing-vscode-num">
+                              {index + 1}
+                            </span>
+                            <span className="landing-vscode-tokens">
+                              {line.map(([role, text], at) => (
+                                <span className={`vsc-tok-${role}`} key={at}>
+                                  {text}
+                                </span>
+                              ))}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <Minimap lines={lines} />
                 </div>
               </div>
-              <StatusBar lines={lines.length} />
+              <StatusBar
+                lines={lines.length}
+                onReplay={() => setTake((count) => count + 1)}
+              />
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="landing-moment-foot">
-        <p className="landing-terminal-caption">
-          The editor is drawn inside the terminal frame: the library&apos;s file
-          tree, a collapsible sidebar and its code pane, running where the shell
-          was. The command is the one <a href="/platform/terminal">the guide</a>{" "}
-          documents.
-        </p>
-        <button
-          aria-label="Replay the terminal animation"
-          className="landing-replay"
-          onClick={() => setTake((count) => count + 1)}
-          type="button"
-        >
-          <ReplayGlyph />
-          Replay
-        </button>
       </div>
     </section>
   );
 }
 
-/** The explorer: a collapsible file tree whose files switch the open buffer. */
+/** The explorer: the package's own tree drawing, with its fold animation. */
 function Explorer({
-  file,
+  active,
   onFile,
 }: {
-  file: FileName;
+  active: FileName | null;
   onFile: (file: FileName) => void;
 }) {
+  const [cursor, setCursor] = useState<TreeCursor>(() => ({
+    expanded: HashSet.make("app"),
+    active: Option.some("app/page.tsx"),
+  }));
+  const roots = buildFileTree([
+    "app/page.tsx",
+    "app/button.tsx",
+    "app/theme.ts",
+    "package.json",
+  ]);
   return (
     <div className="landing-vscode-explorer">
       <div className="landing-vscode-section">
         <span>Explorer</span>
       </div>
-      <div className="landing-vscode-tree">
-        <span className="landing-vscode-row" data-kind="root">
-          <ChevronGlyph />
-          gpuixui
-        </span>
-        <button
-          className="landing-vscode-row"
-          data-kind="open"
-          onClick={() => onFile("page.tsx")}
-          type="button"
-        >
-          <ChevronGlyph />
-          app
-        </button>
-        {FILE_NAMES.map((name) => (
-          <button
-            className="landing-vscode-row"
-            data-active={name === file}
-            data-kind="tsx"
-            key={name}
-            onClick={() => onFile(name)}
-            style={{ paddingLeft: "32px" }}
-            type="button"
-          >
-            <span className="landing-vscode-indent" />
-            <TsGlyph />
-            {name}
-          </button>
-        ))}
-        <span className="landing-vscode-row" data-kind="json">
-          <span className="landing-vscode-indent" />
-          <i className="landing-vscode-json">{"{}"}</i>
-          package.json
-        </span>
+      <div className="landing-term-tree">
+        <FileTreeFrame
+          cursor={cursor}
+          onCursorChange={setCursor}
+          onSelect={(path) => {
+            const name = path.split("/").at(-1);
+            const chosen = FILE_NAMES.find((entry) => entry === name);
+            if (chosen !== undefined) onFile(chosen);
+          }}
+          renderGlyph={fileGlyph}
+          roots={roots}
+          selected={active === null ? "" : `app/${active}`}
+        />
       </div>
     </div>
   );
 }
 
+/** The Seti badge the editor's own explorer shows beside a file. */
+function fileGlyph(node: FileNode): ReactNode {
+  if (node.name === "package.json") {
+    return <i className="landing-vscode-json">{"{}"}</i>;
+  }
+  if (node.name.endsWith(".tsx") || node.name.endsWith(".ts")) {
+    return <TsGlyph />;
+  }
+  return null;
+}
+
 /** The VS Code chrome: an activity bar, a minimap and a status bar. */
-function ActivityBar() {
+function ActivityBar({
+  expanded,
+  onToggle,
+}: {
+  readonly expanded: boolean;
+  readonly onToggle: () => void;
+}) {
   const glyph = (path: ReactNode) => (
     <svg
       aria-hidden="true"
@@ -500,14 +551,21 @@ function ActivityBar() {
   );
   return (
     <div aria-hidden="true" className="landing-vscode-activity">
-      <span className="landing-vscode-action" data-active="true">
+      <button
+        aria-expanded={expanded}
+        aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+        className="landing-vscode-action"
+        data-active="true"
+        onClick={onToggle}
+        type="button"
+      >
         {glyph(
           <>
             <path d="M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V8Z" />
             <path d="M14 3v5h5" />
           </>,
         )}
-      </span>
+      </button>
       <span className="landing-vscode-action">
         {glyph(
           <>
@@ -562,7 +620,13 @@ function Minimap({ lines }: { lines: ReadonlyArray<ReadonlyArray<Token>> }) {
   );
 }
 
-function StatusBar({ lines }: { lines: number }) {
+function StatusBar({
+  lines,
+  onReplay,
+}: {
+  lines: number;
+  onReplay: () => void;
+}) {
   return (
     <div className="landing-vscode-status">
       <span className="landing-vscode-status-left">
@@ -574,6 +638,15 @@ function StatusBar({ lines }: { lines: number }) {
         <span>UTF-8</span>
         <span>LF</span>
         <span>TypeScript React</span>
+        <button
+          aria-label="Replay the terminal animation"
+          className="landing-replay landing-vscode-replay"
+          onClick={onReplay}
+          type="button"
+        >
+          <ReplayGlyph />
+          Replay
+        </button>
       </span>
     </div>
   );
@@ -594,24 +667,6 @@ function ReplayGlyph() {
     >
       <path d="M3 12a9 9 0 1 0 3-6.7" />
       <path d="M3 3v6h6" />
-    </svg>
-  );
-}
-
-function ChevronGlyph() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      height="12"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.6"
-      viewBox="0 0 24 24"
-      width="12"
-    >
-      <path d="m6 9 6 6 6-6" />
     </svg>
   );
 }

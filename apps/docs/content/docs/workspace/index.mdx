@@ -5,13 +5,14 @@ description: The desktop-shell lane, with split and dock
 
 ## The lane
 
-Rows and statuses come from `.agents/slop/COMPONENTS.md`.
+Statuses come from `.agents/slop/COMPONENTS.md`.
 
 <LaneTable lane="workspace" />
 
 <ComponentPreview name="panel-preview" />
 
-The split divider is a 6px box whose size is announced through `aria-valuetext`; a focused divider steps 16px with the arrow keys.
+The divider's 6px box announces its size through `aria-valuetext`; a focused
+divider steps 16px with the arrow keys.
 
 ## What composes a window
 
@@ -30,17 +31,16 @@ The split divider is a 6px box whose size is announced through `aria-valuetext`;
 | Notifications | `Toast` provider and viewport | [Toast](/components/toast) |
 | A whole window | The [Dashboard](/blocks/dashboard) block | [Blocks](/blocks) |
 
-The frames themselves are on [Primitives](/primitives/stack); the [dock](/dock/split-pane) and [shell](/shell/app-menu) parts keep their pages in the Workspace section, and the rest are under [Components](/components).
+The frames themselves are on [Primitives](/primitives/stack); the [dock](/dock/split-pane) and [shell](/shell/app-menu) pages stay in Workspace, and the rest are under [Components](/components).
 
 ## What ships today
 
-Every page the five workspace packages ship, generated from their docs folders:
-
 <LanePages lane="workspace" />
 
-## State and persistence
+## Persistence
 
-A workspace keeps its own layout state: decode a stored `DockNode` or `PanelLayout` with the package's JSON schema and open the default when the decode fails.
+Decode a stored `DockNode` or `PanelLayout` with its JSON schema; open the
+default when the decode fails:
 
 ```ts
 import { DockNodeJson } from "@gpuixui/dock";
@@ -52,18 +52,10 @@ const restored = Schema.decodeUnknownSync(DockNodeJson)(saved);
 
 ## Moving a tab
 
-A tab strip is the shipped `Tabs` plus the app's own drag state. The playground's
-`movable-tabs-lifecycle` probe measured the move on this runtime: a dragged tab
-leaves its strip, the source selects the tab that took its slot, the destination
-inserts it at the slot the drop names, the moved panel's draft survives because
-it changed parent (so the app restores the focus the remount dropped),
-`Cmd+Shift+Left`/`Right` step it without wrapping or passing the ends, and a
-release outside both strips is a miss.
+A tab strip is `Tabs` plus the app's own drag state; `Cmd+Shift+Left`/`Right`
+step it without wrapping.
 
-**A detached tab is not available.** The window holds one process and one
-window: the playground's `second-window-lifecycle` probe measured a second
-`GpuixRenderer.init()` refused with `A GPUI application already exists on this
-thread`, and the refused renderer reported `isInitialized() === false` while the
-running window kept painting and taking presses. A "detached" tab is therefore a
-move to another pane or layer **inside** that window through `createPortal`
-(measured by `portal-layer`), and a real detach needs a second process.
+- A dragged tab leaves its strip and lands at the dropped slot; the source selects the tab that took its place.
+- A moved panel's draft survives the remount; restore the focus it drops.
+- A release outside both strips misses.
+- **A detached tab is not available.** The window holds one process; move a tab to another pane or layer with `createPortal`.

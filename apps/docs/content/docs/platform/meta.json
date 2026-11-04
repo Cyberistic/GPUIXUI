@@ -1,4 +1,4 @@
 {
   "title": "Platform",
-  "pages": ["index", "native-window", "window"]
+  "pages": ["index", "native-window", "terminal", "window"]
 }

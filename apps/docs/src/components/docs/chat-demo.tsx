@@ -30,13 +30,15 @@ type ChatStatus = "idle" | "streaming" | "error";
 
 type Group = "single" | "first" | "middle" | "last";
 
-interface Row {
+export interface Row {
   readonly id: number;
   readonly role: "assistant" | "user";
   readonly body: string;
   readonly at: string;
   readonly live: boolean;
   readonly reaction?: string;
+  /** A picture the speaker sent, painted inside the bubble. */
+  readonly image?: { readonly src: string; readonly alt: string };
 }
 
 const REPLY =
@@ -104,10 +106,12 @@ function Row({
   row,
   first,
   group,
+  participants,
 }: {
   readonly row: Row;
   readonly first: boolean;
   readonly group: Group;
+  readonly participants: { readonly user: string; readonly assistant: string };
 }) {
   const reader = row.role === "user";
   return (
@@ -121,12 +125,14 @@ function Row({
         className="gx-chat-avatar"
         data-empty={first ? undefined : ""}
       >
-        {reader ? "Y" : "A"}
+        {reader
+          ? participants.user.slice(0, 1).toUpperCase()
+          : participants.assistant.slice(0, 1).toUpperCase()}
       </span>
       <div className="gx-chat-message">
         {first ? (
           <p className="gx-chat-meta">
-            {reader ? "You" : "Assistant"} · {row.at}
+            {reader ? participants.user : participants.assistant} · {row.at}
           </p>
         ) : null}
         <div
@@ -139,6 +145,16 @@ function Row({
             data-variant={reader ? "default" : "muted"}
           >
             {row.body === "" ? "…" : row.body}
+            {row.image === undefined ? null : (
+              <img
+                alt={row.image.alt}
+                className="gx-chat-image"
+                height={129}
+                loading="lazy"
+                src={row.image.src}
+                width={230}
+              />
+            )}
           </p>
           {row.reaction === undefined ? null : (
             <div
@@ -155,17 +171,42 @@ function Row({
   );
 }
 
-export function ChatDemo() {
+export interface ChatDemoProps {
+  /** The opening transcript; the default is the docs page's agent thread. */
+  readonly seed?: ReadonlyArray<Row>;
+  /** What the assistant streams back after a send. */
+  readonly reply?: string;
+  readonly title?: string;
+  /** The idle line under the title. */
+  readonly idleSummary?: string;
+  readonly placeholder?: string;
+  readonly participants?: { readonly user: string; readonly assistant: string };
+  /** Whether the transcript opens at the newest message. */
+  readonly startPinned?: boolean;
+  /** Whether the "jump to latest" affordance is drawn. */
+  readonly showJump?: boolean;
+}
+
+export function ChatDemo({
+  seed: initialSeed = seed,
+  reply = REPLY,
+  title = "New Thread",
+  idleSummary = STATUS_COPY.idle,
+  placeholder = "Ask the agent to seal a dossier…",
+  participants = { user: "You", assistant: "Assistant" },
+  startPinned = true,
+  showJump = true,
+}: ChatDemoProps = {}) {
   const [status, setStatus] = useState<ChatStatus>("idle");
-  const [rows, setRows] = useState<ReadonlyArray<Row>>(seed);
+  const [rows, setRows] = useState<ReadonlyArray<Row>>(initialSeed);
   const [draft, setDraft] = useState("");
-  const [pinned, setPinned] = useState(true);
+  const [pinned, setPinned] = useState(startPinned);
   const [unread, setUnread] = useState(0);
   const [sends, setSends] = useState(0);
   const transcript = useRef<HTMLDivElement | null>(null);
   const field = useRef<HTMLTextAreaElement | null>(null);
   const words = useRef<ReadonlyArray<string>>([]);
-  const nextId = useRef(seed.length + 1);
+  const nextId = useRef(initialSeed.length + 1);
   const busy = status === "streaming";
 
   const scrollToEnd = useCallback(() => {
@@ -176,6 +217,14 @@ export function ChatDemo() {
   useLayoutEffect(() => {
     if (pinned) scrollToEnd();
   }, [pinned, rows, scrollToEnd]);
+
+  // A thread that opens at the top stays there even when the browser restores
+  // the scroll position of the page's scroll containers.
+  useLayoutEffect(() => {
+    if (startPinned) return;
+    const element = transcript.current;
+    if (element !== null) element.scrollTop = 0;
+  }, [startPinned]);
 
   // The native field grows to its content; the drawing measures the same way,
   // so the row's cross axis is the line count's, not one fixed row.
@@ -213,7 +262,7 @@ export function ChatDemo() {
     if (busy || draft.trim() === "") return;
     const failing = (sends + 1) % 3 === 0;
     setSends((count) => count + 1);
-    words.current = REPLY.split(" ");
+    words.current = reply.split(" ");
     setStatus("streaming");
     setRows((current) => {
       const next = [
@@ -258,7 +307,7 @@ export function ChatDemo() {
   };
 
   const retry = (): void => {
-    words.current = REPLY.split(" ");
+    words.current = reply.split(" ");
     setStatus("streaming");
     setRows((current) => [
       ...current,
@@ -275,7 +324,7 @@ export function ChatDemo() {
   const reset = (): void => {
     words.current = [];
     setStatus("idle");
-    setRows(seed);
+    setRows(initialSeed);
     setDraft("");
     setUnread(0);
     setPinned(true);
@@ -290,16 +339,16 @@ export function ChatDemo() {
   };
 
   return (
-    <div className="gx-chat">
+    <div className="gx-chat" data-pinned={pinned ? "true" : "false"}>
       <div className="gx-chat-head">
         <div className="gx-chat-head-copy">
-          <p className="gx-chat-title">New Thread</p>
+          <p className="gx-chat-title">{title}</p>
           <p
             className="gx-chat-summary"
             data-error={status === "error" ? "" : undefined}
             role="status"
           >
-            {STATUS_COPY[status]}
+            {status === "idle" ? idleSummary : STATUS_COPY[status]}
           </p>
         </div>
         <div className="gx-chat-head-actions">
@@ -345,15 +394,20 @@ export function ChatDemo() {
                     first={index === 0}
                     group={groupOf(index, run.length)}
                     key={row.id}
+                    participants={participants}
                     row={row}
                   />
                 ))}
               </div>
             ))}
-            {busy ? <p className="gx-chat-sr">Assistant is replying.</p> : null}
+            {busy ? (
+              <p className="gx-chat-sr">
+                {participants.assistant} is replying.
+              </p>
+            ) : null}
           </div>
         </div>
-        {pinned ? null : (
+        {pinned || !showJump ? null : (
           <div className="gx-chat-jump">
             <button
               className="gx-btn gx-btn-secondary gx-btn-sm"
@@ -384,7 +438,7 @@ export function ChatDemo() {
                 send();
               }
             }}
-            placeholder="Ask the agent to seal a dossier…"
+            placeholder={placeholder}
             ref={field}
             rows={1}
             value={draft}

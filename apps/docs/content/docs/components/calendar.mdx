@@ -7,14 +7,6 @@ description: A month grid for a day, several days, or a range
 
 <ComponentPreview name="calendar-range" />
 
-## Dropdown caption
-
-A date that is not near today is reached through two dropdowns rather than eleven
-presses of the previous-month arrow. `captionLayout="dropdown"` paints a month
-select and a year select; `fromYear`/`toYear` narrow the years on offer, and the
-default window is **1900 to a century past today** — the calendar is not limited
-to the decade it is looked at in.
-
 <ComponentPreview name="calendar-dropdowns" />
 
 ## Installation
@@ -34,9 +26,6 @@ export const ReviewDate = () => {
   return <Calendar selected={day} onSelect={setDay} today="2026-10-17" />;
 };
 ```
-
-A span is `mode="range"`; the value is `{ from, to }` of ISO days and `to` is
-`null` until the second day is chosen.
 
 ```tsx
 <Calendar
@@ -74,12 +63,5 @@ A span is `mode="range"`; the value is `{ from, to }` of ISO days and `to` is
 ## Limitations
 
 - No `aria-current`, so today is a border rather than an attribute.
-- No `aria-disabled` and no live region: an unavailable day leaves the tab
-  order, and a selection change is named by the focused cell, not announced.
+- No `aria-disabled` and no live region: an unavailable day leaves the tab order; a selection change is not announced.
 - Fixed English labels; no week numbers and no time of day.
-
-## Related
-
-- **Date picker** — the calendar inside a popover field.
-- **Popover** — the surface the picker anchors it in.
-- **Time picker** — the time of day this control does not own.

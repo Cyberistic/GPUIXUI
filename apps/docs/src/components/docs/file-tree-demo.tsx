@@ -17,7 +17,7 @@ import type { IconName } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
-import { useEffect, useState, type KeyboardEvent } from "react";
+import { useEffect, useState, type KeyboardEvent, type ReactNode } from "react";
 import { BrowserIcon } from "./browser-icon";
 import { treeKeyOf } from "./tree-keys";
 
@@ -115,6 +115,8 @@ export interface FileTreeFrameProps {
   readonly onCursorChange: (cursor: TreeCursor) => void;
   /** Reports the file a press selects. */
   readonly onSelect: (path: string) => void;
+  /** Paints a row's glyph; the demo's own file icon when omitted. */
+  readonly renderGlyph?: (node: FileNode) => ReactNode;
 }
 
 /** How long the drawing keeps a branch's rows while they fold away. */
@@ -134,6 +136,7 @@ export function FileTreeFrame({
   selected,
   onCursorChange,
   onSelect,
+  renderGlyph,
 }: FileTreeFrameProps) {
   const rows = fileRows(roots, cursor);
   const signature = Arr.join(
@@ -251,10 +254,14 @@ export function FileTreeFrame({
                 />
               ) : null}
             </span>
-            <BrowserIcon
-              className="gx-filetree-glyph"
-              name={glyphOf(node, row.expanded)}
-            />
+            {renderGlyph === undefined ? (
+              <BrowserIcon
+                className="gx-filetree-glyph"
+                name={glyphOf(node, row.expanded)}
+              />
+            ) : (
+              <span className="gx-filetree-glyph">{renderGlyph(node)}</span>
+            )}
             <span className="gx-filetree-name">{node.name}</span>
           </div>
         );

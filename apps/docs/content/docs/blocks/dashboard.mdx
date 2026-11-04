@@ -7,22 +7,14 @@ description: An activity dashboard with stats and charts
 
 ## Composition
 
-The block composes:
-
 - `Badge` from `@gpuixui/components/badge`, `Card` and its parts from
   `@gpuixui/components/card`, `SearchInput` from `@gpuixui/components/search-input`
 - `BarChart`, `DonutChart` and `StackedBar` from `@gpuixui/data`
 - `Box`, `Button`, `Progress`, `Stack` and `Text` from `@gpuixui/primitives`
-- `Icon` from `@gpuixui/icons` — the nav's four rows are the glyphs the set
-  carries (`grid`, `folder`, `clock`, `settings`); it has no globe or report mark
+- `Icon` from `@gpuixui/icons`
 
 ## Charts
 
-`BarChart`, `DonutChart` and `StackedBar` are the package's, documented on
-[Charts](/data-display/charts). The runtime paints an `<svg source>` as **one tint**,
-so a multi-series chart is one stacked element per colour and the colours are
-the theme's own series.
+`BarChart`, `DonutChart` and `StackedBar` are documented on [Charts](/data-display/charts). The runtime paints an `<svg source>` as one tint, so a multi-series chart is one stacked element per colour.
 
-The preview is a browser reproduction, `stacked` the way the recipe is: its
-marks are drawn by hand in `--series-1` to `--series-5`, so the look switch
-repaints them together.
+The preview is a browser reproduction, stacked like the recipe: its marks are drawn by hand in `--series-1` to `--series-5`.

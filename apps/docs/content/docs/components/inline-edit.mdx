@@ -26,7 +26,6 @@ export const RenameProject = () => {
     <InlineEdit
       label="Project name"
       onCommit={(next) => {
-        // The component reported a changed value; the app decides what to save.
         setName(next);
       }}
       value={name}
@@ -63,5 +62,5 @@ export const RenameProject = () => {
 ## Limitations
 
 - The display is a `role="button"`; the input is a real `<input>` — both take `label`.
-- **No `aria-invalid` or `aria-describedby`** in 0.11.0, so a refused commit is not announced.
+- **No `aria-invalid` or `aria-describedby`**: a refused commit is not announced.
 - A caller that **disables the control mid-edit** refuses both the edit and the commit.

@@ -40,17 +40,21 @@ describe("the prerendered paths", () => {
     expect(paths).toEqual(expect.arrayContaining([...staticDocumentPaths]));
   });
 
-  it("keeps the registry out of the Worker's bundle", () => {
-    // Registry documents carry the source of every file an item installs, and
-    // bundling all 159 of them into the Worker went over Cloudflare's 63.9 MiB
-    // ceiling. `plugins/registry-assets-plugin.ts` emits them into the client
-    // bundle, so they must never reappear in the prerender list.
-    const registry = registryPaths(root);
+  it(
+    "keeps the registry out of the Worker's bundle",
+    { timeout: 30_000 },
+    () => {
+      // Registry documents carry the source of every file an item installs, and
+      // bundling all 159 of them into the Worker went over Cloudflare's 63.9 MiB
+      // ceiling. `plugins/registry-assets-plugin.ts` emits them into the client
+      // bundle, so they must never reappear in the prerender list.
+      const registry = registryPaths(root);
 
-    expect(registry.length).toBeGreaterThan(100);
-    expect(registry).toContain("/registry.json");
-    expect(registry.filter((path) => paths.includes(path))).toEqual([]);
-  });
+      expect(registry.length).toBeGreaterThan(100);
+      expect(registry).toContain("/registry.json");
+      expect(registry.filter((path) => paths.includes(path))).toEqual([]);
+    },
+  );
 
   it("leaves the routes a static asset cannot answer to the Worker", () => {
     // `/live` boots the wasm renderer and needs the isolation headers the

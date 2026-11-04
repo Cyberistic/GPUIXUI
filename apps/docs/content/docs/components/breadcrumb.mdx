@@ -71,5 +71,5 @@ Breadcrumb
 ## Limitations
 
 - `role="navigation"` with `aria-label="Breadcrumb"`, `role="list"`, and `role="listitem"` on every entry.
-- **No `aria-current`** in `@gpuix/native@0.11.0`.
-- The collapse ellipsis is a mark named "More", not a button: it does not expand the trail and is not in the tab order.
+- **No `aria-current`**; the ellipsis is a mark named "More", not a control.
+- `maxItems` below `3` clamps to `3`; absent, the trail never collapses.

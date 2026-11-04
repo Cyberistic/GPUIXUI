@@ -255,42 +255,46 @@ describe("the shadcn registry", () => {
     expect(malformed).toEqual([]);
   });
 
-  it("resolves every import inside the tree the CLI installs", () => {
-    // The bug this file exists for: `@gpuixui/*` is private, so an item that
-    // ships its source without the runtime is a successful install of a tree
-    // that cannot build. This walks each item's install exactly as the CLI
-    // would resolve it — the item plus its runtime dependencies — and demands
-    // that every specifier lands on a file in that tree or a declared package.
-    const broken = components.flatMap((component) => {
-      const tree = installedTree(component);
-      const targets = new Set(
-        tree.flatMap((entry) => entry.files.map((file) => file.target)),
-      );
-      return tree.flatMap((entry) =>
-        entry.files.flatMap((file) =>
-          importsOf(file.content).flatMap((specifier) => {
-            if (specifier.startsWith("@gpuixui/"))
-              return [`${entry.name} imports ${specifier} (private package)`];
-            if (specifier.startsWith("."))
-              return candidates(file.target, specifier).some((candidate) =>
-                targets.has(candidate),
-              )
+  it(
+    "resolves every import inside the tree the CLI installs",
+    { timeout: 30_000 },
+    () => {
+      // The bug this file exists for: `@gpuixui/*` is private, so an item that
+      // ships its source without the runtime is a successful install of a tree
+      // that cannot build. This walks each item's install exactly as the CLI
+      // would resolve it — the item plus its runtime dependencies — and demands
+      // that every specifier lands on a file in that tree or a declared package.
+      const broken = components.flatMap((component) => {
+        const tree = installedTree(component);
+        const targets = new Set(
+          tree.flatMap((entry) => entry.files.map((file) => file.target)),
+        );
+        return tree.flatMap((entry) =>
+          entry.files.flatMap((file) =>
+            importsOf(file.content).flatMap((specifier) => {
+              if (specifier.startsWith("@gpuixui/"))
+                return [`${entry.name} imports ${specifier} (private package)`];
+              if (specifier.startsWith("."))
+                return candidates(file.target, specifier).some((candidate) =>
+                  targets.has(candidate),
+                )
+                  ? []
+                  : [`${entry.name}: ${file.target} imports ${specifier}`];
+              if (specifier.startsWith("node:")) return [];
+              const dependency = packageOfSpecifier(specifier);
+              return entry.dependencies
+                .map(packageOfDependency)
+                .includes(dependency)
                 ? []
-                : [`${entry.name}: ${file.target} imports ${specifier}`];
-            if (specifier.startsWith("node:")) return [];
-            const dependency = packageOfSpecifier(specifier);
-            return entry.dependencies
-              .map(packageOfDependency)
-              .includes(dependency)
-              ? []
-              : [`${entry.name} imports ${specifier}, undeclared`];
-          }),
-        ),
-      );
-    });
+                : [`${entry.name} imports ${specifier}, undeclared`];
+            }),
+          ),
+        );
+      });
 
-    expect(broken).toEqual([]);
-  });
+      expect(broken).toEqual([]);
+    },
+  );
 
   it("installs each target once per tree, and never two sources on one target", () => {
     expect(

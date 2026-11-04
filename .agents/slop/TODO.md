@@ -11,7 +11,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Calculator example — fx-991ES Plus on GPUix
 
-`[x]` `[██████████]` 10/10
+`[x]` `[██████████]` 18/18
 
 `[x]` Land `@gpuixui/calc` — Effect-first engine, Casio parser/evaluator,
       model seam for a later TI-84 (plans 740/741)
@@ -125,7 +125,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ## Phase B — working foundation
 
-`[x]` `[██████████]` 16/16
+`[x]` `[██████████]` 18/18
 
 `[x]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
@@ -230,40 +230,44 @@ of a generic "unknown class".
 
 ### Upstream runtime PRs (`remorses/gpuix`, `remorses/zed`)
 
-`[ ]` `[██░░░░░░░░]` 2/7
+Checked against the GitHub API on 2026-11-02. Eight of our ten PRs are merged
+(one is still open, one closed unmerged); the runtime surface they add is **not
+in any npm release yet** (`@gpuix/native`
+latest is 0.11.0, cut before these merges), so the repo cannot consume them
+until the GPUix source pin moves and the binding is rebuilt.
 
-`[x]` **zed#15** — tray on macOS (`NSStatusItem`), Windows (`Shell_NotifyIconW`),
-Linux (SNI/`ksni`); native callbacks only fill a channel, one foreground task
-drains it; `App::keep_running`; `TrayHandle::set_title`. Independently re-ran
-279 lib tests, clippy, Windows and Linux checks, and the PR body now argues the
-maintainer's two points.
-`[x]` **zed#16** — `App::set_dock_badge` (stacked on #15); `dockTile.badgeLabel`,
-typed no-op on Windows/Linux, example menu entries.
-`[ ]` **gpuix a11y props** — draft **#122**: 13 props wired
-(`aria-keyshortcuts`, `aria-placeholder`, `aria-pressed` → `Toggled`,
-`aria-valuenow`/`min`/`max`, `aria-orientation`, `aria-posinset`/`setsize`,
-`aria-rowindex`/`colindex`/`rowcount`/`colcount`), with the `aria-*` allowlist
-opened in both host adapters. `aria-invalid`/`required`/`modal`/`current`/
-`haspopup` still need fork builders, and `aria-activedescendant` cannot be
-expressed (the builder marks the descendant, not a container reference) — plan 700.
-`[ ]` **gpuix clipboard** — `writeToClipboard`/`readFromClipboard` + `copyText`
-(plan 708), draft **#121**: a sync read (the pinned GPUI has no macOS async read),
-text-only, an empty string is a real entry, and the test renderer never touches
-the system clipboard.
-`[ ]` **transform** — **zed#17** (`feat/transform`) carries the ported
-`ElementTransform` on top of `f77e5cf` (`04016ba`), plus `951ff5f`, which scales
-corner radii, border widths, shadow blur and underline thickness with the element
-(anisotropic/rotated matrices keep the old behaviour). 302 lib tests (24
-transform + 3 decoration), clippy clean, authored by the original author. No
-upstream PR exists to link — #53306 was never promoted from a discussion, so the
-code came from `0xErwin1/zed` @ `fc4c1586`. Next: `StyleDesc.transform` +
-`MotionStyle` in gpuix once it merges (plan 525 §15). `darwin-x64` is still
-absent from the prebuild matrix.
-`[ ]` **gpuix wrappers** for tray/dock/clipboard — wait on the zed merges and a
-submodule bump.
-`[ ]` **plans 702–714** — tray completion, hotkeys, single instance, auto-launch,
-overlay windows, quit mode, resource profiles, downstream fixture, screen
-capture, biometrics, keyring, power/network.
+**merged, not yet consumable**
+
+`[x]` **gpuix #118** — OS notifications (`notify`, `dismissNotification`,
+`onNotificationResponse`) — merged 2026-10-31.
+`[x]` **gpuix #119** — keep the replaced bundle and roll back to it — merged
+2026-10-31.
+`[x]` **gpuix #121** — clipboard text (`writeToClipboard`, `readFromClipboard`)
+— merged 2026-10-31; unblocks plan 708's wrapper and the copy controls.
+`[x]` **gpuix #122** — ARIA state/value props mapped in `packages/native/js/host.ts`
+and Rust — merged 2026-10-31; unblocks plan 700's remaining props.
+`[x]` **zed #15** — macOS tray / status-bar item — merged 2026-11-02; the gpuix
+wrapper (tray handle, channel drain) is still ours to write.
+`[x]` **zed #16** — dock icon badge — merged 2026-11-02; same: no gpuix wrapper
+yet.
+`[x]` **zed #17** — `ElementTransform` (pan/zoom) — merged 2026-11-02; the
+`StyleDesc.transform` / `MotionStyle` surface in gpuix is still to add (plan 525
+§15).
+`[x]` **zed #14** — physical key code on `Keystroke` — merged 2026-11-02.
+
+**not merged**
+
+`[ ]` **gpuix #127** — `resizeWindow` / `isFullscreen` — **open**.
+`[x]` **gpuix #120** — custom elements — closed unmerged; not available.
+
+`[ ]` `[███░░░░░░░]` **Next: consume what is merged** — bump
+`apps/playground/scripts/build-native-binding.sh`'s `GPUIX_REV` to the GPUix
+main commit that carries #118/#119/#121/#122, build the binding on this host,
+install the matching JS wrapper + types (the 0.11.0 wrapper re-exports a fixed
+name list, so the `.node` alone is not enough), then implement, in order:
+clipboard (plan 708), the outstanding ARIA props (plan 700), and the gpuix
+wrappers for notifications. Tray/dock/transform wait on gpuix wrapper PRs of
+our own.
 
 `[x]` **Docs deploy** — the toast rebuild is live at
 <https://gpuixui.sudokw.com/docs/components/toast> (deployed 2026-10-26 from
@@ -22566,7 +22570,7 @@ numbers).
 
 ## Animated primitives (plan 600)
 
-`[x]` `[██████████]` 17/17
+`[x]` `[██████████]` 18/18
 
 `[x]` `packages/components`: **the four effect components kept their state in
       React, and two of their docs previews were broken** — `RollingText`,
@@ -24838,7 +24842,7 @@ of the change.
 
 ## The reported previews, and the crash behind them (2026-10-30)
 
-`[x]` `[██████████]` 10/10 — **the data-display routes no longer crash.** The
+`[x]` `[██████████]` 18/18 — **the data-display routes no longer crash.** The
 preview and the landing called a demo as a function (`demo.render()`), so the
 drawing's hooks were counted as the preview's own; navigating from one data page
 to another opened the same component with a different hook list and threw React
@@ -25021,3 +25025,185 @@ green; the site deployed and all 195 sitemap pages answer 200.
       **inside** the same frame with a working file tree, file tabs and a
       collapsible sidebar. Landing tests 32/32; `check-types` and the production
       build clean; deployed.
+
+---
+
+## Charts: types, styling and the chart page (plan 751, 2026-11-02)
+
+`[x]` `[██████████]` 18/18
+
+`[x]` `geometry.ts`: signed ranges (`chartRange`, so a negative bar stands below
+      zero), curves (linear/smooth/step), area clipping and nested fade bands,
+      radar webs/points, radial rings, pie/donut ring segments with a pad angle,
+      horizontal and rounded bars, value labels.
+`[x]` New chart types in `@gpuixui/data`: `AreaChart`, `PieChart`, `RadarChart`,
+      `RadialChart`, plus horizontal/negative bars with `valueLabels`, `percent`
+      stacking, `curve`/`dots`/`dashed`/`lineWidth` on lines, `gradient`/
+      `stacked`/`fillOpacity` on areas, `innerRadius`/`padAngle`/`centerLabel`
+      on rings, and `colors`/per-series `color` everywhere.
+`[x]` Shared frame: grid lines, top/bottom legend, value formats, and a hovered
+      column's readout (category + every series' value).
+`[x]` `docs/charts.mdx` now documents every type with its own usage snippet and
+      API table; the site preview shows a gallery of area, pie, radar and radial
+      beside the bar/line switch.
+`[x]` `geometry.test.ts` (13 cases) and `chart-types.test.tsx` (12 cases in the
+      real renderer) hold the new geometry; the shipped example mounts every
+      type.
+`[x]` shadcn-parity pass: `ComposedChart` (bars + line), legend marks
+      (`square`/`dot`/`line`) with row values, tooltip indicator and label
+      format, an active band, radar polygon/circle grids with fills and a
+      lines-only mode, and a radial track with guide rings. The page's preview
+      switches between bars, lines, area, mixed, pie, radar and radial.
+`[x]` shadcn examples round two: pie slice labels (`showLabels`, `labelFormat`)
+      with an `activeIndex` that stands proud, radar `radius`, radial `rounded`
+      caps, and line/area `showLabels`; the page's preview now offers bars,
+      lines, area, mixed, pie, pie-labels, line-labels, radar, radar-filled,
+      radial and radial-rounded.
+`[x]` shadcn examples round three: pie labels outside the ring with leader
+      lines, icon dots on line and radar points, custom radar grid radii
+      (`gridAt`), and dedicated Tooltip/Legend sections on the page with the
+      `tooltip` and `legend` preview modes. Behaviour cases drive the tooltip
+      indicator through a pointer move, and hold the leaders, icons and legend
+      marks.
+`[x]` shadcn example families, round four: `valueLabelFormat` on bars,
+      `axisLabelFormat` on radar, `showLabels` on radial, and seven grouped
+      preview scenes — `area-variants` (linear/step/legend), `bar-variants`
+      (active band + custom labels), `line-variants` (linear/step),
+      `pie-interactive` (rest vs active slice), `radar-variants` (no grid,
+      lines only, custom labels), `radial-variants` (labels, track + grid) and
+      `tooltip-variants` (line indicator, formatter, custom label).
+`[x]` The chart page's parity rows link to the real renderer: `/live` takes
+      `?scene=parity&only=<id>` and mounts that row's native chart (or the whole
+      gallery) through the GPUix wasm build, and each table row links to it.
+      `chart-parity.test.tsx` now asserts every row paints marks with geometry
+      and words, not merely that a node mounts.
+`[x]` `chart-pie-stacked` is native: `PieChart stacked` paints each datum on
+      its own concentric band (`ringBands`), with `activeIndex` still standing
+      one band proud; a behaviour case reads three arcs at decreasing radii.
+      Every parity row is native, and `parity.test.ts` now fails if any row is
+      not.
+`[x]` Reference parity is executable: `chart-tooltip-icons` is native
+      (`tooltipIcons` paints a series' icon in the readout) and area icon dots
+      are native (`AreaChart.dotIcons`), leaving only `chart-pie-stacked`
+      approximated. `chart-parity.example.tsx` renders every one of the 70 rows
+      as a real chart from `PARITY_CHARTS`; `chart-parity.test.tsx` mounts the
+      gallery once in the renderer with a named case per example, and the
+      playground's example gallery mounts the data registry too.
+`[x]` On-plot zoom: with `zoom` on, the plot itself takes a drag-select band
+      (release sets `view` to the selected categories) and a wheel/trackpad
+      zoom around the window's centre; pointer-driven cases cover both. Pinch
+      stays unavailable — the runtime publishes no multitouch gesture.
+`[x]` Reference parity is a checked map: `chart/parity.ts` names all 70 examples
+      of shadcn's charts app with the native chart, option and preview that
+      answer each, marks the approximated and unsupported rows with a reason,
+      and `parity.test.ts` fails when a name, option, mode or covered part is
+      missing. The page prints the table.
+`[x]` Continuous zoom and pan: `view` is a fractional category window,
+      `zoom` paints a navigation strip whose drag pans and whose wheel zooms
+      around the centre, and its Reset returns `[0, labels]`. Marks and labels
+      are placed from the fractional window and clipped to the plot;
+      `chart-zoom.test.tsx` drags (window start moves, first label clipped),
+      wheels (the span narrows and a category widens) and resets.
+`[x]` The brush is a real drag: `brush` paints a strip under the plot, a press
+      and drag reports every step through `onDomainChange`, and the controlled
+      `domain` paints the band while the plot windows live (`domainLabels` keeps
+      the strip's own category list from being windowed by its drag). A
+      behaviour test drags category 1 → 2 and reads only Q2/Q3 with two bars.
+      Per-point cards now follow the pointer inside their zone through the
+      plot's `onLayout` origin.
+`[x]` Per-point readouts and a brushed window: `pointTooltip` on line, area and
+      radar puts a hit zone on every mark (`PointTooltip`, native divs + text,
+      pointer-driven tests), and `domain: [start, end)` windows the plotted
+      categories for the cartesian charts (`chartWindow` normalizes reversed,
+      fractional and out-of-range windows). The page adds a `point-tooltip`
+      and a `brush` preview and a Brush section with API rows.
+`[x]` Native chart animation: `animate` / `animationDuration` tween a data
+      change from the frames on screen (`chart/animation.ts`; ease-out cubic,
+      16 ms clock, series matched by key, added series grow from zero), a
+      `MotionProvider preference="reduced"` paints the target at once, and the
+      page's `animated` preview replays the same interpolation in the browser.
+      `chart-animation.test.tsx` asserts a frame strictly between the start and
+      the end, the exact landing, and the reduced no-tween path.
+`[x]` Charts are interactive where the runtime allows: the readout follows the
+      cursor inside a column (`onLayout` gives the plot's origin, `onMouseMove`
+      the pointer), a press on a pie slice reports through `onSliceActivate`
+      and a controlled `activeIndex` stands the slice proud, and the page's
+      `area-interactive` / `line-interactive` previews track the pointer with a
+      guide line, dot and readout.
+`[x]` The hover readout is driven end to end: `nativeSimulateMouseMove` enters a
+      category zone, the card opens with the category and values, and leaving
+      closes it. `nub run check`, the docs suite (2285), the data suites (331
+      unit, 247 behaviour) and the docs build are green.
+
+## Reorderable editor tabs (2026-11-03)
+
+`[x]` `[██████████]` 7/7 — the landing terminal's editor tabs drag into a
+      new order and close, and the Terminal guide shows the same browser strip.
+
+`[x]` Add the docs-site `ReorderableTabs` component: a pointer drag with a
+      measured gap and a snap, `Alt`+Left/Right keyboard moves, a roving tab
+      stop and a close that collapses the tab's own width before the caller
+      removes it. `reorderable-tabs-logic.ts` holds the arithmetic
+      (`dropIndex`, `orderWith`, `moveTabTo`, `positionsFor`, `shiftsFor`,
+      `closedTabs`).
+`[x]` Use it in `terminal.tsx`: one tab per open file, close leaves the next
+      (or previous) tab open, closing the marked buffer moves the focus to its
+      successor, and an explorer press reopens a closed file at the end of the
+      strip.
+`[x]` Show it on `/platform/terminal` under **The editor tab strip**, with the
+      pointer and keyboard rules and a Reopen all reset.
+`[x]` Keep the motion honest: transforms and measured widths in `demos.css`,
+      the VS Code drag wash in `landing.css`, and both dropped under
+      `prefers-reduced-motion`.
+`[x]` `reorderable-tabs.test.tsx` holds the slot arithmetic, the close
+      successor, the public tab shape and the gesture's source/CSS;
+      `terminal.test.tsx` holds the landing's tab list and close names.
+`[x]` Verified in the browser: dragging `page.tsx` to the end lands
+      `button.tsx,theme.ts,page.tsx`; closing `page.tsx` selects `theme.ts`;
+      closing the last tab paints the empty buffer; an explorer press reopens
+      `page.tsx`; the same drag and close run on the guide preview.
+`[x]` `nub run --filter @gpuixui/docs check-types` and `test` (230 files /
+      2298 tests) are green; the docs build prerenders the new section.
+
+## mermaidcn on Pele (2026-11-03)
+
+`[x]` `[██████████]` 8/8 — the docs ship mermaidcn's renderer, zoom/pan canvas
+      and playground, rebuilt on Pele with the same component syntax.
+
+`[x]` Read the reference and record it in `.agents/slop/LICENSES/mermaidcn.md`,
+      `.agents/slop/LICENSES/README.md` and `status.md`'s Built on table. The
+      clone is at `references/mermaidcn`; the repository carries no LICENSE
+      file, so the record names the README's MIT declaration honestly.
+`[x]` `Mermaid` keeps `chart`, `config`, `onSuccess` and `onError`; Pele renders
+      synchronously, so there is no loading state, and a refused source is the
+      parser's sentence instead of an empty frame.
+`[x]` `config.theme` accepts Mermaid's five names and the fifteen named
+      palettes; the eight Mermaid variables map to `--pele-*` in a fixed
+      precedence, so `primaryTextColor` and `primaryColor` win over their
+      broader fallbacks.
+`[x]` `ZoomPan` keeps mermaidcn's props and controls render prop, adds pointer
+      panning, wheel zoom around the cursor, fit and reset. `zoom.ts` holds the
+      arithmetic; pinch is recorded as a limit (Pele's `enableZoom` has it).
+`[x]` `MermaidPlayground` is the editor + live preview + template/theme
+      pickers + copy/download SVG; the preview is one deferred value behind the
+      editor and opens fitted on a template change.
+`[x]` `/diagrams` documents the fence, the three components, the theme table
+      and the limits; `mermaidcn.test.tsx` holds the renderer, theme mapping,
+      zoom arithmetic, every template and the playground markup.
+`[x]` `mermaidcn.test.tsx` (2315 docs tests) is green, `check-types` and the
+      docs build pass; the example and playground were measured in the browser:
+      a theme switch repaints `--pele-surface` without a second render and a
+      template change refits the canvas.
+`[x]` The gradient/zoom buttons use the shared `.gx-btn` family, held by
+      `drawing-buttons.test.ts`.
+
+`[x]` Fix the terminal explorer's chrome after the package tree landed: the
+      docs demo scene (`.gx-base.gx-demo`) brought a 40px inset, dot field,
+      border and card radius into VS Code's sidebar, so the tree now paints on
+      the explorer's own `--vsc-*` roles with its `Explorer` header and Seti TS
+      badges. The package's row fold animation is untouched.
+`[x]` Make the tabs drag read before the release: a `gx-reorder-indicator`
+      marks the slot, neighbours transition into the opened gap while the
+      pointer moves, and the snapping transforms stay until the caller's order
+      arrives (a layout effect clears them before paint) instead of animating
+      after the tab has already been placed.

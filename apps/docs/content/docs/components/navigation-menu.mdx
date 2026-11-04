@@ -52,21 +52,6 @@ NavigationMenu
             └── NavigationMenuLink
 ```
 
-## The trigger's chevron
-
-shadcn's trigger ends in lucide's `ChevronDown` and rotates it while the panel is
-open. The runtime has no `transform`, so the component paints `chevron-down` and
-`chevron-up` from `@gpuixui/icons` in **one fixed 12px slot** and cross-fades
-them: the outgoing mark fades out 2px downward while the incoming one fades in
-from below. The slot's box never changes, so opening a panel repaints the trigger
-without resizing it or moving a sibling — the layout shift the drawing's old
-`⌄`/`⌃` character swap caused. The chevron is decorative; `aria-expanded` is the
-state a reader hears.
-
-The panel itself enters with a fade and 4px of travel out from its trigger on the
-`normal` level (200 ms), and stays painted for its exit. There is no shared
-viewport animation between panels: each item owns its anchored surface.
-
 ## API reference
 
 | Part | Renders | Props |
@@ -80,13 +65,6 @@ viewport animation between panels: each item owns its anchored surface.
 
 ## Limitations
 
-- The nav is a `navigation` landmark named by `label`; each item is a `listitem`,
-  each trigger a button carrying `aria-expanded`, and the panel a `role="group"`
-  whose accessible name is the item's **`value`**, not its visible label.
-  **No `aria-haspopup`** in `@gpuix/native@0.11.0`.
-- **A dismissed panel is a ghost, not a target.** It stays painted for its
-  **200 ms** exit and the seam's shield takes the presses, while every link
-  inside it leaves the window's Tab order for that window: the runtime decides
-  the order element by element, so a link the library paints has to drop its own
-  stop. A link you compose elsewhere keeps its stop until the runtime publishes
-  an inherited `inert`.
+- The panel's accessible name is the item's **`value`**, not its visible label; no `aria-haspopup`.
+- A dismissed panel paints for its **200 ms** exit and its links leave the window's tab order until the runtime inherits `inert`.
+- The trigger paints `chevron-down`/`chevron-up` in a fixed slot; `aria-expanded` carries the state.

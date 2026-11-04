@@ -7,12 +7,15 @@ import { BlockPreview } from "./docs/block-preview";
 import { ComponentIndex } from "./docs/component-index";
 import { ComponentPreview } from "./docs/component-preview";
 import { ComponentSource } from "./docs/component-source";
+import { EditorTabsPreview } from "./docs/editor-tabs-preview";
 import { ExamplesIndex } from "./docs/examples-index";
 import { IconGallery } from "./docs/icon-gallery";
 import { Install } from "./docs/install";
 import { LanePages } from "./docs/lane-pages";
 import { LaneTable } from "./docs/lane-table";
 import { MermaidDiagram } from "./docs/mermaid-diagram";
+import { MermaidExample } from "./mermaidcn/MermaidExample";
+import { MermaidPlayground } from "./mermaidcn/MermaidPlayground";
 import { PromptPage } from "./docs/prompt-page";
 import { LookPicker } from "./docs/look-picker";
 import { SidebarExample } from "./docs/sidebar-examples";
@@ -69,12 +72,15 @@ export const mdxComponents = {
   ComponentIndex,
   ComponentPreview,
   ComponentSource,
+  EditorTabsPreview,
   ExamplesIndex,
   IconGallery,
   Install,
   LanePages,
   LaneTable,
   MermaidDiagram,
+  MermaidExample,
+  MermaidPlayground,
   pre,
   PromptPage,
   LookPicker,

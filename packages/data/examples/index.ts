@@ -10,6 +10,9 @@
 
 import type { ComponentType } from "react";
 import { ChartExample } from "./chart.example.js";
+import { ParityGallery } from "./chart-parity.example.js";
+
+export { PARITY_CHARTS, ParityGallery } from "./chart-parity.example.js";
 import { ExpandableRowsExample } from "./expandable-rows.example.js";
 import { FrozenTableExample } from "./frozen-table.example.js";
 import { SurfacesExample } from "./surfaces.example.js";
@@ -28,6 +31,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   tree: TreeExample,
   "expandable-rows": ExpandableRowsExample,
   chart: ChartExample,
+  "chart-parity": ParityGallery,
   "virtual-list": VirtualListExample,
   "virtual-table": VirtualTableExample,
   "virtual-tree": VirtualTreeExample,

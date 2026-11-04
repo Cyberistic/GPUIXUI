@@ -838,7 +838,9 @@
   flex-direction: column;
   gap: 22px;
   width: 240px;
-  transition: width 0.28s ease, padding 0.28s ease;
+  transition:
+    width 0.28s ease,
+    padding 0.28s ease;
   flex: none;
   padding: 18px 14px 16px;
   border-right: 1px solid var(--dash-line);
@@ -930,7 +932,9 @@
 /* collapsed sidebar: icon-only rail */
 .gx-dash-side[data-collapsed="true"] {
   width: 64px;
-  transition: width 0.28s ease, padding 0.28s ease;
+  transition:
+    width 0.28s ease,
+    padding 0.28s ease;
   align-items: center;
   padding: 18px 10px 16px;
 }
@@ -7697,4 +7701,11 @@ button.gx-sb-row {
   margin-top: 8px;
   font-size: 13px;
   color: var(--muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-dash-side,
+  .gx-dash-side[data-collapsed="true"] {
+    transition: none;
+  }
 }

@@ -20,6 +20,10 @@
   --accent-ink: #fafafa;
   --accent-text: #171717;
   --accent-wash: #f5f5f5;
+  --landing-code-cmd: #5f5f5f;
+  --landing-code-pkg: #a16207;
+  --landing-code-verb: #1d4ed8;
+  --landing-code-name: #047857;
   --chrome: #fafafa;
   --chrome-line: #e5e5e5;
   --field: #fafafa;
@@ -51,9 +55,9 @@
 }
 
 .dark .landing {
-  --bg: #0a0a0a;
-  --bg-soft: #111111;
-  --card: #111111;
+  --bg: #000000;
+  --bg-soft: #0a0a0a;
+  --card: #0d0d0d;
   --fg: #fafafa;
   --muted: #a1a1a1;
   --dim: #8a8a8a;
@@ -63,7 +67,11 @@
   --accent-text: #fafafa;
   --accent: #fafafa;
   --accent-wash: rgba(255, 255, 255, 0.08);
-  --chrome: #111111;
+  --landing-code-cmd: #a1a1a1;
+  --landing-code-pkg: #e5c07b;
+  --landing-code-verb: #61afef;
+  --landing-code-name: #98c379;
+  --chrome: #0a0a0a;
   --chrome-line: #262626;
   --field: #0a0a0a;
   --field-line: #333333;
@@ -483,7 +491,7 @@
 .landing-deck {
   position: relative;
   width: min(880px, 100%);
-  height: 600px;
+  height: 648px;
   margin: 12px auto 0;
   overflow: visible;
 }
@@ -525,13 +533,13 @@
 }
 
 .landing-deck .landing-window[data-pos="1"] {
-  transform: translateX(calc(-50% - 16px)) translateY(14px) scale(0.955);
+  transform: translateX(calc(-50% - 16px)) translateY(10px) scale(0.96);
   z-index: 2;
   opacity: 0.9;
 }
 
 .landing-deck .landing-window[data-pos="2"] {
-  transform: translateX(calc(-50% + 16px)) translateY(28px) scale(0.91);
+  transform: translateX(calc(-50% + 16px)) translateY(20px) scale(0.92);
   z-index: 1;
   opacity: 0.72;
 }
@@ -642,6 +650,14 @@
   width: min(720px, 100%);
   height: 100%;
   box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
+}
+
+/* The hero's people list is narrower than the block's. At the block's 330px
+   the list takes nearly half the window and the thread beside it is squeezed
+   to a column of stubs; here the list is a reference, and the conversation
+   is the thing the hero is showing. */
+.landing-desktop-stage .gx-conv-side {
+  width: 236px;
 }
 
 /* macOS menu bar and dock */
@@ -834,6 +850,7 @@
 .landing-taskbar-clock {
   display: flex;
   flex: none;
+  margin-left: auto;
   flex-direction: column;
   align-items: flex-end;
   font-size: 8.5px;
@@ -1011,23 +1028,6 @@
   color: var(--muted);
   font-size: 11.5px;
   line-height: 1.5;
-}
-
-.landing-omarchy-note {
-  margin: 12px 0 0;
-  color: var(--dim);
-  font-size: 12px;
-  line-height: 1.5;
-  text-align: center;
-}
-
-.landing-omarchy-note code {
-  padding: 1px 5px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--bg-soft);
-  color: var(--fg);
-  font-size: 11.5px;
 }
 
 /* ---- dashboard: the product window ---- */
@@ -1310,248 +1310,6 @@
   border-radius: 0;
 }
 
-/* ---- the stage: one window, one action ---- */
-/* The stage crops the window at its foot instead of framing it whole: a
-   product shot, not a screenshot pasted into a card. */
-.landing-stage {
-  position: relative;
-  height: 360px;
-  margin: 40px 0 0;
-  overflow: hidden;
-}
-
-.landing-stage-window {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: min(720px, 100%);
-  margin: 0;
-  transform: translateX(-50%);
-  overflow: hidden;
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  background: var(--bg-soft);
-  box-shadow: 0 30px 70px -24px rgb(0 0 0 / 55%);
-}
-
-.landing-stage-bar {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  height: 34px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--line);
-  background: var(--bg);
-}
-
-.landing-stage-lights {
-  display: flex;
-  gap: 6px;
-}
-
-.landing-stage-lights i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--line-strong);
-}
-
-.landing-stage-title {
-  overflow: hidden;
-  color: var(--dim);
-  font-family: var(--mono);
-  font-size: 10.5px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.landing-stage-status {
-  margin-left: auto;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--bg-soft);
-  color: var(--dim);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  transition:
-    background 0.3s ease,
-    color 0.3s ease;
-}
-
-.landing-stage-status[data-state="building"] {
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-  color: var(--accent-text);
-}
-
-.landing-stage-status[data-state="live"],
-.landing-stage-status[data-state="toast"] {
-  background: color-mix(in srgb, var(--success, #3fb950) 24%, transparent);
-  color: var(--success, #3fb950);
-}
-
-.landing-stage-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 18px 8px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.landing-stage-branch {
-  padding: 2px 8px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--dim);
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 400;
-}
-
-.landing-stage-rows {
-  margin: 0;
-  padding: 0 10px 4px;
-  list-style: none;
-}
-
-.landing-stage-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 8px;
-  border-radius: 8px;
-  font-size: 12.5px;
-}
-
-.landing-stage-row + .landing-stage-row {
-  border-top: 1px solid var(--line);
-  border-radius: 0;
-}
-
-.landing-stage-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--dim);
-  transition: background 0.3s ease;
-}
-
-.landing-stage[data-phase="building"] .landing-stage-dot {
-  background: var(--accent);
-}
-
-.landing-stage[data-phase="live"] .landing-stage-dot,
-.landing-stage[data-phase="toast"] .landing-stage-dot {
-  background: var(--success, #3fb950);
-}
-
-.landing-stage-name {
-  font-family: var(--mono);
-}
-
-.landing-stage-meta {
-  margin-left: auto;
-  color: var(--dim);
-  font-size: 11px;
-}
-
-.landing-stage-progress {
-  height: 3px;
-  margin: 10px 18px 0;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--line);
-}
-
-.landing-stage-progress span {
-  display: block;
-  width: 0;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent);
-  transition: width 0.6s ease;
-}
-
-.landing-stage-progress[data-state="building"] span {
-  width: 62%;
-}
-
-.landing-stage-progress[data-state="live"] span,
-.landing-stage-progress[data-state="toast"] span {
-  width: 100%;
-  background: var(--success, #3fb950);
-}
-
-.landing-stage-foot {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 14px 18px 18px;
-}
-
-.landing-stage-button {
-  padding: 7px 14px;
-  font-size: 12px;
-}
-
-.landing-stage-hint {
-  color: var(--dim);
-  font-family: var(--mono);
-  font-size: 10.5px;
-}
-
-.landing-stage-toast {
-  position: absolute;
-  right: max(24px, calc(50% - 336px));
-  bottom: 90px;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  padding: 10px 14px;
-  border: 1px solid var(--line-strong);
-  border-radius: 10px;
-  background: var(--bg-soft);
-  box-shadow: var(--shadow);
-  color: var(--muted);
-  font-size: 12px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
-}
-
-.landing-stage-toast b {
-  color: var(--foreground);
-}
-
-.landing-stage[data-phase="toast"] .landing-stage-toast {
-  opacity: 1;
-  transform: none;
-}
-
-.landing-stage-caption {
-  margin: 14px 0 0;
-  color: var(--dim);
-  font-family: var(--mono);
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-.landing-code-caption {
-  margin: 14px 0 0;
-  font-family: var(--mono);
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--dim);
-}
-
-.landing-code-caption a {
-  color: var(--accent-text);
-}
-
 /* ---- the editor moment: a command, then VS Code ---- */
 /* The stage is a desktop, not a page surface: both windows sit on a dark
    wallpaper in either scheme, the way a screenshot would. */
@@ -1562,10 +1320,35 @@
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: 18px;
-  background:
-    radial-gradient(92% 74% at 16% 0%, #2b4066 0%, transparent 58%),
-    radial-gradient(74% 62% at 88% 100%, #20473f 0%, transparent 62%),
-    linear-gradient(162deg, #0b0e13 0%, #131820 100%);
+  background: #0b0e13;
+}
+
+/* The terminal's wallpaper: the chat's photograph, blurred past recognition so
+   the frame stays the subject. */
+.landing-moment-wallpaper {
+  position: absolute;
+  inset: 0;
+  background: url("/hxh-wp.jpg") center 58% / cover no-repeat;
+  filter: blur(24px) saturate(0.82);
+  opacity: 0.7;
+  transform: scale(1.08);
+}
+
+.landing-moment-wallpaper::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    162deg,
+    rgb(5 7 10 / 82%) 0%,
+    rgb(5 7 10 / 62%) 60%,
+    rgb(5 7 10 / 88%) 100%
+  );
+  content: "";
+}
+
+.landing-moment > .landing-term,
+.landing-moment > .landing-editor {
+  z-index: 1;
 }
 
 /* The terminal the command is typed into: always dark, and gone once the
@@ -1609,7 +1392,8 @@
 .landing-term-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 10px;
   height: 32px;
   padding: 0 12px;
   border-bottom: 1px solid var(--term-edge);
@@ -1618,12 +1402,20 @@
 }
 
 .landing-term-tab {
+  overflow: hidden;
   color: var(--term-ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .landing-term-session {
+  flex: none;
+  padding: 1px 6px;
+  border: 1px solid var(--term-edge);
+  border-radius: 4px;
   color: var(--term-label);
-  font-size: 10px;
+  font-size: 9.5px;
+  white-space: nowrap;
 }
 
 .landing-term-body {
@@ -1837,10 +1629,35 @@
 }
 
 .landing-editor .landing-vscode-tab {
-  border: 0;
   background: transparent;
   font: inherit;
   cursor: pointer;
+}
+
+.landing-editor .landing-vscode-tab[data-dragging="true"] {
+  border-right-color: var(--vsc-border);
+  background: var(--vsc-hover, #2a2d2e);
+  box-shadow:
+    0 6px 16px rgb(0 0 0 / 45%),
+    inset 0 1px 0 var(--vsc-accent);
+  color: var(--vsc-bright);
+}
+
+.landing-editor .landing-vscode-tab[data-dropping="true"] {
+  box-shadow: 0 3px 10px rgb(0 0 0 / 30%);
+}
+
+.landing-editor .gx-reorder-indicator {
+  background: var(--vsc-bright);
+  box-shadow: none;
+  opacity: 0.14;
+}
+
+.landing-editor .landing-vscode-tab[data-closing="true"] {
+  overflow: hidden;
+  opacity: 0;
+  padding-inline: 0;
+  border-right-color: transparent;
 }
 
 .landing-vscode-title {
@@ -1954,7 +1771,9 @@
 
 /* explorer */
 .landing-vscode-explorer {
+  display: flex;
   flex: none;
+  flex-direction: column;
   width: 200px;
   overflow: hidden;
   border-right: 1px solid var(--vsc-border);
@@ -2057,6 +1876,16 @@
   color: var(--vsc-dim);
   font-size: 13px;
   font-style: normal;
+}
+
+.landing-vscode-empty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: var(--vsc-dim);
+  font-size: 12px;
 }
 
 .landing-vscode-trail {
@@ -2244,18 +2073,6 @@
   margin-top: 14px;
 }
 
-.landing-terminal-caption {
-  margin: 0;
-  color: var(--dim);
-  font-family: var(--mono);
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-.landing-terminal-caption a {
-  color: var(--accent-text);
-}
-
 .landing-replay {
   display: inline-flex;
   flex: none;
@@ -2297,7 +2114,7 @@
 }
 
 .landing-graph-leaf-row {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .landing-graph-node {
@@ -2644,7 +2461,8 @@
      the same frame, so only its own motion is dropped. */
   .landing-term,
   .landing-term-out,
-  .landing-editor .landing-vscode-explorer {
+  .landing-editor .landing-vscode-explorer,
+  .landing-editor .landing-vscode-tab {
     transition: none;
   }
 
@@ -2656,11 +2474,1548 @@
   .landing-btn,
   .landing-nav-links a,
   .landing-nav-cta,
-  .landing-theme-toggle,
-  .landing-stage-progress span,
-  .landing-stage-toast,
-  .landing-stage-dot,
-  .landing-stage-status {
+  .landing-theme-toggle {
     transition: none;
   }
+
+  .landing-vscode {
+    transition: none;
+  }
+
+  .landing-mini-switch i {
+    transition: none;
+  }
+
+  .landing-mini-progress i {
+    transition: none;
+  }
+
+  .landing-mini-toast {
+    animation: none;
+  }
+
+  .landing-graph[data-inview] .landing-graph-node,
+  .landing-chart[data-inview] .gx-dchart-plot,
+  .landing-mini-note {
+    animation: none;
+  }
+}
+
+/* ---- the showcase grid: the shipped demos in a masonry of tiles ---- */
+.landing-showcase-section {
+  position: relative;
+  padding-top: 40px;
+}
+
+/* The gallery is a masonry: every tile cascades down its column with no gap
+   under it, so a short tile is followed immediately by the next one instead of
+   waiting for a row of taller neighbours. A CSS grid cannot do that — its rows
+   are shared, so one tall tile leaves a hole under its short neighbours.
+
+   Columns give each one its own stack, which is the masonry the gallery
+   wants. The conversation row is a sibling, not a child: a spanning row
+   inside a column box lands wherever the balance puts it and leaves a hole
+   beside it. */
+.landing-grid {
+  width: min(1180px, 100%);
+  margin: 26px auto 0;
+}
+
+.landing-grid-tiles {
+  columns: 4 260px;
+  column-gap: 12px;
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - 160px),
+    transparent 100%
+  );
+}
+
+.landing-grid-tile {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  gap: 8px;
+  break-inside: avoid;
+  margin: 0 0 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+@media (max-width: 1100px) {
+  .landing-grid-tiles {
+    columns: 3 240px;
+  }
+}
+
+@media (max-width: 900px) {
+  .landing-grid-tiles {
+    columns: 2 240px;
+  }
+}
+
+@media (max-width: 600px) {
+  .landing-grid-tiles {
+    columns: 1;
+  }
+}
+
+/* ---- the showcase tiles: small compositions, in the site's own tokens ---- */
+.landing-mini-btn {
+  align-self: flex-start;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.landing-mini-btn[data-variant="primary"] {
+  border-color: transparent;
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.landing-mini-btn[data-variant="danger"] {
+  border-color: transparent;
+  background: var(--destructive, #dc2626);
+  color: var(--fg);
+}
+
+.landing-mini-link {
+  color: var(--muted);
+  font-size: 11px;
+  text-decoration: underline;
+}
+
+.landing-mini-badge {
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.landing-mini-badge[data-tone="success"] {
+  border-color: transparent;
+  background: color-mix(in oklab, #16a34a 18%, transparent);
+  color: var(--fg);
+}
+
+.landing-mini-badge[data-tone="danger"] {
+  border-color: transparent;
+  background: color-mix(in oklab, #dc2626 16%, transparent);
+  color: var(--fg);
+}
+
+.landing-mini-caption {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.landing-mini-metric {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.landing-mini-foot {
+  margin: 0;
+  color: var(--dim);
+  font-size: 10.5px;
+}
+
+.landing-mini-bars {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  height: 54px;
+}
+
+.landing-mini-bars i {
+  flex: 1;
+  border-radius: 3px 3px 2px 2px;
+  background: var(--muted);
+}
+
+.landing-mini-label {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.landing-mini-input,
+.landing-mini-select,
+.landing-mini-textarea {
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--bg-soft);
+  color: var(--fg);
+  font-size: 11px;
+}
+
+.landing-mini-textarea {
+  min-height: 46px;
+  color: var(--muted);
+}
+
+.landing-mini-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.landing-mini-progress > div {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.landing-mini-progress i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--fg);
+}
+
+.landing-mini-tabs {
+  gap: 2px;
+  padding: 0 0 6px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+
+.landing-mini-tabs .gx-tab {
+  height: auto;
+  padding: 0 6px 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.landing-mini-tabs .gx-tab[data-on] {
+  color: var(--fg);
+}
+
+.landing-mini-tabs .gx-tabs-indicator {
+  height: 2px;
+  background: var(--landing-primary);
+}
+
+.landing-mini-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.landing-mini-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--fg);
+  font-size: 11px;
+}
+
+.landing-mini-check i {
+  display: grid;
+  width: 14px;
+  height: 14px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: transparent;
+  font-size: 9px;
+  font-style: normal;
+}
+
+.landing-mini-check i[data-on] {
+  border-color: var(--fg);
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.landing-mini-calendar-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.landing-mini-calendar-head span {
+  color: var(--muted);
+}
+
+.landing-mini-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 9.5px;
+  font-style: normal;
+}
+
+.landing-mini-calendar i {
+  padding: 3px 0;
+  border-radius: 4px;
+  font-style: normal;
+}
+
+.landing-mini-calendar i[data-on] {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.landing-mini-dow {
+  color: var(--dim);
+}
+
+.landing-mini-stars b {
+  color: var(--line);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.landing-mini-stars b[data-on] {
+  color: var(--fg);
+}
+
+.landing-mini-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--fg);
+  font-size: 11px;
+}
+
+.landing-mini-switch {
+  display: flex;
+  width: 26px;
+  height: 15px;
+  align-items: center;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.landing-mini-switch i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--fg);
+}
+
+.landing-mini-switch[data-on] {
+  justify-content: flex-end;
+  background: var(--landing-primary);
+}
+
+.landing-mini-switch[data-on] i {
+  background: var(--bg);
+}
+
+.landing-mini-alert {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--muted);
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.landing-mini-alert b {
+  color: var(--fg);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.landing-mini-alert[data-tone="success"] {
+  border-left-color: #16a34a;
+}
+
+.landing-mini-alert[data-tone="danger"] {
+  border-left-color: #dc2626;
+}
+
+.landing-mini-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.landing-mini-menu b {
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: var(--bg-soft);
+  color: var(--fg);
+  font-weight: 550;
+}
+
+.landing-mini-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: 0 8px 18px rgb(0 0 0 / 8%);
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.landing-mini-options b {
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: var(--bg-soft);
+  color: var(--fg);
+  font-weight: 550;
+}
+
+.landing-mini-crumbs {
+  display: flex;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.landing-mini-row-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.landing-mini-row-item b {
+  color: var(--fg);
+  font-weight: 550;
+}
+
+.landing-mini-row-item i {
+  font-style: normal;
+}
+
+/* ---- interactive showcase parts ---- */
+.landing-mini-btn,
+.landing-mini-check,
+.landing-mini-toggle-row,
+.landing-mini-star,
+.landing-mini-nav,
+.landing-mini-day,
+.landing-mini-menu-row,
+.landing-mini-option,
+.landing-mini-select,
+.landing-mini-dismiss {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.landing-mini-btn {
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+
+.landing-mini-btn:hover,
+.landing-mini-menu-row:hover,
+.landing-mini-option:hover {
+  border-color: var(--line-strong);
+}
+
+.landing-mini-btn:focus-visible,
+.landing-mini-star:focus-visible,
+.landing-mini-day:focus-visible,
+.landing-mini-menu-row:focus-visible,
+.landing-mini-option:focus-visible,
+.landing-mini-select:focus-visible,
+.landing-mini-nav:focus-visible,
+.landing-mini-check:focus-visible,
+.landing-mini-toggle-row:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.landing-mini-toast-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.landing-mini-toast {
+  display: flex;
+  flex-direction: column;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--muted);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.landing-mini-toast b {
+  color: var(--fg);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.landing-mini-toast[data-tone="success"] {
+  border-left-color: #16a34a;
+}
+.landing-mini-toast[data-tone="warning"] {
+  border-left-color: #d97706;
+}
+.landing-mini-toast[data-tone="danger"] {
+  border-left-color: #dc2626;
+}
+
+.landing-mini-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--fg);
+  font-size: 11px;
+}
+
+.landing-mini-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  color: var(--fg);
+  font-size: 11px;
+}
+
+.landing-mini-nav {
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.landing-mini-calendar-head span {
+  display: flex;
+}
+
+.landing-mini-day {
+  padding: 3px 0;
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 9.5px;
+  text-align: center;
+}
+
+.landing-mini-day:hover {
+  background: var(--bg-soft);
+}
+
+.landing-mini-day[data-on] {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.landing-mini-star {
+  padding: 0 1px;
+  color: var(--line);
+  font-size: 15px;
+}
+
+.landing-mini-star[data-on] {
+  color: var(--fg);
+}
+
+.landing-mini-dismiss {
+  align-self: flex-start;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.landing-mini-alert {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.landing-mini-alert > span {
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-mini-menu-row {
+  padding: 3px 6px;
+  border-radius: 5px;
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.landing-mini-menu-row[data-on] {
+  background: var(--bg-soft);
+  color: var(--fg);
+  font-weight: 550;
+}
+
+.landing-mini-select {
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--bg-soft);
+  color: var(--fg);
+  font-size: 11px;
+}
+
+.landing-mini-option {
+  padding: 3px 6px;
+  border-radius: 5px;
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.landing-mini-option[data-on] {
+  background: var(--bg-soft);
+  color: var(--fg);
+  font-weight: 550;
+}
+
+.landing-mini-input,
+.landing-mini-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.landing-mini-calendar {
+  font-style: normal;
+}
+
+/* ---- colour, chat, QR and OTP tiles ---- */
+.landing-mini-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.landing-mini-swatch {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.landing-mini-swatch[data-on] {
+  border-color: var(--fg);
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+.landing-mini-color {
+  width: 26px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+}
+
+.landing-mini-hex {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+
+.landing-mini-segmented {
+  display: flex;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--bg-soft);
+}
+
+.landing-mini-segment {
+  flex: 1;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 10.5px;
+  cursor: pointer;
+}
+
+.landing-mini-segment[data-on] {
+  background: var(--card);
+  color: var(--fg);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+}
+
+.landing-showcase-head {
+  display: flex;
+  width: fit-content;
+  margin: 22px auto 0;
+  padding: 8px 10px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.landing-showcase-head .landing-mini-caption {
+  margin-right: 2px;
+}
+
+.landing-mini-chat {
+  display: flex;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 5px;
+  height: 118px;
+  padding-right: 2px;
+}
+
+.landing-mini-bubble {
+  align-self: flex-start;
+  max-width: 90%;
+  padding: 5px 8px;
+  border-radius: 9px 9px 9px 3px;
+  background: var(--bg-soft);
+  color: var(--fg);
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.landing-mini-bubble[data-me] {
+  align-self: flex-end;
+  border-radius: 9px 9px 3px 9px;
+  background: var(--landing-primary);
+  color: var(--landing-on-primary);
+}
+
+.landing-mini-qr {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 118px;
+  height: 118px;
+  padding: 8px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.landing-mini-qr svg {
+  width: 100%;
+  height: 100%;
+  fill: #111;
+}
+
+.landing-mini-otp {
+  display: flex;
+  gap: 5px;
+}
+
+.landing-mini-otp-cell {
+  width: 27px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--mini-radius, 7px);
+  background: var(--bg-soft);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  text-align: center;
+}
+
+.landing-mini-otp-cell:focus-visible {
+  outline: 2px solid var(--landing-primary);
+  outline-offset: 1px;
+}
+
+/* The interactive parts, sized after the button reset: the reset inherits the
+   page's 16px, which makes a mini control look like a page control. */
+.landing-mini-btn {
+  font-size: 11px;
+}
+
+.landing-mini-switch {
+  position: relative;
+  justify-content: flex-start;
+  transition: background-color 0.18s ease;
+}
+
+.landing-mini-switch i {
+  position: absolute;
+  left: 2px;
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-mini-switch[data-on] {
+  justify-content: flex-start;
+}
+
+.landing-mini-switch[data-on] i {
+  transform: translateX(11px);
+}
+
+.landing-mini-segment,
+.landing-mini-day,
+.landing-mini-swatch,
+.landing-mini-menu-row,
+.landing-mini-option {
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
+}
+
+/* The shipped picker, at the tile's width. */
+.landing-mini-picker {
+  overflow: visible;
+}
+
+.landing-mini-picker .gx-cp-scene {
+  display: flex;
+  overflow: visible;
+  width: 100%;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  gap: 8px;
+}
+
+.landing-mini-picker .gx-cp-trigger {
+  align-self: center;
+}
+
+/* The picker's panel floats over the grid: the tile must not clip it. */
+.landing-grid-tile-picker {
+  position: relative;
+  z-index: 20;
+  overflow: visible;
+}
+
+.landing-mini-picker .gx-cp-panel-slot {
+  min-height: 0;
+}
+
+/* ---- the live theme the tiles share ---- */
+.landing-grid {
+  --landing-primary: #7c5cff;
+  --landing-on-primary: #ffffff;
+  --mini-radius: 10px;
+  --mini-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mini-control-height: 28px;
+  --mini-card: var(--card);
+}
+
+.landing-grid[data-platform="windows"] {
+  --mini-radius: 5px;
+  --mini-font: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --mini-control-height: 26px;
+  --mini-card: color-mix(in oklab, var(--card), #6ea8ff 6%);
+}
+
+.landing-grid[data-platform="linux"] {
+  --mini-radius: 8px;
+  --mini-font: Ubuntu, "DejaVu Sans", ui-sans-serif, sans-serif;
+  --mini-control-height: 30px;
+  --mini-card: color-mix(in oklab, var(--card), #b8b2a7 5%);
+}
+
+.landing-grid-tile {
+  background: var(--mini-card);
+  font-family: var(--mini-font);
+}
+
+.landing-mini-btn,
+.landing-mini-input,
+.landing-mini-textarea,
+.landing-mini-select {
+  min-height: var(--mini-control-height);
+}
+
+.landing-mini-btn[data-variant="primary"] {
+  border-color: transparent;
+  background: var(--landing-primary);
+  color: var(--landing-on-primary);
+}
+
+.landing-mini-switch[data-on] {
+  background: var(--landing-primary);
+}
+
+.landing-mini-star[data-on] {
+  color: var(--landing-primary);
+}
+
+.landing-mini-progress i {
+  background: var(--landing-primary);
+  transition: width 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-mini-tabs b {
+  border-bottom-color: var(--landing-primary);
+}
+
+.landing-mini-day[data-on] {
+  background: var(--landing-primary);
+  color: var(--landing-on-primary);
+}
+
+.landing-mini-bars i {
+  background: var(--landing-primary);
+  opacity: 0.85;
+}
+
+.landing-mini-btn,
+.landing-mini-input,
+.landing-mini-textarea,
+.landing-mini-select,
+.landing-mini-otp-cell,
+.landing-mini-qr {
+  border-radius: var(--mini-radius);
+}
+
+/* Toasts animate in a fixed area, so firing one never moves the grid. */
+.landing-mini-toast-stack {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  height: 86px;
+}
+
+.landing-mini-toast {
+  animation: landing-toast-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes landing-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) translateX(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(0) scale(1);
+  }
+}
+
+/* ---- terminal chrome: the Mac lights, the replay, the tree's own collapse ---- */
+.landing-term-lights {
+  display: flex;
+  flex: none;
+  gap: 5px;
+  margin-right: 4px;
+}
+
+.landing-term-lights i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ff5f57;
+}
+
+.landing-term-lights i:nth-child(2) {
+  background: #febc2e;
+}
+
+.landing-term-lights i:nth-child(3) {
+  background: #28c840;
+}
+
+.landing-vscode-replay {
+  height: 18px;
+  padding: 0 5px;
+  border-color: transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vsc-ink);
+  font-size: 10px;
+}
+
+.landing-vscode-replay:hover {
+  border-color: transparent;
+  background: rgb(255 255 255 / 10%);
+}
+
+.landing-vscode-replay svg {
+  width: 10px;
+  height: 10px;
+}
+
+.landing-vscode-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.landing-vscode-collapse {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.landing-vscode-collapse:hover {
+  background: rgb(255 255 255 / 10%);
+}
+
+/* ---- theme card, demo tiles and the picker's single card ---- */
+.landing-grid-tile-theme {
+  gap: 10px;
+}
+
+.landing-mini-titlebar {
+  display: flex;
+  padding: 0 0 8px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.landing-mini-titlebar .landing-mini-lights {
+  display: flex;
+  gap: 4px;
+}
+
+.landing-mini-window-controls {
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.landing-grid-tile-demo .gx-demo {
+  width: 100%;
+  padding: 10px;
+  zoom: 0.78;
+}
+
+.landing-mini-picker .gx-demo-label,
+.landing-mini-picker .gx-cp-readout,
+.landing-mini-picker .gx-cp-chosen-row {
+  display: none;
+}
+
+.landing-mini-picker .gx-cp-card {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.landing-grid-tile-alerts {
+  min-height: 176px;
+}
+
+/* ---- graph and chart entrance ---- */
+.landing-graph[data-inview] .landing-graph-node {
+  animation: landing-graph-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.landing-graph[data-inview]
+  .landing-graph-row
+  .landing-graph-node:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.landing-graph[data-inview]
+  .landing-graph-row
+  .landing-graph-node:nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.landing-graph[data-inview] .landing-graph-core {
+  animation-delay: 0.18s;
+}
+
+.landing-graph[data-inview] .landing-graph-renderer {
+  animation-delay: 0.24s;
+}
+
+.landing-graph[data-inview] .landing-graph-leaf {
+  animation-delay: 0.3s;
+}
+
+@keyframes landing-graph-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The terminal explorer uses the package's own tree drawing. The drawing is
+   the docs preview component, but the chrome here is VS Code's: no demo scene,
+   no card, no dot field — the tree rows sit directly on the explorer's bar. */
+.landing-term-tree {
+  --foreground: var(--vsc-ink);
+  --muted-foreground: var(--vsc-dim);
+  --hover: #2a2d2e;
+  --ring: var(--vsc-accent);
+  --radius: 4px;
+  --icon-size-sm: 14px;
+  --row-height: 22px;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+
+.landing-term-tree .gx-filetree {
+  width: 100%;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.landing-term-tree .gx-filetree-row {
+  height: 22px;
+  padding-right: 8px;
+  border-radius: 0;
+  color: var(--vsc-ink);
+}
+
+.landing-term-tree .gx-filetree-row[data-leaving="true"] {
+  height: 0;
+  opacity: 0;
+}
+
+.landing-term-tree .gx-filetree-row:hover {
+  background: var(--hover);
+}
+
+.landing-term-tree .gx-filetree-row[data-selected="true"] {
+  background: var(--vsc-select);
+  color: var(--vsc-bright);
+}
+
+.landing-term-tree .gx-filetree-row[data-selected="true"] .gx-filetree-chevron,
+.landing-term-tree .gx-filetree-row[data-selected="true"] .gx-filetree-glyph {
+  color: var(--vsc-bright);
+}
+
+.landing-term-tree .gx-filetree-chevron,
+.landing-term-tree .gx-filetree-glyph {
+  color: var(--vsc-dim);
+}
+
+.landing-term-tree .gx-filetree-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+}
+
+.landing-vscode-action {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.landing-mini-lights i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5f57;
+}
+
+.landing-mini-lights i:nth-child(2) {
+  background: #febc2e;
+}
+
+.landing-mini-lights i:nth-child(3) {
+  background: #28c840;
+}
+
+.landing-mini-alert > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.landing-mini-dismiss {
+  flex: none;
+  color: var(--muted);
+  line-height: 1;
+}
+
+/* The picker's panel is a popover: the tile lets it out, and it opens towards
+   the page's centre rather than past the grid's right edge. */
+.landing-grid-tile-picker {
+  overflow: visible;
+  z-index: 20;
+}
+
+/* The package's chart geometry is authored at 360px; the tile scales it whole
+   so the axis, plot and legend stay in proportion. */
+.landing-chart {
+  width: 100%;
+  zoom: 0.64;
+}
+
+.landing-chart .gx-dchart,
+.landing-chart .gx-dchart-scene {
+  width: 100%;
+}
+
+.landing-chart figcaption {
+  display: none;
+}
+
+.landing-chart[data-chart="radar"] {
+  display: flex;
+  zoom: 1;
+  justify-content: center;
+}
+
+.landing-chart[data-chart="radar"] > figure {
+  margin: 0;
+}
+
+/* ---- the landing's demos sit on the tile, not on a second grey stage ---- */
+.landing-grid-tile-demo .gx-demo,
+.landing-grid-tile-demo .gx-demo .gx-demo {
+  background-color: transparent;
+}
+
+.landing-grid-tile-demo .gx-otp-scene {
+  min-height: 0;
+  padding: 0;
+}
+
+/* The chat reads left to right instead of as a tall phone column.
+   Two blocks of conversation beside a QR and one OTP field.
+
+   This row is its own grid, not a flex strip: the flex version sized the
+   short tiles to their content and left a dead band under them, so the row
+   read as one tall card beside two stubs. Grid rows stretch, so every tile
+   in the row shares the height of the tallest one.
+
+   It is one column wide. The chat is a transcript with a scrollbar, and a
+   narrow column puts that scrollbar over the avatar at the row's edge; the
+   wide row gives the transcript the room it needs to breathe. */
+.landing-grid-tile-demo .gx-demo.landing-chat-scene {
+  padding: 0;
+  min-height: 0;
+  zoom: 1;
+}
+
+.landing-chat-scene .gx-chat {
+  width: 100%;
+  height: 340px;
+  padding: 14px;
+  border: 0;
+  background: transparent;
+}
+
+.landing-otp-scene {
+  padding: 0;
+  min-height: 0;
+  zoom: 1;
+}
+
+.landing-otp-scene .gx-otp-scene {
+  min-height: 0;
+  padding: 0;
+}
+
+.landing-grid-tile-chat {
+  padding: 8px;
+}
+
+.landing-grid-tile-demo .gx-chat {
+  border: 0;
+  background: transparent;
+}
+
+.landing-chat-scene .gx-chat-messages {
+  scrollbar-width: none;
+}
+
+.landing-chat-scene .gx-chat-messages::-webkit-scrollbar {
+  display: none;
+}
+
+/* The radar is geometry on the tile, not a card inside a card. */
+.landing-grid-tile-chart .gx-dchart-cell {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+/* Toast presses: four actions sharing one row. */
+.landing-grid-tile-toast {
+  gap: 10px;
+}
+
+.landing-mini-toast-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Toasts are page furniture: a fixed viewport, never a tile footer. */
+.landing-page-toasts {
+  position: fixed;
+  right: 24px;
+  bottom: 36px;
+  max-height: calc(100dvh - 72px);
+  z-index: 90;
+  display: flex;
+  justify-content: flex-end;
+  width: min(356px, calc(100vw - 48px));
+  pointer-events: none;
+}
+
+.landing-page-toasts .gx-toast-stack {
+  width: min(356px, 100%);
+}
+
+/* The currency menu floats: opening it must not grow the tile. */
+.landing-grid-tile-select {
+  overflow: visible;
+  z-index: 15;
+}
+
+.landing-mini-select-wrap {
+  position: relative;
+}
+
+.landing-mini-select-wrap .landing-mini-options {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  left: 0;
+  z-index: 25;
+}
+
+/* The trigger shows the colour as a ringed disc. */
+.landing-mini-picker .gx-cp-chip {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--line);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 18%);
+}
+
+.landing-mini-picker .gx-cp-panel-slot {
+  right: auto;
+  left: 0;
+}
+
+/* A warning or an error is marked by its icon and edge, not a tinted card. */
+.landing-page-toasts .gx-toast-card {
+  border-color: var(--border);
+  background: var(--popover);
+}
+
+.landing-page-toasts .gx-toast-glyph {
+  color: var(--muted-foreground);
+}
+
+.landing-page-toasts .gx-toast-warning {
+  border-color: var(--toast-tone);
+}
+
+.landing-page-toasts .gx-toast-warning .gx-toast-glyph {
+  color: var(--toast-tone);
+}
+
+.landing-page-toasts .gx-toast-danger {
+  border-color: var(--toast-tone);
+}
+
+.landing-page-toasts .gx-toast-danger .gx-toast-glyph {
+  color: var(--toast-tone);
+}
+
+/* macOS puts its lights on the left of the bar, as the window does. */
+.landing-mini-titlebar[data-platform="macos"] {
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.landing-mini-titlebar .landing-mini-lights i {
+  width: 10px;
+  height: 10px;
+}
+
+/* A picture sent in the thread reads as an attachment, not as chrome. */
+.gx-chat-image {
+  display: block;
+  width: 100%;
+  max-width: 230px;
+  height: auto;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+/* The rating reads as one line: the stars and their value. */
+.landing-grid-tile-rating {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.landing-grid-tile-rating .landing-mini-foot {
+  margin: 0;
+}
+
+/* The Nen field reads as one line: the label and its control. */
+.landing-grid-tile-select {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.landing-grid-tile-select .landing-mini-label {
+  flex: none;
+}
+
+/* Charts enter once, the first time the reader scrolls to them. */
+.landing-chart[data-inview] .gx-dchart-plot {
+  animation: landing-chart-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes landing-chart-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.landing-footer-end {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+/* A tab switch is a panel change, so the panel announces itself. */
+.landing-mini-note {
+  animation: landing-tab-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes landing-tab-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The registry install line: short, mono and coloured by token role. */
+.landing-grid-tile-code {
+  gap: 10px;
+}
+
+.landing-code-command {
+  display: block;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-soft);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.6;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.landing-code-command [data-token="cmd"] {
+  color: var(--landing-code-cmd);
+}
+
+.landing-code-command [data-token="pkg"] {
+  color: var(--landing-code-pkg);
+}
+
+.landing-code-command [data-token="verb"] {
+  color: var(--landing-code-verb);
+}
+
+.landing-code-command [data-token="name"] {
+  color: var(--landing-code-name);
+}
+
+/* The picker floats over the masonry. Without this, the multi-column flow
+   fragments the open panel across columns. */
+.landing-mini-picker .gx-cp-anchor {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+/* The terminal starts directly under the gallery. */
+#terminal {
+  border-top: 0;
+}
+
+/* The picker's open panel is portalled out of the masonry, so the columns
+   cannot fragment it. */
+.gx-cp-panel-portal {
+  position: absolute;
+  z-index: 120;
+}
+
+/* The gallery and the terminal read as one run, not two padded sections. */
+#dashboard {
+  padding-bottom: 12px;
+}
+
+#terminal {
+  padding-top: 32px;
+}
+
+/* The picker tile is a plain tile, not a preview scene. */
+.landing-grid-tile-picker .gx-demo {
+  background-color: transparent;
+  background-image: none;
 }

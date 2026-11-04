@@ -50,7 +50,7 @@ Tabs
 | `onValueChange` | `(value: string) => void` | none |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` — a stored name the union does not carry |
 | `activation` | `"automatic" \| "manual"` | `"automatic"` — a stored name the union does not carry |
-| `className` | `string` — joined after the root recipe | — |
+| `className` | `string` | — |
 | `children` | parts — `TabsList`, `TabsContent` | — |
 
 ### TabsList
@@ -58,7 +58,7 @@ Tabs
 | Prop | Type | Default |
 | ---- | ---- | ------- |
 | `label` | `string` | none |
-| `className` | `string` — joined after the rail recipe | — |
+| `className` | `string` | — |
 | `children` | parts — `TabsTrigger` | — |
 
 ### TabsTrigger
@@ -68,10 +68,10 @@ Tabs
 | `value` | `string` (required) | none |
 | `disabled` | `boolean` | `false` |
 | `style` | `StyleDesc \| (state) => StyleDesc` | none |
-| `className` | `string` — joined after the trigger recipe | — |
+| `className` | `string` | — |
 
 ## Limitations
 
-- `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are exposed; the roving tab index is the single-stop pattern.
-- **No `aria-orientation`, `aria-controls` or `aria-labelledby`** in `@gpuix/native@0.11.0`.
-- The list owns the keys because a key event on a focused trigger bubbles to the list.
+- `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are exposed.
+- **No `aria-orientation`, `aria-controls` or `aria-labelledby`**.
+- The list owns the keys; a key event on a focused trigger bubbles to it.

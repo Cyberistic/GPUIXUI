@@ -7,27 +7,25 @@ description: A token editor, the authored looks, and the CSS they compile to.
 
 ## Reading the audit
 
-One line per finding, with the ratio and the floor it had to reach:
-`mutedForeground on muted — 3.90:1 (needs 4.5:1)`. **Unmeasurable** means the
-contrast cannot be computed, because a colour is translucent or a wash is
-composited, rather than that it passed; the prefix names the report it came from.
+One line per finding: `mutedForeground on muted — 3.90:1 (needs 4.5:1)`.
+**Unmeasurable** means the contrast cannot be computed — a translucent colour or
+a composited wash — not that it passed; the prefix names the report it came from.
 
-A switch is measured on its box as well as its colours:
+A switch is measured on its box too:
 `switch height — 22 cannot hold a knob that needs 32`, and
 `switch width — 0 cannot be laid out (needs a size greater than zero)`.
 
-Edits are stored per mode over the platform style the sidebar selected, so a
-switch of platform re-bases the audit while your edits stay. **Reset** clears
-them and **Copy theme** prints the resolved module. A browser that refuses site
-storage keeps the editor and the URL, because the edit is also in the link.
+Edits are stored per mode over the selected platform style, so switching
+platform re-bases the audit and your edits stay. **Reset** clears them;
+**Copy theme** prints the resolved module. A browser that refuses site storage
+keeps the editor and the URL.
 
 ## The looks
 
 <LookPicker />
 
-A platform style is one of the four variants of the identity; an authored look is
-a style applied over one. The picker writes its choice to the URL (`?look=aero`)
-and the sidebar switch keeps offering the four platforms.
+A platform style is one of four identity variants; an authored look applies a
+style over one. The picker writes `?look=aero` to the URL.
 
 ### Windows 7
 
@@ -44,6 +42,3 @@ and the sidebar switch keeps offering the four platforms.
 ### Spacing, radius and density
 
 <TokenScales />
-
-Both tables are `classesToStyle`'s answer for the theme the switch selected, so
-every number is the one this release paints.

@@ -175,6 +175,8 @@ component call sites adopt the outline in their own workstream.
 | ---- | ----- | ----- | ---------- | ------ |
 | [440](./440-live-gpuix-web-surface.md) | A live GPUix surface in the docs site: the wasm browser build, cross-origin isolation, one mount per page load | F | `203` (capability record), the docs deploy middleware | **implemented** — `/live` boots the wasm build and mounts the screen through `@gpuix/react`'s reconciler; `live-surface-probe` and `live-route-probe` measured it, `src/lib/live-surface.test.ts` and `src/lib/gpuix-web.test.ts` hold the screen, the mount, the isolation and the policy together. `render()` is not used because it installs Node error handlers against a browser `process` shim; `createRoot` is. §6 records the outcome and the two browser-build gaps |
 
+| [750](./750-docs-prose-pass.md) | Docs prose pass, terminal and Omarchy guides | F | the page contracts in `apps/docs/src/lib` | **done** — seven page sets cut to `docs/VOICE.md`; `/platform/terminal` and `/getting-started/omarchy` shipped |
+
 > The earlier phase-E docs plans (`433` platform recipes, `435a–c`
 > Pele / Editor / RTL) are listed in the reference-adoption table above; they
 > share this block but were numbered before the docs-site section existed.
@@ -245,6 +247,7 @@ Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` �
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [610](./610-tier3-data.md) | Tier 3 data presentation: the `@gpuixui/data` package | D | components, primitives, tw, tokens, motion | done — phases 1–7, 3b, the selection column and the windowed tree landed |
+| [751](./751-native-charts.md) | Native charts: types, styling and the chart page | D | `@gpuixui/data` charts, tokens series | **landed** — area, pie, radar and radial types, signed/horizontal bars, grid, hover readout and a page per type |
 
 ### Media
 

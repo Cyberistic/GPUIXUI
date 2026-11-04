@@ -96,8 +96,10 @@ describe("the pinned runtime", () => {
       versionMentions(source),
     );
 
-    // Seven pages name it today; the floor only proves the scan is matching.
-    expect(mentions.length).toBeGreaterThan(4);
+    // The pages name the pin once, on the reference page: the component pages
+    // state a limit as a fact instead of dating it, so the scan is proven alive
+    // rather than kept busy.
+    expect(mentions.length).toBeGreaterThan(0);
     expect([...new Set(mentions)]).toEqual([nativePin]);
   });
 

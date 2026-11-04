@@ -19,12 +19,14 @@ Every page is an MDX file; the paths below are relative to `content/docs/`.
 ```
 introduction.mdx             Introduction (served at /introduction)
 getting-started/index.mdx    The guide: install, the first component, the four rules, the theme, where next
+getting-started/omarchy.mdx  Developing on Arch/Hyprland, and following the Omarchy palette
 getting-started/prompt.mdx   One copyable build prompt, generated from the pages the site ships
-diagrams.mdx                 Mermaid diagrams at build time, themed from the page's roles
+diagrams.mdx                 Mermaid fences at build time plus the mermaidcn renderer, zoom/pan and playground on Pele
 themes.mdx                   The live token editor, the authored looks, the Aero look's generated CSS, and the compiled style/type/scale references
 workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
 platform/index.mdx            The native surface: what the OS owns and what the library paints
 platform/native-window.mdx    The native window: a sidebar under the lights, a unified toolbar
+platform/terminal.mdx         The same view painted into kitty or Ghostty
 platform/window.mdx           The window's verbs and the system's path picker
 data-display/index.mdx      The data lane: what ships, the table gate, runtime gaps
 registry.mdx                 The shadcn registry: install command and what the files still need
@@ -131,12 +133,19 @@ src/components/landing/blocks-strip.tsx The block tiles, each linking to its pag
 src/components/landing/deck.tsx     The three-desktop deck and the Omarchy strip under it
 src/components/landing/reduced-motion.ts The one prefers-reduced-motion query both moving surfaces read
 src/components/landing/data.ts      The landing page's content, as data
+src/components/landing/lineage.tsx The maker line and its provenance note
+src/components/landing/showcase.tsx The product grid: small working components
+src/components/landing/css-rules.ts Reading the landing's own CSS rules, for its layout guards
+src/components/landing/terminal.tsx The terminal frame the launch film types into
 src/components/not-found.tsx        The 404 inside the docs chrome
 src/components/skip-link.tsx        The site's first tab stop and the content id it targets
 
 src/components/docs/component-preview.tsx The Preview/Code component preview
 src/components/docs/preview-surface.tsx   A preview carrying the resolved theme's variables
 src/components/docs/demos.tsx             The browser renderings and their source strings
+src/components/docs/editor-tabs-preview.tsx The editor tab strip's browser drawing
+src/components/docs/reorderable-tabs-logic.ts The reorder gesture, its placement maths and its two exits
+src/components/docs/reorderable-tabs.tsx   The reorderable tab strip, over that logic
 src/components/docs/bubble-demo.tsx        The seven surfaces, joined corners and action strip
 src/components/docs/chat-demo.tsx          The chat block: fixed header, transcript, rail and composer
 src/components/docs/empty-state-demo.tsx   The empty panel's three shapes
@@ -327,6 +336,14 @@ src/components/docs/kanban-board.tsx      The kanban board's reproduction, colum
 src/components/docs/settings-dialog.tsx   The settings dialog's reproduction, theme state and controls
 src/components/docs/pipeline-block.tsx   The pipeline's preview, from the compiled block's data and rules
 src/components/docs/mermaid.ts          Rendering Mermaid with Pele, and the role mapping
+src/components/mermaidcn/Mermaid.tsx    The Mermaid figure, drawn through Pele
+src/components/mermaidcn/MermaidEditor.tsx The source editor and its live preview
+src/components/mermaidcn/MermaidExample.tsx A worked diagram beside its source
+src/components/mermaidcn/MermaidPlayground.tsx The playground composing editor, figure and templates
+src/components/mermaidcn/ZoomPan.tsx    The zoom and pan viewer around a figure
+src/components/mermaidcn/templates.ts   The starter diagrams the playground offers
+src/components/mermaidcn/theme.ts       The Mermaid palette, read from the page's roles
+src/components/mermaidcn/zoom.ts        The zoom and pan arithmetic
 src/components/docs/mermaid-diagram.tsx A diagram's frame, its caption and its refusal
 src/components/docs/prompt-page.tsx     The prompt printed as one string, with one copy action
 src/components/docs/notification-centre.tsx The notification centre's rows, filters and mark-read state
@@ -411,6 +428,7 @@ src/styles/blocks.css                     The block recipes' preview styles
 src/styles/landing.css                    The landing page's styles
 src/styles/platform.css                   The platform switch's own chrome
 src/styles/live.css                       The live surface's bar and its fallback sentence
+src/styles/mermaidcn.css                  The Mermaid editor and viewer chrome
 
 src/lib/docs-view.tsx               The shared docs layout and the two-collection page template
 src/lib/style-reference.ts          The class groups /themes prints, resolved by @gpuixui/tw

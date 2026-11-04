@@ -61,11 +61,11 @@ Pagination
 | ---- | ---- | ---- | ------- | ----------- |
 | `Pagination` | `page` | `number` (required) | — | the current page, 1-based; clamped into `[1, pageCount]` |
 | `Pagination` | `pageCount` | `number` (required) | — | pages that exist; zero or fewer renders nothing |
-| `Pagination` | `onPageChange` | `(page: number) => void` (required) | — | a step or a page press; the app owns the value |
+| `Pagination` | `onPageChange` | `(page: number) => void` (required) | — | a step or a page press |
 | `Pagination` | `siblingCount` | `number` | `1` | pages shown either side of the current one |
 | `Pagination` | `showEdges` | `boolean` | `true` | keep the first and last page visible |
 | `Pagination` | `children` | parts | — | `PaginationPrevious`, `PaginationList`, `PaginationNext` |
-| `PaginationItem` | `page` | `number` (required) | — | the page this button goes to; the item outside the list reads the root's page |
+| `PaginationItem` | `page` | `number` (required) | — | the page this button goes to |
 | `PaginationItem` | `style` | `StateStyle<PaginationItemState>` | recipe | a style or a function of `{ active }` |
 | `PaginationPrevious` / `PaginationNext` | — | — | — | step by one; disabled at their end |
 | `PaginationList` / `PaginationEllipsis` | `className` | `string` | — | an extra recipe class, joined last |
@@ -73,5 +73,5 @@ Pagination
 ## Limitations
 
 - The root is `role="navigation"` named `Pagination`; page buttons are labelled `Page N`.
-- **No `aria-current="page"`** in 0.11.0: the current page uses `aria-selected` and the primary fill.
-- Controlled only: the result set and the page live together.
+- **No `aria-current="page"`**: the current page uses `aria-selected` and the primary fill.
+- Controlled only: pass `page` and update it from `onPageChange`.

@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
+import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
+import { rulesFor, widthInPixels } from "./css-rules";
 import { Hero, nextDesktop } from "./deck";
 import { omarchyCards, platforms } from "./data";
 
@@ -154,13 +156,12 @@ describe("the landing deck", () => {
       "background: var(--bg-soft)",
     );
     expect(rule(".landing-omarchy-body")).toContain("color: var(--muted)");
-    expect(rule(".landing-omarchy-note")).toContain("color: var(--dim)");
     expect(rule(".landing-omarchy-cards")).toContain("repeat(4, 1fr)");
   });
 
-  it("says the Omarchy look re-applies with the desktop's theme", () => {
-    expect(markup).toContain('class="landing-omarchy-note"');
-    expect(markup).toContain("omarchy-theme-set");
+  it("leaves the Omarchy claim to the deck's own cards", () => {
+    expect(markup).not.toContain('class="landing-omarchy-note"');
+    expect(markup).not.toContain("omarchy-theme-set");
   });
 
   it("drops the hunter-licensing chat it used to draw", () => {
@@ -190,8 +191,23 @@ describe("the landing deck", () => {
     expect(nextDesktop(2)).toBe(0);
     // The fan has three slots; the fourth desktop's slot is gone.
     expect(rule('.landing-deck .landing-window[data-pos="2"]')).toContain(
-      "scale(0.91)",
+      "scale(0.92)",
     );
     expect(rule('.landing-deck .landing-window[data-pos="3"]')).toBe("");
+  });
+
+  it("narrows the hero's people list, and only the hero's", () => {
+    // The block's people list is 330px, which is right for a block page but
+    // took nearly half the hero's window and squeezed the thread beside it
+    // into a column of stubs. The hero is showing the conversation, so the
+    // list is a reference there and narrower.
+    const hero = rule(".landing-desktop-stage .gx-conv-side");
+    const width = Option.getOrNull(widthInPixels(hero));
+    expect(width).not.toBeNull();
+    expect(width ?? Number.POSITIVE_INFINITY).toBeLessThan(330);
+
+    // The block page keeps its own width: the landing's override is scoped to
+    // the deck's stage, so no bare `.gx-conv-side` rule leaks out of here.
+    expect(rulesFor(css, ".gx-conv-side")).toEqual([]);
   });
 });

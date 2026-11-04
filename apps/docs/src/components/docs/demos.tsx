@@ -2447,7 +2447,7 @@ export const AccountFields = () => (
   </>
 );`;
 
-interface PreviewToast {
+export interface PreviewToast {
   readonly id: string;
   readonly title: string;
   readonly description?: string;
@@ -2500,8 +2500,10 @@ export const toastStackSlot = (
 };
 
 /** How many cards newer than the one at `index` are still live. */
-const rankAt = (entries: ReadonlyArray<PreviewEntry>, index: number): number =>
-  entries.slice(index + 1).filter((entry) => !entry.leaving).length;
+export const rankAt = (
+  entries: ReadonlyArray<{ readonly leaving: boolean }>,
+  index: number,
+): number => entries.slice(index + 1).filter((entry) => !entry.leaving).length;
 
 /** A 24px status glyph, tinted by `currentColor`; the tone colours it. */
 const ToastGlyph = ({ children }: { readonly children: ReactNode }) => (
@@ -2562,7 +2564,7 @@ interface PreviewEntry {
  * itself and the slot gets that number, so the peek is a tween like every other
  * move in the stack; a leaving card closes to nothing.
  */
-const ToastCardPreview = ({
+export const ToastCardPreview = ({
   toast,
   leaving,
   slot,
@@ -2653,7 +2655,7 @@ const ToastCardPreview = ({
  * store's `pause`/`resume` with `setTimeout` because the DOM shim owns its own
  * clock. `seed` pre-fills the tone comparison.
  */
-const useToastPreview = (
+export const useToastPreview = (
   seed: ReadonlyArray<Omit<PreviewToast, "id">> = [],
   startExpanded = false,
 ) => {

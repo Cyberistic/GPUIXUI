@@ -1,18 +1,10 @@
 ---
 title: Preferences
-description: "A System-Settings-style window: a searchable source list of panes and a pane built from inset groups."
+description: "A System Settings window: a searchable pane list and inset-group settings."
 ---
 
 <BlockPreview name="preferences-01" />
 
-Run it natively:
-
-```sh
-nub run --filter @gpuixui/blocks dev -- preferences
-```
-
 ## Composition
 
-`Preferences` in `@gpuixui/blocks/preferences`, inside the shell's native window where it has one:
-a `SearchInput` over the panes' `SourceList`, and `InsetGroup` rows of `Switch`, `SegmentedControl` and `Select`. Its rules are pure and tested in `examples/blocks/src/mac-blocks.logic.test.ts`,
-and its primary interaction runs on the real renderer in `src/mac-blocks.test.tsx`.
+`Preferences` in `@gpuixui/blocks/preferences`: a `SearchInput` over the panes' `SourceList`, and `InsetGroup` rows of `Switch`, `SegmentedControl` and `Select`.

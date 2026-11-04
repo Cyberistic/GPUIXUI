@@ -6,7 +6,16 @@ with resizing, the virtualized list over the runtime's own `<virtual-list>`, the
 virtualized table that composes it with a fixed header, the **tree** with its
 expansion and cursor model, the **windowed tree** that retains one window of a
 hierarchy, the **expandable table row** that opens a detail panel under itself,
-the **charts** (bar, stacked, line, donut and sparkline, one tinted `<svg>` mask
+the **charts** (bar — vertical or horizontal, negative values, value labels —,
+stacked — with a `percent` mode —, line — linear/smooth/step, dots, dashed —,
+area — stacked, with a faded fill —, pie, donut, radar, radial, composed
+(bars and lines on one axis) and sparkline,
+icon dots on line and radar points, outside pie labels with leader lines, an
+optional data-change tween (`animate`), per-point readouts (`pointTooltip`) and
+a brushed category window (`domain`, with a drag strip), icon rows in the
+readout, continuous zoom/pan
+(`view` / `zoom`), one
+tinted `<svg>` mask
 per series), and the **data surfaces** (a key-value list, a statistic card, a
 property panel, a toolbar and the advanced filter's predicate tree), and the
 **frozen column** — two panes mirrored into one scroll (`FrozenTable`).

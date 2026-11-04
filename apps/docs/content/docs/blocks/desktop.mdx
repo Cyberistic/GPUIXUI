@@ -7,26 +7,8 @@ description: A whole XP-era or Aero-era desktop, from the library
 
 ## Composition
 
-The block is `DesktopBlock({ look })` in `@gpuixui/blocks/desktop`, with `look`
-either `"luna"` or `"aero"`:
+`DesktopBlock({ look })` in `@gpuixui/blocks/desktop`, with `look` `"luna"` or `"aero"`:
 
-- the windows' contents are library components (`Tabs`, `Checkbox`, `Slider`,
-  `Button`, `Text`, `Icon`) under `retroTheme(lightTheme, look)`. The look restyles
-  them; the recipe sets no colours of its own inside a window;
-- the chrome — title bars, caption buttons, the taskbar, the Start button and menu —
-  is drawn in each era's own values, and the wallpaper is drawn from shapes. No
-  artwork, logo or icon of the era is copied: the Start button wears the Gon mark;
-- a press on Start opens the menu, a press on a taskbar button brings its window to
-  the front, and a press on the desktop closes the menu.
-
-## What the runtime decides
-
-- **Gloss is stacked layers.** The runtime paints two-stop linear gradients, so a
-  title bar's shine is a second translucent gradient over the first.
-- **Aero glass is a translucent fill.** There is no per-element blur (only the
-  window backdrop blurs), so the glass shows the wallpaper through a tinted fill
-  with a sheen rather than blurring it.
-- **Paint order is tree order.** There is no `zIndex` in the published API, so the
-  windows render back to front, then the taskbar, then the open menu.
-- **A press stops at the first painted element.** The catcher that closes the menu
-  is a full-size element with a fully transparent fill over the wallpaper.
+- window contents are `Tabs`, `Checkbox`, `Slider`, `Button`, `Text` and `Icon` under `retroTheme`
+- the chrome — title bars, caption buttons, the taskbar, the Start button and menu — is drawn in each era's own values, over a shaped wallpaper
+- Start opens the menu, a taskbar press raises its window, a desktop press closes the menu

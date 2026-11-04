@@ -64,13 +64,11 @@ Card
 | `elevated` | none | `elevation.sm` |
 | `plain` | none | none |
 
-All three paint the `card` fill and a fixed 8px corner (`rounded-lg`), so a
-platform's `radius` and density do not reshape a card. `outline` spells its edge
-`border-input`, which this library compiles to the `border` role — `input` is the
-fill a field paints, not an edge.
+All three paint the `card` fill and a fixed 8px corner; `outline` edges in
+`border-input`, compiled to `border`.
 
 ## Limitations
 
 - `CardTitle` renders a `<text>` with `role="heading"` and `aria-level={3}`.
-- A card is not a landmark and has no role, name or `aria-*` state of its own.
-- The surface clips overflow, so a scrolling body belongs in `CardContent` with its own height, not in a card that grows with its rows.
+- A card is not a landmark: no role, name or `aria-*` state.
+- The surface clips overflow: a scrolling body needs its own height in `CardContent`.

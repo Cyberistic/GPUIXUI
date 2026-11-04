@@ -44,7 +44,8 @@ describe("the landing's copy", () => {
   });
 
   it("names the one-codebase claim and drops the stack caption", () => {
-    expect(lineage).toContain("Write once, run everywhere.");
+    expect(lineage).toContain("Build once, run on the GPU everywhere");
+    expect(lineage).toContain("blazingly fast btw");
     expect(lineage).toContain("Terminal");
     expect(lineage).not.toContain("shadcn/ui composition, Base UI behaviour");
   });
@@ -54,12 +55,22 @@ describe("the landing's copy", () => {
     expect(code).toContain("It&#x27;s just shadcn!");
   });
 
-  it("asks the dashboard to be a native app, with no preview switch", () => {
-    expect(dashboard).toContain("Build native-looking apps.");
+  it("shows the shipped components as one grid, with no preview switch", () => {
+    expect(dashboard).toContain("All the components you need");
+    expect(dashboard).toContain("Point your agent at");
+    expect(dashboard).toContain('href="/llms.txt"');
+    expect(dashboard).toContain("landing-grid");
     expect(dashboard).not.toContain("Choose platform");
     expect(dashboard).not.toContain(
       "Browser preview of the native composition",
     );
+  });
+
+  it("credits the maker in the footer", () => {
+    const source = read("landing.tsx");
+    expect(source).toContain("Made with ☕ by");
+    expect(source).toContain('href="https://sudokw.com"');
+    expect(source).toContain("@sudo_kw");
   });
 
   it("draws the navbar mark from the monotone outline", () => {
