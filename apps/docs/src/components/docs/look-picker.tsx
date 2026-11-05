@@ -6,12 +6,12 @@ import { usePlatform } from "./platform-toggle";
  *
  * The sidebar switch is the mission's platform toggle — the four platform
  * names, no look group, because a look is not a fifth platform. This picker is
- * the page's own control: it writes the look into the URL (`?look=luna`) and
- * the provider applies `retroStyles` over whichever platform is showing, so the
- * specimens beside it repaint in a real library style rather than a docs skin.
- * A link carries the choice, and the store remembers it; pressing a platform in
- * the sidebar clears it, because a look fixes the palette, radii and density
- * and the press would otherwise move only its label.
+ * the page's own control: it sets the look in the app's state and the provider
+ * applies `retroStyles` over whichever platform is showing, so the specimens
+ * beside it repaint in a real library style rather than a docs skin. The store
+ * remembers the choice for the next visit; pressing a platform in the sidebar
+ * clears it, because a look fixes the palette, radii and density and the press
+ * would otherwise move only its label.
  */
 export function LookPicker() {
   const { look, setLook, theme } = usePlatform();
@@ -27,7 +27,7 @@ export function LookPickerBody({
   onSelect,
   themeName,
 }: {
-  /** The look the URL carried, resolved against the platform's theme. */
+  /** The look the app's state carries, resolved against the platform's theme. */
   readonly look: LookName;
   readonly onSelect: (look: LookName) => void;
   /** The theme name the provider resolved, e.g. `Dark · macOS · Windows XP (Luna)`. */

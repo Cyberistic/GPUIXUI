@@ -823,10 +823,10 @@ sampled `#0e5135` with "Pressed 1 time" — a React tree, a real press.
 Default — the mission's four platform names and **no look group**, because a look
 is not a fifth platform. `src/lib/platform.ts` resolves
 `platformTheme(themes[mode], platform)`; a look is applied over it because the
-authored styles are library data: `?look=luna`, `?look=aero` or `?look=omarchy`
-resolves `retroStyles` (**Windows XP (Luna)**, **Windows 7 (Aero)**, **Omarchy**)
-through `applyStyle`. The choice is carried in
-`?platform=…&mode=…&look=…` and remembered in local storage, and every preview
+authored styles are library data: Luna, Aero or Omarchy resolves `retroStyles`
+(**Windows XP (Luna)**, **Windows 7 (Aero)**, **Omarchy**) through `applyStyle`.
+The choice lives in the app — React for the page and local storage for the next
+visit — so the URL names the page and nothing else. Every preview
 renders on a `PreviewSurface` that applies the resolved theme's variables,
 `data-platform`, `data-mode` and `data-look`. A preview therefore paints the
 library's roles, radii, families and density, not a docs palette. `/themes`
@@ -878,8 +878,8 @@ fixed.
 
 Every docs page publishes its own document metadata: the frontmatter `title`
 with the site name, its `description`, an Open Graph and Twitter card, and a
-canonical link. The canonical drops the `?platform=` and `?look=` switches, so
-the variants are one page to a crawler and shareable links to a reader.
+canonical link. The canonical is the page's own absolute URL: the preview
+switch is not a query string, so there is nothing to strip for a crawler.
 `src/lib/page-meta.ts` builds it; `docs-view.tsx` returns the page's title and
 description from the loader, so both collections — the site's pages and the
 package's — get real metadata without a copy. The landing page is a route rather
@@ -960,9 +960,9 @@ What stays server-rendered is what a static document cannot be:
 
 Nothing interactive moves to the server with it: the preview switch, the search
 dialog, the copy buttons and the playground all run in the browser after the
-prerendered HTML hydrates, exactly as they did after an SSR response. A choice
-carried in `?platform=` is applied by the client, so a shared link still opens on
-the platform it asked for.
+prerendered HTML hydrates, exactly as they did after an SSR response. The
+switch's remembered choice is applied by the client, so a reader's last platform
+survives the prerendered HTML.
 
 `vite build` clears `dist/` before it writes, so a prerendered file can never
 outlive the page it renders. Serving a stale `dist/` by hand is the one way to

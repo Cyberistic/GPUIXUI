@@ -3,7 +3,8 @@
  *
  * The site has two palettes that must never be confused: the docs chrome reads
  * its own `:root`/`.dark` values from `app.css`, while a component preview
- * paints the library's theme and follows only the `?mode=`/`?platform=` axes.
+ * paints the library's theme and follows only the switch's palette and
+ * platform axes.
  * `docs-theme.test.ts` measures the chrome's pairs and `palette-switch-probe.ts`
  * the preview axes, but the **press** is React state in next-themes: no static
  * read proves that pressing the toggle moves `<html>` from one scheme to the

@@ -3,6 +3,7 @@ import { platformNames, platformTheme, themes } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import {
   expectedHeight,
+  namesSwitchAxis,
   parseSurface,
   platformGroup,
   steps,
@@ -11,12 +12,12 @@ import {
 /**
  * The platform switch is the mission's reading test — "a reader toggles macOS
  * -> Windows and every preview changes" — and both halves need holding. The
- * **state** half is `platform.test.ts` (the query parameter, the order, the
- * labels and the storage); the **press** half is React in a browser, which a
- * server-rendered `?platform=` capture does not prove.
+ * **state** half is `platform.test.ts` (the order, the labels and the storage);
+ * the **press** half is React in a browser.
  * `apps/docs/scripts/platform-switch-probe.ts` presses the group on a hydrated
- * page and reads each surface's platform, its control height and the URL; this
- * file holds the probe, the switch markup and the policy together.
+ * page and reads each surface's platform, its control height and the button the
+ * group reports pressed; this file holds the probe, the switch markup and the
+ * policy together.
  */
 
 const root = new URL("../../../../", import.meta.url);
@@ -29,11 +30,11 @@ const policy = read("docs/preview-strategy.md");
 
 describe("the platform switch's readout", () => {
   it("reads the four fields the probe asserts on", () => {
-    expect(parseSurface("win32|dark|32px|?platform=win32")).toEqual({
+    expect(parseSurface("win32|dark|32px|Windows")).toEqual({
       platform: "win32",
       mode: "dark",
       height: "32px",
-      search: "?platform=win32",
+      pressed: "Windows",
     });
   });
 
@@ -57,10 +58,6 @@ describe("the platform switch's readout", () => {
   it("presses the two platforms the acceptance names, in order", () => {
     expect(steps.map((step) => step.label)).toEqual(["Windows", "macOS"]);
     expect(steps.map((step) => step.platform)).toEqual(["win32", "darwin"]);
-    expect(steps.map((step) => step.query)).toEqual([
-      "platform=win32",
-      "platform=darwin",
-    ]);
     expect(platformNames).toContain(steps[0]?.platform);
     expect(platformNames).toContain(steps[1]?.platform);
   });
@@ -82,7 +79,19 @@ describe("the switch's press path", () => {
     expect(probe).toContain("--control-height-md");
     expect(probe).toContain("data-platform");
     expect(probe).toContain("all.length");
-    expect(probe).toContain("includes(step.query)");
+    expect(probe).toContain("namesSwitchAxis(search)");
+  });
+});
+
+describe("the URL the switch leaves behind", () => {
+  it("names no switch axis", () => {
+    expect(namesSwitchAxis("")).toBe(false);
+    expect(namesSwitchAxis("?q=dialog")).toBe(false);
+    expect(namesSwitchAxis("?scene=parity&only=bar")).toBe(false);
+    expect(namesSwitchAxis("?platform=win32")).toBe(true);
+    expect(namesSwitchAxis("?theme=dark&mode=light")).toBe(true);
+    expect(namesSwitchAxis("?appearance=light")).toBe(true);
+    expect(namesSwitchAxis("?look=luna")).toBe(true);
   });
 });
 

@@ -8,15 +8,8 @@ import {
   liveRestingFill,
   LiveScene,
 } from "@/lib/live-scene";
-import {
-  lookFromSearch,
-  platformFromSearch,
-  resolvePlatformTheme,
-} from "@/lib/platform";
-import {
-  browserChoiceStorage,
-  readRememberedChoice,
-} from "@/lib/platform-storage";
+import { resolvePlatformTheme } from "@/lib/platform";
+import { browserChoiceStorage, openingChoice } from "@/lib/platform-storage";
 import { mainContentId } from "@/components/skip-link";
 
 /**
@@ -127,14 +120,8 @@ const report = (lines: ReadonlyArray<string>): void => {
   if (out !== null) out.textContent = lines.join("\n");
 };
 
-const platformOf = () => {
-  const search = window.location.search;
-  const remembered = readRememberedChoice(browserChoiceStorage());
-  return {
-    platform: platformFromSearch(search) ?? remembered.platform,
-    look: lookFromSearch(search) ?? remembered.look,
-  };
-};
+/** The choice the docs switch remembers: the store, then detection. */
+const platformOf = () => openingChoice(browserChoiceStorage());
 
 /** The renderer appends its canvas a frame after `init()`, so wait for it. */
 const awaitCanvas = async (): Promise<HTMLCanvasElement | undefined> => {

@@ -1,13 +1,12 @@
 /**
  * Prove the palette switch changes what a hydrated preview paints.
  *
- * The platform switch is measured in the server-rendered HTML (`?mode=light`
- * reaches the surface), but a reader changes it by pressing a button: the press
- * path is React state, and a capture of the markup proves nothing about it. This
- * probe presses the sidebar's **Palette** group on a curated component page and
- * reads the consequence off every preview surface — its `data-mode`, the
- * `--background` variable the bridge wrote, the group's pressed position and the
- * address bar a link would carry.
+ * A reader changes the palette by pressing a button: the press is React state,
+ * so a capture of the markup proves nothing about it. This probe presses the
+ * sidebar's **Palette** group on a curated component page and reads the
+ * consequence off every preview surface — its `data-mode`, the `--background`
+ * variable the bridge wrote, and the group's pressed position — then requires
+ * the address bar to carry none of the switch's axes.
  *
  * It first presses **before** the page content hydrates, while the switch is
  * still disabled, and requires the press to be refused: a press in that window
@@ -28,6 +27,7 @@ import {
 } from "@gpuixui/tokens";
 import { findChrome, openChrome } from "./chrome-session.ts";
 import { firstReady, propsOfScript } from "./react-ready.ts";
+import { namesSwitchAxis } from "./platform-switch-probe.ts";
 
 /** The page a preview server serves, and the switch every docs page carries. */
 export const defaultUrl = "http://localhost:4175/components/button";
@@ -37,33 +37,26 @@ export const paletteGroup = "Preview palette";
 
 /**
  * What every preview surface reports at one instant: the palette and platform
- * it resolved, the page fill the bridge wrote, the pressed button and the
- * address bar.
- *
- * The platform is read from the surface rather than from the URL, because the
- * provider writes the address bar in the same commit that sets the state: a
- * read between the two would pair one platform with another's paint.
+ * it resolved, the page fill the bridge wrote, and the pressed button.
  */
 export interface Surface {
   readonly mode: string;
   readonly platform: string;
   readonly background: string;
   readonly pressed: string;
-  readonly search: string;
 }
 
 /** Read the probe's one-line readout; `undefined` when it is not one. */
 export const parseSurface = (text: string): Surface | undefined => {
-  const [mode, platform, background, pressed, search] = text.split("|");
+  const [mode, platform, background, pressed] = text.split("|");
   if (
     mode === undefined ||
     platform === undefined ||
     background === undefined ||
-    pressed === undefined ||
-    search === undefined
+    pressed === undefined
   )
     return undefined;
-  return { mode, platform, background, pressed, search };
+  return { mode, platform, background, pressed };
 };
 
 /** A platform the library names, or `undefined` for a value it does not. */
@@ -89,7 +82,6 @@ const readSurfaces = `(() => {
     first?.getAttribute("data-platform") ?? "none",
     (first?.style.getPropertyValue("--background") ?? "").trim(),
     pressed,
-    location.search,
   ].join("|");
 })()`;
 
@@ -191,11 +183,11 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       (await until(
         () => session.page.text(readSurfaces),
         (text) => {
-          const search = parseSurface(text)?.search ?? "";
-          // The provider writes both axes in the commit that sets its state;
-          // waiting for them is what keeps the read from pairing one platform
-          // with another's paint.
-          return search.includes("mode=") && search.includes("platform=");
+          const surface = parseSurface(text);
+          // Both axes are in the same commit, so waiting for the pressed
+          // button keeps the read from pairing one platform with another's
+          // paint.
+          return surface?.pressed === "Dark" && surface.mode === "dark";
         },
         budget,
       )) ?? "",
@@ -255,9 +247,9 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
             `the palette group reports ${JSON.stringify(light.pressed)} pressed, not Light`,
           );
         }
-        if (!light.search.includes("mode=light")) {
+        if (namesSwitchAxis(await session.page.text("location.search"))) {
           failures.push(
-            `the address bar does not carry mode=light (${light.search})`,
+            `the address bar carries the switch's state (${await session.page.text("location.search")})`,
           );
         }
 
@@ -288,9 +280,9 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
     );
     if (dark === undefined) {
       failures.push("pressing Dark left no surface in dark mode");
-    } else if (!dark.search.includes("mode=dark")) {
+    } else if (dark.pressed !== "Dark") {
       failures.push(
-        `the address bar does not carry mode=dark (${dark.search})`,
+        `the palette group reports ${JSON.stringify(dark.pressed)} pressed, not Dark`,
       );
     }
   } finally {
@@ -302,7 +294,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
     return 1;
   }
   console.log(
-    "PASS the palette switch repaints every preview and writes the URL",
+    "PASS the palette switch repaints every preview and leaves the URL clean",
   );
   return 0;
 };

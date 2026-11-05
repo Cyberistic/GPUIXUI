@@ -3,10 +3,9 @@
  *
  * Three generated lists narrow under a reader's query — the component index, the
  * icon gallery and the API reference's symbol table — and a reader who found a
- * part, a prop, a glyph or a symbol is looking at a view worth linking: the
- * platform switch already puts its state in the address bar (`?platform=win32`),
- * and the indexes follow the same rule with `?q=…`. A component index that held
- * its query in React state alone made a shared link reopen the whole list.
+ * part, a prop, a glyph or a symbol is looking at a view worth linking, so the
+ * filter lives in `?q=…`. A component index that held its query in React state
+ * alone made a shared link reopen the whole list.
  *
  * Reading and writing are pure so the rule can be tested without a router: the
  * `q` parameter is set beside every other parameter, and an empty filter

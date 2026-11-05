@@ -76,10 +76,8 @@ describe("a docs page's head", () => {
     const result = head("/components/button", "Button", "The action.");
 
     expect(canonicalOf(result)).not.toContain("platform");
-    // The switch still travels in a shareable link; only the canonical drops it.
-    expect(absoluteUrl("/components/button?platform=win32")).toContain(
-      "platform=win32",
-    );
+    // The switch is not in the query string; a page's own search is the page's.
+    expect(absoluteUrl("/components/button?q=dialog")).toContain("q=dialog");
   });
 
   it("publishes the site root without doubling the slash", () => {

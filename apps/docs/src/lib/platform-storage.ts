@@ -1,28 +1,32 @@
 import { browserStore, guarded } from "./browser-storage";
 import {
+  browserSignals,
+  detectLook,
+  detectPlatform,
+  namesOmarchy,
   parseLook,
   parseMode,
   parsePlatform,
   previewMode,
+  type PlatformSignals,
   type PreviewChoice,
 } from "./platform";
 
 /**
  * The choice a reader made on the platform switch, remembered between pages.
  *
- * The URL is the shareable half: a link carries `?platform=` and `?look=`. Local
- * storage is the navigation half, so moving from one component page to the next
- * does not reset the switch. Both halves are parsed by the same rules — a stored
- * value written by an older build must fall back per axis, not reset the other
- * choice or throw on read.
+ * The state is the app's: React holds it for the page, and local storage keeps
+ * it for the next visit. No query parameter carries it, so a URL names the page
+ * and nothing else. A stored value written by an older build must fall back per
+ * axis, not reset the other choice or throw on read.
  *
  * A browser may also refuse the store outright: a reader who blocks site data
  * gets a `SecurityError` from the `window.localStorage` getter, and one who
  * allows it gets a `QuotaExceededError` on write when there is no room. The
  * switch is a preference, not a requirement, so a refusal is the absence of an
- * answer: the switch then shows the URL's choice (or the identity) and simply
- * does not remember it. The guard lives in `browser-storage.ts`, shared with the
- * theme editor, which reads the same store for its own pins.
+ * answer: the switch then shows the detected choice and simply does not
+ * remember it. The guard lives in `browser-storage.ts`, shared with the theme
+ * editor, which reads the same store for its own pins.
  */
 
 /** The part of `Storage` this module needs, so a test can stand in for it. */
@@ -89,6 +93,27 @@ export const readRememberedChoice = (
   look: parseLook(readKey(storage, lookStorageKey)) ?? fallback.look,
   mode: parseMode(readKey(storage, modeStorageKey)) ?? fallback.mode,
 });
+
+/**
+ * The choice a visit opens with: the store, then the browser's own report.
+ *
+ * A stored value always wins, including a deliberate `default` platform or
+ * `native` look. A first visit has nothing stored, so it opens on the platform
+ * the browser names and the look that desktop implies.
+ */
+export const openingChoice = (
+  storage: ChoiceStorage | undefined,
+  signals: PlatformSignals = browserSignals(),
+): RememberedChoice => {
+  const omarchy =
+    namesOmarchy(readDesktopMarker(storage)) || namesOmarchy(signals.userAgent);
+
+  return readRememberedChoice(storage, {
+    platform: detectPlatform(signals),
+    look: detectLook(omarchy),
+    mode: previewMode,
+  });
+};
 
 /** The desktop marker `storage` remembers, if it remembers one. */
 export const readDesktopMarker = (

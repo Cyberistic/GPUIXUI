@@ -5,7 +5,6 @@ import {
   detectPlatform,
   lookOrder,
   namesOmarchy,
-  openingChoice,
   parseLook,
   platformFamily,
   previewMode,
@@ -16,6 +15,7 @@ import {
 import {
   desktopStorageKey,
   lookStorageKey,
+  openingChoice,
   platformStorageKey,
   readDesktopMarker,
   readRememberedChoice,
@@ -26,9 +26,8 @@ import {
  * Every visitor opened the docs on the same platform: the switch had no
  * detection, so a Windows or Linux reader compared macOS previews until they
  * found the toggle, and the first visit wrote that macOS default into the store.
- * These cases hold the browser's own report, the store that overrides it and
- * the link that overrides both — and the negative controls that keep one rule
- * from swallowing another.
+ * These cases hold the browser's own report, the store that overrides it, and
+ * the negative controls that keep one rule from swallowing another.
  */
 
 const signals = (userAgent: string, maxTouchPoints = 0): PlatformSignals => ({
@@ -155,6 +154,16 @@ const detected: PreviewChoice = {
 describe("the choice a visit opens with", () => {
   it("fills an empty store from detection", () => {
     expect(readRememberedChoice(fakeStorage([]), detected)).toEqual(detected);
+    expect(openingChoice(fakeStorage([]), signals(macOS))).toEqual({
+      platform: "darwin",
+      look: "native",
+      mode: previewMode,
+    });
+    expect(openingChoice(fakeStorage([]), signals(windows10))).toEqual({
+      platform: "win32",
+      look: "native",
+      mode: previewMode,
+    });
   });
 
   it("keeps a stored choice over the browser's report", () => {
@@ -168,33 +177,30 @@ describe("the choice a visit opens with", () => {
       look: "aero",
       mode: previewMode,
     });
-    expect(openingChoice("", readRememberedChoice(storage, detected))).toEqual({
+    expect(openingChoice(storage, signals(macOS))).toEqual({
       platform: "win32",
       look: "aero",
       mode: previewMode,
     });
   });
 
-  it("lets the URL win over the store and detection", () => {
-    const remembered = readRememberedChoice(fakeStorage([]), detected);
-
-    expect(
-      openingChoice("?platform=win32&look=luna&mode=light", remembered),
-    ).toEqual({ platform: "win32", look: "luna", mode: "light" });
+  it("opens an Omarchy desktop on its own look", () => {
+    expect(openingChoice(fakeStorage([]), signals(omarchy))).toEqual({
+      platform: "linux",
+      look: "omarchy",
+      mode: previewMode,
+    });
   });
 
-  it("ignores a URL value the switch cannot show", () => {
-    // A mistyped or stale link must fall back to the stored choice, not reset
-    // it to the browser's report.
-    const stored = readRememberedChoice(
-      fakeStorage([[platformStorageKey, "win32"]]),
-      detected,
-    );
-
-    expect(openingChoice("?platform=windows", stored).platform).toBe("win32");
+  it("ignores a stored value the switch cannot show", () => {
+    // A value an older build wrote must fall back to the browser's report, not
+    // reset the other axis or throw on read.
     expect(
       readRememberedChoice(
-        fakeStorage([[platformStorageKey, "windows"]]),
+        fakeStorage([
+          [platformStorageKey, "windows"],
+          [lookStorageKey, "classic"],
+        ]),
         detected,
       ),
     ).toEqual(detected);

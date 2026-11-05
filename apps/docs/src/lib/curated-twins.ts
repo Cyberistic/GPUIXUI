@@ -83,7 +83,7 @@ export const servedUrls = (urls: ReadonlyArray<string>): string[] =>
  * Where a request for a retired page goes, carrying the reader's query.
  *
  * `searchStr` is the location's own string, leading `?` included, so a
- * `?platform=win32` a reader followed survives the redirect.
+ * `?q=` filter a reader followed survives the redirect.
  */
 export const curatedRedirect = (
   url: string,
