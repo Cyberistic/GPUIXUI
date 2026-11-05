@@ -137,6 +137,34 @@ describe("curves", () => {
     expect(path.endsWith("100 100")).toBe(true);
   });
 
+  it("never overshoots the data it is drawn through", () => {
+    // A spike is a spike. A Catmull-Rom spline bends to reach its neighbours,
+    // so the curve from a peak down to a trough dipped **below** the trough —
+    // painting a value the data does not have, and on a chart that starts at
+    // zero, drawing under the axis. The monotone rule flattens at every local
+    // extreme, so the curve stays inside its own data.
+    // A flat run that ends in a drop: a Catmull-Rom spline bends *up* before
+    // it descends, so the curve rose above the flat line — a value higher than
+    // any the data holds.
+    const spiky = [
+      { x: 0, y: 100 },
+      { x: 50, y: 100 },
+      { x: 100, y: 100 },
+      { x: 150, y: 20 },
+      { x: 200, y: 100 },
+    ];
+    const path = someOr(curvePath(spiky, "smooth"), "no smooth curve");
+
+    // Every coordinate on the path — the points and the two control points of
+    // every segment — lies inside the data's own range.
+    const values = [...path.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((match) =>
+      Number(match[2]),
+    );
+    expect(values.length).toBeGreaterThan(4);
+    expect(Math.min(...values)).toBeGreaterThanOrEqual(20);
+    expect(Math.max(...values)).toBeLessThanOrEqual(100);
+  });
+
   it("paints a half-pixel run for a single point, never a zero-length path", () => {
     expect(curvePath([{ x: 10, y: 20 }], "linear")).toEqual(
       Option.some("M10 20h1"),

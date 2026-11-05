@@ -176,6 +176,50 @@ const at = (value: number): string =>
 const pair = (point: Point): string => `${at(point.x)} ${at(point.y)}`;
 
 /**
+ * The tangent at each point of a **monotone** cubic curve.
+ *
+ * A chart line must never invent a value: a spike from 409 down to 59 is a
+ * spike, and a curve through it that dips below 59 — or below zero — draws a
+ * number the data does not have. A Catmull-Rom spline does exactly that,
+ * because it bends to reach its neighbours.
+ *
+ * The Fritsch–Carlson rule is the curve that cannot: where a point is a local
+ * extreme its tangent is **zero**, and where it is not, the tangent is the
+ * weighted harmonic mean of the slopes either side, which is never steeper
+ * than both. The result passes through every point and stays inside the data.
+ */
+const monotoneTangents = (points: ReadonlyArray<Point>): ReadonlyArray<number> => {
+  const count = points.length;
+  if (count < 2) return Arr.map(points, () => 0);
+  const run: number[] = [];
+  const slope: number[] = [];
+  for (let index = 0; index < count - 1; index += 1) {
+    const from = points[index];
+    const to = points[index + 1];
+    if (from === undefined || to === undefined) continue;
+    const step = to.x - from.x;
+    run[index] = step;
+    slope[index] = step === 0 ? 0 : (to.y - from.y) / step;
+  }
+  const tangent: number[] = Arr.map(points, () => 0);
+  tangent[0] = slope[0] ?? 0;
+  tangent[count - 1] = slope[count - 2] ?? 0;
+  for (let index = 1; index < count - 1; index += 1) {
+    const before = slope[index - 1] ?? 0;
+    const after = slope[index] ?? 0;
+    // A peak or a trough: the curve flattens, so it cannot overshoot.
+    if (before * after <= 0) {
+      tangent[index] = 0;
+      continue;
+    }
+    const left = 2 * (run[index] ?? 1) + (run[index - 1] ?? 1);
+    const right = (run[index] ?? 1) + 2 * (run[index - 1] ?? 1);
+    tangent[index] = (left + right) / (left / before + right / after);
+  }
+  return tangent;
+};
+
+/**
  * The path through points, in the join the caller asked for.
  *
  * `smooth` is a Catmull-Rom spline written as cubics, which passes through
@@ -195,23 +239,21 @@ export const curvePath = (
   }
   const [head, ...rest] = points;
   if (head === undefined) return Option.none();
+  const tangents = monotoneTangents(points);
   const body = Arr.map(rest, (point, index) => {
     const previous = points[index];
     if (previous === undefined) return "";
     return Match.value(curve).pipe(
       Match.when("step", () => `H${at(point.x)}V${at(point.y)}`),
       Match.when("smooth", () => {
-        const before = points[index - 1] ?? previous;
-        const after = points[index + 2] ?? point;
-        const c1 = {
-          x: previous.x + (point.x - before.x) / 6,
-          y: previous.y + (point.y - before.y) / 6,
-        };
-        const c2 = {
-          x: point.x - (after.x - previous.x) / 6,
-          y: point.y - (after.y - previous.y) / 6,
-        };
-        return `C${pair(c1)} ${pair(c2)} ${pair(point)}`;
+        const h = (point.x - previous.x) / 3;
+        return `C${pair({
+          x: previous.x + h,
+          y: previous.y + (tangents[index] ?? 0) * h,
+        })} ${pair({
+          x: point.x - h,
+          y: point.y - (tangents[index + 1] ?? 0) * h,
+        })} ${pair(point)}`;
       }),
       Match.when("linear", () => `L${pair(point)}`),
       Match.exhaustive,
