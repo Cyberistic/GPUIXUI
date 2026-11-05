@@ -425,75 +425,37 @@ function TrafficArea() {
  * The treemap of the traffic sources.
  *
  * Each cell's **area** is its share of the whole, and the cells are squared:
- * a large source is a wide, tall cell and a small one is a sliver. The layout
- * is squarified — the largest value takes a strip of its own, and the rest
- * fill what is left — so the picture is the proportions rather than a grid.
+ * the largest source takes a strip of its own and the rest fill what is left,
+ * so the picture is the proportions rather than a grid.
  */
 function SourceTreemap() {
-  const w = 200;
-  const h = 132;
-  const gap = 3;
+  const w = 150;
+  const h = 104;
+  const gap = 2;
   const sources = [
     { name: "Organic", value: 42 },
     { name: "Direct", value: 26 },
     { name: "Referral", value: 18 },
     { name: "Social", value: 14 },
   ] as const;
-  const total = sources.reduce((sum, one) => sum + one.value, 0);
+  const total = 100;
   const [organic, direct, referral, social] = sources;
 
-  // The largest takes a strip on the left; the rest share the right.
-  const leftW = organic === undefined ? 0 : (organic.value / total) * (w - gap);
+  const leftW = ((organic?.value ?? 0) / total) * (w - gap);
   const rightX = leftW + gap;
   const rightW = w - rightX;
-  const restTotal =
-    (direct?.value ?? 0) + (referral?.value ?? 0) + (social?.value ?? 0);
-  // The right column: the biggest of the three takes the top strip, the two
-  // smallest share the bottom.
-  const directH = direct === undefined ? 0 : (direct.value / restTotal) * h;
+  const rest = (direct?.value ?? 0) + (referral?.value ?? 0) + (social?.value ?? 0);
+  const directH = ((direct?.value ?? 0) / rest) * h;
   const bottomY = directH + gap;
   const bottomH = h - bottomY;
-  const bottomTotal = (referral?.value ?? 0) + (social?.value ?? 0);
-  const referralW =
-    referral === undefined ? 0 : (referral.value / bottomTotal) * (rightW - gap);
+  const bottom = (referral?.value ?? 0) + (social?.value ?? 0);
+  const referralW = ((referral?.value ?? 0) / bottom) * (rightW - gap);
 
   const cells = [
-    {
-      name: organic?.name ?? "",
-      value: organic?.value ?? 0,
-      x: 0,
-      y: 0,
-      w: leftW - gap,
-      h,
-      slot: 1,
-    },
-    {
-      name: direct?.name ?? "",
-      value: direct?.value ?? 0,
-      x: rightX,
-      y: 0,
-      w: rightW,
-      h: directH - gap,
-      slot: 2,
-    },
-    {
-      name: referral?.name ?? "",
-      value: referral?.value ?? 0,
-      x: rightX,
-      y: bottomY,
-      w: referralW,
-      h: bottomH,
-      slot: 3,
-    },
-    {
-      name: social?.name ?? "",
-      value: social?.value ?? 0,
-      x: rightX + referralW + gap,
-      y: bottomY,
-      w: rightW - referralW - gap,
-      h: bottomH,
-      slot: 4,
-    },
+    { name: organic?.name ?? "", value: organic?.value ?? 0, x: 0, y: 0, w: leftW - gap, h, slot: 1 },
+    { name: direct?.name ?? "", value: direct?.value ?? 0, x: rightX, y: 0, w: rightW, h: directH - gap, slot: 2 },
+    { name: referral?.name ?? "", value: referral?.value ?? 0, x: rightX, y: bottomY, w: referralW, h: bottomH, slot: 3 },
+    { name: social?.name ?? "", value: social?.value ?? 0, x: rightX + referralW + gap, y: bottomY, w: rightW - referralW - gap, h: bottomH, slot: 4 },
   ];
 
   return (
@@ -513,17 +475,13 @@ function SourceTreemap() {
             x={cell.x}
             y={cell.y}
           />
-          {cell.h > 22 && cell.w > 58 ? (
+          {cell.w > 54 && cell.h > 30 ? (
             <text className="gx-dash01-cell-label" x={cell.x + 6} y={cell.y + 14}>
               {cell.name}
             </text>
           ) : null}
-          {cell.h > 34 && cell.w > 58 ? (
-            <text
-              className="gx-dash01-cell-value"
-              x={cell.x + 6}
-              y={cell.y + 27}
-            >
+          {cell.w > 54 && cell.h > 46 ? (
+            <text className="gx-dash01-cell-value" x={cell.x + 6} y={cell.y + 28}>
               {cell.value}%
             </text>
           ) : null}
@@ -536,16 +494,16 @@ function SourceTreemap() {
 /**
  * The sankey of the funnel.
  *
- * A node's **height** is the flow through it and a ribbon's **thickness** is
- * the flow it carries, so the picture is the funnel itself: a wide start, a
- * narrower middle, and a thin end.
+ * A node's **height** is the flow through it and a ribbon's **thickness** the
+ * flow it carries, so the picture is the funnel: a wide start, a narrower
+ * middle, a thin end.
  */
 function FunnelSankey() {
-  const w = 200;
-  const h = 132;
-  const nodeW = 12;
-  const top = 12;
-  const bottom = h - 26;
+  const w = 150;
+  const h = 104;
+  const nodeW = 9;
+  const top = 8;
+  const bottom = h - 20;
   const span = bottom - top;
   const widest = 100;
   const stages = [
@@ -554,10 +512,9 @@ function FunnelSankey() {
     { name: "Paid", value: 24, x: w - nodeW },
   ] as const;
   const bar = (value: number): number => (value / widest) * span;
-  // One ribbon per step, each carrying the flow that survives it.
   const steps = [
-    { from: 0, to: 1, value: 60 },
-    { from: 1, to: 2, value: 24 },
+    { from: 0, to: 1, value: 60, colour: "var(--series-3, #1fa968)" },
+    { from: 1, to: 2, value: 24, colour: "var(--series-2, #6e9cff)" },
   ] as const;
 
   return (
@@ -571,20 +528,16 @@ function FunnelSankey() {
         const from = stages[step.from];
         const to = stages[step.to];
         if (from === undefined || to === undefined) return null;
-        const thickness = bar(step.value);
-        // The ribbon leaves its source at the top of the flow it still
-        // carries, and lands at the top of what its target receives.
-        const y0 = top;
-        const y1 = top;
+        const thick = bar(step.value);
         const x0 = from.x + nodeW;
         const x1 = to.x;
         const mid = (x0 + x1) / 2;
         return (
           <path
             className="gx-dash01-ribbon"
-            d={`M${x0},${y0} C${mid},${y0} ${mid},${y1} ${x1},${y1} L${x1},${y1 + thickness} C${mid},${y1 + thickness} ${mid},${y0 + thickness} ${x0},${y0 + thickness} Z`}
+            d={`M${x0},${top} C${mid},${top} ${mid},${top} ${x1},${top} L${x1},${top + thick} C${mid},${top + thick} ${mid},${top + thick} ${x0},${top + thick} Z`}
             key={`${step.from}-${step.to}`}
-            style={{ opacity: 0.28 + (step.value / widest) * 0.5 }}
+            style={{ fill: step.colour, opacity: 0.55 }}
           />
         );
       })}
@@ -600,40 +553,16 @@ function FunnelSankey() {
           />
           <text
             className="gx-dash01-node-label"
-            textAnchor={
-              stage.x === 0
-                ? "start"
-                : stage.x === w - nodeW
-                  ? "end"
-                  : "middle"
-            }
-            x={
-              stage.x === 0
-                ? 0
-                : stage.x === w - nodeW
-                  ? w
-                  : stage.x + nodeW / 2
-            }
-            y={h - 8}
+            textAnchor={stage.x === 0 ? "start" : stage.x === w - nodeW ? "end" : "middle"}
+            x={stage.x === 0 ? 0 : stage.x === w - nodeW ? w : stage.x + nodeW / 2}
+            y={h - 10}
           >
             {stage.name}
           </text>
           <text
             className="gx-dash01-node-value"
-            textAnchor={
-              stage.x === 0
-                ? "start"
-                : stage.x === w - nodeW
-                  ? "end"
-                  : "middle"
-            }
-            x={
-              stage.x === 0
-                ? 0
-                : stage.x === w - nodeW
-                  ? w
-                  : stage.x + nodeW / 2
-            }
+            textAnchor={stage.x === 0 ? "start" : stage.x === w - nodeW ? "end" : "middle"}
+            x={stage.x === 0 ? 0 : stage.x === w - nodeW ? w : stage.x + nodeW / 2}
             y={h - 1}
           >
             {stage.value}
@@ -651,10 +580,10 @@ function FunnelSankey() {
  * from the centre out.
  */
 function DeviceSunburst() {
-  const size = 132;
+  const size = 150;
   const centre = size / 2;
-  const outer = centre - 6;
-  const inner = outer * 0.42;
+  const outer = centre - 4;
+  const inner = outer * 0.52;
   const devices = [
     { name: "Desktop", value: 46, slot: 0 },
     { name: "Mobile", value: 34, slot: 1 },

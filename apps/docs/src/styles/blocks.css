@@ -7869,13 +7869,23 @@ button.gx-sb-row {
 /* The charts. Each is the shape its own type paints: the area fades toward
    the axis, the treemap's cells are squared, the sankey's ribbons are
    proportional, and the sunburst's arcs are angular shares. */
-.gx-dash01-area,
+.gx-dash01-area {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The three small charts fill their panel: a grid row stretches every panel to
+   the tallest, and a chart pinned to its intrinsic height left the rest of the
+   card empty. */
 .gx-dash01-treemap,
 .gx-dash01-sankey,
 .gx-dash01-sunburst {
   display: block;
+  flex: 1 1 auto;
   width: 100%;
-  height: auto;
+  min-height: 0;
+  height: 100%;
 }
 
 /* The plot is a stacked area: the line is a fine stroke and the region under
@@ -7954,30 +7964,28 @@ button.gx-sb-row {
 }
 
 .gx-dash01-cell-label {
-  font-size: 10px;
+  font-size: 11px;
   fill: var(--foreground);
   font-weight: 600;
 }
 
 .gx-dash01-cell-value {
   font-size: 9px;
-  fill: var(--muted-foreground);
-  font-family: var(--font-mono);
+  fill: color-mix(in srgb, var(--foreground) 70%, transparent);
 }
 
 .gx-dash01-ribbon {
   fill: var(--series-3, #1fa968);
 }
 
+/* The nodes are the frame of the flow; the ribbons carry the colour. */
 .gx-dash01-node {
-  fill: var(--series-4, #ffde8a);
-  fill-opacity: 0.9;
+  fill: color-mix(in srgb, var(--foreground) 28%, transparent);
 }
 
 .gx-dash01-node-label {
-  font-size: 9px;
+  font-size: 10px;
   fill: var(--muted-foreground);
-  font-family: var(--font-mono);
 }
 
 .gx-dash01-arc {
@@ -8034,9 +8042,9 @@ button.gx-sb-row {
 }
 
 .gx-dash01-node-value {
-  font-size: 8px;
-  fill: var(--muted-foreground);
-  font-family: var(--font-mono);
+  font-size: 9px;
+  fill: var(--foreground);
+  font-weight: 600;
 }
 
 /* The readout: a hairline at the pointer, a dot on each series, and a card
