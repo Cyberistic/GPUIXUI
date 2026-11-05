@@ -13,8 +13,12 @@ import type { PlatformName, Theme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 
-/** The room the three traffic lights take from the leading edge, with their gap. */
-export const TRAFFIC_LIGHT_INSET = 78;
+/**
+ * The room the three traffic lights take from the leading edge, with their gap.
+ * macOS 26 draws 14-point lights 23 points apart, so the third ends near 79
+ * points; the title starts 11 points past it, where AppKit puts it.
+ */
+export const TRAFFIC_LIGHT_INSET = 90;
 
 /** The lights' leading offset: AppKit's 20 points. */
 export const TRAFFIC_LIGHT_X = 20;

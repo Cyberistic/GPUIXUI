@@ -54,8 +54,8 @@ describe("the lights' box", () => {
   it("is reserved only where the lights float over the toolbar", () => {
     expect(toolbarInset(true)).toBe(TRAFFIC_LIGHT_INSET);
     expect(toolbarInset(false)).toBe(12);
-    // Three 12-point lights at 20 points from the edge end at 20 + 36 + 16.
-    expect(TRAFFIC_LIGHT_INSET).toBeGreaterThanOrEqual(72);
+    // macOS 26's three 14-point lights, 23 points apart from 20 points in, end near 79.
+    expect(TRAFFIC_LIGHT_INSET).toBeGreaterThanOrEqual(86);
   });
 
   it("float only on macOS, and never in a terminal", () => {
