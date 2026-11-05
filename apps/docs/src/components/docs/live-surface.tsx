@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import type { EventPayload } from "@gpuix/native";
 import {
   liveBanner,
@@ -10,6 +10,7 @@ import {
 } from "@/lib/live-scene";
 import {
   lookFromSearch,
+  modeFromSearch,
   platformFromSearch,
   resolvePlatformTheme,
 } from "@/lib/platform";
@@ -156,7 +157,8 @@ export function LiveSurface() {
     }
     started = true;
     const choice = platformOf();
-    const theme = resolvePlatformTheme(choice.platform, "dark", choice.look);
+    const mode = modeFromSearch(window.location.search) ?? "dark";
+    const theme = resolvePlatformTheme(choice.platform, mode, choice.look);
 
     const start = async (): Promise<void> => {
       if (!(await hasBackend())) {
@@ -205,6 +207,89 @@ export function LiveSurface() {
       // the same mount without that side effect, and the automation App gives
       // the probe the same locators the reconciler's tree carries.
       const params = new URLSearchParams(window.location.search);
+      if (params.get("scene") === "examples") {
+        const [{ examples }, data] = await Promise.all([
+          import("@gpuixui/components/examples"),
+          import("@gpuixui/data/examples"),
+        ]);
+        const registry: Readonly<Record<string, ComponentType>> = {
+          ...examples,
+          ...data.examples,
+        };
+        const { ThemeProvider } = await import("@gpuixui/tokens/react");
+        const { LiveBlank, LiveExample } = await import("@/lib/live-example");
+        const root = react.createRoot(host);
+        const box = sizeOf(host.getWindowSize());
+        Reflect.set(window, "__gpuixCapture", {
+          clear: (): void => {
+            root.render(
+              <ThemeProvider theme={theme}>
+                <LiveBlank box={box} theme={theme} />
+              </ThemeProvider>,
+            );
+          },
+          render: (id: string): boolean => {
+            const Example = registry[id];
+            if (Example === undefined) return false;
+            root.render(
+              <ThemeProvider theme={theme}>
+                <LiveExample box={box} example={Example} theme={theme} />
+              </ThemeProvider>,
+            );
+            return true;
+          },
+          text: (): ReadonlyArray<string> => host.getAllText(),
+        });
+        report([
+          "status=ready",
+          "canvas=yes",
+          "scene=examples",
+          `platform=${choice.platform}`,
+          `mode=${mode}`,
+        ]);
+        setStatus({ kind: "painting" });
+        return;
+      }
+
+      if (params.get("scene") === "example") {
+        const id = params.get("id") ?? "";
+        const [{ examples }, data] = await Promise.all([
+          import("@gpuixui/components/examples"),
+          import("@gpuixui/data/examples"),
+        ]);
+        const Example = { ...examples, ...data.examples }[id];
+        if (Example === undefined) {
+          report([`status=failed unknown-example ${id}`]);
+          setStatus({ kind: "failed", message: `no example named "${id}"` });
+          return;
+        }
+        const { ThemeProvider } = await import("@gpuixui/tokens/react");
+        const { LiveExample } = await import("@/lib/live-example");
+        react.createRoot(host).render(
+          <ThemeProvider theme={theme}>
+            <LiveExample
+              box={sizeOf(host.getWindowSize())}
+              example={Example}
+              theme={theme}
+            />
+          </ThemeProvider>,
+        );
+        await new Promise((wait) =>
+          requestAnimationFrame(() => requestAnimationFrame(wait)),
+        );
+        report([
+          "status=painting",
+          "canvas=yes",
+          "scene=example",
+          `id=${id}`,
+          `platform=${choice.platform}`,
+          `mode=${mode}`,
+          `text=${host.getAllText().join(",")}`,
+        ]);
+        setStatus({ kind: "painting" });
+        return;
+      }
+
       if (params.get("scene") === "parity") {
         const { ThemeProvider } = await import("@gpuixui/tokens/react");
         const { PARITY_CHARTS, ParityGallery } =
