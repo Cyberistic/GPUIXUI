@@ -872,27 +872,51 @@ function ChartTypeScene({
         viewBox="0 0 160 160"
         width={160}
       >
+        {/* The web is the series' own colour at a whisper, so the grid belongs
+            to the plot instead of sitting on it as grey scaffolding. */}
         {[...radarGrid(4, 5, square, 100), ...radarSpokes(5, square, 100)].map(
           (d, index) => (
             <path
               d={d}
               fill="none"
               key={`web-${index}`}
-              stroke="#8A8F98"
+              stroke={galleryColour(theme, 0)}
+              strokeOpacity={0.28}
               strokeWidth={1}
             />
           ),
         )}
-        <path
-          d={Option.getOrElse(
-            polygonPath(radarPoints([32, 48, 41, 60, 36], 5, square, 100)),
-            () => "",
-          )}
-          fill={galleryColour(theme, 0)}
-          fillOpacity={0.25}
-          stroke={galleryColour(theme, 0)}
-          strokeWidth={2}
-        />
+        {[1, 0].map((index) => (
+          <path
+            d={Option.getOrElse(
+              polygonPath(
+                radarPoints(
+                  index === 0 ? [32, 48, 41, 60, 36] : [48, 34, 55, 42, 50],
+                  5,
+                  square,
+                  100,
+                ),
+              ),
+              () => "",
+            )}
+            fill={galleryColour(theme, index)}
+            fillOpacity={index === 0 ? 0.34 : 0.16}
+            key={`series-${index}`}
+            stroke={galleryColour(theme, index)}
+            strokeWidth={index === 0 ? 2 : 1.5}
+          />
+        ))}
+        {Arr.map(radarPoints([32, 48, 41, 60, 36], 5, square, 100), (dot) => (
+          <circle
+            cx={dot.x}
+            cy={dot.y}
+            fill={galleryColour(theme, 0)}
+            key={`dot-${dot.x}-${dot.y}`}
+            r={2.4}
+            stroke="var(--card)"
+            strokeWidth={1.5}
+          />
+        ))}
       </svg>
     ),
     radial: (
@@ -1149,27 +1173,51 @@ function ChartTypeScene({
         viewBox="0 0 160 160"
         width={160}
       >
+        {/* The web is the series' own colour at a whisper, so the grid belongs
+            to the plot instead of sitting on it as grey scaffolding. */}
         {[...radarGrid(4, 5, square, 100), ...radarSpokes(5, square, 100)].map(
           (d, index) => (
             <path
               d={d}
               fill="none"
               key={`web-${index}`}
-              stroke="#8A8F98"
+              stroke={galleryColour(theme, 0)}
+              strokeOpacity={0.28}
               strokeWidth={1}
             />
           ),
         )}
-        <path
-          d={Option.getOrElse(
-            polygonPath(radarPoints([32, 48, 41, 60, 36], 5, square, 100)),
-            () => "",
-          )}
-          fill={galleryColour(theme, 0)}
-          fillOpacity={0.25}
-          stroke={galleryColour(theme, 0)}
-          strokeWidth={2}
-        />
+        {[1, 0].map((index) => (
+          <path
+            d={Option.getOrElse(
+              polygonPath(
+                radarPoints(
+                  index === 0 ? [32, 48, 41, 60, 36] : [48, 34, 55, 42, 50],
+                  5,
+                  square,
+                  100,
+                ),
+              ),
+              () => "",
+            )}
+            fill={galleryColour(theme, index)}
+            fillOpacity={index === 0 ? 0.34 : 0.16}
+            key={`series-${index}`}
+            stroke={galleryColour(theme, index)}
+            strokeWidth={index === 0 ? 2 : 1.5}
+          />
+        ))}
+        {Arr.map(radarPoints([32, 48, 41, 60, 36], 5, square, 100), (dot) => (
+          <circle
+            cx={dot.x}
+            cy={dot.y}
+            fill={galleryColour(theme, 0)}
+            key={`dot-${dot.x}-${dot.y}`}
+            r={2.4}
+            stroke="var(--card)"
+            strokeWidth={1.5}
+          />
+        ))}
         {radarPoints([32, 48, 41, 60, 36], 5, square, 100).map(
           (point, index) => (
             <text
