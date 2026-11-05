@@ -512,9 +512,9 @@ function TrafficArea() {
  * so the picture is the proportions rather than a grid.
  */
 function SourceTreemap() {
-  const w = 150;
-  const h = 104;
-  const gap = 2;
+  const w = 300;
+  const h = 208;
+  const gap = 4;
   const sources = [
     { name: "Organic", value: 42 },
     { name: "Direct", value: 26 },
@@ -577,22 +577,23 @@ function SourceTreemap() {
         viewBox={`0 0 ${w} ${h}`}
       >
         {cells.map((cell) => (
-        <g data-slot={cell.slot} key={cell.name}>
+        <g key={cell.name}>
           <rect
             className="gx-dash01-cell"
+            data-slot={cell.slot}
             height={Math.max(0, cell.h)}
             rx="3"
             width={Math.max(0, cell.w)}
             x={cell.x}
             y={cell.y}
           />
-          {cell.w > 54 && cell.h > 30 ? (
-            <text className="gx-dash01-cell-label" x={cell.x + 6} y={cell.y + 14}>
+          {cell.w > 108 && cell.h > 60 ? (
+            <text className="gx-dash01-cell-label" x={cell.x + 12} y={cell.y + 26}>
               {cell.name}
             </text>
           ) : null}
-          {cell.w > 54 && cell.h > 46 ? (
-            <text className="gx-dash01-cell-value" x={cell.x + 6} y={cell.y + 28}>
+          {cell.w > 108 && cell.h > 92 ? (
+            <text className="gx-dash01-cell-value" x={cell.x + 12} y={cell.y + 48}>
               {cell.value}%
             </text>
           ) : null}
@@ -612,11 +613,11 @@ function SourceTreemap() {
  * middle, a thin end.
  */
 function FunnelSankey() {
-  const w = 150;
-  const h = 104;
-  const nodeW = 9;
-  const top = 8;
-  const bottom = h - 20;
+  const w = 300;
+  const h = 208;
+  const nodeW = 18;
+  const top = 16;
+  const bottom = h - 40;
   const span = bottom - top;
   const widest = 100;
   const stages = [
@@ -695,7 +696,7 @@ function FunnelSankey() {
             className="gx-dash01-node-label"
             textAnchor={stage.x === 0 ? "start" : stage.x === w - nodeW ? "end" : "middle"}
             x={stage.x === 0 ? 0 : stage.x === w - nodeW ? w : stage.x + nodeW / 2}
-            y={h - 10}
+            y={h - 22}
           >
             {stage.name}
           </text>
@@ -703,7 +704,7 @@ function FunnelSankey() {
             className="gx-dash01-node-value"
             textAnchor={stage.x === 0 ? "start" : stage.x === w - nodeW ? "end" : "middle"}
             x={stage.x === 0 ? 0 : stage.x === w - nodeW ? w : stage.x + nodeW / 2}
-            y={h - 1}
+            y={h - 4}
           >
             {stage.value}
           </text>
@@ -722,9 +723,9 @@ function FunnelSankey() {
  * from the centre out.
  */
 function DeviceSunburst() {
-  const size = 150;
+  const size = 300;
   const centre = size / 2;
-  const outer = centre - 4;
+  const outer = centre - 8;
   const inner = outer * 0.52;
   const devices = [
     { name: "Desktop", value: 46, slot: 0 },

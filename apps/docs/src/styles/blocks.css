@@ -7740,13 +7740,16 @@ button.gx-sb-row {
   gap: 12px;
 }
 
-@media (width < 1100px) {
+/* The block is a container, so the layout answers **its** width — a reader on
+   a 1440px window sees a 500px block, and a viewport media query handed it the
+   window's columns. */
+@container (width < 900px) {
   .gx-dash01-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (width < 640px) {
+@container (width < 520px) {
   .gx-dash01-cards {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -7860,7 +7863,7 @@ button.gx-sb-row {
   gap: 12px;
 }
 
-@media (width < 1100px) {
+@container (width < 900px) {
   .gx-dash01-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -7884,6 +7887,8 @@ button.gx-sb-row {
   display: block;
   flex: 1 1 auto;
   width: 100%;
+  max-width: 340px;
+  margin-inline: auto;
   min-height: 0;
   height: 100%;
 }
@@ -7949,7 +7954,6 @@ button.gx-sb-row {
    scale, so a picture of four parts reads as four parts. */
 .gx-dash01-cell {
   fill: var(--series-1, #a7a9ff);
-  fill-opacity: 0.85;
 }
 
 .gx-dash01-cell[data-slot="2"],
@@ -7967,15 +7971,28 @@ button.gx-sb-row {
   fill: var(--series-4, #ffde8a);
 }
 
+/* A cell's own colour is its fill, so the label has to hold its own against
+   four different hues: the ink is the surface colour, which is what a filled
+   chip's caption uses. */
 .gx-dash01-cell-label {
   font-size: 11px;
-  fill: var(--foreground);
-  font-weight: 600;
+  fill: var(--background);
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: color-mix(in srgb, var(--background) 22%, transparent);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
 }
 
 .gx-dash01-cell-value {
-  font-size: 9px;
-  fill: color-mix(in srgb, var(--foreground) 70%, transparent);
+  font-size: 9.5px;
+  fill: var(--background);
+  font-weight: 600;
+  opacity: 0.78;
+  paint-order: stroke;
+  stroke: color-mix(in srgb, var(--background) 18%, transparent);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
 }
 
 .gx-dash01-ribbon {
