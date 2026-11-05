@@ -8006,3 +8006,9 @@ button.gx-sb-row {
   color: var(--success);
   border-color: color-mix(in srgb, var(--success) 40%, var(--border));
 }
+
+.gx-dash01-node-value {
+  font-size: 8px;
+  fill: var(--muted-foreground);
+  font-family: var(--font-mono);
+}

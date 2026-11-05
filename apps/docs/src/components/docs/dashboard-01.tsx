@@ -349,12 +349,12 @@ function SourceTreemap() {
             x={cell.x}
             y={cell.y}
           />
-          {cell.h > 24 && cell.w > 46 ? (
+          {cell.h > 22 && cell.w > 58 ? (
             <text className="gx-dash01-cell-label" x={cell.x + 6} y={cell.y + 14}>
               {cell.name}
             </text>
           ) : null}
-          {cell.h > 36 && cell.w > 46 ? (
+          {cell.h > 34 && cell.w > 58 ? (
             <text
               className="gx-dash01-cell-value"
               x={cell.x + 6}
@@ -373,29 +373,27 @@ function SourceTreemap() {
  * The sankey of the funnel.
  *
  * A node's **height** is the flow through it and a ribbon's **thickness** is
- * the flow it carries, so the picture is the funnel: a wide start, a narrower
- * middle, and a thin end.
+ * the flow it carries, so the picture is the funnel itself: a wide start, a
+ * narrower middle, and a thin end.
  */
 function FunnelSankey() {
   const w = 200;
   const h = 132;
-  const pad = 10;
-  const top = pad;
-  const bottom = h - 22;
-  const span = bottom - top;
   const nodeW = 12;
+  const top = 12;
+  const bottom = h - 26;
+  const span = bottom - top;
+  const widest = 100;
   const stages = [
-    { name: "Visits", x: 0, value: 100 },
-    { name: "Trials", x: (w - nodeW) / 2, value: 60 },
-    { name: "Paid", x: w - nodeW, value: 24 },
+    { name: "Visits", value: 100, x: 0 },
+    { name: "Trials", value: 60, x: (w - nodeW) / 2 },
+    { name: "Paid", value: 24, x: w - nodeW },
   ] as const;
-  // Each node's bar is its total flow's share of the widest stage.
-  const bar = (value: number): number => (value / 100) * span;
-  // The ribbons: a stage's flow to the next, and the flow straight to the end.
-  const flows = [
-    { from: 0, to: 1, value: 60, offset: 0 },
-    { from: 1, to: 2, value: 24, offset: 0 },
-    { from: 0, to: 2, value: 24, offset: 60 },
+  const bar = (value: number): number => (value / widest) * span;
+  // One ribbon per step, each carrying the flow that survives it.
+  const steps = [
+    { from: 0, to: 1, value: 60 },
+    { from: 1, to: 2, value: 24 },
   ] as const;
 
   return (
@@ -405,15 +403,15 @@ function FunnelSankey() {
       role="img"
       viewBox={`0 0 ${w} ${h}`}
     >
-      {flows.map((flow) => {
-        const from = stages[flow.from];
-        const to = stages[flow.to];
+      {steps.map((step) => {
+        const from = stages[step.from];
+        const to = stages[step.to];
         if (from === undefined || to === undefined) return null;
-        const thickness = bar(flow.value);
-        // The ribbon leaves its source below the flows already sent, and
-        // lands on its target below the flows already received.
-        const y0 = top + bar(flow.offset);
-        const y1 = top + (flow.to === 2 ? (flow.from === 1 ? bar(36) : bar(24)) : 0);
+        const thickness = bar(step.value);
+        // The ribbon leaves its source at the top of the flow it still
+        // carries, and lands at the top of what its target receives.
+        const y0 = top;
+        const y1 = top;
         const x0 = from.x + nodeW;
         const x1 = to.x;
         const mid = (x0 + x1) / 2;
@@ -421,9 +419,8 @@ function FunnelSankey() {
           <path
             className="gx-dash01-ribbon"
             d={`M${x0},${y0} C${mid},${y0} ${mid},${y1} ${x1},${y1} L${x1},${y1 + thickness} C${mid},${y1 + thickness} ${mid},${y0 + thickness} ${x0},${y0 + thickness} Z`}
-            data-flow={`${flow.from}-${flow.to}`}
-            key={`${flow.from}-${flow.to}`}
-            style={{ opacity: 0.2 + (flow.value / 100) * 0.55 }}
+            key={`${step.from}-${step.to}`}
+            style={{ opacity: 0.28 + (step.value / widest) * 0.5 }}
           />
         );
       })}
@@ -439,11 +436,43 @@ function FunnelSankey() {
           />
           <text
             className="gx-dash01-node-label"
-            textAnchor={stage.x === 0 ? "start" : stage.x === w - nodeW ? "end" : "middle"}
-            x={stage.x === 0 ? 0 : stage.x === w - nodeW ? w : stage.x + nodeW / 2}
-            y={h - 6}
+            textAnchor={
+              stage.x === 0
+                ? "start"
+                : stage.x === w - nodeW
+                  ? "end"
+                  : "middle"
+            }
+            x={
+              stage.x === 0
+                ? 0
+                : stage.x === w - nodeW
+                  ? w
+                  : stage.x + nodeW / 2
+            }
+            y={h - 8}
           >
-            {stage.name} · {stage.value}
+            {stage.name}
+          </text>
+          <text
+            className="gx-dash01-node-value"
+            textAnchor={
+              stage.x === 0
+                ? "start"
+                : stage.x === w - nodeW
+                  ? "end"
+                  : "middle"
+            }
+            x={
+              stage.x === 0
+                ? 0
+                : stage.x === w - nodeW
+                  ? w
+                  : stage.x + nodeW / 2
+            }
+            y={h - 1}
+          >
+            {stage.value}
           </text>
         </g>
       ))}
@@ -689,7 +718,7 @@ export function Dashboard01Render() {
  * the colours are the theme's own series.
  */
 export const dashboard01Source = `import { Badge } from "@gpuixui/components/badge";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@gpuixui/components/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@gpuixui/components/card";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel,
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,

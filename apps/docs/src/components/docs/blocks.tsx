@@ -1,13 +1,4 @@
 import desktopSource from "../../../../../examples/blocks/src/desktop/desktop.tsx?raw";
-import licenseSource from "../../../../../examples/blocks/src/license/license.tsx?raw";
-import notesSource from "../../../../../examples/blocks/src/notes/notes.tsx?raw";
-import preferencesSource from "../../../../../examples/blocks/src/preferences/preferences.tsx?raw";
-import launcherSource from "../../../../../examples/blocks/src/launcher/launcher.tsx?raw";
-import menubarSource from "../../../../../examples/blocks/src/menubar/menubar.tsx?raw";
-import agentSource from "../../../../../examples/blocks/src/agent/agent.tsx?raw";
-import calendarSource from "../../../../../examples/blocks/src/calendar/calendar.tsx?raw";
-import welcomeSource from "../../../../../examples/blocks/src/welcome/welcome.tsx?raw";
-import viewerSource from "../../../../../examples/blocks/src/viewer/viewer.tsx?raw";
 import pipelineSource from "../../../../../examples/blocks/src/pipeline/pipeline.tsx?raw";
 import type { ReactNode } from "react";
 import { SignInPageRender, signInPageSource } from "./auth-blocks";
@@ -80,28 +71,6 @@ export interface Block {
  * `DesktopBlock` rendered by GPUix (`apps/playground/src/film/takes.tsx`,
  * `desktop-luna` / `desktop-aero`), not an HTML reproduction.
  */
-/** A Mac-app block's preview: the offscreen capture of its compiled window. */
-const CaptureRender = ({
-  slug,
-  title,
-}: {
-  readonly slug: string;
-  readonly title: string;
-}) => (
-  <figure className="gx-block-desktop-shot">
-    <img
-      alt={`${title}: captured from the native renderer`}
-      height={700}
-      src={`/blocks/${slug}.webp`}
-      width={1100}
-    />
-    <figcaption>
-      {title} — captured from the native renderer, offscreen (no window server,
-      so no blur or traffic lights)
-    </figcaption>
-  </figure>
-);
-
 const DesktopRender = () => (
   <div className="gx-block-desktop">
     {(
@@ -368,96 +337,6 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
     render: CommandCentreRender,
     source: commandCentreSource,
-  },
-  "license-01": {
-    name: "license-01",
-    slug: "license",
-    title: "Hunter License",
-    description:
-      "The Hunter Association's registry as a Mac app: hunters by specialty under the traffic lights, the chosen hunter's licence card with its rank in stars, and its privileges as switches.",
-    packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="license" title="Hunter License" />,
-    source: licenseSource,
-  },
-  "notes-01": {
-    name: "notes-01",
-    slug: "notes",
-    title: "Notes",
-    description:
-      "A three-pane writing app: folders under the traffic lights, the folder's notes with live excerpts, and the editor.",
-    packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="notes" title="Notes" />,
-    source: notesSource,
-  },
-  "preferences-01": {
-    name: "preferences-01",
-    slug: "preferences",
-    title: "Preferences",
-    description:
-      "A System-Settings-style window: a searchable source list of panes and a pane built from inset groups.",
-    packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="preferences" title="Preferences" />,
-    source: preferencesSource,
-  },
-  "launcher-01": {
-    name: "launcher-01",
-    slug: "launcher",
-    title: "Launcher",
-    description:
-      "The ⌘K command HUD: a large search field, ranked results with their shortcuts and an action footer.",
-    packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="launcher" title="Launcher" />,
-    source: launcherSource,
-  },
-  "menubar-01": {
-    name: "menubar-01",
-    slug: "menubar",
-    title: "Menu bar",
-    description:
-      "A menu-bar extra's popover: a status line, toggles, a sync progress and a footer.",
-    packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="menubar" title="Menu bar" />,
-    source: menubarSource,
-  },
-  "agent-01": {
-    name: "agent-01",
-    slug: "agent",
-    title: "Agent",
-    description:
-      "An AI coding assistant window: sessions, the transcript and composer, and the files the session touched.",
-    packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="agent" title="Agent" />,
-    source: agentSource,
-  },
-  "calendar-01": {
-    name: "calendar-01",
-    slug: "calendar",
-    title: "Calendar",
-    description:
-      "A week view: calendars with switches, the week's events in hourly rows, overlaps side by side.",
-    packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="calendar" title="Calendar" />,
-    source: calendarSource,
-  },
-  "welcome-01": {
-    name: "welcome-01",
-    slug: "welcome",
-    title: "Welcome",
-    description:
-      "A first-run window: the app's mark, feature rows per step, Continue and Import….",
-    packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="welcome" title="Welcome" />,
-    source: welcomeSource,
-  },
-  "viewer-01": {
-    name: "viewer-01",
-    slug: "viewer",
-    title: "Viewer",
-    description:
-      "A media viewer: albums, a grid of thumbnails, and the open photo under a floating HUD.",
-    packages: ["@gpuixui/shell", "@gpuixui/components", "@gpuixui/primitives"],
-    render: () => <CaptureRender slug="viewer" title="Viewer" />,
-    source: viewerSource,
   },
   "pipeline-01": {
     name: "pipeline-01",
