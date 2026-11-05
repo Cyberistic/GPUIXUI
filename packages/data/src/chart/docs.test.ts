@@ -91,6 +91,26 @@ const sections: ReadonlyArray<Section> = [
   { heading: "`RadialChart`", type: "RadialChartProps" , module: "chart" },
   { heading: "`Sparkline`", type: "SparklineProps" , module: "chart" },
   {
+    heading: "`RadialBarChart`",
+    type: "RadialBarChartProps",
+    module: "structure",
+  },
+  {
+    heading: "`TreemapChart`",
+    type: "TreemapChartProps",
+    module: "structure",
+  },
+  {
+    heading: "`SankeyChart`",
+    type: "SankeyChartProps",
+    module: "structure",
+  },
+  {
+    heading: "`SunburstChart`",
+    type: "SunburstChartProps",
+    module: "structure",
+  },
+  {
     heading: "`ChartLegend`",
     type: "ChartLegendProps",
     module: "legend",
@@ -115,8 +135,10 @@ const declaredProps = (
   type: string,
   module: Section["module"],
 ): ReadonlyArray<string> => {
+  // A props interface may extend another's — the cartesian ones do — or
+  // stand alone, and a doc comment may sit between the name and the brace.
   const body = new RegExp(
-    `export interface ${type} extends[^{]*\\{([\\s\\S]*?)\\n\\}`,
+    `export interface ${type}[^{]*\\{([\\s\\S]*?)\\n\\}`,
   ).exec(sources[module]);
   if (body?.[1] === undefined) throw new Error(`no ${type}`);
   return [...body[1].matchAll(/^ {2}readonly (\w+)\??:/gm)].flatMap((match) =>
@@ -156,7 +178,7 @@ const invented = (section: Section): ReadonlyArray<string> => {
 
 describe("the charts page's API tables", () => {
   it("documents every prop each chart part declares", () => {
-    expect(sections).toHaveLength(14);
+    expect(sections).toHaveLength(18);
     expect(
       Arr.length(
         Arr.flatMap(sections, (section) =>
@@ -189,6 +211,10 @@ describe("the charts page's API tables", () => {
       "`RadarChart`",
       "`RadialChart`",
       "`Sparkline`",
+      "`RadialBarChart`",
+      "`TreemapChart`",
+      "`SankeyChart`",
+      "`SunburstChart`",
       "`ChartLegend`",
       "The shared frame",
     ]);

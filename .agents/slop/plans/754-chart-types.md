@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | done — the treemap, the sankey and the sunburst land, with the scene compiler resolving their layouts and the document route painting them |
+| Status | done — the treemap, the sankey and the sunburst land, with the scene compiler resolving their layouts and the document route painting them; the radial bar lands with them, so Recharts' thirteen are all covered |
 | Phase | D (data presentation) |
 | Depends on | `@gpuixui/data` chart module, the scene bridge (plan 752), `@tanstack/charts` |
 | References | Recharts v3 (`Treemap`, `Sankey`, `SunburstChart`), TanStack Charts' `hierarchy/treemap`, `hierarchy/sunburst` and `network/sankey` marks, GPUI Kit's `SankeyChart` |

@@ -28,7 +28,8 @@ import {
   type HierarchyRow,
 } from "./hierarchy.js";
 import { sceneSvg, type SceneChartKind } from "./scene.js";
-import type { ChartBox } from "./logic.js";
+import type { ChartBox, ChartSeries } from "./logic.js";
+import type { ChartRange } from "./geometry.js";
 
 /**
  * The colour each node paints in.
@@ -98,6 +99,9 @@ const SceneChart = ({
   flow,
   colours,
   named,
+  range,
+  series,
+  labels,
   size,
   label,
   description,
@@ -126,6 +130,11 @@ const SceneChart = ({
    * was given — the names the **caller** wrote.
    */
   readonly named?: ReadonlyMap<string, string>;
+  readonly range?: ChartRange;
+  /** The series the cartesian marks read. */
+  readonly series?: ReadonlyArray<ChartSeries>;
+  /** The categories, in order. */
+  readonly labels?: ReadonlyArray<string>;
   readonly size: number;
   readonly label: string;
   readonly description: string;
@@ -144,10 +153,10 @@ const SceneChart = ({
   const markup = useMemo(
     () =>
       sceneSvg({
-        series: [],
-        labels: [],
+        series: series ?? [],
+        labels: labels ?? [],
         box,
-        range: { min: 0, max: 1 },
+        range: range ?? { min: 0, max: 1 },
         colours,
         kind,
         label,
@@ -170,6 +179,10 @@ const SceneChart = ({
       box.width,
       box.height,
       colours,
+      range?.min,
+      range?.max,
+      series,
+      labels,
       kind,
       label,
       description,
@@ -310,6 +323,100 @@ export const TreemapChart = ({
               nodeColors?.get(row.key) ??
               palette[index % Math.max(1, palette.length)] ??
               "#000000",
+          }))}
+        />
+      ) : undefined}
+    </div>
+  );
+};
+
+/** {@link RadialBarChart} props. */
+export interface RadialBarChartProps {
+  /** One row per category. */
+  readonly data: ReadonlyArray<{
+    readonly key: string;
+    readonly label?: string;
+    readonly value: number;
+  }>;
+  /** The plot's size, in pixels. Defaults to `200` square. */
+  readonly size?: number;
+  /** The share of the plot the bars' ring occupies. Defaults to `0.8`. */
+  readonly radiusRatio?: number;
+  /** The share of each category's slot left empty. Defaults to `0.12`. */
+  readonly bandPadding?: number;
+  /** The categorical palette; defaults to the theme's series scale. */
+  readonly colors?: ReadonlyArray<string>;
+  /** The legend paints under the bars. Defaults to `true`. */
+  readonly legend?: boolean;
+  /** How a value prints in the legend. */
+  readonly valueFormat?: (value: number) => string;
+  /** The chart's test id. */
+  readonly testId?: string;
+  /** The chart's name, for the document's accessible label. */
+  readonly label?: string;
+}
+
+/**
+ * Radial bar: one bar per category, each extending out from the centre.
+ *
+ * The bar's length is its value's share of the largest, and the categories
+ * own their own slots around the circle — so a reader compares the lengths
+ * and the sectors at once.
+ */
+export const RadialBarChart = ({
+  data,
+  size = 200,
+  radiusRatio,
+  bandPadding,
+  colors,
+  legend = true,
+  valueFormat,
+  testId,
+  label = "Radial bar",
+}: RadialBarChartProps) => {
+  const palette = colors ?? [];
+  const rows = Arr.map(data, (row) => ({
+    category: row.label ?? row.key,
+    value: row.value,
+  }));
+  const description = Arr.map(
+    rows,
+    (row) => `${row.category} ${row.value}`,
+  ).join(", ");
+  const largest = Arr.reduce(rows, 0, (max, row) => Math.max(max, row.value));
+  return (
+    <div role="group" testId={testId} style={{ position: "relative" }}>
+      <SceneChart
+        kind="radial"
+        rows={[]}
+        flow={{ nodes: [], links: [] }}
+        colours={palette}
+        size={size}
+        label={label}
+        description={description}
+        range={{ min: 0, max: largest }}
+        series={[
+          {
+            key: "value",
+            label: "Value",
+            values: Arr.map(rows, (row) => row.value),
+          },
+        ]}
+        labels={Arr.map(rows, (row) => row.category)}
+        {...(radiusRatio === undefined ? {} : { radiusRatio })}
+        {...(bandPadding === undefined ? {} : { bandPadding })}
+        testId={testId}
+      />
+      {legend ? (
+        <ChartLegend
+          testId={testId === undefined ? undefined : `${testId}-legend`}
+          items={Arr.map(rows, (row, index) => ({
+            key: row.category,
+            label:
+              valueFormat === undefined
+                ? row.category
+                : `${row.category} · ${valueFormat(row.value)}`,
+            color: palette[index % Math.max(1, palette.length)] ?? "#000000",
           }))}
         />
       ) : undefined}

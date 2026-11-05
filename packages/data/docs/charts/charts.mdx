@@ -217,6 +217,38 @@ its own holds its subtree's.
 | `nodeColors` | `Map<string, string>` | — | a node's own colour, by its path |
 | `legend` | `boolean` | `true` | the legend paints under the cells |
 | `valueFormat` | `(value: number) => string` | — | how a value prints in the legend |
+| `testId` | `string` | — | the chart's test id; a cell is `${testId}-cell-${path}` |
+| `label` | `string` | the chart's own name | the name the document announces |
+
+### `RadialBarChart`
+
+```tsx
+<RadialBarChart
+  aria-label="The letters"
+  data={[
+    { key: "E", label: "E", value: 40 },
+    { key: "T", label: "T", value: 30 },
+    { key: "A", label: "A", value: 20 },
+  ]}
+/>
+```
+
+One bar per category, each extending out from the centre. The bar's length
+is its value's share of the largest, and the categories own their own slots
+around the circle — so a reader compares the lengths and the sectors at
+once.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `data` | `{ key: string; label?: string; value: number }[]` | — | one row per category |
+| `size` | `number` | `200` | the plot's size, in pixels |
+| `radiusRatio` | `number` | `0.8` | the share of the plot the bars' ring occupies |
+| `bandPadding` | `number` | `0.12` | the share of each category's slot left empty |
+| `colors` | `string[]` | the theme's series scale | the categorical palette |
+| `legend` | `boolean` | `true` | the legend paints under the bars |
+| `valueFormat` | `(value: number) => string` | — | how a value prints in the legend |
+| `testId` | `string` | — | the chart's test id; a cell is `${testId}-cell-${path}` |
+| `label` | `string` | the chart's own name | the name the document announces |
 
 ### `SankeyChart`
 
@@ -251,6 +283,8 @@ flow that is.
 | `nodeColors` | `Map<string, string>` | — | a node's own colour, by its id |
 | `legend` | `boolean` | `true` | the legend paints under the flow |
 | `valueFormat` | `(value: number) => string` | — | how a value prints in the legend |
+| `testId` | `string` | — | the chart's test id; a cell is `${testId}-cell-${path}` |
+| `label` | `string` | the chart's own name | the name the document announces |
 
 ### `SunburstChart`
 
@@ -280,6 +314,8 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 | `nodeColors` | `Map<string, string>` | — | a node's own colour, by its path |
 | `legend` | `boolean` | `true` | the legend paints under the rings |
 | `valueFormat` | `(value: number) => string` | — | how a value prints in the legend |
+| `testId` | `string` | — | the chart's test id; a cell is `${testId}-cell-${path}` |
+| `label` | `string` | the chart's own name | the name the document announces |
 
 ### `ComposedChart`
 

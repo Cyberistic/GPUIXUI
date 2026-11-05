@@ -104,9 +104,11 @@ export type {
 } from "./chart/chart.js";
 
 export {
+  RadialBarChart,
   SankeyChart,
   SunburstChart,
   TreemapChart,
+  type RadialBarChartProps,
   type SankeyChartProps,
   type SunburstChartProps,
   type TreemapChartProps,

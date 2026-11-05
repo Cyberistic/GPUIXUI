@@ -25342,6 +25342,14 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[x]` Move the **legend** into its own module — every chart family needs
       it, and a legend that lived in one of them would make the others
       import a chart.
+`[x]` Land the **radial bar** — `RadialChart` paints **concentric rings**, a
+      gauge, and Recharts' `RadialBarChart` paints **radially-arranged
+      bars**: each category owns a slot around the circle and its bar
+      extends out from the centre by its value's share of the largest. TanStack
+      ships the mark (`radialBarRadius` in a polar layout), and it is the
+      last of Recharts' thirteen, so the coverage is exact and not nominal.
+      One behaviour case holds it: one bar per category, and the bar's
+      length is proportional to its value.
 
 `[!]` The GPUix issue for **SVG primitives** is open upstream:
       https://github.com/remorses/gpuix/issues/130 — "Add support for SVG

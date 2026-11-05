@@ -18,7 +18,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import { darkTheme, seriesColors } from "@gpuixui/tokens";
-import { SankeyChart, SunburstChart, TreemapChart } from "../chart/structure.js";
+import {
+  RadialBarChart,
+  SankeyChart,
+  SunburstChart,
+  TreemapChart,
+} from "../chart/structure.js";
 import { chartMarkupOf } from "../internal/interaction.js";
 import { renderData, settle, type DataTestRoot } from "../internal/test-root.js";
 
@@ -37,6 +42,38 @@ const coloursOf = (markup: string): ReadonlyArray<string> =>
     [...markup.matchAll(/fill="(#[0-9A-Fa-f]{6})"/g)],
     (match) => match[1] ?? "",
   );
+
+describe("the radial bar", () => {
+  it("paints one bar per category, each in proportion to its value", () => {
+    root = renderData(
+      <RadialBarChart
+        aria-label="The letters"
+        testId="radial"
+        colors={[palette[0] ?? "#B14AFF"]}
+        data={[
+          { key: "E", value: 40 },
+          { key: "T", value: 30 },
+          { key: "A", value: 20 },
+        ]}
+      />,
+    );
+    settle(root);
+
+    const markup = chartMarkupOf(root, "radial");
+    // One bar per category.
+    const radii = Arr.map(
+      [...markup.matchAll(/<path[^>]*d="M[\d.-]+,[\d.-]+A([\d.]+),/g)],
+      (match) => Number(match[1]),
+    );
+    expect(radii.length).toBe(3);
+    // The bar's length is its value's share of the largest: the longest bar
+    // is the largest value's, and the shortest is the smallest's.
+    expect(Math.max(...radii)).toBeGreaterThan(Math.min(...radii));
+    // The largest value's bar reaches the ring, and the smaller ones stop
+    // short of it — a bar's length is proportional to its value.
+    expect(Math.max(...radii) / Math.min(...radii)).toBeGreaterThan(1.5);
+  });
+});
 
 describe("the treemap", () => {
   it("paints each cell in its own colour", () => {

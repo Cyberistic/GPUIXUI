@@ -39,7 +39,7 @@ import { treemap } from "@tanstack/charts/hierarchy/treemap";
 import { sunburst } from "@tanstack/charts/hierarchy/sunburst";
 import { sankeyDiagram } from "@tanstack/charts/network/sankey";
 import { link } from "@tanstack/charts/link";
-import { polar } from "@tanstack/charts/polar";
+import { polar, radialBarRadius } from "@tanstack/charts/polar";
 import { rect } from "@tanstack/charts/rect";
 import { scaleBand } from "@tanstack/charts/scales/band";
 import { scaleLinear } from "@tanstack/charts/scales/linear";
@@ -78,7 +78,8 @@ export type SceneChartKind =
   | "area"
   | "treemap"
   | "sankey"
-  | "sunburst";
+  | "sunburst"
+  | "radial";
 
 /**
  * One row of a chart's data: the category and every series' value.
@@ -163,6 +164,10 @@ export interface SceneChartOptions {
   readonly ringPadding?: number;
   /** How many rings of a sunburst's hierarchy are drawn. */
   readonly visibleDepth?: number;
+  /** The share of the plot a radial bar's ring occupies. */
+  readonly radiusRatio?: number;
+  /** The share of each band's slot a radial bar leaves empty. */
+  readonly bandPadding?: number;
 }
 
 /**
@@ -435,6 +440,45 @@ const cartesianDefinition = (
 };
 
 /**
+ * The radial bar's sectors.
+ *
+ * A radial bar extends one bar **through the radius** for each angle band:
+ * the band is the category, and the bar's length is its value. The angle
+ * scale is a **band** scale, so the categories own their slots, and the
+ * radius scale is linear, so a value's length is its share of the largest.
+ */
+const radialBarMark = (options: SceneChartOptions) =>
+  polar({
+    radiusRatio: options.radiusRatio ?? 0.8,
+    scales: {
+      angle: {
+        scale: () =>
+          scaleBand<string>().padding(options.bandPadding ?? 0.12),
+      },
+      radius: {
+        scale: scaleLinear().domain([0, options.range.max]),
+        range: [
+          ({ radius }) => radius * 0.3,
+          ({ radius }) => radius,
+        ],
+      },
+    },
+    marks: [
+      radialBarRadius(
+        sceneRows(options.series, options.labels),
+        {
+          angle: "category",
+          // The bar's length is the **first** series' value: a radial bar
+          // draws one bar per category, so there is one value per category.
+          radius: valueChannel(options.series[0]?.key ?? "value"),
+          key: "category",
+          fill: options.colours[0] ?? "#000000",
+        },
+      ),
+    ],
+  });
+
+/**
  * The sankey's definition.
  *
  * A sankey resolves its own flow layout, so the scene holds no scale for it.
@@ -464,6 +508,21 @@ const sunburstDefinition = (options: SceneChartOptions) =>
   });
 
 /**
+ * The radial bar's definition.
+ *
+ * The polar mark resolves the radii and the angles, so the scene holds no
+ * scale for it.
+ */
+const radialDefinition = (options: SceneChartOptions) =>
+  defineChart<
+    readonly [ReturnType<typeof radialBarMark>],
+    ChartSpec<readonly [ReturnType<typeof radialBarMark>]>
+  >({
+    marks: [radialBarMark(options)],
+    scales: { x: null, y: null },
+  });
+
+/**
  * The definition a chart's props make.
  *
  * The marks are the chart's own series, in the order the caller gave them,
@@ -484,6 +543,9 @@ export const sceneDefinition = (
   }
   if (options.kind === "sunburst") {
     return sunburstDefinition(options) as StaticChartDefinition<SceneRow>;
+  }
+  if (options.kind === "radial") {
+    return radialDefinition(options) as StaticChartDefinition<SceneRow>;
   }
   return cartesianDefinition(options);
 };
