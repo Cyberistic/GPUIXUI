@@ -8,6 +8,10 @@ import {
   verdictMark,
 } from "../../lib/component-index";
 import { componentIndex, componentPages } from "../../lib/component-index-data";
+import {
+  componentIdFromPath,
+  nativeCaptureOf,
+} from "../../lib/native-captures";
 import { ComponentIndexView } from "./component-index";
 
 /**
@@ -64,13 +68,16 @@ const markup = renderToStaticMarkup(
  * A demo can render its own list, so `</li>` is not the tile's edge; the tile's
  * own marker is.
  */
-const row = (url: string): string => {
-  const link = markup.indexOf(`href="${url}"`);
+const rowOf = (html: string, url: string): string => {
+  const link = html.indexOf(`href="${url}"`);
   if (link === -1) return "";
-  const start = markup.lastIndexOf("data-component=", link);
-  const end = markup.indexOf("data-component=", link);
-  return markup.slice(start, end === -1 ? undefined : end);
+  const start = html.lastIndexOf("data-component=", link);
+  const end = html.indexOf("data-component=", link);
+  return html.slice(start, end === -1 ? undefined : end);
 };
+
+/** A tile in the mounted grid (`previews` on). */
+const row = (url: string): string => rowOf(markup, url);
 
 describe("the component index", () => {
   it("renders every page in the index", () => {
@@ -108,11 +115,11 @@ describe("the component index", () => {
     expect(markup).toContain("lg:grid-cols-3");
   });
 
-  it("paints the same placeholder on the server, then mounts the demos", () => {
+  it("serves the real native frame on the server, then mounts the demos", () => {
     // The demos carry seeded drawings and timers. Rendering them during SSR
     // made React's first client pass disagree with the server (a hydration
-    // error across the grid), so the server and first client pass paint a
-    // placeholder and the mount turns the scenes on in an effect.
+    // error across the grid), so the server paints the build-time native frame
+    // and the mount turns the interactive scenes on in an effect.
     const firstPaint = renderToStaticMarkup(
       <ComponentIndexView onQueryChange={noop} query="" />,
     );
@@ -121,10 +128,30 @@ describe("the component index", () => {
       "utf8",
     );
 
-    expect(firstPaint).toContain(">Preview<");
+    expect(firstPaint).toContain('data-preview="native"');
+    expect(firstPaint).toContain(".webp");
     expect(firstPaint).not.toContain("gx-grid-preview");
     expect(mount).toContain("useEffect(() => setPreviews(true), [])");
     expect(mount).toContain("<Scene />");
+  });
+
+  it("uses the capture for every tile that has one", () => {
+    const serverMarkup = renderToStaticMarkup(
+      <ComponentIndexView onQueryChange={noop} query="" />,
+    );
+    const captured = componentPages.filter(
+      (entry) =>
+        entry.demo !== undefined &&
+        nativeCaptureOf(componentIdFromPath(entry.url) ?? "") !== undefined,
+    );
+
+    expect(captured.length).toBeGreaterThan(70);
+    expect(
+      captured.filter(
+        (entry) =>
+          !rowOf(serverMarkup, entry.url).includes('data-preview="native"'),
+      ),
+    ).toEqual([]);
   });
 
   it("wears the inventory verdict on the tiles that are not whole", () => {

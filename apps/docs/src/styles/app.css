@@ -199,6 +199,28 @@ body {
   border-radius: 0;
 }
 
+/* The build-time native frame: the real GPUix paint, one platform and palette. */
+.gx-native-capture {
+  margin: 0;
+  background: var(--card);
+}
+
+.gx-native-capture img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.gx-native-capture figcaption {
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
 .gx-component-note {
   margin: 0;
   padding: 10px 14px;

@@ -6,6 +6,10 @@ import {
   type ComponentEntry,
 } from "../../lib/component-index";
 import { componentIndex, componentPages } from "../../lib/component-index-data";
+import {
+  componentIdFromPath,
+  nativeCaptureOf,
+} from "../../lib/native-captures";
 import { demos } from "./demos";
 import { PreviewSurface } from "./preview-surface";
 import { useIndexQuery } from "./use-index-query";
@@ -145,12 +149,23 @@ function ComponentTile({
   // would attribute them to the tile that mounts it conditionally.
   const Scene = demo?.render ?? Nothing;
   const mark = verdictMark(entry.verdict);
+  const component = componentIdFromPath(entry.url);
+  const native =
+    component === undefined ? undefined : nativeCaptureOf(component);
 
   return (
     <li
       className="relative m-0 flex min-w-0 flex-col bg-background"
       data-component={entry.url}
-      data-preview={demo === undefined ? "none" : "demo"}
+      data-preview={
+        demo === undefined
+          ? "none"
+          : previews
+            ? "demo"
+            : native === undefined
+              ? "placeholder"
+              : "native"
+      }
     >
       <a
         className="z-10 flex items-baseline justify-between gap-2 p-3 text-sm font-medium text-foreground no-underline after:absolute after:inset-0 after:content-[''] hover:underline"
@@ -188,7 +203,7 @@ function ComponentTile({
             <Scene />
           </PreviewSurface>
         </div>
-      ) : (
+      ) : native === undefined ? (
         <div
           aria-hidden="true"
           className="flex aspect-[4/3] items-center justify-center border-t border-border"
@@ -196,6 +211,19 @@ function ComponentTile({
           <span className="font-mono text-[0.65rem] text-muted-foreground">
             Preview
           </span>
+        </div>
+      ) : (
+        <div
+          aria-hidden="true"
+          className="aspect-[4/3] overflow-hidden border-t border-border"
+        >
+          <img
+            alt=""
+            className="h-full w-full object-cover"
+            decoding="async"
+            loading="lazy"
+            src={native}
+          />
         </div>
       )}
     </li>
