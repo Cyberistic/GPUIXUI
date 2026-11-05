@@ -459,7 +459,7 @@ function ZoomScene({ theme }: { readonly theme: Theme }) {
         })}
         {CHART_LABELS.map((label, index) => (
           <text
-            fill="#8A8F98"
+            fill="var(--muted-foreground)"
             fontSize={10}
             key={`label-${index}`}
             textAnchor="middle"
@@ -689,7 +689,7 @@ function InteractiveScene({
           {hoveredPoint === undefined ? null : (
             <>
               <line
-                stroke="#8A8F98"
+                stroke="var(--muted-foreground)"
                 strokeDasharray="3 3"
                 x1={hoveredPoint.x}
                 x2={hoveredPoint.x}
@@ -934,7 +934,7 @@ function ChartTypeScene({
             <g key={`ring-${index}`}>
               <path
                 d={fullRing(80, 80, outer, outer - 10)}
-                fill="#8A8F98"
+                fill="var(--muted-foreground)"
                 key={`track-${index}`}
                 opacity={0.18}
               />
@@ -978,6 +978,8 @@ function ChartTypeScene({
           Option.match(point, {
             onNone: () => null,
             onSome: (at) => (
+              // A slice is a palette fill in either mode, so its label is a
+              // constant dark ink rather than the surface's.
               <text
                 fill="#0B0D12"
                 fontSize={10}
@@ -1051,7 +1053,7 @@ function ChartTypeScene({
             fill={galleryColour(theme, 0)}
             fillOpacity={0.06}
             key={`fill-${index}`}
-            stroke="#8A8F98"
+            stroke="var(--muted-foreground)"
             strokeWidth={1}
           />
         ))}
@@ -1060,7 +1062,7 @@ function ChartTypeScene({
             d={d}
             fill="none"
             key={`spoke-${index}`}
-            stroke="#8A8F98"
+            stroke="var(--muted-foreground)"
             strokeWidth={1}
           />
         ))}
@@ -1146,11 +1148,11 @@ function ChartTypeScene({
                 <path
                   d={found.leader}
                   fill="none"
-                  stroke="#8A8F98"
+                  stroke="var(--muted-foreground)"
                   strokeWidth={1}
                 />
                 <text
-                  fill="#8A8F98"
+                  fill="var(--muted-foreground)"
                   fontSize={10}
                   textAnchor={found.right ? "start" : "end"}
                   x={found.point.x + (found.right ? 4 : -4)}
@@ -1367,7 +1369,7 @@ function ChartTypeScene({
             width={180}
           >
             <rect
-              fill="#8A8F98"
+              fill="var(--muted-foreground)"
               height={100}
               opacity={0.18}
               width={44}
@@ -1517,7 +1519,7 @@ function ChartTypeScene({
                       d={d}
                       fill="none"
                       key={`web-${index}`}
-                      stroke="#8A8F98"
+                      stroke="var(--muted-foreground)"
                       strokeWidth={1}
                     />
                   ))
@@ -1565,7 +1567,7 @@ function ChartTypeScene({
                     )[index];
                     return point === undefined ? null : (
                       <text
-                        fill="#8A8F98"
+                        fill="var(--muted-foreground)"
                         fontSize={9}
                         key={`label-${index}`}
                         textAnchor="middle"
@@ -1605,7 +1607,7 @@ function ChartTypeScene({
                     {variant.showTrack ? (
                       <path
                         d={fullRing(70, 70, outer, outer - 10)}
-                        fill="#8A8F98"
+                        fill="var(--muted-foreground)"
                         opacity={0.18}
                       />
                     ) : null}
@@ -1627,7 +1629,7 @@ function ChartTypeScene({
                       ),
                     )}
                     <text
-                      fill="#8A8F98"
+                      fill="var(--muted-foreground)"
                       fontSize={9}
                       x={70 + (outer - 5) * Math.cos(-Math.PI / 2 + span) + 6}
                       y={70 + (outer - 5) * Math.sin(-Math.PI / 2 + span) + 3}
@@ -1638,7 +1640,7 @@ function ChartTypeScene({
                 );
               })}
               <text
-                fill="#8A8F98"
+                fill="var(--muted-foreground)"
                 fontSize={10}
                 textAnchor="middle"
                 x={70}
@@ -1702,7 +1704,7 @@ export function ChartDemo() {
   const [mode, setMode] = useState<ChartMode>("bars");
 
   return (
-    <div className="gx-data-scene" data-platform={platform}>
+    <div className="gx-data-scene" data-platform={platform} data-wide="">
       <ChartDemoBody
         key={`${platform}-${look}-${mode}`}
         mode={mode}
@@ -1890,17 +1892,39 @@ export function ChartGallery({ theme }: { readonly theme: Theme }) {
               d={d}
               fill="none"
               key={`web-${index}`}
-              stroke="#8A8F98"
+              stroke={galleryColour(theme, 0)}
+              strokeOpacity={0.28}
               strokeWidth={1}
             />
           ))}
-          <path
-            d={Option.getOrElse(polygonPath(radarSeries), () => "")}
-            fill={galleryColour(theme, 0)}
-            fillOpacity={0.25}
-            stroke={galleryColour(theme, 0)}
-            strokeWidth={2}
-          />
+          {[1, 0].map((index) => (
+            <path
+              d={Option.getOrElse(
+                polygonPath(
+                  index === 0
+                    ? radarSeries
+                    : radarPoints([48, 34, 55, 42, 50], 5, radarBox, radarMax),
+                ),
+                () => "",
+              )}
+              fill={galleryColour(theme, index)}
+              fillOpacity={index === 0 ? 0.34 : 0.16}
+              key={`series-${index}`}
+              stroke={galleryColour(theme, index)}
+              strokeWidth={index === 0 ? 2 : 1.5}
+            />
+          ))}
+          {radarSeries.map((dot) => (
+            <circle
+              cx={dot.x}
+              cy={dot.y}
+              fill={galleryColour(theme, 0)}
+              key={`dot-${dot.x}-${dot.y}`}
+              r={2.4}
+              stroke="var(--card)"
+              strokeWidth={1.5}
+            />
+          ))}
         </svg>
       </figure>
       <figure className="gx-dchart-cell">

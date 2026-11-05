@@ -7470,6 +7470,221 @@ button.gx-date-navbtn:hover:not(:disabled) {
   border-radius: var(--radius-sm);
 }
 
+/* ---- the gallery, the variants and the readouts ----
+   `charts-demo.tsx` is the whole `/graphics/charts` page: one large frame, a
+   grid of small multiples, a row of modes, and the scenes a gesture needs.
+   Only the frame had rules, so the grid stacked down one narrow column and
+   every readout painted as bare text. */
+
+/* A gallery cell is a small multiple: four types read as four answers to one
+   question, on a card each, in a grid that fills the preview's width. */
+.gx-dchart-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.gx-dchart-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+}
+
+.gx-dchart-cell > figcaption {
+  align-self: flex-start;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-dchart-cell > svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.gx-dchart-gallery .gx-dchart-cell,
+.gx-dchart-variants .gx-dchart-cell {
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--card) 55%, transparent);
+}
+
+/* Two or three readings of one option, side by side, so the difference is the
+   caption rather than a paragraph. */
+.gx-dchart-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+}
+
+.gx-dchart-variants .gx-dchart-cell {
+  flex: 1 1 150px;
+}
+
+/* A scene that measures the pointer: the readout is placed in this frame's
+   own coordinates, so the frame is what the inline `left`/`top` is relative to. */
+.gx-dchart-interactive-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.gx-dchart-tooltip-scene {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The readout: a surface that lifts off the plot, never a tint of it, so a
+   label over a filled bar stays a label. */
+.gx-dchart-tip-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: var(--radius);
+  background: var(--popover, var(--card));
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.18);
+  color: var(--popover-foreground, var(--foreground));
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.gx-dchart-tip-head {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-dchart-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-dchart-tip-row b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.gx-dchart-tip-dot,
+.gx-dchart-tip-line {
+  flex: none;
+  border-radius: 999px;
+}
+
+.gx-dchart-tip-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.gx-dchart-tip-line {
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+/* A readout that follows the pointer must not eat the pointer that moves it. */
+.gx-dchart-tip-follow {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.gx-dchart-tip-static {
+  align-self: center;
+}
+
+.gx-dchart-legend-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.gx-dchart-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-dchart-legend-row b {
+  margin-left: auto;
+  color: var(--foreground);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.gx-dchart-legend-mark {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-sm);
+}
+
+.gx-dchart-legend-dot {
+  border-radius: 999px;
+}
+
+.gx-dchart-legend-line {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.gx-dchart-label-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.gx-dchart-label-scene > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gx-dchart-label-scene b {
+  color: var(--foreground);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The brush: a rail the band rides on, so the drawn window is read as a range. */
+.gx-dchart-brush-strip {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 12%, transparent);
+  cursor: ew-resize;
+}
+
+.gx-dchart-brush-band {
+  position: absolute;
+  inset-block: 0;
+  border-radius: 999px;
+}
+
 /* ---- the scenes these drawings sit in ---- */
 .gx-data-scene {
   display: flex;
@@ -7479,6 +7694,20 @@ button.gx-date-navbtn:hover:not(:disabled) {
   max-width: 640px;
   align-items: stretch;
   text-align: left;
+}
+
+/* The charts page is the gallery: the frame, the small multiples and the mode
+   row fill the preview instead of leaving half of it empty. */
+.gx-data-scene[data-wide] {
+  max-width: none;
+}
+
+.gx-data-scene[data-wide] > .gx-dchart {
+  align-self: center;
+}
+
+.gx-data-scene[data-wide] > .gx-data-row {
+  justify-content: center;
 }
 
 .gx-data-row {
