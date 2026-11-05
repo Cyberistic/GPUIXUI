@@ -1,0 +1,52 @@
+---
+title: Dashboard 01
+description: shadcn's dashboard — an inset sidebar, stat cards, and a chart of every shape
+---
+
+<BlockPreview name="dashboard-01-shadcn" />
+
+## Composition
+
+- `Card` and its parts from `@gpuixui/components/card`, `Badge` from
+  `@gpuixui/components/badge`, `Sidebar` and its parts from
+  `@gpuixui/components/sidebar`
+- `AreaChart`, `TreemapChart`, `SankeyChart` and `SunburstChart` from
+  `@gpuixui/data`
+- `Icon` from `@gpuixui/icons`
+- `Box`, `Stack` and `Text` from `@gpuixui/primitives`
+
+## The charts
+
+This is shadcn's `dashboard-01`, and the charts are the point. The reference
+draws **one** area chart; a showcase that draws one chart shows nothing, so
+this recipe shows the whole family — the same reference composition, with a
+chart of every shape the library ships:
+
+| Chart | What it shows |
+| ----- | ------------- |
+| `AreaChart` | desktop and mobile traffic over thirty days, each a filled region under its line |
+| `TreemapChart` | the traffic sources, each cell's area its share of the whole |
+| `SankeyChart` | the funnel from visits to paid, each ribbon's thickness its flow |
+| `SunburstChart` | the device mix, each arc's angle its share of the circle |
+
+All four are documented on [Charts](/graphics/charts/charts).
+
+## The config
+
+The area chart's identity lives in a **config**, not in the data: one keyed
+table names each series and gives it a colour, and the data says only the
+values. The table is shadcn's `ChartConfig`, and a theme owns the colours — so
+the same table can be shared by several charts and one switch repaints them
+all.
+
+```tsx
+const config = {
+  desktop: { label: "Desktop", color: "var(--chart-1)" },
+  mobile: { label: "Mobile", color: "var(--chart-2)" },
+} satisfies ChartConfig;
+
+<AreaChart config={config} data={traffic} />;
+```
+
+A chart that names a config **and** a data needs no series of its own: the
+two make the series together.

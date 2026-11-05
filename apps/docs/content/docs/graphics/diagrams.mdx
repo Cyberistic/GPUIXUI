@@ -79,36 +79,33 @@ The three roles that are not colours — `--pele-radius`, `--pele-font` and
 `--pele-font-mono` — are given literal values, because a raster carries no
 font of its own.
 
-## The renderer
+## Interactive diagrams
 
-The docs also ship the [mermaidcn](https://github.com/Riley1101/mermaidcn)
-components, rebuilt on Pele: the same `chart` prop, the same theme names and the
-same eight Mermaid variables, with Pele's synchronous render underneath. The
-drawing below is live — zoom it with the wheel or the buttons, and pan it with a
-drag.
+The same Pele render, with a zoom/pan canvas. The drawing below is live — wheel
+or the buttons to zoom, drag to pan.
 
-<MermaidExample />
+<DiagramExample />
 
 ```tsx
-import { Mermaid } from "@/components/mermaidcn/Mermaid";
-import { ZoomPan } from "@/components/mermaidcn/ZoomPan";
+import { DiagramView } from "@/components/diagram/DiagramView";
+import { ZoomPan } from "@/components/diagram/ZoomPan";
 
 <ZoomPan
   controls={({ zoomIn, zoomOut, resetZoom, centerView, scalePercent }) => (
     <>…</>
   )}
 >
-  <Mermaid chart={source} config={{ theme: "ocean" }} />
+  <DiagramView chart={source} config={{ theme: "ocean" }} />
 </ZoomPan>;
 ```
 
-### `Mermaid`
+### `DiagramView`
 
 | Prop | Type | Default |
 | --- | --- | --- |
 | `chart` | `string` | required |
 | `config.theme` | `"default" \| "dark" \| "forest" \| "neutral" \| "base"` or a named palette | `"default"` |
-| `config.themeVariables` | `Partial<MermaidThemeVariables>` | none |
+| `config.themeVariables` | `Partial<DiagramThemeVariables>` | none |
 | `config.fontFamily` | `string` | Pele's default |
 | `config.fontSize` | `number` | Pele's default |
 | `config.maxWidth` | `number` | none |
@@ -121,21 +118,20 @@ import { ZoomPan } from "@/components/mermaidcn/ZoomPan";
 `themeVariables` keeps Mermaid's names (`primaryColor`, `primaryTextColor`,
 `primaryBorderColor`, `background`, `textColor`, `lineColor`,
 `secondaryColor`, `tertiaryColor`) and maps them to Pele's roles, so a config
-copied from mermaidcn keeps working. A variable Pele has no role for is ignored
+copied from Mermaid keeps working. A variable Pele has no role for is ignored
 rather than painted as a property nothing reads.
 
-## The playground
+## Playground
 
-The playground is the whole mermaidcn loop: edit the source, switch a template,
-pick a theme, then zoom, fit or reset the preview. Copy and download take the
+Edit the source, switch a template, pick a theme, then zoom, fit or reset. Copy and download take the
 rendered SVG Pele produced.
 
-<MermaidPlayground />
+<DiagramPlayground />
 
 ```tsx
-import { MermaidPlayground } from "@/components/mermaidcn/MermaidPlayground";
+import { DiagramPlayground } from "@/components/diagram/DiagramPlayground";
 
-<MermaidPlayground defaultValue={source} />;
+<DiagramPlayground defaultValue={source} />;
 ```
 
 The preview renders one deferred value behind the editor, so typing stays

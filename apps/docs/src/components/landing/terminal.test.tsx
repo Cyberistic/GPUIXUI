@@ -41,7 +41,7 @@ describe("the terminal moment", () => {
     expect(record).toContain("GPUIX_TERMINAL=1 code GPUIXUI");
     expect(markup).toContain("GPUIX_TERMINAL=1 code GPUIXUI");
     expect(markup).toContain("opening GPUIXUI — terminal mode");
-    expect(markup).toContain('href="/platform/terminal"');
+    expect(markup).toContain('href="/getting-started/terminal"');
   });
 
   it("waits for the reader to reach it before typing", () => {

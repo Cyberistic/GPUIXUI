@@ -22,12 +22,12 @@ getting-started/index.mdx    The guide: install, the first component, the four r
 getting-started/omarchy.mdx  Developing on Arch/Hyprland, and following the Omarchy palette
 getting-started/prompt.mdx   One copyable build prompt, generated from the pages the site ships
 graphics/index.mdx            The Graphics category: the charts, the icons and the diagrams, and the one paint path they share
-graphics/diagrams.mdx        The Diagram component, the Mermaid fences it draws, the mermaidcn renderer, zoom/pan and playground on Pele
+graphics/diagrams.mdx        The Diagram component, the Mermaid fences it draws, the diagram renderer, zoom/pan and playground on Pele
 themes.mdx                   The live token editor, the authored looks, the Aero look's generated CSS, and the compiled style/type/scale references
 workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
 platform/index.mdx            The native surface: what the OS owns and what the library paints
 platform/native-window.mdx    The native window: a sidebar under the lights, a unified toolbar
-platform/terminal.mdx         The same view painted into kitty or Ghostty
+getting-started/terminal.mdx  The same view painted into kitty or Ghostty
 platform/window.mdx           The window's verbs and the system's path picker
 data-display/index.mdx      The data lane: what ships, the table gate, runtime gaps
 registry.mdx                 The shadcn registry: install command and what the files still need
@@ -36,6 +36,7 @@ reference.mdx                The public entry points and the symbols behind them
 blocks/index.mdx             Page-level recipes composed from the library
 blocks/all.mdx               Every block in one column, generated from the pages' frontmatter
 blocks/dashboard.mdx         An activity dashboard composed from the library
+blocks/dashboard-01.mdx      The dashboard block with the captures and stats
 blocks/sign-in.mdx           A full sign-in page: navbar, form card, illustrated quote panel
 blocks/dashboard-management.mdx A three-column management console: service health, deploys, toasts, keys
 blocks/settings.mdx          A settings page with tabbed sections
@@ -43,15 +44,6 @@ blocks/kanban.mdx            A project task board: sidebar, four counted columns
 blocks/settings-dialog.mdx   A modal settings window: section nav, switch, font-size slider, layouts
 blocks/notification-centre.mdx A notification centre: filters, four row bodies, unread dots
 blocks/command-centre.mdx    A command palette over a dimmed page: filter, highlight, run line
-blocks/notes.mdx             Notes: the Mac-app block, from its native capture
-blocks/preferences.mdx       Preferences: the Mac-app block, from its native capture
-blocks/launcher.mdx          Launcher: the Mac-app block, from its native capture
-blocks/menubar.mdx           Menu bar: the Mac-app block, from its native capture
-blocks/agent.mdx             Agent: the Mac-app block, from its native capture
-blocks/calendar.mdx          Calendar: the Mac-app block, from its native capture
-blocks/welcome.mdx           Welcome: the Mac-app block, from its native capture
-blocks/viewer.mdx            Viewer: the Mac-app block, from its native capture
-blocks/license.mdx           Hunter License: the registry, a licence card and its privileges
 blocks/pipeline.mdx          A release pipeline in a native Mac window, from the compiled block
 blocks/file-manager.mdx      A three-pane browser: folders, image tiles and file facts
 blocks/email-inbox.mdx       A four-pane mail client with a filterable list
@@ -332,19 +324,20 @@ src/components/docs/block-icons.tsx       The glyphs the block previews draw
 src/components/docs/sidebar-rail.tsx      The shared collapsible-rail toggle and state
 src/components/docs/auth-blocks.tsx       The auth examples, the sign-in page and their recipes
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
+src/components/docs/dashboard-01.tsx      The dashboard block's captured screen
 src/components/docs/dashboard-management.tsx The console block's browser reproduction and recipe
 src/components/docs/kanban-board.tsx      The kanban board's reproduction, columns and card moves
 src/components/docs/settings-dialog.tsx   The settings dialog's reproduction, theme state and controls
 src/components/docs/pipeline-block.tsx   The pipeline's preview, from the compiled block's data and rules
 src/components/docs/mermaid.ts          Rendering Mermaid with Pele, and the role mapping
-src/components/mermaidcn/Mermaid.tsx    The Mermaid figure, drawn through Pele
-src/components/mermaidcn/MermaidEditor.tsx The source editor and its live preview
-src/components/mermaidcn/MermaidExample.tsx A worked diagram beside its source
-src/components/mermaidcn/MermaidPlayground.tsx The playground composing editor, figure and templates
-src/components/mermaidcn/ZoomPan.tsx    The zoom and pan viewer around a figure
-src/components/mermaidcn/templates.ts   The starter diagrams the playground offers
-src/components/mermaidcn/theme.ts       The Mermaid palette, read from the page's roles
-src/components/mermaidcn/zoom.ts        The zoom and pan arithmetic
+src/components/diagram/DiagramView.tsx The diagram figure, drawn through Pele
+src/components/diagram/DiagramEditor.tsx The source editor and its live preview
+src/components/diagram/DiagramExample.tsx A worked diagram beside its source
+src/components/diagram/DiagramPlayground.tsx The playground composing editor, figure and templates
+src/components/diagram/ZoomPan.tsx    The zoom and pan viewer around a figure
+src/components/diagram/templates.ts   The starter diagrams the playground offers
+src/components/diagram/theme.ts       The Mermaid palette, read from the page's roles
+src/components/diagram/zoom.ts        The zoom and pan arithmetic
 src/components/docs/mermaid-diagram.tsx A diagram's frame, its caption and its refusal
 src/components/docs/prompt-page.tsx     The prompt printed as one string, with one copy action
 src/components/docs/notification-centre.tsx The notification centre's rows, filters and mark-read state
@@ -430,7 +423,7 @@ src/styles/blocks.css                     The block recipes' preview styles
 src/styles/landing.css                    The landing page's styles
 src/styles/platform.css                   The platform switch's own chrome
 src/styles/live.css                       The live surface's bar and its fallback sentence
-src/styles/mermaidcn.css                  The Mermaid editor and viewer chrome
+src/styles/diagram.css                  The Mermaid editor and viewer chrome
 
 src/lib/docs-view.tsx               The shared docs layout and the two-collection page template
 src/lib/style-reference.ts          The class groups /themes prints, resolved by @gpuixui/tw

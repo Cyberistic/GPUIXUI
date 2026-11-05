@@ -14,8 +14,8 @@ import { Install } from "./docs/install";
 import { LanePages } from "./docs/lane-pages";
 import { LaneTable } from "./docs/lane-table";
 import { MermaidDiagram } from "./docs/mermaid-diagram";
-import { MermaidExample } from "./mermaidcn/MermaidExample";
-import { MermaidPlayground } from "./mermaidcn/MermaidPlayground";
+import { DiagramExample } from "./diagram/DiagramExample";
+import { DiagramPlayground } from "./diagram/DiagramPlayground";
 import { PromptPage } from "./docs/prompt-page";
 import { LookPicker } from "./docs/look-picker";
 import { SidebarExample } from "./docs/sidebar-examples";
@@ -79,8 +79,8 @@ export const mdxComponents = {
   LanePages,
   LaneTable,
   MermaidDiagram,
-  MermaidExample,
-  MermaidPlayground,
+  DiagramExample,
+  DiagramPlayground,
   pre,
   PromptPage,
   LookPicker,

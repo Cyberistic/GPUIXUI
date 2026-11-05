@@ -2,12 +2,12 @@ import { Effect } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { renderMermaid } from "../docs/mermaid";
-import { Mermaid, renderOptionsOf } from "./Mermaid";
-import { MermaidPlayground } from "./MermaidPlayground";
+import { DiagramView, renderOptionsOf } from "./DiagramView";
+import { DiagramPlayground } from "./DiagramPlayground";
 import { diagramTemplates } from "./templates";
 import {
   builtinThemes,
-  isMermaidTheme,
+  isDiagramTheme,
   mermaidThemes,
   peleVariables,
   themeSwatch,
@@ -24,7 +24,7 @@ import {
 } from "./zoom";
 
 /**
- * mermaidcn on Pele.
+ * diagram on Pele.
  *
  * The bugs these cases guard: a theme name that resolves to no palette would
  * paint every diagram in the page's roles while the picker says "ocean"; a
@@ -47,7 +47,7 @@ const render = (
 
 describe("the Mermaid renderer", () => {
   const markup = renderToStaticMarkup(
-    <Mermaid
+    <DiagramView
       chart={"flowchart LR\n  A[Ingest] --> B[Frame]"}
       config={{ theme: "ocean" }}
     />,
@@ -70,15 +70,15 @@ describe("the Mermaid renderer", () => {
 
   it("renders the parser's sentence instead of an empty frame", () => {
     const broken = renderToStaticMarkup(
-      <Mermaid chart="this is not a diagram" />,
+      <DiagramView chart="this is not a diagram" />,
     );
     expect(broken).toContain("Syntax error");
-    expect(broken).toContain("gx-mermaidcn-message");
+    expect(broken).toContain("gx-diagram-message");
     expect(broken).not.toContain("<svg");
   });
 
   it("asks for a source when the chart is blank", () => {
-    const empty = renderToStaticMarkup(<Mermaid chart="  " />);
+    const empty = renderToStaticMarkup(<DiagramView chart="  " />);
     expect(empty).toContain("Enter a Mermaid diagram");
   });
 
@@ -108,7 +108,7 @@ describe("the theme table", () => {
   it("resolves every built-in name", () => {
     const table = builtinThemes.map((name) => ({
       name,
-      known: isMermaidTheme(name),
+      known: isDiagramTheme(name),
       variables: themeVariables(name),
       swatch: themeSwatch(name),
     }));
@@ -129,10 +129,10 @@ describe("the theme table", () => {
   it("resolves every named palette the picker offers", () => {
     const names = Object.keys(mermaidThemes);
     expect(names.length).toBeGreaterThan(10);
-    expect(names.every(isMermaidTheme)).toBe(true);
+    expect(names.every(isDiagramTheme)).toBe(true);
     expect(
       names.every(
-        (name) => isMermaidTheme(name) && themeVariables(name) !== undefined,
+        (name) => isDiagramTheme(name) && themeVariables(name) !== undefined,
       ),
     ).toBe(true);
   });
@@ -228,14 +228,14 @@ describe("the templates", () => {
 });
 
 describe("the playground", () => {
-  const markup = renderToStaticMarkup(<MermaidPlayground />);
+  const markup = renderToStaticMarkup(<DiagramPlayground />);
 
   it("mounts the source, the preview and the toolbar", () => {
-    expect(markup).toContain("gx-mermaidcn-toolbar");
-    expect(markup).toContain("gx-mermaidcn-input");
+    expect(markup).toContain("gx-diagram-toolbar");
+    expect(markup).toContain("gx-diagram-input");
     expect(markup).toContain("Mermaid source");
     expect(markup).toContain("API request");
-    expect(markup).toContain("gx-mermaidcn-preview-bar");
+    expect(markup).toContain("gx-diagram-preview-bar");
     expect(markup).toContain('aria-label="Zoom in"');
     expect(markup).toContain("Copy SVG");
   });

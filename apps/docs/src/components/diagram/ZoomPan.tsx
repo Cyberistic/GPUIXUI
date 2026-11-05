@@ -22,7 +22,7 @@ import {
 /**
  * A generic zoom-and-pan canvas.
  *
- * mermaidcn's shape is kept — `children`, `className`, `minScale`, `maxScale`,
+ * diagram's shape is kept — `children`, `className`, `minScale`, `maxScale`,
  * `initialScale`, `zoomStep`, a `controls` render prop and a loading overlay —
  * because the wrapper is useful for any drawing, not only a diagram. The wheel
  * zooms around the pointer, a primary/middle drag pans, and the control prop

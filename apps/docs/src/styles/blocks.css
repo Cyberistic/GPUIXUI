@@ -7709,3 +7709,300 @@ button.gx-sb-row {
     transition: none;
   }
 }
+
+/* A dashboard is taller than a page: its content pane scrolls inside a
+   frame, the way the reference's does, and the sidebar stays put. */
+.gx-sb:has(.gx-dash01-body) {
+  height: 900px;
+}
+
+.gx-sb:has(.gx-dash01-body) .gx-sb-inset-body {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* -- Dashboard 01 ---------------------------------------------------------
+ *
+ * shadcn's dashboard: an inset sidebar, four stat cards, an interactive area
+ * chart, three structural charts and a documents table. The colours are the
+ * library's data series, so the platform and look switch repaint the charts.
+ */
+.gx-dash01-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.gx-dash01-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (width < 1100px) {
+  .gx-dash01-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width < 640px) {
+  .gx-dash01-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.gx-dash01-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--primary) 5%, var(--card));
+}
+
+.gx-dash01-card-label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gx-dash01-card-value {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.gx-dash01-badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-badge[data-up="true"] {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
+}
+
+.gx-dash01-card-note {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.gx-dash01-card-sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+.gx-dash01-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gx-dash01-panel-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gx-dash01-panel-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-panel-tab {
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (width < 1100px) {
+  .gx-dash01-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The charts. Each is the shape its own type paints: the area fades toward
+   the axis, the treemap's cells are squared, the sankey's ribbons are
+   proportional, and the sunburst's arcs are angular shares. */
+.gx-dash01-area,
+.gx-dash01-treemap,
+.gx-dash01-sankey,
+.gx-dash01-sunburst {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Two series, two colours: the first is the library's first series colour
+   and the second is its second, so the plot reads as two series at once. */
+.gx-dash01-area-line {
+  fill: none;
+  stroke: var(--series-1, #a7a9ff);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.gx-dash01-area-fill {
+  fill: var(--series-1, #a7a9ff);
+  fill-opacity: 0.16;
+}
+
+/* The second series takes the scale's **third** colour: the first two are
+   both blues in every shipped theme, and a showcase whose two series read as
+   one line shows nothing. */
+[data-tone="two"] .gx-dash01-area-line {
+  stroke: var(--series-3, #1fa968);
+}
+
+[data-tone="two"] .gx-dash01-area-fill {
+  fill: var(--series-3, #1fa968);
+  fill-opacity: 0.22;
+}
+
+/* Each cell and each arc takes the next colour of the library's series
+   scale, so a picture of four parts reads as four parts. */
+.gx-dash01-cell {
+  fill: var(--series-1, #a7a9ff);
+  fill-opacity: 0.85;
+}
+
+.gx-dash01-cell[data-slot="2"],
+.gx-dash01-arc[data-slot="2"] {
+  fill: var(--series-2, #6e9cff);
+}
+
+.gx-dash01-cell[data-slot="3"],
+.gx-dash01-arc[data-slot="3"] {
+  fill: var(--series-3, #1fa968);
+}
+
+.gx-dash01-cell[data-slot="4"],
+.gx-dash01-arc[data-slot="4"] {
+  fill: var(--series-4, #ffde8a);
+}
+
+.gx-dash01-cell-label {
+  font-size: 10px;
+  fill: var(--foreground);
+  font-weight: 600;
+}
+
+.gx-dash01-cell-value {
+  font-size: 9px;
+  fill: var(--muted-foreground);
+  font-family: var(--font-mono);
+}
+
+.gx-dash01-ribbon {
+  fill: var(--series-3, #1fa968);
+}
+
+.gx-dash01-node {
+  fill: var(--series-4, #ffde8a);
+  fill-opacity: 0.9;
+}
+
+.gx-dash01-node-label {
+  font-size: 9px;
+  fill: var(--muted-foreground);
+  font-family: var(--font-mono);
+}
+
+.gx-dash01-arc {
+  fill: var(--series-1, #a7a9ff);
+  fill-opacity: 0.9;
+  stroke: var(--card);
+  stroke-width: 1;
+}
+
+.gx-dash01-hub {
+  fill: var(--card);
+}
+
+.gx-dash01-table-wrap {
+  overflow-x: auto;
+}
+
+.gx-dash01-table {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.gx-dash01-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.gx-dash01-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.gx-dash01-cell-strong {
+  font-weight: 500;
+}
+
+.gx-dash01-status {
+  padding: 2px 8px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-status[data-done="true"] {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
+}

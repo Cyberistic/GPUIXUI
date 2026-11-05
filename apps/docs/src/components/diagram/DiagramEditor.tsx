@@ -8,19 +8,19 @@ import { type KeyboardEvent, useRef } from "react";
  * spaces because a diagram's indentation is significant.
  */
 
-export interface MermaidEditorProps {
+export interface DiagramEditorProps {
   readonly value: string;
   readonly onChange: (value: string) => void;
   readonly className?: string;
   readonly placeholder?: string;
 }
 
-export function MermaidEditor({
+export function DiagramEditor({
   value,
   onChange,
   className,
   placeholder = "Enter a Mermaid diagram…",
-}: MermaidEditorProps) {
+}: DiagramEditorProps) {
   const gutter = useRef<HTMLDivElement | null>(null);
   const lines = value.split("\n").length;
 
@@ -38,17 +38,15 @@ export function MermaidEditor({
   };
 
   return (
-    <div
-      className={["gx-mermaidcn-editor", className].filter(Boolean).join(" ")}
-    >
-      <div aria-hidden="true" className="gx-mermaidcn-gutter" ref={gutter}>
+    <div className={["gx-diagram-editor", className].filter(Boolean).join(" ")}>
+      <div aria-hidden="true" className="gx-diagram-gutter" ref={gutter}>
         {Array.from({ length: lines }, (_, index) => (
           <span key={index + 1}>{index + 1}</span>
         ))}
       </div>
       <textarea
         aria-label="Mermaid source"
-        className="gx-mermaidcn-input"
+        className="gx-diagram-input"
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={key}
         onScroll={(event) => {

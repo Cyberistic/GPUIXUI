@@ -1,9 +1,9 @@
 /**
- * The palettes mermaidcn exposes, translated to the custom properties Pele
+ * The palettes diagram exposes, translated to the custom properties Pele
  * paints through.
  *
  * Mermaid.js themes are a renderer config; Pele's theme is CSS. The names and
- * the eight Mermaid variables stay the same as mermaidcn's, so a caller can
+ * the eight Mermaid variables stay the same as diagram's, so a caller can
  * move a diagram between the two without changing its theme name, but the
  * result is a set of `--pele-*` values on the wrapper. `default` reads the page
  * roles from the stylesheet, which is what lets a light/dark switch re-theme a
@@ -11,7 +11,7 @@
  */
 
 /** The eight Mermaid theme variables a preset carries. */
-export interface MermaidThemeVariables {
+export interface DiagramThemeVariables {
   readonly primaryColor: string;
   readonly primaryTextColor: string;
   readonly primaryBorderColor: string;
@@ -33,7 +33,7 @@ export const builtinThemes = [
 
 export type MermaidBuiltinTheme = (typeof builtinThemes)[number];
 
-/** The named palettes mermaidcn adds on top of Mermaid's five. */
+/** The named palettes diagram adds on top of Mermaid's five. */
 export const mermaidThemes = {
   emerald: {
     primaryColor: "#22c55e",
@@ -185,21 +185,21 @@ export const mermaidThemes = {
     secondaryColor: "#1f2937",
     tertiaryColor: "#374151",
   },
-} as const satisfies Record<string, MermaidThemeVariables>;
+} as const satisfies Record<string, DiagramThemeVariables>;
 
 export type MermaidCustomTheme = keyof typeof mermaidThemes;
 
-export type MermaidTheme = MermaidBuiltinTheme | MermaidCustomTheme;
+export type DiagramTheme = MermaidBuiltinTheme | MermaidCustomTheme;
 
 /** Whether a stored or selected value names a theme this module carries. */
-export const isMermaidTheme = (value: string): value is MermaidTheme =>
+export const isDiagramTheme = (value: string): value is DiagramTheme =>
   (builtinThemes as ReadonlyArray<string>).includes(value) ||
   Object.hasOwn(mermaidThemes, value);
 
 /** The Mermaid presets, by mode. */
 const BUILTIN_VARIABLES: Record<
   Exclude<MermaidBuiltinTheme, "default">,
-  MermaidThemeVariables
+  DiagramThemeVariables
 > = {
   dark: {
     primaryColor: "#1e293b",
@@ -244,7 +244,7 @@ const BUILTIN_VARIABLES: Record<
 };
 
 const isBuiltinTheme = (
-  theme: MermaidTheme,
+  theme: DiagramTheme,
 ): theme is Exclude<MermaidBuiltinTheme, "default"> =>
   Object.hasOwn(BUILTIN_VARIABLES, theme);
 
@@ -253,8 +253,8 @@ const isCustomTheme = (theme: string): theme is MermaidCustomTheme =>
 
 /** The palette a theme name resolves to. `default` reads the page's roles. */
 export const themeVariables = (
-  theme: MermaidTheme | undefined,
-): MermaidThemeVariables | undefined => {
+  theme: DiagramTheme | undefined,
+): DiagramThemeVariables | undefined => {
   if (theme === undefined || theme === "default") return undefined;
   return isBuiltinTheme(theme)
     ? BUILTIN_VARIABLES[theme]
@@ -264,11 +264,11 @@ export const themeVariables = (
 };
 
 /** The colour a theme picker shows beside the theme's name. */
-export const themeSwatch = (theme: MermaidTheme): string =>
+export const themeSwatch = (theme: DiagramTheme): string =>
   themeVariables(theme)?.primaryBorderColor ?? "var(--ring)";
 
 /** Mermaid's variable names, mapped to the roles Pele paints. */
-export const peleRoleOf: Record<keyof MermaidThemeVariables, string> = {
+export const peleRoleOf: Record<keyof DiagramThemeVariables, string> = {
   primaryColor: "--pele-surface",
   primaryTextColor: "--pele-fg",
   primaryBorderColor: "--pele-border",
@@ -282,11 +282,11 @@ export const peleRoleOf: Record<keyof MermaidThemeVariables, string> = {
 /**
  * A theme's Mermaid variables as Pele custom properties.
  *
- * The Mermaid names are accepted so a config copied from mermaidcn keeps
+ * The Mermaid names are accepted so a config copied from diagram keeps
  * working; a variable outside the eight (a Mermaid-only key) is ignored rather
  * than painted as a property Pele does not read.
  */
-const isVariableName = (name: string): name is keyof MermaidThemeVariables =>
+const isVariableName = (name: string): name is keyof DiagramThemeVariables =>
   Object.hasOwn(peleRoleOf, name);
 
 /**
@@ -295,7 +295,7 @@ const isVariableName = (name: string): name is keyof MermaidThemeVariables =>
  * `primaryTextColor` must win over `textColor` and `primaryColor` over the
  * tertiary fallback; a reduce in object order would let the wrong one win.
  */
-const variableOrder: ReadonlyArray<keyof MermaidThemeVariables> = [
+const variableOrder: ReadonlyArray<keyof DiagramThemeVariables> = [
   "background",
   "tertiaryColor",
   "secondaryColor",
@@ -308,7 +308,7 @@ const variableOrder: ReadonlyArray<keyof MermaidThemeVariables> = [
 
 export const peleVariables = (
   variables:
-    | Partial<MermaidThemeVariables>
+    | Partial<DiagramThemeVariables>
     | Readonly<Record<string, string | undefined>>
     | undefined,
 ): Readonly<Record<string, string>> => {

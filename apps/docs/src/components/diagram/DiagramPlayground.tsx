@@ -1,14 +1,14 @@
 import { useDeferredValue, useMemo, useState } from "react";
 import { writeClipboard } from "@/lib/clipboard";
-import { Mermaid, type MermaidConfig } from "./Mermaid";
-import { MermaidEditor } from "./MermaidEditor";
+import { DiagramView, type DiagramConfig } from "./DiagramView";
+import { DiagramEditor } from "./DiagramEditor";
 import { ZoomPan } from "./ZoomPan";
 import {
   builtinThemes,
-  isMermaidTheme,
+  isDiagramTheme,
   mermaidThemes,
   themeSwatch,
-  type MermaidTheme,
+  type DiagramTheme,
 } from "./theme";
 import {
   defaultTemplate,
@@ -17,7 +17,7 @@ import {
 } from "./templates";
 
 /**
- * The full mermaidcn playground: a source field, a live Pele preview, a
+ * The full diagram playground: a source field, a live Pele preview, a
  * template picker, a theme picker and the preview's zoom controls.
  *
  * The preview is deferred one render behind the field, so a fast typist does
@@ -27,14 +27,14 @@ import {
  * sentence in the preview.
  */
 
-/** Props for {@link MermaidPlayground}. */
-export interface MermaidPlaygroundProps {
+/** Props for {@link DiagramPlayground}. */
+export interface DiagramPlaygroundProps {
   readonly defaultValue?: string;
   readonly className?: string;
 }
 
 const THEMES: ReadonlyArray<{
-  readonly value: MermaidTheme;
+  readonly value: DiagramTheme;
   readonly label: string;
 }> = [
   ...builtinThemes.map((value) => ({
@@ -42,7 +42,7 @@ const THEMES: ReadonlyArray<{
     label: value.charAt(0).toUpperCase() + value.slice(1),
   })),
   ...Object.keys(mermaidThemes)
-    .filter(isMermaidTheme)
+    .filter(isDiagramTheme)
     .map((value) => ({
       value,
       label: value.charAt(0).toUpperCase() + value.slice(1),
@@ -52,20 +52,20 @@ const THEMES: ReadonlyArray<{
 const findTemplate = (id: string): DiagramTemplate | undefined =>
   diagramTemplates.find((template) => template.id === id);
 
-/** The playground. See {@link MermaidPlaygroundProps}. */
-export function MermaidPlayground({
+/** The playground. See {@link DiagramPlaygroundProps}. */
+export function DiagramPlayground({
   defaultValue,
   className,
-}: MermaidPlaygroundProps) {
+}: DiagramPlaygroundProps) {
   const [code, setCode] = useState(
     defaultValue ?? defaultTemplate?.chart ?? "",
   );
   const [template, setTemplate] = useState(defaultTemplate?.id ?? "custom");
-  const [theme, setTheme] = useState<MermaidTheme>("default");
+  const [theme, setTheme] = useState<DiagramTheme>("default");
   const [svg, setSvg] = useState("");
   const [copied, setCopied] = useState<"idle" | "copied" | "failed">("idle");
   const deferred = useDeferredValue(code);
-  const config = useMemo<MermaidConfig>(() => ({ theme }), [theme]);
+  const config = useMemo<DiagramConfig>(() => ({ theme }), [theme]);
 
   const load = (id: string): void => {
     const next = findTemplate(id);
@@ -93,12 +93,10 @@ export function MermaidPlayground({
 
   return (
     <div
-      className={["gx-mermaidcn-playground", className]
-        .filter(Boolean)
-        .join(" ")}
+      className={["gx-diagram-playground", className].filter(Boolean).join(" ")}
     >
-      <div className="gx-mermaidcn-toolbar">
-        <label className="gx-mermaidcn-field">
+      <div className="gx-diagram-toolbar">
+        <label className="gx-diagram-field">
           <span>Template</span>
           <select
             onChange={(event) => load(event.target.value)}
@@ -115,9 +113,9 @@ export function MermaidPlayground({
           </select>
         </label>
 
-        <label className="gx-mermaidcn-field">
+        <label className="gx-diagram-field">
           <span>Theme</span>
-          <span className="gx-mermaidcn-theme">
+          <span className="gx-diagram-theme">
             <i
               aria-hidden="true"
               style={{ backgroundColor: themeSwatch(theme) }}
@@ -125,7 +123,7 @@ export function MermaidPlayground({
             <select
               onChange={(event) => {
                 const next = event.target.value;
-                if (isMermaidTheme(next)) setTheme(next);
+                if (isDiagramTheme(next)) setTheme(next);
               }}
               value={theme}
             >
@@ -138,7 +136,7 @@ export function MermaidPlayground({
           </span>
         </label>
 
-        <span className="gx-mermaidcn-spacer" />
+        <span className="gx-diagram-spacer" />
 
         <button
           className="gx-btn gx-btn-outline gx-btn-sm"
@@ -149,9 +147,9 @@ export function MermaidPlayground({
         </button>
       </div>
 
-      <div className="gx-mermaidcn-split">
-        <MermaidEditor
-          className="gx-mermaidcn-source"
+      <div className="gx-diagram-split">
+        <DiagramEditor
+          className="gx-diagram-source"
           onChange={(value) => {
             setCode(value);
             setTemplate("custom");
@@ -160,9 +158,9 @@ export function MermaidPlayground({
           value={code}
         />
 
-        <div className="gx-mermaidcn-preview">
+        <div className="gx-diagram-preview">
           <ZoomPan
-            className="gx-mermaidcn-canvas"
+            className="gx-diagram-canvas"
             fitOn={template}
             controls={({
               zoomIn,
@@ -171,12 +169,12 @@ export function MermaidPlayground({
               centerView,
               scalePercent,
             }) => (
-              <div className="gx-mermaidcn-preview-bar">
-                <span className="gx-mermaidcn-preview-label">Preview</span>
-                <div className="gx-mermaidcn-controls">
+              <div className="gx-diagram-preview-bar">
+                <span className="gx-diagram-preview-label">Preview</span>
+                <div className="gx-diagram-controls">
                   <button
                     aria-label="Zoom out"
-                    className="gx-btn gx-btn-ghost gx-btn-sm gx-btn-square gx-mermaidcn-control"
+                    className="gx-btn gx-btn-ghost gx-btn-sm gx-btn-square gx-diagram-control"
                     onClick={zoomOut}
                     type="button"
                   >
@@ -184,7 +182,7 @@ export function MermaidPlayground({
                   </button>
                   <button
                     aria-label="Reset zoom"
-                    className="gx-btn gx-btn-ghost gx-btn-sm gx-mermaidcn-percent"
+                    className="gx-btn gx-btn-ghost gx-btn-sm gx-diagram-percent"
                     onClick={resetZoom}
                     type="button"
                   >
@@ -192,21 +190,21 @@ export function MermaidPlayground({
                   </button>
                   <button
                     aria-label="Zoom in"
-                    className="gx-btn gx-btn-ghost gx-btn-sm gx-btn-square gx-mermaidcn-control"
+                    className="gx-btn gx-btn-ghost gx-btn-sm gx-btn-square gx-diagram-control"
                     onClick={zoomIn}
                     type="button"
                   >
                     +
                   </button>
                   <button
-                    className="gx-btn gx-btn-ghost gx-btn-sm gx-mermaidcn-control gx-mermaidcn-control-wide"
+                    className="gx-btn gx-btn-ghost gx-btn-sm gx-diagram-control gx-diagram-control-wide"
                     onClick={centerView}
                     type="button"
                   >
                     Fit
                   </button>
                   <button
-                    className="gx-btn gx-btn-ghost gx-btn-sm gx-mermaidcn-control gx-mermaidcn-control-wide"
+                    className="gx-btn gx-btn-ghost gx-btn-sm gx-diagram-control gx-diagram-control-wide"
                     disabled={svg === ""}
                     onClick={copy}
                     type="button"
@@ -218,7 +216,7 @@ export function MermaidPlayground({
                         : "Copy SVG"}
                   </button>
                   <button
-                    className="gx-btn gx-btn-ghost gx-btn-sm gx-mermaidcn-control gx-mermaidcn-control-wide"
+                    className="gx-btn gx-btn-ghost gx-btn-sm gx-diagram-control gx-diagram-control-wide"
                     disabled={svg === ""}
                     onClick={download}
                     type="button"
@@ -229,7 +227,7 @@ export function MermaidPlayground({
               </div>
             )}
           >
-            <Mermaid
+            <DiagramView
               chart={deferred}
               config={config}
               onError={() => setSvg("")}

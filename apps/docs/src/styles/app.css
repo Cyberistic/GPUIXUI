@@ -11,7 +11,7 @@
 @import "./blocks.css";
 @import "./platform.css";
 @import "./theme-editor.css";
-@import "./mermaidcn.css";
+@import "./diagram.css";
 
 /*
  * The docs palette: Fumadocs' shadcn preset in both schemes — neutral surfaces,

@@ -357,7 +357,7 @@ export function Terminal() {
       </p>
       <h2 className="landing-h2">Render your apps in a terminal</h2>
       <p className="landing-lead">
-        <a href="/platform/terminal">Check out the terminal guide</a>
+        <a href="/getting-started/terminal">Check out the terminal guide</a>
       </p>
 
       <div className="landing-moment" data-stage={stage}>

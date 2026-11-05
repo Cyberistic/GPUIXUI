@@ -6,13 +6,13 @@
     "registry",
     "themes",
     "---",
+    "blocks",
     "components",
     "primitives",
     "graphics",
     "data-display",
     "workspace",
     "platform",
-    "blocks",
     "examples",
     "reference"
   ]

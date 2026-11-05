@@ -3,13 +3,8 @@ title: Omarchy
 description: Develop on Hyprland/Arch, and follow the theme the desktop is running.
 ---
 
-Omarchy is an Arch-based Hyprland desktop. Two things connect this library to it: running the repo there, and reading the palette the desktop has staged.
-
-## Requirements
-
-- **x86_64 Arch.** GPUix publishes `x86_64-unknown-linux-gnu`; a host without a binding prints its target and exits `2`.
-- **Node 24.18.0** (`.node-version`) and `nub` on `PATH`.
-- **A Wayland session** and, for terminal mode, kitty or Ghostty.
+Omarchy is an Arch-based Hyprland desktop. This guide runs the repo there and
+reads the palette the desktop has staged.
 
 ## Run
 
@@ -20,25 +15,13 @@ nub install
 nub run dev:playground
 ```
 
-`nub run dev:docs` serves the Fumadocs site. Before a change is done:
-
-```sh
-nub run check
-nub run test
-```
-
-## In a terminal
-
-```sh
-nub run --filter playground build
-GPUIX_TERMINAL=1 nub apps/playground/dist/main.js
-```
-
-The frame is the kitty graphics protocol, so run it from kitty or Ghostty. See [Terminal](/platform/terminal).
+`nub run dev:docs` serves the docs. The terminal route is in the
+[Terminal guide](/getting-started/terminal).
 
 ## Follow the live theme
 
-`omarchy-theme-set` stages the active theme at `~/.local/state/omarchy/current/theme/colors.toml`. Decode it and hand the palette to the mapper:
+`omarchy-theme-set` stages the active theme at
+`~/.local/state/omarchy/current/theme/colors.toml`:
 
 ```tsx
 import { readFileSync } from "node:fs";
@@ -55,11 +38,6 @@ const file = decodeOmarchyPalette(
 <ThemeProvider theme={paletteToTokens(file.palette)}>{app}</ThemeProvider>;
 ```
 
-The file's names are not this library's roles: `accent` is `primary`, `red` is `destructive`, and `muted` is both the quiet strip and the border. A theme generated from an Alacritty palette names `color4`, `color1` and `color8` instead; the decoder falls back to those. Anything it cannot read is reported in `file.problems` and left out, so a typo keeps the base theme's colour.
-
-The library does not run `omarchy-theme-set`, and it copies no artwork or font from Omarchy. The mapping table is in [`docs/tokens.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md).
-
-## Limits
-
-- This tree measures on macOS arm64; the Linux binding is published, not measured here.
-- The terminal probe runs on a pty, so confirm a frame by looking at a real kitty or Ghostty on the host.
+`accent` maps to `primary`, `red` to `destructive`, and `muted` is both the quiet
+strip and the border. An Alacritty palette names `color4`, `color1` and `color8`
+instead; unreadable values are reported in `file.problems` and left out.

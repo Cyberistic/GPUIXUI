@@ -1,16 +1,16 @@
-/* mermaidcn, rebuilt on Pele: the renderer, the zoom/pan canvas and the
+/* diagram, rebuilt on Pele: the renderer, the zoom/pan canvas and the
    playground. Pele reads `--pele-*` custom properties, so the roles below are
    the page's own; a named theme replaces them on the wrapper without a second
    render. */
 
-.gx-mermaidcn {
-  --pele-bg: var(--card);
+.gx-diagram {
+  --pele-bg: var(--background);
   --pele-fg: var(--foreground);
-  --pele-muted: var(--muted-foreground);
-  --pele-line: var(--border-strong, var(--border));
-  --pele-surface: var(--muted);
-  --pele-surface-alt: var(--accent);
-  --pele-border: var(--border);
+  --pele-muted: var(--foreground);
+  --pele-line: var(--muted-foreground);
+  --pele-surface: var(--card);
+  --pele-surface-alt: var(--muted);
+  --pele-border: var(--muted-foreground);
   --pele-accent: var(--ring);
   --pele-font: var(--font-sans);
   --pele-radius: var(--radius);
@@ -20,18 +20,18 @@
   justify-content: center;
 }
 
-.gx-mermaidcn-svg {
+.gx-diagram-svg {
   display: flex;
   min-width: 0;
   justify-content: center;
 }
 
-.gx-mermaidcn-svg > svg {
+.gx-diagram-svg > svg {
   max-width: 100%;
   height: auto;
 }
 
-.gx-mermaidcn-state {
+.gx-diagram-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -40,7 +40,7 @@
   text-align: center;
 }
 
-.gx-mermaidcn-badge {
+.gx-diagram-badge {
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--destructive) 12%, transparent);
@@ -49,7 +49,7 @@
   font-weight: 600;
 }
 
-.gx-mermaidcn-message {
+.gx-diagram-message {
   max-width: 48ch;
   margin: 0;
   color: var(--muted-foreground);
@@ -58,7 +58,7 @@
 }
 
 /* The editor: a gutter and a textarea that share a line height. */
-.gx-mermaidcn-editor {
+.gx-diagram-editor {
   display: flex;
   min-height: 0;
   overflow: hidden;
@@ -68,7 +68,7 @@
   line-height: 26px;
 }
 
-.gx-mermaidcn-gutter {
+.gx-diagram-gutter {
   display: flex;
   flex: none;
   flex-direction: column;
@@ -82,7 +82,7 @@
   user-select: none;
 }
 
-.gx-mermaidcn-input {
+.gx-diagram-input {
   flex: 1;
   min-width: 0;
   height: 100%;
@@ -97,12 +97,12 @@
   tab-size: 2;
 }
 
-.gx-mermaidcn-input::placeholder {
+.gx-diagram-input::placeholder {
   color: var(--muted-foreground);
 }
 
 /* The playground frame. */
-.gx-mermaidcn-playground {
+.gx-diagram-playground {
   margin-block: 1.25rem;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -111,7 +111,7 @@
   box-shadow: var(--shadow, 0 1px 2px rgb(0 0 0 / 6%));
 }
 
-.gx-mermaidcn-toolbar {
+.gx-diagram-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -121,11 +121,11 @@
   background: color-mix(in srgb, var(--muted) 60%, transparent);
 }
 
-.gx-mermaidcn-spacer {
+.gx-diagram-spacer {
   flex: 1;
 }
 
-.gx-mermaidcn-field {
+.gx-diagram-field {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -133,7 +133,7 @@
   font-size: 12px;
 }
 
-.gx-mermaidcn-field select {
+.gx-diagram-field select {
   height: 30px;
   padding: 0 8px;
   border: 1px solid var(--border);
@@ -143,30 +143,30 @@
   font: inherit;
 }
 
-.gx-mermaidcn-theme {
+.gx-diagram-theme {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.gx-mermaidcn-theme i {
+.gx-diagram-theme i {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   box-shadow: 0 0 0 1px rgb(0 0 0 / 15%);
 }
 
-.gx-mermaidcn-split {
+.gx-diagram-split {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   min-height: 480px;
 }
 
-.gx-mermaidcn-source {
+.gx-diagram-source {
   border-right: 1px solid var(--border);
 }
 
-.gx-mermaidcn-preview {
+.gx-diagram-preview {
   display: flex;
   min-width: 0;
   min-height: 0;
@@ -174,12 +174,12 @@
   background: color-mix(in srgb, var(--muted) 25%, transparent);
 }
 
-.gx-mermaidcn-canvas {
+.gx-diagram-canvas {
   flex: 1;
   min-height: 0;
 }
 
-.gx-mermaidcn-preview-bar {
+.gx-diagram-preview-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -189,7 +189,7 @@
   background: color-mix(in srgb, var(--muted) 50%, transparent);
 }
 
-.gx-mermaidcn-preview-label {
+.gx-diagram-preview-label {
   color: var(--muted-foreground);
   font-size: 11px;
   font-weight: 600;
@@ -197,34 +197,34 @@
   text-transform: uppercase;
 }
 
-.gx-mermaidcn-controls {
+.gx-diagram-controls {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.gx-mermaidcn-control,
-.gx-mermaidcn-percent {
+.gx-diagram-control,
+.gx-diagram-percent {
   color: var(--muted-foreground);
   font-size: 11px;
   font-weight: 500;
 }
 
-.gx-mermaidcn-control:hover,
-.gx-mermaidcn-percent:hover {
+.gx-diagram-control:hover,
+.gx-diagram-percent:hover {
   color: var(--foreground);
 }
 
-.gx-mermaidcn-percent {
+.gx-diagram-percent {
   min-width: 44px;
   font-variant-numeric: tabular-nums;
 }
 
-.gx-mermaidcn-control-wide {
+.gx-diagram-control-wide {
   padding-inline: 8px;
 }
 
-.gx-mermaidcn-field select:focus-visible {
+.gx-diagram-field select:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 1px;
 }
@@ -270,17 +270,17 @@
 }
 
 @media (max-width: 800px) {
-  .gx-mermaidcn-split {
+  .gx-diagram-split {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .gx-mermaidcn-source {
+  .gx-diagram-source {
     min-height: 320px;
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
 
-  .gx-mermaidcn-preview {
+  .gx-diagram-preview {
     min-height: 380px;
   }
 }
@@ -293,7 +293,7 @@
 
 /* The single diagram on the page: the same frame the playground uses, without
    the editor. */
-.gx-mermaidcn-example {
+.gx-diagram-example {
   margin-block: 1.25rem;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -301,10 +301,10 @@
   background: var(--card);
 }
 
-.gx-mermaidcn-example .gx-zoompan-canvas {
+.gx-diagram-example .gx-zoompan-canvas {
   min-height: 360px;
 }
 
-.gx-mermaidcn-example .gx-mermaidcn {
+.gx-diagram-example .gx-diagram {
   padding: 24px;
 }

@@ -18,6 +18,11 @@ import {
   conversationsSource,
 } from "./conversations-block";
 import {
+  Dashboard01Render,
+  dashboard01Packages,
+  dashboard01Source,
+} from "./dashboard-01";
+import {
   DashboardRender,
   dashboardPackages,
   dashboardSource,
@@ -262,6 +267,16 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...dashboardPackages],
     render: DashboardRender,
     source: dashboardSource,
+  },
+  "dashboard-01-shadcn": {
+    name: "dashboard-01-shadcn",
+    slug: "dashboard-01",
+    title: "Dashboard 01",
+    description:
+      "shadcn's dashboard: an inset sidebar, four stat cards, an interactive area chart, a treemap of the sources, a sankey of the funnel, a sunburst of the devices and a documents table.",
+    packages: [...dashboard01Packages],
+    render: Dashboard01Render,
+    source: dashboard01Source,
   },
   "sign-in-01": {
     name: "sign-in-01",
