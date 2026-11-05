@@ -24,12 +24,19 @@ chart of every shape the library ships:
 
 | Chart | What it shows |
 | ----- | ------------- |
-| `AreaChart` | desktop and mobile traffic over thirty days, each a filled region under its line |
-| `TreemapChart` | the traffic sources, each cell's area its share of the whole |
-| `SankeyChart` | the funnel from visits to paid, each ribbon's thickness its flow |
-| `SunburstChart` | the device mix, each arc's angle its share of the circle |
+| `AreaChart` | desktop and mobile **stacked** over thirty days: a monotone curve per series, each region fading to nothing, and a hover readout that names the day and both values |
+| `TreemapChart` | the traffic sources, each cell's **area** its share of the whole |
+| `SankeyChart` | the funnel from visits to paid, each ribbon's **thickness** its flow |
+| `SunburstChart` | the device mix, each arc's **angle** its share of the circle |
 
 All four are documented on [Charts](/graphics/charts/charts).
+
+The area chart is the reference's own: put the pointer anywhere over the plot
+and the nearest day is read out — a hairline at the pointer, a dot on each
+series, and a card naming both values. The two regions are **stacked**, so the
+picture is the total and the split at once, and the curve is monotone — it
+passes through every point without overshooting between them, so the line
+never invents a value the data does not have.
 
 ## The config
 

@@ -7878,31 +7878,57 @@ button.gx-sb-row {
   height: auto;
 }
 
-/* Two series, two colours: the first is the library's first series colour
-   and the second is its second, so the plot reads as two series at once. */
+/* The plot is a stacked area: the line is a fine stroke and the region under
+   it is a gradient, so the two series read as one picture with two parts. */
+.gx-dash01-area-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .gx-dash01-area-line {
   fill: none;
-  stroke: var(--series-1, #a7a9ff);
-  stroke-width: 2;
+  stroke-width: 1.6;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 
-.gx-dash01-area-fill {
-  fill: var(--series-1, #a7a9ff);
-  fill-opacity: 0.16;
+/* A grid rule the eye reads past: the reference's charts are a whisper of a
+   line, not a box. */
+.gx-dash01-area .gx-dash-axis {
+  stroke: color-mix(in srgb, var(--border) 55%, transparent);
+  stroke-width: 1;
 }
 
-/* The second series takes the scale's **third** colour: the first two are
-   both blues in every shipped theme, and a showcase whose two series read as
-   one line shows nothing. */
-[data-tone="two"] .gx-dash01-area-line {
-  stroke: var(--series-3, #1fa968);
+.gx-dash01-area .gx-dash-axis-label {
+  font-size: 10px;
+  fill: color-mix(in srgb, var(--muted-foreground) 80%, transparent);
+  font-family: var(--font-sans);
 }
 
-[data-tone="two"] .gx-dash01-area-fill {
-  fill: var(--series-3, #1fa968);
-  fill-opacity: 0.22;
+.gx-dash01-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 0;
+  padding: 0 0 2px;
+  list-style: none;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-dash01-legend-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
 }
 
 /* Each cell and each arc takes the next colour of the library's series
@@ -8011,4 +8037,83 @@ button.gx-sb-row {
   font-size: 8px;
   fill: var(--muted-foreground);
   font-family: var(--font-mono);
+}
+
+/* The readout: a hairline at the pointer, a dot on each series, and a card
+   that names the day and both values — the same reading the shipped
+   `AreaChart` gives on hover. */
+.gx-dash01-area-plot {
+  position: relative;
+}
+
+.gx-dash01-area {
+  cursor: crosshair;
+}
+
+.gx-dash01-crosshair line {
+  stroke: color-mix(in srgb, var(--muted-foreground) 45%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.gx-dash01-tip {
+  position: absolute;
+  top: 14px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 148px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--popover);
+  box-shadow: 0 10px 28px -10px rgb(0 0 0 / 70%);
+  transform: translateX(14px);
+  pointer-events: none;
+}
+
+.gx-dash01-tip[data-flip="true"] {
+  transform: translateX(calc(-100% - 14px));
+}
+
+.gx-dash01-tip-date {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.gx-dash01-tip-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-dash01-tip-rows li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-tip-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.gx-dash01-tip-name {
+  flex: 1;
+}
+
+.gx-dash01-tip-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--foreground);
 }

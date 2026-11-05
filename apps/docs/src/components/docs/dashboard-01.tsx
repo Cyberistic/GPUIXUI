@@ -22,6 +22,7 @@
  * surface.
  */
 
+import { useState } from "react";
 import {
   SbAccount,
   SbBrand,
@@ -178,82 +179,245 @@ const CLOUDS = [
 /* -- the drawings -------------------------------------------------------- */
 
 /**
+ * A smooth path through points, the way a chart library draws one.
+ *
+ * A polyline puts a sharp vertex on every datum, which reads as noise when
+ * two series are stacked. This is a **monotone cubic** interpolation — the
+ * curve that passes through every point without overshooting between them —
+ * so the line is calm and never invents a value the data does not have.
+ */
+const smoothPath = (points: ReadonlyArray<{ x: number; y: number }>): string => {
+  const first = points[0];
+  if (first === undefined) return "";
+  if (points.length === 1) return `M${first.x.toFixed(1)},${first.y.toFixed(1)}`;
+
+  const n = points.length;
+  const dx: number[] = [];
+  const slope: number[] = [];
+  for (let i = 0; i < n - 1; i += 1) {
+    const a = points[i];
+    const b = points[i + 1];
+    if (a === undefined || b === undefined) continue;
+    const run = b.x - a.x;
+    dx[i] = run;
+    slope[i] = run === 0 ? 0 : (b.y - a.y) / run;
+  }
+
+  // The Fritsch–Carlson tangents: a slope that would overshoot is pulled back
+  // to zero, so the curve stays inside its own data.
+  const tangent: number[] = Array.from({ length: n }, () => 0);
+  const head = slope[0] ?? 0;
+  const tail = slope[n - 2] ?? 0;
+  tangent[0] = head;
+  tangent[n - 1] = tail;
+  for (let i = 1; i < n - 1; i += 1) {
+    const before = slope[i - 1] ?? 0;
+    const after = slope[i] ?? 0;
+    if (before * after <= 0) {
+      tangent[i] = 0;
+      continue;
+    }
+    const w1 = 2 * (dx[i] ?? 1) + (dx[i - 1] ?? 1);
+    const w2 = (dx[i] ?? 1) + 2 * (dx[i - 1] ?? 1);
+    tangent[i] = (w1 + w2) / (w1 / before + w2 / after);
+  }
+
+  let path = `M${first.x.toFixed(1)},${first.y.toFixed(1)}`;
+  for (let i = 0; i < n - 1; i += 1) {
+    const a = points[i];
+    const b = points[i + 1];
+    if (a === undefined || b === undefined) continue;
+    const h = (b.x - a.x) / 3;
+    path += ` C${(a.x + h).toFixed(1)},${(a.y + (tangent[i] ?? 0) * h).toFixed(1)} ${(b.x - h).toFixed(1)},${(b.y - (tangent[i + 1] ?? 0) * h).toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
+  }
+  return path;
+};
+
+/**
  * The area chart over the thirty days.
  *
- * Two series, each a filled region under its line, and the fill fades toward
- * the axis — the same shape the shipped `AreaChart` paints.
+ * Two series, **stacked**: mobile sits on the axis and desktop stands on top
+ * of it, so the picture is the total and the split at once. Each region is a
+ * smooth curve filled with its own colour fading to nothing, and a legend
+ * names the two.
  */
 function TrafficArea() {
-  const w = 640;
-  const h = 200;
-  const gutter = 34;
-  const plotTop = 10;
-  const plotBottom = 168;
+  const w = 720;
+  const h = 240;
+  const gutter = 44;
+  const plotTop = 12;
+  const plotBottom = 196;
   const plotH = plotBottom - plotTop;
-  const max = 520;
-  const slot = (w - gutter) / TRAFFIC.length;
+  const plotW = w - gutter - 12;
+
   const series = [
-    { key: "desktop", name: "Desktop", tone: "one" },
-    { key: "mobile", name: "Mobile", tone: "two" },
+    { key: "mobile", name: "Mobile", id: "mobile", from: "#2f6fed", to: "#2f6fed" },
+    { key: "desktop", name: "Desktop", id: "desktop", from: "#93a4bf", to: "#93a4bf" },
   ] as const;
 
-  const at = (value: number): number =>
-    plotBottom - (value / max) * plotH;
+  // The stack's total, so the axis is the ceiling of what is painted.
+  const totals = TRAFFIC.map((row) => row.desktop + row.mobile);
+  const ceiling = Math.max(...totals);
+  const max = Math.ceil(ceiling / 200) * 200;
+  const step = plotW / Math.max(1, TRAFFIC.length - 1);
+  const at = (value: number): number => plotBottom - (value / max) * plotH;
+
+  // One band per series: mobile on the axis, desktop above it.
+  let floor = TRAFFIC.map(() => 0);
+  const bands = series.map((one) => {
+    const lower = floor;
+    const upper = TRAFFIC.map((row, index) => (lower[index] ?? 0) + row[one.key]);
+    floor = upper;
+    return { ...one, lower, upper };
+  });
+
+  // The readout follows the pointer: the nearest day is the one under it, and
+  // the card names the day and each series' own value — the same reading the
+  // shipped `AreaChart`'s `tooltip` gives.
+  const [hover, setHover] = useState<number | null>(null);
+  const shown = hover === null ? undefined : TRAFFIC[hover];
+  const hoverX = hover === null ? 0 : gutter + hover * step;
+  // The card flips to the left of the pointer once it would run past the plot.
+  const flip = hover !== null && hoverX > gutter + plotW * 0.62;
 
   return (
-    <svg
-      aria-label="Desktop and mobile traffic over the last thirty days"
-      className="gx-dash01-area"
-      role="img"
-      viewBox={`0 0 ${w} ${h}`}
-    >
-      {[0, 100, 200, 300, 400, 500].map((value) => {
-        const y = at(value);
-        return (
-          <g key={value}>
-            <line className="gx-dash-axis" x1={gutter} x2={w} y1={y} y2={y} />
+    <div className="gx-dash01-area-wrap">
+      <div className="gx-dash01-area-plot">
+      <svg
+        aria-label="Desktop and mobile traffic over the last thirty days"
+        className="gx-dash01-area"
+        onMouseLeave={() => setHover(null)}
+        onMouseMove={(event) => {
+          const box = event.currentTarget.getBoundingClientRect();
+          if (box.width === 0) return;
+          const x = ((event.clientX - box.left) / box.width) * w;
+          const index = Math.round((x - gutter) / step);
+          setHover(index >= 0 && index < TRAFFIC.length ? index : null);
+        }}
+        role="img"
+        viewBox={`0 0 ${w} ${h}`}
+      >
+        <defs>
+          {bands.map((band) => (
+            <linearGradient
+              id={`gx-dash01-${band.id}`}
+              key={band.id}
+              x1="0"
+              x2="0"
+              y1="0"
+              y2="1"
+            >
+              <stop offset="0%" stopColor={band.from} stopOpacity="0.55" />
+              <stop offset="100%" stopColor={band.to} stopOpacity="0.04" />
+            </linearGradient>
+          ))}
+        </defs>
+        {[0, 0.25, 0.5, 0.75, 1].map((share) => {
+          const value = Math.round(share * max);
+          const y = at(value);
+          return (
+            <g key={value}>
+              <line className="gx-dash-axis" x1={gutter} x2={w - 8} y1={y} y2={y} />
+              <text
+                className="gx-dash-axis-label"
+                textAnchor="end"
+                x={gutter - 8}
+                y={y + 3}
+              >
+                {value}
+              </text>
+            </g>
+          );
+        })}
+        {bands.map((band) => {
+          const top = band.upper.map((value, index) => ({
+            x: gutter + index * step,
+            y: at(value),
+          }));
+          const bottom = band.lower
+            .map((value, index) => ({
+              x: gutter + index * step,
+              y: at(value),
+            }))
+            .reverse();
+          const line = smoothPath(top);
+          const area = `${line} L${bottom[0]?.x.toFixed(1)},${bottom[0]?.y.toFixed(1)} ${smoothPath(bottom).slice(1)} Z`;
+          return (
+            <g key={band.key}>
+              <path d={area} fill={`url(#gx-dash01-${band.id})`} />
+              <path className="gx-dash01-area-line" d={line} style={{ stroke: band.from }} />
+            </g>
+          );
+        })}
+        {TRAFFIC.map((row, index) =>
+          index % 5 === 0 ? (
             <text
               className="gx-dash-axis-label"
-              textAnchor="end"
-              x={gutter - 6}
-              y={y + 3}
+              key={row.date}
+              textAnchor="middle"
+              x={gutter + index * step}
+              y={h - 10}
             >
-              {value}
+              {row.date}
             </text>
+          ) : null,
+        )}
+        {hover === null ? null : (
+          <g className="gx-dash01-crosshair">
+            <line x1={hoverX} x2={hoverX} y1={plotTop} y2={plotBottom} />
+            {bands.map((band) => {
+              const value = band.upper[hover] ?? 0;
+              return (
+                <circle
+                  cx={hoverX}
+                  cy={at(value)}
+                  fill={band.from}
+                  key={band.key}
+                  r="4"
+                  stroke="var(--card)"
+                  strokeWidth="2"
+                />
+              );
+            })}
           </g>
-        );
-      })}
-      {series.map((one) => {
-        const points = TRAFFIC.map((row, index) => {
-          const value = row[one.key];
-          const x = gutter + index * slot + slot / 2;
-          return { x, y: at(value), value };
-        });
-        const line = points
-          .map((point, index) =>
-            `${index === 0 ? "M" : "L"}${point.x.toFixed(1)},${point.y.toFixed(1)}`,
-          )
-          .join(" ");
-        const area = `${line} L${points[points.length - 1]?.x.toFixed(1)},${plotBottom} L${points[0]?.x.toFixed(1)},${plotBottom} Z`;
-        return (
-          <g data-tone={one.tone} key={one.key}>
-            <path className="gx-dash01-area-fill" d={area} />
-            <path className="gx-dash01-area-line" d={line} />
-          </g>
-        );
-      })}
-      {TRAFFIC.filter((_, index) => index % 6 === 0).map((row, index) => (
-        <text
-          className="gx-dash-axis-label"
-          key={row.date}
-          textAnchor="middle"
-          x={gutter + index * 6 * slot + slot / 2}
-          y={h - 6}
+        )}
+      </svg>
+      {shown === undefined ? null : (
+        <div
+          className="gx-dash01-tip"
+          data-flip={flip}
+          style={{ left: `${(hoverX / w) * 100}%` }}
         >
-          {row.date}
-        </text>
-      ))}
-    </svg>
+          <p className="gx-dash01-tip-date">{shown.date}</p>
+          <ul className="gx-dash01-tip-rows">
+            {series.map((one) => (
+              <li key={one.key}>
+                <span
+                  aria-hidden="true"
+                  className="gx-dash01-tip-dot"
+                  style={{ background: one.from }}
+                />
+                <span className="gx-dash01-tip-name">{one.name}</span>
+                <span className="gx-dash01-tip-value">{shown[one.key]}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      </div>
+      <ul className="gx-dash01-legend">
+        {series.map((one) => (
+          <li key={one.key}>
+            <span
+              aria-hidden="true"
+              className="gx-dash01-legend-dot"
+              style={{ background: one.from }}
+            />
+            {one.name}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -748,8 +912,10 @@ export function Traffic() {
       aria-label="Desktop and mobile traffic"
       config={config}
       data={traffic}
-      height={200}
-      width={640}
+      curve="smooth"
+      height={240}
+      stacked
+      width={720}
     />
   );
 }
