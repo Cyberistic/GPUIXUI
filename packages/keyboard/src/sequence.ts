@@ -1,9 +1,9 @@
 import {
   areHotkeysEqual,
   hasNonModifierKey,
-  parseHotkey,
   type ParsedHotkeyChord,
 } from "@tanstack/hotkeys";
+import { parseBinding } from "./chord.js";
 import { toTanstackPlatform, type Platform } from "./platform.js";
 
 /** Options for {@link makeSequenceMatcher}. */
@@ -42,9 +42,9 @@ export const makeSequenceMatcher = (
   sequence: ReadonlyArray<string>,
   options: SequenceMatcherOptions,
 ): SequenceMatcher => {
-  const steps: ReadonlyArray<ParsedHotkeyChord> = parseHotkey(
+  const steps: ReadonlyArray<ParsedHotkeyChord> = parseBinding(
     sequence,
-    toTanstackPlatform(options.platform),
+    options.platform,
   );
   const { timeoutMs, platform } = options;
   let index = 0;
