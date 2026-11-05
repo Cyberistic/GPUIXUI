@@ -875,8 +875,6 @@ function ChatTile({
           placeholder="Message Killua…"
           reply="Fine. But I'm not carrying your fishing rod."
           seed={HXH_THREAD}
-          showJump={false}
-          startPinned={false}
           title="Killua"
         />
       </LandingScene>

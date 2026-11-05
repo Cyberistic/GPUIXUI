@@ -15552,15 +15552,13 @@ button.gx-rating-star:focus-visible {
   position: relative;
 }
 
-/* The panel is a popover: it floats under the trigger rather than reserving a
-   434px slot in the page. */
+/* The docs preview keeps the panel in flow and reserves its height, so the
+   open panel is never clipped by the preview frame. The landing's copy portals
+   its panel instead. */
 .gx-cp-panel-slot {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  z-index: 30;
-  width: max-content;
-  max-width: min(320px, 86vw);
+  display: flex;
+  flex-direction: column;
+  min-height: 434px;
 }
 
 /* ---- their newest recipes, appended so they win by order ---- */

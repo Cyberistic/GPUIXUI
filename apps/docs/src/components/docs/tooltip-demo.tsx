@@ -10,7 +10,6 @@ import {
 } from "./tooltip-alignment";
 import {
   closedTip,
-  describeTip,
   reducedTipTiming,
   tipAfter,
   tipTiming,
@@ -131,9 +130,6 @@ const ClockedTip = ({ align }: { readonly align: TooltipAlign }) => {
           ) : null}
         </div>
       </div>
-      <p className="gx-tip-readout" role="status">
-        tip <b>{describeTip(state, timing)}</b> · align=&quot;{align}&quot;
-      </p>
       <button
         aria-pressed={reduced}
         className="gx-btn gx-btn-ghost gx-tip-motion"
@@ -172,9 +168,6 @@ const TipStates = () => {
           </span>
         ) : null}
       </div>
-      <p className="gx-tip-readout">
-        controlled <b>{held ? "open" : "closed"}</b>
-      </p>
     </div>
   );
 };

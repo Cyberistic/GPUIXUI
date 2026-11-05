@@ -3,10 +3,9 @@ title: Registry
 description: Install a component's source with the shadcn CLI.
 ---
 
-Every component is published as a [shadcn registry](https://ui.shadcn.com/docs/registry)
-item, so `shadcn add` copies the source you own into your project. The files are
-GPUix native: they render through GPUix's reconciler against `@gpuix/react`, not
-the DOM.
+Every component is a [shadcn registry](https://ui.shadcn.com/docs/registry)
+item. `shadcn add` copies the source into your project; it renders through
+GPUix, not the DOM.
 
 ## Install
 
@@ -14,45 +13,17 @@ the DOM.
 npx shadcn@latest add @sudokw/primitives-button
 ```
 
-`@sudokw` is the namespace shadcn's directory publishes; the item also has a
-direct address:
+Or by direct address:
 
 ```sh
 npx shadcn@latest add https://gpuixui.sudokw.com/primitives-button.json
 ```
 
-Either form installs three things:
+That installs the component, its parts, the `@gpuixui/*` runtime and the npm
+packages they import. Items are `<package>-<component>`; list them with
+`npx shadcn@latest search @sudokw`.
 
-- the component's source and the part files it imports;
-- the `@gpuixui/*` runtime it imports, as separate `gpuix-tokens`, `gpuix-tw`,
-  `gpuix-motion` and `gpuix-primitives` items — written once per project, not
-  copied into each component;
-- the npm packages those files import (`@gpuix/react`, `@gpuix/native`,
-  `effect`, `react`), at the versions the library pins rather than `latest`.
-
-Names are `<package>-<component>` because the registry is flat and eight page
-names belong to two components (`primitives-progress` and `components-progress`).
-`npx shadcn@latest search @sudokw` lists every item.
-
-## Where the files land
-
-Under the project's `ui` alias, in one `gpuixui` folder that keeps the library's
-package layout:
-
-```
-src/components/ui/gpuixui/primitives/components/Button.tsx
-src/components/ui/gpuixui/tokens/index.ts
-src/components/ui/gpuixui/tw/index.ts
-```
-
-Imports between installed files are relative, so the tree moves with the alias
-and needs no path mapping of its own.
-
-## The setting the files need
-
-The CLI removes the comment block at the top of each copied file, and that is
-where the source's `@jsxImportSource` pragma lives. Set the runtime once in the
-project instead:
+## Set the JSX runtime
 
 ```json
 {
@@ -62,10 +33,6 @@ project instead:
   }
 }
 ```
-
-`tsconfig.json` is what TypeScript and Vite both read; with it, the installed
-files compile against GPUix's element types instead of React DOM's. A project
-that skips it still installs, and every render fails to type-check.
 
 ## Render it
 
@@ -84,30 +51,16 @@ render(
 );
 ```
 
-`render` takes one element: a fragment at the root paints only its last child
-and reports nothing. `ThemeProvider` is required — a primitive with no theme
-above it throws rather than inventing a palette.
+`ThemeProvider` is required. `@gpuix/native` ships binaries for Apple Silicon,
+Linux x64 and Windows.
 
-`@gpuix/native` ships prebuilt binaries for Apple Silicon, Linux x64 and
-Windows. On any other host, build the binding first; the
-[playground README](https://github.com/Cyberistic/GPUIXUI/blob/master/apps/playground/README.md#the-binding-on-this-host)
-names the script.
+Files land under your `ui` alias in `gpuixui/`:
 
-## Updating, previewing, replacing
-
-```sh
-npx shadcn@latest add @sudokw/primitives-button --dry-run   # what would be written
-npx shadcn@latest add @sudokw/primitives-button --view      # the file contents
-npx shadcn@latest add @sudokw/primitives-button --overwrite # replace edited files
+```
+src/components/ui/gpuixui/primitives/components/Button.tsx
+src/components/ui/gpuixui/tokens/index.ts
 ```
 
-The copied source is yours: edit it in place. `--overwrite` is the only command
-that replaces it, and it replaces every file the item ships.
-
-## The documents
-
-The registry is flat: an index at [`/registry.json`](/registry.json) and one
-document per item beside it, `/<package>-<component>.json` and
-`/gpuix-<package>.json`. The index lists each item's file paths; each item's own
-document carries their content. A client that speaks the shadcn schema reads
-both with no special case.
+The runtime items (`gpuix-tokens`, `gpuix-tw`, `gpuix-motion`,
+`gpuix-primitives`) install once per project. The site serves the index at
+[`/registry.json`](/registry.json) and one document per item at `/<name>.json`.
