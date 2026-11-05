@@ -28,6 +28,7 @@ import {
   seriesPoints,
 } from "@gpuixui/data/chart/geometry";
 import { easeOutCubic, interpolateValues } from "@gpuixui/data/chart/animation";
+import { ChartGallery } from "./chart-gallery";
 import { smoothPath } from "./chart-smooth";
 import { seriesColors, type Theme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
@@ -49,6 +50,10 @@ import { usePlatform } from "./platform-toggle";
  * category slots and the legend, with one layer per series and no grid the
  * component does not paint.
  */
+
+/** The gallery's categorical palette, the theme's own order. */
+const galleryColour = (theme: Theme, index: number): string =>
+  seriesColour(seriesColors(theme), index);
 
 /** The quarters both series are read across. */
 export const CHART_LABELS: ReadonlyArray<string> = ["Q1", "Q2", "Q3", "Q4"];
@@ -1784,172 +1789,3 @@ export const chartsDemoSource = `import {
 <PieChart aria-label="Traffic" data={SOURCES} innerRadius={0} />;
 <RadarChart aria-label="Coverage" labels={AREAS} series={[team]} levels={4} />;
 <RadialChart aria-label="Storage" data={STORAGE} max={100} centerLabel="62%" />;`;
-
-/** The gallery's box: one small square per type. */
-export const GALLERY_SIZE = 150;
-
-/** The gallery's categorical palette, the theme's own order. */
-const galleryColour = (theme: Theme, index: number): string =>
-  seriesColour(seriesColors(theme), index);
-
-/** One path per band the area fill paints, and one edge per series. */
-export const galleryAreaPaths = (): ReadonlyArray<ReadonlyArray<string>> => {
-  const box = boxOf(GALLERY_SIZE, 90, { width: 150, height: 90 });
-  const range = chartRange(CHART_SERIES, CHART_LABELS.length);
-  return Arr.map(CHART_SERIES, (one) => {
-    const points = seriesPoints(one.values, box, range, CHART_LABELS.length);
-    return Arr.append(
-      areaBands(points, box, range, 3),
-      Option.getOrElse(curvePath(points, "smooth"), () => ""),
-    );
-  });
-};
-
-/** The gallery: every type the package ships, drawn in the browser. */
-export function ChartGallery({ theme }: { readonly theme: Theme }) {
-  const area = galleryAreaPaths();
-  const pieBox = boxOf(96, 96, { width: 96, height: 96 });
-  const slices = ringSegments(
-    CHART_SERIES.map((one) => one.values[3] ?? 0),
-    pieBox,
-    0,
-    0.03,
-  );
-  const radarBox = boxOf(120, 120, { width: 120, height: 120 });
-  const radarMax = 60;
-  const web = radarGrid(4, 5, radarBox, radarMax);
-  const spokes = radarSpokes(5, radarBox, radarMax);
-  const radarSeries = radarPoints([32, 48, 41, 60, 36], 5, radarBox, radarMax);
-  const radialBox = boxOf(96, 96, { width: 96, height: 96 });
-  const rings = radialArcs([48, 32, 20], radialBox, 60, 7, 3);
-  return (
-    <div className="gx-dchart-gallery" data-demo="charts-gallery">
-      <figure className="gx-dchart-cell">
-        <figcaption>Area</figcaption>
-        <svg
-          aria-label="Revenue and cost as areas"
-          className="gx-dchart-plot"
-          height={90}
-          role="img"
-          viewBox="0 0 150 90"
-          width={GALLERY_SIZE}
-        >
-          {area.map((paths, index) => (
-            <g key={CHART_SERIES[index]?.key}>
-              {paths.slice(0, -1).map((d, band) => (
-                <path
-                  d={d}
-                  fill={galleryColour(theme, index)}
-                  key={`band-${band}`}
-                  opacity={0.12 + band * 0.12}
-                />
-              ))}
-              <path
-                d={paths[paths.length - 1] ?? ""}
-                fill="none"
-                stroke={galleryColour(theme, index)}
-                strokeWidth={2}
-              />
-            </g>
-          ))}
-        </svg>
-      </figure>
-      <figure className="gx-dchart-cell">
-        <figcaption>Pie</figcaption>
-        <svg
-          aria-label="Traffic by source as a pie"
-          className="gx-dchart-plot"
-          height={96}
-          role="img"
-          viewBox="0 0 96 96"
-          width={96}
-        >
-          {slices.map((marks, index) =>
-            marks.map((mark) =>
-              mark.kind === "path" ? (
-                <path
-                  d={mark.d}
-                  fill={galleryColour(theme, index)}
-                  key={`${index}-${mark.d.length}`}
-                />
-              ) : null,
-            ),
-          )}
-        </svg>
-      </figure>
-      <figure className="gx-dchart-cell">
-        <figcaption>Radar</figcaption>
-        <svg
-          aria-label="Coverage by discipline"
-          className="gx-dchart-plot"
-          height={120}
-          role="img"
-          viewBox="0 0 120 120"
-          width={120}
-        >
-          {[...web, ...spokes].map((d, index) => (
-            <path
-              d={d}
-              fill="none"
-              key={`web-${index}`}
-              stroke={galleryColour(theme, 0)}
-              strokeOpacity={0.28}
-              strokeWidth={1}
-            />
-          ))}
-          {[1, 0].map((index) => (
-            <path
-              d={Option.getOrElse(
-                polygonPath(
-                  index === 0
-                    ? radarSeries
-                    : radarPoints([48, 34, 55, 42, 50], 5, radarBox, radarMax),
-                ),
-                () => "",
-              )}
-              fill={galleryColour(theme, index)}
-              fillOpacity={index === 0 ? 0.34 : 0.16}
-              key={`series-${index}`}
-              stroke={galleryColour(theme, index)}
-              strokeWidth={index === 0 ? 2 : 1.5}
-            />
-          ))}
-          {radarSeries.map((dot) => (
-            <circle
-              cx={dot.x}
-              cy={dot.y}
-              fill={galleryColour(theme, 0)}
-              key={`dot-${dot.x}-${dot.y}`}
-              r={2.4}
-              stroke="var(--card)"
-              strokeWidth={1.5}
-            />
-          ))}
-        </svg>
-      </figure>
-      <figure className="gx-dchart-cell">
-        <figcaption>Radial</figcaption>
-        <svg
-          aria-label="Storage by service"
-          className="gx-dchart-plot"
-          height={96}
-          role="img"
-          viewBox="0 0 96 96"
-          width={96}
-        >
-          {rings.map((marks, index) =>
-            marks.map((mark) =>
-              mark.kind === "path" ? (
-                <path
-                  d={mark.d}
-                  fill={galleryColour(theme, index)}
-                  key={`${index}-${mark.d.length}`}
-                />
-              ) : null,
-            ),
-          )}
-        </svg>
-      </figure>
-    </div>
-  );
-}
