@@ -104,6 +104,26 @@ export type {
 } from "./chart/chart.js";
 
 export {
+  SankeyChart,
+  SunburstChart,
+  TreemapChart,
+  type SankeyChartProps,
+  type SunburstChartProps,
+  type TreemapChartProps,
+} from "./chart/structure.js";
+export {
+  flowGraph,
+  hierarchyLeaves,
+  hierarchyRoots,
+  hierarchyRows,
+  nameOf,
+  type FlowLink,
+  type FlowNode,
+  type HierarchyNode,
+  type HierarchyRow,
+} from "./chart/hierarchy.js";
+
+export {
   ANIMATION_FRAME_MS,
   DEFAULT_ANIMATION_DURATION,
   easeOutCubic,

@@ -24,7 +24,19 @@ const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
 const page = read("../../docs/charts/charts.mdx");
-const source = `${read("./chart.tsx")}\n${read("./frame.tsx")}`;
+/**
+ * The source of each module a chart part's props are read from.
+ *
+ * A type is read from the file that **declares** it: the legend's props
+ * live beside the legend, not in the file that happens to use it.
+ */
+const sources = {
+  chart: `${read("./chart.tsx")}\n${read("./frame.tsx")}`,
+  legend: read("./legend.tsx"),
+  structure: read("./structure.tsx"),
+} as const;
+
+const source = sources.chart;
 const recipe = read("./recipe.ts");
 const inventory = read("../../../../.agents/slop/COMPONENTS.md");
 
@@ -53,24 +65,37 @@ interface Section {
   readonly heading: string;
   /** The declared type whose fields the section's table must carry. */
   readonly type: string;
+  /**
+   * The module that declares the type.
+   *
+   * A type is read from the file that **declares** it: the legend's props
+   * live beside the legend, not in the file that happens to use it. A page
+   * section is checked against the type the library ships, wherever it is
+   * written.
+   */
+  readonly module: "chart" | "legend" | "structure";
 }
 
 /** Every chart part the page must document, and the type behind it. */
 const sections: ReadonlyArray<Section> = [
-  { heading: "`BarChart`", type: "BarChartProps" },
-  { heading: "`StackedBar`", type: "StackedBarProps" },
-  { heading: "`LineChart`", type: "LineChartProps" },
-  { heading: "`ComposedChart`", type: "ComposedChartProps" },
-  { heading: "`ScatterChart`", type: "ScatterChartProps" },
-  { heading: "`CandleChart`", type: "CandleChartProps" },
-  { heading: "`FunnelChart`", type: "FunnelChartProps" },
-  { heading: "`AreaChart`", type: "AreaChartProps" },
-  { heading: "`PieChart` · `DonutChart`", type: "PieChartProps" },
-  { heading: "`RadarChart`", type: "RadarChartProps" },
-  { heading: "`RadialChart`", type: "RadialChartProps" },
-  { heading: "`Sparkline`", type: "SparklineProps" },
-  { heading: "`ChartLegend`", type: "ChartLegendProps" },
-  { heading: "The shared frame", type: "ChartProps" },
+  { heading: "`BarChart`", type: "BarChartProps" , module: "chart" },
+  { heading: "`StackedBar`", type: "StackedBarProps" , module: "chart" },
+  { heading: "`LineChart`", type: "LineChartProps" , module: "chart" },
+  { heading: "`ComposedChart`", type: "ComposedChartProps" , module: "chart" },
+  { heading: "`ScatterChart`", type: "ScatterChartProps" , module: "chart" },
+  { heading: "`CandleChart`", type: "CandleChartProps" , module: "chart" },
+  { heading: "`FunnelChart`", type: "FunnelChartProps" , module: "chart" },
+  { heading: "`AreaChart`", type: "AreaChartProps" , module: "chart" },
+  { heading: "`PieChart` · `DonutChart`", type: "PieChartProps" , module: "chart" },
+  { heading: "`RadarChart`", type: "RadarChartProps" , module: "chart" },
+  { heading: "`RadialChart`", type: "RadialChartProps" , module: "chart" },
+  { heading: "`Sparkline`", type: "SparklineProps" , module: "chart" },
+  {
+    heading: "`ChartLegend`",
+    type: "ChartLegendProps",
+    module: "legend",
+  },
+  { heading: "The shared frame", type: "ChartProps" , module: "chart" },
 ];
 
 /** The runtime host props a chart takes from `Props`, documented once. */
@@ -86,10 +111,13 @@ const sectionOf = (site: string, heading: string): string => {
 };
 
 /** The fields a props interface declares itself, in source order. */
-const declaredProps = (type: string): ReadonlyArray<string> => {
+const declaredProps = (
+  type: string,
+  module: Section["module"],
+): ReadonlyArray<string> => {
   const body = new RegExp(
     `export interface ${type} extends[^{]*\\{([\\s\\S]*?)\\n\\}`,
-  ).exec(source);
+  ).exec(sources[module]);
   if (body?.[1] === undefined) throw new Error(`no ${type}`);
   return [...body[1].matchAll(/^ {2}readonly (\w+)\??:/gm)].flatMap((match) =>
     match[1] === undefined ? [] : [match[1]],
@@ -107,7 +135,7 @@ const undocumented = (section: Section): ReadonlyArray<string> => {
   const documented = documentedProps(sectionOf(page, section.heading));
   return Arr.map(
     Arr.filter(
-      declaredProps(section.type),
+      declaredProps(section.type, section.module),
       (prop) => !documented.includes(prop),
     ),
     (prop) => `${section.heading}: ${prop}`,
@@ -116,7 +144,7 @@ const undocumented = (section: Section): ReadonlyArray<string> => {
 
 /** Every row naming a prop the section neither declares nor inherits. */
 const invented = (section: Section): ReadonlyArray<string> => {
-  const declared = declaredProps(section.type);
+  const declared = declaredProps(section.type, section.module);
   return Arr.map(
     Arr.filter(
       documentedProps(sectionOf(page, section.heading)),
@@ -131,7 +159,9 @@ describe("the charts page's API tables", () => {
     expect(sections).toHaveLength(14);
     expect(
       Arr.length(
-        Arr.flatMap(sections, (section) => declaredProps(section.type)),
+        Arr.flatMap(sections, (section) =>
+        declaredProps(section.type, section.module),
+      ),
       ),
     ).toBeGreaterThan(20);
 

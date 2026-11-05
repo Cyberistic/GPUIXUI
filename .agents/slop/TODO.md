@@ -25292,6 +25292,57 @@ green; the site deployed and all 195 sitemap pages answer 200.
       page, and the owner's `/platform/terminal` guide with this workstream's
       Graphics navigation.
 
+## The three remaining chart types (plan 754, 2026-11-05)
+
+`[x]` `[██████████]` 10/10
+
+`[x]` Measure the gap against **Recharts' thirteen** chart types — the library
+      shipped ten, and the three it lacked were the ones that draw a
+      **structure** rather than a set of categories: `Treemap`, `Sankey` and
+      `SunburstChart`. GPUI Kit ships seven types and adds only a
+      candlestick, which this library already had, so the three were the whole
+      of the gap.
+`[x]` Measure that **TanStack Charts ships all three** — the `hierarchy/
+      treemap`, `hierarchy/sunburst` and `network/sankey` marks. Measured in a
+      process with no `document` and no `window`: a flat hierarchy compiled to
+      a scene and serialised to one document carrying three differently
+      coloured cells; the same hierarchy as a sunburst serialised to one
+      document carrying two coloured arcs; a four-node, four-link graph
+      serialised to one document carrying the node rects and the link lines.
+`[x]` Land the **bridge** — `SceneChartKind` grows `treemap | sankey |
+      sunburst`, and each layout gets its own definition: a treemap holds no
+      scale (the compiler resolves its cells), a sankey holds none (it
+      resolves the flow), and a sunburst runs inside a polar mark. A
+      `defineChart` call's overload is chosen from the marks it is given, so
+      the type argument is **explicit** — inference across a cartesian and a
+      polar call in one file picks the wrong one.
+`[x]` Land the **hierarchy rows** — a node's **path** is its route through
+      the tree, and the caller's list may name only the leaves: a root is
+      added when the list names none, and the compiler's own rule of exactly
+      one root is met by construction. A node without a value holds its
+      subtree's, and a value that is not finite counts as nothing.
+`[x]` Land the **flow graph** — a link naming a node the graph does not
+      hold is dropped, and a link whose value is not positive is dropped: the
+      compiler rejects both, and a reader would rather see the flow that is.
+`[x]` Land the **three components** — `TreemapChart`, `SankeyChart` and
+      `SunburstChart`, each with its props, its legend and its own
+      accessible name and description.
+`[x]` Land the **page** — a section per type in `packages/data/docs/charts/
+      charts.mdx`, with the usage, every prop and its default.
+`[x]` Hold the **rules** — nine geometry cases in `src/chart/hierarchy.test.ts`
+      (the root, the two roots, the aggregate, the non-finite value, the
+      leaves, the dangling link, the valueless link) and seven behaviour
+      cases in `src/behaviour/chart-structure.test.tsx` (the treemap's
+      colours and its **proportional** areas, the sankey's nodes and ribbons
+      and its dropped link, the sunburst's colours and its **proportional**
+      angles). Each fails on the previous rule.
+`[x]` Read the **export scanner's** props from the module that declares
+      them — the legend's props moved beside the legend when it became its
+      own module, and a type is read from the file that **declares** it.
+`[x]` Move the **legend** into its own module — every chart family needs
+      it, and a legend that lived in one of them would make the others
+      import a chart.
+
 `[!]` The GPUix issue for **SVG primitives** is open upstream:
       https://github.com/remorses/gpuix/issues/130 — "Add support for SVG
       primitives", with a link to `https://www.w3.org/TR/SVG2/`. Until it

@@ -1,6 +1,6 @@
 ---
 title: Charts
-description: Bar, stacked, line, area, pie, donut, radar, radial and sparkline charts
+description: Bar, stacked, line, area, pie, donut, radar, radial, treemap, sankey, sunburst and sparkline charts
 ---
 
 A chart is a **scene**, and the scene is compiled by
@@ -182,6 +182,104 @@ stacked to one side.
 | ---- | ---- | ------- | ----------- |
 | `stages` | `number[]` | — | each stage's value; the first is the widest |
 | `stageLabels` | `string[]` | the categories | the names the stages answer to |
+
+### `TreemapChart`
+
+```tsx
+<TreemapChart
+  aria-label="Where the time goes"
+  nodes={[
+    { path: "engineering", value: 60 },
+    { path: "design", value: 25 },
+    { path: "operations", value: 15 },
+  ]}
+/>
+```
+
+A hierarchy as nested rectangles, each area its value's share of the whole.
+The cells are **squared** by the compiler, so a large value is a wide cell
+rather than a tall one — the shape reads as the value's shape.
+
+A node's **path** is its route through the tree: `"root/engineering"` is a
+node named `engineering` under `root`. The list may name only the leaves — a
+root is added when the list names none — and a node that carries no value of
+its own holds its subtree's.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `nodes` | `{ path: string; value?: number }[]` | — | the hierarchy, one row per node |
+| `size` | `number` | `200` | the plot's size, in pixels |
+| `method` | `"squarify" \| "binary" \| "dice" \| "slice" \| "slice-dice"` | `"squarify"` | how the cells are squared |
+| `ratio` | `number` | the compiler's | the target aspect ratio of a cell |
+| `paddingInner` | `number` | `0` | the gap between adjacent cells |
+| `paddingOuter` | `number` | `0` | the gap between a parent's edge and its children |
+| `colors` | `string[]` | the theme's series scale | the categorical palette |
+| `nodeColors` | `Map<string, string>` | — | a node's own colour, by its path |
+| `legend` | `boolean` | `true` | the legend paints under the cells |
+| `valueFormat` | `(value: number) => string` | — | how a value prints in the legend |
+
+### `SankeyChart`
+
+```tsx
+<SankeyChart
+  aria-label="The pipeline"
+  nodes={[
+    { id: "visits", name: "Visits" },
+    { id: "signups", name: "Signups" },
+    { id: "buys", name: "Buys" },
+  ]}
+  links={[
+    { source: "visits", target: "signups", value: 60 },
+    { source: "signups", target: "buys", value: 20 },
+  ]}
+/>
+```
+
+A flow between nodes, each ribbon's thickness its value. A link naming a node
+the graph does not hold is **dropped**: the compiler rejects such a link, and
+a reader who drew a flow to a node that is not there would rather see the
+flow that is.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `nodes` | `{ id: string; name?: string }[]` | — | the nodes the flow runs through |
+| `links` | `{ source: string; target: string; value: number }[]` | — | the edges the flow runs along |
+| `size` | `number` | `200` | the plot's size, in pixels |
+| `nodeWidth` | `number` | the compiler's | a node's width, in pixels |
+| `nodePadding` | `number` | the compiler's | the gap between same-column nodes |
+| `colors` | `string[]` | the theme's series scale | the categorical palette |
+| `nodeColors` | `Map<string, string>` | — | a node's own colour, by its id |
+| `legend` | `boolean` | `true` | the legend paints under the flow |
+| `valueFormat` | `(value: number) => string` | — | how a value prints in the legend |
+
+### `SunburstChart`
+
+```tsx
+<SunburstChart
+  aria-label="The store"
+  nodes={[
+    { path: "root/engineering", value: 60 },
+    { path: "root/design", value: 25 },
+    { path: "root/operations", value: 15 },
+  ]}
+/>
+```
+
+The same hierarchy a treemap draws, as **concentric rings**: each arc's angle
+is its value's share of its parent, and the rings are drawn from the centre
+out. A hierarchy deeper than `visibleDepth` is not drawn.
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `nodes` | `{ path: string; value?: number }[]` | — | the hierarchy, one row per node |
+| `size` | `number` | `200` | the plot's size, in pixels |
+| `innerRadius` | `number` | the compiler's | the hole at the centre, as a share of the outer radius |
+| `ringPadding` | `number` | `0` | the gap between the rings, in pixels |
+| `visibleDepth` | `number` | every ring | how many rings of the hierarchy are drawn |
+| `colors` | `string[]` | the theme's series scale | the categorical palette |
+| `nodeColors` | `Map<string, string>` | — | a node's own colour, by its path |
+| `legend` | `boolean` | `true` | the legend paints under the rings |
+| `valueFormat` | `(value: number) => string` | — | how a value prints in the legend |
 
 ### `ComposedChart`
 

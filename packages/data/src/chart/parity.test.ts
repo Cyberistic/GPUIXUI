@@ -16,7 +16,18 @@ import { parity, type ParityEntry } from "./parity.js";
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-const source = read("./chart.tsx");
+/**
+ * The source of every module the package's chart parts live in.
+ *
+ * A part is exported from the module that **declares** it: the legend from
+ * the legend's own module, the three structure charts from theirs. So the
+ * exported names are read from all of them.
+ */
+const source = [
+  read("./chart.tsx"),
+  read("./legend.tsx"),
+  read("./structure.tsx"),
+].join("\n");
 const page = read("../../docs/charts/charts.mdx");
 const demo = read("../../../../apps/docs/src/components/docs/charts-demo.tsx");
 

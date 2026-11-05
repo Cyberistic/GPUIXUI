@@ -113,6 +113,16 @@ export const pushDocument = (
 export interface ChartSurfaceProps extends Omit<Props, "children"> {
   /** The marks the surface paints, in paint order. */
   readonly document: ChartDocument;
+  /**
+   * The chart's own markup, when it brings one.
+   *
+   * A chart whose layout the scene compiler resolved — a treemap, a sankey, a
+   * sunburst — has marks the library's own model cannot express, so it
+   * brings the **document** the compiler produced. The surface pushes that
+   * markup instead of drawing the document, and everything else — the
+   * sizing, the push, the accessible name — is the same.
+   */
+  readonly markup?: string;
   /** The route the marks take. Defaults to `document`. */
   readonly render?: ChartRender;
   /** The chart's name, for the image's accessible label. */
@@ -141,6 +151,7 @@ export interface ChartSurfaceProps extends Omit<Props, "children"> {
  */
 export const ChartSurface = ({
   document,
+  markup,
   render = "document",
   label,
   description,
@@ -150,9 +161,10 @@ export const ChartSurface = ({
   ...rest
 }: ChartSurfaceProps) => {
   const instance = useRef<ImgInstance | null>(null);
-  const markup = chartSvg(document);
+  // The chart's own markup when it brings one, and the document's otherwise.
+  const drawn = markup ?? chartSvg(document);
   const box: ChartBox = document.box;
-  const source = render === "document" ? documentDataUrl(markup) : undefined;
+  const source = render === "document" ? documentDataUrl(drawn) : undefined;
 
   // The bytes must be on the element before the frame that paints it, so the
   // push is a layout effect. The decode is a native call, so it is lifted
@@ -161,13 +173,13 @@ export const ChartSurface = ({
   useLayoutEffect(() => {
     if (render !== "document") return;
     Effect.runSync(
-      pushDocument(instance.current, markup).pipe(
+      pushDocument(instance.current, drawn).pipe(
         Effect.catchTag("ChartDecodeError", (failure) =>
           Effect.sync(() => onDecodeError?.(failure)),
         ),
       ),
     );
-  }, [markup, render, onDecodeError]);
+  }, [drawn, render, onDecodeError]);
 
   return (
     <img

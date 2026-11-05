@@ -27,7 +27,7 @@
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon, isIconName, type IconName } from "@gpuixui/icons";
-import { iconStepValue, spokenText } from "@gpuixui/primitives/core";
+import { spokenText } from "@gpuixui/primitives/core";
 import { themeModeOf } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
@@ -99,20 +99,21 @@ import {
   type ValueLabel,
 } from "./frame.js";
 import { recipeStyle } from "../recipe.js";
+import { ChartLegend } from "./legend.js";
 import { textStyle, themeColors, useTheme } from "../theme.js";
-import {
-  CHART_LEGEND,
-  CHART_LEGEND_ITEM,
-  CHART_PLOT,
-  CHART_ROOT,
-  CHART_SWATCH,
-} from "./recipe.js";
+import { CHART_PLOT, CHART_ROOT } from "./recipe.js";
 
 export {
   CHART_AXIS_WIDTH,
   DEFAULT_CHART_HEIGHT,
   DEFAULT_CHART_WIDTH,
 } from "./frame.js";
+export {
+  ChartLegend,
+  type ChartLegendItem,
+  type ChartLegendProps,
+} from "./legend.js";
+export type { LegendShape, TooltipIndicator } from "./frame.js";
 
 /** The side of a donut's square plot when the caller names none. */
 const DEFAULT_RING_SIZE = 160;
@@ -140,93 +141,6 @@ const chosenColour = (colour: string | undefined, fallback: string): string =>
   });
 
 /** One legend entry. */
-export interface ChartLegendItem {
-  readonly key: string;
-  /** The row's words. A blank label reads as `key`. */
-  readonly label: string;
-  /** A theme colour, usually a swatch from `seriesColors`. */
-  readonly color: string;
-  /** A value the row prints after its words, already formatted. */
-  readonly value?: string;
-}
-
-export type { LegendShape, TooltipIndicator } from "./frame.js";
-
-/** {@link ChartLegend} props. */
-export interface ChartLegendProps extends Omit<Props, "children"> {
-  /**
-   * The rows, in paint order.
-   *
-   * A saved legend writes `null` where it carried no rows, so only a list is a
-   * list: a slot with no list paints no rows rather than throwing out of the
-   * render.
-   */
-  readonly items: ReadonlyArray<ChartLegendItem>;
-  /** The mark beside each row: a square (default), a dot or a line. */
-  readonly shape?: LegendShape;
-  readonly testId?: string;
-}
-
-/**
- * The legend: one swatch and one label per series, in the colours they paint.
- *
- * The words are painted beside the colour, so a colour repeats what the text
- * already says — a reader who cannot separate two hues still reads the series.
- */
-export const ChartLegend = ({
-  items,
-  shape = "square",
-  testId,
-  style,
-  ...rest
-}: ChartLegendProps) => {
-  const theme = useTheme();
-  const colors = themeColors(theme);
-  const rows = recordsOf(items);
-  return (
-    <div
-      {...rest}
-      testId={testId}
-      style={mergeStyles(recipeStyle(CHART_LEGEND, theme), style)}
-    >
-      {Arr.map(rows, (item) => (
-        <div key={item.key} style={recipeStyle(CHART_LEGEND_ITEM, theme)}>
-          <div
-            testId={
-              testId === undefined ? undefined : `${testId}-swatch-${item.key}`
-            }
-            style={{
-              ...recipeStyle(CHART_SWATCH, theme),
-              width:
-                shape === "line"
-                  ? iconStepValue(theme, "xs") * 2
-                  : iconStepValue(theme, "xs"),
-              height: shape === "line" ? 2 : iconStepValue(theme, "xs"),
-              borderRadius:
-                shape === "dot"
-                  ? iconStepValue(theme, "xs") / 2
-                  : shape === "line"
-                    ? 1
-                    : undefined,
-              backgroundColor: item.color,
-            }}
-          />
-          <text
-            style={{
-              ...textStyle(theme, "caption"),
-              color: colors.mutedForeground,
-            }}
-          >
-            {item.value === undefined
-              ? seriesName(item.label, item.key)
-              : `${seriesName(item.label, item.key)} ${item.value}`}
-          </text>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 /** The rules every series chart shares. */
 export interface ChartProps extends Omit<Props, "children"> {
   /**
