@@ -115,11 +115,8 @@ const charts: PackageCollection = {
   route: chartsDocsRoute,
   section: "Graphics",
   kind: "chart",
-  index: {
-    title: "Charts",
-    description:
-      "Bar, line, area, pie, radar and radial charts, drawn on the GPU.",
-  },
+  // The package writes its own landing page (`charts/index.mdx`), so the site
+  // generates no index for this route.
 };
 
 const data: PackageCollection = {

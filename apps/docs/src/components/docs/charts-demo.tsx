@@ -28,6 +28,7 @@ import {
   seriesPoints,
 } from "@gpuixui/data/chart/geometry";
 import { easeOutCubic, interpolateValues } from "@gpuixui/data/chart/animation";
+import { smoothPath } from "./chart-smooth";
 import { seriesColors, type Theme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -85,6 +86,36 @@ export const chartBarGroups = (): ReadonlyArray<ReadonlyArray<ChartMark>> =>
 /** One series' line through its category centres. */
 export const seriesLine = (series: ChartSeries): Option.Option<string> =>
   linePath(series.values, chartPlot, chartCeiling, CHART_LABELS.length);
+
+/**
+ * The smooth line and the region under it, for one series.
+ *
+ * The demo draws the same shape the shipped `AreaChart` does: a monotone curve
+ * through the points and a fill that fades from the line to the axis, so the
+ * browser picture and the component agree.
+ */
+export const seriesArea = (
+  series: ChartSeries,
+): Option.Option<{ readonly line: string; readonly area: string }> => {
+  const count = CHART_LABELS.length;
+  const slot = count === 0 ? 0 : chartPlot.width / count;
+  const points = Arr.map(series.values, (value, index) => ({
+    x: slot * index + slot / 2,
+    y:
+      chartCeiling === 0
+        ? chartPlot.height
+        : chartPlot.height - (value / chartCeiling) * chartPlot.height,
+  }));
+  if (points.length === 0) return Option.none();
+  const line = smoothPath(points);
+  const first = points[0];
+  const last = points[points.length - 1];
+  if (first === undefined || last === undefined) return Option.none();
+  return Option.some({
+    line,
+    area: `${line} L${last.x.toFixed(1)},${chartPlot.height} L${first.x.toFixed(1)},${chartPlot.height} Z`,
+  });
+};
 
 /** How a reader chose to read the same series. */
 export type ChartMode =
@@ -148,18 +179,22 @@ export function ChartDemoBody({
   const step = chartCeiling / 4;
   const slot = chartPlot.width / CHART_LABELS.length;
 
+  const areas = Arr.map(CHART_SERIES, seriesArea);
+
   return (
     <div className="gx-dchart" data-demo="charts" data-mode={mode}>
       <div className="gx-dchart-row">
-        <div
-          aria-hidden="true"
-          className="gx-dchart-axis"
-          style={{ height: chartPlot.height }}
-        >
-          {Arr.reverse(chartTicks).map((tick) => (
-            <span key={tick}>{tickLabel(tick, step)}</span>
-          ))}
-        </div>
+        {mode === "bars" ? (
+          <div
+            aria-hidden="true"
+            className="gx-dchart-axis"
+            style={{ height: chartPlot.height }}
+          >
+            {Arr.reverse(chartTicks).map((tick) => (
+              <span key={tick}>{tickLabel(tick, step)}</span>
+            ))}
+          </div>
+        ) : null}
         <svg
           aria-label="Revenue against cost by quarter"
           className="gx-dchart-plot"
@@ -168,6 +203,31 @@ export function ChartDemoBody({
           viewBox={`0 0 ${chartPlot.width} ${chartPlot.height}`}
           width={chartPlot.width}
         >
+          {drawing.mode === "lines" ? (
+            <defs>
+              {CHART_SERIES.map((series, index) => (
+                <linearGradient
+                  id={`gx-dchart-${series.key}`}
+                  key={series.key}
+                  x1="0"
+                  x2="0"
+                  y1="0"
+                  y2="1"
+                >
+                  <stop
+                    offset="5%"
+                    stopColor={seriesColour(drawing.palette, index)}
+                    stopOpacity="0.75"
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor={seriesColour(drawing.palette, index)}
+                    stopOpacity="0.06"
+                  />
+                </linearGradient>
+              ))}
+            </defs>
+          ) : null}
           {drawing.mode === "bars"
             ? drawing.bars.map((marks, index) => (
                 <g key={CHART_SERIES[index]?.key}>
@@ -185,17 +245,24 @@ export function ChartDemoBody({
                   )}
                 </g>
               ))
-            : drawing.lines.map((path, index) =>
-                Option.match(path, {
+            : areas.map((area, index) =>
+                Option.match(area, {
                   onNone: () => null,
-                  onSome: (d) => (
-                    <path
-                      d={d}
-                      fill="none"
-                      key={CHART_SERIES[index]?.key}
-                      stroke={seriesColour(drawing.palette, index)}
-                      strokeWidth={2}
-                    />
+                  onSome: (shape) => (
+                    <g key={CHART_SERIES[index]?.key}>
+                      <path
+                        d={shape.area}
+                        fill={`url(#gx-dchart-${CHART_SERIES[index]?.key ?? index})`}
+                      />
+                      <path
+                        d={shape.line}
+                        fill="none"
+                        stroke={seriesColour(drawing.palette, index)}
+                        strokeWidth={2}
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                      />
+                    </g>
                   ),
                 }),
               )}

@@ -23,6 +23,7 @@
  */
 
 import { useState } from "react";
+import { smoothPath } from "./chart-smooth";
 import {
   SbAccount,
   SbBrand,
@@ -178,61 +179,6 @@ const CLOUDS = [
 
 /* -- the drawings -------------------------------------------------------- */
 
-/**
- * A smooth path through points, the way a chart library draws one.
- *
- * A polyline puts a sharp vertex on every datum, which reads as noise when
- * two series are stacked. This is a **monotone cubic** interpolation — the
- * curve that passes through every point without overshooting between them —
- * so the line is calm and never invents a value the data does not have.
- */
-const smoothPath = (points: ReadonlyArray<{ x: number; y: number }>): string => {
-  const first = points[0];
-  if (first === undefined) return "";
-  if (points.length === 1) return `M${first.x.toFixed(1)},${first.y.toFixed(1)}`;
-
-  const n = points.length;
-  const dx: number[] = [];
-  const slope: number[] = [];
-  for (let i = 0; i < n - 1; i += 1) {
-    const a = points[i];
-    const b = points[i + 1];
-    if (a === undefined || b === undefined) continue;
-    const run = b.x - a.x;
-    dx[i] = run;
-    slope[i] = run === 0 ? 0 : (b.y - a.y) / run;
-  }
-
-  // The Fritsch–Carlson tangents: a slope that would overshoot is pulled back
-  // to zero, so the curve stays inside its own data.
-  const tangent: number[] = Array.from({ length: n }, () => 0);
-  const head = slope[0] ?? 0;
-  const tail = slope[n - 2] ?? 0;
-  tangent[0] = head;
-  tangent[n - 1] = tail;
-  for (let i = 1; i < n - 1; i += 1) {
-    const before = slope[i - 1] ?? 0;
-    const after = slope[i] ?? 0;
-    if (before * after <= 0) {
-      tangent[i] = 0;
-      continue;
-    }
-    const w1 = 2 * (dx[i] ?? 1) + (dx[i - 1] ?? 1);
-    const w2 = (dx[i] ?? 1) + 2 * (dx[i - 1] ?? 1);
-    tangent[i] = (w1 + w2) / (w1 / before + w2 / after);
-  }
-
-  let path = `M${first.x.toFixed(1)},${first.y.toFixed(1)}`;
-  for (let i = 0; i < n - 1; i += 1) {
-    const a = points[i];
-    const b = points[i + 1];
-    if (a === undefined || b === undefined) continue;
-    const h = (b.x - a.x) / 3;
-    path += ` C${(a.x + h).toFixed(1)},${(a.y + (tangent[i] ?? 0) * h).toFixed(1)} ${(b.x - h).toFixed(1)},${(b.y - (tangent[i + 1] ?? 0) * h).toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
-  }
-  return path;
-};
-
 /** One row of a readout: a name, its value, and the colour it belongs to. */
 interface TipRow {
   readonly name: string;
@@ -292,7 +238,9 @@ const TipCard = ({ tip }: { readonly tip: Tip }) => (
           <span
             aria-hidden="true"
             className="gx-dash01-tip-dot"
-            style={row.color === undefined ? undefined : { background: row.color }}
+            style={
+              row.color === undefined ? undefined : { background: row.color }
+            }
           />
           <span className="gx-dash01-tip-name">{row.name}</span>
           <span className="gx-dash01-tip-value">{row.value}</span>
@@ -348,7 +296,9 @@ function TrafficArea() {
   let floor = TRAFFIC.map(() => 0);
   const bands = series.map((one) => {
     const lower = floor;
-    const upper = TRAFFIC.map((row, index) => (lower[index] ?? 0) + row[one.key]);
+    const upper = TRAFFIC.map(
+      (row, index) => (lower[index] ?? 0) + row[one.key],
+    );
     floor = upper;
     return { ...one, lower, upper };
   });
@@ -403,7 +353,11 @@ function TrafficArea() {
                   stopColor="var(--primary)"
                   stopOpacity={band.top}
                 />
-                <stop offset="95%" stopColor="var(--primary)" stopOpacity="0.1" />
+                <stop
+                  offset="95%"
+                  stopColor="var(--primary)"
+                  stopOpacity="0.1"
+                />
               </linearGradient>
             ))}
           </defs>
@@ -527,7 +481,8 @@ function SourceTreemap() {
   const leftW = ((organic?.value ?? 0) / total) * (w - gap);
   const rightX = leftW + gap;
   const rightW = w - rightX;
-  const rest = (direct?.value ?? 0) + (referral?.value ?? 0) + (social?.value ?? 0);
+  const rest =
+    (direct?.value ?? 0) + (referral?.value ?? 0) + (social?.value ?? 0);
   const directH = ((direct?.value ?? 0) / rest) * h;
   const bottomY = directH + gap;
   const bottomH = h - bottomY;
@@ -535,10 +490,42 @@ function SourceTreemap() {
   const referralW = ((referral?.value ?? 0) / bottom) * (rightW - gap);
 
   const cells = [
-    { name: organic?.name ?? "", value: organic?.value ?? 0, x: 0, y: 0, w: leftW - gap, h, slot: 1 },
-    { name: direct?.name ?? "", value: direct?.value ?? 0, x: rightX, y: 0, w: rightW, h: directH - gap, slot: 2 },
-    { name: referral?.name ?? "", value: referral?.value ?? 0, x: rightX, y: bottomY, w: referralW, h: bottomH, slot: 3 },
-    { name: social?.name ?? "", value: social?.value ?? 0, x: rightX + referralW + gap, y: bottomY, w: rightW - referralW - gap, h: bottomH, slot: 4 },
+    {
+      name: organic?.name ?? "",
+      value: organic?.value ?? 0,
+      x: 0,
+      y: 0,
+      w: leftW - gap,
+      h,
+      slot: 1,
+    },
+    {
+      name: direct?.name ?? "",
+      value: direct?.value ?? 0,
+      x: rightX,
+      y: 0,
+      w: rightW,
+      h: directH - gap,
+      slot: 2,
+    },
+    {
+      name: referral?.name ?? "",
+      value: referral?.value ?? 0,
+      x: rightX,
+      y: bottomY,
+      w: referralW,
+      h: bottomH,
+      slot: 3,
+    },
+    {
+      name: social?.name ?? "",
+      value: social?.value ?? 0,
+      x: rightX + referralW + gap,
+      y: bottomY,
+      w: rightW - referralW - gap,
+      h: bottomH,
+      slot: 4,
+    },
   ];
 
   const [tip, setTip] = useState<Tip | null>(null);
@@ -557,7 +544,10 @@ function SourceTreemap() {
           const y = (event.clientY - box.top) * scale;
           const cell = cells.find(
             (one) =>
-              x >= one.x && x <= one.x + one.w && y >= one.y && y <= one.y + one.h,
+              x >= one.x &&
+              x <= one.x + one.w &&
+              y >= one.y &&
+              y <= one.y + one.h,
           );
           if (cell === undefined) {
             setTip(null);
@@ -577,28 +567,36 @@ function SourceTreemap() {
         viewBox={`0 0 ${w} ${h}`}
       >
         {cells.map((cell) => (
-        <g key={cell.name}>
-          <rect
-            className="gx-dash01-cell"
-            data-slot={cell.slot}
-            height={Math.max(0, cell.h)}
-            rx="3"
-            width={Math.max(0, cell.w)}
-            x={cell.x}
-            y={cell.y}
-          />
-          {cell.w > 108 && cell.h > 60 ? (
-            <text className="gx-dash01-cell-label" x={cell.x + 12} y={cell.y + 26}>
-              {cell.name}
-            </text>
-          ) : null}
-          {cell.w > 108 && cell.h > 92 ? (
-            <text className="gx-dash01-cell-value" x={cell.x + 12} y={cell.y + 48}>
-              {cell.value}%
-            </text>
-          ) : null}
-        </g>
-      ))}
+          <g key={cell.name}>
+            <rect
+              className="gx-dash01-cell"
+              data-slot={cell.slot}
+              height={Math.max(0, cell.h)}
+              rx="3"
+              width={Math.max(0, cell.w)}
+              x={cell.x}
+              y={cell.y}
+            />
+            {cell.w > 108 && cell.h > 60 ? (
+              <text
+                className="gx-dash01-cell-label"
+                x={cell.x + 12}
+                y={cell.y + 26}
+              >
+                {cell.name}
+              </text>
+            ) : null}
+            {cell.w > 108 && cell.h > 92 ? (
+              <text
+                className="gx-dash01-cell-value"
+                x={cell.x + 12}
+                y={cell.y + 48}
+              >
+                {cell.value}%
+              </text>
+            ) : null}
+          </g>
+        ))}
       </svg>
       {tip === null ? null : <TipCard tip={tip} />}
     </div>
@@ -647,69 +645,93 @@ function FunnelSankey() {
         role="img"
         viewBox={`0 0 ${w} ${h}`}
       >
-      {steps.map((step) => {
-        const from = stages[step.from];
-        const to = stages[step.to];
-        if (from === undefined || to === undefined) return null;
-        const thick = bar(step.value);
-        const x0 = from.x + nodeW;
-        const x1 = to.x;
-        const mid = (x0 + x1) / 2;
-        return (
-          <path
-            className="gx-dash01-ribbon"
-            d={`M${x0},${top} C${mid},${top} ${mid},${top} ${x1},${top} L${x1},${top + thick} C${mid},${top + thick} ${mid},${top + thick} ${x0},${top + thick} Z`}
-            key={`${step.from}-${step.to}`}
-            onMouseMove={(event) =>
-              setTip(
-                tipFor(event, `${from.name} to ${to.name}`, [
-                  {
-                    name: "Flow",
-                    value: String(step.value),
-                    color: step.colour,
-                  },
-                ]),
-              )
-            }
-            style={{ fill: step.colour, opacity: 0.55 }}
-          />
-        );
-      })}
-      {stages.map((stage) => (
-        <g key={stage.name}>
-          <rect
-            className="gx-dash01-node"
-            height={bar(stage.value)}
-            onMouseMove={(event) =>
-              setTip(
-                tipFor(event, stage.name, [
-                  { name: "Visitors", value: String(stage.value) },
-                ]),
-              )
-            }
-            rx="2"
-            width={nodeW}
-            x={stage.x}
-            y={top}
-          />
-          <text
-            className="gx-dash01-node-label"
-            textAnchor={stage.x === 0 ? "start" : stage.x === w - nodeW ? "end" : "middle"}
-            x={stage.x === 0 ? 0 : stage.x === w - nodeW ? w : stage.x + nodeW / 2}
-            y={h - 22}
-          >
-            {stage.name}
-          </text>
-          <text
-            className="gx-dash01-node-value"
-            textAnchor={stage.x === 0 ? "start" : stage.x === w - nodeW ? "end" : "middle"}
-            x={stage.x === 0 ? 0 : stage.x === w - nodeW ? w : stage.x + nodeW / 2}
-            y={h - 4}
-          >
-            {stage.value}
-          </text>
-        </g>
-      ))}
+        {steps.map((step) => {
+          const from = stages[step.from];
+          const to = stages[step.to];
+          if (from === undefined || to === undefined) return null;
+          const thick = bar(step.value);
+          const x0 = from.x + nodeW;
+          const x1 = to.x;
+          const mid = (x0 + x1) / 2;
+          return (
+            <path
+              className="gx-dash01-ribbon"
+              d={`M${x0},${top} C${mid},${top} ${mid},${top} ${x1},${top} L${x1},${top + thick} C${mid},${top + thick} ${mid},${top + thick} ${x0},${top + thick} Z`}
+              key={`${step.from}-${step.to}`}
+              onMouseMove={(event) =>
+                setTip(
+                  tipFor(event, `${from.name} to ${to.name}`, [
+                    {
+                      name: "Flow",
+                      value: String(step.value),
+                      color: step.colour,
+                    },
+                  ]),
+                )
+              }
+              style={{ fill: step.colour, opacity: 0.55 }}
+            />
+          );
+        })}
+        {stages.map((stage) => (
+          <g key={stage.name}>
+            <rect
+              className="gx-dash01-node"
+              height={bar(stage.value)}
+              onMouseMove={(event) =>
+                setTip(
+                  tipFor(event, stage.name, [
+                    { name: "Visitors", value: String(stage.value) },
+                  ]),
+                )
+              }
+              rx="2"
+              width={nodeW}
+              x={stage.x}
+              y={top}
+            />
+            <text
+              className="gx-dash01-node-label"
+              textAnchor={
+                stage.x === 0
+                  ? "start"
+                  : stage.x === w - nodeW
+                    ? "end"
+                    : "middle"
+              }
+              x={
+                stage.x === 0
+                  ? 0
+                  : stage.x === w - nodeW
+                    ? w
+                    : stage.x + nodeW / 2
+              }
+              y={h - 22}
+            >
+              {stage.name}
+            </text>
+            <text
+              className="gx-dash01-node-value"
+              textAnchor={
+                stage.x === 0
+                  ? "start"
+                  : stage.x === w - nodeW
+                    ? "end"
+                    : "middle"
+              }
+              x={
+                stage.x === 0
+                  ? 0
+                  : stage.x === w - nodeW
+                    ? w
+                    : stage.x + nodeW / 2
+              }
+              y={h - 4}
+            >
+              {stage.value}
+            </text>
+          </g>
+        ))}
       </svg>
       {tip === null ? null : <TipCard tip={tip} />}
     </div>
@@ -791,7 +813,12 @@ function DeviceSunburst() {
             }
           />
         ))}
-        <circle className="gx-dash01-hub" cx={centre} cy={centre} r={inner - 2} />
+        <circle
+          className="gx-dash01-hub"
+          cx={centre}
+          cy={centre}
+          r={inner - 2}
+        />
       </svg>
       {tip === null ? null : <TipCard tip={tip} />}
     </div>
@@ -846,7 +873,10 @@ function DocumentsTable() {
               <td className="gx-dash01-cell-strong">{row.header}</td>
               <td>{row.type}</td>
               <td>
-                <span className="gx-dash01-status" data-done={row.status === "Done"}>
+                <span
+                  className="gx-dash01-status"
+                  data-done={row.status === "Done"}
+                >
                   {row.status}
                 </span>
               </td>
@@ -898,11 +928,7 @@ export function Dashboard01Render() {
           </SbGroup>
         ))}
       </SbPanel>
-      <SbInset
-        header={
-          <SbInsetHeader trail={["Documents", "Dashboard"]} />
-        }
-      >
+      <SbInset header={<SbInsetHeader trail={["Documents", "Dashboard"]} />}>
         <div className="gx-dash01-body">
           <StatCards />
           <section className="gx-dash01-panel">
@@ -922,7 +948,9 @@ export function Dashboard01Render() {
               <header className="gx-dash01-panel-head">
                 <div>
                   <h2 className="gx-dash01-panel-title">Sources</h2>
-                  <p className="gx-dash01-panel-sub">Where the traffic came from</p>
+                  <p className="gx-dash01-panel-sub">
+                    Where the traffic came from
+                  </p>
                 </div>
               </header>
               <SourceTreemap />
@@ -950,9 +978,7 @@ export function Dashboard01Render() {
             <header className="gx-dash01-panel-head">
               <div>
                 <h2 className="gx-dash01-panel-title">Documents</h2>
-                <p className="gx-dash01-panel-sub">
-                  Six documents in flight
-                </p>
+                <p className="gx-dash01-panel-sub">Six documents in flight</p>
               </div>
             </header>
             <DocumentsTable />

@@ -59,7 +59,7 @@ import {
   chartDrawing,
   chartPlot,
   chartTicks,
-  seriesLine,
+  seriesArea,
 } from "./charts-demo";
 import {
   VIRTUAL_COUNT,
@@ -413,10 +413,14 @@ describe("the Charts preview", () => {
     );
     expect(lines).not.toContain("<rect ");
     CHART_SERIES.forEach((series) => {
-      const path = seriesLine(series);
-      expect(Option.isSome(path)).toBe(true);
-      if (Option.isNone(path)) return;
-      expect(lines).toContain(`d="${path.value}"`);
+      // The demo draws the shape the shipped `AreaChart` does: a monotone
+      // curve through the points and a fill under it, not the straight
+      // segments the package's `linePath` makes.
+      const area = seriesArea(series);
+      expect(Option.isSome(area)).toBe(true);
+      if (Option.isNone(area)) return;
+      expect(lines).toContain(`d="${area.value.line}"`);
+      expect(lines).toContain(`d="${area.value.area}"`);
     });
   });
 
