@@ -1,0 +1,43 @@
+---
+title: Charts
+description: Seventeen chart types, one line of code each
+---
+
+<ComponentPreview name="charts-demo" />
+
+## Usage
+
+```tsx
+import { BarChart } from "@gpuixui/data";
+
+<BarChart
+  aria-label="Revenue against cost by quarter"
+  labels={["Q1", "Q2", "Q3", "Q4"]}
+  series={[
+    { key: "revenue", label: "Revenue", values: [32, 48, 41, 60] },
+    { key: "cost", label: "Cost", values: [18, 22, 26, 24] },
+  ]}
+/>;
+```
+
+## The seventeen
+
+| Type | Draws |
+| ---- | ----- |
+| [`BarChart`](/graphics/charts/charts#barchart) | one bar per category, grouped or single |
+| [`StackedBar`](/graphics/charts/charts#stackedbar) | categories stacked to their total |
+| [`LineChart`](/graphics/charts/charts#linechart) | a trend per series, linear, smooth or step |
+| [`AreaChart`](/graphics/charts/charts#areachart) | a filled trend, stacked or on its own |
+| [`ComposedChart`](/graphics/charts/charts#composedchart) | bars and lines on one axis |
+| [`ScatterChart`](/graphics/charts/charts#scatterchart) | points, for correlation |
+| [`CandleChart`](/graphics/charts/charts#candlechart) | open, high, low and close |
+| [`FunnelChart`](/graphics/charts/charts#funnelchart) | stages narrowing to a result |
+| [`PieChart`](/graphics/charts/charts#piechart-donutchart) · [`DonutChart`](/graphics/charts/charts#piechart-donutchart) | part-to-whole, as a ring |
+| [`RadarChart`](/graphics/charts/charts#radarchart) | a profile across axes |
+| [`RadialChart`](/graphics/charts/charts#radialchart) | concentric rings, as a gauge |
+| [`RadialBarChart`](/graphics/charts/charts#radialbarchart) | bars extending from the centre |
+| [`TreemapChart`](/graphics/charts/charts#treemapchart) | a hierarchy, by area |
+| [`SankeyChart`](/graphics/charts/charts#sankeychart) | a flow, by ribbon thickness |
+| [`SunburstChart`](/graphics/charts/charts#sunburstchart) | a hierarchy, by arc angle |
+| [`Sparkline`](/graphics/charts/charts#sparkline) | a trend in one line |
+| [`ChartLegend`](/graphics/charts/charts#chartlegend) | the key beside any of them |
