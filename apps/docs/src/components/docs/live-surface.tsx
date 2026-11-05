@@ -192,14 +192,12 @@ export function LiveSurface() {
 
       let presses = 0;
       let renderer: InstanceType<typeof glue.GpuixRenderer> | undefined;
-      renderer = new glue.GpuixRenderer(
-        (...args: ReadonlyArray<unknown>) => {
-          const event = args.length > 1 ? args[1] : args[0];
-          if (renderer !== undefined && isEventPayload(event)) {
-            react.handleGpuixEvent(event, renderer);
-          }
-        },
-      );
+      renderer = new glue.GpuixRenderer((...args: ReadonlyArray<unknown>) => {
+        const event = args.length > 1 ? args[1] : args[0];
+        if (renderer !== undefined && isEventPayload(event)) {
+          react.handleGpuixEvent(event, renderer);
+        }
+      });
       const host = renderer;
       host.init({});
 
