@@ -49,12 +49,15 @@ components are tracked in `.agents/slop/TODO.md`.
 
 The docs site follows shadcn/ui's anatomy: a sectioned sidebar (the Guide,
 Components, Primitives, Graphics, Data display, Workspace, Blocks, Examples,
-Reference), a reusable component page with Preview/Code tabs, a `nub` install
+Reference), a reusable component page with Preview/Code tabs (plus **Native**
+where a registered example has been captured), a `nub` install
 block, Usage, Composition and API reference, plus the "On this page" table of
-contents and the previous/next pager. Button, Dialog, Popover and
-Tabs are the pattern pages; their previews are labelled browser renderings of
-the native components, and the Code tab plus **Component source** show the real
-implementation. The remaining shadcn surfaces — **Blocks** (`/blocks`) and the
+contents and the previous/next pager. The previews are labelled browser renderings
+of the native components; `scripts/native-previews.ts` also renders every
+registered example through the wasm build into a checked-in `Native` still, and
+the component index serves those stills before hydration. The Code tab plus
+**Component source** show the real implementation. The remaining shadcn surfaces
+— **Blocks** (`/blocks`) and the
 **Theme page** (`/themes`) — landed too: recipe pages composed from the library,
 and a live token editor with the authored looks, the compiled style reference and
 the Aero look's generated stylesheet. The **Dashboard**

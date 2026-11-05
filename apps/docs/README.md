@@ -505,6 +505,9 @@ src/lib/code-theme.ts               The Shiki themes a code block highlights wit
 src/lib/remark-mermaid.ts           Turns a `mermaid` fence into a diagram at compile time
 src/lib/prompt-data.ts             The build prompt: prose plus the rows the pages generate
 src/lib/live-scene.tsx              /live's React screen, styled by the primitives' resolver
+src/lib/live-example.tsx            /live's stage for a registered native example, and its empty frame
+src/lib/native-captures.ts          The build-time native frames, looked up by component id
+src/lib/native-captures.generated.ts The platform and palette the checked-in frames were rendered on
 src/lib/gpuix-native.ts             The browser entry `@gpuix/native` resolves to on /live
 src/lib/block-source.test.ts        A block's copyable source, resolved against the workspace
 src/lib/gpuix-web.test.ts           The GPUix web build: browser entry, shared memory and the policy's status
@@ -816,6 +819,37 @@ page reported `status=painting`, the retained text read
 Press me,Waiting for a press`, the button sampled `#a7a9ff` at `41,113`, the
 banner `#1e222a` at `500,149`, and one press through the automation locator
 sampled `#0e5135` with "Pressed 1 time" — a React tree, a real press.
+
+### Native frames rendered at build time
+
+The component pages and the component index can show the **real** library, not
+only a drawing of it, because the wasm renderer does not need a native binding.
+`scripts/native-previews.ts` opens one cross-origin-isolated `/live` document and
+mounts every registered example in turn through
+`window.__gpuixCapture.render(id)` — the page is `?scene=examples` — then captures
+a `960`-wide WebP after the frame carries more than one colour. The frames land
+in `src/assets/native/<id>.webp` and are checked in; a whole run is 92 examples
+and roughly 657 KiB.
+
+`src/lib/native-captures.ts` resolves a component id to its frame through an
+eager `import.meta.glob`, so a prerendered page carries the image URL before any
+client JavaScript runs. `<ComponentPreview>` gains a **Native** tab when the
+page's last URL segment has a frame; the tab shows the still, names the platform
+and palette it was rendered on, and links to the same tree live. The component
+index paints the frame on the server and mounts the interactive browser demo
+after hydration, so its first paint is the real renderer too.
+
+`/live?scene=example&id=accordion` is the single-example form for a reader;
+`?scene=examples` is the batch surface the capture run drives. A frame is one
+platform and one palette — switching the preview switch repaints the interactive
+demo, not the checked-in still — and the caption says so.
+
+Run `nub run --filter @gpuixui/docs native:previews` (pass
+`--only accordion,dialog` while iterating, or `--url` to reuse a server). The
+script starts the docs server when one is not answering, uses the same headless
+Chrome driver as the live probes, and fails by id when an example paints a flat
+frame. `src/lib/native-captures.test.ts` fails when a capture names an example
+that no longer exists.
 
 ## The platform switch and the authored looks
 

@@ -9,6 +9,23 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ---
 
+## Native previews rendered at build time (2026-11-06)
+
+`[x]` `[██████████]` 1/1 — **the docs can now show the real library through the wasm renderer.**
+
+`[x]` Land plan `756`. `/live?scene=example&id=<id>` mounts any registered
+      example; `/live?scene=examples` exposes `__gpuixCapture.render(id)` so one
+      wasm initialisation yields every frame. `nub run --filter @gpuixui/docs
+      native:previews` writes 92 checked-in WebPs (657 KiB) and rejects a flat
+      frame by counting every pixel's colour. `<ComponentPreview>` gains a
+      **Native** tab for captured ids, and the component index's server paint is
+      the real frame before hydration mounts the interactive demo. Evidence:
+      `src/lib/native-captures.test.ts` (5), `live-frame.test.ts` (+3),
+      `component-index.test.tsx` (server frame + hydrated demo); the accordion
+      page showed a `960×633` still captioned macOS/dark and linked to the live
+      scene. Limitations are on the page: one platform, one palette, not the
+      native macOS runtime.
+
 ## Calculator example — fx-991ES Plus on GPUix
 
 `[x]` `[██████████]` 18/18
