@@ -1,4 +1,5 @@
 import { useEffect, useState, type ComponentType } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import type { EventPayload } from "@gpuix/native";
 import {
   liveBanner,
@@ -8,16 +9,9 @@ import {
   liveRestingFill,
   LiveScene,
 } from "@/lib/live-scene";
-import {
-  lookFromSearch,
-  modeFromSearch,
-  platformFromSearch,
-  resolvePlatformTheme,
-} from "@/lib/platform";
-import {
-  browserChoiceStorage,
-  readRememberedChoice,
-} from "@/lib/platform-storage";
+import { resolvePlatformTheme } from "@/lib/platform";
+import { browserChoiceStorage, openingChoice } from "@/lib/platform-storage";
+import { nativeCaptureOf } from "@/lib/native-captures";
 import { mainContentId } from "@/components/skip-link";
 
 /**
@@ -128,14 +122,8 @@ const report = (lines: ReadonlyArray<string>): void => {
   if (out !== null) out.textContent = lines.join("\n");
 };
 
-const platformOf = () => {
-  const search = window.location.search;
-  const remembered = readRememberedChoice(browserChoiceStorage());
-  return {
-    platform: platformFromSearch(search) ?? remembered.platform,
-    look: lookFromSearch(search) ?? remembered.look,
-  };
-};
+/** The choice the docs switch remembers: the store, then detection. */
+const platformOf = () => openingChoice(browserChoiceStorage());
 
 /** The renderer appends its canvas a frame after `init()`, so wait for it. */
 const awaitCanvas = async (): Promise<HTMLCanvasElement | undefined> => {
@@ -149,6 +137,14 @@ const awaitCanvas = async (): Promise<HTMLCanvasElement | undefined> => {
 
 export function LiveSurface() {
   const [status, setStatus] = useState<Status>({ kind: "starting" });
+  const search = useRouterState({
+    select: (state) => state.location.searchStr,
+  });
+  const query = new URLSearchParams(search);
+  const poster =
+    query.get("scene") === "example"
+      ? nativeCaptureOf(query.get("id") ?? "")
+      : undefined;
 
   useEffect(() => {
     if (started) {
@@ -157,33 +153,53 @@ export function LiveSurface() {
     }
     started = true;
     const choice = platformOf();
-    const mode = modeFromSearch(window.location.search) ?? "dark";
-    const theme = resolvePlatformTheme(choice.platform, mode, choice.look);
+    const theme = resolvePlatformTheme(
+      choice.platform,
+      choice.mode,
+      choice.look,
+    );
 
     const start = async (): Promise<void> => {
-      if (!(await hasBackend())) {
+      // The 19 MiB wasm and the backend probe are independent; start both at
+      // once. A browser with no backend aborts the download instead of leaving
+      // it running behind the "unavailable" sentence.
+      const abort = new AbortController();
+      const gluePromise = import("@gpuix/native/wasm/gpuix-web.js");
+      const wasm = import("@gpuix/native/wasm/gpuix-web_bg.wasm?url")
+        .then((module) => fetch(module.default, { signal: abort.signal }))
+        .then(
+          (response) => ({ ok: true, response }) as const,
+          (cause: unknown) => ({ ok: false, cause }) as const,
+        );
+
+      const [backend, glue] = await Promise.all([hasBackend(), gluePromise]);
+      if (!backend) {
+        abort.abort();
         report(["status=unavailable"]);
         setStatus({ kind: "unavailable" });
         return;
       }
 
+      const downloaded = await wasm;
+      if (!downloaded.ok) throw downloaded.cause;
+
       // The glue is initialised before the reconciler is imported: its class is
       // a binding into this module, and the shim `vite.config.ts` resolves
       // `@gpuix/native` to reads the same instance.
-      const glue = await import("@gpuix/native/wasm/gpuix-web.js");
-      const wasm = await import("@gpuix/native/wasm/gpuix-web_bg.wasm?url");
-      await glue.default({ module_or_path: wasm.default });
+      await glue.default({ module_or_path: downloaded.response });
 
       const react = await import("@gpuix/react");
 
       let presses = 0;
       let renderer: InstanceType<typeof glue.GpuixRenderer> | undefined;
-      renderer = new glue.GpuixRenderer((...args: ReadonlyArray<unknown>) => {
-        const event = args.length > 1 ? args[1] : args[0];
-        if (renderer !== undefined && isEventPayload(event)) {
-          react.handleGpuixEvent(event, renderer);
-        }
-      });
+      renderer = new glue.GpuixRenderer(
+        (...args: ReadonlyArray<unknown>) => {
+          const event = args.length > 1 ? args[1] : args[0];
+          if (renderer !== undefined && isEventPayload(event)) {
+            react.handleGpuixEvent(event, renderer);
+          }
+        },
+      );
       const host = renderer;
       host.init({});
 
@@ -206,8 +222,7 @@ export function LiveSurface() {
       // Node `process` that the browser bundle does not carry. `createRoot` is
       // the same mount without that side effect, and the automation App gives
       // the probe the same locators the reconciler's tree carries.
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("scene") === "examples") {
+      if (query.get("scene") === "examples") {
         const [{ examples }, data] = await Promise.all([
           import("@gpuixui/components/examples"),
           import("@gpuixui/data/examples"),
@@ -245,14 +260,14 @@ export function LiveSurface() {
           "canvas=yes",
           "scene=examples",
           `platform=${choice.platform}`,
-          `mode=${mode}`,
+          `mode=${choice.mode}`,
         ]);
         setStatus({ kind: "painting" });
         return;
       }
 
-      if (params.get("scene") === "example") {
-        const id = params.get("id") ?? "";
+      if (query.get("scene") === "example") {
+        const id = query.get("id") ?? "";
         const [{ examples }, data] = await Promise.all([
           import("@gpuixui/components/examples"),
           import("@gpuixui/data/examples"),
@@ -283,18 +298,18 @@ export function LiveSurface() {
           "scene=example",
           `id=${id}`,
           `platform=${choice.platform}`,
-          `mode=${mode}`,
+          `mode=${choice.mode}`,
           `text=${host.getAllText().join(",")}`,
         ]);
         setStatus({ kind: "painting" });
         return;
       }
 
-      if (params.get("scene") === "parity") {
+      if (query.get("scene") === "parity") {
         const { ThemeProvider } = await import("@gpuixui/tokens/react");
         const { PARITY_CHARTS, ParityGallery } =
           await import("@gpuixui/data/examples");
-        const only = params.get("only");
+        const only = query.get("only");
         const chosen =
           only === null
             ? undefined
@@ -415,6 +430,9 @@ export function LiveSurface() {
         <a href="/introduction">Back to the docs</a>
         <span>{liveSurfaceLabel}</span>
       </header>
+      {poster !== undefined && status.kind !== "painting" ? (
+        <img alt="" className="live-surface-poster" src={poster} />
+      ) : null}
       {status.kind === "unavailable" ? (
         <p className="live-surface-note">{liveUnavailable}</p>
       ) : status.kind === "refused" ? (

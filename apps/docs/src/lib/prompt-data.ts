@@ -97,11 +97,11 @@ minimum the window lets a pane collapse into a clipped column.
 
 ## Appearance
 
-A docs page carries its appearance in the URL, so a link can name a look:
-
-    ?mode=dark          dark or light (also accepted as ?appearance=dark)
-    ?platform=darwin    darwin, win32, linux, or default
-    ?look=luna          an authored look: luna, aero, omarchy
+A docs page carries no appearance in its URL: the platform switch is the app's
+own state — React for the page, local storage for the next visit — so a URL
+names the page and nothing else. The switch offers three axes: the platform
+(\`darwin\`, \`win32\`, \`linux\`, \`default\`), the palette (\`dark\`, \`light\`) and
+an authored look (\`luna\`, \`aero\`, \`omarchy\`).
 
 There is **no OS appearance query** in GPUix 0.11.0 (a measured absence: no
 \`appearance\`, \`prefers*\` or \`reduce*\` export). The app owns the mode and passes

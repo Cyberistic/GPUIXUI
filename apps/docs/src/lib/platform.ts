@@ -20,9 +20,6 @@ import {
  * style sheet written for the browser.
  */
 
-/** The query parameter that carries the platform on every docs URL. */
-export const platformParam = "platform";
-
 /** The platforms the switch offers, in the order it shows them. */
 export const platformOrder = [
   "darwin",
@@ -60,21 +57,12 @@ export const landingPlatformLabel = (platform: LandingPlatform): string =>
   landingPlatformLabels[platform];
 
 /**
- * Parse a raw query value. A value the library does not name is rejected
- * rather than guessed, so a mistyped URL falls back to the remembered or
- * default platform.
+ * Parse a stored value. A value the library does not name is rejected rather
+ * than guessed, so a value written by an older build falls back per axis.
  */
 export const parsePlatform = (
   raw: string | null | undefined,
 ): PlatformName | undefined => platformOrder.find((option) => option === raw);
-
-/** Read the platform out of a query string (`?platform=win32`). */
-export const platformFromSearch = (search: string): PlatformName | undefined =>
-  parsePlatform(new URLSearchParams(search).get(platformParam));
-
-/** The query string a platform produces (`?platform=win32`). */
-export const platformSearch = (platform: PlatformName): string =>
-  `?${platformParam}=${platform}`;
 
 /**
  * The authored look a preview paints, or `native` for the platform's own style.
@@ -87,9 +75,6 @@ export const platformSearch = (platform: PlatformName): string =>
  */
 export type LookName = "native" | RetroName;
 
-/** The query parameter that carries a look. */
-export const lookParam = "look";
-
 /** The looks the switch offers, in order: the platform's own style first. */
 export const lookOrder = [
   "native",
@@ -100,28 +85,10 @@ export const lookOrder = [
 export const lookLabel = (look: LookName): string =>
   look === "native" ? "Platform" : retroStyles[look].label;
 
-/** Parse a raw look. A name the library does not ship is rejected, not guessed. */
+/** Parse a stored look. A name the library does not ship is rejected, not guessed. */
 export const parseLook = (
   raw: string | null | undefined,
 ): LookName | undefined => lookOrder.find((look) => look === raw);
-
-/** Read a look out of a query string (`?look=luna`). */
-export const lookFromSearch = (search: string): LookName | undefined =>
-  parseLook(new URLSearchParams(search).get(lookParam));
-
-/** The query value a look writes (`luna`), or nothing for the platform style. */
-export const lookSearch = (look: LookName): string => look;
-
-/**
- * The query parameters that carry the palette a preview paints.
- *
- * `mode` is what the switch writes; `appearance` is the same value under the
- * name a link from elsewhere is likely to use, so `?appearance=dark` and
- * `?mode=dark` both open dark. The switch keeps writing `mode`, and a page that
- * carries both reads `mode` first.
- */
-export const modeParam = "mode";
-export const appearanceParam = "appearance";
 
 /**
  * The palettes a preview offers, in switch order: the library's identity first,
@@ -137,23 +104,12 @@ export const modeLabel = (mode: ThemeMode): string =>
   mode === "dark" ? "Dark" : "Light";
 
 /**
- * Parse a raw mode. A value the library does not name is rejected rather than
- * guessed, so a mistyped URL falls back to the remembered or opening palette.
+ * Parse a stored mode. A value the library does not name is rejected rather
+ * than guessed, so a value written by an older build falls back per axis.
  */
 export const parseMode = (
   raw: string | null | undefined,
 ): ThemeMode | undefined => modeOrder.find((mode) => mode === raw);
-
-/** Read the mode out of a query string (`?mode=light`, or `?appearance=light`). */
-export const modeFromSearch = (search: string): ThemeMode | undefined => {
-  const params = new URLSearchParams(search);
-  return (
-    parseMode(params.get(modeParam)) ?? parseMode(params.get(appearanceParam))
-  );
-};
-
-/** The query string a mode produces (`?mode=light`). */
-export const modeSearch = (mode: ThemeMode): string => `?${modeParam}=${mode}`;
 
 /**
  * The palette a preview opens in.
@@ -161,9 +117,9 @@ export const modeSearch = (mode: ThemeMode): string => `?${modeParam}=${mode}`;
  * The docs site has its own light/dark switch (Fumadocs' theme provider), and a
  * preview deliberately does not follow it: a preview is a picture of the
  * library, and its identity is the dark theme. The palette a reader compares is
- * the switch's own `?mode=` axis, so the site resolves one opening mode and
- * says which — the guide prints this value rather than typing "dark", so a
- * page and the provider cannot disagree.
+ * the switch's own palette axis, so the site resolves one opening mode and says
+ * which — the guide prints this value rather than typing "dark", so a page and
+ * the provider cannot disagree.
  */
 export const previewMode: ThemeMode = "dark";
 
@@ -251,22 +207,6 @@ export interface PreviewChoice {
   readonly look: LookName;
   readonly mode: ThemeMode;
 }
-
-/**
- * The choice a visit opens with: the URL, then the store, then detection.
- *
- * `remembered` is the store's answer with detection filled in where it had
- * none, so this function is the whole precedence: a shared link wins over the
- * visitor's last choice, and both win over the browser's own report.
- */
-export const openingChoice = (
-  search: string,
-  remembered: PreviewChoice,
-): PreviewChoice => ({
-  platform: platformFromSearch(search) ?? remembered.platform,
-  look: lookFromSearch(search) ?? remembered.look,
-  mode: modeFromSearch(search) ?? remembered.mode,
-});
 
 /**
  * Choosing a platform returns to that platform's own style.

@@ -14,9 +14,8 @@ import {
 /**
  * The palette switch is the one axis a reader uses to see a component in both
  * of the library's themes, so its two halves need holding: the **state** half
- * is covered by `platform.test.ts` (the query parameter, the switch's order and
- * the labels), and the **press** half is React in a browser, which no
- * server-rendered capture proves. `apps/docs/scripts/palette-switch-probe.ts`
+ * is covered by `platform.test.ts` (the switch's order and the labels), and the
+ * **press** half is React in a browser. `apps/docs/scripts/palette-switch-probe.ts`
  * presses the group in a hydrated page and reads the consequence off the
  * surfaces; this file keeps the probe and the policy from drifting apart, and
  * holds the readout parser the probe's assertions depend on.
@@ -30,15 +29,12 @@ const policy = read("docs/preview-strategy.md");
 const probe = read("apps/docs/scripts/palette-switch-probe.ts");
 
 describe("the palette switch's readout", () => {
-  it("reads the five fields the probe asserts on", () => {
-    expect(
-      parseSurface("light|darwin|#F6F8FA|Light|?platform=darwin&mode=light"),
-    ).toEqual({
+  it("reads the four fields the probe asserts on", () => {
+    expect(parseSurface("light|darwin|#F6F8FA|Light")).toEqual({
       mode: "light",
       platform: "darwin",
       background: "#F6F8FA",
       pressed: "Light",
-      search: "?platform=darwin&mode=light",
     });
   });
 
@@ -48,7 +44,6 @@ describe("the palette switch's readout", () => {
     // nothing pass the mode assertion.
     expect(parseSurface("light|darwin|#F6F8FA")).toBeUndefined();
     expect(parseSurface("")).toBeUndefined();
-    expect(parseSurface("none|none||")).toBeUndefined();
   });
 
   it("accepts only a platform the library names", () => {
@@ -113,8 +108,10 @@ describe("the switch's press path", () => {
     expect(probe).toContain('countSurfaces("light")');
     expect(probe).toContain("data-mode");
     expect(probe).toContain("data-platform");
-    expect(probe).toContain('includes("mode=light")');
-    expect(probe).toContain('includes("mode=dark")');
+    // The switch is the app's now: the URL must stay clean, in both
+    // directions, or a stale path has written the state back into it.
+    expect(probe).toContain("namesSwitchAxis(");
+    expect(probe).toContain("location.search");
   });
 
   it("carries no colour of its own", () => {
@@ -166,7 +163,7 @@ describe("the policy", () => {
     // The two measurements a reader can repeat, and the failure that proves
     // the probe is not vacuous.
     expect(policy).toContain("3 of 3 surfaces painted");
-    expect(policy).toContain("a preview opened in light, not dark");
+    expect(policy).toContain("the address bar carries the switch's state");
   });
 
   it("names the probe in the site's ledger", () => {

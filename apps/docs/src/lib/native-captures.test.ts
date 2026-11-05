@@ -47,9 +47,9 @@ describe("the native captures", () => {
     expect(componentIdFromPath("/")).toBeUndefined();
   });
 
-  it("opens the live scene on the reader's platform and mode", () => {
-    expect(nativeExampleHref("accordion", "win32", "light")).toBe(
-      "/live?scene=example&id=accordion&platform=win32&mode=light",
+  it("opens the live scene the capture came from", () => {
+    expect(nativeExampleHref("accordion")).toBe(
+      "/live?scene=example&id=accordion",
     );
   });
 });

@@ -163,7 +163,7 @@ describe("the live surface's route", () => {
     expect(sources.match(/new glue\.GpuixRenderer\(/g) ?? []).toHaveLength(1);
     expect(sources.match(/\.init\(\{\}\)/g) ?? []).toHaveLength(1);
     expect(surface).toContain(
-      'await import("@gpuix/native/wasm/gpuix-web.js")',
+      'import("@gpuix/native/wasm/gpuix-web.js")',
     );
     expect(surface).toContain('await import("@gpuix/react")');
     expect(surface.indexOf("useEffect")).toBeLessThan(

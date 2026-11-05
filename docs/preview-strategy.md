@@ -259,8 +259,8 @@ platform is a document-level singleton.
   class through the `gpuix-web-wasm` rule, and `vite.config.ts` resolves
   `@gpuix/native` to it for the client graph.
 - The theme is the platform switch's: `resolvePlatformTheme(platform, "dark",
-  look)` from `?platform=` and `?look=`, falling back to the remembered choice,
-  so the surface changes with the rest of the site's previews.
+  look)` from the choice the switch remembers, so the surface changes with the
+  rest of the site's previews.
 - A press goes through the automation locator, which calls
   `renderer.simulateClick` — the renderer's own input path — and the React
   handler repaints the banner's fill and counts the press. Nothing in the page
@@ -328,6 +328,15 @@ poster in the component index before hydration: the server-rendered tile carries
 the image, and the mount replaces it with the interactive browser demo. The still
 is one platform and one palette — the caption names both — so it does not repaint
 with the platform switch; the live scene it links to does.
+
+The live example form uses the same frame as a **poster**: the server HTML for
+`/live?scene=example&id=accordion` carries the checked-in image, and the route
+starts the wasm fetch beside the backend probe instead of after it. The reader
+therefore sees the real library immediately; the canvas replaces the poster when
+the page reports `painting`. The 19 MiB payload is still a first-visit download
+and compile — the poster makes the wait honest, it does not remove it. Serving
+the module with Brotli and a long-lived immutable cache (the hashed asset path
+allows both) is the deployment half of that; a repeat visit reuses it.
 
 ### Reading a hydrated node
 
@@ -410,12 +419,11 @@ added record asks the probe to move.
 
 ### The palette switch is a measured click
 
-The palette axis (`?mode=`, the sidebar's **Palette** group) is the one control
-that lets a reader see a component in both of the library's themes, and it is
-React state: `?mode=light` in the address bar proves the surface resolved a
-palette on the server, not that pressing *Light* changes one. `String` state
-crosses three places — the query parameter, the remembered choice and the
-provider — so the click is measured rather than assumed.
+The palette axis (the sidebar's **Palette** group) is the one control that lets
+a reader see a component in both of the library's themes, and it is React state:
+the address bar says nothing about what a press changes. The choice crosses two
+places — the provider and the remembered choice — so the click is measured
+rather than assumed.
 
 `apps/docs/scripts/palette-switch-probe.ts` presses the group on the served
 Button page. It waits for the **Light** button to carry `__reactProps.onClick`
@@ -428,9 +436,9 @@ surface's `data-mode`, `data-platform` and the `--background` variable the bridg
 wrote, and holds each against `platformTheme(themes[mode], platform)` — so the
 expected fill is the library's own value, and a palette edit moves the probe with
 it. It presses **Light**, requires every surface to follow (`3 of 3` on the Button
-page), the group's `aria-pressed` to move, and the address bar to carry
-`mode=light`; then it presses **Dark** and requires the URL back. Run it with a
-dev or preview server up:
+page) and the group's `aria-pressed` to move, and requires the address bar to
+carry none of the switch's axes; then it presses **Dark** and requires the group
+back. Run it with a dev or preview server up:
 
 ```sh
 nub run --filter @gpuixui/docs dev
@@ -459,32 +467,30 @@ is disabled.
 Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
 against `vite preview`: `light: 3 of 3 surfaces painted #F6F8FA`, exit `0` — the
 Default platform's light page fill, with the dark page `#11141A` before the
-press. The negative control is a link that opens on the other palette:
-`--url '…/components/button?mode=light'` prints
-`FAIL a preview opened in light, not dark`, the fill it read beside the dark one
-it expected, and the group's pressed position, then exits `1`.
+press. The negative control is the query guard: `namesSwitchAxis` names
+`platform`, `mode`, `look` and `appearance`, and the probe fails with
+`the address bar carries the switch's state (…)` if any path writes one back.
 `src/lib/palette-switch.test.ts` holds the policy, the command, both measurements
 and the parser the assertions read.
 
 ### The platform switch is a measured click
 
-The platform axis (`?platform=`, the sidebar's **Platform style** group) is the
-mission's acceptance: *a reader toggles macOS → Windows and every preview
-changes*. The URL half is server-rendered — `?platform=win32` reaches the
-surface — but a reader changes it by pressing a button, and that press is React
-state: it writes the address bar and re-resolves `platformTheme` for every
-`PreviewSurface`, which no `?platform=` capture proves.
+The platform axis (the sidebar's **Platform style** group) is the mission's
+acceptance: *a reader toggles macOS → Windows and every preview changes*. A
+reader changes it by pressing a button, and that press is React state: it
+re-resolves `platformTheme` for every `PreviewSurface`, which no capture of the
+markup proves.
 
 `apps/docs/scripts/platform-switch-probe.ts` presses **Windows**, then **macOS**,
 on the served Button page. It waits for the Windows button to carry
 `__reactProps.onClick`, then reads every preview surface's `data-platform`,
-`data-mode`, the `--control-height-md` variable the bridge wrote and the address
-bar. The height is held against
+`data-mode` and the `--control-height-md` variable the bridge wrote, and the
+platform button the group reports pressed. The height is held against
 `platformTheme(themes[mode], platform).density.controlHeight.md`, so the expected
 geometry is the library's own and a density edit moves the probe with it. It
-requires every surface to follow (`3 of 3` on the Button page) and the URL to
-carry `platform=win32`, then `platform=darwin`. Run it with a dev or preview
-server up:
+requires every surface to follow (`3 of 3` on the Button page), the group to
+report the pressed platform, and the address bar to carry none of the switch's
+axes. Run it with a dev or preview server up:
 
 ```sh
 nub run --filter @gpuixui/docs dev
@@ -503,8 +509,8 @@ surfaces that did. `src/lib/platform-switch.test.ts` holds the policy, the
 command, both measurements and the parser the assertions read.
 
 A platform press also clears an authored look. A look is an overlay: it fixes
-the palette, radii and density over whatever platform is showing, so with
-`?look=aero` remembered the sidebar's press moved only the label and every
+the palette, radii and density over whatever platform is showing, so with the
+Aero look remembered the sidebar's press moved only the label and every
 preview kept the look's paint — the failure a reader reports as "the switch does
 nothing". `choosingPlatform` in `src/lib/platform.ts` is that rule, and
 `platform.test.ts` holds both directions: the stale look paints the same page in
@@ -516,9 +522,9 @@ The site has **two** palettes, and they are deliberately independent:
 
 - the **docs chrome** — the sidebar, the page and the prose — reads its own
   `:root`/`.dark` values from `src/styles/app.css`;
-- a **preview** paints the library's theme, resolved from `?mode=`, `?platform=`
-  and `?look=`, so a component can be read in the dark palette while the page is
-  light.
+- a **preview** paints the library's theme, resolved from the switch's palette,
+  platform and look, so a component can be read in the dark palette while the
+  page is light.
 
 The chrome's switch is React state held by next-themes, so no static read proves
 it: `?theme=dark` in a URL, or the class on `<html>` at load, says nothing about
@@ -974,13 +980,13 @@ come from `platformStyles`, the palettes are the library's own light and dark
 themes, and the looks are the authored `retroStyles` — Windows XP (Luna),
 Windows 7 (Aero) and Omarchy — which are styles of the same shape, not a fifth
 platform (the mission's toggle stays
-macOS · Linux · Windows · Default, and the sidebar offers platforms only). Each is
-written to the URL (`?platform=…&mode=…&look=…`) so a link carries what the
-reader saw.
+macOS · Linux · Windows · Default, and the sidebar offers platforms only). Each
+lives in the app — React for the page, local storage for the next visit — so the
+address bar names the page and nothing else.
 
 The palette is the one axis a reader chooses to see a component in both themes:
 the switch opens on the library's dark identity (`previewMode` in
-`src/lib/platform.ts`) and `?mode=light` paints the light theme. What stays fixed
+`src/lib/platform.ts`) and the palette axis paints the light theme. What stays fixed
 is the site's own light/dark mode — a preview does not follow the docs chrome's
 theme, because a preview is a picture of the library and not of the site; the
 palette axis is explicit, shareable and remembered, so a reader in light mode
@@ -1014,7 +1020,7 @@ not the other, so a scheme cannot silently inherit a variable from its sibling.
   re-declared the dark theme and stopped following the platform switch.
   Measured in a headless browser on `/components/checkbox` — the macOS
   surface's `--control-height-md` is `28px` and its scene read `32px`, the dark
-  default, while `?platform=win32` read `32px` in both; with the split the macOS
+  default, while a Windows press read `32px` in both; with the split the macOS
   scene reads `28px` and Windows `32px`.
 - `src/lib/theme-css.test.ts` holds the seam: every `var(--…)` a preview style
   sheet reads must exist in the bridge, the `.gx-base` defaults must equal

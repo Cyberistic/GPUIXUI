@@ -93,8 +93,8 @@ export const landingMeta = () => {
 /**
  * The `head` contribution of a docs page.
  *
- * A canonical link is the page's own absolute URL: the platform switch is a
- * query string, so `?platform=win32` reads as one page rather than four.
+ * A canonical link is the page's own absolute URL. The platform switch lives in
+ * the app, not the query string, so a page's search belongs to the page.
  */
 export const docsMetadata = ({
   title,

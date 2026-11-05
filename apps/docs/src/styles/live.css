@@ -33,6 +33,23 @@
   text-decoration: underline;
 }
 
+/*
+ * The checked-in native frame, shown while the wasm boots.
+ *
+ * The same component was rendered at build time, so a reader sees the real
+ * library immediately; the interactive canvas replaces this still once it has
+ * painted. The bar stays above it.
+ */
+.live-surface-poster {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--background);
+}
+
 .live-surface-note {
   position: fixed;
   inset: 0;

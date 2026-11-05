@@ -212,7 +212,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const server = await docsServer(flags.url);
   const session = await openChrome(
     chrome,
-    `${server.url}/live?scene=examples&platform=darwin&mode=dark`,
+    `${server.url}/live?scene=examples`,
     viewport.width,
     viewport.height,
   );

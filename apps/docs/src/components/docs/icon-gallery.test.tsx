@@ -81,12 +81,20 @@ describe("the icon gallery", () => {
     expect(markup).toContain('type="search"');
   });
 
-  it("filters through the URL, and the page says which renderer draws it", () => {
+  it("mounts once, on the Graphics page, and says which renderer draws it", () => {
     const mount = readFileSync(
       new URL("./icon-gallery.tsx", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
     const page = readFileSync(
+      new URL("../../../../../packages/icons/docs/icon.mdx", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const previews = readFileSync(
+      new URL("../../lib/package-preview.ts", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    const primitives = readFileSync(
       new URL("../../../content/docs/primitives/index.mdx", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
@@ -95,10 +103,16 @@ describe("the icon gallery", () => {
     expect(mount).toContain(
       "<IconGalleryView onQueryChange={chooseQuery} query={query} />",
     );
-    // The page mounts the URL-backed component and links the reference half.
-    expect(page).toContain("<IconGallery />");
-    expect(page).toContain("](/graphics/icons/icon)");
-    // Honesty: the drawings are the package's geometry, painted by the browser.
+    // The icons page mounts the URL-backed grid through the site's preview
+    // table, so the glyphs and the reference are one page.
+    expect(previews).toContain(
+      '{ origin: "icons", path: "icon.mdx", demo: "icon-gallery-demo" }',
+    );
+    // Mounted once: the primitives index points at the page, it does not draw
+    // a second grid.
+    expect(primitives).not.toContain("<IconGallery");
+    expect(primitives).toContain("](/graphics/icons/icon)");
+    // Honesty: the drawings are the package's markup, painted by the browser.
     expect(page).toContain("drawn from the markup the package ships");
     expect(page).toContain("style.color");
   });

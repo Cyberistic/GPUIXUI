@@ -1,4 +1,3 @@
-import type { PlatformName, ThemeMode } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 
@@ -47,14 +46,11 @@ export const componentIdFromPath = (pathname: string): string | undefined =>
   pathname.split("/").filter(Boolean).at(-1);
 
 /**
- * The live scene for one captured example, on the reader's platform and mode.
+ * The live scene for one captured example.
  *
- * The capture is a still of one platform and palette; this link is how a
- * reader opens the same tree, interactive, in the wasm renderer.
+ * Platform and palette are the app's remembered choice, not the URL: `/live`
+ * reads them from the same store the switch writes, so the link carries only
+ * the scene it opens.
  */
-export const nativeExampleHref = (
-  id: string,
-  platform: PlatformName,
-  mode: ThemeMode,
-): string =>
-  `/live?scene=example&id=${encodeURIComponent(id)}&platform=${platform}&mode=${mode}`;
+export const nativeExampleHref = (id: string): string =>
+  `/live?scene=example&id=${encodeURIComponent(id)}`;

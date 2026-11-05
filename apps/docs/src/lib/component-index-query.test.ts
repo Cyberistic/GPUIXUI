@@ -25,7 +25,7 @@ const params = (search: string): ReadonlyArray<readonly [string, string]> => [
 describe("the docs indexes' URL filter", () => {
   it("reads the filter a link carries", () => {
     expect(indexQueryFromSearch("?q=dialog")).toBe("dialog");
-    expect(indexQueryFromSearch("?platform=win32&q=DialogFooter")).toBe(
+    expect(indexQueryFromSearch("?scene=parity&q=DialogFooter")).toBe(
       "DialogFooter",
     );
     expect(indexQueryFromSearch("?q=command+menu")).toBe("command menu");
@@ -34,19 +34,19 @@ describe("the docs indexes' URL filter", () => {
 
   it("opens unfiltered when the URL carries none", () => {
     expect(indexQueryFromSearch("")).toBe("");
-    expect(indexQueryFromSearch("?platform=win32")).toBe("");
+    expect(indexQueryFromSearch("?scene=parity")).toBe("");
   });
 
-  it("keeps the parameters the platform switch owns", () => {
-    expect(params(indexQuerySearch("dialog", "?platform=win32"))).toEqual([
-      ["platform", "win32"],
+  it("keeps every parameter the page already carries", () => {
+    expect(params(indexQuerySearch("dialog", "?scene=parity"))).toEqual([
+      ["scene", "parity"],
       [indexQueryParam, "dialog"],
     ]);
     expect(
-      params(indexQuerySearch("dialog", "?platform=win32&look=luna")),
+      params(indexQuerySearch("dialog", "?scene=parity&only=bar")),
     ).toEqual([
-      ["platform", "win32"],
-      ["look", "luna"],
+      ["scene", "parity"],
+      ["only", "bar"],
       [indexQueryParam, "dialog"],
     ]);
   });
@@ -71,8 +71,8 @@ describe("the docs indexes' URL filter", () => {
   });
 
   it("removes the parameter for an empty filter instead of writing `?q=`", () => {
-    expect(indexQuerySearch("", "?platform=win32&q=dialog")).toBe(
-      "?platform=win32",
+    expect(indexQuerySearch("", "?scene=parity&q=dialog")).toBe(
+      "?scene=parity",
     );
     expect(indexQuerySearch("   ", "?q=dialog")).toBe("");
     expect(indexQuerySearch("", "")).toBe("");

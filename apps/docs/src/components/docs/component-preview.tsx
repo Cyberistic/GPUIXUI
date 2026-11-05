@@ -13,7 +13,6 @@ import {
   nativeExampleHref,
 } from "@/lib/native-captures";
 import { platformLabel } from "@/lib/platform";
-import { usePlatform } from "./platform-toggle";
 import { demos } from "./demos";
 import { PreviewSurface } from "./preview-surface";
 
@@ -42,7 +41,6 @@ export function ComponentPreview({ name }: { name: string }) {
   const component = componentIdFromPath(pathname);
   const capture =
     component === undefined ? undefined : nativeCaptureOf(component);
-  const { platform, theme } = usePlatform();
 
   return (
     <div className="gx-component not-prose">
@@ -72,7 +70,7 @@ export function ComponentPreview({ name }: { name: string }) {
               />
               <figcaption>
                 {`A real GPUix frame, rendered at build time by the wasm build on ${platformLabel(nativeCaptureFrame.platform)}, ${nativeCaptureFrame.mode}. The still is one palette and one platform; `}
-                <a href={nativeExampleHref(component, platform, theme.mode)}>
+                <a href={nativeExampleHref(component)}>
                   open the same scene live
                 </a>
                 {"."}

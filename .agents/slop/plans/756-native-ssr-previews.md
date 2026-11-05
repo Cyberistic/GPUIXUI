@@ -154,6 +154,9 @@ The spike passed. On this host (macOS, headless Chrome over SwiftShader):
 - `ComponentPreview` renders a **Native** tab on pages whose last URL segment has
   a capture (the accordion page verified: image `960×633`, caption naming macOS
   and dark, link to `/live?scene=example&id=accordion`).
+- The live example form SSR-paints the same capture as a poster and starts the
+  wasm fetch beside the backend probe, so the real library is visible while the
+  renderer boots; the canvas replaces it when the route reports `painting`.
 - `/components` prerenders with `data-preview="native"` images for 81 tiles and
   mounts the interactive demos after hydration.
 - Guards: `src/lib/native-captures.test.ts` (5 cases) holds captures to the

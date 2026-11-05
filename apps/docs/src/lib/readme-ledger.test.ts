@@ -96,14 +96,13 @@ describe("the apps/docs ledger", () => {
 
   it("says the sidebar offers platforms and the theme page owns the picker", () => {
     // A look is not a fourth platform: the sidebar's switch carries the four
-    // platform names, and an authored look (`?look=luna`) is the theme page's
-    // own control. The ledger is the only place that split is written down, so
+    // platform names, and an authored look is the theme page's own control. The ledger is the only place that split is written down, so
     // a row that folded the looks back into the switch fails here.
     const readme = ledger.join("\n");
 
     expect(readme).toContain("## The platform switch and the authored looks");
     expect(readme).toContain("no look group");
-    expect(readme).toContain("?look=luna");
+    expect(readme).toContain("`retroStyles`");
     expect(readme).toContain("look-picker.tsx");
     expect(readme).not.toContain("**Look** offers");
   });

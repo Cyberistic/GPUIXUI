@@ -2794,6 +2794,18 @@
   color: var(--muted-foreground);
 }
 
+/* The file path is the link, so it has to read as one. */
+.gx-install-note a {
+  color: var(--foreground);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gx-install-note a:hover {
+  color: var(--primary);
+}
+
 .gx-source {
   margin: 1rem 0;
 }

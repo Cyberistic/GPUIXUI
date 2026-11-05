@@ -6,7 +6,7 @@ import { legacyDocsRedirect } from "./legacy-docs";
  * Bug guarded: the docs moved from `/docs/<path>` to the site root, and a
  * published link must keep working. A retired page answers **301** to its root
  * twin, `/docs` answers **301** to the landing, and the query a reader followed
- * travels with them — a `?platform=` link keeps the theme it was shared with.
+ * travels with them — a `?scene=` link keeps the view it was shared with.
  */
 
 const legacyRoutes = new URL("../routes/docs/", import.meta.url);
@@ -20,10 +20,10 @@ describe("the docs' old prefix", () => {
   });
 
   it("moves the docs root to the landing", () => {
-    const response = legacyDocsRedirect("", "?platform=win32");
+    const response = legacyDocsRedirect("", "?scene=parity");
 
     expect(response.status).toBe(301);
-    expect(response.headers.get("location")).toBe("/?platform=win32");
+    expect(response.headers.get("location")).toBe("/?scene=parity");
   });
 
   it("is the redirect both legacy routes throw", () => {

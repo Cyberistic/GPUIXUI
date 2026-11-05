@@ -42,15 +42,15 @@ export function SourceAccordion({
       <Accordions collapsible type="single">
         <Accordion title={`Component source — ${file}`}>
           <p className="gx-install-note">
-            The shipping implementation in the workspace. Read it on{" "}
+            The shipping implementation is{" "}
             <a
               href={githubUrl(gitConfig, file)}
               rel="noreferrer"
               target="_blank"
             >
-              GitHub
-            </a>
-            .
+              {file}
+            </a>{" "}
+            on GitHub.
           </p>
           <HighlightedCode lang="tsx" code={code} />
         </Accordion>
