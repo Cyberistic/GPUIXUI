@@ -18,6 +18,12 @@ This plan is written against the reference screenshot, feature by feature.
 | `apps/docs/content/docs/blocks/meta.json` | **change** — add the page |
 | `apps/docs/README.md` | **change** — ledger rows for the page and the module |
 
+### Reused, not rebuilt
+
+The top bar's tab strip is `apps/docs/src/components/docs/reorderable-tabs.tsx`,
+the site's drag-and-close tab component, dressed with `tabClassName`. The block
+adds no tab behaviour of its own.
+
 ## The block, feature by feature
 
 The reference is Notion's Tasks view. It has three regions.
@@ -80,6 +86,10 @@ Each card is:
 - a card's menu pins and unpins it; the **Pinned Docs** row follows
 - a section's `⌄` collapses and expands it
 - the rail's collapse keeps its icons and takes its labels
+- the top bar's tab strip is the site's **`ReorderableTabs`**, not a hand-rolled
+  row: a card's title opens that document as a tab, `+` opens a blank view,
+  `×` closes one, and tabs drag or move with `Alt`+arrow; activating a
+  document tab shows that document's page and its tasks
 
 ### Content
 

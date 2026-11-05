@@ -1,6 +1,7 @@
 import { useState } from "react";
 import * as Option from "effect/Option";
 import { BlockIcon, type BlockIconName } from "./block-icons";
+import { ReorderableTabs, type ReorderableTab } from "./reorderable-tabs";
 import { RailToggle, useRailCollapse } from "./sidebar-rail";
 
 /**
@@ -498,12 +499,50 @@ const InboxRow = ({
 const countLabel = (count: number): string =>
   count === 1 ? "1 task to do" : `${count} tasks to do`;
 
+/** The page a document tab opens: its cover, its count and every task. */
+const DocView = ({
+  doc,
+  tasks,
+  onToggle,
+}: {
+  readonly doc: TaskDoc;
+  readonly tasks: ReadonlyArray<Task>;
+  readonly onToggle: (id: string) => void;
+}) => {
+  const all = tasks.filter((task) => Option.contains(task.doc, doc.id));
+  const open = all.filter((task) => !task.done);
+  return (
+    <div className="gx-task-doc" data-accent={doc.accent}>
+      <div
+        className="gx-task-doc-cover"
+        data-cover={doc.cover ?? "band"}
+        data-tone={doc.coverTone}
+      />
+      <h2 className="gx-task-doc-title">{doc.title}</h2>
+      <p className="gx-task-doc-count">{countLabel(open.length)}</p>
+      <ul className="gx-task-doc-list">
+        {all.map((task) => (
+          <li data-done={task.done || undefined} key={task.id}>
+            <TaskCheck
+              checked={task.done}
+              label={task.title}
+              onToggle={() => onToggle(task.id)}
+            />
+            <span>{task.title}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 /** One document card. */
 const DocCard = ({
   doc,
   tasks,
   menuOpen,
   onMenu,
+  onOpen,
   onPin,
   onToggle,
 }: {
@@ -511,6 +550,7 @@ const DocCard = ({
   readonly tasks: ReadonlyArray<Task>;
   readonly menuOpen: boolean;
   readonly onMenu: () => void;
+  readonly onOpen: () => void;
   readonly onPin: () => void;
   readonly onToggle: (id: string) => void;
 }) => {
@@ -533,7 +573,9 @@ const DocCard = ({
           <span aria-hidden="true" className="gx-task-card-glyph">
             <Glyph name="note" size={13} />
           </span>
-          <span className="gx-task-card-title">{doc.title}</span>
+          <button className="gx-task-card-title" onClick={onOpen} type="button">
+            {doc.title}
+          </button>
           <span className="gx-task-card-menu">
             <button
               aria-expanded={menuOpen}
@@ -608,13 +650,60 @@ const SectionHead = ({
   </header>
 );
 
+/** The page's own tab: the Tasks view itself. */
+const TASKS_TAB = "tasks";
+
+const TASKS_HOME_TAB: ReorderableTab = {
+  id: TASKS_TAB,
+  label: "Tasks",
+  leading: <Glyph name="tasks" size={13} />,
+};
+
 export const TasksRender = () => {
   const [tasks, setTasks] = useState<ReadonlyArray<Task>>(initialTasks);
   const [docs, setDocs] = useState<ReadonlyArray<TaskDoc>>(initialDocs);
   const [menu, setMenu] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<ReadonlyArray<string>>([]);
+  const [openTabs, setOpenTabs] = useState<ReadonlyArray<ReorderableTab>>([
+    TASKS_HOME_TAB,
+  ]);
+  const [activeTab, setActiveTab] = useState<string>(TASKS_TAB);
   const rail = useRailCollapse();
   const { pinned, rest } = splitPinned(docs);
+  const activeDoc = docs.find((doc) => doc.id === activeTab);
+
+  /** A document opened as its own tab, or the existing tab brought forward. */
+  const openDoc = (doc: TaskDoc): void => {
+    setOpenTabs((current) =>
+      current.some((tab) => tab.id === doc.id)
+        ? current
+        : [...current, { id: doc.id, label: doc.title }],
+    );
+    setActiveTab(doc.id);
+  };
+
+  /** `+` opens a blank view, which the reader can close again. */
+  const addTab = (): void => {
+    const id = `new-${openTabs.length + 1}`;
+    setOpenTabs((current) => [
+      ...current,
+      { id, label: `Untitled ${current.length}` },
+    ]);
+    setActiveTab(id);
+  };
+
+  /** A closed tab hands the pane to its neighbour, or back to the page. */
+  const closeTab = (id: string): void => {
+    setOpenTabs((current) => {
+      const index = current.findIndex((tab) => tab.id === id);
+      const next = current.filter((tab) => tab.id !== id);
+      if (activeTab === id) {
+        const neighbour = next[Math.min(index, next.length - 1)];
+        setActiveTab(neighbour?.id ?? TASKS_TAB);
+      }
+      return next.length === 0 ? [TASKS_HOME_TAB] : next;
+    });
+  };
 
   const toggle = (id: string): void =>
     setTasks((current) => toggleTask(current, id));
@@ -658,19 +747,24 @@ export const TasksRender = () => {
             </button>
           </span>
         </span>
-        <span className="gx-task-tabs">
-          <span aria-current="page" className="gx-task-tab" data-active="true">
-            <Glyph name="tasks" size={13} />
-            Tasks
-          </span>
-          <button
-            aria-label="New tab"
-            className="gx-task-bar-btn"
-            type="button"
-          >
-            <Glyph name="plus" size={15} />
-          </button>
-        </span>
+        <ReorderableTabs
+          active={activeTab}
+          className="gx-task-tabs"
+          label="Open views"
+          onActivate={setActiveTab}
+          onClose={closeTab}
+          onReorder={setOpenTabs}
+          tabClassName="gx-task-tab"
+          tabs={openTabs}
+        />
+        <button
+          aria-label="New tab"
+          className="gx-task-bar-btn"
+          onClick={addTab}
+          type="button"
+        >
+          <Glyph name="plus" size={15} />
+        </button>
         <span className="gx-task-bar-right">
           <button
             aria-label="Notifications"
@@ -784,98 +878,110 @@ export const TasksRender = () => {
         </aside>
 
         <main className="gx-task-main">
-          <div className="gx-task-page-head">
-            <h2 className="gx-task-page-title">Tasks</h2>
-            <button
-              className="gx-task-new"
-              onClick={() => setTasks((current) => addInboxTask(current))}
-              type="button"
-            >
-              <Glyph name="plus" size={14} />
-              New Task
-            </button>
-          </div>
-
-          <section className="gx-task-section">
-            <SectionHead
-              collapsed={collapsed.includes("inbox")}
-              onToggle={() => fold("inbox")}
-              title="Inbox"
-            />
-            {collapsed.includes("inbox") ? null : (
-              <ul className="gx-task-inbox">
-                {tasks
-                  .filter((task) => Option.isNone(task.doc))
-                  .map((task) => (
-                    <InboxRow
-                      key={task.id}
-                      onToggle={() => toggle(task.id)}
-                      task={task}
-                    />
-                  ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="gx-task-section">
-            <SectionHead
-              collapsed={collapsed.includes("pinned")}
-              onToggle={() => fold("pinned")}
-              title="Pinned Docs"
-            />
-            {collapsed.includes("pinned") ? null : (
-              <div className="gx-task-cards">
-                {pinned.map((doc) => (
-                  <DocCard
-                    doc={doc}
-                    key={doc.id}
-                    menuOpen={menu === doc.id}
-                    onMenu={() =>
-                      setMenu((current) => (current === doc.id ? null : doc.id))
-                    }
-                    onPin={() => {
-                      setDocs((current) =>
-                        setPinned(current, doc.id, !doc.pinned),
-                      );
-                      setMenu(null);
-                    }}
-                    onToggle={toggle}
-                    tasks={tasks}
-                  />
-                ))}
+          {activeDoc === undefined ? (
+            <>
+              <div className="gx-task-page-head">
+                <h2 className="gx-task-page-title">Tasks</h2>
+                <button
+                  className="gx-task-new"
+                  onClick={() => setTasks((current) => addInboxTask(current))}
+                  type="button"
+                >
+                  <Glyph name="plus" size={14} />
+                  New Task
+                </button>
               </div>
-            )}
-          </section>
 
-          <section className="gx-task-section">
-            <SectionHead
-              collapsed={collapsed.includes("docs")}
-              onToggle={() => fold("docs")}
-              title="Docs With Tasks"
-            />
-            {collapsed.includes("docs") ? null : (
-              <div className="gx-task-cards">
-                {rest.map((doc) => (
-                  <DocCard
-                    doc={doc}
-                    key={doc.id}
-                    menuOpen={menu === doc.id}
-                    onMenu={() =>
-                      setMenu((current) => (current === doc.id ? null : doc.id))
-                    }
-                    onPin={() => {
-                      setDocs((current) =>
-                        setPinned(current, doc.id, !doc.pinned),
-                      );
-                      setMenu(null);
-                    }}
-                    onToggle={toggle}
-                    tasks={tasks}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
+              <section className="gx-task-section">
+                <SectionHead
+                  collapsed={collapsed.includes("inbox")}
+                  onToggle={() => fold("inbox")}
+                  title="Inbox"
+                />
+                {collapsed.includes("inbox") ? null : (
+                  <ul className="gx-task-inbox">
+                    {tasks
+                      .filter((task) => Option.isNone(task.doc))
+                      .map((task) => (
+                        <InboxRow
+                          key={task.id}
+                          onToggle={() => toggle(task.id)}
+                          task={task}
+                        />
+                      ))}
+                  </ul>
+                )}
+              </section>
+
+              <section className="gx-task-section">
+                <SectionHead
+                  collapsed={collapsed.includes("pinned")}
+                  onToggle={() => fold("pinned")}
+                  title="Pinned Docs"
+                />
+                {collapsed.includes("pinned") ? null : (
+                  <div className="gx-task-cards">
+                    {pinned.map((doc) => (
+                      <DocCard
+                        doc={doc}
+                        key={doc.id}
+                        menuOpen={menu === doc.id}
+                        onOpen={() => openDoc(doc)}
+                        onMenu={() =>
+                          setMenu((current) =>
+                            current === doc.id ? null : doc.id,
+                          )
+                        }
+                        onPin={() => {
+                          setDocs((current) =>
+                            setPinned(current, doc.id, !doc.pinned),
+                          );
+                          setMenu(null);
+                        }}
+                        onToggle={toggle}
+                        tasks={tasks}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="gx-task-section">
+                <SectionHead
+                  collapsed={collapsed.includes("docs")}
+                  onToggle={() => fold("docs")}
+                  title="Docs With Tasks"
+                />
+                {collapsed.includes("docs") ? null : (
+                  <div className="gx-task-cards">
+                    {rest.map((doc) => (
+                      <DocCard
+                        doc={doc}
+                        key={doc.id}
+                        menuOpen={menu === doc.id}
+                        onOpen={() => openDoc(doc)}
+                        onMenu={() =>
+                          setMenu((current) =>
+                            current === doc.id ? null : doc.id,
+                          )
+                        }
+                        onPin={() => {
+                          setDocs((current) =>
+                            setPinned(current, doc.id, !doc.pinned),
+                          );
+                          setMenu(null);
+                        }}
+                        onToggle={toggle}
+                        tasks={tasks}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            </>
+          ) : (
+            <DocView doc={activeDoc} onToggle={toggle} tasks={tasks} />
+          )}
         </main>
       </div>
     </div>

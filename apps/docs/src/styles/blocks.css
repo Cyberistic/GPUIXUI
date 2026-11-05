@@ -8234,29 +8234,41 @@ button.gx-sb-row {
   outline-offset: 1px;
 }
 
+/* The strip is `ReorderableTabs`: the shared drag, close and keyboard
+   behaviour, dressed as the reference's rounded tab. */
 .gx-task-tabs {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   min-width: 0;
+  gap: 2px;
+  overflow: hidden;
 }
 
 .gx-task-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  flex: none;
   height: 26px;
-  padding: 0 12px;
+  padding: 0 10px 0 12px;
   border-radius: 7px;
-  background: transparent;
   color: var(--muted-foreground);
   font-weight: 500;
   white-space: nowrap;
+  cursor: grab;
 }
 
-.gx-task-tab[data-active] {
+.gx-task-tab[data-active="true"] {
   background: var(--muted);
   color: var(--foreground);
+}
+
+.gx-task-tab .gx-reorder-close {
+  width: 14px;
+  height: 14px;
+  font-size: 12px;
+  opacity: 0;
+}
+
+.gx-task-tab:hover .gx-reorder-close,
+.gx-task-tab[data-active="true"] .gx-reorder-close,
+.gx-task-tab .gx-reorder-close:focus-visible {
+  opacity: 0.55;
 }
 
 .gx-task-avatar {
@@ -8748,16 +8760,6 @@ button.gx-sb-row {
   color: var(--muted-foreground);
 }
 
-.gx-task-card-title {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  color: #4a8cf7;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .gx-task-card[data-accent="orange"] .gx-task-card-title {
   color: #c87b23;
 }
@@ -8874,6 +8876,105 @@ button.gx-sb-row {
 
 .gx-task-menu-item:hover {
   background: var(--muted);
+}
+
+/* ---- the page a document tab opens ---- */
+.gx-task-doc {
+  max-width: 640px;
+}
+
+.gx-task-doc-cover {
+  height: 120px;
+  margin-bottom: 18px;
+  border-radius: 8px;
+  background: var(--muted);
+}
+
+.gx-task-doc-cover[data-cover="photo"] {
+  background: linear-gradient(115deg, #6fa8dc 0%, #8fc98a 60%, #e0c56b 100%);
+}
+
+.gx-task-doc-cover[data-tone="sunset"] {
+  background: linear-gradient(100deg, #f6d7a8 0%, #f0b27a 100%);
+}
+
+.gx-task-doc-cover[data-tone="sky"] {
+  background: linear-gradient(100deg, #cfe3f7 0%, #bfd9c4 100%);
+}
+
+.gx-task-doc-cover[data-tone="mist"] {
+  background: linear-gradient(100deg, #ececec 0%, #dcdcdc 100%);
+}
+
+.gx-task-doc-cover[data-tone="dark"] {
+  background: linear-gradient(100deg, #2b2b2b 0%, #1c1c1c 100%);
+}
+
+.gx-task-doc-title {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.gx-task-doc-count {
+  margin: 0 0 16px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-task-doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-task-doc-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+
+.gx-task-doc-list li:hover {
+  background: var(--muted);
+}
+
+.gx-task-doc-list li[data-done] span:last-child {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+/* The card's title is the control that opens the document. */
+.gx-task-card-title {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #4a8cf7;
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.gx-task-card-title:hover {
+  text-decoration: underline;
+}
+
+.gx-task-card-title:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+  border-radius: 3px;
 }
 
 /* A narrower pane narrows the rail; the rail itself stays, because it is the

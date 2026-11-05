@@ -110,6 +110,17 @@ describe("the tasks block", () => {
     expect(markup).toContain("Docs With Tasks");
   });
 
+  it("opens the views in the shared reorderable tabs", () => {
+    // The strip is the site's `ReorderableTabs`, not a hand-rolled row: the
+    // drag, the close and the roving tab stop are one component's.
+    expect(markup).toContain('role="tablist"');
+    expect(markup).toContain('aria-label="Open views"');
+    expect(markup).toContain('data-reorder-tab="tasks"');
+    expect(markup).toContain('aria-label="Close Tasks"');
+    expect(css).toContain(".gx-task-tabs");
+    expect(css).toContain(".gx-task-tab");
+  });
+
   it("gives every card the count and the tasks it holds", () => {
     expect(markup).toContain("tasks to do");
     // A card's first open task is printed inside it.
