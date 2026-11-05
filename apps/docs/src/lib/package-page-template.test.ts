@@ -64,11 +64,6 @@ interface Section {
 
 const sections: ReadonlyArray<Section> = [
   { name: "API", accepts: (heading) => heading === "API" },
-  {
-    name: "accessibility or limitations",
-    accepts: (heading) =>
-      heading.startsWith("Accessibility") || heading === "Limitations",
-  },
 ];
 
 interface KnownGap {
@@ -158,11 +153,8 @@ describe("the package page template", () => {
       "utf8",
     ).replace(/\s+/g, " ");
 
-    expect(sections.map((section) => section.name)).toEqual([
-      "API",
-      "accessibility or limitations",
-    ]);
-    expect(policy).toContain("`## API` and `## Limitations`");
+    expect(sections.map((section) => section.name)).toEqual(["API"]);
+    expect(policy).toContain("`## API`");
     expect(policy).not.toContain("Four sections are not optional");
     expect(ledger).not.toContain("the evidence section and `## Related`");
     expect(ledger).toContain("src/lib/related.ts");

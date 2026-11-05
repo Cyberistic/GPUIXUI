@@ -134,8 +134,7 @@ ContextMenu
 | `disabled` / `leading` / `trailing` / `textValue` | the row surface | — | the sub trigger is an ordinary row that opens the second level |
 | `className` / `style` | host | none | merged last |
 
-## Limitations
-
+## Notes
 - Rows are `menuitem` or `menuitemcheckbox`; no `aria-haspopup` or `aria-activedescendant`, and the surface is not portalled, so a scroll container does not clip it.
 - A dismissed menu paints its **200 ms** exit; its rows leave the Tab order until an inherited `inert`.
 - The surface paints `elevation.lg` beside a 1px `ring` at a fixed **24px** corner; the preview is an approximation.

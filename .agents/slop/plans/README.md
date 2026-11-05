@@ -251,6 +251,7 @@ Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` �
 | [752](./752-chart-v2.md) | Charts v2: the multi-colour surface, the config seam and the missing types | D | data charts, tokens series, motion | landed — the TanStack Charts scene bridge, the document route, `ChartConfig`, scatter/candle/funnel, the crosshair and the emphasis |
 | [753](./753-graphics-category.md) | Graphics: one category for charts, icons and diagrams | F | data charts, icons, Pele | landed — the `Graphics` section, the `Diagram` component, the pages and the document-route probe |
 | [754](./754-chart-types.md) | The three remaining chart types: treemap, sankey and sunburst | D | data charts, the scene bridge | landed — the three types Recharts ships and this library did not, painted through the document route |
+| [755](./755-tasks-block.md) | The tasks block: a Notion-style Tasks view for the docs | F | blocks registry, `@gpuixui/components`, tokens | **done** — top bar, workspace rail, dated inbox and two card rows; ticks, New Task, pin and collapse are live |
 
 ### Media
 

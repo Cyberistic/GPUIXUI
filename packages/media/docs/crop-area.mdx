@@ -47,8 +47,7 @@ const [crop, setCrop] = useState(
 | `className` | `string` | — |
 | `style` | `StyleDesc` | — |
 
-## Limitations
-
+## Notes
 - **No rotation**: rotate the bytes before cropping.
 - A gesture reports a rectangle **once**, when it changes; `minSize` is 24 points and a stored rectangle is clamped first.
 - **Gestures begin on the primary button**: a secondary press on the picture starts no move and one on a handle starts no resize, so the press a context menu wants cannot drag the hole.

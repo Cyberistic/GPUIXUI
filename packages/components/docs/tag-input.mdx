@@ -56,8 +56,7 @@ TagInput
 | `TagInputField` | `<input>` | `className?`, `style?`, `defaultValue?`, `placeholder?`, `readOnly?`, `disabled?`, `autoFocus?`, `invalid?`, `size?`, `fullWidth?`, `label?`, `tabIndex?`, `testId?`, `onValueChange?`, `onClick?`, `onKeyDown?`, `onKeyUp?`, `onFocus?`, `onBlur?`, `ref?`, `aria-id?`, `onLayout?`, `description?` |
 | `TagInputChip` | chip `div` with a removal `role="button"` | `value` (required), `style?`, `className?` |
 
-## Limitations
-
+## Notes
 - Controlled only.
 - The group cannot observe a descendant's focus on this runtime, so the borderless input carries the focus ring itself rather than the group.
 - `hint` and `caption` are caller copy; the component does not derive a budget from `max`.

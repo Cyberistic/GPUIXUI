@@ -93,8 +93,7 @@ Select
 | `triggerTestId` | `string` | none | locator for the element that opens the list |
 | `itemTestId` | `(value: string) => string` | none | locator for an option row, derived from its value |
 
-## Limitations
-
+## Notes
 - Role and name come from the runtime's trigger; `label` adds the accessible name.
 - The **trigger is the control**: it carries the open state, the chosen words and `description`.
 - `SelectGroup` is a plain `div`; the wrapper carries `role="group"` and the caption's name.

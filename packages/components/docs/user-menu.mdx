@@ -60,8 +60,7 @@ the avatar paints the initials.
 - Standalone use is the same component: it does not require a `SidebarProvider`
   (only `SidebarUserMenu` does, because it reads the panel).
 
-## Limitations
-
+## Notes
 - No `aria-haspopup` in 0.11.0: the trigger announces `aria-expanded` only.
 - The trigger is the local DropdownMenu's own action because that component owns
   the element it anchors and measures; a row composed inside `SidebarMenu` keeps

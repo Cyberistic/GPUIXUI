@@ -48,8 +48,7 @@ const [layout, setLayout] = useState(initial);
 | `renderTab` | `(id: string) => ReactNode` | — | one tab's content |
 | `className` | `string` | — | joined after the recipe |
 
-## Limitations
-
+## Notes
 - The tree is **controlled**: every change arrives through `onLayoutChange`.
 - A layout string that is not a tree is a decode failure; open the default.
 - A split holds exactly two children; a tab press rewrites its group's `activeTab`.

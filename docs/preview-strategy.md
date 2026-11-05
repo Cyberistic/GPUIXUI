@@ -26,7 +26,7 @@ this site uses **3 for the paint and geometry, and 2 for the runtime**:
   reader can run the real component in `apps/playground` — the companion native
   playground — rather than trust the drawing.
 - Where the runtime lacks a capability (no `aria-checked`, no `transform`, no
-  caret position), the page says so in **Limitations** instead of drawing
+  caret position), the page says so in prose instead of drawing
   behaviour that does not exist. `.agents/slop/COMPONENTS.md` carries the same evidence per
   row.
 
@@ -66,7 +66,7 @@ a quarter of the pill's height plus the column's gap — so the pill crosses the
 surface's bottom edge, and the rest of its box lays out below the edge. shadcn
 anchors the row absolutely and hangs three quarters of it past the edge; the
 runtime cannot position a child against its parent, so the Bubble page says so
-under **Limitations** and the drawing mirrors the native quarter rather than
+in its accessibility notes and the drawing mirrors the native quarter rather than
 shadcn's. The drawing's corner is `var(--radius-xl)` and its type is the
 recipe's 14px/20px, so the platform switch moves the corner with the native one;
 shadcn's `--radius * 1.4` and `leading-relaxed` are the two numbers the library's
@@ -1034,13 +1034,10 @@ Every page in `content/docs/components/` follows this order. Sections that do no
 | Composition | a `text` tree of the parts, only for a compound component |
 | API reference | tables: part → prop → type → default |
 | keyboard | the generated block: every key the component handles and what it does, read from the component's own modules — or the installed runtime module for a wrapper that handles none of them |
-| Limitations | at most three one-line runtime facts |
 
-The page is the sentence, the preview, the example, the API and the limits. A
-rationale, a measured story or a section that restates the API belongs in the
-commit or the source comment instead. That cap is enforced: a page carrying a
-fourth limit fails `component-page.test.ts`, and a fact a prop's Consequence
-already states is the API's, not the limits'.
+The page is the sentence, the preview, the example and the API. `src/lib/package-page-template.test.ts` holds every package page to its own `## API`. A rationale, a
+measured story or a section that restates the API belongs in the commit or the
+source comment instead.
 
 A page whose component has a **variant axis** prints a **Variants** table at
 the end of **API reference** — one row per member of the recipe's union, one
@@ -1076,16 +1073,6 @@ primitives package's field. A row may name several props at once
 is how the shared interaction and address props stay readable. A `Member` list —
 `useTable`'s fields, which are values a hook returns rather than props a caller
 passes — is the one table the completeness rule exempts, and the map says so.
-
-The **Limitations** section has a shared half as well as a per-component one. A
-page states what its own control does and cannot do; the runtime's ARIA budget —
-the role-required rule, the attributes it publishes, the attributes it refuses
-and the absent live region — is the cross-cutting contract in
-`docs/gpuix-capabilities.md`, so a page does not have to restate the runtime in
-order to be honest. `src/lib/capability-doc.test.ts` holds the record to the
-installed `@gpuix/native` typings, so a runtime bump that changes the budget
-fails the record rather than leaving it teaching the previous release. `src/lib/package-page-template.test.ts`
-holds every package page to its own `## API` and `## Limitations`.
 
 A page that documents a **dismissing surface** — a dialog, a drawer, a toast
 card, a menu, a navigation panel or a command palette — teaches the window it leaves in: the

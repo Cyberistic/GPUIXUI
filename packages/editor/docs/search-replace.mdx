@@ -51,8 +51,7 @@ index numbers one range set, so it cannot name a match in the next one. A
 document edit is different — after a single replace the bar stays on the match
 that moved into the active slot, which is the one the reader is working through.
 
-## Limitations
-
+## Notes
 - **Literal matching**: no regex mode.
 - **The active match cannot move the editor**: the bar reports `n / m` and the caller jumps.
 - **The bar does not own the text**: replacements arrive through `onValueChange`.

@@ -50,8 +50,7 @@ const [code, setCode] = useState("");
 | `ref` / `aria-id` / `onLayout` | host props | none | land on the first cell; the code belongs to the group |
 | `testId` | `string` | — | the group's locator; cells are `<testId>-cell-N` |
 
-## Limitations
-
+## Notes
 - There is no `onPaste`: a pasted code arrives as one multi-character edit and fills it forward; a longer code truncates at six.
 - Arrows do not repeat: they are handled on key up.
 - The code is contiguous: clearing a middle character shifts the rest left.

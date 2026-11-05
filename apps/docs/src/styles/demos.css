@@ -16045,3 +16045,350 @@ button.gx-rating-star:focus-visible {
   background: var(--primary);
   color: var(--primary-foreground);
 }
+
+/* The charts gallery: one cell per type, beside the mode-switch preview. */
+.gx-dchart-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.gx-dchart-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+.gx-dchart-cell figcaption {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+/* The tooltip and legend example scenes: a static, labelled approximation. */
+.gx-dchart-tooltip-scene {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.gx-dchart-tip-card {
+  position: absolute;
+  top: 8px;
+  left: 46%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  font-size: 12px;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 20%);
+}
+
+.gx-dchart-tip-head {
+  color: var(--muted-foreground);
+}
+
+.gx-dchart-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-dchart-tip-line {
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.gx-dchart-legend-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dchart-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-dchart-legend-row b {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.gx-dchart-legend-mark {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.gx-dchart-legend-dot {
+  border-radius: 50%;
+}
+
+.gx-dchart-legend-line {
+  width: 18px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+/* A variants scene: one row of small labelled drawings. */
+.gx-dchart-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gx-dchart-label-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dchart-tip-static {
+  position: static;
+}
+
+.gx-dchart-tip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* The interactive chart previews: the frame the pointer moves over. */
+.gx-dchart-interactive-frame {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.gx-dchart-tip-follow {
+  position: absolute;
+  top: 8px;
+}
+
+/* The brushed window's strip: drag across it to window the plot. */
+.gx-dchart-brush-strip {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  border-radius: 3px;
+  background: var(--muted);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.gx-dchart-brush-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  opacity: 0.4;
+}
+
+/* The reorderable tab strip: the editor chrome's gesture and its two exits.
+   The component owns the order (the caller says where a tab lands); this sheet
+   only paints the travel, the gap and the close. */
+.gx-reorder-tabs {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  user-select: none;
+}
+
+.gx-reorder-indicator {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-radius: 3px;
+  background: var(--ring);
+  opacity: 0.2;
+  pointer-events: none;
+  transform: translateX(-1px);
+}
+
+.gx-reorder-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  touch-action: none;
+  transition:
+    transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 120ms ease,
+    color 120ms ease,
+    opacity 140ms ease,
+    width 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    padding 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.gx-reorder-tab[data-dragging="true"] {
+  z-index: 2;
+  cursor: grabbing;
+  transition: none;
+}
+
+/* The commit frame: the old offsets and the new base positions arrive in the
+   same paint, so the cleared transform must not animate a second time. */
+.gx-reorder-tabs[data-settling="true"] .gx-reorder-tab {
+  transition: none;
+}
+
+.gx-reorder-tab[data-dropping="true"] {
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.gx-reorder-tab[data-closing="true"] {
+  flex: 0 0 auto;
+  overflow: hidden;
+  opacity: 0;
+  padding-inline: 0;
+  border-right-color: transparent;
+  pointer-events: none;
+}
+
+.gx-reorder-tab:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-reorder-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.gx-reorder-close:hover,
+.gx-reorder-close:focus-visible {
+  background: rgb(127 127 127 / 22%);
+  opacity: 1;
+}
+
+/* The preview on the Terminal guide: a dark editor strip, not the docs theme. */
+.gx-editor-tabs {
+  margin-block: 1.25rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.gx-editor-tabs-rail {
+  height: 36px;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+  overflow: hidden;
+}
+
+.gx-editor-tabs-tab {
+  padding: 0 10px;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.gx-editor-tabs-tab[data-active="true"] {
+  background: var(--card);
+  box-shadow: inset 0 1px 0 var(--primary);
+  color: var(--foreground);
+}
+
+.gx-editor-tabs-tab[data-dragging="true"] {
+  background: var(--card);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 22%);
+  color: var(--foreground);
+}
+
+.gx-editor-tabs-close {
+  margin-left: 2px;
+}
+
+.gx-editor-tabs-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 64px;
+  padding: 0.75rem 1rem;
+}
+
+.gx-editor-tabs-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.gx-editor-tabs-line > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--foreground);
+}
+
+.gx-editor-tabs-dim {
+  flex: none;
+  color: var(--muted-foreground);
+}
+
+.gx-editor-tabs-empty {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-editor-tabs-hint {
+  margin: 0;
+  padding: 0 1rem 0.85rem;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-editor-tabs-hint kbd {
+  padding: 1px 4px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-reorder-tab {
+    transition: none;
+  }
+}

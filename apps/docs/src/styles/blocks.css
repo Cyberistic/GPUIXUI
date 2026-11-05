@@ -8154,3 +8154,771 @@ button.gx-sb-row {
   font-weight: 600;
   color: var(--foreground);
 }
+
+/* ---- the tasks block: a Notion-style Tasks view ---- */
+
+/*
+ * The reference is Notion's Tasks screen: a top bar over two panes, a warm-grey
+ * workspace sidebar, and a white content pane whose page holds an inbox of
+ * tasks and two rows of document cards.
+ */
+.gx-task {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 640px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13px;
+  line-height: 1.45;
+  container-type: inline-size;
+}
+
+/* ---- the top bar ---- */
+.gx-task-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 40px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+}
+
+.gx-task-bar-left,
+.gx-task-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.gx-task-bar-right {
+  justify-content: flex-end;
+}
+
+.gx-task-bar-arrows {
+  display: flex;
+  gap: 2px;
+  margin-left: 6px;
+}
+
+.gx-task-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gx-task-bar-btn:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.gx-task-bar-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-task-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.gx-task-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.gx-task-tab[data-active] {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.gx-task-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 4px;
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+/* ---- the two panes ---- */
+.gx-task-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.gx-task-side {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+  width: 244px;
+  padding: 10px 8px 8px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: color-mix(in oklab, var(--muted), var(--background) 35%);
+  transition:
+    width 200ms ease,
+    padding 200ms ease;
+}
+
+.gx-task-side[data-collapsed="true"] {
+  width: 64px;
+  padding-inline: 8px;
+}
+
+.gx-task-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.gx-task-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 28px;
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-task-nav-row:hover {
+  background: color-mix(in oklab, var(--muted), transparent 30%);
+  color: var(--foreground);
+}
+
+.gx-task-nav-row[data-active] {
+  background: color-mix(in oklab, var(--muted), transparent 10%);
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.gx-task-nav-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -1px;
+}
+
+.gx-task-nav-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-task-nav-trailing {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+/* The workspace row is the sidebar's own header: avatar, name, chevron, search. */
+.gx-task-workspace {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 0 4px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.gx-task-workspace:hover {
+  background: color-mix(in oklab, var(--muted), transparent 30%);
+}
+
+.gx-task-workspace-avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-task-workspace-chevron {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-task-workspace-search {
+  margin-left: auto;
+}
+
+.gx-task-folders-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 2px;
+  padding: 2px 7px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.gx-task-folders-head .gx-task-nav-label {
+  flex: 1;
+}
+
+.gx-task-foot {
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.gx-task-collapse {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.gx-task-side:hover .gx-task-collapse,
+.gx-task-collapse:focus-visible {
+  opacity: 1;
+}
+
+/* A collapsed rail keeps its icons and hides its labels. */
+.gx-task-side[data-collapsed="true"] .gx-task-nav-label,
+.gx-task-side[data-collapsed="true"] .gx-task-nav-trailing,
+.gx-task-side[data-collapsed="true"] .gx-task-workspace-chevron,
+.gx-task-side[data-collapsed="true"] .gx-task-workspace-search,
+.gx-task-side[data-collapsed="true"] .gx-task-folders-head .gx-task-nav-label {
+  display: none;
+}
+
+.gx-task-side[data-collapsed="true"] .gx-task-workspace {
+  justify-content: center;
+}
+
+.gx-task-side[data-collapsed="true"] .gx-task-nav-row {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+/* ---- the content pane ---- */
+.gx-task-main {
+  flex: 1;
+  min-width: 0;
+  padding: 26px 32px 40px;
+  overflow-y: auto;
+}
+
+.gx-task-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.gx-task-page-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.gx-task-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  background: color-mix(in oklab, var(--primary), transparent 88%);
+  color: var(--primary);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.gx-task-new:hover {
+  background: color-mix(in oklab, var(--primary), transparent 80%);
+}
+
+.gx-task-new:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ---- a section ---- */
+.gx-task-section {
+  margin-bottom: 26px;
+}
+
+.gx-task-section-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.gx-task-section-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.gx-task-section-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.gx-task-section-head:hover .gx-task-section-more,
+.gx-task-section-more:focus-visible {
+  opacity: 1;
+}
+
+.gx-task-section-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+
+.gx-task-section-chevron[aria-expanded="false"] {
+  transform: rotate(-90deg);
+}
+
+.gx-task-section-more:hover,
+.gx-task-section-chevron:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+/* ---- the inbox ---- */
+.gx-task-inbox {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+
+.gx-task-row:hover {
+  background: var(--muted);
+}
+
+.gx-task-row[data-done] .gx-task-row-text {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+.gx-task-row-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The date pill: a small grey rounded chip beside (or after) the task. */
+.gx-task-date {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  height: 21px;
+  padding: 0 7px;
+  border-radius: 5px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ---- the checkbox ---- */
+.gx-task-check {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.gx-task-check:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-task-check-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--muted-foreground);
+  border-radius: 3px;
+  color: var(--primary-foreground);
+  font-size: 10px;
+  line-height: 1;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.gx-task-check[data-state="checked"] .gx-task-check-box {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+/* ---- the cards ---- */
+.gx-task-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gx-task-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.gx-task-card:hover {
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.gx-task-card[data-accent="blue"] {
+  border-color: color-mix(in oklab, #4a8cf7, transparent 55%);
+}
+
+.gx-task-card[data-accent="orange"] {
+  border-color: color-mix(in oklab, #e8a33d, transparent 50%);
+}
+
+.gx-task-card[data-accent="yellow"] {
+  border-color: color-mix(in oklab, #e8d33d, transparent 40%);
+}
+
+.gx-task-card[data-accent="violet"] {
+  border-color: color-mix(in oklab, #9b7cf7, transparent 55%);
+}
+
+.gx-task-card-cover {
+  position: relative;
+  flex: none;
+  height: 34px;
+  background: var(--muted);
+}
+
+.gx-task-card-cover[data-cover="photo"] {
+  background: linear-gradient(115deg, #6fa8dc 0%, #8fc98a 60%, #e0c56b 100%);
+}
+
+.gx-task-card-cover[data-tone="sunset"] {
+  background: linear-gradient(100deg, #f6d7a8 0%, #f0b27a 100%);
+}
+
+.gx-task-card-cover[data-tone="sky"] {
+  background: linear-gradient(100deg, #cfe3f7 0%, #bfd9c4 100%);
+}
+
+.gx-task-card-cover[data-tone="mist"] {
+  background: linear-gradient(100deg, #ececec 0%, #dcdcdc 100%);
+}
+
+.gx-task-card-cover[data-tone="dark"] {
+  background: linear-gradient(100deg, #2b2b2b 0%, #1c1c1c 100%);
+}
+
+.gx-task-card-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--background), transparent 15%);
+  color: var(--muted-foreground);
+}
+
+.gx-task-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 11px 11px;
+}
+
+.gx-task-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.gx-task-card-glyph {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.gx-task-card-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #4a8cf7;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-task-card[data-accent="orange"] .gx-task-card-title {
+  color: #c87b23;
+}
+
+.gx-task-card[data-accent="yellow"] .gx-task-card-title {
+  color: #a8890f;
+}
+
+.gx-task-card[data-accent="violet"] .gx-task-card-title {
+  color: #7b58d6;
+}
+
+.gx-task-card-count {
+  margin: 0 0 4px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-task-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-task-card-list li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.gx-task-card-task {
+  min-width: 0;
+  overflow: hidden;
+  color: #4a8cf7;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-task-card[data-accent="orange"] .gx-task-card-task {
+  color: #c87b23;
+}
+
+.gx-task-card[data-accent="yellow"] .gx-task-card-task {
+  color: #a8890f;
+}
+
+.gx-task-card[data-accent="violet"] .gx-task-card-task {
+  color: #7b58d6;
+}
+
+.gx-task-card-menu {
+  position: relative;
+  flex: none;
+}
+
+.gx-task-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.gx-task-card:hover .gx-task-more,
+.gx-task-more[aria-expanded="true"],
+.gx-task-more:focus-visible {
+  opacity: 1;
+}
+
+.gx-task-more:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.gx-task-menu-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--popover);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 14%);
+}
+
+.gx-task-menu-item {
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--popover-foreground);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gx-task-menu-item:hover {
+  background: var(--muted);
+}
+
+/* A narrower pane narrows the rail; the rail itself stays, because it is the
+   block's navigation, not decoration. The cards keep three across only while
+   a card is wide enough to read its tasks. */
+@container (max-width: 900px) {
+  .gx-task-side {
+    width: 208px;
+  }
+
+  .gx-task-main {
+    padding: 22px 22px 36px;
+  }
+}
+
+@container (max-width: 780px) {
+  .gx-task-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 640px) {
+  .gx-task-side {
+    display: none;
+  }
+}
+
+@container (max-width: 480px) {
+  .gx-task-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gx-task-main {
+    padding: 18px 16px 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-task-side,
+  .gx-task-card,
+  .gx-task-section-chevron,
+  .gx-task-check-box,
+  .gx-task-more,
+  .gx-task-section-more,
+  .gx-task-collapse {
+    transition: none;
+  }
+}

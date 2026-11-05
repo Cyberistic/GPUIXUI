@@ -37,8 +37,7 @@ Stepper
 | `Stepper` | `div` with `role="list"` | `value` (required), `orientation?` (default `"horizontal"`; a stored name that is neither axis reads as `"horizontal"`), `label?` (a blank one publishes no name), `className?`, `children` |
 | `StepperStep` | `div` with `role="listitem"` | `value` (required), `label` (required; a blank one reads as the step's position, `Step 2`), `description?` (a blank one paints no line), `style?`, `className?` |
 
-## Limitations
-
+## Notes
 - Display-only: no step click, disabled policy or `onValueChange`.
 - No connector line between steps.
 - No `aria-current`; the current step uses `aria-selected`.

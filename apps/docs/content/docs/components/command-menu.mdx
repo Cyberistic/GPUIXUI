@@ -67,8 +67,7 @@ CommandMenu
 | `CommandMenuItem` | one runnable row | `action` (required), `className` |
 | `CommandMenuEmpty` | the no-match message | `children` (default `No matching commands`), `className` |
 
-## Limitations
-
+## Notes
 - The field keeps the focus; `↓`/`Ctrl+N`, `↑`/`Ctrl+P`, `Home` and `End` move the highlight, `Enter` runs the active row, `Escape` dismisses.
 - A dismissed palette paints for its **320 ms** exit and its field leaves the window's tab order until the runtime inherits `inert`.
 - **No `aria-activedescendant` or `aria-controls`**: the active row is visual only.

@@ -37,6 +37,7 @@
     "switch",
     "table",
     "tabs",
+    "reorderable-tabs",
     "tag-input",
     "time-picker",
     "timeline",

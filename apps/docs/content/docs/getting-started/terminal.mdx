@@ -34,39 +34,4 @@ GPUIX_TERMINAL=1 nub apps/playground/dist/main.js
 | Hosts | macOS and Linux |
 | Exit | ctrl-c restores the terminal: alternate screen, cursor and the enabled protocols |
 
-## The editor tab strip
-
-The landing page's terminal block opens an editor inside the frame. Its tabs
-are a browser component, not the native `Tabs`: drag one to a new slot, press
-<kbd>Alt</kbd> + <kbd>←</kbd>/<kbd>→</kbd> to move the focused tab, or close it
-with <kbd>×</kbd>. A closed file comes back from the explorer.
-
-<EditorTabsPreview />
-
-The strip is one roving tab stop. A drag lifts the tab, shifts its neighbours
-by the width of the gap and snaps the tab into the slot on release; a close
-collapses the tab's measured width before the caller removes it, so the strip
-closes the hole instead of cutting a tab out of the frame.
-
-```tsx
-import { ReorderableTabs } from "@/components/docs/reorderable-tabs";
-
-<ReorderableTabs
-  active={active}
-  label="Open editor files"
-  onActivate={setActive}
-  onClose={closeFile}
-  onReorder={setTabs}
-  tabs={tabs}
-/>;
-```
-
-The component owns the gesture and the animation; the caller owns the order and
-the open file, so a replay or an explorer press can put a closed tab back. This
-is a browser drawing, not the native `Tabs` component.
-
-## Limits
-
-- The frame is the kitty graphics protocol, so the terminal must speak it: kitty or Ghostty.
-- A terminal frame is not a window — no automation protocol addresses it, and there is no PTY host element, so an embedded terminal inside a window stays unavailable.
-- Size and chrome options are ignored; the app takes the terminal's grid.
+The editor tabs inside the terminal are their own browser component: [Reorderable tabs](/components/reorderable-tabs).

@@ -96,8 +96,7 @@ ToastProvider
 | `ToastInput` | `duration` | `Duration.Input` — `0` keeps it until dismissed | the provider's default |
 | `ToastInput` | `action` | `{ label }` — the handler travels beside the draft | — |
 
-## Limitations
-
+## Notes
 - **No `aria-live` or `aria-atomic`**: `role="status"` is a marker, not an announcement; no inherited `inert`.
 - **3 cards show while collapsed** — a queue, not a history; a Tab traversal does not hold the clock; use `duration: 0` for a keyboard user.
 - A dismissed card paints its **180 ms** exit and its controls leave the Tab order; a swipe is one axis.

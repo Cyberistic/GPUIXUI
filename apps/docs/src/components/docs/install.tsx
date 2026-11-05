@@ -46,16 +46,9 @@ export function Install({
         </TabsList>
         <TabsContent value="shadcn">
           <HighlightedCode lang="bash" code={command} />
-          <p className="gx-install-note">
-            Copies the component and the runtime it imports into your project.
-          </p>
         </TabsContent>
         <TabsContent value="url">
           <HighlightedCode lang="bash" code={direct} />
-          <p className="gx-install-note">
-            The same item by its direct address, for a client that does not read
-            the directory.
-          </p>
         </TabsContent>
       </Tabs>
       <HighlightedCode lang="tsx" code={usage} />

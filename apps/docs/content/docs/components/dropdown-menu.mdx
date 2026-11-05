@@ -116,8 +116,7 @@ DropdownMenu
 | `closeOnSelect` / `disabled` / `tone` / `leading` / `trailing` / `textValue` | the row surface — see `DropdownMenuItem` | none (row) |
 | `style` | `StyleDesc \| (state: MenuRadioItemState) => StyleDesc` | none — resolved against `{ checked, disabled, highlighted }` |
 
-## Limitations
-
+## Notes
 - Rows are `menuitem` or `menuitemcheckbox`, and the trigger carries `aria-expanded`; no `aria-haspopup`, `aria-controls`, `aria-checked` or `aria-activedescendant`.
 - A dismissed menu paints its **200 ms** exit; its rows leave the Tab order until an inherited `inert`.
 - The surface paints `elevation.lg` beside a 1px `ring` at a fixed **24px** corner; the preview is an approximation.

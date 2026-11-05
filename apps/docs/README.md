@@ -41,6 +41,7 @@ blocks/sign-in.mdx           A full sign-in page: navbar, form card, illustrated
 blocks/dashboard-management.mdx A three-column management console: service health, deploys, toasts, keys
 blocks/settings.mdx          A settings page with tabbed sections
 blocks/kanban.mdx            A project task board: sidebar, four counted columns, cards that move
+blocks/tasks.mdx             A Notion-style Tasks view: inbox, pinned docs, card task counts
 blocks/settings-dialog.mdx   A modal settings window: section nav, switch, font-size slider, layouts
 blocks/notification-centre.mdx A notification centre: filters, four row bodies, unread dots
 blocks/command-centre.mdx    A command palette over a dimmed page: filter, highlight, run line
@@ -88,6 +89,7 @@ components/table.mdx         Curated: the model, the sort and selection rules, t
 components/tag-input.mdx     Curated: the commit rules, the cap, the 24px removal target, no Backspace
 components/timeline.mdx      Curated: the passed status, the rail that stops, the dot nobody could see
 components/tabs.mdx          Curated: the measured indicator
+components/reorderable-tabs.mdx The browser tab strip: drag, keyboard move, close
 components/time-picker.mdx   Curated: one clock behind typing, arrows and midnight
 components/toast.mdx         Curated: the bounded queue, one action, the hold
 components/tooltip.mdx       Curated: the tip's clock, its entry and held exit, the traversal that never opens it
@@ -232,6 +234,7 @@ src/components/docs/tree-demo.tsx         The two tree drawings: the package's c
 src/components/docs/tree-keys.ts          The browser keys both tree drawings report as the package's own
 src/components/docs/window-preview.ts      The rows a viewport shows, against the window that mounts them
 src/components/docs/column-configuration-demo.tsx Show, hide, move and keyboard-resize over the column reducers
+src/components/docs/chart-smooth.ts The chart smoothing the docs window draws with
 src/components/docs/charts-demo.tsx       The chart geometry, its axis and the theme's categorical swatches
 src/components/docs/chart-smooth.ts       The monotone curve every browser drawing of a chart shares
 src/components/docs/key-value-demo.tsx    The list's fixed label track and the width a layout cannot paint
@@ -328,6 +331,7 @@ src/components/docs/dashboard.tsx         The dashboard's charts and stats
 src/components/docs/dashboard-01.tsx      The dashboard block's captured screen
 src/components/docs/dashboard-management.tsx The console block's browser reproduction and recipe
 src/components/docs/kanban-board.tsx      The kanban board's reproduction, columns and card moves
+src/components/docs/tasks-block.tsx       The Notion-style tasks view: inbox, pinned docs and their recipes
 src/components/docs/settings-dialog.tsx   The settings dialog's reproduction, theme state and controls
 src/components/docs/pipeline-block.tsx   The pipeline's preview, from the compiled block's data and rules
 src/components/docs/mermaid.ts          Rendering Mermaid with Pele, and the role mapping

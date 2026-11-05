@@ -50,8 +50,13 @@ const verdictOf = (page: PageIdentity): PageVerdict | undefined => {
     : undefined;
 };
 
+/** Pages that live in the components folder as docs-only drawings. */
+const docsOnly = new Set(["content/docs/components/reorderable-tabs.mdx"]);
+
 export const componentIndex: ReadonlyArray<ComponentEntry> = buildIndex(
-  [...pages(siteFiles), ...pages(packageFiles)],
+  [...pages(siteFiles), ...pages(packageFiles)].filter(
+    (page) => !docsOnly.has(page.file),
+  ),
   verdictOf,
 );
 

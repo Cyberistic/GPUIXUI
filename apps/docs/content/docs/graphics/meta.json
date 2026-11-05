@@ -1,4 +1,5 @@
 {
   "title": "Graphics",
-  "pages": ["diagrams"]
+  "pages": ["index", "diagrams"],
+  "root": true
 }

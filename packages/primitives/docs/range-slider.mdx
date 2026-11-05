@@ -51,8 +51,7 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
 | `onLayout` | `(event: EventPayload) => void` | none | the painted box of the thumb holding the tab stop — a thumb's, never the track's — reported on mount and again when the address moves; wrap the slider to measure the whole control |
 | `testId` | `string` | — | stable locator for the track |
 
-## Limitations
-
+## Notes
 - No `aria-valuenow`/`min`/`max`: each thumb announces its value as `aria-valuetext`.
 - No `aria-orientation`: a vertical range is announced without its axis.
 - A vertical track needs a definite height.

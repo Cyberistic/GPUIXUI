@@ -38,8 +38,7 @@ import { AvatarGroup } from "@gpuixui/components/avatar-group";
 | `className` | `string` | — |
 | `style` | `StateStyle<AvatarGroupState>` | — |
 
-## Limitations
-
+## Notes
 - A face fades and rises; there is no scale.
 - Names are keys, so two members sharing one name collide.
 - **A stored member list is read**: a group restored from a saved record carries JSON's `null` for a list it never carried, so a value that is not a list paints no faces instead of throwing from the first one, and an entry without a text `name` is not a member — it is dropped while its neighbours paint (`membersOf`).

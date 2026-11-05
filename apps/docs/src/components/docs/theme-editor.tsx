@@ -24,6 +24,14 @@ import {
 
 const URL_PARAM = "theme";
 
+/** Replace the share URL without the router's scroll restoration firing. */
+const replaceUrlKeepingScroll = (url: string): void => {
+  const y = window.scrollY;
+  window.history.replaceState(null, "", url);
+  window.scrollTo(0, y);
+  requestAnimationFrame(() => window.scrollTo(0, y));
+};
+
 /**
  * The browser rendering of one resolved theme, driven only by CSS variables.
  *
@@ -108,7 +116,7 @@ export function ThemeEditorSurface({
     writeStoredEditorState(browserStore(), next);
     const url = new URL(window.location.href);
     url.searchParams.set(URL_PARAM, JSON.stringify(next));
-    window.history.replaceState(null, "", url.toString());
+    replaceUrlKeepingScroll(url.toString());
   }, []);
 
   const pins = state[mode];
@@ -131,7 +139,7 @@ export function ThemeEditorSurface({
     clearStoredEditorState(browserStore());
     const url = new URL(window.location.href);
     url.searchParams.delete(URL_PARAM);
-    window.history.replaceState(null, "", url.toString());
+    replaceUrlKeepingScroll(url.toString());
   };
 
   const resolved = resolveTheme(mode, pins, base);

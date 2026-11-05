@@ -38,8 +38,7 @@ closes it. Moving off a title into its dropdown keeps the dropdown open.
 | `AppMenuItem` | a dropdown row | `id`, `label`, `accelerator?`, `disabled?` |
 | `AppMenuEntry` | a top-level menu | `id`, `label`, `disabled?`, `items` |
 
-## Limitations
-
+## Notes
 - **No native menu bar**: this is an in-window `div` and dropdowns; the runtime's menu is fixed and unaddressable.
 - **Highlight, not focus.** Rows are highlighted with `aria-selected`; a screen reader gets no `aria-activedescendant` (0.11.0 publishes none).
 - Accelerator labels are display-only; no chord is registered.

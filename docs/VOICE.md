@@ -48,9 +48,6 @@ Accordion
 | Part | Prop | Type | Default |
 | ---- | ---- | ---- | ------- |
 
-## Limitations
-
-- One short fact per line.
 ```
 
 Use `<ComponentPreview name="…" />` when `demos.tsx` has a demo for the page.
@@ -59,7 +56,7 @@ Use `<ComponentPreview name="…" />` when `demos.tsx` has a demo for the page.
 
 - **60 prose words** outside frontmatter, code fences, tables and JSX blocks.
 - A sentence is under 25 words.
-- At most three examples; at most four limitations.
+- At most three examples.
 - No "Installation" section when the package is already the page's dependency —
   one `nub add` line is enough.
 

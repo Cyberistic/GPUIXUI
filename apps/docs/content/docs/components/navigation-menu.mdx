@@ -63,8 +63,7 @@ NavigationMenu
 | `NavigationMenuContent` | anchored `role="group"` panel | `className`, `children` |
 | `NavigationMenuLink` | full-width ghost button row | `onSelect`; `onActivate` with `onClick` as the deprecated alias; every `Button` prop |
 
-## Limitations
-
+## Notes
 - The panel's accessible name is the item's **`value`**, not its visible label; no `aria-haspopup`.
 - A dismissed panel paints for its **200 ms** exit and its links leave the window's tab order until the runtime inherits `inert`.
 - The trigger paints `chevron-down`/`chevron-up` in a fixed slot; `aria-expanded` carries the state.

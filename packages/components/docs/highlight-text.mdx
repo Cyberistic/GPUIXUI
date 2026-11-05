@@ -40,8 +40,7 @@ that is **no range at all**. A find bar can therefore pass the ranges its own
 arithmetic produced — `indexOf` answers `-1` for no match — without sending a
 negative offset to the runtime's `highlight`, which reads absolute units.
 
-## Limitations
-
+## Notes
 - **A stored phrase that is not text paints an empty run**: `textOf` reads `text` at the boundary, so a `null` a saved record kept no longer reaches the matcher and throws out of the render.
 - The sweep is a real-time timer, not a motion-clock tween.
 - `ranges` index UTF-16 units; `ranges` wins over `query`.

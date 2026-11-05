@@ -61,8 +61,7 @@ The panel's height and its content move on the same 200 ms clock:
 
 The trigger's indicator is a cross-fade, not a rotation: GPUix has no `transform` style key, so both chevrons stay mounted in one slot, the incoming one rising 2 px as it fades in and the outgoing one leaving upward.
 
-## Limitations
-
+## Notes
 - No `aria-controls`; the trigger–body relationship is positional.
 - A `Tab` traversal focuses the trigger **without running its `onFocus`**; the ring is declared at rest.
 - The indicator cross-fades two chevrons instead of rotating one; the runtime has no `transform`.

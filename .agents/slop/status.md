@@ -60,7 +60,10 @@ and a live token editor with the authored looks, the compiled style reference an
 the Aero look's generated stylesheet. The **Dashboard**
 block (`/blocks/dashboard`) is the landing's product window: a six-card
 activity dashboard composed from the library, with `BarChart`, `DonutChart` and
-`StackedBar` from `@gpuixui/data`.
+`StackedBar` from `@gpuixui/data`. The newest block is **Tasks**
+(`/blocks/tasks`): a Notion-style tasks view with a workspace sidebar, a dated
+inbox and two rows of document cards, where every tick updates the card's
+count from the same task array.
 
 The landing's showcase grid is a masonry: four columns, each its own stack, so
 every tile cascades to the next with a constant gap and no holes. A CSS grid

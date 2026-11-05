@@ -39,8 +39,7 @@ const Signup = Schema.Struct({
 | ---- | ------- | ----- |
 | `Form` | `div` (`role="form"` when `label` is given) | `schema` (required), `value` (required), `onSubmit` (required), `pending?`, `label?`, `className?`, `children` |
 
-## Limitations
-
+## Notes
 - Owned-value: the caller passes the value.
 - The `schema` and submit handler are read when the form mounts.
 - One submit reports every failing field.

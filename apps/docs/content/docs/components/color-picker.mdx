@@ -49,8 +49,7 @@ const [accent, setAccent] = useState("#2F6BFF");
 | `style` | `StateStyle<ColorPickerState>` | — | resolved against `{ disabled, valid }`, merged last |
 | `testId` | `string` | — | the root's locator; the trigger uses it, and its parts derive `-swatch`, `-panel`, `-done`, `-area`, `-hue`, `-alpha`, `-hex`, `-error` and `-preset` (each preset adds `-<index>`) |
 
-## Limitations
-
+## Notes
 - **No screen sampling**: no `transform`, no `clip-path`, no eyedropper; the panel is anchored, not grown from the swatch.
 - **Two stops only**: no repeating gradient; the alpha rail fades rather than checkerboards.
 - **Hex only**: no `rgb()`, `hsl()` or `oklch()` entry and no `aria-valuenow`; the area and rails announce `aria-valuetext`.

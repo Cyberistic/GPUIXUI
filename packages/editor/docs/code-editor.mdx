@@ -40,8 +40,7 @@ import { CodeEditor } from "@gpuixui/editor";
 | `style` | `StateStyle<CodeEditorState>` | — | The surface, or a function of `{ disabled, focused }`. |
 | `testId` | `string` | `"code-editor"` | The address an automation host locates the field by; the surface around it is `${testId}-surface`. |
 
-## Limitations
-
+## Notes
 - **A disabled editor paints the disabled chrome**: the surface fades by `disabledOpacity` and the field leaves the tab order, so a reader sees the refusal rather than typing into a field that answers nothing — held by `src/behaviour/code-editor.test.tsx`.
 - **A transparent textarea paints no caret** and reports no scroll offset.
 - **Tab and Enter insert at the end**, because the runtime exposes no caret position.

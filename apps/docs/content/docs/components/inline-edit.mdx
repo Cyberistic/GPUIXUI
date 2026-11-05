@@ -59,8 +59,7 @@ export const RenameProject = () => {
 | `ref` / `aria-id` / `onLayout` | the addressed element | — | the input while editing: focus it, measure it, name it for automation |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | — | composed with the control's own; yours runs first |
 
-## Limitations
-
+## Notes
 - The display is a `role="button"`; the input is a real `<input>` — both take `label`.
 - **No `aria-invalid` or `aria-describedby`**: a refused commit is not announced.
 - A caller that **disables the control mid-edit** refuses both the edit and the commit.

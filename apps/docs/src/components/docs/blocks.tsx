@@ -29,6 +29,7 @@ import {
   fileManagerSource,
 } from "./file-manager-block";
 import { KanbanRender, kanbanPackages, kanbanSource } from "./kanban-board";
+import { TasksRender, tasksPackages, tasksSource } from "./tasks-block";
 import { PipelineRender } from "./pipeline-block";
 import {
   SettingsDialogRender,
@@ -307,6 +308,16 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...kanbanPackages],
     render: KanbanRender,
     source: kanbanSource,
+  },
+  "tasks-01": {
+    name: "tasks-01",
+    slug: "tasks",
+    title: "Tasks",
+    description:
+      "A Notion-style Tasks view: a workspace sidebar, an inbox of dated tasks, and two rows of document cards whose task counts follow every tick.",
+    packages: [...tasksPackages],
+    render: TasksRender,
+    source: tasksSource,
   },
   "settings-dialog-01": {
     name: "settings-dialog-01",

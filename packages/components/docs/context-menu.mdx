@@ -75,8 +75,7 @@ The pointer follows Base UI's menu rules, with one timer per surface:
 - the waits are `Effect` timers in `internal/local-state.ts`, cancelled with the
   surface that armed them, never `setTimeout`.
 
-## Limitations
-
+## Notes
 - No `onContextMenu`; a right click arrives as `onAuxClick`.
 - The surface is not portalled; it is painted at window coordinates.
 - One level of submenus is tested; a deeper level follows the same hover and `Escape` rules but is not measured.

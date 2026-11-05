@@ -78,9 +78,9 @@ const root = new URL("../../../../", import.meta.url);
 
 const packageFiles = (): ReadonlyArray<string> =>
   packageCollections.flatMap((collection) =>
-    collectionPages(root, collection).map(
-      (name) => `${collection.dir}/${name}`,
-    ),
+    collectionPages(root, collection)
+      .filter((name) => name !== "index.mdx")
+      .map((name) => `${collection.dir}/${name}`),
   );
 
 describe("the index's URL mapping", () => {
@@ -612,7 +612,12 @@ describe("the real index", () => {
     const curated = readdirSync(
       new URL("apps/docs/content/docs/components/", root),
     )
-      .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
+      .filter(
+        (name) =>
+          name.endsWith(".mdx") &&
+          name !== "index.mdx" &&
+          name !== "reorderable-tabs.mdx",
+      )
       .map((name) => ({
         url: `/components/${name.replace(/\.mdx$/, "")}`,
         preview: readFileSync(
@@ -687,13 +692,6 @@ describe("the real index", () => {
     const found = filterEntries(componentIndex, "DropdownMenuCheckboxItem");
 
     expect(found.map((row) => row.url)).toContain("/components/dropdown-menu");
-  });
-
-  it("finds a component by a limitation it records", () => {
-    const found = filterEntries(componentIndex, "aria-orientation");
-
-    expect(found.length).toBeGreaterThan(0);
-    expect(found.map((row) => row.url)).toContain("/components/tabs");
   });
 
   it("finds a component by the parts a curated page composes", () => {
