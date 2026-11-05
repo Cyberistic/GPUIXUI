@@ -213,6 +213,7 @@ describe("the preview strategy document", () => {
       "packages/data/docs/virtual-tree.mdx",
       "packages/data/docs/virtualization.mdx",
       "packages/data/docs/charts/charts.mdx",
+      "packages/data/docs/charts/index.mdx",
       "packages/dock/docs/dock-layout.mdx",
       "packages/dock/docs/panel-group.mdx",
       "packages/dock/docs/split-pane.mdx",

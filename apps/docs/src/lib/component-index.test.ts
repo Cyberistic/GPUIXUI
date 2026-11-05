@@ -572,12 +572,16 @@ describe("the real index", () => {
         .map((name) => `/components/${name.replace(/\.mdx$/, "")}`),
     );
 
-    const missing = packageFiles().filter((file) => {
-      const url = pageUrl(file);
-      if (url === undefined) return true;
-      // The curated page owns the URL; the package row is shadowed on purpose.
-      return !listed.has(url) && !curated.has(url);
-    });
+    // `index.mdx` is its directory's landing page, not a component — the same
+    // rule the curated list above applies.
+    const missing = packageFiles()
+      .filter((file) => !file.endsWith("/index.mdx"))
+      .filter((file) => {
+        const url = pageUrl(file);
+        if (url === undefined) return true;
+        // The curated page owns the URL; the package row is shadowed on purpose.
+        return !listed.has(url) && !curated.has(url);
+      });
 
     expect(missing).toEqual([]);
   });

@@ -233,6 +233,7 @@ src/components/docs/tree-keys.ts          The browser keys both tree drawings re
 src/components/docs/window-preview.ts      The rows a viewport shows, against the window that mounts them
 src/components/docs/column-configuration-demo.tsx Show, hide, move and keyboard-resize over the column reducers
 src/components/docs/charts-demo.tsx       The chart geometry, its axis and the theme's categorical swatches
+src/components/docs/chart-smooth.ts       The monotone curve every browser drawing of a chart shares
 src/components/docs/key-value-demo.tsx    The list's fixed label track and the width a layout cannot paint
 src/components/docs/data-toolbar-demo.tsx The toolbar's debounced wait, its blank-name default and the rows it reports
 src/components/docs/table-filter-demo.tsx The filter field's blank name and hint, and the literal match the table owns

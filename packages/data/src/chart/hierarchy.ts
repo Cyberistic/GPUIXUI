@@ -122,9 +122,8 @@ export const hierarchyRows = (
   for (const node of nodes) {
     const parent = parentOf(node.path);
     if (parent === undefined) continue;
-    const value = node.value === undefined || !Number.isFinite(node.value)
-      ? 0
-      : node.value;
+    const value =
+      node.value === undefined || !Number.isFinite(node.value) ? 0 : node.value;
     sums.set(parent, (sums.get(parent) ?? 0) + value);
   }
 
@@ -222,7 +221,9 @@ export const hierarchyLeaves = (
   rows: ReadonlyArray<HierarchyRow>,
 ): ReadonlyArray<HierarchyRow> => {
   const parents = new Set(
-    rows.map((row) => parentPath(row.path)).filter((path) => path !== undefined),
+    rows
+      .map((row) => parentPath(row.path))
+      .filter((path) => path !== undefined),
   );
   return rows.filter((row) => !parents.has(row.path));
 };

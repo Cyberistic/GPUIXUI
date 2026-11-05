@@ -25,7 +25,11 @@ import {
   TreemapChart,
 } from "../chart/structure.js";
 import { chartMarkupOf } from "../internal/interaction.js";
-import { renderData, settle, type DataTestRoot } from "../internal/test-root.js";
+import {
+  renderData,
+  settle,
+  type DataTestRoot,
+} from "../internal/test-root.js";
 
 let root: DataTestRoot | undefined;
 
@@ -79,7 +83,8 @@ describe("the treemap", () => {
   it("paints each cell in its own colour", () => {
     root = renderData(
       <TreemapChart
-        aria-label="Where the time goes"        testId="treemap"
+        aria-label="Where the time goes"
+        testId="treemap"
         colors={[palette[0] ?? "#B14AFF", palette[1] ?? "#00A893"]}
         nodes={[
           { path: "engineering", value: 60 },
@@ -100,7 +105,8 @@ describe("the treemap", () => {
   it("paints each cell in proportion to its value", () => {
     root = renderData(
       <TreemapChart
-        aria-label="Where the time goes"        testId="treemap"
+        aria-label="Where the time goes"
+        testId="treemap"
         colors={[palette[0] ?? "#B14AFF", palette[1] ?? "#00A893"]}
         nodes={[
           { path: "engineering", value: 75 },
@@ -130,7 +136,8 @@ describe("the treemap", () => {
     // compiler threw and the chart painted nothing.
     root = renderData(
       <TreemapChart
-        aria-label="Where the time goes"        testId="treemap"
+        aria-label="Where the time goes"
+        testId="treemap"
         colors={[palette[0] ?? "#B14AFF"]}
         nodes={[
           { path: "engineering", value: 60 },
@@ -149,7 +156,8 @@ describe("the sankey", () => {
   it("paints the nodes and the ribbons", () => {
     root = renderData(
       <SankeyChart
-        aria-label="The pipeline"        testId="sankey"
+        aria-label="The pipeline"
+        testId="sankey"
         colors={[palette[0] ?? "#B14AFF"]}
         nodeColors={
           new Map([
@@ -180,7 +188,8 @@ describe("the sankey", () => {
     // is.
     root = renderData(
       <SankeyChart
-        aria-label="The pipeline"        testId="sankey"
+        aria-label="The pipeline"
+        testId="sankey"
         colors={[palette[0] ?? "#B14AFF"]}
         nodes={[
           { id: "visits", name: "Visits" },
@@ -203,7 +212,8 @@ describe("the sunburst", () => {
   it("paints each arc in its own colour", () => {
     root = renderData(
       <SunburstChart
-        aria-label="The store"        testId="sunburst"
+        aria-label="The store"
+        testId="sunburst"
         colors={[palette[0] ?? "#B14AFF", palette[1] ?? "#00A893"]}
         nodes={[
           { path: "root/engineering", value: 60 },
@@ -223,7 +233,8 @@ describe("the sunburst", () => {
   it("paints each arc in proportion to its value", () => {
     root = renderData(
       <SunburstChart
-        aria-label="The store"        testId="sunburst"
+        aria-label="The store"
+        testId="sunburst"
         colors={[palette[0] ?? "#B14AFF", palette[1] ?? "#00A893"]}
         nodes={[
           { path: "root/engineering", value: 75 },

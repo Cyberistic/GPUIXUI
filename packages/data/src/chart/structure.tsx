@@ -72,17 +72,14 @@ const sankeyColours = (
   named?: ReadonlyMap<string, string>,
 ): ReadonlyMap<string, string> => {
   const map = new Map<string, string>();
-  Arr.forEach(
-    graph.nodes,
-    (node, index) => {
-      map.set(
-        node.id,
-        named?.get(node.id) ??
-          colours[index % Math.max(1, colours.length)] ??
-          "#000000",
-      );
-    },
-  );
+  Arr.forEach(graph.nodes, (node, index) => {
+    map.set(
+      node.id,
+      named?.get(node.id) ??
+        colours[index % Math.max(1, colours.length)] ??
+        "#000000",
+    );
+  });
   return map;
 };
 
@@ -286,16 +283,11 @@ export const TreemapChart = ({
   const rows = hierarchyRows(nodes);
   const leaves = leafRows(rows);
   const palette = colors ?? [];
-  const description = Arr.map(
-    leaves,
-    (row) => `${row.name} ${row.value}`,
-  ).join(", ");
+  const description = Arr.map(leaves, (row) => `${row.name} ${row.value}`).join(
+    ", ",
+  );
   return (
-    <div
-      role="group"
-      testId={testId}
-      style={{ position: "relative" }}
-    >
+    <div role="group" testId={testId} style={{ position: "relative" }}>
       <SceneChart
         kind="treemap"
         rows={rows}
@@ -501,8 +493,9 @@ export const SankeyChart = ({
             // and what reaches it, so a reader sees the size of the node and
             // not the size of one edge.
             value: (() => {
-              const through = Arr.filter(graph.links, (link) =>
-                link.source === node.id || link.target === node.id,
+              const through = Arr.filter(
+                graph.links,
+                (link) => link.source === node.id || link.target === node.id,
               );
               const total = Arr.reduce(
                 through,
@@ -577,10 +570,9 @@ export const SunburstChart = ({
   const rows = hierarchyRows(nodes);
   const leaves = leafRows(rows);
   const palette = colors ?? [];
-  const description = Arr.map(
-    leaves,
-    (row) => `${row.name} ${row.value}`,
-  ).join(", ");
+  const description = Arr.map(leaves, (row) => `${row.name} ${row.value}`).join(
+    ", ",
+  );
   return (
     <div role="group" testId={testId} style={{ position: "relative" }}>
       <SceneChart

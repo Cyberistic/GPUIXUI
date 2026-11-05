@@ -327,7 +327,9 @@ const sankeyMark = (options: SceneChartOptions) =>
     source: (edge: FlowLink) => edge.source,
     target: (edge: FlowLink) => edge.target,
     value: (edge: FlowLink) => edge.value,
-    ...(options.nodeWidth === undefined ? {} : { nodeWidth: options.nodeWidth }),
+    ...(options.nodeWidth === undefined
+      ? {}
+      : { nodeWidth: options.nodeWidth }),
     ...(options.nodePadding === undefined
       ? {}
       : { nodePadding: options.nodePadding }),
@@ -436,7 +438,6 @@ const cartesianDefinition = (
       y: { scale: scaleLinear().domain(linearDomain(options.range)) },
     },
   });
-
 };
 
 /**
@@ -452,29 +453,22 @@ const radialBarMark = (options: SceneChartOptions) =>
     radiusRatio: options.radiusRatio ?? 0.8,
     scales: {
       angle: {
-        scale: () =>
-          scaleBand<string>().padding(options.bandPadding ?? 0.12),
+        scale: () => scaleBand<string>().padding(options.bandPadding ?? 0.12),
       },
       radius: {
         scale: scaleLinear().domain([0, options.range.max]),
-        range: [
-          ({ radius }) => radius * 0.3,
-          ({ radius }) => radius,
-        ],
+        range: [({ radius }) => radius * 0.3, ({ radius }) => radius],
       },
     },
     marks: [
-      radialBarRadius(
-        sceneRows(options.series, options.labels),
-        {
-          angle: "category",
-          // The bar's length is the **first** series' value: a radial bar
-          // draws one bar per category, so there is one value per category.
-          radius: valueChannel(options.series[0]?.key ?? "value"),
-          key: "category",
-          fill: options.colours[0] ?? "#000000",
-        },
-      ),
+      radialBarRadius(sceneRows(options.series, options.labels), {
+        angle: "category",
+        // The bar's length is the **first** series' value: a radial bar
+        // draws one bar per category, so there is one value per category.
+        radius: valueChannel(options.series[0]?.key ?? "value"),
+        key: "category",
+        fill: options.colours[0] ?? "#000000",
+      }),
     ],
   });
 

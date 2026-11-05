@@ -188,7 +188,9 @@ const pair = (point: Point): string => `${at(point.x)} ${at(point.y)}`;
  * weighted harmonic mean of the slopes either side, which is never steeper
  * than both. The result passes through every point and stays inside the data.
  */
-const monotoneTangents = (points: ReadonlyArray<Point>): ReadonlyArray<number> => {
+const monotoneTangents = (
+  points: ReadonlyArray<Point>,
+): ReadonlyArray<number> => {
   const count = points.length;
   if (count < 2) return Arr.map(points, () => 0);
   const run: number[] = [];

@@ -66,7 +66,16 @@ const curatedPages: ReadonlyArray<Page> = readdirSync(
   .map((name) => withTitle(`apps/docs/content/docs/components/${name}`));
 
 /** Every page the site serves that can publish an inventory row. */
-const componentPages = [...curatedPages, ...packagePages];
+/**
+ * The pages that document a **component**.
+ *
+ * `index.mdx` is its directory's landing page — the charts collection opens
+ * with one — and it names no component, so it has no address to match and no
+ * inventory row to carry.
+ */
+const componentPages = [...curatedPages, ...packagePages].filter(
+  (page) => !page.file.endsWith("/index.mdx"),
+);
 
 /** A title as a page's strip reads it; a page without one is a defect here. */
 const titleOf = (page: Page): string => {

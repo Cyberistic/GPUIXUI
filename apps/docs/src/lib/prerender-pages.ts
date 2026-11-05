@@ -98,7 +98,9 @@ export const packagePageUrls = (root: string | URL): ReadonlyArray<string> =>
   packageCollections.flatMap((collection) =>
     collectionPages(root, collection).map((name) => {
       const page = name.replace(/\.mdx$/, "");
-      return page === "index" ? collection.route : `${collection.route}/${page}`;
+      return page === "index"
+        ? collection.route
+        : `${collection.route}/${page}`;
     }),
   );
 

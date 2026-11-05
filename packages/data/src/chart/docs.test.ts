@@ -78,18 +78,22 @@ interface Section {
 
 /** Every chart part the page must document, and the type behind it. */
 const sections: ReadonlyArray<Section> = [
-  { heading: "`BarChart`", type: "BarChartProps" , module: "chart" },
-  { heading: "`StackedBar`", type: "StackedBarProps" , module: "chart" },
-  { heading: "`LineChart`", type: "LineChartProps" , module: "chart" },
-  { heading: "`ComposedChart`", type: "ComposedChartProps" , module: "chart" },
-  { heading: "`ScatterChart`", type: "ScatterChartProps" , module: "chart" },
-  { heading: "`CandleChart`", type: "CandleChartProps" , module: "chart" },
-  { heading: "`FunnelChart`", type: "FunnelChartProps" , module: "chart" },
-  { heading: "`AreaChart`", type: "AreaChartProps" , module: "chart" },
-  { heading: "`PieChart` · `DonutChart`", type: "PieChartProps" , module: "chart" },
-  { heading: "`RadarChart`", type: "RadarChartProps" , module: "chart" },
-  { heading: "`RadialChart`", type: "RadialChartProps" , module: "chart" },
-  { heading: "`Sparkline`", type: "SparklineProps" , module: "chart" },
+  { heading: "`BarChart`", type: "BarChartProps", module: "chart" },
+  { heading: "`StackedBar`", type: "StackedBarProps", module: "chart" },
+  { heading: "`LineChart`", type: "LineChartProps", module: "chart" },
+  { heading: "`ComposedChart`", type: "ComposedChartProps", module: "chart" },
+  { heading: "`ScatterChart`", type: "ScatterChartProps", module: "chart" },
+  { heading: "`CandleChart`", type: "CandleChartProps", module: "chart" },
+  { heading: "`FunnelChart`", type: "FunnelChartProps", module: "chart" },
+  { heading: "`AreaChart`", type: "AreaChartProps", module: "chart" },
+  {
+    heading: "`PieChart` · `DonutChart`",
+    type: "PieChartProps",
+    module: "chart",
+  },
+  { heading: "`RadarChart`", type: "RadarChartProps", module: "chart" },
+  { heading: "`RadialChart`", type: "RadialChartProps", module: "chart" },
+  { heading: "`Sparkline`", type: "SparklineProps", module: "chart" },
   {
     heading: "`RadialBarChart`",
     type: "RadialBarChartProps",
@@ -115,7 +119,7 @@ const sections: ReadonlyArray<Section> = [
     type: "ChartLegendProps",
     module: "legend",
   },
-  { heading: "The shared frame", type: "ChartProps" , module: "chart" },
+  { heading: "The shared frame", type: "ChartProps", module: "chart" },
 ];
 
 /** The runtime host props a chart takes from `Props`, documented once. */
@@ -182,8 +186,8 @@ describe("the charts page's API tables", () => {
     expect(
       Arr.length(
         Arr.flatMap(sections, (section) =>
-        declaredProps(section.type, section.module),
-      ),
+          declaredProps(section.type, section.module),
+        ),
       ),
     ).toBeGreaterThan(20);
 
