@@ -233,6 +233,83 @@ const smoothPath = (points: ReadonlyArray<{ x: number; y: number }>): string => 
   return path;
 };
 
+/** One row of a readout: a name, its value, and the colour it belongs to. */
+interface TipRow {
+  readonly name: string;
+  readonly value: string;
+  /** The swatch's colour. Defaults to the theme's primary. */
+  readonly color?: string;
+}
+
+/** A readout card, placed where the pointer is. */
+interface Tip {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly title: string;
+  readonly rows: ReadonlyArray<TipRow>;
+}
+
+/**
+ * The readout for the mark under the pointer, in the plot's own CSS pixels.
+ *
+ * Every chart here follows the same rule the area chart does, because the
+ * reference does: the card sits at the **pointer**, not at a fixed corner, and
+ * flips across the plot's midline so it never runs past an edge.
+ */
+const tipFor = (
+  event: React.MouseEvent<SVGElement>,
+  title: string,
+  rows: ReadonlyArray<TipRow>,
+): Tip => {
+  const svg =
+    event.currentTarget.ownerSVGElement ??
+    (event.currentTarget as unknown as SVGSVGElement);
+  const box = svg.getBoundingClientRect();
+  return {
+    x: event.clientX - box.left,
+    y: event.clientY - box.top,
+    width: box.width,
+    height: box.height,
+    title,
+    rows,
+  };
+};
+
+/** The readout card, drawn at the pointer and flipped where it would overflow. */
+const TipCard = ({ tip }: { readonly tip: Tip }) => (
+  <div
+    className="gx-dash01-tip"
+    data-flip-x={tip.x > tip.width * 0.6}
+    data-flip-y={tip.y > tip.height * 0.55}
+    style={{ left: tip.x, top: tip.y }}
+  >
+    <p className="gx-dash01-tip-date">{tip.title}</p>
+    <ul className="gx-dash01-tip-rows">
+      {tip.rows.map((row) => (
+        <li key={row.name}>
+          <span
+            aria-hidden="true"
+            className="gx-dash01-tip-dot"
+            style={row.color === undefined ? undefined : { background: row.color }}
+          />
+          <span className="gx-dash01-tip-name">{row.name}</span>
+          <span className="gx-dash01-tip-value">{row.value}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
+/** The colour a cell or an arc paints in, by its slot on the series scale. */
+const SLOT_COLOURS = [
+  "var(--series-1, #a7a9ff)",
+  "var(--series-2, #6e9cff)",
+  "var(--series-3, #1fa968)",
+  "var(--series-4, #ffde8a)",
+] as const;
+
 /**
  * The area chart over the thirty days.
  *
@@ -464,14 +541,42 @@ function SourceTreemap() {
     { name: social?.name ?? "", value: social?.value ?? 0, x: rightX + referralW + gap, y: bottomY, w: rightW - referralW - gap, h: bottomH, slot: 4 },
   ];
 
+  const [tip, setTip] = useState<Tip | null>(null);
+
   return (
-    <svg
-      aria-label="Traffic by source"
-      className="gx-dash01-treemap"
-      role="img"
-      viewBox={`0 0 ${w} ${h}`}
-    >
-      {cells.map((cell) => (
+    <div className="gx-dash01-plot">
+      <svg
+        aria-label="Traffic by source"
+        className="gx-dash01-treemap"
+        onMouseLeave={() => setTip(null)}
+        onMouseMove={(event) => {
+          const box = event.currentTarget.getBoundingClientRect();
+          if (box.width === 0) return;
+          const scale = w / box.width;
+          const x = (event.clientX - box.left) * scale;
+          const y = (event.clientY - box.top) * scale;
+          const cell = cells.find(
+            (one) =>
+              x >= one.x && x <= one.x + one.w && y >= one.y && y <= one.y + one.h,
+          );
+          if (cell === undefined) {
+            setTip(null);
+            return;
+          }
+          setTip(
+            tipFor(event, cell.name, [
+              {
+                name: "Share",
+                value: `${cell.value}%`,
+                color: SLOT_COLOURS[cell.slot - 1] ?? SLOT_COLOURS[0],
+              },
+            ]),
+          );
+        }}
+        role="img"
+        viewBox={`0 0 ${w} ${h}`}
+      >
+        {cells.map((cell) => (
         <g data-slot={cell.slot} key={cell.name}>
           <rect
             className="gx-dash01-cell"
@@ -493,7 +598,9 @@ function SourceTreemap() {
           ) : null}
         </g>
       ))}
-    </svg>
+      </svg>
+      {tip === null ? null : <TipCard tip={tip} />}
+    </div>
   );
 }
 
@@ -523,13 +630,22 @@ function FunnelSankey() {
     { from: 1, to: 2, value: 24, colour: "var(--series-2, #6e9cff)" },
   ] as const;
 
+  const [tip, setTip] = useState<Tip | null>(null);
+
   return (
-    <svg
-      aria-label="The funnel from visits to paid"
-      className="gx-dash01-sankey"
-      role="img"
-      viewBox={`0 0 ${w} ${h}`}
-    >
+    <div className="gx-dash01-plot">
+      <svg
+        aria-label="The funnel from visits to paid"
+        className="gx-dash01-sankey"
+        onMouseLeave={() => setTip(null)}
+        onMouseMove={(event) => {
+          // A mark's own handler sets the card and this one sees the event
+          // bubble; only a move over the plot itself clears it.
+          if (event.target === event.currentTarget) setTip(null);
+        }}
+        role="img"
+        viewBox={`0 0 ${w} ${h}`}
+      >
       {steps.map((step) => {
         const from = stages[step.from];
         const to = stages[step.to];
@@ -543,6 +659,17 @@ function FunnelSankey() {
             className="gx-dash01-ribbon"
             d={`M${x0},${top} C${mid},${top} ${mid},${top} ${x1},${top} L${x1},${top + thick} C${mid},${top + thick} ${mid},${top + thick} ${x0},${top + thick} Z`}
             key={`${step.from}-${step.to}`}
+            onMouseMove={(event) =>
+              setTip(
+                tipFor(event, `${from.name} to ${to.name}`, [
+                  {
+                    name: "Flow",
+                    value: String(step.value),
+                    color: step.colour,
+                  },
+                ]),
+              )
+            }
             style={{ fill: step.colour, opacity: 0.55 }}
           />
         );
@@ -552,6 +679,13 @@ function FunnelSankey() {
           <rect
             className="gx-dash01-node"
             height={bar(stage.value)}
+            onMouseMove={(event) =>
+              setTip(
+                tipFor(event, stage.name, [
+                  { name: "Visitors", value: String(stage.value) },
+                ]),
+              )
+            }
             rx="2"
             width={nodeW}
             x={stage.x}
@@ -575,7 +709,9 @@ function FunnelSankey() {
           </text>
         </g>
       ))}
-    </svg>
+      </svg>
+      {tip === null ? null : <TipCard tip={tip} />}
+    </div>
   );
 }
 
@@ -621,23 +757,43 @@ function DeviceSunburst() {
     };
   });
 
+  const [tip, setTip] = useState<Tip | null>(null);
+
   return (
-    <svg
-      aria-label="Traffic by device"
-      className="gx-dash01-sunburst"
-      role="img"
-      viewBox={`0 0 ${size} ${size}`}
-    >
-      {arcs.map((arc) => (
-        <path
-          className="gx-dash01-arc"
-          d={arc.path}
-          data-slot={arc.slot + 1}
-          key={arc.name}
-        />
-      ))}
-      <circle className="gx-dash01-hub" cx={centre} cy={centre} r={inner - 2} />
-    </svg>
+    <div className="gx-dash01-plot">
+      <svg
+        aria-label="Traffic by device"
+        className="gx-dash01-sunburst"
+        onMouseLeave={() => setTip(null)}
+        onMouseMove={(event) => {
+          if (event.target === event.currentTarget) setTip(null);
+        }}
+        role="img"
+        viewBox={`0 0 ${size} ${size}`}
+      >
+        {arcs.map((arc) => (
+          <path
+            className="gx-dash01-arc"
+            d={arc.path}
+            data-slot={arc.slot + 1}
+            key={arc.name}
+            onMouseMove={(event) =>
+              setTip(
+                tipFor(event, arc.name, [
+                  {
+                    name: "Share",
+                    value: `${arc.value}%`,
+                    color: SLOT_COLOURS[arc.slot] ?? SLOT_COLOURS[0],
+                  },
+                ]),
+              )
+            }
+          />
+        ))}
+        <circle className="gx-dash01-hub" cx={centre} cy={centre} r={inner - 2} />
+      </svg>
+      {tip === null ? null : <TipCard tip={tip} />}
+    </div>
   );
 }
 

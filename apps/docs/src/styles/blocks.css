@@ -8056,8 +8056,16 @@ button.gx-sb-row {
    midline so it never runs past an edge. `cursor={false}` in the reference,
    so there is no rule across the plot — a dot on each series marks the datum
    instead. */
-.gx-dash01-area-plot {
+.gx-dash01-area-plot,
+.gx-dash01-plot {
   position: relative;
+}
+
+/* The three small charts wait for the pointer, so the cursor says so. */
+.gx-dash01-treemap,
+.gx-dash01-sankey,
+.gx-dash01-sunburst {
+  cursor: pointer;
 }
 
 .gx-dash01-area {
