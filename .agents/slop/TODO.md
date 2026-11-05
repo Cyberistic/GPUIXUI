@@ -25292,6 +25292,19 @@ green; the site deployed and all 195 sitemap pages answer 200.
       page, and the owner's `/platform/terminal` guide with this workstream's
       Graphics navigation.
 
+## The Graphics category's icon grid (2026-11-06)
+
+`[x]` `[██████████]` 2/2
+
+`[x]` The icons page already mounted the gallery through the site's preview
+      table (`package-preview.ts` → `icon-gallery-demo`); the primitives index
+      mounted a second copy below its own text. The duplicate is gone — the
+      index now says where the set lives — and `icon-gallery.test.tsx` holds
+      the mount to one page, through the preview table rather than a literal.
+`[x]` The charts page draws all seventeen types: `70ac7d90a` moved the contact
+      sheet into `chart-gallery.tsx` and mounted it, so the grid and the page's
+      table are the same list.
+
 ## The three remaining chart types (plan 754, 2026-11-05)
 
 `[x]` `[██████████]` 10/10
