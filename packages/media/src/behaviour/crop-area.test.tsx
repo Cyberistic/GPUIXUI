@@ -1,27 +1,3 @@
-/**
- * `CropArea`'s gestures, driven through the real GPUix renderer.
- *
- * The bugs these guard: a controlled crop asked its caller for a rectangle on
- * **every delivered move**, including the moves of a drag held past the frame's
- * edge — where the clamped hole no longer changes. A caller that regenerates a
- * preview, uploads a crop or writes state on `onChange` did that work once per
- * frame for one rectangle. A crop reports a rectangle only when it differs from
- * the one already painted, and a press without a move reports nothing at all.
- * The second: both move paths clamped with the **default** minimum, so a hole
- * the caller allowed to be smaller (a `minSize` below 24) grew to 24 on a
- * pointer drag or an `Alt`+arrow — a move changed the hole's sides.
- * The third: both gestures began on **any** button, so a right press on the
- * picture or on a handle armed a move/resize — a right-drag dragged the hole,
- * and a release delivered outside the frame left the gesture armed for a plain
- * hover. A gesture begins on the primary press alone.
- * The fourth: a disabled window kept the drag that was in flight, so the frame
- * resumed it on the next plain hover once it could act again — a disabled crop
- * still moved its hole without a press.
- * The fifth: a ratio-locked resize capped its width against the whole frame
- * rather than the room the anchored corner left, so a drag that reached one
- * edge slid the crop across the picture instead of stopping at the frame.
- */
-
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
 import { lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -32,7 +8,6 @@ import { CropArea } from "../crop-area.js";
 
 const opening = new CropRect({ x: 60, y: 40, width: 100, height: 70 });
 
-/** A controlled crop whose reports the suite counts. */
 const Harness = ({
   start,
   minSize,
@@ -95,7 +70,6 @@ const mount = (
   return { root, reports, show };
 };
 
-/** The centre of `testId` in window points; a missing element is a broken suite. */
 const centreOf = (
   root: TestRoot,
   testId: string,
@@ -150,9 +124,6 @@ describe("CropArea gestures", () => {
   });
 
   it("does not begin a move on a secondary press", () => {
-    // A right press on the picture is the reader asking for a context menu, not
-    // a drag: it used to arm a move, so a right-drag dragged the hole and a
-    // release delivered outside the frame left the gesture armed for a hover.
     const { root, reports } = mount();
     const at = centreOf(root, "crop");
     root.renderer.nativeSimulateMouseDown(at.x, at.y, 2);
@@ -200,9 +171,6 @@ describe("CropArea gestures", () => {
   });
 
   it("drops a drag a disabled window interrupts", () => {
-    // A crop disabled mid-drag kept the armed gesture, so once it could act
-    // again the next plain hover continued the interrupted drag and moved the
-    // hole with no press at all.
     const { root, reports, show } = mount();
     const at = centreOf(root, "crop-handle-se");
     root.renderer.nativeSimulateMouseDown(at.x, at.y);
@@ -219,8 +187,6 @@ describe("CropArea gestures", () => {
       { x: 60, y: 40, width: 110, height: 80 },
     ]);
 
-    // A fresh primary press still drags the corner, so the drop is not a
-    // disabled window that leaves the frame permanently deaf.
     root.renderer.nativeSimulateMouseDown(at.x + 10, at.y + 10);
     root.renderer.nativeSimulateMouseMove(at.x + 20, at.y + 20);
     expect(reports.map(boxes)).toStrictEqual([
@@ -232,10 +198,6 @@ describe("CropArea gestures", () => {
   });
 
   it("paints the default hole when the stored crop is absent", () => {
-    // The bug guarded: a saved record that carried no crop threw while the
-    // wrapper read its sides, so the whole surface failed to paint. An absent
-    // rectangle reads as the origin at the smallest side, and a drag from it
-    // still reports the rectangle the reader moves to.
     const { root, reports } = mount(null as unknown as CropRect);
     const at = centreOf(root, "crop");
     root.renderer.nativeSimulateMouseDown(at.x, at.y);
@@ -249,8 +211,6 @@ describe("CropArea gestures", () => {
   });
 
   it("moves a hole below the default minimum without growing it", () => {
-    // `minSize` may be smaller than the 24-point default; the move path used
-    // to clamp with the default, so Alt+Right grew a 10-point hole to 24.
     const tiny = new CropRect({ x: 10, y: 10, width: 10, height: 10 });
     const { root, reports } = mount(tiny, 8);
     const handle = root.renderer.findByTestId("crop-handle-se");
@@ -267,10 +227,6 @@ describe("CropArea gestures", () => {
   });
 
   it("stops a locked resize at the frame instead of sliding the crop", () => {
-    // The fifth bug: a ratio-locked handle drag asked for the width its height
-    // implied and then capped it against the whole frame, so a drag past one
-    // edge moved the anchored corner — the crop jumped across the picture while
-    // the reader dragged the opposite corner.
     const wide = new CropRect({ x: 60, y: 40, width: 100, height: 50 });
     const { root, reports } = mount(wide, undefined, 2);
     const at = centreOf(root, "crop-handle-se");

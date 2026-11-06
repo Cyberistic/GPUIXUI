@@ -1,30 +1,9 @@
-/**
- * The keyboard ring every control declares at rest.
- *
- * The bug this guards is the workaround it replaces: the ring used to be merged
- * only while a control held focus, as a spread `boxShadow`, so a mouse press
- * painted the same ring as a Tab. `@gpuix/native@0.11.0` declares `focusVisible`
- * with an outline, so the ring is a resting declaration and the runtime decides
- * when to paint it (measured in plan `053`'s `focus-visible` probe).
- */
-
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { keyboardFocusRing } from "@gpuixui/tokens";
 import { keyboardRing, controlRing } from "./focus.js";
 import { testTheme } from "./testing/theme.fixture.js";
 
-/**
- * The seam used to carry its own copy of the control rule: an invalid control's
- * outline was recoloured here and a disabled one returned `{}` here, while
- * `@gpuixui/tokens` shipped the same two branches as `controlFocusRing`. Two
- * implementations of one design rule drift — a width or a role changed in the
- * tokens contract would leave this package painting the old ring. The seam must
- * ask the token helper for the rule and only spell the absence as `{}`.
- *
- * Node's `fs` reads this package's own source, the one-shot test-boundary
- * convention `theme.test.ts` records.
- */
 describe("the control ring has one home", () => {
   const source = readFileSync(new URL("./focus.ts", import.meta.url), "utf8");
 
@@ -77,8 +56,6 @@ describe("controlRing", () => {
   });
 
   it("declares nothing for a disabled control", () => {
-    // The bug: a control disabled while focused keeps the runtime's focus, so a
-    // ring declared anyway stayed painted on a control that refuses every key.
     expect(controlRing(testTheme, { disabled: true })).toStrictEqual({});
     expect(
       controlRing(testTheme, { disabled: true, invalid: true }),

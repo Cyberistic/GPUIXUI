@@ -34,8 +34,3 @@ import { Text, Stack } from "@gpuixui/primitives";
 | `ref` / `aria-id` / `onLayout` | host props | none | the `<text>` element itself: the box a measurement reads (its own wrapped height, not a wrapper's), the instance a caller holds, and the author id an automation host addresses |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the string (or inline nodes) |
-
-## Notes
-- No paragraph or list semantics: only the heading and code roles are published.
-- No rich text: one run, one role; compose several `Text` nodes in a `Stack`.
-- No responsive type scale or fluid sizing.

@@ -1,12 +1,3 @@
-/**
- * Hunter License — the Association's registry as a Mac app (plan 731).
- *
- * The directory in the source list (everyone, the star hunters, each
- * specialty), the chosen hunter's licence as the window's centrepiece — the
- * mark, the holder, the rank in stars, the licence number — and its privileges
- * as switches. Original artwork: the card is drawn from the theme's roles and
- * the owner's Gon mark; nothing is copied from the series.
- */
 import { Avatar } from "@gpuixui/components/avatar";
 import { InsetGroup, InsetGroupRow } from "@gpuixui/components/inset-group";
 import { Icon } from "@gpuixui/icons";
@@ -26,7 +17,6 @@ const isScope = (value: string): value is Scope =>
   value === "stars" ||
   Arr.some(specialties, (specialty) => specialty === value);
 
-/** The licence itself: a card the size of the real thing, scaled up. */
 const LicenceCard = ({ hunter }: { readonly hunter: Hunter }) => {
   const theme = useTheme();
   const ink = theme.colors.background;
@@ -98,7 +88,6 @@ const LicenceCard = ({ hunter }: { readonly hunter: Hunter }) => {
   );
 };
 
-/** The registry, as a whole native window. */
 export const License = ({ platform }: { readonly platform?: PlatformName }) => {
   const theme = useTheme();
   const [scope, setScope] = useState<Scope>("all");

@@ -1,16 +1,3 @@
-/**
- * AvatarGroup's arithmetic, without a renderer.
- *
- * The bugs these guard: a cap that hides the wrong end of the list or accepts a
- * nonsense value; an overlap wide enough to paint the row backwards; a row whose
- * width disagrees with where the discs actually sit, so the group reflows the
- * page as it animates; a stagger counted per disc instead of through the row;
- * and a chip that paints a count no reader can resolve to names. The delay's
- * seconds and the reduced rule are `@gpuixui/motion`'s (`timing.test.ts`, "a
- * staggered timing"); and a member list a store handed back as `null`, which
- * threw before a face painted.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -51,8 +38,6 @@ describe("visibleCount", () => {
   });
 
   it("falls back for a cap that is not a usable count", () => {
-    // A stored preference can arrive as a negative or a NaN; hiding the whole
-    // group because of it would be worse than showing it.
     expect(visibleCount(4, Option.some(-2))).toBe(0);
     expect(visibleCount(4, Option.some(2.9))).toBe(2);
     expect(visibleCount(4, Option.some(Number.NaN))).toBe(4);
@@ -66,14 +51,11 @@ describe("visibleCount", () => {
 
 describe("the row's geometry", () => {
   it("tucks a quarter of the diameter under the previous disc by default", () => {
-    // The md face is 32px, so the house overlap is 8px and a disc advances 24.
     expect(avatarOverlap(32, Option.none())).toBe(8);
     expect(avatarStep(32, avatarOverlap(32, Option.none()))).toBe(24);
   });
 
   it("keeps a caller's overlap inside the diameter", () => {
-    // An overlap of 100px on a 32px face would both hide every face and reverse
-    // the row, so it is held to one pixel short of the diameter.
     expect(avatarOverlap(32, Option.some(100))).toBe(31);
     expect(avatarStep(32, avatarOverlap(32, Option.some(100)))).toBe(1);
     expect(avatarOverlap(32, Option.some(-4))).toBe(0);
@@ -134,10 +116,6 @@ describe("what the group says", () => {
   });
 
   it("reads a stored member list as faces, and nothing for anything else", () => {
-    // The bug guarded: a group restored from a saved record carries JSON's
-    // `null` for a list it never carried, and `splitMembers` read `.length` off
-    // it — `Cannot read properties of null (reading 'length')` before a face
-    // painted.
     const ada = { name: "Ada Lovelace" } as const;
     const grace = { name: "Grace Hopper" } as const;
     expect(membersOf([ada, grace])).toEqual([ada, grace]);
@@ -147,8 +125,6 @@ describe("what the group says", () => {
   });
 
   it("drops an entry that names nobody, keeping the faces beside it", () => {
-    // The name is the member's key and its picture's name, so an entry a store
-    // left as `null` or wrote a number into has no face to paint.
     const ada = { name: "Ada Lovelace" } as const;
     const grace = { name: "Grace Hopper" } as const;
     expect(

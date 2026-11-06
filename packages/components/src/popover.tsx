@@ -1,28 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Popover: a floating panel anchored to the control that opened it.
- *
- * Positioning is GPUix's own `FloatingLayer` (`<anchored>` with collision
- * handling), so this component owns only the parts 0.11.0 leaves to the library:
- * the open state, the dismissal rules, the trigger's re-open guard and the
- * measured placement correction (the runtime snaps but does not flip, and its
- * `center` centres on the containing block; plan 323).
- *
- * Dismissal rules (all measured — plan 112 §1c):
- *
- * - Escape closes the topmost overlay and returns focus to this popover's
- *   trigger;
- * - Tab closes it and lets focus move on (a popover is not modal, so trapping
- *   would be wrong);
- * - an outside press closes it without moving focus, because the press already
- *   gave focus to whatever was pressed.
- *
- * A press outside fires before the click that follows it, so closing on the press
- * would let that same click toggle the trigger open again. The trigger therefore
- * remembers that it was pressed while open, and the close handler marks the next
- * click as already handled — the technique `@gpuix/react@0.11.0`'s Select uses.
- */
-
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
@@ -71,23 +47,19 @@ import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
 
-/** The alignment a caller asked for, or this popover's own `center` default. */
 const popoverAlign = (align: unknown): FloatingAlign =>
   isAlign(align) ? align : "center";
 
-/** The rules a {@link PopoverContent} follows; throws outside a {@link Popover}. */
 interface PopoverContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
   readonly trigger: RefObject<PublicInstance | null>;
-  /** Set by a dismissing outside press, consumed by the click that follows it. */
 }
 
 const PopoverContext = createContext<PopoverContextValue | undefined>(
   undefined,
 );
 
-/** The popover a part belongs to. Throws when there is none (plan 110 §8.6). */
 const usePopoverContext = (): PopoverContextValue => {
   const value = useContext(PopoverContext);
   if (value === undefined) {
@@ -96,20 +68,14 @@ const usePopoverContext = (): PopoverContextValue => {
   return value;
 };
 
-/** {@link Popover} props. */
 export interface PopoverProps {
-  /** The controlled open state. `undefined` means uncontrolled. */
   readonly open?: boolean;
-  /** The uncontrolled starting state. Default `false`. */
+
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly children?: PartChildren;
 }
 
-/**
- * The open state, the trigger's position and the dismissal bookkeeping. It paints
- * a positioning root, which is what GPUix's anchored layer measures against.
- */
 export const Popover = ({
   open: openProp,
   defaultOpen = false,
@@ -137,16 +103,10 @@ export const Popover = ({
   );
 };
 
-/** {@link PopoverTrigger} props: the shared action, opening this popover. */
 export interface PopoverTriggerProps extends PrimitiveButtonProps {
-  /**
-   * Called for a click or an activating key, opening the popover afterwards.
-   * @deprecated use `onActivate`; removed in the next release.
-   */
   readonly onClick?: (event: EventPayload) => void;
 }
 
-/** Opens the popover it sits in. An ordinary button in every other respect. */
 export const PopoverTrigger = ({
   onClick,
   onActivate,
@@ -165,10 +125,7 @@ export const PopoverTrigger = ({
       aria-expanded={open}
       onActivate={(event) => {
         (onActivate ?? onClick)?.(event);
-        // The click of the press that just dismissed the surface closes it — it
-        // must not toggle it back open. The dismiss layer recognises the gesture
-        // by the point its press landed on, so this is a fact about the gesture,
-        // not a race between two events.
+
         if (isDismissalClick(event)) return;
         setOpen(!open);
       }}
@@ -176,26 +133,20 @@ export const PopoverTrigger = ({
   );
 };
 
-/** {@link PopoverContent} props: a floating surface, side and alignment. */
 export interface PopoverContentProps extends FloatingContentProps {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
-  /** Default `"bottom"`. Flipped once if the snapped surface would cover the trigger. */
+
   readonly side?: "top" | "right" | "bottom" | "left";
-  /** Default `"center"`. `"center"` is measured from the trigger, not the runtime's `center`. */
+
   readonly align?: "start" | "center" | "end";
-  /** The gap between the trigger and the surface. Default `6`. */
+
   readonly sideOffset?: number;
-  /** The margin a snapped surface keeps from the window edge. Default `8`. */
+
   readonly collisionPadding?: number;
-  /** Added on top of the measured centre correction. Default `0`. */
+
   readonly alignOffset?: number;
 }
 
-/**
- * The floating surface, rendered while the popover is open. Focus moves into it
- * on open; Escape returns focus to the trigger, Tab and outside presses do not.
- */
 export const PopoverContent = ({
   className,
   side = "bottom",
@@ -218,8 +169,6 @@ export const PopoverContent = ({
   const timing = useSurfaceTiming("normal");
   const presence = useSurfacePresence(open, timing);
   const placement = usePlacement({
-    // The surface is still painted while it leaves, so its measured side must
-    // not reset under the exit tween.
     open: presence.mounted,
     side,
     align: popoverAlign(align),
@@ -228,16 +177,11 @@ export const PopoverContent = ({
     surface,
   });
 
-  // A re-render must not re-push the layer: that would move the popover above an
-  // overlay opened after it. The handler reads the latest setter through a ref.
   const close = useRef<() => void>(() => undefined);
   useLayoutEffect(() => {
     close.current = () => setOpen(false);
   });
 
-  // A popover is a dismiss layer so a dialog underneath does not also close on
-  // the same event. Escape restores focus to the trigger; an outside press must
-  // not, because it already moved focus to whatever was pressed.
   const depth = useDismissDepth();
   useLayoutEffect(() => {
     if (!open) return;
@@ -248,7 +192,6 @@ export const PopoverContent = ({
         if (target !== null) renderer?.focusElement?.(target.id);
         return;
       }
-      // Mark the press so the click it belongs to cannot re-open the popover.
     }, depth);
   }, [depth, open, renderer, trigger]);
 
@@ -276,7 +219,7 @@ export const PopoverContent = ({
           Match.when(isDismiss, (value) => {
             dismissTopLayer(value);
           }),
-          // Tab is not a dismissal: close and let focus leave the popover.
+
           Match.when(isTab, () => setOpen(false)),
           Match.orElse(() => undefined),
         );
@@ -284,7 +227,7 @@ export const PopoverContent = ({
       style={mergeStyles(
         mergeStyles(
           overlaySurfaceStyle(POPOVER_CONTENT, className, theme, "lg"),
-          // A positioned box is what the leaving guard is inset against.
+
           {
             minWidth: 200,
             position: "relative",
@@ -300,7 +243,6 @@ export const PopoverContent = ({
   );
 };
 
-/** Every part of Popover, so a misplaced sibling is named. */
 const popoverParts: ReadonlyArray<PartComponent> = [
   Popover,
   PopoverTrigger,
@@ -314,7 +256,6 @@ const popoverRoot: PartsContract = {
   hint: "Put PopoverTrigger and PopoverContent directly inside Popover.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const popoverMeta = {
   name: "Popovers",
   tier: 2,

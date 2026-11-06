@@ -41,8 +41,3 @@ export const NameField = () => {
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the name |
-
-## Notes
-- No association by reference: the runtime has no `aria-labelledby` and no `for`/`htmlFor`, so write the name twice.
-- A press moves the focus; it does not activate the control.
-- A label holds the control's element, not its state.

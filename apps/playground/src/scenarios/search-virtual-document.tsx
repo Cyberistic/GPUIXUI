@@ -1,33 +1,3 @@
-/**
- * `search-virtual-document` — the offset a find bar must carry into a
- * virtualized document.
- *
- * `search-highlights` measured a `highlight` spec against three plain lines. A
- * find bar over a log, a code editor or a data grid searches a document the
- * runtime never holds: a `<virtual-list>` mounts a window of its rows, so native
- * can only number the matches inside that window, and `activeIndex` would mean
- * "the nth match on screen" instead of "the nth match in the document".
- * `matchIndexOffset` is the published answer — a **match** count per row, not a
- * row index, because rows hold different numbers of matches.
- *
- * 400 rows of 24px in a 200px viewport, each built with zero, one or two
- * occurrences of the query. Measured on 0.11.0:
- *
- *   - the app's count (`findRanges` over every row) is the document's, while
- *     `getPaintedHighlights()` reports only the mounted window's washes, so the
- *     two numbers differ and the runtime cannot number the rest;
- *   - a cursor in a row the reader has not reached paints no active wash without
- *     the offset, and the **row index** used as one (320 for a match at 541)
- *     leaves the cursor invisible too;
- *   - `row.offset` + the global `activeIndex` marks exactly the named match, and
- *     an off-by-one offset marks the match **before** it — the wash is a match
- *     count compared arithmetically, not a row looked up;
- *   - a negative or fractional offset drops the whole spec, so a bad offset
- *     removes the washes rather than mis-numbering them;
- *   - replace-all rewrites every occurrence (the count over the unmounted rows
- *     is the evidence), clears the washes, and the replacement can be searched
- *     as the matches were.
- */
 import { useRef, useState } from "react";
 import { findRanges, useGpuix } from "@gpuix/react";
 import type { HighlightSpec, PublicInstance } from "@gpuix/react";
@@ -56,17 +26,8 @@ import {
   type IndexedRow,
 } from "./find-document.js";
 
-/**
- * How each row numbers the matches it holds.
- *
- * `match` is the documented composition. The other three are the ways a find bar
- * gets it wrong, and the probe measures what each one paints: `row` is the
- * tempting "a row is a match" shortcut, `previous` is an off-by-one prefix sum,
- * and `invalid` is a value the runtime must refuse.
- */
 type OffsetMode = "match" | "row" | "previous" | "invalid";
 
-/** The offset a row hands the runtime in `mode`. */
 const offsetOf = (row: IndexedRow, mode: OffsetMode): number =>
   Match.value(mode).pipe(
     Match.when("match", () => row.offset),
@@ -76,7 +37,6 @@ const offsetOf = (row: IndexedRow, mode: OffsetMode): number =>
     Match.exhaustive,
   );
 
-/** The mode the offset button switches to. */
 const nextMode = (mode: OffsetMode): OffsetMode =>
   Match.value(mode).pipe(
     Match.when("match", () => "row" as const),
@@ -86,7 +46,6 @@ const nextMode = (mode: OffsetMode): OffsetMode =>
     Match.exhaustive,
   );
 
-/** The spec a row declares, or `undefined` when the row holds no match. */
 const highlightOf = (
   row: IndexedRow,
   query: string,
@@ -114,8 +73,6 @@ const SearchVirtualProbe = () => {
   const [active, setActive] = useState(-1);
   const [mode, setMode] = useState<OffsetMode>("match");
 
-  // The find bar's count is the document's, not the mount window's: the runtime
-  // only numbers what it paints, so the app counts with `findRanges`.
   const total =
     query === ""
       ? 0
@@ -217,29 +174,23 @@ const SearchVirtualProbe = () => {
   );
 };
 
-/** The washes the renderer reports, in paint order. */
 const washes = (ctx: Smoke.SmokeContext) => ctx.host.highlights();
 
-/** The washes a row's own text carries. */
 const washesFor = (ctx: Smoke.SmokeContext, text: string) =>
   Arr.filter(washes(ctx), (wash) => wash.text === text);
 
-/** The washes the find bar's cursor marked. */
 const activeWashes = (ctx: Smoke.SmokeContext) =>
   Arr.filter(washes(ctx), (wash) => wash.active);
 
-/** A host read, flattened for an assertion. */
 const textOf = (ctx: Smoke.SmokeContext, testId: string): string =>
   Option.getOrElse(Option.fromNullishOr(ctx.host.text(testId)), () => "");
 
-/** A painted box's `y`, or `NaN` so an unpainted element fails a `near` check. */
 const yOf = (ctx: Smoke.SmokeContext, testId: string): number =>
   Option.getOrElse(
     Option.map(Option.fromNullishOr(ctx.host.bounds(testId)), (box) => box.y),
     () => Number.NaN,
   );
 
-/** Where the `local`th occurrence of the query starts in `text`, or `-1`. */
 const startOf = (text: string, local: number): number =>
   Option.getOrElse(
     Option.map(
@@ -249,7 +200,6 @@ const startOf = (text: string, local: number): number =>
     () => -1,
   );
 
-/** Where the single active wash starts, or `-1` when none is active. */
 const activeStart = (ctx: Smoke.SmokeContext): number =>
   Option.getOrElse(
     Option.map(Arr.head(activeWashes(ctx)), (wash) => wash.start),
@@ -264,8 +214,6 @@ export const searchVirtualDocumentScenario: ScenarioBody = {
   view: () => <SearchVirtualProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {
-      // 1. Only a window of the document is mounted, so native sees a window's
-      //    matches and nothing else.
       yield* ctx.expectEqual(
         "the first row is painted",
         Option.isSome(Option.fromNullishOr(ctx.host.bounds("find-row-0"))),
@@ -284,7 +232,6 @@ export const searchVirtualDocumentScenario: ScenarioBody = {
         0,
       );
 
-      // 2. The app's count is the document's; the paint is the window's.
       ctx.host.click("find-open");
       ctx.host.advance(50);
       yield* ctx.expectContains(
@@ -328,7 +275,6 @@ export const searchVirtualDocumentScenario: ScenarioBody = {
         0,
       );
 
-      // 3. A cursor in the mount window needs no offset.
       ctx.host.click("find-next");
       ctx.host.advance(50);
       yield* ctx.expectEqual(
@@ -347,8 +293,6 @@ export const searchVirtualDocumentScenario: ScenarioBody = {
         "active=0 row=0 local=0",
       );
 
-      // 4. A cursor in a row the reader has not reached is only numbered
-      //    correctly with the document-wide offset.
       ctx.host.click("find-late");
       ctx.host.advance(50);
       yield* ctx.expectEqual(
@@ -388,7 +332,6 @@ export const searchVirtualDocumentScenario: ScenarioBody = {
         1,
       );
 
-      // 5. The row-index shortcut: 320 compared against a match numbered 541.
       ctx.host.click("find-mode");
       ctx.host.advance(50);
       yield* ctx.expectContains(
@@ -407,7 +350,6 @@ export const searchVirtualDocumentScenario: ScenarioBody = {
         2,
       );
 
-      // 6. An off-by-one prefix sum marks the match before the one named.
       ctx.host.click("find-mode");
       ctx.host.advance(50);
       yield* ctx.expectEqual(
@@ -421,7 +363,6 @@ export const searchVirtualDocumentScenario: ScenarioBody = {
         false,
       );
 
-      // 7. An offset the runtime refuses drops the whole spec.
       ctx.host.click("find-mode");
       ctx.host.advance(50);
       yield* ctx.expectEqual(
@@ -447,7 +388,6 @@ export const searchVirtualDocumentScenario: ScenarioBody = {
         1,
       );
 
-      // 8. Replace-all rewrites every occurrence, mounted or not.
       ctx.host.click("find-replace");
       ctx.host.advance(50);
       yield* ctx.expectContains(

@@ -1,19 +1,3 @@
-/**
- * One activation per interaction, on every control that can be activated.
- *
- * The guarded defect: `Rating` is a `radiogroup` whose stars are `role="radio"`
- * tab stops, but it only moved its value with the arrows — Space and Enter did
- * nothing on a focused star, so a keyboard user could not choose the star they
- * had landed on. The fix is `core/keyboard.ts`'s contract, and this matrix is
- * what stops the next part from drifting: **Enter** activates on the key
- * *press*, **Space** on the *release*, a held key never activates, and the pair
- * fires exactly once.
- *
- * Each case counts the control's own change callback, so the assertion is the
- * behaviour the caller sees rather than which handler was wired: a part that
- * activated on both the press and the release would report two.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
@@ -32,7 +16,6 @@ import { expectSome, hostHandler } from "./testing/element.js";
 
 const focus = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
 
-/** A control, the tree it renders, and the count of activations it reported. */
 interface Part {
   readonly element: () => ReactElement;
   readonly activations: () => number;
@@ -197,13 +180,6 @@ describe("the activation contract", () => {
   });
 });
 
-/**
- * The chord rule: a key carrying Ctrl, Alt or Cmd belongs to the platform or to
- * an application shortcut, and a control that reads it as its own key steals
- * that action. `Ctrl+Space` is the macOS input-source switch, `Cmd+Enter` a
- * common form shortcut: a focused action must not fire on either, and it must
- * not swallow the chord's default on the way.
- */
 describe("a chord belongs to the platform", () => {
   const CHORDS = [
     { shift: false, ctrl: true, alt: false, cmd: false },

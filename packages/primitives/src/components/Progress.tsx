@@ -1,24 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `Progress` — a determinate or indeterminate bar.
- *
- * The runtime exposes **no `aria-valuenow`** (see `docs/gpuix-capabilities.md`), so the value is
- * reported through `aria-valuetext`, which is the one supported way to make a
- * progressbar legible to assistive technology. A `value` outside 0–100 is
- * clamped by `core/style.ts`; an absent `value` means indeterminate.
- *
- * The root paints nothing but the frame; `ProgressTrack` is the bar,
- * `ProgressIndicator` the fill, and `ProgressLabel`/`ProgressValue` the text a
- * caller may put beside it. The default composition is the track alone, so
- * `<Progress value={42} />` renders exactly the bar it always has.
- *
- * The share is said in the caller's words: `formatValue` receives the clamped
- * percentage and `loadingText` names the indeterminate state, so a localised
- * interface — or a download that wants its buffered share in the sentence — is
- * not stuck with the fixed `"42%"`/`"loading"` phrase. Both default from the
- * provider's `messages` table, and a prop still wins per bar.
- */
-
 import {
   createContext,
   useContext,
@@ -70,74 +50,45 @@ import { Text } from "./Text.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface ProgressProps extends ElementHostProps {
-  /**
-   * 0–100. Omit for an indeterminate bar.
-   *
-   * A stored `null` — how JSON keeps a field that was never written — is
-   * absence too, and so is a value that is not a number (text a record wrote, a
-   * `NaN` a measurement produced): the bar paints the moving segment instead of
-   * a bar pinned at 0% or a fill with no width. `0` is still the empty share it
-   * says it is.
-   */
   readonly value?: number;
-  /**
-   * How much of the bar is already held — a download's received-then-buffered
-   * share. Painted as one segment between `value` and this number, so a buffer
-   * behind the value paints nothing. Ignored while indeterminate: an
-   * indeterminate bar has no position to buffer around.
-   */
+
   readonly buffer?: number;
-  /** Defaults to `primary`. */
+
   readonly tone?: ProgressTone;
-  /** Defaults to `md`. */
+
   readonly size?: ProgressSpec["size"];
-  /** Accessible name, e.g. "Uploading". */
+
   readonly label?: string;
-  /**
-   * How the bar says its share — the `aria-valuetext` an assistive technology
-   * reads and the text `ProgressValue` paints. Called with the **clamped**
-   * 0–100 percentage, never the raw prop. Defaults to `` `${percent}%` ``.
-   */
+
   readonly formatValue?: (percent: number) => string;
-  /**
-   * What an indeterminate bar says instead of a percentage. Defaults to the
-   * provider's `loading.indeterminate` (`loading`), so a localised tree names
-   * the state once rather than on every bar.
-   */
+
   readonly loadingText?: string;
-  /**
-   * Hold the indeterminate segment and schedule no interval. Defaults to the
-   * motion provider's preference (`MotionProvider`); the runtime exposes none of
-   * its own. A determinate bar never animates, so this changes nothing on it.
-   */
+
   readonly reducedMotion?: boolean;
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** The parts to draw. Omit for the track and its indicator. */
+
   readonly children?: ReactNode;
   readonly testId?: string;
 }
 
-/** The segment width of an indeterminate bar, as a percentage of the track. */
 const SEGMENT = 40;
 
-/** What every part reads from the progress that owns it. */
 export interface ProgressPart {
   readonly theme: PrimitiveTheme;
   readonly determinate: boolean;
   readonly percent: number;
-  /** Where the held-ahead segment ends, or `undefined` when there is none. */
+
   readonly bufferPercent: number | undefined;
   readonly tone: ProgressTone;
   readonly size: ProgressSize;
   readonly step: number;
   readonly label: string | undefined;
-  /** The share in the caller's words, or the default; announced and painted. */
+
   readonly valueText: string;
 }
 
-/** Resolve a progress's shared state once, for its root and every part. */
 export const progressPart = (
   {
     value,
@@ -152,12 +103,6 @@ export const progressPart = (
   step: number,
   messages: PrimitiveMessages = defaultMessages,
 ): ProgressPart => {
-  // A share is read as the data a store hands back: `null` (JSON's field a
-  // record never wrote) is absence, and so is a value that is not a number —
-  // text a store wrote, or a `NaN` a measurement produced. Both paint the moving
-  // segment and say the loading word, because a determinate bar pinned at 0% is
-  // the position that reads as "nothing received", and a `NaN` share painted no
-  // fill at all while announcing "NaN%".
   const measurement = storedNumber(value);
   const determinate = Option.isSome(measurement);
   const percent = Option.match(measurement, {
@@ -168,9 +113,7 @@ export const progressPart = (
     theme,
     determinate,
     percent,
-    // A buffer is a place on the bar, so it needs one: an indeterminate bar has
-    // none, a buffer behind the value has nothing left to say, and a buffer that
-    // is not a number is not a place.
+
     bufferPercent: determinate
       ? Option.match(storedNumber(buffer), {
           onNone: () => undefined,
@@ -180,20 +123,14 @@ export const progressPart = (
     tone: progressToneOf(tone),
     size: progressSizeOf(size),
     step,
-    // The label is copy, and a blank one is no copy: `visibleCopy` keeps the
-    // caller's own spacing and reports a run of spaces as absence, so the name
-    // and the caption part agree on whether there is a word at all.
+
     label: visibleCopy(label),
-    // The share is said in the caller's words: a locale, a unit, or a buffer the
-    // default phrase cannot know about. The formatter sees the **clamped**
-    // percentage, so it cannot announce a number the track never paints, and an
-    // answer that says nothing — a locale table with no row for this bar —
-    // leaves the default standing rather than announcing an empty value.
+
     valueText: determinate
       ? spokenText(Option.fromNullishOr(formatValue?.(percent)), `${percent}%`)
       : spokenText(
           Option.fromNullishOr(loadingText),
-          // A blank provider row is absence too, so the shipped word stands.
+
           indeterminateWord(messages.loading),
         ),
   };
@@ -209,7 +146,6 @@ const useProgressPart = (name: string): ProgressPart => {
   return part;
 };
 
-/** The row a progress's parts stack in. */
 const frameStyle = (theme: PrimitiveTheme): StyleDesc => ({
   width: "100%",
   display: "flex",
@@ -217,17 +153,14 @@ const frameStyle = (theme: PrimitiveTheme): StyleDesc => ({
   gap: spaceValue(theme, "2xs"),
 });
 
-/** {@link ProgressTrack} props. */
 export interface ProgressTrackProps {
-  /** The indicators. Omit for an empty track. */
   readonly children?: ReactNode;
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly testId?: string;
 }
 
-/** The bar's background. */
 export const renderProgressTrack = (
   { children, className, style, testId }: ProgressTrackProps,
   part: ProgressPart,
@@ -246,31 +179,16 @@ export const renderProgressTrack = (
   </div>
 );
 
-/** The bar's background, inside a progress. */
 export const ProgressTrack = (props: ProgressTrackProps): ReactElement =>
   renderProgressTrack(props, useProgressPart("ProgressTrack"));
 
-/** {@link ProgressIndicator} props. */
 export interface ProgressIndicatorProps {
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly testId?: string;
 }
 
-/**
- * The filled segment.
- *
- * Determinate, it is one fill at the clamped percentage, plus the buffer
- * segment when the caller reports one. Indeterminate, it is the moving segment:
- * a spacer and the fill, so a caller who composes their own track still gets the
- * motion instead of a fill pinned to the start. The tone paints both — a bar
- * that changes colour when it learns its value would be a bar whose colour
- * means nothing. The buffer is painted after the fill rather than under it, so
- * its own segment is the part between the value and the buffer: the runtime
- * paints one child after another, and a segment is measurable where an overlay
- * would need a positioned ancestor the runtime does not guarantee.
- */
 export const renderProgressIndicator = (
   { className, style, testId }: ProgressIndicatorProps,
   part: ProgressPart,
@@ -315,31 +233,20 @@ export const renderProgressIndicator = (
   );
 };
 
-/** The filled segment, inside a progress. */
 export const ProgressIndicator = (
   props: ProgressIndicatorProps,
 ): ReactElement =>
   renderProgressIndicator(props, useProgressPart("ProgressIndicator"));
 
-/** {@link ProgressLabel} props. */
 export interface ProgressLabelProps {
-  /**
-   * Visible text. Defaults to the progress's `label`; a child that says
-   * nothing — `""` or spaces, the row an i18n table never filled — falls back
-   * to it rather than painting a blank line.
-   */
   readonly children?: ReactNode;
   readonly testId?: string;
 }
 
-/** The task's name, as visible text. */
 export const renderProgressLabel = (
   { children, testId }: ProgressLabelProps,
   part: ProgressPart,
 ): ReactElement | null => {
-  // A caption says something or it paints nothing: an empty `<text>` still pays
-  // the frame's gap, and spaces lay out a full line, so a child that arrived
-  // blank falls through to the stored label the prop documents as its default.
   const copy = captionCopy(children, part.label);
   return copy === undefined ? null : (
     <Text role="caption" tone="muted" testId={testId}>
@@ -348,16 +255,13 @@ export const renderProgressLabel = (
   );
 };
 
-/** The task's name, inside a progress. */
 export const ProgressLabel = (props: ProgressLabelProps): ReactElement | null =>
   renderProgressLabel(props, useProgressPart("ProgressLabel"));
 
-/** {@link ProgressValue} props. */
 export interface ProgressValueProps {
   readonly testId?: string;
 }
 
-/** The share in the caller's words, or `loading` when there is no known value. */
 export const renderProgressValue = (
   { testId }: ProgressValueProps,
   part: ProgressPart,
@@ -367,11 +271,9 @@ export const renderProgressValue = (
   </Text>
 );
 
-/** The percentage, inside a progress. */
 export const ProgressValue = (props: ProgressValueProps): ReactElement =>
   renderProgressValue(props, useProgressPart("ProgressValue"));
 
-/** The element a progress renders. Pure in its arguments. */
 export const renderProgress = (
   props: ProgressProps,
   theme: PrimitiveTheme,
@@ -422,23 +324,12 @@ export const renderProgress = (
   );
 };
 
-/**
- * A progress bar.
- *
- * Only an indeterminate bar animates, so only an indeterminate bar runs the
- * step timer: a determinate bar draws a fixed fill, and a timer that wakes the
- * tree for a segment it never paints is cost with nothing to show for it.
- * `reducedMotion` stops the timer the same way.
- */
 export const Progress = (props: ProgressProps): ReactElement => {
   const reducedMotion = reducedMotionOf(
     props.reducedMotion,
     useMotionPreference(),
   );
-  // The timer reads the share through the same seam the paint does: a share the
-  // bar cannot read is absence there, so it must animate here too — a stored
-  // text share painted the moving segment at one frozen frame while the timer
-  // counted it as determinate.
+
   const animates =
     progressAnimates(storedNumber(props.value)) && !reducedMotion;
   return renderProgress(

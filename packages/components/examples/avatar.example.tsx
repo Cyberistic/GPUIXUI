@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Avatar example: a members panel and a facepile.
- *
- * Composition, not a gallery: the row shows how an avatar, a name and a status
- * badge read together, and the facepile shows the small sizes overlapping the
- * way a comment thread does.
- */
-
 import * as Arr from "effect/Array";
 import { Avatar, type AvatarStatus } from "../src/avatar.js";
 import { Badge } from "../src/badge.js";
@@ -19,7 +11,6 @@ import {
 } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** One member: the initials fallback, a role badge and a presence state. */
 const members: ReadonlyArray<{
   readonly name: string;
   readonly role: string;
@@ -31,7 +22,6 @@ const members: ReadonlyArray<{
   { name: "李 小龙", role: "Designer", status: "offline" },
 ];
 
-/** The tiny overlapping avatars a comment thread shows. */
 const faces: ReadonlyArray<string> = [
   "Ada Lovelace",
   "Grace Hopper",
@@ -39,7 +29,6 @@ const faces: ReadonlyArray<string> = [
   "Alan Turing",
 ];
 
-/** A members panel with a facepile footer. */
 export const AvatarExample = () => {
   const theme = useTheme();
   return (
@@ -103,7 +92,6 @@ export const AvatarExample = () => {
                 key={name}
                 name={name}
                 size="sm"
-                // Overlap every face after the first, the way a facepile does.
                 style={index === 0 ? undefined : { marginLeft: -6 }}
               />
             ))}

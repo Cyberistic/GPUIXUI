@@ -12,21 +12,6 @@ import {
 } from "@gpuixui/data/chart/logic";
 import { ringSegments } from "@gpuixui/data/chart/geometry";
 
-/**
- * Dashboard block — the `/blocks/dashboard` recipe. Like every block,
- * `DashboardRender` is a browser reproduction of the native geometry/palette
- * (the shipped tree renders through GPUix, not the DOM); `dashboardSource` is
- * the `@gpuixui/*` recipe a consumer copies, and its charts are
- * `@gpuixui/data`'s — the browser drawing cannot mount them, so it reads the
- * package's chart geometry (`stackedBarMarks`, `groupedBarMarks`,
- * `ringSegments`) instead of laying the marks out a second time.
- *
- * The categorical colours are the library's data series, never a palette of the
- * docs' own: `--series-*` arrives from the preview surface's theme (so the
- * platform and look switch repaint the charts) and `.gx-dash` falls back to the
- * dark theme's scale on the landing, which renders outside a preview surface.
- */
-
 const MODELS = [
   { name: "Kimi", model: "moonshot-v1-32k", pct: 33, tokens: "409k" },
   { name: "DeepSeek", model: "deepseek-chat", pct: 24, tokens: "298k" },
@@ -50,7 +35,6 @@ const APPS = [
   { name: "Obsidian", time: "56m", pct: 12 },
 ] as const;
 
-/** The library's icon geometry; `db` is a hand-drawn gap (no database icon). */
 const ICON = {
   clock: (
     <>
@@ -126,7 +110,6 @@ const NAV = [
 const WEEK = [6.5, 8, 7.2, 9.5, 10, 4, 3.5] as const;
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
-/** Token usage over a day, one column per two-hour bucket, five model values. */
 const HOURLY = [
   { label: "12AM", values: [18, 12, 8, 4, 2] },
   { label: "2AM", values: [12, 9, 6, 3, 2] },
@@ -142,11 +125,9 @@ const HOURLY = [
   { label: "10PM", values: [16, 12, 9, 6, 4] },
 ] as const;
 
-/** The categorical colour for a model index, from the theme's series scale. */
 const colorAt = (index: number): string =>
   `var(--dash-series-${(index % 5) + 1})`;
 
-/** A 24px monochrome icon, tinted by `currentColor`. */
 function IconGlyph({
   children,
   size = 15,
@@ -181,7 +162,6 @@ const SEARCH = (
   </>
 );
 
-/** Mon–Sun bars; the axis is the package's ceiling over the busiest day. */
 const WEEK_SERIES: ReadonlyArray<ChartSeries> = [
   { key: "hours", label: "Hours", values: WEEK },
 ];
@@ -262,7 +242,6 @@ function WeekBars() {
   );
 }
 
-/** Five-segment donut with the total in the centre. */
 const DONUT_SEGMENTS = ringSegments(
   MODELS.map((model) => model.pct),
   chartBox(100, 100, { width: 100, height: 100 }),
@@ -301,7 +280,6 @@ function TokenDonut() {
   );
 }
 
-/** Token usage over a day, one series per model, read by the stacked-bar geometry. */
 const HOURLY_SERIES: ReadonlyArray<ChartSeries> = MODELS.map(
   (model, index) => ({
     key: model.model,
@@ -310,20 +288,15 @@ const HOURLY_SERIES: ReadonlyArray<ChartSeries> = MODELS.map(
   }),
 );
 
-/** The stack's plot: the width the card leaves and the band the axis needs. */
 export const HOURLY_PLOT = chartBox(288, 86, { width: 288, height: 86 });
 
-/** The measure a stack is read against: the tallest column's total. */
 export const HOURLY_SCALE = stackedScale(HOURLY_SERIES, HOURLY.length);
 
-/** Every series' segments, in paint order, for the twelve buckets. */
 export const hourlyStack = (): ReadonlyArray<ReadonlyArray<ChartMark>> =>
   stackedBarMarks(HOURLY_SERIES, HOURLY_PLOT, HOURLY_SCALE, HOURLY.length);
 
-/** The axis steps, from zero to the stack's ceiling. */
 export const HOURLY_TICKS = axisTicks(HOURLY_SCALE, 4);
 
-/** 12AM–10PM stacked bar, one column per two-hour bucket. */
 function HourlyStack() {
   const w = 320;
   const h = 120;
@@ -401,7 +374,6 @@ function HourlyStack() {
   );
 }
 
-/** A green ▲ delta badge and its “vs. previous day” caption. */
 function Delta({
   pct,
   period = "previous day",
@@ -417,7 +389,6 @@ function Delta({
   );
 }
 
-/** One named, timed, percent row with a progress bar. */
 function ProgressRow({
   label,
   time,
@@ -456,7 +427,6 @@ function ProgressRow({
   );
 }
 
-/** A model row: colour dot, name, sub-label, tokens, percent and a bar. */
 function ModelRow({
   name,
   model,
@@ -491,7 +461,6 @@ function ModelRow({
   );
 }
 
-/** A card: titled header over body content. */
 function Card({
   title,
   icon,
@@ -519,7 +488,6 @@ function Card({
   );
 }
 
-/** The dashboard window: sidebar, top bar and the six-card content grid. */
 export function DashboardRender() {
   const [collapsed, setCollapsed] = useState(false);
   const [active, setActive] = useState(0);
@@ -734,7 +702,6 @@ export const dashboardPackages = [
   "@gpuixui/tokens",
 ] as const;
 
-/** The recipe a consumer copies — real `@gpuixui/*` parts, charts included. */
 export const dashboardSource = `import { Badge } from "@gpuixui/components/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@gpuixui/components/card";
 import { SearchInput } from "@gpuixui/components/search-input";

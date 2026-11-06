@@ -1,12 +1,3 @@
-/**
- * The reveal's split store, without a renderer.
- *
- * The bugs these guard: a phrase re-split on every render (a fresh array of
- * units for a headline that did not change), and a changed phrase keeping the
- * units of the one before it — the keys are what the runtime remounts on, so a
- * stale split paints the previous headline.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { makeSplittingStore, type SplitInput } from "./store.js";
@@ -37,8 +28,6 @@ describe("SplittingStore", () => {
 
   it.effect("keeps the split for an unchanged phrase and its settings", () =>
     Effect.gen(function* () {
-      // The bug this guards: a render recomputed the whole reveal, so a character
-      // split of a long headline allocated a new unit array per paint.
       const store = yield* makeSplittingStore(phrase);
       const held = store.local.read();
       yield* store.show({ ...phrase });
@@ -58,8 +47,6 @@ describe("SplittingStore", () => {
 
   it.effect("re-splits when the split mode changes", () =>
     Effect.gen(function* () {
-      // The bug this guards: the mode is a prop like the phrase, and a store that
-      // compared only the text kept a word split under a character request.
       const store = yield* makeSplittingStore(phrase);
       yield* store.show({ ...phrase, split: "characters" });
 

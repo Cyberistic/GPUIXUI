@@ -1,17 +1,3 @@
-/**
- * Tailwind class string → GPUix `StyleDesc`.
- *
- * `cn` does the joining and conflict resolution first, exactly as shadcn uses
- * it. The result keeps the state buckets a GPUix component applies itself
- * (`focus`, `invalid`, `disabled`, `open`/`closed`), because 0.10.0 has no
- * `focusVisible`/`data-*` style properties.
- *
- * `cn-*` hooks are expanded from the registry's alias table before `cn` runs,
- * so a caller's utility still beats the recipe. Component state
- * (`has-[>svg]`, `data-expanded`, …) is resolved from the optional `state`
- * argument instead of being guessed.
- */
-
 import { cn } from "cn";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
@@ -36,10 +22,8 @@ import { calcReasonFromClass } from "./calc.js";
 
 export type { TwBucket, TwState } from "./registry.js";
 
-/** Every bucket the compiler writes. */
 type Bucket = TwBucket | "base" | "hover" | "active";
 
-/** The resolved class string. */
 export interface TwResult {
   readonly style: StyleDesc;
   readonly focus: StyleDesc;
@@ -47,11 +31,11 @@ export interface TwResult {
   readonly disabled: StyleDesc;
   readonly open: StyleDesc;
   readonly closed: StyleDesc;
-  /** Motion-only utilities (`animate-in`, `fade-in-0`, `duration-100`, …). */
+
   readonly motion: ReadonlyArray<string>;
-  /** Responsive prefixes, recorded for a later breakpoint pass. */
+
   readonly responsive: ReadonlyArray<string>;
-  /** Classes the native runtime cannot express (with the class spelled out). */
+
   readonly unsupported: ReadonlyArray<string>;
 }
 
@@ -90,7 +74,6 @@ const empty = (): TwResult => ({
   unsupported: [],
 });
 
-/** A shallow merge, with the two native pseudo-states merged recursively. */
 export const mergeTwStyle = (base: StyleDesc, next: StyleDesc): StyleDesc => {
   const hover =
     base.hover === undefined && next.hover === undefined
@@ -108,13 +91,11 @@ export const mergeTwStyle = (base: StyleDesc, next: StyleDesc): StyleDesc => {
   };
 };
 
-/** A state style is a plain style; the helper keeps the TypeScript shape. */
 const state = (base: StateStyle | undefined, next: StyleDesc): StateStyle => ({
   ...base,
   ...next,
 });
 
-/** Splits `dark:hover:bg-accent` at the top-level colons only. */
 const splitVariants = (token: string): Split => {
   const initial: SplitState = { depth: 0, start: 0, variants: [] };
   const split = Arr.reduce(
@@ -158,12 +139,6 @@ const UNSUPPORTED_VARIANT = new Set([
   "*",
 ]);
 
-/**
- * Whether a state variant matches the component's state.
- *
- * `undefined` means the variant is not state-bearing. A variant we cannot
- * derive honestly stays out of this table and remains unsupported.
- */
 const stateVariant = (variant: string, state: TwState): boolean | undefined =>
   Match.value(variant).pipe(
     Match.when("has-[>svg]", () => state.hasIcon === true),
@@ -179,7 +154,6 @@ const stateVariant = (variant: string, state: TwState): boolean | undefined =>
     Match.orElse(() => undefined),
   );
 
-/** The bucket a variant list writes to, or why it is skipped. */
 const bucketOf = (
   variants: ReadonlyArray<string>,
   registry: TwRegistry,
@@ -226,7 +200,6 @@ const bucketOf = (
   });
 };
 
-/** Expands `cn-*` hooks into their recipes, keeping the caller's modifiers. */
 const expandAliases = (className: string, registry: TwRegistry): string =>
   pipe(
     Str.split(className, /\s+/),
@@ -250,7 +223,6 @@ const expandAliases = (className: string, registry: TwRegistry): string =>
     Arr.join(" "),
   );
 
-/** Parses a ring utility into its width and colour, if it is one. */
 const ringOf = (utility: string, theme: Theme): Ring | undefined => {
   if (!isRing(utility)) return undefined;
   const width = ringWidth(utility);
@@ -262,7 +234,6 @@ const ringOf = (utility: string, theme: Theme): Ring | undefined => {
   };
 };
 
-/** Writes a resolved style into a named state bucket. */
 const setBucket = (
   result: TwResult,
   bucket: TwBucket,
@@ -292,7 +263,6 @@ const setBucket = (
     Match.exhaustive,
   );
 
-/** Writes a resolved style into any bucket, including hover/active. */
 const apply = (result: TwResult, bucket: Bucket, next: StyleDesc): TwResult =>
   Match.value(bucket).pipe(
     Match.when("base", () => ({
@@ -330,13 +300,6 @@ const addRing = (
   return next;
 };
 
-/**
- * Resolves a class string to the native style and its state buckets.
- *
- * The optional `state` makes `has-[>svg]`, `has-data-[icon=*]`,
- * `data-expanded`, `data-behind`, `data-limited` and `aria-expanded` honest:
- * they apply only when the component says they do.
- */
 export const classesToStyle = (
   className: string | undefined,
   theme: Theme,
@@ -404,8 +367,6 @@ export const classesToStyle = (
 
       const resolved = resolveRegistryUtility(registry, utility, theme);
       if (resolved === undefined) {
-        // A responsive token is recorded for the later breakpoint pass; its
-        // utility is not an unsupported class just because it is named-only.
         if (Arr.length(responsive) > 0) return { ...current, result };
         return {
           ...current,
@@ -430,7 +391,6 @@ export const classesToStyle = (
   );
 };
 
-/** Why a class cannot resolve, including the registry's custom reasons. */
 export const unsupportedReason = (
   className: string,
   registry: TwRegistry = defaultRegistry,
@@ -439,7 +399,6 @@ export const unsupportedReason = (
   calcReasonFromClass(className) ??
   prefixReason(className);
 
-/** A registry with `classesToStyle` bound to it. */
 export interface TwCompiler {
   readonly registry: TwRegistry;
   readonly classesToStyle: (
@@ -450,7 +409,6 @@ export interface TwCompiler {
   readonly unsupportedReason: (className: string) => string | undefined;
 }
 
-/** Builds a bound compiler for a consumer's utilities, variants and aliases. */
 export const createTw = (config: TwRegistryConfig = {}): TwCompiler => {
   const registry = createTwRegistry(config);
   return {

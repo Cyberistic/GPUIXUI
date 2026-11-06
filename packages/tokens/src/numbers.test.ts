@@ -1,29 +1,3 @@
-/**
- * Guards the numeric half of the theme gate.
- *
- * The audit checked every colour a theme carries and **no number**. A style
- * batch is serialised with `JSON.stringify` before it reaches native, so `NaN`
- * and `Infinity` arrive as `null` and the renderer drops the property — measured
- * in the test renderer: `borderRadius: NaN` beside a valid `borderWidth`,
- * `fontSize` and `backgroundColor` left those three on the element and dropped
- * only the radius. A negative size is worse than silent: `fontSize: -4` was
- * accepted and laid a text element out at height 0. A brand theme built from a
- * scale factor or a stored preference can carry either, and every suite stayed
- * green.
- *
- * A type role's leading is the same class one step on: a scale computed from a
- * factor keeps every number finite and positive while the next line starts
- * inside the previous one's glyph box. The documents name that rule, and this
- * suite reads them (as `docs.test.ts` and `selection.test.ts` do) so the page
- * cannot describe a report the code does not return.
- *
- * A row height is the third: a list row is a press target, and a `dense` row is
- * built at exactly `density.rowHeight`, so a theme whose rows were shaved ships
- * a target under the floor even when every control height is right. It is the
- * same `pressable` rule one level down, and the row is a box of text as well as a
- * press — a tree row paints `body`'s leading inside it and a log viewer's line is
- * `code` — so the fit rule that holds a control's box holds the row's too.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -121,8 +95,6 @@ describe("a type role's leading reaches its own size", () => {
   });
 
   it("reports an unusable leading once, as a size rather than as a collision", () => {
-    // A zero leading is a size failure; counting it twice would name the same
-    // token for two rules and read as two defects.
     expect(
       invalidNumbers(brand({ typography: { h2: { lineHeight: 0 } } })),
     ).toEqual([
@@ -136,7 +108,6 @@ describe("a type role's leading reaches its own size", () => {
   });
 
   it("fails the gate on a crushed scale with no colour report involved", () => {
-    // The scale a factor produces: the leading moved but the type did not.
     const audit = auditTheme(
       brand({
         typography: {
@@ -158,8 +129,6 @@ describe("a type role's leading reaches its own size", () => {
   });
 
   it("holds every shipped role above the floor", () => {
-    // The scale's own tightest role is the display step; a shipped role that
-    // dropped under 1.0 would be a defect in the tokens, not only in a brand.
     const collapsed = Object.entries(typography).flatMap(([role, value]) =>
       typeof value === "object" && value.lineHeight < value.fontSize
         ? [role]
@@ -171,13 +140,6 @@ describe("a type role's leading reaches its own size", () => {
 });
 
 describe("the strong role outweighs the body it emphasises", () => {
-  // `bodyStrong` shares `body`'s size and leading, so its weight is the whole
-  // difference between reading and emphasis (`Text role="bodyStrong"`, a card
-  // title). `invalidScales` skips the pair — it is not a rung of the size ladder
-  // — so nothing compared the two weights: a brand that forwards one weight from
-  // a design-tool export paints the emphasis identically to the text it lifts,
-  // and every size, leading and weight it carries is still layable.
-
   it("reports a strong role painted at the weight of the body it lifts", () => {
     expect(
       invalidNumbers(
@@ -194,8 +156,6 @@ describe("the strong role outweighs the body it emphasises", () => {
   });
 
   it("compares the pair, so a heavier body also flattens the emphasis", () => {
-    // The report names the role that has to change, which is the strong one,
-    // even when the body is what moved.
     expect(
       invalidNumbers(brand({ typography: { body: { fontWeight: 700 } } })),
     ).toEqual([
@@ -220,8 +180,6 @@ describe("the strong role outweighs the body it emphasises", () => {
   });
 
   it("holds every shipped, platform and authored style to it", () => {
-    // The tokens' own emphasis role is the one every consumer paints; a palette
-    // or platform edit that flattened it would ship a title nobody sees.
     const flattened = [
       ...Object.values(themes),
       ...Object.values(highContrastThemes),
@@ -271,14 +229,6 @@ describe("the strong role outweighs the body it emphasises", () => {
 });
 
 describe("the strong role shares the body's size and leading", () => {
-  // `bodyStrong` and `body` are one emphasis at one size — 14/20 for both roles,
-  // the weight the whole difference between reading and a line that stands out.
-  // The typography merge is per role, so a design-tool export that names only
-  // the token a body line is set from raises `body` and leaves `bodyStrong`
-  // behind: the card title becomes the smaller line. Every number stays finite,
-  // positive and in order and the weights are the library's, so the weight half
-  // of the rule — and every other report — stays empty.
-
   it("reports a body size the strong role did not follow", () => {
     expect(
       invalidNumbers(brand({ typography: { body: { fontSize: 15 } } })),
@@ -319,9 +269,6 @@ describe("the strong role shares the body's size and leading", () => {
   });
 
   it("reports an unusable size once, as a size rather than as emphasis", () => {
-    // A stored role can carry a size the batch would drop. It is the
-    // single-value report's, so the pair does not report the same role twice
-    // under a rule that says nothing about an unusable number.
     expect(
       invalidNumbers({
         ...lightTheme,
@@ -375,7 +322,6 @@ describe("the strong role shares the body's size and leading", () => {
 });
 
 describe("a type role's weight is a number the batch can carry", () => {
-  /** A theme restored from storage, in the shape the report reads. */
   const stored = (role: "h1" | "bodyStrong", fontWeight: number) => ({
     ...lightTheme,
     typography: {
@@ -385,8 +331,6 @@ describe("a type role's weight is a number the batch can carry", () => {
   });
 
   it("reports a heading weight the serialised batch would drop", () => {
-    // `NaN` becomes `null`, the renderer drops the property, and the largest
-    // role in the scale paints at the runtime's default weight.
     expect(invalidNumbers(stored("h1", Number.NaN))).toEqual([
       {
         group: "typography",
@@ -398,8 +342,6 @@ describe("a type role's weight is a number the batch can carry", () => {
   });
 
   it("reports an unusable strong weight once, as a number rather than as emphasis", () => {
-    // The emphasis rule compares two weights; an unusable one is the
-    // single-value report's, so one broken value does not produce two lines.
     expect(invalidNumbers(stored("bodyStrong", Number.NaN))).toEqual([
       {
         group: "typography",
@@ -411,8 +353,6 @@ describe("a type role's weight is a number the batch can carry", () => {
   });
 
   it("leaves a weight between the shipped steps to the runtime's clamp", () => {
-    // A variable font's 450 is a real number in the runtime's 1–1000 range, so
-    // it paints; only a value JSON cannot carry is the report's business.
     expect(invalidNumbers(stored("h1", 450))).toEqual([]);
   });
 
@@ -455,7 +395,7 @@ describe("the documents name the number rules", () => {
     expect(catalogue).toContain(
       "| `density` | `rowHeight` | finite, `>= 24` (`targetSize.minimum`), and at least the line a row paints (`fits`) |",
     );
-    // The snippet is the real report, not an illustration of one.
+
     expect(catalogue).toContain(
       `// [{ group: "density", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
     );
@@ -469,8 +409,7 @@ describe("the documents name the number rules", () => {
     expect(catalogue).toContain(
       `// [{ group: "density", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
     );
-    // The page names the two painters whose type the row carries, so a reader
-    // who shaves a row knows which leading it has to hold.
+
     expect(catalogue).toContain("`packages/data/src/tree/row.tsx`");
     expect(catalogue).toContain("`packages/files/src/log/log-viewer.tsx`");
   });
@@ -485,7 +424,7 @@ describe("the documents name the number rules", () => {
     expect(catalogue).toContain(
       "| `typography` | every role's leading | finite, `> 0`, and at least the role's size (`leading`) |",
     );
-    // The snippet is the real report, not an illustration of one.
+
     expect(catalogue).toContain(
       `// [{ group: "typography", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
     );
@@ -499,7 +438,7 @@ describe("the documents name the number rules", () => {
     expect(catalogue).toContain(
       "| `density` | `controlHeight` per size | finite, `>= 24` (`targetSize.minimum`), and at least the text and the icon it carries (`fits`) |",
     );
-    // The snippet is the real report, not an illustration of one.
+
     expect(catalogue).toContain(
       `// [{ group: "density", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
     );
@@ -513,8 +452,7 @@ describe("the documents name the number rules", () => {
     expect(catalogue).toContain(
       `// [{ group: "density", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
     );
-    // The page names the glyph a control draws, so a reader who grew the icon
-    // scale knows which number the box has to reach.
+
     expect(catalogue).toContain("`iconSize.md`");
   });
 
@@ -526,7 +464,7 @@ describe("the documents name the number rules", () => {
     expect(catalogue).toContain(
       "| `borderWidth` | `strong` | finite, `> 0` — the focus ring's width |",
     );
-    // The snippet is the real report, not an illustration of one.
+
     expect(catalogue).toContain(
       `// [{ group: "borderWidth", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
     );
@@ -540,12 +478,11 @@ describe("the documents name the number rules", () => {
     expect(catalogue).toContain(
       "| `typography` | `bodyStrong`'s size, leading and weight | the size and the leading equal `body`'s, and the weight is greater — `emphasis` |",
     );
-    // The snippet is the real report, not an illustration of one.
+
     expect(catalogue).toContain(
       `// [{ group: "typography", path: "${failure?.path}", value: ${failure?.value}, rule: "${failure?.rule}" }]`,
     );
-    // Both places the design system states it: the type section and the
-    // contract list, so one surface cannot drift from the other.
+
     const design = page("../../../docs/design-system.md");
     expect(design).toContain(
       "the strong role must share the body's size and leading and\nweigh more",
@@ -556,10 +493,6 @@ describe("the documents name the number rules", () => {
   });
 
   it("prints the emphasis size report, not only the weight's", () => {
-    // The pair is three numbers: a brand that raises the body's size and leaves
-    // the strong role behind is reported on the role's `fontSize`. The page
-    // prints that exact report beside the weight one, so a reader cannot take
-    // the weight for the whole rule.
     const catalogue = page("../../../docs/tokens.md");
     const [failure] = invalidNumbers(lopsidedEmphasisTheme);
 
@@ -584,8 +517,7 @@ describe("the documents name the number rules", () => {
     expect(catalogue).toContain(
       "| `typography` | every role's weight | finite — the runtime clamps a real number into its 1–1000 range (`fontWeight`) |",
     );
-    // The snippet is the real report, not an illustration of one; `NaN` prints
-    // as itself in the page's own comment.
+
     expect(catalogue).toContain(
       `// [{ group: "typography", path: "${failure?.path}", value: NaN, rule: "${failure?.rule}" }]`,
     );
@@ -698,8 +630,6 @@ describe("every group of numbers is inspected", () => {
   });
 
   it("reports a shadow geometry the renderer drops, by level and position", () => {
-    // A level a brand supplies can hold several shadows; the bad one behind a
-    // valid entry must still be reported, or a level's first shadow hides it.
     const [first] = lightTheme.elevation.lg;
     expect(first).toBeDefined();
     if (first === undefined) return;
@@ -747,9 +677,6 @@ describe("a control height a pointer cannot reach", () => {
   });
 
   it("accepts the floor itself, which is what the shortest shipped control is built to", () => {
-    // A control box IS the press target: the library reserves no extra inset, so
-    // 24px is the smallest height a control may have. `compact` `sm` sits
-    // exactly on it, which is why the shipped presets pass.
     expect(densityPresets.compact.controlHeight.sm).toBe(targetSize.minimum);
     expect(
       invalidNumbers(
@@ -792,9 +719,6 @@ describe("a control height a pointer cannot reach", () => {
 
 describe("a row height a pointer cannot reach", () => {
   it("reports a row under the pressable floor, because a dense row IS the box", () => {
-    // `packages/components/src/list.tsx` builds a `dense` row at exactly
-    // `density.rowHeight`; that row takes a `tabIndex`, a press and a hover
-    // wash, so the row height is a press target the library does not pad.
     expect(invalidNumbers(brand({ density: { rowHeight: 20 } }))).toEqual([
       { group: "density", path: "rowHeight", value: 20, rule: "pressable" },
     ]);
@@ -824,12 +748,6 @@ describe("a row height a pointer cannot reach", () => {
 });
 
 describe("a row's box fits the line it paints", () => {
-  // The row is a box of text as well as a press target: a tree row paints its
-  // label at `body`'s leading inside `height: theme.density.rowHeight`, a log
-  // viewer's line is `code`, and the tree's chevron sits in an `iconSize.md` slot.
-  // The pressable rule alone let a brand shave the row to the 24px floor while its
-  // line was taller, so the row clipped its own label with every control height
-  // still fitting and no report saying anything.
   const row = (
     overrides: ThemeOverrides,
   ): ReadonlyArray<readonly [string, string]> =>
@@ -848,9 +766,6 @@ describe("a row's box fits the line it paints", () => {
   });
 
   it("reports a row shorter than the glyph slot it leads with", () => {
-    // The tree's chevron slot is `width`/`height: theme.iconSize.md` inside the
-    // row, so a 26px glyph in a 24px row overflows it while every control box
-    // (28/32/36) still contains the glyph.
     expect(
       row({ density: { rowHeight: 24 }, iconSize: { md: 26, lg: 28, xl: 30 } }),
     ).toEqual([["rowHeight", "fits"]]);
@@ -880,8 +795,6 @@ describe("a row's box fits the line it paints", () => {
   });
 
   it("reports a row under the floor once, as the pressable one", () => {
-    // A row that cannot be pressed at all is the height rule's finding: the
-    // number that has to change is the same one the fit would name.
     expect(
       row({
         density: { rowHeight: 20 },
@@ -917,18 +830,13 @@ describe("a row's box fits the line it paints", () => {
       "utf8",
     );
 
-    // A carrier the painters stop painting is a ceiling the report would invent.
     expect(tree).toContain('textStyle(theme, "body")');
-    // The row's box is the density scale's, read directly or through the
-    // primitives' paint-side `rowHeightOf` seam, which answers the same number
-    // and the library's preset for a theme a store gave back without the group.
+
     expect(
       tree.includes("height: height ?? theme.density.rowHeight") ||
         tree.includes("height ?? rowHeightOf(theme)"),
     ).toBe(true);
-    // The chevron's slot is the icon scale's, read directly or through the
-    // primitives' paint-side `iconSideOf` seam, which answers the same step and
-    // the library's for a theme a store gave back without the group.
+
     expect(
       tree.includes("width: theme.iconSize.md") ||
         tree.includes('width: iconSideOf(theme, "md")'),
@@ -951,8 +859,6 @@ describe("a row's box fits the line it paints", () => {
 
 describe("a control's box fits the text it carries", () => {
   it("reports the size whose box is shorter than its body text", () => {
-    // `compact` is 24/28/32 and a control lays its value at `body`'s leading, so
-    // a 26px leading outgrows only the smallest box.
     expect(
       invalidNumbers(
         brand({
@@ -974,8 +880,6 @@ describe("a control's box fits the text it carries", () => {
   });
 
   it("measures the label a button paints as well as the value a field does", () => {
-    // A button, toggle and select trigger lay their text at `label`'s leading;
-    // a field at `body`'s. The taller of the two is what the box must contain.
     expect(
       invalidNumbers(
         brand({
@@ -1008,8 +912,6 @@ describe("a control's box fits the text it carries", () => {
   });
 
   it("reports a shrunken box once, as the pressable floor", () => {
-    // A box under 24px is already a target a reader cannot hit; naming the fit
-    // as well would count one shrunken control as two defects.
     expect(
       invalidNumbers(
         brand({
@@ -1077,9 +979,6 @@ describe("a control's box fits the text it carries", () => {
 
 describe("a control's box fits the icon it draws", () => {
   it("reports the size whose box is shorter than the glyph a control carries", () => {
-    // An `Icon` defaults to `md` and an `IconButton` is a square at its control
-    // height, so a 26px glyph in `compact`'s 24px `sm` control overflows the
-    // action. Every other number is the library's.
     expect(invalidNumbers(grownIconTheme)).toEqual([
       {
         group: "density",
@@ -1091,9 +990,6 @@ describe("a control's box fits the icon it draws", () => {
   });
 
   it("reads the icon step a control draws, not the scale's largest step", () => {
-    // `lg` and `xl` belong to toolbars, navigation and empty states rather than
-    // to the glyph in an action, so a 30px `xl` inside the same 24px control is
-    // not the failure — the `md` the control paints is.
     const wide = brand({ density: "compact", iconSize: { xl: 30 } });
     expect(invalidNumbers(wide)).toEqual([]);
     const glyph = brand({ density: "compact", iconSize: { md: 26, lg: 28 } });
@@ -1146,9 +1042,6 @@ describe("a control's box fits the icon it draws", () => {
   });
 
   it("holds every shipped preset above the glyph a control draws", () => {
-    // The shipped `md` is 16px against a 24px smallest control, so the icon half
-    // of the rule is satisfied by the library's own scale — and the sweep keeps
-    // a future icon step from quietly passing the box.
     const squashed = densityNames.filter((name) =>
       Object.values(densityPresets[name].controlHeight).some(
         (height) => height < iconSize.md,
@@ -1161,8 +1054,6 @@ describe("a control's box fits the icon it draws", () => {
 
 describe("the rule is precise", () => {
   it("allows the zero and negative lengths a design can use", () => {
-    // `radius.none` and a hairline divider are zero by design; a shadow may be
-    // offset up and in — a positive-only rule would report every shipped theme.
     expect(
       invalidNumbers(
         brand({
@@ -1191,9 +1082,6 @@ describe("the rule is precise", () => {
   });
 
   it("reports a size that reached the theme from a value that did not parse", () => {
-    // The real source of a non-finite token is arithmetic on input — a scale
-    // factor read from a settings file, a `parseFloat` of "auto" — not a literal
-    // `NaN` typed into a theme.
     expect(
       invalidNumbers(brand({ spacing: { md: Number.parseFloat("auto") } })),
     ).toEqual([
@@ -1203,12 +1091,6 @@ describe("the rule is precise", () => {
 });
 
 describe("the focus ring's width paints", () => {
-  // A brand that states "no heavy lines" by zeroing `borderWidth.strong` keeps
-  // every colour report clean — the `ring` role is still readable — while the
-  // outline it colours is zero pixels wide and the unconditional ring's shadow
-  // has neither spread nor blur. The keyboard focus cue is then invisible, so
-  // the strong border is the one width that has to paint; the decorative
-  // divider may still be zero.
   const invisibleRing = brand({ borderWidth: { strong: 0 } });
 
   it("reports a strong border a focus ring cannot draw", () => {
@@ -1251,12 +1133,6 @@ describe("the focus ring's width paints", () => {
 });
 
 describe("a theme that lost a type role", () => {
-  // The bug this guards: `invalidNumbers` is documented as walking the steps a
-  // theme carries — "says nothing about one that is not there" — and two pair
-  // readers instead read the role directly. A stored theme that predates a role
-  // (the one way a complete theme becomes incomplete) threw
-  // `TypeError: Cannot read properties of undefined (reading 'fontWeight')` from
-  // the emphasis pair, and `(reading 'lineHeight')` from the control fit.
   const withoutTypeRole = (role: TextRole) => {
     const { [role]: _gone, ...typography } = lightTheme.typography;
     return { ...lightTheme, typography };
@@ -1269,8 +1145,6 @@ describe("a theme that lost a type role", () => {
   });
 
   it("still reports the numbers the theme does carry", () => {
-    // The absent role suppresses only its own pair; a shortened control is a
-    // report of its own and stays one.
     const shortened = brand({ density: { controlHeight: { sm: 20 } } });
     const { label: _gone, ...typography } = shortened.typography;
 
@@ -1285,8 +1159,6 @@ describe("a theme that lost a type role", () => {
   });
 
   it("names the absent role as the gate's refusal", () => {
-    // The reports cannot describe an absence, so the gate refuses it up front —
-    // the report's silence is only correct beside that refusal.
     expect(() => auditTheme(withoutTypeRole("bodyStrong"))).toThrow(
       "`typography.bodyStrong` is missing",
     );
@@ -1303,19 +1175,6 @@ describe("a theme that lost a type role", () => {
 });
 
 describe("a theme that lost a whole numeric group", () => {
-  // The bug this guards: `invalidNumbers` walks the steps of every numeric
-  // group, and a stored theme that predates a group — the same way one predates
-  // a role or a step — gives it no object to walk. The report threw
-  // `TypeError: Cannot convert undefined or null to object` (and
-  // `Cannot read properties of undefined (reading 'controlHeight')` for the two
-  // grouped scales), naming neither the group nor the release it came from,
-  // while every sister report describes an absent group it cannot measure and
-  // the catalogue promises a stored theme never reaches a `TypeError`. The walk
-  // now makes the gate's own refusal, naming the group once and saying what to
-  // do with it.
-  //
-  // The group list is derived from a theme that carries nothing, so a group
-  // added to the package is covered without a second list.
   const lost = missingTokens({}).filter(({ kind }) => kind === "group");
 
   const without = (group: (typeof lost)[number]["group"]) =>
@@ -1327,7 +1186,7 @@ describe("a theme that lost a whole numeric group", () => {
       expect(() => invalidNumbers(without(group)), group).toThrow(
         `a theme must carry every numeric group: \`${group}\` is missing`,
       );
-      // The direction the message is *not*: the runtime's own TypeError.
+
       expect(() => invalidNumbers(without(group)), group).not.toThrow(
         TypeError,
       );
@@ -1335,7 +1194,6 @@ describe("a theme that lost a whole numeric group", () => {
   });
 
   it("reads a nulled group as the group it lost", () => {
-    // JSON has no `undefined`: a store keeps the key and writes `null`.
     const nulled = { ...lightTheme, density: null } as unknown as Theme;
 
     expect(() => invalidNumbers(nulled)).toThrow(
@@ -1364,16 +1222,6 @@ describe("a theme that lost a whole numeric group", () => {
 });
 
 describe("a control-size scale the theme does not carry", () => {
-  // The bug this guards: `density` is not one scale but a record of two —
-  // `controlHeight` and `controlPaddingX` — and the report read them straight
-  // off the group (`density.controlHeight[size]`,
-  // `Object.entries(density.controlPaddingX)`), so a stored theme whose density
-  // record lost one — JSON writes `null` where a theme never carried it, a
-  // hand-edited theme drops the key, an export writes a string where the record
-  // belongs — threw `TypeError: Cannot read properties of undefined (reading
-  // 'sm')` and `Cannot convert undefined or null to object` out of the report.
-  // Every other scale walks only the steps a theme carries and leaves the
-  // absence to the gate's named refusal (`missingTokens`); these two did not.
   const lostScale = (
     metric: "controlHeight" | "controlPaddingX",
     shape: "dropped" | "nulled" | "string",
@@ -1395,7 +1243,7 @@ describe("a control-size scale the theme does not carry", () => {
         const stored = lostScale(metric, shape);
 
         expect(invalidNumbers(stored), `${metric} ${shape}`).toEqual([]);
-        // The direction the report is *not*: the runtime's own TypeError.
+
         expect(() => invalidNumbers(stored), `${metric} ${shape}`).not.toThrow(
           TypeError,
         );
@@ -1415,8 +1263,6 @@ describe("a control-size scale the theme does not carry", () => {
   });
 
   it("still reports the scale the theme carries beside the one it lost", () => {
-    // The skip is per scale, not per group: a control height under the press
-    // floor is still the report it was while the padding scale is gone.
     const stored = {
       ...lostScale("controlPaddingX", "dropped"),
       density: {
@@ -1437,9 +1283,6 @@ describe("a control-size scale the theme does not carry", () => {
   });
 
   it("leaves an absent step inside a carried scale to the refusal too", () => {
-    // The same rule one rung down: the walk reports the steps a theme carries,
-    // so a dropped `md` is `missingTokens`' line and not a `finite` finding
-    // with no value to show.
     const stored = {
       ...lightTheme,
       density: {
@@ -1467,14 +1310,6 @@ describe("a control-size scale the theme does not carry", () => {
 });
 
 describe("a length a store wrote as something else", () => {
-  // The bug this guards: `inspectLengths` skipped every entry that was not a
-  // number — a guard written for the family names beside a type role, which
-  // never reach it — so a theme restored from storage, or pasted from a design
-  // tool that exports `"8"` rather than `8`, passed `auditTheme` with every gap
-  // and glyph the runtime drops, and `passed` read true. The length groups are
-  // the only ones the skip covered: a border width, a control height, a type
-  // size and a shadow number are read directly and were reported already.
-  /** A theme as storage hands it back: the type says complete, the value is not. */
   const stored = (overrides: Partial<Record<keyof Theme, unknown>>): Theme =>
     ({ ...lightTheme, ...overrides }) as Theme;
 
@@ -1505,7 +1340,6 @@ describe("a length a store wrote as something else", () => {
   it("fails the gate on the numbers alone", () => {
     const audit = auditTheme(written);
 
-    // No colour, shadow or contract can see a length's kind, so `passed` must.
     expect(audit.invalidRoles).toEqual([]);
     expect(audit.invalidShadows).toEqual([]);
     expect(audit.contrast).toEqual([]);
@@ -1525,9 +1359,6 @@ describe("a length a store wrote as something else", () => {
   });
 
   it("leaves an absent step to the refusal that names it", () => {
-    // A token a store dropped or nulled is missing, which the gate refuses by
-    // path before any report runs; the walk does not report the same absence a
-    // second time.
     const dropped = stored({
       spacing: { ...lightTheme.spacing, sm: undefined, lg: null },
     });
@@ -1543,7 +1374,6 @@ describe("a length a store wrote as something else", () => {
   });
 
   it("leaves a scale a brand wrote with numbers alone", () => {
-    // The counterweight: a zero radius and an alias are decisions, not defects.
     expect(invalidNumbers(brand({ radius: { md: 0 } }))).toEqual([]);
     expect(invalidNumbers(lightTheme)).toEqual([]);
   });
@@ -1559,7 +1389,6 @@ describe("a length a store wrote as something else", () => {
     const system = read("docs/design-system.md");
     const inventory = read(".agents/slop/COMPONENTS.md");
 
-    // Each surface states the rule the report now keeps, in its own terms.
     expect(page).toContain("A **value that is not a number**");
     expect(page).toContain('value: "8", rule: "finite"');
     expect(page).toContain("the value the store wrote");
@@ -1567,7 +1396,7 @@ describe("a length a store wrote as something else", () => {
       "reported under `finite` with the value the store wrote",
     );
     expect(inventory).toContain("the value as written");
-    // And none of them returns to the retracted skip.
+
     [page, system, inventory].forEach((document) => {
       expect(document).not.toContain("skips a value that is not a number");
     });
@@ -1581,7 +1410,7 @@ describe("the audit gates on the numbers", () => {
     expect(audit.invalidNumbers).toEqual([
       { group: "radius", path: "md", value: Number.NaN, rule: "nonNegative" },
     ]);
-    // None of the colour reports can see it, so `passed` must read this one.
+
     expect(audit.invalidRoles).toEqual([]);
     expect(audit.invalidShadows).toEqual([]);
     expect(audit.contrast).toEqual([]);
@@ -1597,10 +1426,6 @@ describe("the audit gates on the numbers", () => {
   });
 
   it("passes a brand that paints square corners on purpose", () => {
-    // Zero is a design decision, not a broken number: only a value the renderer
-    // cannot lay out is a failure. Every radius takes the same corner, so the
-    // ladder still holds its order — equal adjacent radii are a named alias, and
-    // radius is the one ladder that permits one.
     const square = brand({ radius: { sm: 0, md: 0, lg: 0, xl: 0 } });
 
     expect(auditTheme(square).invalidNumbers).toEqual([]);
@@ -1609,10 +1434,6 @@ describe("the audit gates on the numbers", () => {
   });
 
   it("reports a radius that inverts the ladder, where the number is fine", () => {
-    // Zero is layable, so the number report says nothing — and the step before
-    // it is sharper than the step after it, so `radius="md"` paints a sharper
-    // corner than `radius="sm"`. The gate reads the ladder as well as the
-    // numbers now, so the name that lies is named.
     const inverted = brand({ radius: { md: 0 } });
 
     expect(auditTheme(inverted).invalidNumbers).toEqual([]);

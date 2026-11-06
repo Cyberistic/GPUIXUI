@@ -1,13 +1,3 @@
-/**
- * The crop area's arithmetic — the bounds, the mask, the drag and the keyboard.
- *
- * The bug guarded: a crop restored from storage, or a drag past the picture's
- * edge, must never paint a hole outside the frame or narrower than the handle
- * that grabs it. Every edge keeps the frame's bound and the minimum side, and
- * the four bars are the hole's complement, so a mask that overlaps the hole or
- * leaves a strip of the picture bare fails here.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -53,9 +43,6 @@ describe("clampCrop", () => {
   });
 
   it("reads an absent rectangle as the origin and the floor", () => {
-    // The bug guarded: a record restored from storage that carried no crop read
-    // the rectangle's fields off `undefined` and threw out of the render,
-    // leaving the frame, its mask and its handles unpainted.
     const expected = { x: 0, y: 0, width: 24, height: 24 };
     expect(boxes(clampCrop(undefined, bounds))).toStrictEqual(expected);
     expect(boxes(clampCrop(null, bounds))).toStrictEqual(expected);
@@ -173,10 +160,6 @@ describe("cropGuides", () => {
   });
 
   it("keeps every guide inside a hole too narrow for a one-point line", () => {
-    // The bug guarded: a guide sits at the hole's third and is one point wide,
-    // so a hole narrower than three points pushed the box past the edge it
-    // divides — the invariant above, false at exactly the smallest hole a
-    // caller's `minSize` can admit.
     const sliver = new CropRect({ x: 10, y: 20, width: 2, height: 2 });
     expect(
       cropGuides(sliver).every(
@@ -219,9 +202,6 @@ describe("handleBox", () => {
   });
 
   it("holds a handle inside a frame the hole touches", () => {
-    // The bug guarded: a full-frame hole centred its handles on the frame's
-    // edges, so the clipping frame painted half of each box and the pointer
-    // could reach half of the target.
     const full = new CropRect({ x: 0, y: 0, width: 240, height: 160 });
     expect(boxes(handleBox(full, "nw", 10, bounds))).toStrictEqual({
       x: 0,
@@ -354,11 +334,6 @@ describe("aspect ratio", () => {
   });
 
   it("stops a locked drag at the frame, not by sliding the anchored corner", () => {
-    // The bug guarded: a ratio-locked resize took its width from the height the
-    // frame allowed, so a drag reaching one edge could ask for more width than
-    // the anchored corner had room for. The generic clamps then moved the whole
-    // hole to fit — the corner the reader was not dragging slid across the
-    // picture, and the crop jumped.
     const wide = new CropRect({ x: 100, y: 100, width: 100, height: 50 });
     expect(boxes(resizeCrop(wide, "se", 0, 1000, frame, 24, 2))).toStrictEqual({
       x: 100,
@@ -409,8 +384,6 @@ describe("aspect ratio", () => {
   });
 
   it("reshapes a stored hole inside a frame its origin leaves no room in", () => {
-    // A stored rectangle near an edge has no drag to anchor; shaping it to the
-    // ratio's minimum must move it inside the frame, not paint it past the edge.
     const narrow = { width: 100, height: 400 };
     const stored = new CropRect({ x: 76, y: 0, width: 24, height: 24 });
     expect(boxes(clampCrop(stored, narrow, 24, 4))).toStrictEqual({
@@ -433,8 +406,6 @@ describe("moveCrop", () => {
   });
 
   it("keeps a hole the caller allowed below the default minimum", () => {
-    // A caller may set `minSize` below the 24-point default; a move must not
-    // grow the hole to it — both pointer paths share this translation.
     const tiny = new CropRect({ x: 10, y: 10, width: 10, height: 10 });
     expect(boxes(moveCrop(tiny, 5, 5, bounds, 8))).toStrictEqual({
       x: 15,
@@ -590,9 +561,6 @@ describe("sameCrop", () => {
 
 describe("isPrimaryPress", () => {
   it("begins a gesture on the primary press alone", () => {
-    // The bug guarded: a right press on the picture began a move, so a
-    // context-menu press dragged the hole and, when its release landed
-    // outside the frame, stayed armed for the next plain hover.
     expect(isPrimaryPress(0)).toBe(true);
     expect(isPrimaryPress(undefined)).toBe(true);
     expect(isPrimaryPress(null)).toBe(true);

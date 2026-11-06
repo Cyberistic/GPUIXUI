@@ -1,15 +1,3 @@
-/**
- * `scroll-container` — wheel scrolling and programmatic scroll.
- *
- * `overflow: "scroll"` makes a container natively scrollable. The scenario
- * checks three things a component library depends on: the wheel actually moves
- * the offset, `onScroll` fires so an app can react, and a ref's
- * `scrollIntoView()` moves content without a gesture.
- *
- * The wheel's `deltaY` is **negative to scroll down** (GPUI's convention, the
- * opposite of the DOM `WheelEvent`): a positive delta asks to scroll past the
- * top and clamps at `0`. Measured on this host — see plan `140` §4.
- */
 import { useRef, useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";

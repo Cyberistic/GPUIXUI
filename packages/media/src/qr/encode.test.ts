@@ -1,22 +1,3 @@
-/**
- * The QR encoder, held to an independent implementation and to the arithmetic
- * the standard defines.
- *
- * The three full symbols in `QR_REFERENCES` were produced by `python-qrcode`
- * (a separate implementation, byte mode, `box_size=1`, `border=0`) and the mask
- * that painted each one is read from its own format field, so this suite
- * compares every module of a version-1, a version-6 and a version-10 symbol —
- * data, EC codewords, interleaving, mask application, alignment patterns,
- * format bits and the version field. A wrong block split, a mis-masked cell or
- * a misplaced format bit fails it module by module.
- *
- * The bug guarded: the encoder existed only in the playground's probe, which
- * painted a synthetic matrix. Every value now encodes to a scannable symbol,
- * and one that does not fit is refused with its capacity rather than truncated.
- * A quiet zone is a stored preference as often as a literal, so an unreadable
- * count must read as the default rather than reach the viewBox as `NaN`.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -266,14 +247,12 @@ const rowsOf = (symbol: QrSymbol): ReadonlyArray<string> =>
     ),
   );
 
-/** A symbol result, narrowed — the assertion fails before the cast can lie. */
 const symbolOf = (result: QrEncoding): QrSymbol => {
   expect(result).toBeInstanceOf(QrSymbol);
   if (!(result instanceof QrSymbol)) return expect.fail("no symbol");
   return result;
 };
 
-/** An overflow result, narrowed. */
 const overflowOf = (result: QrEncoding): QrOverflow => {
   expect(result).toBeInstanceOf(QrOverflow);
   if (!(result instanceof QrOverflow)) return expect.fail("no overflow");
@@ -393,8 +372,6 @@ describe("encodeQr", () => {
   });
 
   it("reads a stored level the union does not name as the default", () => {
-    // The bug guarded: a level restored from storage indexed the block table
-    // with `undefined`, so the render threw instead of painting a symbol.
     const stored = levelOf("Q");
     expect(stored).toBe("Q");
     expect(levelOf("X")).toBe("M");
@@ -408,9 +385,6 @@ describe("encodeQr", () => {
   });
 
   it("reads a value that is not text as nothing, never the word null", () => {
-    // The bug guarded: `TextEncoder` stringifies whatever it is handed, so a
-    // value restored from storage as `null` encoded the four bytes of "null" —
-    // a symbol every scanner reads back as a payload the record never carried.
     const stored = encodeQr(null as unknown as string, { level: "M" });
     const empty = encodeQr("", { level: "M" });
     if (!(stored instanceof QrSymbol)) return expect.fail("no symbol");
@@ -542,9 +516,6 @@ describe("qrPenalty", () => {
   });
 
   it("charges the finder-shaped run when the quiet zone follows it", () => {
-    // The four light modules a look-alike needs may cross the symbol's edge:
-    // the quiet zone is as light as the modules inside it, so the pattern at
-    // column 3 has its four after it (one cell plus three outside).
     const rows = Arr.makeBy(11, (row) =>
       row === 3 ? "00010111010" : "00000000000",
     );
@@ -576,8 +547,6 @@ describe("qrPlacement", () => {
   });
 
   it("keeps a side smaller than the module grid inside the asked box", () => {
-    // The bug guarded: a floor of one point per module painted a 29-point
-    // symbol into a 20-point reserved box, so a thumbnail grid overflowed.
     const symbol = encodeQr("place", { level: "L" });
     if (!(symbol instanceof QrSymbol)) return expect.fail("no symbol");
     const tiny = qrPlacement(symbol, 20);

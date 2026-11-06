@@ -1,39 +1,14 @@
-/**
- * The related components a page points at.
- *
- * `.agents/slop/MISSION.md` asks every component page for its related components. Neither
- * frame writes that list itself — a curated page would have to retype it, and a
- * package page is Markdown the site mounts — so the site answers it here and
- * `RelatedStrip` prints the answer at the end of both.
- *
- * A family is one layer's working set, not a taxonomy of the whole library —
- * a reader on the Ripple button page is choosing between the other actions,
- * and a reader on the Table sorting page is choosing between the other table
- * surfaces. Every page the site serves is either in a family or argued as a
- * solo in {@link soloPages}, which `related.test.ts` holds in both directions:
- * a page that moves to another family is a link that changes, and a new page
- * that lands nowhere fails the suite instead of shipping without siblings.
- *
- * A curated page may stand in a family beside the package pages: its URL is the
- * one the site serves, so that is what the strip links.
- */
-
-/** One link the strip prints. */
 export interface RelatedPage {
-  /** The page's own frontmatter title. */
   readonly label: string;
-  /** The mounted URL. */
+
   readonly href: string;
 }
 
-/** A working set of pages a reader picks between. */
 export interface RelatedFamily {
-  /** What the set is, printed after "Related". */
   readonly name: string;
   readonly pages: ReadonlyArray<RelatedPage>;
 }
 
-/** A page with no sibling, and why. */
 export interface SoloPage {
   readonly href: string;
   readonly reason: string;
@@ -360,12 +335,6 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
   },
 ];
 
-/**
- * The pages with no sibling to offer, and the reason.
- *
- * The theme provider and the icon set are one-offs in their own layer: a
- * provider is not a component, and the icon set is a single page.
- */
 export const soloPages: ReadonlyArray<SoloPage> = [
   {
     href: "/primitives/theme-provider",
@@ -377,7 +346,6 @@ export const soloPages: ReadonlyArray<SoloPage> = [
   },
 ];
 
-/** The family a page belongs to, with the page itself left out of the links. */
 export const relatedFor = (
   url: string,
 ):

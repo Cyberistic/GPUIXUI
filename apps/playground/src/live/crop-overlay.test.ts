@@ -1,16 +1,3 @@
-/**
- * Holds the `crop-overlay` fixture, the probe that paints it, and the numbers
- * the README teaches.
- *
- * The bug this guards: Tier 5's *Crop area* row said the paint *under* a crop
- * was measured and the crop itself was not — the mask, the press it must not
- * take and the handle's clamp were claims. The probe settles all three in a
- * window; this suite keeps the arithmetic it paints and the prose a reader
- * plans from pointing at the same numbers.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -62,7 +49,6 @@ describe("the mask's arithmetic", () => {
       { side: "left", box: { x: 0, y: 40, width: 60, height: 70 } },
     ]);
 
-    // The four bars plus the hole are the bitmap, with no overlap and no gap.
     const covered = Arr.reduce(
       bars,
       CROP_OPENING.width * CROP_OPENING.height,
@@ -107,8 +93,6 @@ describe("the mask's arithmetic", () => {
   });
 
   it("composites the veil over the bitmap rather than over the page", () => {
-    // Two premises: the veil is translucent, and the pixel it leaves is that
-    // veil over the bitmap — a bar painted under the picture leaves the bitmap.
     expect(alphaOf(cropMaskColour(theme))).toBeLessThan(1);
     expect(cropMaskPaint(theme)).toBe(
       blend(
@@ -118,7 +102,7 @@ describe("the mask's arithmetic", () => {
       ),
     );
     expect(cropMaskPaint(theme)).not.toBe(CROP_IMAGE_HEX);
-    // The point the probe samples outside the opening is covered at rest.
+
     const bars = cropBars(CROP_OPENING);
     expect(
       Arr.some(
@@ -130,7 +114,7 @@ describe("the mask's arithmetic", () => {
           CROP_OUTSIDE_POINT.y < bar.box.y + bar.box.height,
       ),
     ).toBe(true);
-    // …and inside the hole the second drag leaves.
+
     const largest = draggedCrop(CROP_OPENING, 1000, 1000);
     expect(
       CROP_OUTSIDE_POINT.x < largest.x + largest.width &&
@@ -177,8 +161,7 @@ describe("the handle's clamp", () => {
       width: CROP_MIN,
       height: CROP_MIN,
     });
-    // The second drag starts where the first left the hole, not at the
-    // opening, so a caller applies the delta to the crop its press saw.
+
     const smallest = draggedCrop(CROP_OPENING, -1000, -1000);
     expect(draggedCrop(smallest, 1000, 1000)).toEqual({
       x: smallest.x,
@@ -228,8 +211,6 @@ describe("the probe and the registry", () => {
   });
 
   it("drives the mask, the clamp and the paint through the fixture", () => {
-    // A probe that re-implemented the arithmetic could pass while the README
-    // taught the fixture's numbers, so the composition is the claim.
     expect(probe).toContain("cropBars(crop)");
     expect(probe).toContain("draggedCrop(");
     expect(probe).toContain("cropMaskColour(theme)");
@@ -240,14 +221,10 @@ describe("the probe and the registry", () => {
   });
 
   it("declares the no-press rule the negative control measured", () => {
-    // Without this rule a bar is the hit test's answer and the picture beneath
-    // it is unreachable — the measured control this suite exists to keep.
     expect(probe).toContain('pointerEvents: "none"');
   });
 
   it("counts the checks the probe can assert", () => {
-    // The printed count is the run's own, so it cannot be derived statically;
-    // the assertion sites are the floor a hollow probe cannot fall below.
     const steps = probe.slice(probe.indexOf("export const cropOverlaySteps"));
     const sites = Arr.length(
       Arr.fromIterable(steps.matchAll(/ctx\.expect\w+\(/g)),
@@ -267,8 +244,7 @@ describe("the README", () => {
 
   it("prints the values the fixture computes", () => {
     const flat = readme.replace(/\s+/g, " ");
-    // The composite, the opening's bars and both clamped holes, derived here
-    // so a fixture edit cannot leave the page on the previous numbers.
+
     expect(flat).toContain(cropMaskPaint(theme));
     expect(flat).toContain(CROP_IMAGE_HEX);
     expect(flat).toContain(cropPrefix(draggedCrop(CROP_OPENING, -1000, -1000)));
@@ -278,8 +254,6 @@ describe("the README", () => {
   });
 
   it("states the press routing the window measured", () => {
-    // The measured fact: a press on the bitmap reports on the frame, never on
-    // the image, so a picture-pan handler belongs on the frame.
     const flat = readme.replace(/\s+/g, " ");
     expect(flat).toContain("frame=1 image=0");
     expect(flat).toContain("frame=2 image=0");
@@ -288,9 +262,6 @@ describe("the README", () => {
   });
 
   it("names the limits it did not measure rather than implying them", () => {
-    // A crop that shrinks from the top-left, a rotation and a keyboard path are
-    // not measured here; the page must say so instead of leaving a reader to
-    // infer them from the picture.
     const flat = readme.replace(/\s+/g, " ");
     expect(flat).toContain("a rotate gesture");
     expect(flat).toContain("no keyboard path for the handle");

@@ -1,34 +1,13 @@
-/**
- * Holds the colour contract to its own scope: every role a theme carries is
- * measured by at least one contract.
- *
- * The bug this guards: `disabled`/`disabledForeground` and `scrollbar` were
- * shipped, documented and painted by components, and **no** contract measured
- * any of them — a palette edit could have made the unavailable label or the
- * scrollbar thumb invisible and the whole suite would have stayed green. The
- * role list is the inventory of what a theme carries, so a role added to
- * `ThemeColors` fails here until it is measured somewhere (or named in
- * `measuredElsewhere` with the contract that covers it).
- */
-
 import { describe, expect, it } from "vitest";
 import { colorRoles, type ThemeColors } from "./color.js";
 import { contrastPairs } from "./contrast.js";
 import { decorativeSurfaces } from "./decorative.js";
 import { selectionPairs } from "./selection.js";
 
-/**
- * The role a dedicated contract measures instead of a pair or a surface.
- *
- * A selection wash's effect is not a flat colour on a surface — it is composited
- * behind the text the reader is reading — so the pair tables would overstate
- * what a reader sees, and `selectionFailures` measures both of its jobs.
- */
 const measuredElsewhere = {
   selection: "selectionFailures",
 } as const satisfies Partial<Record<keyof ThemeColors, string>>;
 
-/** Every role the pair and surface tables mention, on either side. */
 const measuredByTables = new Set<string>([
   ...contrastPairs.flatMap(({ foreground, background }) => [
     foreground,
@@ -51,8 +30,6 @@ describe("colour coverage", () => {
   });
 
   it("drops an exemption once the tables measure the role", () => {
-    // An exemption that stopped being needed is a stale claim: the role is
-    // measured twice and the "instead" sends a reader to the wrong contract.
     const stale = Object.keys(measuredElsewhere).filter((role) =>
       measuredByTables.has(role),
     );

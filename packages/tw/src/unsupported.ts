@@ -1,15 +1,3 @@
-/**
- * Classes the native renderer cannot carry, grouped by the reason.
- *
- * `TwResult.unsupported` spells each class out; this table is the audit trail
- * behind it. `coverage.test.ts` refuses an upstream class that is neither
- * resolved nor named here, so a new shadcn recipe cannot silently lose a rule.
- *
- * `PREFIX_GROUPS` names whole utility families (`rotate-*`, `col-span-*`, …)
- * that have no `StyleDesc` value at all, so a class in one never falls through
- * to a generic "unknown class".
- */
-
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
@@ -133,7 +121,6 @@ const GROUPS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
   ],
 ];
 
-/** Family prefixes with no `StyleDesc` value, mapped to their reason. */
 const PREFIX_GROUPS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
   [NO_TRANSFORM, ["transform", "rotate-", "scale-", "translate-", "skew-"]],
   [NO_GRID_SPAN, ["col-span-", "row-span-"]],
@@ -146,13 +133,11 @@ const BY_TOKEN = HashMap.fromIterable(
   ),
 );
 
-/** Every class with a recorded reason, for the coverage audit. */
 export const unsupportedClasses: ReadonlyArray<string> = Arr.flatMap(
   GROUPS,
   ([, tokens]) => tokens,
 );
 
-/** The reason table, for a registry that wants to extend it. */
 export const unsupportedReasons: Readonly<Record<string, string>> =
   R.fromEntries(
     Arr.flatMap(GROUPS, ([reason, tokens]) =>
@@ -160,7 +145,6 @@ export const unsupportedReasons: Readonly<Record<string, string>> =
     ),
   );
 
-/** Why a class in a transform/grid family cannot resolve, or undefined. */
 export const prefixReason = (className: string): string | undefined =>
   Option.match(
     Arr.findFirst(PREFIX_GROUPS, ([, prefixes]) =>
@@ -172,7 +156,6 @@ export const prefixReason = (className: string): string | undefined =>
     },
   );
 
-/** Why `className` cannot become a `StyleDesc`, or undefined when it can. */
 export const unsupportedReason = (className: string): string | undefined => {
   const exact = HashMap.get(BY_TOKEN, className);
   return Option.isSome(exact) ? exact.value : prefixReason(className);

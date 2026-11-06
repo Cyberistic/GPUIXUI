@@ -1,13 +1,3 @@
-/**
- * The three answers a theme toggler gives.
- *
- * The bug these guard: a glyph that describes the current mode rather than the
- * press (a moon in a dark application, which tells a reader nothing about what
- * pressing it does), a name that disagrees with the glyph, and a caller's copy
- * being replaced by the shipped default when it passes an empty string on
- * purpose.
- */
-
 import { describe, expect, it } from "vitest";
 import { toggleIcon, toggleLabel, toggleLabels, toggledMode } from "./logic.js";
 

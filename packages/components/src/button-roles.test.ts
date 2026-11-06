@@ -1,17 +1,3 @@
-/**
- * The label role of this package's action vocabulary.
- *
- * `actionOnColor` tints a glyph, a busy mark or an effect's wash painted over an
- * action, so it has to be the role the action's own label paints. The adapter
- * used to answer with its own `Match` over `theme.colors.*` — a second role
- * table beside the primitives' variant table — so a variant whose label moved
- * there would keep the retired colour here, and a chevron on a filled control
- * would quietly lose its contrast. It reads the primitive's table now.
- *
- * `node:fs` is a test-time repository read, the boundary `button-edge.test.ts`
- * and `inventory.test.ts` already use.
- */
-
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
@@ -29,7 +15,6 @@ const adapter = (): string =>
     "utf8",
   );
 
-/** This package's look names and the primitive's variant each stands for. */
 const MAPPED: ReadonlyArray<readonly [ButtonVariant, PrimitiveVariant]> = [
   ["primary", "primary"],
   ["secondary", "secondary"],
@@ -43,7 +28,6 @@ const THEMES: ReadonlyArray<readonly [string, Theme]> = [
   ["dark", darkTheme],
 ];
 
-/** Every look that answers with a different role than the primitive's. */
 const mismatches = (): ReadonlyArray<string> =>
   Arr.flatMap(THEMES, ([themeName, theme]) =>
     Arr.flatMap(MAPPED, ([look, variant]) => {
@@ -61,9 +45,6 @@ describe("the action's label role", () => {
   });
 
   it("paints a stored look name the table does not carry as the documented default", () => {
-    // A variant is a stored choice as often as a literal, so a name this release
-    // does not ship reaches the adapter at runtime. The table read threw a
-    // `TypeError` before; the documented default is `secondary`.
     Arr.forEach(THEMES, ([themeName, theme]) => {
       // @ts-expect-error — a variant a store wrote, not the union the props declare.
       const painted = actionOnColor(theme, "tertiary");

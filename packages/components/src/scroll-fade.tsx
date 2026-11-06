@@ -1,24 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * ScrollFade: a scroll box that fades its top and bottom edges while there is
- * more content beyond them.
- *
- * The runtime paints a two-stop `linear-gradient` background, so the hint is a
- * real surface: an opaque strip on the edge dissolving into the content, painted
- * over the scroller with `pointerEvents: "none"` so presses still reach the
- * rows. The top strip appears once the reader has moved away from the start and
- * the bottom one disappears at the end; a box whose content fits paints neither,
- * because a fade over nothing is a lie about more to read.
- *
- * The gradient's opaque stop is the caller's surface — the theme's `background`
- * role by default. A scroller on a card passes `color={theme.colors.card}`, or
- * the fade would settle into a colour the surface does not have.
- *
- * This is state, not motion: the edges toggle with the offset in the frame it
- * changes, so `MotionProvider` has nothing to reduce and the reading never waits
- * on a tween. The measurement lives in `internal/scroll-surface.tsx`.
- */
-
 import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
@@ -32,27 +12,22 @@ import {
   type ScrollMetrics,
 } from "./scroll/metrics.js";
 
-/** {@link ScrollFade} props. */
 export interface ScrollFadeProps {
   readonly children?: ReactNode;
-  /** The scroller's locator, for a probe or an automation host. */
+
   readonly testId?: string;
-  /** The scroll region's accessible name. Default: the primitives' "Scroll region". */
+
   readonly label?: string;
-  /**
-   * The colour a fading edge settles into — the surface behind the content.
-   * Defaults to the theme's `background` role.
-   */
+
   readonly color?: string;
-  /** How tall the fade is, in pixels. Default `32`. */
+
   readonly edgeSize?: number;
-  /** A Tailwind class string for the component's box, merged last. */
+
   readonly className?: string;
-  /** A style for the component's box. Give it a bounded height. */
+
   readonly style?: StyleDesc;
 }
 
-/** One edge strip, painted from the measured state. */
 const Edge = ({
   edge,
   size,
@@ -78,17 +53,9 @@ const Edge = ({
   />
 );
 
-/** Whether one edge owes a fade at this reading. */
 const fades = (edge: ScrollEdge, metrics: ScrollMetrics): boolean =>
   metrics.scrollable && (edge === "top" ? !metrics.atStart : !metrics.atEnd);
 
-/**
- * A scroll box whose overflowing edges fade into the surface.
- *
- * The content's own height is what decides whether an edge fades, so a list that
- * grows or shrinks while it is open repaints the hint without the caller doing
- * anything.
- */
 export const ScrollFade = ({
   children,
   color,
@@ -137,7 +104,6 @@ export const ScrollFade = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const scrollFadeMeta = {
   name: "Scroll fade",
   tier: 5,

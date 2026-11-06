@@ -27,8 +27,6 @@ describe("type scale", () => {
   });
 
   it("ships the four named weights", () => {
-    // A role's weight is a number (`FontWeight`), so this holds the *shipped*
-    // scale to the four steps the design chose rather than to the type.
     const weights: readonly FontWeight[] = [400, 500, 600, 700];
     roles.forEach((role) => {
       expect(weights, role).toContain(typography[role].fontWeight);

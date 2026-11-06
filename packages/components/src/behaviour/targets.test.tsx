@@ -1,12 +1,3 @@
-/**
- * The pressable-target floor for the icon-sized controls, in the real renderer.
- *
- * The bug this guards: a clear or remove control drawn as a 16–18px glyph was
- * also its own press box — under the 24px floor WCAG 2.2 SC 2.5.8 states and
- * every density's control height already meets. The suite measures the painted
- * box, so shrinking one back to its drawing fails by name.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { HotkeyRecorder } from "../hotkey-recorder.js";
@@ -29,7 +20,6 @@ const floor = {
   height: targetSize.minimum,
 } as const;
 
-/** The painted box of a chip's removal control, which carries no `testId`. */
 const removeBoxOf = (root: ComponentTestRoot, chipTestId: string) => {
   const chip = root.renderer.findByTestId(chipTestId);
   const id = chip?.children[1];
@@ -79,8 +69,6 @@ describe("pressable targets", () => {
   });
 
   it("does not shrink a control to its drawing", () => {
-    // The glyphs are 16px (tag/recorder) and 18px (search/time); a registered
-    // floor of 24 would be meaningless if the controls still measured those.
     expect(targetSize.minimum).toBeGreaterThan(18);
   });
 });

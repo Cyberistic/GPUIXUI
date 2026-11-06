@@ -1,17 +1,3 @@
-/**
- * A sortable column that arrived unnamed announced only its state.
- *
- * The bug this guards: `TableSortHeader` painted the caller's `label` and built
- * the control's name from it, so a blank label published the name
- * `", sortable"` — a reader heard the state and not which column it belonged
- * to. A label is content before it is a literal: an i18n table missing its row
- * answers `""`, and a saved column configuration can restore a header with no
- * words. Every other name in this package already reads a blank as the words it
- * documents (the filter field's, the advanced filter's field picker, the column
- * menu's), and the column's `field` is the stable identity the header sorts by,
- * so a blank label reads as that field in the paint and in the name.
- */
-
 import * as Option from "effect/Option";
 import { afterEach, describe, expect, it } from "vitest";
 import { decodeA11yTree, onlyRole, type A11yTree } from "../internal/a11y.js";
@@ -29,14 +15,12 @@ afterEach(() => {
   root = undefined;
 });
 
-/** Render one header in a real window and hand back its accessibility tree. */
 const treeOf = (node: Parameters<typeof renderData>[0]): A11yTree => {
   root = renderData(node);
   settle(root);
   return decodeA11yTree(root.renderer.getA11yTree());
 };
 
-/** The sort control's announced name. */
 const sortName = (tree: A11yTree): string =>
   tree.nodes[onlyRole(tree, "Button")]?.aria.label ?? "";
 
@@ -53,8 +37,7 @@ describe("a sortable header's announced name", () => {
     );
 
     expect(sortName(tree)).toBe("name, sortable");
-    // The visible label is the same reading: a header a reader can press has
-    // to show which column it sorts.
+
     expect(root?.renderer.getAllText()).toContain("name");
   });
 
@@ -107,8 +90,6 @@ describe("a sortable header's announced name", () => {
     );
     root.renderer.flush();
 
-    // The press reports through `onSort`; the controller hands the new state
-    // back on the next render, which is what a caller does.
     expect(sortName(decodeA11yTree(root.renderer.getA11yTree()))).toBe(
       "status, sortable",
     );
@@ -117,9 +98,6 @@ describe("a sortable header's announced name", () => {
 
 describe("a sortable header's label", () => {
   it("sits on the cell's own inset, not the ghost button's padding", () => {
-    // Guarded bug: the ghost button kept its `px-sm` inside a `TableHeaderCell`
-    // that already carries the column's padding, so every header label painted
-    // 8 px right of the cells it names.
     root = renderData(
       <TableSortHeader
         field="service"

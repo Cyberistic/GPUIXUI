@@ -1,18 +1,3 @@
-/**
- * The frozen-column grid's empty set, read back through the accessibility tree.
- *
- * The bug these guard: `FrozenTable` passed its `empty` node straight into the
- * data pane's `TableBody`, and when the caller named none the body's
- * no-children branch painted the loading skeleton — so a grid that said it had
- * no records showed three rows of placeholder bars, and a caller who did give a
- * message got a role-less box under the body's `rowgroup` (no row, no cell).
- *
- * The plain table and `VirtualTable` had both already closed this class; the
- * frozen composition kept it. Now the data pane paints a `TableEmpty` row
- * holding one cell, a string message paints as that cell's own text, and the
- * default is `No rows` — an empty set is not a load.
- */
-
 import type { ReactNode } from "react";
 import * as Arr from "effect/Array";
 import * as Result from "effect/Result";
@@ -38,7 +23,6 @@ interface NoRecord {
 
 const NO_ROWS: ReadonlyArray<NoRecord> = [];
 
-/** A zero-row frozen grid: headers paint, the data pane holds the empty state. */
 const emptyFrozen = (empty?: ReactNode) => (
   <FrozenTable
     height={200}
@@ -63,7 +47,6 @@ const emptyFrozen = (empty?: ReactNode) => (
   />
 );
 
-/** Render one empty frozen grid, read its tree and its words, release it. */
 const withEmptyFrozen = (
   empty: ReactNode,
   read: (tree: A11yTree, root: DataTestRoot) => void,
@@ -77,7 +60,6 @@ const withEmptyFrozen = (
   }
 };
 
-/** The words the tree announces under one node, in paint order. */
 const labelValues = (tree: A11yTree, id: string): ReadonlyArray<string> =>
   Arr.filterMap(withRole(tree, id, "Label"), (node) => {
     const value = tree.nodes[node]?.aria.value;
@@ -88,10 +70,10 @@ describe("the frozen-column grid over no rows", () => {
   it("paints an empty row and cell instead of the loading skeleton", () => {
     withEmptyFrozen(undefined, (tree, root) => {
       const table = onlyRole(tree, "Table");
-      // One body cell — the empty state's. The skeleton painted nine.
+
       expect(withRole(tree, table, "Cell")).toHaveLength(1);
       expect(root.renderer.getAllText()).toContain("No rows");
-      // The headers still paint: an empty set is not an empty grid.
+
       expect(root.renderer.getAllText()).toContain("Name");
       expect(root.renderer.getAllText()).toContain("Size");
       const cell = onlyRole(tree, "Cell");
@@ -115,10 +97,6 @@ describe("the frozen-column grid over no rows", () => {
   });
 
   it("reads a blank message as the documented No rows", () => {
-    // Bug guarded: the default was written `empty ?? DEFAULT_EMPTY_MESSAGE`,
-    // which only covers an **absent** prop. A locale table with a missing row
-    // answers `""`, so the empty grid painted a row and a cell with no words
-    // under them — it could not say why it was empty.
     Arr.forEach(["", "   "], (blank) =>
       withEmptyFrozen(blank, (tree, root) => {
         expect(root.renderer.getAllText()).toContain("No rows");

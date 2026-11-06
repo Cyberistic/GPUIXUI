@@ -1,17 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * IconButton example: a layer toolbar.
- *
- * The place icon-only actions belong — a row of tools above a canvas, where a
- * label would be noise for a sighted user and the only thing a screen reader
- * has to go on. Every action carries its name; Delete is unavailable until a
- * layer is picked, and Export shows the busy state a long write uses.
- *
- * Each glyph takes the role of the paint it sits on, because an `Icon` paints
- * one monochrome tint: a literal black would disappear on the dark theme and on
- * the filled destructive action.
- */
-
 import { useState, type ReactElement } from "react";
 import {
   Box,
@@ -24,7 +11,6 @@ import {
 } from "../src/index.js";
 import { Icon } from "@gpuixui/icons";
 
-/** A canvas toolbar: named icon actions, one unavailable, one busy. */
 export const IconButtonExample = (): ReactElement => {
   const theme = useTheme();
   const [selected, setSelected] = useState(true);
@@ -89,8 +75,7 @@ export const IconButtonExample = (): ReactElement => {
               }}
             />
           </Stack>
-          {/* A second axis on the same toolbar: an attached column is the
-              silhouette the group owns, exactly as it is for a row. */}
+          {}
           <ButtonGroup
             mode="attached"
             orientation="vertical"

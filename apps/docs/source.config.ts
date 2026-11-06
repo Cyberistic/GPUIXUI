@@ -2,13 +2,8 @@ import { defineConfig, defineDocs } from "fumadocs-mdx/config";
 import { codeOptions } from "./src/lib/code-theme";
 import { mermaidFence } from "./src/lib/remark-mermaid";
 
-// Docs content lives in apps/docs/content/docs/<page>.mdx.
 export const docs = defineDocs({ dir: "content/docs" });
 
-// The packages' own documentation, rendered as-is rather than copied:
-// `packages/<pkg>/docs/<name>.mdx` is the page a component ships with, so the
-// site and the package cannot disagree about it. `files` keeps a package's
-// README (human notes, no frontmatter) out of the collection.
 export const primitiveDocs = defineDocs({
   dir: "../../packages/primitives/docs",
   docs: { files: ["**/*.mdx"] },
@@ -29,14 +24,8 @@ export const dataDocs = defineDocs({
   docs: { files: ["**/*.mdx"] },
 });
 
-// Code blocks highlight with the library's own syntax palette, in both schemes,
-// rather than Fumadocs' bundled GitHub themes. `code-theme.test.ts` holds the
-// themes to `@gpuixui/tokens` and measures every role on the docs card surface.
 export default defineConfig({
   mdxOptions: {
-    // A `mermaid` fence becomes a diagram at compile time, so the prerendered
-    // page carries the SVG. Fumadocs paints fences through its own CodeBlock,
-    // which is why this is a remark plugin and not a `pre` override.
     remarkPlugins: [mermaidFence],
     rehypeCodeOptions: codeOptions,
   },

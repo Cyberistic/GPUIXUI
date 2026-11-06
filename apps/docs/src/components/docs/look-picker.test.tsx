@@ -5,20 +5,6 @@ import { describe, expect, it } from "vitest";
 import { lookLabel, lookOrder, type LookName } from "../../lib/platform";
 import { LookPickerBody } from "./look-picker";
 
-/**
- * The authored-look picker.
- *
- * The sidebar switch is the mission's four platform names and deliberately has
- * no look group; `/theming` carries this control instead. The markup guard
- * is the button is a real button with the look's own label and the pressed one
- * marked — a picker that painted a fixed style or offered a name the library
- * does not ship would still render.
- *
- * The press itself is React state in a hydrated browser, so the page's press is
- * measured by `apps/docs/scripts/platform-switch-probe.ts` and held by
- * `src/lib/platform-switch.test.ts`; this file holds the markup and the wiring.
- */
-
 const source = readFileSync(
   new URL("./look-picker.tsx", import.meta.url),
   "utf8",
@@ -39,7 +25,6 @@ interface DrawnButton {
   readonly pressed: boolean;
 }
 
-/** Every button the picker renders, attributes read independently of order. */
 const buttons = (markup: string): ReadonlyArray<DrawnButton> =>
   [...markup.matchAll(/<button\b([^>]*)>([^<]*)<\/button>/g)].map((match) => {
     const attributes = match[1] ?? "";
@@ -84,8 +69,6 @@ describe("the authored-look picker", () => {
   });
 
   it("wires the buttons to the provider's own look state", () => {
-    // The body is pure, so this is where a refactor that dropped the hook or
-    // passed a fixed look would be caught; the press path is the probe's.
     expect(source).toContain("usePlatform()");
     expect(source).toContain("onSelect={setLook}");
     expect(source).toContain("onClick={() => onSelect(name)}");

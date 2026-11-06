@@ -1,11 +1,3 @@
-/**
- * GPUix key names → DOM `KeyboardEvent.key` values, with no hotkey library.
- *
- * The bug these guard: GPUix reports `"enter"` and `"down"`, while hotkey
- * libraries and DOM-style code expect `"Enter"` and `"ArrowDown"`. Leaving the
- * translation to a library broke every named-key shortcut when
- * `@tanstack/hotkeys` 0.24 stopped doing it.
- */
 import { describe, expect, it } from "vitest";
 import { toDomKey } from "./key-names.js";
 

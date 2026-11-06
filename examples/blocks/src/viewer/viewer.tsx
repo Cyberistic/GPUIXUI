@@ -1,9 +1,3 @@
-/**
- * Viewer — a media viewer with a floating HUD (plan 729): albums in the source
- * list, a grid of the album, and the chosen photo full-size with a HUD bar of
- * ‹ › and the caption on the `hud` material. Space toggles the open photo, the
- * Quick Look habit; Escape closes it.
- */
 import { Button, Stack, Text } from "@gpuixui/primitives";
 import { SourceList, Window, WindowToolbar } from "@gpuixui/shell";
 import { materialFill, seriesColors, type PlatformName } from "@gpuixui/tokens";
@@ -15,12 +9,6 @@ import { useState } from "react";
 import { albums, photos } from "./data.js";
 import { neighbour } from "./logic.js";
 
-/**
- * A photo, drawn: a sky in the theme's series colour, a sun and two hills.
- * Original artwork from shapes — the recipe is the layout and the HUD, and a
- * consumer's pictures take the scene's place. Every shape is a picture, never
- * the press target.
- */
 const Scene = ({
   sky,
   variant,
@@ -229,8 +217,7 @@ export const Viewer = ({ platform }: { readonly platform?: PlatformName }) => {
                 width: 160,
               }}
             >
-              {/* The scene is a picture, not a target: the press is the
-                  thumbnail's, which a hit on the scene would not reach. */}
+              {}
               <div
                 style={{
                   borderRadius: theme.radius.md,

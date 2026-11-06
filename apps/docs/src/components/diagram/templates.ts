@@ -1,12 +1,3 @@
-/**
- * The playground's starting diagrams.
- *
- * One per shape Pele's parser handles: a flow, a sequence, a class, a state
- * machine, an entity model, a schedule, a share and a commit graph. The source
- * is ordinary Mermaid, so a reader can copy a template into any Mermaid surface
- * and keep editing; the playground only supplies the first line.
- */
-
 export interface DiagramTemplate {
   readonly id: string;
   readonly name: string;

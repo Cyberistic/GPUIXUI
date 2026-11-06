@@ -3,14 +3,6 @@ import { describe, expect, it } from "vitest";
 import { CollectionIndexBody } from "./collection-index";
 import type { CollectionIndexView } from "@/lib/collection-index";
 
-/**
- * The list a collection route renders.
- *
- * The page is generated, so nothing in MDX can hold it: a row that lost its
- * link, its sentence or its count would be a dead end in a section a reader
- * opened from the address bar. The fixture is the shape `/media` serves.
- */
-
 const media: CollectionIndexView = {
   url: "/media",
   title: "Media surfaces",
@@ -36,8 +28,7 @@ describe("the generated collection index", () => {
 
     expect(html).toContain("2 pages in @gpuixui/media");
     expect(html).toContain("generated from the package");
-    // One header row plus one row per page: a dropped or duplicated row is the
-    // failure, not a string the fixture also carries.
+
     expect([...html.matchAll(/<tr/g)]).toHaveLength(media.pages.length + 1);
     media.pages.forEach((page) => {
       expect(html).toContain(`href="${page.url}"`);

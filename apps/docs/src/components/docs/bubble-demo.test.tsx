@@ -3,17 +3,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { BubbleDemo } from "./bubble-demo";
 
-/**
- * The Bubble page's drawing, as it renders.
- *
- * The bug this guards: the page drew seven variant swatches stacked as pills
- * instead of a conversation, so a reader could not see the shape the component
- * is for — a right-aligned primary bubble, a left-aligned muted run with joined
- * corners, or a reaction pill crossing a surface's edge. The drawing is now
- * shadcn's demo conversation, and the variants it does not wear sit in a
- * smaller row beneath it.
- */
-
 const markup = renderToStaticMarkup(<BubbleDemo />);
 
 const css = readFileSync(

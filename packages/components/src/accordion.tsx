@@ -1,18 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Accordion: stacked sections where one — or several — can be open.
- *
- * The two modes are separate state shapes in `accordion/logic.ts`, not a list
- * plus a boolean, because single mode has to decide what "opening another"
- * means and multiple mode has to preserve the order sections were opened in.
- *
- * The indicator is a cross-fade (`chevron-down`/`chevron-up`), not a rotation:
- * `@gpuix/native@0.11.0` has no `transform` in `StyleDesc`, so both marks share
- * one slot, the incoming one rising two pixels as it fades in and the outgoing
- * one leaving upward. That is the 180° read a rotation would give, painted with
- * the `opacity` and `top` keys the runtime does have.
- */
-
 import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
@@ -79,17 +65,16 @@ import {
   useTheme,
 } from "./internal/theme.js";
 
-/** What an accordion part can rely on, regardless of mode. */
 interface AccordionContextValue {
   readonly isOpen: (item: string) => boolean;
   readonly toggle: (item: string) => void;
-  /** The last item in declaration order, so it draws no divider. */
+
   readonly lastValue: Option.Option<string>;
-  /** Register a header row; returns the unregister function. */
+
   readonly registerTrigger: (row: ValueItem) => () => void;
-  /** Move focus one enabled header from `value`. */
+
   readonly moveFrom: (value: string, delta: 1 | -1) => void;
-  /** Focus the first or last enabled header. */
+
   readonly jumpTo: (edge: "first" | "last") => void;
 }
 
@@ -105,7 +90,6 @@ const useAccordionContext = (): AccordionContextValue => {
   return value;
 };
 
-/** The section a trigger and its content belong to. */
 interface AccordionItemContextValue {
   readonly value: string;
   readonly disabled: boolean;
@@ -125,33 +109,29 @@ const useAccordionItemContext = (): AccordionItemContextValue => {
   return value;
 };
 
-/** Props every mode shares. */
 interface AccordionCommonProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** {@link Accordion} props: one of two genuinely different state shapes. */
 export type AccordionProps =
   | (AccordionCommonProps & {
       readonly type: "single";
-      /** Whether the open section may be closed again. Default `false`. */
+
       readonly collapsible?: boolean;
-      /** `null` means "nothing open"; `undefined` means uncontrolled. */
+
       readonly value?: string | null;
       readonly defaultValue?: string;
       readonly onValueChange?: (value: string | null) => void;
     })
   | (AccordionCommonProps & {
       readonly type: "multiple";
-      /** The open sections. `undefined` means uncontrolled; a stored value that is not a list means uncontrolled too. */
+
       readonly value?: ReadonlyArray<string>;
       readonly defaultValue?: ReadonlyArray<string>;
       readonly onValueChange?: (value: ReadonlyArray<string>) => void;
     });
 
-/** The state the current props describe. */
 const singleState = (
   value: string | null | undefined,
   collapsible: boolean | undefined,
@@ -164,7 +144,6 @@ const singleState = (
         collapsible: collapsible ?? false,
       });
 
-/** The frame every mode shares: the trigger registry, the divider order and the box. */
 const AccordionFrame = ({
   state,
   onToggle,
@@ -304,9 +283,7 @@ const MultipleAccordion = ({
   const [state, setState] = useState<AccordionState>(() =>
     initial({ type: "multiple", defaultValue }),
   );
-  // A workspace saves which sections are open, and a store writes `null` where
-  // it carried none: the saved set is read at the boundary, and its absence is
-  // the uncontrolled accordion `undefined` already means.
+
   const controlled = useMemo(() => openSectionsOf(value), [value]);
   const current = Option.match(controlled, {
     onNone: () => state,
@@ -329,11 +306,6 @@ const MultipleAccordion = ({
   );
 };
 
-/**
- * One accordion. `single` keeps at most one section open; with
- * `collapsible={false}` it refuses to close the open one. `multiple` keeps an
- * ordered set. Disabled sections cannot be toggled by any path.
- */
 export const Accordion = (props: AccordionProps) => {
   if (props.type === "single") {
     const { type: _type, ...rest } = props;
@@ -343,17 +315,14 @@ export const Accordion = (props: AccordionProps) => {
   return <MultipleAccordion {...rest} />;
 };
 
-/** {@link AccordionItem} props. */
 export interface AccordionItemProps extends Omit<Props, "children"> {
-  /** Stable id and the value the root reports. */
   readonly value: string;
   readonly disabled?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** One section: a trigger and the content it reveals. */
 export const AccordionItem = ({
   value,
   disabled = false,
@@ -395,23 +364,18 @@ export const AccordionItem = ({
   );
 };
 
-/** {@link AccordionTrigger} props. */
 export interface AccordionTriggerProps extends Omit<Props, "style"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
-  /** A style, or a function of the header's state. */
+
   readonly style?: StateStyle<AccordionTriggerState>;
 }
 
-/** What a header draws: its section's state and its own focus. */
 export interface AccordionTriggerState {
-  /** The section this header controls is open. */
   readonly open: boolean;
   readonly disabled: boolean;
   readonly focused: boolean;
 }
 
-/** The full-width heading button of one section. */
 export const AccordionTrigger = ({
   onClick,
   onKeyDown,
@@ -435,15 +399,12 @@ export const AccordionTrigger = ({
   const open = isOpen(value);
   const state: AccordionTriggerState = { open, disabled, focused };
 
-  // Stable identity: a fresh ref callback each render would re-register the row
-  // on every paint (ListItem has the same constraint).
   const attach = useCallback((next: PublicInstance | null) => {
     setInstance(next ?? undefined);
   }, []);
   const setElement = useMergedRef<PublicInstance | null>(attach, ref);
 
   useLayoutEffect(() => {
-    // The native id only exists after commit, and it is what `moveFrom` focuses.
     if (instance === undefined) return;
     return registerTrigger({ id: instance.id, value, disabled });
   }, [disabled, instance, registerTrigger, value]);
@@ -454,7 +415,7 @@ export const AccordionTrigger = ({
 
   const handleKeyDown = (event: KeyEvent): void => {
     if (disabled) return;
-    // The press half of Space starts the gesture; the release flips the section.
+
     if (swallowsDefault(event, "down")) event.preventDefault();
     Match.value(event).pipe(
       Match.when((press) => isActivation(press, "down"), flip),
@@ -471,8 +432,6 @@ export const AccordionTrigger = ({
     if (isActivation(event, "up")) flip();
   };
 
-  // The caller's testId locates the header; its two marks are named from it, so
-  // a suite can hold the cross-fade to the state the header reports.
   const glyphId = (mark: "up" | "down"): string | undefined =>
     rest.testId === undefined ? undefined : `${rest.testId}-chevron-${mark}`;
 
@@ -534,21 +493,10 @@ export const AccordionTrigger = ({
   );
 };
 
-/** {@link AccordionContent} props. */
 export interface AccordionContentProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/**
- * The body of an open section.
- *
- * The measured reveal belongs to `AutoHeight` — the plan-600 primitive that
- * reports the content's painted height and tweens the clipping box to it, keeps
- * the body mounted for its exit and paints it whole under the reduced
- * preference. This part only names the section's state and its recipe, so the
- * reveal's rules live in one module rather than one per disclosure surface.
- */
 export const AccordionContent = ({
   className,
   style,
@@ -570,7 +518,6 @@ export const AccordionContent = ({
   );
 };
 
-/** Every part of Accordion, so a misplaced sibling is named. */
 const accordionParts: ReadonlyArray<PartComponent> = [
   Accordion,
   AccordionItem,
@@ -592,7 +539,6 @@ const accordionItem: PartsContract = {
   hint: "Put AccordionTrigger and AccordionContent directly inside AccordionItem.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const accordionMeta = {
   name: "Accordions",
   tier: 2,

@@ -1,11 +1,3 @@
-/**
- * `panel-resize` — a pointer-captured divider drag with clamping.
- *
- * Pointer capture is what makes a resize feel right: the pointer may leave the
- * 6px divider (and the pane) and the drag must keep tracking. The scenario
- * drags right by 80px and expects the readout and the pane's measured width to
- * follow, then drags far past the minimum and expects the clamp to hold.
- */
 import { useState } from "react";
 import { Effect, pipe } from "effect";
 import * as Option from "effect/Option";
@@ -76,7 +68,6 @@ const PanelProbe = () => {
   );
 };
 
-/** Parses the readout `split=<n>`; a missing readout is `-1`, never a guess. */
 const panelSize = (ctx: Smoke.SmokeContext): number =>
   pipe(
     Option.fromNullishOr(ctx.host.text("panel-readout")),

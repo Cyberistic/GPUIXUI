@@ -1,12 +1,3 @@
-/**
- * ToggleGroup behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a single group kept its old value pressed after a
- * re-press (or cleared nothing), the group published more than one tab stop, an
- * arrow key pressed an option while it moved focus, and the selected option
- * painted a literal instead of the active platform's accent.
- */
-
 import { platformTheme } from "@gpuixui/tokens";
 import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
@@ -18,7 +9,6 @@ import {
 } from "../internal/test-root.js";
 import { ToggleGroup, ToggleGroupItem } from "../toggle-group.js";
 
-/** One option's value and the tab stop it carries. */
 const stopOf = (
   root: ComponentTestRoot,
   id: string,
@@ -30,7 +20,6 @@ const stopOf = (
   };
 };
 
-/** A single group of three alignments. */
 const Alignments = ({
   onValueChange,
 }: {
@@ -94,7 +83,7 @@ describe("ToggleGroup", () => {
     ).toBe("item-centre");
     expect(stopOf(group, "item-centre").tabIndex).toBe(0);
     expect(stopOf(group, "item-left").tabIndex).toBe(-1);
-    // The mode is the one it was before the key: focus is not activation.
+
     expect(stopOf(group, "item-left").value).toBe("pressed");
     expect(stopOf(group, "item-centre").value).toBe("not pressed");
 
@@ -152,7 +141,7 @@ describe("ToggleGroup", () => {
       backgroundColor: windows.colors.accent,
       color: windows.colors.accentForeground,
     });
-    // The premise: the two styles do not paint the same selected face.
+
     expect(macOS.colors.accent).not.toBe(windows.colors.accent);
   });
 });

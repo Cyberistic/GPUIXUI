@@ -1,15 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * List example: a recent-files panel with single selection, and a reviewers
- * panel with multiple selection.
- *
- * Both lists are **controlled** (`value` + `onValueChange`) because the header
- * shows the selection: the app owns the value, the list renders it. Drop the
- * pair and the list keeps its own state instead. The reviewers list also shows
- * the multiple-selection keys, including `Cmd`/`Ctrl`+A for every enabled row.
- * Typing a name jumps to that row because every row carries its `textValue`.
- */
-
 import * as Arr from "effect/Array";
 import { useState } from "react";
 import { Badge, type BadgeVariant } from "../src/badge.js";
@@ -22,7 +11,6 @@ import {
   ListItemTitle,
 } from "../src/list.js";
 
-/** One file in the panel. */
 const files: ReadonlyArray<{
   readonly id: string;
   readonly name: string;
@@ -67,7 +55,6 @@ const files: ReadonlyArray<{
   },
 ];
 
-/** The team members the multiple-selection panel assigns. */
 const reviewers: ReadonlyArray<{
   readonly id: string;
   readonly name: string;
@@ -80,7 +67,6 @@ const reviewers: ReadonlyArray<{
   { id: "edsger", name: "Edsger Dijkstra", role: "Reviewer" },
 ];
 
-/** The panels: single selection for files, multiple selection for reviewers. */
 export const ListExample = () => {
   const theme = useTheme();
   const [selected, setSelected] = useState("readme");

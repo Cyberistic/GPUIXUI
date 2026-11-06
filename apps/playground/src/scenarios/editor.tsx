@@ -1,25 +1,3 @@
-/**
- * Tier 5 probe: `editor-surface` — what an editor package can build on.
- *
- * The runtime ships the two halves of a code surface as host elements: a
- * `<textarea>` that edits, and a read-only `<code>` that paints highlighted
- * source at exact line heights. There is no caret or selection API, so the
- * honest editor is "edit in the textarea, display in the code view" — this probe
- * measures the editing contract that makes that possible and the display the
- * viewer gets for free:
- *
- * - Enter in a `<textarea>` with **no** `onSubmit` listener inserts a newline
- *   (the same field with a listener reports Enter instead, which is why an
- *   editor must not set one);
- * - the arrow keys move the native caret, proved by where the next typed
- *   character lands;
- * - `<code code language showLineNumbers>` paints its source, and `<diff patch>`
- *   paints both sides of a changed line.
- *
- * Everything a real editor needs on top — caret, selection, scroll sync and
- * inline decorations — has no runtime API; that is recorded as the gap rather
- * than worked around with a fake.
- */
 import { useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
@@ -110,9 +88,6 @@ export const editorScenario: ScenarioBody = {
         "value=ab\\ncd",
       );
 
-      // The caret: two lefts from the end of `cd` put it before `c`, so the next
-      // character lands there. A textarea that ignored the arrow keys would
-      // produce `cdX`.
       ctx.host.key("left");
       ctx.host.key("left");
       ctx.host.key("X");
@@ -122,8 +97,6 @@ export const editorScenario: ScenarioBody = {
         "value=ab\\nXcd",
       );
 
-      // The read-only halves: highlighted source and a unified diff paint their
-      // own text (they do not expose it through `getAllText`).
       const painted = ctx.host.paintedText().join("\n");
       yield* ctx.expectContains(
         "the code view paints its source",
@@ -146,8 +119,6 @@ export const editorScenario: ScenarioBody = {
         "modernCount(1);",
       );
 
-      // A long file scrolls in its own bounded viewport, which is what an editor
-      // pane is: the code element is the scroller's content.
       ctx.host.wheel("editor-code-view", 0, -60);
       const offset = yield* ctx.expectSome(
         "the code viewport scrolls",

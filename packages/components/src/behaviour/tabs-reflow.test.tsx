@@ -1,18 +1,3 @@
-/**
- * The tab pill after a reflow, in the real GPUix renderer.
- *
- * The bug these guard: a layout event reports a **size** change, not a move, so
- * the trigger the pill was under never re-reported when a sibling before it grew
- * or a trigger was inserted — the pill stayed at the x its tab had left (measured
- * `42` against `197`, and `5` against `139`). The rail re-reads its origin probe
- * and every trigger from the renderer in one pass after any measurement, the row
- * set or the caller's rail class changes, so both boxes come from one paint.
- *
- * These live beside `tabs.test.tsx` rather than in it because they hold a
- * measurement contract, the way `presence-contract.test.ts` holds the pointer
- * rule, and the Tabs record's native count is the interaction suite's.
- */
-
 import { describe, expect, it } from "vitest";
 import { requireBounds, settleMotion } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
@@ -48,7 +33,6 @@ describe("the tab pill after a reflow", () => {
     settleMotion(tabs);
     settleMotion(tabs);
 
-    // The selected tab really moved; the pill moved with it.
     expect(requireBounds(tabs, "growing-danger").x).toBeGreaterThan(before);
     expect(requireBounds(tabs, "tabs-indicator")).toEqual(
       requireBounds(tabs, "growing-danger"),
@@ -58,8 +42,6 @@ describe("the tab pill after a reflow", () => {
   });
 
   it("stays under its tab when a trigger appears before it", () => {
-    // The row set is the other reflow path: an inserted trigger shifts the
-    // selected one without resizing it, so only a fresh read can place the pill.
     const Growing = ({ extra }: { readonly extra: boolean }) => (
       <Tabs defaultValue="danger" testId="insert-root">
         <TabsList testId="insert-list">

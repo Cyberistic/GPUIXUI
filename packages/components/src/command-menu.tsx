@@ -1,21 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * CommandMenu: a searchable action list inside the dialog.
- *
- * This composes the parts rather than reinventing them: `Dialog` owns the modal
- * surface and Escape, the palette's own `<input>` owns typing,
- * and `menu/logic.ts` owns which row is active. The active row is **highlighted,
- * not focused** — the input must keep focus or typing would stop after the first
- * arrow key. `Tab`/`Escape` follow the dialog; Enter runs the active action.
- *
- * No custom scoring is required: the default filter is a case-insensitive
- * subsequence match, ranked within each group so a group's heading never
- * repeats. `filter` replaces it with a boolean predicate.
- *
- * The root owns the query and the matches because ranking needs the whole action
- * set; the parts are the input, the list, one row and the empty state.
- */
-
 import type {
   EventPayload,
   Props,
@@ -77,23 +60,21 @@ import {
   type MenuState,
 } from "./menu/logic.js";
 
-/** One runnable command. */
 export interface CommandAction {
   readonly id: string;
   readonly label: string;
-  /** The heading this action sits under; consecutive actions share it. */
+
   readonly group?: string;
-  /** Display only, e.g. `"⌘S"`. The component binds no shortcuts. */
+
   readonly shortcut?: string;
-  /** Visible but not runnable. */
+
   readonly disabled?: boolean;
   readonly perform: () => void;
 }
 
-/** The rules a command-menu part follows; throws outside a {@link CommandMenu}. */
 interface CommandMenuContextValue {
   readonly query: string;
-  /** Set the query and reset the highlight to the first enabled match. */
+
   readonly setQuery: (query: string) => void;
   readonly matches: ReadonlyArray<CommandAction>;
   readonly isActive: (action: CommandAction) => boolean;
@@ -101,10 +82,7 @@ interface CommandMenuContextValue {
   readonly runActive: () => void;
   readonly handleKeyDown: (event: EventPayload) => void;
   readonly registerInput: (instance: PublicInstance | null) => void;
-  /**
-   * Whether the palette is open, so a part the library paints can drop its own
-   * Tab stop for the exit window the dialog keeps painted.
-   */
+
   readonly present: boolean;
 }
 
@@ -112,7 +90,6 @@ const CommandMenuContext = createContext<CommandMenuContextValue | undefined>(
   undefined,
 );
 
-/** The palette a part belongs to. Throws when there is none. */
 const useCommandMenu = (): CommandMenuContextValue => {
   const value = useContext(CommandMenuContext);
   if (value === undefined) {
@@ -121,25 +98,18 @@ const useCommandMenu = (): CommandMenuContextValue => {
   return value;
 };
 
-/** {@link CommandMenu} props. */
 export interface CommandMenuProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
-  /** The commands to search. A value that is not a list — a palette's loading state, a saved toolbar's `null` — carries no rows. */
+
   readonly actions: ReadonlyArray<CommandAction>;
-  /**
-   * Action ids, most recently used first. With an empty query and the default
-   * filter they are shown under one "Recent" heading, in this order; a typed
-   * query keeps the normal ranking. A value that is not a list carries no
-   * recents, and an entry that is not an id is dropped.
-   */
+
   readonly recents?: ReadonlyArray<string>;
-  /** Replace the default ranked fuzzy match; accepted rows keep declaration order. */
+
   readonly filter?: (action: CommandAction, query: string) => boolean;
   readonly children?: PartChildren;
 }
 
-/** The default: rank a subsequence match within each declared group. */
 const defaultMatches = (
   actions: ReadonlyArray<CommandAction>,
   query: string,
@@ -149,11 +119,6 @@ const defaultMatches = (
     (action) => action.group,
   );
 
-/**
- * The empty-query list: the caller's recent ids first, one heading, and the rest
- * in declaration order. Unknown and repeated ids are dropped, so a stale
- * recents list cannot duplicate or invent a row.
- */
 const withRecents = (
   actions: ReadonlyArray<CommandAction>,
   recents: ReadonlyArray<string>,
@@ -172,7 +137,6 @@ const withRecents = (
   );
 };
 
-/** The specs `menu/logic.ts` navigates over: filtered position and disabled. */
 const specs = (
   actions: ReadonlyArray<CommandAction>,
 ): ReadonlyArray<MenuItemSpec> =>
@@ -182,16 +146,11 @@ const specs = (
     label: action.label,
   }));
 
-/** The enabled index to start on, or `None` when every match is disabled. */
 const firstEnabled = (
   actions: ReadonlyArray<CommandAction>,
 ): Option.Option<number> =>
   Arr.findFirstIndex(actions, (action) => action.disabled !== true);
 
-/**
- * The searchable palette. Controlled: the app owns `open`, because the command
- * menu is usually opened by an application shortcut rather than by a control.
- */
 export const CommandMenu = ({
   open,
   onOpenChange,
@@ -207,9 +166,6 @@ export const CommandMenu = ({
   );
   const input = useRef<PublicInstance | null>(null);
 
-  // A palette's rows are built by the app, and its recents are saved with it:
-  // the `null` a store writes for either slot is read as no rows here, once, so
-  // the matcher and the recents membership cannot throw before the first paint.
   const commands = commandListOf(actions);
   const recentIds = recentIdsOf(recents);
   const recent =
@@ -222,8 +178,6 @@ export const CommandMenu = ({
       : (recent ?? defaultMatches(commands, query));
   const rows = specs(matches);
 
-  // The stored index may point at a filtered-out row after typing. Fall back to
-  // the first enabled match instead of highlighting nothing.
   const active: Option.Option<number> = Option.orElse(
     Option.filter(activeId, (id) =>
       Option.exists(Arr.get(rows, id), (row) => !row.disabled),
@@ -312,24 +266,14 @@ export const CommandMenu = ({
   );
 };
 
-/** {@link CommandMenuInput} props. */
 export interface CommandMenuInputProps {
-  /** Default `"Type a command…"`. */
   readonly placeholder?: string;
-  /** The field's accessible name. Default `"Search commands"`. */
+
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/**
- * The search field: it keeps focus while the highlight moves. Enter runs the
- * active action; Escape is offered to the topmost dismiss layer.
- *
- * Focused by the dialog's `initialFocus`, never by `autoFocus`: a field that
- * focuses itself first becomes the modal's restore target, and the opener loses
- * the focus when the palette closes.
- */
 export const CommandMenuInput = ({
   placeholder = "Type a command…",
   label = "Search commands",
@@ -365,15 +309,8 @@ export const CommandMenuInput = ({
         ref={registerInput}
         testId="command-input"
         aria-label={label}
-        // The dismissed palette stays painted for the dialog's exit window, and
-        // the runtime decides its Tab order element by element: a field the
-        // library paints is not a stop a reader can land on as it unmounts.
         {...presenceTabStop(present)}
-        // The hint is painted, so the runtime's `aria_placeholder` left with
-        // the prop; the empty field announces the same words as help.
         aria-description={fieldHelp({ placeholder }, query)}
-        // The palette's field paints the `input` role as its own fill; its hint
-        // is painted, because the host's own placeholder is a fixed grey.
         theme={nativeTextTheme(theme, "input")}
         value={query}
         onChange={(event) => setQuery(event.value ?? "")}
@@ -389,17 +326,10 @@ export const CommandMenuInput = ({
   );
 };
 
-/** {@link CommandMenuList} props. */
 export interface CommandMenuListProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/**
- * The match column: a heading at each group change, the rows, and the key hint.
- * The hint belongs to the list because it describes the list's keys; a custom
- * list drops it.
- */
 export const CommandMenuList = ({
   className,
   style,
@@ -446,14 +376,12 @@ export const CommandMenuList = ({
   );
 };
 
-/** {@link CommandMenuItem} props. */
 export interface CommandMenuItemProps extends Omit<Props, "children"> {
   readonly action: CommandAction;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/** One runnable row: highlighted from the root, never focused. */
 export const CommandMenuItem = ({
   action,
   className,
@@ -503,14 +431,11 @@ export const CommandMenuItem = ({
   );
 };
 
-/** {@link CommandMenuEmpty} props. */
 export interface CommandMenuEmptyProps {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** The empty state. It renders only while no action matches the query. */
 export const CommandMenuEmpty = ({
   className,
   children,
@@ -529,7 +454,6 @@ export const CommandMenuEmpty = ({
   );
 };
 
-/** Every part of CommandMenu, so a misplaced sibling is named. */
 const commandMenuParts: ReadonlyArray<PartComponent> = [
   CommandMenu,
   CommandMenuInput,
@@ -545,7 +469,6 @@ const commandMenuRoot: PartsContract = {
   hint: "Put the input, list and empty state directly inside CommandMenu.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const commandMenuMeta = {
   name: "Command menus",
   tier: 2,

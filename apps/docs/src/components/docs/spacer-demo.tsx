@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Spacer page.
- *
- * `Spacer` is empty space, not a control, so the preview is a labelled diagram:
- * a dashed outline around the row it sits in, with a caption naming the fixed
- * step or the flexible fill. The Code tab shows the native usage.
- */
-
 export const SpacerDemo = () => (
   <div className="gx-demo gx-demo-column gx-layout">
     <div className="gx-layout-row">

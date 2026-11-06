@@ -1,22 +1,8 @@
-/**
- * The film's score: an original solo-piano piece, written as notes and saved as
- * a Standard MIDI File, rendered by `fluidsynth` with the Salamander Grand Piano
- * (CC BY 3.0, Alexander Holm) — see README §Sound.
- *
- * 120 BPM, D major opening on its relative minor (Bm – G – D – A). Fourteen
- * bars, cut for a film under thirty seconds: four of theme from the first beat,
- * four lifted an octave, two of climax in octaves, a bar of chord stabs (one per
- * beat, under the four words) and the final chord held for the mark. The playing
- * is humanised with a fixed seed, so every render is the same file.
- *
- *   nub media/launch/sound/piano.ts media/launch/sound/piano.mid
- */
 import { writeFileSync } from "node:fs";
 
 export const BPM = 120;
 const PPQ = 480;
 
-/** A note: start and length in beats, MIDI pitch, velocity 1–127. */
 type Note = readonly [
   start: number,
   length: number,
@@ -45,15 +31,13 @@ const N = {
   D6: 86,
 } as const;
 
-/** The four chords, each a root and the tones its arpeggio climbs through. */
 const chords = [
-  { root: N.B2, tones: [54, 59, 62] }, // Bm: F#3 B3 D4
-  { root: N.G2, tones: [50, 55, 59] }, // G: D3 G3 B3
-  { root: N.D3, tones: [57, 62, 66] }, // D: A3 D4 F#4
-  { root: N.A2, tones: [52, 57, 61] }, // A: E3 A3 C#4
+  { root: N.B2, tones: [54, 59, 62] },
+  { root: N.G2, tones: [50, 55, 59] },
+  { root: N.D3, tones: [57, 62, 66] },
+  { root: N.A2, tones: [52, 57, 61] },
 ] as const;
 
-/** One bar of left hand: root, fifth, octave, tenth, then back down, in eighths. */
 const arpeggio = (
   bar: number,
   chord: (typeof chords)[number],
@@ -70,7 +54,6 @@ const arpeggio = (
   );
 };
 
-/** Right-hand phrases, one bar each, as [beat, length, pitch]. */
 type Phrase = ReadonlyArray<readonly [number, number, number]>;
 
 const theme: ReadonlyArray<Phrase> = [
@@ -159,7 +142,6 @@ const climax: ReadonlyArray<Phrase> = [
   ],
 ];
 
-/** A deterministic wobble for timing and velocity (a linear congruential generator). */
 const wobble = (() => {
   let seed = 104;
   return (span: number) => {
@@ -182,7 +164,6 @@ const phrase = (
   }
 };
 
-// Theme and lift, four bars each from the first beat; then two bars of climax.
 const sections: ReadonlyArray<
   readonly [ReadonlyArray<Phrase>, number, number, boolean]
 > = [
@@ -198,16 +179,15 @@ for (const [bars, right, left, octaves] of sections) {
   });
   at += bars.length;
 }
-// Bar 10: a stab on each beat — Bm, G, D, A — one under each word.
+
 chords.forEach((chord, beat) => {
   for (const pitch of [chord.root, ...chord.tones, chord.tones[2] + 12])
     notes.push([10 * 4 + beat, 0.8, pitch, 84]);
 });
-// Bars 11–13: the final D-major chord, held for the mark.
+
 for (const pitch of [38, N.D3, N.A3, N.Fs4, N.A4, N.D5])
   notes.push([11 * 4, 12, pitch, 70]);
 
-/** Total length in beats: fourteen bars. */
 export const BEATS = 14 * 4;
 
 const vlq = (value: number): number[] => {
@@ -227,7 +207,7 @@ const track = (): number[] => {
       { tick: tick(at + length * 0.95), data: [0x80, pitch, 0] },
     );
   }
-  // The sustain pedal, re-pressed on every bar (and held through the ending).
+
   for (let bar = 0; bar < 14; bar += 1) {
     if (bar <= 11)
       events.push({ tick: tick(bar * 4) + 10, data: [0xb0, 64, 0] });
@@ -263,7 +243,7 @@ const u32 = (n: number) => [
   (n >>> 8) & 0xff,
   n & 0xff,
 ];
-/** The chunk tags: "MThd" and "MTrk". */
+
 const MTHD = [0x4d, 0x54, 0x68, 0x64];
 const MTRK = [0x4d, 0x54, 0x72, 0x6b];
 const body = track();

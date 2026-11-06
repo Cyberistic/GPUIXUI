@@ -1,15 +1,3 @@
-/**
- * Tier 3 probe: the shipped `@gpuixui/data` table, mounted from its example.
- *
- * The behaviour suite already owns the paint; this probe is the second host a
- * plan can read, and it exercises the composition the way an application does:
- * the header stays painted while the rows wheel, a press chooses the record it
- * hit, a header press changes the painted order, and a query narrows the set and
- * releases a selection it hides.
- *
- * The ids are the example's own (`files-body`, `files-row-file-N`, …), so a
- * probe that drifts from the shipped screen fails instead of measuring a copy.
- */
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import { examples } from "@gpuixui/data/examples";
@@ -39,7 +27,6 @@ export const dataTableScenario: ScenarioBody = {
         true,
       );
 
-      // A header press sorts the painted order; the second press flips it.
       ctx.host.click("files-name-sort");
       ctx.host.click("files-name-sort");
       yield* ctx.expectContains(
@@ -67,7 +54,6 @@ export const dataTableScenario: ScenarioBody = {
         1,
       );
 
-      // A press chooses the record it hits, and a later sort keeps it.
       ctx.host.click("files-row-file-60");
       yield* ctx.expectContains(
         "the press chose the row it landed on",
@@ -87,7 +73,6 @@ export const dataTableScenario: ScenarioBody = {
         "1 selected",
       );
 
-      // The fixed header: a wheel over the body moves the rows, not the header.
       ctx.host.wheel("files-body", 0, -300);
       const scrolled = yield* ctx.expectSome(
         "the body reports a scroll offset",
@@ -109,7 +94,6 @@ export const dataTableScenario: ScenarioBody = {
         1,
       );
 
-      // The query narrows the set and clears the selection it hides.
       ctx.host.click("files-filter");
       ctx.host.key("001");
       yield* ctx.expectContains(
@@ -123,8 +107,6 @@ export const dataTableScenario: ScenarioBody = {
         true,
       );
 
-      // A column divider is a control: a drag widens the track, the cells
-      // follow it, and the clamp is the column's own.
       ctx.host.drag("files-divider-name", 60, 0, 8);
       yield* ctx.expectContains(
         "the drag widened the name column",
@@ -148,12 +130,9 @@ export const dataTableScenario: ScenarioBody = {
         "w=120",
       );
 
-      // The column menu hides a column: its track leaves the content, and its
-      // header stops painting.
       ctx.host.click("files-columns");
       ctx.host.click("files-columns-toggle-status");
-      // The name column was clamped to 120 by the drag above, so the content is
-      // 120 + 110 + 90 before the hide and 120 + 90 after it.
+
       yield* ctx.expectContains(
         "hiding a column takes its width out of the content",
         text(ctx, "files-readout"),
@@ -165,8 +144,6 @@ export const dataTableScenario: ScenarioBody = {
         true,
       );
 
-      // A move is an order change, not a resize: the order moves and the
-      // content width does not.
       ctx.host.click("files-columns-move-size");
       ctx.host.click("files-columns-move-size-left");
       yield* ctx.expectContains(

@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Toggle group component page.
- *
- * The shipped group is a GPUix host tree, so the preview paints the buttons
- * from the theme bridge and says so. It teaches the two modes: a single group
- * with one live mode, and a multiple group where any number stays on.
- */
-
 import { useState } from "react";
 
 const alignments = ["Left", "Centre", "Right", "Justify"] as const;

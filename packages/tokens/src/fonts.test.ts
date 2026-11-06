@@ -1,25 +1,10 @@
-/**
- * Guards plan 052: the library had no way to install a typeface in the native
- * runtime, so a theme could only name a family the OS already had. The failure
- * this suite is written against is re-registration — an application mounts,
- * calls `registerFonts`, remounts and calls it again, and the runtime re-adds
- * the family (GPUix allows it, so nothing complains while the font list grows) —
- * and a rejected file being remembered as installed, which would make a fixed
- * file look broken for the rest of the session.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { registerFonts, type FontRegistrar, type FontSource } from "./fonts.js";
 import { textStyle } from "./styles.js";
 import { extendTheme, lightTheme } from "./theme.js";
 
-/**
- * The places a consumer learns how to install a face. `node:fs` is deliberate,
- * as in `docs.test.ts`: this checks the repository's own prose, and the package
- * keeps zero runtime dependencies.
- */
 const sourceFiles = {
-  "src/fonts.ts": readFileSync(new URL("./fonts.ts", import.meta.url), "utf8"),
   "docs/tokens.md": readFileSync(
     new URL("../../../docs/tokens.md", import.meta.url),
     "utf8",
@@ -27,11 +12,6 @@ const sourceFiles = {
   "README.md": readFileSync(new URL("../README.md", import.meta.url), "utf8"),
 } as const;
 
-/**
- * The design-system inventory states the same capability in one table row. It
- * is read on its own so a deleted row fails the presence check below rather
- * than quietly shrinking the prose sweep.
- */
 const inventorySurface = (): Record<string, string> => {
   const file = readFileSync(
     new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
@@ -48,7 +28,6 @@ const surfaces = (): Record<string, string> => ({
   ...inventorySurface(),
 });
 
-/** A renderer that records the bytes it was handed. */
 const recordingRegistrar = () => {
   const calls: Uint8Array[] = [];
   const registrar: FontRegistrar = {
@@ -107,8 +86,6 @@ describe("registerFonts", () => {
       registerFont: () => {
         attempts += 1;
         if (attempts === 1) {
-          // The runtime's own throw, not this package's: GPUix rejects a font
-          // with no usable name table, and the boundary must not cache that.
           throw new Error("font has no name table");
         }
       },
@@ -137,21 +114,7 @@ describe("registerFonts", () => {
   });
 });
 
-/**
- * Guards the registration-order contract and its measured second half.
- *
- * The bug this holds: `fonts.ts` and both docs told consumers that "rendering
- * before registration is fine — GPUix re-shapes text that already named the
- * family", so the library was teaching the one order that paints a fallback
- * frame. The first correction then over-corrected the other way: all four
- * surfaces said a late install "does not re-shape that text" / "leaves the
- * fallback on screen", and the playground's `font-registration-late` probe
- * measured the opposite (44px → 81px on the next layout). Both absolutes are
- * wrong, so a surface fails here for the original advice or for claiming the
- * fallback is permanent.
- */
 describe("registration order", () => {
-  /** The retracted advice, in the words each surface used. */
   const retracted = [
     "re-shapes text",
     "does not re-shape",
@@ -217,7 +180,7 @@ describe("registration order", () => {
       fonts.indexOf("## Fonts"),
       fonts.indexOf("\n## ", fonts.indexOf("## Fonts") + 1),
     );
-    // The snippet, not the prose: the intro names `registerFonts(` too.
+
     const opening = section.indexOf("```tsx");
     const snippet = section.slice(opening, section.indexOf("```", opening + 6));
 

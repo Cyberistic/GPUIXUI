@@ -1,12 +1,3 @@
-/**
- * Browser preview for the CheckboxGroup page.
- *
- * The group reuses the box drawing from the checkbox preview and adds the
- * roving one-tab-stop list around it. The options arrive as data; the preview
- * shows a checked, an unchecked and a disabled row. The Code tab shows the
- * native usage.
- */
-
 import { useState } from "react";
 
 interface ChannelOption {

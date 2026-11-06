@@ -1,23 +1,3 @@
-/**
- * Holds the `inline-edit-lifecycle` fixture, the probe that mounts it and the
- * section a consumer plans a rename flow from.
- *
- * The gaps this guards: an inline edit is a **swap** — a painted value becomes
- * a real `<input>` and back — and focus does not follow a replaced element, so
- * the component asks the renderer for it in both directions. The package's
- * behaviour suite drives that through the offscreen renderer, where
- * `focusElement` is synchronous; only a window can say the editor holds the
- * window's focus, that a commit returns it to the display, and that a disabled
- * control refuses every route that would open it.
- *
- * The other boundary the fixture records is the witness: a window's painted text
- * of an `<input>` is empty, so the draft a key reaches is read from the caller's
- * own `onChange`, which is the channel a consumer has. A probe that read the
- * input's text would assert `""` against a component that works.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -38,7 +18,6 @@ const scenarios = read("./scenarios.tsx");
 const readme = read("../../README.md");
 const component = read("../../../../packages/components/src/inline-edit.tsx");
 
-/** This probe's own README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `inline-edit-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -47,7 +26,6 @@ const sectionOf = (): string => {
   return readme.slice(start, end === -1 ? undefined : end);
 };
 
-/** One closed control, so a marks literal stays legible. */
 const closed = {
   value: "x",
   draft: "x",
@@ -64,8 +42,6 @@ describe("the readout", () => {
   });
 
   it("keeps a draft that differs from the committed value visible", () => {
-    // The Escape case: the caller heard the draft, the value did not move, and
-    // a readout that printed only the value could not tell the two apart.
     const discarded = inlineEditReadout({ ...closed, draft: "y", edits: 3 });
     expect(discarded).toContain("draft=y");
     expect(discarded).toContain("value=x");
@@ -95,8 +71,6 @@ describe("the view", () => {
   });
 
   it("reads the draft where a consumer reads it, not off the input", () => {
-    // A window's painted text of an `<input>` is empty; the caller's `onChange`
-    // is the only witness a probe can use.
     expect(
       probe.match(
         /onChange=\{\(event\) => \w+\.change\(event\.value \?\? ""\)\}/g,
@@ -138,8 +112,6 @@ describe("the steps", () => {
   });
 
   it("records the disabled rule the window measured", () => {
-    // A `tabIndex: -1` keeps it out of the Tab order; a press still focuses it,
-    // and the contract is that it refuses to open.
     expect(probe).toContain(
       '"a press on a disabled control still gives it the focus"',
     );
@@ -157,9 +129,6 @@ describe("the steps", () => {
   });
 
   it("measures the focus the component moves with the renderer itself", () => {
-    // The probe's claim is the component's two `focusElement` calls: one after
-    // the swap mounts the editor, one after the display comes back. A component
-    // that stopped asking would leave the window's focus on a removed element.
     expect(component).toContain("renderer?.focusElement?.(inputId)");
     expect(component).toContain("renderer?.focusElement?.(instance.id)");
     expect(component).toContain("tabIndex={disabled ? -1 : 0}");
@@ -200,9 +169,6 @@ describe("the registry and the README", () => {
   });
 
   it("separates the door a window cannot measure from the doors it measured", () => {
-    // Blur commits, and this window delivers no blur at all (measured by
-    // `blur-delivery-lifecycle`), so a probe that claimed to prove it would be
-    // claiming a route the runtime never runs.
     const section = sectionOf();
     expect(section).toContain("blur-delivery-lifecycle");
     expect(section).toContain("no blur");

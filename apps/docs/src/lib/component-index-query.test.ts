@@ -6,18 +6,6 @@ import {
   indexQueryValue,
 } from "./component-index-query";
 
-/**
- * The docs index filter travels on the page URL.
- *
- * Bug guarded: the component index kept its query in React state alone, so a filtered
- * view could not be linked and a reload painted the whole list again — while
- * the page promised the reader a filter over a hundred-odd rows. The platform
- * switch already carries its state in the address bar; this is the same rule.
- *
- * The reader is pure, so the cases below hold both directions of the round
- * trip, the parameters it must not touch, and the clean-URL rule.
- */
-
 const params = (search: string): ReadonlyArray<readonly [string, string]> => [
   ...new URLSearchParams(search).entries(),
 ];

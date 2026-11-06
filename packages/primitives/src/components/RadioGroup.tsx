@@ -1,24 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `RadioGroup` — one choice from a small set.
- *
- * A radio group navigates with the arrow keys and holds **one** tab stop: the
- * arrow selects and moves native focus with it, the way the platform behaves.
- * The keys and the stop continue from the row that **holds focus**, so a
- * controlled group whose owner has not applied the choice yet cannot stall the
- * reader on the option they left. Each item is the same three-state paint as a
- * checkbox with the circle shape, so the two controls cannot drift.
- *
- * Focus is tracked **per item**, not on the wrapper: GPUix dispatches an event
- * to the element that owns the handler, so a wrapper never sees a child's
- * focus. The focused item paints the ring, exactly like a Checkbox.
- *
- * Options arrive either as data (`options`) or as `<RadioGroupItem>` children;
- * both are read into one option list by `radioItems`, so the roving index and
- * the arrow contract have a single path. The data prop is sugar for the part —
- * an element is the only shape that can carry rich content (an icon, a price).
- */
-
 import type { ReactElement, ReactNode } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -87,19 +67,10 @@ import { useTheme } from "./ThemeProvider.js";
 
 export type RadioOption = GroupOption;
 
-/** {@link RadioGroupItem} props: one option written as an element. */
 export type RadioGroupItemProps = GroupItemProps;
 
-/**
- * One option as an element, for content the data prop cannot carry.
- *
- * `RadioGroup` reads this part's props and renders the item itself, so the
- * roving index and the arrow contract stay one code path. The part draws
- * nothing on its own.
- */
 export const RadioGroupItem = (_props: RadioGroupItemProps): null => null;
 
-/** The option list a group renders: the data prop, or its item children. */
 export const radioItems = (props: {
   readonly options?: ReadonlyArray<RadioOption>;
   readonly children?: ReactNode;
@@ -114,71 +85,54 @@ export interface RadioGroupProps
     InteractionProps,
     FieldHostProps,
     HelpProps {
-  /** The choices as data. Omit when the options are `RadioGroupItem` children. */
   readonly options?: ReadonlyArray<RadioOption>;
-  /** The choices as items, when they carry rich content. */
+
   readonly children?: ReactNode;
-  /** Controlled selection. Omit to let the group hold its own. */
+
   readonly value?: string;
   readonly defaultValue?: string;
-  /** Arrow-key axis. Defaults to `vertical`. */
+
   readonly orientation?: "vertical" | "horizontal";
-  /** Defaults to `md`. */
+
   readonly size?: ControlSize;
-  /** Defaults to `primary`. */
+
   readonly accent?: SelectionAccent;
-  /** Disables every option. */
+
   readonly disabled?: boolean;
-  /**
-   * Validation failed: every empty circle's edge and every row's focus ring take
-   * the destructive role, exactly as a standalone `Checkbox` does. A chosen
-   * radio keeps its accent fill — the fill is the selection, not the error.
-   */
+
   readonly invalid?: boolean;
-  /** Accessible name for the group. */
+
   readonly label?: string;
-  /** Extra style, resolved against the group's live state and merged last. */
+
   readonly style?: StateStyle<RadioGroupState>;
-  /** Extra style for every option row, resolved against that row's live state. */
+
   readonly itemStyle?: StateStyle<RadioItemState>;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** The group's own locator. A row is named by `itemTestId`. */
+
   readonly testId?: string;
-  /**
-   * One locator per option row, derived from its value.
-   *
-   * A row is a control of its own and the group's `testId` lands on the
-   * unfocusable wrapper, so without this an automation host can address the
-   * group but never press one choice (`Select`'s `itemTestId` is the same
-   * contract). The derivation is a function because rows are data.
-   */
+
   readonly itemTestId?: (value: string) => string;
 }
 
-/** What a `RadioGroup` tells its `style` callback. */
 export interface RadioGroupState {
   readonly disabled: boolean;
-  /** True while any option holds native focus. */
+
   readonly focused: boolean;
 }
 
-/** What a `RadioGroup` tells its `itemStyle` callback, one row at a time. */
 export interface RadioItemState {
   readonly disabled: boolean;
   readonly focused: boolean;
   readonly checked: boolean;
 }
 
-/** Which item holds native focus, and how the group learns that it moved. */
 export type RadioGroupFocus = GroupFocus;
 
-/** What the renderer does with the group's own state. */
 export interface RadioGroupHandlers extends GroupHandlers, GroupKeys {
   readonly onSelect: (value: string) => void;
 }
 
-/** The index the item at `value` sits at, or the first enabled one. */
 export const initialActiveIndex = (
   options: ReadonlyArray<RadioOption>,
   value: string,
@@ -205,9 +159,6 @@ export const renderRadioGroup = (
   handlers: RadioGroupHandlers,
   messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
-  // The axis a group lays out and navigates on. `orientation` is a stored
-  // choice like a size, so a name this release does not carry reads as the
-  // documented vertical (the layout and the keys must not disagree).
   const orientation = orientationOf(props.orientation, "vertical");
   const { accent = "primary" } = props;
   const size = controlSize(props.size);
@@ -215,23 +166,14 @@ export const renderRadioGroup = (
   const options = radioItems(props);
   const count = Arr.length(options);
   const isDisabled = optionDisabled(options, props.disabled);
-  // A focus the group no longer draws is not focus: the option holding it was
-  // filtered out or the list shrank, so no row can carry the ring or the state.
+
   const focused = focusedOption(count, focus.focusedIndex);
-  // A reader's keys continue from the row that holds focus — the rule its two
-  // siblings (`CheckboxGroup`, `ToggleGroup`) already read the stop from. A
-  // controlled group whose owner has not applied the choice yet still carries
-  // the old `value`, so a base taken from it would recompute every arrow from
-  // the option the reader left: the focus would stall on the first row it
-  // reached and the stop would stay behind it, so `Tab` from the focused row
-  // re-entered the group instead of leaving. A row disabled while focused is
-  // not a destination either, so the value's row is the base again.
+
   const from = Option.getOrElse(
     Option.filter(focused, (index) => !isDisabled(index)),
     () => activeIndex,
   );
-  // The stop may land on a disabled row, which takes no focus; moving to the
-  // first option a user can reach is what keeps the group in the tab order.
+
   const stopIndex = Option.getOrElse(
     rovingIndex(count, Option.some(from), isDisabled),
     () => from,
@@ -247,7 +189,7 @@ export const renderRadioGroup = (
     handlers.onSelect(option.value);
     return true;
   };
-  /** A keyboard move selects **and** moves focus, so the ring stays on the choice. */
+
   const navigate = (index: number): boolean => {
     if (!select(index)) return false;
     handlers.onFocusMove(index);
@@ -268,8 +210,7 @@ export const renderRadioGroup = (
     const key = event.key ?? "";
     if (swallowKeyDefault(key, "down")) event.preventDefault();
     if (move(key) || jump(key)) return;
-    // A typed prefix lands where a move would: selection follows focus in a
-    // radio group, so type-ahead chooses the option it reaches.
+
     const typed = Option.flatMap(
       Option.fromNullishOr(handlers.typeAhead),
       (match) => match(stopIndex, key),
@@ -277,8 +218,7 @@ export const renderRadioGroup = (
     if (Option.match(typed, { onNone: () => false, onSome: navigate })) return;
     if (decideActivation(key, "down", event.isHeld === true)) select(stopIndex);
   };
-  // Space selects on the release, the way a platform radio does; Enter has
-  // already selected on the press, and this handler ignores it.
+
   const onKeyUp = (event: KeyEvent): void => {
     if (!isPlainKey(event.modifiers)) return;
     if (decideActivation(event.key ?? "", "up", false)) select(stopIndex);
@@ -312,8 +252,7 @@ export const renderRadioGroup = (
       {Arr.map(options, (option, index) => {
         const current = itemState(option, state.current);
         const disabled = props.disabled === true || option.disabled === true;
-        // The address lands on the row that holds the tab stop, so a form can
-        // focus the group's current choice rather than an unfocusable wrapper.
+
         const addressed = index === stopIndex;
         const spec: SelectionSpec = {
           state: current,
@@ -378,13 +317,7 @@ export const renderRadioGroup = (
                 />
               ) : null}
             </div>
-            {/*
-              One body per row: the name pair, or a `RadioGroupItem`'s rich
-              content. Keep the content non-interactive: a painted element owns
-              a mouse-blocking hitbox in this runtime, so content that accepts
-              the press takes it from the row (a `Box` does; text and icons do
-              not).
-            */}
+            {}
             {optionBody(option, disabled, theme)}
           </div>
         );
@@ -393,7 +326,6 @@ export const renderRadioGroup = (
   );
 };
 
-/** A group of radio buttons. */
 export const RadioGroup = (props: RadioGroupProps): ReactElement => {
   const theme = useTheme();
   const messages = useMessages();

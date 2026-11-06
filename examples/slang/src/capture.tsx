@@ -1,11 +1,3 @@
-/**
- * Capture the checked-in calculator screenshots from the real GPUix test
- * renderer. Tooling boundary only: this file writes files and executes the
- * renderer; the app itself has no Node access.
- *
- *   nub run --filter @gpuixui/slang capture
- */
-
 import { createTestRoot } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import { CalculatorApp } from "./App.js";

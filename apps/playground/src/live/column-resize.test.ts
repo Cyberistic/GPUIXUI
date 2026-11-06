@@ -1,17 +1,3 @@
-/**
- * Holds the premises the `column-resize-lifecycle` probe is read against.
- *
- * The bugs these catch: a column that clamps at a bound other than the one the
- * README prints, a content width that stops matching the row and header, an
- * "outside the divider" count that cannot distinguish a captured move from a
- * move still inside the 6px box, a divider shipped with one of the two listeners
- * that arm pointer capture (the drag then dies at its own edge), and a README
- * check count that disagrees with the probe.
- *
- * `node:fs` is deliberate, as in `table-columns.test.ts`: this checks the
- * repository's own Markdown and the probe's source, not a runtime path.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -36,14 +22,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/**
- * The `columnResizeSteps` effect, bounded by the next declaration after it.
- *
- * It has no loop that adds a check, so its `ctx.expect*` call sites are the
- * checks the window runs — which is what the README prints. The end is the
- * next `const`, not the bodies map: a probe declared between the two would
- * otherwise be counted as this one's checks.
- */
 const columnResizeSteps = (() => {
   const start = scenarios.indexOf("const columnResizeSteps");
   const next = scenarios.indexOf("\nconst ", start + 1);
@@ -54,7 +32,6 @@ const columnResizeSteps = (() => {
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
 })();
 
-/** The count the README prints for this probe, if any. */
 const printedCheckCount = (): number =>
   Number(
     /(\d+) checks, `--only column-resize-lifecycle`/.exec(readme)?.[1] ??
@@ -81,8 +58,7 @@ describe("the width a column drag resolves", () => {
         COLUMN_RESIZE.status +
         COLUMN_RESIZE.size,
     );
-    // The probe's first paint claims the content overflows its viewport; if the
-    // widths ever fit, the pan checks would read a clamped `0` and pass.
+
     expect(opened).toBeGreaterThan(COLUMN_RESIZE.viewport);
     expect(resizeContentWidth(COLUMN_RESIZE.max)).toBeGreaterThan(opened);
   });
@@ -101,8 +77,6 @@ describe("the box a captured drag leaves", () => {
   });
 
   it("keeps the control's one move a proper subset of a drag's", () => {
-    // The press and the first move land inside the box; the rest are lost, so
-    // the control hears some of a drag — and never all of it.
     expect(CONTROL_MOVES).toBeGreaterThan(0);
     expect(CONTROL_MOVES).toBeLessThan(DRAG_STEPS);
   });
@@ -133,11 +107,6 @@ describe("the readout the probe asserts", () => {
 
 describe("the probe the README documents", () => {
   it("arms capture with the listener pair, and leaves the control with one", () => {
-    // The measured rule (`pointer-capture`): the runtime arms the capture on a
-    // left press only for an element that listens to both `mouseDown` and
-    // `mouseMove`. A divider shipped with one listener keeps no drag, and the
-    // probe's "the drag follows past its own box" check would pass on a pointer
-    // that never left it.
     expect(columnResizeSteps).not.toBe("");
     const divider = /onMouseDown=\{[\s\S]{0,400}?onMouseMove=/.test(
       scenarios.slice(
@@ -155,8 +124,6 @@ describe("the probe the README documents", () => {
   });
 
   it("prints the number of checks the steps assert", () => {
-    // Each `paintedBox` records a check of its own (`expectSome` inside), so a
-    // count of the two sites is what the window actually runs.
     const asserted = (
       columnResizeSteps.match(/ctx\.expect(?:Equal|Near|Contains|Some)\(/g) ??
       []

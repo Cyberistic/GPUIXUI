@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * CropArea example: a controlled crop over a picture with a live readout.
- *
- * The hole is the example's own state, so dragging a corner or pressing the
- * picture updates both the mask and the line under it from one value.
- */
-
 import { useState } from "react";
 import { CropRect } from "../src/crop/logic.js";
 import { CropArea } from "../src/crop-area.js";

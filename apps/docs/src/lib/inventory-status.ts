@@ -1,48 +1,15 @@
 import type { Inventory, InventoryRow } from "./inventory";
 import { gitConfig } from "./shared";
 
-/**
- * The inventory row a package page reports.
- *
- * `.agents/slop/COMPONENTS.md` is the only place a component's status and its GPUix support
- * verdict are decided. A page that does not say either lets a reader assume the
- * component is shipped and whole, so every mounted package page carries a strip
- * generated from its row. The page title is the join: most titles match their
- * row once punctuation and a plural are normalised, and the titles whose row
- * reads differently — or that publish more than one row — are named below.
- *
- * A title is not an identity. Two packages can ship a component of the same
- * name (`PropertyPanel` is in `@gpuixui/data` and `@gpuixui/files`), so two
- * mounted pages can carry one title while the inventory keeps a row per
- * component. The address is what the two pages do not share, so a page whose
- * row its title cannot name is pinned by address in {@link pageRowsByUrl}.
- */
-
-/** A page as the strip, the index and the inventory's publication rule name it. */
 export interface PageRef {
-  /** The page's frontmatter title. */
   readonly title: string;
-  /**
-   * The page's address. Omitted by a caller that has only a title and means
-   * whatever that title publishes; present on a page, because a title two pages
-   * share cannot identify one.
-   */
+
   readonly url?: string;
 }
 
-/**
- * The rows a page publishes, primary first.
- *
- * The first row is the one its status strip reports. A page may publish more
- * than one row because it documents a composition: the table page teaches the
- * column menu, the resize strip and the filter field beside the grid, and the
- * dock page teaches its tabs, its nesting and its persistence. Every name here
- * must be a `.agents/slop/COMPONENTS.md` row, and every shipped row must be published by
- * some page — `inventory-status.test.ts` holds both directions.
- */
 export const pageRows: Readonly<Record<string, ReadonlyArray<string>>> = {
   Box: ["Boxes / containers"],
-  // `Bubble` and `Bubbles` share a stem, so each page names its own row.
+
   Bubble: ["Bubble"],
   Bubbles: ["Bubbles"],
   Checkbox: ["Checkboxes"],
@@ -61,7 +28,6 @@ export const pageRows: Readonly<Record<string, ReadonlyArray<string>>> = {
   Text: ["Text / typography"],
   Toast: ["Toasts / notifications", "Notification centre"],
 
-  // The table the site curates documents the three Tier 3 rows composed on it.
   Table: [
     "Tables",
     "Column configuration",
@@ -72,11 +38,9 @@ export const pageRows: Readonly<Record<string, ReadonlyArray<string>>> = {
   "Table sorting": ["Sortable tables"],
   "Table selection": ["Row selection"],
 
-  // One page, two windowed surfaces.
   Virtualization: ["Virtualized lists", "Virtualized tables"],
   "Virtual trees": ["Virtualized hierarchical data"],
 
-  // The dock page publishes the tab, nesting and persistence rows it composes.
   "Docking layouts": [
     "Docking layouts",
     "Tabbed panels",
@@ -85,8 +49,6 @@ export const pageRows: Readonly<Record<string, ReadonlyArray<string>>> = {
   ],
   "Split pane": ["Resizable split panes"],
 
-  // The `@gpuixui/data` panel: the rows that describe one object. The
-  // `@gpuixui/files` panel shares the title and is pinned to its own rows below.
   "Property panels": ["Property panels"],
 
   "Code editor": ["Code editor integration"],
@@ -95,29 +57,10 @@ export const pageRows: Readonly<Record<string, ReadonlyArray<string>>> = {
   DropZone: ["File / folder selection"],
 };
 
-/**
- * The rows a page publishes when its title cannot name them, by address.
- *
- * Both `@gpuixui/data` and `@gpuixui/files` ship a `PropertyPanel`, so their
- * pages carry the same title while the inventory keeps the data panel's row and
- * the two rows the files panel answers for — the inspector it fills and the
- * editors it holds. Without this table the files page reported the **data**
- * package's verdict, and the files rows were credited to a page that does not
- * document them. Every address here must be a mounted page whose rows are not
- * the ones its title already publishes; `inventory-status.test.ts` holds both
- * directions.
- */
 export const pageRowsByUrl: Readonly<Record<string, ReadonlyArray<string>>> = {
   "/files/property-panel": ["Inspector panels", "Property editors"],
 };
 
-/**
- * Package pages the inventory has no row for, with the reason.
- *
- * The one entry is honest rather than an exception to the rule: a provider is
- * not a component. `Grid` was the second until its Tier 1 row landed, and the
- * guard fails if a third page lands here without being argued in this table.
- */
 export const withoutRow: ReadonlyArray<{
   readonly title: string;
   readonly reason: string;
@@ -128,13 +71,6 @@ export const withoutRow: ReadonlyArray<{
   },
 ];
 
-/**
- * Shipped rows a lane page documents instead of a component page.
- *
- * A lane page is not a component: it carries no status strip, so it cannot be
- * one of `pageRows`. The row it documents names the file that teaches it and
- * the reason it is composition rather than a component.
- */
 export const laneRows: ReadonlyArray<{
   readonly row: string;
   readonly file: string;
@@ -208,10 +144,8 @@ export const laneRows: ReadonlyArray<{
   },
 ];
 
-/** The inventory document, the source the strip reads. */
 export const inventoryUrl = `https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/.agents/slop/COMPONENTS.md`;
 
-/** What a page's status strip shows: its row, or nothing and the reason. */
 export type PageStatus =
   | { readonly kind: "row"; readonly row: InventoryRow }
   | { readonly kind: "none"; readonly reason: string };
@@ -219,28 +153,18 @@ export type PageStatus =
 const key = (text: string): string =>
   text.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
-/** `Switches` and `Switch` are the same row once a trailing plural is dropped. */
 const stem = (text: string): string => {
   const normalised = key(text);
   return normalised.endsWith("s") ? normalised.slice(0, -1) : normalised;
 };
 
-/** A page named once: a title, or a title and the address that separates it. */
 const refOf = (page: PageRef | string): PageRef =>
   typeof page === "string" ? { title: page } : page;
 
-/** The rows a page names outright, address pin first, title alias second. */
 const namedRows = (page: PageRef): ReadonlyArray<string> | undefined =>
   (page.url === undefined ? undefined : pageRowsByUrl[page.url]) ??
   pageRows[page.title];
 
-/**
- * Every row a page publishes, primary first.
- *
- * A page pinned by address publishes the rows in `pageRowsByUrl`; a page named
- * in `pageRows` publishes its rows outright; any other title must match one row
- * once punctuation and a trailing plural are dropped.
- */
 export const rowsForPage = (
   inventory: Inventory,
   page: PageRef | string,
@@ -250,14 +174,12 @@ export const rowsForPage = (
   if (named === undefined) {
     return inventory.rows.filter((row) => stem(row.name) === stem(ref.title));
   }
-  // The declared order is the primary-first order the strip reads, so it must
-  // not fall back to the inventory's own ordering.
+
   return named.flatMap((name) =>
     inventory.rows.filter((row) => row.name === name),
   );
 };
 
-/** The shipped rows no page publishes, by name. */
 export const unpublishedRows = (
   inventory: Inventory,
   pages: ReadonlyArray<PageRef | string>,
@@ -275,14 +197,6 @@ export const unpublishedRows = (
     .map((row) => row.name);
 };
 
-/**
- * The status a page reports.
- *
- * The first row a page publishes is the one its strip reports. An ambiguous
- * title throws instead of guessing: a page that reported the wrong component's
- * verdict would be worse than one that reported none, and
- * `inventory-status.test.ts` holds every mounted page to one row.
- */
 export const statusForPage = (
   inventory: Inventory,
   page: PageRef | string,
@@ -299,9 +213,7 @@ export const statusForPage = (
       reason: ".agents/slop/COMPONENTS.md has no row for this page",
     };
   }
-  // A page in either alias table names its rows on purpose; one that matched
-  // several by itself is ambiguous and must be aliased rather than silently
-  // reading the first.
+
   if (namedRows(ref) === undefined && rows.length > 1) {
     throw new Error(
       `inventory: "${ref.title}" names ${rows.length} rows (${rows

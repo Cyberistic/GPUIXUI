@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * SETUP — the menu SHIFT + MODE opens on the device.
- *
- * The same `Setup` object the engine stores, presented in the manual's groups:
- * display, angle, number format, fraction, complex format, STAT frequency,
- * decimal point and contrast. Contrast is the app's one device-only setting:
- * it fades the LCD content rather than pretending to be a calculation.
- */
-
 import type { CalculatorState, CommandAction } from "@gpuixui/calc";
 import {
   Dialog,

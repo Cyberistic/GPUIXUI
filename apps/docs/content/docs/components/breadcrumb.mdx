@@ -67,8 +67,3 @@ Breadcrumb
 | `BreadcrumbPage` | `children` | text | — | the current page; not focusable |
 | `BreadcrumbSeparator` | `children` | text | `/` | the default glyph when none is authored |
 | all parts | `className` | `string` | — | an extra recipe class, joined last |
-
-## Notes
-- `role="navigation"` with `aria-label="Breadcrumb"`, `role="list"`, and `role="listitem"` on every entry.
-- **No `aria-current`**; the ellipsis is a mark named "More", not a control.
-- `maxItems` below `3` clamps to `3`; absent, the trail never collapses.

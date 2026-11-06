@@ -11,18 +11,6 @@ import {
   type Policy,
 } from "./collapsible-preview";
 
-/**
- * Browser previews for the Collapsible page.
- *
- * The shipped trigger is a `div role="button"`; the preview uses a real
- * `<button>`, because the browser gives it the same tab stop, `aria-expanded`
- * host and Enter/Space activation. The body is **not** rendered while closed,
- * exactly as the native body unmounts — that is why the note a reader types
- * inside it disappears on the next open — while the policy lives above the
- * disclosure and survives. The native body grows to its measured height; the
- * preview fades the mounted body in, and the page says which half is drawn.
- */
-
 const Chevron = ({ open }: { readonly open: boolean }) => (
   <svg aria-hidden="true" className="gx-collapse-icon" viewBox="0 0 24 24">
     <path d={open ? "m18 15-6-6-6 6" : "m6 9 6 6 6-6"} />
@@ -37,14 +25,6 @@ interface TriggerProps {
   readonly onToggle: () => void;
 }
 
-/**
- * One disclosure trigger.
- *
- * `disabled` is a browser attribute here; the native trigger is a `div` that
- * leaves the tab order with `tabIndex={-1}`, takes no press handler and paints
- * at half opacity. The hint is caller content under the label, as the workflow's
- * Code tab shows — the component ships no indicator of its own.
- */
 const Trigger = ({
   label,
   hint,
@@ -77,13 +57,6 @@ interface PolicyBodyProps {
   readonly onJitter: () => void;
 }
 
-/**
- * The advanced body.
- *
- * The note is the body's own state, so it lives and dies with this component.
- * The policy is passed in: the parent owns it, which is why a collapse cannot
- * lose it.
- */
 const PolicyBody = ({
   policy,
   onBudget,
@@ -159,12 +132,9 @@ const PolicyBody = ({
   );
 };
 
-/** A retry policy in a card: one advanced section, one managed section. */
 export const CollapsibleWorkflow = () => {
   const [state, setState] = useState(initialDisclosure);
-  // The body unmounts after it closes (its own note is meant to be lost), but
-  // it stays mounted for the exit so the reveal is a tween, not a snap — the
-  // same window the native panel keeps its content for.
+
   const [mounted, setMounted] = useState(state.open);
   useEffect(() => {
     if (state.open) {
@@ -253,7 +223,6 @@ const StateBody = () => (
   </div>
 );
 
-/** One independent disclosure: the open state belongs to this tile. */
 const LocalSection = ({
   label,
   initial,
@@ -294,13 +263,6 @@ const Tile = ({
   </div>
 );
 
-/**
- * The controlled tile: the trigger only reports, and the consumer decides.
- *
- * Pressing the trigger increments the request count and moves nothing; the
- * consumer's own button is what opens and closes the section. That is the
- * controlled contract the component documents.
- */
 const ControlledSection = () => {
   const [open, setOpen] = useState(false);
   const [requests, setRequests] = useState(0);
@@ -327,7 +289,6 @@ const ControlledSection = () => {
   );
 };
 
-/** The four states a disclosure can be in. */
 export const CollapsibleStates = () => (
   <div className="gx-collapse-scene">
     <div className="gx-collapse-states">

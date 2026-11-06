@@ -1,14 +1,3 @@
-/**
- * ScrollFade in the real GPUix renderer.
- *
- * The bugs these guard: a fade over content that fits (a lie about more to
- * read); both edges painted at the start, or neither at the middle; a top edge
- * that stays painted at the start or a bottom edge at the end; a gradient that
- * fades the wrong way at the bottom; a strip that swallows a press on the row
- * under it; a caller's surface colour ignored; and a measured content height that
- * stops tracking a list that grows.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { ScrollFade } from "../scroll-fade.js";
@@ -18,7 +7,6 @@ import {
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 
-/** A bounded reader of `rows` 24px rows. */
 const Reader = ({ rows = 30 }: { readonly rows?: number }) => (
   <ScrollFade
     testId="fade"
@@ -154,7 +142,6 @@ describe("ScrollFade", () => {
       scrollTo(page, -100_000);
       expect(has(page, "fade-bottom")).toBe(false);
 
-      // 40 rows no longer fit in the same box, so the bottom owes a hint again.
       page.rerender(<Reader rows={40} />);
       settle(page);
       settle(page);

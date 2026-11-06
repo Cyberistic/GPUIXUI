@@ -1,11 +1,3 @@
-/**
- * Disclosure in the real GPUix renderer (plan 725).
- *
- * Bugs guarded: a folded section that still mounts its body, a triangle that
- * keeps pointing down when the section folds (the runtime cannot rotate it,
- * so the glyph must be swapped), and a header Enter does not toggle.
- */
-
 import { afterEach, describe, expect, it } from "vitest";
 import { Disclosure } from "../disclosure.js";
 import {
@@ -30,14 +22,11 @@ const Section = ({ open }: { readonly open: boolean }) => (
   </Disclosure>
 );
 
-/** The triangle's markup: the first svg the header paints. */
 const glyph = (root: ComponentTestRoot): unknown =>
   root.renderer.findByType("svg")[0]?.customProps?.["source"];
 
 describe("Disclosure", () => {
   it("sets the title right after its triangle", () => {
-    // Bug guarded: the collapsible recipe's `justify-between` pushed the
-    // title to the header's far edge, away from its triangle.
     page = renderComponent(
       <div style={{ width: 300 }}>
         <Section open />

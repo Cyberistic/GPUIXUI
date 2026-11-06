@@ -1,18 +1,7 @@
-/**
- * Pixel evidence: decode the PNG a live capture wrote and read exact colours.
- *
- * A real window reports no style, so paint is only provable from the frame the
- * runtime produced. The module stays platform-free: the caller injects
- * `inflate`, so its own tests need no binding and no native window.
- *
- * Scope is deliberate: GPUI writes 8-bit, non-interlaced PNGs in colour types
- * 0/2/4/6. Any other encoding is a typed `PngDecodeError`, never a guess.
- */
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
 
-/** One straight (non-premultiplied) 8-bit RGBA colour. */
 export class Rgba extends Schema.Class<Rgba>("Rgba")({
   r: Schema.Int,
   g: Schema.Int,
@@ -20,14 +9,12 @@ export class Rgba extends Schema.Class<Rgba>("Rgba")({
   a: Schema.Int,
 }) {}
 
-/** A decoded frame: row-major RGBA bytes, `width * height * 4` long. */
 export class Pixels extends Schema.Class<Pixels>("Pixels")({
   width: Schema.Int,
   height: Schema.Int,
   data: Schema.Uint8Array,
 }) {}
 
-/** Why a byte array is not a frame this module can read. */
 export class PngDecodeError extends Schema.TaggedError<PngDecodeError>()(
   "PngDecodeError",
   { reason: Schema.String },
@@ -37,7 +24,6 @@ export class PngDecodeError extends Schema.TaggedError<PngDecodeError>()(
   }
 }
 
-/** The signature every PNG starts with. */
 const SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10] as const;
 
 const fail = (reason: string) => new PngDecodeError({ reason });
@@ -71,7 +57,7 @@ const headerOf = (data: Uint8Array): Header | PngDecodeError => {
     return fail("the IHDR chunk is malformed");
   }
   if (byte(24) !== 8) return fail("only 8-bit channels are supported");
-  // IHDR fields: width, height, bit depth, colour type, compression, filter, interlace.
+
   if (byte(26) !== 0 || byte(27) !== 0 || byte(28) !== 0) {
     return fail("interlaced or non-standard PNGs are not supported");
   }
@@ -81,7 +67,6 @@ const headerOf = (data: Uint8Array): Header | PngDecodeError => {
     : { width, height, channels };
 };
 
-/** Concatenates every IDAT payload, ignoring ancillary chunks. */
 const idatOf = (data: Uint8Array): Uint8Array | PngDecodeError => {
   const parts: Array<Uint8Array> = [];
   let at = 8;
@@ -122,13 +107,6 @@ const paeth = (left: number, up: number, upLeft: number): number => {
       : upLeft;
 };
 
-/**
- * The five scanline filters, in the spec's numbering.
- *
- * The filter is one byte per row, so it is resolved **once per row**: a
- * per-byte dispatch over a 1800×1040 capture costs seconds (measured: 4.2s for
- * one frame), and a decode sits in every pixel check of the live suite.
- */
 const filters: ReadonlyArray<
   (value: number, left: number, up: number, upLeft: number) => number
 > = [
@@ -139,11 +117,6 @@ const filters: ReadonlyArray<
   (value, left, up, upLeft) => value + paeth(left, up, upLeft),
 ];
 
-/**
- * Reverses the per-scanline filters (PNG spec §9.2).
- *
- * `prior` is the already-unfiltered previous row; filter 0 needs neither.
- */
 const unfilter = (
   raw: Uint8Array,
   header: Header,
@@ -183,7 +156,6 @@ const unfilter = (
   return out;
 };
 
-/** Expands 1/2/3-channel rows into RGBA. */
 const toRgba = (rows: Uint8Array, header: Header): Pixels => {
   const data = new Uint8Array(header.width * header.height * 4);
   const byte = (at: number): number => rows[at] ?? 0;
@@ -205,7 +177,6 @@ const toRgba = (rows: Uint8Array, header: Header): Pixels => {
   return new Pixels({ width: header.width, height: header.height, data });
 };
 
-/** Decodes an 8-bit, non-interlaced PNG into RGBA bytes. */
 export const decodePng = (
   bytes: Uint8Array,
   inflate: (bytes: Uint8Array) => Uint8Array,
@@ -222,7 +193,6 @@ export const decodePng = (
   return rows instanceof PngDecodeError ? rows : toRgba(rows, header);
 };
 
-/** Why a frame cannot be written as a PNG. */
 export class PngEncodeError extends Schema.TaggedError<PngEncodeError>()(
   "PngEncodeError",
   { reason: Schema.String },
@@ -274,15 +244,6 @@ const pngChunk = (type: string, data: Uint8Array): Uint8Array => {
   return out;
 };
 
-/**
- * Encodes a frame as an 8-bit RGBA PNG, one `None` filter per row.
- *
- * The terminal renderer hands a frame over as raw RGBA in the kitty graphics
- * protocol, so this is how a terminal capture becomes a file a reader can look
- * at — and how a probe that reads raw frames can still leave the same PNG
- * evidence a window capture does. `deflate` is injected, like `inflate` above,
- * so the encoder is platform-free.
- */
 export const encodePng = (
   frame: Pixels,
   deflate: (bytes: Uint8Array) => Uint8Array,
@@ -320,7 +281,6 @@ export const encodePng = (
   return out;
 };
 
-/** The colour at a pixel, or `null` outside the frame. */
 export const pixelAt = (frame: Pixels, x: number, y: number): Rgba | null => {
   if (x < 0 || y < 0 || x >= frame.width || y >= frame.height) return null;
   const at = (y * frame.width + x) * 4;
@@ -332,14 +292,8 @@ export const pixelAt = (frame: Pixels, x: number, y: number): Rgba | null => {
   });
 };
 
-/**
- * A whole hex body, not a prefix of one: `Number.parseInt` stops at the first
- * character it cannot read, so validating only the length would turn a typo in
- * a value's tail into a different colour.
- */
 const HEX_DIGITS = /^[0-9a-fA-F]+$/;
 
-/** A hex colour (`#RGB`, `#RRGGBB` or `#RRGGBBAA`), or `null` when malformed. */
 export const hexToRgba = (hex: string): Rgba | null => {
   const digits = hex.startsWith("#") ? hex.slice(1) : hex;
   if (!HEX_DIGITS.test(digits)) return null;
@@ -366,12 +320,6 @@ export const hexToRgba = (hex: string): Rgba | null => {
   });
 };
 
-/**
- * How many pixels paint `colour` exactly.
- *
- * A count, not a coordinate: a capture is device-scaled, and the caller should
- * not have to know the scale factor to prove that a colour reached the frame.
- */
 export const countColour = (frame: Pixels, colour: Rgba): number => {
   let count = 0;
   for (let at = 0; at < frame.data.length; at += 4) {
@@ -387,13 +335,6 @@ export const countColour = (frame: Pixels, colour: Rgba): number => {
   return count;
 };
 
-/**
- * The rectangle `colour` paints, or `null` when it paints nothing.
- *
- * The bound of a paint, not a count: a probe asserting that a run was laid out
- * in the middle of its frame reads the ink's box rather than guessing where a
- * pixel might fall.
- */
 export const boundsOfColour = (
   frame: Pixels,
   colour: Rgba,
@@ -428,7 +369,6 @@ export const boundsOfColour = (
       });
 };
 
-/** A rectangle in a capture's own pixels (device-scaled, not logical). */
 export class PixelRegion extends Schema.Class<PixelRegion>("PixelRegion")({
   x: Schema.Int,
   y: Schema.Int,
@@ -436,13 +376,6 @@ export class PixelRegion extends Schema.Class<PixelRegion>("PixelRegion")({
   height: Schema.Int,
 }) {}
 
-/**
- * The part of `frame` a region covers, as a frame of its own.
- *
- * The region is clamped to the frame, because a capture's edge can cut a box
- * the layout reports. A region with no overlap at all is `null`: there is no
- * paint there to compare.
- */
 export const crop = (frame: Pixels, region: PixelRegion): Pixels | null => {
   const left = Math.max(region.x, 0);
   const top = Math.max(region.y, 0);
@@ -459,14 +392,6 @@ export const crop = (frame: Pixels, region: PixelRegion): Pixels | null => {
   return new Pixels({ width, height, data });
 };
 
-/**
- * How many pixels differ between two captures of the same box.
- *
- * `null` when the frames are not the same size: two boxes of different shapes
- * are not a measurement of "nothing changed", and reporting `0` would let a
- * resized layer pass as an invisible one. A difference is any differing byte,
- * alpha included — a wash that changes only opacity is paint too.
- */
 export const countDifferingPixels = (
   left: Pixels,
   right: Pixels,

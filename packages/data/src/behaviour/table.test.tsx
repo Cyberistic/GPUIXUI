@@ -1,25 +1,3 @@
-/**
- * The table in the real GPUix renderer, mounted through the shipped example.
- *
- * The bugs these guard are the ones the window probes found and a pure reducer
- * cannot see:
- *
- * - a header inside the row scroller (it must keep its painted `y` when the
- *   rows wheel under it — the runtime has no sticky);
- * - a plain press that does not paint the selection wash;
- * - a selection box's painted target fixed to the card fill, so it reads as a
- *   notch inside a chosen row;
- * - a Cmd press that replaces instead of toggling, or a Shift press that does
- *   not extend from the anchor;
- * - a sort that changes a label but not the painted order;
- * - a filter that narrows the rows but leaves a selection it no longer paints
- *   (the readout must fall to zero);
- * - an arrow key that moves the selection without moving native focus, so the
- *   next key goes to the old row.
- * - a computed cell width the layout cannot paint, so a column's header and its
- *   cells stop sharing a track and the rows drift under their own headings.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -80,7 +58,6 @@ const click = (
   );
 };
 
-/** The file names in paint order, without the header's labels. */
 const paintedFiles = (root: DataTestRoot): ReadonlyArray<string> =>
   Arr.filter(root.renderer.getAllText(), Str.startsWith("file-"));
 
@@ -93,15 +70,8 @@ const focusedTestId = (root: DataTestRoot): Option.Option<string> =>
 const allText = (root: DataTestRoot): string =>
   Arr.join(root.renderer.getAllText(), " ");
 
-/** The readout's words. The runtime reports a `<text>`'s run through `getAllText`. */
 const readout = (root: DataTestRoot): string => allText(root);
 
-/**
- * The elements that hold focus as Tab walks off `testId`, at most `count`.
- *
- * `focusNext` is the renderer's own traversal, so this reads the Tab order the
- * runtime builds rather than a `tabIndex` prop a suite could only guess at.
- */
 const tabStops = (
   root: DataTestRoot,
   testId: string,
@@ -114,8 +84,7 @@ const tabStops = (
     root.renderer.flush();
     return Option.getOrElse(focusedTestId(root), () => "none");
   };
-  // Stops at the first row: the assertion is where a row appears in the order,
-  // and every stop after it is a control the row holds.
+
   return Arr.reduce(Arr.range(1, count), Arr.empty<string>(), (stops) =>
     Arr.some(stops, Str.startsWith("files-row-"))
       ? stops
@@ -123,18 +92,14 @@ const tabStops = (
   );
 };
 
-/** The rows in a Tab walk, without the per-row controls they hold. */
 const rowsIn = (stops: ReadonlyArray<string>): ReadonlyArray<string> =>
   Arr.filter(stops, Str.startsWith("files-row-"));
 
 let root: DataTestRoot | undefined;
 
-/** Mount the example; `afterEach` tears it down even when an assertion fails. */
 const mount = (): DataTestRoot => {
   root = renderData(<TableExample />);
-  // The body learns its height from the viewport's and header's `onLayout`
-  // events; a suite that wheels before they are dispatched measures the
-  // unmeasured frame.
+
   settle(root);
   return root;
 };
@@ -195,17 +160,11 @@ describe("the example table", () => {
     );
     root.renderer.flush();
 
-    // The chosen row keeps saying which record is chosen, and the pointer moves
-    // it one step off that fill: one flat fill wherever the pointer is would
-    // answer nothing. The runtime resolves a state diff into its own record, so
-    // the assertion is on the fields that matter.
     expect(styleOf().backgroundColor).toBe(darkTheme.colors.selected);
     expect(styleOf().hover).toMatchObject({
       backgroundColor: darkTheme.colors.accent,
     });
-    // The press takes the derived wash over the hover it replaces, not the raw
-    // `active` role — a palette's own role can sit under the perceptibility
-    // floor beside the `accent` it would paint over.
+
     expect(styleOf().active).toMatchObject({
       backgroundColor: pointerWash(darkTheme, "active", "accent"),
     });
@@ -214,9 +173,6 @@ describe("the example table", () => {
   it("answers a press on an unchosen row, not only the pointer's hover", () => {
     const root = mount();
 
-    // The recipe tints `hover`; with the pointer down the row must paint the
-    // wash derived over it — the tokens contract's `active`-over-`hover`
-    // transition — or the press looks exactly like the hover it already had.
     expect(requireStyle(root, "files-row-file-3").active).toMatchObject({
       backgroundColor:
         pointerWash(darkTheme, "active", "hover") ?? darkTheme.colors.active,
@@ -224,17 +180,10 @@ describe("the example table", () => {
   });
 
   it("derives the rule from the fill the row wears", () => {
-    // The raw `border` role is under the 1.05:1 floor on 22 of the 90 shipped
-    // wash placements, so a rule painted raw disappears on the row the reader
-    // is looking at. The row asks `dividerOn` for the surface it crosses — and
-    // the dark theme's `accent` is one of the placements the authored role
-    // loses (1.004:1), so a raw rule here is measurably wrong rather than a
-    // taste.
     const root = mount();
     const styleOf = (testId: string): Record<string, unknown> =>
       requireStyle(root, testId);
 
-    // At rest an unchosen row sits on the table's card.
     expect(styleOf("files-row-file-3").borderColor).toBe(
       dividerOn(darkTheme, darkTheme.colors.card),
     );
@@ -252,7 +201,6 @@ describe("the example table", () => {
     );
     root.renderer.flush();
 
-    // The chosen row's hover moves it onto `accent`; the rule follows the fill.
     const accentRule = dividerOn(darkTheme, darkTheme.colors.accent);
     expect(styleOf("files-row-file-3").hover).toMatchObject({
       borderColor: accentRule,
@@ -267,8 +215,6 @@ describe("the example table", () => {
       borderColor: dividerOn(darkTheme, pressFill),
     });
 
-    // An unchosen row restates the recipe's hover fill and derives its rule
-    // from that wash, so the pointer never leaves the grid behind.
     expect(styleOf("files-row-file-2").hover).toMatchObject({
       borderColor: dividerOn(darkTheme, darkTheme.colors.hover),
     });
@@ -277,7 +223,6 @@ describe("the example table", () => {
   it("paints the box in the fill of the row it sits in", () => {
     const root = mount();
 
-    // At rest the box's target is the table's own card fill, so it is invisible.
     expect(
       requireStyle(root, "files-select-file-3-target").backgroundColor,
     ).toBe(darkTheme.colors.card);
@@ -288,18 +233,15 @@ describe("the example table", () => {
     expect(requireStyle(root, "files-row-file-3").backgroundColor).toBe(
       darkTheme.colors.selected,
     );
-    // The target is a painted child (that is what stops a box press reaching
-    // the row), so it has to follow the row's own fill: a target fixed to
-    // `card` reads as a card-coloured notch inside a chosen row.
+
     expect(
       requireStyle(root, "files-select-file-3-target").backgroundColor,
     ).toBe(darkTheme.colors.selected);
-    // The header box sits on the card strip, not on a row, so it keeps it.
+
     expect(requireStyle(root, "files-select-all-target").backgroundColor).toBe(
       darkTheme.colors.card,
     );
 
-    // Under the pointer it takes the same wash the chosen row takes.
     const target = boundsOf(root, "files-select-file-3-target");
     root.renderer.nativeSimulateMouseMove(target.x + 2, target.y + 2);
     root.renderer.flush();
@@ -312,9 +254,6 @@ describe("the example table", () => {
     const root = mount();
     const cell = boundsOf(root, "files-cell-file-2-name");
 
-    // The cell's content is a short label, so the right edge is blank: a cell
-    // that paints a fill would stop the press here (the measured rule), which
-    // is why `TableCell` has no background.
     root.renderer.nativeSimulateClick(
       cell.x + cell.width - 4,
       cell.y + cell.height / 2,
@@ -334,9 +273,6 @@ describe("the example table", () => {
     click(root, "files-select-file-5");
     root.renderer.flush();
 
-    // The box paints a fill, so GPUI's hit test stops there
-    // (`press-routing-lifecycle`): the box toggles its record and the row it
-    // sits in does not also run its press, which would replace the set.
     expect(
       root.renderer.findByTestId("files-row-file-2")?.style.backgroundColor,
     ).toBe(darkTheme.colors.selected);
@@ -377,7 +313,7 @@ describe("the example table", () => {
 
     click(root, "files-row-file-6", "shift");
     root.renderer.flush();
-    // file-2 survives, and the range runs from the toggled anchor (4) to 6.
+
     expect(readout(root)).toContain("4 selected");
   });
 
@@ -398,9 +334,6 @@ describe("the example table", () => {
   it("adds a Shift press as the tie-break, and flips it in place", () => {
     const root = mount();
 
-    // Status is the primary: three records per group, so only a second sort can
-    // decide the order inside one. The example's statuses cycle with the row
-    // number, which is why the modified group's greatest name is file-058.
     click(root, "files-status-sort");
     root.renderer.flush();
     expect(readout(root)).toContain("status-asc");
@@ -416,7 +349,6 @@ describe("the example table", () => {
     expect(readout(root)).toContain("status-asc+name-desc");
     expect(paintedFiles(root)[0]).toBe("file-058.ts");
 
-    // A plain press asks for one sort: the order replaces, it does not grow.
     click(root, "files-size-sort");
     root.renderer.flush();
     expect(readout(root)).toContain("size-desc");
@@ -465,10 +397,6 @@ describe("the example table", () => {
     const root = mount();
     const row = findId(root, "files-row-file-2");
 
-    // The grid's stop is a row, so the keys a stop implies act on that row. A
-    // focusable `div` has no activation of its own: without a key handler the
-    // arrow walk would move the selection off the row the reader entered on and
-    // leave that row the one record the keyboard cannot choose.
     root.renderer.focusElement(row);
     root.renderer.flush();
     root.renderer.nativeSimulateKeyDown(row, "space");
@@ -496,16 +424,12 @@ describe("the example table", () => {
   it("keeps one row in the Tab order, before a press and after a filter releases the chosen one", () => {
     const root = mount();
 
-    // A fresh grid holds no selection, so a tab stop that waited for a press
-    // would leave the rows out of the Tab order: a keyboard reader tabbing off
-    // the toolbar lands on the column menu and the header controls, then walks
-    // the per-row boxes, and never reaches a row the arrow keys move.
     const before = tabStops(root, "files-filter", 16);
     expect(rowsIn(before)).toEqual(["files-row-file-1"]);
 
     click(root, "files-row-file-3");
     root.renderer.flush();
-    // The chosen record owns the stop until the filter hides it.
+
     expect(rowsIn(tabStops(root, "files-filter", 16))).toEqual([
       "files-row-file-3",
     ]);
@@ -514,8 +438,6 @@ describe("the example table", () => {
     root.renderer.flush();
     expect(readout(root)).toContain("1 rows · 0 selected");
 
-    // The release takes the old stop with it, so the stop moves to the first
-    // painted row rather than leaving the table unreachable.
     const after = tabStops(root, "files-filter", 16);
     expect(rowsIn(after)).toEqual(["files-row-file-60"]);
   });
@@ -534,22 +456,12 @@ describe("the example table", () => {
   });
 });
 
-/** The width a divider announces through the only channel 0.11.0 publishes. */
 const announcedWidth = (root: DataTestRoot, testId: string): string =>
   `${root.renderer.getElement(findId(root, testId))?.customProps?.["aria-valuetext"] ?? ""}`;
 
-/** A checkbox's state: 0.11.0 has no `aria-checked`, so it is `aria-valuetext`. */
 const checkboxWord = (root: DataTestRoot, testId: string): string =>
   `${root.renderer.getElement(findId(root, testId))?.customProps?.["aria-valuetext"] ?? ""}`;
 
-/**
- * Drag `testId` by `deltaX`, delivered as eight moves.
- *
- * One jump would prove nothing about the press-arms-the-capture rule; eight
- * moves is the number every pointer probe in this repository uses. Each move
- * reports the primary button held (`0`), which is what the runtime delivers for
- * a captured drag — a move with none ends the gesture (`pressedButton`).
- */
 const drag = (root: DataTestRoot, testId: string, deltaX: number): void => {
   const { x, y, width, height } = boundsOf(root, testId);
   const startX = x + width / 2;
@@ -608,13 +520,6 @@ describe("resizable columns", () => {
   });
 
   it("steps from the width it announces, not the width it was handed", () => {
-    // Bug guarded: the announcement and the drag read the caller's width through
-    // `readableWidth` and clamp it to the column's bounds, while the key path
-    // stepped from the raw prop. A consumer that does not clamp — the rule the
-    // drag case above measures — hands over a width past the maximum (or below
-    // the minimum), so the announced track was 640 while Left computed
-    // `clamp(700 - 16)` and handed back the same 640: the column could be
-    // dragged narrower but its keyboard never moved it, on either side.
     const received: number[] = [];
     root = renderData(
       <div
@@ -662,11 +567,6 @@ describe("resizable columns", () => {
   });
 
   it("announces the floor for a track the grid cannot measure", () => {
-    // Bug guarded: `aria-valuetext` printed the raw number, so a computed width
-    // the layout cannot paint (`NaN`) was announced as `NaN pixels` — the one
-    // channel 0.11.0 has for a number, carrying nothing a reader can use. The
-    // key path already reads an unreadable width as the column's floor, so the
-    // announcement names that same number.
     root = renderData(
       <div
         style={{
@@ -691,10 +591,6 @@ describe("resizable columns", () => {
   });
 
   it("drags from the floor when the track cannot be measured", () => {
-    // The drag reads its starting width at the press. `NaN` read there clamped
-    // every gesture back to the floor, so a right drag grew nothing while the
-    // divider still announced a width; the press now starts from the floor the
-    // announcement names.
     const received: number[] = [];
     root = renderData(
       <div
@@ -727,17 +623,10 @@ describe("resizable columns", () => {
     const startY = y + height / 2;
     expect(readout(root)).toContain("w=260");
 
-    // The runtime delivers mouseDown for all three buttons: a right press is
-    // the context-menu gesture and a middle one is nothing, so neither may arm
-    // a resize the caller never saw. The move holds the primary button, so only
-    // the press's own button decides this — a move with no held button ends a
-    // gesture, which the next case measures.
     Arr.forEach([1, 2], (button) => {
       root.renderer.nativeSimulateMouseDown(startX, startY, button);
       root.renderer.flush();
-      // Stay inside the 6px strip: without capture, a move past its box is not
-      // the divider's event, so a bug that armed the gesture would show on the
-      // move that is still over it.
+
       root.renderer.nativeSimulateMouseMove(startX + 2, startY, 0);
       root.renderer.flush();
       root.renderer.nativeSimulateMouseUp(startX + 2, startY, button);
@@ -759,17 +648,12 @@ describe("resizable columns", () => {
     root.renderer.flush();
     expect(readout(root)).toContain("w=262");
 
-    // The reader drags out of the window and releases there: the platform
-    // reports no release to a window the pointer left, so the press stays armed
-    // unless the strip reads the button a move holds.
     root.renderer.nativeSimulateMouseExit(startX + 2, startY);
     root.renderer.flush();
     root.renderer.nativeSimulateMouseMove(startX + 4, startY);
     root.renderer.flush();
     expect(readout(root)).toContain("w=262");
 
-    // A press after the lost release starts a fresh gesture from the width the
-    // reader can see, so the guard does not cost them the drag.
     root.renderer.nativeSimulateMouseDown(startX + 4, startY);
     root.renderer.flush();
     root.renderer.nativeSimulateMouseMove(startX + 10, startY, 0);
@@ -785,12 +669,10 @@ describe("resizable columns", () => {
 
     expect(readout(root)).toContain("w=320");
     expect(boundsOf(root, "files-name").width).toBe(320);
-    // The header and the body cells share one width: a width the cells do not
-    // read is a grid that drifts row by row.
+
     expect(boundsOf(root, "files-cell-file-1-name").width).toBe(320);
     expect(announcedWidth(root, "files-divider-name")).toBe("320 pixels");
 
-    // A second gesture measures from the width the first one ended at.
     drag(root, "files-divider-name", 30);
     expect(readout(root)).toContain("w=350");
   });
@@ -844,13 +726,11 @@ describe("the column menu", () => {
     expect(root.renderer.findByTestId("files-status")).toBeUndefined();
     expect(allText(root)).not.toContain("modified");
     expect(readout(root)).toContain("cols=name,size");
-    // 460 - 110: the hidden track's width leaves the content, and the size
-    // column starts exactly 110 points further left.
+
     expect(readout(root)).toContain("content=350");
     expect(boundsOf(root, "files-size").x).toBe(sizeBefore.x - 110);
     expect(boundsOf(root, "files-name").x).toBe(nameBefore.x);
 
-    // Restoring the column returns it at the width it had, in its place.
     click(root, "files-columns-toggle-status");
     root.renderer.flush();
     expect(readout(root)).toContain("cols=name,status,size");
@@ -865,7 +745,7 @@ describe("the column menu", () => {
       "modified",
     );
     root.renderer.flush();
-    // Each third file is `modified`, so the status column alone matches 20.
+
     expect(readout(root)).toContain("20 rows");
 
     click(root, "files-columns");
@@ -873,9 +753,6 @@ describe("the column menu", () => {
     click(root, "files-columns-toggle-status");
     root.renderer.flush();
 
-    // The status cell is gone, so the query has nothing left to match. A row
-    // model that still searched the hidden track would paint 20 records whose
-    // visible cells contain nothing the reader typed.
     expect(readout(root)).toContain("0 rows");
     expect(paintedFiles(root)).toEqual([]);
 
@@ -895,13 +772,11 @@ describe("the column menu", () => {
     click(root, "files-columns-move-size-left");
     root.renderer.flush();
 
-    // One step swaps size with its visible neighbour (status).
     expect(readout(root)).toContain("cols=name,size,status");
     expect(readout(root)).toContain("content=460");
     const nameWidth = boundsOf(root, "files-name").width;
     expect(boundsOf(root, "files-size").x).toBe(nameBefore.x + nameWidth);
 
-    // A second step reaches the front; the cells follow the header.
     click(root, "files-columns");
     root.renderer.flush();
     click(root, "files-columns-move-size");
@@ -917,12 +792,6 @@ describe("the column menu", () => {
 });
 
 describe("the loading skeleton", () => {
-  /**
-   * The skeleton beside a box of its own.
-   *
-   * A fragment of rows at the window root paints only its first child, so the
-   * mount wraps them the way a body does.
-   */
   const skeleton = (rows: number, columns: number) => (
     <div>
       <TableSkeleton rows={rows} columns={columns} />
@@ -930,11 +799,6 @@ describe("the loading skeleton", () => {
   );
 
   it("mounts a count it can lay out, and a default for one it cannot", () => {
-    // `rows`/`columns` are often computed — a page size read from a config, a
-    // viewport divided by a row height. `Array.from({ length: Infinity })`
-    // throws `RangeError: Invalid array length`, so a loading table took the
-    // renderer down with it, and `NaN` mounted no track at all: the one state a
-    // reader cannot diagnose is the one that paints nothing.
     const countRoles = (role: string): number => {
       const tree = decodeA11yTree(root?.renderer.getA11yTree());
       return withRole(tree, tree.root, role).length;
@@ -942,20 +806,15 @@ describe("the loading skeleton", () => {
 
     root = renderData(skeleton(Number.POSITIVE_INFINITY, Number.NaN));
     settle(root);
-    // The unreadable counts are the shipped three: a computed infinity used to
-    // throw, and a computed NaN mounted no track at all.
+
     expect(countRoles("Row")).toBe(3);
     expect(countRoles("Cell")).toBe(9);
 
-    // A finite count past a screenful is bounded rather than mounting a data
-    // set's worth of placeholder bars.
     root.rerender(skeleton(10_000, 1));
     settle(root);
     expect(countRoles("Row")).toBe(SKELETON_TRACK_LIMIT);
     expect(countRoles("Cell")).toBe(SKELETON_TRACK_LIMIT);
 
-    // A count below one is still a track: the placeholder must hold the shape
-    // of a row even when a caller computed none.
     root.rerender(skeleton(0, -4));
     settle(root);
     expect(countRoles("Row")).toBe(1);
@@ -964,13 +823,6 @@ describe("the loading skeleton", () => {
 });
 
 describe("the cell track", () => {
-  /**
-   * One table whose first column is handed a computed width.
-   *
-   * The column paints a short header over a long cell, which is what a drifted
-   * track looks like: each box sizes from its own content instead of sharing the
-   * column's width.
-   */
   const withTrack = (width: number) => (
     <Table height={200} aria-label="Files">
       <TableViewport>
@@ -997,11 +849,6 @@ describe("the cell track", () => {
   );
 
   it("keeps a width that cannot paint on the column's one track", () => {
-    // A cell's width is often computed — a share of a pane, a stored size, a
-    // measurement taken before the first layout. The runtime drops `NaN` and the
-    // infinities, and a negative width paints nothing usable, so the cell fell
-    // back to its own content: measured before the guard, the 62px `Name`
-    // header sat above a 204px cell and the column had no track at all.
     const unreadable = [Number.NaN, Number.POSITIVE_INFINITY, -20];
     root = renderData(withTrack(Number.NaN));
     settle(root);
@@ -1013,8 +860,7 @@ describe("the cell track", () => {
       expect(header.width).toBe(cell.width);
       expect(header.x).toBe(cell.x);
       expect(cell.width).toBeGreaterThan(0);
-      // The column after it starts at the same edge in both rows, so the drift
-      // did not reach the rest of the table either.
+
       expect(boundsOf(root, "track-header-status").x).toBe(
         boundsOf(root, "track-cell-status").x,
       );
@@ -1022,8 +868,6 @@ describe("the cell track", () => {
   });
 
   it("keeps the width a caller can paint", () => {
-    // The guard reads an unreadable width as *no* width; a finite one is the
-    // caller's track, so a resized or authored column keeps its number.
     root = renderData(withTrack(160));
     settle(root);
     expect(boundsOf(root, "track-header").width).toBe(160);

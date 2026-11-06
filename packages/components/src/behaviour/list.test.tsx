@@ -1,35 +1,3 @@
-/**
- * List behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a row that can be selected although it is disabled, by
- * click or by key; a hover/selection fill that ignores the theme; the roving tab
- * stop landing on more than one row (which would make the list several stops) or
- * on a disabled one; a click that selects twice; arrow keys that move the active
- * row without moving real focus; wrap-around failing at either end; a controlled
- * list that updates its own selection when the consumer says no; and — in
- * multiple mode — a Cmd-click that replaces instead of toggling, a Shift range
- * that includes a disabled row, Shift+Arrow moving focus without extending, and
- * Cmd/Ctrl+A doing nothing in multiple mode (or reporting a change in single
- * mode).
- *
- * Activation: Enter that selected but ran nothing; Space that ran the action it
- * should only select with; a click that did not run the row it selected; a plain
- * list click that ran nothing; a disabled row that activated anyway; and an
- * arrow move that activated the old row instead of the reached one.
- *
- * A caller `ref` on a row was also discarded in favour of the internal one, and
- * so was a caller `onClick`.
- *
- * Type-ahead: typing a prefix moved nothing, a repeated letter did not advance,
- * a disabled row won the match, an uppercase letter never matched, a missed
- * prefix poisoned the next search, and a typed jump must not change the
- * selection in multiple mode.
- *
- * Selection paint: a selected row declares `selectedForeground` for its text,
- * but the title's own recipe painted the page's `foreground` over it, so the
- * on-colour the row hands everything else never reached its label.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
@@ -55,7 +23,6 @@ import {
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 
-/** Three rows, the middle one disabled. */
 const catalog = (
   <List testId="list" selectionMode="single">
     <ListItem testId="row-a" value="a">
@@ -71,7 +38,6 @@ const catalog = (
   </List>
 );
 
-/** Every row that owns the list's tab stop: exactly one should. */
 const tabStop = (
   root: ComponentTestRoot,
   testIds: ReadonlyArray<string> = ["row-a", "row-b", "row-c"],
@@ -91,7 +57,6 @@ const tabStop = (
     ),
   );
 
-/** Four rows for the multiple-mode suites; the second is disabled. */
 const multiCatalog = (
   onValueChange?: (values: ReadonlyArray<string>) => void,
 ) => (
@@ -111,10 +76,8 @@ const multiCatalog = (
   </List>
 );
 
-/** All four row ids, for the tab-stop helper. */
 const multiIds = ["row-a", "row-b", "row-c", "row-d"];
 
-/** Rows for type-ahead: two D rows, a disabled B row, and an unsearched row. */
 const searchable = (mode: "single" | "multiple" = "single") => (
   <List testId="list" selectionMode={mode}>
     <ListItem testId="row-alpha" value="alpha" textValue="Alpha">
@@ -138,7 +101,6 @@ const searchable = (mode: "single" | "multiple" = "single") => (
   </List>
 );
 
-/** The six ids of the type-ahead fixture, for the tab-stop helper. */
 const searchableIds = [
   "row-alpha",
   "row-beta",
@@ -148,7 +110,6 @@ const searchableIds = [
   "row-echo",
 ];
 
-/** Whether a row reports itself selected. */
 const isSelected = (root: ComponentTestRoot, testId: string): unknown =>
   root.renderer.findByTestId(testId)?.customProps?.["aria-selected"];
 
@@ -224,9 +185,6 @@ describe("List", () => {
     const painted = (testId: string): unknown =>
       list.renderer.findByTestId(testId)?.style.color;
 
-    // The row's on-colour, not the page's body role: `selected` is the fill and
-    // the title sits on it, so the recipe's `text-foreground` erased the role
-    // the row declares. The token contract holds this pair to the body floor.
     expect(painted("title-a")).toBe(darkTheme.colors.selectedForeground);
     expect(
       contrastRatio(
@@ -235,8 +193,7 @@ describe("List", () => {
       ) ?? 0,
     ).toBeGreaterThanOrEqual(contrastFloors.body);
     expect(painted("title-b")).toBe(darkTheme.colors.foreground);
-    // The second line keeps its muted role, which the contract measures on the
-    // same fill at the secondary floor.
+
     expect(painted("description-a")).toBe(darkTheme.colors.mutedForeground);
 
     clickCentreOf(list, "row-b");
@@ -244,7 +201,6 @@ describe("List", () => {
     expect(painted("title-b")).toBe(darkTheme.colors.selectedForeground);
     expect(painted("title-a")).toBe(darkTheme.colors.foreground);
 
-    // A caller's `style` is still the last word.
     clickCentreOf(list, "row-c");
 
     expect(painted("title-c")).toBe("#FF0000");
@@ -325,8 +281,7 @@ describe("List", () => {
     clickCentreOf(list, "row-b");
 
     expect(onValueChange).not.toHaveBeenCalled();
-    // Unavailable is carried by the label's role, not by fading the row: an
-    // `opacity` on the row dims every fill the row paints with it.
+
     expect(list.renderer.findByTestId("row-b")?.style.opacity).toBeUndefined();
     expect(list.renderer.findByTestId("title-b")?.style.color).toBe(
       darkTheme.colors.disabledForeground,
@@ -342,12 +297,6 @@ describe("List", () => {
   });
 
   it("keeps a disabled row's selection wash and mutes only its text", () => {
-    // The bug this guards: the row faded itself with `opacity: 0.5`, which
-    // composited the `selected` fill it had just painted into the strip behind
-    // it — 1.03:1 on several shipped styles, under the 1.05:1 the un-faded wash
-    // clears everywhere — so a chosen row that became unavailable lost the wash
-    // that says it is chosen. The state now rides on the text roles the contract
-    // measures on that fill.
     const list = renderComponent(
       <List testId="list" selectionMode="single" defaultValue="a">
         <ListItem testId="row-a" value="a" disabled>
@@ -367,13 +316,10 @@ describe("List", () => {
 
     const style = (testId: string) => list.renderer.findByTestId(testId)?.style;
 
-    // The wash is the role itself, not the role at 50% over the strip.
     expect(style("row-a")?.backgroundColor).toBe(darkTheme.colors.selected);
     expect(style("row-a")?.opacity).toBeUndefined();
     expect(style("row-b")?.backgroundColor).toBeUndefined();
 
-    // On the wash the title keeps the secondary role the contract measures
-    // there; off it, the disabled pair.
     expect(style("title-a")?.color).toBe(darkTheme.colors.mutedForeground);
     expect(
       contrastRatio(
@@ -389,7 +335,6 @@ describe("List", () => {
       darkTheme.colors.disabledForeground,
     );
 
-    // A row that cannot be pressed does not advertise a press either.
     expect(style("row-a")?.cursor).toBe("not-allowed");
     expect(style("row-a")?.hover).toBeUndefined();
 
@@ -493,7 +438,6 @@ describe("List", () => {
 
     clickCentreOf(list, "row-b");
 
-    // The change is reported, but the consumer still owns the value.
     expect(onValueChange).toHaveBeenCalledWith("b");
     expect(
       list.renderer.findByTestId("row-a")?.customProps?.["aria-selected"],
@@ -541,8 +485,6 @@ describe("List", () => {
 
     hoverCentreOf(list, "row-a");
 
-    // The runtime resolves the hover diff into a full style record, so the
-    // assertion is on the one field that matters.
     expect(list.renderer.findByTestId("row-a")?.style.hover).toMatchObject({
       backgroundColor: darkTheme.colors.accent,
     });
@@ -551,11 +493,6 @@ describe("List", () => {
   });
 
   it("paints a press the wash it replaces can show", () => {
-    // The bug: the press repainted the raw `active` role. Light · macOS's
-    // `active` sits 1.026:1 from the `accent` a hovered row wears — under the
-    // 1.05:1 perceptibility floor — so the row answered the pointer and then
-    // went still under the press. `@gpuixui/tokens`' `pointerWash` derives the
-    // step toward `foreground` from the wash being replaced.
     const macOSLight = platformTheme(lightTheme, "darwin");
     const list = renderComponent(catalog, macOSLight);
 
@@ -580,7 +517,7 @@ describe("List", () => {
         macOSLight.colors.accent,
       ) ?? 0,
     ).toBeGreaterThanOrEqual(decorativeFloor);
-    // The premise: the role the row used to paint cannot be seen on its hover.
+
     expect(
       contrastRatio(macOSLight.colors.active, macOSLight.colors.accent) ?? 0,
     ).toBeLessThan(decorativeFloor);
@@ -765,7 +702,6 @@ describe("List", () => {
 
     expect(ref.current?.id).toBe(list.renderer.findByTestId("row-a")?.id);
 
-    // The internal ref still carries the roving tab stop.
     list.renderer.focusElement(ref.current?.id ?? -1);
     list.renderer.simulateKeystrokes("down");
     expect(focusedTestId(list)).toEqual(Option.some("row-b"));
@@ -1010,12 +946,6 @@ describe("List", () => {
   });
 
   it("refuses the keys while a press has left a disabled row focused", () => {
-    // The sequence the live `list-lifecycle` probe measured: a press leaves a
-    // disabled row focused and a selection already made, and the keys must
-    // neither act on the row the record names nor on the selection. This
-    // renderer delivers the focus event the window does not, so the end state
-    // is what it holds here; the origin rule's own direction is measured by
-    // `list/origin.test.ts` and the window by `list-lifecycle`.
     const onActivate = vi.fn();
     const onValueChange = vi.fn();
     const list = renderComponent(
@@ -1050,8 +980,6 @@ describe("List", () => {
     expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(onActivate).toHaveBeenCalledTimes(1);
 
-    // An arrow leaves the disabled row for the next enabled one, where Enter
-    // acts again.
     pressKey(list, "down");
     pressKey(list, "enter");
     expect(onActivate).toHaveBeenLastCalledWith("c");
@@ -1061,10 +989,6 @@ describe("List", () => {
   });
 
   it("keeps the tab stop off a disabled row a press focused", () => {
-    // The press records the disabled row as the row the reader is on (so the
-    // keys act from it and refuse), while the tab stop stays a row a traversal
-    // may land on: a disabled row that owned the stop would be the only way in
-    // from the keyboard.
     const list = renderComponent(catalog);
 
     clickCentreOf(list, "row-b");
@@ -1100,13 +1024,10 @@ describe("List", () => {
     const titleStyle = list.renderer.findByTestId("title")?.style;
     const descriptionStyle = list.renderer.findByTestId("description")?.style;
 
-    // The control is the same text with no one-line rule: it wraps, so the
-    // measurement can see a wrap, and the row's parts must not be that tall.
     expect(control.height).toBeGreaterThan(title.height);
     expect(title.height).toBe(titleStyle?.lineHeight);
     expect(description.height).toBe(descriptionStyle?.lineHeight);
 
-    // Neither the title nor the description stretches the row.
     expect(title.width).toBeLessThanOrEqual(row.width);
     expect(description.width).toBeLessThanOrEqual(row.width);
 

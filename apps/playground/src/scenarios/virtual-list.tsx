@@ -1,13 +1,3 @@
-/**
- * `virtual-list-window` — `<virtual-list>` paints only a window of rows.
- *
- * 5 000 rows are declared. React and the retained tree hold every row, but GPUI
- * builds, lays out and paints only those near the viewport — so the honest
- * check is `getPaintedText()`, not the retained child count (which is 5 000).
- * Measured on this host: 9 rows painted at rest; see plan `140` §4.
- *
- * The wheel's `deltaY` is negative to scroll down (see `scroll.tsx`).
- */
 import { useState } from "react";
 import { Effect, pipe } from "effect";
 import * as Arr from "effect/Array";
@@ -61,7 +51,6 @@ const VirtualListProbe = () => {
   );
 };
 
-/** Parses a readout holding one index; a missing or malformed readout is `-1`. */
 const readIndex = (text: Option.Option<string>): number =>
   pipe(
     text,
@@ -88,8 +77,7 @@ export const virtualListScenario: ScenarioBody = {
 
       ctx.host.wheel("vlist", 0, -400);
       ctx.host.advance(50);
-      // `onVisibleRange` fires on scroll; the readouts start at `first=0
-      // last=-1`, so a non-negative `last` proves the event reached React.
+
       const lastAfter = readIndex(
         Option.fromNullishOr(ctx.host.text("vlist-last")),
       );
@@ -98,8 +86,7 @@ export const virtualListScenario: ScenarioBody = {
         lastAfter >= 0,
         true,
       );
-      // The first `onVisibleRange` reports the pre-scroll range, so the window
-      // moving is asserted on the painted rows instead: row 0 scrolls away.
+
       yield* ctx.expectEqual(
         "the painted window moved past the first row",
         Arr.some(ctx.host.paintedText(), (line) => line === "row 0"),

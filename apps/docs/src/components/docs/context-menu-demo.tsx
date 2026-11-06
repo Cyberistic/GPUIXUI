@@ -22,24 +22,6 @@ import {
   type TypedBuffer,
 } from "./context-menu-preview";
 
-/**
- * Browser previews for the Context menu page.
- *
- * The shipped menu is opened by a right press on its trigger (0.11.0 has no
- * `onContextMenu`, so the aux click's point is used) or by `Shift+F10` at the
- * trigger's bottom-left, and it restores focus only when it was opened from the
- * keyboard. The drawing takes the same routes — it listens for the browser's
- * `contextmenu` event and for `Shift+F10`, computes its point the same way, and
- * prints where focus went — so a reader pressing through the preview meets the
- * component's contract rather than a generic right-click popup.
- *
- * Geometry comes from `context-menu-preview.ts`, whose test reads the shipped
- * component and type-ahead module. The page says the paint is an approximation:
- * the native surface is an `anchored` layer at window coordinates and keeps its
- * box for a 200 ms exit, while this drawing paints inside the preview frame and
- * removes the surface at once.
- */
-
 interface Row {
   readonly id: string;
   readonly label: string;
@@ -65,7 +47,6 @@ const shareRows: ReadonlyArray<Row> = [
 const enabled = (list: ReadonlyArray<Row>): ReadonlyArray<Row> =>
   list.filter((row) => row.disabled !== true);
 
-/** The next enabled row in `rows`, wrapping at both ends. */
 const step = (
   list: ReadonlyArray<Row>,
   current: string | null,
@@ -106,14 +87,6 @@ interface SurfaceProps {
   readonly checked: boolean;
 }
 
-/**
- * The menu surface: rows, the second level and the key contract.
- *
- * The highlight is the focus, as in the shipped component: a row focused by an
- * arrow key, a click or type-ahead is the row `Enter` runs. The surface itself
- * takes focus on every open, so no row is highlighted until a key, a pointer or
- * type-ahead moves there.
- */
 const ContextSurface = ({
   point,
   onClose,
@@ -132,10 +105,6 @@ const ContextSurface = ({
   const buffer = useRef<TypedBuffer>(idleTyped);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  /**
-   * The pointer waits Base UI waits: a rest before a submenu opens, a grace
-   * before it closes. One timer per surface, so the last wait replaces the last.
-   */
   const later = (delay: number, run: () => void): void => {
     if (timer.current !== undefined) clearTimeout(timer.current);
     timer.current = setTimeout(run, delay);
@@ -164,7 +133,6 @@ const ContextSurface = ({
     subRefs.current.get(id)?.focus();
   };
 
-  /** Close the second level and put the focus back on the row that opened it. */
   const closeSubmenu = () => {
     hold();
     setSubmenu(false);
@@ -180,12 +148,10 @@ const ContextSurface = ({
       return;
     }
     onActivate(row);
-    // A checkbox row stays open, exactly as the shared menu row does.
+
     if (row.kind !== "checkbox") onClose("activate", row.label);
   };
 
-  // A press near the frame's bottom edge would put the surface half outside it,
-  // so the drawing places it the way a real menu collides: pulled back inside.
   useLayoutEffect(() => {
     const element = surface.current;
     const frame = element?.offsetParent;
@@ -200,10 +166,6 @@ const ContextSurface = ({
     );
   }, [point]);
 
-  // The second level opens past its row, and the frame decides the side: with
-  // no room on the right it flips to the left of its parent, the way a menu
-  // does. Without this it painted 167px outside the card, widened the scene's
-  // scroll box under the row's chevron, and was cut off.
   useLayoutEffect(() => {
     if (!submenu) return;
     const parent = surface.current;
@@ -234,16 +196,13 @@ const ContextSurface = ({
       submenu: boxOf(menu),
       frame: { width: frameBox.width, height: frameBox.height },
     });
-    // The child's `left`/`top` are measured from its parent's padding box.
+
     setSubPlaced({
       x: placed.x - parent.clientLeft,
       y: placed.y - parent.clientTop,
     });
   }, [submenu]);
 
-  // The shift, measured: without `preventScroll` a press near the frame's bottom
-  // edge scrolled the frame **84 px** to reveal the focused surface, and the file
-  // rows jumped with it. Focus must never scroll the page the menu opened over.
   useEffect(() => {
     surface.current?.focus({ preventScroll: true });
   }, []);
@@ -351,8 +310,6 @@ const ContextSurface = ({
           onFocus={() => setHighlight(row.id)}
           onMouseEnter={() => {
             if (row.kind !== "submenu") {
-              // A row that is not the submenu's trigger drops it, without moving
-              // the focus the pointer never put on this row.
               if (submenu) {
                 hold();
                 setSubmenu(false);
@@ -440,7 +397,6 @@ const files: ReadonlyArray<FileRow> = [
   { id: "runs", name: "runs/", meta: "12 files" },
 ];
 
-/** The workflow: a file list whose rows carry the project menu. */
 const ContextMenuWorkflow = () => {
   const scene = useRef<HTMLDivElement | null>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -557,7 +513,6 @@ const ContextMenuWorkflow = () => {
   );
 };
 
-/** The states: both opening routes and the focus each close leaves. */
 const ContextMenuStates = () => {
   const scene = useRef<HTMLDivElement | null>(null);
   const row = useRef<HTMLButtonElement | null>(null);

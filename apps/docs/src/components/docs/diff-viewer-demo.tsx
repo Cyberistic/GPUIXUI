@@ -11,16 +11,6 @@ import {
 import * as Option from "effect/Option";
 import { useState } from "react";
 
-/**
- * Browser preview for the Diff viewer page.
- *
- * The hunks, the unified row order and the split pairing are the package's own
- * `diff/logic`; the preview paints them in the platform theme's variables and
- * lets a reader switch the two modes the component offers. Only the paint is the
- * browser's — the rows are the diff the shipped viewer would draw, including the
- * hunk heading the sample earns and the paired change at the divider.
- */
-
 export const DIFF_MODE_ORDER = ["unified", "split"] as const;
 export type DiffMode = (typeof DIFF_MODE_ORDER)[number];
 
@@ -69,7 +59,6 @@ export function discounted(items, rate) {
 
 export const CURRENCY = "USD";`;
 
-/** The diff the page's two sources produce. */
 export const diffRows = (): ReadonlyArray<DiffRow> =>
   numberDiff(diffStrings(DIFF_BEFORE, DIFF_AFTER));
 

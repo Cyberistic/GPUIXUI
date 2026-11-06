@@ -1,15 +1,3 @@
-/**
- * Fieldset behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a group with no accessible name; a legend rendered twice
- * (the root writes it and a consumer writes it again); a `disabled` fieldset that
- * leaves its input editable and in the tab order; a disabled group that changes
- * a control it does not own; and a consumer `style` losing to the group layout.
- *
- * Runs wherever GPUix publishes a native binding; on this Intel Mac that is plan
- * 140's locally built `darwin-x64` binding.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import { Field, FieldInput } from "../field.js";
 import { Fieldset } from "../fieldset.js";
@@ -17,7 +5,6 @@ import { nodesWithRole } from "../internal/a11y.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
 
-/** Two fields in one billing group, with the group's own state driven by props. */
 const Billing = ({
   disabled,
   onChange,

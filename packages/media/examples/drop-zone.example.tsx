@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * DropZone example: a drop target that reports dropped files, and a pick route.
- *
- * `onPick` is where the caller's `GpuixRenderer.promptForPaths` goes; here it is
- * a no-op so the example mounts without a platform picker.
- */
-
 import { useState } from "react";
 import { DropZone } from "../src/drop-zone.js";
 

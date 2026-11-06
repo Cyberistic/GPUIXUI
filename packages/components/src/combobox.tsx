@@ -1,20 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Combobox: a searchable single- or multi-select built on GPUix's headless
- * combobox, with our own ranking from `combobox/logic.ts`.
- *
- * GPUix's `items` are strings and its `filter` is a predicate that preserves the
- * original order, so a predicate cannot express our ranking. The adapter therefore
- * feeds it an already-ranked `items` array (`filter={null}`) and controls
- * `inputValue`, which is the documented fallback plan 116 §3 allowed. Values are
- * the option `value`, never the displayed label.
- *
- * Focus, the active row and Enter/arrow/Escape handling stay GPUix's: those are
- * proven in its own suite and reimplementing them here would be a second, worse
- * copy. The parts own the trigger label, the ranking adapter and the selection
- * payload, and a part is never given a duplicated `value` prop.
- */
-
 import {
   Combobox as HeadlessCombobox,
   ComboboxEmpty as HeadlessEmpty,
@@ -112,26 +96,24 @@ import {
 } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
 
-/** What a selection callback receives: one value, several, or none. */
 export type ComboboxSelection = string | null | ReadonlyArray<string>;
 
-/** The rules a combobox part follows; throws outside a {@link Combobox}. */
 interface ComboboxContextValue {
   readonly options: ReadonlyArray<ComboboxOption>;
   readonly selectedValues: ReadonlyArray<string>;
   readonly open: boolean;
   readonly disabled: boolean;
-  /** The caller's fetch is in flight; the empty slot says so. */
+
   readonly loading: boolean;
-  /** The text in the search field; the popup owns it through the runtime. */
+
   readonly query: string;
   readonly labelFor: (value: string) => string;
   readonly isDisabled: (value: string) => boolean;
   readonly trigger: RefObject<PublicInstance | null>;
   readonly registerTrigger: (instance: PublicInstance | null) => void;
-  /** Close the popup; a leaving one stays painted for its exit tween. */
+
   readonly close: () => void;
-  /** An outside press already moved focus, so do not restore it. */
+
   readonly noteOutsidePress: () => void;
 }
 
@@ -139,7 +121,6 @@ const ComboboxContext = createContext<ComboboxContextValue | undefined>(
   undefined,
 );
 
-/** The combobox a part belongs to. Throws when there is none. */
 const useCombobox = (): ComboboxContextValue => {
   const value = useContext(ComboboxContext);
   if (value === undefined) {
@@ -148,44 +129,29 @@ const useCombobox = (): ComboboxContextValue => {
   return value;
 };
 
-/** {@link Combobox} props. */
 export interface ComboboxProps {
-  /** The options to choose from. A value that is not a list — a saved record's `null` — carries no rows, and an entry without a text value is dropped. */
   readonly options: ReadonlyArray<ComboboxOption>;
-  /** The controlled selection. `undefined` means uncontrolled; a stored value that is neither text nor a list means uncontrolled. */
+
   readonly value?: string | ReadonlyArray<string>;
-  /** The initial selection, read the same way. */
+
   readonly defaultValue?: string | ReadonlyArray<string>;
   readonly onValueChange?: (value: ComboboxSelection) => void;
-  /** Default `false`: one value and the popup closes on select. */
+
   readonly multiple?: boolean;
   readonly disabled?: boolean;
-  /**
-   * A query that matched no option may be created. Single-select only; the root
-   * reports the trimmed query and leaves the selection alone, because only the
-   * caller can add the option.
-   */
+
   readonly onCreate?: (query: string) => void;
-  /** The create row's label for a query. Default `Create "…"`. */
+
   readonly createLabel?: (query: string) => string;
-  /**
-   * Reports every search the popup runs: each typed query, and the empty one a
-   * popup opens with (each open is a new search). The caller fetches, debounces
-   * and cancels; the component never does.
-   */
+
   readonly onQueryChange?: (query: string) => void;
-  /**
-   * Whether `options` are filtered and ranked locally. Default `true`. Set
-   * `false` when a remote search already chose and ordered the rows — a result
-   * that matches on a synonym rather than on the label would be hidden.
-   */
+
   readonly shouldFilter?: boolean;
-  /** The caller's fetch is in flight; the empty slot says so. Default `false`. */
+
   readonly loading?: boolean;
   readonly children?: PartChildren;
 }
 
-/** Narrow the public selection to the runtime's value shape. */
 const toRuntimeValue = (
   value: Option.Option<string | ReadonlyArray<string>>,
   multiple: boolean,
@@ -202,14 +168,12 @@ const toRuntimeValue = (
           : (chosen[0] ?? null),
   });
 
-/** The option carrying `value`, if any. */
 const optionOf = (
   options: ReadonlyArray<ComboboxOption>,
   value: string,
 ): Option.Option<ComboboxOption> =>
   Arr.findFirst(options, (option) => option.value === value);
 
-/** The row's look in each interaction state. */
 const rowStyle = (theme: Theme, state: ComboboxItemState): StyleDesc => ({
   ...recipeStyle(COMBOBOX_ITEM, theme),
   minHeight: controlHeight(theme, "sm"),
@@ -221,14 +185,6 @@ const rowStyle = (theme: Theme, state: ComboboxItemState): StyleDesc => ({
   hover: state.disabled ? undefined : { backgroundColor: theme.colors.hover },
 });
 
-/**
- * The role a row's label paints.
- *
- * The label names its own colour in the recipe, so the row's inherited `color`
- * never reached it: a disabled row faded the whole row to 50% instead, which
- * composites the label into the popover fill (the state the menu row's comment
- * rejects). The disabled pair is measured on the popover, so the line states it.
- */
 const labelColor = (
   theme: Theme,
   state: { readonly disabled: boolean; readonly selected: boolean },
@@ -239,11 +195,6 @@ const labelColor = (
       ? theme.colors.foreground
       : theme.colors.popoverForeground;
 
-/**
- * A searchable single- or multi-select. Compose {@link ComboboxTrigger} and
- * {@link ComboboxContent} (with {@link ComboboxInput}, {@link ComboboxList} and
- * {@link ComboboxEmpty}) inside it.
- */
 export const Combobox = ({
   options,
   value: valueProp,
@@ -264,48 +215,22 @@ export const Combobox = ({
   const trigger = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
   const wasOpen = useRef(false);
-  /**
-   * The label the runtime is about to write into the search field.
-   *
-   * A single selection is published as the label of the chosen option — the
-   * runtime's own `ComboboxInput` shows it — and that is not a query the reader
-   * typed. Storing it would re-filter the list the popup is leaving, and the
-   * written value comes back as a host change (which the runtime reads as a new
-   * search and reopens on). The write is recognised by the label the selection
-   * names and dropped, so the field keeps the query the reader dismissed with.
-   */
+
   const labelWrite = useRef<Option.Option<string>>(Option.none());
-  // The popup's own presence: `open` publishes at once (the trigger stops
-  // claiming to be expanded and focus returns), while the box it painted stays
-  // mounted for its exit tween.
+
   const timing = useSurfaceTiming("normal");
   const presence = useSurfacePresence(open, timing);
 
-  /**
-   * The query belongs to the box on screen, not to the flag: a leaving popup
-   * keeps the rows, the input and the create row the reader dismissed instead
-   * of flashing the unfiltered list on its way out. The next open clears it,
-   * because every open is a new search.
-   */
   useLayoutEffect(() => {
     if (presence.mounted) return;
     setQuery("");
   }, [presence.mounted]);
 
-  // A remote list needs the query, not only the rows, and the caller's handler
-  // is usually an inline closure over its own draft: keeping it in a ref lets
-  // the report read the current one without re-running on every render (which
-  // would report again for the same query).
   const onQueryChangeRef = useRef(onQueryChange);
   useLayoutEffect(() => {
     onQueryChangeRef.current = onQueryChange;
   });
 
-  // Report each search the popup runs, including the empty one it opens with.
-  // A closed popup is not a search: `open` is false from the dismissal, so the
-  // query its ghost keeps painted is never reported, and a caller is not asked
-  // to fetch nothing. A control the caller disables is closing for the same
-  // reason.
   useLayoutEffect(() => {
     if (!open || disabled) return;
     onQueryChangeRef.current?.(query);
@@ -325,9 +250,6 @@ export const Combobox = ({
       ? []
       : [selected];
 
-  // A picker's rows are saved data as often as literals: a stored record's
-  // `null` is read as no rows here, once, so the filter, the label lookup and
-  // every part share the one list.
   const optionList = optionsOf(options);
   const visible =
     shouldFilter === true ? filterOptions(optionList, query) : optionList;
@@ -356,17 +278,11 @@ export const Combobox = ({
           onSome: labelOf,
         });
 
-  // A popup already open when the caller disables the combobox closes with it:
-  // the trigger refuses every route, so a surface left mounted paints rows no
-  // press can choose. A layout effect retires it before the frame paints, and
-  // the close path drops the query with the surface, so re-enabling does not
-  // reopen on a stale one.
   useLayoutEffect(() => {
     if (!disabled) return;
     setOpen(false);
   }, [disabled]);
 
-  /** Close, restoring focus only for the paths that should (Escape, select). */
   useLayoutEffect(() => {
     if (wasOpen.current && !open && restoreFocus.current) {
       const instance = trigger.current;
@@ -376,9 +292,6 @@ export const Combobox = ({
     wasOpen.current = open;
   }, [open, renderer]);
 
-  // An open popup is a dismiss layer, so a combobox inside a dialog closes on
-  // Escape before the dialog does: the stack consumes the event once and the
-  // dialog's own layer is never reached.
   const depth = useDismissDepth();
   useLayoutEffect(() => {
     if (!open) return;
@@ -388,9 +301,6 @@ export const Combobox = ({
     }, depth);
   }, [depth, open]);
 
-  // The label write lands in the same event as the selection that names it; a
-  // commit that ends without one (a multi-select toggle) drops the marker, so a
-  // later keystroke is never mistaken for it.
   useLayoutEffect(() => {
     labelWrite.current = Option.none();
   });
@@ -424,8 +334,6 @@ export const Combobox = ({
         items={items}
         value={selected}
         onValueChange={(next) => {
-          // The label this selection publishes into the search field, recorded
-          // before the runtime writes it (`labelWrite`).
           labelWrite.current = Option.fromNullishOr(
             typeof next === "string" ? labelFor(next) : null,
           );
@@ -440,9 +348,6 @@ export const Combobox = ({
         }}
         inputValue={query}
         onInputValueChange={(next) => {
-          // GPUix writes the selected label into the input as it closes a
-          // single-select; that is not a query the user typed, so the field
-          // keeps the words the reader searched with.
           const written = labelWrite.current;
           labelWrite.current = Option.none();
           if (!open) return;
@@ -472,22 +377,19 @@ export const Combobox = ({
   );
 };
 
-/** {@link ComboboxTrigger} props. */
 export interface ComboboxTriggerProps extends Omit<
   HeadlessTriggerProps,
   "children"
 > {
-  /** Shown while nothing is selected. Default `"Select…"`. */
   readonly placeholder?: string;
-  /** The trigger's accessible name. */
+
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** Default `"combobox-trigger"`. */
+
   readonly testId?: string;
 }
 
-/** The closed control: the selected labels, the caret and `aria-expanded`. */
 export const ComboboxTrigger = ({
   placeholder = "Select…",
   label,
@@ -546,32 +448,19 @@ export const ComboboxTrigger = ({
   );
 };
 
-/** {@link ComboboxContent} props: the anchored popup surface. */
 export interface ComboboxContentProps extends FloatingContentProps {
-  /** Default `"bottom"`. Flipped once if the snapped surface would cover the trigger. */
   readonly side?: "top" | "right" | "bottom" | "left";
-  /** Default `"start"`. `"center"` is measured from the trigger, not the runtime's `center`. */
+
   readonly align?: "start" | "center" | "end";
-  /** The gap between trigger and surface. Default `4`. */
+
   readonly sideOffset?: number;
-  /** Added on top of the measured centre correction. Default `0`. */
+
   readonly alignOffset?: number;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/**
- * The popup. It stays painted for its exit tween and travels out the way it
- * arrived: a fade plus 4px of travel from the side it opened at.
- *
- * The box is ours rather than GPUix's `ComboboxContent`, because that part
- * returns nothing the moment the root closes, so a popup built from it can enter
- * but never leave. The runtime still owns the state — the rows, the ranking, the
- * active row and every key are its context — so this part only paints the
- * surface, keeps it mounted for its exit window, and stops it taking presses
- * while it leaves.
- */
 export const ComboboxContent = ({
   side = "bottom",
   align = "start",
@@ -592,8 +481,6 @@ export const ComboboxContent = ({
   const timing = useSurfaceTiming("normal");
   const presence = useSurfacePresence(open, timing);
   const placement = usePlacement({
-    // The exit tween keeps the measured side, so a popup that flipped does not
-    // jump back while it fades out.
     open: presence.mounted,
     side,
     align,
@@ -603,17 +490,8 @@ export const ComboboxContent = ({
   });
   assertParts(comboboxContent, children);
 
-  // The box is on screen while the flag is open **or** while its exit window is
-  // still running. The open half is belt and braces over the seam's own
-  // layout-effect mount: it keeps the entry on the commit the flag changes,
-  // which is the frame the popup's first box is measured in.
   if (!open && !presence.mounted) return null;
 
-  // A surface's first motion frame is committed when its host mounts, one commit
-  // before the measured flip can move it, so the travel follows the side this
-  // popup was asked to open at; a popup the component flips above its trigger
-  // keeps the entrance its requested side owns (`behaviour/combobox.test.tsx`,
-  // "the popup's entrance and exit").
   const frames = fadeFromAnchor(side, 4);
 
   return (
@@ -636,7 +514,7 @@ export const ComboboxContent = ({
         mergeStyles(recipeStyle(cn(COMBOBOX_CONTENT, className), theme), {
           maxHeight: 280,
           overflowY: "scroll",
-          // A positioned box is what the leaving guard is inset against.
+
           position: "relative",
           ...presenceStyle(presence.present),
         }),
@@ -649,15 +527,12 @@ export const ComboboxContent = ({
   );
 };
 
-/** {@link ComboboxInput} props. */
 export interface ComboboxInputProps {
-  /** Default `"Search…"`. */
   readonly placeholder?: string;
-  /** The field's accessible name. Default `"Search options"`. */
+
   readonly label?: string;
 }
 
-/** The search field. Escape asks the root to return focus to the trigger. */
 export const ComboboxInput = ({
   placeholder = "Search…",
   label = "Search options",
@@ -680,8 +555,7 @@ export const ComboboxInput = ({
     <div
       style={hintHost({
         width: "100%",
-        // The popup's inset seats the row; a long list must not shrink it, and
-        // the gap below keeps the first option off the field.
+
         flexShrink: 0,
         paddingBottom: theme.spacing.xs,
       })}
@@ -689,11 +563,7 @@ export const ComboboxInput = ({
       <HeadlessInput
         testId="combobox-input"
         aria-label={label}
-        // The hint is painted, so the runtime's `aria_placeholder` left with
-        // the prop; the empty field announces the same words as help.
         aria-description={fieldHelp({ placeholder }, query)}
-        // The headless field forwards the host theme; its own fill is `input`.
-        // The hint is painted, because the host's placeholder is a fixed grey.
         theme={nativeTextTheme(theme, "input")}
         onKeyDown={(event) => {
           if (isDismiss(event)) dismissTopLayer(event);
@@ -708,15 +578,12 @@ export const ComboboxInput = ({
   );
 };
 
-/** {@link ComboboxList} props. */
 export interface ComboboxListProps extends Omit<HeadlessListProps, "children"> {
-  /** The listbox's accessible name. Default `"Options"`. */
   readonly label?: string;
-  /** A style for every option row, or a function of its state. */
+
   readonly itemStyle?: StateStyle<ComboboxItemState>;
 }
 
-/** The listbox: one {@link ComboboxItem} per visible option, in ranked order. */
 export const ComboboxList = ({
   label = "Options",
   itemStyle,
@@ -736,15 +603,12 @@ export const ComboboxList = ({
   );
 };
 
-/** {@link ComboboxItem} props. */
 export interface ComboboxItemProps {
-  /** The option's value. The label and description are read from the root. */
   readonly value: string;
-  /** A style, or a function of the row's state (GPUix's `ComboboxItemState`). */
+
   readonly style?: StateStyle<ComboboxItemState>;
 }
 
-/** One option row: label, description and the selected mark. */
 export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
   const theme = useTheme();
   const { options, selectedValues, labelFor, isDisabled } = useCombobox();
@@ -814,16 +678,10 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
   );
 };
 
-/** {@link ComboboxEmpty} props. */
 export interface ComboboxEmptyProps {
   readonly children?: ReactNode;
 }
 
-/**
- * GPUix's empty slot: shown while no option matches the query. A caller's
- * children win, so a remote list can paint its own searching row; without them
- * the root's `loading` chooses the words.
- */
 export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
   const theme = useTheme();
   const { loading } = useCombobox();
@@ -841,10 +699,8 @@ export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
 
 export type { ComboboxOption } from "./combobox/logic.js";
 
-/** GPUix's own state shape for one option row, re-exported for our consumers. */
 export type { ComboboxItemState } from "@gpuix/react";
 
-/** Every part of Combobox, so a misplaced sibling is named. */
 const comboboxParts: ReadonlyArray<PartComponent> = [
   Combobox,
   ComboboxTrigger,
@@ -869,7 +725,6 @@ const comboboxContent: PartsContract = {
   hint: "Put ComboboxInput, ComboboxList and ComboboxEmpty directly inside ComboboxContent.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const comboboxMeta = {
   name: "Comboboxes",
   tier: 2,

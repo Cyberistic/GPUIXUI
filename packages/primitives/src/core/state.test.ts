@@ -2,16 +2,6 @@ import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { initValueState, setValue, withValue } from "./state.js";
 
-/**
- * Guards the controlled/uncontrolled contract.
- *
- * The bug this exists for is specific and common: a component that keeps its
- * own copy of a value the parent also owns. The parent re-renders, the copy
- * wins, and the field appears to revert what the user just typed. `withValue`
- * is the guard — an uncontrolled control must survive a parent re-render, and a
- * controlled one must follow the parent.
- */
-
 describe("initValueState", () => {
   it("is uncontrolled when no value is supplied", () => {
     const state = initValueState<string>(Option.none(), "draft");
@@ -62,8 +52,6 @@ describe("withValue", () => {
   });
 
   it("follows a value that arrives after the control was mounted", () => {
-    // The bug guarded: a control that mounted without a value dropped the one
-    // its owner pushed later, so a field loaded from a server stayed empty.
     const state = initValueState(Option.none(), "default");
     const next = withValue(state, Option.some("from parent"));
     expect(next.mode).toBe("controlled");

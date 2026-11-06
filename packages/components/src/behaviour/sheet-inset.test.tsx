@@ -1,10 +1,3 @@
-/**
- * An AppKit sheet: a top sheet that hangs from the toolbar (plan 724).
- *
- * Bug guarded: a Mac sheet drops from under the window's toolbar, centred and
- * narrower than the window; a top drawer painted flush against the window's top
- * edge across its whole width, over the toolbar it belongs under.
- */
 import { describe, expect, it } from "vitest";
 import { Drawer, DrawerContent } from "../drawer.js";
 import { requireBounds, settleMotion } from "../internal/interaction.js";

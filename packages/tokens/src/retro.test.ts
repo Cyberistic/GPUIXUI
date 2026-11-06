@@ -1,26 +1,3 @@
-/**
- * Guards the authored looks.
- *
- * The defect this closes: the only way to ship a look that was not one of the
- * four platform names was `extendTheme` one value at a time, so the most
- * recognisable desktop looks could only be reached by copying twenty roles out
- * of prose. `retroStyles` is the same data shape as `platformStyles` and
- * `applyStyle` is the one merge rule, so a look is data a consumer can read,
- * edit and ship — without `platformNames` growing a value, because that list is
- * the persisted key a consumer stores and the docs toggle offers.
- *
- * The second thing held here is honesty, and it now has two provenances. The
- * Windows eras carried no artwork (their chrome is a handful of colour values,
- * no bundled face), and neither shipped a dark mode, so those two dark editions
- * are invented. Omarchy's pair is **not** invented: its dark set is Tokyo Night
- * and its light set the guide's Flexoki Light reference, both named in the
- * module. Every one of the six themes has to clear the same contrast and
- * decorative contracts as the built-in and platform themes, and the documents
- * have to name all three looks, state the theme count the tables carry, and
- * keep the invented claim where it belongs rather than reading as a fact about
- * every look.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { invalidColorRoles } from "./color.js";
@@ -53,7 +30,6 @@ import {
 
 const looks = retroNames;
 
-/** Every authored theme: every look, both modes. */
 const retroThemes = looks.flatMap((name) =>
   themeModes.map((mode) => ({
     label: `${name} ${mode}`,
@@ -74,29 +50,20 @@ describe("retroStyles", () => {
 
   it("narrows a stored look name to the ones it ships", () => {
     looks.forEach((name) => expect(isRetroName(name)).toBe(true));
-    // A stored value is `unknown`: a renamed look, a different case or a number
-    // must not reach `retroStyles[name]` as `undefined`.
+
     ["Luna", "aero ", "", "win32", 7, null].forEach((value) =>
       expect(isRetroName(value), String(value)).toBe(false),
     );
   });
 
-  /**
-   * `retroStyles[name]` on a name the release dropped is `undefined`, and
-   * `applyStyle` then read the absent style's `contrast` and threw
-   * `Cannot read properties of undefined (reading 'contrast')` — a message
-   * naming neither the look nor the release it predates. A look name is a stored
-   * preference, so the resolver refuses it by name instead.
-   */
   it("refuses a stored look its resolver cannot find", () => {
-    // The cast is the storage boundary: a settings row is unknown input.
     const stored = JSON.parse('"aqua"') as RetroName;
 
     expect(() => retroTheme(themes.light, stored)).toThrow(
       /`aqua` is not an authored look/,
     );
     expect(() => retroTheme(themes.light, stored)).toThrow(/isRetroName/);
-    // The membership test is the guard's, so no shipped look is refused.
+
     looks.forEach((name) =>
       expect(retroTheme(themes.light, name).mode).toBe("light"),
     );
@@ -115,19 +82,17 @@ describe("retroStyles", () => {
       full: 9999,
     });
     expect(style.density).toBe("compact");
-    // Tokyo Night's baseline roles from the Omarchy Style guide.
+
     expect(style.colors.dark.background).toBe("#1A1B26");
     expect(style.colors.dark.primary).toBe("#7AA2F7");
     expect(style.colors.dark.foreground).toBe("#C0CAF5");
     expect(style.colors.dark.selected).toBe("#292E42");
-    // Its stated light reference is Flexoki Light.
+
     expect(style.colors.light.background).toBe("#FFFCF0");
     expect(style.colors.light.primary).toBe("#205EA6");
   });
 
   it("keeps the platform axis as it is", () => {
-    // A look is not a platform: the persisted key and the docs toggle offer the
-    // four operating systems, and a look is applied by name instead.
     looks.forEach((name) => expect(platformNames).not.toContain(name));
   });
 
@@ -185,10 +150,7 @@ describe("retroTheme", () => {
       );
       expect(theme.radius.md, label).toBe(style.radius.md);
       expect(theme.density.name, label).toBe(style.density);
-      // Untouched groups stay the base theme's: a look changes chrome, shape
-      // and type, not the spacing scale or the shadow design. Elevation keeps
-      // the base geometry, restated in the look's own `shadow` role — that is
-      // how a look that carries its own tint owns its shadows.
+
       expect(theme.spacing, label).toEqual(base.spacing);
       expect(theme.elevation, label).toEqual(
         elevationWithTint(base.elevation, theme.colors.shadow),
@@ -214,7 +176,6 @@ describe("retroTheme", () => {
   it("inherits a role the look does not author", () => {
     retroThemes.forEach(({ label, name, theme, base }) => {
       if (name !== "omarchy") {
-        // Luna and Aero keep the base red; Omarchy's own palette names one.
         expect(theme.colors.destructive, label).toBe(base.colors.destructive);
       }
       expect(theme.colors.overlay, label).toBe(base.colors.overlay);
@@ -241,9 +202,6 @@ describe("retroTheme", () => {
   });
 
   it("ships both editions as a real second palette", () => {
-    // Luna and Aero are authored for the library because neither era shipped a
-    // dark mode; Omarchy's pair is the shell's own. Whichever the provenance,
-    // each look must carry a real second palette for both modes.
     const overBlack = (color: string | undefined): number =>
       contrastRatio(color ?? "#FFFFFF", "#000000") ?? 0;
     looks.forEach((name) => {
@@ -282,8 +240,7 @@ describe("editing an authored look", () => {
       const brand = resolveRetroBrand(mode);
       const aero = retroTheme(themes[mode], "aero");
       expect(brand.name).toBe("Aero brand");
-      // The brand owns its primary per mode: it is also the mark a checked row
-      // paints, and the look's dark washes are too light for the era's deep blue.
+
       expect(brand.colors.primary).toBe(
         mode === "dark" ? "#4FA9E0" : "#0F5E8C",
       );
@@ -299,8 +256,6 @@ describe("editing an authored look", () => {
   });
 
   it("stays readable in both modes", () => {
-    // The brand owns its on-colour and its accent family, so the audit the
-    // library publishes passes on the result.
     themeModes.forEach((mode) => {
       expect(invalidColorRoles(resolveRetroBrand(mode)), mode).toEqual([]);
       expect(contrastFailures(resolveRetroBrand(mode)), mode).toEqual([]);
@@ -309,12 +264,6 @@ describe("editing an authored look", () => {
   });
 });
 
-/**
- * Guards the prose the provenance and the contract live in. A look that is
- * documented as a platform, or with invented dark palettes presented as
- * historical, sends a consumer looking for a toggle entry that does not exist
- * and copies colours the era never used.
- */
 describe("retro documentation", () => {
   const inventoryRow = (): Record<string, string> => {
     const row = read("../../../.agents/slop/COMPONENTS.md")
@@ -345,7 +294,6 @@ describe("retro documentation", () => {
   });
 
   it("says the looks are not platform names", () => {
-    // Emphasis markers and line wrapping are formatting, not meaning.
     const plain = (text: string): string =>
       text.replaceAll("*", "").replace(/\s+/g, " ");
     const vague = Object.entries(surfaces())
@@ -357,9 +305,6 @@ describe("retro documentation", () => {
   });
 
   it("keeps the invented dark editions with the era that invented them", () => {
-    // The claim is true of the two Windows looks and false of Omarchy, whose
-    // pair is a desktop's own palette. A page that reads as a fact about every
-    // look sends a consumer looking for an Omarchy dark mode nobody invented.
     const everyLookInvented = Object.entries(surfaces())
       .filter(([, text]) =>
         /their (?:dark )?(?:editions?|sets?|modes?) (?:are|is) invented/i.test(
@@ -403,9 +348,6 @@ describe("retro documentation", () => {
   });
 
   it("states the look and theme counts the tables carry", () => {
-    // A look or a mode added to the table has to move every printed count with
-    // it: the pages said "ships two" and "All four themes" for a season while
-    // three looks painted six themes.
     const numberWords = [
       "zero",
       "one",
@@ -469,8 +411,6 @@ describe("retro documentation", () => {
   });
 
   it("prints each look's family, radius and density as the table carries them", () => {
-    // A row is the look's whole identity on the page, so it is compared as one
-    // line built from the table: a changed value cannot drift in either place.
     const catalogue = read("../../../docs/tokens.md");
     const missing = looks
       .map((name) => {

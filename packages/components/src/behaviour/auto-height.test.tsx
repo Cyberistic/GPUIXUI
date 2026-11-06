@@ -1,17 +1,3 @@
-/**
- * AutoHeight in the real GPUix renderer.
- *
- * The bugs these guard: a reveal that mounts at its full height instead of
- * growing from the measurement; a collapse that unmounts before its exit tween
- * runs, or never unmounts at all; a reduced-motion reveal that still needs the
- * clock; and a measured height that is captured once and never refreshed when
- * the content changes.
- *
- * The motion clock is paused before each interaction, so the entry frame is the
- * declared zero rather than however far real time had got; the exit's unmount is
- * a real timer, so that half polls.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { boundsOf, settle, waitFor } from "../internal/interaction.js";
@@ -19,20 +5,17 @@ import { renderComponent } from "../internal/test-root.js";
 import { AutoHeight } from "../auto-height.js";
 import { MotionProvider } from "../motion.js";
 
-/** The painted height of the reveal, `-1` when nothing was painted. */
 const height = (page: ReturnType<typeof renderComponent>): number =>
   Option.getOrElse(
     Option.map(boundsOf(page, "box"), (box) => box.height),
     () => -1,
   );
 
-/** The motion description the runtime is running for `testId`. */
 const motionOf = (
   page: ReturnType<typeof renderComponent>,
   testId: string,
 ): unknown => page.renderer.findByTestId(testId)?.customProps?.motion;
 
-/** A reveal over a body of `height` pixels. */
 const Reveal = ({
   open,
   body = 80,
@@ -45,7 +28,6 @@ const Reveal = ({
   </AutoHeight>
 );
 
-/** An opened reveal, settled on the motion clock. */
 const opened = (page: ReturnType<typeof renderComponent>): void => {
   page.rerender(<Reveal open />);
   settle(page);
@@ -54,13 +36,6 @@ const opened = (page: ReturnType<typeof renderComponent>): void => {
 };
 
 describe("AutoHeight", () => {
-  /**
-   * The bug this guards: `onLayout` reports after the frame that painted the
-   * reveal, so the opening frame handed the runtime a target of zero. The panel
-   * painted at rest and only began to grow once the event arrived — a visible
-   * stall on the first open. The content is laid out when it commits, so the
-   * target has to be the measured height on the frame the reveal opens.
-   */
   it("hands the runtime the measured height on the frame it opens", () => {
     const page = renderComponent(<Reveal open={false} />);
     try {
@@ -77,8 +52,6 @@ describe("AutoHeight", () => {
   });
 
   it("fades the content in after the box starts to grow, and out with it", () => {
-    // The panel's 0.02s lead: the height starts first, so the arriving content
-    // is not a flash inside a box that is still opening.
     const page = renderComponent(<Reveal open={false} />);
     try {
       page.renderer.clockPause();
@@ -126,7 +99,7 @@ describe("AutoHeight", () => {
 
       page.rerender(<Reveal open={false} />);
       settle(page);
-      // The collapse tweens, so the body is still in the tree for a moment.
+
       expect(page.renderer.findByTestId("box")).toBeDefined();
       await waitFor(() =>
         expect(page.renderer.findByTestId("box")).toBeUndefined(),
@@ -152,7 +125,6 @@ describe("AutoHeight", () => {
       settle(page);
       settle(page);
 
-      // The clock never advanced: a duration of zero did the work.
       expect(height(page)).toBe(80);
     } finally {
       page.unmount();
@@ -177,14 +149,6 @@ describe("AutoHeight", () => {
     }
   });
 
-  /**
-   * The bug this guards: the measurement outlived the subtree that produced it,
-   * so a reveal reopened after its content changed headed for the height the
-   * **closed** content had until the new body reported one. The box still
-   * started at zero, but its target was a number that described content no
-   * longer mounted, and the caller's `style` callback read that stale height on
-   * the first frame.
-   */
   it("starts a reopened reveal from nothing, not the height it closed with", async () => {
     const heights: number[] = [];
     const Box = ({
@@ -214,8 +178,6 @@ describe("AutoHeight", () => {
       settle(page);
       await waitFor(() => expect(height(page)).toBe(80));
 
-      // Close and let the entry unmount, so the height it reported belongs to a
-      // subtree that is no longer on screen.
       page.rerender(<Box open={false} body={80} />);
       settle(page);
       await waitFor(() =>
@@ -238,19 +200,6 @@ describe("AutoHeight", () => {
 });
 
 describe("the press a close uncovers", () => {
-  /**
-   * The bug this guards: a collapse is a **wrapper**, not a surface. `auto` on
-   * its clipping box inserts the runtime's blocking hitbox between the control
-   * that paints under it and the content it wraps, so a control inside an open
-   * section could lose the press to the box; and a collapse stays mounted for
-   * its exit tween, so it was still that boundary while the section shrank. The
-   * box therefore paints nothing at rest and `none` while it leaves. The
-   * measured limit is the runtime's: `pointerEvents` does not inherit and
-   * removes only the declaring element's hitbox, so a control inside the fading
-   * box keeps its own (GPUix `AGENTS.md`; the headless renderer dispatches a
-   * simulated click by bounds, so routing is the live probes' claim, not this
-   * one). This case holds the guard the surface owes.
-   */
   const guard = (page: ReturnType<typeof renderComponent>) =>
     page.renderer.findByTestId("box")?.style.pointerEvents;
 
@@ -260,12 +209,12 @@ describe("the press a close uncovers", () => {
       page.renderer.clockPause();
       opened(page);
       await waitFor(() => expect(height(page)).toBe(80));
-      // Open, the clipping box adds no hitbox of its own.
+
       expect(guard(page)).toBeUndefined();
 
       page.rerender(<Reveal open={false} />);
       settle(page);
-      // The clipped box is still painted for the tween, and no longer a target.
+
       expect(page.renderer.findByTestId("box")).toBeDefined();
       expect(guard(page)).toBe("none");
     } finally {

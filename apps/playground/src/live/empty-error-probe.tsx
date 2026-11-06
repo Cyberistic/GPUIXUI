@@ -1,22 +1,3 @@
-/**
- * The `empty-error-states-lifecycle` probe: the panel a collection shows when a
- * load fails and when it has nothing, driven out of both states in a window.
- *
- * MISSION lists **empty and error states** among the interactions "tested in the
- * actual native runtime" means, and nothing had driven either: the shipped
- * `EmptyState` was only mounted by `examples-mount`, and `validation-lifecycle`
- * measures a field's message rather than the panel a list falls back to.
- *
- * The probe starts on a failed load (the shipped `Alert`, destructive tone, with
- * its retry action), recovers to the empty collection (the shipped `EmptyState`,
- * with its own action) and ends on a painted record. Every state change is a
- * press, so the two ways out are proved to be real controls rather than painted
- * words; the paint is read from the frame, so a component that keeps its box but
- * stops painting its surface cannot pass the text checks alone.
- *
- * The view and the steps live here so the measurement is one module; the
- * registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { Pixels, Smoke } from "@gpuixui/testing";
@@ -58,10 +39,8 @@ import {
   type EmptyErrorStage,
 } from "./empty-error.js";
 
-/** A press and the input that follows it need a frame to commit. */
 const SETTLE = Duration.millis(40);
 
-/** The panel's window: one state at a time, each with its own action. */
 export const EmptyErrorProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -165,7 +144,6 @@ export const EmptyErrorProbe = (): ReactNode => {
   );
 };
 
-/** The colour at a logical point of a capture, failing by name if outside. */
 const sampleAt = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -175,7 +153,6 @@ const sampleAt = (
 ): Effect.Effect<Pixels.Rgba, Smoke.SmokeAssertionError> =>
   ctx.expectSome(label, colourAt(frame, point, scale));
 
-/** Whether `sample` is the paint `expected` within the frame's tolerance. */
 const expectPaint = (
   ctx: Smoke.AsyncSmokeContext,
   label: string,
@@ -184,7 +161,6 @@ const expectPaint = (
 ): Effect.Effect<void, Smoke.SmokeAssertionError> =>
   ctx.expectEqual(label, differs(sample, expected), false);
 
-/** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -199,7 +175,6 @@ const paintedBox = (
     );
   });
 
-/** Whether an element the runtime no longer paints reports no box. */
 const unpainted = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -216,7 +191,6 @@ export const emptyErrorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const readout = () => ctx.host.text(EMPTY_ERROR_IDS.readout);
     const words = () => ctx.host.text(EMPTY_ERROR_IDS.stage);
 
-    /** A capture and the scale its logical points convert by. */
     const capture = (name: string) =>
       Effect.gen(function* () {
         yield* ctx.host.capture(name);
@@ -251,7 +225,6 @@ export const emptyErrorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Option.fromNullishOr(Pixels.hexToRgba(contentPaint(dark))),
     );
 
-    // 1. The panel opens on the failed load, with its own surface and words.
     yield* ctx.expectEqual(
       "the panel opens on the failed load",
       yield* readout(),
@@ -272,8 +245,6 @@ export const emptyErrorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       surfaceColour,
     );
 
-    // 2. The readable role reaches the surface, not only the description: the
-    //    title's own ink is counted inside the alert's box.
     const inkRegion = yield* ctx.expectSome(
       "the alert's box is inside the capture",
       Option.fromNullishOr(
@@ -290,8 +261,6 @@ export const emptyErrorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 3. The way out is a real control: its fill paints, and a press moves the
-    //    panel off the error rather than painting beside it.
     const retry = yield* paintedBox(ctx, EMPTY_ERROR_IDS.retry);
     yield* expectPaint(
       ctx,
@@ -319,8 +288,6 @@ export const emptyErrorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 4. The empty state paints its words and no surface of its own: the panel
-    //    behind it is the only fill the padding shows.
     const emptyWords = yield* words();
     yield* ctx.expectContains(
       "the empty state paints its title",
@@ -347,7 +314,6 @@ export const emptyErrorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       stageColour,
     );
 
-    // 5. The empty state's action is a control too, and it paints the record.
     const newProject = yield* paintedBox(ctx, EMPTY_ERROR_IDS.newProject);
     yield* expectPaint(
       ctx,
@@ -375,7 +341,6 @@ export const emptyErrorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 6. The recovered panel paints the record and drops both fallback states.
     const content = yield* paintedBox(ctx, EMPTY_ERROR_IDS.content);
     const readyFrame = yield* capture(EMPTY_ERROR_FRAMES.ready);
     yield* expectPaint(

@@ -1,13 +1,3 @@
-/**
- * RotatingText in the real GPUix renderer.
- *
- * The bugs these guard: a line that never advances; an interval that fires
- * forever for a single phrase; a step that drops the callback; a rotation that
- * stops under the reduced preference even though the phrase is content; a fade
- * that still runs when the reader asked for less motion; and a phrase list or a
- * name that arrived from a saved record as something other than text.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import {
   a11yNodes,
@@ -18,7 +8,6 @@ import {
 import { MotionProvider } from "@gpuixui/components/motion";
 import { RotatingText } from "../rotating-text.js";
 
-/** Every painted string, joined: the phrase at the frame just painted. */
 const painted = (page: ReturnType<typeof renderComponent>): string =>
   page.renderer.getAllText().join("");
 
@@ -118,9 +107,6 @@ describe("RotatingText", () => {
     }
   });
 
-  // The bug guarded: a page restored from storage carries `null` where it kept
-  // no copy, so `phrases` reached the render as a record's shape rather than a
-  // list and `phrases.length` threw before a single frame painted.
   it("keeps the frame when a saved phrase list is absent", () => {
     const page = renderComponent(
       <RotatingText
@@ -137,9 +123,6 @@ describe("RotatingText", () => {
     }
   });
 
-  // The bug guarded: an i18n row that lost its key is `null` inside an
-  // otherwise good list, and the rotation painted that hole as a blank frame
-  // with no name instead of stepping over it.
   it("steps over an entry a stored record left empty", async () => {
     const onIndexChange = vi.fn();
     const page = renderComponent(
@@ -153,18 +136,13 @@ describe("RotatingText", () => {
     try {
       expect(painted(page)).toBe("Faster");
       await waitFor(() => expect(onIndexChange).toHaveBeenCalledWith(1));
-      // The callback fires before the frame that paints the new phrase, so a
-      // fast machine passed this on the same tick and a loaded one read the
-      // previous phrase. Waiting for the paint still fails if the blank entry is
-      // the one that reaches the surface.
+
       await waitFor(() => expect(painted(page)).toBe("Safer"));
     } finally {
       page.unmount();
     }
   });
 
-  // The bug guarded: a label restored blank painted a text node whose name was
-  // a run of spaces, so assistive technology met an unnamed phrase.
   it("names the phrase when the stored label arrived blank", () => {
     const page = renderComponent(
       <RotatingText

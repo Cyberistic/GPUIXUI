@@ -5,16 +5,6 @@ import * as R from "effect/Record";
 import { ICON_NAMES, isIconName } from "./names.js";
 import { FALLBACK_ICON, iconMarkup, icons } from "./registry.js";
 
-/**
- * Guards the icon registry's structure, not its art.
- *
- * A monochrome icon is only paintable by GPUix if it is self-contained, on the
- * 24x24 grid, and carries no colour of its own — the tint comes from
- * `style.color`, so **any** paint literal in the markup is invisible to the
- * theme. Each assertion below is a bug that shipped somewhere before: a
- * foreign `fill`, an off-grid `viewBox`, an external reference.
- */
-
 const PAINT = /(?:fill|stroke)="([^"]*)"/g;
 
 describe("icon registry", () => {
@@ -54,10 +44,6 @@ describe("icon registry", () => {
   });
 
   it("draws only with the element types the runtime suite has painted", () => {
-    // The window suite paints the shared grammar (`check` and `star-filled` are
-    // `path`/`circle` shapes). A new element type (`ellipse`, `text`, `mask`)
-    // paints its own default — or nothing — until a probe measures it, so the
-    // set stays on the elements it has measured.
     const PAINTED = Arr.fromIterable([
       "path",
       "circle",
@@ -78,9 +64,6 @@ describe("icon registry", () => {
   });
 
   it("gives no two names the same geometry", () => {
-    // The copy-paste bug: adding `save` by duplicating `download` compiles,
-    // passes every structural check, and paints the wrong glyph under the new
-    // name — so a consumer asking for one icon gets another.
     const groups = Arr.groupBy(R.toEntries(icons), ([, markup]) => markup);
     const shared = Arr.filter(
       R.values(groups),
@@ -107,12 +90,6 @@ describe("icon names", () => {
   });
 
   it("reads a stored name the set does not carry as the placeholder mark", () => {
-    // The bug guarded: a name is a stored value as often as a literal, so a
-    // release that renames or drops an icon reaches `iconMarkup` as a string the
-    // union no longer names. The registry read answered `undefined`, which the
-    // runtime painted as an empty box inside a live `Image` node; a decoded name
-    // now paints the placeholder. `undefined` and a non-string are the same
-    // absence — a saved record whose field a store wrote `null` into.
     expect(iconMarkup("check")).toBe(icons.check);
     expect(iconMarkup("floppy")).toBe(icons[FALLBACK_ICON]);
     expect(iconMarkup(undefined)).toBe(icons[FALLBACK_ICON]);
@@ -126,8 +103,6 @@ describe("icon names", () => {
   });
 
   it("narrows only a name the set carries", () => {
-    // `isIconName` is what a caller with its own stored list filters through, so
-    // it must answer the same membership the resolver reads.
     expect(
       Arr.map(["check", "floppy", "", "Check", 7, undefined], isIconName),
     ).toEqual([true, false, false, false, false, false]);

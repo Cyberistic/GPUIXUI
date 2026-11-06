@@ -1,20 +1,3 @@
-/**
- * PageTransition in the real GPUix renderer.
- *
- * The bugs these guard: a swap that mounts the incoming view beside the
- * outgoing one (two pages in the accessibility tree and in the focus order); an
- * exit that never finishes, so the old view is the page for good; a settle that
- * runs before the exit tween; a travel that points the wrong way for the
- * direction, or on the wrong axis; a reduced run that still travels; a key
- * changed mid-exit that paints the abandoned view; and a return to the view on
- * screen that leaves it and remounts the same content.
- *
- * The exit is a real timer while the arrival is a motion-clock tween, so the
- * swap itself polls and the travel is read on a paused clock. A headless tree
- * reports bounds and text, not paint, so the travel is the observable half of
- * the fade-and-offset pair.
- */
-
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -28,7 +11,6 @@ import { MotionProvider, surfaceLevelOf } from "../motion.js";
 import { PageTransition } from "../page-transition.js";
 import type { PageTransitionProps } from "../page-transition.js";
 
-/** One view inside a framed region, so a shifted child is measurable. */
 const scene = (
   viewKey: string,
   props: Partial<PageTransitionProps> = {},
@@ -42,11 +24,9 @@ const scene = (
   </div>
 );
 
-/** How far the mounted view sits from the region's own left edge. */
 const offsetX = (page: ReturnType<typeof renderComponent>): number =>
   requireBounds(page, "page-view").x - requireBounds(page, "page").x;
 
-/** The text of the one mounted view, `[]` when a view is missing. */
 const shownText = (page: ReturnType<typeof renderComponent>): unknown =>
   page.renderer.getAllText();
 
@@ -69,9 +49,6 @@ describe("PageTransition", () => {
   });
 
   it("swaps in the frame it changes for a stored none read through the reader", () => {
-    // A saved route carries its transition level, and the table's own reader
-    // answers `normal` for `"none"` — the reader beside the prop vocabulary is
-    // what keeps the saved choice still.
     const saved: unknown = "none";
     const page = renderComponent(scene("a"));
     try {
@@ -157,10 +134,6 @@ describe("PageTransition", () => {
   });
 
   it("stops a leaving view taking presses while it fades", async () => {
-    // The bug this guards: the outgoing view is still painted for its exit half,
-    // and its controls were still live, so a press aimed at the page the reader
-    // had just navigated to re-ran an action on the page leaving the screen.
-    // The leaving view is a wrapper, so it paints the seam's no-press guard.
     const leavingPress = vi.fn();
     const arrivingPress = vi.fn();
     const pressable = (key: string): ReactNode => (
@@ -180,7 +153,6 @@ describe("PageTransition", () => {
       page.rerender(pressable("b"));
       settle(page);
 
-      // The old view is still painted: this is the window a press lands in.
       expect(page.renderer.findByTestId("action-a")).toBeDefined();
       clickCentreOf(page, "action-a");
       settle(page);
@@ -205,7 +177,6 @@ describe("PageTransition", () => {
       page.rerender(scene("c"));
       settle(page);
 
-      // The abandoned view is never painted: one exit, one arrival.
       expect(shownText(page)).toEqual(["a"]);
       expect(page.renderer.findByTestId("content-b")).toBeUndefined();
 
@@ -229,7 +200,7 @@ describe("PageTransition", () => {
 
       page.rerender(scene("a", { level: "slow" }));
       settle(page);
-      // A running exit would travel further out; a cancelled one returns home.
+
       page.renderer.clockFastForward(100);
       settle(page);
       expect(offsetX(page)).toBeGreaterThan(midExit);
@@ -237,7 +208,6 @@ describe("PageTransition", () => {
       page.renderer.clockFastForward(600);
       settle(page);
 
-      // It came back instead of leaving and mounting a second copy.
       expect(shownText(page)).toEqual(["a"]);
       expect(offsetX(page)).toBeCloseTo(0, 1);
       expect(page.renderer.findByTestId("content-b")).toBeUndefined();

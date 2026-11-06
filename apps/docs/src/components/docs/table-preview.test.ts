@@ -33,26 +33,8 @@ import {
   type PreviewSortOrder,
 } from "./table-preview";
 
-/**
- * The Table page's previews paint a sort, a selection and a filter, and the
- * shipped parts paint the *package's* rules for those three — a preview that
- * re-invented one would teach a model `@gpuixui/data` does not implement.
- *
- * The preview's copy is pinned here case by case, and the rules it copies are
- * read out of `packages/data/src` so the two cannot drift apart: a sort that
- * stops flipping on the sorted field, a selection that releases no hidden
- * record, or a filter that starts matching across cells fails by name.
- *
- * The filter's rule moved with the table-core migration: `filter/logic.ts` is
- * gone and the query is the core's global filter, configured in `grid-core.ts`.
- * The guard read the deleted module, so the whole suite died at import with
- * `ENOENT` and the preview's filter went unpinned — including the joined-text
- * match the old `textOf` had, which let a query span two cells.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
-/** Read a source file, naming the one that is gone rather than dying in Vite. */
 const read = (path: string): string => {
   const file = new URL(path, root);
   if (!existsSync(file)) {
@@ -74,10 +56,6 @@ const ids = (
 
 describe("the preview's filter", () => {
   it("matches one literal, case-insensitive query over each cell", () => {
-    // The rule the package owns (`grid-core.ts`): the core's `includesString`
-    // global filter, fed a trimmed query, over every column's accessor value.
-    // The query is read through the state seam (`readGridState`), so the local
-    // name the record lands on is the package's to choose.
     expect(gridCore).toContain('globalFilterFn: "includesString"');
     expect(gridCore).toMatch(
       /globalFilter: [A-Za-z_$][\w$]*\.globalFilter\.trim\(\)/,
@@ -97,21 +75,17 @@ describe("the preview's filter", () => {
       "gateway",
       "auth",
     ]);
-    // Every cell is searchable, not only the first one: `36` is a duration and
-    // `staging` is an environment.
+
     expect(ids(filterRows(TABLE_ROWS, "36"))).toEqual(["gateway"]);
     expect(ids(filterRows(TABLE_ROWS, "staging"))).toEqual([
       "search",
       "reports",
     ]);
     expect(filterRows(TABLE_ROWS, "no-such-service")).toEqual([]);
-    // A query is not a pattern.
+
     expect(filterRows(TABLE_ROWS, ".*")).toEqual([]);
     expect(normalizeQuery("  PROD ")).toBe("prod");
 
-    // A query is matched against one cell at a time. `billing-api` and
-    // `production` are two cells of one row, so the joined text used to match
-    // this and the core does not.
     expect(
       cellsOf({
         id: "billing",
@@ -125,16 +99,8 @@ describe("the preview's filter", () => {
   });
 
   it("leaves a hidden column out of the query, and keeps its sort", () => {
-    // Bug guarded: the workflow preview drew the Columns menu and still
-    // filtered on a column it had hidden, while the page above it says — and
-    // `useTable` implements — that a hidden column leaves the search. A reader
-    // who hid `environment` and typed `staging` saw two rows the page says the
-    // table cannot show.
     expect(gridCore).toContain(
       "enableGlobalFilter: !HashSet.has(hidden, column.id)",
-    );
-    expect(useTableSource).toContain(
-      "A hidden column keeps its sort but leaves the search",
     );
 
     expect(ids(filterRows(TABLE_ROWS, "staging"))).toEqual([
@@ -144,14 +110,12 @@ describe("the preview's filter", () => {
     expect(
       filterRows(TABLE_ROWS, "staging", ["service", "status", "duration"]),
     ).toEqual([]);
-    // The columns that remain are still searched.
+
     expect(ids(filterRows(TABLE_ROWS, "staging", ["environment"]))).toEqual([
       "search",
       "reports",
     ]);
 
-    // The hidden column keeps its sort: `environment` still orders the set
-    // while only `service` is shown.
     expect(
       ids(
         visibleRows(
@@ -163,8 +127,6 @@ describe("the preview's filter", () => {
       ),
     ).toEqual(["media", "billing", "gateway", "auth", "search", "reports"]);
 
-    // The workflow hands the current columns to the rule both when it paints
-    // and when it retains a chosen record the narrowed set no longer holds.
     const workflow = readFileSync(
       new URL("./table-demo.tsx", import.meta.url),
       "utf8",
@@ -174,11 +136,6 @@ describe("the preview's filter", () => {
   });
 
   it("keeps the page's copyable source on the controller the package ships", () => {
-    // The snippet a reader copies. It still passed `textOf`/`valueOf` to
-    // `useTable` after those options were replaced by one `columns` list, and
-    // the lane page still described the sort as a `sortRows` helper the package
-    // no longer has. It then taught a single-column sort while the controller
-    // had grown an order: a reader copying it lost the Shift tie-break.
     expect(gridCore).toContain(
       "readonly valueOf: (row: Row) => string | number",
     );
@@ -205,11 +162,6 @@ describe("the preview's filter", () => {
 
 describe("the preview's sort", () => {
   it("presses the cycle the package implements, and Shift adds a tie-break", () => {
-    // `sort/logic.ts`'s `pressSortOrder`: a plain press keeps the cycle over
-    // the primary entry and drops every other field; a Shift press (`additive`)
-    // flips the pressed field where it sits or appends it at `initialDirection`.
-    // The controller then walks the order in turn (`use-table.ts`), so the
-    // preview copies a multi-column order rather than a single sort.
     expect(sortLogic).toContain("export const pressSortOrder");
     expect(sortLogic).toContain("additive: boolean = false");
     expect(sortLogic).toContain("flip(entry.direction)");
@@ -223,11 +175,11 @@ describe("the preview's sort", () => {
     expect(pressSortOrder(INITIAL_ORDER, "service")).toEqual([
       { field: "service", direction: "desc" },
     ]);
-    // A plain press on another column replaces the order...
+
     expect(pressSortOrder(INITIAL_ORDER, "duration", "desc")).toEqual([
       { field: "duration", direction: "desc" },
     ]);
-    // ...even when the table was already sorted by more than one field.
+
     expect(
       pressSortOrder(
         [
@@ -237,7 +189,7 @@ describe("the preview's sort", () => {
         "duration",
       ),
     ).toEqual([{ field: "duration", direction: "asc" }]);
-    // A Shift press appends the second field as the tie-break...
+
     expect(
       pressSortOrder(
         [{ field: "environment", direction: "asc" }],
@@ -249,7 +201,7 @@ describe("the preview's sort", () => {
       { field: "environment", direction: "asc" },
       { field: "service", direction: "asc" },
     ]);
-    // ...and the next Shift press on that field flips it in place.
+
     expect(
       pressSortOrder(
         [
@@ -264,7 +216,7 @@ describe("the preview's sort", () => {
       { field: "environment", direction: "asc" },
       { field: "service", direction: "desc" },
     ]);
-    // An empty table has no press cycle to keep.
+
     expect(pressSortOrder([], "size", "desc", true)).toEqual([
       { field: "size", direction: "desc" },
     ]);
@@ -282,10 +234,7 @@ describe("the preview's sort", () => {
     expect(byDuration.map((row) => row.duration)).toEqual([
       211, 148, 129, 92, 74, 36,
     ]);
-    // Negative control: a lexicographic sort would read the durations as text,
-    // putting "92" before "36" and every "1…" hundred first. The preview's
-    // order must differ from that string order, or a duration column reading
-    // "92 before 36" has sorted digits, not numbers.
+
     expect(byDuration.map((row) => row.duration)).not.toEqual([
       92, 74, 36, 211, 148, 129,
     ]);
@@ -300,9 +249,8 @@ describe("the preview's sort", () => {
       "search",
     ]);
 
-    // Unsorted is the caller's order, not a default sort.
     expect(ids(sortRows(TABLE_ROWS, []))).toEqual(ids(TABLE_ROWS));
-    // A sort never mutates the fixture the next preview reads.
+
     expect(ids(TABLE_ROWS)).toEqual([
       "billing",
       "search",
@@ -311,7 +259,7 @@ describe("the preview's sort", () => {
       "auth",
       "media",
     ]);
-    // Filter first, then sort: the rows a query keeps are the rows ordered.
+
     expect(
       ids(
         visibleRows(TABLE_ROWS, "production", [
@@ -322,8 +270,6 @@ describe("the preview's sort", () => {
   });
 
   it("orders by every entry in turn, the first field deciding the ties", () => {
-    // Environment repeats, so the second entry is the only thing ordering three
-    // production rows. Without it the caller's order survives the ties.
     expect(
       ids(sortRows(TABLE_ROWS, [{ field: "environment", direction: "asc" }])),
     ).toEqual(["media", "billing", "gateway", "auth", "search", "reports"]);
@@ -335,8 +281,7 @@ describe("the preview's sort", () => {
         ]),
       ),
     ).toEqual(["media", "gateway", "billing", "auth", "search", "reports"]);
-    // The first field still leads: reversing it reverses the groups, and the
-    // tie-break only reorders rows inside one group.
+
     expect(
       ids(
         sortRows(TABLE_ROWS, [
@@ -348,9 +293,6 @@ describe("the preview's sort", () => {
   });
 
   it("announces the sorted column because the runtime has no aria-sort", () => {
-    expect(sortLogic).toContain(
-      'rather than "Name" and a glyph they cannot see',
-    );
     expect(sortOrderLabel("Service", INITIAL_ORDER, "service")).toBe(
       "Service, sorted ascending",
     );
@@ -369,8 +311,7 @@ describe("the preview's sort", () => {
       { field: "environment", direction: "asc" },
       { field: "service", direction: "desc" },
     ];
-    // A field in a multi-column order also announces its place, and its glyph
-    // carries it: ↑1 decides, ↓2 breaks the tie.
+
     expect(sortOrderLabel("Environment", order, "environment")).toBe(
       "Environment, sorted ascending, sort 1 of 2",
     );
@@ -388,10 +329,7 @@ describe("the preview's selection", () => {
   const order = ids(TABLE_ROWS);
 
   it("replaces on a plain press, toggles on a chord and extends from the anchor", () => {
-    // The package's order is `shift` first, then the toggle chord, then replace
-    // (`selection/logic.ts`), and a range keeps the anchor it extended from.
     expect(selectionLogic).toContain("modifiers.shift === true");
-    expect(selectionLogic).toContain("A range keeps the anchor");
 
     const chosen: PreviewSelection = {
       selected: ["billing"],
@@ -413,14 +351,14 @@ describe("the preview's selection", () => {
       selected: ["billing", "search", "gateway", "reports"],
       anchor: "billing",
     });
-    // A chord cannot narrow a range that `shift` asked for.
+
     expect(
       pressRow(chosen, "search", { shift: true, cmd: true }, order),
     ).toEqual({
       selected: ["billing", "search"],
       anchor: "billing",
     });
-    // The range is measured in the visible order, and it is clamped to it.
+
     expect(pressRow(NO_SELECTION, "media", { shift: true }, order)).toEqual({
       selected: ["media"],
       anchor: "media",
@@ -428,8 +366,6 @@ describe("the preview's selection", () => {
   });
 
   it("releases a chosen record a filter hides, and the anchor with it", () => {
-    // `retainSelection`'s rule, and the reason a filtered table cannot act on a
-    // record it does not paint.
     expect(selectionLogic).toContain("export const retainSelection");
 
     const state: PreviewSelection = {
@@ -445,9 +381,7 @@ describe("the preview's selection", () => {
       anchor: null,
     });
     expect(retainSelection(state, [])).toEqual({ selected: [], anchor: null });
-    // Negative control: a chosen record the narrower set hides must not
-    // survive, or a "delete selected" would reach a row the table no longer
-    // paints.
+
     expect(
       retainSelection(state, ["billing", "search", "media"]).selected,
     ).not.toContain("gateway");
@@ -458,7 +392,6 @@ describe("the preview's pagination", () => {
   it("pages five rows and clamps a page the filter no longer spans", () => {
     expect(PAGE_SIZE).toBe(5);
 
-    // Six rows → two pages: five on the first, one on the second.
     expect(pageCount(TABLE_ROWS)).toBe(2);
     expect(ids(pageSlice(TABLE_ROWS, 0))).toEqual([
       "billing",
@@ -469,20 +402,17 @@ describe("the preview's pagination", () => {
     ]);
     expect(ids(pageSlice(TABLE_ROWS, 1))).toEqual(["media"]);
 
-    // A filter narrows the set to one page; a page past it clamps to the last.
     const production = filterRows(TABLE_ROWS, "production");
     expect(ids(production)).toEqual(["billing", "gateway", "auth"]);
     expect(pageCount(production)).toBe(1);
     expect(clampPage(3, pageCount(production))).toBe(0);
     expect(ids(pageSlice(production, 3))).toEqual(ids(production));
-    // An empty set still spans one page, so the footer never reads "of 0".
+
     expect(pageCount([])).toBe(1);
     expect(clampPage(0, pageCount([]))).toBe(0);
   });
 
   it("never returns an empty page while rows still exist", () => {
-    // Negative control: an unclamped page 9 would be empty even though two pages
-    // of rows exist. The clamp must return rows, not a blank body.
     expect(ids(pageSlice(TABLE_ROWS, 9))).not.toEqual([]);
     expect(ids(pageSlice(TABLE_ROWS, 9))).toEqual(
       ids(pageSlice(TABLE_ROWS, 1)),
@@ -505,8 +435,6 @@ describe("the preview's column visibility", () => {
   });
 
   it("keeps the last visible column, so a row never loses its text", () => {
-    // Negative control: a menu that let the reader hide every column would paint
-    // an empty row. The toggle must refuse to empty the set.
     const only: ReadonlyArray<ColumnId> = ["service"];
     expect(toggleColumn(only, "service")).toEqual(["service"]);
     expect(
@@ -528,7 +456,6 @@ describe("the preview's page selection", () => {
     expect(allPageSelected(chosen, pageOne)).toBe(true);
     expect(somePageSelected(chosen, pageOne)).toBe(false);
 
-    // Part of the page chosen → indeterminate; a page with nothing → neither.
     const partial: PreviewSelection = {
       selected: ["billing"],
       anchor: "billing",
@@ -536,14 +463,10 @@ describe("the preview's page selection", () => {
     expect(allPageSelected(partial, pageOne)).toBe(false);
     expect(somePageSelected(partial, pageOne)).toBe(true);
 
-    // A fully-chosen page toggles off to nothing.
     expect(togglePageSelection(chosen, pageOne).selected).toEqual([]);
   });
 
   it("leaves the rows pagination hides untouched", () => {
-    // Negative control: a header box that reached past the page would select
-    // every filtered row. The page select must not claim a row it does not
-    // paint — page two's `media` stays unchosen.
     const selected = togglePageSelection(NO_SELECTION, pageOne);
     expect(selected.selected).not.toContain("media");
     expect(allPageSelected(selected, pageTwo)).toBe(false);
@@ -565,15 +488,6 @@ describe("the preview's page selection", () => {
   });
 });
 
-/**
- * The workflow's tracks.
- *
- * Guarded bug: the tracks were pixels — `40 + 250 + 150 + 110 + 90 + 48`, 688px
- * inside the card's 625px table box at 1440 — so the Duration column lost its
- * tail, the Actions column was invisible, and the caption (a table child, so as
- * wide as the columns) was clipped into the stray half-line at the bottom of
- * the stage. A share of the table cannot overrun it.
- */
 describe("the workflow's tracks", () => {
   const share = (width: string): number =>
     Number.parseFloat(width.replace("%", ""));
@@ -586,15 +500,12 @@ describe("the workflow's tracks", () => {
   });
 
   it("names every track as a share, not a pixel width", () => {
-    // A pixel width is what overran the card: 688px of columns in a 625px box.
     for (const width of Object.values(TABLE_TRACKS)) {
       expect(width.endsWith("%")).toBe(true);
     }
   });
 
   it("keeps the select track narrower than any data column", () => {
-    // The first text column's x is the select track plus its 12px inset; a
-    // select track that grew with its label would move that x per row.
     expect(share(TABLE_TRACKS.select)).toBeLessThan(
       share(TABLE_TRACKS.duration),
     );

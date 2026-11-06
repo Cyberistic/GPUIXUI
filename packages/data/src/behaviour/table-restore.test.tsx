@@ -1,30 +1,3 @@
-/**
- * A grid reopened from the state a store saved.
- *
- * The gap this guards: `useTable` started every grid at the source order, with
- * an empty query and nothing chosen — `initialSort` was the only starting
- * state — so a workspace that saved its sorting, its search and its selection
- * had no way to hand them back through the shipped controller. The seam that
- * reads a saved record (`readGridState`) existed and was documented for
- * `constructGrid`, but it was reachable only by a caller building the table
- * itself. `stored` reads it once at mount, so the parts paint a grid the reader
- * left sorted, narrowed and chosen.
- *
- * The second half is the same rule the seam already states: a record this
- * release cannot use reads as the slice it can — an unreadable sorting list is
- * no sort, a query that is not text is no query, and a chosen set keeps only the
- * ids the store set to `true`.
- *
- * The record is also **written** here: `table.save()` composes the state the
- * grid runs (the order it can actually sort, the query, the core's chosen ids)
- * and a remount reads it back, so the round trip a workspace depends on is one
- * window case rather than a caller re-deriving the wire shape. A chosen record
- * a filter hides is saved because retention is a view, not a write — the saved
- * ids are the core's. A saved sort that names a column this release dropped is
- * not a sort: the row model already skipped it, so counting it in the order
- * made a Shift press announce "sort 2 of 2" above one sort.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -80,7 +53,6 @@ afterEach(() => {
   root = undefined;
 });
 
-/** A grid over the three files, opened from a record the caller hands it. */
 const RestoredGrid = ({ stored }: { readonly stored?: unknown }) => {
   const table = useTable({ rows: FILES, keyOf, columns: COLUMNS, stored });
   return (
@@ -130,8 +102,6 @@ describe("a grid reopened from a saved state", () => {
     );
     settle(root);
 
-    // The query narrowed the set before the sort ordered it: `e` keeps the
-    // notes and the readme, and descending puts `readme.md` first.
     const painted = paintedText(root);
     expect(painted).toContain("2 rows · 1 selected");
     expect(painted).not.toContain("alpha.ts");
@@ -143,8 +113,6 @@ describe("a grid reopened from a saved state", () => {
   });
 
   it("reads a state this release cannot use as the slice it can", () => {
-    // A record a store or an older release wrote is not trusted: the sorting is
-    // not a list, the query is not text, and one chosen id is not `true`.
     root = renderData(
       <RestoredGrid
         stored={{
@@ -156,7 +124,6 @@ describe("a grid reopened from a saved state", () => {
     );
     settle(root);
 
-    // No sort and no query: the source order, whole.
     const painted = paintedText(root);
     expect(painted).toContain("3 rows · 1 selected");
     expect(painted.indexOf("alpha.ts")).toBeLessThan(
@@ -165,13 +132,12 @@ describe("a grid reopened from a saved state", () => {
     expect(painted.indexOf("notes.txt")).toBeLessThan(
       painted.indexOf("readme.md"),
     );
-    // Only the id the store set to `true` is chosen; the string is no choice.
+
     expect(root.renderer.findByTestId("restore-row-readme")).toBeDefined();
     expect(root.renderer.findByTestId("restore-row-alpha")).toBeDefined();
   });
 });
 
-/** A row with a size, so a sort has two fields to order by. */
 interface SizedFile {
   readonly id: string;
   readonly name: string;
@@ -201,7 +167,6 @@ const SIZED_COLUMNS = [
 
 const sizedKeyOf = (row: SizedFile): string => row.id;
 
-/** One row of the window's text, found by the words it contains. */
 const textWith = (testRoot: DataTestRoot, words: string): string =>
   Option.getOrElse(
     Arr.findFirst(testRoot.renderer.getAllText(), Str.includes(words)),
@@ -210,7 +175,6 @@ const textWith = (testRoot: DataTestRoot, words: string): string =>
     },
   );
 
-/** Press `testId` through the runtime's real hit testing. */
 const pressSaved = (testRoot: DataTestRoot, testId: string): void => {
   const element = testRoot.renderer.findByTestId(testId);
   if (element === undefined)
@@ -225,7 +189,6 @@ const pressSaved = (testRoot: DataTestRoot, testId: string): void => {
   testRoot.renderer.flush();
 };
 
-/** A grid a reader sorts, chooses, narrows and then saves. */
 const SavedGrid = ({
   stored,
   onSave,
@@ -301,12 +264,6 @@ const SavedGrid = ({
   );
 };
 
-/**
- * The saved record, held where a store would hold it.
- *
- * A keyed remount is the "open the workspace again" step: `useTable` reads
- * `stored` once, so the fresh mount is the only reading a saved record gets.
- */
 const SaveHarness = () => {
   const [saved, setSaved] = useState<unknown>(undefined);
   const [generation, setGeneration] = useState(0);
@@ -327,29 +284,23 @@ describe("the record a grid writes to a store", () => {
     root = renderData(<SaveHarness />);
     settle(root);
 
-    // Sort by name, descending: readme, notes, alpha.
     pressSaved(root, "saved-name-sort");
     pressSaved(root, "saved-name-sort");
     expect(textWith(root, "order:")).toBe(
       "order: readme.md notes.txt alpha.ts",
     );
 
-    // Choose alpha, then narrow the set until alpha is not painted: the view
-    // releases it, while the core still holds the id.
     pressSaved(root, "saved-row-alpha");
     expect(paintedText(root)).toContain("3 rows · 1 selected");
     typeInto(root, "saved-filter", "no");
     root.renderer.flush();
     expect(paintedText(root)).toContain("1 rows · 0 selected");
 
-    // Save, and reopen from the record.
     pressSaved(root, "save-grid");
     expect(paintedText(root)).toContain("1 rows · 0 selected");
     expect(textWith(root, "order:")).toBe("order: notes.txt");
     expect(paintedText(root)).toContain("alpha free");
 
-    // The query widened: the record the store saved is chosen again, and the
-    // sort is the order the reader left.
     pressSaved(root, "show-all");
     expect(paintedText(root)).toContain("3 rows · 1 selected");
     expect(textWith(root, "order:")).toBe(
@@ -359,7 +310,6 @@ describe("the record a grid writes to a store", () => {
   });
 });
 
-/** A grid opened from a record, with the one gesture that reads the order. */
 const PhantomSortGrid = ({ stored }: { readonly stored?: unknown }) => {
   const table = useTable({
     rows: SIZED_FILES,
@@ -402,8 +352,6 @@ const PhantomSortGrid = ({ stored }: { readonly stored?: unknown }) => {
 
 describe("a saved sort that names a column this release dropped", () => {
   it("is not an order the grid counts", () => {
-    // The release that saved this sorted by `path`; the column is gone, so the
-    // row model cannot compare it and paints the source order.
     root = renderData(
       <PhantomSortGrid
         stored={{
@@ -418,8 +366,6 @@ describe("a saved sort that names a column this release dropped", () => {
     expect(textWith(root, "sorts · ")).toBe("0 sorts · ");
     expect(paintedText(root)).toContain("alpha,notes,readme");
 
-    // A Shift press on a live column is the only sort: the dropped one must not
-    // become its tie-break, which announced "sort 2 of 2" above one sort.
     pressSaved(root, "phantom-shift");
     expect(textWith(root, "sorts · ")).toBe("1 sorts · name");
   });

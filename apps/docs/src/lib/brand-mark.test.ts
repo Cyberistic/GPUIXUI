@@ -1,20 +1,9 @@
-/**
- * The brand marks. The bugs this guards: the vector logo was redrawn as a
- * purple square (73132e369) while every raster favicon kept Gon, so the tab, the
- * nav and the social image disagreed; and a mark drawn in fixed colours that
- * could not follow the theme's ink.
- *
- * Two marks, one rule each: the favicon and the logo are the two-colour Gon the
- * raster set carries; the marks the interface draws are the one-colour outline
- * of it, painted in the surrounding text colour through a mask.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string) =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-/** Gon's hair and skin, as the raster favicons paint them. */
 const HAIR = "#0A1D0F";
 const SKIN = "#FBCAA1";
 

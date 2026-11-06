@@ -1,19 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-/**
- * Three controls that claimed an effect and had none.
- *
- * Guarded bugs:
- *
- * - the copy button's preview flipped to "Copied" and wrote nothing to the
- *   clipboard — the one thing a copy button may not do;
- * - the countdown preview printed two still frames, so a page about a clock
- *   showed time that never moved;
- * - the alert's action was rendered inside the description paragraph, so "Try
- *   again" sat on the text's baseline instead of in a row under it.
- */
-
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
@@ -38,7 +25,6 @@ describe("the countdown's preview", () => {
   });
 
   it("prints the package's own clock text", () => {
-    // One formatter: the drawing must not carry a second copy of the arithmetic.
     expect(source).toContain("formatCountdown(");
     expect(source).toContain('"@gpuixui/components/countdown/logic"');
   });

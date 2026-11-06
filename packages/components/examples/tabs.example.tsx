@@ -1,17 +1,9 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Tabs example: account settings, three panels, one disabled tab.
- *
- * The tab set is uncontrolled; the header reads the same state from
- * `onValueChange`, which is what a real settings screen would persist.
- */
-
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../src/tabs.js";
 
-/** One read-only settings row. */
 const Row = ({
   label,
   value,
@@ -51,7 +43,6 @@ const Row = ({
   );
 };
 
-/** Account settings with the profile, notification and danger panels. */
 export const TabsExample = () => {
   const theme = useTheme();
   const [tab, setTab] = useState("profile");
@@ -91,10 +82,6 @@ export const TabsExample = () => {
   );
 };
 
-/**
- * The same section rail on the vertical axis: a workspace-style settings
- * sidebar. Arrows move with Up/Down, and the rail is a column beside the panel.
- */
 export const VerticalTabsExample = () => (
   <Card style={{ maxWidth: 560 }}>
     <CardHeader>

@@ -1,19 +1,3 @@
-/**
- * Particles in the real GPUix renderer.
- *
- * The bugs these guard: a field seeded outside the box it was measured in; a
- * seed that is not the identity it claims (a background that reshuffles between
- * mounts); motes that never move, or that travel and never come back, because the
- * runtime tweens one target and a float has to turn around; a reduced preference
- * that deletes the field instead of stilling it; a decorative field that leaks
- * into the accessibility tree or swallows the presses on the content in front of
- * it; and a field that keeps the box it was first laid out in after a resize.
- *
- * The motion clock is paused before the mount, so the first frame is the declared
- * initial position rather than wherever the frame loop had got. A headless tree
- * reports bounds, not paint, so the drift is the observable half of the motion.
- */
-
 import type { TestElement, TestRoot } from "@gpuix/react/testing";
 import { motionLevels } from "@gpuixui/motion/timing";
 import * as Arr from "effect/Array";
@@ -36,10 +20,8 @@ import {
   type ParticleSpec,
 } from "../particles/logic.js";
 
-/** The leg the drift cases run with, short enough to finish in a test. */
 const legMs = 2_000;
 
-/** A field's pure layout for the box the renderer measured. */
 const fieldIn = (
   page: ReturnType<typeof renderComponent>,
   overrides: Partial<ParticleFieldInput> = {},
@@ -57,7 +39,6 @@ const fieldIn = (
   });
 };
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   renderer: TestRoot["renderer"],
   testId: string,
@@ -69,7 +50,6 @@ const byTestId = (
   return element;
 };
 
-/** Mount under a paused motion clock, then let the box measurement land. */
 const mountFrozen = (node: ReactNode) => {
   const page = renderComponent(<div />);
   page.renderer.clockPause();
@@ -78,14 +58,12 @@ const mountFrozen = (node: ReactNode) => {
     page.renderer.flush();
   };
   show(node);
-  // The field positions itself from its own layout, so the motes arrive on the
-  // second frame; the second settle paints what the measurement changed.
+
   settle(page);
   settle(page);
   return { page, show };
 };
 
-/** How far a mote's top-left sits from the field's own top-left. */
 const offsetOf = (
   page: ReturnType<typeof renderComponent>,
   index: number,
@@ -142,8 +120,6 @@ describe("Particles", () => {
         offsetOf(page, index),
       );
 
-      // The same seed is the same field: a decorative background must not
-      // reshuffle when the component remounts or re-renders.
       show(<Field />);
       settle(page);
       settle(page);
@@ -151,7 +127,6 @@ describe("Particles", () => {
         Arr.map(fieldIn(page), (_, index) => offsetOf(page, index)),
       ).toEqual(seeded);
 
-      // Another seed is another field.
       show(
         <Particles
           testId="field"
@@ -185,8 +160,6 @@ describe("Particles", () => {
       expect(offsetOf(page, 0).x).toBeCloseTo(far.left, 0);
       expect(offsetOf(page, 0).y).toBeCloseTo(far.top, 0);
 
-      // The turnaround is the completion edge: the same mote returns to the
-      // seeded place instead of drifting away from it.
       page.renderer.clockFastForward(spec.durationMs);
       settle(page);
       expect(offsetOf(page, 0).x).toBeCloseTo(spec.x, 0);
@@ -222,12 +195,11 @@ describe("Particles", () => {
   it("publishes no accessibility node and takes no pointer input", () => {
     const { page } = mountFrozen(<Field />);
     try {
-      // The window itself is the only node: the field adds no role and no name.
       expect(Arr.map(a11yNodes(page.renderer), (node) => node.role)).toEqual([
         "window",
       ]);
       expect(byTestId(page.renderer, "field").style.pointerEvents).toBe("none");
-      // A mote is a filled, positioned box, so it needs the opt-out of its own.
+
       expect(byTestId(page.renderer, "particle-0").style.pointerEvents).toBe(
         "none",
       );

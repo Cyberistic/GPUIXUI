@@ -1,18 +1,3 @@
-/**
- * Holds the arithmetic the `rtl-text` probe reads a capture with.
- *
- * The probe's whole finding is "the crossbar is at the left end" versus "at
- * the right end", and that is decided by how much exact ink sits in the top
- * rows of each end band. A real frame cannot prove the arithmetic — a bar and
- * a letter's stem are both just ink — so the reader is held to a drawn frame
- * where the crossbar is known.
- *
- * The failure being guarded is a reader that counts the whole band instead of
- * its top rows: the vertical strokes of the letters would then swamp the
- * crossbar, and every right-to-left run would read as unresolved. The second
- * half is the guard that a run with no top ink at either end is *unresolved*
- * rather than "left", which is the default a bare ratio would return.
- */
 import { readFileSync } from "node:fs";
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
@@ -43,7 +28,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The `rtlTextSteps` effect, bounded by the first declaration after it. */
 const steps = (() => {
   const start = scenarios.indexOf("const rtlTextSteps");
   if (start === -1) return "";
@@ -66,13 +50,11 @@ const INK = "#FF0000";
 const PAGE = [255, 255, 255, 255] as const;
 const MARK = [255, 0, 0, 255] as const;
 
-/** Where the drawn ink sits: `top` bars and `bottom` strokes. */
 interface Drawn {
   readonly top: ReadonlyArray<readonly [number, number, number, number]>;
   readonly bottom: ReadonlyArray<readonly [number, number, number, number]>;
 }
 
-/** A capture of `scale` device pixels per logical point holding `drawn`. */
 const frameOf = (drawn: Drawn, scale = 1): Pixels.Pixels => {
   const width = FRAME.width * scale;
   const height = FRAME.height * scale;
@@ -99,10 +81,8 @@ const frameOf = (drawn: Drawn, scale = 1): Pixels.Pixels => {
   });
 };
 
-/** The whole frame as a read region. */
 const BOX = { x: 0, y: 0, width: FRAME.width, height: FRAME.height } as const;
 
-/** The reader's answer, or a failure no test can pass through. */
 const readOf = (frame: Pixels.Pixels, scale = 1): EndInk =>
   pipe(
     readEndInk(frame, BOX, scale, INK),
@@ -114,13 +94,11 @@ const readOf = (frame: Pixels.Pixels, scale = 1): EndInk =>
     }),
   );
 
-/** A crossbar at the left end and a letter's stem at the right. */
 const leftBar: Drawn = {
   top: [[2, 0, 20, 1]],
   bottom: [[70, 0, 71, 24]],
 };
 
-/** The same, mirrored. */
 const rightBar: Drawn = {
   top: [[59, 0, 77, 1]],
   bottom: [[2, 0, 3, 24]],
@@ -201,7 +179,7 @@ describe("the shaping reading", () => {
 
   it("does not read two identical layouts as shaping", () => {
     expect(shaped(shapingOf(58, 58))).toBe(false);
-    // Below half a point is rounding, not a shaper choosing a form.
+
     expect(shaped(shapingOf(58, 58.4))).toBe(false);
     expect(shaped(shapingOf(58, 58.5))).toBe(true);
   });
@@ -225,7 +203,7 @@ describe("the right-to-left probe's record", () => {
   it("prints the check count the steps execute", () => {
     const sites = steps.match(/ctx\.expect[A-Za-z]+\(/g)?.length ?? 0;
     const reads = steps.match(/read\(RTL_IDS/g)?.length ?? 0;
-    // `read` asserts the box and the ink; its two sites are counted once above.
+
     const executed = reads * 2 + (sites - 2);
     expect(executed).toBe(19);
     const printed = Number(
@@ -235,9 +213,6 @@ describe("the right-to-left probe's record", () => {
   });
 
   it("prints the ends and advances the frame measured", () => {
-    // The values are host measurements, and the page is what the docs site and
-    // a release report cite: a stale number has to fail rather than teach the
-    // previous run.
     expect(readme).toContain(
       "| `nnT` (Latin control) | **0** | **92** | 46 pt |",
     );

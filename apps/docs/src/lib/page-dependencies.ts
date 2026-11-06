@@ -1,81 +1,40 @@
-/**
- * What a package page's component is built on.
- *
- * `.agents/slop/MISSION.md` asks every component page to list the packages it needs. The
- * package pages are Markdown, so the site cannot generate a table into them —
- * and a hand-written list beside a component drifts the first time an import
- * moves. This module is the model the site renders instead: the workspace
- * packages the component's own module imports, read at build time, with the
- * page that documents each one.
- *
- * Pure: `page-dependencies-source.ts` reads the workspace and hands the index
- * over; the strip and its tests only see this shape.
- */
-
 import { packageCollections } from "./collection-routes";
 
-/** One workspace package a component's module imports. */
 export interface ComponentDependency {
-  /** The package as the import names it: `@gpuixui/tokens`, `@gpuix/react`. */
   readonly packageName: string;
-  /** Every subpath the module imports from it, e.g. `/floating`; empty at the root. */
+
   readonly specifiers: ReadonlyArray<string>;
-  /** The page that documents the package, when the site mounts one. */
+
   readonly url?: string;
 }
 
-/** What one page depends on, and the module the imports were read from. */
 export interface PageDependencyEntry {
-  /** Repository-relative file the imports come from. */
   readonly module: string;
   readonly dependencies: ReadonlyArray<ComponentDependency>;
 }
 
-/** Every mounted package page, keyed by the URL it renders at. */
 export interface PageDependencyIndex {
   readonly pages: Readonly<Record<string, PageDependencyEntry>>;
-  /** Pages whose component module could not be resolved. Must stay empty. */
+
   readonly unresolved: ReadonlyArray<string>;
 }
 
-/**
- * The page that documents a workspace package.
- *
- * A mounted collection documents its package at the collection's own route, so
- * that route is derived rather than listed twice. Only a package the site
- * writes a page for, or a collection whose documentation lives below its route,
- * needs an entry here. A package the site has no page for is still listed — it
- * is a dependency the reader may need — but its name stays plain text rather
- * than link nowhere.
- */
 const sitePages: Readonly<Record<string, string>> = {
   "@gpuixui/icons": "/graphics/icons/icon",
   "@gpuixui/tokens": "/getting-started",
 };
 
-/** A name with its case and punctuation removed, so `OTPField` matches `otp-field`. */
 export const normalisedName = (name: string): string =>
   name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-/**
- * The workspace package a specifier imports from.
- *
- * `@gpuixui/tokens`, `@gpuixui/primitives/core` and `@gpuix/react/floating`
- * name three packages between them; a framework import is not a dependency of
- * the library and returns nothing.
- */
 export const dependencyPackage = (specifier: string): string | undefined =>
   /^(@gpuixui\/[^/]+|@gpuix\/[^/]+)/.exec(specifier)?.[1];
 
-/** The page that documents a package, when the site mounts one. */
 export const packagePage = (packageName: string): string | undefined =>
   sitePages[packageName] ??
   packageCollections.find(
     (collection) =>
       collection.packageName === packageName &&
-      // The package's **own** `docs` directory is its lane; a collection that
-      // sits inside it — the charts live in `packages/data/docs/charts` — is a
-      // page of that lane, not the lane itself.
       collection.dir ===
         `packages/${packageName.replace("@gpuixui/", "")}/docs`,
   )?.route ??
@@ -83,7 +42,6 @@ export const packagePage = (packageName: string): string | undefined =>
     (collection) => collection.packageName === packageName,
   )?.route;
 
-/** Group a module's import specifiers into the workspace packages it needs. */
 export const collectDependencies = (
   specifiers: ReadonlyArray<string>,
 ): ReadonlyArray<ComponentDependency> => {

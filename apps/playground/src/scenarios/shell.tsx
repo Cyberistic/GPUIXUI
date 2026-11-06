@@ -1,17 +1,3 @@
-/**
- * `shell-navigation` — the playground's own sidebar is usable.
- *
- * The registry **is** the sidebar, so a scenario the sidebar cannot reach is a
- * scenario the app cannot open. The list is taller than the 720px window, and
- * before this scenario the sidebar had no scroller: every entry past the fold
- * was painted outside the window and unreachable.
- *
- * It mounts the real `App` and proves the list is a scroll container, that the
- * wheel moves it, and that the last entry ends up inside the list's bounds —
- * the regression guard is the first step, which sees `offset.y = 0` and an
- * off-list last entry without the `overflowY`. The scroll is a loop until the
- * offset stops changing, so adding a scenario cannot break the guard.
- */
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -31,7 +17,6 @@ const offset = (ctx: Smoke.SmokeContext): Option.Option<Smoke.Offset> =>
 const STEP = 600;
 const MAX_STEPS = 40;
 
-/** Wheels to the end; stops as soon as an offset repeats. */
 const scrollToEnd = (
   ctx: Smoke.SmokeContext,
   previous: Option.Option<Smoke.Offset>,

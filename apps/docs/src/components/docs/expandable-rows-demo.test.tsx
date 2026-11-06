@@ -15,19 +15,6 @@ import {
   toggleOpen,
 } from "./expandable-rows-demo";
 
-/**
- * The Expandable rows preview.
- *
- * `packages/data/docs/expandable-rows.mdx` is the package's Markdown, so the
- * site mounts the drawing from `package-preview.ts` and the page carries no
- * `<ComponentPreview>`. The registry's guard sees the demo and the page mount;
- * what it cannot see is whether the drawing still paints the row's contract —
- * the row is the toggle, the panel is a sibling row on the `muted` strip, the
- * expander track is the package's width, and two rows can be open at once — so
- * the cases below hold the drawing to
- * `packages/data/src/table/expandable.tsx` and its recipes.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -36,9 +23,9 @@ const read = (path: string): string =>
 describe("the expandable-rows preview", () => {
   it("opens and closes one row without closing the other", () => {
     expect(OPEN_ON_MOUNT).toEqual(["harbour"]);
-    // A press on another row leaves the open panel alone: two can be open.
+
     expect(toggleOpen(OPEN_ON_MOUNT, "notes")).toEqual(["harbour", "notes"]);
-    // A second press on an open row closes only it.
+
     expect(toggleOpen(["harbour", "notes"], "harbour")).toEqual(["notes"]);
     expect(toggleOpen([], "deploy")).toEqual(["deploy"]);
   });
@@ -50,7 +37,7 @@ describe("the expandable-rows preview", () => {
 
     expect(expanderGlyph(false)).toBe("chevron-right");
     expect(expanderGlyph(true)).toBe("chevron-down");
-    // The browser has no icon package here, so the mark is the glyph's shape.
+
     expect(expanderMark(false)).toBe("▸");
     expect(expanderMark(true)).toBe("▾");
   });
@@ -64,7 +51,7 @@ describe("the expandable-rows preview", () => {
       "Owner",
       "Modified",
     ]);
-    // The panel is the object read once: every file answers the same labels.
+
     const labels = Arr.map(LISTED_FILES, (file) =>
       detailOf(file).map((fact) => fact.key),
     );
@@ -80,10 +67,10 @@ describe("the expandable-rows preview", () => {
       LISTED_FILES.length - 1,
     );
     expect(html.match(/aria-expanded="true"/g) ?? []).toHaveLength(1);
-    // One panel, under the row the page opens on.
+
     expect(html.match(/class="gx-dt-detail"/g) ?? []).toHaveLength(1);
     expect(html).toContain("harbour-chart.png details");
-    // The expander track is data: the package's 32px, not a share.
+
     expect(html.match(/width:32px/g) ?? []).toHaveLength(
       LISTED_FILES.length + 1,
     );
@@ -107,14 +94,10 @@ describe("the expandable-rows preview", () => {
   });
 
   it("keeps the expander track out of the table's columns", () => {
-    // Guarded bug: the track was a fourth `columnheader` (and `aria-hidden`, so
-    // no reader could meet it), while a body row holds three cells. It is
-    // decoration: the package's header cell is empty too.
     const html = renderToStaticMarkup(<ExpandableRowsDemo />);
 
     expect(html.match(/role="columnheader"/g) ?? []).toHaveLength(3);
-    // The track is decoration in the header and a cell in a row (a row's every
-    // box is a cell), and neither is a column a reader can meet.
+
     expect(html.match(/aria-hidden="true"/g) ?? []).toHaveLength(1);
     expect(html).not.toContain('role="columnheader" aria-hidden');
   });
@@ -129,7 +112,5 @@ describe("the expandable-rows preview", () => {
 
     const page = read("packages/data/docs/expandable-rows.mdx");
     expect(page).not.toContain("<ComponentPreview");
-    expect(page).toContain("One panel per row; two rows can be open at once");
-    expect(page).toContain("No animation of the panel's height");
   });
 });

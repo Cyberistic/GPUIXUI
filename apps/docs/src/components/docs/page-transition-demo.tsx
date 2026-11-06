@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Page transition page.
- *
- * The native region swaps views with the house exit and entrance; the preview
- * clips one frame and slides the incoming view in from the travel direction.
- */
-
 import { useState } from "react";
 
 const views = {

@@ -1,21 +1,3 @@
-/**
- * The `mention-input-lifecycle` probe: the shipped `MentionInput` in a real
- * window.
- *
- * The component derives its query from the field's text, ranks the rows the
- * caller declares and paints the highlighted one in the theme's `accent`. Its
- * behaviour suite reads `aria-selected` and fires presses into a `TestRenderer`;
- * three of its claims are a window's to prove: the suggestion list is a
- * **floating layer** placed one gap below the field, the highlight is paint (an
- * `aria-selected` attribute never reaches a window's accessibility tree), and a
- * press on a row runs the window's own hit test because the layer sits outside
- * the field's element.
- *
- * The second half is the dismissal. A list that leaves keeps the rows it was
- * dismissed with and drops its tab stops, so the probe reads the departing rows
- * in a frame rather than trusting the unmount, and the disabled twin proves a
- * locked field never opens a list at all.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -51,19 +33,15 @@ import {
   type MentionState,
 } from "./mention-input.js";
 
-/** A list paints one frame behind the keystroke that opened it. */
 const SETTLE = Duration.millis(40);
 
-/** The captures a reader can look at. */
 const OPEN = "mention-open";
 const SECOND = "mention-second";
 const FILTERED = "mention-filtered";
 const DISMISS = "mention-dismiss";
 
-/** The theme's accent, the fill the highlighted row paints. */
 const ACCENT = palettes.dark.colors.accent;
 
-/** The people a field offers, so both instances paint the same rows. */
 const rows = (field: string): ReadonlyArray<ReactElement> =>
   Arr.map(MENTION_PEOPLE, (person) => (
     <MentionInputItem
@@ -74,7 +52,6 @@ const rows = (field: string): ReadonlyArray<ReactElement> =>
     />
   ));
 
-/** The probe's window: an editable field and a locked twin. */
 export const MentionInputProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -134,14 +111,12 @@ export const MentionInputProbe = (): ReactNode => {
   );
 };
 
-/** Whether `testId` painted at all. */
 const paintedAt = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
 ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
   Effect.map(ctx.host.bounds(testId), (bounds) => bounds !== null);
 
-/** How many accent pixels the inner crop of `testId` holds in `capture`. */
 const accentPixels = (
   ctx: Smoke.AsyncSmokeContext,
   capture: string,
@@ -160,7 +135,6 @@ const accentPixels = (
     return crop === null ? 0 : Pixels.countColour(crop, accent);
   });
 
-/** The focused `testId`, with `"none"` for no focus so a failure reads clearly. */
 const focusedId = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<string, Smoke.SmokeHostError> =>
@@ -168,12 +142,6 @@ const focusedId = (
     Option.getOrElse(Option.fromNullishOr(id), () => "none"),
   );
 
-/**
- * Waits until `testId` stops painting, and reports whether it did.
- *
- * A dismissal is a transition: the shipped list stays mounted for its exit
- * tween, so `bounds` still answers for a few hundred milliseconds after Escape.
- */
 const settleGone = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -185,7 +153,6 @@ const settleGone = (
     (gone) => gone,
   );
 
-/** Types a query into the enabled field's current draft. */
 const typeQuery = (
   ctx: Smoke.AsyncSmokeContext,
   query: string,
@@ -208,7 +175,6 @@ export const mentionInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Option.fromNullishOr(Pixels.hexToRgba(ACCENT)),
     );
 
-    // 1. A closed field paints no list.
     yield* ctx.expectEqual(
       "the field starts empty",
       yield* ctx.host.text(MENTION_IDS.readout),
@@ -220,7 +186,6 @@ export const mentionInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // 2. `@` opens the list: every name, first row highlighted.
     yield* ctx.host.click(MENTION_IDS.enabled);
     yield* ctx.host.key(AT_KEY);
     yield* Effect.sleep(SETTLE);
@@ -286,7 +251,6 @@ export const mentionInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 3. The arrow moves the highlight, and the paint follows it.
     yield* ctx.host.key("down");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.capture(SECOND);
@@ -313,7 +277,6 @@ export const mentionInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 4. Enter inserts the highlighted row, and the field keeps the focus.
     yield* ctx.host.key("enter");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -332,7 +295,6 @@ export const mentionInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       MENTION_IDS.enabled,
     );
 
-    // 5. The query ranks prefix matches first; a narrowed list paints only them.
     yield* typeQuery(ctx, SECOND_QUERY);
     yield* ctx.expectEqual(
       "only the prefix match remains",
@@ -357,7 +319,6 @@ export const mentionInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       mentionReadout({ text: SECOND_INSERTION, mentions: 2 }),
     );
 
-    // 6. A pointer press reaches a row of the floating layer.
     yield* typeQuery(ctx, PRESS_QUERY);
     yield* ctx.host.clickText("Margaret Hamilton");
     yield* Effect.sleep(SETTLE);
@@ -372,9 +333,6 @@ export const mentionInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 7. Escape keeps the dismissed rows painted while the box leaves.
-    // Focus the field without pressing it: a press places the caret where it
-    // lands, and a query typed mid-string is not an open `@` token.
     yield* ctx.host.focusElement(MENTION_IDS.enabled);
     yield* typeQuery(ctx, DISMISS_QUERY);
     yield* ctx.host.key("escape");
@@ -391,7 +349,6 @@ export const mentionInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 8. A locked field never offers a row and never takes an edit.
     yield* ctx.host.focusElement(MENTION_IDS.disabled);
     yield* ctx.host.key(AT_KEY);
     yield* ctx.host.key("a");

@@ -1,22 +1,3 @@
-/**
- * One implementation of the painted hint, reached through its published subpath.
- *
- * The bug this guards: the rule that an empty GPUix host paints no placeholder
- * of its own (0.11.0 shapes every one in a fixed `#8F8F8F`) lived twice — once in
- * `@gpuixui/primitives` and once in `src/internal/hint.tsx` — because the
- * primitives published no seam and a package cannot import another's source
- * path. The primitives now publish `fieldHint`/`hintFrame`/`renderFieldHint` and
- * `hintHost` at `@gpuixui/primitives/hint`, so this package paints through that
- * seam and the copy is gone.
- *
- * The import path is part of the contract: reaching the seam through the
- * primitives' root barrel would load the whole Tier 1 package to paint one line
- * (measured 2026-10-22: 52 modules / 416 KiB), which is why the subpath exists.
- *
- * Both directions fail here: restoring a local copy fails the copy and host
- * cases by name, and moving an import to the barrel fails the path case.
- */
-
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -28,7 +9,6 @@ const packageRoot = new URL("../", import.meta.url);
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, packageRoot)), "utf8");
 
-/** Every package source file, test suites included (they are not the seam). */
 const sources = (relative = "src/"): ReadonlyArray<string> => {
   const directory = fileURLToPath(new URL(relative, packageRoot));
   return Arr.flatMap(
@@ -41,7 +21,6 @@ const sources = (relative = "src/"): ReadonlyArray<string> => {
   );
 };
 
-/** The hosts that paint a hint, each named by the file that owns it. */
 const hintHosts: ReadonlyArray<string> = [
   "src/chat.tsx",
   "src/combobox.tsx",

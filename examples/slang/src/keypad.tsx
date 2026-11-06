@@ -1,16 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The keypad, painted from the model's key table in the device's own geometry:
- * the top cluster around the round replay pad, three rows of small function
- * keys, four rows of large main keys. Each key wears the legends printed above
- * it on the body — SHIFT in gold on the left, ALPHA in red on the right.
- *
- * Every length is a multiple of `u`, the unit the device frame fits to the space
- * it is given (GPUix has no transform to scale a finished tree). Keys are real
- * `Button`s with accessible names, out of the Tab order: the whole calculator is
- * reachable from the computer keyboard and ⌘K.
- */
-
 import type {
   DirectionPad,
   Keypad as KeypadModel,
@@ -28,7 +16,7 @@ export interface KeypadProps {
   readonly alpha: boolean;
   readonly hyp: boolean;
   readonly theme: Theme;
-  /** The device unit: 1 at the design size. */
+
   readonly u: number;
   readonly press: (key: string) => void;
 }
@@ -196,7 +184,6 @@ const Rows = ({
   </div>
 );
 
-/** The round replay pad: a silver cap with four presses under it. */
 const Pad = ({
   pad,
   u,

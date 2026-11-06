@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Magnetic example: a row of workspace cards whose contents lean toward the
- * pointer, and the same row under the reduced preference.
- *
- * `Magnetic` wraps whatever it is given, so the cards keep their own layout,
- * surface and click behaviour — only the plate inside travels. The second row is
- * the policy answer: the same surface, the same pointer, no lean.
- */
-
 import { useState } from "react";
 import {
   Card,
@@ -19,7 +10,6 @@ import {
 import { Magnetic } from "../src/magnetic.js";
 import { MotionProvider } from "@gpuixui/components/motion";
 
-/** One card: a document the reader can open. */
 const Panel = ({
   title,
   detail,
@@ -29,8 +19,6 @@ const Panel = ({
   readonly detail: string;
   readonly onOpen: () => void;
 }) => (
-  // The press is the card's: its fill would take a press meant for the
-  // magnetic wrapper (plan 731).
   <Magnetic style={{ width: 200 }}>
     <Card onClick={onOpen}>
       <CardHeader>
@@ -44,7 +32,6 @@ const Panel = ({
   </Magnetic>
 );
 
-/** Three cards that lean, plus a reduced row that does not. */
 export const MagneticExample = () => {
   const [opened, setOpened] = useState("none");
 

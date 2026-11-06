@@ -1,26 +1,3 @@
-/**
- * Guards the categorical scale data marks are painted in.
- *
- * The bug this prevents: the design system had no colour a chart could use for
- * "this series is different from that one". A chart author therefore either
- * borrowed a semantic role — a revenue bar painted `warning` — or hard-coded a
- * palette, which is exactly what the docs dashboard's `PALETTE` does today
- * (`#8b5cf6`, `#3b82f6`, … with a comment claiming they are readable in both
- * themes and nothing measuring it). Neither follows a theme, so a brand's chart
- * cannot follow its palette.
- *
- * The scale is held to three contracts and this file measures all of them:
- * every swatch is perceivable against the surfaces a plot is drawn on, no two
- * swatches read as the same colour, and no two collapse for a reader with
- * protanopia, deuteranopia or tritanopia. The second cannot be a contrast ratio
- * — two hues of one lightness differ plainly yet measure near 1:1 — so it is an
- * OKLab distance; the third repeats that distance after simulating each
- * deficiency, because a red and a green 0.286 apart for a full-colour reader
- * are 0.027 apart to a deuteranope. The failure cases below build a brand whose
- * scale is too pale to see, a brand whose scale repeats a colour and a brand
- * whose red/green pair separates only for a full-colour reader.
- */
-
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
 import {
@@ -73,7 +50,6 @@ const shipped = [
   highContrastDarkTheme,
 ] as const;
 
-/** Every platform and authored look, in both modes. */
 const styled = [
   ...platformNames.flatMap((name) =>
     Object.values(themes).map((theme) => platformTheme(theme, name)),
@@ -83,7 +59,6 @@ const styled = [
   ),
 ];
 
-/** A scale that repeats one value in all five positions. */
 const five = (color: string): SeriesColors => [
   color,
   color,
@@ -127,7 +102,7 @@ describe("the shipped scale", () => {
 
   it("keeps the scale on a platform or authored look's base theme", () => {
     expect(seriesColors(platformTheme(lightTheme, "linux"))).toBe(lightSeries);
-    // The one look that repaints the strips a plot is drawn on owns its table.
+
     expect(seriesColors(retroTheme(lightTheme, "luna"))).toBe(lunaSeries);
   });
 
@@ -137,8 +112,7 @@ describe("the shipped scale", () => {
     expect(themed.series).toBe(houseSeries);
     expect(seriesColors(themed)).toBe(houseSeries);
     expect(seriesColors(lightTheme)).toBe(lightSeries);
-    // A mode the look does not name keeps the base's table, and a style that
-    // declares none is the platform case above.
+
     expect(houseTheme("dark").series).toBeUndefined();
     expect(seriesColors(houseTheme("dark"))).toBe(darkSeries);
     expect(retroStyles.luna.series?.light).toBe(lunaSeries);
@@ -146,8 +120,6 @@ describe("the shipped scale", () => {
   });
 
   it("keeps a high-contrast base's own scale", () => {
-    // Same rule as the palette: a scale designed for a look's strips is not an
-    // AAA one, so accessibility outranks the look.
     const accessible = applyStyle(highContrastLightTheme, houseLook);
 
     expect(accessible.series).toBeUndefined();
@@ -193,7 +165,7 @@ describe("every shipped scale passes its contract", () => {
 
   it("audits a real set, so a scan that stopped iterating cannot pass", () => {
     expect(passing.length).toBeGreaterThanOrEqual(16);
-    // The quiet strip is a default because the library's own plots land there.
+
     expect(seriesSurfaces).toEqual(["background", "card", "popover", "muted"]);
   });
 
@@ -222,7 +194,6 @@ describe("every shipped scale passes its contract", () => {
 });
 
 describe("the surface floor follows the theme's variant", () => {
-  /** Grey on white: 3.95:1 — past the default floor, short of the high one. */
   const plainGrey = five("#808080");
 
   it("passes the default variant and fails the high-contrast one", () => {
@@ -300,9 +271,6 @@ describe("the failures name the decision", () => {
 
 describe("the strips a plot is drawn on", () => {
   it("measures the quiet strip by default and names any other", () => {
-    // A dark window whose sidebar is white: the shared dark scale is clean on
-    // the page, the card and the popover, and four of its five swatches are
-    // gone on the toolbar the chart in that sidebar is actually drawn on.
     const whiteSidebar = extendTheme(darkTheme, {
       colors: { muted: "#FFFFFF" },
     });
@@ -334,9 +302,6 @@ describe("a look owns the scale its own strips need", () => {
   const luna = retroTheme(themes.light, "luna");
 
   it("measures the shared light table on Luna's toolbar", () => {
-    // The measured case for the mechanism: a look that only repainted its page
-    // resolved the table designed for a near-white one, and on Luna's `#E0DCCB`
-    // toolbar the shared amber is 2.75:1 — one series nobody can find.
     const inherited = seriesFailures(
       { ...luna, series: lightSeries },
       { surfaces: ["muted"] },
@@ -358,7 +323,7 @@ describe("a look owns the scale its own strips need", () => {
       distinctness: [],
       deficiencies: [],
     });
-    // The dark edition keeps the shared dark table: its navy page separates it.
+
     expect(retroStyles.luna.series?.dark).toBeUndefined();
     expect(seriesColors(retroTheme(themes.dark, "luna"))).toBe(darkSeries);
   });
@@ -373,10 +338,6 @@ describe("a look owns the scale its own strips need", () => {
 });
 
 describe("the colour-vision contract", () => {
-  /**
-   * A brand's red and green: 0.286 apart for a full-colour reader, 0.024 apart
-   * once deuteranopia is simulated.
-   */
   const redGreen: SeriesColors = [
     "#C02B45",
     "#2E7D32",
@@ -451,7 +412,6 @@ describe("the colour-vision contract", () => {
 
 describe("simulateColorVision", () => {
   it("leaves an achromatic colour unchanged", () => {
-    // Every matrix row sums to one, so grey has no hue for a deficiency to lose.
     expect(simulateColorVision("#808080", "deuteranopia")).toBe("#808080");
     expect(simulateColorVision("#FFFFFF", "tritanopia")).toBe("#FFFFFF");
   });
@@ -530,19 +490,7 @@ describe("the example is executable and its calls are the documented ones", () =
   });
 });
 
-/**
- * Guards the table a stated-but-unshipped variant resolves.
- *
- * `seriesColors` compared `theme.contrast === "high"`, so a chart in a theme
- * restored with the upper-cased `HIGH` was drawn in the **default** scale — five
- * hues designed against the 3:1 boundary floor, in a window that promises 4.5 —
- * while `seriesFailures` measured that same table. The variant is read through
- * the floors' own rule now, so a stated variant this release does not ship takes
- * the scale designed for the strict floors.
- */
 describe("a stored contrast variant", () => {
-  // The fixture is the shape a store hands back: the strict `Theme` type made
-  // these calls cast, which `AGENTS.md` §2 forbids.
   const stored = (contrast: unknown): SeriesSource => ({
     ...lightTheme,
     contrast,
@@ -555,17 +503,6 @@ describe("a stored contrast variant", () => {
   });
 });
 
-/**
- * Guards the table a stated-but-unshipped mode resolves.
- *
- * `seriesColors` compared `theme.mode === "dark"`, so a chart in a theme
- * restored from storage with the upper-cased `Dark` was drawn in the **light**
- * categorical scale while its page was the dark one — five dark hues measured
- * against a light page, read on a near-black fill — and `seriesFailures`
- * measured that same table, so the gate agreed with the wrong paint. The mode
- * is read through `themeModeOf` now, which reads a value this release does not
- * ship from the page the theme carries.
- */
 describe("a stored theme mode", () => {
   const stored = (mode: unknown, base: Theme): SeriesSource => ({
     ...base,
@@ -578,13 +515,11 @@ describe("a stored theme mode", () => {
     expect(seriesColors(stored("Dark", highContrastDarkTheme))).toBe(
       highContrastDarkSeries,
     );
-    // A stored theme that lost the field is read from its page too.
+
     expect(seriesColors(stored(undefined, lightTheme))).toBe(lightSeries);
   });
 
   it("measures the table the chart will paint", () => {
-    // The premise: the light table does not clear the dark page, so a report
-    // that resolved it would name the swatches the painter never uses.
     expect(seriesColors(stored("Dark", darkTheme))).not.toBe(lightSeries);
     expect(seriesFailures(stored("Dark", darkTheme)).surfaces).toEqual([]);
   });

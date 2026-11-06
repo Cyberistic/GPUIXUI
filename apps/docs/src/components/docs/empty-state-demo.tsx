@@ -1,13 +1,3 @@
-/**
- * Browser preview for the EmptyState page.
- *
- * The shipped panel is centred and unfocusable — a panel, not a surface, so it
- * paints no background or border of its own and sits inside the `Card`, panel
- * or table body that already supplies one. The preview draws three shapes a
- * caller reaches: the full state with an action, an icon with no action, and
- * the title-only state, each on the card that would hold it.
- */
-
 export function EmptyStateDemo() {
   return (
     <div className="gx-empty-grid">

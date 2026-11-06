@@ -1,19 +1,3 @@
-/**
- * The browser drawing of a slider: one value, or the two ends of a range.
- *
- * Every decision the drawing makes is the primitive's
- * (`@gpuixui/primitives/core`): a press aims at a value with `pointerValue`, a
- * pair asks `nearestEnd` which thumb it grabbed, a drag draws through
- * `dragSpan`, and a key goes through `decideValueKey`. The shipped track pads
- * itself by half a thumb and measures the press against the padded span; the
- * drawing does the same, so a press lands on the thumb it looks like it landed
- * on.
- *
- * A pointer that leaves the rail keeps reporting: the press captures the
- * pointer on the track, which is the browser's version of the runtime's
- * `mouseDown` + `mouseMove` capture.
- */
-
 import {
   useRef,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -37,9 +21,8 @@ import {
 } from "./slider-preview";
 
 interface SliderDrawingProps {
-  /** The group's name, and the base of each thumb's name in a range. */
   readonly label: string;
-  /** One number for a slider, two for the ends of a range. */
+
   readonly values: ReadonlyArray<number>;
   readonly range: ValueRange;
   readonly onChange?: (values: ReadonlyArray<number>) => void;
@@ -50,7 +33,6 @@ interface SliderDrawingProps {
 const percent = (fraction: number): string => `${fraction * 100}%`;
 const ends = ["start", "end"] as const;
 
-/** The drawing: a rail, a fill and one thumb per value. */
 export const SliderDrawing = ({
   label,
   values,
@@ -86,8 +68,7 @@ export const SliderDrawing = ({
           onChange?.([value]);
           return;
         }
-        // Pin the end the pointer is *not* moving, then draw the span around it:
-        // the dragged end can pass its pair and keeps following the pointer.
+
         drag.current = {
           anchor: nearestEnd(value, span) === "start" ? span.end : span.start,
         };
@@ -115,14 +96,12 @@ export const SliderDrawing = ({
 
   const release = (event: ReactPointerEvent<HTMLDivElement>): void => {
     drag.current = null;
-    // A pointer the window lost its grip on (a cancel, a release outside the
-    // window) is no longer captured, and releasing it again throws.
+
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
   };
 
-  /** A key on the single value, or on one end of the range. */
   const key =
     (end: "start" | "end") =>
     (event: ReactKeyboardEvent<HTMLElement>): void => {

@@ -8,7 +8,6 @@ import { reducedMotionOf } from "./motion.js";
 
 const components = new URL("../components/", import.meta.url);
 
-/** Every component source in the package, read once. */
 const sources = Arr.map(
   Arr.filter(readdirSync(components), Str.endsWith(".tsx")),
   (file) => ({
@@ -17,15 +16,6 @@ const sources = Arr.map(
   }),
 );
 
-/**
- * The one rule behind every primitive's reduced motion.
- *
- * The bug this guards: each animated control took its own `reducedMotion` prop
- * and defaulted it to `false`, so an application that wrapped its tree in the
- * shared `MotionProvider preference="reduced"` still animated a tooltip, a
- * switch and a spinner unless it repeated the flag on every instance — the
- * motion context existed and no primitive read it.
- */
 describe("reducedMotionOf", () => {
   it("reads the provider's preference when the control states none", () => {
     expect(reducedMotionOf(undefined, "reduced")).toBe(true);
@@ -33,22 +23,15 @@ describe("reducedMotionOf", () => {
   });
 
   it("keeps a control's own answer over the provider's", () => {
-    // One surface may hold — or move — against the application's default.
     expect(reducedMotionOf(false, "reduced")).toBe(false);
     expect(reducedMotionOf(true, "animated")).toBe(true);
   });
 
   it("is the motion package's own rule, not a second copy", () => {
-    // The policy has one home: the motion package publishes `reducedMotionOf`
-    // on the timing subpath the primitives already depend on. A local copy
-    // agrees only until one side is edited.
     expect(reducedMotionOf).toBe(published);
   });
 
   it("routes every animated control through the one rule", () => {
-    // The guard: a component that declares `reducedMotion` has to read the
-    // provider-aware rule, and no control may keep the `!== true` test that
-    // ignored the context — the shape the default flag had.
     const animated = Arr.filter(sources, ({ source }) =>
       source.includes("readonly reducedMotion?: boolean"),
     );

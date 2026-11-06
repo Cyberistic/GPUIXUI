@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Magnetic page.
- *
- * The native surface leans its content toward the pointer while it is over it;
- * the preview tracks the pointer and offsets the card toward the box centre.
- */
-
 import { useState, type CSSProperties, type MouseEvent } from "react";
 
 const strength = 0.35;

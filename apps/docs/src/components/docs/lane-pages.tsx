@@ -5,14 +5,6 @@ import {
   type PackageLane,
 } from "../../lib/lane-pages";
 
-/**
- * The pages a composition lane's packages ship.
- *
- * `<LaneTable>` answers what the lane is made of from `.agents/slop/COMPONENTS.md`; this
- * answers where to read about it from the collections the site mounts. The rows
- * are generated, so a new package page reaches the lane entry in the same commit
- * that adds it, and a hand-written list cannot drift back in.
- */
 export function LanePages({ lane }: { readonly lane: PackageLane }) {
   const groups = lanePageGroups(componentIndex, lane);
   if (groups.length === 0) {

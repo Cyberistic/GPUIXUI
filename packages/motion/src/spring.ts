@@ -1,23 +1,5 @@
-/**
- * Closed-form spring integration (under / critical / over-damped) for
- * layout-like UI motion.
- *
- * Ported from open-gpui `crates/motion/src/spring.rs` (Apache-2.0). Sampling is
- * velocity-aware and retargetable: re-seed `sampleSpring` with a prior sample's
- * value and velocity to change target without losing momentum.
- *
- * `SpringPhysics` is structural, so a caller may build one without
- * {@link springPhysics}: the samplers repair what they are handed, the way
- * {@link sampleInertia} repairs an `Inertia`. Without that, a `NaN` damping
- * made every formula answer `NaN` and the spring jumped to its target in one
- * frame, while a `NaN` rest threshold meant the run never settled at all. A
- * displacement the arithmetic cannot represent is read the way an interpolation
- * is (`mix`): through the endpoints, not through their difference.
- */
-
 import { mix } from "./progress.js";
 
-/** Sanitized spring physics parameters. */
 export interface SpringPhysics {
   readonly mass: number;
   readonly stiffness: number;
@@ -26,12 +8,6 @@ export interface SpringPhysics {
   readonly restSpeed: number;
 }
 
-/**
- * A sampled point on the spring trajectory.
- *
- * Structural, so a caller may persist a sample and hand the value a store gave
- * back to {@link retarget} — which reads it the way the samplers read physics.
- */
 export interface SpringSample {
   readonly value: number;
   readonly velocity: number;
@@ -39,11 +15,6 @@ export interface SpringSample {
   readonly settled: boolean;
 }
 
-/**
- * The spring fields a caller may set. A value that cannot be read is replaced
- * with the house default, so {@link springPhysics} and the samplers agree on
- * what a physics means.
- */
 export interface SpringPhysicsParams {
   readonly mass?: number;
   readonly stiffness?: number;
@@ -80,19 +51,6 @@ const sanitizeNonNegative = (
     ? Math.min(value, MAX_PHYSICS_VALUE)
     : fallback;
 
-/**
- * The physics a sample can run with: a field it cannot read takes the house
- * default, and a readable one is left alone.
- *
- * The declaration may arrive with **no object at all**, because `Transition` is
- * structural: a spring a caller built by hand or decoded from storage can carry
- * no physics, and reading `.mass` off nothing threw out of a frame loop. It is
- * read as `{}` — the house spring — which is the same answer every unreadable
- * field already gets.
- *
- * {@link springPhysics} composes this, so the constructor and the samplers
- * cannot drift — a hand-built physics samples as the built one does.
- */
 const physicsOf = (
   fields: SpringPhysicsParams | null | undefined,
 ): SpringPhysics => ({
@@ -103,30 +61,25 @@ const physicsOf = (
   restSpeed: sanitizePositive(fields?.restSpeed, DEFAULT_REST_SPEED),
 });
 
-/** Sanitized spring physics from optional parameters. */
 export const springPhysics = (
   params: SpringPhysicsParams = {},
 ): SpringPhysics => physicsOf(params);
 
-/** Short, subtle affordance motion. */
 export const affordanceSpring: SpringPhysics = springPhysics({
   stiffness: 320,
   damping: 34,
 });
 
-/** Committed layout motion such as collapse, expand, insert, or remove. */
 export const layoutSpring: SpringPhysics = springPhysics({
   stiffness: 260,
   damping: 28,
 });
 
-/** Continuity motion for retargeted pane, divider, or zoom transitions. */
 export const continuitySpring: SpringPhysics = springPhysics({
   stiffness: 190,
   damping: 23,
 });
 
-/** Whether a value is within the rest thresholds of a physics. */
 const withinRest = (
   rest: SpringPhysics,
   value: number,
@@ -136,13 +89,6 @@ const withinRest = (
   Math.abs(value - target) <= rest.restDelta &&
   Math.abs(velocity) <= rest.restSpeed;
 
-/**
- * Whether the spring has reached its rest thresholds.
- *
- * A threshold that cannot be read takes the house one, so a hand-built physics
- * answers the same rule the constructor's physics does — a `NaN` threshold
- * would otherwise read as "never at rest" and the run would never settle.
- */
 export const atRest = (
   physics: SpringPhysics,
   value: number,
@@ -150,18 +96,6 @@ export const atRest = (
   velocity: number,
 ): boolean => withinRest(physicsOf(physics), value, target, velocity);
 
-/**
- * Re-seeds a running spring at a new target, keeping the sampled value and
- * velocity. Pair with {@link sampleSpring} at `elapsedMs = 0` to continue
- * seamlessly toward the new target.
- *
- * A sample is caller data as often as a live one — a workspace that saved a
- * panel's mid-flight state and reads it back, whose `null` JSON keeps for a
- * field it never carried — so it is read like the physics: a missing sample or
- * an unreadable field is a **standstill** (`0`), and an unreadable target keeps
- * the sample's own value. Reading `.value` off the absent object threw out of the
- * render that resumed the run.
- */
 export const retarget = (
   sample: SpringSample | null | undefined,
   target: number,
@@ -175,12 +109,6 @@ export const retarget = (
   };
 };
 
-/**
- * Samples a spring at an explicit elapsed time, returning value and velocity.
- * Non-finite inputs are sanitized to sensible defaults: a `NaN` elapsed time is
- * the start of the run (`0`), while an infinity is the end of it, and a physics
- * field that cannot be read takes the house default.
- */
 export const sampleSpring = (
   physics: SpringPhysics,
   from: number,
@@ -228,12 +156,6 @@ export const sampleSpring = (
     value = safeTarget + sampledDisplacement;
     outVelocity = sampledVelocity;
   } else {
-    // Both endpoints are readable and only their difference is not, so the
-    // formulas above answer `NaN` and the sanitiser would replace the whole
-    // journey with the target. The response is linear in displacement and
-    // velocity, so read its shape on unit inputs and compose it with `mix`,
-    // which weights the endpoints instead of adding a difference they cannot
-    // hold.
     const scale = Math.max(Math.abs(safeFrom), Math.abs(safeTarget));
     const [position, positionSpeed] = regime(1, 0);
     const [response, responseSpeed] = regime(0, 1);

@@ -1,18 +1,3 @@
-/**
- * Holds the arithmetic the `flex-sizing` probe reads a window with, and the
- * claims its README section prints.
- *
- * The probe's answer is a width per box, and the interesting ones are easy to
- * get backwards: `flexBasis: 0` is an even split only while the content fits, an
- * auto basis grows from the content, and a grower whose content is wider than
- * its share keeps its content rather than its share. The window measured **200**
- * and **80** where an equal-split reading predicted 140 and 140, which is why
- * the case table is derived here and the section is held to it.
- *
- * `node:fs` is deliberate, as in `registry.test.ts` and `aspect-ratio.test.ts`:
- * this reads the repository's own probe, twin scenario and Markdown, never a
- * runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -74,7 +59,6 @@ describe("the flex sizing arithmetic", () => {
   });
 
   it("grows an auto basis from its content plus an equal share", () => {
-    // The free width is what the fixed item and both contents leave.
     expect(
       autoBasisShare(
         FLEX_ROW_WIDTH,
@@ -94,7 +78,6 @@ describe("the flex sizing arithmetic", () => {
   });
 
   it("gives the share a wide grower refuses to the one beside it", () => {
-    // Measured in the window: 200 + 80, not 140 + 140.
     expect(
       shareNextToContent(FLEX_ROW_WIDTH, FLEX_FIXED_WIDTH, FLEX_OVER_CONTENT),
     ).toBe(80);
@@ -139,12 +122,10 @@ describe("the flex sizing case table", () => {
   it("asks for every rule the section teaches, once per box", () => {
     const ids = Arr.map(FLEX_WIDTH_CASES, (box) => box.id);
     expect(new Set(ids).size).toBe(ids.length);
-    // Every case reads a box the fixture declares: an id the view does not
-    // paint would fail in the window for the wrong reason.
+
     const declared: ReadonlySet<string> = new Set(Object.values(FLEX_IDS));
     expect(Arr.filter(ids, (id) => !declared.has(id))).toEqual([]);
-    // The widths a reader checks first, named so a constant edit cannot leave
-    // the table quietly agreeing with itself.
+
     expect([
       FLEX_FIXED_WIDTH,
       FLEX_NARROW_WIDTH,
@@ -192,17 +173,13 @@ describe("the flex-sizing probe's record", () => {
 
   it("prints the widths the fixture expects, not remembered ones", () => {
     Arr.forEach(FLEX_WIDTH_CASES, (box) => {
-      // The table prints the interesting widths in bold; the align boxes are
-      // only described, so they are held by the align sentence below.
       if (box.width === FLEX_ALIGN_CONTENT) return;
       expect(readme).toContain(`**${box.width}**`);
     });
     expect(readme.replace(/\s+/g, " ")).toContain(
       "`start`, `center` and `end` place that width at **0 / 120 / 240**",
     );
-    // The rule the window taught, stated as the measurement rather than as
-    // "a basis of zero splits evenly". The section is wrapped prose, so the
-    // sentences are read from one line of text.
+
     const flat = readme.replace(/\s+/g, " ");
     expect(flat).toContain(
       "a grower holding content wider than its share keeps its content",
@@ -233,8 +210,7 @@ describe("both views ask for the rules the section claims", () => {
         ),
       ),
     );
-    // A case the view does not name would fail in the window for the wrong
-    // reason, so the table and the view are held together here.
+
     expect(names).toHaveLength(FLEX_WIDTH_CASES.length);
     Arr.forEach(names, (name) => {
       expect(liveScenarios).toContain(`FLEX_IDS.${name}`);
@@ -254,8 +230,7 @@ describe("both views ask for the rules the section claims", () => {
       '"layout-flex-sizing": layoutFlexSizingScenario',
     );
     expect(headlessLayout).toContain("layoutFlexSizingScenario");
-    // The twin walks the same tables, so the renderer and the window cannot
-    // disagree about which rule they measure.
+
     expect(headlessLayout).toMatch(/Effect\.forEach\(\s*FLEX_WIDTH_CASES/);
     expect(headlessLayout).toMatch(/Effect\.forEach\(\s*FLEX_ALIGN_CASES/);
     expect(liveScenarios).toMatch(/Effect\.forEach\(\s*FLEX_WIDTH_CASES/);

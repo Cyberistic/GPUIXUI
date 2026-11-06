@@ -8,19 +8,6 @@ import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { useState } from "react";
 
-/**
- * Browser preview for the Filtering controls page.
- *
- * `TableFilterField` is a GPUix host field, so the drawing is a labelled
- * approximation. What it does not approximate is the field's contract: it owns
- * no query, it reports **every** edit (the wait in `DataToolbar` is the
- * toolbar's), a blank name reads as `DEFAULT_FILTER_LABEL` and a blank hint as
- * `DEFAULT_FILTER_PLACEHOLDER`. The two constants and the two readers are the
- * package's, so the drawing cannot teach a default or a rule the field does not
- * ship.
- */
-
-/** One record the drawing narrows: a service a reader is looking for. */
 export interface FilterRow {
   readonly id: string;
   readonly service: string;
@@ -28,7 +15,6 @@ export interface FilterRow {
   readonly state: string;
 }
 
-/** The records the drawing opens on. */
 export const FILTER_ROWS: ReadonlyArray<FilterRow> = [
   { id: "f1", service: "reports", environment: "production", state: "healthy" },
   { id: "f2", service: "search", environment: "staging", state: "degraded" },
@@ -37,16 +23,9 @@ export const FILTER_ROWS: ReadonlyArray<FilterRow> = [
   { id: "f5", service: "billing", environment: "production", state: "paused" },
 ];
 
-/** The cells a query is matched against. */
 const fieldsOf = (row: FilterRow): string =>
   `${row.service} ${row.environment} ${row.state}`;
 
-/**
- * The records a query keeps — the table's rule, not the field's.
- *
- * A literal match, case ignored, and an empty query keeps every row. The field
- * only reports the text; this is the narrowing the grid would do with it.
- */
 export const matchingRows = (query: string): ReadonlyArray<FilterRow> => {
   const needle = Str.toLowerCase(Str.trim(query));
   return Str.isNonEmpty(needle)
@@ -56,15 +35,12 @@ export const matchingRows = (query: string): ReadonlyArray<FilterRow> => {
     : FILTER_ROWS;
 };
 
-/** The field's accessible name, read the way the component reads it. */
 export const filterLabel = (label: string | undefined): string =>
   spokenText(Option.fromNullishOr(label), DEFAULT_FILTER_LABEL);
 
-/** The hint the empty field shows, read the way the component reads it. */
 export const filterHint = (placeholder: string | undefined): string =>
   visibleCopy(placeholder) ?? DEFAULT_FILTER_PLACEHOLDER;
 
-/** The theme's status tone for one state, as the Badge recipe paints it. */
 const stateTone = (state: FilterRow["state"]): string =>
   state === "healthy"
     ? "gx-badge-success"
@@ -72,7 +48,6 @@ const stateTone = (state: FilterRow["state"]): string =>
       ? "gx-badge-warning"
       : "gx-badge-neutral";
 
-/** The page's preview: the field narrows the rows it sits above. */
 export function TableFilterDemo() {
   const [query, setQuery] = useState("");
   const [label, setLabel] = useState("");

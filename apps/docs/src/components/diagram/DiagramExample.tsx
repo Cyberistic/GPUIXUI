@@ -1,14 +1,6 @@
 import { DiagramView } from "./DiagramView";
 import { ZoomPan } from "./ZoomPan";
 
-/**
- * One diagram in the docs: a Pele render inside the zoom/pan canvas, with the
- * four controls diagram's preview exposes.
- *
- * The source is deliberately a graph with two paths and a cycle, so zooming and
- * panning have something to reveal beyond the initial fit.
- */
-
 const PIPELINE = `flowchart LR
   subgraph author[Author]
     component[Component] --> recipe[Recipe]

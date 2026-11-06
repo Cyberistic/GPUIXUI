@@ -1,33 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * MessageScroller: follow new content while the reader is at the end, and leave
- * them alone when they are not.
- *
- * Ported from shadcn/ui's `MessageScroller` (provider, frame, viewport, content,
- * item, button). The behaviour is ours: the pin decision is measured from a 1px
- * tail sentinel's laid-out position relative to the viewport, because GPUix
- * reports a scroll offset but no content height. The viewport renders every row
- * (`<virtual-list>` takes a count, not compound children), and the limitation is
- * recorded in `.agents/slop/COMPONENTS.md` and the page.
- *
- * **The frame owns its height.** The viewport grows inside the root
- * (`flex: 1 1 0; min-height: 0`), and the jump control floats over its bottom
- * edge: the root is the positioned box, so the control is an overlay rather
- * than a row that takes height from the transcript. Mounting it therefore moves
- * nothing above or below the scroller.
- *
- * **An append while the reader is away changes nothing.** The scroller scrolls
- * only when the store says it is pinned. An appended row follows on the commit
- * that added it (the row count is the dependency), and a row that grows in place
- * follows through its own `onLayout` size report. Neither path measures on a
- * render the content did not cause, so a sibling's keystroke moves nothing.
- *
- * `scrollAnchor` on an item is opt-in turn anchoring: a newly mounted anchor is
- * placed near the top of the viewport with `previousItemPeek` of the row above
- * still visible. It is not the default, and it only runs while the reader is
- * pinned — an unpinned reader keeps their place.
- */
-
 import type {
   EventPayload,
   Props,
@@ -71,29 +42,19 @@ import {
   type MessageScrollerState,
 } from "./message-scroller/store.js";
 
-/**
- * The rules every part reads; throws outside a {@link MessageScroller}.
- *
- * The state is deliberately **not** here. Every row consumes this value, so a
- * scroller whose value carried the state re-rendered every row on every write:
- * a row's own arrival wrote the store, which rebuilt the value, which repainted
- * all `n` rows — `n` arrivals cost `n²` repaints, measured at 3.1s for forty
- * rows. `pinned` is a ref read at event time, and the two parts that paint state
- * read it through {@link useMessageScrollerState}.
- */
 interface MessageScrollerContextValue {
   readonly threshold: number;
   readonly peek: number;
-  /** The first layout has happened; a row mounting now is an arrival. */
+
   readonly ready: { current: boolean };
-  /** Whether the viewport follows the tail, read at event and layout time. */
+
   readonly pinned: { current: boolean };
   readonly observe: (distanceFromEnd: number) => void;
   readonly arrived: () => void;
   readonly jump: () => void;
-  /** The viewport's scroll command, installed by the mounted viewport. */
+
   readonly scrollToEnd: { current: () => void };
-  /** Place an anchored row near the top, or scroll it into view. */
+
   readonly alignTo: { current: (instance: PublicInstance) => void };
 }
 
@@ -101,12 +62,10 @@ const MessageScrollerContext = createContext<
   MessageScrollerContextValue | undefined
 >(undefined);
 
-/** The state, for the two parts that paint it. */
 const MessageScrollerStateContext = createContext<
   MessageScrollerState | undefined
 >(undefined);
 
-/** The scroller a part belongs to. Throws when there is none. */
 const useMessageScroller = (): MessageScrollerContextValue => {
   const value = useContext(MessageScrollerContext);
   if (value === undefined) {
@@ -117,7 +76,6 @@ const useMessageScroller = (): MessageScrollerContextValue => {
   return value;
 };
 
-/** The scroller's state, for a part that paints it. Throws when there is none. */
 const useMessageScrollerState = (): MessageScrollerState => {
   const value = useContext(MessageScrollerStateContext);
   if (value === undefined) {
@@ -128,15 +86,6 @@ const useMessageScrollerState = (): MessageScrollerState => {
   return value;
 };
 
-/**
- * Follow the tail when the rows under this part change.
- *
- * The dependency is the row count, not the element identity: a parent that
- * re-renders for its own reasons (a sibling's keystroke) passes fresh elements
- * with the same count, and a scroller that measured on that render would force
- * a layout for text nobody typed into the transcript. Growth at a fixed count is
- * the row's own size report, not this hook.
- */
 const useFollowAppendedRows = (children: PartChildren): void => {
   const scroller = useMessageScroller();
   const rows = Children.count(children);
@@ -147,33 +96,23 @@ const useFollowAppendedRows = (children: PartChildren): void => {
   }, [rows, scroller]);
 };
 
-/** {@link MessageScroller} props. */
 export interface MessageScrollerProps extends Omit<Props, "children"> {
-  /** The scroller's accessible name. */
   readonly label: string;
-  /**
-   * Distance from the tail that still counts as "at the end". Defaults to the
-   * theme's `spacing["2xl"]` (24px). A value the scroller cannot read (`NaN`) is
-   * no observation: the pin state is kept.
-   */
+
   readonly threshold?: number;
-  /**
-   * How much of the row above a `scrollAnchor` stays visible. Defaults to the
-   * theme's `spacing["3xl"]` (32px).
-   */
+
   readonly previousItemPeek?: number;
-  /** The controlled pinned state. `undefined` means uncontrolled. */
+
   readonly pinned?: boolean;
   readonly defaultPinned?: boolean;
   readonly onPinnedChange?: (pinned: boolean) => void;
-  /** A reply is still arriving; the content publishes `aria-busy`. */
+
   readonly streaming?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The scroller root: the store, the threshold and the two viewport commands. */
 export const MessageScroller = ({
   label,
   threshold: thresholdProp,
@@ -203,7 +142,6 @@ export const MessageScroller = ({
     send(store.stream(streaming));
   }, [store, streaming]);
 
-  // A controlled pin is authoritative; the store mirrors it for rendering.
   useEffect(() => {
     if (pinnedProp === undefined) return;
     send(store.setPinned(pinnedProp));
@@ -270,19 +208,12 @@ export const MessageScroller = ({
   );
 };
 
-/** {@link MessageScrollerViewport} props. */
 export interface MessageScrollerViewportProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
   readonly ref?: Ref<PublicInstance>;
 }
 
-/**
- * The scroll container. It grows inside the root; give the root a bounded
- * height (directly or through a flex parent), because a scroller with no height
- * has nothing to scroll.
- */
 export const MessageScrollerViewport = ({
   children,
   className,
@@ -298,10 +229,7 @@ export const MessageScrollerViewport = ({
   const viewportRef = useRef<PublicInstance | null>(null);
   const tailRef = useRef<PublicInstance | null>(null);
   const mergedRef = useMergedRef(viewportRef, ref);
-  // A scroll the scroller asked for is not the reader leaving the end. Its
-  // events arrive while the viewport is still travelling, so a position short of
-  // the tail for a moment is not an observation; an offset that moved back
-  // toward the start is the reader, and is.
+
   const programmatic = useRef(false);
   const lastOffset = useRef(0);
   assertParts(messageScrollerViewport, children);
@@ -316,8 +244,7 @@ export const MessageScrollerViewport = ({
     } else if (viewport !== null && renderer?.scrollTo !== undefined) {
       renderer.scrollTo(viewport.id, 0, -Number.MAX_SAFE_INTEGER);
     }
-    // The target is the baseline the next offset is read against, so a wheel
-    // back toward the start is recognised even if no scroll event arrived.
+
     const offset =
       viewport === null
         ? undefined
@@ -329,16 +256,12 @@ export const MessageScrollerViewport = ({
     scroller.scrollToEnd.current = scrollToEnd;
   });
 
-  // After the first commit every later row is an arrival. A passive effect runs
-  // after the initial rows' own effects, so the first transcript is not counted.
   useEffect(() => {
     if (scroller.ready.current) return;
     scroller.ready.current = true;
     if (scroller.pinned.current) scrollToEnd();
   }, []);
 
-  // A row appended or a streamed reply grown: while pinned, the tail stays in
-  // view. Unpinned, the position is never touched.
   useFollowAppendedRows(children);
 
   const align = (instance: PublicInstance): void => {
@@ -353,8 +276,7 @@ export const MessageScrollerViewport = ({
       const target = renderer.getElementBounds(instance.id);
       if (box !== null && target !== null) {
         const offset = renderer.getScrollOffset(viewport.id)?.[1] ?? 0;
-        // The sentinel/row is in window coordinates; move it to `peek` below
-        // the viewport's top, never above the start.
+
         const next = Math.min(0, offset - (target.y - box.y) + scroller.peek);
         renderer.scrollTo(viewport.id, 0, next);
         return;
@@ -397,9 +319,7 @@ export const MessageScrollerViewport = ({
   const base: StyleDesc = {
     ...recipeStyle(cn(MESSAGE_SCROLLER_VIEWPORT, className), theme),
     overflowY: "scroll",
-    // The viewport is the flexible middle: it may shrink, never grow the frame.
-    // It keeps an explicit height a caller gives it; `flex-basis: 0` would
-    // replace that height with zero on a scroller with no sized parent.
+
     flexGrow: 1,
     flexShrink: 1,
     minHeight: 0,
@@ -411,8 +331,6 @@ export const MessageScrollerViewport = ({
       ref={mergedRef}
       onScroll={handleScroll}
       onLayout={(event) => {
-        // The first paint makes later item mounts arrivals and later layout
-        // reports scroll-safe; the initial transcript is not an arrival.
         if (!scroller.ready.current) {
           scroller.ready.current = true;
           if (scroller.pinned.current) scrollToEnd();
@@ -425,8 +343,6 @@ export const MessageScrollerViewport = ({
       <div
         ref={tailRef}
         onLayout={() => {
-          // A streamed reply that grows through its own state changes nothing
-          // React renders, but the sentinel moves. While pinned, follow it.
           if (scroller.pinned.current && scroller.ready.current) scrollToEnd();
         }}
         style={{ height: 1, flexShrink: 0 }}
@@ -435,14 +351,11 @@ export const MessageScrollerViewport = ({
   );
 };
 
-/** {@link MessageScrollerContent} props. */
 export interface MessageScrollerContentProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The rows column. It publishes the streaming state beside the transcript. */
 export const MessageScrollerContent = ({
   children,
   className,
@@ -472,20 +385,14 @@ export const MessageScrollerContent = ({
   );
 };
 
-/** {@link MessageScrollerItem} props. */
 export interface MessageScrollerItemProps extends Omit<Props, "children"> {
-  /**
-   * Place this row near the top when it mounts after the first paint, while the
-   * reader follows the end. A turn's user message is the usual anchor.
-   */
   readonly scrollAnchor?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: ReactNode;
   readonly ref?: Ref<PublicInstance>;
 }
 
-/** One row. It paints no surface; the message or marker inside does. */
 export const MessageScrollerItem = ({
   scrollAnchor = false,
   children,
@@ -501,8 +408,6 @@ export const MessageScrollerItem = ({
   const mergedRef = useMergedRef(itemRef, ref);
   const first = useRef(true);
 
-  // `arrived` is stable for the store's life: depending on the whole context
-  // would re-run this on every state write and count the same row forever.
   useEffect(() => {
     if (scroller.ready.current) scroller.arrived();
   }, [scroller.arrived, scroller.ready]);
@@ -512,8 +417,6 @@ export const MessageScrollerItem = ({
       {...rest}
       ref={mergedRef}
       onLayout={(event) => {
-        // The row's own size report: a streamed reply that grows in place
-        // moves the tail without adding a child, so this is what follows it.
         if (
           !first.current &&
           scroller.pinned.current &&
@@ -544,26 +447,15 @@ export const MessageScrollerItem = ({
   );
 };
 
-/** {@link MessageScrollerJumpToLatest} props. */
 export interface MessageScrollerJumpToLatestProps extends Omit<
   Props,
   "children"
 > {
-  /** Text when nothing is unread. Default `"Jump to latest"`. */
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe. */
+
   readonly className?: string;
 }
 
-/**
- * The way back to the newest row.
- *
- * It floats over the viewport's bottom edge, centred, the way shadcn's button
- * sits above the transcript: a full-width absolute strip carries the centring
- * (the runtime has no transform), and the button inside it takes the pointer.
- * Hidden, nothing is mounted, so it is untabbable and absent from the
- * accessibility tree; the fade and 4px travel are motion on `opacity` and `top`.
- */
 export const MessageScrollerJumpToLatest = ({
   label = "Jump to latest",
   className,
@@ -645,7 +537,6 @@ const messageScrollerContent: PartsContract = {
   hint: "Put MessageScrollerItem directly inside it.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`. */
 export const messageScrollerMeta = {
   name: "Message scroller",
   tier: 2,

@@ -1,24 +1,3 @@
-/**
- * Open one block as a real native window.
- *
- *   nub run --filter @gpuixui/blocks dev -- pipeline [--dark]
- *   nub run --filter @gpuixui/blocks dev -- desktop [--aero]
- *
- * The window wears the host's platform style and `nativeWindowOptions`, so on
- * macOS the pipeline opens vibrant, with a transparent titlebar and the
- * traffic lights over its sidebar. One block per process: the runtime paints
- * one window per application (`docs/gpuix-capabilities.md`).
- *
- * `--terminal` paints the block through GPUix's terminal platform instead of a
- * window (`render(<App />, { terminal: true })`), inside kitty or Ghostty:
- *
- *   nub run --filter @gpuixui/blocks dev -- settings --terminal
- *
- * A leading `--` is nub's argument separator, passed through: it is skipped.
- *
- * `--bench` (plan 730) reports the process's resident memory five seconds
- * after the window mounts, as `bench rss=<bytes>`, and exits.
- */
 import { render } from "@gpuix/react";
 import { nativeWindowOptions } from "@gpuixui/shell";
 import {
@@ -94,8 +73,7 @@ const program = Option.match(R.get(blocks, slug), {
         currentPlatform,
       );
       // TODO: the terminal platform paints on commits, not on the motion clock,
-      // so an animation's middle frames never reach the terminal; until it
-      // drives frames, a terminal run takes the reduced (instant) motion.
+
       const terminal = flags.includes("--terminal");
       render(
         <MotionProvider preference={terminal ? "reduced" : "animated"}>

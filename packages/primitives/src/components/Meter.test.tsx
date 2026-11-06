@@ -1,14 +1,3 @@
-/**
- * `Meter` — a measurement in a range, not a task's progress.
- *
- * The bug to guard is the one that made this a separate component: a value
- * outside its range must clamp instead of painting outside the track, and the
- * announced value must be the measurement (not the percentage the fill uses).
- * A meter is status, so it must also never become a tab stop or take a handler.
- * The parts suite guards that a label or value part cannot drift from the
- * clamped measurement the fill paints.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
@@ -37,10 +26,6 @@ import {
 const stringIn = (element: ReactElement, name: string): string =>
   expectSome(hostStyleString(element, name));
 
-/**
- * The first painted element: a context provider draws nothing, so the root's
- * body is one level in before the default composition's track.
- */
 const bodyOf = (element: ReactElement): ReactElement => {
   const child =
     elementChildren(element)[0] ?? expect.fail("the meter drew nothing");
@@ -49,14 +34,11 @@ const bodyOf = (element: ReactElement): ReactElement => {
     : (elementChildren(child)[0] ?? expect.fail("the meter has no body"));
 };
 
-/** The bar's background — the default composition's only body. */
 const trackOf = bodyOf;
 
-/** The fill inside the default track. */
 const fillOf = (element: ReactElement): ReactElement =>
   elementChildren(trackOf(element))[0] ?? expect.fail("the track has no fill");
 
-/** A text part's children, as React handed them to the host. */
 const textOf = (element: ReactElement | null): string =>
   Option.getOrElse(
     Option.flatMap(Option.fromNullishOr(element), (host) =>
@@ -78,10 +60,6 @@ describe("Meter", () => {
   });
 
   it("keeps the bar's height when its size name is one the scale does not carry", () => {
-    // The bug guarded: a meter is a widget a dashboard stores, so its size is a
-    // name from another release as often as a literal. The height table indexed
-    // raw answered `undefined`, so the track painted with no height at all — a
-    // measurement bar collapsed to its border.
     const stored = renderMeter({ value: 62, size: "xl" as "md" }, testTheme);
     const fallback = renderMeter({ value: 62, size: "md" }, testTheme);
     expect(expectSome(hostStyle(trackOf(stored), "height"))).toStrictEqual(
@@ -93,12 +71,6 @@ describe("Meter", () => {
   });
 
   it("reads a saved bound it cannot read as the documented range", () => {
-    // The bug guarded: a meter is a widget a dashboard stores, so its bounds
-    // arrive as whatever the record carried. `??` kept the documented default
-    // only for `null`/`undefined`, and `normalizeRange` answers any other
-    // unreadable bound with `min + 1` — a 0..1 range for a meter documented as
-    // 0..100 — so a 62% measurement painted the track full while its label
-    // still read the measurement.
     const stored = renderMeter(
       { value: 62, max: "100" } as unknown as MeterProps,
       testTheme,
@@ -112,9 +84,6 @@ describe("Meter", () => {
   });
 
   it("paints the fill when its tone name is one the table does not carry", () => {
-    // The bug guarded: a stored tone resolved to no colour class at all, so the
-    // measured share of the track was transparent — a gauge whose needle was
-    // invisible while its label read the value.
     const stored = renderMeter(
       { value: 62, tone: "chart" as ProgressTone },
       testTheme,
@@ -151,16 +120,12 @@ describe("Meter", () => {
   });
 
   it("keeps the measurement when a formatter says nothing", () => {
-    // The bug guarded: a formatter's answer was published as it arrived, so one
-    // whose lookup table had no row for this measurement (`""`) announced an
-    // empty value — the only channel 0.11.0 has for a meter — and `MeterValue`
-    // painted nothing beside a filled bar.
     const part = meterPart({ value: 62, formatValue: () => "" }, testTheme);
     const blank = renderMeter({ value: 62, formatValue: () => "" }, testTheme);
     expect(expectSome(hostProp(blank, "aria-valuetext"))).toBe("62");
     expect(textOf(renderMeterValue({}, part))).toBe("62");
     expect(part.valueText).toBe("62");
-    // A real answer is still the caller's, trimmed.
+
     expect(
       expectSome(
         hostProp(
@@ -184,7 +149,7 @@ describe("Meter", () => {
       testTheme,
     );
     expect(textOf(renderMeterValue({}, part))).toBe("50 GB");
-    // The fraction is the clamped measurement's place, not the raw value's.
+
     expect(part.fraction).toBe(1);
   });
 
@@ -197,13 +162,6 @@ describe("Meter", () => {
   });
 
   it("paints no label line for a label that arrived blank", () => {
-    // The bug guarded: a meter's subject is copy from an i18n table or a saved
-    // record, so a missing row arrives as `""` or a run of spaces. The label
-    // part painted `children ?? label` unconditionally, and the runtime lays a
-    // run of spaces out as a full line (16px on 0.11.0), so a measurement whose
-    // name said nothing still grew a blank caption row — while its accessible
-    // name was correctly absent. The rule is `visibleCopy`'s, the one a
-    // separator's caption already follows.
     const part = meterPart({ value: 68, label: "   " }, testTheme);
     expect(renderMeterLabel({}, part)).toBeNull();
     expect(textOf(renderMeterLabel({ children: "Memory" }, part))).toBe(
@@ -212,12 +170,6 @@ describe("Meter", () => {
   });
 
   it("keeps the stored label for a child that says nothing", () => {
-    // The bug guarded: `children ?? label` covered only an **absent** child, so
-    // a caption's own copy a translation table left blank — `""` or a run of
-    // spaces — both hid the meter's label and laid out a full blank line
-    // (16px on 0.11.0), while the rule the part documents is that a child
-    // defaults to the label. A child that says nothing is absence now, and the
-    // label it documents stands.
     const named = meterPart({ value: 68, label: "Disk usage" }, testTheme);
     expect(textOf(renderMeterLabel({ children: "" }, named))).toBe(
       "Disk usage",
@@ -225,19 +177,16 @@ describe("Meter", () => {
     expect(textOf(renderMeterLabel({ children: "   " }, named))).toBe(
       "Disk usage",
     );
-    // Both halves blank: no caption element at all.
+
     const unnamed = meterPart({ value: 68, label: "  " }, testTheme);
     expect(renderMeterLabel({ children: "   " }, unnamed)).toBeNull();
-    // A caller's own spacing is still painted exactly as written.
+
     expect(textOf(renderMeterLabel({ children: "  Memory  " }, named))).toBe(
       "  Memory  ",
     );
   });
 
   it("lets a caller's className restyle the frame", () => {
-    // The bug guarded: the frame's own column layout was merged *after* the
-    // caller's classes, so `className="flex-row"` compiled and then lost to the
-    // resting `flexDirection: column` — the documented join order never held.
     const element = renderMeter(
       { value: 62, className: "flex-row" },
       testTheme,
@@ -250,8 +199,7 @@ describe("Meter", () => {
     const track = trackOf(element);
     expect(hostTag(track)).toStrictEqual(Option.some("div"));
     expect(elementChildren(track)).toHaveLength(1);
-    // Root → provider → track: no value part is drawn for the caller; the
-    // announced measurement lives on the root.
+
     const provider =
       elementChildren(element)[0] ?? expect.fail("the meter drew nothing");
     expect(elementChildren(provider)).toHaveLength(1);

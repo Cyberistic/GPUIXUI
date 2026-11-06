@@ -1,8 +1,3 @@
-/**
- * The board's rules. The bugs these guard: a drop resolved to a column the
- * pointer was not over (or to one when it was over none), and a move that lost
- * the card, duplicated it, or changed the board when it went nowhere.
- */
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { board } from "./data.js";

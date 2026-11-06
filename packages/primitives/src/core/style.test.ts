@@ -44,38 +44,15 @@ import { buttonVariants, BUTTON_VARIANTS, fieldVariant } from "./variants.js";
 import { testTheme } from "./testing/theme.fixture.js";
 import type { PrimitiveTheme, RadiusStep } from "./theme.js";
 
-/**
- * Guards the theme-role → GPUix `StyleDesc` boundary.
- *
- * GPUix has no CSS, so this function is the entire design system's runtime. A
- * bug here is invisible in review and obvious on screen: the wrong role, a
- * colour that ignores the theme, hover feedback that never appears, a progress
- * fill that paints past its track.
- *
- * The "reads the theme it is given" test is the anti-tautology guard for the
- * rest: it changes the fixture and requires the resolved value to change, so a
- * resolver that quietly hard-codes a colour cannot pass.
- *
- * The `@gpuixui/tokens` block guards .agents/slop/PLAN.md D17: the ring geometry and the
- * elevation rule come from the tokens package, not from a local copy. The
- * widened-border test fails if a local ring constant returns.
- */
-
 const spec = (over: Partial<ControlSpec> = {}): ControlSpec => ({
   variant: buttonVariants.primary,
   size: "md",
   ...over,
 });
 
-/** The outline width a control declares, if it declares one. */
 const outlineWidthOf = (style: ReturnType<typeof controlFocusStyle>): number =>
   style.focusVisible?.outlineWidth ?? 0;
 
-/**
- * The paint a variant declares for an interaction: a change of fill, of border
- * or of decoration. Flattening those fields makes "no feedback at all" visible
- * without inventing a sentinel colour.
- */
 const feedbackOf = (style: ReturnType<typeof controlStyle>): string =>
   Arr.join(
     Arr.getSomes(
@@ -109,8 +86,7 @@ describe("controlStyle", () => {
     );
     expect(style.backgroundColor).toBeUndefined();
     expect(style.borderWidth).toBe(testTheme.borderWidth.thin);
-    // A control's shape is functional: `borderStrong` is the role the boundary
-    // pairs measure, not the decorative `border` a divider paints.
+
     expect(style.borderColor).toBe(testTheme.colors.borderStrong);
   });
 
@@ -143,29 +119,22 @@ describe("controlStyle", () => {
   });
 
   it("replaces a disabled filled action's fade with the measured neutral pair", () => {
-    // The bug: a disabled filled action faded itself to 50%, which composites
-    // the label into whatever is behind the control — 1.47:1–1.49:1 on the
-    // card of four light styles (`disabled.test.ts` in `@gpuixui/tokens`). The
-    // neutral pair is the one `contrastPairs` measures on every surface a
-    // control sits on.
     const style = controlStyle(spec({ disabled: true }), testTheme);
     expect(style.cursor).toBe("not-allowed");
     const pair = disabledAction(testTheme);
     expect(style.backgroundColor).toBe(pair.backgroundColor);
     expect(style.color).toBe(pair.color);
     expect(style.opacity).toBeUndefined();
-    // The press, or the hover, must not look like it did anything.
+
     expect(style.hover?.backgroundColor).toBe(style.backgroundColor);
     expect(style.active?.backgroundColor).toBe(style.backgroundColor);
   });
 
   it("keeps the fade where there is no filled action to collapse", () => {
-    // A field is measured on every content surface it sits on and clears the
-    // floor there; an unfilled control has no fill to swap for the pair.
     Arr.forEach([fieldVariant, buttonVariants.ghost] as const, (variant) => {
       const style = controlStyle(spec({ variant, disabled: true }), testTheme);
       expect(style.opacity).toBe(disabledOpacity);
-      // The label is not swapped for the disabled role: the fade is the state.
+
       expect(style.color).not.toBe(testTheme.colors.disabledForeground);
       expect(style.hover?.backgroundColor).toBe(style.backgroundColor);
       expect(style.active?.backgroundColor).toBe(style.backgroundColor);
@@ -173,11 +142,6 @@ describe("controlStyle", () => {
   });
 
   it("writes every fade from the token package's share, not a copy", () => {
-    // `disabledOpacity` is the share `disabledFadeFailures` composites, so a
-    // literal here would keep the old 0.5 when the constant moves. The three
-    // fades are the unfilled control, a slider's thumb and a rating's star;
-    // `@gpuixui/tokens`' `disabled.test.ts` reads the same file and only counts
-    // a name that is imported from the package (`fadeShares`).
     const source = readFileSync(new URL("./style.ts", import.meta.url), "utf8");
     expect(source).toMatch(
       /import\s*\{[^}]*\bdisabledOpacity\b[^}]*\}\s*from\s*"@gpuixui\/tokens"/,
@@ -223,14 +187,11 @@ describe("controlStyle", () => {
       outlineColor: testTheme.colors.ring,
       outlineOffset: testTheme.borderWidth.strong,
     });
-    // An outline takes no layout space; a shadow ring would have had to be
-    // merged on focus, which is what this removes.
+
     expect(ring.boxShadow).toBeUndefined();
   });
 
   it("declares no ring for a disabled control", () => {
-    // A control disabled while focused keeps the runtime's focus; the ring must
-    // not stay painted on an element that can no longer act.
     expect(
       controlFocusStyle(spec({ disabled: true }), testTheme),
     ).toStrictEqual({});
@@ -251,7 +212,6 @@ describe("controlStyle", () => {
 });
 
 describe("the tokens package owns the theme", () => {
-  /** The fixture with one number changed: the ring must follow it. */
   const widened: PrimitiveTheme = {
     ...testTheme,
     borderWidth: { thin: testTheme.borderWidth.thin, strong: 5 },
@@ -321,12 +281,6 @@ describe("textStyle", () => {
   });
 
   it("paints a brand-toned run in the derived brand text, not the fill role", () => {
-    // The bug: this resolver kept `theme.colors.primary` after the shipped
-    // `Text` moved to `text-brand`, so the two paint paths disagreed — and a
-    // consumer calling `textStyle` got the fill role as text, 4.30:1 on the
-    // base light theme's pressed wash and 3.10:1 in macOS dark. The recipe
-    // equivalence case could not see it, because the test fixture's washes are
-    // translucent, so `brandText` returns its brand unchanged there.
     Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
       const colour = textStyle({ role: "body", tone: "primary" }, theme).color;
       expect(colour).toBe(brandText(theme));
@@ -342,11 +296,6 @@ describe("textStyle", () => {
   });
 
   it("paints an alignment in the grammar the runtime parses", () => {
-    // The bug guarded: `end` was handed to the runtime verbatim, and its text
-    // host parses `left`, `center` and `right` (plus `start` as left) but not
-    // `end` — handed `end` it painted the default, so a right-aligned run
-    // stayed left. The API keeps the direction-neutral names; this is the seam
-    // that states what each means to a runtime with no writing direction.
     expect(
       text({ role: "body", tone: "default", align: "start" }).textAlign,
     ).toBe("left");
@@ -359,11 +308,6 @@ describe("textStyle", () => {
   });
 
   it("paints no alignment for a stored name the release does not carry", () => {
-    // An alignment is a stored choice as often as a literal, so a renamed or
-    // dropped one is the runtime's own default (no declaration), not an unknown
-    // string handed to the host.
-    // The cast is the storage boundary: a saved alignment a later release
-    // renamed arrives as a string the union no longer names.
     const stored = "END" as Parameters<typeof textStyle>[0]["align"];
     expect(
       text({ role: "body", tone: "default", align: stored }).textAlign,
@@ -377,9 +321,7 @@ describe("textStyle", () => {
     const truncated = text({ role: "body", tone: "default", truncate: true });
     expect(truncated.whiteSpace).toBe("nowrap");
     expect(truncated.textOverflow).toBe("ellipsis");
-    // `lineClamp` paints every line in 0.11.0 (measured by the playground's
-    // `text-truncation` probe), so a clamp is a definite box instead: the role's
-    // leading times the line count, with the overflow hidden.
+
     const clamped = text({ role: "body", tone: "default", clamp: 2 });
     expect(clamped.height).toBe(2 * testTheme.typography.body.lineHeight);
     expect(clamped.overflow).toBe("hidden");
@@ -388,7 +330,6 @@ describe("textStyle", () => {
   });
 
   it("reads a clamp it cannot lay out as one line", () => {
-    // A count from a measurement that never arrived is not a zero-height box.
     expect(
       text({ role: "body", tone: "default", clamp: Number.NaN }).height,
     ).toBe(testTheme.typography.body.lineHeight);
@@ -399,13 +340,6 @@ describe("textStyle", () => {
   });
 
   it("reads a clamp a store never wrote as no clamp, not as one line", () => {
-    // The bug guarded: a clamp is a stored preference — a markdown node's line
-    // budget, a restored inspector row's preview — and JSON keeps a field the
-    // record never carried as `null`, not `undefined`. The paint asked
-    // `clamp !== undefined`, so a restored run was cut to a **one-line** box
-    // (content the reader could never reveal) although the prop's documented
-    // default is no clamp at all. Absence is the default; a count that is there
-    // and cannot be laid out is still the one-line floor.
     const stored = text({
       role: "body",
       tone: "default",
@@ -435,9 +369,6 @@ describe("textStyle", () => {
   });
 
   it("paints the design system's selection wash behind a selectable run", () => {
-    // GPUix defaults `selectionColor` to the theme accent at 35%, which no
-    // contrast pair measures; the `selection` role is the one the token
-    // contract composites and holds to both floors.
     const selectable = text({
       role: "body",
       tone: "default",
@@ -471,10 +402,7 @@ describe("surfaceStyle", () => {
   });
 
   it("paints no corner for a stored radius name the release dropped", () => {
-    // The bug: a saved panel's corner arrives as a name a later release no
-    // longer ships, and the resolver indexed it straight through — no corner,
-    // and its recipe shipped an unsupported class nobody reads.
-    const stored = "xl2" as RadiusStep; // the storage boundary
+    const stored = "xl2" as RadiusStep;
     expect(
       surfaceStyle({ tone: "card", radius: stored }, testTheme).borderRadius,
     ).toBeUndefined();
@@ -487,8 +415,7 @@ describe("surfaceStyle", () => {
     ).toBeUndefined();
     expect(bordered.borderWidth).toBe(testTheme.borderWidth.thin);
     expect(bordered.borderColor).toBe(testTheme.colors.border);
-    // The default edge is the runtime's solid one; only an explicit dashed
-    // border declares a style, and a style without a border is not a rule.
+
     expect(bordered.borderStyle).toBeUndefined();
     expect(
       surfaceStyle(
@@ -585,20 +512,11 @@ describe("scrollStyle", () => {
     const both = scrollStyle({ axis: "both" });
     expect(both.overflowY).toBe("scroll");
     expect(both.overflowX).toBe("scroll");
-    // This resolver is theme-free on purpose; `ScrollAreaViewport` is where the
-    // `scrollbar` role becomes the runtime's `scrollbarColor` (proven in
-    // `presentational.test.tsx` and `layout.runtime.test.tsx`).
+
     expect(Object.keys(both)).not.toContain("scrollbarColor");
   });
 
-  // Bug guarded: an axis is a stored layout choice (a restored panel, a
-  // split-pane record), and the union that names the three axes had no guard,
-  // so a name this release does not carry fell through `scrollStyle`'s two
-  // ternaries as **both** scrollbars — the opposite of the `vertical` default
-  // the page documents — while `scrollTarget` read the same name as *no* axis
-  // at all, leaving the region's tab stop answering no key.
   it("paints the documented axis for a stored name the union does not carry", () => {
-    // The cast is the storage boundary: a saved axis is a string, not a union.
     const stored = "sideways" as ScrollAxis;
     expect(scrollStyle({ axis: stored })).toStrictEqual(
       scrollStyle({ axis: "vertical" }),
@@ -606,7 +524,7 @@ describe("scrollStyle", () => {
     expect(scrollAxis(stored)).toBe("vertical");
     expect(isScrollAxis(stored)).toBe(false);
     expect(SCROLL_AXES).toStrictEqual(["vertical", "horizontal", "both"]);
-    // The axis itself is still the caller's.
+
     expect(scrollStyle({ axis: "horizontal" }).overflowX).toBe("scroll");
   });
 });
@@ -624,16 +542,11 @@ describe("progress", () => {
   });
 
   it("reads a share that is not a number as empty, not as a NaN width", () => {
-    // The bug guarded: `Number.isNaN` answers `true` only for a numeric `NaN`,
-    // so a share a record wrote as text passed the guard, went through
-    // `Math.max` and answered `NaN`. The fill's width became `"NaN%"` — which
-    // the runtime paints as no width at all — and the announced share read
-    // `"NaN%"`, while the seam's own doc promised an unreadable value was empty.
     expect(progressPercent("half")).toBe(0);
     expect(progressPercent("42")).toBe(0);
     expect(progressPercent(undefined)).toBe(0);
     expect(progressPercent(null)).toBe(0);
-    // The readable numbers keep their answers.
+
     expect(progressPercent(42)).toBe(42);
     expect(progressPercent(Number.POSITIVE_INFINITY)).toBe(100);
   });
@@ -675,8 +588,6 @@ describe("value controls", () => {
   const spec = { size: "md" } as const;
 
   it("insets the track by half a thumb and pulls the thumb back by the same amount", () => {
-    // The bug guarded: without the negative margins every thumb paints half a
-    // thumb to the right of the value it represents (plan 053 §6).
     const inset = sliderInset(spec.size, testTheme);
     const track = sliderTrackStyle(spec, testTheme);
     const thumb = sliderThumbStyle(spec, testTheme);
@@ -694,8 +605,6 @@ describe("value controls", () => {
   });
 
   it("keeps the rail, the fill and the thumb out of the hit test", () => {
-    // The deepest hit target wins in GPUix and events do not bubble, so a
-    // painted child would swallow the press that maps to a value.
     const rail = sliderRailStyle(spec, testTheme);
     const fill = sliderFillStyle(0.5, spec, testTheme);
     const thumb = sliderThumbStyle(spec, testTheme);
@@ -714,9 +623,6 @@ describe("value controls", () => {
   });
 
   it("turns the track, rail, fill and thumb onto the vertical axis", () => {
-    // The bug guarded: a value on a vertical track was still painted by the
-    // horizontal recipe, so the fill grew sideways out of a bar one spacing
-    // step wide and the thumb's half-side pull moved it off its own centre.
     const vertical = { size: "md", orientation: "vertical" } as const;
     const inset = sliderInset(vertical.size, testTheme);
     const track = sliderTrackStyle(vertical, testTheme);
@@ -746,18 +652,11 @@ describe("value controls", () => {
   });
 
   it("leaves the ring to the track, which is the slider's focus target", () => {
-    // A thumb is not focusable, so a ring declared on it would never paint; the
-    // single slider rings its track and the range slider rings each thumb.
     expect(sliderThumbStyle(spec, testTheme).focusVisible).toBeUndefined();
     expect(sliderThumbStyle(spec, testTheme).boxShadow).toBeUndefined();
   });
 });
 
-/**
- * The AppKit interaction (plan 724). Bug guarded: every control painted the
- * web's hover wash on macOS, where a button, a row and a toggle do not answer
- * a pointer crossing them — only the press darkens.
- */
 describe("the AppKit interaction", () => {
   const appkit: PrimitiveTheme = { ...testTheme, interaction: "appkit" };
 

@@ -1,17 +1,3 @@
-/**
- * The `qr-matrix` probe: one version-1 QR symbol painted twice — a grid of
- * filled `div`s and one tinted `<svg>` mask — read back out of a window.
- *
- * Tier 5's **QR code** row said the runtime provides both routes and left the
- * claim unmeasured (`?`). The probe paints a fixed 21×21 matrix with a
- * four-module quiet zone at 6 points per module (174×174), scans every cell of
- * the 29×29 field from one capture, and compares the two routes pixel for
- * pixel. The encoder is the caller's: a matrix is data, and the runtime's part
- * is only whether a module grid paints.
- *
- * The view and the steps live here so the measurement is one module; the
- * registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -39,13 +25,10 @@ import {
   qrSvgMarkup,
 } from "./qr-matrix.js";
 
-/** A capture needs a frame after the layout settles. */
 const SETTLE = Duration.millis(40);
 
-/** The capture a reader can look at. */
 const FRAME = "qr-matrix";
 
-/** One wrapper of the symbol's own box, in its paper colour. */
 const QrFrame = ({
   id,
   children,
@@ -66,7 +49,6 @@ const QrFrame = ({
   </div>
 );
 
-/** The probe's window: the same matrix as a module grid and as one svg mask. */
 export const QrMatrixProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -122,7 +104,6 @@ export const QrMatrixProbe = (): ReactNode => {
   );
 };
 
-/** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -137,7 +118,6 @@ const paintedBox = (
     );
   });
 
-/** Whether a sampled pixel is ink rather than paper, by the nearer colour. */
 const isInk = (
   ink: Pixels.Rgba,
   paper: Pixels.Rgba,
@@ -214,7 +194,6 @@ export const qrMatrixSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Option.fromNullishOr(Pixels.hexToRgba(QR_PAPER_HEX)),
     );
 
-    /** The captured pixels inside a route's own painted box. */
     const inside = (box: Smoke.Bounds): Option.Option<Pixels.Pixels> =>
       Option.fromNullishOr(
         Pixels.crop(frame, {
@@ -225,7 +204,6 @@ export const qrMatrixSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }),
       );
 
-    /** How many of a route's scanned cells disagree with the matrix. */
     const mismatches = (crop: Pixels.Pixels): number =>
       qrMismatches((row, col) => {
         const centre = qrCellCentre(row, col);
@@ -235,7 +213,6 @@ export const qrMatrixSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** The quiet zone's four corners, read as paper on one route. */
     const quiet = (crop: Pixels.Pixels): boolean =>
       Arr.every(qrQuietCorners, ({ row, col }) =>
         Option.match(colourAt(crop, qrCellCentre(row, col), scale), {
@@ -302,8 +279,6 @@ export const qrMatrixSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 5. The symbol is dark on light whatever the page wears, and the pair is
-    //    far above the contrast a scanner needs.
     const ratio = yield* ctx.expectSome(
       "the ink and paper have a contrast ratio",
       Option.fromNullishOr(contrastRatio(QR_INK_HEX, QR_PAPER_HEX)),

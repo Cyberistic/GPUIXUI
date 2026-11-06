@@ -1,16 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * HotkeyRecorder: bind a keyboard chord to an action.
- *
- * The chord grammar and the platform glyphs come from `@gpuixui/keyboard`
- * (`decodeGpuixEvent`, `normalizeHotkey`, `hasNonModifierKey`, `formatSymbols`);
- * this component only owns the recording state and the display.
- *
- * 0.11.0's test renderer emits no key event for Backspace or Delete, so
- * clearing is a real control next to the recorder rather than a key the docs
- * could not prove.
- */
-
 import type { KeyEvent, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -50,40 +38,31 @@ import {
   useTheme,
 } from "./internal/theme.js";
 
-/** {@link HotkeyRecorder} props. */
 export interface HotkeyRecorderProps extends Omit<
   Props,
   "children" | "style" | "onChange"
 > {
-  /** The recorder's accessible name. */
   readonly label: string;
-  /** The bound chord, or `null` for none. */
+
   readonly value?: string | null;
-  /** A captured chord, or `null` when cleared. */
+
   readonly onChange: (value: string | null) => void;
-  /**
-   * Reports the armed state as it changes, so a caller can suspend its own
-   * bindings while the recorder listens. `preventDefault` removes the element's
-   * default action, not the window's: a key pressed while recording is still
-   * delivered to an application-level handler, so the gate is the caller's.
-   */
+
   readonly onRecordingChange?: (recording: boolean) => void;
-  /** Shown while no chord is bound. Default `"Click to record"`. */
+
   readonly placeholder?: string;
   readonly disabled?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, or a function of the recording state. */
+
   readonly style?: StateStyle<HotkeyRecorderState>;
 }
 
-/** What the recorder draws: whether it is listening, and whether it is disabled. */
 export interface HotkeyRecorderState {
   readonly recording: boolean;
   readonly disabled: boolean;
 }
 
-/** A control that captures the next chord the user presses. */
 export const HotkeyRecorder = ({
   label,
   value = null,
@@ -102,13 +81,11 @@ export const HotkeyRecorder = ({
 }: HotkeyRecorderProps) => {
   const theme = useTheme();
   const [recording, setRecording] = useState(false);
-  // A press on the clear control must not also start recording on the root.
+
   const skipStart = useRef(false);
-  // A chord capture owns the keyup that follows it: Space is a chord while
-  // recording, not the other half of an activation.
+
   const captured = useRef(false);
-  // The armed state is reported on a transition only, through a ref so a caller
-  // passing an inline callback is not called again on every render.
+
   const report = useRef(onRecordingChange);
   report.current = onRecordingChange;
   const wasRecording = useRef(false);
@@ -123,9 +100,6 @@ export const HotkeyRecorder = ({
     setRecording(true);
   };
 
-  // A control the caller disables stops listening: every key is refused, so a
-  // painted "Press keys…" would wait for a chord that can never be accepted.
-  // A layout effect drops it before the frame paints.
   useLayoutEffect(() => {
     if (disabled) setRecording(false);
   }, [disabled]);
@@ -155,10 +129,6 @@ export const HotkeyRecorder = ({
         onKeyDown?.(event);
         if (disabled) return;
         if (recording) {
-          // The element's default action is refused; the key still reaches an
-          // application-level handler (the `hotkey-recorder-lifecycle` probe
-          // measured `window=shift,k`), which is why the armed state is
-          // reported and the caller gates its own bindings.
           event.preventDefault();
           captured.current = true;
           if (isDismiss(event)) {
@@ -235,7 +205,6 @@ export const HotkeyRecorder = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const hotkeyRecorderMeta = {
   name: "Hotkey-recorder input",
   tier: 2,

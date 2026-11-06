@@ -1,24 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The hint a text host paints when it is empty.
- *
- * GPUix shapes an empty `<input>`/`<textarea>`'s placeholder in a fixed
- * `#8F8F8F` (`custom_elements/input.rs` at the pinned `@gpuix/native@0.11.0`),
- * so `textFaint` — the role the contrast contract measures on both field fills
- * — never reaches it and no theme can move it. A field therefore gives the host
- * no placeholder and paints the caller's words in the measured `placeholder`
- * role itself.
- *
- * Published because the rule is a runtime fact rather than one field's paint:
- * `@gpuixui/components`' own hinted hosts face the same host behaviour and call
- * this seam instead of keeping a second copy. The frame takes no pointer input,
- * so a press through a hint still focuses the host underneath it.
- *
- * Import it from the `@gpuixui/primitives/hint` subpath, not the package root:
- * the root barrel re-exports every primitive, so a second package reaching the
- * seam through it loads the whole Tier 1 package to paint one line of text.
- */
-
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { disabledOpacity } from "@gpuixui/tokens";
@@ -30,30 +10,19 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle } from "./internal.js";
 
-/** Which line of a field a hint sits on. */
 export type FieldHintAlign = "center" | "top";
 
-/** A field's painted hint. */
 export interface FieldHint {
   readonly text: string;
   readonly frame: StyleDesc;
   readonly textStyle: StyleDesc;
 }
 
-/** The field a hint belongs to. */
 export interface HintField {
   readonly placeholder?: string;
   readonly disabled?: boolean;
 }
 
-/**
- * Where the hint is measured from.
- *
- * `field` is a field that draws its own border and padding (`Input`,
- * `TextArea`); `content` is a host already inside that chrome (`NumberField`'s
- * input, which its root insets). `host` is a host another package paints: its
- * resolved style owns the chrome and the type, so the hint follows both.
- */
 export type HintSpec =
   | {
       readonly origin: "field" | "content";
@@ -75,7 +44,6 @@ interface HintInsets {
 
 const pixels = (value: number | undefined): number => value ?? 0;
 
-/** The insets a hint frame takes from the box it sits in. */
 const hintInsets = (theme: PrimitiveTheme, spec: HintSpec): HintInsets => {
   if (spec.origin === "host") {
     const style = spec.style ?? {};
@@ -96,12 +64,6 @@ const hintInsets = (theme: PrimitiveTheme, spec: HintSpec): HintInsets => {
   };
 };
 
-/**
- * The frame a hint paints in, over the empty host.
- *
- * The frame sits inside the field and takes no pointer input: a press lands on
- * the host underneath, exactly as it does through the runtime's own hint.
- */
 export const hintFrame = (theme: PrimitiveTheme, spec: HintSpec): StyleDesc => {
   const insets = hintInsets(theme, spec);
   return {
@@ -121,7 +83,6 @@ export const hintFrame = (theme: PrimitiveTheme, spec: HintSpec): StyleDesc => {
   };
 };
 
-/** The hint's type: the field's body role, or the host's own resolved metrics. */
 const hintType = (theme: PrimitiveTheme, spec: HintSpec): StyleDesc =>
   spec.origin === "host"
     ? {
@@ -132,14 +93,6 @@ const hintType = (theme: PrimitiveTheme, spec: HintSpec): StyleDesc =>
       }
     : recipeTw.classesToStyle("type-body font-sans", theme).style;
 
-/**
- * A field's hint, or nothing when it has no placeholder or already has a value.
- *
- * A blank placeholder is no hint — the same rule the words it announces keep
- * (`fieldHelp`), so the paint and the announcement cannot disagree — and the
- * hint fades with the field's own disabled paint (`disabledOpacity`, the share
- * the field chrome fades by).
- */
 export const fieldHint = (
   props: HintField,
   theme: PrimitiveTheme,
@@ -165,7 +118,6 @@ export const fieldHint = (
     })),
   );
 
-/** The hint element: one label the reader sees and assistive technology reads. */
 export const renderFieldHint = (
   hint: FieldHint,
   testId: string | undefined,
@@ -180,25 +132,8 @@ export const renderFieldHint = (
   </div>
 );
 
-/**
- * The words the paint must also *say*.
- *
- * A host handed no `placeholder` also loses the runtime's `aria_placeholder`, so
- * a field that paints this hint has to publish the same words on the help
- * channel — `fieldHelp` is that rule (`core/a11y.ts`), re-exported here because
- * the paint and its announcement are one contract: a second package that calls
- * this seam must not forget the half that reaches a reader.
- */
 export { fieldHelp } from "../core/a11y.js";
 
-/**
- * The box a hinted host sits in.
- *
- * The frame above is absolutely positioned, so the host needs a positioning
- * context. A host keeps every part of its own chrome — border, fill, radius and
- * the ring the runtime paints on the element it tracks — and this only becomes
- * that context, carrying whatever flex role the host held.
- */
 export const hintHost = (layout: StyleDesc = {}): StyleDesc => ({
   position: "relative",
   display: "flex",

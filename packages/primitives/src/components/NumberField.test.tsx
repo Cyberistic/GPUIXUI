@@ -1,13 +1,3 @@
-/**
- * `NumberField` — the element tree the runtime receives.
- *
- * The bug this suite guards at the tree level: a numeric *text* field must keep
- * the draft it is given (so `1.` does not become `1` mid-edit), must add no tab
- * stops beyond the input, must not step past a bound, and must leave an
- * unrelated key to the form. Parsing and stepping live in `core/number.ts` and
- * are proven there; the pointer/focus behaviour is the runtime suite's.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
@@ -74,15 +64,12 @@ const render = (
     scrub,
   );
 
-/** The field's body: a context provider draws nothing in the runtime. */
 const bodyOf = (element: ReactElement): ReactElement =>
   elementChildren(element)[0] ?? expect.fail("the number field drew nothing");
 
-/** The native input inside the part's positioning frame. */
 const inputOf = (part: ReactElement): ReactElement =>
   elementChildren(part)[0] ?? expect.fail("the input part drew nothing");
 
-/** The native input, the spin column, and the two step buttons. */
 const partsOf = (element: ReactElement) => {
   const [part, column] = elementChildren(bodyOf(element));
   const input = inputOf(part ?? expect.fail("the number field has no input"));
@@ -112,16 +99,13 @@ describe("NumberField", () => {
     const { input } = partsOf(render({ label: "Quantity" }, 12, "12"));
     expect(expectSome(hostProp(input, "value"))).toBe("12");
     expect(expectSome(hostProp(input, "aria-label"))).toBe("Quantity");
-    // The draft is the component's job: a trailing dot survives while typing.
+
     expect(
       expectSome(hostProp(partsOf(render({}, 1, "1.")).input, "value")),
     ).toBe("1.");
   });
 
   it("reads a value it cannot paint as the bound it can", () => {
-    // The bug guarded: `NaN` reached the part unchanged, so the field painted
-    // "NaN" and both steppers read as available. The display, the bounds and a
-    // step now agree on the clamped value.
     const part = numberFieldPart(
       { min: 0, max: 10 },
       testTheme,
@@ -136,9 +120,6 @@ describe("NumberField", () => {
   });
 
   it("reads inverted bounds as the range they mean, so the steppers work", () => {
-    // The bug guarded: the part compared the raw props, so `min: 100, max: 0`
-    // clamped every value to 0 and both steppers read as blocked. The range is
-    // the one the core arithmetic uses — swapped, the same rule a slider follows.
     const onValue = vi.fn();
     const { up } = partsOf(
       render({ min: 100, max: 0 }, 50, "50", idle, { onValue }),
@@ -148,11 +129,6 @@ describe("NumberField", () => {
   });
 
   it("starts an empty field at its range's floor, so the first step moves one step from there", () => {
-    // The rule `docs/number-field.mdx` §Absence teaches: a field that has never
-    // held a value paints empty, while its value channel starts at the range's
-    // floor — so the first press moves floor → floor + step rather than from an
-    // invented zero. With `min: 72` and `step: 12` that is 84, not 12 and not a
-    // second press at 72.
     const part = numberFieldPart(
       { min: 72, step: 12 },
       testTheme,
@@ -275,7 +251,6 @@ describe("NumberField", () => {
 });
 
 describe("NumberField scrub", () => {
-  /** A gesture whose scrubbed state a test can set, so the click is observable. */
   const gesture = () => {
     let scrubbed = false;
     const scrub: NumberFieldScrub = {
@@ -297,11 +272,6 @@ describe("NumberField scrub", () => {
   };
 
   it("hands both steppers the drag gesture", () => {
-    // The bug guarded: a number field's only pointer affordance was its two
-    // chevrons, so a caller could not scrub a value the way a design tool's
-    // field does. The pure renderer only carries the handlers; the gesture
-    // itself lives in the component (`runtime/number-field.runtime.test.tsx`
-    // drags it in a window).
     const { scrub } = gesture();
     const { up, down } = partsOf(render({}, 50, "50", idle, {}, scrub));
     expect(Option.getOrUndefined(hostHandler(up, "onMouseDown"))).toBe(
@@ -324,7 +294,7 @@ describe("NumberField scrub", () => {
     moved(true);
     click();
     expect(onValue).toHaveBeenCalledTimes(0);
-    // The flag is consumed: the next plain click steps once, as before.
+
     click();
     expect(onValue).toHaveBeenCalledWith(51);
   });
@@ -381,10 +351,6 @@ describe("NumberField parts", () => {
 
 describe("NumberField styles", () => {
   it("declares the keyboard ring on the input, the element that holds focus", () => {
-    // The bug this guards: the ring was declared on the field's wrapper, and
-    // the runtime applies `focusVisible` only to an element it tracks focus for
-    // (measured by `runtime/groups.runtime.test.tsx`), so a Tab painted no ring
-    // at all. The input is the tab stop, so the declaration belongs there.
     const element = render({}, 50, "50", focused);
     const chrome = expectSome(hostStyleRecord(element));
     expect(Option.fromNullishOr(chrome["focusVisible"])).toStrictEqual(
@@ -399,9 +365,6 @@ describe("NumberField styles", () => {
   });
 
   it("keeps the value lit while another control holds keyboard focus", () => {
-    // A field's value is content, not chrome: the runtime's 40% keyboard dim
-    // composites it into its own fill, so the input opts out. The part's own
-    // `style` merges last and can put the dim back.
     const { input } = partsOf(render({}, 50, "50", focused));
     expect(expectSome(hostStyle(input, "keyboardFocusDim"))).toBe(false);
     const overridden = inputOf(
@@ -411,9 +374,6 @@ describe("NumberField styles", () => {
   });
 
   it("resolves a style callback against the live field state, last", () => {
-    // The bug: a field that reported a stale state to a `style` callback (or
-    // merged its result before the chrome) would paint the wrong state and the
-    // caller could never override it.
     const seen: Array<FieldState> = [];
     const element = render(
       {
@@ -436,11 +396,6 @@ describe("NumberField styles", () => {
 
 describe("a number field's address and help", () => {
   it("hands the address and help to the input, and keeps its own registration", () => {
-    // Bug guarded: a form could not focus the number field it failed on, and a
-    // `Label`'s description reached nobody. The address belongs to the inner
-    // `<input>` — the chrome is not focusable — and the field's own ref
-    // (which points native focus at the input when a stepper runs) must not be
-    // replaced by the caller's.
     const registerInput = vi.fn();
     const ref = vi.fn();
     const layout = vi.fn();

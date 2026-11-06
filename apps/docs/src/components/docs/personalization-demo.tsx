@@ -3,7 +3,6 @@ import { toCssVars } from "../../lib/theme-css";
 
 const aero = retroTheme(themes.dark, "aero");
 
-/** The eight themes the control panel offers, in the reference's order. */
 const THEMES = [
   "Windows 7",
   "Architecture",
@@ -15,7 +14,6 @@ const THEMES = [
   "Studio",
 ] as const;
 
-/** The four settings the reference lists under the grid. */
 const SETTINGS = [
   ["Desktop Background", "Harmony"],
   ["Window Color", "Sky"],
@@ -23,7 +21,6 @@ const SETTINGS = [
   ["Screen Saver", "None"],
 ] as const;
 
-/** The page's own links, in the order the reference paints them. */
 const LINKS = [
   "Control Panel Home",
   "Change desktop icons",
@@ -33,15 +30,6 @@ const LINKS = [
 
 const ALSO = ["Display", "Taskbar and Start Menu", "Ease of Access Center"];
 
-/**
- * Windows 7's Personalization screen, drawn from the Aero look's own roles.
- *
- * The reference art is Microsoft's; this is the *screen* rebuilt in the
- * library's vocabulary: the chrome, the address bar, the theme grid and the
- * four settings read the Aero theme's colours, radii and density, and the
- * thumbnails are two-stop gradients rather than the shipped wallpapers. No
- * bitmap, gradient ramp or mark of the original is copied.
- */
 export function PersonalizationWindow() {
   return (
     <div className="gx-pz not-prose" data-look="aero" style={toCssVars(aero)}>

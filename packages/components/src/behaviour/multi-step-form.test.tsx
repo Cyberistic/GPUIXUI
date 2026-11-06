@@ -1,15 +1,3 @@
-/**
- * MultiStepForm behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a gate that is checked after the step moves instead of
- * before; a wizard that paints another step's content under the current one; a
- * submit reachable before the last step; a refusal that survives the step it
- * belongs to (including through a caller's reorder of `steps`); a pending
- * wizard that advances or submits again; a controlled `step` that does not
- * drive the paint; and a gate whose message arrived blank, which left the reader
- * on the step with an empty alert and no reason for the refusal.
- */
-
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
@@ -32,7 +20,6 @@ interface HarnessProps {
   readonly acceptGate?: () => boolean;
 }
 
-/** Two steps: the first is released by a press, the second by its own press. */
 const Harness = ({
   onSubmit = () => undefined,
   pending = false,
@@ -91,7 +78,6 @@ const Harness = ({
   );
 };
 
-/** A wizard whose only gate answers with a blank message. */
 const BlankRefusal = () => (
   <MultiStepForm
     testId="wizard"
@@ -112,7 +98,6 @@ const BlankRefusal = () => (
   />
 );
 
-/** Two named steps the caller can reorder without changing the current index. */
 const Ordered = ({ reordered }: { readonly reordered: boolean }) => {
   const name = {
     id: "name",
@@ -167,8 +152,6 @@ describe("MultiStepForm", () => {
   });
 
   it("announces the step's place on the content it mounts", () => {
-    // The bug guarded: a roleless div carrying only `aria-label` paints no a11y
-    // node, so the step announcement never reached a reader.
     const wizard = renderComponent(<Harness />);
     const groups = nodesWithRole(wizard.renderer, "group").map(
       (node) => node.name,
@@ -219,10 +202,6 @@ describe("MultiStepForm", () => {
   });
 
   it("moves past a step whose stored gate is not a function", () => {
-    // The bug guarded: a workflow composed from a saved definition merges the
-    // record's `gate: null` into a step, and the gate read trusted it to be a
-    // function — the step's own Next press threw `gate is not a function` and
-    // the workflow never moved, where a step with no gate is a step that moves.
     const wizard = renderComponent(
       <MultiStepForm
         testId="wizard"
@@ -299,8 +278,6 @@ describe("MultiStepForm", () => {
   });
 
   it("keeps a refusal with the step it was raised on when the caller reorders", () => {
-    // The bug guarded: a refusal remembered by its index paints on whichever
-    // step the caller later moves into that slot.
     const wizard = renderComponent(<Ordered reordered={false} />);
     clickCentreOf(wizard, "multi-step-next");
     expect(text(wizard)).toContain("Enter a workspace name");
@@ -318,10 +295,6 @@ describe("MultiStepForm", () => {
   });
 
   it("reads a blank action label as the default, never an unnamed action", () => {
-    // The bug guarded: a default applies only to an absent prop, so an i18n
-    // table that handed over "" (a missing key) painted the wizard's only
-    // forward actions with no words and no accessible name — a blank box the
-    // reader had to press to make progress.
     const wizard = renderComponent(
       <MultiStepForm
         testId="wizard"
@@ -353,10 +326,6 @@ describe("MultiStepForm", () => {
   });
 
   it("names the wizard, its list and its steps when every name arrived blank", () => {
-    // The bug guarded: `label`, a step's `title` and its `description` are copy
-    // from a data table or an i18n file as often as literals, and a blank one
-    // published an empty group name, an unnamed list item and an announcement
-    // opening with a comma (", step 1 of 2").
     const wizard = renderComponent(
       <MultiStepForm
         testId="wizard"
@@ -394,11 +363,6 @@ describe("MultiStepForm", () => {
   });
 
   it("paints a stored step list that is not a list as no workflow", () => {
-    // The bug guarded: a workflow is data as often as code — an app composing its
-    // wizard from a saved definition — and JSON writes `null` for a list it never
-    // carried. `steps.length` threw `Cannot read properties of undefined
-    // (reading 'length')` before the first step painted, taking the whole screen
-    // with it, where the documented empty list paints nothing.
     const wizard = renderComponent(
       <div>
         <text testId="before">Before</text>
@@ -412,17 +376,11 @@ describe("MultiStepForm", () => {
     );
     const painted = text(wizard);
     wizard.unmount();
-    // The sibling is the counter: a render that threw takes the whole tree with
-    // it, so an empty read alone could pass on the crash.
+
     expect(painted).toStrictEqual(["Before"]);
   });
 
   it("reads a stored wizard name and action labels that are not text", () => {
-    // The bug guarded: a wizard composed from a saved definition carries the
-    // fields the record kept, so a name or action label the decoder wrote as a
-    // number reached `accessibleName`, whose `trim` threw
-    // `self.trim is not a function` out of the first paint — the whole workflow
-    // went down instead of painting the words it documents.
     const wizard = renderComponent(
       <MultiStepForm
         testId="wizard"
@@ -462,12 +420,6 @@ describe("MultiStepForm", () => {
   });
 
   it("names a step whose stored title is not text by its position", () => {
-    // The bug guarded: a workflow composed from a saved definition carries the
-    // field the record kept, so a title the decoder wrote as a number reached
-    // `stepName`'s `accessibleName`, whose `trim` threw
-    // `self.trim is not a function` out of the first paint — the whole wizard
-    // went down. The step is named by its position, and its stored description
-    // paints no line.
     const wizard = renderComponent(
       <MultiStepForm
         testId="wizard"
@@ -502,10 +454,6 @@ describe("MultiStepForm", () => {
   });
 
   it("keeps the steps beside a stored entry that names none", () => {
-    // A deleted record leaves `null` inside the list, and an entry whose id is
-    // not text has no identity for the indicator's key or the refusal's step:
-    // the row threw on its `id` while its neighbours painted. The workflow paints
-    // the readable steps and the arithmetic counts them.
     const wizard = renderComponent(
       <MultiStepForm
         testId="wizard"

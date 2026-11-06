@@ -17,31 +17,6 @@ import {
   type NavRovingKey,
 } from "./navigation-menu-preview";
 
-/**
- * Browser previews for the Navigation menu page.
- *
- * The shipped nav keeps exactly one anchored panel open, runs a pointer policy
- * on top of that (rest to open, leave both surfaces to close) and lets an
- * explicit press or key win over a pending hover timer. The workflow below runs
- * the preview's own reducer, and `navigation-menu-preview.test.ts` holds its
- * delays and its rules to `packages/components/src/navigation-menu.tsx`, so the
- * drawing can show the state machine rather than a picture of one.
- *
- * A trigger is a real `<button>` here, as it is in the component. The browser's
- * Enter, Space and arrows are the component's own key contract. The panel is an
- * in-flow `<div role="group">` while the native surface is an anchored layer;
- * that placement is the approximation this page records.
- */
-
-/**
- * The chevron the native trigger paints, in the slot it reserves.
- *
- * shadcn's is lucide's `ChevronDown` with a rotate transition. The runtime has
- * no `transform`, so the component cross-fades `chevron-down` and `chevron-up`
- * in one fixed slot (`internal/flip-mark.tsx`); the drawing does the same, which
- * is also why the trigger cannot resize under the pointer and move its
- * siblings — the bug the character swap (`⌄` -> `⌃`) caused.
- */
 const NavChevron = ({ open }: { readonly open: boolean }): ReactNode => (
   <span
     aria-hidden="true"
@@ -75,13 +50,11 @@ const NavChevron = ({ open }: { readonly open: boolean }): ReactNode => (
   </span>
 );
 
-/** The key a roving trigger hands to the group, if it is one. */
 const rovingKey = (key: string): NavRovingKey | undefined =>
   key === "ArrowLeft" || key === "ArrowRight" || key === "Home" || key === "End"
     ? key
     : undefined;
 
-/** The workflow scene: one nav, driven by pointer, press and keys. */
 export const NavigationMenuDemo = (): ReactNode => {
   const [state, dispatch] = useReducer(
     applyNavEvent,
@@ -99,7 +72,6 @@ export const NavigationMenuDemo = (): ReactNode => {
     setLast(note);
   };
 
-  // One pending transition at a time: the pointer's open, or its close grace.
   useEffect(() => {
     const next = navTimer(state);
     if (next === undefined) return;
@@ -107,7 +79,6 @@ export const NavigationMenuDemo = (): ReactNode => {
     return () => window.clearTimeout(timer);
   }, [state]);
 
-  // ArrowDown opens and moves focus into the panel — not onto its first link.
   useEffect(() => {
     if (panelFocusRequest === 0) return;
     panel.current?.focus();
@@ -265,7 +236,6 @@ interface TileProps {
   readonly disabled?: ReadonlyArray<string>;
 }
 
-/** One state as a still: the panel is in flow here, not anchored. */
 const NavTile = ({ title, open, disabled = [] }: TileProps): ReactNode => (
   <div className="gx-nav-tile">
     <p className="gx-nav-tile-title">{title}</p>
@@ -306,7 +276,6 @@ const NavTile = ({ title, open, disabled = [] }: TileProps): ReactNode => (
   </div>
 );
 
-/** The states scene: at rest, one open, a disabled trigger, a populated panel. */
 export const NavigationMenuStates = (): ReactNode => (
   <div className="gx-demo-navigation">
     <div className="gx-nav-tiles">

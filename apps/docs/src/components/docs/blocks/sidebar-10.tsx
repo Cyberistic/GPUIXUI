@@ -10,10 +10,6 @@ import {
   SbWorkspacePanel,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 10 — the workspace panel on the left, and shadcn's header popover on
- * the right: four groups of actions, opened from the header's dots.
- */
 export const Sidebar10Render = () => {
   const [starred, setStarred] = useState(false);
 

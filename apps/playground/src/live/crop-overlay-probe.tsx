@@ -1,22 +1,3 @@
-/**
- * The `crop-overlay` probe: a crop frame built from the four things the runtime
- * actually provides, read back out of a window.
- *
- * Tier 5's **Crop area** row said the paint *under* a crop was measured and the
- * crop itself was not. The open questions were all about the overlay: does a
- * veil bar paint over the bitmap, does a bar keep the press meant for the
- * picture, does a corner handle keep a drag while it moves, and does the hole
- * clamp to the bitmap's bounds?
- *
- * The mask is four positioned bars because the runtime has no `clip-path`, no
- * mask and no radial gradient; the handle is one positioned box because a drag
- * is the runtime's pointer capture rather than a host feature. Each bar reads
- * its own pixel out of the capture, so a bar that paints under the bitmap — or
- * not at all — cannot pass as a mask.
- *
- * The view and the steps live here so the measurement is one module; the
- * registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { Pixels, Smoke } from "@gpuixui/testing";
@@ -51,18 +32,14 @@ import {
   type CropState,
 } from "./crop-overlay.js";
 
-/** A press and the input that follows it need a frame to commit. */
 const SETTLE = Duration.millis(40);
 
-/** The moves one drag delivers, the automation client's own default. */
 const DRAG_MOVES = 8;
 
-/** The captures a reader can look at, one per painted state. */
 const REST = "crop-rest";
 const AT_MIN = "crop-min";
 const AT_MAX = "crop-max";
 
-/** The state a readout is built from. */
 const stateOf = (
   crop: CropRect,
   moves = 0,
@@ -70,7 +47,6 @@ const stateOf = (
   imagePresses = 0,
 ): CropState => ({ crop, moves, framePresses, imagePresses });
 
-/** The probe's window: one bitmap, four veil bars, one corner handle. */
 export const CropOverlayProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -194,7 +170,6 @@ export const CropOverlayProbe = (): ReactNode => {
   );
 };
 
-/** The colour at a logical point of a capture, failing by name if outside. */
 const sampleAt = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -204,7 +179,6 @@ const sampleAt = (
 ): Effect.Effect<Pixels.Rgba, Smoke.SmokeAssertionError> =>
   ctx.expectSome(label, colourAt(frame, point, scale));
 
-/** Whether `sample` is the paint `expected` within the frame's tolerance. */
 const expectPaint = (
   ctx: Smoke.AsyncSmokeContext,
   label: string,
@@ -213,7 +187,6 @@ const expectPaint = (
 ): Effect.Effect<void, Smoke.SmokeAssertionError> =>
   ctx.expectEqual(label, differs(sample, expected), false);
 
-/** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -244,13 +217,11 @@ export const cropOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const frameBounds = yield* paintedBox(ctx, CROP_IDS.frame);
 
-    /** A logical point in the frame's own coordinates, as a window point. */
     const inFrame = (point: Point): Point => ({
       x: frameBounds.x + point.x,
       y: frameBounds.y + point.y,
     });
 
-    /** A capture and the scale its logical points convert by. */
     const capture = (name: string) =>
       Effect.gen(function* () {
         yield* ctx.host.capture(name);
@@ -263,7 +234,6 @@ export const cropOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return { pixels, scale } as const;
       });
 
-    // 1. The frame paints its declared box, and the hole opens where it says.
     yield* ctx.expectNear(
       "the frame paints the bitmap's own width",
       frameBounds.width,
@@ -282,7 +252,6 @@ export const cropOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       cropReadout(stateOf(CROP_OPENING)),
     );
 
-    // 2. The four bars paint the box the hole leaves for each side.
     yield* Effect.forEach(
       cropBars(CROP_OPENING),
       (bar) =>
@@ -302,7 +271,6 @@ export const cropOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1, discard: true },
     );
 
-    // 3. The handle straddles the hole's bottom-right corner.
     yield* ctx.expectEqual(
       "the handle paints on the hole's bottom-right corner",
       sameBox(yield* paintedBox(ctx, CROP_IDS.handle), {
@@ -314,7 +282,6 @@ export const cropOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 4. The mask is a veil over the bitmap, and the hole is the bitmap itself.
     const rest = yield* capture(REST);
     yield* expectPaint(
       ctx,
@@ -356,8 +323,6 @@ export const cropOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       bitmap,
     );
 
-    // 5. A drag past the smallest hole clamps to the minimum, and the bars
-    //    follow the hole rather than their opening boxes.
     yield* ctx.host.drag(CROP_IDS.handle, -1000, -1000);
     yield* Effect.sleep(SETTLE);
     const smallest = draggedCrop(CROP_OPENING, -1000, -1000);
@@ -390,8 +355,6 @@ export const cropOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       bitmap,
     );
 
-    // 6. A drag past the bitmap's edge clamps to it, and the veil recedes from
-    //    the pixels the hole gained.
     yield* ctx.host.drag(CROP_IDS.handle, 1000, 1000);
     yield* Effect.sleep(SETTLE);
     const largest = draggedCrop(smallest, 1000, 1000);
@@ -426,9 +389,6 @@ export const cropOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       mask,
     );
 
-    // 7. A press on a veil bar and a press inside the hole both reach the frame
-    //    beneath the mask — not the bar, and not the `<img>`, which reports no
-    //    press of its own — and resize nothing.
     yield* ctx.host.click(CROP_IDS.bar("top"));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(

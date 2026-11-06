@@ -1,27 +1,3 @@
-/**
- * The page a grid paints, measured in the real renderer.
- *
- * The gap these guard: the core's pagination model slices the filtered and
- * sorted rows by the index it is handed, and the index belongs to the set it
- * was measured against. A grid reopened on page six of a set a filter has since
- * narrowed to three pages therefore painted **no row at all** — the controller
- * had no page state, so nothing clamped it.
- *
- * Four rules are measured here:
- *
- * - a page is a slice of the kept set, and the arrows move it;
- * - a filter or a search returns to the first page, because the records the
- *   reader was on are not where the index says they are;
- * - a saved index past the last page paints the last page (the regression);
- * - the arrows and a size change measure from the page the grid **paints**, so
- *   a saved index past the set does not strand them at its end;
- * - a new predicate tree returns to the first page, the rule a query change
- *   follows, even though the tree arrives as a controlled prop;
- * - the selection is the kept set's, not the page's: a record chosen on page
- *   one is still chosen while page two paints, and the page's own checkbox
- *   covers only what it paints.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -87,7 +63,6 @@ afterEach(() => {
   root = undefined;
 });
 
-/** Press `testId` through the runtime's real hit testing, then paint. */
 const press = (testRoot: DataTestRoot, testId: string): void => {
   clickCentreOf(testRoot, testId);
   testRoot.renderer.flush();
@@ -101,7 +76,6 @@ const readout = (testRoot: DataTestRoot): string =>
     },
   );
 
-/** A grid whose page the reader moves, with the state it paints printed. */
 const PagedGrid = ({
   stored,
   pageSize,
@@ -173,7 +147,6 @@ const PagedGrid = ({
   );
 };
 
-/** The tree the reader builds: the odd lane. */
 const keepOdd: FilterTree = {
   kind: "all",
   children: [
@@ -181,7 +154,6 @@ const keepOdd: FilterTree = {
   ],
 };
 
-/** A paged grid whose predicate tree the reader can replace. */
 const TreePagedGrid = () => {
   const [tree, setTree] = useState<FilterTree | undefined>(undefined);
   const table = useTable({
@@ -259,7 +231,6 @@ describe("a paged grid", () => {
     press(root, "page-next");
     expect(readout(root)).toContain("page 3/3 · 2 rows");
 
-    // Five odd rows, four to a page: two pages, and the reader is on the first.
     typeInto(root, "page-filter", "odd");
     root.renderer.flush();
     expect(readout(root)).toContain("page 1/2 · 4 rows");
@@ -268,9 +239,6 @@ describe("a paged grid", () => {
   });
 
   it("paints the last page when a saved index is past the set", () => {
-    // The regression: ten rows at four a page hold three pages, and the saved
-    // record names page six. The core slices past the end and paints nothing,
-    // so the controller must clamp before the table is built.
     root = renderData(
       <PagedGrid
         pageSize={4}
@@ -286,9 +254,6 @@ describe("a paged grid", () => {
   });
 
   it("steps from the page it paints, not the saved index it clamped", () => {
-    // The regression: the record names page six, the grid paints page three of
-    // three, and `previousPage` computed `5 - 1` from the record — clamped back
-    // to two — so the arrow that says Previous painted the same page again.
     root = renderData(
       <PagedGrid
         pageSize={4}
@@ -309,10 +274,6 @@ describe("a paged grid", () => {
   });
 
   it("keeps the painted page's top row when the saved index was clamped", () => {
-    // Ten rows at four a page hold three pages, and the record names page six,
-    // so the grid paints page three, whose top row is the ninth. At three a
-    // page that row opens page three; measuring from the record's 5 × 4 = 20
-    // put the reader on the last page, showing one row instead.
     root = renderData(
       <PagedGrid
         pageSize={4}
@@ -329,9 +290,6 @@ describe("a paged grid", () => {
   });
 
   it("returns to the first page when the predicate tree narrows the set", () => {
-    // Five of the ten files are in the odd lane. A reader on page three of the
-    // whole set has a saved index of two, which the narrowed set would clamp
-    // onto its **last** page — the records they were reading are not there.
     root = renderData(<TreePagedGrid />);
     settle(root);
     expect(readout(root)).toContain("page 1/4 · 3 rows");
@@ -346,7 +304,6 @@ describe("a paged grid", () => {
     expect(root.renderer.findByTestId("page-row-file-1")).toBeDefined();
     expect(root.renderer.findByTestId("page-row-file-7")).toBeUndefined();
 
-    // The gesture after the tree arrived steps from the page it reset to.
     press(root, "tree-next");
     expect(readout(root)).toContain("page 2/2 · 2 rows");
     expect(root.renderer.findByTestId("page-row-file-7")).toBeDefined();
@@ -360,8 +317,6 @@ describe("a paged grid", () => {
     expect(readout(root)).toContain("1 selected");
     expect(readout(root)).toContain("active=file-1");
 
-    // Page two paints none of file-1, so the focus target and the tab stop move
-    // to rows this page holds — while the record stays chosen.
     press(root, "page-next");
     expect(readout(root)).toContain("1 selected");
     expect(readout(root)).toContain("active=none");
@@ -380,8 +335,6 @@ describe("a paged grid", () => {
     expect(readout(root)).toContain("4 selected");
     expect(readout(root)).toContain("all=true");
 
-    // The next page's four records are not chosen, though the set still holds
-    // the four the reader chose on page one.
     press(root, "page-next");
     expect(readout(root)).toContain("4 selected");
     expect(readout(root)).toContain("all=false");
@@ -395,7 +348,6 @@ describe("a paged grid", () => {
     press(root, "page-next");
     expect(readout(root)).toContain("page 2/3 · 4 rows");
 
-    // Page 2 starts at row 5; at two a page that row opens page 3.
     press(root, "page-two");
     expect(readout(root)).toContain("page 3/5 · 2 rows");
     expect(root.renderer.findByTestId("page-row-file-5")).toBeDefined();

@@ -1,17 +1,3 @@
-/**
- * SlidingNumber in the real GPUix renderer.
- *
- * The bugs these guard: a column painted at the wrong digit; a value change that
- * rolls every column instead of the one that changed; a column that appears
- * already grown and rolls up from zero; a point painted where the value has no
- * fraction; affixes painted on the wrong side; a reduced-motion reader who still
- * gets a tween; ten stacked glyphs published to the accessibility tree where the
- * value should be; and a value no column can paint, painted as blanks.
- *
- * The motion clock is paused around a change, so a roll is read at the fraction
- * it declares rather than wherever the frame loop had got.
- */
-
 import type { ComponentTestRoot } from "../internal/test-root.js";
 import { describe, expect, it } from "vitest";
 import { a11yNodes } from "../internal/a11y.js";
@@ -21,10 +7,8 @@ import { renderComponent } from "../internal/test-root.js";
 import { MotionProvider } from "../motion.js";
 import { SlidingNumber, type SlidingNumberProps } from "../sliding-number.js";
 
-/** One line of the theme's body role: the height of a column's frame. */
 const LINE = textStyle(darkTheme, "body").lineHeight;
 
-/** Mount a value, with the props a case needs. */
 const render = (props: Partial<SlidingNumberProps> = {}) => {
   const page = renderComponent(
     <SlidingNumber testId="number" value={42} {...props} />,
@@ -33,12 +17,10 @@ const render = (props: Partial<SlidingNumberProps> = {}) => {
   return page;
 };
 
-/** How far a column's plate is raised above its column's top. */
 const riseOf = (page: ComponentTestRoot, key: string): number =>
   requireBounds(page, `cell-${key}-plate`).y -
   requireBounds(page, `cell-${key}`).y;
 
-/** The painted runs, in paint order. */
 const painted = (page: ComponentTestRoot): ReadonlyArray<string> =>
   page.renderer.getAllText();
 

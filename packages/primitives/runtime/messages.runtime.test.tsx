@@ -1,17 +1,3 @@
-/**
- * The words a control announces, in a real window.
- *
- * `messages.test.tsx` proves each pure render function announces the table it is
- * handed; this suite proves the other half — that `useMessages` carries the
- * provider's table to the element GPUI paints, and that the a11y dump reads the
- * translated word. It is the same seam `loadingLabel` needed: a localised
- * interface must not hear English from its own controls.
- *
- * One window per test (`runtime/fixture.tsx`), and every window here names a
- * different vocabulary, so a component that quietly kept a literal would report
- * the English word and fail by name.
- */
-
 import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { Checkbox } from "../src/components/Checkbox.js";
@@ -36,7 +22,6 @@ import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
 import { openWindow, Surface } from "./fixture.js";
 
-/** A caller's table: what a French interface announces. */
 const french: PrimitiveMessages = {
   selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" },
   press: { pressed: "enfoncé", notPressed: "relâché" },
@@ -49,26 +34,20 @@ const french: PrimitiveMessages = {
     `${end === "start" ? "minimum" : "maximum"} de ${label}`,
 };
 
-/** The word the accessibility node named `label` announces. */
 const announced = (runtime: Runtime, label: string): string =>
   Option.getOrElse(a11yValueOf(runtime.a11y(), { label }), () =>
     expect.fail(`no accessibility node announced ${label}`),
   );
 
-/** Whether a node with this role and name is in the painted tree. */
 const named = (runtime: Runtime, role: string, label: string): boolean =>
   Option.isSome(a11yNode(runtime.a11y(), { role, label }));
 
-/** The description the accessibility node named `label` carries. */
 const described = (runtime: Runtime, label: string): Option.Option<string> =>
   Option.flatMap(a11yNode(runtime.a11y(), { label }), (node) =>
     Option.fromNullishOr(node.aria?.description),
   );
 
 it("announces every control's state in the caller's words", async () => {
-  // The bug: `checked`, `mixed`, `pressed`, `Scroll region` and `Code digit N`
-  // were English literals in the components, so the provider's table reached
-  // nothing and a localised interface heard its own controls speak English.
   const runtime = await openWindow();
   runtime.render(
     <Surface messages={french}>
@@ -112,19 +91,15 @@ it("announces every control's state in the caller's words", async () => {
   expect(announced(runtime, "Wi-Fi")).toBe("coché");
   expect(announced(runtime, "Bold")).toBe("enfoncé");
   expect(announced(runtime, "Left")).toBe("enfoncé");
-  // A rating names each star from the table and announces how much of it is
-  // filled — the second vocabulary the seam carries.
+
   expect(announced(runtime, "étoile 1 sur 2")).toBe("plein");
   expect(announced(runtime, "étoile 2 sur 2")).toBe("vide");
-  // The scroll region names itself from the table, and a code cell names its
-  // position in the caller's sentence.
+
   expect(named(runtime, "Group", "Zone de défilement")).toBe(true);
   expect(named(runtime, "TextInput", "Code chiffre 1")).toBe(true);
 });
 
 it("lets a nested provider extend the table instead of resetting it", async () => {
-  // The bug: the nested provider replaced the table whole, so a dialog that
-  // named its own two words silenced the page's selection words around it.
   const runtime = await openWindow();
   runtime.render(
     <Surface messages={french}>
@@ -140,16 +115,11 @@ it("lets a nested provider extend the table instead of resetting it", async () =
   );
 
   expect(announced(runtime, "Italic")).toBe("appuyé");
-  // Not reset to English: the selection group came from the outer provider.
+
   expect(announced(runtime, "Preview")).toBe("coché");
 });
 
 it("keeps the words a nested provider leaves undefined", async () => {
-  // The bug: a group a caller forwards as `undefined` — an optional prop it
-  // never received — erased the table above it instead of inheriting. The
-  // selection group dropped back to the shipped English, and an erased
-  // `starName` made Rating throw while rendering, which this window painted as
-  // no rating at all rather than as an error.
   const runtime = await openWindow();
   runtime.render(
     <Surface messages={french}>
@@ -170,9 +140,6 @@ it("keeps the words a nested provider leaves undefined", async () => {
 });
 
 it("announces a busy action and an indeterminate bar in the caller's words", async () => {
-  // The bug: the busy word and the indeterminate word were the only announced
-  // copy outside the table, so a French tree heard "Loading" from every action
-  // and "loading" from every bar unless it repeated a prop on each instance.
   const runtime = await openWindow();
   runtime.render(
     <Surface messages={french}>
@@ -190,15 +157,12 @@ it("announces a busy action and an indeterminate bar in the caller's words", asy
       expect.fail("the busy action carries no description"),
     ),
   ).toBe("Chargement");
-  // The busy spinner is named too, so the indicator is not a silent status.
+
   expect(named(runtime, "Status", "Chargement")).toBe(true);
   expect(announced(runtime, "Import")).toBe("chargement");
 });
 
 it("names a range slider's ends in the caller's words", async () => {
-  // The bug: both ends were named `<label> minimum` / `<label> maximum` inside
-  // the component, so a localised range announced an English suffix and had no
-  // way to say otherwise.
   const runtime = await openWindow();
   runtime.render(
     <Surface messages={french}>
@@ -213,13 +177,6 @@ it("names a range slider's ends in the caller's words", async () => {
 });
 
 it("keeps the shipped sentence when a caller's says nothing", async () => {
-  // The bug guarded: `starName`, `codeDigit` and `rangeEnd` are sentences a
-  // component calls with the caller's own data, and a localised table with a
-  // missing row answers `""`. That named a rating's stars and a code field's
-  // cells with nothing and left both of a range's thumbs unnamed — a reader
-  // heard "checked" on an unnamed radio, and Tab crossed six unnamed inputs.
-  // A blank answer is absence, so the shipped sentence is what the window
-  // reports; each node is found by that name and by no empty one.
   const runtime = await openWindow();
   runtime.render(
     <Surface
@@ -238,8 +195,6 @@ it("keeps the shipped sentence when a caller's says nothing", async () => {
     </Surface>,
   );
 
-  // The names fall back to the shipped sentence; the state words stay the
-  // caller's, because that group was not the one left blank.
   expect(announced(runtime, "1 of 2")).toBe("plein");
   expect(announced(runtime, "2 of 2")).toBe("vide");
   expect(named(runtime, "TextInput", "Vérification digit 1")).toBe(true);
@@ -249,13 +204,6 @@ it("keeps the shipped sentence when a caller's says nothing", async () => {
 });
 
 it("keeps the shipped state word when the table's says nothing", async () => {
-  // The bug guarded: a `messages` group is filled per state, and a row nobody
-  // translated answers `""` — the shape `starName` and a formatter already read
-  // as absence. A state word is the only channel this runtime gives a checkbox,
-  // a switch, a toggle or a star (there is no `aria-checked`/`aria-pressed`), so
-  // the blank row announced nothing while the control still held a value, and a
-  // blank `scrollRegion` left the tab stop a group with an empty name. The
-  // shipped words are what the window reports, and a real word is trimmed.
   const runtime = await openWindow();
   runtime.render(
     <Surface
@@ -290,7 +238,7 @@ it("keeps the shipped state word when the table's says nothing", async () => {
 
   expect(announced(runtime, "Notify")).toBe("checked");
   expect(announced(runtime, "Bold")).toBe("pressed");
-  // A rating's fill vocabulary is its own group and falls back word by word.
+
   expect(announced(runtime, "étoile 1 sur 2")).toBe("checked");
   expect(announced(runtime, "étoile 2 sur 2")).toBe("unchecked");
   expect(
@@ -300,21 +248,11 @@ it("keeps the shipped state word when the table's says nothing", async () => {
   ).toBe("Loading");
   expect(named(runtime, "Status", "Loading")).toBe(true);
   expect(announced(runtime, "Import")).toBe("loading");
-  // The tab stop keeps a name a reader can reach: an empty `Group` would be the
-  // unnamed stop `DEFAULT_SCROLL_NAME` exists to prevent.
+
   expect(named(runtime, "Group", "Scroll region")).toBe(true);
 });
 
 it("keeps a tree a stored words table reaches, and the words it lost", async () => {
-  // The bug guarded: the words are interface copy an app may keep in a settings
-  // record, and a decoded table is JSON — `null` for the field it never
-  // carried, and no functions at all, because JSON cannot encode a sentence.
-  // `resolveMessages` read `messages.selection` straight off the value, so the
-  // provider (`messages={null}` here) threw `Cannot read properties of null
-  // (reading 'selection')` while rendering and the window painted no control.
-  // A `null` table is absence: the table above stands. A stored table reaches
-  // the seam without a cast, and every shape it can lose — a row, a group, a
-  // sentence, a name — keeps the table above it.
   const runtime = await openWindow();
   const stored: MessagesSource = {
     selection: { checked: "sélectionné", unchecked: null, mixed: null },
@@ -345,21 +283,17 @@ it("keeps a tree a stored words table reaches, and the words it lost", async () 
     </Surface>,
   );
 
-  // The row the stored pack translated is its own; the row it lost is the table
-  // above the provider, not the shipped English.
   expect(announced(runtime, "Notify")).toBe("sélectionné");
   expect(announced(runtime, "Preview")).toBe("décoché");
-  // A sentence JSON cannot carry is absent, so the table's own names the stars.
+
   expect(announced(runtime, "étoile 1 sur 2")).toBe("plein");
   expect(announced(runtime, "étoile 2 sur 2")).toBe("vide");
-  // The two scalar keys a pack never filled keep the table's.
+
   expect(announced(runtime, "Import")).toBe("chargement");
   expect(named(runtime, "Group", "Zone de défilement")).toBe(true);
 });
 
 it("keeps the shipped words when a caller names none", async () => {
-  // The compatibility direction: adopting the seam changes nothing on a screen
-  // that names no words.
   const runtime = await openWindow();
   runtime.render(
     <Surface>

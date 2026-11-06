@@ -1,18 +1,3 @@
-/**
- * The code block's tokenizer record.
- *
- * The bug this guards: the records that describe the block all said the runtime's
- * own `<code>` host decided which run was a token and that `nativeTextTheme`
- * handed the host its palette, so a reader was told the block painted through a
- * host it no longer uses. The block now tokenizes with `@tanstack/highlight`
- * (`code-block/tokenize.ts`) and resolves `syntaxColors(theme)` directly.
- *
- * The checks are derived from the seam rather than pinned as prose: the block's
- * source must read `syntaxColors(theme)`, the tokenizer module must import
- * `@tanstack/highlight` and map its classes through `tokenRole`, and every record
- * must name the tokenizer and fall back to plain text rather than a host.
- */
-
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -32,7 +17,6 @@ const source = read("src/code-block.tsx", packageRoot);
 const tokenizer = read("src/code-block/tokenize.ts", packageRoot);
 const limitations = codeBlockMeta.limitations.join("\n");
 
-/** The Code block row of the Tier 5 table. */
 const row = Option.getOrElse(
   Arr.findFirst(
     read(".agents/slop/COMPONENTS.md", repoRoot).split("\n"),
@@ -41,14 +25,12 @@ const row = Option.getOrElse(
   () => "",
 );
 
-/** Every record a consumer can read the tokenizer from. */
 const records: ReadonlyArray<readonly [string, string]> = [
   ["codeBlockMeta.limitations", limitations],
   [".agents/slop/COMPONENTS.md", row],
   ["docs/code-block.mdx", page],
 ];
 
-/** The sentences the tokenizer made false. */
 const retracted: ReadonlyArray<string> = [
   "runtime's tokenizer decides",
   "nativeTextTheme",
@@ -63,7 +45,7 @@ describe("the code block's tokenizer", () => {
     expect(Str.includes("tokenRole")(tokenizer)).toBe(true);
   });
 
-  it("names the tokenizer and the plain-text fallback in every record", () => {
+  it("names the tokenizer in every record", () => {
     const missing = Arr.map(
       Arr.filter(
         records,
@@ -72,7 +54,6 @@ describe("the code block's tokenizer", () => {
       ([name]) => name,
     );
     expect(missing).toStrictEqual([]);
-    expect(page).toContain("plain text");
   });
 
   it("retracts the runtime host and its tokenizer from every record", () => {

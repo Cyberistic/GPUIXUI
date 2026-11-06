@@ -9,10 +9,6 @@ import {
   SbSettingsBody,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 13 — the settings dialog shadcn opens on mount: a sidebar of
- * sections inside a modal, and the selected section's settings beside it.
- */
 export const Sidebar13Render = () => {
   const [open, setOpen] = useState(true);
 

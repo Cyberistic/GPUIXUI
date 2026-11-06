@@ -13,15 +13,6 @@ import {
   type CrumbEntry,
 } from "./breadcrumb-preview";
 
-/**
- * A breadcrumb's collapse is the one thing a drawing cannot show: a trail with
- * an ellipsis looks the same whether the rule kept the current page or dropped
- * it, and a hidden entry that leaves its separator behind still reads as a
- * path. These cases hold the preview's copy of `collapse` to the component's
- * function over a sweep, and pin the budgets the page prints.
- */
-
-/** The component's crumbs in the preview's shape. */
 const shape = (
   entries: ReadonlyArray<ComponentCrumb<ComponentCrumbLabel>>,
 ): ReadonlyArray<CrumbEntry> =>
@@ -38,7 +29,6 @@ interface ComponentCrumbLabel {
   readonly label: string;
 }
 
-/** The trail as a page prints it: labels, with `…` for the hidden middle. */
 const trail = (entries: ReadonlyArray<CrumbEntry>): string =>
   entries
     .map((entry) => (entry.kind === "item" ? entry.item.label : "…"))
@@ -49,8 +39,6 @@ const lengthSweep = [0, 1, 2, 3, 4, 5, 6, 7, 9];
 
 describe("the preview's collapse", () => {
   it("matches the component for every trail length and budget", () => {
-    // The equality is the guard: every trail the preview paints is the trail
-    // the component paints, including the clamped budgets below three.
     interface Drift {
       readonly input: string;
       readonly preview: string;
@@ -80,7 +68,6 @@ describe("the preview's collapse", () => {
   });
 
   it("keeps both ends and the current page at every budget", () => {
-    // The budgets the workflow control offers, over the six-entry trail.
     expect(BUDGETS).toEqual([3, 4, 5]);
     expect(trail(collapseCrumbs(CRUMBS, 3))).toBe(
       "Projects / … / breadcrumb.tsx",
@@ -91,7 +78,7 @@ describe("the preview's collapse", () => {
     expect(trail(collapseCrumbs(CRUMBS, 5))).toBe(
       "Projects / … / components / src / breadcrumb.tsx",
     );
-    // A trail that fits renders whole; no ellipsis to make room for.
+
     expect(trail(collapseCrumbs(CRUMBS, 6))).toBe(
       "Projects / GPUIXUI / packages / components / src / breadcrumb.tsx",
     );
@@ -111,8 +98,6 @@ describe("the preview's collapse", () => {
   });
 
   it("hides an entry's separator with the entry", () => {
-    // The separator count follows the rendered entries, never the authored
-    // trail: a collapsed middle takes its separators with it.
     expect(separatorCount(collapseCrumbs(CRUMBS, 6))).toBe(5);
     expect(separatorCount(collapseCrumbs(CRUMBS, 3))).toBe(2);
     expect(separatorCount(collapseCrumbs(CRUMBS, 4))).toBe(3);

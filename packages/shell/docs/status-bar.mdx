@@ -45,9 +45,3 @@ gpui-kit's bar has three regions and the centre follows the pinned ends:
 | ---- | ------- | ----- |
 | `StatusBar` | `div` with `role="status"` | `label?`, `left?`, `center?`, `right?`, `className?` |
 | `StatusBarItem` | one `<text>` in a group | `id`, `label`, `tone?` |
-
-## Notes
-- Truncation is `whiteSpace: "nowrap"` + `overflow: "hidden"` + `textOverflow: "ellipsis"` on each item; a bar whose groups still overflow clips the last item.
-- Separators are 1px elements, not borders: one element carries one border colour.
-- The bar paints its own top hairline and no outer radius, so it can sit at the
-  window's bottom edge. A floating bar is a `className` that overrides both.

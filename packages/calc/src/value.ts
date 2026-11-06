@@ -1,33 +1,16 @@
-/**
- * The values a calculation produces, and the arithmetic on them.
- *
- * A fx-991ES has one number type with three faces: a 15-digit decimal, an
- * exact rational the Natural Display can show as a fraction, and a complex
- * pair in CMPLX mode. `Real` keeps the decimal *and* the exact rational beside
- * it, so `1/3` can display as `1/3` while `sin(1)` stays a decimal. Matrices
- * and vectors are small immutable grids, and `Base` is an integer whose
- * display base the mode owns.
- *
- * `mathjs` supplies the `Fraction` type and its exact arithmetic; the complex
- * arithmetic is here because the calculator's angle unit, display rounding
- * and failure ranges are its own.
- */
-
 import { add, divide, fraction, multiply, Fraction } from "mathjs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { failure, isFailure, type CalculatorFailure } from "./failure.js";
 
-/** A real result: the decimal plus, when the operation stayed exact, the rational. */
 export interface Real {
   readonly _tag: "real";
   readonly value: number;
   readonly exact: Option.Option<Fraction>;
-  /** The result entered or produced through `°′″`; display it sexagesimally. */
+
   readonly sexagesimal: boolean;
 }
 
-/** A complex result. */
 export interface ComplexValue {
   readonly _tag: "complex";
   readonly re: number;
@@ -46,7 +29,6 @@ export interface VectorValue {
   readonly items: ReadonlyArray<number>;
 }
 
-/** One labelled reading, for Pol/Rec, statistics and regression results. */
 export interface Reading {
   readonly label: string;
   readonly value: Scalar;
@@ -58,7 +40,6 @@ export interface ListValue {
   readonly items: ReadonlyArray<Reading>;
 }
 
-/** An integer whose displayed base is the mode's (BASE-N). */
 export interface BaseValue {
   readonly _tag: "base";
   readonly value: number;
@@ -72,7 +53,6 @@ export type CalcValue =
   | ListValue
   | BaseValue;
 
-/** A decimal with no exact form. Exactness is created by `exact` or a literal. */
 export const real = (value: number, sexagesimal = false): Real => ({
   _tag: "real",
   value,
@@ -80,7 +60,6 @@ export const real = (value: number, sexagesimal = false): Real => ({
   sexagesimal,
 });
 
-/** A literal number keeps the rational its digits denote. */
 export const literal = (value: number, text: string): Real => ({
   _tag: "real",
   value,
@@ -88,7 +67,6 @@ export const literal = (value: number, text: string): Real => ({
   sexagesimal: false,
 });
 
-/** A decimal known to be irrational or rounded; no exact form. */
 export const approx = (value: number, sexagesimal = false): Real => ({
   _tag: "real",
   value,
@@ -96,7 +74,6 @@ export const approx = (value: number, sexagesimal = false): Real => ({
   sexagesimal,
 });
 
-/** An exact rational. */
 export const exact = (numerator: number, denominator = 1): Real => {
   const value = fraction(numerator, denominator);
   return {
@@ -107,42 +84,29 @@ export const exact = (numerator: number, denominator = 1): Real => {
   };
 };
 
-/** A complex pair, without collapsing. */
 export const complexValue = (re: number, im: number): ComplexValue => ({
   _tag: "complex",
   re,
   im,
 });
 
-/** A complex pair, collapsing to a real when the imaginary part is zero. */
 export const complex = (re: number, im: number): Scalar =>
   im === 0 ? approx(re) : complexValue(re, im);
 
-/** Read any scalar as a complex pair, for arithmetic that crosses the axis. */
 const complexOf = (value: Scalar): ComplexValue =>
   isReal(value) ? complexValue(value.value, 0) : value;
 
-/** Whether a scalar is real. */
 export const isReal = (value: Scalar): value is Real => value._tag === "real";
 
-/** The decimal magnitude of a scalar, or `None` for a complex. */
 export const asNumber = (value: Scalar): Option.Option<number> =>
   isReal(value) ? Option.some(value.value) : Option.none();
 
-/** The exact rational of a real, when it has one. */
 export const asFraction = (value: Scalar): Option.Option<Fraction> =>
   isReal(value) ? value.exact : Option.none();
 
 export const numberOf = (value: Fraction): number =>
   (Number(value.s) * Number(value.n)) / Number(value.d);
 
-/**
- * Narrow a mathjs result to `Fraction` without a type assertion.
- *
- * `mathjs` types its operators as `MathType`; the exact path only stays exact
- * when both operands were fractions, and this is the one place that fact is
- * checked.
- */
 const mathFraction = (value: unknown): Option.Option<Fraction> =>
   value instanceof Fraction ? Option.some(value) : Option.none();
 
@@ -159,7 +123,6 @@ const exactDivide = (
   right: Fraction,
 ): Option.Option<Fraction> => mathFraction(divide(left, right));
 
-/** Preserve the sexagesimal display flag across an operation. */
 const flagOf = (left: Real, right: Real): boolean =>
   left.sexagesimal || right.sexagesimal;
 
@@ -235,11 +198,9 @@ export const divideScalar = (
   );
 };
 
-/** The magnitude of a scalar. */
 export const magnitude = (value: Scalar): number =>
   isReal(value) ? Math.abs(value.value) : Math.hypot(value.re, value.im);
 
-/** The angle of a complex value in radians. */
 export const argument = (value: Scalar): number =>
   isReal(value)
     ? value.value >= 0
@@ -253,7 +214,6 @@ export const conjugate = (value: Scalar): Scalar =>
 export const isZero = (value: Scalar): boolean =>
   isReal(value) ? value.value === 0 : value.re === 0 && value.im === 0;
 
-/** A scalar at a power. Integer real powers keep exact rationals. */
 export const powerScalar = (
   base: Scalar,
   exponent: Scalar,
@@ -291,7 +251,7 @@ export const powerScalar = (
   }
   const b = complexOf(base);
   const e = complexOf(exponent);
-  // exp(e * ln b)
+
   const radius = Math.hypot(b.re, b.im);
   if (radius === 0) return failure("Math");
   const theta = Math.atan2(b.im, b.re);
@@ -301,7 +261,6 @@ export const powerScalar = (
   return complex(scale * Math.cos(imagPart), scale * Math.sin(imagPart));
 };
 
-/** A square root, exact for perfect-square rationals. */
 export const sqrtScalar = (value: Scalar): Scalar => {
   if (isReal(value)) {
     if (value.value < 0) return complex(0, Math.sqrt(-value.value));
@@ -328,7 +287,6 @@ export const sqrtScalar = (value: Scalar): Scalar => {
   return complex(root * Math.cos(theta), root * Math.sin(theta));
 };
 
-/** An n-th root. */
 export const rootScalar = (
   value: Scalar,
   index: number,
@@ -342,7 +300,6 @@ export const rootScalar = (
   return powerScalar(value, approx(1 / index));
 };
 
-/** e^x. */
 export const expScalar = (value: Scalar): Scalar => {
   if (isReal(value)) {
     const result = Math.exp(value.value);
@@ -354,7 +311,6 @@ export const expScalar = (value: Scalar): Scalar => {
   return complex(scale * Math.cos(value.im), scale * Math.sin(value.im));
 };
 
-/** The natural logarithm. */
 export const lnScalar = (value: Scalar): Scalar | CalculatorFailure => {
   if (isReal(value)) {
     if (value.value <= 0) return failure("Math");
@@ -365,7 +321,6 @@ export const lnScalar = (value: Scalar): Scalar | CalculatorFailure => {
   return complex(Math.log(radius), Math.atan2(value.im, value.re));
 };
 
-/** A logarithm in a given base. */
 export const logScalar = (
   value: Scalar,
   base: number,
@@ -443,13 +398,12 @@ export const tanhScalar = (value: Scalar): Scalar | CalculatorFailure => {
   return divided;
 };
 
-/** Inverse sine, in radians. */
 export const asinScalar = (value: Scalar): Scalar | CalculatorFailure => {
   if (isReal(value)) {
     if (Math.abs(value.value) > 1) return failure("Math");
     return approx(Math.asin(value.value));
   }
-  // asin(z) = -i ln(iz + sqrt(1 - z²))
+
   const zSquared = multiplyScalar(value, value);
   const oneMinus = subtractScalar(approx(1), zSquared);
   const root = sqrtScalar(oneMinus);
@@ -461,7 +415,6 @@ export const asinScalar = (value: Scalar): Scalar | CalculatorFailure => {
   return result;
 };
 
-/** Inverse cosine, in radians. */
 export const acosScalar = (value: Scalar): Scalar | CalculatorFailure => {
   if (isReal(value)) {
     if (Math.abs(value.value) > 1) return failure("Math");
@@ -472,19 +425,16 @@ export const acosScalar = (value: Scalar): Scalar | CalculatorFailure => {
   return subtractScalar(approx(Math.PI / 2), asin);
 };
 
-/** Inverse tangent, in radians. */
 export const atanScalar = (value: Scalar): Scalar | CalculatorFailure => {
   if (isReal(value)) return approx(Math.atan(value.value));
   return failure("Argument");
 };
 
-/** Inverse hyperbolic sine. */
 export const asinhScalar = (value: Scalar): Scalar | CalculatorFailure => {
   if (isReal(value)) return approx(Math.asinh(value.value));
   return failure("Argument");
 };
 
-/** Inverse hyperbolic cosine. */
 export const acoshScalar = (value: Scalar): Scalar | CalculatorFailure => {
   if (isReal(value)) {
     if (value.value < 1) return failure("Math");
@@ -493,7 +443,6 @@ export const acoshScalar = (value: Scalar): Scalar | CalculatorFailure => {
   return failure("Argument");
 };
 
-/** Inverse hyperbolic tangent. */
 export const atanhScalar = (value: Scalar): Scalar | CalculatorFailure => {
   if (isReal(value)) {
     if (Math.abs(value.value) >= 1) return failure("Math");
@@ -502,7 +451,6 @@ export const atanhScalar = (value: Scalar): Scalar | CalculatorFailure => {
   return failure("Argument");
 };
 
-/** Whether a scalar is inside the calculator's display range. */
 export const inRange = (value: Scalar): boolean => {
   const magnitudes = isReal(value)
     ? [Math.abs(value.value)]
@@ -512,13 +460,11 @@ export const inRange = (value: Scalar): boolean => {
   );
 };
 
-/** Treat a value as an integer for BASE-N and combinatorics. */
 export const integerOf = (value: Scalar): Option.Option<number> =>
   isReal(value) && Number.isInteger(value.value)
     ? Option.some(value.value)
     : Option.none();
 
-/** A scalar rounded as Rnd does: decimal places under Fix, digits under Sci/Norm. */
 export const roundScalar = (
   value: Scalar,
   digits: number,

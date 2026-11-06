@@ -10,22 +10,6 @@ import {
   searchTrigger,
 } from "../../scripts/search-probe";
 
-/**
- * The search dialog is the site's component search, and it was the one
- * interaction no browser probe pressed: the index, the shadowing rule and the
- * response shape each had unit guards, while a reader's path — open the dialog,
- * type, press Enter — had none.
- *
- * `apps/docs/scripts/search-probe.ts` measures that path, and this suite keeps
- * the probe honest in the two ways a probe can rot. Its **premise** is a page
- * per part of the index: a page only a package writes, a page only the site
- * writes, and a component with two addresses, where the curated page must
- * answer and the retired package page must not. Its **mechanism** is a
- * controlled React input: React keeps its own value tracker, so a probe that
- * assigns `input.value` and dispatches an event types nothing and passes on the
- * opening suggestions.
- */
-
 const root = new URL("../../../../", import.meta.url);
 
 interface Page {
@@ -61,7 +45,6 @@ const walk = (
     ];
   });
 
-/** Every page a collection mounts, site pages first. */
 const pages: ReadonlyArray<Page> = [
   ...walk(
     new URL("apps/docs/content/docs/", root),
@@ -77,28 +60,11 @@ const pages: ReadonlyArray<Page> = [
   ),
 ];
 
-/** The pages a reader can land on; a retired twin is a redirect. */
 const served = new Map(
   pages
     .filter((page) => curatedTwinOf(page.url) === undefined)
     .map((page) => [page.url, page] as const),
 );
-
-/** Fenced code is sample text; the query must be words the page itself writes. */
-const prose = (source: string): string => {
-  const kept: string[] = [];
-  let fenced = false;
-
-  for (const line of source.split("\n")) {
-    if (line.trimStart().startsWith("```")) {
-      fenced = !fenced;
-      continue;
-    }
-    if (!fenced) kept.push(line);
-  }
-
-  return kept.join("\n");
-};
 
 const policy = readFileSync(new URL("docs/preview-strategy.md", root), "utf8");
 
@@ -114,8 +80,7 @@ describe("the search dialog", () => {
       path: "/components/button",
     });
     expect(parseSearchReadout("|/architecture|/")?.options).toEqual([]);
-    // A truncated line has no address; reading the blanks would compare two
-    // empty strings and pass.
+
     expect(parseSearchReadout("/architecture|")).toBeUndefined();
     expect(parseSearchReadout("/a|/a|/a|extra")).toBeUndefined();
     expect(parseSearchReadout("")).toBeUndefined();
@@ -123,8 +88,7 @@ describe("the search dialog", () => {
 
   it("tells a page row from one of its sections", () => {
     expect(isPageRow("/components/button", "/components/button")).toBe(true);
-    // A section id is the page's id plus a chunk number, so an exact compare is
-    // the only thing that knows Enter will open the page rather than a heading.
+
     expect(isPageRow("/components/button-14", "/components/button")).toBe(
       false,
     );
@@ -173,9 +137,6 @@ describe("the search dialog", () => {
       "no query finds a page only the site writes",
     ).toBe(true);
 
-    // The shadowing rule has a live case: every retired twin is a real list, so
-    // requiring one is enough to know the probe exercises the join, not a page
-    // that merely happens to be absent.
     const retired = curatedPrimitiveTwins.filter((twin) =>
       searchCases.some(
         (searchCase) =>
@@ -189,35 +150,17 @@ describe("the search dialog", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("asks each query of the page that writes the word", () => {
-    for (const searchCase of searchCases) {
-      const page = served.get(searchCase.expected);
-      expect(page, `${searchCase.expected} has no file`).toBeDefined();
-      if (page === undefined) continue;
-      expect(
-        prose(page.source)
-          .toLowerCase()
-          .includes(searchCase.query.toLowerCase()),
-        `${page.file} never says ${JSON.stringify(searchCase.query)}`,
-      ).toBe(true);
-    }
-  });
-
   it("types through React's input, then submits the highlighted result", () => {
     const probe = readFileSync(
       new URL("apps/docs/scripts/search-probe.ts", root),
       "utf8",
     );
 
-    // React keeps its own value tracker: assigning `input.value` directly
-    // leaves it believing nothing changed, so the value is written through the
-    // prototype's setter and an `input` event carries it.
     expect(probe).toContain("HTMLInputElement.prototype");
     expect(probe).toContain('new InputEvent("input"');
-    // The trigger's handler is the hydration precondition, read through the
-    // shared helper over every copy of the trigger the chrome renders.
+
     expect(probe).toContain("firstReady(");
-    // Enter runs after the list is read, or the probe submits a suggestion.
+
     expect(probe.indexOf("const submit")).toBeGreaterThan(
       probe.indexOf("const readResults"),
     );

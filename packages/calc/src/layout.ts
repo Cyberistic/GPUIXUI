@@ -1,15 +1,3 @@
-/**
- * The Natural Display layout.
- *
- * A `MathNode` is the display tree the way the manual draws it: stacked
- * fractions, a radical with its vinculum, π as a coefficient, and a sum of up
- * to two √ terms. It is layout data, not HTML — the app paints each kind with
- * native divs/text, so GPUix still owns the pixels.
- *
- * A layout is only produced when the symbolic form agrees with the numeric
- * result and the display mode is `MthIO-MathO`; LineIO keeps linear text.
- */
-
 import * as Option from "effect/Option";
 import { fraction } from "mathjs";
 import type { Fraction } from "mathjs";
@@ -62,7 +50,6 @@ const absolute = (value: Fraction): Fraction =>
 const numeratorOf = (value: Fraction): number => Number(value.n);
 const denominatorOf = (value: Fraction): number => Number(value.d);
 
-/** A rational fraction; the caller owns the sign. */
 const fractionNode = (value: Fraction, setup: Setup): MathNode => {
   const numerator = numeratorOf(value);
   const denominator = denominatorOf(value);
@@ -167,7 +154,6 @@ const symbolicTerms = (
   return [...rationalTerm, ...piTerm, ...radicalTerms];
 };
 
-/** The Natural layout for a result, or `None` when it has no stacked form. */
 export const layoutOf = (
   value: CalcValue,
   setup: Setup,
@@ -198,9 +184,7 @@ export const layoutOf = (
   });
 };
 
-/** The plain text a value falls back to when no layout is produced. */
 export const fallbackText = (value: CalcValue, setup: Setup): string =>
   formatValue(value, setup).text;
 
-/** Whether a real's exact value is the numerator/denominator a layout can stack. */
 export const layoutable = (value: Real): boolean => !value.sexagesimal;

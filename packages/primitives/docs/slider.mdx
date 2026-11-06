@@ -48,8 +48,3 @@ const [quality, setQuality] = useState(62);
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the slider's own; the press and keys reach the track |
 | `ref` / `aria-id` / `onLayout` | host props | none | land on the track, the element that carries the pointer and the value |
 | `testId` | `string` | — | stable locator for the track |
-
-## Notes
-- No `aria-valuenow`/`min`/`max`: the value is announced as `aria-valuetext`.
-- No `aria-orientation`: a vertical track is announced without its axis.
-- A vertical track needs a definite height.

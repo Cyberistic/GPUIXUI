@@ -1,25 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * UserMenu: the account row shadcn puts in a sidebar footer.
- *
- * The trigger is an avatar, the reader's name and address, and a
- * account row; the menu repeats the identity under a label,
- * offers **Upgrade to Pro**, then Account / Billing / Notifications, and closes
- * with Log out behind separators. It is a standalone component — render it in a
- * toolbar or a header — and {@link SidebarUserMenu} is the same menu in the
- * panel's own list, where it collapses to its avatar with the panel.
- *
- * The trigger is the dropdown's own action (`DropdownMenuTrigger`), not a
- * `SidebarMenuButton`: the local DropdownMenu owns the element it anchors and
- * measures, so the row's look is carried by that action's style. A row composed
- * inside `SidebarMenu` therefore keeps the list semantics, and the menu keeps
- * one trigger.
- *
- * Every row is an ordinary action: the component owns no account state and
- * runs the callback the caller hands it, once, through the menu's own
- * activation and dismissal rules.
- */
-
 import type { Props } from "@gpuix/react";
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
 import { mergeStyles } from "@gpuix/react/floating";
@@ -43,15 +22,13 @@ import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
 import { SidebarMenu, SidebarMenuItem, useSidebar } from "./sidebar.js";
 
-/** The identity the trigger and the menu's label show. */
 export interface UserMenuUser {
   readonly name: string;
   readonly email: string;
-  /** An image path or URL. Without one the avatar paints the initials. */
+
   readonly avatar?: string;
 }
 
-/** What each row does. Every handler is optional; a row without one is inert. */
 export interface UserMenuActions {
   readonly onUpgrade?: () => void;
   readonly onAccount?: () => void;
@@ -60,33 +37,27 @@ export interface UserMenuActions {
   readonly onLogOut?: () => void;
 }
 
-/** {@link UserMenu} props. */
 export interface UserMenuProps
   extends UserMenuActions, Omit<Props, "children"> {
   readonly user: UserMenuUser;
-  /** Where the menu opens. Default `"bottom"`. */
+
   readonly side?: FloatingSide;
-  /** Default `"end"`. */
+
   readonly align?: FloatingAlign;
-  /**
-   * Paint only the avatar, for an icon-collapsed sidebar. `SidebarUserMenu`
-   * passes this from the sidebar's own state.
-   */
+
   readonly collapsed?: boolean;
-  /** A Tailwind class string, joined after the trigger's recipe. */
+
   readonly className?: string;
-  /** The trigger's test id. Default `"user-menu-trigger"`. */
+
   readonly testId?: string;
-  /** The menu surface's test id. Default `"user-menu-content"`. */
+
   readonly menuTestId?: string;
 }
 
-/** The trigger row: the avatar, and the name over the address. */
 const IDENTITY_HEIGHT = 48;
 const IDENTITY_HEIGHT_COLLAPSED = 32;
 const MENU_WIDTH = 224;
 
-/** The account row and its dropdown. */
 export const UserMenu = ({
   user,
   onUpgrade,
@@ -142,8 +113,7 @@ export const UserMenu = ({
         style={mergeStyles(
           {
             height: collapsed ? IDENTITY_HEIGHT_COLLAPSED : IDENTITY_HEIGHT,
-            // A 26px avatar in a 32px row: 3px a side, so the disc's rim is
-            // the box's inset instead of overflowing a shrunken slot.
+
             ...(collapsed
               ? { width: IDENTITY_HEIGHT_COLLAPSED, padding: 3 }
               : { paddingLeft: 8, paddingRight: 8 }),
@@ -154,11 +124,7 @@ export const UserMenu = ({
           style,
         )}
       >
-        {/*
-          The avatar declares `clickThrough`: its disc paints a fill and would
-          otherwise take the press on 0.11.0 instead of bubbling it to the
-          action. This row only lays the identity out.
-        */}
+        {}
         {collapsed ? (
           avatar
         ) : (
@@ -200,8 +166,7 @@ export const UserMenu = ({
           {avatar}
           {identity}
         </div>
-        {/* An item with no handler is a dead end, so it is not painted: the
-            menu is the actions the caller actually wired. */}
+        {}
         {onUpgrade === undefined ? null : (
           <>
             <DropdownMenuSeparator />
@@ -299,16 +264,8 @@ export const UserMenu = ({
   );
 };
 
-/** {@link SidebarUserMenu} props: the same menu, in the panel's list. */
 export type SidebarUserMenuProps = Omit<UserMenuProps, "collapsed">;
 
-/**
- * The account row in a sidebar footer.
- *
- * It reads the panel's own collapse state, so the row shows only the avatar
- * when the panel is an icon rail, and opens to the right of the rail rather
- * than over it.
- */
 export const SidebarUserMenu = (props: SidebarUserMenuProps) => {
   const { state, collapsible, isMobile } = useSidebar();
   return (
@@ -324,7 +281,6 @@ export const SidebarUserMenu = (props: SidebarUserMenuProps) => {
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const userMenuMeta = {
   name: "User menu",
   tier: 2,

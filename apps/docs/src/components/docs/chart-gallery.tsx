@@ -27,53 +27,33 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { JSX } from "react";
 
-/**
- * The chart gallery: one small drawing per type the package ships.
- *
- * The page is a catalogue, so the gallery is a contact sheet — seventeen
- * drawings a reader can scan, each labelled with the component that paints it.
- * The geometry is the package's own (`groupedBarMarks`, `ringSegments`,
- * `radialArcs`, …) and the palette is the theme's `seriesColors` order, so a
- * drawing cannot drift from the chart it names.
- */
-
-/** The gallery's plot: one wide cell per type. */
 const CELL: ChartBox = chartBox(160, 100, { width: 160, height: 100 });
 
-/** The square plot the radial types draw in. */
 const SQUARE: ChartBox = chartBox(100, 100, { width: 100, height: 100 });
 
-/** The series a bar reads first. */
 const REVENUE: ChartSeries = {
   key: "revenue",
   label: "Revenue",
   values: [32, 48, 41, 60],
 };
 
-/** The series beside it, so a grouped chart has a group. */
 const COST: ChartSeries = {
   key: "cost",
   label: "Cost",
   values: [18, 22, 26, 24],
 };
 
-/** The two series every rectangular drawing reads. */
 const SERIES: ReadonlyArray<ChartSeries> = [REVENUE, COST];
 
-/** The four categories those series are labelled by. */
 const CATEGORIES = 4;
 
-/** The one measure the rectangular drawings share. */
 const RANGE = chartRange(SERIES, CATEGORIES);
 
-/** The higher measure a stack is read against. */
 const STACK_RANGE = chartRange(SERIES, CATEGORIES, true);
 
-/** A series' colour, in the theme's categorical order. */
 const colourOf = (theme: Theme, index: number): string =>
   seriesColour(seriesColors(theme), index);
 
-/** One painted mark, in the drawing's own units. */
 function Painted({
   marks,
   colour,
@@ -118,7 +98,6 @@ function Painted({
   );
 }
 
-/** One cell of the gallery: a caption and the drawing it names. */
 function Cell({
   label,
   children,
@@ -134,7 +113,6 @@ function Cell({
   );
 }
 
-/** A plot sized to its own box, with a caption for a reader who cannot see it. */
 function Plot({
   label,
   children,
@@ -159,19 +137,15 @@ function Plot({
   );
 }
 
-/** The points a series makes in the cell. */
 const pointsOf = (series: ChartSeries) =>
   seriesPoints(series.values, CELL, RANGE, CATEGORIES);
 
-/** The smooth edge a series draws. */
 const edgeOf = (series: ChartSeries): string =>
   Option.getOrElse(curvePath(pointsOf(series), "smooth"), () => "");
 
-/** The closed shape under a series' edge. */
 const areaOf = (series: ChartSeries): string =>
   Option.getOrElse(areaPath(pointsOf(series), CELL, RANGE, "smooth"), () => "");
 
-/** The two-node flow the sankey draws. */
 const SANKEY = {
   from: [
     { name: "Visits", value: 100 },
@@ -189,7 +163,6 @@ const SANKEY = {
   ],
 } as const;
 
-/** Open, high, low, close — one candle per category slot. */
 const CANDLES = [
   { open: 34, high: 56, low: 26, close: 50 },
   { open: 50, high: 62, low: 42, close: 44 },
@@ -197,10 +170,8 @@ const CANDLES = [
   { open: 33, high: 72, low: 28, close: 68 },
 ] as const;
 
-/** The funnel's stages, widest first. */
 const FUNNEL = [100, 74, 48, 24] as const;
 
-/** The sunburst's two bands. */
 const SUNBURST = {
   inner: [58, 42],
   outer: [
@@ -209,11 +180,6 @@ const SUNBURST = {
   ],
 } as const;
 
-/**
- * The gallery: every type the package ships, drawn in the browser.
- *
- * @param props - the theme the drawings take their palette from.
- */
 export function ChartGallery({
   theme,
 }: {
@@ -534,7 +500,6 @@ export function ChartGallery({
   );
 }
 
-/** A four-cell treemap: one source takes a strip, three fill the rest. */
 function Treemap({ theme }: { readonly theme: Theme }): JSX.Element {
   const sources = [
     { name: "Organic", value: 42 },
@@ -578,7 +543,6 @@ function Treemap({ theme }: { readonly theme: Theme }): JSX.Element {
   );
 }
 
-/** A two-node sankey: node bars, then the ribbons between them. */
 function Sankey({ theme }: { readonly theme: Theme }): JSX.Element {
   const nodeW = 8;
   const total = 140;
@@ -647,7 +611,6 @@ function Sankey({ theme }: { readonly theme: Theme }): JSX.Element {
   );
 }
 
-/** Two bands of arcs, each split in two, from the centre out. */
 function Sunburst({ theme }: { readonly theme: Theme }): JSX.Element {
   const innerTotal = Arr.reduce(SUNBURST.inner, 0, (sum, value) => sum + value);
   let innerStart = -Math.PI / 2;

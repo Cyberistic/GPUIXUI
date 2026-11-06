@@ -1,13 +1,3 @@
-/**
- * Record a short interaction loop from a block, offscreen (plan 727's "feel"
- * clips): real presses and keystrokes on the GPUix test renderer, one captured
- * PNG per held frame, encoded by the caller.
- *
- *   nub run --filter @gpuixui/blocks clip -- <name> <outDir>
- *
- * Like `capture.tsx`, the frames have no window server: the window is opaque
- * and the OS draws no buttons or blur.
- */
 import { createTestRoot } from "@gpuix/react/testing";
 import { extendTheme, lightTheme, platformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -20,7 +10,6 @@ import { Pipeline } from "./pipeline/pipeline.js";
 import { Preferences } from "./preferences/preferences.js";
 import { Viewer } from "./viewer/viewer.js";
 
-/** One step: what to do, then how many frames to hold the result. */
 type Step =
   | { readonly press: string; readonly hold: number }
   | { readonly type: string; readonly into: string; readonly hold: number }

@@ -1,15 +1,3 @@
-/**
- * The sidebar's evidence frames, through the native test renderer.
- *
- * The four states a reviewer reads: the expanded panel, the icon rail, the
- * mobile sheet, and the account menu open. The capture is the real GPUix paint,
- * not a browser approximation, and the assertions prove each state actually
- * painted before the frame was written (a blank window is not evidence).
- *
- * The files land under `apps/playground/.artifacts/live/`, which is gitignored:
- * local evidence for the run, never repository content.
- */
-
 import { mkdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -113,8 +101,7 @@ const Frame = ({ open }: { readonly open: boolean }) => (
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        {/* Every action wired, so the frame shows the whole menu: the menu
-            paints only the rows a caller handles (#1). */}
+        {}
         <SidebarUserMenu
           user={user}
           onUpgrade={() => undefined}
@@ -165,8 +152,7 @@ describe.skipIf(process.platform !== "darwin")("Sidebar frames", () => {
     clickCentreOf(root, "sidebar-trigger");
     settleMotion(root);
     expect(root.renderer.findByTestId("sidebar-sheet")).toBeDefined();
-    // The pointer opened the sheet from the header; park it on the scrim so
-    // the frame shows the resting panel rather than the row it landed on.
+
     root.renderer.nativeSimulateMouseMove(590, 700);
     settle(root);
     expect(capture(root, frame("sidebar-mobile"))).toBeGreaterThan(0);
@@ -180,8 +166,7 @@ describe.skipIf(process.platform !== "darwin")("Sidebar frames", () => {
       settle(root);
       requireBounds(root, "user-menu-upgrade");
     });
-    // The rows have layout before the surface has finished arriving; the frame
-    // should show the resting menu, not its first opacity frame.
+
     settleMotion(root);
     expect(capture(root, frame("user-menu-open"))).toBeGreaterThan(0);
     root.unmount();

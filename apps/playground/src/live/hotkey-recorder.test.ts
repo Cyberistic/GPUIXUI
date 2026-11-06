@@ -1,18 +1,3 @@
-/**
- * Holds the `hotkey-recorder-lifecycle` fixture, the probe that drives it and
- * the section a reader plans from.
- *
- * The bug this guards: the shipped `HotkeyRecorder`'s page promises that a
- * recorded key is swallowed, so "the app's own binding does not fire". That
- * claim had only ever been read off the component's tree, where
- * `preventDefault` is a declaration. A window's app-level handler is installed
- * on the root and runs after the focused element, so whether a recorded key
- * reaches it is a separate measurement — and the probe must keep asserting the
- * answer it measured rather than the sentence the page prints.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe, component suite and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -46,7 +31,6 @@ const componentSuite = read(
   "../../../../packages/components/src/behaviour/hotkey-recorder.test.tsx",
 );
 
-/** This probe's own README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `hotkey-recorder-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -72,9 +56,6 @@ describe("the fixture", () => {
   });
 
   it("names the canonical chord each platform's normalizer writes", () => {
-    // The runtime's `cmd` flag decodes to `meta`, which the normalizer writes
-    // as `Mod` where the platform allows it and as the literal modifier
-    // otherwise — the rule the components' own suite pins for `ctrl`.
     expect(capturedChord("darwin")).toBe("Mod+Shift+K");
     expect(capturedChord("win32")).toBe("Meta+Shift+K");
     expect(capturedChord("linux")).toBe("Meta+Shift+K");
@@ -139,7 +120,7 @@ describe("the probe", () => {
     );
     expect(probe).toContain("paintsKeycaps(yield* recorderText()");
     expect(probe).toContain("the tab walk skips the disabled recorder");
-    // The count is the floor a planted assertion is held to.
+
     const sites = Arr.length(
       Arr.fromIterable(probe.matchAll(/ctx\.expect\w+\(/g)),
     );

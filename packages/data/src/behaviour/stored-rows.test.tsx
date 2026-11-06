@@ -1,29 +1,3 @@
-/**
- * A row surface handed a row list that is absent, or that holds the hole a
- * store wrote.
- *
- * The bug these guard: the rows a data surface paints are data as often as a
- * literal — a saved workspace restores a panel's rows from JSON, and an app
- * hands `snapshot?.rows` while the snapshot is still absent, which is
- * `undefined` at runtime. The prop types say a list is present, while
- * `FrozenTable` and `TreeView` both dereferenced it (`rows.map`, `rows.length`,
- * and `useTree`'s `Arr.map(rows, …)` for the type-ahead), so one stored
- * absence threw out of the first render: the frozen grid painted neither its
- * frozen column nor its empty message, and the tree painted nothing at all.
- *
- * A list is stored **twice**, and the second half was unguarded everywhere: an
- * entry inside a readable list can be the hole a store wrote (`[null, { … }]`,
- * a record a release dropped). Every row surface then dereferenced it — the
- * grid through the core's `getRowId`, a tree through `row.key`, a frozen pane
- * through its `rowKey` — and the first paint threw and took the whole surface
- * with it. `recordsOf` reads a keyed list; `rowsOf` reads one through the
- * surface's own identity reader.
- *
- * The rule every other part of this package follows is `listOf`: only a list
- * is a list, and a slot with no list paints no rows — the frozen grid's data
- * pane then paints its own empty message, and the tree paints its frame.
- */
-
 import { afterEach, describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { paintedText } from "../internal/interaction.js";
@@ -62,7 +36,6 @@ afterEach(() => {
   root = undefined;
 });
 
-/** The frozen grid's parts, so a case can hand it one row list. */
 const frozen = (rows: ReadonlyArray<{ readonly id: string }>) => (
   <FrozenTable
     height={320}
@@ -115,13 +88,11 @@ describe("a frozen grid whose stored row list is absent", () => {
       </div>,
     );
     expect(paintedText(mounted)).toContain(DEFAULT_EMPTY_MESSAGE);
-    // The data pane's header still paints: the grid is empty, not unmounted.
+
     expect(paintedText(mounted)).toContain("Size");
   });
 
   it("paints the empty message for an undefined row list too", () => {
-    // `snapshot?.rows` is `undefined`, not `null`, when the snapshot has not
-    // arrived — the other absence a store writes.
     const mounted = mount(
       <div>
         {/* @ts-expect-error — a row list a store wrote as absent. */}
@@ -142,7 +113,6 @@ describe("a frozen grid whose stored row list is absent", () => {
   });
 });
 
-/** A grid over the row list a caller hands the controller. */
 const StoredGrid = ({
   rows,
   filterTree,
@@ -183,10 +153,6 @@ const StoredGrid = ({
 
 describe("a grid whose stored row list is absent", () => {
   it("paints no rows instead of throwing", () => {
-    // The rows a grid is handed are stored data too: a saved workspace
-    // restores them from JSON, and `snapshot?.rows` is `undefined` before the
-    // snapshot arrives. `useTable` handed the value to the core's `data` and to
-    // the tree filter raw, so one absence threw out of the first render.
     const mounted = mount(
       <div>
         {/* @ts-expect-error — a row list a store wrote as absent. */}
@@ -255,7 +221,6 @@ describe("a tree whose stored row list is absent", () => {
   });
 });
 
-/** The row list a store wrote with one record dropped out of the middle. */
 const holedRows: ReadonlyArray<{ readonly id: string }> = [
   { id: "alpha" },
   // @ts-expect-error — a hole a store wrote inside the list.
@@ -265,9 +230,6 @@ const holedRows: ReadonlyArray<{ readonly id: string }> = [
 
 describe("a grid whose saved row list holds a hole", () => {
   it("paints the rows it can name instead of throwing", () => {
-    // Before the read, the core's `getRowId` threw
-    // `Cannot read properties of null (reading 'id')` out of the first build,
-    // so the readout, the rows and the empty state all went with it.
     const mounted = mount(
       <div>
         <StoredGrid rows={holedRows} />
@@ -281,8 +243,6 @@ describe("a grid whose saved row list holds a hole", () => {
   });
 
   it("narrows a holed list through a filter tree without throwing", () => {
-    // The tree reads every record through a column's own value reader before
-    // the core builds a row model, so a hole must be gone by then.
     const mounted = mount(
       <div>
         <StoredGrid rows={holedRows} filterTree={emptyTree} />
@@ -319,8 +279,6 @@ describe("a tree whose saved row list holds a hole", () => {
   ];
 
   it("paints the rows it can name instead of throwing", () => {
-    // `useTree` walked every entry for its type-ahead table and the paint read
-    // `row.key`, so the hole threw `(reading 'key')` before the frame painted.
     const mounted = mount(
       <div>
         <TreeView
@@ -339,8 +297,6 @@ describe("a tree whose saved row list holds a hole", () => {
   });
 
   it("paints a windowed tree whose row list is absent", () => {
-    // The windowed tree read `dataRows.length` for its window and painted from
-    // the same list, so one absence threw before its frame existed.
     const mounted = mount(
       <div>
         <VirtualTree

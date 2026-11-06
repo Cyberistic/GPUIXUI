@@ -1,12 +1,3 @@
-/**
- * Every dock page's `## API` table against the props its type declares.
- *
- * The gap guarded: the docking pages were written as prose plus a table kept by
- * hand, so a prop added to `DockLayoutProps`/`PanelGroupProps`/`SplitPaneProps`
- * later was documented nowhere, and a row naming a renamed prop kept teaching a
- * name the component no longer takes. The check is exact in both directions.
- */
-
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -44,7 +35,6 @@ const PAGES: ReadonlyArray<PageContract> = [
   },
 ];
 
-/** The props one interface declares, from its own body. */
 const declaredProps = (source: string, type: string): ReadonlyArray<string> => {
   const start = source.indexOf(`export interface ${type}`);
   if (start < 0) return [];
@@ -59,7 +49,6 @@ const declaredProps = (source: string, type: string): ReadonlyArray<string> => {
   );
 };
 
-/** The surface a part may inherit rather than declare. */
 const INHERITED: ReadonlySet<string> = new Set([
   "aria-id",
   "children",
@@ -70,13 +59,11 @@ const INHERITED: ReadonlySet<string> = new Set([
   "testId",
 ]);
 
-/** Every name a row's prop cell documents, in backticks. */
 const namesIn = (cell: string): ReadonlyArray<string> =>
   Arr.map(Arr.fromIterable(cell.matchAll(/`([A-Za-z][\w-]*)`/g)), (match) =>
     String(match[1]),
   );
 
-/** The props a page's `## API` table documents. */
 const documentedProps = (page: string): ReadonlyArray<string> => {
   const start = page.indexOf("## API");
   if (start < 0) return [];

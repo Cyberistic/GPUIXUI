@@ -1,19 +1,3 @@
-/**
- * Holds what the `scrollbar-drag` probe aims at, and the finding its README
- * section prints: the runtime's scrollbar is painted with **no hitbox**, so a
- * pointer cannot grab the thumb.
- *
- * The bug this file guards is a claim, not a formula. The pinned binding's
- * `scrollbar_overlay` is a `canvas` whose own doc comment says it "has no
- * hitbox and takes no input", and the window reads the consequence: a drag on
- * the thumb's centre and a press on the track below it leave the offset at
- * zero, while the same drag runs a sibling React handle's eight moves and a
- * wheel moves the same scroller. A page that promised a draggable native
- * scrollbar would be teaching a gesture the runtime does not have.
- *
- * `node:fs` is deliberate, as in `scrollbar-both.test.ts`: this reads the
- * repository's own probe, host and Markdown, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -52,20 +36,16 @@ const hostContract = readFileSync(
   "utf8",
 );
 
-/** The section's prose on one line, so a wrapped sentence still reads whole. */
 const flat = readme.replace(/\s+/g, " ");
 
 describe("what the scrollbar drag aims at", () => {
   it("puts the press on the thumb's own centre", () => {
-    // A 160 px track over 700 px of content: 160² / 860 = 29.8 raw, floored by
-    // the 20 px minimum? No — the share wins at 37, which is the thumb the
-    // window painted.
     expect(DRAG_THUMB).toEqual({ start: 0, length: 37 });
     expect(DRAG_VIEWPORT.height / 2 + DRAG_GRAB.y).toBe(18.5);
     expect(DRAG_VIEWPORT.width / 2 + DRAG_GRAB.x).toBe(
       DRAG_VIEWPORT.width - DRAG_THICKNESS / 2,
     );
-    // The press is inside the band the probe reads the tint from.
+
     expect(DRAG_VIEWPORT.width / 2 + DRAG_GRAB.x).toBeGreaterThanOrEqual(
       DRAG_BAND.x,
     );
@@ -77,15 +57,12 @@ describe("what the scrollbar drag aims at", () => {
   it("puts the second press on the track below the thumb", () => {
     const y = DRAG_VIEWPORT.height / 2 + DRAG_TRACK_GRAB.y;
     expect(y).toBe(120);
-    // Below the thumb's end, so a press there is the track rather than the
-    // thumb — the two cases a scrollbar distinguishes.
+
     expect(y).toBeGreaterThan(DRAG_THUMB.start + DRAG_THUMB.length);
     expect(DRAG_TRACK_GRAB.x).toBe(DRAG_GRAB.x);
   });
 
   it("moves the thumb by the rule the other scroll probes share", () => {
-    // The wheel's offset puts the thumb a third of the way down its free track;
-    // restating the arithmetic here would let the paint and the read drift.
     expect(dragThumbAfter(0)).toEqual(DRAG_THUMB);
     expect(dragThumbAfter(DRAG_WHEEL)).toEqual(
       Option.getOrElse(
@@ -138,7 +115,7 @@ describe("the scrollbar-drag probe's record", () => {
     );
     expect(flat).toContain("has no hitbox and takes no input");
     expect(flat).toContain("`renderer.rs`");
-    // Both directions: what does nothing and what proves the drag works.
+
     expect(flat).toContain("a drag from the thumb's own centre, 40 px down");
     expect(flat).toContain(
       "the same drag on a sibling handle that listens for it",
@@ -172,8 +149,6 @@ describe("the probe asks the question the section answers", () => {
   });
 
   it("forwards the drag start through the host contract", () => {
-    // The offset is what lets a probe aim inside an element; a host that
-    // dropped it would press the scroller's centre and measure the content.
     expect(hostContract).toContain("export interface AsyncDragOptions");
     expect(hostContract).toContain("readonly offset?: DragStart");
     expect(liveHost).toContain("at(testId).dragBy(deltaX, deltaY, options)");

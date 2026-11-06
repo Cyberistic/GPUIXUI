@@ -1,19 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `MultiStepForm`: a wizard shell over the shipped `Stepper`, with a gate on
- * every step and a submit that only the last step offers.
- *
- * The state is the step index; the draft belongs to the caller, because a
- * wizard's fields are the caller's fields — the same ownership the probe's
- * `multi-step-form-lifecycle` measured on 0.11.0 (the caller keeps the draft,
- * each step's gate runs **before** the step moves, and the whole record is
- * decoded by `Form` only on the last step's submit).
- *
- * A step's content is mounted only while it is current. The draft survives
- * because it lives above this component; a field's own transient state does not,
- * which is the honest trade against keeping hidden fields in the tab order.
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { accessibleName } from "@gpuixui/primitives/core";
@@ -39,42 +24,38 @@ import {
   type StepGate,
 } from "./wizard/logic.js";
 
-/** One step of a wizard. */
 export interface MultiStep extends StepGate {
-  /** A stable key for the step and its indicator row. */
   readonly id: string;
-  /** The step's name in the indicator. A blank title reads as its position. */
+
   readonly title: string;
-  /** One line of supporting copy in the indicator. A blank line paints nothing. */
+
   readonly description?: string;
-  /** The step's content, mounted only while the step is current. */
+
   readonly content: ReactNode;
 }
 
-/** {@link MultiStepForm} props. */
 export interface MultiStepFormProps extends Omit<
   Props,
   "children" | "onSubmit"
 > {
-  /** The steps, in order. An empty list paints nothing, and so does a value that is not a list — a saved definition's `null`; a step without a text `id` is not a step. */
   readonly steps: ReadonlyArray<MultiStep>;
-  /** The controlled current step, 1-based; `undefined` is uncontrolled. */
+
   readonly step?: number;
-  /** The uncontrolled starting step. Default `1`. */
+
   readonly defaultStep?: number;
-  /** Reports every accepted step change, in both modes. */
+
   readonly onStepChange?: (step: number) => void;
-  /** Runs when the last step's gate passes. */
+
   readonly onSubmit: () => void;
-  /** A submit the caller is waiting on; the actions refuse a second press. */
+
   readonly pending?: boolean;
-  /** The last step's action. Default `"Submit"`; a blank label reads as the default. */
+
   readonly submitLabel?: string;
-  /** A middle step's action. Default `"Next"`; a blank label reads as the default. */
+
   readonly nextLabel?: string;
-  /** The backward action. Default `"Back"`; a blank label reads as the default. */
+
   readonly backLabel?: string;
-  /** The wizard's accessible name. A blank name is an absence, not an empty group. */
+
   readonly label?: string;
   readonly className?: string;
 }
@@ -83,23 +64,14 @@ const DEFAULT_SUBMIT_LABEL = "Submit";
 const DEFAULT_NEXT_LABEL = "Next";
 const DEFAULT_BACK_LABEL = "Back";
 
-/** A refusal, remembered with the step that raised it. */
 interface Refusal {
   readonly id: string;
   readonly message: string;
 }
 
-/**
- * A step's gate, run with no content mounted.
- *
- * The gate belongs to the step the reader is on; the refusal is kept with that
- * step, so a controlled `step` change cannot paint a message against another
- * step's content.
- */
 const guard = (step: MultiStep | undefined): Option.Option<string> =>
   gateMessage(step);
 
-/** A wizard over the shipped stepper, with gated steps and one submit. */
 export const MultiStepForm = ({
   steps,
   step: stepProp,
@@ -117,17 +89,12 @@ export const MultiStepForm = ({
 }: MultiStepFormProps) => {
   const theme = useTheme();
   const name = accessibleName(textOf(label));
-  // A default covers only an absent prop, so an action label that arrived blank
-  // (an i18n table's missing key) would paint an unnamed button — the only
-  // route forward. Read the three through the same absence rule as every name.
+
   const submitWord =
     accessibleName(textOf(submitLabel)) ?? DEFAULT_SUBMIT_LABEL;
   const nextWord = accessibleName(textOf(nextLabel)) ?? DEFAULT_NEXT_LABEL;
   const backWord = accessibleName(textOf(backLabel)) ?? DEFAULT_BACK_LABEL;
-  // A workflow is data as often as code: a saved definition writes `null` where
-  // it carried no list, and one deleted record leaves a `null` entry. Both read
-  // as no step rather than throwing out of the render — an empty list already
-  // paints nothing, which is the state a workflow with no readable step is in.
+
   const list = stepsOf(steps);
   const count = list.length;
   const [value, setStep] = useControllableState({
@@ -275,7 +242,6 @@ export const MultiStepForm = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const multiStepFormMeta = {
   name: "Multi-step forms",
   tier: 5,

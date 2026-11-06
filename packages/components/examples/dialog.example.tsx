@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Dialog example: deleting a workspace, with a real cancel and a busy confirm.
- *
- * The example is **controlled** (`open` + `onOpenChange`) because the delete is
- * asynchronous: the dialog must stay open while the work runs, and close only
- * when it succeeds. A second dialog use — a rename form — would share the same
- * `DialogContent` parts.
- */
-
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -29,14 +20,12 @@ import { Button } from "../src/internal/button.js";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** A workspace row whose delete action is guarded by the dialog. */
 export const DialogExample = () => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
 
-  // The caller owns the async work, so it also owns the close on success.
   useEffect(() => {
     if (!deleting) return;
     const timer = setTimeout(() => {

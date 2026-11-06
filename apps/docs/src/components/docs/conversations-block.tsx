@@ -1,25 +1,16 @@
-import { Fragment, useReducer, useRef, useState, type ReactNode } from "react";
+import {
+  Fragment,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { BlockIcon } from "./block-icons";
 import { RailToggle } from "./sidebar-rail";
 
-/**
- * Conversations block — `/blocks/conversations`.
- *
- * One Messages-style window in four platform dresses: macOS Messages, Windows
- * 11 (Fluent 2), Linux (Breeze dark) and Omarchy (a Linux desktop in its own
- * Tokyo Night look). `ConversationWindow` is the browser reproduction the docs
- * page and the landing deck mount; `conversationsSource` is the recipe a
- * consumer copies, and `.agents/slop/references/conversations.md` is the
- * reference the four skins are measured against.
- *
- * `conversationsReducer` and `filterConversations` are pure, so the block's
- * three interactions — selecting a thread, sending a message and filtering the
- * list — are table-tested against the same code the surface dispatches to.
- */
-
 export type ConversationPlatform = "macos" | "windows" | "linux" | "omarchy";
 
-/** The role an outgoing bubble wears, per platform. */
 const OUTGOING_TONE: Readonly<
   Record<ConversationPlatform, "success" | "primary" | "info">
 > = {
@@ -31,14 +22,14 @@ const OUTGOING_TONE: Readonly<
 
 export interface ConversationMessage {
   readonly id: string;
-  /** Outgoing (right) rather than incoming (left). */
+
   readonly mine: boolean;
   readonly text: string;
-  /** The grey timestamp a message carries. */
+
   readonly at?: string;
-  /** The photo attachment painted from `greed-island.webp`. */
+
   readonly photo?: boolean;
-  /** The grey receipt under an outgoing message. */
+
   readonly read?: boolean;
 }
 
@@ -117,7 +108,6 @@ const killua: Conversation = {
   ],
 };
 
-/** The conversations, in the list's order. Three carry a short thread. */
 export const conversations: ReadonlyArray<Conversation> = [
   {
     id: "gon",
@@ -228,11 +218,9 @@ export type ConversationsAction =
   | { readonly type: "send"; readonly text: string }
   | { readonly type: "toggle-rail" };
 
-/** The thread a send opens; an unknown selection falls back to the sample. */
 export const selectedConversation = (state: ConversationsState): Conversation =>
   state.threads.find((thread) => thread.id === state.selectedId) ?? killua;
 
-/** The list a search leaves: a name or a preview matches, case-insensitively. */
 export const filterConversations = (
   threads: ReadonlyArray<Conversation>,
   query: string,
@@ -288,7 +276,6 @@ export interface ConversationsSurfaceProps {
   readonly onToggleRail: () => void;
 }
 
-/** The window at a given state; `ConversationWindow` owns the reducer. */
 export function ConversationsSurface({
   platform,
   state,
@@ -303,14 +290,17 @@ export function ConversationsSurface({
   const visible = filterConversations(state.threads, state.query);
   const tone = OUTGOING_TONE[platform];
 
-  // The newest bubble scrolls into view after it paints; the window itself keeps
-  // its height, so the thread grows inside the log and nothing else moves.
   const reveal = () => {
     requestAnimationFrame(() => {
       const node = log.current;
       if (node !== null) node.scrollTop = node.scrollHeight;
     });
   };
+
+  useLayoutEffect(() => {
+    const node = log.current;
+    if (node !== null) node.scrollTop = node.scrollHeight;
+  }, [thread.id]);
 
   return (
     <div className="gx-conv" data-platform={platform}>
@@ -543,7 +533,6 @@ export function ConversationsSurface({
   );
 }
 
-/** The block's preview: the reducer, then the macOS window at its state. */
 export function ConversationsRender() {
   const [state, dispatch] = useReducer(
     conversationsReducer,
@@ -562,7 +551,6 @@ export function ConversationsRender() {
   );
 }
 
-/** One window in a given platform dress; the deck picks a dress per card. */
 export function ConversationWindow({
   platform,
 }: {
@@ -591,7 +579,6 @@ export const conversationsPackages = [
   "@gpuixui/icons",
 ] as const;
 
-/** The recipe a consumer copies. */
 export const conversationsSource = `import { Avatar } from "@gpuixui/components/avatar";
 import { Button, Input, ScrollArea, Stack, Text } from "@gpuixui/primitives";
 import { Icon } from "@gpuixui/icons";
@@ -763,7 +750,6 @@ function SendGlyph() {
   );
 }
 
-/** The delivered mark: two blue checks, in every dress. */
 function Ticks() {
   return (
     <span aria-hidden="true" className="gx-conv-ticks">

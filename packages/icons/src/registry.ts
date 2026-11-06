@@ -1,30 +1,8 @@
-/**
- * The icon set: 24x24 monochrome SVG markup, built for GPUix's `<svg source>`.
- *
- * GPUix's host `<svg>` element takes `source` — raw markup the native renderer
- * paints — and tints it with the element's `style.color` (`SvgProps` in
- * `@gpuix/native/host`: "Props for monochrome SVGs tinted by `style.color`").
- * So an icon is **data**, and the markup carries no colour of its own: the
- * wrapper below fixes the grid and the two paint values a monochrome tint can
- * use (`fill: none`, `stroke: #000` — what GPUix's own example assets use),
- * and each entry holds only geometry.
- *
- * Geometry follows the Lucide 24x24 grid (ISC licence, attributed in
- * `.agents/slop/LICENSES/`). `registry.test.ts` enforces the structure, so a stray colour
- * literal or an off-grid icon fails the suite rather than shipping.
- */
-
 import * as R from "effect/Record";
 import { isIconName, type IconName } from "./names.js";
 
-/** A self-contained icon: fixed geometry, no colour of its own. */
 export type IconMarkup = string;
 
-/**
- * Shared wrapper attributes. `stroke="#000"` is deliberate, not an accidental
- * black: GPUix replaces the monochrome paint with `style.color`, which is how
- * one markup string serves every theme.
- */
 const ATTRIBUTES = [
   'xmlns="http://www.w3.org/2000/svg"',
   'viewBox="0 0 24 24"',
@@ -35,7 +13,6 @@ const ATTRIBUTES = [
   'stroke-linejoin="round"',
 ].join(" ");
 
-/** Geometry only, on the 24x24 grid. */
 const shapes = {
   "arrow-down": '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
   "arrow-left": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
@@ -137,7 +114,7 @@ const shapes = {
     '<path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/>',
   square: '<rect width="18" height="18" x="3" y="3" rx="2"/>',
   star: '<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01Z"/>',
-  /** The same geometry, filled: the retintable `#000` is what `style.color` replaces. */
+
   "star-filled":
     '<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01Z" fill="#000" stroke="none"/>',
   success: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
@@ -162,44 +139,18 @@ const shapes = {
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
 } satisfies Record<IconName, string>;
 
-/** Markup by name. Built once: the `source` string is a stable value per icon. */
 export const icons: Record<IconName, IconMarkup> = R.map(
   shapes,
   (shape) => `<svg ${ATTRIBUTES}>${shape}</svg>`,
 );
 
-/** The mark a name the set does not carry paints instead. */
 export const FALLBACK_ICON = "help" satisfies IconName;
 
-/**
- * The mark a name paints, or the placeholder when the set does not carry it.
- *
- * `name` is `unknown` because it is often a stored value rather than a literal —
- * a saved toolbar, a workspace layout or an action record keeps the name a
- * release may rename or drop. Reading the registry with such a name answered
- * `undefined`, and `Icon` wrote that to `source`: measured on
- * `@gpuix/native@0.11.0`, the element kept its 24×24 box and its `Image`
- * accessibility node while **painting nothing** — a named image of nothing, so
- * an icon-only button read as its action and showed an empty square. A name the
- * set does not carry paints {@link FALLBACK_ICON}, a mark that reads as "unknown"
- * instead of as the action the caller meant.
- */
 export const iconMarkup = (name: unknown): IconMarkup =>
   isIconName(name) ? icons[name] : icons[FALLBACK_ICON];
 
-/** Markup already turned, keyed by name and normalised degrees. */
 const turned = new Map<string, IconMarkup>();
 
-/**
- * The icon's markup turned by `degrees` clockwise about the 24x24 centre.
- *
- * GPUix paints `<svg source>` through resvg, so a `transform` inside the
- * document is part of the geometry — the only way to rotate an icon today.
- * `StyleDesc` has no transform, and an `<svg>` host would ignore it anyway: the
- * patch that adds one is limited to `div`/`text`. A quarter turn is exact; any
- * finite angle is passed through, and a non-finite one (a measured value that
- * never arrived) reads as no turn rather than painting nothing.
- */
 export const rotatedIconMarkup = (
   name: unknown,
   degrees: number,

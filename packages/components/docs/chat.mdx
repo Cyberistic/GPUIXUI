@@ -129,24 +129,3 @@ this release removes.
 `MessageScrollerItem` rows inside it (through `Message`) and pass
 `MessageScrollerItem scrollAnchor` on a turn's first row if you want that turn
 placed near the top.
-
-## Notes
-- The transport is yours; the component never calls a model.
-- No `aria-live`; the header's status line is a marker, not a live region, so a
-  new row is painted but not announced.
-- The composer's key contract is the runtime's: Enter reaches the textarea's
-  `onSubmit`, Shift+Enter inserts a newline and reaches no handler, Escape is a
-  keydown. A textarea without an `onSubmit` consumes Enter as a newline.
-- The failure line is clamped to one line in the header; the full sentence is
-  the status node's description.
-- The jump control owns a reserved rail under the viewport; the runtime cannot
-  position it over the viewport's corner (`position: absolute` resolves against
-  the mount parent in `0.11.0`).
-- A blank name or sentence reads as the documented default; a stored draft that
-  is not text reads as an empty composer.
-
-## Related
-
-- [Bubble](/components/bubble) — the message surface.
-- [Message](/components/message) — the row.
-- [Message Scroller](/components/message-scroller) — the transcript rules.

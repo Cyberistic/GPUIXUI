@@ -1,21 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Hexagon: a flat-top hexagon grid generated for the box it fills.
- *
- * The runtime paints one `<svg source>` path as a mask in the element's colour,
- * so the field is **one** generated path rather than a component per cell. The
- * `svg-pattern` probe measured how that path lands: it is scaled by the element's
- * width alone and centred from a content area the element does not clip, so the
- * field generates its view box from its own measured box — the scale is then 1:1
- * on both axes, including in a wide hero. `hexagon/logic.ts` owns the tiling.
- *
- * The grid cannot move: the runtime has no `transform` (upstream issue #102), so
- * the only motion a line-art field can offer is a slow breath of opacity, which
- * `internal/pattern-field.tsx` runs. The grid is not content: its art owns no
- * accessibility node and takes no pointer input, children painted above it keep
- * both, and it paints nothing until the box has been measured.
- */
-
 import type { Props } from "@gpuix/react";
 import type { StateStyle } from "@gpuix/react/floating";
 import type { MotionLevel } from "@gpuixui/motion/timing";
@@ -27,36 +10,26 @@ import {
   useTheme,
 } from "@gpuixui/components/authoring";
 
-/** What a hexagon field draws at one frame. */
 export type HexagonState = PatternFieldState;
 
-/** {@link Hexagon} props. */
 export interface HexagonProps extends Omit<Props, "children" | "style"> {
-  /** The hexagon radius (centre to vertex), in pixels. Default `30`; 10–160. */
   readonly radius?: number;
-  /** The outline weight, in pixels. Default `1`; 0.5–6. */
+
   readonly stroke?: number;
-  /** The line colour. Default the theme's `border` role. */
+
   readonly color?: string;
-  /** One breath's length in milliseconds. Default `8_000`; 1–60 s. */
+
   readonly breatheMs?: number;
-  /** The entrance level. Default `"slow"` (320 ms). */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string for the box, merged last. */
+
   readonly className?: string;
-  /** A style for the box, or a function of the measured field. */
+
   readonly style?: StateStyle<HexagonState>;
-  /** Content painted above the grid; it owns the words and the presses. */
+
   readonly children?: ReactNode;
 }
 
-/**
- * A bounded box of hexagon outlines behind a hero, a card or an empty state.
- *
- * Give it a box — a height, padding or a sized flex parent — because the grid is
- * generated for the size the field actually has; before the first layout it
- * paints nothing.
- */
 export const Hexagon = ({
   radius,
   stroke,
@@ -92,7 +65,6 @@ export const Hexagon = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const hexagonMeta = {
   name: "Hexagon",
   tier: 5,

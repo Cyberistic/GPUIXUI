@@ -1,20 +1,3 @@
-/**
- * `DockLayout` — a named tree of split and tab groups, rendered from a schema.
- *
- * The tree is {@link DockNode}: a `split` (two dock nodes sharing an axis) or a
- * `tabs` group (an ordered tab list and its active tab). It round-trips through
- * {@link DockNodeJson} at the app's persistence boundary, so a workspace is
- * restored by decoding one string and re-mounting the tree — the contract
- * `workspace-restore` measured, where a decode failure opens the default and a
- * restored size is clamped once.
- *
- * Rendering is recursive and state is the tree's: a tab press rewrites that
- * group's `activeTab` and a divider drag rewrites its split's `size`, both
- * reported through `onLayoutChange` as a new tree. The divider is the same
- * {@link Divider} a `SplitPane` uses, so the resize interaction is one control
- * across the whole package.
- */
-
 import type { ReactElement, ReactNode } from "react";
 import { useRef, useState } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
@@ -34,15 +17,14 @@ import { DOCK_PANE, DOCK_ROOT, mergeStyle, recipeStyle } from "./recipe.js";
 import { textStyle, useTheme } from "./theme.js";
 
 export interface DockLayoutProps {
-  /** The tree to render. Controlled. */
   readonly layout: DockNode;
-  /** Reports the next tree after a tab switch or a resize. */
+
   readonly onLayoutChange?: (layout: DockNode) => void;
-  /** Renders one tab's content by its id. */
+
   readonly renderTab: (id: string) => ReactNode;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** Stable locator for automation. */
+
   readonly testId?: string;
 }
 
@@ -53,7 +35,6 @@ interface NodeViewProps {
   readonly testId?: string;
 }
 
-/** A tab strip and the active tab's panel. */
 const DockTabsView = ({
   node,
   onLayoutChange,
@@ -135,7 +116,6 @@ const DockTabsView = ({
   );
 };
 
-/** A split: two dock nodes and the divider that resizes them. */
 const DockSplitView = ({
   node,
   onLayoutChange,
@@ -232,7 +212,6 @@ const DockSplitView = ({
   );
 };
 
-/** One dock node, by its kind. */
 const DockNodeView = ({
   node,
   onLayoutChange,
@@ -255,7 +234,6 @@ const DockNodeView = ({
     />
   );
 
-/** A named tree of split and tab groups, rendered from a schema. */
 export const DockLayout = ({
   layout,
   onLayoutChange,

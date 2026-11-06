@@ -12,10 +12,6 @@ import {
   SbSubRow,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 05 — one docs group whose parent rows open their submenu in place;
- * the second section is open on landing, the rest wait behind a plus.
- */
 export const Sidebar05Render = () => (
   <SbShell>
     <SbPanel

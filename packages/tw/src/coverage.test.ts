@@ -1,13 +1,3 @@
-/**
- * Guards the upstream class coverage.
- *
- * Bug guarded: a new shadcn class reaches a recipe, resolves to nothing and is
- * silently dropped — or lands in `unsupported` without a recorded reason. The
- * test extracts every class token from the Base UI input/button/dialog/popover/
- * toast sources and the luma blocks that style them, then requires each token
- * to resolve or to be named in `unsupported.ts`.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
@@ -30,7 +20,6 @@ const SOURCES = [
   "toast.tsx",
 ] as const;
 
-/** The luma blocks that style those five components. */
 const LUMA_BLOCKS = [
   "cn-input",
   "cn-button",
@@ -65,7 +54,6 @@ const LUMA_BLOCKS = [
   "cn-skeleton",
 ] as const;
 
-/** Resumes the scan after a string literal or one nesting level. */
 const scan = (
   source: string,
   index: number,
@@ -94,7 +82,6 @@ const scan = (
   return scan(source, index + 1, next, found);
 };
 
-/** The string arguments of every `cn(...)` call, quotes respected. */
 const cnStrings = (source: string): ReadonlyArray<string> =>
   Arr.flatMap(Arr.fromIterable(source.matchAll(/(?<![.\w])cn\(/g)), (call) =>
     Option.match(Option.fromNullishOr(call.index), {
@@ -139,7 +126,6 @@ const tokens = (): ReadonlyArray<string> => {
   return Arr.dedupe(Arr.appendAll(fromSources, fromLuma));
 };
 
-/** A token the compiler drops, checked against the reason table. */
 const withoutReason = (token: string): boolean => {
   const result = classesToStyle(token, lightTheme);
   return (
@@ -147,7 +133,6 @@ const withoutReason = (token: string): boolean => {
   );
 };
 
-/** A token the reason table names, checked against the compiler. */
 const withoutClassification = (token: string): boolean =>
   !classesToStyle(token, lightTheme).unsupported.includes(token);
 

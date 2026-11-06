@@ -1,30 +1,3 @@
-/**
- * ContextMenu behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a left click opening the menu; a right click that the
- * runtime reported but the component ignored; the surface appearing at the
- * parent's origin instead of the pointer; a selected action not running, or
- * running twice; and a second right click leaving the old point in place. A
- * caller `ref` on the trigger was also discarded in favour of the internal one.
- *
- * Type-ahead regression: typing in the pointer-positioned menu selected nothing,
- * although it shares the Dropdown menu's rows.
- *
- * Submenu regression: the Context menu had no submenu parts, and in both menus a
- * pointer press on a submenu row was treated as an outside press, closing both
- * levels before the click ran the row.
- *
- * Hover regression (guarded by the suite below): a submenu opened on the first
- * `mouseEnter` — so sweeping the pointer across a menu left the last submenu it
- * crossed open — and nothing closed it when the pointer left, because the only
- * close was another row's. Base UI rests ~100 ms before an open and holds a
- * grace before a close; these cases hold the same two waits.
- *
- * Shift regression: opening the menu must not move the page. The surface is an
- * `anchored` layer, out of the layout flow, so a sibling keeps its y — the case
- * below is the guard, and painting the surface in flow is what fails it.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
 import { createRef } from "react";
@@ -53,12 +26,10 @@ import {
   ContextMenuTrigger,
 } from "../context-menu.js";
 
-/** Right-click at a point in window coordinates. */
 const rightClickAt = (root: ComponentTestRoot, x: number, y: number): void => {
   root.renderer.nativeSimulateClick(x, y, 2);
 };
 
-/** The project row whose right click offers three actions. */
 const ProjectRow = ({
   onSelect,
   disabled,
@@ -93,7 +64,6 @@ const ProjectRow = ({
   </ContextMenu>
 );
 
-/** The row's top-left bounds in window coordinates. */
 const rowOrigin = (
   root: ComponentTestRoot,
 ): { readonly x: number; readonly y: number } => {
@@ -103,7 +73,6 @@ const rowOrigin = (
   return { x: bounds.x, y: bounds.y };
 };
 
-/** The menu's top-left bounds, or a broken-fixture failure. */
 const menuOrigin = (
   root: ComponentTestRoot,
 ): { readonly x: number; readonly y: number } => {
@@ -113,12 +82,10 @@ const menuOrigin = (
   return { x: bounds.x, y: bounds.y };
 };
 
-/** Focus the trigger, as Tab would. */
 const focusRow = (root: ComponentTestRoot): void => {
   root.renderer.focusElement(root.renderer.findByTestId("row")?.id ?? -1);
 };
 
-/** A project row whose menu offers a Share submenu. */
 const WithSubmenu = ({
   onSelect,
 }: {
@@ -231,11 +198,6 @@ describe("ContextMenu", () => {
   });
 
   it("leaves the focus nowhere when a pointer-opened menu dismisses", async () => {
-    // The light harness cannot see a native window's focus, but the rule is the
-    // component's: a pointer open records no restore target, so the documented
-    // contract is "focus stays where the pointer put it" rather than the
-    // trigger. A pointer-opened menu that started restoring would make the
-    // Context menu page wrong (measured in a window by `context-menu-lifecycle`).
     const row = renderComponent(<ProjectRow onSelect={vi.fn()} />);
     const origin = rowOrigin(row);
 
@@ -358,7 +320,6 @@ describe("ContextMenu", () => {
 
     expect(ref.current?.id).toBe(row.renderer.findByTestId("row")?.id);
 
-    // The internal registration still works: Escape returns focus to the row.
     focusRow(row);
     row.renderer.simulateKeystrokes("shift-f10");
     row.renderer.simulateKeystrokes("escape");
@@ -381,7 +342,6 @@ describe("ContextMenu", () => {
 });
 
 describe("ContextMenu submenus", () => {
-  /** Open the submenu through the keyboard: first row, Share, ArrowRight. */
   const openSubmenu = (root: ComponentTestRoot): void => {
     root.renderer.simulateKeystrokes("down");
     root.renderer.simulateKeystrokes("down");
@@ -454,11 +414,9 @@ describe("ContextMenu submenus", () => {
   });
 });
 
-/** Whether the trigger row says its submenu is open, which outlives its paint. */
 const submenuOpen = (root: ComponentTestRoot): boolean =>
   root.renderer.findByTestId("share")?.customProps?.["aria-expanded"] === true;
 
-/** A menu whose pointer routes can be followed: a submenu, a disabled row, and a neighbour. */
 const PointerPage = ({
   onSelect,
   onReason,
@@ -522,7 +480,6 @@ const PointerPage = ({
   </div>
 );
 
-/** Open the pointer menu at a point clear of the neighbour. */
 const openPointerMenu = (root: ComponentTestRoot): void => {
   rightClickAt(root, 160, 30);
 };
@@ -550,7 +507,7 @@ describe("ContextMenu hover, in Base UI's shape", () => {
 
     const menu = requireBounds(page, "menu");
     const share = requireBounds(page, "share");
-    // The 4px between the menu's edge and the submenu's: neither surface holds it.
+
     page.renderer.nativeSimulateMouseMove(menu.x + menu.width + 2, share.y + 4);
     await after(40);
     hoverCentreOf(page, "copy-link");
@@ -570,8 +527,7 @@ describe("ContextMenu hover, in Base UI's shape", () => {
     hoverCentreOf(page, "rename");
 
     expect(submenuOpen(page)).toBe(false);
-    // The submenu's rows unmount, so the focus they held goes back to the row the
-    // submenu belongs to rather than nowhere.
+
     expect(focusedTestId(page)).toEqual(Option.some("share"));
     await waitFor(() =>
       expect(page.renderer.findByTestId("submenu")).toBeUndefined(),
@@ -590,7 +546,6 @@ describe("ContextMenu hover, in Base UI's shape", () => {
     await after(40);
     hoverCentreOf(page, "share");
 
-    // No close and no second wait: the row that opens the submenu is inside it.
     expect(submenuOpen(page)).toBe(true);
     page.unmount();
   });
@@ -604,8 +559,7 @@ describe("ContextMenu hover, in Base UI's shape", () => {
 
     hoverCentreOf(page, "elsewhere");
     await after(40);
-    // Still inside the grace: a pointer crossing a corner on its way back is
-    // not a dismissal.
+
     expect(submenuOpen(page)).toBe(true);
 
     await waitFor(() =>
@@ -682,7 +636,6 @@ describe("ContextMenu keyboard, in Base UI's shape", () => {
     const page = renderComponent(<PointerPage />);
     openPointerMenu(page);
 
-    // The last row is disabled, so Up lands on the row before it.
     page.renderer.simulateKeystrokes("up");
 
     expect(focusedTestId(page)).toEqual(Option.some("rename"));
@@ -704,7 +657,6 @@ describe("ContextMenu keyboard, in Base UI's shape", () => {
       0,
     );
 
-    // The state, not the paint: a closing submenu is still mounted for its exit.
     expect(submenuOpen(page)).toBe(true);
     expect(page.renderer.findByTestId("menu")).toBeDefined();
     page.unmount();

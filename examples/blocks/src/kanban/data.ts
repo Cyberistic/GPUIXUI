@@ -1,6 +1,3 @@
-/**
- * The board's sample data: the Hunter Association's own release board.
- */
 export const columns = ["Backlog", "In progress", "Done"] as const;
 export type Column = (typeof columns)[number];
 

@@ -1,12 +1,3 @@
-/**
- * Browser preview for the Hover card page.
- *
- * The shipped card opens after 700 ms of hover, at once on focus, and closes
- * 300 ms after the pointer and focus have left both the trigger and the card.
- * The preview keeps those waits, so a reader can feel why the card is hoverable:
- * the pointer travels from the name into the surface without a flash.
- */
-
 import { useEffect, useRef, useState } from "react";
 
 const OPEN_MS = 700;
@@ -30,9 +21,7 @@ export function HoverCardDemo() {
 
   return (
     <div className="gx-hovercard-scene">
-      {/* The frame reserves the card's height: an absolutely positioned card in
-          a scene that only measures its one-line trigger overflows the preview's
-          own scroller, which is the "broken" card the page used to paint. */}
+      {}
       <div className="gx-hovercard-frame">
         <p className="gx-hovercard-line">
           Assigned to{" "}

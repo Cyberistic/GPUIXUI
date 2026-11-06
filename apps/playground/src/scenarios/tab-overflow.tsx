@@ -1,20 +1,3 @@
-/**
- * `tab-overflow` — a tab strip wider than its rail, and the reveal a tab strip
- * owes the selected tab.
- *
- * A workspace with many tabs puts them in an `overflowX: "scroll"` rail. The
- * question a Tabs component must answer is whether selecting a tab the rail
- * clips moves the rail by itself. It does not: the runtime scrolls on a wheel,
- * a scrollbar drag or an explicit call, and selection is none of those. The
- * probe measures both halves on two identical strips — the plain one keeps its
- * offset, the revealing one calls the selected tab's `scrollIntoView()` and ends
- * with that tab wholly inside the rail.
- *
- * Measured on this host: `scrollIntoView()` scrolls the horizontal scroller, so
- * reveal is the component's job and needs no wheel. The runtime's own keyboard
- * focus does not reveal either — `Tab` traversal to a clipped tab leaves the
- * rail where it was (the plain strip is that measurement).
- */
 import { useRef, useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
@@ -27,7 +10,6 @@ const TAB_COUNT = 8;
 const TAB_WIDTH = 80;
 const RAIL_WIDTH = 320;
 
-/** The next selection for a tab strip's arrow/Home/End contract. */
 const nextIndex = (current: number, key: string): Option.Option<number> => {
   if (key === "end") return Option.some(TAB_COUNT - 1);
   if (key === "home") return Option.some(0);
@@ -36,10 +18,6 @@ const nextIndex = (current: number, key: string): Option.Option<number> => {
   return Option.none();
 };
 
-/**
- * One strip. `reveal` is the only difference: it calls the next tab's
- * `scrollIntoView()` when the selection moves, the plain strip never does.
- */
 const TabStrip = ({
   id,
   reveal,
@@ -144,7 +122,6 @@ const TabOverflowProbe = () => {
   );
 };
 
-/** The `selected=` readout for a strip, or `""` when it is not painted. */
 const readout = (text: string | null): string =>
   Option.getOrElse(Option.fromNullishOr(text), () => "");
 
@@ -167,9 +144,6 @@ export const tabOverflowScenario: ScenarioBody = {
         0,
       );
 
-      // Select the last tab with the keyboard the way a tab strip does: focus
-      // the first tab, then End. The rail is narrower than the tab row, so the
-      // selection is off-screen.
       ctx.host.click("plain-tab-0");
       ctx.host.key("end");
       yield* ctx.expectContains(
@@ -198,8 +172,6 @@ export const tabOverflowScenario: ScenarioBody = {
         true,
       );
 
-      // The revealing strip does exactly what a Tabs component must: the
-      // selection change calls the tab's own `scrollIntoView()`.
       const revealStart = yield* ctx.expectSome(
         "the revealing rail reports an offset",
         offset("revealing"),
@@ -236,8 +208,7 @@ export const tabOverflowScenario: ScenarioBody = {
         "the revealing rail is painted",
         Option.fromNullishOr(ctx.host.bounds("revealing-rail")),
       );
-      // The runtime reports an element's layout box, not its scrolled position:
-      // the rail's offset is what moves the tab on screen.
+
       const paintedX = revealed.x;
       yield* ctx.expectEqual(
         "the revealed tab starts inside the rail",
@@ -250,10 +221,6 @@ export const tabOverflowScenario: ScenarioBody = {
         true,
       );
 
-      // The measured limitation: `scrollIntoView()` scrolls the nearest
-      // scroller to the index of its **direct child**. A tab nested inside a
-      // row is therefore out of reach — the rail scrolls to the row, not to the
-      // tab — so a tab strip keeps its tabs as children of the scroller.
       const nestedStart = yield* ctx.expectSome(
         "the nested rail reports an offset",
         offset("nested"),

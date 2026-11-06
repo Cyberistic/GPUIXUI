@@ -1,8 +1,3 @@
-/**
- * Console — the Hunter Association's deploy console: a sidebar that collapses to
- * icons, a list of deploys, and a Deploy button that raises toasts. Built to read
- * as well in a terminal (`--terminal`) as in a window.
- */
 import { Badge } from "@gpuixui/components/badge";
 import {
   Sidebar,
@@ -88,12 +83,11 @@ const Deploys = () => {
   );
 };
 
-/** The console, as a window's (or a terminal's) whole content. */
 export const Console = () => {
   const theme = useTheme();
   return (
     <ToastProvider>
-      {/* One root: the runtime paints only the last root child of a tree. */}
+      {}
       <div
         style={{
           display: "flex",

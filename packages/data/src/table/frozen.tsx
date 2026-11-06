@@ -1,60 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The frozen-column composition: two panes that scroll as one.
- *
- * `@gpuix/native@0.11.0` paints no `position: "sticky"`, so a column cannot be
- * pinned inside a scroller. The rule the `data-grid-frozen-column` and
- * `frozen-column-lifecycle` probes measured is a **composition**: the frozen
- * column is its own vertical scroller beside the grid's, and the two are
- * mirrored through `onScrollChange` → `renderer.scrollTo`, guarded by a ref
- * because the programmatic scroll paints synchronously and reports its own
- * change inside the call.
- *
- * What the panes share, and what they do not:
- *
- * - **Vertical** — both directions. A wheel over either pane moves both, so the
- *   row under the reader keeps its `y` across the seam.
- * - **Horizontal** — the data pane's alone. A sideways wheel pans its cells and
- *   leaves the frozen column where it is; a vertical mirror must not reset the
- *   data pane's `x`, so the body's last `scrollX` is carried into the call.
- * - **Height** — the frozen pane's header and rows paint the same height as the
- *   data pane's, because both use the table's own header and row recipes. The
- *   composition's own box is the caller's height, or the pane it fills when that
- *   height cannot paint: two row scrollers handed no bound paint nothing at all
- *   (`behaviour/paintable-height.test.tsx`).
- *
- * A press on a frozen cell is the caller's: `frozenRow` renders the same
- * `TableRow` the data pane does, including `selected` and `onClick`, so choosing
- * a record from the frozen pane selects it for the whole grid
- * (`frozen-column-lifecycle`).
- *
- * An empty set is the grid's, not the body's: the data pane paints
- * {@link TableEmpty} (a `No rows` default), because a body with no child falls
- * through to its loading skeleton and a role-less message sits outside the grid
- * the accessibility tree describes.
- *
- * ```tsx
- * <FrozenTable
- *   height={320}
- *   frozenWidth={180}
- *   rows={table.rows}
- *   rowKey={(row) => row.id}
- *   frozenHeader={
- *     <TableRow>
- *       <TableHeaderCell width={180}>Name</TableHeaderCell>
- *     </TableRow>
- *   }
- *   frozenRow={(row) => (
- *     <TableRow selected={table.isSelected(row.id)} onClick={…}>
- *       <TableCell width={180}>{row.name}</TableCell>
- *     </TableRow>
- *   )}
- *   header={<TableRow>{/* the scrolling columns' header cells *\/}</TableRow>}
- *   row={(row) => <TableRow>{/* the scrolling columns' cells *\/}</TableRow>}
- * />
- * ```
- */
-
 import {
   useGpuix,
   type EventPayload,
@@ -76,95 +20,34 @@ import {
   emptyMessage,
 } from "./table.js";
 
-/** {@link FrozenTable} props. Generics are per row, like `useTable`'s. */
 export interface FrozenTableProps<Row> extends Omit<Props, "children"> {
-  /**
-   * A definite height: the panes are two scrollers and need a bound.
-   *
-   * A height the layout cannot paint reads as **no height**
-   * ({@link paintableSize}): the composition takes the share of the pane it
-   * sits in and bounds both scrollers from the height that box painted.
-   * Measured before the rule, in a 320-point pane: a `NaN` height painted both
-   * row scrollers at **0 points** against the **276** the same grid paints with
-   * a readable one, so the grid showed no row at all.
-   */
   readonly height: number;
-  /**
-   * The frozen pane's width, in pixels.
-   *
-   * A width the layout cannot paint (`NaN`, an infinity, a negative) reads as
-   * **no width** ({@link paintableSize}): the pane keeps the track its own
-   * frozen cells declare instead of collapsing, and the data pane keeps the
-   * rest of the frame (`behaviour/paintable-width.test.tsx`).
-   */
+
   readonly frozenWidth: number;
-  /**
-   * The scrolling columns' total width, in pixels.
-   *
-   * It is what the data pane's horizontal scroller pans over: the measured
-   * composition puts the header and the body in one inner column of this width
-   * (`data-grid-fixed-header`), so a pane narrower than the columns has
-   * somewhere to scroll to.
-   *
-   * A width the layout cannot paint reads as **no width** ({@link paintableSize}),
-   * so the column takes the pane it sits in rather than painting in a box of no
-   * points (`behaviour/paintable-width.test.tsx`).
-   */
+
   readonly contentWidth: number;
-  /**
-   * The rows that fill both panes, in paint order.
-   *
-   * The list is stored data as often as a literal — a saved workspace restores
-   * a panel's rows, and an app hands `snapshot?.rows`, which is `undefined`
-   * while the snapshot is absent — so it is read through {@link rowsOf}: a
-   * value that is not a list fills no pane, and an entry `rowKey` cannot name
-   * is not a row, so a dropped record paints nothing. Before the read, one
-   * stored absence threw `Cannot read properties of null (reading 'map')` out
-   * of the first render and a hole in a readable list threw from `rowKey`,
-   * and the grid painted neither pane nor its message
-   * (`behaviour/stored-rows.test.tsx`).
-   */
+
   readonly rows: ReadonlyArray<Row>;
-  /** The stable React key of a record. */
+
   readonly rowKey: (row: Row) => string;
-  /**
-   * The frozen column's header: a `TableRow` holding the header cell(s).
-   *
-   * Its cell(s) should paint `frozenWidth`, the same width the pane is given.
-   */
+
   readonly frozenHeader: ReactNode;
-  /** The frozen column's row: a `TableRow` holding one cell of `frozenWidth`. */
+
   readonly frozenRow: (row: Row) => ReactNode;
-  /** The scrolling columns' header: a `TableRow` of header cells. */
+
   readonly header: ReactNode;
-  /** The scrolling columns' row: a `TableRow` of cells. */
+
   readonly row: (row: Row) => ReactNode;
-  /**
-   * Painted in the data pane when `rows` is empty.
-   *
-   * It is wrapped in a `TableEmpty` row, so the message sits inside the grid
-   * the accessibility tree describes and a string paints as that cell's own
-   * text. Defaults to `No rows`: an empty set is not a load, and a body with
-   * no child paints the loading skeleton. A **blank** string reads as that
-   * default too ({@link emptyMessage}), because a default only covers an
-   * absent prop.
-   */
+
   readonly empty?: ReactNode;
-  /** The frozen pane's test id, for a probe that reads its scroller. */
+
   readonly frozenTestId?: string;
-  /** The data pane's vertical scroller id, for a probe that reads its offset. */
+
   readonly bodyTestId?: string;
-  /** The data pane's horizontal scroller id, for a probe that pans it. */
+
   readonly viewportTestId?: string;
 }
 
-/**
- * Two panes beside each other: a frozen column and a scrolling grid.
- *
- * The frozen pane holds the header and the frozen cells; the data pane is the
- * table core's measured composition — one horizontal scroller holding a header
- * and a vertical row scroller as siblings — inside the remaining width.
- */
 export const FrozenTable = <Row,>({
   height,
   frozenWidth,
@@ -188,30 +71,19 @@ export const FrozenTable = <Row,>({
   const body = useRef<PublicInstance | null>(null);
   const syncing = useRef(false);
   const bodyX = useRef(0);
-  // The box the composition was given: the caller's height when it paints, and
-  // otherwise the height this box measured in the pane it fills. A height
-  // nothing could be read from is no height, so the layout owns the box and the
-  // two scrollers are bounded from what it painted (`internal/painted.ts`).
+
   const bound = paintableSize(height);
   const painted = usePaintedHeight(onLayout);
   const box = Option.orElse(bound, () => painted.measured);
   const boxHeight = Option.getOrUndefined(box);
-  // A width is computed as often as a literal — a share of the pane, the sum of
-  // a saved column set, a measurement taken before the first layout — and one
-  // the layout cannot paint reads as **no width** (`paintableSize`), the rule
-  // every other size here follows: each pane falls back to the track its own
-  // cells declare rather than the composition painting a zero-point box.
+
   const frozenTrack = Option.getOrUndefined(paintableSize(frozenWidth));
   const contentTrack = Option.getOrUndefined(paintableSize(contentWidth));
-  // The caller's rows are stored data: a saved panel, or `snapshot?.rows`
-  // before the snapshot arrives, is not a list and fills no pane, and a hole
-  // the store wrote inside one is a record with no identity to key a row by.
+
   const records = rowsOf(rows, rowKey);
   const [frozenHeaderHeight, setFrozenHeaderHeight] = useState(0);
   const [dataHeaderHeight, setDataHeaderHeight] = useState(0);
-  // The panes' headers are the caller's rows, so their heights can differ by a
-  // text step. Both panes get the taller one, which is what keeps the two row
-  // scrollers starting at the same y.
+
   const measuredHeader = Math.max(frozenHeaderHeight, dataHeaderHeight);
   const headerHeight =
     measuredHeader === 0 ? DEFAULT_HEADER_HEIGHT : measuredHeader;
@@ -219,10 +91,6 @@ export const FrozenTable = <Row,>({
     Option.map(box, (size) => Math.max(0, size - headerHeight)),
   );
 
-  // The source's own change arrives inside `scrollTo`, so the flag stops the
-  // target mirroring it back (`data-grid-frozen-column`). A vertical mirror
-  // leaves each pane's own `x` alone: the data pane's pan is its own, and the
-  // frozen pane never pans.
   const mirror = (from: "frozen" | "body") => (event: EventPayload) => {
     const y = event.scrollY;
     if (from === "body" && event.scrollX !== undefined) {

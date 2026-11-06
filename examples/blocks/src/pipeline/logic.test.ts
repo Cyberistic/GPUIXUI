@@ -1,8 +1,3 @@
-/**
- * The pipeline's rules (plan 728). Bugs guarded: a stage filter that leaks
- * another stage's rows, a "Mine" scope that keeps everyone's work, a due sort
- * that runs backwards, and stage counts that ignore the scope the sidebar set.
- */
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { viewer, work } from "./data.js";

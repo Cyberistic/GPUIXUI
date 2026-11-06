@@ -1,62 +1,35 @@
-/**
- * The inventory lanes.
- *
- * `.agents/slop/COMPONENTS.md` is the inventory's source of truth. The three composition
- * pages (`/data-display`, `/workspace`) render their
- * rows straight from its tier tables, so a page cannot call a row shipped while
- * the inventory says `todo`. The parser keeps the table's four columns and
- * reports a row it cannot read instead of dropping it.
- */
-
-/**
- * The section a row belongs to: a tier number, or `"animated"` for the plan 600
- * catalogue that lives below Tier 5.
- *
- * The catalogue is not a tier. The parser used to keep the last tier open
- * across a non-tier heading, so its 34 rows were counted as Tier 5.
- */
 export type InventoryTier = number | "animated";
 
-/** One row of a `.agents/slop/COMPONENTS.md` component table. */
 export interface InventoryRow {
   readonly tier: InventoryTier;
   readonly name: string;
   readonly status: string;
-  /** The GPUix support verdict: `yes`, `partial`, `?` or a note. */
+
   readonly support: string;
   readonly notes: string;
 }
 
-/** A heading that opens a component table, in document order. */
 export interface InventorySection {
   readonly tier: InventoryTier;
-  /** The heading's own words, without the `## `. */
+
   readonly title: string;
 }
 
 export interface Inventory {
   readonly rows: ReadonlyArray<InventoryRow>;
   readonly sections: ReadonlyArray<InventorySection>;
-  /** Table rows that did not have the four expected cells, with their line. */
+
   readonly malformed: ReadonlyArray<string>;
 }
 
 const tierHeading = /^## Tier (\d+)/;
-/** The animated catalogue: the core's rows and `@gpuixui/fx`'s (plan 726). */
+
 const animatedHeading = /^## (Animated primitives|Effects)\b/;
 const columnHeading = /^\|\s*Component\s*\|\s*Status\s*\|/;
 const rule = /^\|[\s:|-]+\|$/;
 
-/**
- * A cell separator: a bar the row does not escape.
- *
- * A note can carry a union in a code span (`"all" \| "any"`), and Markdown's
- * table syntax makes the escaped form the only way to write it — the code span
- * does not protect a raw bar.
- */
 const cellSeparator = /(?<!\\)\|/;
 
-/** The cells of a markdown row, without the outer pipes. */
 const cells = (line: string): ReadonlyArray<string> =>
   line
     .replace(/^\|/, "")
@@ -64,13 +37,11 @@ const cells = (line: string): ReadonlyArray<string> =>
     .split(cellSeparator)
     .map((cell) => cell.trim().replace(/\\\|/g, "|"));
 
-/** Parse every tier table and the animated catalogue in the inventory. */
 export const parseInventory = (markdown: string): Inventory => {
   const rows: InventoryRow[] = [];
   const sections: InventorySection[] = [];
   const malformed: string[] = [];
-  // A table outside a known section is ignored rather than attached to the
-  // section before it, which is how the animated catalogue became Tier 5.
+
   type Section =
     | { readonly kind: "none" }
     | { readonly kind: "component"; readonly tier: InventoryTier };
@@ -128,7 +99,6 @@ export const parseInventory = (markdown: string): Inventory => {
   return { rows, sections, malformed };
 };
 
-/** A composition lane: a whole tier, or the named rows of one. */
 export type Lane =
   | { readonly title: string; readonly kind: "tier"; readonly tier: number }
   | {
@@ -160,11 +130,10 @@ export type LaneName = keyof typeof lanes;
 export interface LaneView {
   readonly lane: Lane;
   readonly rows: ReadonlyArray<InventoryRow>;
-  /** Names the lane lists that the inventory does not have. */
+
   readonly unmatched: ReadonlyArray<string>;
 }
 
-/** The inventory rows a lane covers, in the lane's declared order. */
 export const laneView = (inventory: Inventory, name: LaneName): LaneView => {
   const lane: Lane = lanes[name];
   if (lane.kind === "tier") {
@@ -198,17 +167,9 @@ export type LaneSummary = {
   readonly pending: number;
 };
 
-/**
- * The GPUix support cell a lane prints.
- *
- * `?` is the inventory's "the runtime was never measured for this row", so a
- * page that printed it raw would read as a verdict; every other cell is the
- * inventory's own wording and passes through unchanged.
- */
 export const supportLabel = (support: string): string =>
   support === "?" ? "unmeasured" : support;
 
-/** Which state a status cell is in. `done (…)` still counts as shipped. */
 export const groupOf = (status: string): LaneGroup =>
   status.startsWith("done")
     ? "shipped"
@@ -218,7 +179,6 @@ export const groupOf = (status: string): LaneGroup =>
         ? "unsupported"
         : "pending";
 
-/** The counts a lane page prints: how much of the lane is real. */
 export const summarize = (rows: ReadonlyArray<InventoryRow>): LaneSummary => {
   const shipped = rows.filter(
     (row) => groupOf(row.status) === "shipped",
@@ -226,7 +186,6 @@ export const summarize = (rows: ReadonlyArray<InventoryRow>): LaneSummary => {
   return { total: rows.length, shipped, pending: rows.length - shipped };
 };
 
-/** One run of a note: inline code, bold, or plain text. */
 export interface Span {
   readonly text: string;
   readonly code: boolean;
@@ -235,10 +194,6 @@ export interface Span {
 
 const spanPattern = /(`[^`]*`|\*\*[^*]+\*\*)/g;
 
-/**
- * Split a note's inline Markdown so a table can render `<code>` and `<strong>`
- * without handing the cell to an MDX pipeline. An unclosed marker stays text.
- */
 export const spans = (text: string): ReadonlyArray<Span> =>
   text
     .split(spanPattern)

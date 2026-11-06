@@ -15,16 +15,6 @@ import {
 } from "./auth-blocks";
 import { blockList } from "./blocks";
 
-/**
- * The auth blocks.
- *
- * The previews are illustrations, but every control a reader is told to look
- * for has to reach the markup: the forgot-password and sign-up links, both
- * OAuth buttons, the terms checkbox, six code cells and the reserved status
- * row. The validation tables are the rules behind the states; a missing check
- * would make the preview succeed on input the real form must refuse.
- */
-
 const text = (markup: string): string =>
   markup
     .replaceAll("&#x27;", "'")
@@ -36,7 +26,6 @@ const css = readFileSync(
   "utf8",
 );
 
-/** The declarations of the first `selector { … }` block in the style sheet. */
 const rule = (selector: string): string => {
   const start = css.indexOf(`${selector} {`);
   return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
@@ -61,9 +50,6 @@ describe("login block", () => {
   });
 
   it("opens on the reference's heading and sentence, with no mark", () => {
-    // The card is the reference the page was asked to reproduce: the head is
-    // the title and one sentence, and a site mark above the form was neither
-    // part of it nor part of the shipped `CardHeader`.
     expect(markup).toContain(
       '<h3 class="gx-auth-title">Login to your account</h3>',
     );
@@ -75,17 +61,13 @@ describe("login block", () => {
   });
 
   it("labels its fields as the shipped Field does, on a divider", () => {
-    // The preview painted each label as a 10px uppercase mono eyebrow; the
-    // shipped `FieldLabel` is 14px medium sans in the body role, so the drawing
-    // now names the control rather than annotating a diagram.
     expect(markup).toContain('class="gx-auth-label"');
     expect(markup).not.toContain("gx-block-label");
     expect(markup).toContain('class="gx-auth-divider"');
     expect(rule(".gx-auth-label")).toContain("font-size: 14px");
     expect(rule(".gx-auth-label")).not.toContain("text-transform");
     expect(rule(".gx-auth-card")).toContain("gap: 14px");
-    // At rest the reserved note is absent, so the primary action and the
-    // divider are not separated by an empty row.
+
     expect(rule(".gx-auth-status:empty")).toContain("display: none");
   });
 
@@ -192,7 +174,6 @@ describe("the sign-in page", () => {
     expect(markup).toContain('href="/#features"');
     expect(markup).toContain('href="/#pricing"');
     expect(markup).toContain('href="/introduction"');
-    expect(text(markup)).toContain("The same components, one theme away.");
   });
 
   it("prints the whole form, the providers and the account footer", () => {
@@ -240,12 +221,6 @@ describe("the sign-in page", () => {
 
 describe("the auth surface's placement", () => {
   it("keeps one auth entry in Blocks, and it is the full page", () => {
-    // The `fullBleed` flag this case read is gone with the preview frame: every
-    // block page now paints its scene at the column's width, so "fills the
-    // preview" is no longer a per-block choice. What makes the sign-in entry a
-    // page is its own markup — navbar, body, quote panel — which the render
-    // check below holds; the registry keeps exactly one auth entry beside the
-    // auth cards on `/components/auth`.
     const auth = blockList.filter((block) =>
       ["login", "signup", "forgot-password", "otp", "sign-in"].includes(
         block.slug,

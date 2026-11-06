@@ -1,85 +1,43 @@
 import { packageCollections } from "./collection-routes";
 import type { ComponentEntry } from "./component-index";
 
-/**
- * The example registry.
- *
- * Every package ships a worked example beside its components — a screen with
- * caller-owned state, not a prop gallery. The site had no way to see them: a
- * reader learned an example's file name from the page it happened to be
- * documented on. This module turns the files themselves into rows, so a new
- * example appears on `/examples` with no docs change and a deleted one
- * cannot leave a dead row.
- *
- * Pure: `examples-data.ts` supplies the files and the page index.
- */
-
-/** One example file, as the build read it. */
 export interface ExampleSource {
-  /** Repository-relative: `packages/components/examples/card.example.tsx`. */
   readonly file: string;
   readonly source: string;
 }
 
-/** One row the page renders. */
 export interface ExampleEntry {
-  /** The registry id: `card`, `number-field`. */
   readonly id: string;
-  /** The owning page's title when it has one, else the id in title case. */
+
   readonly title: string;
-  /** The example's own first sentence, from its header comment. */
+
   readonly summary: string;
   readonly packageName: string;
-  /** The sidebar section the package's pages fill: `Primitives`, `Components`. */
+
   readonly section: string;
   readonly file: string;
-  /** The page this example illustrates, or the lane index when it spans several. */
+
   readonly url: string;
-  /** The fragment the registry row answers to: `<package>-<id>`, e.g. `components-switch`. */
+
   readonly anchor: string;
-  /** True when no single page owns the example. */
+
   readonly grouped: boolean;
   readonly source: string;
 }
 
-/**
- * The fragment one example row answers to.
- *
- * A package's `examples` directory cannot hold the same id twice, so the pair
- * names one file and one row. A bare id would repeat (`form` ships in both
- * packages), and a page's title could be edited without the link moving.
- */
 export const exampleAnchor = (entry: {
   readonly packageName: string;
   readonly id: string;
 }): string => `${entry.packageName}-${entry.id}`;
 
-/** The files the registry reads: one package's `examples` directory. */
 const filePattern = /^packages\/([^/]+)\/examples\/([^/]+)\.example\.tsx$/;
 
-/**
- * Where a package's examples are documented.
- *
- * A package collection carries its pages' route and sidebar section; a package
- * whose examples are documented on a lane page has the same two facts without
- * pages of its own.
- */
 export interface ExampleHome {
-  /** The route an example with no page of its own links to. */
   readonly route: string;
-  /** The section the examples registry groups its rows under. */
+
   readonly section: string;
 }
 
-/**
- * A package whose examples are documented on a lane page, not in a collection
- * of its own.
- *
- * `@gpuixui/data` ships a table example before it ships component pages, and an
- * example with no home would vanish from the registry while sitting on disk —
- * so its row points at the lane that documents the package's rows. A package
- * that gains a `docs` collection takes over automatically.
- */
 const laneHomes: ReadonlyArray<{
   readonly packageName: string;
   readonly home: ExampleHome;
@@ -90,13 +48,11 @@ const laneHomes: ReadonlyArray<{
   },
 ];
 
-/** The collection an example belongs to: the package's pages, or its lane. */
 export const collectionOf = (packageName: string): ExampleHome | undefined =>
   packageCollections.find(
     (collection) => collection.dir === `packages/${packageName}/docs`,
   ) ?? laneHomes.find((lane) => lane.packageName === packageName)?.home;
 
-/** `number-field` → `Number field`: a fallback title, never a replacement. */
 const titleCase = (id: string): string => {
   const words = id.split("-");
   const [first, ...rest] = words;
@@ -113,26 +69,14 @@ const sentenceCase = (text: string): string =>
     ? text
     : `${text.slice(0, 1).toUpperCase()}${text.slice(1)}`;
 
-/** The lines of one doc comment, without the ` * ` gutters. */
 const commentLines = (comment: string): ReadonlyArray<string> =>
   comment
     .split("\n")
     .map((line) => line.replace(/^\s*\*\s?/, "").trim())
     .filter((line) => line !== "");
 
-/** A directive a published file pins before its header, e.g. `@jsxImportSource`. */
 const jsxDirectives = /^(?:\s*\/\*\*\s*@jsx\w+[^*]*\*\/)+/;
 
-/**
- * The lines of a file's header comment.
- *
- * A file may open with a **directive** comment before its header — the packages
- * pin their JSX runtime with `@jsxImportSource @gpuix/react` in one — and that
- * line is an instruction to the compiler, not a description of the example, so
- * it is read past rather than read as one. Measured on the nine files under
- * `packages/data/examples`, whose every example opens that way: the registry
- * answered `JsxImportSource @gpuix/react` for each.
- */
 const headerLines = (source: string): ReadonlyArray<string> => {
   const comment = /^\s*\/\*\*([\s\S]*?)\*\//.exec(
     source.replace(jsxDirectives, ""),
@@ -140,13 +84,6 @@ const headerLines = (source: string): ReadonlyArray<string> => {
   return comment === undefined ? [] : commentLines(comment);
 };
 
-/**
- * The example's first sentence, from its own header.
- *
- * Every example opens with `<Name> example: <what it shows>.`; the summary is
- * the half after the colon, so the page cannot describe an example differently
- * from the file. A header that wraps is joined until the sentence ends.
- */
 export const summaryOf = (source: string): string | undefined => {
   const lines = headerLines(source);
   const first = lines[0];
@@ -165,13 +102,6 @@ export const summaryOf = (source: string): string | undefined => {
   return sentenceCase(end === -1 ? trimmed : trimmed.slice(0, end + 1));
 };
 
-/**
- * The one page an example illustrates.
- *
- * An exact name wins; otherwise a single page whose name starts with the id
- * (`otp` → `otp-field`). Two candidates is ambiguous, and an ambiguous match
- * would send a reader to a page the example may not prove, so it stays grouped.
- */
 export const pageFor = (
   id: string,
   route: string,
@@ -186,12 +116,6 @@ export const pageFor = (
   return prefixed.length === 1 ? prefixed[0] : undefined;
 };
 
-/**
- * The registry, ordered by sidebar section and then by title.
- *
- * A file outside `packages/*\/examples/*.example.tsx` is not an example and is
- * skipped rather than guessed at.
- */
 export const buildExamples = (
   sources: ReadonlyArray<ExampleSource>,
   pages: ReadonlyArray<ComponentEntry>,
@@ -243,26 +167,12 @@ export const buildExamples = (
   );
 };
 
-/**
- * The rows a page links back to.
- *
- * A grouped example owns no single page — it points at its lane index — so it
- * is not a page's example and is left to the registry. A page with no row
- * renders nothing rather than a guess, the same rule `StatusStrip` follows.
- */
 export const examplesForPage = (
   entries: ReadonlyArray<ExampleEntry>,
   url: string,
 ): ReadonlyArray<ExampleEntry> =>
   entries.filter((entry) => !entry.grouped && entry.url === url);
 
-/**
- * The rows a reader's query keeps.
- *
- * Every whitespace-separated term must appear in the row, so `card page` finds
- * the card example and `primitives` narrows to that lane — the same rule the
- * component index uses.
- */
 export const filterExamples = (
   entries: ReadonlyArray<ExampleEntry>,
   query: string,

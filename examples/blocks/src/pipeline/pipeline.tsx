@@ -1,12 +1,3 @@
-/**
- * Pipeline — a release pipeline in a native Mac window (plan 728).
- *
- * The anatomy is `@gpuixui/shell`'s `Window`: a source list of views and
- * projects under the traffic lights, a unified toolbar with the List/Board
- * switch, the sort and the search, the stage strip over the work, and an
- * inspector for the chosen item. Every part is the library's; nothing here
- * paints its own chrome.
- */
 import { Avatar } from "@gpuixui/components/avatar";
 import { Badge } from "@gpuixui/components/badge";
 import { Card } from "@gpuixui/components/card";
@@ -43,7 +34,6 @@ const isScope = (value: string): value is Scope =>
 const isStage = (value: string): value is Stage =>
   Arr.some(stages, (stage) => stage === value);
 
-/** One work row in the list view. */
 const Row = ({
   item,
   chosen,
@@ -79,7 +69,6 @@ const Row = ({
   );
 };
 
-/** The board view: one column per stage. */
 const Board = ({
   items,
   onChoose,
@@ -123,7 +112,6 @@ const Board = ({
   );
 };
 
-/** The chosen item's details and activity. */
 const Inspector = ({ item }: { readonly item: Option.Option<WorkItem> }) => {
   const theme = useTheme();
   return Option.match(item, {
@@ -171,7 +159,6 @@ const Inspector = ({ item }: { readonly item: Option.Option<WorkItem> }) => {
   });
 };
 
-/** The release pipeline, as a whole native window. */
 export const Pipeline = ({
   platform,
 }: {

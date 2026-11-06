@@ -9,19 +9,6 @@ import {
   CalendarSingle,
 } from "./date-picker-demo";
 
-/**
- * The Calendar and Date picker chrome.
- *
- * The bugs these guard:
- *
- * - the range window's nav spacer wore `gx-date-navbtn`, so pointing at the gap
- *   between the two months painted the button's grey hover square — a control
- *   that is not there;
- * - the caption `<select>`s were native boxes: the browser's own arrow, a tall
- *   `md` box and a `borderStrong` edge that matched neither the field nor the
- *   `Select`'s `sm` trigger.
- */
-
 const css = readFileSync(
   new URL("../../styles/demos.css", import.meta.url),
   "utf8",
@@ -32,7 +19,6 @@ interface Rule {
   readonly body: string;
 }
 
-/** Every top-level rule, with a selector list split. */
 const rules = (source: string): ReadonlyArray<Rule> => {
   const found: Array<Rule> = [];
   let from = 0;
@@ -56,7 +42,6 @@ const rules = (source: string): ReadonlyArray<Rule> => {
   }
 };
 
-/** One selector's declarations. */
 const block = (selector: string): string =>
   rules(css).find((rule) => rule.selector === selector)?.body ?? "";
 
@@ -70,13 +55,10 @@ describe("the calendar's nav spacer", () => {
   it("is never a control, on any caption or side", () => {
     for (const [, Page] of pages) {
       const html = renderToStaticMarkup(<Page />);
-      // The phantom was a `<span>` carrying the button's class, which the
-      // button's own hover rule then filled.
+
       expect(html).not.toMatch(/<span[^>]*class="[^"]*gx-date-navbtn/);
     }
 
-    // The two-month window paints one spacer on each inner edge, where the
-    // shared nav pair leaves room for the arrow the other month does not own.
     const range = renderToStaticMarkup(<CalendarRange />);
     const spacers = [
       ...range.matchAll(/<span[^>]*class="([^"]*gx-date-navspacer[^"]*)"/g),
@@ -92,8 +74,6 @@ describe("the calendar's nav spacer", () => {
     expect(spacer[0]?.body).toContain("visibility: hidden");
     expect(spacer.filter((rule) => /background/.test(rule.body))).toEqual([]);
 
-    // The pointer wash belongs to the button, so no element can take it by
-    // mere class name.
     expect(
       rules(css)
         .filter((rule) => rule.selector.includes("gx-date-navbtn:hover"))
@@ -111,7 +91,7 @@ describe("the caption selects", () => {
     expect(selects).toHaveLength(1);
 
     const style = selects[0]?.body ?? "";
-    // `appearance: none` is what removes the browser's arrow box.
+
     expect(style).toContain("appearance: none");
     expect(style).toContain("height: var(--control-height-sm)");
     expect(style).toContain("padding: 0 calc(");
@@ -121,12 +101,10 @@ describe("the caption selects", () => {
     expect(style).toContain("color: var(--input-foreground)");
     expect(style).toContain("font-size: 13px");
 
-    // The height is the shipped `sm` box, not a number that drifted.
     expect(css).toContain(
       `--control-height-sm: ${themes.light.density.controlHeight.sm}px`,
     );
 
-    // Two selects, each with the icon set's own chevron over it.
     expect(html.match(/class="gx-date-select"/g) ?? []).toHaveLength(2);
     expect(html.match(/class="gx-date-chevron"/g) ?? []).toHaveLength(2);
     expect(html).toMatch(/class="gx-date-chevron"[\s\S]{0,400}<svg/);

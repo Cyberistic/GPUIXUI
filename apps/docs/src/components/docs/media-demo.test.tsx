@@ -51,18 +51,6 @@ import {
   QR_ZONE,
 } from "./qr-code-demo";
 
-/**
- * The media lane's previews.
- *
- * Each page in `packages/media/docs` mounts a labelled browser approximation.
- * `component-preview.test.ts` holds the registry to the pages and
- * `preview-demo-render.test.tsx` mounts every demo in both palettes; what those
- * cannot see is whether the drawing still runs the package's own arithmetic.
- * These cases read the markup against the logic the component ships: the crop's
- * bars, guides and handles, the QR's module grid, the upload queue's lifecycle
- * and the three states of an image preview.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -78,8 +66,6 @@ describe("the CropArea preview", () => {
   it("paints the bars, guides and handles the package computes", () => {
     const bars = cropBars(crop, CROP_FRAME);
 
-    // The native mask is four finite bars; a preview that painted one veil
-    // rectangle would agree with the picture and not with the component.
     expect(bars.length).toBe(4);
     expect(html.match(/class="gx-crop-bar"/g)).toHaveLength(bars.length);
     expect(html).toContain(`data-side="${bars[0]?.side}"`);
@@ -96,7 +82,7 @@ describe("the CropArea preview", () => {
     expect(html).toContain(`aria-valuetext="${cropLabel(crop)}"`);
     expect(html).toContain("Crop area top left handle");
     expect(html).toContain("Crop area bottom right handle");
-    // The readout is the same sentence, so the drawing and the sliders agree.
+
     expect(
       html.match(new RegExp(cropLabel(crop), "g"))?.length,
     ).toBeGreaterThan(1);
@@ -111,8 +97,6 @@ describe("the QrCode preview", () => {
     if (Option.isNone(symbol)) return;
     const placement = qrPlacement(symbol.value, QR_SIZE, QR_ZONE);
 
-    // The symbol is not a picture of a QR code: the version is the encoder's
-    // answer for this value, and the quiet zone is inside the painted square.
     expect(symbol.value.version).toBeGreaterThanOrEqual(1);
     expect(placement.cells).toBe(symbol.value.modules + QR_ZONE * 2);
     expect(placement.side).toBeLessThanOrEqual(QR_SIZE);
@@ -136,8 +120,6 @@ describe("the QrCode preview", () => {
   });
 
   it("keeps the component's scanner-safe ink and paper", () => {
-    // A symbol is read by a camera, so the pair is deliberately not a theme
-    // role. The preview may not drift from the component's own constants.
     const source = readFileSync(
       new URL("packages/media/src/qr-code.tsx", root),
       "utf8",
@@ -168,9 +150,6 @@ describe("the ImagePreview preview", () => {
   });
 
   it("paints the box ImageZoom computes for a pointer, not a centre scale", () => {
-    // The bug guarded: the drawing's zoom was a `:hover { width:160% }` centre
-    // scale, so the spot under the pointer moved instead of staying put. The
-    // expected box comes from the component's own rule, never a snapshot.
     const pointer = { x: 180, y: 80 };
     const geometry = zoomGeometry({
       width: Option.some(PREVIEW_FRAME.width),
@@ -226,7 +205,7 @@ describe("the ImagePreview preview", () => {
     expect(source).toContain('from "@gpuixui/components/image-zoom/logic"');
     expect(source).toContain("zoomFollow");
     expect(source).toContain("zoomRest");
-    // A second lens would be a centre scale in the style sheet.
+
     expect(styles).not.toContain(".gx-preview-frame:hover");
   });
 });
@@ -259,8 +238,7 @@ describe("the FileUpload preview", () => {
     expect(twice.items.find((item) => item.id === "report")?.status).toBe(
       "error",
     );
-    // A queue with nothing in flight is returned as it was, so the preview's
-    // timer cannot repaint the whole frame for every tick.
+
     expect(advanceUploads(twice)).toBe(twice);
     expect(UPLOAD_STEP * 2).toBeCloseTo(0.4);
   });
@@ -291,12 +269,12 @@ describe("the MediaPlayer preview", () => {
     expect(html).toContain('aria-label="Playback rate"');
     expect(html).toContain('aria-label="Settings"');
     expect(html).toContain('aria-label="Fullscreen"');
-    // The timeline, its rail and the three boxes are the component's anatomy.
+
     expect(html).toContain("gx-player-timeline");
     expect(html).toContain("gx-player-buffered");
     expect(html).toContain("gx-player-fill");
     expect(html).toContain("gx-player-thumb");
-    // The poster is an image drawn per playhead, not a decoded video frame.
+
     expect(html).toContain("data:image/svg+xml");
   });
 
@@ -304,7 +282,6 @@ describe("the MediaPlayer preview", () => {
     const shares = sharesAt(0);
     const html = markup(<MediaPlayerDemo />);
 
-    // The drawing is the component's own share rule, scaled to its track.
     expect(shares.played).toBe(progressWidth(0, PLAYER_DURATION, PLAYER_TRACK));
     expect(shares.buffered).toBe(
       progressWidth(PLAYER_BUFFERED, PLAYER_DURATION, PLAYER_TRACK),
@@ -327,7 +304,7 @@ describe("the MediaPlayer preview", () => {
     PLAYER_QUALITIES.forEach((quality) =>
       expect(html).toContain(`>${quality}<`),
     );
-    // The rate the button prints is the resting rate the menus offer.
+
     expect(html).toContain(`aria-checked="true"`);
   });
 
@@ -349,8 +326,7 @@ describe("the DropZone preview", () => {
     expect(html).toContain("or pick them from the platform");
     expect(html).toContain(">Choose files<");
     expect(html).toContain("Nothing dropped yet");
-    // The picker is the browser's own, and a drop reports names rather than a
-    // path the preview could not have.
+
     expect(html).toContain('type="file"');
     expect(html).toContain("multiple");
     expect(html).not.toContain("data-disabled");

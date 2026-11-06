@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Skeleton page.
- *
- * A skeleton is a pulsing placeholder block. The preview draws the shape of a
- * card: a title line, a body line and a full-width block, with the radius and
- * circle variants. The Code tab shows the native usage.
- */
-
 export const SkeletonDemo = () => (
   <div className="gx-demo gx-demo-column gx-skel-scene">
     <div className="gx-skel-card">

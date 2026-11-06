@@ -22,14 +22,6 @@ import {
   type ChoiceStorage,
 } from "./platform-storage";
 
-/**
- * Every visitor opened the docs on the same platform: the switch had no
- * detection, so a Windows or Linux reader compared macOS previews until they
- * found the toggle, and the first visit wrote that macOS default into the store.
- * These cases hold the browser's own report, the store that overrides it, and
- * the negative controls that keep one rule from swallowing another.
- */
-
 const signals = (userAgent: string, maxTouchPoints = 0): PlatformSignals => ({
   userAgent,
   maxTouchPoints,
@@ -91,7 +83,6 @@ describe("the platform a user agent reports", () => {
   });
 
   it("opens a user agent it cannot place on macOS rather than guessing", () => {
-    // The fallback is explicit: the site's own identity is macOS.
     expect(detectPlatform(signals(""))).toBe("darwin");
     expect(detectPlatform(signals(bot))).toBe("darwin");
   });
@@ -99,14 +90,11 @@ describe("the platform a user agent reports", () => {
 
 describe("the rules that would overreach", () => {
   it("does not read an Android tablet as an iPhone", () => {
-    // The iOS rule is the three device names, not every agent with `Mobile`.
     expect(platformFamily(signals(android))).toBe("linux");
     expect(detectPlatform(signals(android))).toBe("linux");
   });
 
   it("keeps a Mac a Mac at one touch point or none", () => {
-    // Desktop mode is the same agent with more than one touch; the count, not
-    // the Macintosh string, decides.
     expect(platformFamily(signals(iPadDesktop, 0))).toBe("macos");
     expect(platformFamily(signals(iPadDesktop, 1))).toBe("macos");
   });
@@ -130,8 +118,7 @@ describe("the rules that would overreach", () => {
 describe("the Omarchy look", () => {
   it("names only a look the switch offers, and degrades to Linux's own", () => {
     expect(namesOmarchy(omarchy)).toBe(true);
-    // Until `retroStyles` ships the look, the Linux platform style is the
-    // answer; a name `lookOrder` does not offer must never be returned.
+
     expect(lookOrder).toContain(detectLook(true));
     expect(detectLook(true)).toBe(parseLook("omarchy") ?? "native");
     expect(detectLook(false)).toBe("native");
@@ -193,8 +180,6 @@ describe("the choice a visit opens with", () => {
   });
 
   it("ignores a stored value the switch cannot show", () => {
-    // A value an older build wrote must fall back to the browser's report, not
-    // reset the other axis or throw on read.
     expect(
       readRememberedChoice(
         fakeStorage([

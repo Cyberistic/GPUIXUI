@@ -1,11 +1,3 @@
-/**
- * A press on an avatar inside a row reaches the row (plan 731).
- *
- * Bug guarded: the disc paints a fill, and on 0.11.0 an element with a fill
- * takes the press itself, so a list row, a kanban card or an inbox thread did
- * nothing when the reader pressed the person's initials — every block had to
- * remember `clickThrough`, and the pipeline, inbox and kanban blocks did not.
- */
 import { describe, expect, it, vi } from "vitest";
 import { Avatar } from "../avatar.js";
 import { clickCentreOf } from "../internal/interaction.js";

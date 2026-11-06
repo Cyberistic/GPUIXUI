@@ -1,29 +1,6 @@
-/**
- * Dashboard 01 — shadcn's dashboard, at `/blocks/dashboard-01`.
- *
- * The reference is shadcn/ui's `dashboard-01`: an inset sidebar with a
- * version switcher, five nav groups, a documents header, four stat cards, an
- * interactive area chart over thirty days of traffic, and a documents table.
- *
- * Two views of one composition, like every block: the browser drawing below
- * is a reproduction of the native geometry and palette (the shipped tree
- * renders through GPUix, not the DOM), and `dashboard01Source` is the
- * `@gpuixui/*` recipe a consumer copies.
- *
- * **The charts are the point.** The reference draws one area chart; this
- * drawing shows the whole chart family — an area over thirty days, a
- * treemap of the traffic sources, a sankey of the funnel, and a sunburst of
- * the device mix — because a showcase that shows one chart shows nothing.
- *
- * The categorical colours are the library's data series, never a palette of
- * the docs' own: `--series-*` arrives from the preview surface's theme (so the
- * platform and look switch repaint the charts) and `.gx-dash` falls back to
- * the dark theme's scale on the landing, which renders outside a preview
- * surface.
- */
-
 import { useState } from "react";
-import { smoothPath } from "./chart-smooth";
+import { curvePath } from "@gpuixui/data/chart/geometry";
+import * as Option from "effect/Option";
 import {
   SbAccount,
   SbBrand,
@@ -37,9 +14,6 @@ import {
   SbShell,
 } from "./blocks/sidebar-kit";
 
-/* -- the reference's data ---------------------------------------------- */
-
-/** The reference's thirty days of traffic, in the two series it plots. */
 const TRAFFIC = [
   { date: "Apr 01", desktop: 222, mobile: 150 },
   { date: "Apr 02", desktop: 97, mobile: 180 },
@@ -73,7 +47,6 @@ const TRAFFIC = [
   { date: "Apr 30", desktop: 454, mobile: 380 },
 ] as const;
 
-/** The reference's four stat cards, in the order it lays them out. */
 const STATS = [
   {
     label: "Total Revenue",
@@ -109,7 +82,6 @@ const STATS = [
   },
 ] as const;
 
-/** The reference's documents table. */
 const DOCUMENTS = [
   {
     header: "Cover page",
@@ -161,7 +133,6 @@ const DOCUMENTS = [
   },
 ] as const;
 
-/** The nav the reference's sidebar carries. */
 const NAV = [
   { title: "Dashboard", icon: "grid" },
   { title: "Lifecycle", icon: "list" },
@@ -170,24 +141,19 @@ const NAV = [
   { title: "Team", icon: "user" },
 ] as const;
 
-/** The reference's three cloud groups, each with two items. */
 const CLOUDS = [
   { title: "Capture", active: true, items: ["Active Proposals", "Archived"] },
   { title: "Proposal", active: false, items: ["Active Proposals", "Archived"] },
   { title: "Prompts", active: false, items: ["Active Proposals", "Archived"] },
 ] as const;
 
-/* -- the drawings -------------------------------------------------------- */
-
-/** One row of a readout: a name, its value, and the colour it belongs to. */
 interface TipRow {
   readonly name: string;
   readonly value: string;
-  /** The swatch's colour. Defaults to the theme's primary. */
+
   readonly color?: string;
 }
 
-/** A readout card, placed where the pointer is. */
 interface Tip {
   readonly x: number;
   readonly y: number;
@@ -197,13 +163,6 @@ interface Tip {
   readonly rows: ReadonlyArray<TipRow>;
 }
 
-/**
- * The readout for the mark under the pointer, in the plot's own CSS pixels.
- *
- * Every chart here follows the same rule the area chart does, because the
- * reference does: the card sits at the **pointer**, not at a fixed corner, and
- * flips across the plot's midline so it never runs past an edge.
- */
 const tipFor = (
   event: React.MouseEvent<SVGElement>,
   title: string,
@@ -223,7 +182,6 @@ const tipFor = (
   };
 };
 
-/** The readout card, drawn at the pointer and flipped where it would overflow. */
 const TipCard = ({ tip }: { readonly tip: Tip }) => (
   <div
     className="gx-dash01-tip"
@@ -250,7 +208,6 @@ const TipCard = ({ tip }: { readonly tip: Tip }) => (
   </div>
 );
 
-/** The colour a cell or an arc paints in, by its slot on the series scale. */
 const SLOT_COLOURS = [
   "var(--series-1, #a7a9ff)",
   "var(--series-2, #6e9cff)",
@@ -258,19 +215,6 @@ const SLOT_COLOURS = [
   "var(--series-4, #ffde8a)",
 ] as const;
 
-/**
- * The area chart over the thirty days.
- *
- * The reference is shadcn's `chart-area-interactive`: two series **stacked**
- * on one axis, a smooth edge, a fill that fades from the line to the axis,
- * horizontal grid rules and **no value axis** — the numbers live in the
- * readout, not in a column of ticks beside the plot.
- *
- * The readout is the reference's too: Recharts places its tooltip wrapper at
- * the pointer, so the card **follows the cursor** and flips when it would run
- * past an edge. `cursor={false}`, so there is no rule across the plot; the
- * datum under the pointer is marked by a dot on each series instead.
- */
 function TrafficArea() {
   const w = 720;
   const h = 240;
@@ -292,7 +236,6 @@ function TrafficArea() {
   const step = plotW / Math.max(1, TRAFFIC.length - 1);
   const at = (value: number): number => plotBottom - (value / max) * plotH;
 
-  // One band per series: mobile on the axis, desktop above it.
   let floor = TRAFFIC.map(() => 0);
   const bands = series.map((one) => {
     const lower = floor;
@@ -303,8 +246,6 @@ function TrafficArea() {
     return { ...one, lower, upper };
   });
 
-  // The pointer, in the plot's own CSS pixels, so the card can sit where the
-  // cursor is — the way Recharts places its tooltip wrapper.
   const [pointer, setPointer] = useState<{
     readonly x: number;
     readonly y: number;
@@ -361,8 +302,7 @@ function TrafficArea() {
               </linearGradient>
             ))}
           </defs>
-          {/* The reference's grid is horizontal only: a vertical rule adds a
-              column the reader has no value to read against. */}
+          {}
           {[0, 0.25, 0.5, 0.75, 1].map((share) => {
             const y = at(share * max);
             return (
@@ -387,8 +327,12 @@ function TrafficArea() {
                 y: at(value),
               }))
               .reverse();
-            const line = smoothPath(top);
-            const area = `${line} L${bottom[0]?.x.toFixed(1)},${bottom[0]?.y.toFixed(1)} ${smoothPath(bottom).slice(1)} Z`;
+            const line = Option.getOrElse(curvePath(top, "smooth"), () => "");
+            const under = Option.getOrElse(
+              curvePath(bottom, "smooth"),
+              () => "",
+            );
+            const area = `${line} L${bottom[0]?.x.toFixed(1)},${bottom[0]?.y.toFixed(1)} ${under.slice(1)} Z`;
             return (
               <g key={band.key}>
                 <path d={area} fill={`url(#gx-dash01-${band.id})`} />
@@ -458,13 +402,6 @@ function TrafficArea() {
   );
 }
 
-/**
- * The treemap of the traffic sources.
- *
- * Each cell's **area** is its share of the whole, and the cells are squared:
- * the largest source takes a strip of its own and the rest fill what is left,
- * so the picture is the proportions rather than a grid.
- */
 function SourceTreemap() {
   const w = 300;
   const h = 208;
@@ -603,13 +540,6 @@ function SourceTreemap() {
   );
 }
 
-/**
- * The sankey of the funnel.
- *
- * A node's **height** is the flow through it and a ribbon's **thickness** the
- * flow it carries, so the picture is the funnel: a wide start, a narrower
- * middle, a thin end.
- */
 function FunnelSankey() {
   const w = 300;
   const h = 208;
@@ -638,8 +568,6 @@ function FunnelSankey() {
         className="gx-dash01-sankey"
         onMouseLeave={() => setTip(null)}
         onMouseMove={(event) => {
-          // A mark's own handler sets the card and this one sees the event
-          // bubble; only a move over the plot itself clears it.
           if (event.target === event.currentTarget) setTip(null);
         }}
         role="img"
@@ -738,12 +666,6 @@ function FunnelSankey() {
   );
 }
 
-/**
- * The sunburst of the device mix.
- *
- * Each arc's angle is its value's share of the whole, and the rings are drawn
- * from the centre out.
- */
 function DeviceSunburst() {
   const size = 300;
   const centre = size / 2;
@@ -756,7 +678,6 @@ function DeviceSunburst() {
     { name: "Other", value: 8, slot: 3 },
   ] as const;
 
-  // The arcs are laid out from twelve o'clock, clockwise.
   let angle = -Math.PI / 2;
   const arcs = devices.map((device) => {
     const sweep = (device.value / 100) * Math.PI * 2;
@@ -825,9 +746,6 @@ function DeviceSunburst() {
   );
 }
 
-/* -- the block ----------------------------------------------------------- */
-
-/** The reference's four stat cards. */
 function StatCards() {
   return (
     <div className="gx-dash01-cards">
@@ -852,7 +770,6 @@ function StatCards() {
   );
 }
 
-/** The reference's documents table. */
 function DocumentsTable() {
   return (
     <div className="gx-dash01-table-wrap">
@@ -891,7 +808,6 @@ function DocumentsTable() {
   );
 }
 
-/** The reference's page: an inset sidebar, a header, and the content. */
 export function Dashboard01Render() {
   return (
     <SbShell>
@@ -989,16 +905,6 @@ export function Dashboard01Render() {
   );
 }
 
-/* -- the recipe ---------------------------------------------------------- */
-
-/**
- * The `@gpuixui/*` recipe a consumer copies.
- *
- * The charts are `@gpuixui/data`'s own: an `AreaChart` over the same thirty
- * days, a `TreemapChart` of the sources, a `SankeyChart` of the funnel and a
- * `SunburstChart` of the devices. The config is shadcn's `ChartConfig`, and
- * the colours are the theme's own series.
- */
 export const dashboard01Source = `import { Badge } from "@gpuixui/components/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@gpuixui/components/card";
 import {
@@ -1087,7 +993,6 @@ export function Devices() {
   );
 }`;
 
-/** The packages the recipe uses. */
 export const dashboard01Packages = [
   "@gpuixui/components",
   "@gpuixui/data",

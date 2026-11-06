@@ -1,15 +1,3 @@
-/**
- * `file-drop` — the runtime's Finder-style file drop.
- *
- * A file picker inside a desktop app needs the OS drop path, not a web
- * `DataTransfer`: the renderer dispatches `FileDrop::Entered` then `Submit`, and
- * `onFileDrop` receives absolute paths. The probe proves the payload arrives in
- * order, and that a drop outside the zone reaches no handler — so a drop target
- * is a real region rather than the whole window.
- *
- * The renderer's own `nativeSimulateFileDrop` drives it, which is the same path
- * a Finder drag takes, so this is a measurement rather than a claim.
- */
 import { useState } from "react";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
@@ -73,9 +61,6 @@ export const fileDropScenario: ScenarioBody = {
         Option.fromNullishOr(ctx.host.bounds("drop-outside")),
       );
 
-      // A text field focused by an earlier scenario keeps the platform's text
-      // input session alive; a press elsewhere ends it, so the drop reaches the
-      // zone rather than the unmounted field's session.
       ctx.host.click("drop-outside");
       ctx.host.fileDrop("drop-zone", ["/tmp/alpha.txt", "/tmp/beta.txt"]);
       yield* ctx.expectEqual(

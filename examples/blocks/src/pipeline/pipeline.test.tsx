@@ -1,10 +1,3 @@
-/**
- * The pipeline block in the real GPUix renderer (plan 728).
- *
- * Bugs guarded: a stage strip that does not change the rows, a row press that
- * does not fill the inspector, a sidebar scope that leaves the list unchanged,
- * and a Board switch that keeps the list.
- */
 import { createTestRoot } from "@gpuix/react/testing";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -14,7 +7,6 @@ import { Pipeline } from "./pipeline.js";
 
 const theme = platformTheme(lightTheme, "darwin");
 
-// The first mount loads the native binding and its fonts.
 vi.setConfig({ testTimeout: 20_000 });
 
 let unmount = () => {};
@@ -45,7 +37,6 @@ const press = (r: Renderer, testId: string) => {
 const present = (r: Renderer, ids: ReadonlyArray<string>) =>
   ids.filter((id) => r.findByTestId(id) !== undefined).length;
 
-/** How many work rows the list paints. */
 const rows = (r: Renderer) =>
   present(
     r,
@@ -93,8 +84,6 @@ describe("the pipeline block", () => {
   });
 
   it("chooses a card pressed on the board", () => {
-    // Bug guarded: the card sat in a click wrapper, and a press on the card's
-    // own fill never reached it.
     const r = mount();
     press(r, "segment-board");
     press(r, "card-w9");

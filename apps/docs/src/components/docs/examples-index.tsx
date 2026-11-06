@@ -4,16 +4,6 @@ import { examples } from "../../lib/examples-data";
 import { filterExamples, type ExampleEntry } from "../../lib/examples";
 import { gitConfig } from "../../lib/shared";
 
-/**
- * The example registry, filterable.
- *
- * The rows are generated from `packages/*\/examples/*.example.tsx`
- * (`examples-data.ts`), so the page cannot list an example that does not exist.
- * The source is a **reading** aid, not a preview: these are GPUix modules, and
- * a browser rendering of them would be the fake native preview .agents/slop/MISSION.md
- * forbids. It stays collapsed until a reader asks for it.
- */
-
 const sectionsOf = (
   entries: ReadonlyArray<ExampleEntry>,
 ): ReadonlyArray<string> =>

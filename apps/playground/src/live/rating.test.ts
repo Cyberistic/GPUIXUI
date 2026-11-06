@@ -1,19 +1,3 @@
-/**
- * Holds the `rating-lifecycle` fixture, the probe that paints it and the
- * section a plan reads.
- *
- * The bug this guards: a rating states its paint as roles — `primary` for a
- * filled star, `mutedForeground` for an empty one, `destructive` for a failed
- * validation — and a **half** star as the filled glyph inside a box clipped at
- * the star's midpoint. The package's suites read the element tree and the
- * icons' `style.color`, so a role that never reached the glass, or a clip that
- * cut the wrong half, would pass them. The probe answers both from a capture,
- * and the four readings below are what this suite holds: the empty star, the
- * filled one, the half's two halves and the disabled fill's half opacity.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -48,13 +32,11 @@ const probe = read("./rating-probe.tsx");
 const registry = read("./registry.ts");
 const readme = read("../../README.md");
 
-/** The probe's own steps, so a count cannot be read out of another probe. */
 const stepsOf = (): string => {
   const start = probe.indexOf("export const ratingSteps");
   return start === -1 ? "" : probe.slice(start);
 };
 
-/** This probe's README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `rating-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -63,12 +45,6 @@ const sectionOf = (): string => {
   return readme.slice(start, end === -1 ? undefined : end);
 };
 
-/**
- * A role as channels.
- *
- * An unreadable role gives black, which every assertion below then fails: the
- * fallback cannot make a bad palette pass.
- */
 const channels = (hex: string) =>
   Option.getOrElse(rgbOf(hex), () => ({ r: 0, g: 0, b: 0 }));
 
@@ -96,9 +72,6 @@ describe("the readout", () => {
 
 describe("the star's inks", () => {
   it("keeps every role further apart than the paint tolerance", () => {
-    // A tolerance that reached another role would let an empty star's outline
-    // stand in for a filled one, and the probe's zero claims would pass as the
-    // wrong paint.
     expect(STAR_INK_TOLERANCE).toBeGreaterThan(0);
     expect(inkDistance(primary.r, primary.g, primary.b, muted)).toBeGreaterThan(
       STAR_INK_TOLERANCE,
@@ -112,8 +85,6 @@ describe("the star's inks", () => {
   });
 
   it("counts a partly covered glyph pixel and refuses the page and the other role", () => {
-    // A 16-point outline star is a 1.33-point stroke, so its closest pixel is a
-    // blend toward the surface — the shape the exclusive-choice menu measured.
     const edge = channels(
       blend(palettes.dark.colors.primary, palettes.dark.colors.background, 0.1),
     );
@@ -138,8 +109,7 @@ describe("the star's inks", () => {
     ).toBe(
       blend(palettes.dark.colors.primary, palettes.dark.colors.background, 0.5),
     );
-    // The composite is not the role itself: that is why the probe reads two
-    // inks for a disabled star.
+
     expect(
       inkDistance(
         primary.r,
@@ -165,8 +135,7 @@ describe("the probe", () => {
     expect(probe).toContain("RATING_IDS.invalid");
     expect(probe).toContain("RATING_IDS.disabled");
     expect(probe).toContain("RATING_IDS.interactive");
-    // Five one-star readings (a group's box is then exactly one star) and the
-    // five-star group the steps drive: one `Rating` per row, no second harness.
+
     expect(Arr.fromIterable(probe.matchAll(/<Rating\b/g))).toHaveLength(6);
     expect(probe).toContain("max={1}");
     expect(probe).toContain("max={RATING_STARS}");
@@ -212,8 +181,7 @@ describe("the probe", () => {
       Arr.fromIterable(stepsOf().matchAll(/ctx\.expect\w+\(/g)),
     );
     expect(sites).toBeGreaterThan(0);
-    // The box, capture and crop helpers assert once per call, so the printed
-    // count floors the sites in the steps.
+
     expect(RATING_CHECKS).toBeGreaterThanOrEqual(sites);
   });
 });
@@ -240,8 +208,7 @@ describe("the registry and the record", () => {
 
   it("prints the readings the window took", () => {
     const section = sectionOf();
-    // One run's counts: the zero claims are the assertions; the positive ones
-    // are what a reader compares a re-run against.
+
     expect(section).toContain("**196**");
     expect(section).toContain("**270**");
     expect(section).toContain("**168**");
@@ -256,8 +223,7 @@ describe("the registry and the record", () => {
     expect(section).toContain("The role is in the glass");
     expect(section).toContain("A half star is a clip, not a tint");
     expect(section).toContain("A press owns the keyboard path");
-    // The measured surprise: the first pass cleared after pressing the
-    // disabled group and left the value at five.
+
     expect(section).toContain("left the value at **5**");
   });
 

@@ -1,23 +1,3 @@
-/**
- * `file-tree-lifecycle`: the shipped `@gpuixui/files` `FileTree` in a window.
- *
- * The headless `virtual-tree-lifecycle` scenario measured the runtime's
- * `<virtual-list>` around a probe-local flattening, and the Tier 4 *File trees*
- * row cites it for the shipped tree. This probe mounts the **component**: its
- * declarative parts built from a flat path list, its folder press, its file
- * press, its one tab stop and its definite height.
- *
- * What a window alone answers: whether a folder press opens only its subtree
- * and reports no selection, whether a file press selects it, whether arrow keys
- * move native focus row by row, and whether the `height` prop is a scroller
- * rather than a clip.
- *
- * Every check is a `ctx.expect*` at the step that makes it — the helpers only
- * read — so the count the README prints is the number of assertion sites.
- *
- * Captures: `file-tree-open`.
- */
-
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -55,13 +35,11 @@ import {
 } from "./file-tree.js";
 import { settleUntil } from "./settle.js";
 
-/** The one capture: the tree with a folder open and a file selected. */
 const CAPTURE = "file-tree-open";
 
 const CAPTION =
   "The shipped FileTree: a folder press opens only its own subtree, a file press selects it, the arrow keys move native focus, and the height the tree was handed is a scroller.";
 
-/** The parts for one path list, so the probe mounts the component's own tree. */
 const renderNodes = (
   nodes: ReadonlyArray<FileNode>,
 ): ReadonlyArray<ReactNode> =>
@@ -75,7 +53,6 @@ const renderNodes = (
     ),
   );
 
-/** The view: the shipped tree over a flat path list and its readout. */
 export const FileTreeProbe = (): ReactNode => {
   const theme = useTheme();
   const [state, setState] = useState<FileTreeState>(FILE_TREE_REST);
@@ -126,7 +103,6 @@ export const FileTreeProbe = (): ReactNode => {
   );
 };
 
-/** The probe's steps: open a folder, scroll, choose, walk by keyboard. */
 export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(FILE_TREE_IDS.tree);
@@ -134,32 +110,27 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     type Failure = Smoke.SmokeAssertionError | Smoke.SmokeHostError;
 
-    /** The readout once it reports `expected`, which a press reports a frame later. */
     const readout = (expected: string): Effect.Effect<string, Failure> =>
       settleUntil(ctx.host.text(FILE_TREE_IDS.readout), (line) =>
         line.includes(expected),
       );
 
-    /** The element that holds native focus, or `none`. */
     const focused = (): Effect.Effect<string, Smoke.SmokeHostError> =>
       Effect.map(ctx.host.focused(), (id) =>
         Option.getOrElse(Option.fromNullishOr(id), () => "none"),
       );
 
-    /** Whether an id paints a box at all, so a row's absence is read, not assumed. */
     const painted = (
       testId: string,
     ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
       Effect.map(ctx.host.bounds(testId), (bounds) => bounds !== null);
 
-    /** A reader's press on a row: move onto it, then press it. */
     const press = (path: string): Effect.Effect<void, Smoke.SmokeHostError> =>
       Effect.gen(function* () {
         yield* ctx.host.hover(fileTreeRow(path));
         yield* ctx.host.click(fileTreeRow(path));
       });
 
-    // ── At rest: four roots, folded children, one definite height ────────────
     yield* ctx.expectEqual(
       "the readout starts empty and reports nothing open",
       yield* readout(fileTreeReadout(FILE_TREE_REST)),
@@ -201,7 +172,6 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // ── A press on a folder opens only its subtree and selects nothing ───────
     yield* press(FILE_TREE_SRC);
     yield* ctx.expectEqual(
       "the readout reports the open folder and no selection",
@@ -224,7 +194,6 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // ── The two rows the folder opened sit below the box, and it scrolls ─────
     const opened = yield* ctx.expectSome(
       "the sixth row lays out its box",
       Option.fromNullishOr(
@@ -276,7 +245,6 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── A press on a file selects it and leaves the folder open ─────────────
     yield* press(FILE_TREE_README);
     yield* ctx.expectEqual(
       "a press on a file selects it and reports it once",
@@ -289,7 +257,6 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── Back to the top, where the keyboard starts ──────────────────────────
     yield* ctx.host.wheel(FILE_TREE_IDS.tree, 0, FILE_TREE_SCROLL);
     const rested = yield* settleUntil(
       Effect.map(
@@ -304,7 +271,6 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── One tab stop, and the keys move native focus row by row ──────────────
     yield* press(FILE_TREE_BUTTON);
     yield* Effect.sleep(Duration.millis(200));
     yield* ctx.expectEqual(
@@ -341,6 +307,5 @@ export const fileTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       fileTreeRow(FILE_TREE_README),
     );
 
-    // Captures come last: a screenshot stalls the animation clock.
     yield* ctx.host.capture(CAPTURE);
   });

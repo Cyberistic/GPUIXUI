@@ -1,14 +1,3 @@
-/**
- * The magnetic arithmetic.
- *
- * The bugs these guard: a pull that does not reach zero at the centre (the plate
- * would sit off-centre at rest); a pull that scales with the surface rather than
- * its distance (a wide card would yank); an uncapped pull that walks the content
- * out of the box; an axis that is not capped on its own; a `NaN` strength or
- * reach reaching the runtime; and a repeated pointer reading that paints a new
- * offset so the plate never rests.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   magneticFrames,
@@ -19,7 +8,6 @@ import {
   samePull,
 } from "./logic.js";
 
-/** A 200 × 80 surface at (100, 50). */
 const box = { x: 100, y: 50, width: 200, height: 80 };
 
 describe("magneticPull", () => {
@@ -28,7 +16,6 @@ describe("magneticPull", () => {
   });
 
   it("follows a share of the distance from the centre", () => {
-    // 40 px right of centre at the house share of 0.35 is 14, capped at 12.
     expect(magneticPull({ x: 240, y: 90 }, box, 0.35, 100)).toEqual({
       left: 14,
       top: 0,
@@ -47,7 +34,6 @@ describe("magneticPull", () => {
   });
 
   it("caps one axis without touching the other", () => {
-    // Far right, centre line: a horizontal pull only.
     expect(magneticPull({ x: 900, y: 90 }, box)).toEqual({
       left: magneticReach,
       top: 0,
@@ -75,7 +61,6 @@ describe("magneticPull", () => {
   });
 
   it("rounds to a tenth of a pixel so a held pointer paints one value", () => {
-    // 5 px right of centre at the house share is 1.75, painted as 1.8.
     expect(magneticPull({ x: 205, y: 90 }, box, 0.35, 100)).toEqual({
       left: 1.8,
       top: 0,

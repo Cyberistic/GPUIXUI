@@ -1,12 +1,3 @@
-/**
- * Display formatting: what the LCD paints, not what the engine computes.
- *
- * The fx-991ES stores 15 digits and shows 10; it can show an exact fraction,
- * `π` form or `√` form beside a decimal. This module owns those decisions, the
- * Norm/Fix/Sci rules, the sexagesimal form, BASE-N widths and the S⇔D alternate
- * — all from the setup, never from scattered options.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { Fraction } from "mathjs";
@@ -23,11 +14,10 @@ import type {
 import { isReal } from "./value.js";
 
 export interface FormattedValue {
-  /** The primary display line. */
   readonly text: string;
-  /** Grid rows for a matrix or vector; one row for a scalar. */
+
   readonly rows: ReadonlyArray<string>;
-  /** The other form the S⇔D key would show, when there is one. */
+
   readonly alternate: Option.Option<string>;
 }
 
@@ -69,7 +59,6 @@ const scientific = (value: number, significant: number): string => {
   return `${trimZeros(mantissa.toFixed(digits))}×10${superscript(exponent)}`;
 };
 
-/** The decimal reading under the current number format. */
 export const formatDecimal = (value: number, setup: Setup): string => {
   if (!Number.isFinite(value)) return "Math ERROR";
   if (value === 0) return "0";
@@ -272,7 +261,6 @@ const realFormat = (
   return { primary, alternate };
 };
 
-/** Engineering notation: the exponent is a multiple of three. */
 export const formatEngineering = (value: number, setup: Setup): string => {
   if (value === 0 || !Number.isFinite(value))
     return formatDecimal(value, setup);
@@ -284,7 +272,6 @@ export const formatEngineering = (value: number, setup: Setup): string => {
   );
 };
 
-/** Format one value for the display. */
 export const formatValue = (value: CalcValue, setup: Setup): FormattedValue => {
   if (value._tag === "real") {
     const formatted = realFormat(value, setup);

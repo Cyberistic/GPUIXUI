@@ -1,33 +1,15 @@
-/**
- * The reference set, mapped one-to-one onto this package.
- *
- * Every example shadcn's charts app ships is named here with the native chart
- * that answers it, the option that makes it, and the page preview it appears
- * in. The map is the parity claim, so it is checked rather than trusted: a
- * native part that does not exist, an option the page does not document, and a
- * preview mode the site does not serve each fail the suite.
- *
- * A row is **native** when the shipped component paints it, **approximated**
- * when the browser scene is the only rendering, and **unsupported** when the
- * runtime cannot paint it — with the reason in the note. The unsupported rows
- * are the honest gap, not a plan.
- */
-
-/** How close a reference example is to the shipped chart. */
 export type ParityStatus = "native" | "approximated" | "unsupported";
 
-/** One reference example and the native answer to it. */
 export interface ParityEntry {
-  /** The reference example's id, as its file names it. */
   readonly example: string;
-  /** The shipped chart that answers it. */
+
   readonly native: string;
-  /** The option that makes the example's shape. */
+
   readonly option: string;
-  /** The page preview the example appears under. */
+
   readonly mode: string;
   readonly status: ParityStatus;
-  /** Why a row is not native; required for `unsupported`. */
+
   readonly note?: string;
 }
 
@@ -40,9 +22,7 @@ const e = (
   note?: string,
 ): ParityEntry => ({ example, native, option, mode, status, note });
 
-/** Every example the reference charts app ships, and this package's answer. */
 export const parity: ReadonlyArray<ParityEntry> = [
-  // Area
   e("chart-area-axes", "AreaChart", "axis", "area-variants"),
   e("chart-area-default", "AreaChart", "gradient", "area"),
   e("chart-area-gradient", "AreaChart", "gradient", "area"),
@@ -60,7 +40,7 @@ export const parity: ReadonlyArray<ParityEntry> = [
   e("chart-area-stacked", "AreaChart", "stacked", "area"),
   e("chart-area-stacked-expand", "AreaChart", "stacked", "area"),
   e("chart-area-step", "AreaChart", "curve", "area-variants"),
-  // Bar
+
   e("chart-bar-active", "BarChart", "activeBand", "bar-variants"),
   e("chart-bar-default", "BarChart", "radius", "bars"),
   e("chart-bar-horizontal", "BarChart", "orientation", "bar-variants"),
@@ -71,7 +51,7 @@ export const parity: ReadonlyArray<ParityEntry> = [
   e("chart-bar-multiple", "BarChart", "series", "bars"),
   e("chart-bar-negative", "BarChart", "series", "bar-variants"),
   e("chart-bar-stacked", "StackedBar", "percent", "bars"),
-  // Line
+
   e("chart-line-default", "LineChart", "lineWidth", "lines"),
   e("chart-line-dots", "LineChart", "dots", "line-variants"),
   e("chart-line-dots-colors", "LineChart", "colors", "line-variants"),
@@ -82,7 +62,7 @@ export const parity: ReadonlyArray<ParityEntry> = [
   e("chart-line-linear", "LineChart", "curve", "line-variants"),
   e("chart-line-multiple", "LineChart", "series", "lines"),
   e("chart-line-step", "LineChart", "curve", "line-variants"),
-  // Pie
+
   e("chart-pie-donut", "DonutChart", "innerRadius", "pie"),
   e("chart-pie-donut-active", "DonutChart", "activeIndex", "pie-interactive"),
   e("chart-pie-donut-text", "DonutChart", "centerLabel", "pie"),
@@ -101,7 +81,7 @@ export const parity: ReadonlyArray<ParityEntry> = [
     "native",
     "each datum owns a concentric band",
   ),
-  // Radar
+
   e("chart-radar-default", "RadarChart", "fill", "radar"),
   e("chart-radar-dots", "RadarChart", "dots", "radar"),
   e("chart-radar-grid-circle", "RadarChart", "gridShape", "radar"),
@@ -121,14 +101,14 @@ export const parity: ReadonlyArray<ParityEntry> = [
   e("chart-radar-lines-only", "RadarChart", "fill", "radar-variants"),
   e("chart-radar-multiple", "RadarChart", "series", "radar"),
   e("chart-radar-radius", "RadarChart", "radius", "radar"),
-  // Radial
+
   e("chart-radial-grid", "RadialChart", "grid", "radial-variants"),
   e("chart-radial-label", "RadialChart", "showLabels", "radial-variants"),
   e("chart-radial-shape", "RadialChart", "rounded", "radial-rounded"),
   e("chart-radial-simple", "RadialChart", "data", "radial"),
   e("chart-radial-stacked", "RadialChart", "data", "radial"),
   e("chart-radial-text", "RadialChart", "centerLabel", "radial"),
-  // Tooltip and legend
+
   e("chart-tooltip-advanced", "BarChart", "tooltip", "tooltip"),
   e("chart-tooltip-default", "BarChart", "tooltip", "tooltip"),
   e("chart-tooltip-formatter", "BarChart", "valueFormat", "tooltip-variants"),

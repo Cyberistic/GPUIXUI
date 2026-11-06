@@ -72,10 +72,3 @@ import {
 `80` mean the same shares as `0.2` and `0.8`, and `normalizePanels` rescales a
 set that does not add up. The parts are declarations — they paint nothing — so
 the group keeps the single tab stop a divider needs.
-
-## Notes
-- The layout is **controlled**: resize and collapse report through `onLayoutChange`.
-- Fractions need not sum to one; `normalizePanels` rescales them.
-- A collapsed pane's content leaves the tree and the remaining panes fill the gap.
-- The preview is a fixed 620px drawing: a divider's 16px step is converted against that frame, while the shipped group measures its own pane space in `onLayout`.
-- The preview's collapse header is a real `<button>`; the shipped pane header is the primitives' `Button`, so the two agree about activation and differ about the element.

@@ -1,11 +1,5 @@
-/**
- * A theme magnified k× for the film's macro shots: every length the tokens own
- * scales, so a control renders natively large instead of being upscaled.
- * Colours, weights and unitless ratios are not lengths and stay put.
- */
 // TODO: `Avatar` sizes from a fixed table (`avatarPixels`), not the theme, so it
-// stays 1× under a magnified theme; theme-driven diameters would fix the film's
-// terminal shot and any HiDPI terminal app.
+
 import type { Theme } from "@gpuixui/tokens";
 
 const unitless = new Set(["fontWeight", "opacity", "name", "mode", "contrast"]);

@@ -8,21 +8,6 @@ import { publicSymbolIndex } from "../../lib/public-symbols-data";
 import { filterSymbols } from "../../lib/public-symbols";
 import { ApiReferenceView } from "./api-reference";
 
-/**
- * The reference page's symbol links and its filter.
- *
- * The page lists every name the packages publish, and the name alone does not
- * say where to read it: a reader who found `IconButton` had to guess that the
- * page sits at `/primitives/icon-button`. Every link here is resolved
- * against the mounted pages, so a row can neither point at a page the site does
- * not serve nor lose the link when a page is renamed.
- *
- * Bug guarded by the filter cases: the symbol filter was React state alone, so a
- * reader who narrowed three thousand rows to one name could not link that view —
- * a reload or a shared URL painted the whole table again, while the component
- * index and the icon gallery already carried `?q=`.
- */
-
 const noop = (): void => undefined;
 
 const markup = renderToStaticMarkup(
@@ -31,8 +16,7 @@ const markup = renderToStaticMarkup(
 const mounted = new Set(
   componentIndex
     .map((page) => page.url)
-    // A page a curated page replaces is **not served**: its address answers
-    // with a 301, so a link to it is a link to a page the reader cannot open.
+
     .filter((url) => curatedTwinOf(url) === undefined),
 );
 const linked = [...markup.matchAll(/href="(\/[^"]+)"/g)].map(
@@ -41,13 +25,8 @@ const linked = [...markup.matchAll(/href="(\/[^"]+)"/g)].map(
 
 describe("the API reference's symbol links", () => {
   it("links a symbol to the page named after the file that declares it", () => {
-    // `Button` is declared in `packages/primitives/src/components/Button.tsx`,
-    // and the page that documents it is the **curated** one: five primitives
-    // are documented in full under `/components` and their package address
-    // only answers with a 301. So the link is the page a reader can open.
     expect(markup).toContain('href="/components/button"');
-    // The row is the symbol's, not the entry point table's: the name, its
-    // module and the page are one row.
+
     const row = markup.slice(
       markup.indexOf("packages/primitives/src/components/Button.tsx") - 400,
       markup.indexOf(
@@ -71,8 +50,6 @@ describe("the API reference's symbol links", () => {
   });
 
   it("leaves a package with no docs collection unlinked", () => {
-    // `@gpuixui/tokens` ships no `/*` pages, so a link would be invented;
-    // the module path beside the name is the honest provenance.
     const tokens = publicSymbolIndex.packages.find(
       (pkg) => pkg.name === "@gpuixui/tokens",
     );
@@ -90,7 +67,7 @@ describe("the API reference's filter", () => {
   );
   const count = (html: string, needle: string): number =>
     html.split(needle).length - 1;
-  /** Body rows of both tables: every `<tr>` that is not a table's header. */
+
   const rows = (html: string): number =>
     count(html, "<tr") - count(html, "<thead");
   const symbolRows = (query: string): number =>
@@ -105,9 +82,6 @@ describe("the API reference's filter", () => {
   });
 
   it("paints exactly the rows a linked filter keeps", () => {
-    // The expected rows are the pure filter's own answer, and the row count
-    // covers both tables, so a view that renders one extra name fails even when
-    // the count line agrees with the query.
     const query = "createTheme";
     const kept = symbolRows(query);
     const filtered = renderToStaticMarkup(
@@ -133,8 +107,6 @@ describe("the API reference's filter", () => {
   });
 
   it("reads the filter off the page URL instead of state a link cannot carry", () => {
-    // The mount is what the MDX page renders; the view is the markup. A filter
-    // that never touches `location.search` is the defect these cases hold shut.
     const mount = readFileSync(
       new URL("./api-reference.tsx", import.meta.url),
       "utf8",

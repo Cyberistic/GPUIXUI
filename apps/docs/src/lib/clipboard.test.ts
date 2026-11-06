@@ -2,25 +2,12 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { writeClipboard } from "./clipboard";
 
-/**
- * Copy is a convenience the browser may withhold.
- *
- * `navigator.clipboard` exists only in a secure context, and even there a write
- * can be refused — a denied permission, a document that is not focused. The
- * theme editor, the page copy action and a block's recipe copy each await this
- * helper, and each used to call `navigator.clipboard.writeText` directly: an
- * absent API threw a `TypeError` out of the click handler, so the control could
- * not even report that the copy failed.
- */
-
 const withClipboard = (clipboard: unknown): void => {
   vi.stubGlobal("navigator", { clipboard });
 };
 
 describe("writing to the clipboard", () => {
   it("answers a browser with no clipboard as a failed copy", async () => {
-    // Node's `navigator` carries no clipboard, which is the insecure-context
-    // shape too: the property is absent rather than refusing.
     expect(navigator.clipboard).toBeUndefined();
     await expect(writeClipboard("text")).resolves.toBe(false);
   });

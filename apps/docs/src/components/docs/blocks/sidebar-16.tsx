@@ -8,10 +8,6 @@ import {
   SbTrigger,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 16 — the sticky site header above both columns: the toggle, the
- * trail and a search field, with the workspace panel beneath it.
- */
 export const Sidebar16Render = () => (
   <SbShell
     height="tall"

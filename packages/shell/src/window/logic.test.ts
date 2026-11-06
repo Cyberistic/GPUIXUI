@@ -11,14 +11,6 @@ import {
   TRAFFIC_LIGHT_INSET,
 } from "./logic.js";
 
-/**
- * The native window's geometry and the source list's keyboard (plan 722).
- *
- * Bugs guarded: a toolbar that pads 12 points beside no sidebar paints its
- * title under the close button; lights placed at y = 0 sit above the toolbar's
- * line instead of on it; and a macOS window opened without a transparent
- * titlebar stacks the system bar over the app's own.
- */
 
 const mac = platformTheme(lightTheme, "darwin");
 
@@ -54,7 +46,6 @@ describe("the lights' box", () => {
   it("is reserved only where the lights float over the toolbar", () => {
     expect(toolbarInset(true)).toBe(TRAFFIC_LIGHT_INSET);
     expect(toolbarInset(false)).toBe(12);
-    // macOS 26's three 14-point lights, 23 points apart from 20 points in, end near 79.
     expect(TRAFFIC_LIGHT_INSET).toBeGreaterThanOrEqual(86);
   });
 

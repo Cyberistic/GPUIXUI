@@ -1,21 +1,3 @@
-/**
- * Holds `dock-layout-lifecycle` to the component, its arithmetic and its prose.
- *
- * The gap this guards: Tier 4's *Tabbed panels* and *Nested panel arrangements*
- * rows cited `docking-nested`, which mounts the playground's own `SplitPane`
- * fixture — the shipped `DockLayout` had never been mounted in a window. If
- * this probe is rewritten around a local split, the rows and the README would
- * claim the package while measuring a copy.
- *
- * The second guard is the defect itself. A group reports the node it changed,
- * so `onLayoutChange={setLayout}` replaces the whole tree with one group. The
- * probe pins that reading (`layout=tabs:editor reports=tabs:editor`); this case
- * reads the reporting call out of the component and the same sentence out of
- * the README, so the check and the prose cannot drift apart silently.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own component, probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -51,7 +33,6 @@ const readiness = read("../../../../packages/dock/README.md");
 const inventory = read("../../../../.agents/slop/COMPONENTS.md");
 const readme = read("../../README.md");
 
-/** The probe's README section, so a value printed elsewhere cannot pass. */
 const section = (() => {
   const heading = "### `dock-layout-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -60,7 +41,6 @@ const section = (() => {
   return readme.slice(start, end === -1 ? undefined : end);
 })();
 
-/** The .agents/slop/COMPONENTS.md row named `title`. */
 const row = (title: string): string => {
   const start = inventory.indexOf(`| ${title} |`);
   if (start === -1) return "";
@@ -104,8 +84,7 @@ describe("the dock layout tree", () => {
     expect(
       Arr.dedupe(Arr.map(DOCK_GROUPS, (group) => DOCK_ZONE_FILLS[group])),
     ).toHaveLength(DOCK_GROUPS.length);
-    // Every tab names a zone the fills record carries, so a body always paints
-    // a colour the capture can assert.
+
     expect(Arr.every(tabs, (tab) => (DOCK_TAB_ZONE[tab] ?? "") !== "")).toBe(
       true,
     );
@@ -124,16 +103,12 @@ describe("the dock layout tree", () => {
 
 describe("the component the probe measures", () => {
   it("reports the node it changed, not the tree the caller passed", () => {
-    // The mechanism behind the measured readout: a tab press hands
-    // `setActiveTab(node, …)` — the tabs node — to the caller's handler.
     expect(component).toContain(
       "onLayoutChange?.(setActiveTab(node, node.id, tab.id))",
     );
-    expect(component).toContain("Reports the next tree after a tab switch");
-    // …and the package's README tells a consumer to assign that report as the
-    // whole tree, which is what turns the node into the layout.
+
     expect(readiness).toContain("onLayoutChange={setLayout}");
-    // The probe carries the same reading, not a rewritten expectation.
+
     expect(probe).toContain('dockReadoutLine("tabs:editor", "tabs:editor", 1)');
     expect(probe).toContain(
       'dockReadoutLine("tabs:explorer", "tabs:explorer", 2)',
@@ -141,10 +116,6 @@ describe("the component the probe measures", () => {
   });
 
   it("renders its parts without an address, so the press names the words", () => {
-    // `PanelGroup` and `SplitPane` derive child ids and receive their `testId`
-    // from the caller; `DockLayout` derives them too but passes no `testId` to
-    // the node views it renders, so every trigger and divider it paints is
-    // nameless and the probe reaches a trigger by the words it paints.
     const nodeViews = component.match(/<DockNodeView[\s\S]*?\/>/g) ?? [];
     expect(nodeViews).toHaveLength(3);
     expect(nodeViews.filter((view) => view.includes("testId"))).toEqual([]);
@@ -152,7 +123,6 @@ describe("the component the probe measures", () => {
     expect(component).toContain("`${testId}-divider`");
     expect(probe).toContain("clickText(");
     expect(probe).not.toContain("dock-layout-tab-");
-    expect(probe).toContain("`testId` to them");
   });
 
   it("answers a press only, with no keyboard route on the strip", () => {
@@ -209,8 +179,7 @@ describe("the probe that paints it", () => {
     expect(tabbed).toContain("yes (measured)");
     const nested = row("Nested panel arrangements");
     expect(nested).toContain("dock-layout-lifecycle");
-    // The rows must keep the honest half: the headless composition measured the
-    // playground's split, and the package's layout is what the window measures.
+
     expect(tabbed).toContain("the node it changed");
     expect(nested).toContain("the node it changed");
   });

@@ -46,6 +46,7 @@ blocks/settings-dialog.mdx   A modal settings window: section nav, switch, font-
 blocks/notification-centre.mdx A notification centre: filters, four row bodies, unread dots
 blocks/command-centre.mdx    A command palette over a dimmed page: filter, highlight, run line
 blocks/pipeline.mdx          A release pipeline in a native Mac window, from the compiled block
+blocks/profile-settings.mdx  A profile page with a photo, contact details and tabbed settings
 blocks/file-manager.mdx      A three-pane browser: folders, image tiles and file facts
 blocks/email-inbox.mdx       A four-pane mail client with a filterable list
 blocks/conversations.mdx     A macOS Messages window: threads, search and a composer
@@ -235,7 +236,6 @@ src/components/docs/tree-keys.ts          The browser keys both tree drawings re
 src/components/docs/window-preview.ts      The rows a viewport shows, against the window that mounts them
 src/components/docs/column-configuration-demo.tsx Show, hide, move and keyboard-resize over the column reducers
 src/components/docs/charts-demo.tsx       The chart geometry, its axis and the theme's categorical swatches
-src/components/docs/chart-smooth.ts       The monotone curve every browser drawing of a chart shares
 src/components/docs/chart-gallery.tsx     The seventeen-types contact sheet every chart's drawing is named in
 src/components/docs/key-value-demo.tsx    The list's fixed label track and the width a layout cannot paint
 src/components/docs/data-toolbar-demo.tsx The toolbar's debounced wait, its blank-name default and the rows it reports
@@ -323,9 +323,10 @@ src/components/docs/token-list.tsx       A contract's roles or surfaces, rendere
 src/components/docs/block-index.tsx       The Blocks index, one thumbnail card per block
 src/components/docs/all-blocks.tsx        The all-blocks page: every block, one row each
 src/components/docs/blocks.tsx            The block registry: Sign in, Settings, Dashboard, Dashboard management, Kanban, Settings dialog, File manager and Email inbox
-src/components/docs/block-preview.tsx     A block page: the screen at the page's own width, then its recipe
+src/components/docs/block-preview.tsx     A block page: the screen at the page's own width, its GitHub source, then its recipe
 src/components/docs/block-icons.tsx       The glyphs the block previews draw
 src/components/docs/sidebar-rail.tsx      The shared collapsible-rail toggle and state
+src/components/docs/tab-strip.tsx        The animated tab switcher every drawing shares
 src/components/docs/auth-blocks.tsx       The auth examples, the sign-in page and their recipes
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
 src/components/docs/dashboard-01.tsx      The dashboard block's captured screen
@@ -505,11 +506,6 @@ src/lib/code-theme.ts               The Shiki themes a code block highlights wit
 src/lib/remark-mermaid.ts           Turns a `mermaid` fence into a diagram at compile time
 src/lib/prompt-data.ts             The build prompt: prose plus the rows the pages generate
 src/lib/live-scene.tsx              /live's React screen, styled by the primitives' resolver
-src/lib/live-example.tsx            /live's stage for a registered native example, and its empty frame
-src/lib/native-captures.ts          The build-time native frames, looked up by component id
-src/lib/native-captures.generated.ts The platform and palette the checked-in frames were rendered on
-src/lib/live-prefetch.ts            Warms the live wasm download when a reader shows intent
-src/lib/live-wasm.ts                The browser build's wasm URL, imported lazily
 src/lib/gpuix-native.ts             The browser entry `@gpuix/native` resolves to on /live
 src/lib/block-source.test.ts        A block's copyable source, resolved against the workspace
 src/lib/gpuix-web.test.ts           The GPUix web build: browser entry, shared memory and the policy's status
@@ -821,43 +817,6 @@ page reported `status=painting`, the retained text read
 Press me,Waiting for a press`, the button sampled `#a7a9ff` at `41,113`, the
 banner `#1e222a` at `500,149`, and one press through the automation locator
 sampled `#0e5135` with "Pressed 1 time" — a React tree, a real press.
-
-### Native frames rendered at build time
-
-The component pages and the component index can show the **real** library, not
-only a drawing of it, because the wasm renderer does not need a native binding.
-`scripts/native-previews.ts` opens one cross-origin-isolated `/live` document and
-mounts every registered example in turn through
-`window.__gpuixCapture.render(id)` — the page is `?scene=examples` — then captures
-a `960`-wide WebP after the frame carries more than one colour. The frames land
-in `src/assets/native/<id>.webp` and are checked in; a whole run is 92 examples
-and roughly 657 KiB.
-
-`src/lib/native-captures.ts` resolves a component id to its frame through an
-eager `import.meta.glob`, so a prerendered page carries the image URL before any
-client JavaScript runs. `<ComponentPreview>` gains a **Native** tab when the
-page's last URL segment has a frame; the tab shows the still, names the platform
-and palette it was rendered on, and links to the same tree live. The component
-index paints the frame on the server and mounts the interactive browser demo
-after hydration, so its first paint is the real renderer too.
-
-`/live?scene=example&id=accordion` is the single-example form for a reader;
-`?scene=examples` is the batch surface the capture run drives. The server HTML
-for the example form carries the checked-in frame as a poster, and the route
-starts the wasm fetch beside the backend probe, so the real library is visible
-while the renderer boots; the canvas replaces the poster when it paints. A frame
-is one platform and one palette — switching the preview switch repaints the
-interactive demo, not the checked-in still — and the caption says so. The
-first visit still downloads and compiles the ~20 MiB module; the deploy caches
-`/assets/*` for a year (`immutable`) and Cloudflare serves Brotli, so a repeat
-visit reuses both.
-
-Run `nub run --filter @gpuixui/docs native:previews` (pass
-`--only accordion,dialog` while iterating, or `--url` to reuse a server). The
-script starts the docs server when one is not answering, uses the same headless
-Chrome driver as the live probes, and fails by id when an example paints a flat
-frame. `src/lib/native-captures.test.ts` fails when a capture names an example
-that no longer exists.
 
 ## The platform switch and the authored looks
 

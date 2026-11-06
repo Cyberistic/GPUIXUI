@@ -1,5 +1,3 @@
-/** The notes block's rules: which notes a folder shows, and a note's excerpt. */
-
 import * as Arr from "effect/Array";
 import * as Str from "effect/String";
 import type { Folder, Note } from "./data.js";

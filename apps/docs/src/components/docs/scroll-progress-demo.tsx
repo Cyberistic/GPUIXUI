@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Scroll progress page.
- *
- * The native reading line tracks how far through scrollable content the reader
- * is; the preview fills the same line from the scroll offset.
- */
-
 import { useState, type UIEvent } from "react";
 
 const rows = [

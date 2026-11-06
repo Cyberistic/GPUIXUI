@@ -1,10 +1,3 @@
-/**
- * Live GPUix 0.5.1 window probe (darwin-x64).
- *
- * Answers the question the offscreen renderer could not: in a real GPUI window,
- * do focus events fire, does the wheel scroll, and does native input work?
- * The automation driver connects over stdin because stdin is a pipe here.
- */
 import { createElement as h, useRef, useState } from "react";
 import { render } from "@gpuix/react";
 

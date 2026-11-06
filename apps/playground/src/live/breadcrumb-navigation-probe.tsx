@@ -1,27 +1,3 @@
-/**
- * The `breadcrumb-navigation-lifecycle` probe: a trail in a pane that narrows,
- * plus the two answers to a budget the shipped component offers.
- *
- * Tier 4's **Breadcrumb navigation** row was `?` — a trail looked like
- * composition, but the composition has decisions nothing had measured. The
- * shipped list wraps (`flex-wrap`), so a trail wider than its pane grows a
- * second line instead of clipping, and the component's own collapse replaces
- * the middle with an ellipsis that is deliberately not a control. This probe
- * paints the **shipped** trail twice in the same pane:
- *
- * - **No budget**: all five levels, which is what the list does on its own.
- * - **Budgeted**: the app's own trail, budgeted from the pane's `onLayout`
- *   report, whose collapsed middle is a shipped `DropdownMenuTrigger` and whose
- *   menu rows are the hidden levels.
- *
- * The steps press the narrow width, prove the first trail wraps while the
- * second stays one row, then drive the collapsed middle from both inputs: a
- * press chooses a level and returns the focus to the trigger, and a keyboard
- * open lands on the first hidden level, steps with the arrows and chooses one.
- *
- * The view and the steps live here so the measurement is one module; the
- * registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -62,20 +38,15 @@ import {
 } from "./breadcrumb-navigation.js";
 import { captureScale, colourAt, differs, type Point } from "./frame.js";
 
-/** A press and the layout pass it causes need a frame to commit. */
 const SETTLE = Duration.millis(60);
 
-/** How long a poll waits for a transition, in 20ms samples. */
 const POLLS = 100;
 
-/** The pane that holds both trails. */
 export const BreadcrumbNavigationProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
   const [pane, setPane] = useState<BreadcrumbPane>("wide");
-  // The budget is derived from the pane's own report, never from the state that
-  // asked for a width: a trail budgeted from a constant would pass at one width
-  // and overflow at the other.
+
   const [measured, setMeasured] = useState(0);
   const [page, setPage] = useState<number>(BREADCRUMB_START);
   const [selected, setSelected] = useState("none");
@@ -249,7 +220,6 @@ export const BreadcrumbNavigationProbe = (): ReactNode => {
   );
 };
 
-/** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -264,7 +234,6 @@ const paintedBox = (
     );
   });
 
-/** Whether `testId` paints nothing. */
 const unpainted = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -273,7 +242,6 @@ const unpainted = (
     Option.isNone(Option.fromNullishOr(bounds)),
   );
 
-/** The focused element's id, or `"none"` when the window holds no focus. */
 const focusedId = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<string, Smoke.SmokeHostError> =>
@@ -281,13 +249,6 @@ const focusedId = (
     Option.getOrElse(Option.fromNullishOr(id), () => "none"),
   );
 
-/**
- * Waits until `testId`'s text is `wanted`, and reports whether it arrived.
- *
- * The pane's budget moves only after a layout pass, which a state change plus a
- * press do not complete in one frame; polling for the readout keeps the check
- * about the budget rather than about the pass's duration.
- */
 const settleText = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -306,7 +267,6 @@ const settleText = (
   return attempt(POLLS);
 };
 
-/** Waits until `testId` paints, and reports whether it did. */
 const settlePainted = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -324,7 +284,6 @@ const settlePainted = (
   return attempt(POLLS);
 };
 
-/** Waits until `testId` paints nothing, and reports whether it stopped. */
 const settleGone = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -342,7 +301,6 @@ const settleGone = (
   return attempt(POLLS);
 };
 
-/** A capture and the scale its logical points convert by. */
 const capture = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -361,7 +319,6 @@ const capture = (
     return { pixels, scale };
   });
 
-/** A logical point in the window. */
 const at = (box: Smoke.Bounds, dx: number, dy: number): Point => ({
   x: box.x + dx,
   y: box.y + dy,
@@ -378,15 +335,12 @@ export const breadcrumbNavigationSteps: Smoke.AsyncSmokeScenario["steps"] = (
       breadcrumbReadout(width, page, selected);
     const deep = levelAt(BREADCRUMB_START);
 
-    /** A capture's colour at a logical point, failing by name if outside it. */
     const sample = (
       frame: { readonly pixels: Pixels.Pixels; readonly scale: number },
       point: Point,
       label: string,
     ) => ctx.expectSome(label, colourAt(frame.pixels, point, frame.scale));
 
-    // 1. The pane reports the wide width, and the budget follows it: every
-    //    level paints and nothing is hidden.
     const wide = shown(BREADCRUMB_WIDTHS.wide, BREADCRUMB_START, "none");
     yield* ctx.expectEqual(
       "the wide pane's own report sets the budget",
@@ -428,8 +382,6 @@ export const breadcrumbNavigationSteps: Smoke.AsyncSmokeScenario["steps"] = (
     );
     yield* capture(ctx, BREADCRUMB_FRAMES.wide);
 
-    // 2. A press narrows the pane, the layout report changes, and the budget
-    //    with it: the middle leaves the trail and the trigger takes its place.
     yield* ctx.host.click(BREADCRUMB_IDS.narrow);
     const narrow = shown(BREADCRUMB_WIDTHS.narrow, BREADCRUMB_START, "none");
     yield* ctx.expectEqual(
@@ -512,8 +464,6 @@ export const breadcrumbNavigationSteps: Smoke.AsyncSmokeScenario["steps"] = (
       false,
     );
 
-    // 3. The trigger is the trail's second tab stop: the root, then the menu —
-    //    a level inside a budget is reachable with no measurement of its own.
     yield* ctx.host.focusElement(BREADCRUMB_IDS.appCrumb(0));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -529,8 +479,6 @@ export const breadcrumbNavigationSteps: Smoke.AsyncSmokeScenario["steps"] = (
       BREADCRUMB_IDS.more,
     );
 
-    // 4. A press opens the shipped menu and choosing a level keeps the trail
-    //    collapsed around the chosen page, so the trigger survives.
     yield* ctx.host.click(BREADCRUMB_IDS.more);
     yield* ctx.expectEqual(
       "a press on the trigger paints the hidden levels",
@@ -567,8 +515,6 @@ export const breadcrumbNavigationSteps: Smoke.AsyncSmokeScenario["steps"] = (
       BREADCRUMB_IDS.more,
     );
 
-    // 5. A keyboard open lands on the first hidden level, the arrows move real
-    //    focus and Enter chooses; the path now fits, so the trigger leaves.
     yield* ctx.host.key("enter");
     yield* ctx.expectEqual(
       "a keyboard open paints the hidden levels",
@@ -610,8 +556,6 @@ export const breadcrumbNavigationSteps: Smoke.AsyncSmokeScenario["steps"] = (
       true,
     );
 
-    // 6. The keyboard continues from the trail's last stop to the control after
-    //    it: a trail is a row of stops, not the end of the window's order.
     yield* ctx.host.focusElement(BREADCRUMB_IDS.appCrumb(1));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(

@@ -81,8 +81,3 @@ Drawer
 | `initialFocus` | `() => number \| null` | none | the native id to focus after the surface receives focus |
 | `className` | `string` | none | compiled through `@gpuixui/tw` and joined after the recipe |
 | `children` | parts | none | the header, title, description, body and footer |
-
-## Notes
-- The close control paints outside the body's `scroller` (`src/behaviour/drawer.test.tsx`).
-- A dismissed drawer paints its **320 ms** exit while the shield takes presses; its close control leaves the Tab order until an inherited `inert`.
-- No `aria-modal`, drag host or veil blur. A `side` restored from storage takes the house `right` edge, and a `size` likewise the house `md` box.

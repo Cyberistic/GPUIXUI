@@ -1,12 +1,3 @@
-/**
- * Sidebar behaviour in the real GPUix renderer.
- *
- * The bugs these guard: a collapse that the content does not pay for (the gap
- * and the panel disagree), a persisted state that a remount forgets, a shortcut
- * the window never reaches, an icon tooltip that cannot open, and a mobile sheet
- * that lets Tab walk out or a scrim press through.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
 import { Icon } from "@gpuixui/icons";
@@ -50,7 +41,6 @@ import { SidebarUserMenu } from "../user-menu.js";
 
 const user = { name: "Benji van der Brand", email: "benji@example.com" };
 
-/** The panel used by the geometry and keyboard cases. */
 const Workspace = ({
   variant = "sidebar",
   collapsible = "icon",
@@ -142,7 +132,6 @@ const Workspace = ({
   </SidebarProvider>
 );
 
-/** Whether `elementId` sits inside the subtree of `ancestorId`. */
 const inside = (
   root: ReturnType<typeof renderComponent>,
   elementId: number,
@@ -222,7 +211,7 @@ describe("Sidebar", () => {
 
     expect(root.renderer.findByTestId("nav-models-tip")).toBeDefined();
     expect(root.renderer.getAllText()).toContain("Models");
-    // Only the hovered row's tip opens.
+
     expect(root.renderer.findByTestId("nav-settings-tip")).toBeUndefined();
 
     root.renderer.nativeSimulateMouseMove(1000, 700);
@@ -285,7 +274,7 @@ describe("Sidebar", () => {
     expect(root.renderer.findByTestId("sub-genesis")?.style.display).toBe(
       "none",
     );
-    // The badge is a paint-only slot: it leaves with the label it counts.
+
     expect(root.renderer.findByTestId("row-badge")?.style.display).toBe("none");
     root.unmount();
   });
@@ -305,8 +294,7 @@ describe("Sidebar", () => {
     expect(requireBounds(root, "user-menu-trigger").width).toBe(32);
 
     clickCentreOf(root, "user-menu-trigger");
-    // This workspace wires no menu action, so the open menu is its identity
-    // header alone (the menu paints only the rows a caller handles, #1).
+
     await waitFor(() => {
       settle(root);
       requireBounds(root, "user-menu-content");
@@ -322,8 +310,7 @@ describe("Sidebar", () => {
     const root = renderComponent(<Workspace defaultOpen onLogOut={onLogOut} />);
 
     clickCentreOf(root, "user-menu-trigger");
-    // The anchored surface measures itself over a few paint rounds before its
-    // rows have bounds; one round leaves the later rows unpainted.
+
     await waitFor(() => {
       settle(root);
       requireBounds(root, "user-menu-log-out");
@@ -357,8 +344,6 @@ describe("Sidebar on a narrow window", () => {
     });
     expect(focusedTestId(root)).toEqual(Option.some("sidebar-sheet"));
 
-    // Walk past every control the sheet holds: the modal wraps at the end,
-    // where an untrapped traversal would leave for the trigger behind it.
     for (let step = 0; step < 10; step += 1) {
       pressKey(root, "tab");
       const focused = root.renderer.getFocusedElementId();

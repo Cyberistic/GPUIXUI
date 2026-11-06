@@ -1,20 +1,3 @@
-/**
- * NavigationMenu behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: two panels open at once, a panel that does not report
- * `aria-expanded`, ArrowDown that opens without taking focus into the panel,
- * Left/Right that open instead of moving, Escape that closes the nav without
- * returning focus, an outside press that does nothing, a controlled nav that
- * opens on its own, a hover policy that opens instantly, never closes, drops
- * the panel while the pointer crosses into it, or springs a pressed-closed panel
- * back open from a stale timer — and a panel that vanishes on dismiss instead of
- * running its exit, keeps taking presses while it leaves, or travels under a
- * reduced-motion preference. The trigger now also paints the lucide chevron in a
- * fixed slot: opening must repaint that slot without resizing the trigger or
- * moving a sibling, and the two marks must cross-fade (the runtime has no
- * `transform`, so shadcn's rotate is a swap).
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -41,7 +24,6 @@ import { MotionProvider } from "../motion.js";
 import { renderComponent } from "../internal/test-root.js";
 import { Button } from "../internal/button.js";
 
-/** Move the pointer into the open panel's padding, not onto a child. */
 const hoverPanel = (
   root: ReturnType<typeof renderComponent>,
   testId: string,
@@ -50,12 +32,6 @@ const hoverPanel = (
   root.renderer.nativeSimulateMouseMove(bounds.x + 10, bounds.y + 10);
 };
 
-/**
- * Walk the window's Tab order: focus `from`, then take `steps` stops in turn.
- *
- * The runtime decides the order element by element, so this is the only route a
- * suite can ask which painted controls a reader can Tab to.
- */
 const tabWalk = (
   root: ReturnType<typeof renderComponent>,
   from: string,
@@ -69,7 +45,6 @@ const tabWalk = (
   });
 };
 
-/** A two-item product nav, with an inert target far to the right. */
 const Workspace = ({
   value,
   onValueChange,
@@ -182,9 +157,6 @@ describe("NavigationMenu", () => {
   });
 
   it("cancels a hover open when the trigger is disabled before the delay", async () => {
-    // The trigger can be disabled between the pointer's entry and the delay's
-    // end; the armed timer used to open anyway, mounting the panel over a
-    // control that refuses every route.
     const nav = renderComponent(<Workspace openDelay={120} />);
 
     try {
@@ -234,8 +206,6 @@ describe("NavigationMenu", () => {
     clickCentreOf(nav, "trigger-platform");
     clickCentreOf(nav, "trigger-pricing");
 
-    // The switch is a state change at once: the first trigger no longer says it
-    // is expanded, and the panel it owned is on its way out rather than open.
     expect(
       nav.renderer.findByTestId("trigger-platform")?.customProps,
     ).toMatchObject({ "aria-expanded": false });
@@ -300,7 +270,6 @@ describe("NavigationMenu", () => {
 
     nav.renderer.simulateKeystrokes("escape");
 
-    // The state is settled at once: the trigger is collapsed and focus is back.
     expect(
       nav.renderer.findByTestId("trigger-platform")?.customProps,
     ).toMatchObject({ "aria-expanded": false });
@@ -459,8 +428,6 @@ describe("NavigationMenu", () => {
       expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined(),
     );
 
-    // The stale hover timer is gone for good: the pricing panel is still the
-    // open one a full open-delay later.
     await after(60);
     expect(nav.renderer.findByTestId("panel-pricing")).toBeDefined();
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
@@ -534,13 +501,11 @@ describe("NavigationMenu", () => {
   });
 });
 
-/** The motion frame of a part, as the runtime paints it. */
 const motionOf = (
   nav: ReturnType<typeof renderComponent>,
   testId: string,
 ): unknown => nav.renderer.findByTestId(testId)?.customProps?.motion;
 
-/** A nav with a sibling under it, for the shift measurement. */
 const NavWithSibling = () => (
   <div style={{ display: "flex", flexDirection: "column" }}>
     <Workspace />
@@ -550,11 +515,6 @@ const NavWithSibling = () => (
 
 describe("NavigationMenu motion", () => {
   it("opens on hover without moving its trigger or a sibling, with one chevron slot", async () => {
-    // The bug this guards: the trigger painted no chevron at all, and the
-    // drawing swapped a `⌄` for a `⌃` — the mark the component did not ship and
-    // the width the trigger did not reserve. A chevron mounted only while the
-    // panel is open widens the trigger under the pointer and pushes every
-    // sibling after it; this holds the box on both sides of the open.
     const nav = renderComponent(<NavWithSibling />);
     try {
       const sibling = requireBounds(nav, "sibling");
@@ -581,10 +541,6 @@ describe("NavigationMenu motion", () => {
   });
 
   it("cross-fades lucide's chevron instead of swapping a character", async () => {
-    // The runtime has no `transform`, so shadcn's rotate-180 is two marks in one
-    // fixed slot: the incoming one fades in as it rises 2px, and the outgoing
-    // one fades out. The trigger's text is the label alone — the chevron is an
-    // `svg` mark, not the `⌄` the drawing used to print.
     const nav = renderComponent(<Workspace />);
     try {
       nav.renderer.clockPause();
@@ -608,7 +564,7 @@ describe("NavigationMenu motion", () => {
       expect(motionOf(nav, "trigger-platform-chevron-up")).toMatchObject({
         animate: { opacity: 1, top: 0 },
       });
-      // Both marks stay painted, which is what makes it a cross-fade.
+
       expect(
         nav.renderer.findByTestId("trigger-platform-chevron-down"),
       ).toBeDefined();
@@ -630,7 +586,6 @@ describe("NavigationMenu motion", () => {
     nav.renderer.clockFastForward(300);
     await after(30);
 
-    // A panel below its trigger enters from the trigger's side, then stops.
     expect(requireBounds(nav, "panel-platform").y - entering).toBe(4);
 
     nav.unmount();
@@ -673,12 +628,10 @@ describe("NavigationMenu motion", () => {
     nav.renderer.simulateKeystrokes("escape");
     await after(30);
 
-    // The box is still painted while it fades, but it is no longer a target...
     const leaving = nav.renderer.findByTestId("panel-platform");
     expect(leaving).toBeDefined();
     expect(leaving?.style.pointerEvents).toBe("none");
-    // ...and its links keep their own hitboxes, so the seam's shield takes the
-    // press rather than the page underneath receiving it mid-exit.
+
     nav.renderer.nativeSimulateClick(
       surface.x + surface.width / 2,
       surface.y + surface.height / 2,
@@ -698,13 +651,6 @@ describe("NavigationMenu motion", () => {
   });
 
   it("keeps a dismissed panel's links out of the window's tab order", async () => {
-    // The bug this guards: a dismissed panel stays painted for its 200 ms exit
-    // (`PresenceShield` takes the presses), but the runtime decides its Tab order
-    // element by element, and neither the surface's `pointerEvents` nor the shield
-    // reaches a descendant's `tabIndex`. So a reader who pressed Escape and then
-    // Tabbed landed on a link of the panel that unmounted under the keyboard —
-    // the same defect the menu family fixed for its rows (`MenuLeaving`). Every
-    // link of a panel that is only painted for its exit drops its own stop.
     const nav = renderComponent(<Workspace />);
     try {
       nav.renderer.focusElement(
@@ -714,8 +660,7 @@ describe("NavigationMenu motion", () => {
       await waitFor(() =>
         expect(nav.renderer.findByTestId("panel-platform")).toBeDefined(),
       );
-      // While the panel is open its links are stops, or the ghost walk below
-      // would pass by reading a tree that never had them.
+
       expect(tabWalk(nav, "trigger-platform", 6)).toContain("link-overview");
 
       nav.renderer.focusElement(

@@ -1,16 +1,3 @@
-/**
- * The Tier 1 set in one workflow.
- *
- * Not a gallery of swatches: this is the settings form an application would
- * actually ship — a labelled field set with live validation, a select, three
- * kinds of selection control, a save that shows progress, a loading state, and
- * a light/dark switch — so every primitive is exercised the way a consumer
- * would use it, including the composition between them.
- *
- * It needs the GPUix runtime to open a window; `main.tsx` is the mount
- * boundary. See `README.md` for the run command and for what is verified where.
- */
-
 import { useEffect, useState, type ReactElement } from "react";
 import { Icon } from "@gpuixui/icons";
 import {
@@ -43,11 +30,9 @@ type Mode = "light" | "dark";
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface AppProps {
-  /** Which theme to open with. Defaults to `light`. */
   readonly initialMode?: Mode;
 }
 
-/** A form field with its visible name and its validation message. */
 const Field = ({
   name,
   description,
@@ -72,7 +57,6 @@ const Field = ({
   </Stack>
 );
 
-/** A switch with a visible name and an optional explanation. */
 const Toggle = ({
   name,
   description,
@@ -108,8 +92,6 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // The form "arrives" over the first second, so the skeleton is a real state
-  // rather than a swatch on a page.
   useEffect(() => {
     const id = setTimeout(() => setLoading(false), 900);
     return () => clearTimeout(id);

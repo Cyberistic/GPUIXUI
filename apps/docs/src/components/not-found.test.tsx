@@ -3,16 +3,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { NotFound } from "../components/not-found";
 
-/**
- * A missing address must not throw the reader out of the docs.
- *
- * The router's default 404 is outside the docs chrome — no brand, no
- * navigation, no search — so a stale link left the reader to edit the URL. The
- * page rendered here is the whole recovery path: it names the missing state and
- * links the pages that find things. The wiring is checked too, because a good
- * page that no route mounts is invisible.
- */
-
 const root = new URL("../../../../", import.meta.url);
 
 const read = (path: string): string =>

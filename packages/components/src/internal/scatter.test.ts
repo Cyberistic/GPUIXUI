@@ -1,13 +1,3 @@
-/**
- * The shared arithmetic of a scattered field.
- *
- * The bugs these guard: a field that reshuffles between mounts (a hash that is
- * not stable); a count or a size the runtime cannot paint reaching the tree
- * (every piece is its own native tween); an inverted size pair painting a
- * negative range; a motion time so short it is a jitter or so long the field
- * looks frozen; and a broken seed, which is not a layout at all.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -41,7 +31,7 @@ describe("the field's policy", () => {
     expect(countOf(Option.some(6), 24, 120)).toBe(6);
     expect(countOf(Option.some(0), 24, 120)).toBe(0);
     expect(countOf(Option.some(1_000), 24, 120)).toBe(120);
-    // An unreadable or negative request is not a smaller field.
+
     expect(countOf(Option.some(Number.NaN), 24, 120)).toBe(24);
     expect(countOf(Option.some(-4), 24, 120)).toBe(24);
   });
@@ -55,7 +45,7 @@ describe("the field's policy", () => {
       min: 3,
       max: 9,
     });
-    // A piece smaller than a pixel cannot be seen, so it is the house size.
+
     expect(sizeRangeOf(Option.some(0), Option.some(Number.NaN), 2, 5)).toEqual({
       min: 2,
       max: 5,

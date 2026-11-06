@@ -1,16 +1,3 @@
-/**
- * MessageScroller behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a new row that yanks a reader who scrolled up; an
- * unread count that increments while pinned; a "jump to latest" that does not
- * reach the end or leaves the count behind; a short history that offers a
- * pointless control; a streamed row that grows without keeping its bottom
- * visible; and a threshold that measured `NaN`, which used to read as "away
- * from the end" so a reader at the bottom stopped following new rows. The
- * scroll position is read from the renderer, not inferred from the component's
- * own state, so a wrong pin decision fails here.
- */
-
 import * as Option from "effect/Option";
 import { Profiler } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -33,13 +20,12 @@ import {
 
 interface TranscriptProps {
   readonly count: number;
-  /** Give the last row extra height, as a streamed reply would gain. */
+
   readonly grown?: boolean;
   readonly onPinnedChange?: (pinned: boolean) => void;
   readonly threshold?: number;
 }
 
-/** A bounded transcript: 26px-ish rows in a 200px viewport. */
 const Transcript = ({
   count,
   grown = false,
@@ -69,7 +55,6 @@ const Transcript = ({
   </div>
 );
 
-/** The viewport's vertical scroll offset; `0` when it has not rendered. */
 const offsetOf = (root: ComponentTestRoot): number =>
   Option.getOrElse(
     Option.flatMap(
@@ -80,7 +65,6 @@ const offsetOf = (root: ComponentTestRoot): number =>
     () => 0,
   );
 
-/** Wheel over the viewport. Positive scrolls up (toward older rows). */
 const wheel = (root: ComponentTestRoot, deltaY: number): void => {
   const { x, y, width, height } = requireBounds(root, "viewport");
   root.renderer.nativeSimulateScrollWheel(
@@ -91,11 +75,9 @@ const wheel = (root: ComponentTestRoot, deltaY: number): void => {
   );
 };
 
-/** Whether the jump control is painted and reachable, or only reserving rail. */
 const jumpActive = (root: ComponentTestRoot): boolean =>
   root.renderer.findByTestId("jump")?.customProps?.tabIndex === 0;
 
-/** Whether the last row sits inside the viewport, i.e. the end is visible. */
 const endIsVisible = (root: ComponentTestRoot, last: number): boolean => {
   const viewport = requireBounds(root, "viewport");
   const row = requireBounds(root, `row-${last}`);
@@ -156,10 +138,6 @@ describe("MessageScroller", () => {
   });
 
   it("keeps following rows when its threshold cannot be measured", () => {
-    // The threshold is a layout token, often arithmetic over a measured inset,
-    // and `NaN` failed every comparison: a reader who moved 10px — inside the
-    // default 24px — was read as away from the end, so the next row stopped
-    // following and the affordance offered a jump the reader did not need.
     const unreadable = Number.NaN;
     const root = renderComponent(
       <Transcript count={40} threshold={unreadable} />,
@@ -228,8 +206,7 @@ describe("MessageScroller", () => {
     const root = renderComponent(<Transcript count={40} />);
 
     root.rerender(<Transcript count={40} grown />);
-    // A growing row reports its new size on the next layout, which is when the
-    // scroller follows it.
+
     settle(root);
 
     expect(endIsVisible(root, 39)).toBe(true);
@@ -266,11 +243,6 @@ describe("MessageScroller", () => {
   });
 });
 
-/**
- * The jump control floats over the transcript's bottom edge, the way shadcn's
- * button does. The bug this guards: it used to sit in a rail below the viewport,
- * taking its own row of height from the scroller.
- */
 describe("MessageScroller's jump control", () => {
   it("floats centred over the viewport's bottom edge", () => {
     const root = renderComponent(<Transcript count={40} />);
@@ -292,7 +264,6 @@ describe("MessageScroller's jump control", () => {
   });
 });
 
-/** The documented composition: rows live inside the content part. */
 const ContentTranscript = ({ count }: { readonly count: number }) => (
   <div style={{ width: 480 }}>
     <MessageScroller testId="scroller" label="Conversation">
@@ -310,7 +281,6 @@ const ContentTranscript = ({ count }: { readonly count: number }) => (
   </div>
 );
 
-/** A transcript beside a sibling whose text changes, as a composer's draft would. */
 const WithSibling = ({ draft }: { readonly draft: string }) => (
   <div style={{ width: 480 }}>
     <text testId="draft">{draft}</text>
@@ -327,11 +297,6 @@ const WithSibling = ({ draft }: { readonly draft: string }) => (
   </div>
 );
 
-/**
- * A sibling's keystroke is not a transcript change. The bug this guards: the
- * viewport re-scrolled the tail on every render, so typing in a composer beside
- * it forced a layout per character.
- */
 describe("MessageScroller's measurements", () => {
   it("follows a row appended inside the content part", () => {
     const root = renderComponent(<ContentTranscript count={40} />);
@@ -363,7 +328,6 @@ describe("MessageScroller's measurements", () => {
   });
 });
 
-/** A transcript whose rows count their own commits, one profiler per row. */
 const Profiled = ({
   count,
   commits,
@@ -391,11 +355,6 @@ const Profiled = ({
   </div>
 );
 
-/**
- * The scroller's state is not what every row reads. The bug this guards: the
- * shared context carried `pinned`/`unread`, so one store write rebuilt the value
- * and every row repainted — `n` arrivals cost `n` repaints.
- */
 describe("MessageScroller's repaints", () => {
   it("repaints no rows for a jump that only moves the store", () => {
     const commits = new Map<string, number>();

@@ -1,18 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The picker's painted parts: the swatch disc, the saturation/value area, the
- * two rails, the preset row and the contrast readout.
- *
- * The area is three stacked fills, because the runtime paints exactly two
- * gradient stops and no radial or conic gradient: the pure hue is one solid
- * fill, and white-to-clear and clear-to-black are two two-stop ramps above it.
- * The same rule gives the hue rail six segments — one ramp per 60° — and the
- * alpha rail one ramp from the colour at zero alpha to the colour at full.
- *
- * There is no `transform`, so a thumb is placed by the fraction the area's own
- * measurement gives it, not by a translated centre.
- */
-
 import type {
   EventPayload,
   KeyEvent,
@@ -58,27 +44,21 @@ import {
   type Grade,
 } from "./logic.js";
 
-/** The area's painted height, in the reference's proportions. */
 const AREA_HEIGHT = 148;
 
-/** The area's thumb diameter. */
 const THUMB = 20;
 
-/** The white ring a thumb keeps against any fill. */
 const THUMB_RING = 3;
 
-/** How far one key moves the area, and how far Shift moves it. */
 const AREA_STEP = 0.01;
 const AREA_BIG_STEP = 0.1;
 
 const clamp = (value: number, min = 0, max = 1): number =>
   Math.min(max, Math.max(min, value));
 
-/** The pure hue a rail's thumb is filled with. */
 const pureHue = (hue: number): string =>
   opaqueHex(new Hsva({ h: hue, s: 1, v: 1, a: 1 }));
 
-/** A two-stop ramp; the runtime's whole gradient grammar. */
 const ramp = (from: string, to: string, angle: number): StyleDesc => ({
   background: {
     type: "linear-gradient",
@@ -90,18 +70,15 @@ const ramp = (from: string, to: string, angle: number): StyleDesc => ({
   },
 });
 
-/** The two ramps a saturation/value area paints over its hue. */
 export const areaLayers: ReadonlyArray<StyleDesc> = [
   ramp("#FFFFFF", "#FFFFFF00", 90),
   ramp("#000000", "#00000000", 0),
 ];
 
-/** The six ramps of the hue rail, left to right. */
 export const hueLayers: ReadonlyArray<StyleDesc> = HUE_STOPS.slice(0, 6).map(
   (stop, index) => ramp(stop, HUE_STOPS[index + 1] ?? stop, 90),
 );
 
-/** A thumb with a white ring, so it reads over any rail. */
 const thumbStyle = (fill: string): StyleDesc => ({
   width: THUMB,
   height: THUMB,
@@ -117,14 +94,12 @@ const thumbStyle = (fill: string): StyleDesc => ({
   },
 });
 
-/** {@link ColorChip} props. */
 export interface ColorChipProps {
   readonly hsva: Hsva;
   readonly size: number;
   readonly testId?: string;
 }
 
-/** A colour disc: the trigger's swatch, filled with the colour as written. */
 export const ColorChip = ({ hsva, size, testId }: ColorChipProps) => {
   const theme = useTheme();
   return (
@@ -135,15 +110,13 @@ export const ColorChip = ({ hsva, size, testId }: ColorChipProps) => {
         height: size,
         flexShrink: 0,
         backgroundColor: toHex(hsva),
-        // A filled disc takes the press on 0.11.0; the trigger it sits in is
-        // the target, so a press on the colour opens the picker (plan 731).
+
         pointerEvents: "none",
       })}
     />
   );
 };
 
-/** {@link ColorArea} props. */
 export interface ColorAreaProps {
   readonly label: string;
   readonly hsva: Hsva;
@@ -151,17 +124,10 @@ export interface ColorAreaProps {
   readonly onChange: (next: Hsva) => void;
   readonly testId?: string;
   readonly ref?: Ref<PublicInstance>;
-  /** Called once the area has a measured box, so its owner can focus it. */
+
   readonly onMeasured?: () => void;
 }
 
-/**
- * The saturation/value field.
- *
- * A press sets both fractions from the point that was hit; a drag keeps setting
- * them until the release, through the pointer capture the runtime arms for an
- * element that listens to both `mouseDown` and `mouseMove`.
- */
 export const ColorArea = ({
   label,
   hsva,
@@ -297,7 +263,6 @@ export const ColorArea = ({
   );
 };
 
-/** {@link HueSlider} props. */
 export interface HueSliderProps {
   readonly label: string;
   readonly hue: number;
@@ -307,7 +272,6 @@ export interface HueSliderProps {
   readonly ref?: Ref<PublicInstance>;
 }
 
-/** The hue rail: six ramps of the colour circle, with one thumb. */
 export const HueSlider = ({
   label,
   hue,
@@ -360,7 +324,6 @@ export const HueSlider = ({
   );
 };
 
-/** {@link AlphaSlider} props. */
 export interface AlphaSliderProps {
   readonly label: string;
   readonly hsva: Hsva;
@@ -370,13 +333,6 @@ export interface AlphaSliderProps {
   readonly ref?: Ref<PublicInstance>;
 }
 
-/**
- * The alpha rail: the colour at full alpha over a clear left end.
- *
- * The runtime has no repeating gradient, so the track does not paint a
- * checkerboard; it fades to the panel's own fill, which is what transparency
- * will show anyway.
- */
 export const AlphaSlider = ({
   label,
   hsva,
@@ -417,7 +373,6 @@ export const AlphaSlider = ({
   );
 };
 
-/** {@link PresetSwatch} props. */
 export interface PresetSwatchProps {
   readonly value: string;
   readonly selected: boolean;
@@ -427,7 +382,6 @@ export interface PresetSwatchProps {
   readonly ref?: Ref<PublicInstance>;
 }
 
-/** One preset colour: a circle that reports the colour it paints. */
 export const PresetSwatch = ({
   value,
   selected,
@@ -478,21 +432,19 @@ export const PresetSwatch = ({
   );
 };
 
-/** {@link PresetRow} props. */
 export interface PresetRowProps {
   readonly swatches: ReadonlyArray<string>;
   readonly value: Hsva;
   readonly disabled?: boolean;
   readonly onSelect: (value: string) => void;
   readonly testId?: string;
-  /** Called with each preset's host instance, in row order. */
+
   readonly onInstance?: (
     index: number,
     instance: PublicInstance | null,
   ) => void;
 }
 
-/** The preset row: one button per colour. */
 export const PresetRow = ({
   swatches,
   value,
@@ -503,8 +455,7 @@ export const PresetRow = ({
 }: PresetRowProps) => {
   const theme = useTheme();
   const current = toHex(value);
-  // A stable callback per slot: a new identity on every render would detach and
-  // re-attach the refs the panel's tab order reads.
+
   const refFor = useMemo(
     () =>
       swatches.map(
@@ -534,7 +485,6 @@ export const PresetRow = ({
   );
 };
 
-/** The tone a grade paints its chip in. */
 const gradeTone = (value: Grade): "success" | "warning" | "destructive" =>
   value === "Fails"
     ? "destructive"
@@ -542,13 +492,11 @@ const gradeTone = (value: Grade): "success" | "warning" | "destructive" =>
       ? "warning"
       : "success";
 
-/** {@link ContrastReadout} props. */
 export interface ContrastReadoutProps {
   readonly hsva: Hsva;
   readonly background: string;
 }
 
-/** The WCAG readout: a sample on the caller's background, the ratio and grade. */
 export const ContrastReadout = ({ hsva, background }: ContrastReadoutProps) => {
   const theme = useTheme();
   const measured = Option.getOrElse(contrast(hsva, background), () => 1);

@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * DatePicker example: a booking window with a summary.
- *
- * The app owns the ISO day; the picker owns the popover, the month grid, its
- * keyboard and the bounds. `min`/`max` make out-of-window days unchosen, and
- * `clearable` returns the field to "no date" without a second control.
- */
-
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import {
@@ -17,7 +9,6 @@ import {
 } from "../src/date-picker.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** A due-date field with a booking window. */
 export const DatePickerExample = () => {
   const theme = useTheme();
   const [due, setDue] = useState<string | null>("2026-10-30");

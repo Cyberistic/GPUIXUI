@@ -1,21 +1,10 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Gradient example: a hero band that breathes, and the same ramp stilled.
- *
- * Composition, not a gallery: the field's real job is behind a heading and its
- * actions — the content owns the words and the presses, the ramp only lights the
- * surface. The strip below shows the one decision `Gradient` leaves to its
- * caller: a shift of a whole turn is a single still ramp, and the reduced
- * preference paints the same frame.
- */
-
 import { Card } from "../src/card.js";
 import { Gradient } from "../src/gradient.js";
 import { Button } from "../src/internal/button.js";
 import { alpha, textStyle, useTheme } from "../src/internal/theme.js";
 import { MotionProvider } from "../src/motion.js";
 
-/** A brand wash behind a heading and its actions. */
 export const GradientExample = () => {
   const theme = useTheme();
 

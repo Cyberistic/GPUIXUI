@@ -1,13 +1,3 @@
-/**
- * The `color-picker-lifecycle` probe: the shipped `ColorPicker` in a real
- * window.
- *
- * The window is the only place that can say the panel is a floating surface
- * below its trigger, that a press on the area commits the colour under the
- * pointer, and that a refused draft paints the field's destructive edge. The
- * behaviour suite reads `aria-valuetext` and the reported value; this probe
- * reads the paint.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -39,10 +29,8 @@ import {
   type PaintedBox,
 } from "./color-picker.js";
 
-/** A picker's paint is one render behind the input that changed it. */
 const SETTLE = Duration.millis(120);
 
-/** One labelled picker row. */
 const Row = ({
   label,
   children,
@@ -74,7 +62,6 @@ const Row = ({
   );
 };
 
-/** The probe's window: the picker it drives and the disabled one beside it. */
 export const ColorPickerProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -144,7 +131,6 @@ export const ColorPickerProbe = (): ReactNode => {
   );
 };
 
-/** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -172,14 +158,12 @@ export const colorPickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Option.fromNullishOr(Pixels.hexToRgba(colours.destructive)),
     );
 
-    // 1. The readout starts on the caller's colour.
     yield* ctx.expectEqual(
       "the picker starts on the caller's colour",
       yield* readout(),
       colorPickerReadout({ value: initial, changes: 0, refused: 0 }),
     );
 
-    // 2. The trigger opens a panel below itself.
     yield* ctx.expectEqual(
       "a closed picker paints no panel",
       Option.isNone(
@@ -202,7 +186,6 @@ export const colorPickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 3. A press on the area commits the colour under the pointer.
     const area = yield* paintedBox(
       ctx,
       partId(COLOR_PICKER_IDS.enabled, "area"),
@@ -219,7 +202,6 @@ export const colorPickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "true true",
     );
 
-    // 4. A preset press commits the role it paints.
     yield* ctx.host.click(presetId(COLOR_PICKER_IDS.enabled, 2));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -228,7 +210,6 @@ export const colorPickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       colorPickerReadout({ value: pressed, changes: 2, refused: 0 }),
     );
 
-    // 5. The alpha rail's key commits the hex with its alpha digits.
     yield* ctx.host.focusElement(partId(COLOR_PICKER_IDS.enabled, "alpha"));
     yield* ctx.host.key("pagedown");
     yield* Effect.sleep(SETTLE);
@@ -238,7 +219,6 @@ export const colorPickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 6. A typed shorthand commits through one normal form.
     yield* ctx.host.focusElement(partId(COLOR_PICKER_IDS.enabled, "hex"));
     yield* ctx.host.key("cmd-a");
     yield* Effect.forEach(
@@ -246,8 +226,7 @@ export const colorPickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       (letter) => ctx.host.key(letter),
       { concurrency: 1 },
     );
-    // The keys land inside one frame: the submit has to read the draft the
-    // field was written with, not the one before it.
+
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("enter");
     yield* Effect.sleep(SETTLE);
@@ -257,7 +236,6 @@ export const colorPickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       colorPickerReadout({ value: TYPED_COLOUR, changes: 4, refused: 0 }),
     );
 
-    // 7. A draft the normal form refuses paints the field and commits nothing.
     const field = yield* paintedBox(
       ctx,
       partId(COLOR_PICKER_IDS.enabled, "hex"),
@@ -289,7 +267,6 @@ export const colorPickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       colorPickerReadout({ value: TYPED_COLOUR, changes: 4, refused: 0 }),
     );
 
-    // 8. A disabled picker refuses the open, and the traversal skips it.
     yield* ctx.host.click(COLOR_PICKER_IDS.disabled);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(

@@ -1,17 +1,3 @@
-/**
- * InlineEdit behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a swap that leaves focus outside the input; Enter that
- * commits twice (keyDown and submit); Escape that commits the draft; an
- * unchanged draft that still calls `onCommit`; a disabled control that opens;
- * a control a caller disables mid-edit that still commits that draft on Enter
- * or blur; a disabled control that opens; an editor a caller disables that
- * stays a tab stop while it refuses every key; a controlled edit state the
- * component overrides; and the caller's own `onChange`, `onBlur` and
- * `onSubmit` handlers, which the editor used to drop because it wrote its own
- * over them.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -22,7 +8,6 @@ import {
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 
-/** A caller-owned value with a sibling focus target for the blur test. */
 const Harness = ({
   initial = "",
   onCommit,
@@ -53,12 +38,10 @@ const Harness = ({
   );
 };
 
-/** Enter edit mode by clicking the display. */
 const startEditing = (root: ComponentTestRoot): void => {
   clickCentreOf(root, "name");
 };
 
-/** Type every character as a real key press on whatever has focus. */
 const type = (root: ComponentTestRoot, text: string): void => {
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
 };
@@ -191,10 +174,6 @@ describe("InlineEdit", () => {
   });
 
   it("takes the editor out of the tab order while the control is disabled", () => {
-    // Every disabled host in the package leaves the tab order, because a host
-    // input has no `disabled` and `readOnly` still takes focus. The editor kept
-    // the host's default stop, so a control a caller disabled mid-edit was a
-    // stop a reader could Tab onto and type into with nowhere for the text to go.
     const edit = renderComponent(<Harness initial="old" />);
     const editorTabStop = () =>
       edit.renderer.findByType("input")[0]?.customProps?.tabIndex;
@@ -212,9 +191,6 @@ describe("InlineEdit", () => {
   });
 
   it("composes the caller's edit, submit and blur handlers with its own", () => {
-    // `InlineEditProps` extends the host input's props, so a caller can pass
-    // `onChange`/`onSubmit`/`onBlur`; the editor wrote its own over the spread
-    // and the caller's handler ran only on the display, never while editing.
     const onCommit = vi.fn();
     const onChange = vi.fn();
     const onSubmit = vi.fn();

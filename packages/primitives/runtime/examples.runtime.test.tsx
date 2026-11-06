@@ -1,19 +1,3 @@
-/**
- * The examples, mounted in the real GPUix runtime.
- *
- * `src/components/*.test.tsx` decode an element tree and `runtime/*.runtime`
- * proves each component in isolation. Neither proves the thing a consumer
- * copies: an **example** is a composition of several components with caller-
- * owned state, and a composition can be wrong even when every part is right.
- * This suite is the only place where that claim is checked, by mounting each
- * example and reading what the frame actually painted.
- *
- * It is deliberately small. The per-component contracts belong to the other
- * runtime suites; here the assertions are "this screen renders", "this example
- * still exercises the control it exists to demonstrate", and the one
- * interaction each example is built around.
- */
-
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -23,7 +7,6 @@ import { examples } from "../examples/index.js";
 import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme, testThemeDark } from "./fixture.js";
 
-/** An element found by its accessible name — a group row has no `testId`. */
 const byLabel = (runtime: Runtime, label: string) =>
   Option.getOrElse(
     Arr.findFirst(
@@ -33,7 +16,6 @@ const byLabel = (runtime: Runtime, label: string) =>
     () => expect.fail(`the runtime retained no element labelled ${label}`),
   );
 
-/** The root and the headline each example must paint. */
 const SCREENS = [
   { id: "layout", root: "layout-example", headline: "Inspector" },
   { id: "typography", root: "typography-example", headline: "Version 0.11.0" },
@@ -74,10 +56,6 @@ const renderExample = (
 };
 
 it("lists a native screen for every registered example", () => {
-  // Bug guarded: `rating` and `toggle` joined the registry (and the playground's
-  // gallery) without a runtime screen, so the "every registered example" mount
-  // and the dark-palette sweep silently covered ten of twelve. The list and the
-  // registry have to agree, so a new example fails here by id.
   expect(
     Arr.filter(
       R.keys(examples),
@@ -109,15 +87,9 @@ it("composes the layout example around a scrolling property list", async () => {
 });
 
 it("measures the layout example's drop target where the primitive paints it", async () => {
-  // Bug guarded: the layout primitives published no `onLayout`, so a measured
-  // region had to be wrapped in a `div` — and in a flex parent the wrapper is
-  // the item, so the box measured is not the box composed. The number this
-  // caption paints is read from the primitive's own layout event, and it agrees
-  // with the box the frame painted.
   const runtime = await openWindow();
   renderExample(runtime, "layout");
-  // The layout event crosses to the handler on a dispatch, and the caption
-  // repaints in the frame after the state it set.
+
   Arr.forEach(Arr.range(0, 1), () => {
     runtime.renderer.dispatchNativeEvents();
     runtime.flush();
@@ -138,9 +110,7 @@ it("creates through the form example's busy action", async () => {
   renderExample(runtime, "form");
   expect(Option.getOrUndefined(runtime.focused())).toBe("form-example-name");
   runtime.click("form-example-save");
-  // The bar says its share in the composition's own words (`formatValue`), not
-  // the default percentage: this is the only example that proves the seam end to
-  // end, and the value still describes the clamped fill.
+
   expect(
     Option.getOrUndefined(
       a11yValueOf(runtime.a11y(), { label: "Creating project" }),
@@ -149,11 +119,6 @@ it("creates through the form example's busy action", async () => {
 });
 
 it("counts the form example's name and refuses a name past its limit", async () => {
-  // The composition the field pages recommend instead of a `maxLength`: the
-  // runtime cannot take a refused character back (a `value` is applied only
-  // when it changed), so the form counts as the reader types and the action
-  // refuses what is too long. Measured through the painted caption, not a
-  // declared prop.
   const runtime = await openWindow();
   renderExample(runtime, "form");
   expect(Option.getOrUndefined(runtime.text("form-example-name-count"))).toBe(
@@ -203,7 +168,7 @@ it("moves the value example's quality slider and repaints its readout", async ()
   renderExample(runtime, "value");
   expect(runtime.allText()).toContain("62%");
   runtime.click("value-example-quality");
-  // A hit-tested click at the track's centre is 50% of 0–100.
+
   expect(
     Option.getOrUndefined(a11yValueOf(runtime.a11y(), { label: "Quality" })),
   ).toBe("50%");
@@ -228,7 +193,6 @@ it("rates the rating example in whole stars and halves", async () => {
     Arr.some(runtime.allText(), (line) => line.startsWith("You rated 4 of 5.")),
   ).toBe(true);
 
-  // The example scores halves, so the same star's left quarter is 3.5.
   const bounds = Option.getOrElse(runtime.boundsOfId(four.id), () =>
     expect.fail("the fourth star painted no bounds"),
   );
@@ -260,12 +224,6 @@ it("flips the toggle example's snap mode and repaints its summary", async () => 
 });
 
 it("flips the toggle example's standalone mode and repaints its summary", async () => {
-  // The bug guarded: `toggle.example.tsx` composed only a `ToggleGroup`, while
-  // the Toggle record and `docs/README.md`'s page table both named it as the
-  // standalone control's example — so the one screen a consumer copies never
-  // mounted the primitive the row calls done. The mode is controlled and its
-  // paint is the pressed state's own, so both the announcement and the fill are
-  // read back here.
   const runtime = await openWindow();
   renderExample(runtime, "toggle");
   const background = (): unknown =>
@@ -330,8 +288,7 @@ it("paints every example from the dark palette", async () => {
         Option.fromNullishOr(element.style.backgroundColor),
       ),
     );
-    // Every example's root is a `card` surface; a literal colour here would
-    // survive the theme switch and fail this assertion.
+
     expect(fill, screen.id).toBe(testThemeDark.colors.card);
   });
 });

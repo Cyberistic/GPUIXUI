@@ -1,26 +1,3 @@
-/**
- * The film's terminal takes: the command the film types (`nub run dev <block>
- * --terminal` in `examples/blocks`, or Slang's own `terminal` script),
- * run in a pty by GPUix's terminal platform; its kitty-graphics frames decoded
- * and resampled to 30 fps.
- *
- * The pty answers no pixel-size query, so the harness sends the in-band resize
- * kitty terminals send (`CSI 48 ; rows ; cols ; height ; width t`) with a
- * 1024×576 pixel area. Each click is an SGR-pixel press and release (the
- * terminal's own report) on a `testId`, measured by laying the same block out in
- * a test window of the same size and theme; between clicks the pointer moves as a
- * hand would, reported as SGR motion. Every synchronized-update batch the
- * platform writes is one frame; its arrival time places it.
- *
- *   nub apps/playground/dist/film/terminal-take.js <outDir> <program> <[~]testId@seconds>…
- *
- * A hover stop (`~testId`) moves the pointer there without pressing.
- *
- * TODO: terminal mode paints a sidebar's collapse only with the next committing
- * press (a hover or a press on plain text does not), though a toast's arrival
- * paints alone. Measured here 2026-11-01; the collapse likely waits on a layout
- * event the terminal platform delivers with input. A runtime fix is owed.
- */
 import { createTestRoot } from "@gpuix/react/testing";
 import { Console } from "@gpuixui/blocks/console";
 import { SettingsApp } from "@gpuixui/blocks/settings";
@@ -42,17 +19,12 @@ import { FPS, type PointerSample } from "./take.js";
 
 const SIZE = { width: 1024, height: 576, columns: 128, rows: 36 } as const;
 const END_OF_BATCH = "\x1b[?2026l";
-/** Seconds of footage kept after the last click. */
+
 const TAIL = 1.2;
-/** Where the pointer starts, and how often it reports a move (ms). */
+
 const REST = { x: 700, y: 420 } as const;
 const MOVE_EVERY = 33;
 
-/**
- * The pointer at `t` seconds: gliding to each click over the 0.6 s before it.
- * Terminal mode repaints on input, so the moves a real pointer makes are what
- * let an animation (the sidebar collapsing, a toast arriving) paint its frames.
- */
 const pointerAt = (
   clicks: ReadonlyArray<Click>,
   t: number,
@@ -75,9 +47,8 @@ const pointerAt = (
 };
 
 interface Program {
-  /** The tree as the terminal run renders it, laid out to measure each click. */
   readonly tree: ReactNode;
-  /** Where the command runs, relative to the repo root, and the command. */
+
   readonly dir: string;
   readonly command: string;
 }
@@ -88,7 +59,6 @@ const block = (tree: ReactNode, name: string): Program => ({
   command: `nub run dev ${name} --terminal`,
 });
 
-/** The programs the film runs in a terminal. */
 const programs: Readonly<Record<string, Program>> = {
   settings: block(
     createElement(SettingsApp, { initialLook: "linux" }),
@@ -104,14 +74,13 @@ const programs: Readonly<Record<string, Program>> = {
 
 interface Click {
   readonly testId: string;
-  /** A hover-only stop (`~testId@seconds`): the pointer arrives, nothing is pressed. */
+
   readonly hover: boolean;
   readonly at: number;
   readonly x: number;
   readonly y: number;
 }
 
-/** Where each `testId` lays out in a 1024×576 window: the terminal's frame. */
 const measure = (block: ReactNode, wanted: ReadonlyArray<string>) => {
   const root = createTestRoot({ width: SIZE.width, height: SIZE.height });
   root.render(
@@ -227,7 +196,6 @@ const record = (
     );
   });
 
-/** Each batch's last full-size frame, stamped with the time its batch closed. */
 const framesOf = (bytes: Buffer, arrivals: ReadonlyArray<Arrival>) => {
   const text = bytes.toString("latin1");
   const stamped: Array<{ ms: number; frame: KittyFrame }> = [];
@@ -253,7 +221,6 @@ const framesOf = (bytes: Buffer, arrivals: ReadonlyArray<Arrival>) => {
   return stamped;
 };
 
-/** The repo root: each program runs the command the film types, in its directory. */
 const ROOT = new URL("../../../../", import.meta.url).pathname;
 const [, , outDir = "", name = "", ...specs] = process.argv;
 
@@ -311,8 +278,7 @@ Effect.runPromise(
             Pixels.countDifferingPixels(x.frame.pixels, y.frame.pixels) ?? 0,
         ),
       ).pipe(Option.getOrElse(() => 0)) > 0;
-    // Each click's repaint is the first changed frame after it is sent; this rig's
-    // pty pipe delays it, so the press is drawn 3 frames before its repaint.
+
     const presses = Arr.filter(clicks, (c) => !c.hover);
     const repaints = Arr.map(presses, (click) => {
       const from = Math.round(click.at * FPS);

@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Auto height page.
- *
- * The native reveal grows to its content's measured height; the preview mounts
- * the content in place and fades it in, which the page names the approximation.
- */
-
 import { useState } from "react";
 
 export function AutoHeightDemo() {

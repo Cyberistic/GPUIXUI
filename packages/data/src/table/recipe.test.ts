@@ -1,14 +1,3 @@
-/**
- * The table recipes compile to the roles and metrics the parts paint.
- *
- * A table is the first surface in the library whose rows and header are separate
- * scrollers, so a silent compile failure (a class the registry cannot express)
- * would leave a part unpainted rather than throwing. This suite holds every
- * recipe to `unsupported: []`, the selected row's wash and label role to the
- * theme's own, and the header/body chrome to the border role the runtime paints
- * with a `borderBottomWidth`.
- */
-
 import { describe, expect, it } from "vitest";
 import { darkTheme, lightTheme } from "@gpuixui/tokens";
 import { classesToStyle } from "@gpuixui/tw";
@@ -70,15 +59,11 @@ describe("the table recipes", () => {
     const chosen = classesToStyle(TABLE_ROW_SELECTED, darkTheme).style;
     const interactive = classesToStyle(TABLE_ROW_INTERACTIVE, darkTheme).style;
 
-    // The chosen recipe paints the fill and nothing else: a row's press state is
-    // the *derived* wash over the hover it replaces (`pointerWash`), which a
-    // class string cannot express.
     expect(chosen.backgroundColor).toBe(darkTheme.colors.selected);
     expect(chosen.hover).toBeUndefined();
     expect(chosen.active).toBeUndefined();
     expect(chosen.cursor).toBeUndefined();
 
-    // An unchosen pressable row answers with the plain hover wash.
     expect(interactive.hover?.backgroundColor).toBe(darkTheme.colors.hover);
   });
 
@@ -98,8 +83,7 @@ describe("the table recipes", () => {
 
   it("leaves a body cell unfilled, so a press reaches its row", () => {
     const cell = classesToStyle(TABLE_CELL, lightTheme).style;
-    // A fill is where GPUI's hit test stops (`press-routing-lifecycle`): a
-    // painted cell swallows the press its row answers.
+
     expect(cell.backgroundColor).toBeUndefined();
   });
 
@@ -107,14 +91,11 @@ describe("the table recipes", () => {
     const cell = classesToStyle(TABLE_HEADER_CELL, lightTheme).style;
     const divider = classesToStyle(TABLE_COLUMN_DIVIDER, lightTheme).style;
 
-    // A divider needs a containing block; without it the strip is placed
-    // against the window rather than its column, and every row drifts.
     expect(cell.position).toBe("relative");
     expect(divider.position).toBe("absolute");
     expect(divider.right).toBe(0);
     expect(divider.width).toBe(6);
-    // The strip paints a fill at rest, because GPUI's hit test stops at the
-    // first painted child: a transparent strip never receives the press.
+
     expect(divider.backgroundColor).toBe(lightTheme.colors.border);
     expect(divider.hover?.backgroundColor).toBe(lightTheme.colors.primary);
   });

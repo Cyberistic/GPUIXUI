@@ -1,20 +1,9 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Hexagon example: a hexagon field behind a workspace hero, and the same field
- * stilled under the reduced preference.
- *
- * Composition, not a gallery: the grid's job is to give a launch panel depth
- * while the content keeps the words and the presses. The second strip shows the
- * one decision the field leaves to its caller: the reduced preference paints the
- * same grid at rest.
- */
-
 import { Card } from "@gpuixui/components/card";
 import { Hexagon } from "../src/hexagon.js";
 import { Button, textStyle, useTheme } from "@gpuixui/components/authoring";
 import { MotionProvider } from "@gpuixui/components/motion";
 
-/** A workspace launch panel with a hexagon field behind it. */
 export const HexagonExample = () => {
   const theme = useTheme();
 

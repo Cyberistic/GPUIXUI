@@ -1,6 +1,3 @@
-/**
- * The stats block's sample data: Heavens Arena, as the fighters' manager sees it.
- */
 export const ranges = [
   { value: "week", label: "Week" },
   { value: "month", label: "Month" },
@@ -16,14 +13,14 @@ export interface Tile {
 
 export interface Dataset {
   readonly tiles: ReadonlyArray<Tile>;
-  /** Bout wins per period, by fighter. */
+
   readonly labels: ReadonlyArray<string>;
   readonly wins: ReadonlyArray<{
     readonly key: string;
     readonly label: string;
     readonly values: ReadonlyArray<number>;
   }>;
-  /** Average aura output per period. */
+
   readonly aura: ReadonlyArray<number>;
 }
 
@@ -98,7 +95,6 @@ export const datasets: Readonly<Record<Range, Dataset>> = {
   },
 };
 
-/** The Nen types among the arena's fighters this season. */
 export const nenTypes = [
   { key: "enhancer", label: "Enhancer", value: 34 },
   { key: "transmuter", label: "Transmuter", value: 22 },

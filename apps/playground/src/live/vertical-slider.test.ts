@@ -1,17 +1,3 @@
-/**
- * Holds the arithmetic the `slider-vertical-lifecycle` probe reads a window
- * with, and the claims the probe has to keep making.
- *
- * The probe's whole finding is "the value runs up": a thumb at zero sits on the
- * rail's floor and a drag maps `event.y` from the bottom. That inversion cannot
- * be proved by a frame alone — a caption can say "runs up" over a slider that
- * runs down — so the reader is held to a drawn frame with a known centre and to
- * the primitives' own pointer mapping.
- *
- * The failure being guarded is a ceiling-first formula: it would centre the
- * thumb at the top for a zero value, which is the exact bug the probe exists to
- * settle (measured in the window as `expected 56 ± 1, got 240`).
- */
 import { readFileSync } from "node:fs";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
@@ -38,21 +24,18 @@ const readme = readFileSync(
   "utf8",
 );
 
-/** The `verticalSliderSteps` effect, bounded by the `box-paint` probe. */
 const steps = (() => {
   const start = scenarios.indexOf("const verticalSliderSteps");
   const end = scenarios.indexOf("const BoxPaintProbe", start + 1);
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
 })();
 
-/** The count the README prints for this probe, if any. */
 const printedCheckCount = (): number =>
   Number(
     /(\d+) checks, `--only slider-vertical-lifecycle`/.exec(readme)?.[1] ??
       Number.NaN,
   );
 
-/** The track the probe mounts: a 200-point box with half a thumb at each end. */
 const TRACK: VerticalBox = { x: 16, y: 48, width: 32, height: 200 };
 const INSET = 8;
 const RAIL: VerticalBox = {
@@ -66,12 +49,6 @@ const INK = "#FF0000";
 const PAGE = [255, 255, 255, 255] as const;
 const DISC = [255, 0, 0, 255] as const;
 
-/**
- * A drawn frame with a 12-point disc of ink, its top-left at `at`, at `scale`.
- *
- * The frame is the region the reader is given plus a margin, so a wrong origin
- * shows up as a shifted centre rather than as a frame edge.
- */
 const frameWithDisc = (at: VerticalBox, scale: number): Pixels.Pixels => {
   const width = 48 * scale;
   const height = 100 * scale;
@@ -107,7 +84,6 @@ describe("the vertical slider's axis", () => {
   });
 
   it("puts zero on the rail's floor and one on its ceiling", () => {
-    // The inversion itself: a ceiling-first formula would swap these.
     expect(thumbCentreAt(RAIL, 0)).toBe(RAIL.y + RAIL.height);
     expect(thumbCentreAt(RAIL, 1)).toBe(RAIL.y);
   });
@@ -120,7 +96,6 @@ describe("the vertical slider's axis", () => {
 
 describe("the thumb's paint", () => {
   it("reads the centre of the ink inside the slider's box", () => {
-    // A disc whose centre is logical y=40, captured at 2 device pixels a point.
     const disc = { x: 10, y: 34, width: 12, height: 12 } as const;
     const frame = frameWithDisc(disc, 2);
     const centre = Option.getOrNull(
@@ -173,8 +148,6 @@ describe("the probe's documentation", () => {
   });
 
   it("prints the check count the probe actually asserts", () => {
-    // A `paintedBox` call is one `the runtime paints <id>` check as well as the
-    // box it returns, so both sites count.
     const asserted =
       (steps.match(/ctx\.expect[A-Za-z]+\(/g)?.length ?? 0) +
       (steps.match(/paintedBox\(/g)?.length ?? 0);
@@ -183,8 +156,6 @@ describe("the probe's documentation", () => {
   });
 
   it("states the axis the frame measured", () => {
-    // Each claim is the one check that would pass if the axis were reversed, so
-    // a probe that drops one leaves the measurement unreadable rather than red.
     expect(steps).toContain("a thumb at zero is centred on the rail's floor");
     expect(steps).toContain("a press at the track's centre reports half");
     expect(steps).toContain("a drag to a quarter from the floor reports 25");

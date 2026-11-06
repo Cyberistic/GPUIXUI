@@ -11,23 +11,6 @@ import {
 } from "./registry.js";
 import { ICON_SIZES } from "./sizes.js";
 
-/**
- * Guards what `Icon` hands GPUix.
- *
- * `Icon` is a pure function of its props — it renders no children and holds no
- * state — so asserting on the element it *returns* is a real behavioural test,
- * not a snapshot: it catches the three mistakes that matter. A decorative icon
- * that announces itself as an image pollutes the accessibility tree for every
- * screen reader user; a blank label that promotes one publishes an unnamed
- * image, which is worse than decoration; and an icon that does not disable
- * pointer events eats the click meant for the button around it.
- *
- * There is no renderer in this package's own suite: `Icon` is a pure function,
- * so these cases assert on the element it returns and claim no painted result.
- * Painted behaviour is `packages/testing`'s job, run by the playground suite on
- * this host.
- */
-
 const render = (props: Parameters<typeof Icon>[0]): ReactElement<SvgProps> =>
   Icon(props);
 
@@ -39,9 +22,6 @@ describe("Icon", () => {
   });
 
   it("turns the icon in the markup, because the runtime has no transform", () => {
-    // GPUix's `<svg>` host ignores `StyleDesc.transform`, so the turn has to be
-    // part of the document resvg resolves. A quarter turn about the 24×24
-    // centre is the case a chevron or an arrow needs.
     const { props } = render({
       name: "chevron-right",
       color: "#123456",
@@ -49,7 +29,7 @@ describe("Icon", () => {
     });
 
     expect(props.source).toContain('<g transform="rotate(90 12 12)">');
-    // The geometry is the registry's own, not a second copy written for the turn.
+
     expect(props.source).toContain('<path d="m9 18 6-6-6-6"/>');
     expect(props.source).toBe(rotatedIconMarkup("chevron-right", 90));
   });
@@ -140,14 +120,6 @@ describe("Icon", () => {
   });
 
   it("paints the placeholder mark for a name the set no longer carries", () => {
-    // The bug guarded: `name` is a stored value as often as a literal — a saved
-    // toolbar, a workspace layout, an action record — so a name a release
-    // renamed or dropped arrives as a string the union does not name. `Icon`
-    // read `icons[name]` and wrote the `undefined` straight into `source`: the
-    // element kept its box and its `Image` node while painting nothing (measured
-    // in the runtime suite), so an icon-only button showed a blank square while
-    // it announced its action. A stored name paints the `help` mark, and the
-    // caller's label still names the action.
     const { props } = render({
       name: "floppy" as IconName,
       color: "#123456",
@@ -168,8 +140,6 @@ describe("Icon", () => {
   });
 
   it("hands over a tween and lets the caller's style win", () => {
-    // The theme toggler grows a crescent out of the sun's box: GPUix has no
-    // transform, so the size the path scales from is the tween's own geometry.
     const frame = { width: 8, height: 8, left: 4, top: 4, opacity: 0 };
     const { props } = render({
       name: "moon",

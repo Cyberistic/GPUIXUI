@@ -1,11 +1,3 @@
-/**
- * `accessibleName` — the one rule every media surface reads a name through.
- *
- * The bug guarded: a documented default only covers `undefined`, so a label a
- * stored table or an untranslated locale handed over as `""` reached
- * `aria-label` as an empty string and the surface published no name at all.
- */
-
 import { describe, expect, it } from "vitest";
 import { accessibleName } from "./name.js";
 

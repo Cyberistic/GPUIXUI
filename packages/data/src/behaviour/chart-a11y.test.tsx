@@ -1,21 +1,3 @@
-/**
- * A chart announces its data, and a sparkline announces itself once.
- *
- * Two bugs are guarded here, both measured in a real window on
- * `@gpuix/native@0.11.0`:
- *
- * - **A sparkline was two images.** Its wrapper claimed `role="img"` with the
- *   caller's `aria-label` while the single series layer inside it claimed the
- *   same role with the same name, so the tree held two `Image` nodes and a
- *   reader heard the trend twice. Written as one layer, the tree holds one.
- * - **A series' values were silent.** A layer was named by its series label
- *   alone (`Revenue`), so the numbers a chart exists to show reached no reader:
- *   the axis tick text and the category labels were loose `Label`s beside it.
- *   0.11.0 carries no figure or table role, so each series now carries its
- *   readout in `aria-description` (`Q1 3, Q2 6`) — the one extra channel the
- *   closed `aria-*` set has.
- */
-
 import * as Arr from "effect/Array";
 import { afterEach, describe, expect, it } from "vitest";
 import { darkTheme, seriesColors } from "@gpuixui/tokens";
@@ -45,14 +27,12 @@ afterEach(() => {
   root = undefined;
 });
 
-/** Render one chart in a real window and hand back its accessibility tree. */
 const treeOf = (node: Parameters<typeof renderData>[0]): A11yTree => {
   root = renderData(node);
   settle(root);
   return decodeA11yTree(root.renderer.getA11yTree());
 };
 
-/** One node's announced name and description. */
 const wordsOf = (
   tree: A11yTree,
   id: string,
@@ -84,11 +64,6 @@ describe("a chart's accessibility tree", () => {
   });
 
   it("reads a blank name as the word Trend the page documents", () => {
-    // Bug guarded: `aria-label` is a stored value as often as a literal — a
-    // locale table with a missing row, a preference a store saved empty — and
-    // the default was written as `ariaLabel ?? "Trend"`, which only covers an
-    // **absent** prop. A blank name reached the image while the page promised
-    // the word, so the sparkline was announced by nothing.
     const tree = treeOf(<Sparkline aria-label="" values={[3, 6]} />);
 
     const images = withRole(tree, tree.root, "Image");
@@ -131,8 +106,6 @@ describe("a chart's accessibility tree", () => {
       />,
     );
 
-    // The third value draws nowhere, so announcing it would name a datum the
-    // picture does not show.
     expect(wordsOf(tree, onlyRole(tree, "Image")).description).toBe(
       "Q1 3, Q2 6",
     );
@@ -171,12 +144,6 @@ describe("a chart's accessibility tree", () => {
   });
 
   it("announces a ring datum that draws no slice", () => {
-    // Bug guarded: a ring datum with nothing to draw — a zero, or a value the
-    // geometry cannot read — painted no layer at all, so its reading vanished
-    // from the tree while the legend still named the datum: a reader heard
-    // three categories and two numbers, and could not tell a zero from a value
-    // left out. This is the loss the series charts closed for a bar of zeros;
-    // the datum keeps its image and simply draws no slice.
     const tree = treeOf(
       <DonutChart
         aria-label="Traffic by source"
@@ -197,10 +164,6 @@ describe("a chart's accessibility tree", () => {
   });
 
   it("announces a series whose values draw no bar", () => {
-    // A bar chart of zeros paints no bar — a zero keeps its slot and has no
-    // height — but the series exists and its values are the reading. Dropping
-    // the layer left the legend naming a series the tree never described, so a
-    // reader could not tell a zero from a series left out of the chart.
     const tree = treeOf(
       <BarChart
         aria-label="Revenue"
@@ -218,10 +181,7 @@ describe("a chart's accessibility tree", () => {
       { label: "Revenue", description: "Q1 0, Q2 0" },
       { label: "Cost", description: "Q1 0, Q2 -4" },
     ]);
-    // The picture does not lie to meet the words: a zero paints no bar, while
-    // a negative value stands below the zero line — the geometry draws it, so
-    // the tree names a series the plot really shows. The document carries the
-    // grid and every series, so a series' shapes are the ones in its colour.
+
     const palette = seriesColors(darkTheme);
     const revenue = seriesShapesOf(
       root!,
@@ -235,12 +195,6 @@ describe("a chart's accessibility tree", () => {
   });
 
   it("reads a blank series label as the key the series is stored by", () => {
-    // Bug guarded: a series' label is content — an i18n table missing its row
-    // answers `""` and a saved chart configuration restores a series with no
-    // words — and the layer is named by it, so a blank one published an image
-    // with no name and a legend row with nothing in it while the series was
-    // still painted and its values still described. The key is the identity the
-    // caller stores the series by, and the one word that is always there.
     const tree = treeOf(
       <BarChart
         aria-label="Revenue"
@@ -258,7 +212,7 @@ describe("a chart's accessibility tree", () => {
       "revenue",
       "cost",
     ]);
-    // The legend paints the same words the images are named by.
+
     const words = root?.renderer.getAllText() ?? [];
     expect(words).toEqual(expect.arrayContaining(["revenue", "cost"]));
   });
@@ -287,18 +241,13 @@ describe("a chart's accessibility tree", () => {
       "referral",
     ]);
     const words = root?.renderer.getAllText() ?? [];
-    // Both legends paint the key: the ring's two rows and the standalone one.
+
     expect(words).toContain("direct");
     expect(words).toContain("referral");
     expect(words).toContain("sessions");
   });
 
   it("keeps a category's slot when its stored label is a hole", () => {
-    // Bug guarded: a label list is stored data, and a store can write a hole
-    // where a category's name belongs. The description painted the JS word
-    // `null` as the category's name ("null 6") — a datum the caller never
-    // wrote — while the paint showed a blank slot. The slot stays (the bar
-    // above it still draws) and the datum reads as its number alone.
     const tree = treeOf(
       <div>
         <BarChart
@@ -314,8 +263,7 @@ describe("a chart's accessibility tree", () => {
     const images = withRole(tree, tree.root, "Image");
     expect(images).toHaveLength(1);
     expect(wordsOf(tree, images[0] ?? "").description).toBe("Q1 3, 6");
-    // The category keeps its own track: filtering the hole would move the
-    // second value under the first label.
+
     expect(root?.renderer.findByTestId("holed-label-1")).not.toBe(undefined);
     expect(root?.renderer.getAllText() ?? []).not.toContain("null");
   });

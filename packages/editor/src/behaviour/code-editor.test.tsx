@@ -1,14 +1,3 @@
-/**
- * CodeEditor behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a Tab or Enter that is swallowed without inserting the
- * indentation the editor promises; a read-only editor that still edits when a
- * key reaches its field; a disabled editor that does the same; the auto-indent
- * an editable Enter must keep; and a source field handed the runtime's default
- * control fill instead of the page fill the editor paints, so the caret and
- * selection are measured against a surface the reader is not looking at.
- */
-
 import { useState, type ReactNode } from "react";
 import { createTestRoot } from "@gpuix/react/testing";
 import { Button } from "@gpuixui/primitives";
@@ -44,7 +33,6 @@ afterEach(() => {
   current?.unmount();
 });
 
-/** The value the native field carries. */
 const valueOf = (root: Root): string => {
   const field = root.renderer.findByTestId("code-editor");
   const value = (field?.customProps as { readonly value?: unknown } | undefined)
@@ -52,7 +40,6 @@ const valueOf = (root: Root): string => {
   return typeof value === "string" ? value : "";
 };
 
-/** The test id of the element holding focus, if it names one. */
 const focusedTestId = (root: Root): Option.Option<string> =>
   Option.flatMap(
     Option.fromNullishOr(root.renderer.getFocusedElementId()),
@@ -65,7 +52,6 @@ const type = (root: Root, keys: string): void => {
   root.renderer.nativeSimulateKeyDown(field?.id ?? -1, keys);
 };
 
-/** A controlled editor whose value the harness owns. */
 const Controlled = (props: {
   readonly initial: string;
   readonly readOnly?: boolean;
@@ -112,10 +98,6 @@ describe("CodeEditor", () => {
   });
 
   it("paints a stored draft that is not text as an empty document", () => {
-    // The bug guarded: a draft restored from storage as `null` reached the
-    // tokenizer and the gutter, so the editor threw out of the render instead
-    // of painting the empty document it documents — while the markdown editor
-    // already read the same prop through `draftOf`.
     const editor = render(
       <CodeEditor defaultValue={null as unknown as string} />,
     );
@@ -126,10 +108,6 @@ describe("CodeEditor", () => {
   });
 
   it("paints the source plain when the stored language is not text", () => {
-    // The bug guarded: a language restored beside the draft as a number
-    // reached `@tanstack/highlight`, which reads the id through `.trim()`, so
-    // the editor threw `value.trim is not a function` out of the render instead
-    // of painting the plain fallback an unknown id gets.
     const editor = render(
       <CodeEditor
         defaultValue="const a = 1"
@@ -142,17 +120,12 @@ describe("CodeEditor", () => {
   });
 
   it("names the field when the stored label is blank", () => {
-    // The bug guarded: a label restored from an i18n table with a missing row
-    // published `aria-label=""`, so the editor had no name in the a11y tree.
     const editor = render(<CodeEditor label="" />);
     expect(
       editor.renderer.findByTestId("code-editor")?.customProps?.["aria-label"],
     ).toBe("Code editor");
     editor.unmount();
 
-    // A saved record writes the field it kept, and a label that is not text is
-    // no name at all: it reads as the same default instead of throwing
-    // `self.trim is not a function` out of `accessibleName`.
     const stored = render(<CodeEditor label={42 as unknown as string} />);
     expect(
       stored.renderer.findByTestId("code-editor")?.customProps?.["aria-label"],
@@ -185,11 +158,6 @@ describe("CodeEditor", () => {
   });
 
   it("leaves the tab order and paints the disabled chrome", () => {
-    // The bug this guards: `disabled` documented "painted with the disabled
-    // chrome" and dropped the tab stop, but the surface painted the same as a
-    // live editor — a reader typed into a field that refused every key with
-    // nothing saying why. The `opacity` is the share the library's other
-    // disabled surfaces paint (`@gpuixui/tokens`' `disabledOpacity`).
     const editor = render(
       <div>
         <Button testId="before">Before</Button>
@@ -222,8 +190,6 @@ describe("CodeEditor", () => {
   });
 
   it("keeps Tab as the traversal when the indent inserts nothing", () => {
-    // The bug guarded: `tabMode` still swallowed Tab with `indent=""`, so the
-    // field was a keyboard trap — every Tab inserted "" and none moved focus.
     const editor = render(
       <div>
         <Button testId="before">Before</Button>
@@ -243,10 +209,6 @@ describe("CodeEditor", () => {
   });
 
   it("keeps Tab inserting for a stored tab mode name it does not ship", () => {
-    // The bug guarded: `tabMode` was compared raw, so a preference restored as
-    // an older or renamed spelling (`"indent"`) read as not-insert: Tab moved
-    // the focus out of the field although the prop documents `"insert"`, and
-    // no indentation was ever typed.
     const onChange = vi.fn();
     const editor = render(
       <div>
@@ -254,7 +216,6 @@ describe("CodeEditor", () => {
         <CodeEditor
           value="const a = 1"
           onValueChange={onChange}
-          // A store hands back the name it wrote; this release does not declare it.
           // @ts-expect-error — the value a saved preference actually carries
           tabMode="indent"
           testId="code-editor"
@@ -274,8 +235,6 @@ describe("CodeEditor", () => {
   });
 
   it("reads an indent it cannot store as the default", () => {
-    // The bug guarded: a preference restored as `null` reached
-    // `value + indent`, so Tab typed the word "null" into the document.
     const onChange = vi.fn();
     const editor = render(
       <Controlled
@@ -291,11 +250,6 @@ describe("CodeEditor", () => {
   });
 
   it("lines a gutter number up with the code line it numbers", () => {
-    // The bug guarded: the gutter column was padded by one spacing step, so
-    // every number painted below the line it numbers — measured in the
-    // renderer as `alpha` at y=1 with its `1` at y=9 and `beta` at y=19 with
-    // its `2` at y=27 — on a surface whose whole job is to lay code out in
-    // numbered rows.
     const editor = render(<CodeEditor defaultValue={"alpha\nbeta"} />);
     const boundsOf = (text: string) => {
       const element = editor.renderer.findByText(text);
@@ -314,10 +268,6 @@ describe("CodeEditor", () => {
   });
 
   it("paints the line an empty document shows", () => {
-    // The bug guarded: the highlight layer is the editor's box (the field is
-    // absolutely positioned over it), and it painted one row per line *ending*,
-    // so an empty document was its two borders — 2 points tall, with no line
-    // number, no room for its hint and no caret line to type on.
     const heightOf = (node: ReactNode): number | undefined => {
       const editor = render(node);
       const surface = editor.renderer.findByTestId("code-editor-surface");
@@ -344,9 +294,6 @@ describe("CodeEditor", () => {
   });
 
   it("keeps the caret's line inside the box a trailing newline leaves", () => {
-    // The bug guarded: after Enter the field holds an empty final line, and the
-    // layer stopped at the last line *with text*, so the caret's line painted
-    // outside a box that ended on the newline (`"a\n"` measured one row tall).
     const heightOf = (value: string): number | undefined => {
       const editor = render(
         <CodeEditor value={value} onValueChange={() => undefined} />,
@@ -368,9 +315,6 @@ describe("CodeEditor", () => {
   });
 
   it("paints the rows the caller asks for with minRows", () => {
-    // The bug guarded: `minRows` documented "minimum visible rows" and reached
-    // the absolutely positioned field, so it could not size anything — three
-    // asked-for rows measured the empty editor's two borders.
     const heightOf = (node: ReactNode): number | undefined => {
       const editor = render(node);
       const surface = editor.renderer.findByTestId("code-editor-surface");
@@ -395,16 +339,14 @@ describe("CodeEditor", () => {
     Arr.forEach([lightTheme, darkTheme], (theme) => {
       const editor = render(<CodeEditor defaultValue="const a = 1" />, theme);
       const host = editor.renderer.findByTestId("code-editor");
-      // The editor paints `bg-background` and lays a transparent field over it,
-      // so the runtime must measure the caret and selection on that fill rather
-      // than on a plain control's `input` role.
+
       expect(host?.customProps?.theme).toMatchObject({
         appearance: theme.mode,
         bg: theme.colors.background,
         caret: theme.colors.primary,
         fontMono: theme.typography.mono,
       });
-      // The seam is a host prop, not a style: `appearance` in a style is ignored.
+
       expect(host?.style.appearance).toBeUndefined();
       editor.unmount();
     });

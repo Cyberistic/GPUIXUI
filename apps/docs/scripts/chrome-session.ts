@@ -1,21 +1,8 @@
-/**
- * A headless Chrome page, enough of it to evaluate a script and capture a frame.
- *
- * Two docs probes drive a browser: `live-surface-probe.ts` (the spike that
- * proved the wasm paints) and `live-route-probe.ts` (that proof, through the
- * `/live` route). Neither can use `--screenshot`: headless Chrome captures at
- * load, and with `--virtual-time-budget` it fast-forwards the page's timers and
- * captures before the renderer's first frame. Measured — see
- * `docs/preview-strategy.md` §The paint is measured. So both speak DevTools.
- *
- * A host tool: it is never imported by a route.
- */
 import { spawn } from "node:child_process";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-/** The browser to drive: an argument, the environment, or this host's Chrome. */
 export const findChrome = (
   given: string | undefined,
   environment: Readonly<Record<string, string | undefined>>,
@@ -27,7 +14,6 @@ export const findChrome = (
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-/** One field of a JSON-RPC result, narrowed rather than asserted. */
 const field = (value: unknown, key: string): unknown =>
   isRecord(value) ? value[key] : undefined;
 
@@ -48,7 +34,6 @@ interface DevTools {
   readonly close: () => void;
 }
 
-/** Wait for the port Chrome writes into its profile directory. */
 const portOf = async (profile: string): Promise<number> => {
   const file = join(profile, "DevToolsActivePort");
 
@@ -62,7 +47,6 @@ const portOf = async (profile: string): Promise<number> => {
   throw new Error("Chrome never opened a DevTools port");
 };
 
-/** The browser's DevTools socket, once the endpoint is actually listening. */
 const socketOf = async (port: number): Promise<string> => {
   for (let attempt = 0; attempt < 100; attempt += 1) {
     const version: unknown = await fetch(
@@ -129,21 +113,11 @@ const connect = async (port: number): Promise<DevTools> => {
   return { send, close: () => socket.close() };
 };
 
-/** What `openChrome` may do before the page's own scripts run. */
 export interface ChromeOptions {
-  /**
-   * A script installed on every new document, before the page's own scripts.
-   *
-   * This is what makes a browser capability measurable as absent: a probe that
-   * needs `localStorage` to refuse has to patch `Storage.prototype` before the
-   * application mounts, and a script run after load is too late.
-   */
   readonly preload?: string;
 }
 
-/** A page rectangle in CSS pixels, and the codec a capture writes. */
 export interface CaptureOptions {
-  /** Capture this rectangle instead of the viewport. */
   readonly clip?: {
     readonly x: number;
     readonly y: number;
@@ -151,23 +125,20 @@ export interface CaptureOptions {
     readonly height: number;
   };
   readonly format?: "png" | "webp";
-  /** The codec's quality; `webp` only. */
+
   readonly quality?: number;
 }
 
-/** A page open in the browser, and the frame it paints. */
 export interface ChromePage {
-  /** Evaluate an expression in the page, and read its string result. */
   readonly text: (expression: string) => Promise<string>;
-  /** Evaluate an expression for its side effect. */
+
   readonly run: (expression: string) => Promise<void>;
-  /** Navigate the open target to `url`; the caller waits for its paint. */
+
   readonly goto: (url: string) => Promise<void>;
-  /** The page as an image. */
+
   readonly capture: (options?: CaptureOptions) => Promise<Uint8Array>;
 }
 
-/** Open `url` in a headless browser at `width`×`height` CSS pixels. */
 export const openChrome = async (
   chrome: string,
   url: string,
@@ -210,8 +181,6 @@ export const openChrome = async (
     const targetId = asText(
       field(
         await devtools.send("Target.createTarget", {
-          // A preloaded script must exist before the page's first script, so the
-          // target opens blank and is navigated after the script is installed.
           url: options.preload === undefined ? url : "about:blank",
         }),
         "targetId",
@@ -231,7 +200,6 @@ export const openChrome = async (
     if (sessionId === undefined) throw new Error("the page never attached");
 
     if (options.preload !== undefined) {
-      // The script only reaches the new document once `Page` is enabled.
       await devtools.send("Page.enable", {}, sessionId);
       await devtools.send(
         "Page.addScriptToEvaluateOnNewDocument",

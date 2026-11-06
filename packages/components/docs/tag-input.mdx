@@ -55,11 +55,3 @@ TagInput
 | `TagInput` | `div` with `role="group"` | `value` (required), `onValueChange` (required), `label` (required), `max?`, `allowDuplicates?`, `disabled?`, `hint?`, `caption?`, `className?`, `children` |
 | `TagInputField` | `<input>` | `className?`, `style?`, `defaultValue?`, `placeholder?`, `readOnly?`, `disabled?`, `autoFocus?`, `invalid?`, `size?`, `fullWidth?`, `label?`, `tabIndex?`, `testId?`, `onValueChange?`, `onClick?`, `onKeyDown?`, `onKeyUp?`, `onFocus?`, `onBlur?`, `ref?`, `aria-id?`, `onLayout?`, `description?` |
 | `TagInputChip` | chip `div` with a removal `role="button"` | `value` (required), `style?`, `className?` |
-
-## Notes
-- Controlled only.
-- The group cannot observe a descendant's focus on this runtime, so the borderless input carries the focus ring itself rather than the group.
-- `hint` and `caption` are caller copy; the component does not derive a budget from `max`.
-- `max` is a whole count: a fractional cap is floored, and a cap that cannot be read (`NaN`, an infinity) is no cap at all.
-- No Backspace-on-empty removal.
-- A token list read from storage is read at the boundary: a `value` that is not a list carries no tokens, and an entry that is not text is dropped, so a saved record's `null` does not throw out of the edit that adds the next token.

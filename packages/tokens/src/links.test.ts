@@ -1,34 +1,7 @@
-/**
- * Guards the links a reader follows out of the three token documents: the
- * catalogue (`docs/tokens.md`), the design-system page and this package's
- * README.
- *
- * The bug this guards: the README's syntax-palette evidence row was written
- * `../apps/playground/README.md`, which resolves against
- * `packages/tokens/README.md` to `packages/apps/playground/README.md` — a path
- * this repository does not have — while every sibling row links `../../`, so
- * the one row a reader opens to check the measured pixels answered 404. A
- * link is resolved against the document it is written in, which the prose
- * cannot show: `../apps/…` and `../../apps/…` read alike two directories up.
- *
- * The second drift is an anchor: `#data-series` is a promise that the page it
- * points into still has a heading that slug. A renamed section leaves every
- * cross-reference pointing at the top of a page instead of the rule the
- * sentence cites.
- *
- * A fenced block is code a reader copies, not a link, so the scan reads only
- * prose — the `](…)` inside a snippet is not a link the document site follows.
- *
- * `node:fs` is deliberate, as in `docs.test.ts` and `exports.test.ts`: this is a
- * check over the repository's own Markdown, and the package keeps zero runtime
- * dependencies by design — no Effect, and so no `Option` for a parsed absence.
- */
-
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-/** One document this package teaches with, as a path below this test file. */
 const documents = [
   "../../../docs/tokens.md",
   "../../../docs/design-system.md",
@@ -38,20 +11,12 @@ const documents = [
 const text = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-/** One line of prose, with the number a failure names it by. */
 interface ProseLine {
-  /** The 1-based line in the document. */
   readonly line: number;
-  /** The line's text. */
+
   readonly text: string;
 }
 
-/**
- * The lines of a document that are prose rather than a fenced snippet.
- *
- * A fence opens and closes on a line whose first non-space characters are three
- * backticks; everything between is code.
- */
 const prose = (markdown: string): ReadonlyArray<ProseLine> =>
   markdown
     .split("\n")
@@ -68,24 +33,16 @@ const prose = (markdown: string): ReadonlyArray<ProseLine> =>
       { fenced: false, lines: [] },
     ).lines;
 
-/** One inline Markdown link, with the line that holds it. */
 interface DocumentLink {
-  /** The 1-based line the link is written on. */
   readonly line: number;
-  /** The target as written, anchor included. */
+
   readonly target: string;
-  /** The part before `#`, or `""` for a link into the same document. */
+
   readonly file: string;
-  /** The part after `#`, or `undefined` when the link names no anchor. */
+
   readonly anchor: string | undefined;
 }
 
-/**
- * The inline links in a document's prose.
- *
- * Absolute links are not this guard's business — they need the network — so
- * they are left out rather than checked against the filesystem.
- */
 const linksIn = (markdown: string): ReadonlyArray<DocumentLink> =>
   prose(markdown).flatMap(({ line, text: lineText }) =>
     [...lineText.matchAll(/\]\(([^)\s]+)\)/g)].flatMap((match) => {
@@ -105,12 +62,6 @@ const linksIn = (markdown: string): ReadonlyArray<DocumentLink> =>
     }),
   );
 
-/**
- * The slugs a document's headings answer to, in GitHub's form: a heading is
- * lower-cased, its inline code markers and punctuation dropped, and its spaces
- * turned into hyphens. The three documents carry no duplicate heading, so one
- * slug names one heading.
- */
 const headings = (markdown: string): ReadonlySet<string> =>
   new Set(
     prose(markdown).flatMap(({ text: lineText }) => {
@@ -128,7 +79,6 @@ const headings = (markdown: string): ReadonlySet<string> =>
     }),
   );
 
-/** The file a link points at, resolved from the document that writes it. */
 const resolvesTo = (document: string, link: DocumentLink): string =>
   fileURLToPath(
     new URL(
@@ -137,15 +87,6 @@ const resolvesTo = (document: string, link: DocumentLink): string =>
     ),
   );
 
-/**
- * The documents a link can point into, read once.
- *
- * Forty links across three documents resolve into the same handful of targets —
- * the catalogue and the playground README account for most of them — and the
- * suite runs against a two-second budget, so a scan that re-read and re-slugged
- * one large page per link timed out. The repository does not change while the
- * suite runs.
- */
 const contents = new Map<string, string>();
 const slugs = new Map<string, ReadonlySet<string>>();
 
@@ -214,8 +155,7 @@ describe("the token documents' links", () => {
           return [];
         }
         const target = resolvesTo(document, link);
-        // A missing file is the case above's failure, and is named there; a
-        // heading cannot be read from it here.
+
         if (!existsSync(target)) {
           return [];
         }

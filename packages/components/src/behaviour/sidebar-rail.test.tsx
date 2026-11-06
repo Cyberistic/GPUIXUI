@@ -1,9 +1,3 @@
-/**
- * Regression: the icon rail centred its rows only at shadcn's 48px. The header,
- * group and footer kept a fixed `p-2`, so a wider rail (one that clears
- * macOS's traffic lights, say) pushed every icon off its centre.
- */
-
 import { describe, expect, it } from "vitest";
 import { requireBounds, settleMotion } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";

@@ -1,24 +1,3 @@
-/**
- * The `z-index-lifecycle` probe: does a stacking level order positioned
- * siblings for paint and for the hit test?
- *
- * The published runtime has no `zIndex`, and the repository builds its own
- * binding with `apps/playground/patches/gpuix-zindex.patch` applied. The patch
- * has Rust unit tests over the retained tree, but nothing in this app had ever
- * painted a level: a rebuild that dropped the patch would keep every existing
- * probe green, because every shipped surface renders last in its parent.
- *
- * Three arrangements of one box settle it. The **levelled** stack mounts red,
- * green, blue with levels 3, 1, 2, so tree order says blue on top and the level
- * says red. The **plain** stack mounts the same way with no level, so the gate
- * has to leave tree order alone. The **flow** pair puts a level on an in-flow
- * child and covers it with a positioned sibling, so a level that leaked into
- * in-flow layout would paint the wrong colour.
- *
- * Paint is read from the capture, the hit order from the renderer's own
- * `getElementsAt`, and the press from the box whose `onClick` ran — three
- * channels for one rule.
- */
 import { Duration, Effect } from "effect";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
@@ -45,13 +24,10 @@ import {
   type IndexedHandle,
 } from "./z-index.js";
 
-/** A paint or a hit test needs a frame to commit. */
 const SETTLE = Duration.millis(40);
 
-/** The capture the fills are read out of. */
 const CAPTURE = "z-index";
 
-/** A painted box, as `onLayout` reports one. */
 interface LayoutBox {
   readonly x: number;
   readonly y: number;
@@ -59,7 +35,6 @@ interface LayoutBox {
   readonly height: number;
 }
 
-/** The fields an `onLayout` payload may carry; each is optional. */
 interface LayoutPayload {
   readonly x?: number;
   readonly y?: number;
@@ -67,7 +42,6 @@ interface LayoutPayload {
   readonly height?: number;
 }
 
-/** A layout report as a box, or `None` while a field is missing. */
 const boxOf = (payload: LayoutPayload): Option.Option<LayoutBox> =>
   Option.map(
     Option.all([
@@ -79,7 +53,6 @@ const boxOf = (payload: LayoutPayload): Option.Option<LayoutBox> =>
     ([x, y, width, height]) => ({ x, y, width, height }),
   );
 
-/** One positioned box over the shared geometry. */
 const positioned = (fill: string): StyleDesc => ({
   position: "absolute",
   top: Z_INDEX_BOX.top,
@@ -89,16 +62,13 @@ const positioned = (fill: string): StyleDesc => ({
   backgroundColor: fill,
 });
 
-/** The same box at a level. */
 const layered = (fill: string, level: number): StyleDesc => ({
   ...positioned(fill),
   zIndex: level,
 });
 
-/** How a stack reports its frame so the probe can aim a hit test at its centre. */
 type Remember = (payload: LayoutPayload) => void;
 
-/** One layer of a stack: its id, the name the readout prints and its paint. */
 const Layer = ({
   id,
   name,
@@ -122,7 +92,6 @@ const Layer = ({
   />
 );
 
-/** The centre of a painted box, the point every layer shares. */
 const centreOf = (
   box: LayoutBox,
 ): { readonly x: number; readonly y: number } => ({
@@ -166,7 +135,6 @@ export const ZIndexProbe = (): ReactNode => {
     [],
   );
 
-  /** The hit order at one stack's centre, or no names when it has not painted. */
   const orderAt = useCallback(
     (name: string): ReadonlyArray<string> =>
       Option.match(HashMap.get(frames.current, name), {
@@ -227,7 +195,7 @@ export const ZIndexProbe = (): ReactNode => {
         and a level on an in-flow child is ignored.
       </text>
 
-      {/* The levelled stack: mounted high, low, mid; painted low, mid, high. */}
+      {}
       <div
         testId={Z_INDEX_IDS.stack}
         onLayout={remember(Z_INDEX_IDS.stack)}
@@ -259,7 +227,7 @@ export const ZIndexProbe = (): ReactNode => {
         />
       </div>
 
-      {/* The gate: the same three boxes, same order, no level declared. */}
+      {}
       <div
         testId={Z_INDEX_IDS.plain}
         onLayout={remember(Z_INDEX_IDS.plain)}
@@ -288,7 +256,7 @@ export const ZIndexProbe = (): ReactNode => {
         />
       </div>
 
-      {/* In-flow first, then the positioned cover: a level on the first is inert. */}
+      {}
       <div
         testId={Z_INDEX_IDS.flow}
         onLayout={remember(Z_INDEX_IDS.flow)}
@@ -339,8 +307,6 @@ export const zIndexSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor(Z_INDEX_IDS.probe);
     yield* Effect.sleep(SETTLE);
 
-    // 1. The hit test: the level orders the stack, the gate keeps tree order,
-    // and an in-flow child stays under the positioned cover.
     yield* ctx.host.click(Z_INDEX_IDS.measure);
     yield* Effect.sleep(SETTLE);
     const order = yield* ctx.host.text(Z_INDEX_IDS.readout);
@@ -361,7 +327,6 @@ export const zIndexSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.expectContains("no press has run yet", order, "presses=none");
 
-    // 2. The paint: one capture, the three tops as colours.
     yield* ctx.host.capture(CAPTURE);
     const frame = yield* ctx.host.pixels(CAPTURE);
     const window = yield* ctx.host.windowSize();
@@ -409,7 +374,6 @@ export const zIndexSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 3. The press: the pointer reaches the box the paint put on top.
     yield* ctx.host.click(Z_INDEX_IDS.stack);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(

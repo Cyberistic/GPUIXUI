@@ -1,12 +1,3 @@
-/**
- * The editor-overlay fixture's premises.
- *
- * The probe's whole measurement is a pixel comparison between two boxes that
- * differ only by the field. If the fixture gave the pair different metrics, a
- * painted fill, or a control ink the code also paints, the comparison would
- * report something other than "the field painted nothing" — and the probe would
- * read as evidence either way. Each case below is one of those premises.
- */
 import { describe, expect, it } from "@effect/vitest";
 import * as Arr from "effect/Array";
 import * as Str from "effect/String";
@@ -38,8 +29,6 @@ describe("the editor-overlay fixture", () => {
   });
 
   it("paints no fill of its own in either ink", () => {
-    // A field with a fill hides the layer beneath it, which is the whole
-    // composition; the visible control changes the glyph colour only.
     expect(
       Arr.map(
         INKS,
@@ -55,7 +44,7 @@ describe("the editor-overlay fixture", () => {
       "transparent",
     );
     expect(visible.color).not.toBe("transparent");
-    // Glyph for glyph in the code's ink, a field could compare as unchanged.
+
     expect(visible.color).not.toBe(code.color);
   });
 
@@ -79,7 +68,7 @@ describe("the editor-overlay fixture", () => {
     const lineHeight = overlayCodeStyle(lightTheme).lineHeight ?? 0;
     const padding = (OVERLAY_GAP / 2) * 2;
     expect(lineHeight).toBeGreaterThan(0);
-    // The comparison needs the whole source inside both boxes.
+
     expect(
       Arr.length(Str.split("\n")(OVERLAY_SOURCE)) * lineHeight + padding,
     ).toBeLessThanOrEqual(OVERLAY_FRAME.height);
@@ -89,8 +78,6 @@ describe("the editor-overlay fixture", () => {
   });
 
   it("prints counts in the readout, never the value", () => {
-    // A readout that echoed the value would paint the probe's marker itself, so
-    // "the code layer repainted" could never be read from the frame.
     const readout = overlayReadout(OVERLAY_SOURCE, "transparent");
     expect(readout).toBe(
       `ink=transparent chars=${Str.length(OVERLAY_SOURCE)} lines=6`,

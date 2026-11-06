@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Avatar group page.
- *
- * The native facepile overlaps its avatars and caps the overflow behind a chip;
- * the preview draws the same discs, initials, ring and `+N` chip.
- */
-
 const members = [
   "Ada Lovelace",
   "Grace Hopper",

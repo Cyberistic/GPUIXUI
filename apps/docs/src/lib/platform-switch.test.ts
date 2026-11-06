@@ -9,17 +9,6 @@ import {
   steps,
 } from "../../scripts/platform-switch-probe";
 
-/**
- * The platform switch is the mission's reading test — "a reader toggles macOS
- * -> Windows and every preview changes" — and both halves need holding. The
- * **state** half is `platform.test.ts` (the order, the labels and the storage);
- * the **press** half is React in a browser.
- * `apps/docs/scripts/platform-switch-probe.ts` presses the group on a hydrated
- * page and reads each surface's platform, its control height and the button the
- * group reports pressed; this file holds the probe, the switch markup and the
- * policy together.
- */
-
 const root = new URL("../../../../", import.meta.url);
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
@@ -44,8 +33,6 @@ describe("the platform switch's readout", () => {
   });
 
   it("derives the height from the platform theme, not a literal", () => {
-    // The mission names two steps a reader can compare; the library's density
-    // is why they differ, and a geometry edit must move the probe with it.
     expect(expectedHeight("dark", "darwin")).toBe("28px");
     expect(expectedHeight("dark", "win32")).toBe("32px");
     expect(expectedHeight("dark", "linux")).toBe("36px");
@@ -67,8 +54,7 @@ describe("the switch's press path", () => {
   it("names the group the markup renders", () => {
     expect(platformGroup).toBe("Platform style");
     expect(toggle).toContain('label="Platform style"');
-    // The gate is the shared read (`react-ready.ts`), over every copy of the
-    // group; `react-ready.test.ts` proves the read itself.
+
     expect(probe).toContain("firstReady(");
   });
 

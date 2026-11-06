@@ -64,26 +64,3 @@ closest the runtime gets to it.
 | `className` | `string` | — | joined after the surface recipe, so it wins conflicts |
 | `style` | `StyleState<ShimmerState>` | — | a style, or a function of the frame's `peak`, `active` and `reducedMotion` |
 | `testId` | `string` | — | stable locator; a text run is `testId-ink`, a band is `testId-overlay` |
-
-## Accessibility
-
-- A text run is announced word by word: the first glyph of each word carries
-  the word as its accessible name and the rest are presentational, because the
-  runtime has no `aria-hidden`.
-- Shimmer is activity, not progress. Give it a `label` when the surface means
-  "working" (a `status` node named by that label); leave it unnamed when the
-  highlight decorates content that is already named.
-- Reduced motion rests the text and paints no band, so the surface still reads.
-- Never use the highlight, its direction or its motion to carry success or a
-  percentage — use `Progress` for a known value and an ordinary surface once the
-  work settles.
-
-## Notes
-- **No mask, no `background-clip`**: a text run is one colour per code point, so
-  the sheen is discrete at glyph resolution rather than a continuous fill.
-- **A gradient is two stops**: the band's strips are each their own ramp, and a
-  row of them reads as a band at a glance but is not one continuous gradient.
-- **Composed children are not recoloured**: a card, an icon or a mixed tree
-  keeps the band because the runtime cannot repaint its text.
-- **Reduced motion removes the highlight** rather than freezing it mid-surface,
-  because a permanent sheen would read as a state rather than a sweep.

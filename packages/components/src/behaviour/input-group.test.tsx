@@ -1,14 +1,3 @@
-/**
- * InputGroup behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: the row's ring not following the field's focus (so the
- * group looks inert while it is being typed in); an `inline-end` addon shrinking
- * the field instead of taking its own width; an `inline-start` addon painted
- * after the field because of where it was written; a press on an addon not
- * reaching the field; and an error message painting neither the destructive edge
- * nor the message itself.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -25,7 +14,6 @@ import {
   InputGroupText,
 } from "../input-group.js";
 
-/** A search row with a trailing shortcut, written before the field. */
 const Search = ({
   error,
   description,
@@ -48,7 +36,6 @@ const Search = ({
   </div>
 );
 
-/** The ring the group paints while the field holds focus. */
 const ringOf = (page: ReturnType<typeof renderComponent>) =>
   page.renderer.findByTestId("group")?.style.boxShadow;
 
@@ -62,7 +49,7 @@ describe("InputGroup", () => {
       page.renderer.focusElement(page.renderer.findByTestId("field")?.id ?? -1);
 
       expect(ringOf(page)).toMatchObject({ spreadRadius: 3 });
-      // The field declares no ring of its own: one box owns the cue.
+
       expect(
         page.renderer.findByTestId("field")?.style.focusVisible,
       ).toMatchObject({ outlineWidth: 0 });
@@ -79,8 +66,6 @@ describe("InputGroup", () => {
       const field = requireBounds(page, "field");
       const addon = requireBounds(page, "end");
 
-      // The addon takes its own width to the right; the field takes the rest
-      // of the line rather than collapsing to the width of its placeholder.
       expect(field.x + field.width).toBeLessThanOrEqual(addon.x + 1);
       expect(
         Math.abs(field.width + addon.width - group.width),

@@ -1,11 +1,3 @@
-/**
- * TABLE mode: `f(x)` over Start/End/Step, with the manual's 30-row ceiling.
- *
- * The function is evaluated by the same engine as COMP, so a table can contain
- * any expression COMP can (except the functions the manual excludes, which the
- * caller refuses before calling this module).
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 
@@ -22,7 +14,6 @@ export interface TableRequest {
 
 export const DEFAULT_TABLE: TableRequest = { start: 1, end: 5, step: 1 };
 
-/** The x values the request would produce, or `None` when it exceeds 30. */
 export const tableValues = (
   request: TableRequest,
 ): Option.Option<ReadonlyArray<number>> => {
@@ -46,7 +37,6 @@ export const tableValues = (
   );
 };
 
-/** Generate the rows by evaluating the supplied function at each x. */
 export const buildTable = (
   request: TableRequest,
   evaluate: (x: number) => Option.Option<number>,

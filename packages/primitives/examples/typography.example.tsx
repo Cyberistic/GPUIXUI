@@ -1,19 +1,8 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Typography example: one release-notes entry.
- *
- * Every role in the scale appears in the place it belongs — a heading, running
- * body, a strong lead, labels, a caption, inline code and a code block — so the
- * page demonstrates hierarchy instead of listing font sizes. Tones carry
- * meaning too: muted for metadata, destructive for the breaking-change notice,
- * and the footer is the one run aligned to the end of the card's line.
- */
-
 import { Icon } from "@gpuixui/icons";
 import type { ReactElement } from "react";
 import { Box, Separator, Stack, Text, useTheme } from "../src/index.js";
 
-/** A release-notes card using every typographic role and the common tones. */
 export const TypographyExample = (): ReactElement => {
   const theme = useTheme();
   return (
@@ -77,8 +66,7 @@ export const TypographyExample = (): ReactElement => {
           Read the migration note before upgrading a shipping application.
         </Text>
 
-        {/* A caption sits at the end of the card's line: `align="end"` is the
-            API's direction-neutral name for the runtime's `right`. */}
+        {}
         <Text role="caption" tone="muted" align="end">
           Published 17 October 2026 · v0.11.0
         </Text>

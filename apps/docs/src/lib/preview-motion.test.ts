@@ -1,31 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-/**
- * A preview may move; it may not move a reader who asked it not to.
- *
- * The library ships a motion policy (`prefers-reduced-motion`, a zero-duration
- * assignment on the native side), and the previews that draw the same
- * components animate their own keyframes — a chart growing in, a toast leaving,
- * a spinner turning, a skeleton pulsing. Those drawings are browser code, so
- * none of them reach the runtime's policy: each needs its own
- * `@media (prefers-reduced-motion: reduce)` rule. A movement transition is the
- * same kind of journey — a thumb sliding, a chart growing, a picture zooming —
- * and is collapsed the same way.
- *
- * A source scan before this guard found four animated parts still moving (a
- * chart column, a leaving toast, a collapsing body, a copy button's glyph) and
- * eight movement transitions still travelling (a settings knob, a switch thumb,
- * a carousel dot, a liquid fill, a magnetic card, an image zoom, a motion-grid
- * cell and a preview picture).
- *
- * The scan is structural rather than a list: every rule that turns on
- * `animation` or a geometric transition names the selector it applies to, and
- * that selector (or its subject compound) has to appear in a reduced-motion
- * block that stops the same property in the same style sheet. A new moving part
- * without a guard fails by name.
- */
-
 const styles = new URL("../styles/", import.meta.url);
 const root = new URL("../../../../", import.meta.url);
 const policy = readFileSync(new URL("docs/preview-strategy.md", root), "utf8");
@@ -46,7 +21,6 @@ const sheets: ReadonlyArray<StyleSheet> = readdirSync(styles)
     ),
   }));
 
-/** The bodies of every block opened by `needle`, brace-matched. */
 const blocksAt = (css: string, needle: string): ReadonlyArray<string> => {
   const blocks: Array<string> = [];
   let from = 0;
@@ -72,7 +46,6 @@ const blocksAt = (css: string, needle: string): ReadonlyArray<string> => {
 const reduceBlocks = (css: string): ReadonlyArray<string> =>
   blocksAt(css, "@media (prefers-reduced-motion: reduce)");
 
-/** A selector's subject compound, without the state that narrows it. */
 const subjectOf = (selector: string): string =>
   (
     selector
@@ -83,13 +56,6 @@ const subjectOf = (selector: string): string =>
     .replace(/\[[^\]]*\]/g, "")
     .replace(/::?[a-zA-Z-]+(?:\([^)]*\))?/g, "");
 
-/**
- * The selectors a reduced-motion block collapses for one property.
- *
- * The property matters: a block that stops an animation does not stop a
- * movement transition. The selector matters too: `.gx-imagezoom` stopping its
- * own transition does not stop the `img` inside it.
- */
 const surrendered = (
   css: string,
   property: "animation" | "transition",
@@ -110,7 +76,6 @@ interface MotionRule {
   readonly selector: string;
 }
 
-/** The selectors that turn on a property. */
 const motionRules = (
   css: string,
   picks: (body: string) => boolean,
@@ -132,7 +97,6 @@ const animated = (css: string): ReadonlyArray<MotionRule> =>
       !/animation\s*:\s*none/.test(body),
   );
 
-/** A transition that moves a part: the properties a reader would see travel. */
 const MOVEMENT = /\b(?:left|right|top|bottom|width|height|transform)\b/;
 
 const travelling = (css: string): ReadonlyArray<MotionRule> =>
@@ -141,14 +105,6 @@ const travelling = (css: string): ReadonlyArray<MotionRule> =>
     return transition !== undefined && MOVEMENT.test(transition);
   });
 
-/**
- * A rule is guarded when a block stops the same property for its own selector.
- *
- * A descendant selector whose subject carries a class also accepts a guard for
- * that subject (`.gx-shine-btn:hover .gx-shine-sheen` is stopped by
- * `.gx-shine-sheen`); a subject with no class of its own (`… img`) needs the
- * whole selector, because a guard for a different parent does not apply to it.
- */
 const unguarded = (
   sheet: StyleSheet,
   rules: ReadonlyArray<MotionRule>,
@@ -182,7 +138,6 @@ describe("the previews' motion", () => {
   });
 
   it("scans the style sheets rather than passing on an empty walk", () => {
-    // Floors: a parser that stopped matching would otherwise report no gap.
     const animations = sheets.flatMap((sheet) => animated(sheet.css));
     const transitions = sheets.flatMap((sheet) => travelling(sheet.css));
     const guards = sheets.flatMap((sheet) => [

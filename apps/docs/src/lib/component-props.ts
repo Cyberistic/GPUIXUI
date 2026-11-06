@@ -1,81 +1,36 @@
 import { readFileSync, readdirSync } from "node:fs";
 
-/**
- * The props a package component declares, read from its source.
- *
- * A curated page's API table is its most copyable claim, and two directions
- * matter: a name the page prints must exist (`component-page.test.ts` resolves
- * that already) and a prop the component declares must have a row. The second
- * direction is a compiler question — through `extends`, an alias intersection
- * and `Omit` — so the site reads the declarations the way
- * `packages/primitives/src/docs.test.ts` §The primitives API tables does, with
- * the same four rules:
- *
- * - an interface contributes its own fields and its parents';
- * - an alias contributes the members of its intersection or union;
- * - `Omit<T, "a">` subtracts, and a cycle cannot recurse;
- * - a type no scanned package declares is the runtime's own surface (`Props`,
- *   and what `ActionHostProps` omits it from) and stays opaque: its properties
- *   are not this repository's to document.
- *
- * Names collide across packages — `FieldProps` is the primitives package's text
- * field and the components package's labelled field, and `InputProps` is an
- * alias of the first — so a name resolves inside the package that referred to
- * it, then inside the package the page installs from, then anywhere. A flat
- * map would document the wrong component's surface.
- *
- * Node-only, and only the suite imports it, so the site bundle carries neither
- * the reader nor a filesystem call.
- */
-
-/** The packages a curated page documents. */
 export const packages = ["primitives", "components", "data"] as const;
 
-/** One of the packages a curated page installs from. */
 export type Package = (typeof packages)[number];
 
 const root = new URL("../../../../", import.meta.url);
 
-/** A props type as its source declares it: fields, parents, or an alias body. */
 export interface DeclaredType {
   readonly props: ReadonlyArray<string>;
   readonly parents: ReadonlyArray<string>;
   readonly alias?: string;
-  /** The package that declares it, so its parents resolve there first. */
+
   readonly pkg: Package;
 }
 
-/** Every declaration the documented packages carry, by name then package. */
 export interface TypeIndex {
   readonly byName: ReadonlyMap<string, ReadonlyMap<Package, DeclaredType>>;
-  /** The package a page installs from; absent when no page context applies. */
+
   readonly prefer?: Package;
 }
 
-/** An interface header, however its `extends` list is wrapped. */
 const INTERFACE_HEADER =
   /(?:^|\n)(?:export\s+)?interface\s+(\w+)(?:<[^>]*>)?(?:\s+extends\s+([^{]+))?\s*\{/g;
 
-/** A type alias header; its body ends at the `;` at its own level. */
 const TYPE_ALIAS = /(?:^|\n)(?:export\s+)?type\s+(\w+)(?:<[^>]*>)?\s*=\s*/g;
 
-/**
- * A `Schema.Class` whose constructor takes its fields as an object literal —
- * the shape the toast draft (`ToastInput`) is declared in.
- */
 const SCHEMA_CLASS =
   /(?:^|\n)export\s+class\s+(\w+)\s+extends\s+Schema\.Class<[^>]+>\([^)]*\)\(\s*\{/g;
 
-/** `readonly name?:`, `name?:` and the quoted form a hyphenated prop takes. */
 const PROP_SIGNATURE =
   /^\s*(?:readonly\s+)?(?:"([^"]+)"|([A-Za-z_][\w-]*))\s*\??:/;
 
-/**
- * The text between a `{` and its matching `}`.
- *
- * A bracket scan says more than a combinator here: it stops at the first
- * balanced close instead of visiting the rest of the file.
- */
 const balancedBody = (source: string, open: number): string | undefined => {
   let depth = 0;
   for (let index = open; index < source.length; index += 1) {
@@ -88,7 +43,6 @@ const balancedBody = (source: string, open: number): string | undefined => {
   return undefined;
 };
 
-/** An alias body, up to the `;` that ends it at its own level. */
 const aliasBody = (source: string, start: number): string | undefined => {
   let depth = 0;
   for (let index = start; index < source.length; index += 1) {
@@ -100,15 +54,6 @@ const aliasBody = (source: string, start: number): string | undefined => {
   return undefined;
 };
 
-/**
- * The prop names one object type's body declares at its own level.
- *
- * A nested object (`readonly style?: { readonly color: string }`) is a prop's
- * shape, not a set of props, so its members are skipped — depth is read at the
- * start of each line, before the line moves it. Comments are stripped first:
- * a doc comment quotes code (`style={(state) => ({ ... })}`), and its brackets
- * are prose.
- */
 const signatureNames = (body: string): ReadonlyArray<string> =>
   body
     .replaceAll(/\/\*[\s\S]*?\*\//g, "")
@@ -132,12 +77,6 @@ const signatureNames = (body: string): ReadonlyArray<string> =>
       { names: [], depth: 0 },
     ).names;
 
-/**
- * The members of an intersection or a union, split only at its own level.
- *
- * `(`/`{`/`[` count as nesting; a generic's angle brackets do not, because a
- * function type's `=>` would look like a close.
- */
 const typeParts = (body: string): ReadonlyArray<string> => {
   const parts: Array<string> = [];
   let current = "";
@@ -155,12 +94,6 @@ const typeParts = (body: string): ReadonlyArray<string> => {
     .filter((part) => part !== "");
 };
 
-/**
- * The interfaces an `extends` clause names, split at its own commas.
- *
- * A generic's comma belongs to the generic — `Omit<MenuItemProps, "onSelect">`
- * is one parent, not two — so an unclosed `<` keeps the split waiting.
- */
 const parentParts = (clause: string): ReadonlyArray<string> => {
   const parts: Array<string> = [];
   let current = "";
@@ -181,15 +114,6 @@ const parentParts = (clause: string): ReadonlyArray<string> => {
     .filter((part) => part !== "");
 };
 
-/**
- * Every props declaration the documented packages carry.
- *
- * `prefer` is the package the page installs from: it wins a name that another
- * package also declares, and a name resolves inside the package that referred
- * to it before either. The other packages are still read, so a parent declared
- * across a boundary (`data`'s table extending `primitives`' field props)
- * resolves.
- */
 export const declaredTypes = (prefer?: Package): TypeIndex => {
   const byName = new Map<string, Map<Package, DeclaredType>>();
   const remember = (name: string, declared: DeclaredType): void => {
@@ -244,7 +168,6 @@ export const declaredTypes = (prefer?: Package): TypeIndex => {
   return prefer === undefined ? { byName } : { byName, prefer };
 };
 
-/** The declaration a name resolves to, from the package that named it outward. */
 const declarationOf = (
   name: string,
   index: TypeIndex,
@@ -260,10 +183,6 @@ const declarationOf = (
   return undefined;
 };
 
-/**
- * One member of a type expression: an inline object, an `Omit`, a parenthesised
- * group, or a named type.
- */
 const resolvePart = (
   part: string,
   index: TypeIndex,
@@ -291,11 +210,6 @@ const resolvePart = (
   return named === undefined ? [] : propsOf(named, index, seen, from);
 };
 
-/**
- * Every prop a type carries, through `extends`, an alias intersection or union
- * and `Omit`. A name no scanned package declares is the runtime's own surface
- * and contributes nothing; `seen` keeps a cycle from recursing.
- */
 export const propsOf = (
   name: string,
   index: TypeIndex,

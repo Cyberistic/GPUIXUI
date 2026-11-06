@@ -1,45 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Tabs: a roving-focus tab list and the panels it switches.
- *
- * The list owns the keys — a key event fired on a focused trigger bubbles to the
- * list, the same measured behaviour that lets `List` own its rows — and the
- * trigger owns its own focus. A `Tab` traversal focuses a trigger **without
- * running its `onFocus`** on 0.11.0 (`tabs-lifecycle` reads `focuses=0`), so an
- * arrow move anchors on the trigger that sent the key, then the recorded row,
- * then the selection: the key's own element is the precise origin, and a key
- * that names no row still moves from the selection rather than re-anchoring at
- * the first enabled tab.
- * Index arithmetic is
- * `internal/collection.ts`, so disabled tabs are skipped and wrap-around agrees
- * with every other collection in the package.
- *
- * The selected surface is **one** element for the whole set (`tabs-indicator`),
- * not a background on each trigger. It is measured rather than assumed: each
- * trigger reports its painted box through `onLayout`, the rail reports the box
- * its absolute children resolve against (`tabs-origin`) on every paint where
- * that box changes — a window resize or a pane opening above the rail moves the
- * origin too — and `tabs/indicator.ts` turns the pair into the pill's offsets.
- * So the pill follows a trigger that resizes, and a caller's rail padding or
- * border cannot leave it short.
- *
- * A layout event reports a **size** change, not a move, so a trigger pushed
- * along the rail by a sibling that grew keeps the box it last reported. The rail
- * therefore re-reads its origin and every trigger from the renderer in one pass
- * whenever a box, the origin or the row set changes: a tab shoved aside by a
- * longer neighbour keeps the pill under it, not at the place it used to occupy.
- *
- * Measured limitations: the pill **slides** by retargeting the box's
- * `left`/`top`/`width`/`height` (a `normal` motion target), because
- * `@gpuix/native@0.11.0` has no `transform`; the movement is a box
- * interpolation rather than a scaled layer, and reduced motion is the
- * consumer's policy (`MotionProvider`). There is no `zIndex`, so the pill stays
- * behind the triggers by being their earlier sibling. It has no
- * `aria-orientation`, `aria-controls` or `aria-labelledby` either (`HostProps`),
- * so the panel is named by its value and the trigger/panel relationship is
- * positional.
- */
-
 import type {
   EventPayload,
   KeyEvent,
@@ -117,19 +76,16 @@ import {
 
 export type { TabsActivation, TabsOrientation } from "./tabs/logic.js";
 
-/** One registered trigger: its value, native id and whether it accepts input. */
 interface TabRow {
   readonly value: string;
   readonly id: number;
   readonly disabled: boolean;
 }
 
-/** A trigger's painted box, kept by the set for the shared selected surface. */
 interface MeasuredTab extends TabBox {
   readonly value: string;
 }
 
-/** The rules a tab part follows; throws outside a {@link Tabs} root. */
 interface TabsContextValue {
   readonly selected: string;
   readonly active: Option.Option<string>;
@@ -150,7 +106,6 @@ interface TabsContextValue {
 
 const TabsContext = createContext<TabsContextValue | undefined>(undefined);
 
-/** The tab set a part belongs to. Throws when there is none. */
 const useTabsContext = (): TabsContextValue => {
   const value = useContext(TabsContext);
   if (value === undefined) {
@@ -159,7 +114,6 @@ const useTabsContext = (): TabsContextValue => {
   return value;
 };
 
-/** Replace the row with the same value, keeping declaration order. */
 const upsert = (
   rows: ReadonlyArray<TabRow>,
   row: TabRow,
@@ -177,17 +131,12 @@ const upsert = (
     },
   );
 
-/** Whether two painted boxes are the same box, to the nearest subpixel. */
 const sameBox = (a: TabBox, b: TabBox): boolean =>
   Math.abs(a.x - b.x) < 0.5 &&
   Math.abs(a.y - b.y) < 0.5 &&
   Math.abs(a.width - b.width) < 0.5 &&
   Math.abs(a.height - b.height) < 0.5;
 
-/**
- * Take a trigger's latest painted box. An unmoved box keeps the previous array,
- * so a paint that reports the same geometry costs no render.
- */
 const upsertBox = (
   boxes: ReadonlyArray<MeasuredTab>,
   box: MeasuredTab,
@@ -216,26 +165,20 @@ const rowAt = (
 ): Option.Option<TabRow> =>
   Option.flatMap(index, (position) => Arr.get(rows, position));
 
-/** {@link Tabs} props. */
 export interface TabsProps extends Omit<Props, "children"> {
-  /** The controlled selected value. `undefined` means uncontrolled. */
   readonly value?: string;
-  /** The uncontrolled starting value. Default `""`, no tab selected. */
+
   readonly defaultValue?: string;
   readonly onValueChange?: (value: string) => void;
-  /** Default `"horizontal"`. */
+
   readonly orientation?: TabsOrientation;
-  /** Default `"automatic"`: moving focus selects. */
+
   readonly activation?: TabsActivation;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/**
- * A tab set. Put {@link TabsList}, {@link TabsTrigger} and {@link TabsContent}
- * inside; the root owns the value, the focus registry and the tab stop.
- */
 export const Tabs = ({
   value: valueProp,
   defaultValue = "",
@@ -249,9 +192,7 @@ export const Tabs = ({
 }: TabsProps) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
-  // Both names are stored with the workspace as often as they are literals, so
-  // each is read once here and the layout, the keys, the activation policy and
-  // the context all paint the same answer.
+
   const axis = orientationOf(orientation);
   const policy = activationOf(activation);
   const [selected, setSelected] = useControllableState({
@@ -358,10 +299,6 @@ export const Tabs = ({
     );
   }, [active, select]);
 
-  /**
-   * One tab stop: the selected tab when it accepts input, otherwise the first
-   * enabled tab. A disabled selected tab must not eat the list's only stop.
-   */
   const tabbable = useMemo(
     () =>
       pipe(
@@ -426,26 +363,13 @@ export const Tabs = ({
   );
 };
 
-/** {@link TabsList} props: the rail, optionally named for assistive technology. */
 export interface TabsListProps extends Omit<Props, "children"> {
-  /** The tab list's accessible name. */
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/**
- * The row of triggers. Owns the arrow, Home and End keys, and the shared
- * selected surface every trigger paints over.
- *
- * The surface is placed from two measurements rather than guessed: the
- * `tabs-origin` probe fills the box the rail's absolute children resolve
- * against (borders and padding included) and reports it again whenever that box
- * changes, and each trigger reports its own painted box. Together they give the
- * pill's offsets exactly, so a caller's rail padding cannot leave it short and a
- * rail the window moved cannot leave the pill behind.
- */
 export const TabsList = ({
   label,
   className,
@@ -485,7 +409,6 @@ export const TabsList = ({
           ? Option.some(-1)
           : Option.none();
 
-  /** The trigger whose key reached the list, when a trigger fired it. */
   const originOf = (event: EventPayload): Option.Option<string> =>
     pipe(
       Arr.findFirst(rows, (row) => row.id === event.elementId),
@@ -510,11 +433,6 @@ export const TabsList = ({
     );
   };
 
-  /**
-   * The origin is the box the pill's absolute children resolve against, in
-   * window coordinates. An unmoved box keeps the previous state, so repainting
-   * the same rail costs no render.
-   */
   const keepOrigin = (box: TabBox): void =>
     setOrigin((current) =>
       Option.match(current, {
@@ -530,17 +448,6 @@ export const TabsList = ({
       Option.match({ onNone: () => undefined, onSome: keepOrigin }),
     );
 
-  /**
-   * Re-read every box after a reflow.
-   *
-   * A layout event reports a **size** change, not a move: a trigger pushed along
-   * the rail by a sibling that grew — or by a caller's own rail padding — keeps
-   * the box it last reported, so the pill stayed where its tab used to be. One
-   * pass reads the origin and every trigger from the renderer's current paint,
-   * the rule `usePlacement` uses, so the offsets are exact even when the rail
-   * itself moved. The renderer's bounds are the boxes `onLayout` carries, so the
-   * two paths cannot disagree, and an unchanged pass sets no state.
-   */
   useLayoutEffect(() => {
     const at = (id: number) =>
       Option.fromNullishOr(renderer?.getElementBounds?.(id));
@@ -587,8 +494,7 @@ export const TabsList = ({
             cn(TABS_LIST, TABS_LIST_ORIENTATION[orientation], className),
             theme,
           ),
-          // The pill's containing block: it must be the rail, and its absolute
-          // children are what the probe measures.
+
           { position: "relative" },
         ),
         style,
@@ -600,11 +506,7 @@ export const TabsList = ({
         onLayout={noteOrigin}
         style={{
           position: "absolute",
-          // The box an absolute child resolves against — the rail's padding
-          // box. It fills that box rather than sitting in one corner, because
-          // the runtime reports a layout it can see change: a rail that resizes
-          // must report the origin again, or a trigger it re-measured would be
-          // subtracted from a box the rail no longer starts at.
+
           left: 0,
           top: 0,
           right: 0,
@@ -618,20 +520,13 @@ export const TabsList = ({
           <div
             testId="tabs-indicator"
             motion={{
-              // The first measured box is painted where it is; every later one
-              // retargets from the box on screen, which is the slide.
               initial: false,
               animate: indicatorBox(anchoredAt, box),
               transition: move,
             }}
             style={{
               position: "absolute",
-              // The pill's whole job is to show which tab is selected, so it
-              // wears the `selected` state wash: `card` equals the rail's own
-              // `background` in the high-contrast light theme (1.00:1), so the
-              // selected tab painted no surface at all. `selected` is held to
-              // the decorative floor on `background`, and the `foreground`
-              // label it carries is a measured body pair on that fill.
+
               backgroundColor: theme.colors.selected,
               borderRadius: theme.radius.sm,
               pointerEvents: "none",
@@ -644,29 +539,24 @@ export const TabsList = ({
   );
 };
 
-/** {@link TabsTrigger} props. */
 export interface TabsTriggerProps extends Omit<Props, "style"> {
-  /** The value this trigger selects. Must match a {@link TabsContent}. */
   readonly value: string;
   readonly disabled?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, or a function of the trigger's state. */
+
   readonly style?: StateStyle<TabsTriggerState>;
 }
 
-/** What a trigger draws: its selection, input state and axis. */
 export interface TabsTriggerState {
-  /** Selected (`aria-selected`). */
   readonly active: boolean;
   readonly disabled: boolean;
   readonly focused: boolean;
-  /** The tab the last arrow/Home/End gesture landed on. */
+
   readonly highlighted: boolean;
   readonly orientation: TabsOrientation;
 }
 
-/** One tab. Focusable only when selected, or when the selection is disabled. */
 export const TabsTrigger = ({
   value,
   disabled = false,
@@ -771,15 +661,12 @@ export const TabsTrigger = ({
   );
 };
 
-/** {@link TabsContent} props. */
 export interface TabsContentProps extends Props {
-  /** The trigger value that reveals this panel. */
   readonly value: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/** The panel for one tab. Renders nothing while another tab is selected. */
 export const TabsContent = ({
   value,
   className,
@@ -803,7 +690,6 @@ export const TabsContent = ({
   );
 };
 
-/** Every part of Tabs, so a misplaced sibling is named. */
 const tabsParts: ReadonlyArray<PartComponent> = [
   Tabs,
   TabsList,
@@ -825,7 +711,6 @@ const tabsList: PartsContract = {
   hint: "Put TabsTrigger directly inside TabsList; put TabsContent beside it.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const tabsMeta = {
   name: "Tabs",
   tier: 2,

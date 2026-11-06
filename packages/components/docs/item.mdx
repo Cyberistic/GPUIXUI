@@ -65,17 +65,3 @@ ItemGroup
 | `ItemActions` | `className` / `children` | `string` / `PartChildren` | — |
 | `ItemHeader` | `className` / `children` | `string` / `PartChildren` | — |
 | `ItemFooter` | `className` / `children` | `string` / `PartChildren` | — |
-
-## Notes
-- The row is a layout primitive: it paints no hover, focus or press state. Wrap
-  it in a `ListItem` or a `Button` when the whole row acts.
-- `line-clamp-2` has no native utility, so a long description clips its
-  overflow rather than ending in an ellipsis after two lines.
-- No `ItemSeparator`: put a `Separator` between rows when the surfaces are all
-  `default`.
-
-## Related
-
-- **List** — the selectable rows a settings list is built from.
-- **Card** — the bordered surface when a single record needs a frame.
-- **Separator** — the divider between rows.

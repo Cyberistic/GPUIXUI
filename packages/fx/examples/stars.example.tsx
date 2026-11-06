@@ -1,20 +1,10 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Stars example: an empty state under a night sky.
- *
- * Composition, not a gallery: the field's real job is behind content — an empty
- * state whose copy still owns the words — and the quiet strip shows the same sky
- * under the reduced preference, which is the one decision the field leaves to the
- * application.
- */
-
 import { Card } from "@gpuixui/components/card";
 import { EmptyState } from "@gpuixui/components/empty-state";
 import { textStyle, useTheme } from "@gpuixui/components/authoring";
 import { MotionProvider } from "@gpuixui/components/motion";
 import { Stars } from "../src/stars.js";
 
-/** The field fills the box it is given, so the example bounds it with insets. */
 const fill = {
   position: "absolute" as const,
   top: 0,
@@ -23,7 +13,6 @@ const fill = {
   left: 0,
 };
 
-/** A night sky behind an empty state, and the same sky stilled. */
 export const StarsExample = () => {
   const theme = useTheme();
 
@@ -69,7 +58,7 @@ export const StarsExample = () => {
         >
           <MotionProvider preference="reduced">
             <div style={fill}>
-              {/* The caller's colour: a warm sky rather than the page ink. */}
+              {}
               <Stars
                 count={24}
                 seed={3}

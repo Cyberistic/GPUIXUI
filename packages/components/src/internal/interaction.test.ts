@@ -1,12 +1,3 @@
-/**
- * The behaviour suites' wait helper.
- *
- * A component timer is real time. The bug this guards: a fixed sleep that is
- * barely longer than the delay, which passes or fails on how busy the machine
- * is — and a poller that keeps polling after the deadline, which would turn "it
- * never opened" into a pass.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import { waitFor } from "./interaction.js";
 

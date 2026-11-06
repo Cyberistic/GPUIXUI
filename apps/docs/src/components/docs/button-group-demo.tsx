@@ -1,11 +1,3 @@
-/**
- * Browser preview for the ButtonGroup page.
- *
- * A group attaches or separates the actions it wraps; the preview reuses the
- * shared button chrome and shows the two modes with a selected action in each.
- * The Code tab shows the native usage.
- */
-
 import { useState } from "react";
 
 const actions = ["Left", "Center", "Right"] as const;

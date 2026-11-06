@@ -1,12 +1,3 @@
-/**
- * Guards the renderer-free replay helper (plan 201).
- *
- * The bugs these can catch: a fold that answers the query before the last
- * command (a check passing on a halfway state), a replay that mutates
- * `initial` so a second run starts dirty, and a folded command whose effect the
- * query never sees. Deleting the `Arr.reduce` above fails the fold and query
- * checks; the initial-state check fails if the fold writes into it.
- */
 import { Match } from "effect";
 import { describe, expect, it } from "vitest";
 import { runCommands, type ReplayRuntime } from "./state.js";

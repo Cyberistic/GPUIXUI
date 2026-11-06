@@ -34,12 +34,7 @@ describe("dragging a card", () => {
       (card) => card.column === "hunting",
     );
     const last = hunting[hunting.length - 1];
-    const moved = moveCardTo(
-      initialKanbanCards,
-      last?.id ?? "",
-      "hunting",
-      0,
-    );
+    const moved = moveCardTo(initialKanbanCards, last?.id ?? "", "hunting", 0);
 
     expect(moved.filter((card) => card.column === "hunting")[0]?.id).toBe(
       last?.id,
@@ -155,9 +150,7 @@ describe("moving a card", () => {
   });
 
   it("updates both the source and the target column counts", () => {
-    const counts = countCards(
-      moveCard(initialKanbanCards, "exam", "cleared"),
-    );
+    const counts = countCards(moveCard(initialKanbanCards, "exam", "cleared"));
 
     expect(counts.open).toBe(1);
     expect(counts.cleared).toBe(3);

@@ -1,25 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A grid whose page the reader moves: the page is the core's slice of the
- * filtered and sorted rows, and the controller owns the state.
- *
- * The screen is the wiring a consumer copies:
- *
- * - `useTable({ pageSize })` slices the kept set; `pageIndex`/`pageCount` are
- *   what a pager prints, and `nextPage`/`previousPage` are the arrows;
- * - the filter field narrows the set **and returns to the first page**, because
- *   the records the reader was reading are not where the saved index says they
- *   are once the set changes;
- * - a record chosen on one page stays chosen while another page paints, so the
- *   readout counts the kept set while the header's box covers the page;
- * - the page is part of the record `save()` writes, so a workspace reopens on
- *   the page the reader left — and a saved index past a narrowed set clamps to
- *   the last page the set holds instead of painting a blank one.
- *
- * The example holds 24 rows at six a page: four pages, and the last one holds
- * the remainder rather than a full page.
- */
-
 import * as Arr from "effect/Array";
 import { Button } from "@gpuixui/primitives/button";
 import type { GridColumn } from "../src/grid-core.js";
@@ -52,7 +31,6 @@ const tasks: ReadonlyArray<TaskRow> = Arr.map(Arr.range(1, 24), (n) => ({
   owner: OWNERS[n % OWNERS.length] ?? "ada",
 }));
 
-/** The one column list the header, the rows and the row model read. */
 const TASK_COLUMNS: ReadonlyArray<ColumnDef & GridColumn<TaskRow>> = [
   {
     id: "title",
@@ -72,10 +50,8 @@ const TASK_COLUMNS: ReadonlyArray<ColumnDef & GridColumn<TaskRow>> = [
   },
 ];
 
-/** The rows one page holds. */
 export const PAGE_SIZE = 6;
 
-/** A task list the reader pages through and narrows. */
 export const TablePaginationExample = () => {
   const theme = useTheme();
   const table = useTable({

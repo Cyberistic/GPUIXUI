@@ -1,39 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The column configuration menu above a table.
- *
- * A reader's two decisions live here — which columns paint, and their order —
- * because both are app state and neither is a styling choice. The menu is the
- * `DropdownMenu` the component package already measured (keyboard open, focus
- * on a row, dismiss layering), not a second menu implementation: a data grid
- * owes the consequences, not the surface.
- *
- * The consequences are the `table-columns-lifecycle` probe's, and the grid owns
- * each one: hiding a column takes its width out of the content and shifts every
- * later column by exactly that width; a move changes the order and not the
- * width; the header and the cells read one list. The last visible column cannot
- * be hidden, and the menu disables that row rather than offering a change the
- * reducer refuses.
- *
- * A pinned (frozen) column is deliberately not a row: the runtime paints no
- * sticky position, so a frozen column is the measured two-pane composition,
- * not a flag in this menu.
- *
- * A column's words are {@link columnName}'s: a label this release cannot read —
- * a locale table missing its row, a saved configuration restored without its
- * title — reads as the column's `id`, so the visibility row is never unnamed
- * and a Move row never says `Move ` and stops.
- *
- * ```tsx
- * const columns = useColumns({ columns: FILE_COLUMNS });
- * <ColumnMenu
- *   state={columns.state}
- *   onChange={columns.apply}
- *   onReset={columns.reset}
- * />
- * ```
- */
-
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -57,34 +22,23 @@ import {
   type ColumnState,
 } from "./logic.js";
 
-/** The trigger's name when the caller says nothing. */
 export const DEFAULT_COLUMN_MENU_LABEL = "Columns";
 
-/** {@link ColumnMenu} props. */
 export interface ColumnMenuProps {
-  /** The configured columns, in paint order. */
   readonly state: ColumnState;
-  /** Receives every complete next state. A controlled consumer stores it. */
+
   readonly onChange: (next: ColumnState) => void;
-  /** Restores the definitions, order included. Omit to hide the row. */
+
   readonly onReset?: () => void;
-  /**
-   * The trigger's label. Defaults to `Columns`; a blank name is the default
-   * too, because a default only covers an absent prop.
-   */
+
   readonly label?: string;
-  /** The menu surface's accessible name. Defaults to the trigger's label. */
+
   readonly contentLabel?: string;
   readonly disabled?: boolean;
-  /**
-   * The trigger's test id. Every row derives from it:
-   * `${testId}-toggle-${id}`, `${testId}-move-${id}` and
-   * `${testId}-move-${id}-left` / `-right`.
-   */
+
   readonly testId?: string;
 }
 
-/** The row that shows or hides one column. */
 const VisibilityRow = ({
   column,
   state,
@@ -110,7 +64,6 @@ const VisibilityRow = ({
   </DropdownMenuCheckboxItem>
 );
 
-/** The submenu that moves one visible column through the order. */
 const MoveRow = ({
   column,
   at,
@@ -157,7 +110,6 @@ const MoveRow = ({
   </DropdownMenuSub>
 );
 
-/** A menu that shows, hides, reorders and restores a table's columns. */
 export const ColumnMenu = ({
   state,
   onChange,
@@ -169,9 +121,7 @@ export const ColumnMenu = ({
 }: ColumnMenuProps) => {
   const visible = visibleColumns(state);
   const canHide = visible.length > 1;
-  // A locale table with a missing row answers `""`, which reaches the trigger
-  // as an empty child and the surface as an empty `aria-label`: both read as
-  // unnamed while the documented default sat unused.
+
   const menuLabel = spokenText(
     Option.fromNullishOr(label),
     DEFAULT_COLUMN_MENU_LABEL,

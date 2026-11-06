@@ -1,18 +1,3 @@
-/**
- * The kitty stream decoder's rules.
- *
- * The bug this file catches: every frame of one terminal window reuses image id
- * 1 and one placement, and a repaint arrives as a **new** transfer, not a frame
- * edit. A decoder that replaced its frame list on each completed transfer left
- * the probe holding only the latest paint, so a run whose first page had been
- * replaced by the pressed page read as "no page frame at all" — the failure the
- * `terminal-input` scenario hit before this file existed. A second defect lives
- * here too: an image delete (`a=d,d=A,q=2`) carries **no payload**, so a decoder
- * whose APC grammar required `;<payload>` never saw the terminal restore.
- *
- * Frames are synthesised from the protocol's own grammar — zlib-compressed RGBA
- * in base64, chunked across continuations — not from the decoder.
- */
 import { deflateSync, inflateSync } from "node:zlib";
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
@@ -44,7 +29,6 @@ const solid = (
   return data;
 };
 
-/** A transfer in three chunks, so the decoder has to join them. */
 const transfer = (
   width: number,
   height: number,
@@ -70,7 +54,6 @@ const transfer = (
 const parse = (text: string) =>
   parseKittyStream(new TextEncoder().encode(text), inflate);
 
-/** A frame the test has already proved exists. */
 const frameAt = (stream: KittyStream, index: number) => {
   const frame = stream.frames[index];
   if (frame === undefined) {
@@ -92,8 +75,6 @@ describe("parseKittyStream", () => {
   });
 
   it("joins a frame's chunks in arrival order", () => {
-    // Two pixels, so a decoder that concatenated chunks backwards would paint
-    // blue at the first row.
     const stream = parse(
       transfer(1, 2, new Uint8Array([255, 0, 0, 255, 0, 0, 255, 255])),
     );

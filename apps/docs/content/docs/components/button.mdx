@@ -51,8 +51,3 @@ import { Button } from "@gpuixui/primitives";
 | `style` | `StyleDesc` | none | merged last |
 | `testId` | `string` | none | stable locator |
 | `children` | `ReactNode` | none | visible label |
-
-## Notes
-- Role `button`; the name comes from `label` or the visible text.
-- `loading` sets `aria-description="Loading"` — the runtime declares no `aria-busy`.
-- There is no `aria-disabled`: a disabled button leaves the tab order and drops its handlers.

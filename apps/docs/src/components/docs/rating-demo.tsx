@@ -1,16 +1,3 @@
-/**
- * Browser preview for the Rating page.
- *
- * A score is pressed on a star, and the drawing rates through the primitive's
- * **own** arithmetic: `rateAt` reads the half of the star the press landed in
- * (`pointerRating`) and the keyboard steps with `decideRating`, where Delete and
- * Backspace are the only way back to zero. The old drawing printed "press a
- * star to rate" beside stars that took no press, and offered a row of number
- * buttons instead.
- *
- * The Code tab shows the native usage.
- */
-
 import { useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import * as Option from "effect/Option";
 import { decideRating, starCount, starState } from "@gpuixui/primitives/core";

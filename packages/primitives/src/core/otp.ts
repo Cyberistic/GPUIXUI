@@ -1,78 +1,29 @@
-/**
- * The value and focus contract behind `OTPField`.
- *
- * A one-time-code field is one string distributed over `length` cells: the
- * code stays contiguous, so a caller never juggles an array. Two facts shape
- * the rules below.
- *
- * The runtime's `<input>` reports the **accumulated** text after an edit, so a
- * paste arrives as one multi-character change while ordinary typing arrives one
- * character at a time. `applyOtpInput` handles both from the cell that was
- * edited. There is no `onPaste` and no caret API in `@gpuix/native` 0.11.0, so the field cannot
- * tell a paste from several fast keystrokes — it does not need to, because the
- * distribution is the same.
- *
- * GPUix also has no `onBeforeInput`: Backspace on a filled cell is the native
- * input's own edit (and arrives through `onChange`), while Backspace on an
- * **empty** cell has nothing to delete, so `decideOtpKey` is what clears the
- * cell before it and moves focus there.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { storedNumber, storedText } from "./stored.js";
 
-/** A usable cell count: a whole number, at least one. */
 export const otpLength = (length: number): number =>
   Math.max(1, Math.trunc(Number.isFinite(length) ? length : 1));
 
-/** The cells a field draws when it was given no length. */
 export const DEFAULT_OTP_LENGTH = 6;
 
-/**
- * The cells a field draws from the length it was given.
- *
- * A cell count is a setting saved beside the form as often as a literal, and a
- * record can keep it as text (a settings field, a decoder's answer). Only a
- * real number is a count (`storedNumber`'s rule), so a stored shape this
- * release cannot read is the documented **six** cells rather than the one-cell
- * floor a number that cannot be laid out keeps: read raw, a saved `"4"` painted
- * one cell and called the code complete on its first character — a verifier
- * handed a one-character code.
- */
 export const otpCellCount = (length: unknown): number =>
   Option.match(storedNumber(length), {
     onNone: () => DEFAULT_OTP_LENGTH,
     onSome: otpLength,
   });
 
-/**
- * Keep letters and digits, drop separators, truncate to `length`.
- *
- * A code is alphanumeric by contract. Rejecting other characters (rather than
- * guessing at a locale or an escape) mirrors `core/number.ts`'s rule.
- *
- * A code is also **content**, so it arrives from a saved form record as often
- * as from a literal — and a verification code is numeric often enough that a
- * record keeps it as a number. Only text is a code (`storedText`'s rule), so a
- * value that is not text is **no code**, the empty field an omitted value
- * already means; read raw, `Str.replace` answered
- * `TypeError: self.replace is not a function` out of the first paint and took
- * the screen with it.
- */
 export const normalizeOtp = (value: unknown, length: number): string =>
   Str.takeLeft(otpLength(length))(
     Str.replace(/[^0-9A-Za-z]/g, "")(storedText(value) ?? ""),
   );
 
-/** The value and focus index an edit produces. */
 export interface OtpEdit {
   readonly value: string;
   readonly focus: number;
 }
 
-/** The compact code as one string per cell, padded with empty cells. */
 export const otpCells = (
   value: unknown,
   length: number,
@@ -84,7 +35,6 @@ export const otpCells = (
   );
 };
 
-/** A cell index clamped into the field. */
 const indexOf = (index: number, length: number): number =>
   Math.min(
     otpLength(length) - 1,
@@ -100,15 +50,6 @@ const withCell = (
 ): ReadonlyArray<string> =>
   Arr.map(cells, (cell, at) => (at === index ? char : cell));
 
-/**
- * Apply an edit reported by the cell at `index`.
- *
- * A one-character edit replaces that cell and advances; a longer insert fills
- * forward from it, which is exactly what a pasted code needs. An empty edit
- * clears the cell and leaves focus there, because the user is deleting rather
- * than moving on. The code is contiguous: editing a cell beyond its end appends
- * at the end, so a gap can never exist in the value a caller receives.
- */
 export const applyOtpInput = (
   current: unknown,
   index: number,
@@ -118,9 +59,7 @@ export const applyOtpInput = (
   const limit = otpLength(length);
   const cells = otpCells(current, limit);
   const start = Math.min(indexOf(index, limit), Str.length(join(cells)));
-  // The runtime appends to what the cell already held, so the reported text can
-  // carry the old character with it ("1" + typed "2" reports "12"). Strip that
-  // prefix; an unchanged report is left alone so it cannot clear the cell.
+
   const cell = Option.getOrElse(Arr.get(cells, start), () => "");
   const edited =
     cell !== "" &&
@@ -152,20 +91,6 @@ export const applyOtpInput = (
   };
 };
 
-/**
- * Whether this key's own native edit just emptied the cell at `index`.
- *
- * Backspace on a filled cell is the input's edit, so it clears the cell and
- * reports it through `onChange`; the key-up handler runs afterwards and must
- * not clear the cell before it as well. A host that tracks the key remembers
- * this answer and returns early. Both the primitive and the docs drawing share
- * it, so neither can delete twice.
- *
- * Only the cell the edit left empty counts. The code is contiguous, so clearing
- * a cell with characters after it lets the next one shift in; that cell is
- * filled and `decideOtpKey` answers `none` for its Backspace anyway, so the two
- * rules cannot both delete.
- */
 export const otpEmptiedCell = (
   before: unknown,
   after: unknown,
@@ -179,14 +104,6 @@ export const otpEmptiedCell = (
   return cell(before) !== "" && cell(after) === "";
 };
 
-/**
- * The keys the native input does not already answer.
- *
- * Left/Right/Home/End move between cells instead of the caret — each cell holds
- * one character, so a caret has nowhere to go. Backspace is ours only when the
- * cell is empty: otherwise the input deletes its own character and reports it
- * through `onChange`, and handling it here too would delete twice.
- */
 export const decideOtpKey = (
   current: unknown,
   index: number,

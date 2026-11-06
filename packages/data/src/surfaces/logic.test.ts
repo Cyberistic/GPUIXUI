@@ -1,30 +1,3 @@
-/**
- * The predicate tree an advanced filter composes.
- *
- * The bugs these guard:
- *
- * - a comparison that reads the wrong side (a `contains` that matched the
- *   clause's value instead of the field's);
- * - a numeric comparison that compared text lexicographically, so `9` was
- *   "greater than" `10`;
- * - a `not` that negated the whole tree instead of its own child;
- * - an edit that rebuilt the tree around a nested clause and lost the clauses
- *   the reader did not touch;
- * - a removal that removed the wrong sibling;
- * - an empty builder that matched nothing instead of everything;
- * - an order that read a blank side as zero, so an unfilled clause kept every
- *   positive row;
- * - an append that could only reach the root, so a nested `any` could never
- *   gain a clause from the builder;
- * - a builder that could read an `any` or a `not` but never compose one, so
- *   every saved query it wrote was a flat `all`;
- * - a combinator or a negation that rebuilt the group around its clauses, so
- *   switching "all" to "any" dropped the clauses the reader had typed;
- * - a saved query this release cannot read (an unknown comparison or node)
- *   throwing out of the grid, or passing every record through the filter it
- *   was meant to apply.
- */
-
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -72,7 +45,6 @@ const rows: ReadonlyArray<Row> = [
   { name: "notes.txt", size: 90, status: "ignored" },
 ];
 
-/** A row's field, read the way the tree's caller reads it. */
 const valueOf = (row: Row, field: string): string | number =>
   Match.value(field).pipe(
     Match.when("name", () => row.name),
@@ -81,12 +53,6 @@ const valueOf = (row: Row, field: string): string | number =>
     Match.orElse(() => ""),
   );
 
-/**
- * The clause a path names, or a sentinel that no assertion can match.
- *
- * The sentinel is a clause that names no field, so a path that finds nothing
- * fails the assertion instead of throwing inside the test.
- */
 const clauseOf = (tree: FilterTree, path: FilterPath): FieldPredicate =>
   Option.getOrElse(clauseAt(tree, path), () => ({
     kind: "predicate",
@@ -128,16 +94,13 @@ describe("the comparisons", () => {
   });
 
   it("reads a blank side as no number, so an unfilled clause keeps nothing", () => {
-    // The builder appends a clause with `value: ""`; a reader can switch its
-    // comparison before typing, and `Number("")` is 0 — so the order used to
-    // keep every row with a value above (or below) zero.
     expect(matchesComparison("greaterThan", 5, "")).toBe(false);
     expect(matchesComparison("lessThan", -5, "")).toBe(false);
-    // A row with no value is not zero either.
+
     expect(matchesComparison("greaterThan", "", "-1")).toBe(false);
     expect(matchesComparison("lessThan", "", "10")).toBe(false);
     expect(matchesComparison("greaterThan", " ", "0")).toBe(false);
-    // A number that is not a number satisfies no order either.
+
     expect(matchesComparison("greaterThan", Number.NaN, "0")).toBe(false);
   });
 
@@ -171,7 +134,7 @@ describe("the tree", () => {
     const tree = appendClause(emptyTree, clause("size", "greaterThan", ""));
 
     expect(filterByTree(rows, tree, valueOf)).toEqual([]);
-    // A field the row does not carry reads as blank, not as zero.
+
     expect(
       filterByTree(rows, clause("missing", "lessThan", "10"), valueOf),
     ).toEqual([]);
@@ -204,7 +167,7 @@ describe("the tree", () => {
     expect(filterByTree(rows, tree, valueOf).map((row) => row.name)).toEqual([
       "readme.md",
     ]);
-    // The negated clause alone keeps the row the whole tree drops.
+
     expect(
       matchesTree(
         { kind: "not", child: clause("size", "greaterThan", "1024") },
@@ -254,10 +217,6 @@ describe("the tree", () => {
   });
 
   it("names a clause that names no field, instead of opening on its comparison", () => {
-    // A clause's field is stored data: a saved query can carry a blank one (a
-    // builder saved before a field was picked), and a builder with no field to
-    // offer appends exactly that. The sentence opened on the comparison
-    // (`" equals "`), so a reader could not tell which part was missing.
     expect(describeTree(clause("", "equals", "tracked"))).toBe(
       "Field equals tracked",
     );
@@ -265,7 +224,7 @@ describe("the tree", () => {
     expect(
       describeTree({ kind: "all", children: [clause("", "equals", "")] }),
     ).toBe("all of (Field equals)");
-    // A clause that does name its field is unchanged.
+
     expect(describeTree(clause("status", "equals", "tracked"))).toBe(
       "status equals tracked",
     );
@@ -274,9 +233,6 @@ describe("the tree", () => {
   it("reads an empty any group as nothing, because that is what it keeps", () => {
     const emptyAny: FilterTree = { kind: "any", children: [] };
 
-    // An `all` of no clause has nothing to fail, so it keeps every row; an
-    // `any` of no alternative has nothing to satisfy, so it keeps none. The
-    // sentence a builder shows has to agree with the rows it paints.
     expect(filterByTree(rows, emptyAny, valueOf)).toHaveLength(0);
     expect(filterByTree(rows, emptyTree, valueOf)).toHaveLength(3);
     expect(describeTree(emptyAny)).toBe("nothing");
@@ -406,10 +362,6 @@ describe("editing a tree", () => {
   });
 
   it("edits a group a not negates, because it is a group like any other", () => {
-    // The builder paints Remove and Add on a group's clauses wherever that
-    // group sits — including inside a `not` — so both paths must descend
-    // through the `not` to its child at index `0`. Refusing at the `not` left
-    // every press on those controls changing nothing.
     const tree: FilterTree = {
       kind: "all",
       children: [
@@ -435,7 +387,7 @@ describe("editing a tree", () => {
 
     expect(clauseCount(added)).toBe(3);
     expect(clauseOf(added, [0, 0, 2])).toMatchObject({ field: "status" });
-    // The `not` itself still takes no clause: its one child is not a group.
+
     expect(appendAt(tree, [0], clause("status", "equals", "tracked"))).toEqual(
       tree,
     );
@@ -478,7 +430,6 @@ describe("editing a tree", () => {
 
     const next = appendAt(tree, [1], clause("size", "greaterThan", "1024"));
 
-    // The root still holds its two children; the clause joined the `any`.
     expect(isAll(next)).toBe(true);
     expect(clauseCount(next)).toBe(3);
     expect(clauseOf(next, [0])).toMatchObject({ field: "status" });
@@ -514,8 +465,6 @@ describe("editing a tree", () => {
       ],
     };
 
-    // A clause is not a group, a `not` holds one child, and an index past the
-    // children names nothing: Add is only painted where the append lands.
     expect(appendAt(nested, [0], clause("size", "lessThan", "1"))).toEqual(
       nested,
     );
@@ -556,8 +505,7 @@ describe("editing a tree", () => {
 
     expect(clauseOf(next, [0]).comparison).toBe("contains");
     expect(clauseOf(next, [1]).comparison).toBe("contains");
-    // The two clauses now contradict each other, so the group keeps nothing:
-    // a row cannot both contain "tracked" and contain "ignored".
+
     expect(filterByTree(rows, next, valueOf)).toEqual([]);
   });
 
@@ -567,9 +515,6 @@ describe("editing a tree", () => {
       children: [clause("name", "contains", "readme")],
     };
 
-    // A lone root clause becomes an `all` holding both, so the group has a
-    // parent to combine with; the builder's Add group starts from an empty
-    // tree the same way.
     const root = appendAt(clause("status", "equals", "tracked"), [], group);
     expect(root).toEqual({
       kind: "all",
@@ -581,7 +526,7 @@ describe("editing a tree", () => {
       children: [clause("size", "lessThan", "1024")],
     });
     expect(clauseCount(nested)).toBe(3);
-    // The group is the node the append added; its own clause sits inside it.
+
     expect(nested).toEqual({
       kind: "all",
       children: [
@@ -595,7 +540,7 @@ describe("editing a tree", () => {
         },
       ],
     });
-    // The group that received it kept its own clause.
+
     expect(clauseOf(nested, [1, 0])).toMatchObject({ field: "name" });
   });
 
@@ -614,17 +559,15 @@ describe("editing a tree", () => {
 
     const any = setGroupKind(tree, [], "any");
     expect(any.kind).toBe("any");
-    // The clauses are the reader's; a combinator change combines them
-    // differently instead of rebuilding the tree around them.
+
     expect(clauseCount(any)).toBe(3);
-    // No row is both tracked and a readme whose size passes 1 KiB…
+
     expect(filterByTree(rows, tree, valueOf)).toEqual([]);
-    // …while any one of the three clauses keeps both tracked rows.
+
     expect(
       Arr.map(filterByTree(rows, any, valueOf), (row) => row.name),
     ).toEqual(["readme.md", "main.ts"]);
 
-    // The named group changed and the root kept its own combinator.
     expect(setGroupKind(tree, [1], "any")).toEqual({
       kind: "all",
       children: [
@@ -646,9 +589,6 @@ describe("editing a tree", () => {
       },
     };
 
-    // "Not any of" and "all of" are different trees; giving the group a
-    // combinator means the same clauses now combine that way, not a group
-    // holding a `not` as its only child.
     expect(setGroupKind(negated, [], "all")).toEqual({
       kind: "all",
       children: [
@@ -669,12 +609,9 @@ describe("editing a tree", () => {
 
     const negated = negateAt(tree, []);
     expect(negated).toEqual({ kind: "not", child: tree });
-    // The control is its own inverse, so a reader who changes their mind gets
-    // the tree they had rather than a second wrapper.
+
     expect(negateAt(negated, [])).toEqual(tree);
 
-    // A `not` holding a clause gives the clause back, which is what the
-    // builder's "do not negate" offers.
     const one = negateAt(clause("status", "equals", "tracked"), []);
     expect(one).toEqual({
       kind: "not",
@@ -682,7 +619,6 @@ describe("editing a tree", () => {
     });
     expect(negateAt(one, [])).toEqual(clause("status", "equals", "tracked"));
 
-    // The negation lands at the path it names: the root's other clause stays.
     const inner: FilterTree = {
       kind: "any",
       children: [
@@ -702,8 +638,7 @@ describe("editing a tree", () => {
         { kind: "not", child: inner },
       ],
     });
-    // "Tracked AND (readme or notes)" keeps one row; negating its group keeps
-    // the tracked row whose name holds neither.
+
     expect(
       Arr.map(filterByTree(rows, nestedTree, valueOf), (row) => row.name),
     ).toEqual(["readme.md"]);
@@ -718,8 +653,6 @@ describe("editing a tree", () => {
       children: [clause("status", "equals", "tracked")],
     };
 
-    // A missing index, a path past a clause and a path past a `not`'s only
-    // child name nothing; the builder paints these controls on groups only.
     expect(setGroupKind(tree, [9], "any")).toEqual(tree);
     expect(negateAt(tree, [0, 0])).toEqual(tree);
     const negated: FilterTree = {
@@ -730,17 +663,6 @@ describe("editing a tree", () => {
   });
 });
 
-/**
- * A saved query, read back out of a store.
- *
- * A store hands back `unknown`; the cast is its claim about what it wrote, and
- * the release that reads it is what has to be sure. The JSON goes through
- * `Schema` (`Schema.Unknown`) so the fixture is parsed the way an app parses a
- * saved record. A tree this build cannot read used to throw
- * `Match/exhaustive: absurd` out of the grid on the first record — and the fix
- * must not swing to "match everything", which would paint the records the query
- * meant to hide.
- */
 const saved = (json: string): FilterTree =>
   Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(
     json,
@@ -780,8 +702,7 @@ describe("a saved query", () => {
       UNREADABLE_TREE,
       UNREADABLE_TREE,
     ]);
-    // The refusal is not the empty tree: an `all` with no clause keeps every
-    // row, and a stored query must never be read as one.
+
     expect(filterByTree(rows, emptyTree, valueOf)).toHaveLength(3);
   });
 
@@ -824,8 +745,7 @@ describe("a saved query", () => {
     ).toBe(true);
     expect(Option.isNone(readFilterTree(saved('{"kind":"all"}')))).toBe(true);
     expect(Option.isNone(readFilterTree(saved('"everything"')))).toBe(true);
-    // Absence is the caller's to read: `useTable` and the builder treat a
-    // nullish query as no filter, while a direct read refuses it.
+
     expect(Option.isNone(readFilterTree(null))).toBe(true);
   });
 });
@@ -840,9 +760,6 @@ describe("the name a property row is painted by", () => {
 
 describe("withClauseField", () => {
   it("drops the value typed against the field the clause named", () => {
-    // Guarded bug: a status clause switched to `size` kept `tracked`, so the
-    // builder painted `size equals tracked` — a value describing nothing the
-    // clause reads.
     const clause: FieldPredicate = {
       kind: "predicate",
       field: "status",

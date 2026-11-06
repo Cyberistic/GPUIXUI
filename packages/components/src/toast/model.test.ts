@@ -1,12 +1,3 @@
-/**
- * Toast input decoding.
- *
- * The bugs these guard: a missing tone decoding to `undefined` instead of the
- * documented `info` default, an empty title queuing an invisible toast, an
- * unknown tone reaching the viewport, and a `duration` that silently decodes to
- * the wrong magnitude.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Duration from "effect/Duration";

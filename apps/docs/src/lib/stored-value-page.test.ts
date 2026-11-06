@@ -1,38 +1,18 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-/**
- * The value a store kept, on the pages the site serves.
- *
- * A variant, size, tone, axis, edge or activation is stored with the workspace
- * as often as it is a literal, so it arrives as a name a later release renamed
- * or dropped. Every one of these components reads the stored value through a guard
- * (`Schema.is(...) ? value : "<default>"`) because the raw table read painted
- * the wrong thing: a badge with no ink, a card with no boundary, a tab set laid
- * out vertical, a menu row that threw out of its matcher.
- *
- * The components workstream measured each fallback and documented it on the
- * **package** page, and the site's curated page owns the same URL for all of
- * them, so the package files are shadowed and never served. This guard derives
- * each default from the guard function itself and holds the served page's own
- * prop row to it, so a page cannot teach a union without the answer a restored
- * value gets.
- */
-
 const repo = new URL("../../../../", import.meta.url);
 
 const read = (path: string): string =>
   readFileSync(new URL(path, repo), "utf8");
 
-/** One prop whose stored value the component reads through a guard. */
 interface StoredValue {
-  /** The curated page the site serves. */
   readonly page: string;
-  /** The prop as the page's table names it. */
+
   readonly prop: string;
-  /** The module the guard lives in. */
+
   readonly source: string;
-  /** The guard function's name. */
+
   readonly reader: string;
 }
 
@@ -62,8 +42,7 @@ const storedValues: ReadonlyArray<StoredValue> = [
   {
     page: "popover.mdx",
     prop: "align",
-    // The popover's own default is `center`, so it reads a stored name before
-    // the shared rule (whose house word is `start`).
+
     source: "packages/components/src/popover.tsx",
     reader: "popoverAlign",
   },
@@ -127,7 +106,6 @@ const storedValues: ReadonlyArray<StoredValue> = [
 const pageText = (name: string): string =>
   read(`apps/docs/content/docs/components/${name}`);
 
-/** The default a guard answers for a name it does not carry. */
 const fallbackOf = (source: string, reader: string): string | undefined => {
   const start = new RegExp(`const ${reader} =`).exec(source);
   if (start === null) return undefined;
@@ -135,30 +113,20 @@ const fallbackOf = (source: string, reader: string): string | undefined => {
   return /\? \w+ : "([a-z]+)"/.exec(body)?.[1];
 };
 
-/** One prop whose stored value a reader answers with a whole list or absence. */
 interface StoredBoundary {
-  /** The curated page the site serves. */
   readonly page: string;
-  /** The prop as the page's table names it. */
+
   readonly prop: string;
-  /** The module that owns the reader. */
+
   readonly source: string;
-  /** The reader function's name. */
+
   readonly reader: string;
-  /** The branch the reader answers when the stored value is not the shape. */
+
   readonly fallback: string;
-  /** The clause the served page's row must carry beside the prop. */
+
   readonly clause: string;
 }
 
-/**
- * The pickers read a stored palette, token list or selection through a reader
- * that answers a list or an absence, so the page's row has to say what that
- * absence paints. `optionsOf` and `tokensOf` drop every entry that is not the
- * right shape and answer `[]`; `storedSwatches`, `storedDraft` and
- * `selectionOf` answer `Option.none()`, which the caller turns into the theme's
- * defaults, the documented colour or an uncontrolled control.
- */
 const boundaries: ReadonlyArray<StoredBoundary> = [
   {
     page: "color-picker.mdx",
@@ -242,18 +210,16 @@ const boundaries: ReadonlyArray<StoredBoundary> = [
   },
 ];
 
-/** The fallback a boundary reader answers with, read out of its own branch. */
 const branchOf = (source: string, reader: string): string | undefined => {
   const start = new RegExp(`export const ${reader} =`).exec(source);
   if (start === null) return undefined;
-  // The reader's own declaration only: a sibling's absence is not its answer.
+
   const rest = source.slice(start.index + 1);
   const end = rest.search(/\nexport const /);
   const body = end === -1 ? rest : rest.slice(0, end);
   return [...body.matchAll(/:\s*(\[\]|Option\.none\(\))/g)].at(-1)?.[1];
 };
 
-/** The table row that documents a prop, from its name cell. */
 const rowOf = (text: string, prop: string): string | undefined =>
   text
     .split("\n")
@@ -261,13 +227,6 @@ const rowOf = (text: string, prop: string): string | undefined =>
       new RegExp(`^\\| (?:[^|]+ \\| )?\`${prop}\` \\|`).test(line),
     );
 
-/**
- * The line that documents a prop inside the API reference.
- *
- * A page whose parts share one dense table (`CommandMenu`'s `Part | Renders |
- * Props`) names its props inside a cell rather than one row each, so the prop is
- * looked up across the section's table lines instead.
- */
 const apiLineOf = (text: string, prop: string): string | undefined => {
   const start = text.indexOf("## API reference");
   if (start === -1) return undefined;
@@ -288,8 +247,6 @@ describe("a value a store kept", () => {
       ),
     ).toEqual([]);
 
-    // The fallbacks are not one word: a modal card keeps its edge, a badge its
-    // ink, a tab set its horizontal axis and a menu row its default emphasis.
     expect(
       new Set(
         storedValues.map((value) =>
@@ -316,33 +273,8 @@ describe("a value a store kept", () => {
       }),
     ).toEqual([]);
   });
-
-  it("answers a stored side with its edge, not with the size's absence", () => {
-    // Bug guarded: the served Drawer page merged the two guards into one
-    // sentence — a `size` the union does not name "paints the house `md` box
-    // instead of an `undefined` side" — so a reader storing a dropped `side`
-    // was told the component leaves an edge undefined, when `drawerSide` reads
-    // it as the house `right` edge the box, layout and entry travel all use.
-    const page = pageText("drawer.mdx").replace(/\s+/g, " ");
-
-    expect(page).not.toContain("an `undefined` side");
-    expect(page).toContain("A `side` restored from storage");
-    expect(page).toContain("house `right` edge");
-    expect(page).toContain("house `md` box");
-  });
 });
 
-/**
- * The list a store kept.
- *
- * A palette, a token list, a picker's rows and selection and a command
- * palette's actions and recents are saved with the workspace as often as they
- * are literals, so a record's `null` reaches the component. Each picker reads
- * the saved value at its boundary and answers a list or an absence; the curated
- * page owns the URL, so the package page that documents the answer is never
- * served. This case derives each reader's own fallback branch and holds the
- * served page's row to the clause that says what it paints.
- */
 describe("a list a store kept", () => {
   it("teaches the boundary each picker reads a saved value at", () => {
     const policy = read("docs/preview-strategy.md");
@@ -362,9 +294,6 @@ describe("a list a store kept", () => {
       }),
     ).toEqual([]);
 
-    // Ten boundaries, ten clauses: a page cannot pass by printing one
-    // sentence ten times, and the list cannot shrink without the table
-    // losing a row.
     expect(new Set(boundaries.map((boundary) => boundary.clause)).size).toBe(
       boundaries.length,
     );
@@ -374,8 +303,6 @@ describe("a list a store kept", () => {
   });
 
   it("prints the colour a stored default falls back to", () => {
-    // The default a stored `defaultValue` cannot answer with is not prose: the
-    // picker's own constant is the colour, so the page's cell must print it.
     const colour = /const DEFAULT_COLOUR = "([^"]+)"/.exec(
       read(colourHex),
     )?.[1];

@@ -1,19 +1,3 @@
-/**
- * The `typing-text-lifecycle` probe: what the shipped `TypingText` really
- * paints in a window.
- *
- * The catalogue's *Typing text* row claims the reveal is a timer over the
- * characters the string has, that a character is a **code point** (so an emoji
- * is never split), that `speed={0}` and the reduced preference paint the whole
- * string on the first frame, and that a caret sits after the run until the last
- * character lands. The component's renderer suite reads its text nodes; this
- * probe reads what the **runtime shaped** — the painted lines the renderer
- * reports — and the caret's own pixels.
- *
- * The reveal is a real-time timer, deliberately: the row notes that a paused
- * motion clock does not hold it, so the frames here are **found by polling**,
- * not by freezing anything.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -39,14 +23,11 @@ import {
   wholeLines,
 } from "./typing-text.js";
 
-/** The palette the live runner provides every probe. */
 const THEME: Theme = palettes.dark;
 
-/** Where a reader looks: the caret while typing, and the run once it is whole. */
 const TYPING = "typing-caret";
 const DONE = "typing-done";
 
-/** The view: a slow reveal with a caret, an instant one, an emoji one, a reduced one. */
 export const TypingTextProbe = (): ReactNode => {
   const window = useWindowSize();
   const row = {
@@ -109,13 +90,10 @@ export const TypingTextProbe = (): ReactNode => {
   );
 };
 
-/** The probe's steps: the first frames, the caret, the emoji, the whole run. */
 export const typingTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(TYPING_IDS.probe);
-    // No settle: the reveal is real time, so a sleep here would eat the frames.
 
-    /** The box `testId` paints, failing by name when it paints nothing. */
     const box = (
       testId: string,
     ): Effect.Effect<
@@ -134,7 +112,6 @@ export const typingTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** Captures `name` and hands back the frame with its device scale. */
     const captureFrame = (
       name: string,
     ): Effect.Effect<
@@ -152,7 +129,6 @@ export const typingTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return { frame, scale };
       });
 
-    /** How many pixels of the theme's `primary` role a box paints. */
     const caretPaint = (
       captured: { readonly frame: Pixels.Pixels; readonly scale: number },
       at: {
@@ -192,7 +168,6 @@ export const typingTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* box(TYPING_IDS.reduced);
     yield* box(TYPING_IDS.emoji);
 
-    // ── The two frames that paint the whole string at once ──────────────────
     yield* ctx.expectEqual(
       "a zero-speed reveal paints its whole string on the first frame",
       yield* ctx.host.text(TYPING_IDS.instant),
@@ -204,7 +179,6 @@ export const typingTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       TYPING_TEXT.reduced,
     );
 
-    // ── The slow reveal: a partial run, and a caret beside it ───────────────
     const first = yield* ctx.host.text(TYPING_IDS.slow);
     yield* ctx.expectEqual(
       "the slow reveal has not painted the whole string yet",
@@ -233,7 +207,6 @@ export const typingTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The emoji reveal: every frame is a whole code point ─────────────────
     const samples = yield* Effect.forEach(
       Arr.range(1, TYPING_SAMPLES),
       () =>
@@ -255,7 +228,6 @@ export const typingTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The end: the whole line, and no caret ───────────────────────────────
     const whole = yield* settleUntil(
       ctx.host.text(TYPING_IDS.slow),
       (line) => line === TYPING_TEXT.slow,

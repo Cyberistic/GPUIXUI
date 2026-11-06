@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Spinner example: the three sizes beside a busy action.
- *
- * The mark is a travelling lit dot, not a rotating arc — 0.11.0 has no
- * transform. The last row shows the action that reads it: a `Button` whose
- * `loading` spinner stands where its leading icon would, with the label kept.
- */
-
 import * as Arr from "effect/Array";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { Button } from "../src/internal/button.js";
@@ -15,7 +7,6 @@ import { Spinner, type SpinnerSize } from "../src/spinner.js";
 
 const sizes: ReadonlyArray<SpinnerSize> = ["sm", "md", "lg"];
 
-/** A sync card with every size, and a busy primary action. */
 export const SpinnerExample = () => {
   const theme = useTheme();
   return (

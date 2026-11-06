@@ -1,23 +1,3 @@
-/**
- * The `image-zoom` probe: the shipped magnifier mounted in a window, read out of
- * the frame it paints.
- *
- * `ImageZoom` rested on two claims from other measurements: that an `<img>` host
- * scales its own buffer into the box it is given (measured for a chart's pixel
- * buffer by `chart-raster`), and that the pan keeps the spot under the pointer in
- * place (measured for boxes only, by the component's own suite). The probe
- * hovers a marked spot of a synthetic picture and reads both: the picture's
- * painted box is larger than the frame and covers it, the pointed spot still
- * paints the mark it painted at rest, and the marks the magnified window leaves
- * out are gone from the capture.
- *
- * It also proves the pointer reaches the component at all, and in the
- * coordinates the pan is computed from: the view prints the event's point minus
- * the frame's own `onLayout` origin, which must be the point the probe aimed at.
- *
- * The view and the steps live here so the measurement is one module; the
- * registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { Pixels, Smoke } from "@gpuixui/testing";
@@ -50,24 +30,15 @@ import {
   type ZoomMarkName,
 } from "./image-zoom.js";
 
-/** A hover needs a frame to reach the component's handler. */
 const SETTLE = Duration.millis(60);
 
-/**
- * The tween's level, with a frame to spare.
- *
- * The box is read once it has stopped: a box read mid-journey names the frame
- * the runtime was painting, not the one the pointer asked for.
- */
 const TRAVEL = Duration.millis(400);
 
-/** The captures a reader can look at, one per painted state. */
 const REST = "image-zoom-rest";
 const MARK = "image-zoom-mark";
 const OTHER = "image-zoom-other";
 const RETURNED = "image-zoom-returned";
 
-/** The probe's window: one picture, one marked spot and an empty box beside it. */
 export const ImageZoomProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -117,10 +88,6 @@ export const ImageZoomProbe = (): ReactNode => {
           });
           setMoves((count) => count + 1);
         }}
-        // Counted **per arrival**: a full run's previous probe can leave the
-        // pointer over the frame's box, so the park below takes a leave before
-        // the measured hover and a cumulative counter would report it as this
-        // pointer's. Zero means "no leave since the pointer reached the frame".
         onMouseEnter={() => setLeaves(0)}
         onMouseLeave={() => setLeaves((count) => count + 1)}
       />
@@ -136,7 +103,6 @@ export const ImageZoomProbe = (): ReactNode => {
   );
 };
 
-/** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -151,7 +117,6 @@ const paintedBox = (
     );
   });
 
-/** The picture's box in the frame's own coordinates. */
 const pictureBox = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Smoke.Bounds,
@@ -166,7 +131,6 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor(ZOOM_IDS.frame);
     yield* Effect.sleep(SETTLE);
 
-    /** A capture and the scale its logical points convert by. */
     const capture = (name: string) =>
       Effect.gen(function* () {
         yield* ctx.host.capture(name);
@@ -179,12 +143,6 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return { pixels, scale } as const;
       });
 
-    /**
-     * The colour a window point paints.
-     *
-     * `None` when the point is outside the capture, so a frame the window does
-     * not hold is reported rather than sampled from another part of it.
-     */
     const sample = (
       frame: Pixels.Pixels,
       point: Point,
@@ -192,7 +150,6 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       label: string,
     ) => ctx.expectSome(label, colourAt(frame, point, scale));
 
-    /** Asserts a window point paints `expected`. */
     const expectPaint = (
       frame: Pixels.Pixels,
       point: Point,
@@ -210,19 +167,11 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         yield* ctx.expectEqual(label, differs(colour, expected), false);
       });
 
-    /** A window point from a frame-local one. */
     const at = (frame: Smoke.Bounds, point: Point): Point => ({
       x: frame.x + point.x,
       y: frame.y + point.y,
     });
 
-    /**
-     * Hovers a frame-local point.
-     *
-     * Twice: the component's surface box is a 1 px probe that reports its origin
-     * after a layout, so the first move asks for the report and the second paints
-     * the frame the report settles.
-     */
     const hover = (frame: Smoke.Bounds, point: Point) =>
       Effect.gen(function* () {
         const target = at(frame, point);
@@ -233,13 +182,9 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return target;
       });
 
-    /** The colour of a named mark, as the sampler's own value. */
     const markPaint = (name: ZoomMarkName): Pixels.Rgba =>
       rgbaOf(zoomMark(name).colour);
 
-    // ── The pointer starts somewhere the frame is not ─────────────────────
-    // A probe that assumed the resting state would read the previous probe's
-    // pointer position, so the pointer is parked on an element beside the frame.
     yield* ctx.host.hover(ZOOM_IDS.away);
     yield* Effect.sleep(TRAVEL);
 
@@ -257,7 +202,6 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // ── At rest the picture covers the frame exactly ──────────────────────
     yield* ctx.expectEqual(
       "the resting picture is the frame, 1:1 and un-panned",
       sameZoomBox(yield* pictureBox(ctx, frame), {
@@ -293,8 +237,7 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       differs(restingAbove, rgbaOf(ZOOM_BACKGROUND)),
       false,
     );
-    // The picture carries the frame's radius at rest, so its painted corner is
-    // the page. The magnified capture is read against the same point below.
+
     const restingCorner = yield* sample(
       resting.pixels,
       at(frame, { x: 1, y: 1 }),
@@ -307,7 +250,6 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The pointer on a marked spot magnifies the picture ────────────────
     const markPoint = yield* hover(frame, ZOOM_HOVERS.mark);
     const zoomed = yield* pictureBox(ctx, frame);
     yield* ctx.expectContains(
@@ -341,7 +283,6 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The capture: the mark under the pointer, the rest gone ────────────
     const magnifiedFrame = yield* capture(MARK);
     yield* expectPaint(
       magnifiedFrame.pixels,
@@ -368,9 +309,7 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }),
       { concurrency: 1, discard: true },
     );
-    // Measured, not assumed: the runtime clips an overflowing child to its box
-    // and not to the frame's corner radius, so the magnified picture paints the
-    // corner square. `image-zoom.test.ts` and the README carry the limitation.
+
     const magnifiedCorner = yield* sample(
       magnifiedFrame.pixels,
       at(frame, { x: 1, y: 1 }),
@@ -383,11 +322,6 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // ── The picture's own extent grew with the box ────────────────────────
-    // A mark is sixteen picture pixels wide and sixteen points wide at rest; a
-    // box that magnifies the buffer paints it wider by the same factor. The read
-    // is the mark's exact paint, so a picture scaled by anything else cannot
-    // pass by painting a bigger box.
     const restExtent = yield* ctx.expectSome(
       "the resting capture holds the pointed mark's own paint",
       Option.fromNullishOr(
@@ -407,7 +341,6 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0.12,
     );
 
-    // ── A second point pans the other way ─────────────────────────────────
     const otherPoint = yield* hover(frame, ZOOM_HOVERS.other);
     const pushed = yield* pictureBox(ctx, frame);
     yield* ctx.expectEqual(
@@ -450,8 +383,7 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       differs(amberAfter, markPaint("mark")),
       true,
     );
-    // The far mark's own picture point is inside the window the pan opened, so
-    // it paints where the panned box puts it — the window moved, not the picture.
+
     yield* expectPaint(
       pushedFrame.pixels,
       at(frame, framePointOf(markCentre(zoomMark("far")), pushed)),
@@ -460,7 +392,6 @@ export const imageZoomSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "the far mark paints where the panned box puts it",
     );
 
-    // ── Leaving the frame returns the picture to rest ─────────────────────
     yield* ctx.host.hover(ZOOM_IDS.away);
     yield* Effect.sleep(TRAVEL);
     yield* ctx.expectEqual(

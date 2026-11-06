@@ -141,38 +141,6 @@ layout for mobile.
 `SIDEBAR_WIDTH`, `SIDEBAR_WIDTH_ICON`, `SIDEBAR_WIDTH_MOBILE`, `SIDEBAR_BREAKPOINT`
 and `SIDEBAR_KEYBOARD_SHORTCUT` are exported from the component module.
 
-## Notes
-- No `transform` in 0.11.0: the offcanvas panel animates `left`/`right` and
-  `width`, so it travels as a box rather than a translated layer. The mobile
-  sheet fades and travels 12px from its edge instead of sliding its full width.
-- The ⌘/Ctrl + B handler lives on the provider's wrapper. The runtime accepts a
-  window-level handler only at `render()` (`docs/gpuix-capabilities.md`), so a
-  key typed while focus is outside the provider's subtree is not seen.
-- There is no cookie jar. The default `SidebarPreference` is an in-process jar
-  with shadcn's key and lifetime; a state kept across launches needs a caller's
-  preference.
-- The provider owns `side`/`variant`/`collapsible`. shadcn derives the inset's
-  margin from a parent selector; GPUix has none, and `SidebarInset` is a sibling
-  of `Sidebar`, so the layout is declared once on the provider. `Sidebar`
-  accepts the same three props as overrides for its own paint.
-- Icons clip their labels in icon mode; there is no CSS descendant selector to
-  truncate arbitrary children, so `SidebarMenuButton` and
-  `SidebarMenuSubButton` own their label text through `label`.
-- The rail toggles on a press and a short drag **inside the panel's edge**. A
-  strip outside it would paint under the inset: order is paint order and 0.11.0
-  has no `zIndex`. An offcanvas panel parked outside the window is reopened by
-  `SidebarTrigger` or ⌘/Ctrl+B.
-- There is no resize gesture on the rail because the runtime has no pointer
-  capture.
-- A `side`, `variant` or `collapsible` restored from storage that this release
-  does not name reads as `left`, `sidebar` and `offcanvas`.
-
-## Related
-
-- **Dropdown menu** — the account menu inside the footer.
-- **Avatar** — the identity mark in the footer.
-- **Toast** — the other family with an Effect store and a provider.
-
 ## Widths and the shortcut
 
 `width` (default 256, shadcn's 16rem), `iconWidth` (48, 3rem) and `mobileWidth`

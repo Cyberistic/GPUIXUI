@@ -1,21 +1,3 @@
-/**
- * The window arithmetic a virtualized table runs on.
- *
- * The bugs these guard are the ones a measured probe makes possible and a
- * plausible-looking window does not: a window that follows the runtime's
- * **lagging** range report (it reads `20..27` while the paint has reached
- * `40..46`, so a window built from it paints blank rows), a window that does
- * not cover the rows in view, a reveal whose target is outside the window it
- * just asked the runtime to build, a start that runs past the last row, and a
- * **shrinking set** that leaves the offset measured against the old rows
- * (`virtual-table-lifecycle`: a filter narrowed a thousand rows to 127 while
- * the window sat near row 900, and the core's own clamp mounted five rows in a
- * viewport that holds nine).
- *
- * The arithmetic is `@tanstack/virtual-core`'s; these cases hold the seam — the
- * numbers the runtime reports and the window they produce.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -32,7 +14,6 @@ import {
   type WindowSpec,
 } from "./window.js";
 
-/** 1 000 rows of 36px in a 320px viewport: nine rows in view, four overdraw. */
 const spec: WindowSpec = {
   count: 1_000,
   rowHeight: 36,
@@ -43,9 +24,7 @@ const spec: WindowSpec = {
 describe("the mounted window", () => {
   it("mounts the rows in view plus overdraw on each side", () => {
     const calculator = createWindowCalculator(spec);
-    // Half way down, ten rows are in view and four more are mounted on each
-    // side: the range the runtime reports lags the paint by one gesture, so
-    // the window has to be wider than the viewport.
+
     const window = calculator.at(500);
     expect(window.start).toBe(9);
     expect(window.end).toBe(27);
@@ -63,7 +42,7 @@ describe("the mounted window", () => {
 
   it("follows the scroll offset, not the range the runtime reports", () => {
     const calculator = createWindowCalculator(spec);
-    // The paint after one wheel reached row 16; the report still read 0..8.
+
     const window = calculator.at(16 * 36);
     expect(window.start).toBeLessThanOrEqual(16);
     expect(window.end).toBeGreaterThan(16 + 8);
@@ -81,7 +60,7 @@ describe("the mounted window", () => {
     const indices = calculator.indicesAt(0);
     expect(indices[0]).toBe(0);
     expect(indices.length).toBe(13);
-    // The indices are contiguous: a gap would leave an estimate box.
+
     expect(indices).toEqual(
       Array.from({ length: indices.length }, (_, at) => at),
     );
@@ -105,7 +84,6 @@ describe("a reveal", () => {
 
 describe("the scroll anchor", () => {
   it("reads the pixel the viewport's top edge is at", () => {
-    // The runtime reports `[itemIndex, offsetInItemPx, viewportHeightPx]`.
     const offset = anchorOffset(Option.some([16, 24, 272]), 36);
     expect(offset).toStrictEqual(Option.some(16 * 36 + 24));
   });
@@ -116,33 +94,24 @@ describe("the scroll anchor", () => {
 });
 
 describe("a set that shrinks under the window", () => {
-  /** The same thousand rows the table opens on, narrowed to the `01` set. */
   const narrowed: WindowSpec = { ...spec, count: 127 };
 
   it("clamps the offset the reader left to the rows that remain", () => {
-    // The reveal left the window at row 900; the narrowed set's last row is
-    // 127, so the farthest the scroller may sit is its own content's end.
     expect(maxScrollOffset(narrowed)).toBe(127 * 36 - 320);
     expect(clampScrollOffset(narrowed, 900 * 36)).toBe(127 * 36 - 320);
-    // The old offset still clamps at the top and is never negative.
+
     expect(clampScrollOffset(narrowed, -40)).toBe(0);
     expect(clampScrollOffset(narrowed, 120)).toBe(120);
   });
 
   it("holds a full viewport of the narrowed set, not the tail of the old one", () => {
-    // Measured on 0.11.0: the core clamps a stale offset to the end and mounts
-    // only the rows below it — five rows in a 320px viewport — because the
-    // offset it clamps is still the one the large set was measured against.
-    // The window is computed from the clamped offset, so the tail holds the
-    // viewport's own rows as well as the ones past the edge.
     const calculator = createWindowCalculator(narrowed);
     const window = calculator.at(900 * 36);
     const rows = calculator.indicesAt(900 * 36);
     expect(window.end).toBe(127);
     expect(rows.length).toBeGreaterThanOrEqual(Math.floor(320 / 36));
     expect(rows.at(-1)).toBe(126);
-    // A row above the clamped window's start is not mounted: the window is a
-    // slice of the narrowed set, not of the set it was measured against.
+
     expect(rows.length).toBeLessThan(127);
   });
 
@@ -150,7 +119,7 @@ describe("a set that shrinks under the window", () => {
     const calculator = createWindowCalculator(narrowed);
     const rows = calculator.indicesAt(900 * 36);
     expect(rows.filter((index) => index >= 127)).toEqual([]);
-    // A set with no rows at all mounts nothing rather than a negative index.
+
     expect(createWindowCalculator({ ...spec, count: 0 }).indicesAt(0)).toEqual(
       [],
     );
@@ -164,8 +133,7 @@ describe("degenerate sizes", () => {
       rowHeight: 0,
       viewportHeight: 10,
     });
-    // Ten pixels hold one row of the shipped height, plus four overdraw rows;
-    // a one-pixel fallback would have mounted fourteen rows in a ten-pixel box.
+
     expect(calculator.at(0).end).toBe(5);
   });
 
@@ -174,14 +142,11 @@ describe("degenerate sizes", () => {
       ...spec,
       overdraw: -3,
     });
-    // The nine rows in view and nothing around them.
+
     expect(calculator.at(0).end).toBe(9);
   });
 
   it("reads an overdraw the window cannot mount as the default", () => {
-    // `overdraw` is often computed, and `@tanstack/virtual-core` multiplies it
-    // into both range edges: `new Array(NaN)` is a `RangeError`, so a `NaN`
-    // took the renderer down before the table painted a row.
     [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY].forEach(
       (overdraw) => {
         const calculator = createWindowCalculator({ ...spec, overdraw });
@@ -202,7 +167,7 @@ describe("the overdraw a window holds", () => {
     expect(overdrawRows(4)).toBe(4);
     expect(overdrawRows(2.7)).toBe(2);
     expect(overdrawRows(0)).toBe(0);
-    // A negative count is no rows around the viewport, not rows above it.
+
     expect(overdrawRows(-3)).toBe(0);
   });
 
@@ -217,16 +182,11 @@ describe("the overdraw a window holds", () => {
 describe("a row height the window can divide", () => {
   it("keeps a height the runtime can lay out", () => {
     expect(rowHeightOf(36)).toBe(36);
-    // A fractional row is a real measurement, not a broken one.
+
     expect(rowHeightOf(36.5)).toBe(36.5);
   });
 
   it("reads a height nothing could be read from as the row this package paints", () => {
-    // A row height is often computed — the density's step, a viewport divided
-    // by the rows it should show, a measurement taken before the first layout
-    // — and a value the runtime cannot divide reached the estimate, the anchor
-    // and every offset at once (the defect `behaviour/rowheight.test.tsx`
-    // holds in a window).
     [
       Number.NaN,
       Number.POSITIVE_INFINITY,
@@ -240,15 +200,11 @@ describe("a row height the window can divide", () => {
   });
 
   it("takes the fallback the caller's own rows paint", () => {
-    // The tree's rows are built at the density's step, so it passes that step.
     expect(rowHeightOf(Number.NaN, 28)).toBe(28);
     expect(rowHeightOf(28, 32)).toBe(28);
   });
 
   it("mounts a viewport of rows, not a row per pixel", () => {
-    // Measured before the fallback: a `NaN` height mounted 204 rows of a
-    // thousand in a 240px viewport, because the window's own normaliser read
-    // the height as one pixel.
     const calculator = createWindowCalculator({
       count: 1_000,
       rowHeight: Number.NaN,
@@ -263,8 +219,6 @@ describe("a row height the window can divide", () => {
   });
 
   it("follows the anchor at the height it divides by", () => {
-    // The pinned window: `16 * NaN` is `NaN`, which the offset clamp read as
-    // `0`, so no gesture moved the window past the first one it mounted.
     expect(anchorOffset(Option.some([16, 24, 272]), Number.NaN)).toStrictEqual(
       Option.some(16 * DEFAULT_ROW_HEIGHT + 24),
     );
@@ -284,8 +238,7 @@ describe("a row index the window can position", () => {
     expect(anchorOffset(Option.some([16.4, 0, 272]), 36)).toStrictEqual(
       Option.some(16 * 36),
     );
-    // An index nothing could be read from is the first row, and the pixel into
-    // it stays a measurement.
+
     expect(anchorOffset(Option.some([Number.NaN, 8, 272]), 36)).toStrictEqual(
       Option.some(8),
     );
@@ -300,7 +253,7 @@ describe("a row index the window can position", () => {
       rowHeight: Number.NaN,
       viewportHeight: 240,
     });
-    // The reveal's own window: the first row, not a window computed from `NaN`.
+
     expect(calculator.around(Number.NaN).start).toBe(0);
     expect(calculator.around(900).start).toBeLessThanOrEqual(900);
   });
@@ -308,10 +261,6 @@ describe("a row index the window can position", () => {
 
 describe("the count a window can hold", () => {
   it("reads a computed count as the whole, non-negative rows it holds", () => {
-    // The one number the runtime list's `itemCount`, the table's empty state
-    // and the window all read: a fraction of a row does not exist, a negative
-    // is none, and a count nothing could be read from (`NaN`, an infinity) is
-    // no rows rather than a window over a count that is not a number.
     expect(rowCount(2.5)).toBe(2);
     expect(rowCount(0)).toBe(0);
     expect(rowCount(-3)).toBe(0);

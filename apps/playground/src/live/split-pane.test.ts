@@ -1,16 +1,3 @@
-/**
- * Holds the split probe's README to the checks it actually runs, and the
- * divider's keyboard contract to the source.
- *
- * Two regressions this file guards: a printed check count that drifts from the
- * assertions the probe makes (the section said 12 while the probe asserted 12
- * only if the paint reads are counted, and no test held it), and a keyboard path
- * that names the DOM's `ArrowLeft` instead of the runtime's `left`, which would
- * be dead on the host while every unit test still passed.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the
- * repository's own probe and prose, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
@@ -29,14 +16,12 @@ const source = readFileSync(
   "utf8",
 );
 
-/** The `splitSteps` effect, bounded to the next top-level declaration. */
 const splitSteps = (() => {
   const start = scenarios.indexOf("const splitSteps");
   const end = scenarios.indexOf("\nconst ", start + 1);
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
 })();
 
-/** The README section for this probe, bounded by the next probe's heading. */
 const splitSection = (() => {
   const heading = "### `split-pane-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -46,8 +31,6 @@ const splitSection = (() => {
 
 describe("the split divider's keyboard contract", () => {
   it("prints the checks the probe runs, counting the paint reads", () => {
-    // `paintedBox` records its own check when the element paints, so the
-    // printed total is the explicit assertions plus one per paint read.
     const asserted = splitSteps.match(/ctx\.expect[A-Za-z]+\(/g)?.length ?? 0;
     const painted = splitSteps.match(/paintedBox\(/g)?.length ?? 0;
     expect(asserted).toBeGreaterThan(10);
@@ -68,8 +51,6 @@ describe("the split divider's keyboard contract", () => {
   });
 
   it("binds the keys the runtime reports, not the DOM's names", () => {
-    // `host.d.ts` names a key "left"/"right"; a divider matching ArrowLeft
-    // would never move on the host.
     expect(source).toContain("isResizeKey");
     expect(source).toContain("keySize");
     expect(splitSteps).toContain('ctx.host.key("left")');

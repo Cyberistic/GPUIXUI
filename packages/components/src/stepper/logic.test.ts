@@ -1,12 +1,3 @@
-/**
- * The stepper's one rule, without a renderer.
- *
- * The bug these guard: a `value` the caller cannot name — `NaN` or an infinity
- * from arithmetic over a step index, stamped before a total arrived — left
- * every marker `upcoming` and announced no current step, so the indicator
- * claimed the workflow had not started while nothing on the page said so.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import { currentStep, orientationOf, statusOf, stepName } from "./logic.js";
@@ -18,10 +9,6 @@ describe("orientationOf", () => {
   });
 
   it("reads a name it does not ship as the documented horizontal axis", () => {
-    // A saved workspace writes the axis it was built with, and a release can
-    // rename it: the root's recipe then has no entry to paint, so the list
-    // falls back to the runtime's own row with no alignment — a vertical
-    // stepper laid out side by side.
     expect(orientationOf("column")).toBe("horizontal");
     expect(orientationOf("Vertical")).toBe("horizontal");
     expect(orientationOf(" vertical")).toBe("horizontal");
@@ -40,8 +27,6 @@ describe("currentStep", () => {
   });
 
   it("reads a value it cannot name as the first step", () => {
-    // The first step is the default the prop documents ("1-based"): a marker
-    // is painted rather than every step reading upcoming.
     expect(currentStep(Number.NaN)).toBe(1);
     expect(currentStep(Number.POSITIVE_INFINITY)).toBe(1);
     expect(currentStep(Number.NEGATIVE_INFINITY)).toBe(1);
@@ -70,8 +55,6 @@ describe("statusOf", () => {
   });
 
   it("paints no step current for an explicit value below the first", () => {
-    // A caller who says "not started" gets an unstarted ladder, which is a
-    // state they asked for — distinct from one they could not read.
     expect(statusOf(0, 1)).toBe("upcoming");
     expect(statusOf(-1, 1)).toBe("upcoming");
   });
@@ -79,9 +62,6 @@ describe("statusOf", () => {
 
 describe("stepName", () => {
   it("names a titleless step by its position", () => {
-    // The bug guarded: a title that arrived blank published an unnamed list
-    // item and a marker with no word beside it (`StepperStep` read `label`
-    // raw, while the wizard derived this name at its own call site).
     expect(stepName("", 2)).toBe("Step 2");
     expect(stepName("   ", 3)).toBe("Step 3");
     expect(stepName("", Number.NaN)).toBe("Step 1");
@@ -93,11 +73,6 @@ describe("stepName", () => {
   });
 
   it("reads a title that is not text as the step's position", () => {
-    // The bug guarded: a workflow definition restored from storage carries the
-    // field the record kept — a number a settings row wrote, an object a decoder
-    // produced — and `stepName` handed it to `accessibleName`, whose `trim`
-    // threw `self.trim is not a function` out of the first paint. A name is
-    // text or it is nothing.
     expect(stepName(42, 2)).toBe("Step 2");
     expect(stepName(null, 3)).toBe("Step 3");
     expect(stepName({ title: "Name" }, 4)).toBe("Step 4");

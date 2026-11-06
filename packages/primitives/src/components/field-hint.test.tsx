@@ -1,19 +1,3 @@
-/**
- * A field's hint is painted, not handed to the runtime.
- *
- * The bug this suite guards: `nativeTextTheme` fills `textFaint`, but at the
- * pinned `@gpuix/native@0.11.0` an empty `<input>`/`<textarea>` shapes its
- * placeholder with a fixed `#8F8F8F` (`custom_elements/input.rs`), so every
- * field's hint was that grey — **2.84:1** on a white field, under the 4.5:1 the
- * token contract holds `placeholder` to — and no theme value could reach it.
- * The field now gives the host no placeholder and paints the caller's words in
- * the measured `placeholder` role.
- *
- * A hint is **content the reader is about to replace**, so it is held to the
- * same rules as the value: the hint fades with the field's own disabled paint
- * rather than staying full-opacity beside a faded box.
- */
-
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
@@ -73,14 +57,10 @@ const handlers = (): NumberFieldHandlers => ({
   registerInput: () => {},
 });
 
-/** The hint's painted type and colour. */
 const styleOf = (hint: FieldHint) => hint.textStyle;
 
 describe("a field's hint", () => {
   it("gives the host no placeholder, so the runtime's fixed grey never paints", () => {
-    // Every field the package renders: the single-line input, the textarea and
-    // the number field's own host. A host handed a `placeholder` paints it in
-    // the runtime's `#8F8F8F`, which no token can move.
     const input = renderInput(
       { placeholder: "Search projects" },
       testTheme,
@@ -116,8 +96,6 @@ describe("a field's hint", () => {
   });
 
   it("paints the caller's words in the measured placeholder role", () => {
-    // The role the token contract measures on both field fills (secondary
-    // floor) — not the runtime's grey, which nothing can move.
     const hint = expectSome(hintOf({ placeholder: "Search projects" }));
     expect(hint.text).toBe("Search projects");
     expect(styleOf(hint).color).toBe(testTheme.colors.placeholder);
@@ -137,23 +115,16 @@ describe("a field's hint", () => {
   });
 
   it("paints no hint for a placeholder that is only spaces", () => {
-    // The bug guarded: the hint was painted for any non-empty string, while the
-    // words it announces went through the name rule — so `"   "` painted an
-    // empty frame over the field and announced nothing. A run of spaces is a
-    // full line on 0.11.0 where `""` is none, so the paint cost a line for copy
-    // the reader never saw.
     expect(Option.isNone(hintOf({ placeholder: "   " }))).toBe(true);
     expect(Option.isNone(hintOf({ placeholder: "\t\n" }))).toBe(true);
-    // Both sides of the one decision: what is not painted is not announced.
+
     expect(fieldHelp({ placeholder: "   " }, "")).toBeUndefined();
-    // A hint with its own padding is still the caller's text, painted as written.
+
     const padded = expectSome(hintOf({ placeholder: "  Search projects  " }));
     expect(padded.text).toBe("  Search projects  ");
   });
 
   it("fades with the field it sits in", () => {
-    // The field chrome fades a disabled field by `disabledOpacity`; a hint left
-    // at full opacity would be the brightest thing in a disabled box.
     const chrome = fieldChrome(
       { placeholder: "Search projects", disabled: true },
       testTheme,
@@ -167,8 +138,6 @@ describe("a field's hint", () => {
   });
 
   it("frames the hint at the field's own text origin", () => {
-    // A frame over the field's border box: the hint starts where the value
-    // starts, takes no pointer input, and cannot spill over the edge.
     const frame = hintFrame(testTheme, {
       size: "md",
       align: "center",
@@ -192,8 +161,6 @@ describe("a field's hint", () => {
       testTheme.borderWidth.thin + testTheme.density.controlPaddingX.md,
     );
 
-    // A host that already sits inside the field's chrome (the number field's
-    // input) is framed from its own content box.
     const content = hintFrame(testTheme, {
       size: "md",
       align: "center",
@@ -204,10 +171,6 @@ describe("a field's hint", () => {
   });
 
   it("insets a stored size at the default step", () => {
-    // The bug guarded: a hint's frame takes the field's horizontal padding from
-    // the control size, and a stored name the scale no longer carries indexed
-    // the scale raw — the padding collapsed to `undefined`, so the placeholder
-    // sat against the border it was meant to clear.
     const stored = hintFrame(testTheme, {
       size: "xl" as ControlSize,
       align: "center",
@@ -264,11 +227,6 @@ describe("a field's hint", () => {
 });
 
 describe("the published hint seam", () => {
-  // The rule is a runtime fact, not one field's paint: `@gpuixui/components`
-  // faces the same fixed `#8F8F8F` and paints its own hinted hosts. It can
-  // only call this seam if the package publishes it, so a root that stops
-  // exporting one of the parts leaves that package with a second copy (the
-  // two-copy state `.agents/slop/TODO.md` → Interlocks records).
   it("publishes the frame, the hint and its element from the package root", () => {
     expect(publishedFieldHelp).toBe(fieldHelp);
     expect(publishedFieldHint).toBe(fieldHint);
@@ -301,10 +259,6 @@ describe("the published hint seam", () => {
   });
 
   it("follows a host package's own resolved style", () => {
-    // A host another package paints owns its chrome and its type, so the hint
-    // measures from that style rather than from this package's density — the
-    // reason `@gpuixui/components` can call this seam without changing what its
-    // hinted hosts paint (only the disabled ink follows this package's rule).
     const style: StyleDesc = {
       borderWidth: 2,
       paddingLeft: 10,
@@ -342,7 +296,6 @@ describe("the published hint seam", () => {
   });
 
   it("documents the seam where a consumer reads the package", () => {
-    // A published seam nothing names is one no second package finds.
     const readme = readFileSync(
       fileURLToPath(new URL("../../README.md", import.meta.url)),
       "utf8",
@@ -356,11 +309,6 @@ describe("the published hint seam", () => {
     expect(readme).toContain("@gpuixui/primitives/hint");
   });
 
-  // The root barrel re-exports every primitive, so reaching this seam through
-  // it loads the whole Tier 1 package: `@gpuixui/components` measured 52
-  // modules / 416 KiB to paint one line of text, which is why the copy it
-  // already had was kept (`.agents/slop/TODO.md` → Interlocks). The subpath is the route
-  // that makes the shared frame cheaper than the copy.
   it("loads the seam from its subpath without the package barrel", () => {
     expect(Arr.sort(Object.keys(hintSubpath), Order.String)).toEqual([
       "fieldHelp",
@@ -376,8 +324,6 @@ describe("the published hint seam", () => {
     expect(hintSubpath.renderFieldHint).toBe(renderFieldHint);
   });
 
-  // A hint frame is absolutely positioned, so the host it sits in is the
-  // positioning context. A host that wraps its own layout keeps it.
   it("gives a hinted host its positioning context", () => {
     expect(hintSubpath.hintHost()).toEqual({
       position: "relative",

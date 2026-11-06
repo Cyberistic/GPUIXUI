@@ -1,11 +1,3 @@
-/**
- * The AppKit pointer model on a real button (plan 724).
- *
- * Bugs guarded: `Button` takes its hover from its compiled recipe, not from
- * `controlStyle`, so a gate there left every macOS button washing on hover; and
- * an AppKit toolbar button must show its bezel under the pointer, the one hover
- * AppKit keeps.
- */
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";

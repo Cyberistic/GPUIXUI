@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * PageTransition example: a three-step form whose body swaps with the house
- * transition.
- *
- * Composition, not a gallery: the step body is a real settings form, the
- * pressures that change it are the two actions a wizard has, and the direction
- * follows the reader — continuing moves forward, going back mirrors the travel,
- * so the movement agrees with the action that caused it.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -24,7 +14,6 @@ import {
 import { PageTransition } from "../src/page-transition.js";
 import type { PageDirection } from "../src/page-transition/logic.js";
 
-/** One step of the form: the title a reader is on and the rows it shows. */
 interface Step {
   readonly id: string;
   readonly title: string;
@@ -65,17 +54,14 @@ const steps: ReadonlyArray<Step> = [
   },
 ];
 
-/** The index of a step, 0 when a key is not one of them (never, by construction). */
 const stepIndex = (id: string): number =>
   Option.getOrElse(
     Arr.findFirstIndex(steps, (step) => step.id === id),
     () => 0,
   );
 
-/** One step by index, absent when the index is out of range. */
 const stepAt = (index: number): Option.Option<Step> => Arr.get(steps, index);
 
-/** One step's body: what the transition swaps between. */
 const StepBody = ({ step }: { readonly step: Step }) => {
   const theme = useTheme();
   return (
@@ -136,7 +122,6 @@ const StepBody = ({ step }: { readonly step: Step }) => {
   );
 };
 
-/** A wizard whose body moves in the direction the reader travels. */
 export const PageTransitionExample = () => {
   const theme = useTheme();
   const [step, setStep] = useState(steps[0]?.id ?? "details");

@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * ScrollProgress example: a bounded settings list with a reading line.
- *
- * The list is taller than the box on purpose: the line starts empty, fills as
- * the reader moves, and reaches the end exactly when the last row does. The
- * second reader puts the line on the top edge, which is where a page-level
- * reading usually sits.
- */
-
 import { ScrollProgress } from "../src/scroll-progress.js";
 import { useTheme } from "../src/internal/theme.js";
 
@@ -37,7 +28,6 @@ const rows = (prefix: string) =>
     </div>
   ));
 
-/** A bottom reading line and a top one over the same list. */
 export const ScrollProgressExample = () => {
   const theme = useTheme();
   return (

@@ -1,25 +1,3 @@
-/**
- * Plan 600's catalogue against the motion inventory.
- *
- * The bug this guards: plan 600 §2 names 47 animated primitives and §5 requires
- * every one to land with an inventory record — or, where the runtime cannot
- * paint it, to be declined with evidence. Fourteen names had no record a reader
- * of `.agents/slop/COMPONENTS.md` could see: eight cannot be painted on
- * `@gpuix/native@0.11.0` (`blur`, `zoom`, `tilt`, `flip-button`, `hole`,
- * `morphing-text`, `click`, `github-stars`) and six resolve to a primitive that
- * already ships (`fade` and `slide` to `Reveal`, `highlight` to `Highlight text`,
- * `icon-button` to the primitives' `IconButton`, `swapping-text` and
- * `scrolling-number` to their two implementations). The declines lived only in
- * `.agents/slop/TODO.md` sub-bullets, which the inventory does not render, so the animated
- * table read complete while a reader could not tell a declined entry from work
- * nobody had started.
- *
- * Every catalogue name is placed here — a row, a shipped primitive, or a decline
- * whose reason names the runtime gap — and `.agents/slop/COMPONENTS.md`'s recorded entries
- * are held to the same placements, so the plan, the code and the record cannot
- * drift apart.
- */
-
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,7 +14,6 @@ const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const read = (relative: string): string =>
   readFileSync(join(repoRoot, relative), "utf8");
 
-/** The text between two headings, so a block cannot leak into its neighbour. */
 const section = (text: string, from: string, to: string): string => {
   const start = text.indexOf(from);
   const rest = start < 0 ? "" : text.slice(start + from.length);
@@ -47,10 +24,8 @@ const section = (text: string, from: string, to: string): string => {
   return rest.slice(0, end);
 };
 
-/** A catalogue slug: the plan writes every primitive as one backticked token. */
 const SLUG = /^[a-z][a-z-]*$/;
 
-/** Every backticked slug in a block, in the order it is written. */
 const slugs = (text: string): ReadonlyArray<string> => {
   const parts = Str.split("`")(text);
   return Arr.filterMap(parts, (part, index) =>
@@ -68,7 +43,6 @@ const catalogue = Arr.dedupe(
   ),
 );
 
-/** Where one catalogue name lives: a row, a shipped primitive, or a decline. */
 type Placement =
   | { readonly _tag: "row"; readonly name: string }
   | { readonly _tag: "covered"; readonly by: ReadonlyArray<string> }
@@ -79,12 +53,6 @@ type Placement =
     }
   | { readonly _tag: "declined"; readonly gap: string };
 
-/**
- * The placement of every catalogue name. `row` names an animated table row,
- * `covered` names the rows that already implement the idea, `published` names a
- * primitive another package ships, and `declined` names the gap that makes the
- * effect unrepresentable — the same clause `.agents/slop/COMPONENTS.md` records.
- */
 const placements: Readonly<Record<string, Placement>> = {
   "splitting-text": { _tag: "row", name: "Splitting text" },
   "typing-text": { _tag: "row", name: "Typing text" },
@@ -141,7 +109,6 @@ const placements: Readonly<Record<string, Placement>> = {
   "github-stars": { _tag: "declined", gap: "out of scope" },
 };
 
-/** One table cell, trimmed, or the empty string when the cell is absent. */
 const cell = (cells: ReadonlyArray<string>, index: number): string =>
   Option.getOrElse(Arr.get(cells, index), () => "");
 
@@ -150,7 +117,6 @@ interface Row {
   readonly status: string;
 }
 
-/** The animated primitives table, parsed from `.agents/slop/COMPONENTS.md`. */
 const rows = (): ReadonlyArray<Row> => {
   const markdown = read(".agents/slop/COMPONENTS.md");
   const heading = "## Animated primitives (plan 600)";
@@ -167,7 +133,6 @@ const rows = (): ReadonlyArray<Row> => {
   });
 };
 
-/** One line of `.agents/slop/COMPONENTS.md`'s declined-and-covered block. */
 interface Recorded {
   readonly slug: string;
   readonly kind: "declined" | "covered";
@@ -176,7 +141,6 @@ interface Recorded {
 
 const ENTRY = /^- `([a-z][a-z-]*)` — \*\*(declined|covered)\*\*(.*)$/;
 
-/** The entries the inventory records, one bullet each. */
 const recorded = (): ReadonlyArray<Recorded> =>
   Arr.filterMap(Str.split("\n")(read(".agents/slop/COMPONENTS.md")), (line) =>
     Option.match(Str.match(ENTRY)(line), {
@@ -204,8 +168,6 @@ const names = (tag: Placement["_tag"]): ReadonlyArray<string> =>
 
 describe("the plan-600 catalogue", () => {
   it("reads the names the plan lists", () => {
-    // A floor rather than the exact count: a new catalogue entry has to be
-    // placed below, and a scan that read nothing must not pass by accident.
     expect(catalogue.length).toBeGreaterThan(40);
     expect(Arr.dedupe(catalogue)).toEqual(catalogue);
   });
@@ -233,7 +195,7 @@ describe("the plan-600 catalogue", () => {
       );
     });
     expect(problems).toEqual([]);
-    // The placements are not vacuous: most of the catalogue ships as a row.
+
     expect(names("row").length).toBeGreaterThan(30);
   });
 

@@ -1,17 +1,3 @@
-/**
- * Every editor page's `## API` table against the props its type declares.
- *
- * The bug guarded: a page that lists the props its author remembered, so a prop
- * added to a `*Props` interface later is documented nowhere and a reader cannot
- * discover it. The address an automation host locates the surface by
- * (`testId`) was missing from three of the four pages while `MarkdownEditor`'s
- * page carried it, so the omission was invisible from any one page.
- *
- * The check is exact in both directions: a declared prop must have a row and a
- * row must name a declared prop. A row may document two props in one cell
- * (`minRows` / `maxRows`); its names are read as a set, not as its first span.
- */
-
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -21,12 +7,11 @@ import { describe, expect, it } from "vitest";
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
 
-/** A page and the props type its source declares, with a floor for the reader. */
 interface PageContract {
   readonly page: string;
   readonly source: string;
   readonly type: string;
-  /** Minimum props a table must resolve, so a broken reader cannot pass. */
+
   readonly floor: number;
 }
 
@@ -57,7 +42,6 @@ const PAGES: ReadonlyArray<PageContract> = [
   },
 ];
 
-/** The props one interface declares, from its own body. */
 const declaredProps = (source: string, type: string): ReadonlyArray<string> => {
   const start = source.indexOf(`export interface ${type} {`);
   const end = source.indexOf("\n}", start);
@@ -70,13 +54,6 @@ const declaredProps = (source: string, type: string): ReadonlyArray<string> => {
   );
 };
 
-/**
- * The surface a part may inherit rather than declare.
- *
- * A page may document these beside the props its interface declares, so a row
- * naming one is not reported as a phantom prop; every locally declared prop is
- * still required, which is what catches a real omission.
- */
 const INHERITED: ReadonlySet<string> = new Set([
   "aria-id",
   "children",
@@ -86,13 +63,11 @@ const INHERITED: ReadonlySet<string> = new Set([
   "testId",
 ]);
 
-/** Every name a row's prop cell documents, in backticks. */
 const namesIn = (cell: string): ReadonlyArray<string> =>
   Arr.map(Arr.fromIterable(cell.matchAll(/`([A-Za-z][\w-]*)`/g)), (match) =>
     String(match[1]),
   );
 
-/** The props a page's `## API` table documents. */
 const documentedProps = (page: string): ReadonlyArray<string> => {
   const start = page.indexOf("## API");
   if (start < 0) return [];
@@ -109,7 +84,6 @@ describe.each(PAGES)("the $page page", (contract) => {
     const declared = declaredProps(read(contract.source), contract.type);
     const documented = documentedProps(read(contract.page));
 
-    // A floor so a reader that resolved nothing cannot pass vacuously.
     expect(declared.length).toBeGreaterThan(contract.floor - 1);
     expect(Arr.filter(declared, (name) => !documented.includes(name))).toEqual(
       [],
@@ -123,17 +97,6 @@ describe.each(PAGES)("the $page page", (contract) => {
   });
 });
 
-/**
- * The Diff viewer's split contract, held to the page that teaches it.
- *
- * The bug guarded: a split viewer whose cells sized themselves by content
- * pushed the right column past the sheet and clipped its code, while the page
- * promised only "old line left, replacement right". The page now teaches the
- * two equal columns, the divider, the per-column scroller and the shared row
- * height the component paints, and must not still print the retracted
- * content-sizing record. `node:fs` is used here only because this is a
- * test-time repository check.
- */
 describe("the Diff viewer page's split contract", () => {
   const page = read("../docs/diff-viewer.mdx").replace(/\s+/g, " ");
 
@@ -147,7 +110,7 @@ describe("the Diff viewer page's split contract", () => {
   it("retracts the content-sizing claim the rebuilt layout replaces", () => {
     expect(page).not.toContain("sizes a row's cells by their content");
     expect(page).not.toContain("removed tint ended");
-    // The hunk model is the data behind both views, and the page names it.
+
     expect(page).toContain("`hunks(");
     expect(page).toContain("`rows(");
     expect(page).toContain("`pairs(");

@@ -1,12 +1,3 @@
-/**
- * Guards the luma `cn-*` aliases the Base UI registry writes.
- *
- * Bug guarded: Base UI sources use `cn-input` / `cn-button` instead of long
- * class strings, and without an alias table those hooks are unsupported. The
- * tests also record where luma deliberately differs from new-york-v4, so a
- * future "fix" cannot quietly replace one preset with the other.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as R from "effect/Record";

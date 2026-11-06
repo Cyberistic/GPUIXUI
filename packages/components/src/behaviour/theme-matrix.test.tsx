@@ -1,13 +1,3 @@
-/**
- * The Tier 2 both-theme matrix (plan 117 §4).
- *
- * Every component here has one assertion that must change with the theme. If a
- * component hard-codes a colour, or reads the wrong role, one of the two rows
- * fails. The suites that already assert both themes cover Card, Badge, Alert,
- * Dialog, Popover, Tabs, DropdownMenu, Pagination, Toast, Field and Combobox;
- * this file is the rest of the matrix, in one place so gaps are visible.
- */
-
 import { useState, type ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import {
@@ -76,7 +66,6 @@ import {
 
 const themes: ReadonlyArray<Theme> = [darkTheme, lightTheme];
 
-/** Render under each theme, assert, and unmount, so the one-window rule holds. */
 const bothThemes = (
   render: () => ReactElement,
   assert: (root: ComponentTestRoot, theme: Theme) => void,
@@ -132,8 +121,6 @@ describe("theme matrix", () => {
         />
       ),
       (root, theme) => {
-        // A GPUix `<text>` host wraps an anonymous child holding the string, so
-        // only the wrapper carries the style (measured in empty-state.test.tsx).
         const colours = root.renderer
           .findByType("text")
           .filter((element) => element.style.color !== undefined)
@@ -373,9 +360,6 @@ describe("theme matrix", () => {
   it("InlineEdit swaps to a themed display and input", () => {
     bothThemes(
       () => (
-        // One host element: a render root paints a single child of a
-        // multi-child fragment, so the display and the input would not both
-        // be in the tree.
         <div>
           <InlineEdit
             value="Renamable"
@@ -392,9 +376,6 @@ describe("theme matrix", () => {
         </div>
       ),
       (root, theme) => {
-        // The display text colour lives on the nested `<text>` host, not on the
-        // control div that carries the test id — and a GPUix `<text>` wraps an
-        // anonymous child, so only the wrapper carries the style.
         expect(
           root.renderer
             .findByType("text")
@@ -438,9 +419,6 @@ describe("theme matrix", () => {
   });
 
   it("TagInput paints chips with the secondary role", () => {
-    // A chip is a typed token, so its label owes the body floor on its own fill.
-    // `muted` was a rung too close to the field it sits in: the label cleared the
-    // secondary floor but missed the body one in every light style.
     bothThemes(
       () => (
         <TagInput

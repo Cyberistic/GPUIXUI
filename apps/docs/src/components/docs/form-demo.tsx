@@ -1,18 +1,3 @@
-/**
- * Browser previews for the Form page.
- *
- * The shipped `Form` is owned-value: it never reads a runtime value, it runs the
- * caller's schema, and it turns the messages on only after a submit has failed.
- * The preview cannot mount it (the library renders through GPUix), so it mirrors
- * the contract with HTML and says so: the draft lives in React, the messages are
- * derived from the live draft once a submit has failed, `pending` refuses a
- * second submit, and the success line carries the accepted draft.
- *
- * The rules themselves live in `form-preview.ts` so a test can fail on them;
- * this file only renders them. The Code tab on the page always shows the native
- * usage.
- */
-
 import { useState } from "react";
 import {
   accept,
@@ -25,10 +10,8 @@ import {
   type FormDraft,
 } from "./form-preview";
 
-/** How long the preview's simulated save takes, in milliseconds. */
 const SAVE_MS = 700;
 
-/** One field with its label, hint or the message the schema reported. */
 const PreviewField = ({
   id,
   label,
@@ -73,7 +56,6 @@ const PreviewField = ({
   </div>
 );
 
-/** The message one field carries, only once a submit has failed. */
 const messageFor = (
   draft: FormDraft,
   field: "email" | "name",
@@ -85,7 +67,6 @@ const messageFor = (
   return check.accepted ? undefined : check.message;
 };
 
-/** Create account: a failed submit, a live fix, a pending save and a success. */
 export const FormWorkflow = () => {
   const [draft, setDraft] = useState<FormDraft>(EMPTY_DRAFT);
   const [attempted, setAttempted] = useState(false);
@@ -99,15 +80,13 @@ export const FormWorkflow = () => {
     if (pending) return;
     setAttempts(attempts + 1);
     if (!canSubmit(draft, false)) {
-      // The failed submit turns the messages on. They are derived from the live
-      // draft, so the next edit clears or replaces its own.
       setAttempted(true);
       setCreated(null);
       return;
     }
     setAttempted(false);
     setPending(true);
-    // A caller's save is async; the preview stands one in with a timer.
+
     window.setTimeout(() => {
       setPending(false);
       setCreated(createdLabel(accept(draft)));
@@ -165,7 +144,6 @@ export const FormWorkflow = () => {
   );
 };
 
-/** The four moments of the contract, side by side. */
 export const FormStates = () => {
   const empty = EMPTY_DRAFT;
   const failed: FormDraft = { email: "hunter", name: "" };

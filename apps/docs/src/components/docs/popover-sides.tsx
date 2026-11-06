@@ -24,18 +24,6 @@ import {
   type PopoverSide,
 } from "./popover-preview";
 
-/**
- * Browser previews for the Popover page.
- *
- * The shipped popover takes a `side`, an `align` and a `sideOffset`, keeps the
- * side unless it has no room at all, centres a panel on its trigger by default,
- * and lets the runtime pull a snapped surface back inside the window by
- * `collisionPadding`. The drawings show the three alignments on one trigger, all
- * four sides on another, and a panel against the frame's right edge, where the
- * pull-back is the thing a reader needs to see. They are illustrations of the
- * native surface — the component renders through GPUix, not the DOM.
- */
-
 const usePopover = () => {
   const [open, setOpen] = useState(true);
   const scene = useRef<HTMLDivElement | null>(null);
@@ -62,7 +50,6 @@ const usePopover = () => {
   return { close, open, scene, setOpen };
 };
 
-/** The panel's body, shared by the drawings. */
 const PanelBody = ({ note }: { readonly note: ReactNode }): ReactNode => (
   <>
     <p className="gx-popover-title">Visible columns</p>
@@ -74,13 +61,6 @@ const PanelBody = ({ note }: { readonly note: ReactNode }): ReactNode => (
   </>
 );
 
-/**
- * The three alignments, switched from one control row above the stage.
- *
- * The panel's `left` is `alignmentLayout`'s: `start` shares the trigger's left
- * edge, `center` its centre line and `end` its right edge, and a panel with no
- * room shifts back only as far as the collision margin.
- */
 export const PopoverAligned = ({
   align: initialAlign = "center",
 }: {
@@ -141,7 +121,6 @@ export const PopoverAligned = ({
   );
 };
 
-/** The four sides, switched from one control row. */
 export const PopoverSides = (): ReactNode => {
   const [side, setSide] = useState<PopoverSide>("bottom");
   const { close, open, scene, setOpen } = usePopover();
@@ -203,15 +182,6 @@ export const PopoverSides = (): ReactNode => {
   );
 };
 
-/**
- * The collision pull-back, as the runtime does it.
- *
- * The trigger sits against the frame's right edge, so an `align="start"` panel
- * would paint past it; the surface slides back until its right edge keeps the
- * collision margin. The panel is a child of the frame rather than the trigger,
- * so the drawing's `left` is the box the readout prints — the number a reader
- * can check against the rule.
- */
 export const PopoverCollision = (): ReactNode => {
   const { close, open, scene, setOpen } = usePopover();
   const layout = collisionLayout();

@@ -1,17 +1,3 @@
-/**
- * Calendar behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: two cells claiming the roving tab stop; an arrow that
- * paints a highlight without moving real focus; `Home`/`End` read as the page's
- * edges instead of the week's; `PageDown` changing the selected day; a `Shift`
- * page that moves a month instead of a year; `Enter`/`Space` not selecting the
- * focused day; a disabled day taking a press; an arrow landing on a disabled
- * day; Escape not reaching the owner that opened the surface; a span painted
- * only at its ends; a second month never painted; a caption dropdown that moves
- * the label but not the grid; and a selected day painted from a constant instead
- * of the theme's `primary` role.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -30,12 +16,10 @@ import type {
 } from "../calendar.js";
 import type { ReactNode } from "react";
 
-/** The room a calendar needs, and the day every case calls today. */
 const Frame = ({ children }: { readonly children: ReactNode }) => (
   <div style={{ width: 720, padding: 40 }}>{children}</div>
 );
 
-/** A one-day calendar, with today fixed so the paint is stable. */
 const single = (
   props: Omit<SingleCalendarProps, "mode" | "today"> = {},
 ): ReturnType<typeof renderComponent> =>
@@ -45,7 +29,6 @@ const single = (
     </Frame>,
   );
 
-/** A span calendar. */
 const range = (
   props: Omit<RangeCalendarProps, "mode" | "today"> = {},
 ): ReturnType<typeof renderComponent> =>
@@ -55,7 +38,6 @@ const range = (
     </Frame>,
   );
 
-/** A several-days calendar. */
 const several = (
   props: Omit<MultipleCalendarProps, "mode" | "today"> = {},
 ): ReturnType<typeof renderComponent> =>
@@ -65,7 +47,6 @@ const several = (
     </Frame>,
   );
 
-/** Put real focus on a day cell, the way Tab or a press would. */
 const focusDay = (root: ReturnType<typeof single>, iso: string): void => {
   const cell = root.renderer.findByTestId(`date-day-${iso}`);
   if (cell === undefined) throw new Error(`behaviour: no cell for ${iso}`);
@@ -78,7 +59,7 @@ describe("the month grid", () => {
     expect(root.renderer.findByTestId("date-month")).toBeDefined();
     expect(root.renderer.findByText("October 2026")).toBeDefined();
     expect(root.renderer.getAllText()).toContain("Mon");
-    // Today is marked by the theme's primary edge, not a constant.
+
     expect(
       root.renderer.findByTestId("date-day-2026-10-17")?.style.borderColor,
     ).toBe(darkTheme.colors.primary);
@@ -94,7 +75,6 @@ describe("the month grid", () => {
     expect(root.renderer.getAllText()).toContain("November 2026");
     expect(root.renderer.findByTestId("date-month-1")).toBeDefined();
 
-    // The roving stop is one cell, on the focused day.
     const stops = ["2026-10-17", "2026-10-18", "2026-11-01"].map(
       (iso) =>
         root.renderer.findByTestId(`date-day-${iso}`)?.customProps?.tabIndex,
@@ -104,7 +84,6 @@ describe("the month grid", () => {
   });
 
   it("paints outside days by default, and only when asked otherwise", () => {
-    // shadcn's Calendar paints the neighbouring months unless told not to.
     const byDefault = single();
     expect(
       byDefault.renderer.findByTestId("date-day-2026-09-28"),
@@ -135,14 +114,12 @@ describe("the keyboard", () => {
     root.renderer.simulateKeystrokes("down");
     expect(focusedTestId(root)).toEqual(Option.some("date-day-2026-10-25"));
 
-    // 25 October 2026 is a Sunday; a Monday-first week is 19–25.
     root.renderer.simulateKeystrokes("home");
     expect(focusedTestId(root)).toEqual(Option.some("date-day-2026-10-19"));
 
     root.renderer.simulateKeystrokes("end");
     expect(focusedTestId(root)).toEqual(Option.some("date-day-2026-10-25"));
 
-    // The 1st has no earlier day in the month when outside days are off.
     focusDay(root, "2026-10-01");
     root.renderer.simulateKeystrokes("left");
     expect(focusedTestId(root)).toEqual(Option.some("date-day-2026-10-01"));
@@ -239,7 +216,7 @@ describe("the selection", () => {
     expect(
       root.renderer.findByTestId("date-day-2026-10-20")?.style.backgroundColor,
     ).toBe(darkTheme.colors.primary);
-    // A day after the range wears neither paint.
+
     expect(
       root.renderer.findByTestId("date-day-2026-10-21")?.style.backgroundColor,
     ).toBeUndefined();
@@ -291,7 +268,7 @@ describe("the selection", () => {
         "aria-label"
       ],
     ).toBe("19 October 2026, in range");
-    // The grid carries the span, so a reader who reaches it hears the value.
+
     expect(
       root.renderer.findByTestId("date-day-2026-10-20")?.customProps?.[
         "aria-label"
@@ -324,7 +301,7 @@ describe("the refused days", () => {
 
   it("skips a refused day with the arrows instead of landing on it", () => {
     const root = single({ disabled: { weekdays: [0, 6] } });
-    // 16 October 2026 is a Friday; the weekend is refused.
+
     focusDay(root, "2026-10-16");
 
     root.renderer.simulateKeystrokes("right");
@@ -339,9 +316,6 @@ describe("the refused days", () => {
 
 describe("the caption dropdown", () => {
   it("jumps the grid to the month and the year it names", () => {
-    // A short window keeps the option in the list's first screen: a year three
-    // decades out is a real row but sits below the 320px viewport, and a press
-    // has to land on a painted row.
     const root = single({
       captionLayout: "dropdown",
       fromYear: 2026,
@@ -353,7 +327,7 @@ describe("the caption dropdown", () => {
 
     clickCentreOf(root, "date-month-select");
     clickCentreOf(root, "date-month-month-3");
-    // The dropdown names the month in two controls, so the grid is the evidence.
+
     expect(root.renderer.findByTestId("date-day-2026-03-01")).toBeDefined();
     expect(root.renderer.findByTestId("date-day-2026-10-17")).toBeUndefined();
 
@@ -367,8 +341,6 @@ describe("the caption dropdown", () => {
 
 describe("the year window", () => {
   it("offers the century around today, not the decade", () => {
-    // Guarded bug: the default window was today ± 10, so a 1994 birthday had no
-    // year in the dropdown and `Shift`+Page refused the month before it.
     const root = single({ captionLayout: "dropdown" });
     clickCentreOf(root, "date-month-year");
 

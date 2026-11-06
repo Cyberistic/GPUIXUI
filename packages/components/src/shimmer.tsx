@@ -1,27 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Shimmer: a travelling highlight, painted into a text run.
- *
- * A `background-clip: text` gradient is not available: the runtime has no mask
- * and no background-clip, and a `<text>` host paints one `color`. A plain
- * string child is therefore composed as **one text host per code point**, each
- * taking its ink from the travelling profile at its place in the line. That is
- * a per-glyph colour step, not a continuous fill — the honest form this runtime
- * can paint — and it is the strongest form of the browser drawing, not the same
- * effect.
- *
- * Any other child — a card, an icon beside a label, a run this component cannot
- * recolour — keeps the surface band: a row of thin two-stop ramps over the
- * content, sampled from that same profile. The two paths are different
- * drawings; neither is presented as the other.
- *
- * The surface owns its children's layout: the band is painted after them and
- * takes no presses, so a button or a link inside still works. Under
- * `MotionProvider preference="reduced"` — or `reducedMotion` on this surface —
- * the text rests at its own colour and the band is not painted at all: no
- * interval is scheduled.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -53,42 +30,31 @@ import {
   shimmerLines,
 } from "./shimmer/logic.js";
 
-/** The roles a shimmer highlight may paint. */
 export type ShimmerAccent = "foreground" | "primary" | "muted";
 
-/** What a shimmer surface draws at one frame. */
 export interface ShimmerState {
-  /** The brightest strip's alpha this frame. */
   readonly peak: number;
   readonly reducedMotion: boolean;
   readonly active: boolean;
 }
 
-/** {@link Shimmer} props. */
 export interface ShimmerProps extends Omit<Props, "children" | "style"> {
-  /** The surface the highlight travels across. */
   readonly children?: ReactNode;
-  /** Whether the highlight runs. Default `true`. */
+
   readonly active?: boolean;
-  /** One complete sweep, in milliseconds. Default `2000`. */
+
   readonly durationMs?: number;
-  /**
-   * The role the highlight paints. Default `primary`: a text run blends toward
-   * it, and a band paints it at a low alpha.
-   */
+
   readonly accent?: ShimmerAccent;
-  /** The typographic role a text run paints. Default `"body"`. */
+
   readonly role?: TextRole;
-  /**
-   * Hold the content still with no band. Defaults to the motion provider's
-   * preference; the runtime exposes none of its own.
-   */
+
   readonly reducedMotion?: boolean;
-  /** An accessible name; when set, the surface is a `status` node. */
+
   readonly label?: string;
-  /** A Tailwind class string, joined after the surface recipe. */
+
   readonly className?: string;
-  /** A style for the surface, or a function of {@link ShimmerState}. */
+
   readonly style?: StateStyle<ShimmerState>;
 }
 
@@ -98,7 +64,6 @@ const ACCENT_ROLE: Readonly<Record<ShimmerAccent, (theme: Theme) => string>> = {
   muted: (theme) => theme.colors.mutedForeground,
 };
 
-/** One line of inked glyphs; words wrap between each other, never inside one. */
 const GlyphLine = ({
   line,
   metrics,
@@ -177,10 +142,7 @@ export const Shimmer = ({
   const lines =
     text === undefined
       ? []
-      : // The resting ink is the muted role and the sweep is the accent, so a
-        // neutral run reads the way shadcn's does: grey text a bright band
-        // passes over. The accent is the sheen, not the colour of the copy.
-        shimmerLines(text, theme.colors.mutedForeground, ink, frame);
+      : shimmerLines(text, theme.colors.mutedForeground, ink, frame);
 
   return (
     <div
@@ -236,8 +198,7 @@ export const Shimmer = ({
                 flexGrow: 1,
                 flexBasis: 0,
                 height: "100%",
-                // The role is a colour; the sample is a **share** of its
-                // resting alpha, so the peak is a sheen rather than the ink.
+
                 background: rampOf(
                   alpha(ink, 0.3 * (frame.alphas[index] ?? 0)),
                   alpha(ink, 0.3 * (frame.alphas[index + 1] ?? 0)),
@@ -252,7 +213,6 @@ export const Shimmer = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s animated-primitives table. */
 export const shimmerMeta = {
   name: "Shimmer",
   tier: 2,

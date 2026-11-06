@@ -1,16 +1,3 @@
-/**
- * The dismiss stack's rules, without a renderer.
- *
- * The bugs these guard: two Escape handlers firing on one keystroke (a popover
- * inside a dialog closing both layers), one outside press closing two overlays,
- * an outside press closing an overlay that is not topmost, a nested surface
- * losing the first Escape because React ran the child's effect before the
- * parent's, and a closed overlay leaving its handler on the stack to be
- * dismissed later. One key dispatch and one press are each counted once, because
- * the runtime rebuilds the payload per handler: a key shares `keystrokeId`, a
- * press shares its type, point, button and click count.
- */
-
 import type { EventPayload } from "@gpuix/react";
 import * as Duration from "effect/Duration";
 import { describe, expect, it, vi } from "vitest";
@@ -23,15 +10,9 @@ import {
 
 const frame = BigInt(Duration.toMillis(pointerGestureWindow)) * 1_000_000n;
 
-/**
- * A reading a full gesture after every earlier one in this suite. Two calls to
- * `dismissTopLayer` with the same reading are the handlers of one press; two
- * readings are two presses.
- */
 let clock = 0n;
 const gesture = (): bigint => (clock += frame + 1n);
 
-/** An outside press at one point, as one overlay's handler receives it. */
 const press = (elementId: number, at = { x: 40, y: 40 }): EventPayload => ({
   elementId,
   eventType: "mouseDownOutside",
@@ -41,7 +22,6 @@ const press = (elementId: number, at = { x: 40, y: 40 }): EventPayload => ({
   clickCount: 1,
 });
 
-/** The key dispatch a renderer numbers; every handler's payload shares it. */
 const keystroke = (keystrokeId: number): EventPayload => ({
   elementId: 1,
   eventType: "keyDown",
@@ -70,8 +50,6 @@ describe("dismiss layer stack", () => {
   });
 
   it("puts the deeper surface on top even when it pushed first", () => {
-    // Both open in one first render: React runs the popover's layout effect
-    // before the dialog's, so the depth — not the push — must order them.
     const dialog = vi.fn();
     const popover = vi.fn();
     const removePopover = pushDismissLayer(popover, 2);
@@ -102,7 +80,6 @@ describe("dismiss layer stack", () => {
   });
 
   it("keeps push order between layers at the same depth", () => {
-    // Siblings: neither contains the other, so the later one is on top.
     const first = vi.fn();
     const second = vi.fn();
     const removeFirst = pushDismissLayer(first, 1);
@@ -117,9 +94,6 @@ describe("dismiss layer stack", () => {
   });
 
   it("closes one overlay for one outside press, however many handlers it reaches", () => {
-    // The bug this guards: an outside press raises every open overlay's
-    // `onMouseDownOutside`, each with its own payload object, so both layers
-    // dismissed the topmost one and the app saw the same overlay close twice.
     const outer = vi.fn();
     const inner = vi.fn();
     const removeOuter = pushDismissLayer(outer, 1);
@@ -136,12 +110,6 @@ describe("dismiss layer stack", () => {
   });
 
   it("treats one press delivered after a frame's re-render as one gesture", () => {
-    // The bug this guards: one outside press reaches every open overlay, and
-    // the topmost one's close re-renders the tree between two deliveries. That
-    // re-render outlasted the one-frame window and closed two overlays on one
-    // press once the action paint moved onto the primitives. The platform
-    // counts a second press at one point as a double click, so the shape still
-    // tells a real next gesture apart after the wider window.
     const outer = vi.fn();
     const inner = vi.fn();
     const removeOuter = pushDismissLayer(outer, 1);
@@ -189,8 +157,6 @@ describe("dismiss layer stack", () => {
   });
 
   it("treats the same point after the gesture window as a new press", () => {
-    // A reader pressing the same pixel twice: the deliveries of one press
-    // arrive inside the gesture window, so a later reading is the next gesture.
     const outer = vi.fn();
     const inner = vi.fn();
     const removeOuter = pushDismissLayer(outer, 1);
@@ -211,8 +177,6 @@ describe("dismiss layer stack", () => {
     const removeOuter = pushDismissLayer(outer, 1);
     const removeInner = pushDismissLayer(inner, 2);
 
-    // The same Escape reaches the input and the dialog as two objects that share
-    // the dispatch id; only the first call may dismiss a layer.
     expect(dismissTopLayer(keystroke(7), gesture())).toBe(true);
     expect(dismissTopLayer(keystroke(7), gesture())).toBe(false);
     expect(inner).toHaveBeenCalledTimes(1);
@@ -245,8 +209,6 @@ describe("dismiss layer stack", () => {
     expect(dismissTopLayer(keystroke(1), now)).toBe(true);
     remove();
 
-    // A fresh renderer numbers its keystrokes from its own start; a stale id
-    // must not swallow the first Escape of the next stack.
     const next = vi.fn();
     const removeNext = pushDismissLayer(next, 1);
     expect(dismissTopLayer(keystroke(1), now)).toBe(true);
@@ -256,8 +218,6 @@ describe("dismiss layer stack", () => {
   });
 
   it("forgets the last press once the stack empties", () => {
-    // A surface re-opened by the press that dismissed its predecessor must not
-    // be dismissed by the same gesture surviving on an empty stack.
     const closed = vi.fn();
     const remove = pushDismissLayer(closed, 1);
     const now = gesture();

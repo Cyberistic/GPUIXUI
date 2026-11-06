@@ -1,16 +1,3 @@
-/**
- * The chart's config: the labels, the icons and the colours, in one table.
- *
- * These cases guard the claims the seam makes:
- *
- * - the config is **decoupled from the data** — one table can be shared by
- *   several charts, and a theme can own the colours;
- * - a chart that names a config **and** a data paints the series the two
- *   make, and the categories the data names;
- * - a chart that names no config keeps the caller's own series, so the
- *   config is an addition rather than a replacement;
- * - a config the parser cannot read is read as **absence**, not as a crash.
- */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -54,7 +41,6 @@ describe("a chart's config", () => {
   });
 
   it("reads a value the data does not carry as zero, not as a hole", () => {
-    // A series with no numbers yet keeps its slot — the legend still names it.
     const series = seriesFromConfig({ visitors: {} }, [{ month: "January" }]);
     expect(series[0]?.values).toEqual([0]);
   });
@@ -74,7 +60,7 @@ describe("a chart's config", () => {
     expect(
       Option.getOrElse(configColour(config["desktop"], "light"), () => ""),
     ).toBe("#2563eb");
-    // The per-mode table wins where it names the mode.
+
     expect(
       Option.getOrElse(configColour(config["mobile"], "light"), () => ""),
     ).toBe("#60a5fa");
@@ -84,22 +70,17 @@ describe("a chart's config", () => {
   });
 
   it("reads a blank label as the key the series is stored by", () => {
-    // A label is content before it is a literal: a table missing its row
-    // answers "", and a saved chart can restore a series with no words.
     expect(configLabel("revenue", { label: "  " })).toBe("revenue");
     expect(configLabel("revenue", undefined)).toBe("revenue");
     expect(configLabel("revenue", { label: "Revenue" })).toBe("Revenue");
   });
 
   it("reads a blank colour as no colour", () => {
-    // A blank is absence: a colour the runtime would drop is not a colour.
     expect(Option.isNone(configColour({ color: "   " }, "light"))).toBe(true);
     expect(Option.isNone(configColour({}, "light"))).toBe(true);
   });
 
   it("reads a table with a hole as an entry with no words", () => {
-    // A table a store wrote can carry a hole: the key is there and the entry
-    // is not. The key still names the series.
     const hole: ChartConfig = { desktop: { label: "Desktop" } };
     const entries = configEntries({ ...hole, mobile: undefined });
     expect(Arr.map(entries, ([key]) => key)).toEqual(["desktop", "mobile"]);

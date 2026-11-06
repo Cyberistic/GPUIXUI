@@ -1,8 +1,3 @@
-/**
- * Notes — a three-pane writing app (plan 729): folders in a source list under
- * the traffic lights, the folder's notes with a two-line excerpt, and the
- * editor. Typing in the editor rewrites the list row's excerpt as you go.
- */
 import { SourceList, Window, WindowToolbar } from "@gpuixui/shell";
 import { Stack, Text, TextArea } from "@gpuixui/primitives";
 import type { PlatformName } from "@gpuixui/tokens";
@@ -95,8 +90,6 @@ export const Notes = ({ platform }: { readonly platform?: PlatformName }) => {
               onValueChange={(body) =>
                 setAll(editNote(all, current.value.id, body))
               }
-              // A textarea's height is rows (the runtime's own control), so
-              // the editor asks for enough to fill the pane.
               minRows={24}
             />
           </Stack>

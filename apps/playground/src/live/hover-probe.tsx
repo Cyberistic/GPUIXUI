@@ -1,17 +1,3 @@
-/**
- * The `hover-routing-lifecycle` probe: a row whose native `hover` fill is
- * measured while the pointer sits on each shape a Tier 3/4 row nests.
- *
- * The row declares the runtime's own `style.hover` refinement — the seam every
- * list, table and tree row paints its feedback through — so the question is
- * answered in paint rather than in a React state a component happens to keep.
- * The `onMouseEnter` pair on the row and the child is the second half: it says
- * which element the runtime credited with the hover, which is what a tooltip or
- * a hover-opened menu depends on.
- *
- * The view and the steps live here rather than in `scenarios.tsx` so the
- * measurement is one module; the registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { Pixels, Smoke } from "@gpuixui/testing";
@@ -33,20 +19,16 @@ import {
   type HoverCase,
 } from "./hover-routing.js";
 
-/** The roles the row, its `hover` state and its nested child paint. */
 const HOVER_PAINT = {
   rest: "card",
   hover: "accent",
   child: "muted",
 } as const;
 
-/** How long a pointer move is given to reach the frame before it is read. */
 const HOVER_SETTLE = Duration.millis(120);
 
-/** The words a case's nested shape paints. */
 const HOVER_CHILD_LABEL = "Nested row content";
 
-/** One row: a hover-painted surface with one child shape at its centre. */
 const HoverRow = ({
   probeCase,
   counts,
@@ -126,7 +108,6 @@ const HoverRow = ({
   );
 };
 
-/** The frame: one row per nested shape, and a label outside every row. */
 export const HoverRoutingProbe = (): ReactNode => {
   const theme = useTheme();
   const [counts, setCounts] = useState<Record<string, HoverCounts>>({});
@@ -190,7 +171,6 @@ export const HoverRoutingProbe = (): ReactNode => {
   );
 };
 
-/** The counts a case's readout prints, or `None` while it does not decode. */
 const readCounts = (
   ctx: Smoke.AsyncSmokeContext,
   probeCase: HoverCase,
@@ -199,7 +179,6 @@ const readCounts = (
     Effect.succeed(decodeHoverCounts(text)),
   );
 
-/** How many pixels of the row's `hover` fill the frame paints. */
 const hoverPixels = (
   ctx: Smoke.AsyncSmokeContext,
   probeCase: HoverCase,
@@ -236,15 +215,12 @@ const hoverPixels = (
     );
   });
 
-/** One case: the pointer moves onto the child, then away from every row. */
 const hoverCaseSteps = (
   ctx: Smoke.AsyncSmokeContext,
   theme: Theme,
   probeCase: HoverCase,
 ): Effect.Effect<void, Smoke.SmokeAssertionError | Smoke.SmokeHostError> =>
   Effect.gen(function* () {
-    // A known position first: the pointer may already be over a row at mount,
-    // so every case is read as a delta from the frame it starts in.
     yield* ctx.host.hover(HOVER_AWAY);
     yield* Effect.sleep(HOVER_SETTLE);
     const before = yield* ctx.expectSome(
@@ -292,7 +268,6 @@ const hoverCaseSteps = (
     );
   });
 
-/** What the `hover-routing-lifecycle` probe drives and asserts. */
 export const hoverRoutingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(hoverChildId("text-unfilled"));

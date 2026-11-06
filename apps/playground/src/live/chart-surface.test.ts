@@ -1,29 +1,3 @@
-/**
- * Guards the fixture `chart-surface-lifecycle` samples the shipped charts with.
- *
- * The live probe's checks are pixel counts and samples, so two things must hold
- * before a green run means anything:
- *
- * 1. **A sample point is a mark the shipped geometry draws.** The points are
- *    written in each plot's own coordinates, and a window that reads a pixel
- *    there proves the paint only if the bar, the stack segment or the ring
- *    segment really covers it. The first two cases derive the marks from
- *    `@gpuixui/data/chart/logic` and hold every point to them, so a data or
- *    size change moves the check to the new mark instead of measuring the old
- *    empty box.
- * 2. **The view mounts the supplied parts with the fixture's ids.** The probe
- *    composes the shipped `BarChart`, `LineChart`, `StackedBar`, `DonutChart`
- *    and `Sparkline`; a probe that drew its own `<svg>`, or renamed an id only
- *    on one side, would pass while measuring a copy.
- *
- * The last two cases are the record: the probe is registered, its README
- * section prints the check count the fixture declares and names the two
- * captures a reader can open, and the packages that call the charts
- * window-verified cite this probe.
- *
- * `node:fs` is a check over the repository's own source, the shape
- * `data-table.test.ts` and `registry.test.ts` use.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -67,7 +41,6 @@ const chartsPage = readFileSync(
   "utf8",
 );
 
-/** The text between two markers, failing by name when a marker is gone. */
 const between = (text: string, from: string, to: string): string => {
   const start = text.indexOf(from);
   const end = text.indexOf(to, start + from.length);
@@ -88,20 +61,17 @@ const steps = between(
   "const WindowChromeProbe",
 );
 
-/** The first mark one series paints, or `None` when it paints none. */
 const firstMark = (
   marks: ReadonlyArray<ReadonlyArray<ChartMark>>,
   seriesIndex: number,
 ): Option.Option<ChartMark> =>
   Option.flatMap(Arr.get(marks, seriesIndex), Arr.head);
 
-/** The rectangle a mark paints, or `None` for a path (the ring has none). */
 const rectOf = (
   mark: ChartMark,
 ): Option.Option<{ x: number; y: number; width: number; height: number }> =>
   mark.kind === "rect" ? Option.some(mark) : Option.none();
 
-/** Whether a mark paints the point, strictly inside it so an edge cannot pass. */
 const paints = (
   mark: Option.Option<ChartMark>,
   point: { readonly x: number; readonly y: number },
@@ -115,7 +85,6 @@ const paints = (
       point.y < rect.y + rect.height,
   });
 
-/** The radii an arc path's two sweep commands name, in the path's own units. */
 const arcRadii = (
   mark: ChartMark,
 ): Option.Option<{ readonly inner: number; readonly outer: number }> =>
@@ -134,7 +103,6 @@ const arcRadii = (
     },
   );
 
-/** The label a ring sample belongs to, and the sweep its datum occupies. */
 const ringBounds = (): ReadonlyArray<{
   readonly key: string;
   readonly from: number;
@@ -174,8 +142,7 @@ describe("the chart-surface fixture", () => {
     expect(paints(firstMark(bars, 1), CHART_SURFACE_POINTS.barsSecond)).toBe(
       true,
     );
-    // The growth point is empty before the press: no first-category mark in
-    // either series reaches it, which is what makes the repaint a change.
+
     expect(
       Arr.every(
         Arr.flatten(bars),
@@ -209,8 +176,7 @@ describe("the chart-surface fixture", () => {
     expect(paints(firstMark(stack, 1), CHART_SURFACE_POINTS.stackedUpper)).toBe(
       true,
     );
-    // The two samples are different paints: the floor series does not reach the
-    // point the series above it covers.
+
     expect(paints(firstMark(stack, 0), CHART_SURFACE_POINTS.stackedUpper)).toBe(
       false,
     );
@@ -243,8 +209,7 @@ describe("the chart-surface fixture", () => {
         sample.point.x - centre.x,
         sample.point.y - centre.y,
       );
-      // Twelve o'clock, clockwise, as a share of the full turn — the space the
-      // segment's sweep is written in.
+
       const angle = Math.atan2(
         sample.point.y - centre.y,
         sample.point.x - centre.x,
@@ -257,9 +222,6 @@ describe("the chart-surface fixture", () => {
       expect(at).toBeLessThan(sweep.value.to);
     });
 
-    // The zero datum paints no segment at all; the probe reads that from the
-    // ring's pixels, because the datum keeps its image so its value is
-    // announced.
     const zero = Arr.findFirstIndex(
       CHART_SURFACE_SOURCES,
       (source) => source.value === 0,
@@ -280,8 +242,7 @@ describe("the chart-surface fixture", () => {
       },
     );
     expect(view).not.toContain("<svg");
-    // A part's id is the fixture's constant, so the view names it and the steps
-    // read it back; a literal string on one side only would measure nothing.
+
     Arr.forEach(
       [
         "CHART_SURFACE_PROBE",
@@ -300,8 +261,7 @@ describe("the chart-surface fixture", () => {
         expect(`${view}\n${steps}`).toContain(constant);
       },
     );
-    // The probe composes the package's data at the fixture's sizes, so a chart
-    // cannot be mounted at another size and quietly agree with the fixture.
+
     expect(view).toContain("CHART_SURFACE_SIZES");
     expect(view).toContain("CHART_SURFACE_SOURCES");
     expect(view).toContain("CHART_SURFACE_CHURN");

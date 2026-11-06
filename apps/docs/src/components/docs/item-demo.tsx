@@ -1,12 +1,3 @@
-/**
- * Browser preview for the Item page.
- *
- * The row is a layout primitive, so the drawing is the layout: media, text and
- * actions on one line, header and footer on their own lines, and the three
- * surfaces a `variant` picks. It paints no hover, because the shipped row does
- * not either — the action is the button the row carries.
- */
-
 const rows = [
   {
     id: "default",

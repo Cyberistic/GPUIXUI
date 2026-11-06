@@ -1,17 +1,3 @@
-/**
- * Holds the roving-focus model the `grid-focus-lifecycle` probe drives, and the
- * claims its README section prints.
- *
- * The probe's whole subject is a rule the library owns but the runtime must
- * honour: one tab stop for a widget, arrows moving real focus, and the
- * remembered cell restored on re-entry. The arithmetic below is that rule, so
- * a movement that wraps instead of clamping, a tab stop that moves with the
- * wrong cell, or a readout that prints a different cell fails here before a
- * window is opened.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the
- * repository's own probe and prose, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -46,7 +32,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The `gridFocusSteps` effect, bounded by the first declaration after it. */
 const steps = (() => {
   const start = scenarios.indexOf("const gridFocusSteps");
   if (start === -1) return "";
@@ -96,7 +81,6 @@ describe("the grid's geometry", () => {
   });
 });
 
-/** Every cell's position, built from the fixture's own helper. */
 const ARR_POSITIONS = Arr.map(GRID_CELLS, positionOf);
 
 describe("the roving movement", () => {
@@ -108,8 +92,6 @@ describe("the roving movement", () => {
   });
 
   it("clamps at every edge rather than wrapping", () => {
-    // A wrap would move a reader two cells for one press: the row's end is the
-    // next row's start, and the grid's top is the bottom.
     expect(moveIndex(2, "right")).toBe(2);
     expect(moveIndex(0, "left")).toBe(0);
     expect(moveIndex(0, "up")).toBe(0);
@@ -208,8 +190,6 @@ describe("the grid-focus probe's record", () => {
   });
 
   it("prints the measured rule for a cell outside the tab stop", () => {
-    // The window measured that `-1` is ordered *before* the zero-index stops
-    // rather than removed from the chain, so the page has to say so.
     expect(readme).toContain("ordered before");
     expect(readme).toContain("gridfocus-r2c2");
     expect(readme).toContain("grid-focus-before");

@@ -1,19 +1,9 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * GravityStars example: a launch panel with a field of falling stars behind it,
- * and the same field stilled under the reduced preference.
- *
- * Composition, not a gallery: the field's real job is behind a moment whose copy
- * owns the words and the actions — the stars only move the surface. The quiet
- * strip is the one decision the field leaves to the application.
- */
-
 import { Card } from "@gpuixui/components/card";
 import { GravityStars } from "../src/gravity-stars.js";
 import { Button, textStyle, useTheme } from "@gpuixui/components/authoring";
 import { MotionProvider } from "@gpuixui/components/motion";
 
-/** The field fills the box it is given, so the example bounds it with insets. */
 const fill = {
   position: "absolute" as const,
   top: 0,
@@ -22,7 +12,6 @@ const fill = {
   left: 0,
 };
 
-/** A falling-star field behind a launch panel, and the same field stilled. */
 export const GravityStarsExample = () => {
   const theme = useTheme();
 
@@ -100,7 +89,7 @@ export const GravityStarsExample = () => {
         >
           <MotionProvider preference="reduced">
             <div style={fill}>
-              {/* The caller's colour and pace: a quieter field, still falling. */}
+              {}
               <GravityStars
                 count={22}
                 seed={2}

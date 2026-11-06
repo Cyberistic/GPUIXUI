@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Message example: the four slots a reply can carry, in one transcript.
- *
- * A user row, an assistant reply with collapsed reasoning, two tool calls (one
- * still running, one failed), citations, a streaming marker and — only because
- * this example wires them — the copy, retry and feedback actions. Actions with
- * no handler render nothing, which the last row proves.
- */
-
 import { useState } from "react";
 import { Button } from "../src/internal/button.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
@@ -21,7 +12,6 @@ import {
 } from "../src/message.js";
 import { Bubble, BubbleContent } from "../src/bubble.js";
 
-/** A transcript with every slot, and one row left bare. */
 export const MessageExample = () => {
   const theme = useTheme();
   const [streaming, setStreaming] = useState(true);

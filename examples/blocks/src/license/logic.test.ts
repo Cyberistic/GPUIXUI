@@ -1,9 +1,3 @@
-/**
- * The Hunter License block's rules (plan 731). Bugs guarded: a specialty that
- * lists another specialty's hunters, a "Star hunters" scope that keeps the
- * unstarred, a directory that does not lead with its most-starred hunters, and
- * a rank title that names stars a hunter does not hold.
- */
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { hunters } from "./data.js";

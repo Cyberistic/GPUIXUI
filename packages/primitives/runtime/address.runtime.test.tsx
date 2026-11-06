@@ -1,22 +1,3 @@
-/**
- * The address and announced help of the controls that used to have neither.
- *
- * `Input` and `TextArea` gained this surface first (`fields.runtime.test.tsx`):
- * a form focuses the field it failed on, an automation host addresses it by
- * `aria-id`, and a `Label`'s description reaches assistive technology through
- * `aria-description` because 0.11.0 has no `aria-describedby`. The same three
- * jobs apply to every other control a form owns — a checkbox, a switch, a
- * toggle, the radio, checkbox and toggle groups, a rating, a number field, a
- * code field, the two sliders and a select — and the guarantee this suite holds
- * is that the words reach the runtime's accessibility tree and the ref receives
- * the runtime's own element, not a wrapper id.
- *
- * A composite names the element the address lands on, because only one element
- * can hold it: a number field's inner `<input>`, a code field's first cell, the
- * row or star a group's tab stop sits on, and the thumb of a range slider that
- * holds the keyboard focus.
- */
-
 import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { createRef } from "react";
@@ -36,13 +17,11 @@ import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import { a11yNode, type Runtime } from "./harness.js";
 import { Surface, openWindow } from "./fixture.js";
 
-/** The accessibility node that says it is this role and name. */
 const node = (runtime: Runtime, role: string, label: string) =>
   Option.getOrElse(a11yNode(runtime.a11y(), { role, label }), () =>
     expect.fail(`the runtime painted no ${role} named ${label}`),
   );
 
-/** The element the runtime retained under this accessible name. */
 const addressed = (runtime: Runtime, label: string) =>
   Option.getOrElse(
     Option.fromNullishOr(
@@ -183,8 +162,6 @@ const rangeRef = createRef<PublicInstance>();
 const fruitRef = createRef<PublicInstance>();
 
 it("announces the help every control carries", async () => {
-  // The help a visible `Label description` paints used to reach nobody on these
-  // controls: only `Input`/`TextArea` carried `aria-description`.
   const runtime = await mount();
   expect(node(runtime, "CheckBox", "Accept").aria?.description).toBe(
     "Required to continue.",
@@ -204,7 +181,7 @@ it("announces the help every control carries", async () => {
   expect(node(runtime, "TextInput", "Copies").aria?.description).toBe(
     "One to ninety-nine.",
   );
-  // Every cell is independently focusable, so every cell announces it.
+
   expect(node(runtime, "TextInput", "Code digit 1").aria?.description).toBe(
     "Six digits from the email.",
   );
@@ -214,7 +191,7 @@ it("announces the help every control carries", async () => {
   expect(node(runtime, "Slider", "Volume").aria?.description).toBe(
     "Controls the output level.",
   );
-  // The group is not focusable but it is a node, so its help rides there.
+
   expect(node(runtime, "Group", "Price").aria?.description).toBe(
     "Between one and nine hundred.",
   );
@@ -230,9 +207,6 @@ it("announces the help every control carries", async () => {
 });
 
 it("publishes the id an automation host addresses, on the element named", async () => {
-  // A composite cannot put one id on every part: a number field's id belongs to
-  // its input, a code field's to the first cell, and a group's to the row or
-  // star that holds its tab stop.
   const runtime = await mount();
   expect(node(runtime, "CheckBox", "Accept").aria?.author_id).toBe(
     "accept-box",
@@ -278,9 +252,6 @@ it("publishes the id an automation host addresses, on the element named", async 
 });
 
 it("hands the caller's ref the element the form has to focus", async () => {
-  // The address is only useful if it is the runtime's own instance: a form
-  // focuses this handle, so the id is compared with the element the control
-  // painted, not with the wrapper's `testId`.
   const runtime = await mount();
   const checkbox = Option.getOrElse(runtime.element("accept"), () =>
     expect.fail("the runtime mounted no checkbox"),
@@ -308,9 +279,6 @@ it("hands the caller's ref the element the form has to focus", async () => {
   );
   expect(otpRef.current?.id).toBe(firstCell.id);
 
-  // A slider's root is both the slider and its tab stop; a range slider's
-  // address names the end a form should focus, which is its start while
-  // neither thumb holds focus.
   const slider = Option.getOrElse(runtime.element("volume"), () =>
     expect.fail("the runtime mounted no slider"),
   );
@@ -318,21 +286,11 @@ it("hands the caller's ref the element the form has to focus", async () => {
   expect(rangeRef.current?.id).toBe(addressed(runtime, "Price minimum").id);
   expect(channelGroupRef.current?.id).toBe(addressed(runtime, "Email").id);
   expect(alignGroupRef.current?.id).toBe(addressed(runtime, "Left").id);
-  // A select's address belongs to its trigger, the one focusable element.
+
   expect(fruitRef.current?.id).toBe(addressed(runtime, "Fruit").id);
 });
 
 it("moves a range slider's address to the end the reader last used", async () => {
-  // The bug guarded: the page told a caller the address trio landed on the
-  // **track** — the non-focusable `role="group"` — so a form focused an element
-  // that cannot take focus, an automation host looked for the id on the wrong
-  // node, and a measurement was read as the control's. The page's own rule
-  // (`docs/README.md`) makes the address name the element a form focuses and a
-  // layout measures, and only the thumbs can be focused: the start while
-  // neither holds focus, the end once the reader has tabbed there. The pure
-  // suite reads the two branches; only a window can say the native focus move
-  // lands on the end, the address follows it, and the box the caller receives is
-  // a thumb's rather than the track's.
   const runtime = await openWindow();
   const ref = createRef<PublicInstance>();
   const boxes: Array<{ readonly x: number; readonly width: number }> = [];
@@ -356,11 +314,10 @@ it("moves a range slider's address to the end the reader last used", async () =>
     expect.fail("the runtime painted no range slider"),
   );
   expect(ref.current?.id).toBe(addressed(runtime, "Price minimum").id);
-  // The first box is the addressed thumb, not the track a caller measures.
+
   expect(boxes).toHaveLength(1);
   expect((boxes[0]?.width ?? 0) < track.width).toBe(true);
 
-  // Two stops: the start thumb, then the end thumb.
   runtime.focusNext();
   runtime.focusNext();
   runtime.renderer.dispatchNativeEvents();
@@ -372,8 +329,7 @@ it("moves a range slider's address to the end the reader last used", async () =>
   expect(
     node(runtime, "Slider", "Price minimum").aria?.author_id,
   ).toBeUndefined();
-  // The address moving re-reports its box, and it is still a thumb's: the second
-  // report sits where the end thumb is painted.
+
   const end = Option.getOrElse(
     runtime.boundsOfId(addressed(runtime, "Price maximum").id),
     () => expect.fail("the end thumb painted no box"),

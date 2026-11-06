@@ -1,20 +1,3 @@
-/**
- * Combobox behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a popup that opens without focusing its search field; a
- * filter that hides matches; a selection that reports the label instead of the
- * value; a single select that does not replace the previous value; a multi select
- * that loses order or duplicates; a disabled option that can still be chosen; an
- * empty state that never appears; a ranking that puts `Vacation` before
- * `Calendar`; a whitespace-only option label that painted the trigger blank
- * instead of naming the value; and Escape that does not return focus to the
- * trigger.
- *
- * Pointer coverage: the suite originally drove every selection from the
- * keyboard, so a wrapper that ignored a clicked option, kept the popup open, or
- * let a disabled option through would have passed.
- */
-
 import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import { describe, expect, it, vi } from "vitest";
@@ -103,7 +86,6 @@ const Picker = ({
   </div>
 );
 
-/** A trigger near the window centre, where a centred popup has room to sit. */
 const CentredPicker = () => (
   <div style={{ paddingLeft: 540, paddingTop: 100 }}>
     <Combobox options={options}>
@@ -116,7 +98,6 @@ const CentredPicker = () => (
   </div>
 );
 
-/** A trigger at the bottom of the window, where a downside popup cannot fit. */
 const LowPicker = () => (
   <div style={{ display: "flex", flexDirection: "column", height: 780 }}>
     <div style={{ flexGrow: 1 }} />
@@ -130,7 +111,6 @@ const LowPicker = () => (
   </div>
 );
 
-/** A trigger low enough to leave the top side room, which this picker asks for. */
 const TopPicker = () => (
   <div style={{ paddingTop: 320 }}>
     <Combobox options={options}>
@@ -143,20 +123,17 @@ const TopPicker = () => (
   </div>
 );
 
-/** Let the runtime's microtask (focus) and React's updates settle. */
 const settle = async (): Promise<void> => {
   await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
 };
 
-/** Open the popup and wait for its input. */
 const open = async (root: ComponentTestRoot): Promise<void> => {
   clickCentreOf(root, "combobox-trigger");
   await settle();
 };
 
-/** Type into the focused search field. */
 const type = (root: ComponentTestRoot, text: string): void => {
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
 };
@@ -174,9 +151,6 @@ describe("Combobox", () => {
   });
 
   it("seats the search row on the popup's inset with a gap under it", async () => {
-    // The bug this guards: the field sat on the popup's edge and the first
-    // option started right under it, so the search row read as part of the list
-    // instead of its header. A long list must not squeeze the row either.
     const picker = renderComponent(<Picker />);
     try {
       await open(picker);
@@ -294,8 +268,6 @@ describe("Combobox", () => {
     );
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
 
-    // The root reports the query; only the caller can add the option, so no
-    // selection is invented.
     expect(onValueChange).not.toHaveBeenCalled();
     expect(picker.renderer.getAllText()).toContain("Select…");
 
@@ -419,11 +391,6 @@ describe("Combobox", () => {
   });
 
   it("paints a disabled row in the disabled pair instead of fading it", async () => {
-    // The row faded itself to 50%, a third fade painter the token pages do not
-    // name — they say the `@gpuixui/tw` recipes and the Button's ghost path are
-    // the two that remain. A menu-like row wears the `disabled` /
-    // `disabledForeground` pair, which `contrastPairs` measures on the popover;
-    // a row-level opacity composites the label into the fill instead.
     const painted = (root: ComponentTestRoot, value: string) =>
       root.renderer.getElement(root.renderer.findByText(value)?.parentId ?? -1)
         ?.style.color;
@@ -445,8 +412,6 @@ describe("Combobox", () => {
     );
     light.unmount();
 
-    // The role pair clears the floor the theme asks of a disabled control on the
-    // surface the row floats on; the painted pair is what the contract holds.
     Arr.forEach([lightTheme, darkTheme], (theme) => {
       expect(
         contrastRatio(theme.colors.disabledForeground, theme.colors.popover) ??
@@ -456,10 +421,6 @@ describe("Combobox", () => {
   });
 
   it("closes a popup the caller disables, and does not reopen it", async () => {
-    // The bug this guards: a trigger that is disabled while its popup is open
-    // leaves the surface mounted, so the control paints rows no press can
-    // choose. The popped-out list closes with the control and the stored request
-    // is dropped, so re-enabling does not resurrect it.
     const onValueChange = vi.fn();
     const picker = renderComponent(<Picker onValueChange={onValueChange} />);
     await open(picker);
@@ -467,14 +428,11 @@ describe("Combobox", () => {
 
     picker.rerender(<Picker disabled onValueChange={onValueChange} />);
     await settle();
-    // The popup closes at once and is painted for its exit window, so the claim
-    // is that the box goes rather than that it has already gone.
+
     await waitFor(() =>
       expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined(),
     );
 
-    // Re-enabling brings no surface back on its own, and the trigger still
-    // refuses while it is disabled.
     picker.rerender(<Picker onValueChange={onValueChange} />);
     await settle();
     expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
@@ -668,9 +626,6 @@ describe("Combobox", () => {
 
     picker.unmount();
 
-    // A blank label is absence, not a name: a list decoded from a table whose
-    // name column has no text must name the selection by its value instead of
-    // painting the caller's whitespace as an empty trigger.
     const blankLabel = renderComponent(
       <div style={{ width: 360, padding: 40 }}>
         <Combobox options={[{ value: "ada", label: "   " }]} defaultValue="ada">
@@ -689,15 +644,11 @@ describe("Combobox", () => {
   });
 });
 
-/** Let the runtime's frame loop publish what the last commit queued. */
 const frame = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 30));
 
 describe("the popup's entrance and exit", () => {
   it("travels down into place when it opens below its trigger", async () => {
-    // The bugs this guards: a popup that pops into place while every other
-    // anchored panel fades and travels, and a travel that points at the wrong
-    // edge of the trigger.
     const picker = renderComponent(<Picker />);
     picker.renderer.clockPause();
     await open(picker);
@@ -710,45 +661,36 @@ describe("the popup's entrance and exit", () => {
     await frame();
     const resting = requireBounds(picker, "combobox-content").y;
 
-    // Below its trigger, the popup starts above its resting place and moves down.
     expect(resting - entering).toBe(4);
     picker.unmount();
   });
 
   it("enters from below when it is asked to open above its trigger", async () => {
-    // The direction follows the side the popup was asked to open at, so this
-    // case fails if the entrance is hardcoded to the default bottom travel.
     const picker = renderComponent(<TopPicker />);
     picker.renderer.clockPause();
     await open(picker);
 
     const trigger = requireBounds(picker, "combobox-trigger");
     const entering = requireBounds(picker, "combobox-content");
-    // The requested side had room, so the popup stayed where it was put.
+
     expect(entering.y + entering.height).toBeLessThanOrEqual(trigger.y);
 
     picker.renderer.clockFastForward(400);
     await frame();
     const resting = requireBounds(picker, "combobox-content");
 
-    // Above its trigger, the popup starts below its resting place and moves up.
     expect(entering.y - resting.y).toBe(4);
     picker.unmount();
   });
 
   it("keeps the entrance its requested side owns when the component flips it", async () => {
-    // A surface's first motion frame is fixed when its host mounts, which is one
-    // commit before the measured flip can re-anchor it: a popup the component
-    // flips above its trigger still travels the way its requested bottom side
-    // travels. This case pins that measured limitation, so the arrangement that
-    // retargets the entrance has to say so here as well as in the docs.
     const picker = renderComponent(<LowPicker />);
     picker.renderer.clockPause();
     await open(picker);
 
     const trigger = requireBounds(picker, "combobox-trigger");
     const entering = requireBounds(picker, "combobox-content");
-    // The measured placement put it above the trigger that opened it.
+
     expect(entering.y).toBeLessThan(trigger.y);
 
     picker.renderer.clockFastForward(400);
@@ -777,11 +719,6 @@ describe("the popup's entrance and exit", () => {
   });
 
   it("travels back out the side it opened at while it leaves", async () => {
-    // The bug this guards: the popup used to be GPUix's own content, which
-    // returns nothing the moment the root closes — so a combobox was the one
-    // floating surface that vanished while every other one ran its exit. The
-    // exit is the entrance's frames reversed: below its trigger the popup starts
-    // above its resting place and leaves the same 4px.
     const picker = renderComponent(<Picker />);
     picker.renderer.clockPause();
     await open(picker);
@@ -804,9 +741,6 @@ describe("the popup's entrance and exit", () => {
   });
 
   it("keeps the rows it was showing while it leaves", async () => {
-    // The popup owns the query, and a close used to clear it in the same commit
-    // as the flag — so a surface kept for its exit would have flashed the
-    // unfiltered list it no longer matched, under the reader's own dismissal.
     const picker = renderComponent(<Picker />);
     await open(picker);
     type(picker, "cam");
@@ -827,9 +761,6 @@ describe("the popup's entrance and exit", () => {
   });
 
   it("does not answer a press in a dismissed popup", async () => {
-    // The pointer half: the popup stays painted for its exit while its own
-    // hitbox is gone, so the seam's shield is what stops a row's ghost selecting
-    // a value the reader has already dismissed.
     const onValueChange = vi.fn();
     const picker = renderComponent(<Picker onValueChange={onValueChange} />);
     await open(picker);
@@ -861,11 +792,6 @@ describe("the popup's entrance and exit", () => {
   });
 
   it("paints a picker whose saved option list and selection are not lists", async () => {
-    // A picker's rows and its selection are saved with the control — a settings
-    // pane, a picker inside a saved record — and a store writes `null` for the
-    // fields it never carried. The component filtered `.flatMap` over the list
-    // and spread/indexed the selection before anything painted, so one absent
-    // slot threw out of the render and took the trigger and the surface with it.
     const picker = renderComponent(
       <div style={{ width: 360, padding: 40 }}>
         <text>Before</text>

@@ -59,22 +59,3 @@ the root's state, so a share is computed once.
 | `ProgressIndicator` | `style`, `className`, `testId` | — | — |
 | `ProgressLabel` | `children`, `testId` | `ReactNode`, `string` | the root's `label` |
 | `ProgressValue` | `testId` | `string` | — |
-
-## Accessibility
-
-- The bar is a `progressbar` node named by `label`, and its share is announced
-  through `aria-valuetext`.
-- 0.11.0 publishes no `aria-valuenow`, `aria-valuemin` or `aria-valuemax`, so
-  `max` is not a separate announcement: use `formatValue` to say "30 of 120"
-  when the scale matters to a reader.
-- The indeterminate state says the provider's `loading.indeterminate` word, or
-  `loadingText` when the whole interface is localised.
-
-## Notes
-- **No `aria-valuenow` family** — the measured gap above; the value is text.
-- The indeterminate segment is a discrete eight-step move, not a smooth sweep:
-  the runtime animates opacity and size only.
-- No buffered segment in this surface. The primitive can paint one, but a
-  buffer is a second value with no shadcn equivalent, so it is not exposed here.
-- A `value` that is not a number (a stored string, a `NaN` measurement) is
-  absence and paints the indeterminate segment rather than a bar at 0%.

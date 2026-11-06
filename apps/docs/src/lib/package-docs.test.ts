@@ -9,23 +9,6 @@ import {
 } from "./collection-routes";
 import { curatedTwinOf } from "./curated-twins";
 
-/**
- * The package-owned documentation the site mounts.
- *
- * Three defects are silent in a package and fatal on the site, so each is
- * guarded here rather than remembered:
- *
- *   1. a docs directory that no collection mounts, whose pages then simply do
- *      not exist for a reader;
- *   2. a frontmatter value a YAML parser rejects (`description: `@name` …`), or
- *      a raw `<tag>` in prose, which MDX reads as JSX — one file fails the whole
- *      collection at build time;
- *   3. two collections claiming one URL, where the second page is shadowed.
- *
- * The primitives index is also held to the pages the package ships, so adding a
- * page without linking it fails here.
- */
-
 const root = new URL("../../../../", import.meta.url);
 const docsDir = new URL("content/docs/", new URL("apps/docs/", root));
 
@@ -37,7 +20,6 @@ const mdxFiles = (dir: URL): ReadonlyArray<string> =>
 const read = (dir: URL, name: string): string =>
   readFileSync(new URL(name, dir), "utf8");
 
-/** Every `.mdx` under `content/docs`, as a URL path (`/foo/bar`). */
 const sitePages = (dir: URL, slugs: ReadonlyArray<string> = []): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     if (entry.isDirectory()) {
@@ -49,16 +31,8 @@ const sitePages = (dir: URL, slugs: ReadonlyArray<string> = []): string[] =>
     return [`/${path.join("/")}`];
   });
 
-/** A plain YAML scalar may not begin with one of these. */
 const YAML_RESERVED = /^[`@*&[\]{}>|%#]/;
 
-/**
- * The mounted set, read out of a document's table.
- *
- * Both the policy and the site ledger list one row per collection; a route cell
- * may carry the `<name>` suffix a page mounts under, which is not part of the
- * collection's root.
- */
 const documentedCollections = (
   text: string,
   startHeading: string,
@@ -77,8 +51,6 @@ const documentedCollections = (
         .slice(1, -1),
     )
     .flatMap((cells) => {
-      // The policy names the lane before the source; the ledger names it after
-      // the route. The package dir is the one cell both tables share.
       const at = cells.findIndex((cell) => cell.includes("`packages/"));
       const dir = cells[at];
       const route = cells[at + 1];
@@ -99,7 +71,6 @@ const frontmatter = (source: string): string => {
   return match?.[1] ?? "";
 };
 
-/** The prose of a page: no frontmatter, no fenced blocks, no inline code. */
 const prose = (source: string): string =>
   source
     .replace(/^---\n[\s\S]*?\n---\n/, "")
@@ -132,29 +103,15 @@ describe("the package docs collections", () => {
   });
 
   it("serve each page from the collection that owns its directory", () => {
-    // The charts live in `packages/data/docs/charts`, inside the data
-    // package's own docs directory, and the data collection's glob could not
-    // be made to leave them out. So the data lane listed the charts page at
-    // `/data-display/charts/charts` as well — an address that answered **404**,
-    // and the sidebar's Data display section carried it.
-    //
-    // The owner is decided by the directory, and the **longest** matching
-    // directory wins.
     expect(collectionOwns("charts", "charts/charts.mdx")).toBe(true);
     expect(collectionOwns("data", "charts/charts.mdx")).toBe(false);
-    // The data collection's own pages are still its own.
+
     expect(collectionOwns("data", "advanced-filter.mdx")).toBe(true);
-    // A collection that holds no other collection's directory owns all of it.
+
     expect(collectionOwns("components", "dialog.mdx")).toBe(true);
   });
 
   it("answer a nested collection route, and the pages under it", () => {
-    // The charts and the icons live under the Graphics section, so their
-    // routes are `/graphics/charts` and `/graphics/icons` rather than one
-    // segment. A matcher that read a single segment found neither, so
-    // `/graphics/charts` answered **404** while every page under it answered
-    // — and the build, which prerenders the route of every collection that
-    // ships a generated index, failed on it.
     const charts = collectionAt(["graphics", "charts"]);
     expect(charts?.collection.origin).toBe("charts");
     expect(charts?.rest).toEqual([]);
@@ -163,15 +120,14 @@ describe("the package docs collections", () => {
     expect(page?.collection.origin).toBe("charts");
     expect(page?.rest).toEqual(["charts"]);
 
-    // The icons are a collection of their own.
     expect(collectionAt(["graphics", "icons", "icon"])?.collection.origin).toBe(
       "icons",
     );
-    // A single-segment route still answers.
+
     expect(collectionAt(["components", "dialog"])?.collection.origin).toBe(
       "components",
     );
-    // An address no collection owns answers with nothing.
+
     expect(collectionAt(["graphics", "nothing-here"])).toBeUndefined();
   });
 
@@ -183,8 +139,7 @@ describe("the package docs collections", () => {
         (collection) => !sections.has(collection.section),
       ),
     ).toEqual([]);
-    // A collection whose package has not shipped a page yet is not empty: it
-    // is not written yet. A directory that exists and holds no page is.
+
     expect(
       packageCollections.flatMap((collection) =>
         existsSync(new URL(`${collection.dir}/`, root)) &&
@@ -196,11 +151,6 @@ describe("the package docs collections", () => {
   });
 
   it("name every mounted collection in the policy's and the ledger's tables", () => {
-    // `docs/preview-strategy.md`'s table is what an author reads before
-    // mounting a docs directory, and `apps/docs/README.md`'s table is the
-    // ledger's copy of the same set: a collection the site mounts and a table
-    // omits leaves a reader describing three of four sections, and a row no
-    // collection backs sends them looking for a route that does not exist.
     const policy = readFileSync(
       new URL("docs/preview-strategy.md", root),
       "utf8",
@@ -229,11 +179,6 @@ describe("the package docs collections", () => {
     ).toEqual(mounted);
   });
 
-  /**
-   * The curated pages the site writes in place of the package's page. The site
-   * goes deeper on these and owns their URL, so the package file is shadowed by
-   * design — and the list must stay true in both directions.
-   */
   const curated = new Set([
     "/components/accordion",
     "/components/alert",
@@ -288,8 +233,6 @@ describe("the package docs collections", () => {
       const dir = new URL(`${collection.dir}/`, root);
       const files = mdxFiles(dir);
 
-      // A collection whose package has not shipped its pages yet has nothing
-      // to compile; the case that mounts it is the one below.
       if (!existsSync(dir)) return;
 
       expect(files.length).toBeGreaterThan(0);
@@ -327,9 +270,6 @@ describe("the package docs collections", () => {
   );
 
   it("list every primitive the package ships on the section index", () => {
-    // Five primitives are documented in the Components section, so their row
-    // links the curated page rather than the package page the site does not
-    // serve (`curated-twins.ts`). Either address answers the same component.
     const index = read(new URL("primitives/", docsDir), "index.mdx");
     const linked = new Set(
       [...index.matchAll(/\]\((\/[a-z0-9/-]+)\)/g)].flatMap((match) =>
@@ -354,11 +294,6 @@ describe("the package docs collections", () => {
   });
 
   it("prints the icon count the set ships, not the one it shipped before", () => {
-    // The section index called the set "Forty-seven monochrome icons" while
-    // `ICON_NAMES` had grown to 76 — the page links the icon page, whose
-    // frontmatter prints the real number, so a reader met two counts for one
-    // package. The count is derived from the set's own list, which is the
-    // single source `registry.ts` is checked against.
     const names = read(new URL("packages/icons/src/", root), "names.ts");
     const listed = /export const ICON_NAMES = \[([\s\S]*?)\]/.exec(names)?.[1];
     const count = (listed?.match(/^\s*"/gm) ?? []).length;
@@ -371,8 +306,6 @@ describe("the package docs collections", () => {
     );
     expect(row?.[1] ?? "").toContain(`${count} monochrome icons`);
 
-    // The page it links prints the same number in the sentence a search
-    // result shows, so the two surfaces cannot disagree.
     const page = read(new URL("packages/icons/docs/", root), "icon.mdx");
     expect(page).toContain(`${count} monochrome icons`);
   });

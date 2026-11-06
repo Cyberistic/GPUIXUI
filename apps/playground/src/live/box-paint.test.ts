@@ -1,17 +1,3 @@
-/**
- * Holds the arithmetic the `box-paint` probe reads a frame with, and the claims
- * its README section prints.
- *
- * Two numbers decide the whole probe — how many pixels of the border colour a
- * box holds, and whether two sampled points are the same colour — and both are
- * easy to get subtly wrong: a comparison with no tolerance never matches an
- * antialiased sample, and a count over a region that moved reads `0`, which is
- * the answer "this edge painted nothing" rather than "this region is not in the
- * frame". The drawn frame below makes each failure visible.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the
- * repository's own probe and prose, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -42,7 +28,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The `boxPaintSteps` effect, bounded by the first declaration after it. */
 const steps = (() => {
   const start = scenarios.indexOf("const boxPaintSteps");
   if (start === -1) return "";
@@ -60,7 +45,6 @@ const steps = (() => {
 const BORDER = new Pixels.Rgba({ r: 255, g: 59, b: 48, a: 255 });
 const PAGE = new Pixels.Rgba({ r: 17, g: 20, b: 26, a: 255 });
 
-/** A 20×10 frame with an 4×3 block of the border colour at x 2–5, y 2–4. */
 const frame = (): Pixels.Pixels => {
   const width = 20;
   const height = 10;
@@ -80,7 +64,6 @@ const frame = (): Pixels.Pixels => {
 
 const BOX: PaintBox = { x: 0, y: 0, width: 20, height: 10 };
 
-/** An `Option` that the drawn frame guarantees, as a value a test can read. */
 const someOf = <A>(value: Option.Option<A>): A =>
   Option.match(value, {
     onNone: () => {
@@ -111,7 +94,7 @@ describe("the box-paint reader", () => {
     expect(differs(BORDER, antialiased)).toBe(false);
     expect(isColour(antialiased, BOX_PAINT_BORDER)).toBe(true);
     expect(isColour(PAGE, BOX_PAINT_BORDER)).toBe(false);
-    // A colour string the grammar cannot read is not a match for anything.
+
     expect(isColour(BORDER, "notacolour")).toBe(false);
   });
 
@@ -120,7 +103,7 @@ describe("the box-paint reader", () => {
     expect(countPaint(frame(), region, 1, BOX_PAINT_BORDER)).toEqual(
       Option.some(12),
     );
-    // The same region moved out of the frame is absent, not empty.
+
     expect(
       countPaint(
         frame(),
@@ -180,9 +163,6 @@ describe("the box-paint probe's record", () => {
   });
 
   it("states the three shapes the fixture asks for", () => {
-    // The page says which properties it measured, so a fixture that stopped
-    // asking for one of them would leave the sentence claiming a paint nobody
-    // requested.
     expect(scenarios).toContain('borderStyle: "dashed"');
     expect(scenarios).toContain("borderTopLeftRadius: 24");
     expect(scenarios).toContain("borderTopWidth: 8");

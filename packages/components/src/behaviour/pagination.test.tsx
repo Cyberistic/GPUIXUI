@@ -1,13 +1,3 @@
-/**
- * Pagination behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: previous/next staying pressable at the first and last
- * page; `onPageChange` reporting an index instead of the page number, or firing
- * on the current page; an ellipsis that was a focus stop; a current page that
- * was not painted with the primary role; and a root that ignored the parts the
- * caller composed.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { clickCentreOf } from "../internal/interaction.js";
@@ -25,7 +15,6 @@ import {
   type PaginationProps,
 } from "../pagination.js";
 
-/** The default composition a caller writes. */
 const Pager = (props: PaginationProps) => (
   <Pagination {...props}>
     <PaginationPrevious />
@@ -34,14 +23,12 @@ const Pager = (props: PaginationProps) => (
   </Pagination>
 );
 
-/** The button element a visible label sits in. */
 const buttonFor = (root: ComponentTestRoot, label: string) => {
   const text = root.renderer.findByText(label);
   if (text?.parentId == null) return undefined;
   return root.renderer.getElement(text.parentId);
 };
 
-/** Click the centre of the label's own bounds; the press bubbles to the button. */
 const clickLabel = (root: ComponentTestRoot, label: string): void => {
   const text = root.renderer.findByText(label);
   if (text === undefined) throw new Error(`behaviour: no text "${label}"`);
@@ -150,8 +137,6 @@ describe("Pagination", () => {
       empty.unmount();
     }
 
-    // `Math.ceil(total / pageSize)` over a response that never arrived is NaN;
-    // the old root compared `NaN <= 0` (false) and painted a trail labelled NaN.
     const unreadable = renderComponent(
       <Pager
         testId="pager"
@@ -183,8 +168,6 @@ describe("Pagination", () => {
     assertTheme("dark", darkTheme.colors.primary);
     assertTheme("light", lightTheme.colors.primary);
 
-    // A page and sibling count the control cannot read paint page 1 and the
-    // default window, never the string `NaN`.
     const unreadable = renderComponent(
       <Pager
         page={Number.NaN}

@@ -1,17 +1,5 @@
 import { readFileSync } from "node:fs";
 
-/**
- * The reflow `floating-reflow-lifecycle` measured, derived from the probe.
- *
- * `capability-doc.test.ts` holds the durable record to these
- * numbers, so a fixture that grows a different gap — or a window that opens at
- * another size — fails by name instead of leaving two documents teaching the
- * retired placement. Test-only: the fixture belongs to the playground app, so it
- * is read as source, the way `column-drag.test-util.ts` reads its own. `node:fs`
- * is deliberate and synchronous, as in every docs guard: this reads the
- * repository at module load, not a runtime path.
- */
-
 const read = (path: string): string =>
   readFileSync(new URL(`../../../../${path}`, import.meta.url), "utf8");
 
@@ -30,11 +18,9 @@ interface Placement {
   readonly y: number;
 }
 
-/** A `= 6;` constant, or `NaN` when the fixture no longer declares it. */
 const constant = (name: string): number =>
   Number(new RegExp(`\\b${name} = (\\d+);`).exec(fixture)?.[1] ?? Number.NaN);
 
-/** One `{ width, height } as const` pair, or `NaN`s. */
 const pair = (name: string, source: string): Box => {
   const found = new RegExp(
     `const ${name} = \\{ width: (\\d+), height: (\\d+) \\} as const;`,
@@ -45,14 +31,12 @@ const pair = (name: string, source: string): Box => {
   };
 };
 
-/** The probe's own section of the README, where it records a run. */
 const section = (() => {
   const start = readme.indexOf("### `floating-reflow-lifecycle`");
   const end = readme.indexOf("\n## ", start + 1);
   return start === -1 ? "" : readme.slice(start, end === -1 ? undefined : end);
 })();
 
-/** The two window sizes the section prints, in the order it prints them. */
 const sizes = [...section.matchAll(/\*\*(\d+)×(\d+)\*\*/g)].map((match) => ({
   width: Number(match[1] ?? Number.NaN),
   height: Number(match[2] ?? Number.NaN),
@@ -65,7 +49,6 @@ const inset = constant("REFLOW_INSET");
 const popoverInset = constant("REFLOW_POPOVER_INSET");
 const top = constant("REFLOW_TOP");
 
-/** The probe's steps, from its declaration to the next one. */
 const steps = (() => {
   const start = scenarios.indexOf(
     'const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"]',
@@ -79,10 +62,8 @@ const steps = (() => {
 const opened = sizes[0] ?? { width: Number.NaN, height: Number.NaN };
 const zoomed = sizes[1] ?? { width: Number.NaN, height: Number.NaN };
 
-/** The right-hand anchor's left edge in a window `width` wide. */
 const anchorLeft = (width: number): number => width - anchor.width - inset;
 
-/** The bottom anchor's top edge in a window `height` tall. */
 const anchorTop = (height: number): number => height - anchor.height - inset;
 
 const rightAnchor = (width: number): Placement => ({
@@ -106,19 +87,15 @@ const popoverTrigger = (width: number, height: number): Placement => ({
 });
 
 export const reflow = {
-  /** The window the runner opens, from the runner rather than from a print. */
   runnerWindow: pair("WINDOW", runner),
   window: { opened, zoomed },
   gap,
   anchor,
   panel,
   top,
-  /** The least either anchor must travel before the run counts. */
+
   minTravel: constant("REFLOW_MIN_TRAVEL"),
-  /**
-   * The checks the probe asserts: `paintedPair` counts once per call site and
-   * once in its own body, the same arithmetic `floating-reflow.test.ts` uses.
-   */
+
   checks:
     [...steps.matchAll(/ctx\.expect/g)].length -
     1 +

@@ -1,19 +1,3 @@
-/**
- * Guards the window-backdrop fixture and its arithmetic.
- *
- * The probe asserts only two numbers: the fill at the box's centre and the
- * alpha in a corner the app leaves empty. Both are computed here from the
- * fixture, and a run costs a window — so a mistake in this module would be
- * reported as a runtime defect (`expected rgba(...), got rgba(...)`) rather
- * than as the stale constant it is. The three bugs these cases catch:
- *
- * 1. a mode whose expected surface alpha is wrong, so `transparent` passes on an
- *    opaque window (the claim the probe exists to make);
- * 2. a capture-scale rule that divides a frame which is not the window's box,
- *    which would sample a pixel outside the window and read it as paint;
- * 3. a fixture point that falls outside a window size the runner can open, so
- *    the check reads "outside the capture" for a reason unrelated to the mode.
- */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -95,9 +79,6 @@ describe("the capture's geometry", () => {
   });
 
   it("refuses a frame that is not the window's box", () => {
-    // A window captured at a different scale on each axis, a frame smaller than
-    // the layout, and a fractional ratio are all "not this window": sampling a
-    // logical point in them would read paint the probe never placed.
     expect(
       Option.isNone(captureScale({ width: 900, height: 1040 }, size)),
     ).toBe(true);
@@ -136,7 +117,6 @@ describe("the capture's geometry", () => {
           inside.y > 0 &&
           inside.x < window.width &&
           inside.y < window.height &&
-          // The corner sample must miss the box and the mode readout below it.
           inside.y > BACKDROP_BOX.y + BACKDROP_BOX.height + 40
         );
       }),

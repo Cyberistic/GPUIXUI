@@ -17,35 +17,20 @@ import {
   type TipState,
 } from "./tooltip-preview";
 
-/**
- * Browser previews for the Tooltip page.
- *
- * The shipped component wraps `@gpuix/react/tooltip`, so the clock below is the
- * runtime's, not a lookalike: hover opens at the provider's 0 ms delay, a
- * leaving pointer gets 80 ms to reach the tip, a press or Escape closes it and
- * it stays shut until the pointer leaves, and a `Tab` traversal never opens it
- * because a window does not run the trigger's `onFocus` (measured on 0.11.0).
- * The wrapper's own exit is here too: a closed tip is still painted for its
- * 160 ms tween, and `reducedMotion` removes it. The readout is the preview's
- * own, so a reader can watch the grace and the exit a screenshot cannot show.
- */
-
 const tipContent = "Booked revenue, net of refunds.";
 
-/** One trigger whose tip is driven by the preview's clock. */
 const ClockedTip = ({ align }: { readonly align: TooltipAlign }) => {
   const [reduced, setReduced] = useState(false);
   const timing = reduced ? reducedTipTiming : tipTiming;
-  // The page opens with its tip showing: a reader who never hovers still sees
-  // the thing this preview is about. The clock owns it from the first leave.
+
   const [state, setState] = useState<TipState>({
     ...closedTip,
     open: true,
   });
   const layout = tooltipLayout(align);
-  /** Whether the last focus arrived from a `Tab` rather than a pointer. */
+
   const tabbed = useRef(false);
-  /** When the tip last closed, for the 300 ms reopen window. */
+
   const closedAt = useRef<number | null>(null);
 
   const send = (event: TipEvent): void =>
@@ -55,7 +40,6 @@ const ClockedTip = ({ align }: { readonly align: TooltipAlign }) => {
       return next;
     });
 
-  /** The box is painted while open **and** while its exit runs. */
   const painted = state.open || state.leaving;
 
   useEffect(() => {
@@ -142,7 +126,6 @@ const ClockedTip = ({ align }: { readonly align: TooltipAlign }) => {
   );
 };
 
-/** The two states a caller owns: `defaultOpen` and a controlled tip. */
 const TipStates = () => {
   const [held, setHeld] = useState(false);
 

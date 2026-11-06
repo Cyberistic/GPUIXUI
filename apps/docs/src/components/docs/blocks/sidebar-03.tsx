@@ -12,10 +12,6 @@ import {
   SbSubRow,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 03 — a docs tree whose five sections are always-open submenus, under
- * a single brand header with no search field.
- */
 export const Sidebar03Render = () => (
   <SbShell>
     <SbPanel

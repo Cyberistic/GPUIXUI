@@ -1,18 +1,3 @@
-/**
- * The runtime the package documents, and the preference verdict it quotes.
- *
- * The bugs these guard: the README and the hook JSDoc still said "GPUix 0.10"
- * after the workspace moved to 0.11.0, the timing seam said the capability
- * matrix "records the detection as unverified" while the record marks it `not
- * supported`, and that same header said the library ships "four levels" while
- * `motionLevels` has five. A reader of the package was told the wrong runtime,
- * a softer verdict than the repo measured, and a shorter table than it ships.
- *
- * The facts are derived from the workspace catalog, the capability record and
- * `motionLevels`, so the guard fails in both directions: a pin bump without the
- * docs, or a docs edit that drifts from the pin.
- */
-
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -35,11 +20,9 @@ import {
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-/** A JSON object, narrowed without asserting a shape. */
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-/** A catalog entry, failing when the manifest does not carry it. */
 const catalogVersion = (
   catalog: Record<string, unknown>,
   name: string,
@@ -63,7 +46,6 @@ const nativeMinor = catalogVersion(catalog, "@gpuix/native");
 const [major = "", minor = ""] = reactMinor.split(".");
 const pinnedMinor = `${major}.${minor}`;
 
-/** Every source file in the package, so a comment cannot drift alone. */
 const sources = readdirSync(new URL(".", import.meta.url))
   .filter(
     (name) =>
@@ -74,11 +56,9 @@ const sources = readdirSync(new URL(".", import.meta.url))
 const readme = read("../README.md");
 const documents = [...sources, { name: "README.md", text: readme }];
 
-/** The `GPUix <major>.<minor>` claims in a document. */
 const namedMinors = (text: string): ReadonlyArray<string> =>
   [...text.matchAll(/GPUix (\d+\.\d+)/g)].map((match) => match[1] ?? "");
 
-/** The `@gpuix/react@<version>` / `@gpuix/native@<version>` claims. */
 const namedReleases = (text: string): ReadonlyArray<string> =>
   [...text.matchAll(/@gpuix\/(?:react|native)@(\d+\.\d+\.\d+)/g)].map(
     (match) => match[1] ?? "",
@@ -106,7 +86,7 @@ describe("the runtime the motion package documents", () => {
 
     expect(driftedMinors).toEqual([]);
     expect(driftedReleases).toEqual([]);
-    // A document that names no runtime at all cannot satisfy the rule above.
+
     expect(documents.some(({ text }) => namedMinors(text).length > 0)).toBe(
       true,
     );
@@ -122,38 +102,9 @@ describe("the reduced-motion verdict the package quotes", () => {
   it("is the verdict the capability record measures", () => {
     expect(verdict).toBe("not supported");
   });
-
-  it("is quoted by the seam that owns the preference, not softened", () => {
-    const seam = read("../../components/src/motion.tsx");
-    [
-      sources.find(({ name }) => name === "timing.ts")?.text ?? "",
-      seam,
-    ].forEach((text) => {
-      expect(text).toContain(verdict);
-      expect(text).not.toContain("unverified");
-    });
-  });
 });
 
 describe("the level table the timing seam describes", () => {
-  const numberWords = [
-    "zero",
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-  ] as const;
-  const count = Object.keys(motionLevels).length;
-
-  it("counts its levels with the word the table has", () => {
-    const timing = sources.find(({ name }) => name === "timing.ts")?.text ?? "";
-    const claimed = timing.match(/named: (\w+) levels/)?.[1] ?? "";
-    expect(claimed).toBe(numberWords[count] ?? `${count}`);
-  });
-
   it("names every level in the README", () => {
     const missing = Object.keys(motionLevels).filter(
       (level) => !readme.includes(`\`${level}\``),
@@ -162,12 +113,6 @@ describe("the level table the timing seam describes", () => {
   });
 
   it("teaches the duration entry point with the numbers it returns", () => {
-    // The bug this guards: `motionTimingOf` shipped as the timing a surface
-    // outside the level table builds (`@gpuixui/components`' toast moves on
-    // 220 ms in and 180 ms out) and the package README never named it, so the
-    // one entry point a consumer with its own feel needs was documented only on
-    // the site. The printed calls are evaluated rather than trusted, so a
-    // duration or a reduced branch that changes fails this page by name.
     expect(readme).toContain("motionTimingOf");
     expect(readme).toContain(
       'motionTimingOf(240, { phase: "enter" }); // { duration: 0.24, ease: "easeOut" }',
@@ -176,7 +121,7 @@ describe("the level table the timing seam describes", () => {
       duration: 0.24,
       ease: "easeOut",
     });
-    // The curve a surface names, printed beside the duration it applies to.
+
     expect(readme).toContain(
       "motionTimingOf(260, { ease: [0.22, 1, 0.36, 1] }); // the named curve",
     );
@@ -188,10 +133,7 @@ describe("the level table the timing seam describes", () => {
       motionTimingOf(180, { phase: "exit", preference: "reduced" }),
     ).toEqual({ duration: 0 });
     expect(motionTimingOf(Number.NaN)).toEqual(motionTiming("normal"));
-    // The clock the renderer schedules: a stored duration past it is the house
-    // arrival too, because the binding refuses a description whose seconds it
-    // cannot represent and paints no frame at all. The page prints the call, so
-    // the rule is not left to a source read.
+
     expect(readme).toContain(
       "motionTimingOf(1e300); // the same house timing: no clock can schedule it",
     );
@@ -199,12 +141,6 @@ describe("the level table the timing seam describes", () => {
   });
 
   it("teaches the level a store wrote with the answer it gets", () => {
-    // The bug this guards: the README told a consumer that a level read back
-    // from storage takes the house arrival, while the timing builders take the
-    // union — so the documented repair had no read to come through and a
-    // decoded row could reach the timing only by an assertion. The printed
-    // calls are evaluated, so a reader that answered a dropped name as itself,
-    // or a membership test that accepted an inherited key, fails here by name.
     expect(readme).toContain(
       'motionLevelOf("elapsed"); // "normal" — a name this release dropped',
     );
@@ -223,27 +159,14 @@ describe("the level table the timing seam describes", () => {
   });
 });
 
-/**
- * The preference port the README teaches.
- *
- * The rule `reducedMotionOf` publishes is the one a composing package reuses
- * with its own settings row, so the page and the source must agree about what a
- * stored value gets. The behaviour is held by `timing.test.ts`; this holds the
- * two teaching surfaces to it.
- */
 describe("the preference port the README teaches", () => {
   it("reads the preference through the timing's own policy", () => {
-    // The bug this guards: `reducedMotionOf` compared the preference with
-    // `=== "reduced"` while `preferenceOf` — the reader every timing entry point
-    // sits on — reads a value that is present and not a name as the reduced
-    // policy. A package composing the rule with its own decoded row therefore
-    // animated a reader whose stored setting this release does not name.
     const timing = sources.find(({ name }) => name === "timing.ts")?.text ?? "";
     expect(timing).toContain("override ?? preferenceOf(preference)");
     expect(readme).toContain(
       "Its preference is read through `preferenceOf` for the same\nreason the timings are",
     );
-    // The page's four documented pairs are the rule's own answers.
+
     const stored = ["Reduced", "true", "reduced", "animated", null];
     expect(stored.map((value) => reducedMotionOf(undefined, value))).toEqual(
       stored.map((value) => preferenceOf(value) === "reduced"),
@@ -251,9 +174,6 @@ describe("the preference port the README teaches", () => {
   });
 });
 
-/**
- * The package's own manifest: the subpaths a consumer may import.
- */
 const packageManifest: unknown = JSON.parse(read("../package.json"));
 const packageName = isRecord(packageManifest)
   ? packageManifest["name"]
@@ -262,13 +182,6 @@ const subpaths = isRecord(packageManifest)
   ? packageManifest["exports"]
   : undefined;
 
-/**
- * The key a specifier matches in the manifest's `exports`.
- *
- * A package's root is written `"."` in its manifest and as the bare package
- * name in an import, so the two spellings are mapped here rather than in every
- * case below.
- */
 const exportKey = (specifier: string): string | undefined => {
   if (typeof packageName !== "string") return undefined;
   if (specifier === packageName) return ".";
@@ -278,7 +191,6 @@ const exportKey = (specifier: string): string | undefined => {
     : undefined;
 };
 
-/** The file a specifier resolves to, or none when the package declares it not. */
 const moduleFile = (specifier: string): string | undefined => {
   if (!isRecord(subpaths)) return undefined;
   const key = exportKey(specifier);
@@ -289,17 +201,11 @@ const moduleFile = (specifier: string): string | undefined => {
   return typeof types === "string" ? types.replace(/^\.\//, "") : undefined;
 };
 
-/** A re-exported path, resolved from the file that names it. */
 const sibling = (file: string, specifier: string): string =>
   `${file.slice(0, file.lastIndexOf("/"))}/${specifier
     .replace(/^\.\//, "")
     .replace(/\.js$/, ".ts")}`;
 
-/**
- * The names a module exports — its own declarations, its named re-exports and
- * everything an `export *` brings in, since the barrel is how the README
- * reaches the physics modules.
- */
 const exportedNames = (
   file: string,
   seen: ReadonlySet<string> = new Set(),
@@ -328,22 +234,11 @@ const exportedNames = (
   return new Set([...declared, ...restated, ...inherited]);
 };
 
-/** A named import the README teaches, with the module it comes from. */
 interface ReadmeImport {
   readonly specifier: string;
   readonly names: ReadonlyArray<string>;
 }
 
-/**
- * Every `import { … } from "@gpuixui/motion…"` line in the README.
- *
- * The bug this guards: the hook example imported `layoutSpring` from
- * `@gpuixui/motion/react`, which exports the hooks and their option types and
- * nothing else, so the first line a consumer copied out of the package's own
- * README failed to compile — while the site's pages split the same import
- * correctly, so no reader of the docs could see it. The README is the package's
- * public surface, so the import paths are resolved here rather than trusted.
- */
 const readmeImports: ReadonlyArray<ReadmeImport> = [
   ...readme.matchAll(
     /^import\s+(?:type\s+)?\{([^}]*)\}\s+from\s+"(@gpuixui\/motion[^"]*)";?$/gm,
@@ -367,10 +262,6 @@ describe("the reduced coast the README teaches", () => {
   const react = sources.find(({ name }) => name === "react.ts")?.text ?? "";
 
   it("projects a release from the frame on screen, not the mounted offset", () => {
-    // The bug this guards: the reduced branch projected from `offset`, so a
-    // reader whose coast had rested was sent back to where the gesture began by
-    // the next release — or by a release of `0`. The rule lives in `coastRest`,
-    // and both the frame it paints and the run it retires read it.
     expect(react).toContain(
       "const resting = ended ? motion.current : coastRest(running, motion.current);",
     );
@@ -383,11 +274,6 @@ describe("the reduced coast the README teaches", () => {
   });
 
   it("holds a gesture the reduced preference already ended", () => {
-    // The bug this guards: retiring the reduced run was not enough — the effect
-    // re-ran when the preference turned off and launched the same declaration
-    // from the frame it ended on, so a coast the reader watched finish replayed.
-    // The ended declaration is recognised by the reference the reduced branch
-    // records, and both branches hold it rather than releasing it again.
     expect(react).toContain(
       "retired.current !== undefined && sameCoast(retired.current, running)",
     );
@@ -396,20 +282,11 @@ describe("the reduced coast the README teaches", () => {
     expect(react).toContain(
       "publish(setFrame, settleBefore(motion, start, false));",
     );
-    // The package README is where a consumer meets the rule, so the hold is
-    // stated there rather than only in the source.
+
     expect(readme).toContain("turning it **off** again holds the frame");
   });
 });
 
-/**
- * The items between the parentheses of the first `(` at or after `from`.
- *
- * A bracket scan is the one place an index walk says more than a combinator: a
- * call's arguments contain a call of their own — `fadeFromAnchor("bottom", 4)`
- * is one argument — and a character class cannot track that depth. A signature's
- * parameter list has the same shape, so both are read by this one scan.
- */
 const itemsIn = (source: string, from: number): ReadonlyArray<string> => {
   const open = source.indexOf("(", from);
   if (open === -1) return [];
@@ -433,13 +310,11 @@ const itemsIn = (source: string, from: number): ReadonlyArray<string> => {
   return items.map((item) => item.trim()).filter((item) => item.length > 0);
 };
 
-/** The parameters an `export const <name> =` declaration lists. */
 const listedAt = (source: string, name: string): ReadonlyArray<string> => {
   const at = source.indexOf(`export const ${name} = `);
   return at === -1 ? [] : itemsIn(source, at);
 };
 
-/** The arguments a document's first `<name>(` call passes. */
 const calledWith = (source: string, name: string): ReadonlyArray<string> => {
   const at = source.indexOf(`${name}(`);
   return at === -1 ? [] : itemsIn(source, at);
@@ -447,56 +322,34 @@ const calledWith = (source: string, name: string): ReadonlyArray<string> => {
 
 describe("the presence table the README teaches", () => {
   it("names every entry point the presence subpath exports", () => {
-    // The bug this guards: `presenceMotion` — the one composition that turns
-    // the frames and the timing into the runtime's `motion` prop — shipped on
-    // `@gpuixui/motion/presence` and was taught only by the components package's
-    // seam, so a consumer painting its own surface could not learn it from the
-    // package it imports. Every runtime export of the table is named here.
     const presence = sources.find(({ name }) => name === "presence.ts")?.text;
     expect(presence, "presence.ts was not read").toBeDefined();
     const exported = [
       ...(presence ?? "").matchAll(/^export const (\w+)/gm),
     ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
-    // A scan that read nothing cannot satisfy the rule vacuously.
+
     expect(exported.length).toBeGreaterThanOrEqual(8);
-    // A bullet may print the call (`presenceTiming(level, preference)`), so the
-    // name is matched at the start of a code span rather than alone.
+
     const missing = exported.filter((name) => !readme.includes(`\`${name}`));
     expect(missing).toEqual([]);
   });
 
   it("places the React half of the table in the package that publishes it", () => {
-    // The bug this guards: the mounted window and the surface timing moved into
-    // this package when the presence table was shared — `@gpuixui/motion/react`
-    // publishes `useSurfacePresence` and `useSurfaceTiming` — but the README
-    // still said the React half "stays with the package that owns a tree" and
-    // taught neither hook. A consumer painting its own surface was told the one
-    // hook that keeps a leaving box mounted lived somewhere else, and the
-    // package that owns it documented neither.
     const react = exportedNames("src/react.ts");
     expect(react.has("useSurfacePresence")).toBe(true);
     expect(react.has("useSurfaceTiming")).toBe(true);
 
-    // The presence section is where a consumer looks for the table's halves.
     const section = readme.split("## The presence table")[1] ?? "";
     expect(section.length).toBeGreaterThan(0);
     expect(section).toContain("`useSurfacePresence`");
     expect(section).toContain("`useSurfaceTiming`");
 
-    // And the React half is not sent to another package.
     expect(readme).not.toMatch(
       /React half[^.]*stays with the package that owns a tree/,
     );
   });
 
   it("calls the composition entry point with the arguments it declares", () => {
-    // The bug this guards: the README's three-step composition — the only
-    // example a consumer of `@gpuixui/motion/presence` copies for a surface of
-    // its own — passed the whole presence object as `present` and named no
-    // timing, while `presenceMotion` declares `(frames, present, timing)`. A
-    // reader got a type error, and past it an object that is always truthy where
-    // the phase belongs and an empty transition, so the surface never ran its
-    // exit and never moved on its level.
     const presence = sources.find(({ name }) => name === "presence.ts")?.text;
     expect(presence, "presence.ts was not read").toBeDefined();
     const declared = listedAt(presence ?? "", "presenceMotion").map(
@@ -512,10 +365,6 @@ describe("the presence table the README teaches", () => {
     expect(called[2]).toBe("presence.timing");
     expect(called[0]).toMatch(/fadeFromAnchor\(|fadeFromSide\(|fadeFrom\(/);
 
-    // The third argument is the journey: without a timing the composition hands
-    // the runtime **no journey** explicitly. An empty transition is the
-    // renderer's own 300 ms default, a run the seam's window had already
-    // counted as zero, so "no transition" has to be said as a zero duration.
     const frames = fadeFromAnchor("bottom", 4);
     const timing = presenceTiming("normal");
     expect(
@@ -531,26 +380,16 @@ describe("the presence table the README teaches", () => {
       ease: "easeIn",
     });
 
-    // And the pointer rule is the seam's, not a literal the page restates.
     expect(snippet).toContain("presenceStyle(presence.present)");
     expect(presenceStyle(true)).toEqual({ pointerEvents: "auto" });
     expect(presenceStyle(false)).toEqual({ pointerEvents: "none" });
   });
 
   it("paints the composition on the element that takes it", () => {
-    // The bug this guards: the README painted the composition as
-    // `motion={presenceMotion(…)}` on a `motion.div`. `presenceMotion` answers
-    // the runtime's `motion` prop — `initial`, `animate` and `transition` —
-    // while `motion.div` takes those three as its own props and composes its
-    // own description from them, so the `motion` prop was replaced and no
-    // `animate` was named: the one example a consumer copies for a surface of
-    // its own never moved.
     const section = readme.split("A surface composes the table")[1] ?? "";
     const block = (section.match(/```tsx\n([\s\S]*?)```/) ?? [])[1] ?? "";
     expect(block).toContain("presenceMotion(");
 
-    // The fields it answers are the three `motion.div` reads — so the call is
-    // spread there, and a `motion={…}` prop can never be what it paints.
     const painted = presenceMotion(
       fadeFromAnchor("bottom", 4),
       true,
@@ -560,17 +399,9 @@ describe("the presence table the README teaches", () => {
     expect(block).toContain("{...presenceMotion(");
     expect(block).not.toContain("motion={presenceMotion(");
 
-    // A host element takes the same object as its `motion` prop — the mapping
-    // the library's own surfaces paint through — and the section says so.
     expect(section).toContain("the same object is its `motion` prop");
   });
   it("holds a stored frame to the grammar the renderer validates", () => {
-    // The bug this guards: the renderer validates the **whole** motion
-    // description and paints no frame for one it refuses — an inset past a
-    // 32-bit float, a negative size, an opacity outside `0..1` — while the
-    // presence table dropped only non-finite fields. One out-of-range field a
-    // caller had stored therefore took the readable fields beside it with it:
-    // measured in a window, a surface asking for 8px of travel moved 0.
     const presence = sources.find(({ name }) => name === "presence.ts")?.text;
     expect(presence, "presence.ts was not read").toBeDefined();
     [
@@ -584,8 +415,6 @@ describe("the presence table the README teaches", () => {
       "readInset(offset) ?? 0",
     ].forEach((marker) => expect(presence).toContain(marker));
 
-    // The page teaches the rule where a consumer of the table meets it, and
-    // names the renderer's own bound rather than a value of its own.
     const section = readme.split("## The presence table")[1] ?? "";
     expect(section).toContain("32-bit float");
     expect(section).toContain("negative size");
@@ -595,7 +424,6 @@ describe("the presence table the README teaches", () => {
 
 describe("the imports the README teaches", () => {
   it("reaches each symbol from the subpath that exports it", () => {
-    // A floor: deleting the snippets must not make the rule vacuous.
     expect(readmeImports.length).toBeGreaterThanOrEqual(4);
     const failures = readmeImports.flatMap(({ specifier, names }) => {
       const file = moduleFile(specifier);

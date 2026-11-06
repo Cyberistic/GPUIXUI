@@ -1,27 +1,3 @@
-/**
- * `@gpuixui/data` — data presentation rendered by GPUix through React.
- *
- * The package is deliberately not part of `@gpuixui/components`: a data grid is
- * a composition with its own state (sort, selection, filters, column sizes,
- * virtualisation), and folding that into the component package would make every
- * consumer of a badge pay for it.
- *
- * Shape:
- *
- * - `table/` — the parts, the measured fixed-header composition and
- *   `FrozenTable`, the two-pane frozen column.
- * - `sort/`, `selection/`, `filter/`, `columns/` — pure reducers plus the one
- *   control each needs; they import no React and can drive the grid from
- *   Effect.
- * - `virtual/` — the typed seam over the runtime's `<virtual-list>`.
- * - `tree/`, `chart/` and `surfaces/` — the hierarchy, the SVG charts and the
- *   data surfaces.
- * - `use-table`, `use-columns` — the uncontrolled controllers.
- *
- * Read `packages/data/README.md` for the runtime rules (no sticky, no
- * transform, no canvas) and every surface the package ships.
- */
-
 export {
   DEFAULT_EMPTY_MESSAGE,
   Table,

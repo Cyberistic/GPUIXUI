@@ -5,21 +5,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { demos } from "./demos";
 
-/**
- * The card previews, as they render.
- *
- * The gallery used to be three cards of one width, each floating beside an
- * uppercase label with no shared edge, and the footer had no bottom padding, so
- * the last row sat on the clipped corner. These cases hold the drawing to the
- * comparison it now claims: one grid, equal columns, a caption per treatment,
- * and a footer that clears the edge.
- *
- * The footer's actions were plain spans in a 190px column, so both labels broke
- * across two lines and the row read as text rather than as the card's actions.
- * They are the library's `sm` ghost buttons now, and the column floor is wide
- * enough to hold the pair — an action that wraps is not the recipe's row.
- */
-
 const demo = demos["card-variants"];
 
 if (demo === undefined) throw new Error("card-variants is not registered");
@@ -48,13 +33,11 @@ describe("the card treatments preview", () => {
       (name) => !markup.includes(`<b>${name}</b>`),
     );
     expect(captions).toEqual([]);
-    // The old eyebrow read as another heading; a caption names what the card is.
+
     expect(markup).not.toContain('class="gx-demo-label">outline');
   });
 
   it("gives the three cards one column width and a shared baseline", () => {
-    // The floor is the footer's, not a preferred density: three equal columns
-    // that cannot hold two small actions would wrap them again.
     expect(block(".gx-card-grid")).toContain(
       "grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))",
     );
@@ -71,8 +54,6 @@ describe("the card treatments preview", () => {
   });
 
   it("draws each footer action as the recipe's small ghost button", () => {
-    // Three cards, two actions each. A span here is the bug: nothing about a
-    // span takes focus, presses or announces itself as the card's action.
     const actions = markup.match(
       /<button class="gx-btn gx-btn-ghost gx-btn-sm" type="button">/g,
     );

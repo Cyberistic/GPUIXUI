@@ -6,26 +6,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { AccordionComposition } from "./demos";
 
-/**
- * The accordion drawing, held to the component it documents.
- *
- * Guarded bug: the settings drawing wrapped the sections in a frame with 12px
- * of side padding, so the open row's wash stopped short of both edges and read
- * as a floating card. The trigger is `w-full` in `accordion.tsx`, and its
- * section divider spans the item, so the frame carries no side padding and the
- * header's inset is the recipe's own `px-1`.
- *
- * The remaining numbers are read out of the recipe (`ACCORDION_TRIGGER`,
- * `ACCORDION_CONTENT` through `@gpuixui/tw`), so a change in the component
- * fails here until the drawing follows it.
- */
-
 const css = readFileSync(
   new URL("../../styles/demos.css", import.meta.url),
   "utf8",
 );
 
-/** The declarations of the first `selector { … }` block in the sheet. */
 const rule = (selector: string): string => {
   const start = css.indexOf(`\n${selector} {`);
   if (start === -1) throw new Error(`no ${selector} block`);
@@ -52,9 +37,6 @@ describe("the settings accordion draws the component's rows", () => {
   });
 
   it("lets the row wash reach the frame's edges", () => {
-    // The native trigger is `w-full` inside a root with no padding: the wash and
-    // the item dividers touch both edges. The drawing's frame is decoration
-    // around the same rows, so it may keep its edge and corner but no inset.
     expect(rule(".gx-acc-panel")).not.toContain("padding");
     expect(rule(".gx-acc-trigger")).toContain("width: 100%;");
     expect(markup).toContain('class="gx-acc gx-acc-panel"');

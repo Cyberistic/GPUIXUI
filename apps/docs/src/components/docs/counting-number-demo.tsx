@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
 
-/**
- * The counting-number preview: the same value the component reveals, painted
- * at a readable pace. Browser illustration; the shipped part interpolates with
- * `@gpuixui/motion`.
- */
 export const CountingNumberDemo = () => {
   const [value, setValue] = useState(0);
 

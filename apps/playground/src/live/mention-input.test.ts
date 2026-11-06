@@ -1,20 +1,3 @@
-/**
- * Holds `mention-input-lifecycle` to the shipped component and to its own
- * arithmetic.
- *
- * The gap this guards: every `MentionInput` rule was a renderer read — the
- * `aria-selected` row, the draft the host held, a synthetic press — and no
- * window had placed the floating list under the field, found the highlighted
- * row's accent fill in a frame, or pressed a row of the layer the way a pointer
- * does. The probe's rows are the component's own parts and its paint claim is
- * the component's `theme.colors.accent`; if the list moves to another side, the
- * row stops painting the accent, or the probe is rewritten around a local grid,
- * the registry, the README and the inventory row would still claim the library's
- * `MentionInput` while the window measured the fixture.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe, component and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -44,10 +27,8 @@ const probe = read("./mention-input-probe.tsx");
 const mention = read("../../../../packages/components/src/mention-input.tsx");
 const readme = read("../../README.md");
 
-/** The checks the probe asserts: one per `ctx.expect*` site, and no loops. */
 const checks = probe.match(/ctx\.expect[A-Za-z]*\(/g)?.length ?? 0;
 
-/** The probe's README section, so a value printed elsewhere cannot pass. */
 const section = (() => {
   const heading = "### `mention-input-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -61,7 +42,7 @@ describe("the mention input scene's arithmetic", () => {
     expect(mentionReadout({ text: "", mentions: 0 })).toBe(
       "text=[] mentions=0",
     );
-    // The brackets keep the trailing space `applyMention` writes visible.
+
     expect(mentionReadout({ text: FIRST_INSERTION, mentions: 1 })).toBe(
       "text=[@grace ] mentions=1",
     );
@@ -80,7 +61,7 @@ describe("the mention input scene's arithmetic", () => {
     expect(
       Arr.dedupe(Arr.map(MENTION_PEOPLE, (person) => person.label)),
     ).toHaveLength(MENTION_PEOPLE.length);
-    // `al` is a prefix of `alan` only, and `m` starts no other name.
+
     expect(
       Arr.filter(MENTION_PEOPLE, (person) =>
         person.value.startsWith(SECOND_QUERY),
@@ -109,7 +90,6 @@ describe("the mention input scene's arithmetic", () => {
   });
 
   it("crops a row's inner square so a rounded corner cannot be counted", () => {
-    // A 194 × 22-point inner square at this host's 2x scale.
     const region = rowRegion({ x: 100, y: 200, width: 200, height: 28 }, 2);
     expect({
       x: region.x,
@@ -122,7 +102,7 @@ describe("the mention input scene's arithmetic", () => {
       width: (200 - 2 * ROW_INSET) * 2,
       height: (28 - 2 * ROW_INSET) * 2,
     });
-    // The floor is below a whole fill and far above a corner's fringe.
+
     expect(MENTION_ACCENT_FLOOR).toBeLessThan(region.width * region.height);
     expect(MENTION_ACCENT_FLOOR).toBeGreaterThan(200);
   });
@@ -153,7 +133,6 @@ describe("the mention-input-lifecycle probe's record", () => {
   });
 
   it("prints the scene and the readings the window measured", () => {
-    // A page that printed only fixture constants would claim no measurement.
     expect(section).toContain("one **4-point** gap below");
     expect(section).toContain("accent");
     expect(section).toContain("mentions=3");

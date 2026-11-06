@@ -1,25 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * GradientText: a phrase painted as a colour ramp.
- *
- * `@gpuix/native@0.11.0` has no text fill — a `linear-gradient` is a box
- * background, and a `<text>` host paints one `color` — so the ramp is sampled
- * **per glyph**: every code point is its own text host and takes the colour the
- * ramp gives its position in the line (`gradient-text/logic.ts`). The blend is
- * discrete at glyph resolution, which is the strongest honest form the runtime
- * can paint; a continuous fill waits on a text-fill capability.
- *
- * A word is one non-wrapping row of glyphs, and the line wraps **between**
- * words, never inside one. The first glyph of each word carries the word as its
- * accessible name and the rest are presentational, because `0.11.0` has no
- * `aria-hidden` and a reader should hear words rather than letters.
- *
- * The only motion is the house entrance: a fade on mount, zeroed under
- * `MotionProvider preference="reduced"`. The ramp itself does not travel —
- * recolouring glyphs frame by frame would need a per-frame React loop, and
- * there is no `transform` (upstream issue #102) to move a text layer instead.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -39,37 +18,29 @@ import {
   type GradientLine,
 } from "./gradient-text/logic.js";
 
-/** What a gradient text paints. */
 export interface GradientTextState {
   readonly text: string;
-  /** How many glyphs the ramp samples. */
+
   readonly glyphs: number;
   readonly reducedMotion: boolean;
 }
 
-/** {@link GradientText} props. */
 export interface GradientTextProps extends Omit<Props, "children" | "style"> {
-  /**
-   * The phrase to paint. A changed phrase re-samples the ramp, and a value a
-   * saved record left absent paints no glyphs rather than taking the render
-   * down.
-   */
   readonly text: string;
-  /** The ramp's first colour. Default the theme's `foreground` role. */
+
   readonly from?: string;
-  /** The ramp's last colour. Default the theme's `primary` role. */
+
   readonly to?: string;
-  /** A typographic role from the theme. Default `"display"`. */
+
   readonly role?: TextRole;
-  /** The entrance level. Default `"slow"` (320 ms). */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string, joined after the resting style so it wins. */
+
   readonly className?: string;
-  /** A style, or a function of what is painted. */
+
   readonly style?: StateStyle<GradientTextState>;
 }
 
-/** One line: a wrapping row of words, each word a non-wrapping row of glyphs. */
 const Line = ({
   line,
   metrics,
@@ -116,13 +87,6 @@ const Line = ({
   </div>
 );
 
-/**
- * A phrase painted as a colour ramp, one colour per glyph.
- *
- * Both ends must be hex colours; an end that is not one paints the run flat in
- * `from` rather than inventing an interpolation. An explicit `\n` starts a new
- * line and a new ramp, and every run of whitespace is a word gap.
- */
 export const GradientText = ({
   text,
   from,
@@ -137,7 +101,7 @@ export const GradientText = ({
   const timing = useSurfaceTiming(level);
   const start = from ?? theme.colors.foreground;
   const end = to ?? theme.colors.primary;
-  /** The phrase a saved layout may have lost; JSON writes `null` for it. */
+
   const phrase = textOf(text);
   const lines = gradientLines(phrase, start, end);
   const metrics = textStyle(theme, role);
@@ -171,7 +135,6 @@ export const GradientText = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const gradientTextMeta = {
   name: "Gradient text",
   tier: 5,

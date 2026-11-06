@@ -1,16 +1,3 @@
-/**
- * The line-diff half of the diff viewer.
- *
- * The bugs these guard: a diff that reports a non-minimal edit (every changed
- * line outside the common subsequence must be reported exactly once, never
- * delete-all-then-add-all); a diff that eats a line (reconstructing either side
- * from the edits must return the source); a line split that invents a line for a
- * trailing newline or drops an interior blank line; and a split pairing that
- * stacked a removed line and its replacement on two rows instead of one.
- *
- * The suite runs under `environment: "node"`; nothing here needs a renderer.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
@@ -31,7 +18,6 @@ import {
   type SplitPair,
 } from "./logic.js";
 
-/** One side of one split row, as `None` when the row or that side is absent. */
 const side = (
   pairs: ReadonlyArray<SplitPair>,
   index: number,
@@ -41,10 +27,6 @@ const side = (
 
 describe("modeOf", () => {
   it("reads a stored layout name, and a name it does not declare as the default", () => {
-    // The bug guarded: `mode` was compared with `=== "unified"` and every
-    // other value fell through to the split layout, so a saved preference from
-    // an older release (`"inline"`) painted two columns on a reader who asked
-    // for one. A view name the union no longer carries is the default.
     expect(modeOf("unified")).toBe("unified");
     expect(modeOf("split")).toBe("split");
     expect(modeOf("inline")).toBe("unified");
@@ -75,8 +57,7 @@ describe("diffLines", () => {
   it("moves a line as the minimal removal plus addition", () => {
     const edits = diffStrings("x\ny\nz", "y\nx\nz");
     const changed = edits.filter((edit) => edit.kind !== "context").length;
-    // The two sources share a two-line subsequence, so the minimal edit is two
-    // changed lines — a delete-and-reinsert of the whole file would be six.
+
     expect(changed).toBe(2);
   });
 
@@ -91,8 +72,7 @@ describe("diffLines", () => {
   it("breaks reconstruction when an edit is dropped (negative control)", () => {
     const edits = diffStrings("a\nb\nc", "a\nc");
     expect(reconstructBefore(edits)).toEqual(["a", "b", "c"]);
-    // Drop the removal: the before side can no longer reassemble its source,
-    // which is what makes the reconstruction assertion above meaningful.
+
     const dropped: ReadonlyArray<LineEdit> = edits.slice(0, 2);
     expect(reconstructBefore(dropped)).not.toEqual(["a", "b", "c"]);
   });
@@ -119,11 +99,11 @@ describe("numberDiff", () => {
 describe("pairs", () => {
   it("puts a removed line and the line that replaces it on one row", () => {
     const split = pairs(numberDiff(diffStrings("a\nb\nc", "a\nB\nc")));
-    // A one-line edit is one row, not a removal and an addition stacked apart.
+
     expect(split).toHaveLength(3);
     expect(Option.getOrUndefined(side(split, 1, "left"))?.text).toBe("b");
     expect(Option.getOrUndefined(side(split, 1, "right"))?.text).toBe("B");
-    // The context rows pair with themselves and keep both line numbers.
+
     expect(Option.getOrUndefined(side(split, 0, "left"))).toBe(
       Option.getOrUndefined(side(split, 0, "right")),
     );
@@ -157,9 +137,6 @@ describe("pairs", () => {
   });
 
   it("gives every changed pair two cells, so a row is never half a change", () => {
-    // The bug guarded: a split row that dropped one side made the two columns
-    // different heights, and the rows below the change no longer lined up
-    // across the divider.
     const split = pairs(numberDiff(diffStrings("a\nb\nc", "a\nB\nc")));
     expect(
       split.every(
@@ -171,9 +148,6 @@ describe("pairs", () => {
 
 describe("rows", () => {
   it("puts a removal immediately beside the addition it became", () => {
-    // The bug guarded: the unified script painted every removal and then every
-    // addition, so a reviewer read two slabs and had to match them by eye. A
-    // pair is adjacent — removed line, added line — in display order.
     const script = rows(numberDiff(diffStrings("a\nb\nc\nd", "a\nX\nd")));
     expect(script.map((row) => row.kind)).toEqual([
       "context",
@@ -182,8 +156,7 @@ describe("rows", () => {
       "removed",
       "context",
     ]);
-    // The first removal and its replacement are the adjacent pair; the second
-    // removal has no replacement and follows it.
+
     expect(script.map((row) => row.text)).toEqual(["a", "b", "X", "c", "d"]);
   });
 
@@ -215,8 +188,6 @@ describe("hunks", () => {
   );
 
   it("skips unchanged lines beyond the context and names the skip", () => {
-    // The bug guarded: the viewer painted every unchanged line, so a one-line
-    // edit in a long file buried its change and had no hunk heading at all.
     const grouped = hunks(
       numberDiff(diffStrings(before.join("\n"), after.join("\n"))),
       1,
@@ -231,10 +202,10 @@ describe("hunks", () => {
       ),
     ).toEqual(["@@ -1,3 +1,3 @@", "@@ -10,3 +10,3 @@"]);
     const painted = grouped.flatMap((hunk) => hunk.rows.map((row) => row.text));
-    // Eight unchanged lines between the two changes are dropped...
+
     expect(painted).not.toContain("04");
     expect(painted).not.toContain("08");
-    // ...while the one line of context either side of each change survives.
+
     expect(painted).toContain("03");
     expect(painted).toContain("10");
   });
@@ -268,9 +239,6 @@ describe("hunks", () => {
   });
 
   it("names the insertion point when a hunk adds lines with no before side", () => {
-    // The bug guarded: a heading read only the lines it paints, so a pure
-    // addition with no context named `-0,0` and the reader lost where the
-    // insertion lands. It names the line the addition follows.
     const grouped = hunks(numberDiff(diffStrings("a\nb\nc", "a\nb\nX\nc")), 0);
     expect(
       Option.match(Arr.getUnsafe(grouped, 0).heading, {

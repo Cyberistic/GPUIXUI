@@ -1,19 +1,3 @@
-/**
- * Holds the `media-player-lifecycle` fixture, the probe that paints it and the
- * section the README records it in.
- *
- * The gap this guards: `@gpuixui/media` ships `MediaPlayer`, and every claim
- * its package makes about the transport — the clock, the fill's share, the seek
- * keys, the disabled refusal — was held only by the offscreen renderer.
- * `media-frame-lifecycle` measured the route a clip can be *composed* from; this
- * probe paints the **shipped wrapper** in a window. The fixture's ids, its clip
- * and its geometry only mean something if they are the component's own, so this
- * suite reads them out of the package sources: a rename there has to fail here
- * rather than time out in a window.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe, package and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -62,19 +46,16 @@ const scenarios = read("./scenarios.tsx");
 const readme = read("../../README.md");
 const component = read("../../../../packages/media/src/media-player.tsx");
 
-/** One `const NAME = <number>;` the shipped component declares. */
 const numberIn = (name: string): number => {
   const match = new RegExp(`const ${name} = (\\d+);`).exec(component);
   return Number(match?.[1] ?? Number.NaN);
 };
 
-/** The probe's own steps, so a count cannot be read out of another probe. */
 const stepsOf = (): string => {
   const start = probe.indexOf("export const mediaPlayerSteps");
   return start === -1 ? "" : probe.slice(start);
 };
 
-/** This probe's README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `media-player-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -92,24 +73,18 @@ describe("the shipped component's surface", () => {
     expect(missing).toEqual([]);
     const ids = Object.values(PLAYER_IDS);
     expect(new Set(ids).size).toBe(ids.length);
-    // The probe owns its page, its readout and its switch; they are not the
-    // component's, so a name collision would read the wrong box.
+
     expect(PLAYER_COMPONENT_IDS).not.toContain(PLAYER_IDS.readout);
     expect(PLAYER_COMPONENT_IDS).not.toContain(PLAYER_IDS.disable);
   });
 
   it("declares the geometry and the clock the fixture hands it", () => {
-    // The timeline is the frame less the bar's two insets, and its rail is the
-    // component's own height.
     expect(PLAYER_TRACK.width).toBe(PLAYER_POSTER.width - 16);
     expect(PLAYER_TRACK.height).toBe(numberIn("TRACK_HEIGHT"));
     expect(`${PLAYER_POSTER.width}×${PLAYER_POSTER.height}`).toBe("512×288");
-    // The fixture overrides the shipped tick on purpose: this host's paint
-    // rate paces the interval, so the probe waits longer per tick than the
-    // component's default.
+
     expect(PLAYER_TICK_MS).toBeGreaterThan(MEDIA_TICK_MS);
-    // The seek step is *not* overridden: the probe measures the package's own
-    // default, so a changed default must fail here rather than in the window.
+
     expect(PLAYER_SEEK_STEP_MS).toBe(MEDIA_SEEK_STEP_MS);
     expect(probe).toContain("tickMs={PLAYER_TICK_MS}");
     expect(probe).toContain("idleMs={PLAYER_IDLE_MS}");
@@ -139,8 +114,7 @@ describe("the clip the shipped player is given", () => {
         pixels: framePixels(frameColour(3 * PLAYER_SEEK_STEP_MS)),
       }),
     );
-    // A playhead past the clip stays on its last frame rather than reading
-    // outside the schedule.
+
     expect(frameAt(PLAYER_CLIP_MS * 2)).toEqual(frameAt(PLAYER_CLIP_MS));
   });
 
@@ -207,8 +181,7 @@ describe("the probe", () => {
     expect(probe).toContain("disabled={disabled}");
     expect(probe).toContain("onPlayheadChange=");
     expect(probe).toContain("onPlayingChange=");
-    // The composition probe owns a clock and pushes buffers; this one must not,
-    // or it would be measuring the route again rather than the wrapper.
+
     expect(probe).not.toContain("setInterval(");
     expect(probe).not.toContain("setImagePixels(");
   });
@@ -226,8 +199,6 @@ describe("the probe", () => {
   });
 
   it("drives the track's pointer scrub on the band a press reaches", () => {
-    // The rail is pointer-transparent, so the registered band is the element
-    // that hears the gesture — and it is the shipped `media-track-hit`.
     expect(PLAYER_IDS.trackHit).toBe("media-track-hit");
     expect(PLAYER_COMPONENT_IDS).toContain(PLAYER_IDS.trackHit);
     expect(probe).toContain("ctx.host.drag(PLAYER_IDS.trackHit, 0, 0, {");
@@ -235,14 +206,13 @@ describe("the probe", () => {
       "ctx.host.drag(PLAYER_IDS.trackHit, PLAYER_SCRUB_OFFSET, 0, {",
     );
     expect(probe).not.toContain("ctx.host.drag(PLAYER_IDS.track,");
-    // The press lands three quarters along the band, which is the playhead
-    // the transport's own three steps reach: the two readings share a point.
+
     const pressAt = PLAYER_TRACK.width / 2 + PLAYER_SCRUB_OFFSET;
     expect(pressAt).toBe((PLAYER_TRACK.width * 3) / 4);
     expect((pressAt / PLAYER_TRACK.width) * PLAYER_CLIP_MS).toBe(
       3 * PLAYER_SEEK_STEP_MS,
     );
-    // The gesture ends on the band's trailing edge, and the release ends it.
+
     expect(pressAt + PLAYER_SCRUB_OFFSET).toBe(PLAYER_TRACK.width);
     expect(probe).toContain("ctx.host.hover(PLAYER_IDS.trackHit)");
     expect(probe).toContain('"a hover after the release reports nothing"');
@@ -254,7 +224,7 @@ describe("the probe", () => {
       Arr.fromIterable(stepsOf().matchAll(/ctx\.expect\w+\(/g)),
     );
     expect(sites).toBeGreaterThan(0);
-    // The helpers assert per call, so the printed count floors the sites.
+
     expect(PLAYER_CHECKS).toBeGreaterThanOrEqual(sites);
   });
 });
@@ -290,13 +260,13 @@ describe("the record", () => {
 
   it("prints the pointer scrub the same window measured", () => {
     const section = sectionOf();
-    // The three-quarter press, its report and the fill's share.
+
     expect(section).toContain("three quarters along the track");
     expect(section).toContain(
       `${progressWidth(3 * PLAYER_SEEK_STEP_MS, PLAYER_CLIP_MS, PLAYER_TRACK.width)}`,
     );
     expect(section).toContain("playhead=3000");
-    // The drag's end and the release that ended it.
+
     expect(section).toContain("trailing edge");
     expect(section).toContain("playhead=4000");
     expect(section).toContain("a hover after the release");

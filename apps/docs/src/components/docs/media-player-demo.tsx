@@ -19,32 +19,14 @@ import * as Option from "effect/Option";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { galleryMarkup } from "../../lib/icon-gallery";
 
-/**
- * Browser preview for the MediaPlayer page.
- *
- * The runtime has no `video`/`audio` host and no playback verb, so the shipped
- * player is composition: the caller supplies each frame's bytes, and the
- * component owns the clock, the transport and the chrome. The preview plays
- * exactly that part — its clock, keys, played/buffered shares, rate and volume
- * are `player/logic`'s — over three illustrated frames standing in for the
- * caller's decoded bytes. The chrome is the same anatomy: a centred play
- * control, a bar that fades after idle, a timeline with a buffered range and a
- * thumb, the clock, mute and volume, rate, settings and fullscreen.
- */
-
-/** The clip the preview plays, in milliseconds. */
 export const PLAYER_DURATION = 180_000;
 
-/** The part of the clip the app has in hand; the preview has most of it. */
 export const PLAYER_BUFFERED = 120_000;
 
-/** The frame's width in points, so the painted shares are the package's arithmetic. */
 export const PLAYER_WIDTH = 520;
 
-/** The timeline's width: the frame less the bar's two insets. */
 export const PLAYER_TRACK = PLAYER_WIDTH - 16;
 
-/** The rates and renditions the menus offer, as the component's props do. */
 export const PLAYER_RATES = MEDIA_RATES;
 export const PLAYER_QUALITIES: ReadonlyArray<string> = [
   "Auto",
@@ -52,12 +34,10 @@ export const PLAYER_QUALITIES: ReadonlyArray<string> = [
   "720p",
 ];
 
-/** How long the chrome stays after the last activity. */
 export const PLAYER_IDLE_MS = 3000;
 
 type Popup = "volume" | "rate" | "settings" | null;
 
-/** Three frames the caller "decodes"; the playhead picks the one on screen. */
 const FRAMES: ReadonlyArray<string> = ["#2E2370", "#20405A", "#3F2A52"].map(
   (fill, index) =>
     `data:image/svg+xml,${encodeURIComponent(
@@ -65,7 +45,6 @@ const FRAMES: ReadonlyArray<string> = ["#2E2370", "#20405A", "#3F2A52"].map(
     )}`,
 );
 
-/** The frame a playhead stands on. */
 export const frameAt = (playhead: number): string =>
   FRAMES[
     Math.min(
@@ -77,7 +56,6 @@ export const frameAt = (playhead: number): string =>
     )
   ] ?? "";
 
-/** A glyph from the icon set, painted in the page's ink. */
 const Glyph = ({ name }: { readonly name: IconName }) => (
   <span
     aria-hidden
@@ -89,7 +67,6 @@ const Glyph = ({ name }: { readonly name: IconName }) => (
 const percent = (width: number, track: number): string =>
   `${track === 0 ? 0 : (width / track) * 100}%`;
 
-/** The three boxes the timeline paints for a playhead, in points. */
 export const sharesAt = (
   playhead: number,
   track: number = PLAYER_TRACK,
@@ -129,7 +106,6 @@ export const MediaPlayerDemo = () => {
     setActivity((current) => current + 1);
   };
 
-  // The app's clock, scaled by the rate the menus report.
   useEffect(() => {
     if (!playing) return undefined;
     const timer = setInterval(
@@ -142,12 +118,10 @@ export const MediaPlayerDemo = () => {
     return () => clearInterval(timer);
   }, [playing, rate]);
 
-  // The transport stops itself at the clip's end, as the component's does.
   useEffect(() => {
     if (playing && isFinished(playhead, PLAYER_DURATION)) setPlaying(false);
   }, [playing, playhead]);
 
-  // The bar fades after the last activity; a popup owns it while open.
   useEffect(() => {
     if (popup !== null || !controls) return undefined;
     const timer = setTimeout(() => setControls(false), PLAYER_IDLE_MS);
@@ -212,8 +186,7 @@ export const MediaPlayerDemo = () => {
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const key = event.key.toLowerCase();
     const target = event.target as HTMLElement;
-    // A field owns its keys, and a control owns Space: the player only takes
-    // the key when its own surface or timeline holds the focus.
+
     if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
     const transport =
       target === event.currentTarget ||

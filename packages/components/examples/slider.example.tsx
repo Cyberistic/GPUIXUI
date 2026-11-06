@@ -1,17 +1,9 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Slider example: one value and a price range.
- *
- * The same component takes a number or a pair, so a settings pane and a filter
- * read as one surface rather than two names a caller has to know.
- */
-
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import { isSliderSpan, Slider, type SliderValue } from "../src/slider.js";
 
-/** A settings card with a quality bar and a price filter. */
 export const SliderExample = () => {
   const theme = useTheme();
   const [quality, setQuality] = useState(72);

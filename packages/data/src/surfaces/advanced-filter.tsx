@@ -1,40 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The advanced filter: a builder over a typed predicate tree.
- *
- * A query builder is **data**, not a string: every clause names a field, a
- * comparison and a value, and the clauses combine with `all`, `any` and `not`.
- * The tree is the caller's — this component paints it and reports every edit —
- * so a builder, a saved query and a table's own filter all read one shape.
- *
- * The tree's rules are the pure ones in `surfaces/logic.ts`: the comparisons are
- * literal, a numeric comparison reads both sides as numbers, and an empty
- * `all` matches everything (which is what an empty builder means). A side that
- * does not read as a number — the blank value a clause starts with — satisfies
- * no order, so an unfilled clause keeps no row rather than reading the blank as
- * zero.
- *
- * The runtime paints no menu of its own, so the field and comparison pickers
- * are the component package's measured `DropdownMenu` — the same surface the
- * column configuration uses, not a second menu implementation.
- *
- * Every group paints its **combinator** as a menu: `all of`, `any of` and
- * whether the group is negated. That is how a reader composes an `any` or a
- * `not` — the tree has always held them, and this control is what writes one
- * from the builder. **Add group** appends an `all` group holding one blank
- * clause to the group it sits in, so a nested group lands where the reader
- * asked and its combinator is one press away.
- *
- * ```tsx
- * const [tree, setTree] = useState<FilterTree>(emptyTree);
- * <AdvancedFilter
- *   fields={[{ field: "status", label: "Status" }]}
- *   tree={tree}
- *   onChange={setTree}
- * />
- * ```
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import {
@@ -80,53 +44,28 @@ import {
   FILTER_SENTENCE,
 } from "./recipe.js";
 
-/** One field a clause may name. */
 export interface AdvancedFilterField {
-  /** The field the clause reads. */
   readonly field: string;
-  /**
-   * The words the builder shows for it.
-   *
-   * A blank label reads as {@link field}'s own name: a locale table with a
-   * missing row answers `""`, which would leave the picker unnamed.
-   */
+
   readonly label: string;
 }
 
-/** {@link AdvancedFilter} props. */
 export interface AdvancedFilterProps extends Omit<
   Props,
   "children" | "onChange"
 > {
-  /** The fields a clause may name, in the order the picker lists them. */
   readonly fields: ReadonlyArray<AdvancedFilterField>;
-  /** The tree the builder paints. */
+
   readonly tree: FilterTree;
-  /** Receives every edited tree. */
+
   readonly onChange: (next: FilterTree) => void;
-  /**
-   * The title above the builder. Defaults to `Filters`; a blank title is the
-   * default, because a default only covers an absent prop.
-   */
+
   readonly title?: string;
   readonly className?: string;
-  /**
-   * The trigger's test id. Every row derives from it: `${testId}-${slot}` names
-   * a clause, where `slot` is the clause's path joined with `-` (a root clause
-   * is `0`), and the row's parts are `${testId}-${slot}-field`,
-   * `${testId}-${slot}-comparison`, `${testId}-${slot}-value` and
-   * `${testId}-${slot}-remove`. A nested group's clause therefore keeps its own
-   * id instead of repeating a sibling's. A group's combinator is
-   * `${testId}-kind` at the root and `${testId}-${slot}-kind` below it, with
-   * `${testId}-${slot}-kind-all`, `-kind-any` and `-kind-negate` for its menu,
-   * and its Add group is `${testId}-add-group` at the root and
-   * `${testId}-${slot}-add-group` below it. The root's Add clause is
-   * `${testId}-add`, and a nested group's own is `${testId}-${slot}-add`.
-   */
+
   readonly testId?: string;
 }
 
-/** The words a comparison is shown by. */
 export const comparisonLabels: Readonly<Record<Comparison, string>> = {
   equals: "equals",
   notEquals: "does not equal",
@@ -135,24 +74,14 @@ export const comparisonLabels: Readonly<Record<Comparison, string>> = {
   lessThan: "less than",
 };
 
-/** The title a builder is shown under when the caller names none. */
 export const DEFAULT_FILTER_TITLE = "Filters";
 
-/** The words a group is shown by. */
 export const groupLabels: Readonly<Record<"all" | "any" | "not", string>> = {
   all: "all of",
   any: "any of",
   not: "not",
 };
 
-/**
- * The label a field is shown by, falling back to its own name.
- *
- * A blank label is absence: a locale table with a missing row answers `""`,
- * which would leave the picker's trigger unnamed and the value field named
- * `" value"` — so the field's own name is the words, and a clause that names no
- * field at all reads {@link clauseFieldName}'s word instead of nothing.
- */
 const labelOf = (
   fields: ReadonlyArray<AdvancedFilterField>,
   field: string,
@@ -167,11 +96,9 @@ const labelOf = (
     Option.getOrElse(() => clauseFieldName(field)),
   );
 
-/** A clause's or group's path as a locator segment: a root node is `0`. */
 const slotOf = (path: FilterPath): string =>
   path.length === 0 ? "0" : Arr.join(Arr.map(path, String), "-");
 
-/** The clause an Add control appends: the first field, no comparison made yet. */
 const clauseFor = (
   fields: ReadonlyArray<AdvancedFilterField>,
 ): FieldPredicate => ({
@@ -184,17 +111,6 @@ const clauseFor = (
   value: "",
 });
 
-/**
- * The fields a builder can offer, read as data.
- *
- * A saved builder writes `null` where it carried no field list, and a picker
- * that iterated it threw out of the render. Only a list is a list, and only an
- * entry that **names** a field is one: a blank `field` is the absence a saved
- * clause already carries before a field is picked, so it can name no column and
- * no value column — offering it left an unnamed menu row, made Add compose a
- * clause over no field, and named a saved clause after a field it does not
- * have.
- */
 const fieldList = (
   fields: ReadonlyArray<AdvancedFilterField>,
 ): ReadonlyArray<AdvancedFilterField> =>
@@ -206,7 +122,6 @@ const fieldList = (
       Str.isNonEmpty(Str.trim(field.field)),
   );
 
-/** One clause: a field, a comparison, a value and a way out. */
 const ClauseRow = ({
   root,
   clause,
@@ -217,22 +132,13 @@ const ClauseRow = ({
   onChange,
   testId,
 }: {
-  /** The whole tree: an edit is written back into it by path. */
   readonly root: FilterTree;
   readonly clause: FieldPredicate;
   readonly path: FilterPath;
-  /** The clause's path as a locator segment, unique across nested groups. */
+
   readonly slot: string;
   readonly fields: ReadonlyArray<AdvancedFilterField>;
-  /**
-   * Whether removing this clause changes the tree.
-   *
-   * A root clause and the child a `not` holds directly do not: the root has no
-   * parent to drop it, and a `not` cannot be left without its child. Neither
-   * paints a Remove control, because a press that leaves the tree unchanged is
-   * a control claiming an action it cannot take. A clause deeper inside a group
-   * the `not` negates does remove, and paints one.
-   */
+
   readonly removable: boolean;
   readonly onChange: (next: FilterTree) => void;
   readonly testId: string | undefined;
@@ -314,7 +220,6 @@ const ClauseRow = ({
   );
 };
 
-/** A group of clauses, or a negated one. */
 const Group = ({
   root,
   path,
@@ -326,25 +231,22 @@ const Group = ({
   slot,
   testId,
 }: {
-  /** The whole tree: a combinator change is written back into it. */
   readonly root: FilterTree;
-  /** The group's own path. */
+
   readonly path: FilterPath;
   readonly kind: GroupKind;
   readonly children: ReactNode;
-  /** Append a group to this group, when it can take one. */
+
   readonly onAdd?: () => void;
-  /** The group's own removal, when it sits in a group that can drop it. */
+
   readonly onRemove?: () => void;
   readonly onChange: (next: FilterTree) => void;
-  /** The group's path as a locator segment. */
+
   readonly slot: string;
   readonly testId: string | undefined;
 }) => {
   const theme = useTheme();
-  // The root's own controls drop the `0-` prefix the clauses keep, so a
-  // root control reads `-add` and a nested one `-1-add`, the naming the
-  // clause locators already use.
+
   const base =
     testId === undefined
       ? undefined
@@ -422,7 +324,6 @@ const Group = ({
   );
 };
 
-/** The tree, painted. */
 const Tree = ({
   root,
   node,
@@ -435,27 +336,20 @@ const Tree = ({
   removable,
   canAdd,
 }: {
-  /** The whole tree: an edit is written back into it by path. */
   readonly root: FilterTree;
-  /** The node this call paints. */
+
   readonly node: FilterTree;
   readonly path: FilterPath;
   readonly fields: ReadonlyArray<AdvancedFilterField>;
   readonly onChange: (next: FilterTree) => void;
-  /** Append a clause to the group at a path. */
+
   readonly onAddClause: (path: FilterPath) => void;
-  /** Append a group to the group at a path. */
+
   readonly onAddGroup: (path: FilterPath) => void;
   readonly testId: string | undefined;
-  /** Whether the node sits in a group that can drop it. */
+
   readonly removable: boolean;
-  /**
-   * Whether the builder has a field a new clause could name.
-   *
-   * Add appends a clause over the first offered field, so with none to offer
-   * the clause would name no field and narrow nothing. The control is withheld
-   * rather than painting a press that cannot compose a query.
-   */
+
   readonly canAdd: boolean;
 }) => {
   if (node.kind === "predicate") {
@@ -541,37 +435,6 @@ const Tree = ({
   );
 };
 
-/**
- * The builder.
- *
- * The tree is the caller's, so a saved query, a table's filter and this
- * builder read one shape; the component paints the tree and reports every
- * edit — a clause's field, comparison or value, a clause removed, a clause
- * added, a group added, a group's combinator changed or negated, and the whole
- * tree cleared.
- *
- * A group's combinator control edits the group in place: **match all** and
- * **match any** keep its children and change how they combine, while **negate**
- * wraps the group (and pressing it again gives the group back). A `not` holds
- * one child, so its own Add controls are absent; a group inside it is a group
- * like any other and paints both Adds.
- *
- * A clause's Remove control paints only where removal changes the tree: a
- * `not` holds one child and is removed whole (when it sits in a group), so that
- * child carries none and a root clause is cleared with Clear. A clause deeper
- * inside a group the `not` negates removes like any other. Add is the same
- * rule: every `all`/`any` group that sits in a group paints its own Add
- * controls, so a nested `any` can be extended or given a group in place —
- * including one a `not` negates — while the root's Add sits below the tree.
- *
- * **Add is offered only while there is a field to name.** A new clause takes
- * the first offered field, so a builder whose `fields` list arrived empty (a
- * saved record that carried `null`, a list whose entries this release cannot
- * read) would append a clause over no field — a press that composes a query
- * narrowing nothing. The Add controls are withheld until a field is offered;
- * Clear stays, and a saved clause that names no field still paints its row
- * (under `clauseFieldName`'s word) so the reader can edit it.
- */
 export const AdvancedFilter = ({
   fields,
   tree,
@@ -584,16 +447,9 @@ export const AdvancedFilter = ({
 }: AdvancedFilterProps) => {
   const theme = useTheme();
   const heading = spokenText(Option.fromNullishOr(title), DEFAULT_FILTER_TITLE);
-  // The fields a saved builder carries: only a list of named fields is a list.
+
   const offered = fieldList(fields);
-  /**
-   * The tree this build can paint.
-   *
-   * A saved query is data: `null`/`undefined` is the empty tree a fresh builder
-   * starts from, and anything else the schema refuses paints the refusal with
-   * Clear rather than throwing out of the render. `None` is the unreadable
-   * case; the editor controls are hidden until it is cleared.
-   */
+
   const shown = Option.match(Option.fromNullishOr(tree), {
     onNone: () => Option.some(emptyTree),
     onSome: (value) =>
@@ -604,11 +460,6 @@ export const AdvancedFilter = ({
     onChange(appendAt(base, path, clauseFor(offered)));
   };
   const addGroup = (path: FilterPath): void => {
-    // A new group starts as an `all` holding one blank clause: the reader
-    // edits that clause, and the combinator control turns the group into a
-    // disjunction or negates it. A group with no clause would be an `any` that
-    // keeps nothing, which is not a state an Add control should land a reader
-    // in.
     onChange(
       appendAt(base, path, { kind: "all", children: [clauseFor(offered)] }),
     );

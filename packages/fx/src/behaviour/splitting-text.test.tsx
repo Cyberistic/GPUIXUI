@@ -1,19 +1,3 @@
-/**
- * SplittingText in the real GPUix renderer.
- *
- * The bugs these guard: a reveal that drops a word or paints them out of order;
- * a unit that is already at rest when it mounts (no rise, so nothing to see); a
- * stagger that restarts per line or is handed the milliseconds as seconds; a
- * re-render that replays the whole headline; a reduced run that still travels;
- * and a character split that breaks an emoji or loses the word gap.
- *
- * The motion clock is paused before the component mounts, so the entry frame is
- * exact rather than wherever the frame loop had got. A headless tree reports
- * bounds, not paint, so the offset is the observable half of the
- * fade-and-offset pair (the presence probes prove the runtime paints an opacity
- * tween); the declared frames are read for the rest.
- */
-
 import type { TestElement, TestRoot } from "@gpuix/react/testing";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
@@ -24,21 +8,12 @@ import {
 import { MotionProvider } from "@gpuixui/components/motion";
 import { SplittingText } from "../splitting-text.js";
 
-/**
- * The painted units, in paint order.
- *
- * The runtime makes two `text` elements per host — the styled host and the text
- * run it paints — so only the host (which owns the motion and the style) is a
- * unit; the run is its content.
- */
 const units = (renderer: TestRoot["renderer"]): ReadonlyArray<TestElement> =>
   renderer.findByType("text").filter((element) => element.text === null);
 
-/** Every painted string, joined with the gap the layout paints between units. */
 const painted = (renderer: TestRoot["renderer"], glue = ""): string =>
   renderer.getAllText().join(glue);
 
-/** One unit, failing on a missing index rather than casting it away. */
 const unitAt = (renderer: TestRoot["renderer"], index: number): TestElement => {
   const unit = units(renderer)[index];
   if (unit === undefined) {
@@ -47,7 +22,6 @@ const unitAt = (renderer: TestRoot["renderer"], index: number): TestElement => {
   return unit;
 };
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   renderer: TestRoot["renderer"],
   testId: string,
@@ -59,7 +33,6 @@ const byTestId = (
   return element;
 };
 
-/** The painted y of one element. */
 const yOf = (renderer: TestRoot["renderer"], element: TestElement): number => {
   const bounds = renderer.getElementBounds(element.id);
   if (bounds === null) {
@@ -68,14 +41,12 @@ const yOf = (renderer: TestRoot["renderer"], element: TestElement): number => {
   return bounds.y;
 };
 
-/** How far `element` sits below the top of `container`. */
 const riseOf = (
   renderer: TestRoot["renderer"],
   element: TestElement,
   container: TestElement,
 ): number => yOf(renderer, element) - yOf(renderer, container);
 
-/** Mount a reveal under a paused motion clock, so its first frame is exact. */
 const mountFrozen = (node: ReactNode) => {
   const page = renderComponent(<div />);
   page.renderer.clockPause();
@@ -131,7 +102,7 @@ describe("SplittingText", () => {
       const motions = units(page.renderer).map(
         (unit) => unit.customProps?.motion,
       );
-      // A zero stagger adds nothing, so the first arrival carries no delay.
+
       expect(motions[0]).not.toHaveProperty("transition.delay");
       expect(motions[1]).toMatchObject({ transition: { delay: 0.04 } });
       expect(motions[2]).toMatchObject({ transition: { delay: 0.08 } });
@@ -204,9 +175,6 @@ describe("SplittingText", () => {
   });
 
   it("paints no units for a stored phrase that was not text", () => {
-    // The bug guarded: a headline saved with a layout writes `null` for a string
-    // it never carried, and `splitUnits` handed that to `Str.split`, which threw
-    // `Cannot read properties of null (reading 'split')` out of the render.
     const { page } = mountFrozen(
       <SplittingText testId="split" text={null as unknown as string} />,
     );

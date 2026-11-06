@@ -1,51 +1,11 @@
-/**
- * The motion hooks' frame loop, in the real GPUix renderer.
- *
- * The bugs these guard: the documented inline declarations — `useSpring(target,
- * springPhysics({ … }))` and `useInertia(v, inertia())` — are a new object on
- * every render, and the hook's effect was keyed on that identity. Every commit
- * re-armed the effect, which sampled immediately and published a fresh frame
- * object even when nothing had moved: measured at `HEAD` (2026-10-23) a spring
- * that had already settled re-rendered **1 089** times to rest and then ~200 more
- * in the 150 ms after it, a loop that ran for as long as the component was
- * mounted. The declaration is retained by value now (the rule the retained value
- * already applied) and a frame is published only when it differs, so the same
- * component rests and stops.
- *
- * The reduced preference's later frames are the second guard: it painted the
- * resting frame only in the mount's first render, so a target or a release
- * changed while it was on kept the previous frame for one commit — the same
- * one-frame flash the mount rule forbids — and reported the skipped journey
- * against the run that was leaving. A reduced render now paints the destination
- * it names, with the completion edge, and retires the retained run in the same
- * commit.
- *
- * The third guard: that branch repaired a value it could not read to `0`, so a
- * measured height or a release velocity that failed for one render collapsed the
- * surface to the first frame (or to the offset a reduced coast had already left)
- * and retired the retained value there — the next readable value then reported a
- * journey the reader never saw. A value the render cannot read is no destination
- * now: the hook holds the frame on screen.
- *
- * The fourth guard: a reduced commit retired the retained coast, and the effect
- * re-ran when the preference turned back off and launched that same declaration
- * again from the frame it ended on — measured, a 50 ms coast released at `400`
- * rested at `20` under the preference and then drifted on to `40`, replaying a
- * gesture the reader had already watched finish. The ended declaration is held
- * now, a second reduced commit holds it too rather than projecting again, and a
- * genuinely new release still starts from the frame on screen.
- */
-
 import { describe, expect, it } from "vitest";
 import { inertia, layoutSpring, springPhysics } from "@gpuixui/motion";
 import { useInertia, useSpring } from "@gpuixui/motion/react";
 import { after, waitFor } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 
-/** Renders painted since the case reset it, so a loop is visible as a count. */
 const paints = { count: 0 };
 
-/** A spring whose physics — the documented inline form — are rebuilt per render. */
 const InlineSpring = ({ target }: { readonly target: number }) => {
   paints.count += 1;
   const { value } = useSpring(
@@ -58,14 +18,12 @@ const InlineSpring = ({ target }: { readonly target: number }) => {
   return <text testId="inline-spring">{String(value)}</text>;
 };
 
-/** A coast whose inertia — also rebuilt per render — clamps at its bound. */
 const InlineCoast = ({ release }: { readonly release: number }) => {
   paints.count += 1;
   const { value } = useInertia(release, inertia(350, { max: 60 }));
   return <text testId="inline-coast">{String(value)}</text>;
 };
 
-/** A spring a reduced reader drives: the target is the frame it names. */
 const ReducedTarget = ({
   target,
   reduced,
@@ -84,7 +42,6 @@ const ReducedTarget = ({
   );
 };
 
-/** A coast a reduced reader releases: the projection is the frame it names. */
 const ReducedCoast = ({
   release,
   reduced,
@@ -101,7 +58,6 @@ const ReducedCoast = ({
   );
 };
 
-/** A coast with a short time constant, so a case can wait for its rest. */
 const RestedCoast = ({
   release,
   reduced,
@@ -118,7 +74,6 @@ const RestedCoast = ({
   );
 };
 
-/** A coast the preference toggles after its journey has ended. */
 const ToggledCoast = ({
   release,
   reduced,
@@ -135,7 +90,6 @@ const ToggledCoast = ({
   );
 };
 
-/** Every painted string, joined: the frame the loop last published. */
 const painted = (page: ReturnType<typeof renderComponent>): string =>
   page.renderer.getAllText().join("");
 
@@ -145,13 +99,11 @@ describe("the motion hooks", () => {
     const page = renderComponent(<InlineSpring target={100} />);
     try {
       await waitFor(() => expect(painted(page)).toBe("100"));
-      // The painted value is the target exactly, so the run has rested; a render
-      // past this point is the loop the inline declaration used to keep alive.
+
       const rested = paints.count;
       await after(120);
       expect(paints.count).toBe(rested);
-      // ...and the run itself is sampled by the frame timer, not by a re-armed
-      // effect: the old loop painted a thousand frames for this run.
+
       expect(rested).toBeLessThan(200);
     } finally {
       page.unmount();
@@ -162,7 +114,6 @@ describe("the motion hooks", () => {
     paints.count = 0;
     const page = renderComponent(<InlineCoast release={400} />);
     try {
-      // The bounded projection is the rest the coast lands on.
       await waitFor(() => expect(painted(page)).toBe("60"));
       const rested = paints.count;
       await after(120);
@@ -176,8 +127,6 @@ describe("the motion hooks", () => {
 
 describe("the reduced preference's later frames", () => {
   it("paints a target changed while it is on in the frame it arrives", () => {
-    // The defect: the render still published the previous frame, so a reduced
-    // count-up or width change flashed the value it was leaving for one commit.
     const page = renderComponent(<ReducedTarget target={100} reduced />);
     try {
       expect(painted(page)).toBe("100:0:false");
@@ -189,10 +138,6 @@ describe("the reduced preference's later frames", () => {
   });
 
   it("paints a release changed while it is on in the frame it arrives", () => {
-    // The projection is the resting frame, so a new release names a new one;
-    // the previous projection must not survive the commit that changes it. A
-    // release is a new gesture from where the surface is, so it projects from
-    // the `140` the reduced mount painted — not from the offset it mounted at.
     const page = renderComponent(<ReducedCoast release={400} reduced />);
     try {
       expect(painted(page)).toBe("140:0:true");
@@ -204,10 +149,6 @@ describe("the reduced preference's later frames", () => {
   });
 
   it("starts a reduced release from the frame on screen after a coast", async () => {
-    // The defect: the reduced projection read the mount offset as the release
-    // position, so a reader whose coast had already rested at `140` was sent
-    // back to `0` by the next gesture — the `coast` it retires starts from the
-    // presentation, and the painted frame must name the same journey.
     const page = renderComponent(<RestedCoast release={400} reduced={false} />);
     try {
       await waitFor(() => expect(painted(page)).toBe("20:0:true"));
@@ -219,8 +160,6 @@ describe("the reduced preference's later frames", () => {
   });
 
   it("holds the frame on screen for a reduced release of zero after a coast", async () => {
-    // A release of `0` asks for no journey, so it stays where the surface is;
-    // reading the offset instead painted the first frame the coast left.
     const page = renderComponent(<RestedCoast release={400} reduced={false} />);
     try {
       await waitFor(() => expect(painted(page)).toBe("20:0:true"));
@@ -232,8 +171,6 @@ describe("the reduced preference's later frames", () => {
   });
 
   it("paints the resting frame in the commit the preference turns on", () => {
-    // The preference removes the journey, so the frame it lands on is the one
-    // the reader sees when the setting changes — not the tween's next sample.
     const page = renderComponent(
       <ReducedTarget target={100} reduced={false} initial={0} />,
     );
@@ -247,8 +184,6 @@ describe("the reduced preference's later frames", () => {
   });
 
   it("keeps a mount that asked for no journey from reporting one", () => {
-    // The over-correction: a reduced mount with no `initial` has no run to
-    // complete, so the target paints with `complete` false.
     const page = renderComponent(<ReducedTarget target={100} reduced />);
     try {
       expect(painted(page)).toBe("100:0:false");
@@ -258,10 +193,6 @@ describe("the reduced preference's later frames", () => {
   });
 
   it("holds the frame on screen when a reduced target cannot be read", () => {
-    // The defect: an unreadable target was repaired to `0` in the reduced
-    // branch, so a measurement that failed for one render collapsed a surface
-    // to the first frame and retired the retained value there — the next
-    // readable target then reported a journey the reader never saw.
     const page = renderComponent(<ReducedTarget target={100} reduced />);
     try {
       expect(painted(page)).toBe("100:0:false");
@@ -275,8 +206,6 @@ describe("the reduced preference's later frames", () => {
   });
 
   it("reports no journey for a reduced mount with no readable target", () => {
-    // The over-correction beside the hold: `initial` names the start of a run,
-    // but an unreadable target names no destination, so nothing was skipped.
     const page = renderComponent(
       <ReducedTarget target={Number.NaN} initial={8} reduced />,
     );
@@ -288,11 +217,6 @@ describe("the reduced preference's later frames", () => {
   });
 
   it("does not relaunch a coast whose journey the reduced preference ended", async () => {
-    // The defect: a reduced commit retired the retained value, and the effect
-    // re-ran when the preference turned off and launched the same declaration
-    // again from the frame it ended on — a 50 ms coast released at 400 rested at
-    // 20 under the preference and then drifted on to 40, replaying a gesture the
-    // reader had already watched finish.
     const page = renderComponent(<ToggledCoast release={400} reduced />);
     try {
       expect(painted(page)).toBe("20:0:true");
@@ -305,9 +229,6 @@ describe("the reduced preference's later frames", () => {
   });
 
   it("holds an ended coast rather than projecting it again", async () => {
-    // The same journey is not a new gesture the next time the preference turns
-    // on: projecting again from the frame it rests on would jump the surface to
-    // a rest nobody released towards (the `40` a `400` release projects from it).
     const page = renderComponent(<ToggledCoast release={400} reduced />);
     try {
       expect(painted(page)).toBe("20:0:true");
@@ -321,9 +242,6 @@ describe("the reduced preference's later frames", () => {
   });
 
   it("starts a new release from the frame an ended coast rests on", async () => {
-    // The guard must not stop the next gesture: once the reader releases again,
-    // the coast projects from the frame on screen, not from where this one
-    // began.
     const page = renderComponent(<ToggledCoast release={400} reduced />);
     try {
       expect(painted(page)).toBe("20:0:true");
@@ -337,9 +255,6 @@ describe("the reduced preference's later frames", () => {
   });
 
   it("holds the frame a reduced coast reached when the release cannot be read", () => {
-    // The defect: the projection read an unreadable release as a standstill at
-    // the *offset*, so a reduced coast whose velocity failed for a render
-    // flashed the release frame it had already left.
     const page = renderComponent(<ReducedCoast release={400} reduced />);
     try {
       expect(painted(page)).toBe("140:0:true");

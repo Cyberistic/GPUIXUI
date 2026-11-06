@@ -1,16 +1,3 @@
-/**
- * A floating surface is raised, in the real GPUix renderer.
- *
- * The bug these guard: `@gpuixui/tw` writes `shadow-*` and `ring-*` through the
- * one `boxShadow` slot and applies the ring last, so the shipped dialog,
- * popover and menu painted a 1px hairline and **no elevation** — every
- * "raised" surface sat flat while its recipe named a lift. The seam composes
- * the theme's `lg` beside the ring, and the runtime paints a list, so the
- * surface now carries both declarations. These cases read the applied style off
- * the rendered element, which is the only place the pair can be seen; a unit
- * test on the seam would not prove the three components ask for it.
- */
-
 import {
   classesToStyle,
   DIALOG_CONTENT,
@@ -36,15 +23,13 @@ import {
 import { renderComponent } from "../internal/test-root.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
 
-/** The pair a raised surface must paint: the theme's lift, then its ring. */
 const lifted = (theme: Theme, recipe: string) => {
   const edge = Option.getOrElse(
     Option.fromNullishOr(classesToStyle(recipe, theme).style.boxShadow),
     () => [],
   );
   const lift = elevationShadow(theme, "lg");
-  // The renderer reports the optional `inset` field as `false` on every shadow
-  // it applies; the theme's own values omit it.
+
   return [lift, ...Arr.ensure(edge)].map((shadow) => ({
     ...shadow,
     inset: false,

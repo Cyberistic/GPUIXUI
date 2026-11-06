@@ -1,12 +1,3 @@
-/**
- * The arithmetic behind the zoom/pan canvas.
- *
- * A view is a scale and a translation from the content's top-left corner.
- * Keeping it here means a wheel, a drag, a button and a fit all move the same
- * numbers, and a unit test can assert the point under the pointer stays put.
- * The component only owns the gesture and the paint.
- */
-
 export interface ZoomView {
   readonly scale: number;
   readonly x: number;
@@ -33,12 +24,6 @@ export const panBy = (view: ZoomView, dx: number, dy: number): ZoomView => ({
   y: view.y + dy,
 });
 
-/**
- * Zoom to `scale` while holding `point` (in the container's coordinates) still.
- *
- * This is the rule a wheel and a pinch share: the content under the pointer
- * does not slide away as the scale changes.
- */
 export const zoomTo = (
   view: ZoomView,
   scale: number,
@@ -55,7 +40,6 @@ export const zoomTo = (
   };
 };
 
-/** The scale at which `content` fits inside `container`, with padding. */
 export const fitScale = (
   content: Size,
   container: Size,
@@ -78,7 +62,6 @@ export const fitScale = (
   );
 };
 
-/** A view that centres `content` in `container` at its fit scale. */
 export const fitView = (
   content: Size,
   container: Size,
@@ -94,7 +77,6 @@ export const fitView = (
   };
 };
 
-/** A wheel's delta as a multiplicative factor, normalised across devices. */
 export const wheelFactor = (deltaY: number, deltaMode = 0): number => {
   const delta =
     deltaMode === 1 ? deltaY * 40 : deltaMode === 2 ? deltaY * 800 : deltaY;

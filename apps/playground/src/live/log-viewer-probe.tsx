@@ -1,23 +1,3 @@
-/**
- * `log-viewer-lifecycle`: the shipped `@gpuixui/files` `LogViewer` in a window.
- *
- * The headless `log-viewer` scenario measured the runtime's virtual list —
- * `alignment="bottom"` plus `followTail` — around a probe-local list. This
- * probe mounts the **component** the Tier 4 *Log viewers* row ships: its
- * toolbar, its level filter and its controlled `followTail`/`enabledLevels`
- * props, over 240 lines of ten 24-point rows in a 240-point viewport.
- *
- * What a window alone answers: whether the tail is the row on screen, whether an
- * append follows it, whether a reader who wheels up is left where they stopped,
- * and whether the follow flag is a hold, a jump or both — the headless probe
- * inferred "app state plus a scroll", and this one reads the shipped toggle.
- *
- * Every check is a `ctx.expect*` at the step that makes it — the helpers only
- * read — so the count the README prints is the number of assertion sites.
- *
- * Captures: `log-viewer-tail`.
- */
-
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { LogViewer } from "@gpuixui/files";
@@ -44,13 +24,11 @@ import {
 } from "./log-viewer.js";
 import { settleUntil } from "./settle.js";
 
-/** The one capture: the tail the run leaves on screen. */
 const CAPTURE = "log-viewer-tail";
 
 const CAPTION =
   "The shipped LogViewer: the tail is the row on screen, an append follows it, a reader who wheels up is left where they stopped, and the level filter narrows the rows.";
 
-/** The view: the shipped viewer over its own controls and a readout. */
 export const LogViewerProbe = (): ReactNode => {
   const theme = useTheme();
   const [state, setState] = useState<LogState>(LOG_REST);
@@ -126,17 +104,14 @@ export const LogViewerProbe = (): ReactNode => {
   );
 };
 
-/** The probe's steps: the tail, the reader's wheel, the toggle and the filter. */
 export const logViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(LOG_IDS.viewer);
-    // A capture stalls the animation clock and the list anchors on its first
-    // measurement, so the rest state is read once the mount has painted.
+
     yield* Effect.sleep(Duration.millis(400));
 
     type Failure = Smoke.SmokeAssertionError | Smoke.SmokeHostError;
 
-    /** Whether a row's message is painted in the last frame. */
     const painted = (
       label: string,
     ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
@@ -144,13 +119,11 @@ export const logViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         lines.some((line) => line === label),
       );
 
-    /** The readout once it names `expected`, which a press reports a frame later. */
     const readout = (expected: string): Effect.Effect<string, Failure> =>
       settleUntil(ctx.host.text(LOG_IDS.readout), (line) =>
         line.includes(expected),
       );
 
-    /** The row the list is anchored at: the first row of the painted window. */
     const anchor = (): Effect.Effect<number, Failure> =>
       Effect.gen(function* () {
         const read = yield* ctx.expectSome(
@@ -160,13 +133,11 @@ export const logViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return read.itemIndex;
       });
 
-    /** A row's painted state once it stops changing, so a tween cannot race it. */
     const settled = (
       label: string,
     ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
       settleUntil(painted(label), (isPainted) => isPainted);
 
-    /** An absence a step waits for, so a retired row cannot pass as unpainted. */
     const retired = (
       label: string,
     ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
@@ -175,11 +146,9 @@ export const logViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         (isPainted) => !isPainted,
       );
 
-    /** The viewer's own text: its toolbar and the rows the list paints. */
     const viewerText = (): Effect.Effect<string, Smoke.SmokeHostError> =>
       ctx.host.text(LOG_IDS.viewer);
 
-    // ── At rest: the tail is the last row, and the toolbar paints ───────────
     yield* ctx.expectContains(
       "the readout reports the lines it was handed and the tail it follows",
       yield* readout(logReadout(LOG_REST)),
@@ -216,7 +185,6 @@ export const logViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const restAnchor = rest.itemIndex;
 
-    // ── An append at the tail follows it ────────────────────────────────────
     yield* ctx.host.click(LOG_IDS.append);
     yield* ctx.expectContains(
       "an append reaches the viewer",
@@ -240,9 +208,6 @@ export const logViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── A reader who wheels up leaves the tail and stays there ──────────────
-    // The runtime's wheel scrolls down on a negative `deltaY`, so the reader
-    // moves towards the head — away from the tail — with a positive one.
     yield* ctx.host.wheel(LOG_IDS.frame, 0, LOG_VIEWPORT);
     const scrolledAnchor = yield* settleUntil(
       anchor(),
@@ -281,7 +246,6 @@ export const logViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       scrolledAnchor,
     );
 
-    // ── The flag off: appends may not move the reader at all ────────────────
     yield* ctx.host.click(LOG_IDS.follow);
     yield* ctx.expectContains(
       "the toggle reports the follow flag it turned off",
@@ -305,7 +269,6 @@ export const logViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       scrolledAnchor,
     );
 
-    // ── The flag on returns the reader to the tail, and keeps them there ────
     yield* ctx.host.click(LOG_IDS.follow);
     yield* ctx.expectContains(
       "the toggle reports the follow flag it turned on",
@@ -330,7 +293,6 @@ export const logViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The level filter narrows the rows to the level it was given ─────────
     yield* ctx.host.click(LOG_IDS.errors);
     yield* ctx.expectContains(
       "the readout reports the one level the filter keeps",
@@ -371,6 +333,5 @@ export const logViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // Captures come last: a screenshot stalls the animation clock.
     yield* ctx.host.capture(CAPTURE);
   });

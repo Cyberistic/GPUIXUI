@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Mention input example: a comment composer with three people.
- *
- * Typing `@` opens the ranked list; Enter inserts the highlighted name, or a
- * press picks a row.
- */
-
 import { useState } from "react";
 import {
   MentionInput,
@@ -15,7 +8,6 @@ import {
 
 const people = ["ana", "anna", "joan"];
 
-/** A comment field with mention suggestions. */
 export const MentionInputExample = () => {
   const [comment, setComment] = useState("");
 

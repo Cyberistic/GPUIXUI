@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Particles page.
- *
- * The native field drifts `count` seeded motes across the caller's bounded box;
- * the preview reproduces the scatter and drifts each mote on a slow loop.
- */
-
 import type { CSSProperties } from "react";
 import { scatter } from "./scatter";
 

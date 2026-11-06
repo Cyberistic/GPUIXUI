@@ -1,12 +1,3 @@
-/**
- * Guards the progress rule every curve shares: a value that cannot be read is
- * the start of the run, and a curve that cannot read the frame it is handed
- * falls back to the linear progress instead of painting `NaN`.
- *
- * Reverting either branch fails a case here, and the three samplers that apply
- * a caller's curve (`sampleKeyframes`, `Sequence.sample` and
- * `MotionValue.sample`) are measured where they live.
- */
 import { describe, expect, it } from "vitest";
 import { clamp01, eased } from "./progress.js";
 
@@ -31,21 +22,12 @@ describe("eased", () => {
   });
 
   it("falls back to the linear progress for a curve that cannot read the frame", () => {
-    // A curve answering `NaN` (or an infinity) is not a curve: the caller's
-    // frame is the unit progress itself, so the run still starts, ends and
-    // completes where it said.
     expect(eased(() => Number.NaN, 0.5)).toBe(0.5);
     expect(eased(() => Number.POSITIVE_INFINITY, 0.25)).toBe(0.25);
     expect(eased(() => Number.NaN, Number.NaN)).toBe(0);
   });
 
   it("treats a value that is not a function as no curve", () => {
-    // `Easing` is a caller's function, and a `Transition`/`Keyframe` is
-    // structural, so a hand-built declaration can carry the easing a config
-    // failed to decode. The samplers called it inside a frame loop, so the run
-    // threw `TypeError: curve is not a function` from a timer instead of
-    // painting; no curve is the linear progress, exactly like a curve whose
-    // answer cannot be painted.
     expect(eased(undefined, 0.5)).toBe(0.5);
     expect(eased(null, 0.25)).toBe(0.25);
     expect(eased("easeOut", 0.5)).toBe(0.5);

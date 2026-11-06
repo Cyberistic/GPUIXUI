@@ -11,17 +11,6 @@ import {
   notifications,
 } from "./notification-centre";
 
-/**
- * The notification centre block.
- *
- * The preview is an illustration, but every control a reader is told to look
- * for has to reach the markup — the mark-all-read and settings actions, the
- * three tabs with their count, one row from each of the four bodies, and the
- * download action on the attachment. The filter, the dot and the accepted
- * invite are the panel's state rules; a wrong one would leave a reader looking
- * at a tab that shows the wrong rows.
- */
-
 const text = (markup: string): string =>
   markup
     .replaceAll("&#x27;", "'")
@@ -46,18 +35,17 @@ describe("the notification centre", () => {
   });
 
   it("prints all four row bodies", () => {
-    // The nested quote card, with both of its lines.
     expect(all).toContain("gx-notif-quote");
     expect(text(all)).toContain(
       "I moved the migration note above the examples.",
     );
-    // The follow row has no body at all.
+
     expect(text(all)).toContain("Marcus Bell");
     expect(text(all)).toContain("started following you");
-    // The invite's two actions.
+
     expect(all).toContain(">Decline<");
     expect(all).toContain(">Accept<");
-    // The attachment, its glyph, its meta and its download action.
+
     expect(all).toContain("Prototype recording 01.mp4");
     expect(all).toContain("MP4 · 14 MB");
     expect(all).toContain('aria-label="Download Prototype recording 01.mp4"');
@@ -109,7 +97,7 @@ describe("the notification centre", () => {
     expect(isUnread(initialNotificationState, priya)).toBe(true);
     const read = markRead(initialNotificationState, priya.id);
     expect(isUnread(read, priya)).toBe(false);
-    // The same row again is not a second read.
+
     expect(markRead(read, priya.id)).toBe(read);
 
     const cleared = markAllRead(initialNotificationState, notifications);
@@ -125,7 +113,7 @@ describe("the notification centre", () => {
     const accepted = acceptInvite(initialNotificationState, invite.id);
     expect(accepted.accepted).toEqual([invite.id]);
     expect(isUnread(accepted, invite)).toBe(false);
-    // Accepting again is not a second entry.
+
     expect(acceptInvite(accepted, invite.id).accepted).toEqual([invite.id]);
   });
 });

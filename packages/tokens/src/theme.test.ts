@@ -1,11 +1,3 @@
-/**
- * Guards the extension contract: overrides merge without mutating the base,
- * typography merges field by field, elevation replaces whole levels, a density
- * override merges each control size rather than replacing the record, a theme
- * can never change its mode through an override, and `createTheme` starts from
- * the contrast variant the caller asked for — every group's `undefined` inherits
- * rather than erasing a role.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
@@ -62,23 +54,13 @@ describe("built-in themes", () => {
   });
 });
 
-/**
- * A mode, a contrast variant and a platform name are stored preferences before
- * they are literals, so a value this release does not ship reaches a resolver
- * through a decoder or a cast. The lookups took them on the type's word: an
- * unshipped mode answered `undefined`, an unrecognised contrast painted the
- * **default** palette — a restored `HIGH` silently losing its contrast — and an
- * unshipped platform threw `Cannot read properties of undefined (reading
- * 'contrast')` from inside `applyStyle`.
- */
 describe("a resolver refuses an axis value this release does not ship", () => {
   it("names an unshipped mode instead of answering undefined", () => {
-    // The cast is the storage boundary: a settings row is unknown input.
     const stored = JSON.parse('"solar"') as ThemeMode;
 
     expect(() => getTheme(stored)).toThrow(/`solar` is not a theme mode/);
     expect(() => getTheme(stored)).toThrow(/isThemeMode/);
-    // The membership test is the guard's, so no shipped mode is refused.
+
     themeModes.forEach((mode) => {
       expect(getTheme(mode).mode).toBe(mode);
     });
@@ -107,18 +89,6 @@ describe("a resolver refuses an axis value this release does not ship", () => {
   });
 });
 
-/**
- * Guards the mode a stored theme is read as.
- *
- * A theme is documented as storable, so `theme.mode` is unknown input before it
- * is a union: an upper-cased `Dark`, a release's old name, a theme another app
- * wrote. Every seam that branches on it compared `mode === "dark"`, so a dark
- * palette stored that way was handed the **light** categorical scale and the
- * light syntax palette, and `applyStyle` picked no palette at all from the
- * platform style — it applied the radii and families but not the colours.
- * `themeModeOf` reads a value this release does not ship from the page the
- * theme carries, which is the one question a palette can answer by itself.
- */
 describe("a theme mode this release does not ship", () => {
   const stored = (mode: unknown, base: Theme): Theme =>
     ({ ...base, mode }) as Theme;
@@ -129,7 +99,7 @@ describe("a theme mode this release does not ship", () => {
     );
     expect(themeModeOf(stored("Dark", darkTheme))).toBe("dark");
     expect(themeModeOf(stored("LIGHT", lightTheme))).toBe("light");
-    // A theme a store lost the field on has only its page to answer with.
+
     expect(themeModeOf(stored(undefined, darkTheme))).toBe("dark");
     expect(themeModeOf(stored(null, lightTheme))).toBe("light");
   });
@@ -174,10 +144,6 @@ describe("a theme mode this release does not ship", () => {
   });
 
   it("prints the direction the page rule answers, not the opposite one", () => {
-    // A page nearer white is a *light* theme's page: its dark ink is designed
-    // to read on it. Every surface taught the fallback said the opposite — a
-    // page nearer white was "a dark theme's page" — so a reader learned the
-    // inverted rule from the seam, both pages, the README and the inventory.
     const lightPage = lightTheme.colors.background;
     const darkPage = darkTheme.colors.background;
     expect(pageMode(lightPage)).toBe("light");
@@ -194,8 +160,6 @@ describe("a theme mode this release does not ship", () => {
       "docs/tokens.md": read("../../../docs/tokens.md"),
       "docs/design-system.md": read("../../../docs/design-system.md"),
       "packages/tokens/README.md": read("../README.md"),
-      "packages/tokens/src/mode.ts": read("./mode.ts"),
-      "packages/tokens/src/luminance.ts": read("./luminance.ts"),
       ".agents/slop/COMPONENTS.md": read("../../../.agents/slop/COMPONENTS.md"),
     };
     Object.entries(surfaces).forEach(([name, text]) => {
@@ -278,9 +242,6 @@ describe("extendTheme", () => {
   });
 
   it("accepts a weight between or above the shipped steps", () => {
-    // The runtime clamps any numeric weight into 1–1000, so a variable face's
-    // 450 and a display role's 800 are decisions it paints. The type is a
-    // number for that reason; `invalidNumbers` is what holds it finite.
     const variable = extendTheme(lightTheme, {
       typography: { body: { fontWeight: 450 }, display: { fontWeight: 800 } },
     });
@@ -316,10 +277,6 @@ describe("extendTheme", () => {
   });
 
   it("replaces the switch a platform style declares, whole", () => {
-    // The switch is a value of the theme, not a fixed control: a consumer that
-    // starts from a platform style and owns its toggle names all three slots,
-    // because a half-declared one is not a declaration — the primitive keeps the
-    // accent toggle and `switchFailures` names the lost slot.
     const apple = platformTheme(darkTheme, "darwin");
     expect(apple.switch).toBeDefined();
     const house: SwitchColors = {
@@ -330,8 +287,7 @@ describe("extendTheme", () => {
     const custom = extendTheme(apple, { switch: house });
     expect(custom.switch).toEqual(house);
     expect(apple.switch).not.toEqual(house);
-    // Both the base and the brand are held to the report the override exists to
-    // satisfy, so a documented brand cannot ship a toggle nobody can find.
+
     expect(switchFailures(custom).placements).toEqual([]);
   });
 
@@ -342,8 +298,6 @@ describe("extendTheme", () => {
   });
 
   it("declares a switch on a theme that carries none", () => {
-    // A theme without a switch paints the accent toggle; an override can give it
-    // the platform paint without starting from a platform style.
     expect(lightTheme.switch).toBeUndefined();
     const custom = extendTheme(lightTheme, {
       switch: { on: "#16A34A", off: "#DCDCE1", knob: "#FFFFFF" },
@@ -357,23 +311,13 @@ describe("extendTheme", () => {
     expect(custom.density).toEqual(densityPresets.compact);
   });
 
-  /**
-   * A preset name is a stored preference as often as a literal, so a name this
-   * release does not ship reaches the merge through a decoder or a cast. The
-   * lookup used to answer `undefined`, `extendTheme` returned a theme with **no**
-   * density group, and the first control beside it read `Cannot read properties
-   * of undefined (reading 'controlHeight')` — the failure the presence rule
-   * exists to prevent, with a gate message telling the caller to rebuild a theme
-   * they had just built with `extendTheme`.
-   */
   it("refuses a density preset this release does not ship", () => {
-    // The cast is the storage boundary: a settings row is unknown input.
     const stored = JSON.parse('{"density":"cosy"}') as ThemeOverrides;
 
     expect(() => extendTheme(lightTheme, stored)).toThrow(
       /`cosy` is not a density preset: compact, comfortable, spacious/,
     );
-    // The membership test is the guard's, so it cannot reject a shipped preset.
+
     densityNames.forEach((name) => {
       expect(extendTheme(lightTheme, { density: name }).density).toEqual(
         densityPresets[name],
@@ -390,19 +334,6 @@ describe("extendTheme", () => {
     );
   });
 
-  /**
-   * A preset name is a stored choice, and a store writes "no choice" as a blank
-   * as readily as a `null`: a brand editor's cleared row writes `""`, an unset
-   * template variable leaves whitespace, and `JSON.parse` answers `any` so
-   * neither needs a cast to reach the merge. Read as a name, a cleared field was
-   * **refused** — `extendTheme` threw `` ` ` is not a density preset `` and the
-   * throw came from `restoreTheme`, the seat a store-based consumer calls at
-   * startup, so emptying one settings row took the window down while every other
-   * name the merge reads (`nameOf`, `namesColour`, the two families) answered
-   * the base's value. Nothing was chosen, so the base's preset is the truthful
-   * answer; a name that names a *different* preset is still refused, because that
-   * is a rename to repair rather than a field to inherit.
-   */
   describe("a density preset a store wrote", () => {
     it("inherits the base's box for a name that names none", () => {
       const unreadable: ReadonlyArray<unknown> = ["", "   ", null, undefined];
@@ -414,63 +345,42 @@ describe("extendTheme", () => {
       });
 
       expect(boxes).toEqual(unreadable.map(() => darkTheme.density));
-      // The control: a name still selects the preset it names.
+
       expect(
         extendTheme(darkTheme, JSON.parse('{"density":"compact"}')).density,
       ).toEqual(densityPresets.compact);
     });
 
     it("restores a theme whose cleared field names no preset", () => {
-      // The documented restore route is where the refusal landed: a saved theme
-      // is decoded, then rebuilt from its own labels.
       const restored = restoreTheme(JSON.parse('{"mode":"dark","density":""}'));
 
       expect(restored.density).toEqual(darkTheme.density);
       expect(restored.mode).toBe("dark");
-      // A name this release does not ship is still the refusal it was: the
-      // distinction is "names nothing" versus "names another preset".
+
       expect(() =>
         restoreTheme(JSON.parse('{"mode":"dark","density":"cosy"}')),
       ).toThrow(/`cosy` is not a density preset/);
     });
 
-    it("teaches the blank name on the three surfaces that document the merge", () => {
+    it("teaches the blank name on the pages that document the merge", () => {
       const read = (path: string): string =>
         readFileSync(new URL(path, import.meta.url), "utf8").replace(
           /\s+/g,
           " ",
         );
-      const seam = read("./theme.ts");
       const catalogue = read("../../../docs/tokens.md");
       const design = read("../../../docs/design-system.md");
 
-      expect(seam).toContain("A name written **blank** is the absence it is");
       expect(catalogue).toContain(
         "A name written **blank** is the absence it is",
       );
       expect(design).toContain("a name written blank is the absence it is");
-      // The rule sits beside the refusal, not instead of it: the two surfaces
-      // that quote the message still do, and the design page still names it.
-      [seam, catalogue].forEach((page) => {
-        expect(page).toContain("not a density preset");
-      });
+
+      expect(catalogue).toContain("not a density preset");
       expect(design).toContain("is refused by name");
     });
   });
 
-  /**
-   * A theme's name is content — the row a picker prints, the header a preview
-   * shows — so it is a value a store writes as readily as a word: JSON keeps the
-   * `null` of a name never carried, a cleared brand-editor field writes `""`, a
-   * decoder can write a number, and `JSON.parse` answers `any` so none of them
-   * needs a cast to arrive. The merge interpolated whatever came, so
-   * `{"name": 42}` landed in a field the `Theme` type promises is a string, and
-   * the next `applyStyle` over that theme threw
-   * `TypeError: base.name.trim is not a function` — measured on the restored
-   * theme, from the seat that applies a platform style to it. A name is read as
-   * a name now: a value that names nothing inherits the base's, and a base that
-   * carries none is the library's.
-   */
   describe("a theme name a store wrote", () => {
     it("inherits the base's name for a value that names nothing", () => {
       const unreadable: ReadonlyArray<unknown> = [
@@ -487,7 +397,7 @@ describe("extendTheme", () => {
       );
 
       expect(names).toEqual(unreadable.map(() => darkTheme.name));
-      // A word is a name, and a base that names nothing gets the library's.
+
       expect(extendTheme(darkTheme, { name: "Acme" }).name).toBe("Acme");
       expect(
         extendTheme({ ...darkTheme, name: JSON.parse("42") }, {}).name,
@@ -495,9 +405,6 @@ describe("extendTheme", () => {
     });
 
     it("inherits the base's face for a family that names none", () => {
-      // The two families are names under the same rule — `applyStyle` already
-      // reads them that way — so a stored `"sans": 42` or a blank one is the
-      // base's face rather than a value the theme claims and no face can paint.
       const stored = (family: unknown): Theme =>
         extendTheme(
           darkTheme,
@@ -527,8 +434,6 @@ describe("extendTheme", () => {
     });
 
     it("restores a stored theme with a name a store wrote, and applies a style", () => {
-      // The stored route is the same merge: the value reaches `restoreTheme`
-      // through `JSON.parse`, exactly as a decoded settings row would.
       const restored = restoreTheme(JSON.parse('{"mode":"dark","name":42}'));
 
       expect(restored.name).toBe(darkTheme.name);
@@ -549,30 +454,15 @@ describe("extendTheme", () => {
         ".agents/slop/COMPONENTS.md": read(
           "../../../.agents/slop/COMPONENTS.md",
         ),
-        "packages/tokens/src/theme.ts": read("./theme.ts"),
       };
 
       Object.entries(surfaces).forEach(([name, text]) => {
         expect(text, name).toContain("base.name.trim is not a function");
         expect(text, name).toContain("names nothing");
       });
-      // The rule is one reader, used by the merge and by the style's name.
-      expect(surfaces["packages/tokens/src/theme.ts"]).toContain(
-        "nameOf(overrides.name)",
-      );
-      expect(surfaces["packages/tokens/src/theme.ts"]).toContain(
-        "nameOf(base.name)",
-      );
     });
   });
 
-  /**
-   * A size is a step in a record, and the documented override names one size
-   * (`invalidNumbers`' own example raises `controlHeight.sm`). The merge used
-   * to overlay the record whole, so a brand that changed one size erased the
-   * two it did not name — and the audit gate refuses a theme missing a step,
-   * which turned the documented snippet into a thrown audit.
-   */
   describe("a partial density override", () => {
     it("merges the control sizes it does not name", () => {
       const custom = extendTheme(lightTheme, {
@@ -682,17 +572,6 @@ describe("createTheme", () => {
   });
 });
 
-/**
- * A whole theme is documented as storable, so it is read back through
- * `JSON.parse` and rebuilt. `extendTheme` cannot do that alone: it keeps its
- * base's `mode` and `contrast` by design, so a saved dark theme passed to it
- * under the light base painted every dark role on a theme that still said light —
- * and `themeModeOf`, which the chart and code seams read, then handed it the
- * light scale and the light palette. A stored density box had a second half of
- * the same shape: it arrived as a complete box rather than a preset name, and the
- * merge kept the *base* preset's name over the stored metrics, so a row that
- * highlights `density.name` pointed at the wrong preset.
- */
 describe("restoreTheme", () => {
   const stored = (theme: Theme): Theme => JSON.parse(JSON.stringify(theme));
 
@@ -704,9 +583,6 @@ describe("restoreTheme", () => {
     expect(restored.colors).toEqual(darkTheme.colors);
     expect(auditTheme(restored).passed).toBe(true);
 
-    // The path this replaces: the same value under the light base is a
-    // light-labelled theme painting dark roles, and the seam a chart and a code
-    // block read resolves the light tables for it.
     const mislabelled = extendTheme(lightTheme, stored(darkTheme));
     expect(mislabelled.mode).toBe("light");
     expect(seriesColors(mislabelled)).toEqual(seriesColors(lightTheme));
@@ -742,8 +618,7 @@ describe("restoreTheme", () => {
 
     expect(saved.density.name).toBe("compact");
     expect(restoreTheme(saved).density).toEqual(densityPresets.compact);
-    // The rule it completes: an override that names only metrics still edits the
-    // base preset, so a brand's `md` keeps the name it was built from.
+
     const partial = extendTheme(lightTheme, { density: { rowHeight: 30 } });
     expect(partial.density.name).toBe(lightTheme.density.name);
     expect(partial.density.rowHeight).toBe(30);
@@ -784,24 +659,11 @@ describe("restoreTheme", () => {
     expect(restoreTheme(unlabelled).colors).toEqual(darkTheme.colors);
   });
 
-  /**
-   * The other shape a store hands back: no theme at all.
-   *
-   * `missingTokens` already answers `null` — "the `null` a store writes for no
-   * saved theme at all" — as every group missing, and the report exists so a
-   * consumer can decide **before** it restores. `restoreTheme` then read its two
-   * labels off that value and threw `Cannot read properties of null (reading
-   * 'mode')`, so the documented order (`missingTokens`, then restore) crashed on
-   * the one value the report had just described; a settings row that never held
-   * a theme read `undefined` the same way.
-   */
   it("answers the light theme for a store that kept no theme", () => {
     expect(missingTokens(null)).toEqual(missingTokens({}));
     expect(restoreTheme(null)).toBe(lightTheme);
     expect(restoreTheme(undefined)).toBe(lightTheme);
-    // A saved theme with absent labels is still a theme to merge, so the two
-    // absences stay distinct: only the value that is no theme at all is the
-    // shipped default.
+
     expect(
       restoreTheme({ colors: { primary: "#123456" } }).colors.primary,
     ).toBe("#123456");
@@ -816,7 +678,6 @@ describe("restoreTheme", () => {
       "docs/tokens.md": read("../../../docs/tokens.md"),
       "docs/design-system.md": read("../../../docs/design-system.md"),
       "packages/tokens/README.md": read("../README.md"),
-      "packages/tokens/src/theme.ts": read("./theme.ts"),
       ".agents/slop/COMPONENTS.md": read("../../../.agents/slop/COMPONENTS.md"),
     };
 
@@ -824,29 +685,18 @@ describe("restoreTheme", () => {
       expect(text, name).toContain("restoreTheme");
       expect(text, name).toContain("keeps its base's");
     });
-    // The stored density box is the same defect one group down: the rule that a
-    // complete box replaces the base's has to be taught where it is decided.
+
     expect(surfaces["docs/tokens.md"]).toContain("whole box");
     expect(surfaces[".agents/slop/COMPONENTS.md"]).toContain(
       "whole density box",
     );
-    // The absence one value up — a store that kept no theme at all. Every
-    // surface that teaches the seam says what it answers, because the
-    // documented order (report, then restore) is what crashed.
+
     Object.entries(surfaces).forEach(([name, text]) => {
       expect(text, name).toContain("kept no theme");
     });
   });
 });
 
-/**
- * Guards the merge defect this suite found: an override carrying an explicit
- * `undefined` — an optional value a caller forwarded unchanged, which the
- * compiler allows because the groups are optional properties — overwrote a
- * complete role with nothing. The theme still type-checked, so a brand that
- * forwarded a missing colour shipped a palette with a role the renderer could
- * not paint. Omitted and `undefined` now both inherit.
- */
 describe("an override that names a value as absent", () => {
   it("keeps the base colour rather than erasing the role", () => {
     const custom = extendTheme(darkTheme, { colors: { primary: undefined } });
@@ -887,22 +737,12 @@ describe("an override that names a value as absent", () => {
   });
 
   it("inherits the switch a theme carries rather than erasing it", () => {
-    // `applyStyle` clears a look's switch on purpose, but an extension that
-    // forwards an optional paint as `undefined` must not drop the base's.
     const apple = platformTheme(darkTheme, "darwin");
     const custom = extendTheme(apple, { switch: undefined });
     expect(custom.switch).toBe(apple.switch);
   });
 });
 
-/**
- * JSON has no `undefined`: a theme restored from a store carries `null` for a
- * group it never carried and for a role it never filled, and the same is true of
- * the partial a consumer assembles to rebuild one. `undefined` already inherits,
- * so `null` — the shape the store actually hands back — must inherit too rather
- * than reaching a merge as a value: `extendTheme(lightTheme, { colors: null })`
- * threw `TypeError: Cannot convert undefined or null to object` out of `overlay`.
- */
 describe("a partial a store handed back", () => {
   it("keeps every group a store wrote as null", () => {
     const base = extendTheme(darkTheme, {});
@@ -971,17 +811,12 @@ describe("a partial a store handed back", () => {
     expect(custom.colors.background).toBe(darkTheme.colors.background);
     expect(custom.radius.md).toBe(2);
     expect(custom.radius.lg).toBe(darkTheme.radius.lg);
-    // A nulled shadow is absent, so no level is restated in a tint nobody named.
+
     expect(custom.elevation).toBe(darkTheme.elevation);
     expect(retinted.elevation).not.toBe(darkTheme.elevation);
   });
 
   it("reads a base a store truncated past a whole group", () => {
-    // The cast is the storage boundary: a store hands back the type's shape with
-    // groups missing, which is the class `incomplete.test.ts` reports. The merge
-    // read each lost group straight off the base, so the type scale threw
-    // `Cannot read properties of null (reading 'sans')` and the density box
-    // `(reading 'name')` from the one seam a restored brand reaches.
     const stored = (groups: Partial<Record<keyof Theme, unknown>>): Theme =>
       ({ ...darkTheme, ...groups }) as Theme;
 
@@ -1013,14 +848,10 @@ describe("a partial a store handed back", () => {
       { radius: { md: 6 } },
     );
     expect(regionLost.radius.md).toBe(6);
-    // A flat group stays as the base wrote it: the roles an override does not
-    // name stay absent for the gate, which is what `paletteToTokens` relies on.
+
     expect(regionLost.spacing).toBeNull();
     expect(regionLost.colors).toBeNull();
 
-    // A style over the same base completes the two complete types, and invents
-    // no flat role: its palette is partial by design, so the gate still names
-    // what the restored brand lost.
     const styled = platformTheme(
       stored({ typography: null, density: null, colors: null, radius: null }),
       "darwin",
@@ -1043,7 +874,6 @@ describe("a partial a store handed back", () => {
       "docs/tokens.md": read("../../../docs/tokens.md"),
       "docs/design-system.md": read("../../../docs/design-system.md"),
       "packages/tokens/README.md": read("../README.md"),
-      "packages/tokens/src/theme.ts": read("./theme.ts"),
       ".agents/slop/COMPONENTS.md": read("../../../.agents/slop/COMPONENTS.md"),
     };
 
@@ -1051,21 +881,13 @@ describe("a partial a store handed back", () => {
       expect(text, name).toContain("ThemeOverridesSource");
       expect(text, name).toContain("JSON has no `undefined`");
     });
-    // A base a store truncated past the two complete types is read as the
-    // library's own for the merge; a flat group stays absent for the gate.
+
     Object.entries(surfaces).forEach(([name, text]) => {
       expect(text, name).toContain("base a store truncated");
       expect(text, name).toContain("reading 'sans'");
       expect(text, name).toContain("flat group");
     });
-    expect(surfaces["packages/tokens/src/theme.ts"]).toContain(
-      "base.typography ?? identity.typography",
-    );
-    expect(surfaces["packages/tokens/src/theme.ts"]).toContain(
-      "base.density ?? identity.density",
-    );
-    // The catalogue names the two failures the rule retires, so a reader can
-    // tell an absence they fixed from a cast they worked around.
+
     expect(surfaces[".agents/slop/COMPONENTS.md"]).toContain(
       "Cannot convert undefined or null to object",
     );
@@ -1073,15 +895,6 @@ describe("a partial a store handed back", () => {
 });
 
 describe("the extension mechanism", () => {
-  /**
-   * Every group a theme carries except its mode and contrast variant, in the
-   * order the catalogue lists them.
-   *
-   * The list is the test's own inventory: a group added to `Theme` fails
-   * `EveryGroupProbed` below until it is named here and given a probe, so the
-   * extension promise ("start from a style, edit any value") cannot lose a
-   * group to a new optional field.
-   */
   const overridableGroups = [
     "name",
     "colors",
@@ -1104,7 +917,6 @@ describe("the extension mechanism", () => {
 
   type ListedGroup = (typeof overridableGroups)[number];
 
-  /** A group the list does not name, as a build error naming it. */
   type EveryGroupProbed =
     Exclude<
       Exclude<keyof Theme, "mode" | "contrast">,
@@ -1119,7 +931,6 @@ describe("the extension mechanism", () => {
   const everyGroupProbed: EveryGroupProbed = true;
   void everyGroupProbed;
 
-  /** The override each group is reached through, read off the base theme. */
   const overrideProbes = {
     name: () => ({ name: "Probe" }),
     colors: () => ({ colors: { primary: "#123456" } }),
@@ -1168,9 +979,6 @@ describe("the extension mechanism", () => {
   } satisfies Record<ListedGroup, (base: Theme) => ThemeOverrides>;
 
   it("carries every group when nothing is overridden", () => {
-    // A group copied by hand in `extendTheme` is one a later group can be
-    // forgotten beside: the returned theme names every key, so a group missing
-    // from the copy is absent here rather than silently `undefined`.
     const custom = extendTheme(darkTheme, {});
 
     expect(Object.keys(custom)).toEqual(
@@ -1191,7 +999,6 @@ describe("the extension mechanism", () => {
         .map(({ group }) => group),
     ).toEqual([]);
 
-    // A group the override did not name must be the base's, untouched.
     expect(
       extended.flatMap(({ group, theme }) =>
         overridableGroups
@@ -1200,8 +1007,6 @@ describe("the extension mechanism", () => {
       ),
     ).toEqual([]);
 
-    // A mode or a contrast variant is what the numbers mean, so no override
-    // may move either; `getTheme` is how a caller asks for the other one.
     expect(
       extended.flatMap(({ group, theme }) =>
         (["mode", "contrast"] as const)

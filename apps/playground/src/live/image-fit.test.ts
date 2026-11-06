@@ -1,15 +1,3 @@
-/**
- * Holds the placement arithmetic the `image-fit` probe reads a window with, and
- * the claims its README section prints.
- *
- * The probe's whole evidence is a frame: a band paints somewhere, or the page
- * does. Those coordinates come from `fitRect`/`bandSamples`/`edgeSamples`, so
- * this file pins them — a wrong placement would make the probe assert the wrong
- * pixel and still pass if the runtime painted what the fixture mispredicted.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the
- * repository's own probe and prose, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { Match } from "effect";
 import * as Arr from "effect/Array";
@@ -48,7 +36,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The `imageFitSteps` effect, bounded by the next declaration after it. */
 const steps = (() => {
   const start = scenarios.indexOf("const imageFitSteps");
   if (start === -1) return "";
@@ -62,7 +49,6 @@ const steps = (() => {
   );
 })();
 
-/** The probe view, bounded the same way. */
 const view = (() => {
   const start = scenarios.indexOf("const ImageFitProbe");
   if (start === -1) return "";
@@ -81,7 +67,6 @@ const caseOf = (id: string): FitCase =>
 
 describe("the image-fit fixture", () => {
   it("builds the bitmap from its bands, in order", () => {
-    // The bands tile the source, or a pixel would belong to none of them.
     const starts = Arr.map(FIT_BANDS, (band) => band.start);
     const ends = Arr.map(FIT_BANDS, (band) => band.start + band.width);
     expect(starts).toEqual([0, 14, 26]);
@@ -90,7 +75,7 @@ describe("the image-fit fixture", () => {
 
     const pixels = fitPixels();
     expect(pixels.length).toBe(FIT_SOURCE_WIDTH * FIT_SOURCE_HEIGHT * 4);
-    // Row 0 is the three runs, and every row is that row again.
+
     const firstRow = Arr.map(FIT_BANDS, (band) =>
       Arr.makeBy(band.width, () => [
         band.colour.r,
@@ -126,7 +111,7 @@ describe("the image-fit fixture", () => {
     expect(placementLabel(caseRect(caseOf(FIT_IDS.scaleDown)))).toBe(
       "60,70 40×20",
     );
-    // `none` keeps the bitmap's size at the box's origin, not its centre.
+
     expect(placementLabel(caseRect(caseOf(FIT_IDS.none)))).toBe("0,0 40×20");
     expect(placementLabel(caseRect(caseOf(FIT_IDS.scaleDownSmall)))).toBe(
       "0,5 20×10",
@@ -144,12 +129,11 @@ describe("the image-fit fixture", () => {
       signature,
     );
     expect(new Set(signatures).size).toBe(5);
-    // An absent prop is the runtime's default, which is `contain`.
+
     expect(caseRect(caseOf(FIT_IDS.default))).toEqual(
       caseRect(caseOf(FIT_IDS.contain)),
     );
-    // For a bitmap smaller than its box, `scaleDown` and `none` differ only in
-    // the anchor; a larger bitmap is the only place their scale differs too.
+
     expect(placementLabel(caseRect(caseOf(FIT_IDS.scaleDownSmall)))).not.toBe(
       placementLabel(caseRect(caseOf(FIT_IDS.noneSmall))),
     );
@@ -167,8 +151,7 @@ describe("the image-fit fixture", () => {
       ["green", 80, 80],
       ["blue", 132, 80],
     ]);
-    // The `cover` crop starts 80 points into the 320-point scale, so the outer
-    // bands are narrower than they are in the source.
+
     const cover = visibleBands(caseOf(FIT_IDS.cover));
     expect(
       Arr.map(cover, ({ band, span }) => [band.name, span.start, span.end]),
@@ -177,7 +160,7 @@ describe("the image-fit fixture", () => {
       ["green", 32, 128],
       ["blue", 128, 160],
     ]);
-    // The small `none` box crops the blue band away entirely.
+
     expect(
       Arr.map(
         bandSamples(caseOf(FIT_IDS.noneSmall)),
@@ -198,22 +181,21 @@ describe("the image-fit fixture", () => {
       ["top", "bitmap"],
       ["bottom", "bitmap"],
     ]);
-    // `contain` covers the width and letterboxes the height.
+
     expect(edges(FIT_IDS.contain)).toEqual([
       ["left", "bitmap"],
       ["right", "bitmap"],
       ["top", "page"],
       ["bottom", "page"],
     ]);
-    // `none` anchors at the origin, so the page shows to its right and below.
+
     expect(edges(FIT_IDS.none)).toEqual([
       ["left", "bitmap"],
       ["right", "page"],
       ["top", "bitmap"],
       ["bottom", "page"],
     ]);
-    // A larger bitmap is scaled down inside the small box: the page shows above
-    // and below, while `none` keeps its own size and is cropped instead.
+
     expect(edges(FIT_IDS.scaleDownSmall)).toEqual([
       ["left", "bitmap"],
       ["right", "bitmap"],
@@ -250,8 +232,6 @@ describe("the image-fit fixture", () => {
   });
 
   it("counts every check the probe asserts", () => {
-    // 161 as measured: two header reads, three per case, two per sample, and
-    // the rounded case's declaration and second box read.
     expect(FIT_CHECKS).toBe(161);
     expect(FIT_SMALL_BOX).toEqual({ width: 20, height: 20 });
     const red = Option.match(Arr.head(FIT_BANDS), {
@@ -291,9 +271,6 @@ describe("the image-fit probe's record", () => {
 
   it("prints the placement the fixture computes, not a remembered one", () => {
     Arr.forEach(FIT_CASES, (image) => {
-      // The whole cell, so a value shifted into a sibling row fails: the
-      // default and `contain` rows share a placement, and reading the page as
-      // one string would let a wrong row pass.
       Match.value(Option.isSome(image.radius)).pipe(
         Match.when(true, () => {
           expect(readme).toContain(`| ${image.label} | as \`cover\` |`);

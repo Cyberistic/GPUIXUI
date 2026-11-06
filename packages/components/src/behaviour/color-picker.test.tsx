@@ -1,15 +1,3 @@
-/**
- * ColorPicker behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a saturation/value area that never reports the point it
- * was pressed at, a hue rail that cannot be stepped back to the colour it
- * announces, an alpha rail whose reported value does not reach the hex the
- * picker commits, a hex field that accepts a shorthand it never expands or
- * commits a draft it cannot read, a preset row that paints a colour without
- * reporting it, a panel whose controls the keyboard cannot reach, and a
- * disabled picker that still opens.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 import * as Option from "effect/Option";
@@ -30,7 +18,6 @@ import {
 } from "../internal/test-root.js";
 import { a11yNodes } from "../internal/a11y.js";
 
-/** A caller-owned colour, and the value the picker reports into it. */
 const Harness = ({
   initial = "#FF0000",
   disabled = false,
@@ -59,26 +46,22 @@ const Harness = ({
   );
 };
 
-/** Open the panel and let the anchored surface settle. */
 const open = (root: ComponentTestRoot): void => {
   clickCentreOf(root, "picker");
   settleMotion(root);
 };
 
-/** The announced value of a slider, or the area's own sentence. */
 const announced = (root: ComponentTestRoot, testId: string): string =>
   String(
     root.renderer.findByTestId(testId)?.customProps?.["aria-valuetext"] ?? "",
   );
 
-/** The colour a committed hex parses to, failing the case when it does not. */
 const parse = (hex: string) => {
   const parsed = parseColor(hex);
   if (Option.isNone(parsed)) throw new Error(`not a colour: ${hex}`);
   return parsed.value;
 };
 
-/** Press the picker's hex field into a new draft. */
 const typeHex = (root: ComponentTestRoot, text: string): void => {
   root.renderer.focusElement(
     root.renderer.findByTestId("picker-hex")?.id ?? -1,
@@ -118,7 +101,7 @@ describe("ColorPicker", () => {
     open(picker);
 
     const box = requireBounds(picker, "picker-area");
-    // The press sets the colour at the point that was hit; the moves carry it.
+
     picker.renderer.nativeSimulateMouseDown(
       box.x + box.width * 0.5,
       box.y + box.height * 0.5,
@@ -156,8 +139,7 @@ describe("ColorPicker", () => {
     settle(picker);
 
     const colour = parse(String(onValueChange.mock.calls.at(-1)?.[0] ?? ""));
-    // The red default is fully saturated at full brightness: each arrow moves
-    // one axis by a step.
+
     expect(colour.s).toBeCloseTo(0.99, 1);
     expect(colour.v).toBeCloseTo(0.99, 1);
 
@@ -199,7 +181,7 @@ describe("ColorPicker", () => {
 
     expect(announced(picker, "picker-alpha")).toBe("90%");
     const committed = String(onValueChange.mock.calls.at(-1)?.[0] ?? "");
-    // 90% of a byte is 230: the value carries the alpha digit the rail names.
+
     expect(committed).toBe("#FF0000E6");
     expect(toHex(parse(committed))).toBe(committed);
 
@@ -224,8 +206,6 @@ describe("ColorPicker", () => {
     pressKey(picker, "enter");
     settle(picker);
 
-    // The refused draft keeps the field's text and paints the destructive
-    // edge; the value and the trigger never take it.
     expect(picker.renderer.findByTestId("picker-hex")?.customProps?.value).toBe(
       "zzz",
     );
@@ -260,13 +240,11 @@ describe("ColorPicker", () => {
     open(picker);
 
     expect(focusedTestId(picker)).toEqual(Option.some("picker-area"));
-    // The area takes focus when the panel opens; Tab walks the parts in the
-    // order a reader meets them.
+
     const walked: string[] = [];
     for (let step = 0; step < 11; step += 1) {
       const focused = picker.renderer.getFocusedElementId?.() ?? -1;
-      // A key-down only: `pressKey`'s key-up names the element it started on,
-      // which would move focus back to where the walk began.
+
       picker.renderer.nativeSimulateKeyDown(focused, "tab");
       settle(picker);
       const next = focusedTestId(picker);

@@ -1,30 +1,3 @@
-/**
- * `dock-layout-lifecycle`: the shipped `DockLayout` painted by a real window.
- *
- * The tree's arithmetic is pure (`logic.ts`) and `panel-group-lifecycle` paints
- * a sibling surface, but the shipped dock layout — a split whose children are
- * tabbed groups — had never been mounted on glass. The question a window
- * answers is whether a fraction lands a **tab group** in the share it owns and
- * whether a tab press repaints that group without moving it.
- *
- * The component renders its tab triggers and its divider itself and forwards no
- * `testId` to them, so the press is aimed at the words a trigger paints
- * (`AsyncSmokeHost.clickText`) — the same hit-tested path a pointer takes.
- *
- * The second half measures the contract the component documents. Its
- * `onLayoutChange` is "the next tree after a tab switch or a resize", and a
- * group reports `setActiveTab(node, node.id, tab.id)` — the **node** it changed.
- * A caller following the package's own README (`onLayoutChange={setLayout}`)
- * therefore replaces the whole tree with that one group, and the checks below
- * pin that measured behaviour so a fix moves them rather than leaving the claim
- * unread.
- *
- * Every check is a `ctx.expect*` at the step that makes it — the helpers only
- * read — so the count the README prints is the number of assertion sites.
- *
- * Captures: `dock-layout-rest`.
- */
-
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -55,7 +28,6 @@ import { settleUntil } from "./settle.js";
 
 const REST = "dock-layout-rest";
 
-/** A tab's content: the caller's fill and the one line that names the tab. */
 const TabBody = ({ tab }: { readonly tab: string }): ReactNode => {
   const theme = useTheme();
   const zone = DOCK_TAB_ZONE[tab] ?? "explorer";
@@ -80,7 +52,6 @@ const TabBody = ({ tab }: { readonly tab: string }): ReactNode => {
   );
 };
 
-/** The view: the shipped layout on a fixed stage, a readout and a Reset. */
 export const DockLayoutProbe = (): ReactNode => {
   const theme = useTheme();
   const [layout, setLayout] = useState<DockNode>(dockLayoutTree);
@@ -140,17 +111,14 @@ export const DockLayoutProbe = (): ReactNode => {
   );
 };
 
-/** The probe's steps: the split's shares, a tab press, and what it reports. */
 export const dockLayoutSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(DOCK_IDS.layout);
-    // The split measures its own width on a layout pass and paints a fraction
-    // on the frame after it.
+
     yield* Effect.sleep(Duration.millis(200));
 
     type Failure = Smoke.SmokeAssertionError | Smoke.SmokeHostError;
 
-    /** The box that eventually paints `testId`, or `None` while it does not. */
     const box = (
       testId: string,
     ): Effect.Effect<Option.Option<Smoke.Bounds>, Smoke.SmokeHostError> =>
@@ -159,19 +127,16 @@ export const dockLayoutSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         Option.fromNullishOr,
       );
 
-    /** The readout once it names `expected`. */
     const readout = (expected: string): Effect.Effect<string, Failure> =>
       settleUntil(ctx.host.text(DOCK_IDS.readout), (line) =>
         line.includes(expected),
       );
 
-    /** A body's sample point: below its one line of copy. */
     const fillPoint = (painted: Smoke.Bounds): Point => ({
       x: painted.x + painted.width / 2,
       y: painted.y + painted.height * 0.75,
     });
 
-    /** The frame `name` captured, with its device scale. */
     const capture = (
       name: string,
     ): Effect.Effect<
@@ -209,7 +174,6 @@ export const dockLayoutSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // ── The split's fraction lands each tab group in its share ───────────────
     const files = yield* ctx.expectSome(
       "the explorer group paints its active tab's content",
       yield* box(dockBodyId("files")),
@@ -268,7 +232,6 @@ export const dockLayoutSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       dockLayoutReadout(dockLayoutTree(), "none", 0),
     );
 
-    // ── The paint: each group's content covers the share it was given ────────
     const rest = yield* ctx.expectSome(
       "the rest capture is the window at a whole device scale",
       yield* capture(REST),
@@ -296,7 +259,6 @@ export const dockLayoutSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── A tab press: the words are the only address the trigger has ──────────
     yield* ctx.host.clickText(DOCK_TAB_LABELS.logs ?? "Logs");
     const pressed = yield* readout("changes=1");
     yield* ctx.expectEqual(
@@ -330,7 +292,6 @@ export const dockLayoutSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // ── Reset: the window is still the probe's to restore ────────────────────
     yield* ctx.host.click(DOCK_IDS.reset);
     const restored = yield* readout("layout=split:root");
     yield* ctx.expectContains(
@@ -354,7 +315,6 @@ export const dockLayoutSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── A press on the tab a group already shows reports a node too ──────────
     yield* ctx.host.clickText(DOCK_TAB_LABELS.files ?? "Files");
     const again = yield* readout("changes=2");
     yield* ctx.expectEqual(

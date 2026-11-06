@@ -1,5 +1,3 @@
-/** The calendar block's sample week: the Hunter Association's schedule. */
-
 export const calendars = [
   { id: "exam", label: "Hunter Exam", tone: "primary" },
   { id: "arena", label: "Heavens Arena", tone: "warning" },

@@ -1,95 +1,18 @@
-/**
- * The other way a control can say "unavailable": fading itself.
- *
- * Two mechanisms ship in this workspace. A disabled field, a select's value and
- * a fieldset legend paint the role pair (`disabled` behind
- * `disabledForeground`), which `contrastPairs` measures. The recipes and the
- * primitive cores instead fade the whole control — `disabled:opacity-50` in
- * `@gpuixui/tw`, `opacity = 0.5` in the primitives' core styles and in a menu
- * row — and a translucent control is invisible to `contrastRatio`: its result
- * depends on the surface behind it, so no role pair can measure it.
- *
- * This module measures the fade by compositing it, so both mechanisms are held
- * to a floor instead of only the one that happens to use roles. The floor is the
- * default `contrastFloors.disabled` for every variant, deliberately: the fade
- * cannot express more (a high-contrast filled action still lands near 2:1), and
- * a contract that demanded more would be measuring a mechanism the library does
- * not have. That gap is the argument for the role pair, not a second floor.
- *
- * A fade is also a property of the strip behind it, not of the control: measured
- * on the shipped palettes, a faded filled action keeps the floor on the page and
- * lands at 1.47:1–1.49:1 on a card in four of the light styles (Linux, macOS,
- * Windows XP Luna, Windows 7 Aero). So the fade is a **page** mechanism for a
- * filled action, and {@link disabledAction} is the paint a disabled action wears
- * anywhere else.
- */
-
 import { themeColors, type ColourSource } from "./color.js";
 import { contrastFloors, contrastRatio } from "./contrast.js";
 import { fadedPair, type FadeFailure, type FadePair } from "./fade.js";
 import type { Theme } from "./theme.js";
 
-/**
- * The share of itself a control keeps while disabled.
- *
- * It is a design constant rather than a theme group, for the same reason the
- * pressable-target floors are: every shipped recipe paints this one value, and a
- * brand that lowered it would make the library's own disabled state disappear.
- */
 export const disabledOpacity = 0.5;
 
-/** One control the fade is measured on: its fill, its label and its surface. */
 export type DisabledFadePair = FadePair;
 
-/**
- * The fills a field paints. A plain field fills `input`; a composite field — a
- * search, tag or mention field, the inline edit, the chat composer, the colour
- * picker's hex field — paints the **page** role as its own fill
- * (`SEARCH_INPUT`, `TAG_INPUT_ROOT`, `MENTION_INPUT_FIELD`,
- * `COLOR_PICKER_INPUT` and `CHAT_COMPOSER` are `bg-background` in
- * `@gpuixui/tw`'s recipes).
- */
 const fieldFills = ["input", "background"] as const;
 
-/**
- * The two labels a field carries: its value and its hint. The placeholder is the
- * lowest-contrast label a field paints at rest (the secondary floor), so the
- * value alone says nothing about the first thing a reader loses when the field
- * stops accepting input.
- */
 const fieldLabels = ["inputForeground", "placeholder"] as const;
 
-/**
- * The surfaces a field can sit on: a page, a card, a popover and the `muted`
- * toolbar or sidebar a search or filter field lives in.
- *
- * The fourth strip is the design system's (`docs/design-system.md` §7 names all
- * four) and the keyboard dim already measures a field's hint there, so the fade
- * carried the one composite of a placed field. It is not a redundant placement:
- * a fade is a share of the strip behind the control, and a brand with a dark
- * sidebar and a light content area — `muted: "#2A2A2A"` over the base light page
- * — composes the composite hint down to 1.30:1 while the same field on the page
- * reads 2.03:1.
- */
 const fieldStrips = ["background", "card", "popover", "muted"] as const;
 
-/**
- * The controls that fade rather than swap roles: the three filled actions and a
- * field.
- *
- * The filled actions are measured on the page only, because that is the strip
- * the fade keeps the floor on — see {@link disabledAction} for the paint a
- * disabled action wears on a card, a popover or a group strip.
- *
- * A field is measured on every content surface with both of its fills and both
- * of its labels. The table carried only the plain field's `input` fill and its
- * value, so the fade a composite field paints — the page role, the one a
- * toolbar's search or a command panel's mention field uses — was the one control
- * no report composited. The strips are the four a field sits on, the `muted`
- * toolbar included, because that is where a fade is decided: the same composite
- * hint reads 1.96:1 on the Windows 7 look's toolbar and 1.30:1 on a brand's dark
- * sidebar while its page placement still clears the floor.
- */
 export const disabledFadePairs: readonly DisabledFadePair[] = [
   { fill: "primary", label: "primaryForeground", over: "background" },
   { fill: "destructive", label: "destructiveForeground", over: "background" },
@@ -101,24 +24,8 @@ export const disabledFadePairs: readonly DisabledFadePair[] = [
   ),
 ];
 
-/** One faded control whose label is too close to the faded fill it sits on. */
 export type DisabledFadeFailure = FadeFailure;
 
-/**
- * Every faded control in a theme whose label misses the disabled floor.
- *
- * An empty array means the fade keeps the state readable. A pair that cannot be
- * composited — a translucent or non-hex role, or a role the theme does not carry
- * — is reported with `ratio: undefined` rather than skipped, as every other
- * report does.
- *
- * @example
- * ```ts
- * import { disabledFadeFailures, lightTheme } from "@gpuixui/tokens";
- *
- * disabledFadeFailures(lightTheme); // [] — every faded label clears 1.5:1
- * ```
- */
 export function disabledFadeFailures(
   theme: ColourSource,
   floor: number = contrastFloors.disabled,
@@ -133,41 +40,12 @@ export function disabledFadeFailures(
   });
 }
 
-/** The paint a disabled action wears off the page. */
 export interface DisabledActionStyle {
-  /**
-   * The fill: the theme's neutral `disabled` role, not the action's own — and
-   * not the face of an enabled control, which the decorative contract measures.
-   */
   readonly backgroundColor: string;
-  /** The label: `disabledForeground`, measured against that fill. */
+
   readonly color: string;
 }
 
-/**
- * The paint a disabled filled action wears where the fade is not the contract.
- *
- * A fade composites the fill with whatever is behind it, so the same action is a
- * different colour on the page and on a card — and on a card it is under the
- * floor. This is the alternative the design system calls the contract: the
- * neutral pair `contrastPairs` already measures on every surface a control sits
- * on. A control that can appear on a card or a popover paints this and removes
- * its fade; one that only ever sits on the page may keep fading.
- *
- * The fill replaces the control's own face rather than sitting on a strip, so it
- * must also stay distinguishable from every face an enabled control wears
- * (`decorative.ts` §disabledFace). Both high-contrast themes shipped it equal to
- * `secondary`; it is the quiet step now.
- *
- * A theme restored from storage that lost either role answers `undefined` rather
- * than throwing — the rule {@link statusTone} follows — so a control falls back
- * to the fade instead of losing the window; a `Theme` answers a pair outright.
- *
- * @example
- * ```tsx
- * <div style={disabled ? disabledAction(theme) : undefined} />
- * ```
- */
 export function disabledAction(theme: Theme): DisabledActionStyle;
 export function disabledAction(
   theme: ColourSource,

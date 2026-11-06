@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Collapsible: one section that reveals its content on demand.
- *
- * The body grows to its measured height and collapses again through
- * `AutoHeight`, the plan-600 reveal: the content box reports what it paints and
- * the clipping box tweens to it, so the section reads as opening rather than
- * appearing. It stays mounted for its exit tween and unmounts after it, so a
- * closed body still holds nothing that runs.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -39,7 +29,6 @@ import {
   useTheme,
 } from "./internal/theme.js";
 
-/** The rules a collapsible part follows; throws outside a root. */
 interface CollapsibleContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
@@ -49,7 +38,6 @@ const CollapsibleContext = createContext<CollapsibleContextValue | undefined>(
   undefined,
 );
 
-/** The collapsible a part belongs to. Throws when there is none. */
 const useCollapsibleContext = (): CollapsibleContextValue => {
   const value = useContext(CollapsibleContext);
   if (value === undefined) {
@@ -58,17 +46,14 @@ const useCollapsibleContext = (): CollapsibleContextValue => {
   return value;
 };
 
-/** {@link Collapsible} props. */
 export interface CollapsibleProps {
-  /** The controlled open state. `undefined` means uncontrolled. */
   readonly open?: boolean;
-  /** The uncontrolled starting state. Default `false`. */
+
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly children?: PartChildren;
 }
 
-/** The open state shared by a trigger and its content. */
 export const Collapsible = ({
   open: openProp,
   defaultOpen = false,
@@ -90,17 +75,14 @@ export const Collapsible = ({
   );
 };
 
-/** {@link CollapsibleTrigger} props. */
 export interface CollapsibleTriggerProps extends Omit<Props, "style"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
-  /** A style, or a function of the trigger's state. */
+
   readonly style?: StateStyle<CollapsibleTriggerState>;
-  /** A section that cannot open: out of the tab order, no handlers, dimmed. */
+
   readonly disabled?: boolean;
 }
 
-/** What the trigger draws: the section's open state, its focus and its disabled state. */
 export interface CollapsibleTriggerState {
   readonly open: boolean;
   readonly closed: boolean;
@@ -108,7 +90,6 @@ export interface CollapsibleTriggerState {
   readonly disabled: boolean;
 }
 
-/** A button that opens and closes its section. */
 export const CollapsibleTrigger = ({
   onClick,
   onKeyDown,
@@ -169,13 +150,10 @@ export const CollapsibleTrigger = ({
   );
 };
 
-/** {@link CollapsibleContent} props. */
 export interface CollapsibleContentProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** The revealed body: a measured height reveal that unmounts after it closes. */
 export const CollapsibleContent = ({
   className,
   style,
@@ -196,7 +174,6 @@ export const CollapsibleContent = ({
   );
 };
 
-/** Every part of Collapsible, so a misplaced sibling is named. */
 const collapsibleParts: ReadonlyArray<PartComponent> = [
   Collapsible,
   CollapsibleTrigger,
@@ -210,7 +187,6 @@ const collapsibleRoot: PartsContract = {
   hint: "Put CollapsibleTrigger and CollapsibleContent directly inside Collapsible.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const collapsibleMeta = {
   name: "Collapsible sections",
   tier: 2,

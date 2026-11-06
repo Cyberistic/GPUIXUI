@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Field example: a real validation round-trip on submit.
- *
- * `validate` returns an Effect over the schema, so the example runs it in the
- * click handler — an application boundary, which is the one place `Effect.run*`
- * belongs (EF-21). The field itself never validates on every keystroke.
- */
-
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -17,7 +9,6 @@ import { Button } from "../src/internal/button.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import { validate } from "../src/validation/logic.js";
 
-/** A workspace slug: lowercase words joined by hyphens. */
 const Slug = Schema.NonEmptyString.check(
   Schema.isPattern(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
     identifier: "WorkspaceSlugPattern",
@@ -27,7 +18,6 @@ const Slug = Schema.NonEmptyString.check(
   }),
 );
 
-/** A tiny form that validates on Apply, not on every keystroke. */
 export const FieldExample = () => {
   const theme = useTheme();
   const [slug, setSlug] = useState("");

@@ -1,12 +1,3 @@
-/**
- * Status tone → colour role, and the centre region's alignment.
- *
- * The bugs these guard: a named tone painted the bar's plain foreground (so the
- * tone never appeared), the default tone was tinted by accident, two tones
- * resolved to the same readable colour, and a centre region that ignored the
- * pinned groups so a one-sided bar centred its labels against nothing.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { lightTheme } from "@gpuixui/tokens";

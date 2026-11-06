@@ -1,31 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * List and ListItem: a vertical collection of rows, optionally single- or
- * multi-selectable with a roving tab stop.
- *
- * This is the keyboard and selection foundation the menus and tabs reuse: the
- * item registry `internal/collection.ts` is shared, and the navigation rules live
- * there rather than here. The multiple-selection arithmetic lives in
- * `list/selection.ts` for the same reason.
- *
- * Two measured facts shape the implementation (probe, 2026-10-17):
- *
- * - a key event fired on a focused row **bubbles** to the list's `onKeyDown`, so
- *   the list can own the keys while the row owns the focus;
- * - the ring is the runtime's `focusVisible` outline, so it paints after a
- *   keyboard focus and not after a click (measured on 0.11.0).
- *
- * Two more decide where a key acts (live `list-lifecycle`, 2026-10-22):
- *
- * - a window builds a key payload per handler, so the list's `onKeyDown` sees
- *   `elementId` naming the list rather than the row that sent it;
- * - a pointer press moves focus without running the row's `onFocus`
- *   (`focuses=0` on 0.11.0), so the record can name the previous row.
- *
- * `keyOrigin` therefore reads the sender, then the renderer's focused element,
- * then the record.
- */
-
 import type {
   EventPayload,
   KeyEvent,
@@ -95,30 +68,14 @@ import { typedChar, useTypeahead } from "./typeahead.js";
 import { range, sameValues, selectAll, toggle } from "./list/selection.js";
 import { makeRowStore, type RowStore } from "./list/store.js";
 
-/** Whether the list only presents rows, or also tracks a selection. */
 export type ListSelectionMode = "none" | "single" | "multiple";
 
-/**
- * The box a list row paints at.
- *
- * A row is built at the theme's density `rowHeight`, and its two-line form adds
- * one `md` spacing step above it. Both are numeric groups a store can lose: a
- * theme restored from storage writes `null` where JSON carried no group, a
- * hand-edited literal drops the key, and a saved style from a release that added
- * one restores without it. Reading the group directly therefore threw
- * `Cannot read properties of undefined (reading 'rowHeight')` from the first row
- * a list painted, and a group that lost only the step built a `NaN` height the
- * serialiser drops. The primitives' density and spacing seams answer the
- * library's numbers for that absence.
- */
 export const listRowHeight = (
   theme: DensitySource & SpaceSource,
   dense: boolean,
 ): number =>
   dense ? rowHeightOf(theme) : rowHeightOf(theme) + spaceValue(theme, "md");
 
-/** One registered row: its value, whether it accepts input, its native id, and
- *  the text type-ahead searches. */
 interface Row {
   readonly value: string;
   readonly disabled: boolean;
@@ -126,30 +83,21 @@ interface Row {
   readonly label: string;
 }
 
-/** The rules a {@link ListItem} follows; throws when there is no list above it. */
 interface ListContextValue {
   readonly selectable: boolean;
   readonly dense: boolean;
-  /** The row's slice of the selection; a row subscribes to its own. */
+
   readonly store: RowStore;
-  /** Focus and select `value` if it is enabled — what a click does. */
+
   readonly activate: (value: string, event: EventPayload) => void;
-  /** Note that `value` now holds focus, so keys move on from it. */
+
   readonly noteFocus: (value: string) => void;
-  /** Register a row; returns the unregister function. */
+
   readonly register: (row: Row) => () => void;
 }
 
 const ListContext = createContext<ListContextValue | undefined>(undefined);
 
-/**
- * What the text parts of a row need to know about it.
- *
- * The row paints its own fill, but a text part sets its colour from its recipe,
- * so the title and the description have to know which fill they sit on (the
- * `selected` wash or the strip) and whether the row is unavailable, to keep the
- * role the token contract measured for that surface.
- */
 interface RowState {
   readonly selected: boolean;
   readonly disabled: boolean;
@@ -160,24 +108,18 @@ const RowStateContext = createContext<RowState>({
   disabled: false,
 });
 
-/** The list a {@link ListItem} belongs to. Throws when there is none. */
 const useListContext = (): ListContextValue => {
   const value = useContext(ListContext);
   if (value === undefined) {
-    // A compound part outside its root is a programming error at the boundary,
-    // not a domain failure: plan 110 §8.6 takes the same line for every part.
     throw new Error("ListItem must be used inside List");
   }
   return value;
 };
 
-/** `row` replaces the row with the same value, keeping its position. */
 const upsert = (rows: ReadonlyArray<Row>, row: Row): ReadonlyArray<Row> =>
   Option.match(
     Arr.findFirst(rows, (candidate) => candidate.value === row.value),
     {
-      // Unchanged rows return the same array, so React can skip the re-render
-      // that registration would otherwise trigger.
       onNone: () => Arr.append(rows, row),
       onSome: (current) =>
         current.disabled === row.disabled &&
@@ -190,11 +132,9 @@ const upsert = (rows: ReadonlyArray<Row>, row: Row): ReadonlyArray<Row> =>
     },
   );
 
-/** The shape `internal/collection.ts` navigates over, preserving row order. */
 const items = (rows: ReadonlyArray<Row>): ReadonlyArray<CollectionItem> =>
   Arr.map(rows, (row) => ({ id: row.nativeId, disabled: row.disabled }));
 
-/** The index of the row carrying `value`, or `None`. */
 const indexOf = (
   rows: ReadonlyArray<Row>,
   value: Option.Option<string>,
@@ -203,19 +143,12 @@ const indexOf = (
     Arr.findFirstIndex(rows, (row) => row.value === target),
   );
 
-/** The row at a collection index, or `None` when the index is out of range. */
 const rowAt = (
   rows: ReadonlyArray<Row>,
   index: Option.Option<number>,
 ): Option.Option<Row> =>
   Option.flatMap(index, (position) => Arr.get(rows, position));
 
-/**
- * Which row owns the tab stop: the active row, else the first selected one in
- * declaration order, else the first row that accepts input. Exactly one row is
- * tabbable, which is what makes a list a single stop rather than one stop per
- * row.
- */
 const tabbableValue = (
   rows: ReadonlyArray<Row>,
   active: Option.Option<string>,
@@ -223,9 +156,6 @@ const tabbableValue = (
   selectable: boolean,
 ): Option.Option<string> =>
   pipe(
-    // A press moves the pointer's focus onto a disabled row and records it as
-    // the active row, so the stop has to skip it: a traversal must not be the
-    // way onto the one row nothing accepts.
     Option.flatMap(active, (value) =>
       pipe(
         Arr.findFirst(rows, (row) => row.value === value),
@@ -252,11 +182,6 @@ const tabbableValue = (
     ),
   );
 
-/**
- * The public value in one internal shape: zero or more selected values.
- * `undefined` is React's controlled/uncontrolled discriminator, so it is
- * converted to `Option` at the call site rather than leaking further.
- */
 const controlledValues = (
   props: ListProps,
 ): ReadonlyArray<string> | undefined =>
@@ -268,7 +193,6 @@ const controlledValues = (
     Match.orElse(() => undefined),
   );
 
-/** The public initial value in the same internal shape. */
 const initialValues = (props: ListProps): ReadonlyArray<string> =>
   Match.value(props).pipe(
     Match.when({ selectionMode: "multiple" }, (p) => p.defaultValue ?? []),
@@ -281,7 +205,6 @@ const initialValues = (props: ListProps): ReadonlyArray<string> =>
     Match.orElse(() => Arr.empty<string>()),
   );
 
-/** Report an internal selection in the shape the current mode promises. */
 const report = (props: ListProps, next: ReadonlyArray<string>): void =>
   Match.value(props).pipe(
     Match.when({ selectionMode: "multiple" }, (p) => p.onValueChange?.(next)),
@@ -291,25 +214,16 @@ const report = (props: ListProps, next: ReadonlyArray<string>): void =>
     Match.orElse(() => undefined),
   );
 
-/** The props shared by every selection mode. */
 interface ListBaseProps extends Omit<Props, "children"> {
-  /** Row height `rowHeight` instead of `rowHeight + spacing.md`. */
   readonly dense?: boolean;
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The modes that can run a row action. */
 interface Activatable {
-  /**
-   * Run the row's action: `Enter` on the active row, a double click in single
-   * mode, or a click with no selection mode. Disabled rows never activate. A
-   * multiple-selection list has no activation.
-   */
   readonly onActivate?: (value: string) => void;
 }
 
-/** {@link List} props: the value shape follows the selection mode. */
 export type ListProps =
   | (ListBaseProps &
       Activatable & {
@@ -327,27 +241,17 @@ export type ListProps =
       })
   | (ListBaseProps & {
       readonly selectionMode: "multiple";
-      /** A multiple list toggles rows; it has no activation action. */
+
       readonly onActivate?: never;
       readonly value?: ReadonlyArray<string>;
       readonly defaultValue?: ReadonlyArray<string>;
       readonly onValueChange?: (values: ReadonlyArray<string>) => void;
     });
 
-/**
- * A vertical list of rows. With `selectionMode="single"` it is a `listbox`: arrow
- * keys move a roving tab stop, Home/End jump, Enter/Space select, and a click
- * selects the row it lands on. `selectionMode="multiple"` keeps that keyboard
- * model and adds the desktop modifiers: a plain click selects one row, Cmd/Ctrl
- * toggles, Shift extends the range from the anchor, and Shift+Arrow extends from
- * the keyboard. A disabled row is skipped by every path. A single or
- * `selectionMode="none"` list may also pass `onActivate` to run a row action.
- */
 export const List = (props: ListProps) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
-  // The four selection props are read through `props` so the mode narrows them;
-  // this destructure only strips them from the host props.
+
   const {
     selectionMode: _selectionMode,
     value: _value,
@@ -404,18 +308,10 @@ export const List = (props: ListProps) => {
     [renderer],
   );
 
-  /**
-   * Adopt focus the row already got — from Tab, or from the consumer focusing it
-   * — so the first arrow key moves on from where the user is, not from the top.
-   */
   const noteFocus = useCallback((value: string) => {
     setActive(Option.some(value));
   }, []);
 
-  /**
-   * Move focus one enabled row. A plain move re-anchors; a Shift move in
-   * multiple mode selects the range from the anchor to the row it reached.
-   */
   const moveBy = useCallback(
     (delta: 1 | -1, extend: boolean, from: Option.Option<string>) => {
       pipe(
@@ -460,7 +356,6 @@ export const List = (props: ListProps) => {
     [focusRow, rows],
   );
 
-  /** The row with `value`, when it exists and accepts input. */
   const enabledRow = useCallback(
     (target: string) =>
       pipe(
@@ -470,7 +365,6 @@ export const List = (props: ListProps) => {
     [rows],
   );
 
-  /** The keyboard activation: select one, or toggle one in multiple mode. */
   const select = useCallback(
     (target: string) => {
       pipe(
@@ -487,11 +381,6 @@ export const List = (props: ListProps) => {
     [commit, enabledRow, multiple, selected],
   );
 
-  /**
-   * A click: focus the row, then apply the pointer contract. In multiple mode
-   * Cmd/Ctrl toggles and Shift takes the range from the anchor; a plain click
-   * replaces the selection, the desktop file-list convention.
-   */
   const activate = useCallback(
     (target: string, event: EventPayload) => {
       pipe(
@@ -551,7 +440,6 @@ export const List = (props: ListProps) => {
     [select],
   );
 
-  /** Run a row's action; a disabled or missing row does nothing. */
   const activateActive = useCallback(
     (target: Option.Option<string>) => {
       pipe(
@@ -565,7 +453,6 @@ export const List = (props: ListProps) => {
     [enabledRow, onActivate],
   );
 
-  /** Cmd/Ctrl+A: select every enabled row and anchor at the first of them. */
   const selectEveryRow = useCallback(() => {
     if (!multiple) return;
     const next = selectAll(rows);
@@ -581,8 +468,7 @@ export const List = (props: ListProps) => {
 
   const typeahead = useTypeahead(rows, indexOf(rows, active), (row) => {
     focusRow(row);
-    // A typed jump re-anchors, exactly like an arrow move, so a following
-    // Shift+click extends from the row the user reached.
+
     setAnchor(Option.some(row.value));
   });
 
@@ -596,13 +482,11 @@ export const List = (props: ListProps) => {
 
   const handleKeyDown = (event: KeyEvent): void => {
     if (!selectable) return;
-    // The press half of Space starts the gesture; the release selects.
+
     if (swallowsDefault(event, "down")) event.preventDefault();
     const origin = originOf(event);
     const extend = multiple && event.modifiers?.shift === true;
 
-    // Adopt a row that holds focus without having reported it, so the highlight
-    // and the tab stop follow the reader rather than the last recorded row.
     pipe(
       origin,
       Option.match({
@@ -615,7 +499,6 @@ export const List = (props: ListProps) => {
     pipe(
       typedChar(event),
       Option.match({
-        // A typed letter jumps to a row; it never also runs a named-key rule.
         onSome: typeahead,
         onNone: () =>
           Match.value(event).pipe(
@@ -648,8 +531,6 @@ export const List = (props: ListProps) => {
     [active, rows, selectable, selected],
   );
 
-  // The row handlers are context values, so their identity must not change when
-  // the selection does; each reads the current render's implementation.
   const latest = useRef(activate);
   useLayoutEffect(() => {
     latest.current = activate;
@@ -698,39 +579,29 @@ export const List = (props: ListProps) => {
   );
 };
 
-/** {@link ListItem} props. */
 export interface ListItemProps extends Omit<Props, "children" | "style"> {
-  /** Stable id, and the value a selection reports. */
   readonly value: string;
-  /**
-   * The text type-ahead matches. Rows are composed from {@link ListItemTitle}
-   * and {@link ListItemDescription}, so the list cannot read the text off
-   * `children`; omit this and the row is skipped by type-ahead.
-   */
+
   readonly textValue?: string;
-  /** Skipped by the arrow keys and by clicks. */
+
   readonly disabled?: boolean;
-  /** Slot before the text: an avatar, an icon. */
+
   readonly leading?: ReactNode;
-  /** Slot after the text: a badge, a shortcut. */
+
   readonly trailing?: ReactNode;
   readonly children?: PartChildren;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, or a function of the row's state. */
+
   readonly style?: StateStyle<ListItemState>;
 }
 
-/** What a row draws: the roving focus, the selection and input state. */
 export interface ListItemState {
-  /** The row the list's roving focus is on. */
   readonly active: boolean;
   readonly disabled: boolean;
   readonly selected: boolean;
 }
 
-/** One row of a {@link List}. Its text parts are {@link ListItemTitle} and
- *  {@link ListItemDescription}. */
 export const ListItem = ({
   value,
   textValue,
@@ -753,17 +624,12 @@ export const ListItem = ({
     undefined,
   );
 
-  // Stable identity: React only calls a ref callback again when the callback
-  // itself changes, and a fresh closure each render would re-register the row
-  // (and reorder it) on every paint.
   const attach = useCallback((next: PublicInstance | null) => {
     setInstance(next ?? undefined);
   }, []);
   const setElement = useMergedRef<PublicInstance | null>(attach, ref);
 
   useLayoutEffect(() => {
-    // Registration needs the native id, which only exists after the element is
-    // committed; `instance` is state, so this effect re-runs once it arrives.
     if (instance === undefined) return;
     return register({
       value,
@@ -805,12 +671,7 @@ export const ListItem = ({
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(LIST_ITEM, className), theme), {
           height: listRowHeight(theme, dense),
-          // No `opacity` on a disabled row: it composites the `selected` fill
-          // this same style paints into the strip behind it, so the wash a
-          // reader uses to find the current row drops under the perceptibility
-          // floor. The state is carried by the text roles instead
-          // (`ListItemTitle`/`ListItemDescription`), and the pointer gets a
-          // cursor that says the row will not take the press.
+
           ...(selectable
             ? {
                 cursor: disabled ? "not-allowed" : "pointer",
@@ -828,8 +689,7 @@ export const ListItem = ({
                 color: theme.colors.selectedForeground,
               }
             : {}),
-          // The ring is the runtime's keyboard-only `focusVisible` outline: a
-          // click paints none, a Tab-driven focus paints it at rest.
+
           ...controlRing(theme, { disabled }),
         }),
         resolveStyle(style, state),
@@ -875,23 +735,10 @@ export const ListItem = ({
   );
 };
 
-/** {@link ListItemTitle} props. */
 export interface ListItemTitleProps extends Props {
   readonly className?: string;
 }
 
-/**
- * The row's one-line label. The row's height is fixed, so the title is clipped
- * rather than wrapped.
- *
- * The title takes the role the row's own fill was measured with: a selected row
- * is a saturated fill, so the title keeps the row's on-colour
- * (`selectedForeground`) — or the secondary `mutedForeground` that the contract
- * measures on that same wash once the row is also unavailable. An unavailable
- * row on its strip carries `disabledForeground`, the pair the disabled floor
- * measures there. The row never fades itself by opacity, because that
- * composites the selection wash it just painted into the strip behind it.
- */
 export const ListItemTitle = ({
   className,
   style,
@@ -921,19 +768,10 @@ export const ListItemTitle = ({
   );
 };
 
-/** {@link ListItemDescription} props. */
 export interface ListItemDescriptionProps extends Props {
   readonly className?: string;
 }
 
-/**
- * The row's second line: metadata, a path, a subtitle.
- *
- * It keeps the recipe's muted role on a selected row — the token contract
- * measures `mutedForeground` on the `selected` fill — and takes
- * `disabledForeground` when the row is unavailable on its strip, so the two
- * lines agree about the state.
- */
 export const ListItemDescription = ({
   className,
   style,
@@ -957,7 +795,6 @@ export const ListItemDescription = ({
   );
 };
 
-/** Every part of List, so a misplaced sibling is named. */
 const listParts: ReadonlyArray<PartComponent> = [
   List,
   ListItem,
@@ -979,7 +816,6 @@ const listItem: PartsContract = {
   hint: "Put ListItemTitle and ListItemDescription directly inside ListItem.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const listMeta = {
   name: "Lists / list items",
   tier: 2,

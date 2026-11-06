@@ -19,27 +19,10 @@ import {
 } from "@gpuixui/dock/logic";
 import { dockKeyOf } from "./dock-preview";
 
-/**
- * Browser preview for the Workspace lane's docking layout.
- *
- * `@gpuixui/dock`'s `DockLayout` renders a named tree: a split holds two dock
- * nodes, a tab group holds an ordered list and one active tab. The preview
- * draws the page's own tree — one split with a tab group on each side — and
- * calls the package's reducers: `resizeSplit` and `resizeSplitByKey` for the
- * divider, `setActiveTab` for a tab press. Only the paint is the browser's.
- *
- * The shipped split converts a pixel delta against the pane space it measures
- * in `onLayout`; the drawing is a fixed frame, so the conversion uses
- * `DOCK_LAYOUT_WIDTH`. That number is the preview's, not the component's.
- */
-
-/** The frame's main axis, in pixels — the drawing's stand-in for `onLayout`. */
 export const DOCK_LAYOUT_WIDTH = 620;
 
-/** The first child's share at rest, inside `[0, 1]` so both ends are reachable. */
 const DOCK_SPLIT_START = 0.58;
 
-/** The one-level tree the drawing supports: a split of two tab groups. */
 export interface TabbedSplit extends DockSplit {
   readonly first: DockTabs;
   readonly second: DockTabs;
@@ -53,7 +36,6 @@ const group = (
   tabs: ReadonlyArray<DockTab>,
 ): DockTabs => ({ kind: "tabs", id, activeTab, tabs });
 
-/** The tree the preview opens at: two tab groups sharing one split. */
 export const dockStart = (): TabbedSplit => ({
   kind: "split",
   id: "root",
@@ -69,10 +51,8 @@ export const dockStart = (): TabbedSplit => ({
   ]),
 });
 
-/** The main axis a split's fractions divide, minus its divider. */
 export const dockAvailable = (): number => DOCK_LAYOUT_WIDTH - DIVIDER_WIDTH;
 
-/** The tree a pointer drag produces, from the share the press found. */
 export const dragDock = (
   layout: TabbedSplit,
   start: number,
@@ -82,13 +62,11 @@ export const dragDock = (
   size: resizeSplit(start, delta / dockAvailable()),
 });
 
-/** The tree a divider key produces, stepped in pixels like the component. */
 export const keyDock = (layout: TabbedSplit, key: DividerKey): TabbedSplit => ({
   ...layout,
   size: resizeSplitByKey(layout.size, key, DIVIDER_STEP / dockAvailable()),
 });
 
-/** Read a tree back as the shape the drawing supports. */
 const tabbedSplit = (node: DockNode): TabbedSplit | undefined => {
   if (node.kind !== "split") return undefined;
   if (node.first.kind !== "tabs" || node.second.kind !== "tabs")
@@ -96,7 +74,6 @@ const tabbedSplit = (node: DockNode): TabbedSplit | undefined => {
   return { ...node, first: node.first, second: node.second };
 };
 
-/** The tree a tab press produces, through the package's reducer. */
 export const activateTab = (
   layout: TabbedSplit,
   groupId: string,
@@ -106,12 +83,10 @@ export const activateTab = (
   return next === layout ? layout : (tabbedSplit(next) ?? layout);
 };
 
-/** The active tab's label in a group, for the readout. */
 export const activeLabel = (node: DockTabs): string =>
   node.tabs.find((entry) => entry.id === node.activeTab)?.label ??
   node.activeTab;
 
-/** The readout under the frame: each pane's share and its active tab. */
 export const dockReadout = (layout: TabbedSplit): string =>
   `${activeLabel(layout.first)} ${Math.round(layout.size * 100)}% · ` +
   `${activeLabel(layout.second)} ${100 - Math.round(layout.size * 100)}%`;
@@ -191,13 +166,11 @@ const TabGroup = ({
 );
 
 export interface DockLayoutFrameProps {
-  /** The tree to render, controlled the way `DockLayout` takes it. */
   readonly layout: TabbedSplit;
-  /** Reports the next tree after a tab press or a divider move. */
+
   readonly onChange: (layout: TabbedSplit) => void;
 }
 
-/** The drawing itself: the split, its two tab groups and its divider. */
 export const DockLayoutFrame = ({ layout, onChange }: DockLayoutFrameProps) => {
   const drag = useRef<
     | {
@@ -277,7 +250,6 @@ export const DockLayoutFrame = ({ layout, onChange }: DockLayoutFrameProps) => {
   );
 };
 
-/** The page's preview: the tree and the shares it currently paints. */
 export const DockLayoutDemo = () => {
   const [layout, setLayout] = useState<TabbedSplit>(dockStart);
 

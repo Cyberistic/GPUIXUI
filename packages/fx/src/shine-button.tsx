@@ -1,19 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * ShineButton: a sheen that travels across the action while it is hovered.
- *
- * The runtime has no `transform` (upstream issue #102) and its gradient takes
- * exactly two stops, so the sheen is not a scaled highlight: it is two
- * absolutely positioned halves that tween their `left` together, the lead
- * brightening into the label's ink and the trail dimming back to nothing
- * (`shine-button/logic.ts`). The pair is clipped by the control's rounded box.
- *
- * The sheen marks a hover, so it is feedback rather than content: under the
- * reduced preference none is painted, and the control's own hover fill — which
- * the local `Button` already paints — is what remains. A keyboard reader gets
- * the focus ring instead.
- */
-
 import type { EventPayload } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import type { MotionLevel } from "@gpuixui/motion/timing";
@@ -43,23 +28,14 @@ import {
 } from "./shine-button/logic.js";
 import { makeSheenStore } from "./shine-button/store.js";
 
-/** The two halves, in paint order. */
 const halves: ReadonlyArray<SheenHalf> = ["lead", "trail"];
 
-/** {@link ShineButton} props. */
 export interface ShineButtonProps extends ButtonProps {
-  /** How long the sheen takes to cross. Default `"notice"` (500 ms). */
   readonly level?: MotionLevel;
-  /** The sheen's ink. Default the label's own colour. */
+
   readonly sheenColor?: string;
 }
 
-/**
- * A labelled action that a sheen crosses while the pointer is over it.
- *
- * It is the local `Button` with two extra layers, so `variant`, `size`,
- * `disabled` and the whole host-prop surface behave exactly as they do there.
- */
 export const ShineButton = ({
   variant = "secondary",
   size = "md",
@@ -81,15 +57,10 @@ export const ShineButton = ({
   const windowMs = transitionWindowMs(timing);
   const inert = disabled || preference === "reduced";
 
-  // A sheen is pure journey, so a reader who turns the preference on mid-sweep
-  // keeps no band: it goes with the travel the setting removed. An action that
-  // becomes disabled under a sweep can no longer answer the hover it marks, so
-  // the band goes with the control instead of crossing an inert action.
   useEffect(() => {
     if (inert) send(store.clear);
   }, [inert, store]);
 
-  // A level change retimes the sweep it finds running.
   useEffect(() => {
     send(store.retime(windowMs));
   }, [store, windowMs]);
@@ -149,7 +120,6 @@ export const ShineButton = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const shineButtonMeta = {
   name: "Shine button",
   tier: 5,

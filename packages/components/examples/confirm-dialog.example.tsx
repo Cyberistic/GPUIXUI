@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * ConfirmDialog example: a destructive action with the consequence named.
- *
- * The dialog does not close itself after confirming: the caller runs the work and
- * closes on success. Here that is a simulated archive; a real one would await a
- * service and leave the dialog open with the error if it failed.
- */
-
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -19,7 +11,6 @@ import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { ConfirmDialog } from "../src/confirm-dialog.js";
 import { useTheme } from "../src/internal/theme.js";
 
-/** A project row with an archive action behind a confirmation. */
 export const ConfirmDialogExample = () => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);

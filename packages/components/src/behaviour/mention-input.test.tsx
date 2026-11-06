@@ -1,14 +1,3 @@
-/**
- * MentionInput behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a list that never opens on `@`, a query that does not
- * narrow, arrows that do not move the highlight, Enter or a press that inserts
- * the wrong name, Escape/space that fail to close, a double `onMention`, a
- * disabled field that opens the list, a `maxVisible` a caller computed before
- * its row height was measured hiding every suggestion, a dismissed list that cut
- * instead of leaving, and a ghost the reader could still press.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -30,7 +19,6 @@ import {
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 
-/** A comment composer with three candidates. */
 const Harness = ({
   initial = "",
   disabled = false,
@@ -66,7 +54,6 @@ const Harness = ({
   );
 };
 
-/** Focus the field and type each character as a real key press. */
 const type = (root: ComponentTestRoot, text: string): void => {
   root.renderer.focusElement(root.renderer.findByTestId("mention")?.id ?? -1);
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
@@ -75,7 +62,6 @@ const type = (root: ComponentTestRoot, text: string): void => {
 const valueOf = (root: ComponentTestRoot): unknown =>
   root.renderer.findByTestId("mention")?.customProps?.value;
 
-/** Let the runtime's frame loop publish what the last commit queued. */
 const frame = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 30));
 
@@ -141,7 +127,7 @@ describe("MentionInput", () => {
     expect(valueOf(mention)).toBe("@ana ");
     expect(onMention).toHaveBeenCalledTimes(1);
     expect(onMention).toHaveBeenCalledWith("ana");
-    // The list runs its exit tween, then it is gone.
+
     await waitFor(() =>
       expect(mention.renderer.findByTestId("row-ana")).toBeUndefined(),
     );
@@ -171,7 +157,7 @@ describe("MentionInput", () => {
     mention.renderer.clockFastForward(400);
     await frame();
     const rest = requireBounds(mention, "row-ana");
-    // The list starts 4px above its resting place and travels down into it.
+
     expect(rest.y - entering.y).toBe(4);
     mention.unmount();
 
@@ -183,7 +169,7 @@ describe("MentionInput", () => {
     reduced.renderer.clockPause();
     type(reduced, "@");
     await frame();
-    // No journey: the first painted frame is the resting one.
+
     expect(requireBounds(reduced, "row-ana").y).toBe(rest.y);
     reduced.unmount();
   });
@@ -244,9 +230,6 @@ describe("MentionInput", () => {
   });
 
   it("shows the house budget for a maxVisible that cannot be measured", () => {
-    // `maxVisible` is usually `Math.floor(availableHeight / rowHeight)`, which
-    // is `NaN` until the first layout. `Math.max(0, NaN)` kept it `NaN` and
-    // `Arr.take(list, NaN)` is empty, so a query painted no row at all.
     const mention = renderComponent(
       <div style={{ width: 360 }}>
         <MentionInput testId="mention" label="Comment" maxVisible={Number.NaN}>
@@ -291,8 +274,6 @@ describe("MentionInput", () => {
 
     mention.rerender(<Harness initial="@an" disabled onMention={onMention} />);
 
-    // A field that cannot act cuts its list: there is no gesture to finish, and
-    // the box would fade over a control that refuses every route.
     expect(mention.renderer.findByTestId("row-ana")).toBeUndefined();
     expect(valueOf(mention)).toBe("@an");
     expect(onMention).not.toHaveBeenCalled();
@@ -303,10 +284,6 @@ describe("MentionInput", () => {
 
 describe("the list's exit", () => {
   it("stays painted for its exit and travels back out towards its field", async () => {
-    // The bug this guards: the list was rendered from the query in the text and
-    // returned nothing in the commit the query closed, so the one anchored
-    // surface in the package that follows a query cut while every other panel
-    // left. It now runs the same entrance frames in reverse.
     const mention = renderComponent(<Harness />);
     mention.renderer.clockPause();
     type(mention, "@");
@@ -321,7 +298,7 @@ describe("the list's exit", () => {
 
     mention.renderer.clockFastForward(400);
     await frame();
-    // Below its field, the list starts 4px closer to the field and leaves up.
+
     expect(requireBounds(mention, "row-ana").y).toBe(resting - 4);
 
     mention.renderer.clockResume();
@@ -339,8 +316,6 @@ describe("the list's exit", () => {
     mention.renderer.simulateKeystrokes("escape");
     await frame();
 
-    // The ghost is the list the reader dismissed, not a ranking of the empty
-    // query: `ana` never matched `ann` and must not appear now.
     expect(mention.renderer.findByTestId("row-anna")).toBeDefined();
     expect(mention.renderer.findByTestId("row-ana")).toBeUndefined();
     expect(mention.renderer.findByTestId("row-joan")).toBeUndefined();
@@ -352,11 +327,6 @@ describe("the list's exit", () => {
   });
 
   it("does not answer a press in a dismissed list, and drops the ghost from the tab order", async () => {
-    // `pointerEvents` does not inherit in 0.11.0, so the rows keep their own
-    // hitboxes while the box fades: the seam's shield is what stops a ghost row
-    // inserting a name the reader has already dismissed. The runtime also decides
-    // the Tab order element by element, so the row drops its own stop with the
-    // box.
     const onMention = vi.fn();
     const mention = renderComponent(<Harness onMention={onMention} />);
     type(mention, "@an");
@@ -379,8 +349,7 @@ describe("the list's exit", () => {
     await frame();
     animated.renderer.simulateKeystrokes("escape");
     await frame();
-    // The same frame that closes the animated box still paints it: the exit is
-    // the journey the preference below removes.
+
     expect(animated.renderer.findByTestId("row-ana")).toBeDefined();
     animated.unmount();
 

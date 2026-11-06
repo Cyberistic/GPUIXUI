@@ -1,11 +1,3 @@
-/**
- * InsetGroup in the real GPUix renderer (plan 725).
- *
- * Bugs guarded: rows that run together with no hairline, or a doubled one
- * (a border on both sides of the seam), and a control that is not pushed to
- * the trailing edge, so a column of switches does not line up.
- */
-
 import { Switch } from "@gpuixui/primitives";
 import { afterEach, describe, expect, it } from "vitest";
 import { InsetGroup, InsetGroupRow } from "../inset-group.js";
@@ -51,7 +43,7 @@ describe("InsetGroup", () => {
       requireBounds(root, id),
     );
     const bottom = (box: typeof a) => (box?.y ?? 0) + (box?.height ?? 0);
-    // Each later row starts one hairline below the one before it.
+
     expect((b?.y ?? 0) - bottom(a)).toBe(1);
     expect((c?.y ?? 0) - bottom(b)).toBe(1);
   });

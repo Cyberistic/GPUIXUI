@@ -18,32 +18,14 @@ import {
 import type { CSSProperties } from "react";
 import { cssFontStack } from "./fonts";
 
-/**
- * The browser bridge from a library theme to CSS variables.
- *
- * `@gpuixui/tokens` ships data, not CSS. Every browser rendering of the library
- * — a component preview, a block, the theme editor — reads the variables this
- * maps, so a preview cannot drift from the theme it claims to show. The names
- * are shadcn's (`primaryForeground` → `--primary-foreground`), which is what the
- * preview rules are written against.
- */
-
-/** CSS custom properties, as React accepts them in a `style` prop. */
 export type CssVars = CSSProperties & Record<`--${string}`, string>;
 
-/** `primaryForeground` → `primary-foreground`: the variable a role maps to. */
 const toKebab = (name: string): string =>
   name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 
-/** A theme shadow as the CSS `box-shadow` value it stands for. */
 const cssShadow = (shadow: BoxShadow): string =>
   `${shadow.offsetX}px ${shadow.offsetY}px ${shadow.blurRadius}px ${shadow.spreadRadius}px ${shadow.color}`;
 
-/**
- * The paint a platform's own switch hands a preview, and the knob's lift. A
- * theme that declares no switch writes nothing, and every preview rule falls
- * back to the accent recipe.
- */
 const switchVars = (theme: Theme): CssVars => {
   if (theme.switch === undefined) return {};
   const shadow = elevationShadow(theme, "sm");
@@ -80,30 +62,6 @@ const switchVars = (theme: Theme): CssVars => {
   };
 };
 
-/**
- * The variables a preview reads from a theme: every colour role as
- * `--<kebab role>`, `--radius` from `radius.md`, the two families, the control
- * metrics and row height of the theme's density so a platform's controls and
- * rows change size in a browser preview the way they do in the runtime, the
- * spacing steps a list row and a timeline's event add between their parts, the
- * icon steps a drawn control takes its side from, the pressable-target floor a
- * control reserves around that drawing, the five categorical series colours
- * as `--series-1` through `--series-5` so a chart or a legend paints the
- * theme's scale instead of a palette of its own, the rule a row crosses
- * each fill it can wear (`--divider-card`, `--divider-muted`,
- * `--divider-selected`, `--divider-hover`, `--divider-accent`), because a row
- * or a header band paints its rule
- * *inside* its own box and the raw `border` role is under the perceptibility
- * floor on a wash, and the syntax palette as `--syntax-<kebab role>`, so a code
- * block draws the palette its native `<code>` host paints rather than a
- * third-party theme.
- *
- * @example
- * ```tsx
- * const theme = platformTheme(themes.dark, "win32");
- * <div style={toCssVars(theme)}>{children}</div>;
- * ```
- */
 export const toCssVars = (theme: Theme): CssVars => ({
   "--radius-sm": `${theme.radius.sm}px`,
   "--radius": `${theme.radius.md}px`,
@@ -127,11 +85,7 @@ export const toCssVars = (theme: Theme): CssVars => ({
   "--icon-size-lg": `${theme.iconSize.lg}px`,
   "--target-size": `${targetSize.minimum}px`,
   ...switchVars(theme),
-  // A filled box's hover and press are the theme's derived opaque fills, not an
-  // alpha lift, so a preview shadowing a checked control must take them here.
-  // A link is written in the role `brandText` derives: the fill role is under
-  // the text floor on several surfaces, so the bridge publishes the measured
-  // colour rather than the raw brand.
+
   "--brand-text": brandText(theme),
   "--primary-hover": filledHover(theme, "primary"),
   "--primary-pressed": filledPressed(theme, "primary"),
@@ -139,13 +93,9 @@ export const toCssVars = (theme: Theme): CssVars => ({
   "--secondary-pressed": filledPressed(theme, "secondary"),
   "--destructive-hover": filledHover(theme, "destructive"),
   "--destructive-pressed": filledPressed(theme, "destructive"),
-  // A row paints its rule inside its own box, so the line crosses the fill the
-  // row wears. The token package derives the colour per surface; a preview
-  // drawing the raw `border` role on a wash would show a line the row does not
-  // paint (`packages/data/src/table/table.tsx` → `rule`).
+
   "--divider-card": dividerOn(theme, theme.colors.card) ?? theme.colors.border,
-  // The header band a table paints its labels on (`bg-muted`): its rule lands
-  // on the band, not on the card behind it.
+
   "--divider-muted":
     dividerOn(theme, theme.colors.muted) ?? theme.colors.border,
   "--divider-selected":
@@ -157,8 +107,7 @@ export const toCssVars = (theme: Theme): CssVars => ({
   ...Object.fromEntries(
     seriesColors(theme).map((value, index) => [`--series-${index + 1}`, value]),
   ),
-  // The lift each level paints, so a drawing of a raised surface carries the
-  // theme's own shadow geometry instead of a literal that agrees with one mode.
+
   ...Object.fromEntries(
     elevationLevels.flatMap((level) => {
       const shadow = elevationShadow(theme, level);
@@ -167,8 +116,7 @@ export const toCssVars = (theme: Theme): CssVars => ({
         : [[`--elevation-${level}`, cssShadow(shadow)]];
     }),
   ),
-  // A material is the fill a native window paints over its blur (plan 721); a
-  // drawing pairs it with `backdrop-filter` so the browser shows the same glass.
+
   ...Object.fromEntries(
     materialNames.map((name) => [
       `--material-${name}`,
@@ -189,19 +137,6 @@ export const toCssVars = (theme: Theme): CssVars => ({
   ),
 });
 
-/**
- * The same variables as a stylesheet a reader can copy.
- *
- * A preview paints through a `style` prop, but a reader taking a theme into an
- * application needs the declarations themselves. The block is generated from
- * {@link toCssVars}, so it can never name a variable the preview does not read
- * or miss one it does.
- *
- * @example
- * ```ts
- * toCssText(retroTheme(themes.dark, "aero"), ".aero");
- * ```
- */
 export const toCssText = (theme: Theme, selector = ":root"): string =>
   `${selector} {\n${Object.entries(toCssVars(theme))
     .map(([name, value]) => `  ${name}: ${value};`)

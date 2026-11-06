@@ -1,11 +1,3 @@
-/**
- * Breadcrumb collapsing.
- *
- * The bugs these guard: a long path dropped the current page (the tail was
- * computed from the wrong end), and `maxItems: 1` produced a trail with no
- * first entry and no last entry, so the ellipsis stood alone.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import { collapse, crumb } from "./logic.js";
@@ -69,14 +61,12 @@ describe("collapse", () => {
   });
 
   it("reads a budget it cannot read as the minimum", () => {
-    // `Math.floor(width / 96)` over a width that never arrived is NaN; a budget
-    // that hides the tail would leave an ellipsis where the current page is.
     expect(collapse(items("a", "b", "c", "d", "e"), Number.NaN)).toEqual([
       crumb("a"),
       { kind: "ellipsis" },
       crumb("e"),
     ]);
-    // An infinite budget is a readable "no limit", not the minimum.
+
     expect(
       collapse(items("a", "b", "c", "d"), Number.POSITIVE_INFINITY),
     ).toEqual([crumb("a"), crumb("b"), crumb("c"), crumb("d")]);

@@ -1,15 +1,3 @@
-/**
- * `CheckboxGroup` — the element tree the runtime receives.
- *
- * The bug this suite guards is the group's roving tab stop: a group whose
- * chosen (or first) option is disabled used to leave the stop on that row,
- * which has no `tabIndex`, so there was no reachable stop to Tab into. It also
- * holds the group to the supported accessibility subset — 0.11.0 has no
- * `aria-checked`, so state is announced as `aria-valuetext` — and proves that an
- * arrow moves focus without changing the value, which is what separates a
- * checkbox group from a radio group.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -46,7 +34,6 @@ const idle: GroupFocus = {
   onBlur: vi.fn(),
 };
 
-/** The group's handlers, with the value toggle recorded by default. */
 const handlers = (
   onToggle: (value: string) => void,
 ): CheckboxGroupHandlers => ({
@@ -62,7 +49,6 @@ const options: ReadonlyArray<CheckboxGroupOption> = [
 ];
 const labels = Arr.map(options, (option) => option.label);
 
-/** Type-ahead as the component wires it: the buffer is the caller's, the match is not. */
 const typeAhead = (from: number, key: string) =>
   decideTypeAhead(labels, from, key);
 
@@ -82,11 +68,9 @@ const render = (
     groupHandlers,
   );
 
-/** The group's option rows, from the rendered tree. */
 const rows = (element: ReturnType<typeof renderCheckboxGroup>) =>
   elementChildren(element);
 
-/** A row's tab stop, with "absent" standing in for `undefined`. */
 const stopOf = (row: ReturnType<typeof rows>[number]): number | "absent" =>
   Option.getOrElse(
     Option.flatMap(hostProp(row, "tabIndex"), (value) =>
@@ -97,10 +81,6 @@ const stopOf = (row: ReturnType<typeof rows>[number]): number | "absent" =>
 
 describe("CheckboxGroup", () => {
   it("moves focus to the option a typed prefix names, without toggling it", () => {
-    // The bug this guards: a reader who knew the option's name had to arrow to
-    // it. A checkbox group's arrows move focus only, so type-ahead must not
-    // change a value either — moving focus and toggling in one key would be a
-    // press this keyboard contract does not have.
     const onToggle = vi.fn();
     const onFocusMove = vi.fn();
     const element = render({ options, label: "Channels" }, [], Option.some(0), {
@@ -134,11 +114,6 @@ describe("CheckboxGroup", () => {
   });
 
   it("announces the group's help and addresses the row that holds the stop", () => {
-    // Bug guarded: a checkbox group is a control a form owns, but it had no
-    // address and no announced help — a form could not focus the group it
-    // failed on, an automation host could not name it, and a visible `Label`'s
-    // description reached nobody. The wrapper is not focusable, so the address
-    // lands on the row that holds the tab stop; the help rides the group node.
     const ref = vi.fn();
     const layout = vi.fn();
     const register = vi.fn();
@@ -186,11 +161,6 @@ describe("CheckboxGroup", () => {
   });
 
   it("announces an option's caption as the row's help", () => {
-    // The bug guarded: an option's `description` was painted text only — this
-    // runtime has no `aria-describedby`, so an option that says "Desktop app"
-    // was heard as its name alone. The row is the control, so its caption is the
-    // row's help (`aria-description`, the channel every control here uses), and
-    // a blank caption is absence like a blank name.
     const element = render(
       {
         options: [
@@ -211,11 +181,6 @@ describe("CheckboxGroup", () => {
   });
 
   it("publishes a trimmed row name, and no name at all for a blank label", () => {
-    // The bug guarded: the row's `aria-label` was the option's label verbatim,
-    // so a padded label announced its padding and a blank one published `""` —
-    // the runtime puts an empty string in the accessibility tree, which is not
-    // the same as no name. An icon-only option whose label a caller left blank
-    // announced nothing at all instead of leaving the name to its content.
     const element = render(
       {
         options: [
@@ -263,11 +228,6 @@ describe("CheckboxGroup", () => {
   });
 
   it("reads a stored orientation name as the documented vertical axis", () => {
-    // The bug guarded: `orientation` is a stored layout choice as often as a
-    // literal, so a name this release does not carry arrives as a string the
-    // union no longer names. Read raw it reached `ARROW_KEYS[orientation]`, and
-    // destructuring threw `TypeError: Cannot destructure property 'forward'`
-    // on the first plain key press. It reads as the documented vertical.
     const onToggle = vi.fn();
     const groupHandlers = handlers(onToggle);
     const element = render(
@@ -391,10 +351,6 @@ describe("CheckboxGroup", () => {
   });
 
   it("reports no focus for an option the group no longer draws", () => {
-    // The bug guarded: focus is tracked by index, so a group whose options shrank
-    // kept telling its `style` callback `focused: true` while the row that held
-    // native focus was gone — a caller painting a group-level focus state showed
-    // it on a group nothing could Tab into.
     const groupSeen: CheckboxGroupState[] = [];
     const rowSeen: CheckboxItemState[] = [];
     const element = render(
@@ -417,7 +373,7 @@ describe("CheckboxGroup", () => {
 
     expect(groupSeen).toEqual([{ disabled: false, focused: false }]);
     expect(Arr.every(rowSeen, (row) => !row.focused)).toBe(true);
-    // The shrink must not cost the group its tab stop either.
+
     expect(stopOf(rows(element)[0] ?? expect.fail("no row"))).toBe(0);
   });
 
@@ -462,11 +418,6 @@ describe("CheckboxGroup", () => {
   });
 
   it("puts the ring, the floor and the press on the row, not its box", () => {
-    // The bugs these guard: `focusVisible` on the box never painted (the
-    // runtime applies a focus refinement only to an element it tracks focus
-    // for), the checked box's fill owns a mouse-blocking hitbox so it swallowed
-    // the row's press, and a single-line row measured 17px tall — under the
-    // floor.
     const element = render(
       { options },
       ["email"],
@@ -483,10 +434,6 @@ describe("CheckboxGroup", () => {
   });
 
   it("marks an invalid group on every empty edge and every row ring", () => {
-    // The bug guarded: the page promised that `invalid` paints "every box and
-    // its ring destructive", while a checked box keeps its accent fill — only
-    // the empty box's border and the row's focus ring take the destructive
-    // role, exactly as the standalone `Checkbox` does.
     const element = render(
       { options, invalid: true },
       ["email"],
@@ -520,7 +467,6 @@ describe("CheckboxGroup", () => {
   });
 });
 
-/** Three items written as elements, the middle one disabled and rich. */
 const itemChildren = (
   <>
     <CheckboxGroupItem value="email" label="Email" />
@@ -546,10 +492,6 @@ describe("checkboxGroupItems", () => {
   });
 
   it("reads a stored list structurally, dropping a record it cannot place", () => {
-    // The bug guarded: the data prop is a saved list, and JSON leaves `null` in
-    // an array whose record was deleted. Read raw, that entry threw
-    // `Cannot read properties of null (reading 'value')` and took every row
-    // beside it out of the render.
     const items = groupOptions([
       null,
       { value: "email" },
@@ -586,11 +528,6 @@ describe("checkboxGroupItems", () => {
   });
 
   it("paints no caption for a description that says nothing", () => {
-    // The bug guarded: the row painted `description` whenever it was not
-    // `undefined`, and a run of spaces is a whole line where `""` is none — so
-    // a caption that arrived from data blank cost the row a line of empty text.
-    // The row's own body is the one the three groups share, so the rule is held
-    // here once.
     const blank = optionBody(
       { value: "sms", label: "SMS", description: "   " },
       false,
@@ -612,9 +549,6 @@ describe("checkboxGroupItems", () => {
 
 describe("a checkbox group's row locators", () => {
   it("names each row from its value and leaves the group's own id on the wrapper", () => {
-    // The bug guarded: `testId` landed on the wrapper, so a native probe could
-    // address the group and never press one choice. The derived locator makes a
-    // data-option row a subject a test can name.
     const element = render(
       {
         options,

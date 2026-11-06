@@ -1,15 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-/**
- * A scene that aligns its children must be a flex container — unless it is an
- * element that already carries `gx-demo`, whose rules make it one.
- *
- * Guarded bug: `.gx-demo-list` declared `justify-content: center` on a plain
- * div, so the property did nothing and the list card sat at the start of the
- * row instead of centred.
- */
-
 const css = readFileSync(
   new URL("../../src/styles/demos.css", import.meta.url),
   "utf8",
@@ -20,7 +11,6 @@ const sources = readdirSync(docs)
   .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx"))
   .map((file) => readFileSync(new URL(file, docs), "utf8"));
 
-/** Classes that appear beside `gx-demo` in one className string. */
 const withDemo = new Set(
   sources.flatMap((source) =>
     [...source.matchAll(/className="([^"]*)"/g)]

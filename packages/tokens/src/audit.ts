@@ -1,23 +1,3 @@
-/**
- * The one check a theme runs before it ships.
- *
- * A theme fails silently in independent ways: a role the renderer cannot parse
- * paints black, a shadow colour it cannot parse paints no shadow at all, a
- * number it cannot lay out is dropped, a ladder whose steps no longer describe
- * two sizes makes a name lie, a declared switch track that vanishes into its own
- * surface draws a control the reader cannot find, a text pair below its floor is
- * unreadable, a decorative surface close to its background is invisible, a data
- * series is lost on its plot, a code block's syntax token vanishes into the page
- * it is read on, the selection wash hides the text it selects, an indicator mark
- * disappears into the strip it is drawn on, a find wash cannot be seen or hides
- * the result it marks, a disabled control faded by `disabledOpacity` loses its
- * label, and the keyboard dim the runtime paints on every other focusable erases
- * a control's label. Each has its own report, and a
- * consumer who forgets one ships the failure it would have caught — which is
- * what the documented gate did, running two of the three and holding every theme
- * to the default floors even when the theme declares the high-contrast variant.
- */
-
 import {
   invalidColorRoles,
   type ColourSource,
@@ -76,17 +56,6 @@ import {
 export { missingTokens };
 export type { MissingToken, MissingTokenKind };
 
-/**
- * A theme as the gate reads it: every group in the **storage shape** the reports
- * themselves take.
- *
- * This is the value the seam's own flow produces — `restoreTheme(decoded)` and
- * the reports are meant to be run on the shape a store hands back — so the
- * labels are `unknown` (a stored `"Dark"` or `"HIGH"` is read by
- * `themeModeOf`/`themeContrastOf`), a group may be `null` and a role may be
- * absent. A theme that lost a numeric group or a step is still refused by name
- * (`requireTokens`), because that is an absence no report can describe.
- */
 export type ThemeAuditSource = ColourSource &
   ContrastSource &
   SeriesAuditSource &
@@ -96,110 +65,42 @@ export type ThemeAuditSource = ColourSource &
   ScaleSource &
   SwitchAuditSource;
 
-/** Everything a theme must be free of before it ships. */
 export interface ThemeAudit {
-  /** Roles whose value is not a colour GPUix can paint. */
   readonly invalidRoles: readonly InvalidColorRole[];
-  /** Elevation shadows whose colour GPUix cannot paint, by level and position. */
+
   readonly invalidShadows: readonly InvalidShadowColor[];
-  /** Numeric tokens the renderer cannot lay out — a dropped or invisible size. */
+
   readonly invalidNumbers: readonly InvalidNumber[];
-  /** Steps that no longer describe two sizes — an inverted or repeated rung. */
+
   readonly scales: readonly InvalidScale[];
-  /** A declared switch paint the renderer cannot paint or find, or a box it cannot draw. */
+
   readonly switch: SwitchReport;
-  /** Text, icon and boundary pairs that miss their floor, or cannot be measured. */
+
   readonly contrast: readonly ContrastFailure[];
-  /** Dividers, skeleton fills, veils and status edges too close to their surface. */
+
   readonly decorative: readonly DecorativeFailure[];
-  /** Data series too close to a plot surface, to each other, or to one another under a colour-vision deficiency. */
+
   readonly series: SeriesReport;
-  /** Syntax token colours that cannot be read on the fill a code host paints. */
+
   readonly syntax: readonly SyntaxFailure[];
-  /** Selection washes that cannot be seen, or that hide the text inside them. */
+
   readonly selection: readonly SelectionFailure[];
-  /** Indicator marks that cannot be found on the strip they are drawn on. */
+
   readonly indicators: readonly IndicatorFailure[];
-  /** Find washes that cannot be seen, hide their result, or fail to stand apart. */
+
   readonly highlight: readonly HighlightFailure[];
-  /** Disabled controls whose faded label vanishes into the faded fill. */
+
   readonly disabledFade: readonly DisabledFadeFailure[];
-  /** Controls whose label the keyboard dim erases while another control has focus. */
+
   readonly keyboardDim: readonly KeyboardDimFailure[];
-  /** True only when all fourteen reports are empty. */
+
   readonly passed: boolean;
 }
 
-/**
- * Audit a theme against the fourteen contracts the library holds itself to.
- *
- * The contrast floors come from the theme's own `contrast` variant, so a
- * high-contrast brand is measured at AAA without the caller naming a floor set;
- * pass `floors` to hold a theme to a different contract. Three reports do not
- * take them: `disabledFadeFailures` measures a mechanism rather than a
- * readability claim, and holds every variant to the same
- * `contrastFloors.disabled` — the fade cannot reach a high-contrast variant's
- * 3:1, which is why that variant paints the role pair instead;
- * `keyboardDimFailures` holds every variant to `decorativeFloor` (1.05:1),
- * because the dim is a where-can-Tab-go cue rather than a reading mode; and
- * `switchFailures` holds a declared switch to that same perceptibility floor,
- * because a platform's own toggle is a *look* reproduced rather than one of the
- * library's roles.
- *
- * The two reports that measure the theme's own structure sit beside the colour
- * ones because they are the two ways a theme can be structurally wrong rather
- * than unreadable: `scales` names the rung that no longer exceeds the one
- * before it (a `size` prop that lies, a dialog as square as a card), and
- * `switch` names a declared switch value the renderer ignores, a track that
- * vanishes into the surface it stands on, or a box whose knob no longer fits the
- * track it slides in. Both were public functions *beside* the gate, so a
- * consumer running the gate alone shipped a theme they failed.
- *
- * An incomplete theme does not crash the gate. A theme restored from storage can
- * predate a colour role, an elevation level or the whole elevation scale the
- * library has added since, so `invalidRoles` and `invalidShadows` name the
- * absence and the contracts that measure a pair report it unmeasurable; `passed`
- * is false either way. The same answer is one group up: a store that truncated
- * past the whole `colors` group is read through `themeColors`, so `invalidRoles`
- * names all 47 roles rather than the first lookup throwing. A
- * **numeric step** is the one absence the reports cannot describe — the
- * components read every step, and `invalidNumbers` walks the steps a theme
- * carries, so it says nothing about one that is not there while the first paint
- * that asks for it throws — so a theme missing a group, or a step inside one, is
- * refused with an error naming the path. A font family is refused the same way:
- * it is present but **blank**, so no report can measure it, while every text
- * role paints the renderer's fallback instead of the face the theme names. Such
- * a theme must be rebuilt from a shipped one: a step is a breaking change rather
- * than an additive one. All three lists are readable **before** the refusal with
- * {@link missingTokens}, so a caller deciding whether to restore a stored theme
- * reads the absence as data instead of catching this function's error.
- *
- * **A store with no saved theme is that absence at its widest**: JSON writes
- * `null` for a row never written and a settings value that never held one reads
- * as `undefined`, so the gate takes both and reads them as the empty source
- * {@link missingTokens} already describes — every numeric group missing, named
- * in the refusal. Reading the labels before that refusal threw
- * `TypeError: Cannot read properties of null (reading 'contrast')` instead.
- *
- * `passed` is the only passing result — a report nobody checked is not a pass.
- *
- * @example
- * ```ts
- * import { auditTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
- *
- * const brand = extendTheme(lightTheme, { colors: { primary: "#6A45F0" } });
- * auditTheme(brand).passed; // true
- * ```
- */
 export function auditTheme(
   theme: ThemeAuditSource | null | undefined,
   floors?: ContrastFloors,
 ): ThemeAudit {
-  // A store that kept no theme at all (`null` for a row never written, the
-  // `undefined` a settings value reads as) is the empty source `missingTokens`
-  // names every group missing for, so the refusal below is the answer rather
-  // than a `TypeError` reading a label off the absence. The floors are read
-  // after it, from the source the gate actually measures.
   const source: ThemeAuditSource = theme ?? {};
   requireTokens(source);
   const contract = floors ?? contrastFloorsFor(source);

@@ -2,22 +2,8 @@ import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { appCssSchemes as schemes } from "./app-css.test-util";
 
-/**
- * The docs site's own palette — the one thing on the site that is not the
- * library's tokens.
- *
- * `src/styles/app.css` declares it twice, for `:root` and `.dark`, and Fumadocs
- * reads every colour through those variables. Nothing measured it: the light
- * scheme painted its focus ring at 2.33:1 against the page, under the 3:1 floor
- * a non-text boundary needs, so a keyboard reader could not see where they were
- * on a light page. The clock, the pairs and the floors are the library's own
- * (`@gpuixui/tokens`), so the docs identity is held to the contract the
- * components are.
- */
-
 const schemeNames = ["light", "dark"] as const;
 
-/** The pairs a reader reads, and the floor each has to clear. */
 const pairs: ReadonlyArray<
   readonly [foreground: string, background: string, floor: number]
 > = [
@@ -30,8 +16,7 @@ const pairs: ReadonlyArray<
   ["--accent-foreground", "--accent", contrastFloors.secondary],
   ["--primary-foreground", "--primary", contrastFloors.secondary],
   ["--secondary-foreground", "--secondary", contrastFloors.secondary],
-  // The theme editor draws a destructive-filled action with this pair; the
-  // variable was never declared, so its label inherited the page's ink.
+
   ["--destructive-foreground", "--destructive", contrastFloors.secondary],
   [
     "--sidebar-primary-foreground",
@@ -39,21 +24,19 @@ const pairs: ReadonlyArray<
     contrastFloors.secondary,
   ],
   ["--sidebar-accent-foreground", "--sidebar-accent", contrastFloors.secondary],
-  // The theme editor prints a broken pair in `--destructive`.
+
   ["--destructive", "--background", contrastFloors.secondary],
-  // A focus ring is a non-text boundary: 3:1 against every surface it is drawn on.
+
   ["--ring", "--background", contrastFloors.boundary],
   ["--ring", "--card", contrastFloors.boundary],
   ["--ring", "--sidebar", contrastFloors.boundary],
 ];
 
-/** A scheme's colour variables. The families are scheme-independent. */
 const colourNames = (palette: Readonly<Record<string, string>>): string[] =>
   Object.keys(palette).filter((name) => !name.startsWith("--font-"));
 
 describe("the docs palette", () => {
   it("declares the same colours in both schemes", () => {
-    // A variable only in `:root` leaves the dark scheme on the light value.
     const onlyInLight = colourNames(schemes.light).filter(
       (name) => !(name in schemes.dark),
     );

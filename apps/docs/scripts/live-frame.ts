@@ -1,53 +1,24 @@
-/**
- * What a live-surface frame has to satisfy, and how to read its pixels.
- *
- * `scripts/live-surface-probe.ts` boots the published GPUix wasm renderer in a
- * headless browser and screenshots the frame. A screenshot that exists is not a
- * paint — a blank page writes one too — so the probe reads a pixel out of the
- * PNG and holds it to the fill the mutation batch set.
- *
- * The renderer's own `getPaintedText()` is **not** usable for this: it returned
- * `[]` on a frame that visibly painted (see `docs/preview-strategy.md` §The
- * paint is measured), so the pixels are the only honest report.
- *
- * The scanline walk below is a byte-level PNG reader, so it is index-driven on
- * purpose: this is the boundary that turns a browser's file into a domain value,
- * not domain logic.
- */
 import { inflateSync } from "node:zlib";
 
-/** The text the batch sets, and the report must find in the retained tree. */
 export const probeText = "GPUix live surface";
 
-/** Two root fills; matching pixels are the proof that the frame is the batch. */
 export const probeColours = ["#7C5CFF", "#31A05F"] as const;
 
-/** The frame's box, and the point sampled inside it. */
 export const probeBox = { width: 420, height: 200 } as const;
 export const probePoint = { x: 210, y: 100 } as const;
 
-/**
- * The headers a document needs before the wasm starts.
- *
- * The glue instantiates `WebAssembly.Memory` with `shared: true`, so
- * `SharedArrayBuffer` must exist: without cross-origin isolation the module
- * never runs. `require-corp` also needs every subresource to be same-origin,
- * which is why the probe serves the wasm itself.
- */
 export const isolationHeaders = {
   "cross-origin-opener-policy": "same-origin",
   "cross-origin-embedder-policy": "require-corp",
   "cross-origin-resource-policy": "same-origin",
 } as const;
 
-/** The probe page: one batch, one report, and nothing painted over the frame. */
 export const probeHtml = (colour: string): string => {
   const fill = JSON.stringify(colour);
   return [
     '<!doctype html><meta charset="utf-8"><title>GPUix live surface</title>',
     '<body style="margin:0">',
-    // Hidden on purpose: a visible report would change the pixels, so a frame
-    // could differ from its sibling for the wrong reason.
+
     '<pre id="out" hidden>pending</pre>',
     '<script type="module">',
     "const lines = [];",
@@ -69,7 +40,7 @@ export const probeHtml = (colour: string): string => {
     '    ["appendChild", 1, 2],',
     '    ["setRoot", 1],',
     "  ]));",
-    // The renderer lays out and paints on its own frame.
+
     "  await new Promise((done) => setTimeout(done, 600));",
     '  say("status=ok");',
     '  say("canvas=" + (document.querySelector("canvas") === null ? "no" : "yes"));',
@@ -81,7 +52,6 @@ export const probeHtml = (colour: string): string => {
   ].join("\n");
 };
 
-/** The `key=value` lines the probe page reports. */
 export const parseReport = (text: string): Readonly<Record<string, string>> =>
   Object.fromEntries(
     text
@@ -95,7 +65,6 @@ export const parseReport = (text: string): Readonly<Record<string, string>> =>
       .filter(([key]) => key.length > 0),
   );
 
-/** The report, read out of the dumped DOM rather than trusted from a script. */
 export const readReport = (dom: string): Readonly<Record<string, string>> => {
   const block = /<pre id="out"[^>]*>([\s\S]*?)<\/pre>/.exec(dom);
   if (block === null) return {};
@@ -103,15 +72,13 @@ export const readReport = (dom: string): Readonly<Record<string, string>> => {
   return parseReport(block[1] ?? "");
 };
 
-/** One probe run: what the page reported, and the pixel at the sample point. */
 export interface FrameResult {
   readonly colour: string;
   readonly report: Readonly<Record<string, string>>;
-  /** `#rrggbb` at `probePoint`, or `undefined` when the PNG could not be read. */
+
   readonly pixel: string | undefined;
 }
 
-/** Whether a frame is a paint of `colour`, and every reason it is not. */
 export const judge = (
   frame: FrameResult,
 ): { readonly ok: boolean; readonly reasons: ReadonlyArray<string> } => {
@@ -138,7 +105,6 @@ export const judge = (
 
 const signature = [137, 80, 78, 71, 13, 10, 26, 10] as const;
 
-/** Any byte buffer: the reader's input comes from a browser, not from us. */
 type Bytes = Uint8Array<ArrayBufferLike>;
 
 const u32 = (bytes: Bytes, at: number): number =>
@@ -171,7 +137,6 @@ interface Header {
   readonly channels: number;
 }
 
-/** The IHDR fields this reader supports, or `undefined` for anything else. */
 const header = (bytes: Bytes): Header | undefined => {
   if (!signature.every((byte, at) => bytes[at] === byte)) return undefined;
   if (ascii(bytes, 12, 4) !== "IHDR") return undefined;
@@ -186,7 +151,6 @@ const header = (bytes: Bytes): Header | undefined => {
   return { width: u32(bytes, 16), height: u32(bytes, 20), channels };
 };
 
-/** The concatenated `IDAT` payload, which is the one zlib stream. */
 const data = (bytes: Bytes): Bytes => {
   const chunks: Array<Bytes> = [];
   let at = 8;
@@ -202,7 +166,6 @@ const data = (bytes: Bytes): Bytes => {
   return join(chunks);
 };
 
-/** A scanline byte, or zero outside it — byte 0 is the filter, never a pixel. */
 const byteAt = (row: Bytes, index: number): number =>
   index >= 1 && index < row.length ? (row[index] ?? 0) : 0;
 
@@ -219,7 +182,6 @@ const paeth = (left: number, up: number, corner: number): number => {
       : corner;
 };
 
-/** Undo one scanline's filter, in place, against the row above it. */
 const unfilter = (row: Bytes, previous: Bytes, channels: number): void => {
   const filter = row[0] ?? 0;
   const at = (index: number): number => byteAt(row, index);
@@ -241,10 +203,7 @@ const unfilter = (row: Bytes, previous: Bytes, channels: number): void => {
   }
 };
 
-/** The inflated scanlines, or `undefined` when the zlib stream is not whole. */
 const pixels = (png: Bytes): Bytes | undefined => {
-  // A truncated or non-PNG file makes the inflater throw; "cannot measure" is
-  // the answer here, and a throw is not a measurement.
   try {
     return inflateSync(data(png));
   } catch {
@@ -257,90 +216,33 @@ const hex = (red: number, green: number, blue: number): string =>
     .map((channel) => channel.toString(16).padStart(2, "0"))
     .join("")}`;
 
-/**
- * A decoded frame: the header's fields and the unfiltered scanlines.
- *
- * The scanlines keep their filter byte, so a pixel's offset is
- * `row * stride + 1 + x * channels`.
- */
-interface Frame extends Header {
-  readonly data: Bytes;
-}
-
-/** One decode of the PNG; `undefined` when the file cannot be measured. */
-const decode = (png: Bytes): Frame | undefined => {
-  const size = header(png);
-  if (size === undefined) return undefined;
-
-  const data = pixels(png);
-  if (data === undefined) return undefined;
-
-  const stride = size.width * size.channels + 1;
-  if (data.length < stride * size.height) return undefined;
-
-  let previous: Bytes = new Uint8Array(stride);
-  for (let row = 0; row < size.height; row += 1) {
-    const line = data.subarray(row * stride, (row + 1) * stride);
-    unfilter(line, previous, size.channels);
-    previous = line;
-  }
-
-  return { ...size, data };
-};
-
-/**
- * How many distinct colours the whole frame carries.
- *
- * A capture that exists is not a paint: a blank canvas writes a perfectly valid
- * image. The capture run holds a frame to this floor — one colour is the empty
- * stage, and the empty stage is not a rendered component. Every pixel counts:
- * a sampled grid missed a disclosure's glyphs and called a real frame flat.
- * `undefined` when the file cannot be measured, never a guess.
- */
-export const distinctFillCount = (png: Bytes): number | undefined => {
-  const frame = decode(png);
-  if (frame === undefined) return undefined;
-
-  const stride = frame.width * frame.channels + 1;
-  const seen = new Set<number>();
-
-  for (let y = 0; y < frame.height; y += 1) {
-    for (let x = 0; x < frame.width; x += 1) {
-      const at = y * stride + 1 + x * frame.channels;
-      const [red, green, blue] = [
-        frame.data[at] ?? 0,
-        frame.data[at + 1] ?? 0,
-        frame.data[at + 2] ?? 0,
-      ];
-      seen.add((red << 16) | (green << 8) | blue);
-    }
-  }
-
-  return seen.size;
-};
-
-/**
- * The pixel at `(x, y)` of an 8-bit, non-interlaced RGB or RGBA PNG.
- *
- * `undefined` rather than a guess: a frame this reader cannot measure must fail
- * the probe, not pass it. CRC and ancillary chunks are ignored — Chrome writes
- * the frame, and the point is the colour, not the file's integrity.
- */
 export const fillAt = (
   png: Bytes,
   x: number,
   y: number,
 ): string | undefined => {
-  const frame = decode(png);
-  if (frame === undefined) return undefined;
-  if (x < 0 || y < 0 || x >= frame.width || y >= frame.height) return undefined;
+  const size = header(png);
+  if (size === undefined) return undefined;
+  if (x < 0 || y < 0 || x >= size.width || y >= size.height) return undefined;
 
-  const stride = frame.width * frame.channels + 1;
-  const at = y * stride + 1 + x * frame.channels;
+  const inflated = pixels(png);
+  if (inflated === undefined) return undefined;
+
+  const stride = size.width * size.channels + 1;
+  if (inflated.length < stride * (y + 1)) return undefined;
+
+  let previous: Bytes = new Uint8Array(stride);
+  for (let row = 0; row <= y; row += 1) {
+    const line = inflated.subarray(row * stride, (row + 1) * stride);
+    unfilter(line, previous, size.channels);
+    previous = line;
+  }
+
+  const start = 1 + x * size.channels;
   const [red, green, blue] = [
-    frame.data[at] ?? 0,
-    frame.data[at + 1] ?? 0,
-    frame.data[at + 2] ?? 0,
+    previous[start] ?? 0,
+    previous[start + 1] ?? 0,
+    previous[start + 2] ?? 0,
   ];
 
   return hex(red, green, blue);

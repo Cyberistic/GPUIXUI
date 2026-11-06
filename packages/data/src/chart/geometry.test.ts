@@ -1,20 +1,3 @@
-/**
- * The geometry the second chart generation paints: a signed axis, curves,
- * areas, radar webs, radial rings and horizontal bars.
- *
- * The bugs these guard are the ones a richer chart ships with:
- *
- * - a negative value drawn as a zero-height bar, so the axis names a number the
- *   plot never draws;
- * - a smooth curve that only approaches its points, so a dot sits off its own
- *   value;
- * - an area whose fill stops at the line instead of the axis' zero;
- * - a fade painted by one band, so the fill is flat at the baseline;
- * - a radar whose point count depends on the label list instead of the axes;
- * - a radial ring of zero painting a mark that claims a value;
- * - a pie that drops the gap between slices, joining two neighbours into one.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -46,7 +29,6 @@ import {
 
 const box: ChartBox = { width: 200, height: 100 };
 
-/** A geometry value the case depends on, failing the case when it is absent. */
 const someOr = <A>(value: Option.Option<A>, why: string): A =>
   Option.match(value, {
     onNone: () => {
@@ -138,14 +120,6 @@ describe("curves", () => {
   });
 
   it("never overshoots the data it is drawn through", () => {
-    // A spike is a spike. A Catmull-Rom spline bends to reach its neighbours,
-    // so the curve from a peak down to a trough dipped **below** the trough —
-    // painting a value the data does not have, and on a chart that starts at
-    // zero, drawing under the axis. The monotone rule flattens at every local
-    // extreme, so the curve stays inside its own data.
-    // A flat run that ends in a drop: a Catmull-Rom spline bends *up* before
-    // it descends, so the curve rose above the flat line — a value higher than
-    // any the data holds.
     const spiky = [
       { x: 0, y: 100 },
       { x: 50, y: 100 },
@@ -155,8 +129,6 @@ describe("curves", () => {
     ];
     const path = someOr(curvePath(spiky, "smooth"), "no smooth curve");
 
-    // Every coordinate on the path — the points and the two control points of
-    // every segment — lies inside the data's own range.
     const values = [...path.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((match) =>
       Number(match[2]),
     );
@@ -191,7 +163,7 @@ describe("an area", () => {
   it("fades by nesting bands, so the baseline is the lightest", () => {
     const bands = areaBands(points, box, { min: 0, max: 100 }, 4);
     expect(bands).toHaveLength(4);
-    // The last band is the whole area, so its path reaches every point.
+
     expect(bands[3]).toContain("M0 80");
   });
 
@@ -212,7 +184,7 @@ describe("bars on a signed axis", () => {
     const mark = layer?.[0];
     expect(mark?.kind).toBe("rect");
     if (mark?.kind !== "rect") return;
-    // -40 on a -50..50 axis: from y = 90 down to the zero line at 50.
+
     expect(mark.y).toBe(50);
     expect(mark.height).toBeCloseTo(40);
   });
@@ -256,7 +228,7 @@ describe("a radar", () => {
     expect(points).toHaveLength(3);
     expect(points[0]?.x).toBeCloseTo(100);
     expect(points[0]?.y).toBeCloseTo(4);
-    // A zero reaches the centre, not a rim.
+
     expect(points[2]?.x).toBeCloseTo(100);
     expect(points[2]?.y).toBeCloseTo(50);
   });

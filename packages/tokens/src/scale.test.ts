@@ -94,8 +94,7 @@ describe("density presets", () => {
       expect(densityPresets[preset].controlHeight.md).toBeLessThan(
         densityPresets[preset].controlHeight.lg,
       );
-      // A dense list row is built at exactly this height and takes a press, so
-      // the scale itself must clear the floor a brand's row is held to.
+
       expect(densityPresets[preset].rowHeight).toBeGreaterThanOrEqual(
         targetSize.minimum,
       );
@@ -103,11 +102,6 @@ describe("density presets", () => {
   });
 
   it("lines every preset's rows up with its default control", () => {
-    // A dense list, tree or log row and one line of a scroller's step are built
-    // at `rowHeight`; a `md` control is built at `controlHeight.md`, and a list
-    // row sits beside the toolbar's default actions. The catalogue states the
-    // two share a height, so a preset that moves one must move the other — the
-    // numbers are both valid, and no report can see the two-pixel mismatch.
     densityNames.forEach((preset) => {
       expect(
         densityPresets[preset].rowHeight,
@@ -154,26 +148,17 @@ describe("avatar sizes", () => {
   });
 
   it("aligns the inline sizes with the text and row scales", () => {
-    // 20px is the large icon, so an avatar sits optically level with a toolbar;
-    // 26px is a 20px body line plus 3px of breathing room either side.
     expect(avatarSize.xs).toBe(20);
     expect(avatarSize.sm).toBe(26);
     expect(avatarSize.md).toBe(densityPresets.comfortable.controlHeight.md);
     expect(avatarSize.lg).toBe(densityPresets.spacious.controlHeight.lg);
   });
 
-  /**
-   * The defect this holds: `avatarPixels` did not exist and the scale shipped no
-   * index, so a stored avatar size — a saved contact list's density, a settings
-   * row's preview — could only reach the scale through a cast (`AGENTS.md` §2
-   * forbids it) or a second hand-written list of the four names.
-   */
   it("reads every step at its own diameter, and a dropped one at the default", () => {
     avatarSizes.forEach((step) => {
       expect(avatarPixels(step), step).toBe(avatarSize[step]);
     });
-    // A name a release renamed or dropped, a name the record's prototype
-    // carries, and a value that is not a name at all: all paint the default.
+
     ["xl", "huge", "toString", "constructor", "", 32, null].forEach((value) => {
       expect(avatarPixels(value), String(value)).toBe(avatarSize.md);
     });

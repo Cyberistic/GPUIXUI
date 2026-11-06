@@ -13,19 +13,6 @@ import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { useEffect, useRef, useState } from "react";
 
-/**
- * Browser preview for the Log viewers page.
- *
- * `@gpuixui/files`' `LogViewer` is a GPUix host list, so the page cannot mount
- * it and this drawing is a labelled approximation. The lines are the package's
- * own: `parseLogLine` reads every row, `filterByLevel` decides what paints, and
- * `levelTone` names the role the level column is tinted with. The toolbar is the
- * component's `ToggleGroup`/`Toggle` shape, the gutter is its
- * `LEVEL_COLUMN_WIDTH`, and a row is the density's `rowHeight`. Only the paint —
- * and the scroll box, because a browser scrolls its own way — is the browser's.
- */
-
-/** The log the preview opens: a dev server's last few dozen lines. */
 export const LOG_LINES: ReadonlyArray<string> = [
   "info dev server started on :5173",
   "debug resolved 148 modules in 320 ms",
@@ -42,24 +29,20 @@ export const LOG_LINES: ReadonlyArray<string> = [
   "debug cache cleared (12 entries)",
 ];
 
-/** The lines the preview appends when a reader presses "Append a line". */
 export const APPENDED_LINES: ReadonlyArray<string> = [
   "info rebuild finished in 96 ms",
   "warn 1 module was not tree-shaken",
   "info hot update src/app.tsx",
 ] as const;
 
-/** The viewport the page's usage passes, in pixels. */
 export const LOG_FRAME_HEIGHT = 240;
 
-/** The rows the filter paints, through the package's parser and filter. */
 export const visibleEntries = (
   lines: ReadonlyArray<string>,
   enabled: ReadonlyArray<LogLevel>,
 ): ReadonlyArray<LogEntry> =>
   filterByLevel(Arr.map(lines, parseLogLine), HashSet.fromIterable(enabled));
 
-/** The enabled levels after one toggle, in the package's level order. */
 export const toggleLevel = (
   enabled: ReadonlyArray<LogLevel>,
   level: LogLevel,
@@ -70,11 +53,9 @@ export const toggleLevel = (
       : Arr.contains(enabled, candidate),
   );
 
-/** The colour role a level's token paints in; `debug` and `trace` are quiet. */
 export const levelRole = (level: LogLevel): string =>
   Option.getOrElse(levelTone(level), () => "muted");
 
-/** The line an append produces; the caller owns the lines, as with the viewer. */
 export const appendLine = (
   lines: ReadonlyArray<string>,
 ): ReadonlyArray<string> =>
@@ -83,21 +64,18 @@ export const appendLine = (
     APPENDED_LINES[lines.length % APPENDED_LINES.length] ?? "info appended",
   );
 
-/** The drawing itself: the level filter, the follow toggle and the rows. */
 export interface LogViewerFrameProps {
-  /** The raw lines, controlled the way `LogViewer` takes them. */
   readonly lines: ReadonlyArray<string>;
-  /** The enabled levels, controlled the same way. */
+
   readonly enabled: ReadonlyArray<LogLevel>;
-  /** Whether the list follows the tail. */
+
   readonly follow: boolean;
-  /** Reports the next enabled levels. */
+
   readonly onEnabledChange: (levels: ReadonlyArray<LogLevel>) => void;
-  /** Reports the next follow state. */
+
   readonly onFollowChange: (follow: boolean) => void;
 }
 
-/** The drawing itself: the level filter, the follow toggle and the rows. */
 export function LogViewerFrame({
   lines,
   enabled,
@@ -181,7 +159,6 @@ export function LogViewerFrame({
   );
 }
 
-/** The page's preview: the filter, the follow toggle and an append action. */
 export function LogViewerDemo() {
   const [lines, setLines] = useState<ReadonlyArray<string>>(LOG_LINES);
   const [enabled, setEnabled] = useState<ReadonlyArray<LogLevel>>(LOG_LEVELS);

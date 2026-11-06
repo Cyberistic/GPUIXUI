@@ -96,20 +96,3 @@ is never moved.
 | `MessageScrollerContent` | the rows column; publishes `aria-busy` | `className?`, `children` |
 | `MessageScrollerItem` | one row, no surface; reports its size | `scrollAnchor?`, `className?`, `children`, `ref?` |
 | `MessageScrollerJumpToLatest` | a floating secondary control, centred over the viewport's bottom edge | `label?`, `className?`, `style?` |
-
-## Notes
-- Not virtualized; every row renders. `<virtual-list>` takes an item count
-  rather than compound children.
-- No `aria-live` role, so new rows are not announced; the control's count is
-  painted and the content publishes `aria-busy` while a reply is streaming.
-- Turn anchoring has no follow-output handoff: after a new turn is anchored, the
-  reader is away from the tail until they jump back. shadcn resumes following
-  once the reply fills the viewport; this release keeps the reader's position.
-- `scrollToMessage` is not part of this release: items carry a ref and report
-  their size, but there is no id index or external jump command yet.
-
-## Related
-
-- [Message](/components/message) — the row you put in an item.
-- [Chat](/components/chat) — a full conversation on the scroller.
-- [Bubble](/components/bubble) — the message surface.

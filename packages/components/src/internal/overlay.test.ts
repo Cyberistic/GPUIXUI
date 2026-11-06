@@ -1,16 +1,3 @@
-/**
- * The overlay surface seam: a floating surface paints the theme's lift beside
- * its hairline edge.
- *
- * The bug these guard: `@gpuixui/tw` writes `shadow-*` and `ring-*` through the
- * one `boxShadow` slot and applies the ring after the utilities, so the shipped
- * dialog, popover and menu recipes compiled to a 1px `foreground` ring and **no
- * elevation** — a "raised" surface that sat flat. The runtime paints a shadow
- * list, so the seam restores the theme's level as a second entry. A recipe that
- * already paints its own lift must keep exactly one (a second would be a
- * double-height shadow), and the reserved, empty `overlay` level must stay flat.
- */
-
 import {
   classesToStyle,
   DIALOG_CONTENT,
@@ -30,7 +17,6 @@ import {
   type Theme,
 } from "./theme.js";
 
-/** The shadows a compiled style paints, in order. */
 const painted = (style: { readonly boxShadow?: BoxShadow | BoxShadow[] }) =>
   Option.getOrElse(
     Option.map(Option.fromNullishOr(style.boxShadow), (value) =>
@@ -39,7 +25,6 @@ const painted = (style: { readonly boxShadow?: BoxShadow | BoxShadow[] }) =>
     () => [],
   );
 
-/** The shadow the recipe itself compiles, before the seam adds a lift. */
 const recipeShadow = (recipe: string, theme: Theme) =>
   painted(classesToStyle(recipe, theme).style);
 
@@ -63,8 +48,6 @@ describe("overlaySurfaceStyle", () => {
   });
 
   it("keeps exactly one lift when the recipe already paints its own", () => {
-    // TOAST_CARD names `border` and `shadow-md`, so its recipe compiles the md
-    // lift; naming a level must not stack a second shadow behind it.
     const style = overlaySurfaceStyle(TOAST_CARD, undefined, lightTheme, "md");
     expect(painted(style)).toEqual([elevationShadow(lightTheme, "md")]);
   });

@@ -77,23 +77,6 @@ import {
 } from "./virtualization-demo";
 import { rowsInView } from "./window-preview";
 
-/**
- * The data lane's new previews.
- *
- * `component-preview.test.ts` holds the registry to the pages and
- * `preview-demo-render.test.tsx` mounts every demo in both palettes; what those
- * cannot see is whether a drawing still runs the package's own arithmetic. These
- * cases read each drawing against the logic the component ships: the query the
- * page evaluates, the window the package calculates and the column reducers the
- * menu, the order and the divider call.
- *
- * Guarded bugs: the Virtualization drawing called every **mounted** row "in
- * view" (the overdraw above the top edge is clipped, so the scene claimed rows
- * nobody could see), the Charts viewBox cut the ceiling tick in half, and the
- * column menu left the last visible column's toggle enabled, so a press claimed
- * a change the reducer refuses.
- */
-
 const markup = (node: Parameters<typeof renderToStaticMarkup>[0]): string =>
   renderToStaticMarkup(node);
 
@@ -115,7 +98,7 @@ describe("the AdvancedFilter preview", () => {
     expect(ids(kept)).toEqual(
       ids(filterByTree(FILTER_FILES, opening, filterValueOf)),
     );
-    // The opening pair is a conjunction: a tracked file larger than 1 kB only.
+
     expect(ids(kept)).toEqual(["brand"]);
   });
 
@@ -126,7 +109,7 @@ describe("the AdvancedFilter preview", () => {
     expect(ids(kept)).toEqual(
       ids(filterByTree(FILTER_FILES, any, filterValueOf)),
     );
-    // Every tracked file joins the one large ignored file.
+
     expect(ids(kept)).toEqual(["brand", "hero", "logo", "draft"]);
     expect(kept.length).toBeGreaterThan(
       filterFiles(appliedFilter(false, "all", "1024")).length,
@@ -194,8 +177,6 @@ describe("the Virtualization preview", () => {
       expect(mountedWindow(offset)).toEqual(calculator.at(offset));
     });
 
-    // Only a window exists: the mounted set is wider than the viewport, and it
-    // starts with overdraw rows above the first row in view.
     const firstVisible = Math.floor(4_000 / VIRTUAL_ROW_HEIGHT);
     const mounted = mountedRows(4_000);
     expect(Option.getOrNull(Arr.head(mounted))).toBe(
@@ -205,7 +186,7 @@ describe("the Virtualization preview", () => {
       Math.ceil(VIRTUAL_VIEWPORT / VIRTUAL_ROW_HEIGHT),
     );
     expect(mountedWindow(4_000).start).toBe(firstVisible - VIRTUAL_OVERDRAW);
-    // The view starts at the top edge; the mounted window reaches past it.
+
     expect(rowsInView(virtualSpec, 4_000)).toEqual({
       start: firstVisible,
       end: firstVisible + Math.ceil(VIRTUAL_VIEWPORT / VIRTUAL_ROW_HEIGHT),
@@ -213,9 +194,6 @@ describe("the Virtualization preview", () => {
   });
 
   it("labels only the rows the viewport shows as in view", () => {
-    // The bug guarded: the drawing called every mounted row "in view", so the
-    // overdraw above the top edge — rows a reader cannot see — claimed to be on
-    // screen. The scene now reads the viewport's own range.
     expect(rowsInView(virtualSpec, 0)).toEqual({
       start: 0,
       end: Math.ceil(VIRTUAL_VIEWPORT / VIRTUAL_ROW_HEIGHT),
@@ -251,7 +229,7 @@ describe("the Virtualization preview", () => {
     expect(html.match(/gx-virt-row/g)).toHaveLength(mounted.length);
     expect(html.match(/data-index="/g)).toHaveLength(mounted.length);
     expect(html).toContain(windowReadout(0));
-    // The header is a sibling above the scroller, not a row inside it.
+
     expect(html.indexOf("gx-dt-head")).toBeLessThan(
       html.indexOf("gx-virt-body"),
     );
@@ -329,10 +307,6 @@ describe("the Column configuration preview", () => {
   });
 
   it("disables the last column's toggle instead of refusing its press", () => {
-    // Guarded bug: with one column left, the menu's toggle still claimed a
-    // change (`aria-pressed` true) and the press did nothing. The package
-    // disables that row (`column.visible && !canHide`), and a hidden column has
-    // no move arrows at all — the menu only paints moves for visible tracks.
     const oneLeft = Arr.reduce(
       ["status", "size", "updated"],
       opening,
@@ -348,7 +322,7 @@ describe("the Column configuration preview", () => {
     expect(source).toContain("{shown < 0 ? null : (");
     expect(source).toContain("disabled={shown === 0}");
     expect(source).toContain("disabled={shown === columns.length - 1}");
-    // The menu the snippet passes `onReset` to offers the reset it names.
+
     expect(source).toContain("Reset columns");
     expect(source).toContain("setState(openingColumns())");
   });
@@ -381,8 +355,7 @@ describe("the Charts preview", () => {
         mark.kind === "rect",
     );
     expect(bars.match(/<rect /g)).toHaveLength(marks.length);
-    // Every bar stands on the plot's floor, inside the package's box, and the
-    // two series share each slot side by side rather than over each other.
+
     Arr.forEach(marks, (mark) => {
       expect(mark.x + mark.width).toBeLessThanOrEqual(chartPlot.width);
       expect(mark.y + mark.height).toBe(chartPlot.height);
@@ -413,9 +386,6 @@ describe("the Charts preview", () => {
     );
     expect(lines).not.toContain("<rect ");
     CHART_SERIES.forEach((series) => {
-      // The demo draws the shape the shipped `AreaChart` does: a monotone
-      // curve through the points and a fill under it, not the straight
-      // segments the package's `linePath` makes.
       const area = seriesArea(series);
       expect(Option.isSome(area)).toBe(true);
       if (Option.isNone(area)) return;
@@ -426,8 +396,7 @@ describe("the Charts preview", () => {
 
   it("prints the axis, the slots and the legend the frame paints", () => {
     const step = chartCeiling / 4;
-    // The plot is the package's box: the marks fill it, and nothing is clipped
-    // outside it because the axis and the labels are boxes beside it.
+
     expect(bars).toContain(
       `viewBox="0 0 ${chartPlot.width} ${chartPlot.height}"`,
     );
@@ -437,8 +406,7 @@ describe("the Charts preview", () => {
     Arr.forEach(CHART_LABELS, (label) => {
       expect(bars).toContain(`>${label}</span>`);
     });
-    // One slot per category, and each slot is the plot's width divided by the
-    // labels — the composition `chart.tsx` paints.
+
     const slot = chartPlot.width / CHART_LABELS.length;
     expect(bars.match(/class="gx-dchart-category"/g)).toHaveLength(
       CHART_LABELS.length,
@@ -469,8 +437,7 @@ describe("the four scenes this file owns", () => {
       expect(present.filter((name) => !html.includes(name))).toEqual([]);
       expect(html, `scene ${index}`).not.toContain("<table");
     });
-    // The chart's plot is `chartBox`'s, so the frame paints that box and no
-    // second margin of its own.
+
     expect(markup(<ChartDemoBody mode="bars" theme={themes.dark} />)).toContain(
       `viewBox="0 0 ${chartPlot.width} ${chartPlot.height}"`,
     );

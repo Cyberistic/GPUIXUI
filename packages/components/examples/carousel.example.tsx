@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Carousel example: a three-panel gallery with previous/next controls.
- *
- * The slides stay mounted; only the active one is displayed. Arrow keys work
- * while the carousel has focus, and Home/End jump to the ends. The dots are the
- * second route to a slide: one press target per panel, named for it.
- */
-
 import { useState } from "react";
 import {
   Carousel,
@@ -16,7 +8,6 @@ import {
   CarouselTrack,
 } from "../src/carousel.js";
 
-/** One slide's placeholder content. */
 const slide = (title: string, body: string) => (
   <div
     style={{ display: "flex", flexDirection: "column", gap: 8, padding: 24 }}
@@ -26,7 +17,6 @@ const slide = (title: string, body: string) => (
   </div>
 );
 
-/** A looped gallery with real controls. */
 export const CarouselExample = () => {
   const [index, setIndex] = useState(0);
 

@@ -1,13 +1,3 @@
-/**
- * `window-key-shortcut` — an app-level shortcut (the command-palette mechanism).
- *
- * GPUix delivers window keys only through the app boundary (`render({ onKeyDown })`),
- * after the focused element's `onKeyDown`. That is how a command palette or an
- * application menu gets a global shortcut, and it is the one input path the
- * element-level scenarios do not cover. Measured on this host (plan `140` §4):
- * `simulateKeystrokes("cmd-k")` runs the element handler and then the window
- * handler, with `event.modifiers.cmd` set.
- */
 import { useState } from "react";
 import { Effect, pipe } from "effect";
 import * as Option from "effect/Option";
@@ -70,7 +60,6 @@ const ShortcutProbe = () => {
   );
 };
 
-/** The `open=`/`last=` readout, or `""` when the element is missing. */
 const readout = (ctx: Smoke.SmokeContext): string =>
   pipe(
     Option.fromNullishOr(ctx.host.text("shortcut-readout")),

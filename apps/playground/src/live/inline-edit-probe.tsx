@@ -1,24 +1,3 @@
-/**
- * The `inline-edit-lifecycle` probe: the shipped `InlineEdit` in a real window.
- *
- * The component owns a **swap**, not a value: a painted `<text>` becomes an
- * `<input>`, and back. Its behaviour suite drives that swap through the offscreen
- * renderer, where `focusElement` is synchronous and every handler is called. The
- * things only a window can say are the ones this probe measures:
- *
- * 1. the editor the swap mounts really holds the window's focus — focus does not
- *    follow a replaced element, so the component asks the renderer for it;
- * 2. the commit returns the focus to the display, which is also a new element;
- * 3. typed keys reach the input, and Enter commits **once** (keyDown and the
- *    host's submit are both paths the component guards);
- * 4. Escape discards the draft and an unchanged draft calls nothing;
- * 5. a disabled control cannot be opened, and an empty one paints its
- *    placeholder until a value is committed.
- *
- * The readout is the caller's own state — the value it was committed by
- * `onCommit` and how many edits and commits it saw — so a control that painted a
- * draft without committing it cannot pass.
- */
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import type { Smoke } from "@gpuixui/testing";
@@ -38,10 +17,8 @@ import {
   type InlineEditMarks,
 } from "./inline-edit.js";
 
-/** A focus change and a swap need a frame to commit. */
 const SETTLE = Duration.millis(40);
 
-/** One caller-owned control: the value and the events its handlers saw. */
 const useMarks = (value: string) => {
   const [marks, setMarks] = useState<InlineEditMarks>({
     value,
@@ -67,7 +44,6 @@ const useMarks = (value: string) => {
   return { marks, commit, edit, change };
 };
 
-/** The probe's window: the shipped component in its three states. */
 export const InlineEditProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -152,7 +128,6 @@ export const inlineEditSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const settled = (marks: InlineEditMarks) =>
       settleUntil(readout(), (value) => value === inlineEditReadout(marks));
 
-    // ── At rest: the display is the value, and nothing is editing ───────────
     const atRest = {
       value: INLINE_EDIT_VALUE,
       draft: INLINE_EDIT_VALUE,
@@ -172,7 +147,6 @@ export const inlineEditSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("inline-edit-rest");
 
-    // ── A press opens the editor, and the window focuses it ────────────────
     yield* ctx.host.click(INLINE_EDIT_IDS.field);
     yield* Effect.sleep(SETTLE);
     const opened = { ...atRest, edits: 1, editing: true } as const;
@@ -188,7 +162,6 @@ export const inlineEditSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("inline-edit-editing");
 
-    // ── A key reaches the editor, and Enter commits the draft once ──────────
     yield* ctx.host.key("cmd-a");
     yield* ctx.host.key("x");
     yield* Effect.sleep(SETTLE);
@@ -229,7 +202,6 @@ export const inlineEditSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("inline-edit-committed");
 
-    // ── An unchanged draft calls nothing ───────────────────────────────────
     yield* ctx.host.key("enter");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -245,7 +217,6 @@ export const inlineEditSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       inlineEditReadout({ ...committed, edits: 2 }),
     );
 
-    // ── Escape discards the draft and still returns the focus ──────────────
     yield* ctx.host.key("enter");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("cmd-a");
@@ -274,7 +245,6 @@ export const inlineEditSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       INLINE_EDIT_IDS.field,
     );
 
-    // ── A disabled control cannot be opened or typed into ──────────────────
     const closedEmpty = {
       value: "",
       draft: "",
@@ -289,8 +259,7 @@ export const inlineEditSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text(INLINE_EDIT_IDS.disabledReadout),
       inlineEditReadout(closedEmpty),
     );
-    // A `tabIndex: -1` removes the control from the Tab order; a press still
-    // gives it the window's focus, and the contract is that it refuses to open.
+
     yield* ctx.expectEqual(
       "a press on a disabled control still gives it the focus",
       yield* focused(),
@@ -304,7 +273,6 @@ export const inlineEditSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       inlineEditReadout(closedEmpty),
     );
 
-    // ── An empty control paints its placeholder, then a real value ─────────
     yield* ctx.expectEqual(
       "an empty control paints its placeholder",
       yield* ctx.host.text(INLINE_EDIT_IDS.empty),

@@ -1,12 +1,3 @@
-/**
- * Guards the state-aware variants.
- *
- * Bug guarded: `has-[>svg]`, `has-data-[icon=*]`, `data-expanded`,
- * `data-behind`, `data-limited` and `aria-expanded` were reported unsupported
- * even though the owning component knows the answer. They now apply only when
- * the caller passes matching state; unknown state is never guessed.
- */
-
 import { describe, expect, it } from "vitest";
 import { lightTheme } from "@gpuixui/tokens";
 import { classesToStyle } from "./classes.js";

@@ -1,16 +1,8 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Color picker example: choose an accent from swatches or HEX.
- *
- * The chosen colour drives the preview Badge, so the value is visibly owned by
- * the example rather than by the picker.
- */
-
 import { useState } from "react";
 import { Badge } from "../src/badge.js";
 import { ColorPicker } from "../src/color-picker.js";
 
-/** An accent picker with a live preview. */
 export const ColorPickerExample = () => {
   const [accent, setAccent] = useState("#3b82f6");
 

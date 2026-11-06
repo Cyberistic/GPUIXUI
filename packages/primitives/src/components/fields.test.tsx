@@ -1,13 +1,3 @@
-/**
- * The field wiring: `Input` and the narrower `TextArea`.
- *
- * `core/state.test.ts` proves the controlled/uncontrolled decision; this suite
- * proves the elements are *driven by it* — the rendered value comes from the
- * resolved state, an edit is reported from `event.value`, a runtime event with
- * no value is not a `null` change, and the field carries the name GPUix can
- * actually read (`aria-label`; there is no `aria-labelledby`; see `docs/gpuix-capabilities.md`).
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
@@ -27,14 +17,13 @@ import {
 } from "./testing/element.js";
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
-/** A control whose parent owns the value. */
+
 const controlled = (value: string): ValueState<string> =>
   initValueState(Option.some(value), "");
-/** An uncontrolled control holding its own draft. */
+
 const draft = (initial: string): ValueState<string> =>
   initValueState(Option.none(), initial);
 
-/** The resolved `height`, which a textarea leaves to its rows. */
 const heightOf = (element: ReactElement): Option.Option<number> =>
   expectSome(
     Schema.decodeUnknownOption(
@@ -42,7 +31,6 @@ const heightOf = (element: ReactElement): Option.Option<number> =>
     )(expectSome(hostProp(element, "style"))),
   ).height;
 
-/** The two chrome values that make a field look and behave disabled. */
 const chromeOf = (element: ReactElement) =>
   expectSome(
     Schema.decodeUnknownOption(
@@ -55,9 +43,6 @@ const chromeOf = (element: ReactElement) =>
 
 describe("Input", () => {
   it("paints a size name the scale does not carry at the default height", () => {
-    // The bug guarded: the field's height comes from the density scale by
-    // control size, so a size restored from another release indexed nothing and
-    // the field painted without a height beside the controls that kept theirs.
     const stored = renderInput(
       { size: "xl" as ControlSize },
       testTheme,
@@ -131,11 +116,6 @@ describe("Input", () => {
   });
 
   it("hands the native element an address, its help and its tab order", () => {
-    // Bug guarded: a field was reachable only by its `testId`, and the help a
-    // visible `Label` painted was announced to nobody. A form that focuses the
-    // field it failed on needs the element itself, an automation host needs the
-    // author id, a layout needs the box, and the words need `aria-description`
-    // (0.11.0 has no `aria-describedby`).
     const ref = vi.fn();
     const layout = vi.fn();
     const element = renderInput(
@@ -165,9 +145,6 @@ describe("Input", () => {
   });
 
   it("publishes nothing rather than an empty description", () => {
-    // The same rule as a blank tooltip: an empty `aria-description` is an
-    // announcement of nothing, which reads as a field with a help text that
-    // cannot be heard.
     const blank = renderInput(
       { description: "   " },
       testTheme,
@@ -239,13 +216,6 @@ describe("TextArea", () => {
   });
 
   it("leaves a saved row count it cannot read to the runtime", () => {
-    // The bug guarded: a text area's row floor and cap are saved with the form,
-    // and JSON keeps a field a record never carried as `null`. Read with
-    // `=== undefined`, that `null` reached `fieldRows` as **one row**, so a
-    // restored field published `maxRows: 1` and the runtime painted a six-line
-    // box as a single row. The host props must be absent instead, so the
-    // runtime's own height control answers.
-    // The cast is the storage boundary: a saved record stores absence as null.
     const stored = { minRows: null, maxRows: null } as unknown as TextAreaProps;
     const area = renderTextArea(stored, testTheme, draft(""), idle, vi.fn());
     expect(hostProp(area, "minRows")).toStrictEqual(Option.none());
@@ -283,9 +253,6 @@ describe("TextArea", () => {
   });
 
   it("carries the same address and help as the single-line field", () => {
-    // One seam: a `TextArea` is the same `FieldProps` on a different host, so a
-    // form that hands a description to its fields does not lose it on the
-    // multi-line one.
     const ref = vi.fn();
     const area = renderTextArea(
       {

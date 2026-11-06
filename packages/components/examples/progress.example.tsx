@@ -1,18 +1,9 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Progress example: an upload queue stated in bytes.
- *
- * The bar's `value` is the caller's unit and `max` is the size the file reports,
- * so one component serves a 4 MB image and a 2 GB archive without the caller
- * converting every share to a percentage.
- */
-
 import * as Arr from "effect/Array";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import { Progress, ProgressLabel, ProgressValue } from "../src/progress.js";
 
-/** One file in flight, with the bytes received so far. */
 const uploads: ReadonlyArray<{
   readonly name: string;
   readonly received: number;
@@ -23,7 +14,6 @@ const uploads: ReadonlyArray<{
   { name: "assets.zip", received: 0, total: 250_000_000 },
 ];
 
-/** A queue where each row is its own bar. */
 export const ProgressExample = () => {
   const theme = useTheme();
   return (

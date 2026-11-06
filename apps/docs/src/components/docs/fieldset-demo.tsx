@@ -1,13 +1,3 @@
-/**
- * Browser preview for the Fieldset page.
- *
- * The shipped group is a `div role="group"` named by its legend — 0.11.0 has no
- * `fieldset` element and no `aria-disabled`, so `disabled` reaches the controls
- * that opt in (today `FieldInput`) and only the legend dims. The preview draws
- * the enabled group and the disabled one side by side, reusing the field page's
- * chrome, with the legend carrying the only paint the disabled state changes.
- */
-
 import { useState } from "react";
 
 const street = "Street and number";

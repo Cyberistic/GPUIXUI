@@ -22,18 +22,6 @@ import {
   visibleDeployments,
 } from "./badge-preview";
 
-/**
- * The badge preview's model, held to the component and its recipe.
- *
- * The bug this guards: a preview that invents its own badge teaches a variant,
- * a size or a press rule the shipped component does not have. Every variant is
- * compiled through the component's own `BADGE_*` recipe, every size's height is
- * derived from that compilation, and the press route is read out of
- * `badge.tsx`, so a component change fails here before it reaches the page.
- *
- * `node:fs` is the test's own read of a checked-in file, not runtime I/O.
- */
-
 const read = (path: string): string =>
   readFileSync(new URL(`../../../../../${path}`, import.meta.url), "utf8");
 
@@ -41,23 +29,19 @@ const component = read("packages/components/src/badge.tsx");
 const behaviour = read("packages/components/src/behaviour/badge.test.tsx");
 const css = read("apps/docs/src/styles/demos.css");
 
-/** The declarations of the first `selector { … }` block in the style sheet. */
 const block = (selector: string): string => {
   const start = css.indexOf(`${selector} {`);
   return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
 };
 
-/** `successSoft` → `success-soft`: the variable the docs bridge publishes. */
 const kebab = (role: string): string =>
   role.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 
-/** The classes the pill's own recipe compiles for a size and variant. */
 const classesOf = (
   size: "sm" | "md",
   variant: keyof typeof BADGE_VARIANTS = "neutral",
 ): string => cn(BADGE_BASE, BADGE_SIZES[size], BADGE_VARIANTS[variant]);
 
-/** The role a utility names: `bg-muted` → `muted`, `text-sm` is not a role. */
 const declaredRole = (
   className: string,
   prefix: "bg" | "text" | "border",
@@ -71,13 +55,11 @@ const declaredRole = (
   return candidates.find((role) => role in lightTheme.colors) ?? "";
 };
 
-/** The style the recipe compiles: the authority for every printed number. */
 const compiled = (
   size: "sm" | "md",
   variant: keyof typeof BADGE_VARIANTS = "neutral",
 ) => classesToStyle(classesOf(size, variant), lightTheme).style;
 
-/** The height the renderer measures: the leading plus the `py-0.5` padding. */
 const pillHeight = (size: "sm" | "md"): number => {
   const style = compiled(size);
   return (style.lineHeight ?? 0) + (style.paddingTop ?? 0) * 2;
@@ -113,7 +95,7 @@ describe("the badge preview's deployments", () => {
     expect(visibleDeployments(initialDeployments, "all")).toBe(
       initialDeployments,
     );
-    // Every filter the panel offers is a state it can show, or `all`.
+
     const counts = statusCounts(initialDeployments);
     expect(
       deploymentFilters.filter(
@@ -128,7 +110,7 @@ describe("the badge preview's deployments", () => {
     expect(new Set(painted).size).toBe(deploymentStatuses.length);
     expect(painted).not.toContain("outline");
     expect(painted.every((variant) => variant in BADGE_VARIANTS)).toBe(true);
-    // The outline variant is the page's one *label*: a branch is not a state.
+
     expect(initialDeployments.map((row) => row.branch).length).toBe(6);
     expect(badgeVariants).toEqual(Object.keys(BADGE_VARIANTS));
   });
@@ -136,8 +118,6 @@ describe("the badge preview's deployments", () => {
 
 describe("the badge preview's press route", () => {
   it("leaves a press on the pill to its row, and nothing once the caller hands the pointer back", () => {
-    // The measured routes: `list-row-press` reads `selected=badge` when the
-    // press lands on the shipped pill, and `selected=none` on `badge-eager`.
     expect(pressTarget("status-pill")).toBe("row");
     expect(pressTarget("row")).toBe("row");
     expect(pressTarget("eager-pill")).toBe("none");
@@ -145,10 +125,8 @@ describe("the badge preview's press route", () => {
 
   it("reads the declaration and the opt-back-in out of the component and its suite", () => {
     expect(component).toContain('{ pointerEvents: "none" }');
-    expect(component).toContain("the caller's `style` below can hand it back");
     expect(component).toContain("style,");
-    // The caller's style is merged after the refusal, which is why an eager
-    // pill can exist at all.
+
     const refusal = component.indexOf('{ pointerEvents: "none" }');
     const caller = component.lastIndexOf("style,", component.indexOf("};"));
     expect(caller).toBeGreaterThan(refusal);
@@ -169,7 +147,7 @@ describe("the badge preview's geometry and palette", () => {
     expect(block(".gx-badge-md")).toContain("height: 24px");
     expect(block(".gx-badge-sm")).toContain("font-size: 12px");
     expect(block(".gx-badge-md")).toContain("font-size: 14px");
-    // The weight is the md step's, and only the md step's.
+
     expect(block(".gx-badge-md")).toContain("font-weight: 500");
     expect(block(".gx-badge-sm")).not.toContain("font-weight");
     expect(badgeSizes).toEqual(["sm", "md"]);
@@ -215,8 +193,6 @@ describe("the badge preview's geometry and palette", () => {
   });
 
   it("keeps the outline's edge on the boundary role, not the divider", () => {
-    // The measured defect: the divider role is ~1.00:1 on a row's accent wash,
-    // so the one variant with no fill had no boundary under the pointer.
     const classes = classesOf("md", "outline");
     const decl = block(".gx-badge-outline");
 

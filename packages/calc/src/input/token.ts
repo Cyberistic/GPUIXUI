@@ -1,13 +1,3 @@
-/**
- * The input line as atomic tokens.
- *
- * A fx-991ES cursor sits between *functions*, not characters: DEL after `sin(`
- * removes the function, and replay restores exactly what was entered. Storing
- * the entry as tokens (each with its painted text) gives that behaviour without
- * a second representation. `inputText` is the only place the entry becomes a
- * string, and it is used for display and history only — never re-parsed.
- */
-
 import * as Arr from "effect/Array";
 import * as Str from "effect/String";
 
@@ -24,7 +14,6 @@ export type TokenKind =
   | "paren"
   | "separator";
 
-/** One atomic piece of the entry line. */
 export interface InputToken {
   readonly id: string;
   readonly text: string;
@@ -58,7 +47,6 @@ export const DIGITS: ReadonlyArray<InputToken> = Arr.map(
   (value) => digit(String(value)),
 );
 
-/** `A`–`F` as digits, for BASE-N input; they are numbers, not variables. */
 export const hexDigit = (letter: string): InputToken =>
   ({ id: `hex:${letter}`, text: letter, kind: "digit" }) as const;
 
@@ -67,19 +55,15 @@ export const HEX_DIGITS: ReadonlyArray<InputToken> = Arr.map(
   hexDigit,
 );
 
-/** A function token paints its opening parenthesis as part of its name. */
 export const call = (id: string, label: string = id): InputToken =>
   fn(id, `${label}(`);
 
-/** A named scientific constant, inserted by the CONST browser. */
 export const namedConstant = (index: string, symbol: string): InputToken =>
   constant(`const:${index}`, symbol);
 
-/** A metric conversion command, applied to the value before it. */
 export const conversion = (index: string, label: string): InputToken =>
   postfix(`conv:${index}`, label);
 
-/** The catalog's function tokens, shared by the keypad and the palette. */
 export const SIN = call("sin");
 export const SIN_INV = call("sin⁻¹", "sin⁻¹");
 export const COS = call("cos");
@@ -148,10 +132,8 @@ export const BASE_OCT = baseTag("base:o", "o");
 export const FORMAT_RECT = format("fmt:rect", "▸a+bi");
 export const FORMAT_POLAR = format("fmt:polar", "▸r∠θ");
 
-/** A variable token for `A`…`F`, `X`, `Y` and `M`. */
 export const variableToken = (name: string): InputToken => variable(name, name);
 
-/** The stable token ids the parser understands, for model definitions. */
 export const tokenIds = new Set<string>([
   ...Arr.map(DIGITS, (held) => held.id),
   ".",
@@ -190,7 +172,6 @@ export const tokenIds = new Set<string>([
   "base:o",
 ]);
 
-/** Insert one token at the cursor; the cursor lands after it. */
 export const insertToken = (
   tokens: ReadonlyArray<InputToken>,
   cursor: number,
@@ -203,7 +184,6 @@ export const insertToken = (
   cursor: cursor + 1,
 });
 
-/** Insert several tokens at the cursor; the cursor lands after the last. */
 export const insertTokens = (
   tokens: ReadonlyArray<InputToken>,
   cursor: number,
@@ -216,7 +196,6 @@ export const insertTokens = (
   cursor: cursor + held.length,
 });
 
-/** Delete the token left of the cursor. */
 export const deleteBackward = (
   tokens: ReadonlyArray<InputToken>,
   cursor: number,
@@ -231,7 +210,6 @@ export const deleteBackward = (
         cursor: cursor - 1,
       };
 
-/** Delete the token under the cursor (the `DEL` right-arrow mode). */
 export const deleteForward = (
   tokens: ReadonlyArray<InputToken>,
   cursor: number,
@@ -246,14 +224,12 @@ export const deleteForward = (
         cursor,
       };
 
-/** The painted entry line. */
 export const inputText = (tokens: ReadonlyArray<InputToken>): string =>
   Arr.join(
     Arr.map(tokens, (held) => held.text),
     "",
   );
 
-/** The entry with a caret painted at the cursor, for the LCD. */
 export const inputTextWithCaret = (
   tokens: ReadonlyArray<InputToken>,
   cursor: number,
@@ -263,7 +239,6 @@ export const inputTextWithCaret = (
   return Str.isEmpty(before) && Str.isEmpty(after) ? "▏" : `${before}▏${after}`;
 };
 
-/** Tokens that begin a primary expression; implicit multiplication sees these. */
 export const startsOperand = (held: InputToken): boolean =>
   held.kind === "digit" ||
   held.kind === "constant" ||
@@ -272,6 +247,5 @@ export const startsOperand = (held: InputToken): boolean =>
   held.id === "(" ||
   held.id === "Ran#";
 
-/** The text a history row paints for a token list. */
 export const historyLabel = (tokens: ReadonlyArray<InputToken>): string =>
   inputText(tokens);

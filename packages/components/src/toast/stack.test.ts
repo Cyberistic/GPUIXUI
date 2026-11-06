@@ -1,18 +1,3 @@
-/**
- * The stack's geometry.
- *
- * The bug these guard: a stack that painted every card full and interactive —
- * the old hover "fan" lifted older cards by 8px but left them the same size,
- * so the reader could not tell which card the corner belonged to. The collapsed
- * stack is now the newest card plus two peeking slices; the fourth card waits
- * with no height, and expanding gives every card its measured height and a
- * shared gap. The tests read the numbers the viewport animates, not a render.
- *
- * A peeking card carries no opacity step: its slot clips the card's own surface,
- * so a push changes a card's size and never its paint. Dimming the slices was
- * what made every push flash — the whole stack re-faded at once.
- */
-
 import { describe, expect, it } from "vitest";
 import { stackGap, toastSlotOf, toastSlots } from "./stack.js";
 
@@ -94,8 +79,6 @@ describe("an expanded stack", () => {
 
 describe("one card's slot", () => {
   it("is the same box whether the rank comes from the list or from a card", () => {
-    // A leaving card is not ranked with the cards behind it, so the viewport
-    // asks for its slot by rank rather than by position in the queue.
     expect(toastSlotOf(1, 82, false)).toEqual({
       rank: 1,
       height: 12,

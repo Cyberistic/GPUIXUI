@@ -86,8 +86,3 @@ Form
 | `className` | `string` | none | joined after the recipe, so it wins conflicts |
 | `children` | `(state: FormState) => ReactNode` | none | the render prop: `errors`, `pending`, `submit`, `form` |
 | `style` | `StateStyle` | none | merged last on the root |
-
-## Notes
-- The root is `role="form"` with `aria-label` only when `label` is passed.
-- Messages are one `role="alert"` block above the children.
-- **The summary has no field paths**: `validateAll` returns one deduped list of messages.

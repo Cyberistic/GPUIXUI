@@ -1,15 +1,3 @@
-/**
- * The markdown editor's rules.
- *
- * The bug guarded: an unclosed fence swallows every following line in the
- * preview, so a preview that trusts the source turns the rest of the document
- * into one code block while the reader is still typing the block. The source is
- * never repaired; only the preview closes the fence. A draft that already ended
- * on a newline — the state of a field after Enter — also took a separator line
- * before the marker, so the preview gained a blank code line the reader never
- * typed.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -46,8 +34,6 @@ describe("openFence", () => {
   });
 
   it("does not let a shorter run close a longer fence", () => {
-    // The bug guarded: the preview treated any tick line as a closer, so a
-    // three-tick line inside a four-tick block ended it and swallowed the rest.
     expect(Option.getOrNull(openFence("````\n```\ncode"))).toBe("````");
     expect(Option.getOrNull(openFence("~~~~\n~~~\ncode"))).toBe("~~~~");
     expect(closeFences("````\n```\ncode")).toBe("````\n```\ncode\n````");
@@ -55,10 +41,9 @@ describe("openFence", () => {
   });
 
   it("does not let an info string close a fence", () => {
-    // ```js opens a block; inside another one it is content, not a closer.
     expect(Option.getOrNull(openFence("```\n```js\ncode"))).toBe("```");
     expect(Option.getOrNull(openFence("```\n``` js\ncode"))).toBe("```");
-    // Trailing spaces alone are still a closing fence in CommonMark.
+
     expect(Option.isNone(openFence("```\ncode\n```   \nmore"))).toBe(true);
   });
 
@@ -80,7 +65,7 @@ describe("closeFences", () => {
 
   it("does not add a blank line when the draft already ends on a newline", () => {
     expect(closeFences("```\ncode\n")).toBe("```\ncode\n```");
-    // A blank line the reader did type is content and stays.
+
     expect(closeFences("~~~\ncode\n\n")).toBe("~~~\ncode\n\n~~~");
     expect(closeFences(closeFences("```\ncode\n"))).toBe("```\ncode\n```");
   });
@@ -133,8 +118,6 @@ describe("splitOf", () => {
   });
 
   it("reads a split it cannot lay out as the middle of the body", () => {
-    // The bug guarded: Math.max(NaN, min) stayed NaN, so a restored split
-    // painted a pane with no width.
     expect(splitOf(undefined, 634)).toBe(317);
     expect(splitOf(Number.NaN, 634)).toBe(317);
     expect(splitOf(Number.POSITIVE_INFINITY, 634)).toBe(317);
@@ -143,9 +126,6 @@ describe("splitOf", () => {
 
 describe("draftOf", () => {
   it("reads a stored draft that is not text as an empty document", () => {
-    // The bug guarded: a restored draft of null reached the status line and the
-    // preview, which read `.length` and `.trim()` off it and threw out of the
-    // render instead of painting the empty state.
     expect(draftOf(null)).toBe("");
     expect(draftOf(undefined)).toBe("");
     expect(draftOf(42)).toBe("");

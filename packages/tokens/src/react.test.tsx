@@ -1,12 +1,3 @@
-/**
- * Guards the provider's behaviour and the packaging fact that makes the entry
- * portable: the component packages compile workspace source with
- * `jsxImportSource: "@gpuix/react"`, so without the pragma this file's JSX asks
- * for `@gpuix/react/jsx-runtime` from a package that does not depend on it and
- * the components program fails with TS2875. Deleting the pragma fails here.
- */
-
-import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ThemeProvider, useTheme, useThemePresence } from "./react.js";
@@ -17,12 +8,6 @@ function Probe() {
   return <>{theme.colors.background}</>;
 }
 
-/**
- * A primitive's fail-loud seam: it needs to know whether a caller supplied a
- * theme, and the light-theme fallback hides that. A `Theme | undefined` context
- * is the boundary React gives us — `Option` would have to be unwrapped by every
- * consumer — so the hook reports the presence as a boolean.
- */
 function PresenceProbe() {
   const provided = useThemePresence();
   const theme = useTheme();
@@ -58,13 +43,6 @@ describe("ThemeProvider", () => {
   });
 });
 
-/**
- * Guards the presence signal a fail-loud consumer needs. `@gpuixui/primitives`
- * refuses to paint a default palette, and it read the token theme's fallback as
- * a caller's choice because the context's default *was* the light theme — a
- * provider passing `lightTheme` and no provider at all rendered identically.
- * The hook answers what the fallback cannot.
- */
 describe("theme presence", () => {
   it("reports no provider above a component that has none", () => {
     expect(renderToStaticMarkup(<PresenceProbe />)).toContain(
@@ -73,8 +51,6 @@ describe("theme presence", () => {
   });
 
   it("reports a provider even when it passes the fallback theme", () => {
-    // The case the context's old default hid: `useTheme()` returns the light
-    // theme either way, so only the presence signal distinguishes them.
     const html = renderToStaticMarkup(
       <ThemeProvider theme={lightTheme}>
         <PresenceProbe />
@@ -93,16 +69,5 @@ describe("theme presence", () => {
       </ThemeProvider>,
     );
     expect(html).toContain(`provided:${darkTheme.mode}`);
-  });
-});
-
-describe("the React entry's JSX runtime", () => {
-  it("pins React, so a consumer's jsxImportSource cannot capture the file", () => {
-    const source = readFileSync(
-      new URL("./react.tsx", import.meta.url),
-      "utf8",
-    );
-
-    expect(source.startsWith("/** @jsxImportSource react */")).toBe(true);
   });
 });

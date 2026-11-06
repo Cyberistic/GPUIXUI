@@ -1,15 +1,3 @@
-/**
- * Pagination window arithmetic.
- *
- * The bugs these guard: the window grew at the edges so the control changed
- * width as the user paged (page 1 of 10 rendering two numbers, page 5 rendering
- * three); a crop could omit the current page; an out-of-range `page` or
- * `pageCount <= 0` produced a list containing pages that do not exist; and a
- * wide `siblingCount` at the end of a short trail printed an ellipsis between
- * two neighbours with no page between them (page 8 of 8 with two siblings drew
- * `1 … 2 3 4 5 6 7 8` — wider than the whole trail it was cropping).
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -25,7 +13,6 @@ const gap = (side: "start" | "end"): PageItem => ({
   side,
 });
 
-/** The pages an ellipsis claims to stand for; empty when it hides nothing. */
 const hiddenByGap = (entries: ReadonlyArray<PageItem>): ReadonlyArray<number> =>
   Arr.filterMap(entries, (entry, index) => {
     if (entry.kind !== "ellipsis") return Result.failVoid;
@@ -93,8 +80,6 @@ describe("pageWindow", () => {
   });
 
   it("widens the window with siblingCount", () => {
-    // Two siblings on each side leave only page 2 between the edge and the
-    // window, so it is pressed rather than elided; the far gap is real.
     expect(pageWindow({ page: 5, pageCount: 20, siblingCount: 2 })).toEqual([
       ...pages(1, 2, 3, 4, 5, 6, 7),
       gap("end"),
@@ -103,8 +88,6 @@ describe("pageWindow", () => {
   });
 
   it("keeps the head inside range when siblingCount is large", () => {
-    // The widened window covers a ten-page trail whole; one page further it has
-    // a real gap to stand in for and stays inside the range.
     expect(pageWindow({ page: 1, pageCount: 10, siblingCount: 4 })).toEqual(
       pages(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
     );
@@ -128,25 +111,22 @@ describe("pageWindow", () => {
   });
 
   it("renders the trail in full instead of an ellipsis over nothing", () => {
-    // The window clamps to page 2, so it would stand between neighbours with no
-    // page between them — and the whole trail fits the window's own width.
     expect(pageWindow({ page: 8, pageCount: 8, siblingCount: 2 })).toEqual(
       pages(1, 2, 3, 4, 5, 6, 7, 8),
     );
-    // The clamped gap holds exactly one page: the same slot renders the number.
+
     expect(pageWindow({ page: 9, pageCount: 9, siblingCount: 2 })).toEqual(
       pages(1, 2, 3, 4, 5, 6, 7, 8, 9),
     );
   });
 
   it("renders a single hidden page instead of an ellipsis over it", () => {
-    // Page 2 is the only page between the edge and the window, so it is drawn.
     expect(pageWindow({ page: 4, pageCount: 10 })).toEqual([
       ...pages(1, 2, 3, 4, 5),
       gap("end"),
       ...pages(10),
     ]);
-    // Two hidden pages are what an ellipsis is for.
+
     expect(pageWindow({ page: 5, pageCount: 10 })).toEqual([
       ...pages(1),
       gap("start"),
@@ -202,9 +182,6 @@ describe("pageWindow", () => {
   });
 
   it("renders no pages for a count it cannot read", () => {
-    // A count is often `Math.ceil(total / pageSize)`; a response that never
-    // arrived reaches the control as `NaN`, and an unread number must not paint
-    // the string `NaN` (or an endless trail).
     expect(pageWindow({ page: 1, pageCount: Number.NaN })).toEqual([]);
     expect(
       pageWindow({ page: 1, pageCount: Number.POSITIVE_INFINITY }),

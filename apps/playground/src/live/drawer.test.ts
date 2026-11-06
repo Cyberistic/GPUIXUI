@@ -1,18 +1,3 @@
-/**
- * Holds the `drawer-lifecycle` fixture, the probe that drives it and the
- * section the README records it in.
- *
- * The gap this guards: the shipped `Drawer` is the modal whose edge, veil and
- * dismissal are all paint and hit-testing, and its own suite only reaches the
- * offscreen renderer. The probe's expected boxes are the component's arithmetic
- * copied into `drawer.ts`, so this suite reads the size tables back out of
- * `drawer.tsx` and fails here — rather than in a window — when the component
- * moves them. The README count is derived from the probe's own assertion sites,
- * so a check added without the sentence (or the sentence edited alone) fails.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own component, probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -35,7 +20,6 @@ const scenarios = read("./scenarios.tsx");
 const readme = read("../../README.md");
 const component = read("../../../../packages/components/src/drawer.tsx");
 
-/** The numbers in one `const NAME = { sm: …, md: …, lg: … }` table. */
 const sizeTableIn = (name: string): Record<string, number> => {
   const block = new RegExp(
     `const ${name}: Readonly<Record<DrawerSize, number>> = \\{([^}]*)\\}`,
@@ -46,14 +30,12 @@ const sizeTableIn = (name: string): Record<string, number> => {
   return Object.fromEntries(entries);
 };
 
-/** This probe's steps, so a count cannot be read out of another probe. */
 const stepsOf = (): string => {
   const start = scenarios.indexOf("const drawerSteps");
   const end = scenarios.indexOf("const surfaceFadeSteps", start);
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
 };
 
-/** This probe's README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `drawer-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);

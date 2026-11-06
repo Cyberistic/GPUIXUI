@@ -50,8 +50,3 @@ Collapsible
 | `CollapsibleTrigger` | `style` | `StateStyle<CollapsibleTriggerState>` | the recipe | resolved against the live state and merged last |
 | `CollapsibleContent` | `className` | `string` | — | joined after the recipe on the measured box |
 | `CollapsibleContent` | `children` | `ReactNode` | — | the body; mounted only while open, and during the exit |
-
-## Notes
-- The trigger is a **`div role="button"`**, not an HTML `<button>`.
-- `Enter` and `Space` activate it; `aria-expanded` is the state channel.
-- **No `aria-disabled`**: a disabled trigger leaves the tab order and paints at half opacity.

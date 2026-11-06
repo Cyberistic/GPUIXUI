@@ -1,14 +1,3 @@
-/**
- * STAT mode: the editor's numeric content and every reading the STAT menu
- * offers — sums, means, standard deviations, the seven paired regressions,
- * estimates, min/max and the normal distribution.
- *
- * Regression coefficients are computed from the same sums the calculator
- * exposes, so a reader can check a reading with `Σx`, `Σxy` and friends. The
- * normal CDF uses an explicit erf approximation; the tolerance is documented in
- * the test rather than hidden in the formatter.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 
@@ -39,7 +28,6 @@ export interface StatPoint {
 
 export const emptyStatRow = (): StatRow => ({ x: "", y: "", freq: "" });
 
-/** The manual's editor capacity: 80 single-column rows, 40 two-column, 26 three. */
 export const STAT_ROWS = 80;
 
 export const statRowLimit = (kind: StatKind, frequency: boolean): number =>
@@ -62,7 +50,6 @@ export const columnsOf = (
       ? ["x", "freq"]
       : ["x"];
 
-/** Parse the editor's strings into points; invalid or empty rows are skipped. */
 export const pointsOf = (
   rows: ReadonlyArray<StatRow>,
   frequency: boolean,
@@ -130,9 +117,9 @@ export interface Regression {
   readonly b: number;
   readonly c?: number;
   readonly r?: number;
-  /** Evaluate the regression at x. */
+
   readonly at: (x: number) => number;
-  /** Solve for x at y, returning up to two roots (quadratic has two). */
+
   readonly inverse: (y: number) => ReadonlyArray<number>;
 }
 
@@ -194,7 +181,7 @@ const quadraticFrom = (
 }> => {
   const sums = sumsOf(points);
   if (sums.n < 3) return Option.none();
-  // Normal equations: [n Σx Σx²; Σx Σx² Σx³; Σx² Σx³ Σx⁴] [A B C] = [Σy Σxy Σx²y]
+
   const matrix = [
     [sums.n, sums.sx, sums.sx2, sums.sy],
     [sums.sx, sums.sx2, sums.sx3, sums.sxy],
@@ -210,7 +197,6 @@ const quadraticFrom = (
       });
 };
 
-/** Gaussian elimination on an augmented matrix; `None` when singular. */
 const gauss = (
   rows: ReadonlyArray<ReadonlyArray<number>>,
 ): Option.Option<ReadonlyArray<number>> => {
@@ -435,11 +421,10 @@ export type StatReadingId =
 export interface StatQuery {
   readonly kind: StatKind;
   readonly points: ReadonlyArray<StatPoint>;
-  /** The argument an estimate or distribution command consumes. */
+
   readonly argument?: number;
 }
 
-/** The reading a STAT menu command names, or `None` when it does not apply. */
 export const statReading = (
   query: StatQuery,
   id: StatReadingId,
@@ -555,7 +540,6 @@ export const statReading = (
   });
 };
 
-/** Every reading a menu shows, in the manual's order. */
 export const readingsFor = (
   query: StatQuery,
   command: StatCommand,

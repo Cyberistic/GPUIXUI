@@ -1,27 +1,3 @@
-/**
- * The `carousel-lifecycle` probe: the shipped `Carousel` mounted in a window,
- * read out of the frame it paints.
- *
- * The component's offscreen suite proves the tree — which slide is mounted, the
- * reported index, the dots' roles — and says nothing about paint. The probe
- * paints three slides whose fills and label inks are colours only that slide
- * can produce, then reads the frame a capture holds: the active slide's fill
- * and ink at every step, none of the other slides' paint at any of them, and
- * the frame's height following the slide on screen (which is why the track
- * does not travel). It then reads the indicator twice: at rest, where the
- * selected dot is an 18×6 pill of the theme's `primary` ink and the others are
- * 6×6 `mutedForeground` dots, and on the renderer's frozen motion clock, where
- * a change of slide swaps the two **inks** in the press's own frame while the
- * **widths** travel over the level before landing.
- *
- * Driving one carousel through both loop rules is the caller's control in the
- * view: the disabled edge and the wrap are the same component with a different
- * prop, so a window that only measured one of them would leave half of the
- * component's step contract untested.
- *
- * The view and the steps live here so the measurement is one module; the
- * registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -59,16 +35,12 @@ import {
   travelling,
 } from "./carousel.js";
 
-/** A press needs a frame to reach the component and a state to paint. */
 const SETTLE = Duration.millis(260);
 
-/** How long a poll waits for a paint, in 20ms samples. */
 const POLLS = 100;
 
-/** How many captures a frozen-clock read may take to settle on a frame. */
 const CAPTURE_ATTEMPTS = 12;
 
-/** The captures a reader can look at, one per painted state. */
 const FIRST = "carousel-first";
 const SECOND = "carousel-second";
 const DOTS = "carousel-dots";
@@ -76,7 +48,6 @@ const FROZEN = "carousel-motion-frozen";
 const PARTIAL = "carousel-motion-partial";
 const SETTLED = "carousel-motion-settled";
 
-/** The probe's window: one carousel, its loop control and its own readout. */
 export const CarouselProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -179,7 +150,6 @@ export const CarouselProbe = (): ReactNode => {
   );
 };
 
-/** A painted box, as the runtime's layout report gives it. */
 interface ProbeBox {
   readonly x: number;
   readonly y: number;
@@ -187,7 +157,6 @@ interface ProbeBox {
   readonly height: number;
 }
 
-/** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -199,7 +168,6 @@ const paintedBox = (
     );
   });
 
-/** A capture and the scale its logical points convert by. */
 const capture = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -218,7 +186,6 @@ const capture = (
     return { pixels, scale } as const;
   });
 
-/** The part of a capture a logical box covers. */
 const cropTo = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -241,11 +208,9 @@ const cropTo = (
     ),
   );
 
-/** How many pixels of `region` paint `ink` exactly. */
 const countOf = (region: Pixels.Pixels, ink: Pixels.Rgba): number =>
   Pixels.countColour(region, ink);
 
-/** The ink's box in points, or `None` when it paints nothing. */
 const inkBoxIn = (
   region: Pixels.Pixels,
   ink: Pixels.Rgba,
@@ -259,12 +224,6 @@ const inkBoxIn = (
     }),
   );
 
-/**
- * One dot as the frame paints it: the role it carries and the drawing's box.
- *
- * Read inside the dot's own press target, so a neighbouring dot's ink cannot
- * be counted as this one's and the width is the drawing's, not the target's.
- */
 interface DotPaint {
   readonly primary: number;
   readonly rest: number;
@@ -274,7 +233,6 @@ interface DotPaint {
   }>;
 }
 
-/** The two inks a dot can paint, as the palette resolves them. */
 interface DotInks {
   readonly primary: Pixels.Rgba;
   readonly rest: Pixels.Rgba;
@@ -299,14 +257,12 @@ const dotPaint = (
     } as const;
   });
 
-/** The width a dot's drawing paints, or `0` when it paints nothing. */
 const inkWidth = (paint: DotPaint): number =>
   Option.getOrElse(
     Option.map(paint.ink, (box) => box.width),
     () => 0,
   );
 
-/** Waits until `testId` holds the native focus, and reports whether it did. */
 const settleFocused = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -323,7 +279,6 @@ const settleFocused = (
   return attempt(POLLS);
 };
 
-/** Waits until a read of `testId`'s text contains `expected`. */
 const settleReadout = (
   ctx: Smoke.AsyncSmokeContext,
   expected: string,
@@ -341,12 +296,6 @@ const settleReadout = (
   return attempt(POLLS);
 };
 
-/**
- * Captures until `read` holds `accept`, or returns the last reading.
- *
- * A frozen clock makes the frame the reading names the clock's own, so the
- * retry only waits for the paint to catch up with it.
- */
 function settlePaint<A>(
   read: (
     name: string,
@@ -383,18 +332,11 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
     };
 
-    /**
-     * The frame's crop and the paint each slide can be recognised by.
-     *
-     * A count is taken inside the frame only: the page around it paints the
-     * theme's roles, and none of the slides' colours are roles.
-     */
     const frameRegion = (frame: Pixels.Pixels, scale: number, box: ProbeBox) =>
       Effect.gen(function* () {
         return yield* cropTo(ctx, frame, scale, box, "the carousel's frame");
       });
 
-    /** The fill and label ink of every slide, counted inside the frame. */
     const slidePaints = (frame: Pixels.Pixels, scale: number, box: ProbeBox) =>
       Effect.gen(function* () {
         const region = yield* frameRegion(frame, scale, box);
@@ -405,7 +347,6 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }));
       });
 
-    /** Asserts that `active` is the one slide whose paint is in the frame. */
     const expectOnlySlide = (
       frame: Pixels.Pixels,
       scale: number,
@@ -450,7 +391,6 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** The active slide's fill paints and an inactive one's does not. */
     const expectSlidePaint = (
       frame: Pixels.Pixels,
       scale: number,
@@ -480,10 +420,8 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** The frame's box, read once per step so a moved frame is a failure. */
     const frameBox = () => paintedBox(ctx, CAROUSEL_IDS.track);
 
-    // ── 1. The first slide alone is mounted and paints ────────────────────
     yield* ctx.expectEqual(
       "the carousel starts on its first slide",
       yield* readout(),
@@ -505,7 +443,6 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const first = yield* capture(ctx, FIRST);
     yield* expectOnlySlide(first.pixels, first.scale, firstBox, 0);
 
-    // ── 2. The next control steps, and the frame follows the slide ────────
     yield* ctx.host.click(CAROUSEL_IDS.next);
     yield* ctx.expectContains(
       "a press on the next control steps to the second slide",
@@ -541,7 +478,6 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const second = yield* capture(ctx, SECOND);
     yield* expectOnlySlide(second.pixels, second.scale, secondBox, 1);
 
-    // ── 3. The keys step, clamp, and jump to an end ───────────────────────
     yield* ctx.host.focusElement(CAROUSEL_IDS.root);
     yield* ctx.expectEqual(
       "the carousel's root takes the native focus",
@@ -574,7 +510,6 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "active=2 reports=4",
     );
 
-    // ── 4. The controls are disabled at an edge until the caller loops ────
     yield* ctx.host.focusElement(CAROUSEL_IDS.root);
     yield* ctx.host.key("home");
     yield* settleReadout(ctx, "active=0 reports=5");
@@ -617,7 +552,6 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "active=2 reports=8",
     );
 
-    // ── 5. A dot chooses its slide, once ──────────────────────────────────
     yield* ctx.host.click(dotId(1));
     yield* ctx.expectContains(
       "a press on a dot chooses its slide",
@@ -632,7 +566,6 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       carouselReadout({ active: 1, reports: 9, loop: true }),
     );
 
-    // ── 6. The indicator marks the chosen slide, at its own widths ────────
     yield* Effect.sleep(SETTLE);
     const dots = yield* capture(ctx, DOTS);
     const paints = yield* Effect.forEach(
@@ -686,13 +619,6 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1, discard: true },
     );
 
-    /**
-     * The two dots a change of slide moves, as the frame paints them.
-     *
-     * Dot 1 is the selection the carousel is leaving and dot 2 the one it
-     * reaches, so the pair is the whole tween: one pill shrinking, one dot
-     * growing.
-     */
     const travellingDots = (frame: {
       readonly pixels: Pixels.Pixels;
       readonly scale: number;
@@ -717,7 +643,6 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return [left, reached] as const;
       });
 
-    // ── 7. The inks change in the press's frame, the widths travel ────────
     const pauseClock = yield* ctx.expectSome(
       "the window exposes a motion clock",
       Option.fromNullishOr(ctx.host.clockPause),
@@ -762,7 +687,6 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── 8. Partway through the level both dots are between the widths ─────
     yield* fastForward(CAROUSEL_PARTIAL_MS);
     const partial = yield* settlePaint(
       (name) =>
@@ -783,7 +707,6 @@ export const carouselSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── 9. Past the level the widths land where the inks already were ─────
     yield* fastForward(CAROUSEL_LEVEL_MS - CAROUSEL_PARTIAL_MS);
     const settled = yield* settlePaint(
       (name) =>

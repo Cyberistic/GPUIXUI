@@ -1,19 +1,3 @@
-/**
- * Holds the arithmetic the `collapsible-lifecycle` probe reads a window with,
- * and the claims its README section prints.
- *
- * The finding this file guards is that a disclosure's height is the **content
- * box's**, not the caller's: the window settles the clipping box on the body
- * because `<AutoHeight>` is handed what the content reports through `onLayout`,
- * and the content recipe's padding is part of that number (94 for an 80 body,
- * measured when the negative control left it on). The presses are the other
- * half: the body is grown while the section is closed, when the reveal has
- * unmounted its subtree, so the next open has to measure the height on screen
- * rather than reuse the one it closed with.
- *
- * `node:fs` is deliberate, as in `scrollbar-both.test.ts`: this reads the
- * repository's own probe, view and Markdown, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -43,7 +27,6 @@ const liveScenarios = readFileSync(
   "utf8",
 );
 
-/** The section's prose on one line, so a wrapped sentence still reads whole. */
 const flat = readme.replace(/\s+/g, " ");
 
 describe("a collapsible's measured height", () => {
@@ -55,8 +38,7 @@ describe("a collapsible's measured height", () => {
       false,
       true,
     ]);
-    // The counters only ever climb: an open increments `opens`, a close
-    // increments `closes`, and neither replays after a press.
+
     expect(Arr.map(COLLAPSE_PRESSES, (press) => press.opens)).toEqual([
       1, 1, 2, 2, 3,
     ]);
@@ -68,14 +50,11 @@ describe("a collapsible's measured height", () => {
   });
 
   it("grows the body while the section is closed, never while it is open", () => {
-    // The gap the probe exists for: the tree is unmounted on the press before
-    // the grow, so the reopened section has nothing to reuse.
     expect(COLLAPSE_PRESSES[COLLAPSE_GROW_BEFORE - 1]?.open).toBe(false);
     expect(COLLAPSE_PRESSES[COLLAPSE_GROW_BEFORE]?.open).toBe(true);
     expect(COLLAPSE_PRESSES[COLLAPSE_GROW_BEFORE]?.height).toBe(COLLAPSE_GROWN);
     expect(COLLAPSE_PRESSES[COLLAPSE_GROW_BEFORE]?.open).toBe(true);
-    // The grow press is between a close at the old height and an open at the
-    // new one, so a reorder cannot keep the pass by opening at the grown body.
+
     expect(COLLAPSE_PRESSES[COLLAPSE_GROW_BEFORE - 1]?.height).toBe(
       COLLAPSE_BODY,
     );
@@ -86,8 +65,7 @@ describe("a collapsible's measured height", () => {
     expect(COLLAPSE_MOUNTED).toBeLessThan(COLLAPSE_BODY);
     expect(COLLAPSE_BODY).toBeLessThan(COLLAPSE_GROWN);
     expect(COLLAPSE_WIDTH).toBeGreaterThan(COLLAPSE_GROWN);
-    // Three different heights are what let the reopen prove it measured again:
-    // two equal numbers could not tell a re-measurement from a stale target.
+
     expect(
       new Set([COLLAPSE_MOUNTED, COLLAPSE_BODY, COLLAPSE_GROWN]).size,
     ).toBe(3);
@@ -108,7 +86,6 @@ describe("a collapsible's measured height", () => {
   });
 
   it("counts the checks the probe asserts", () => {
-    // Every body read is a `paintedBox` check plus the size it returns.
     expect(COLLAPSE_CHECKS).toBe(
       5 + 4 + 1 + COLLAPSE_OPENS.length * 5 + COLLAPSE_CLOSES.length * 3,
     );
@@ -146,8 +123,6 @@ describe("the collapsible-lifecycle probe's record", () => {
   });
 
   it("prints the heights the window read, not only the constants", () => {
-    // The three settled heights and the recipe's padding are measurements; a
-    // page that printed only the fixture's numbers would claim none of them.
     Arr.forEach([80, 120, 200], (height) => {
       expect(flat).toContain(`**${height}**`);
     });
@@ -176,15 +151,12 @@ describe("the probe asks the question the section answers", () => {
     expect(liveScenarios).toContain("<Collapsible");
     expect(liveScenarios).toContain("<CollapsibleTrigger");
     expect(liveScenarios).toContain("<CollapsibleContent");
-    // Both mount paths are driven: the pressed section and the one that is
-    // open at mount.
+
     expect(liveScenarios).toContain("<Collapsible defaultOpen>");
     expect(liveScenarios).toContain("testId={COLLAPSE_IDS.initialClip}");
   });
 
   it("drops the content recipe's padding on both sections", () => {
-    // The probe's arithmetic is one number per read because of this class; a
-    // section mounted without it would settle 14 px past the body.
     const padded = liveScenarios.match(/className="p-0 gap-0"/g) ?? [];
     expect(padded).toHaveLength(2);
   });

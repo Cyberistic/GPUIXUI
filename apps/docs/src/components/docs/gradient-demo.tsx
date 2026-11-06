@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Gradient page.
- *
- * The native surface breathes between two seeded ramps; the preview paints the
- * two-stop ramp and cross-fades a second one over it on the same slow loop.
- */
-
 export function GradientDemo() {
   return (
     <div className="gx-gradient">

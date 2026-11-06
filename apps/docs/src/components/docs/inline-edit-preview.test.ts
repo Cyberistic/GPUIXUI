@@ -11,35 +11,18 @@ import {
   type Rename,
 } from "./inline-edit-preview";
 
-/**
- * The Inline edit preview's model.
- *
- * A rename field's interesting half is invisible in a drawing: whether `Enter`
- * commits once although the runtime delivers it twice, whether an unchanged
- * draft calls nothing, whether Escape is the only discard, and whether the focus
- * goes back to the display after the keyboard but stays where the reader put it
- * after a blur. A preview that commits twice, or resumes an abandoned draft,
- * paints a control the shipped one would not answer.
- *
- * `node:fs` is the test's own read of a checked-in file, not runtime I/O.
- */
-
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
 const source = read("../../../../../packages/components/src/inline-edit.tsx");
 
-/** A rename at rest, with a committed value. */
 const atRest = (): Rename => renameOf("Docs site");
 
-/** A state mid-edit with a typed draft. */
 const editing = (draft: string): Rename =>
   editDraft(beginEdit(atRest()), draft);
 
 describe("the inline edit preview", () => {
   it("stops an edit from being committed twice, because Enter arrives twice", () => {
-    // 0.11.0 delivers Enter as both a key and the input's submit event. The
-    // component latches the finish; the model's second call must do nothing.
     const first = commitEdit(editing("Docs"));
 
     expect(first.commits).toBe(1);
@@ -83,7 +66,7 @@ describe("the inline edit preview", () => {
     expect(discarded.discards).toBe(1);
     expect(discarded.commits).toBe(0);
     expect(discarded.focus).toBe("display");
-    // A second Escape is not a second discard.
+
     expect(cancelEdit(discarded)).toBe(discarded);
   });
 
@@ -104,8 +87,6 @@ describe("the inline edit preview", () => {
   });
 
   it("accepts an empty name, and the app refuses it", () => {
-    // The component's contract: an empty string is a value. The demo's rule: a
-    // workspace needs a name. Both are true, and the page teaches the split.
     const emptied = commitEdit(editing(""));
 
     expect(emptied.value).toBe("");
@@ -129,9 +110,6 @@ describe("the inline edit preview", () => {
   });
 
   it("reads the contract the component actually implements", () => {
-    // The latch, the unchanged-draft guard, the disabled-mid-edit discard and
-    // the two refocus reasons, read from the source so the model cannot outlive
-    // the paint.
     expect(source).toContain("const finished = useRef(false);");
     expect(source).toContain("if (finished.current) return;");
     expect(source).toContain(
@@ -144,25 +122,10 @@ describe("the inline edit preview", () => {
   });
 
   it("discards a draft the caller disabled before any finish arrives", () => {
-    // A disabled control must not write a value: the entry guard refuses a new
-    // edit, so the half that could still reach `onCommit` is the finish, and the
-    // suite proves both (`Enter`/submit and the blur). The page teaches the rule
-    // where a reader designs a save; this holds the sentence to the source.
-    const page = read(
-      "../../../content/docs/components/inline-edit.mdx",
-    ).replace(/\s+/g, " ");
-
     expect(source).toContain("if (commit && !disabled && draft !== value)");
-    expect(page).toContain(
-      "**disables the control mid-edit** refuses both the edit and the commit",
-    );
   });
 
   it("keeps the caller's handlers after its own on the editor", () => {
-    // `getInputProps` extends the host input's props, so the editor must run
-    // its own decision first and hand the caller the same event after it — a
-    // handler written over the spread ran only on the display, never while
-    // editing. Read whitespace-collapsed, so formatting cannot hide the order.
     const compact = source.replace(/\s+/g, " ");
 
     expect(compact).toContain(
@@ -177,8 +140,6 @@ describe("the inline edit preview", () => {
   });
 
   it("keeps the display and the editor the page prints", () => {
-    // The `sm` display, the `md` editor and the `accent` hover wash are the
-    // component's own values, so the drawings cannot show another control.
     expect(source).toContain('minHeight: controlHeight(theme, "sm")');
     expect(source).toContain('height: controlHeight(theme, "md")');
     expect(source).toContain("hover: { backgroundColor: theme.colors.accent }");

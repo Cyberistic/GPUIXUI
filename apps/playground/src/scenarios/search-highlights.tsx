@@ -1,17 +1,3 @@
-/**
- * Tier 3 probe: `search-highlights` — the runtime's own find-in-content API.
- *
- * A search box over a document needs what a browser test cannot see: which runs
- * of text the paint layer marked, how the count follows the query's case and
- * word rules, which match a find bar's cursor is on, and that an explicit
- * `[start, end)` range marks the same region `indexOf` would. A wash is a quad,
- * so `getAllText`/`getPaintedText` never report it; the renderer's
- * `getPaintedHighlights` does, and `SmokeHost.highlights` exposes it.
- *
- * The probe asserts the paint, not just a callback: every wash carries the run
- * it marked and the boxes it drew, so a query that returns the right count but
- * paints nothing fails here.
- */
 import { useState } from "react";
 import { Effect } from "effect";
 import { findHighlight } from "@gpuixui/tokens";
@@ -22,10 +8,8 @@ import type { ScenarioBody } from "../types.js";
 
 const LINES = ["alpha beta alpha", "gamma alpha delta", "beta gamma"];
 
-/** The document as the ranges index it: lines joined with a newline. */
 const CONTENT = LINES.join("\n");
 
-/** What a `highlight` spec asks for; `ranges` wins when set. */
 interface Spec {
   readonly query: string;
   readonly caseSensitive: boolean;
@@ -113,11 +97,9 @@ const SearchProbe = () => {
   );
 };
 
-/** Every wash's matched text, in paint order. */
 const matches = (ctx: Smoke.SmokeContext): ReadonlyArray<string> =>
   ctx.host.highlights().map((wash) => wash.text.slice(wash.start, wash.end));
 
-/** Fails unless every wash marked `expected`. */
 const expectMatches = (
   ctx: Smoke.SmokeContext,
   label: string,
@@ -172,8 +154,6 @@ export const searchHighlightsScenario: ScenarioBody = {
         false,
       );
 
-      // Case: `ALPHA` is not in the document, so a case-sensitive query marks
-      // nothing; the insensitive one marks the three lower-case words.
       ctx.host.click("search-upper");
       ctx.host.click("search-case");
       yield* expectMatches(ctx, "a case-sensitive query respects case", []);
@@ -184,8 +164,6 @@ export const searchHighlightsScenario: ScenarioBody = {
         "alpha",
       ]);
 
-      // Whole word: `alp` is a prefix of three words, so it marks nothing when
-      // the rule is on and three runs when it is off.
       ctx.host.click("search-alp");
       ctx.host.click("search-word");
       yield* expectMatches(ctx, "whole-word refuses a prefix", []);
@@ -196,8 +174,6 @@ export const searchHighlightsScenario: ScenarioBody = {
         "alp",
       ]);
 
-      // Explicit ranges index the same content with a newline between lines:
-      // `[0, 5)` is the first `alpha`.
       ctx.host.click("search-range");
       yield* expectMatches(ctx, "an explicit range marks one region", [
         "alpha",

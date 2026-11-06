@@ -1,16 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-/**
- * The capability record, held to the code that encodes it.
- *
- * `docs/gpuix-capabilities.md` is what component plans and `.agents/slop/COMPONENTS.md`
- * cite. A row can drift from `@gpuixui/runtime`'s `capabilities` matrix, and a
- * probe citation can name a probe no playground registry declares. Both are
- * read from disk here. The site's runtime page is a summary of this record; it
- * is not a second copy to keep in sync.
- */
-
 const root = new URL("../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -62,11 +52,9 @@ const limits = (source: string): ReadonlyArray<LimitRow> => {
 
 const rows = limits(doc);
 
-/** The record row whose label starts with `label`, or `undefined`. */
 const rowFor = (label: string): LimitRow | undefined =>
   rows.find((row) => row.label.startsWith(label));
 
-/** The matrix entries, read the way the module declares them. */
 const matrix = ((): ReadonlyArray<{
   readonly key: string;
   readonly supported: boolean;
@@ -86,7 +74,6 @@ const matrix = ((): ReadonlyArray<{
   return entries;
 })();
 
-/** The record's label for each matrix key. */
 const labels: Readonly<Record<string, string>> = {
   transform: "Per-element `transform`",
   gridSpan: "Grid span",
@@ -102,7 +89,6 @@ const labels: Readonly<Record<string, string>> = {
   tabNavigation: "Tab / Shift+Tab focus traversal",
 };
 
-/** The probe ids the playground's headless, live and terminal registries declare. */
 const registeredProbes = (): ReadonlySet<string> => {
   const ids = (path: string) =>
     [...read(path).matchAll(/\n\s*id: "([^"]+)",/g)].map(
@@ -115,7 +101,6 @@ const registeredProbes = (): ReadonlySet<string> => {
   ]);
 };
 
-/** Every backticked token a row writes. */
 const rowTokens = (): ReadonlyArray<string> =>
   rows
     .flatMap((row) => [row.evidence, row.workaround])
@@ -125,7 +110,6 @@ const rowTokens = (): ReadonlyArray<string> =>
 const modalFixture = read("apps/playground/src/live/modal-scroll.ts");
 const motionFixture = read("apps/playground/src/live/motion-interruption.ts");
 
-/** One numeric constant the fixture exports. */
 const fixtureNumber = (name: string): number => {
   const found = new RegExp(`export const ${name} = (-?\\d+)`).exec(
     modalFixture,
@@ -133,31 +117,21 @@ const fixtureNumber = (name: string): number => {
   return Number(found?.[1] ?? Number.NaN);
 };
 
-/** One numeric constant of any fixture, by name. */
 const numberIn = (source: string, name: string): number => {
   const found = new RegExp(`export const ${name} = (-?\\d+)`).exec(source);
   return Number(found?.[1] ?? Number.NaN);
 };
 
-/**
- * The `motion-interruption` probe's published section.
- *
- * The count and the cut samples are the probe's own record, held to its
- * assertions by the playground's `motion-interruption.test.ts`; the durable
- * capability record must print the same numbers.
- */
 const motionInterruptSection = (): string => {
   const probe = read("apps/playground/README.md");
   return probe.slice(probe.indexOf("### `motion-interruption`"));
 };
 
-/** The checks the probe's README prints. */
 const motionInterruptChecks = (): number => {
   const found = /(\d+) checks/.exec(motionInterruptSection());
   return Number(found?.[1] ?? Number.NaN);
 };
 
-/** A number as the record prints it: thousands separated by a space. */
 const grouped = (value: number): string => {
   const text = String(Math.abs(value)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   return value < 0 ? `-${text}` : text;
@@ -170,7 +144,7 @@ describe("docs/gpuix-capabilities.md", () => {
       .map((row) => row.verdict)
       .filter((verdict) => !verdicts.includes(verdict as never));
     expect(unknown).toEqual([]);
-    // The table's first cell names a capability, not a column header.
+
     expect(rows.filter((row) => row.label === "Capability")).toEqual([]);
   });
 
@@ -200,8 +174,7 @@ describe("docs/gpuix-capabilities.md", () => {
         registered.has(match[1] ?? ""),
       ),
     );
-    // The measured rows are the record's evidence; a scan that stopped
-    // matching cannot pass on an empty set.
+
     expect(citing.length).toBeGreaterThanOrEqual(30);
   });
 
@@ -225,10 +198,6 @@ describe("docs/gpuix-capabilities.md", () => {
   });
 
   it("records the wheel a modal contains, from its fixture", () => {
-    // The probe measured that an `occlude` layer is a wall, which is the reason
-    // a modal over a scrolling page needs no scroll lock. Every figure the
-    // record prints is the fixture's own arithmetic, so a changed row count or
-    // viewport fails here instead of leaving a stale measurement behind.
     const rowHeight = fixtureNumber("MODAL_ROW_HEIGHT");
     const pageRows = fixtureNumber("MODAL_PAGE_ROWS");
     const bodyRows = fixtureNumber("BODY_ROWS");
@@ -267,10 +236,6 @@ describe("docs/gpuix-capabilities.md", () => {
   });
 
   it("records an interrupted animation continuing, from its fixture", () => {
-    // The runtime's most load-bearing motion sentence — a retarget starts from
-    // the visible value — was the one supported row with no probe. The fixture
-    // carries the three widths and the tolerance; the probe asserts the cuts;
-    // the record and the page print what it painted.
     const rest = numberIn(motionFixture, "MOTION_REST_WIDTH");
     const mid = numberIn(motionFixture, "MOTION_MID_WIDTH");
     const far = numberIn(motionFixture, "MOTION_FAR_WIDTH");
@@ -278,7 +243,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect([rest, mid, far, tolerance]).toEqual([120, 240, 400, 60]);
 
     const checks = motionInterruptChecks();
-    // A floor, so a scan that stopped matching cannot pass on `NaN`.
+
     expect(checks).toBeGreaterThanOrEqual(15);
     const section = motionInterruptSection();
     expect(section).toContain(`${checks} checks`);
@@ -289,39 +254,30 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(evidence).toContain("`motion-interruption`");
     expect(evidence).toContain(`${checks} checks`);
     expect(evidence).toContain("src/live/motion-interruption.ts");
-    // The three targets are the fixture's: a restart paints the rest width and
-    // a run that finished the abandoned target paints the far one, so the two
-    // failure shapes are widths the row prints.
+
     expect(evidence).toContain(`**${rest}**`);
     expect(evidence).toContain(`**${far}**`);
     expect(tolerance).toBeLessThan(far - mid);
-    // The two cut readings are the probe's own; a changed sample fails here.
+
     expect(section).toContain("**192**");
     expect(section).toContain("**329.5**");
     expect(evidence).toContain("**192**");
     expect(evidence).toContain("**329.5**");
-    // The new run is re-timed from the cut, and completion reporting is
-    // `motion-geometry`'s measurement, not this probe's.
+
     expect(evidence).toContain("own full declared duration");
     expect(evidence).toContain("`motion-geometry`");
     expect(row?.workaround).toContain("generation filter");
 
-    // §5 owes every cited probe a line.
     expect(doc.slice(doc.indexOf("## 5."))).toContain("`motion-interruption`");
   });
 
   it("records the one child a window's root paints, from the mount seam", () => {
-    // A root fragment paints its **last** child and reports nothing, so an app
-    // shell that returns `<><Toolbar /><Body /></>` at the root paints the body
-    // and loses the toolbar silently. The live runner hit it while adding a
-    // mount marker; the record and the page must carry the rule and the counts.
     const readme = read("apps/playground/README.md");
     const section = readme
       .slice(readme.indexOf("### One window, one probe at a time"))
       .replace(/\s+/g, " ");
     expect(section).not.toBe("");
 
-    // The measurement's own words, so a re-measure rewords both documents.
     const measured =
       /a root `Fragment` of (\w+) divs renders the (\w+) alone, and (\w+) children of a root fragment render only the (\w+)/.exec(
         section,
@@ -341,9 +297,6 @@ describe("docs/gpuix-capabilities.md", () => {
   });
 
   it("owes only probes a registry declares, in one sentence", () => {
-    // The list is the whole debt, so it ends its sentence. A merge once left
-    // "the record does not owe." after it, which reads as both a promise and a
-    // retraction; the ids themselves must all be real probes.
     const keeping = doc.slice(doc.indexOf("## 5. Keeping this document true"));
     const owed = /The probes the record owes: \(([^)]*)\)\./.exec(keeping);
     expect(owed).not.toBeNull();
@@ -358,11 +311,6 @@ describe("docs/gpuix-capabilities.md", () => {
   });
 
   it("records the chrome the shipped shell parts paint, from the probe", () => {
-    // The record's Application-menu row can only say "draw an in-window menu";
-    // whether the shipped parts actually paint one was only in the playground's
-    // README. The row is the durable claim, so it is held to the probe's own
-    // section: a renamed probe, a changed check count or a limit the probe no
-    // longer measures fails here.
     const row = rowFor("In-window application chrome");
 
     expect(row?.verdict).toBe("supported, with limits");
@@ -384,20 +332,14 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(section).toContain("`escape`");
     expect(section).toContain("status bar");
 
-    // §5 owes every cited probe a line.
     expect(doc.slice(doc.indexOf("## 5."))).toContain("`app-chrome-lifecycle`");
   });
 
   it("records the radio group's keys, from the probe", () => {
-    // The record can only say "keep one tab stop"; whether the shipped
-    // `RadioGroup` actually paints a disc for the choice and a ring for the
-    // focus, and where its roving base sits, was only in the playground's
-    // README. The row is the durable claim, so it is held to the fixture, the
-    // probe's own assertion titles, the README's printed numbers and the page.
     const fixture = read("apps/playground/src/live/radio-group.ts");
     const probe = read("apps/playground/src/live/radio-group-probe.tsx");
     const checks = numberIn(fixture, "RADIO_CHECKS");
-    // The fixture's count is the probe's, held by the playground's own suite.
+
     expect(checks).toBe(39);
     expect(fixture).toContain("radioRowId");
 
@@ -409,8 +351,7 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(evidence).toContain(`${checks} checks`);
     expect(evidence).toContain("32x32");
     expect(evidence).toContain("516x64");
-    // Each rule the row prints is one the probe asserts by name, so the record
-    // cannot teach a behaviour the window never measured.
+
     [
       "a press paints the selection disc, not the keyboard ring",
       "an arrow past the last row wraps to the first",
@@ -422,7 +363,6 @@ describe("docs/gpuix-capabilities.md", () => {
     expect(row?.workaround).toContain("report");
     expect(row?.workaround).toContain("pixel count");
 
-    // The numbers are the README's own measurement, not a second reading.
     const section = read("apps/playground/README.md").slice(
       read("apps/playground/README.md").indexOf("### `radio-group-lifecycle`"),
     );

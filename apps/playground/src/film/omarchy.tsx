@@ -1,13 +1,3 @@
-/**
- * The film's Omarchy desktop: two blocks tiled the way Hyprland tiles them, on
- * the theme's own wallpaper, under a Waybar-style strip. The wallpaper, strip
- * and borders are the desktop, drawn here; the blocks are GPUIxUI.
- *
- * Each look is a real Omarchy theme: its `colors.toml` (MIT, basecamp/omarchy)
- * decoded by `decodeOmarchyPalette` and turned into a theme by
- * `paletteToTokens` — the same path an app takes when the desktop's theme file
- * changes.
- */
 import {
   decodeOmarchyPalette,
   paletteToTokens,
@@ -45,11 +35,9 @@ const wallpaper = (name: OmarchyLook) =>
     ),
   );
 
-/** A look's theme, decoded from its real `colors.toml`. */
 export const omarchyTheme = (name: OmarchyLook): Theme =>
   paletteToTokens(decodeOmarchyPalette(source(name)).palette);
 
-/** Hyprland's gaps: between tiles, and around the screen's edge. */
 const GAP = 12;
 const EDGE = 26;
 const BAR = 28;
@@ -114,7 +102,6 @@ const Bar = ({ theme }: { theme: Theme }) => (
   </div>
 );
 
-/** The desktop at 1280×720 in `look`. */
 export const OmarchyDesktop = ({ look }: { look: OmarchyLook }) => {
   const theme = omarchyTheme(look);
   return (

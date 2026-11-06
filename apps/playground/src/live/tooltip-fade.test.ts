@@ -1,20 +1,3 @@
-/**
- * Guards the tooltip-fade fixture.
- *
- * The probe spends a window to assert a handful of pixels and two boxes, so a
- * stale constant in this module would be reported as a runtime defect rather
- * than as the arithmetic it is. The bugs these cases catch:
- *
- * 1. a box parser that accepts a short or empty readout, so a closed tip reads
- *    as a box at the origin and the offset check compares nothing;
- * 2. a level or travel that no longer matches `motionLevels.fast` or the
- *    component's own `TOOLTIP_OFFSET`, which would make both read windows
- *    meaningless;
- * 3. a sample point on the border or the text, where the pixel is not the
- *    surface the fade composites;
- * 4. a palette whose tip surface is too close to the strip it is painted over,
- *    which would leave the fade with nothing measurable to blend toward.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
@@ -46,13 +29,11 @@ const read = (path: string): string =>
 
 const readme = read("../../README.md");
 
-/** The tip's resting surface colour; a black fallback fails loudly. */
 const surface = Option.getOrElse(
   surfaceFadeColour(palettes.dark.colors.popover),
   () => new Pixels.Rgba({ r: 0, g: 0, b: 0, a: 0 }),
 );
 
-/** A straight composite of `top` over `bottom` at `alpha`. */
 const mix = (
   top: Pixels.Rgba,
   bottom: Pixels.Rgba,
@@ -68,10 +49,9 @@ const mix = (
 const SIZE = 40;
 const SURFACE = new Pixels.Rgba({ r: 34, g: 39, b: 48, a: 255 });
 const INK = new Pixels.Rgba({ r: 238, g: 241, b: 245, a: 255 });
-/** A content box whose interior is rows 7–13 and columns 7–13 at scale 1. */
+
 const BOX = { x: 5, y: 5, width: 10, height: 10 };
 
-/** A capture built pixel by pixel from `paint`. */
 const frameOf = (
   size: number,
   paint: (x: number, y: number) => Pixels.Rgba,
@@ -87,7 +67,6 @@ const frameOf = (
     }),
   });
 
-/** A surface with ink on the given rows, inside the box's interior. */
 const inked = (rows: ReadonlyArray<number>, size = SIZE): Pixels.Pixels =>
   frameOf(size, (x, y) =>
     rows.includes(y) && x >= 8 && x <= 12 ? INK : SURFACE,
@@ -113,7 +92,7 @@ describe("the tooltip-fade fixture", () => {
     const box = { x: 200, y: 100, width: 80, height: 24 };
     const point = tooltipSample(box);
     expect(point).toEqual({ x: 200 - TOOLTIP_SAMPLE_INSET, y: 100 + 12 });
-    // The surface's left padding is `spacing.sm` (6) past a one-point border.
+
     expect(point.x).toBeGreaterThan(box.x - 7);
     expect(point.x).toBeLessThan(box.x);
     expect(point.y).toBeGreaterThan(box.y);
@@ -132,9 +111,7 @@ describe("the tooltip-fade fixture", () => {
     const duration = /fast:\s*(\d+)/.exec(timing)?.[1];
     expect(duration).toBe(`${TOOLTIP_ENTER_MS}`);
     expect(TOOLTIP_LEVEL).toBe("fast");
-    // The primitive's seam names the level once and the motion package reads
-    // both phases from it, so an exit at another level — which would unmount the
-    // tip before the entry the probe measures — cannot ship.
+
     const presence = read(
       "../../../../packages/primitives/src/core/presence.ts",
     );
@@ -160,7 +137,7 @@ describe("the tooltip-fade fixture", () => {
   it("finds the first row of ink, and none on a surface with no text", () => {
     expect(inkTopRow(inked([9, 10]), BOX, 1, SURFACE)).toEqual(Option.some(9));
     expect(inkTopRow(inked([]), BOX, 1, SURFACE)).toEqual(Option.none());
-    // Ink outside the content box is not the tip's own text.
+
     expect(
       inkTopRow(
         frameOf(SIZE, (_, y) => (y === 2 ? INK : SURFACE)),
@@ -169,7 +146,7 @@ describe("the tooltip-fade fixture", () => {
         SURFACE,
       ),
     ).toEqual(Option.none());
-    // A pixel a few levels above the surface is the border, not ink.
+
     const border = new Pixels.Rgba({
       r: SURFACE.r + 10,
       g: SURFACE.g + 10,

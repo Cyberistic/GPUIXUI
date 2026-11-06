@@ -1,12 +1,3 @@
-/**
- * EQN mode: the four equation types the fx-991ES Plus solves.
- *
- * Simultaneous systems use Gaussian elimination with partial pivoting; the
- * quadratic and cubic use closed forms that keep complex roots, as the manual's
- * examples do. The solutions are returned as labelled scalars, ready for the
- * display and for the A–F/X/Y variables the calculator exposes.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { Scalar } from "../value.js";
@@ -32,7 +23,6 @@ export const equationLabel = (kind: EquationKind): string =>
         ? "aX² + bX + c = 0"
         : "aX³ + bX² + cX + d = 0";
 
-/** The cell captions in the coefficient editor, in entry order. */
 export const coefficientLabels = (kind: EquationKind): ReadonlyArray<string> =>
   kind === "2x2"
     ? ["a1", "b1", "c1", "a2", "b2", "c2"]
@@ -172,7 +162,6 @@ const cubic = (
   );
 };
 
-/** Solve one equation type from the coefficient editor's values. */
 export const solveEquation = (
   kind: EquationKind,
   values: ReadonlyArray<number>,
@@ -183,10 +172,6 @@ export const solveEquation = (
   return cubic(values[0] ?? 0, values[1] ?? 0, values[2] ?? 0, values[3] ?? 0);
 };
 
-/**
- * Newton's method for SOLVE, with the initial value the reader supplied.
- * Returns the solution and the left-minus-right residual the manual shows.
- */
 export const newtonSolve = (
   fn: (x: number) => number,
   initial: number,

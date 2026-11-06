@@ -1,14 +1,3 @@
-/**
- * PreviewCard behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a hover delay that opens instantly or never; a press
- * that waits for the hover delay, or re-opens the card the same gesture just
- * dismissed; a card that closes while the pointer travels into it; a card that
- * never closes when the pointer leaves; an open path on focus, which a real
- * window never delivers; Escape or an outside press that closes the wrong
- * layer; an unnamed surface; and a controlled card that opens on its own.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -28,19 +17,11 @@ import {
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 
-/** Hover the card's padding, not a child inside it. */
 const hoverCard = (root: ReturnType<typeof renderComponent>): void => {
   const bounds = requireBounds(root, "preview");
   root.renderer.nativeSimulateMouseMove(bounds.x + 10, bounds.y + 10);
 };
 
-/**
- * An open card near the window centre, where every alignment has room.
- *
- * The inner row is shrink-to-fit: the anchored layer measures the positioning
- * root, so a stretched root makes `end` read from the page's edge instead of
- * the trigger's.
- */
 const AlignedCard = ({
   align,
 }: {
@@ -65,7 +46,6 @@ const AlignedCard = ({
   </div>
 );
 
-/** A document link with a hoverable preview card. */
 const Workspace = ({
   open,
   onOpenChange,
@@ -134,8 +114,6 @@ describe("PreviewCard", () => {
   });
 
   it("opens centred on its trigger when the caller names no align", () => {
-    // The card defaulted to `align="start"`, so it sat on its trigger's left
-    // corner where the popover centres. The house relation is `center`.
     const card = renderComponent(<AlignedCard />);
     settleMotion(card);
 
@@ -151,10 +129,6 @@ describe("PreviewCard", () => {
   });
 
   it("opens the card on each alignment it is asked for", () => {
-    // The panel's own relation to its trigger: `start` shares a left edge,
-    // `center` a centre line and `end` a right edge. GPUix 0.11.0 centres on
-    // the containing block, so `center` is `start` plus the measured half
-    // difference (the popover's rule).
     const alignments = [
       [
         "start",
@@ -210,9 +184,6 @@ describe("PreviewCard", () => {
     try {
       hoverCentreOf(card, "trigger");
 
-      // `setTimeout` floors a delay it cannot read to one millisecond, so an
-      // infinite wait used to open the card in the pointer's frame. The
-      // documented default is 300 ms.
       await after(120);
       expect(card.renderer.findByTestId("preview")).toBeUndefined();
 
@@ -231,8 +202,6 @@ describe("PreviewCard", () => {
     try {
       clickCentreOf(card, "trigger");
 
-      // No `await`: a press is explicit, so the card is open in the same frame,
-      // not after `openDelay` (20 ms here, 300 by default).
       expect(card.renderer.findByTestId("preview")).toBeDefined();
 
       clickCentreOf(card, "trigger");
@@ -252,8 +221,6 @@ describe("PreviewCard", () => {
         card.renderer.findByTestId("trigger")?.id ?? -1,
       );
 
-      // The event does arrive in a window; the card keeps its open path off it
-      // deliberately, so focus alone leaves it closed.
       await waitFor(() =>
         expect(card.renderer.findByTestId("preview")).toBeUndefined(),
       );
@@ -283,9 +250,6 @@ describe("PreviewCard", () => {
   });
 
   it("cancels a hover open when the trigger is disabled before the delay", async () => {
-    // The trigger can be disabled between the pointer's entry and the delay's
-    // end; the armed timer used to open anyway, mounting the card over a
-    // control that refuses every route.
     const card = renderComponent(<Workspace openDelay={120} />);
 
     try {

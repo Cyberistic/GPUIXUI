@@ -1,12 +1,3 @@
-/**
- * The rotation's index rules, without a renderer.
- *
- * The bugs these guard: a rotation that runs past the end of a shortened list, a
- * negative or fractional index from a stored preference, an empty list that
- * makes the phrase lookup throw, and a phrase list a saved record wrote as
- * something other than text.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { at, nextIndex, phraseAt, phrasesOf } from "./logic.js";

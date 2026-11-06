@@ -13,10 +13,6 @@ import {
 } from "./sidebar-kit";
 import type { SbIconName } from "./sidebar-kit";
 
-/**
- * Sidebar 09 — the nested inbox: an icon rail for the folders, a second panel
- * for the message list, and the open thread beside them.
- */
 const FOLDERS: ReadonlyArray<{
   readonly label: string;
   readonly icon: SbIconName;

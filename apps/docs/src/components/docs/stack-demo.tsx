@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Stack page.
- *
- * `Stack` is layout, not a control, so the preview is a labelled diagram: a
- * dashed outline around each arrangement with a caption naming its axis, gap
- * and alignment. The Code tab shows the native usage.
- */
-
 const cells = ["A", "B", "C"] as const;
 
 export const StackDemo = () => (

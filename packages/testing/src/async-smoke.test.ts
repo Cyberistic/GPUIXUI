@@ -1,12 +1,3 @@
-/**
- * Guards the live-window runner contract.
- *
- * The bug this prevents: a window verb that fails (a missing locator, a closed
- * window) being recorded as a *passed* or merely *failed* check, or aborting the
- * remaining probes. A live run must report a host failure as `errored`, keep the
- * suite going, and keep the capability verdict `failed` — otherwise a broken
- * window reads as verified evidence.
- */
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
@@ -182,8 +173,6 @@ describe("runAsyncScenarios", () => {
               : Effect.void,
         );
 
-        // A mount that cannot prove its own view has no evidence: it must not
-        // read as a pass, and the next probe still runs.
         expect(isFailed(report, 0)).toBe(false);
         expect(Option.getOrUndefined(erroredDetail(report, 0))).toContain(
           "waitFor mount never-mounted: the marker never painted",

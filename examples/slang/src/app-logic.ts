@@ -1,9 +1,3 @@
-/**
- * The app's pure logic: palette rows, their searchable text, and the status
- * bar's reading. Keeping this out of the render tree is what lets the palette
- * be tested for "does searching determinant find it" without a window.
- */
-
 import type { CommandAction } from "@gpuixui/components/command-menu";
 import {
   MODES,
@@ -18,11 +12,10 @@ import * as Str from "effect/String";
 
 export interface PaletteEntry {
   readonly action: CommandAction;
-  /** Words the palette searches beyond the painted label. */
+
   readonly keywords: string;
 }
 
-/** Build the palette rows for the model plus the app's own actions. */
 export const paletteEntries = (
   model: CalculatorModel,
   handlers: {
@@ -98,7 +91,6 @@ export const paletteEntries = (
   );
 };
 
-/** Case-insensitive subsequence search over label and keywords. */
 export const paletteMatches = (entry: PaletteEntry, query: string): boolean => {
   const wanted = Str.toLowerCase(Str.trim(query));
   if (wanted === "") return true;
@@ -114,7 +106,6 @@ export const paletteMatches = (entry: PaletteEntry, query: string): boolean => {
   });
 };
 
-/** The status bar's two ends. */
 export const statusItems = (
   state: CalculatorState,
 ): {
@@ -145,17 +136,14 @@ export const statusItems = (
   ],
 });
 
-/** The mode a `⌘1`…`⌘8` chord names. */
 export const modeForShortcut = (index: number): Mode | null =>
   MODES[index - 1]?.mode ?? null;
 
-/** The MODE menu as the LCD lists it. */
 export const modeMenu: ReadonlyArray<string> = Arr.map(
   MODES,
   (mode) => `${mode.index}:${mode.label}`,
 );
 
-/** While the MODE menu is open, a digit 1–8 picks its mode; any other key closes it. */
 export const modeMenuPick = (key: string): Option.Option<Mode> =>
   /^[1-8]$/.test(key)
     ? Option.fromNullishOr(modeForShortcut(Number(key)))
@@ -163,7 +151,6 @@ export const modeMenuPick = (key: string): Option.Option<Mode> =>
 
 export type InspectorTab = "history" | "mode" | "catalog";
 
-/** What SHIFT opens from a number key: the device's menus, as the app's panels. */
 export type ShiftMenu =
   | {
       readonly _tag: "panel";
@@ -180,7 +167,6 @@ const SHIFT_MODES: Readonly<Record<string, Mode>> = {
   "5": "VECTOR",
 };
 
-/** SHIFT 7/8 (CONST, CONV) open the catalogue; SHIFT 9 (CLR) SETUP's resets; SHIFT 1–5 the mode's panel. */
 export const shiftMenu = (key: string): Option.Option<ShiftMenu> => {
   if (key === "7" || key === "8")
     return Option.some({ _tag: "panel", tab: "catalog", mode: Option.none() });
@@ -192,10 +178,8 @@ export const shiftMenu = (key: string): Option.Option<ShiftMenu> => {
   }));
 };
 
-/** The device's design size; the frame fits a unit `u` to the space it gets. */
 export const DEVICE = { width: 340, height: 620 } as const;
 
-/** The unit that fits the whole device in a `width` × `height` stage. */
 export const deviceUnit = (width: number, height: number): number =>
   Math.min(
     1.3,

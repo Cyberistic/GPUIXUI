@@ -1,24 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `QrCode`: a QR symbol painted from the package's own encoder.
- *
- * The symbol is one tinted `<svg>` mask — the route the playground's
- * `qr-matrix` probe measured in a window — with the four-module quiet zone
- * inside the mask's viewBox, because a scanner needs the light ring as much as
- * it needs the modules. A grid of `div`s also paints (the probe measured both),
- * but one element is the cheaper and crisper of the two for a symbol that can
- * hold a thousand modules.
- *
- * The two colours are **not theme roles**: a symbol is read by a camera, so its
- * ink and paper stay a scanner-safe near-black on white even in a dark theme.
- * A caller may override either, and owns what a low-contrast pair costs.
- *
- * A value past the largest symbol paints an **alert** carrying the capacity
- * sentence, not an image named after a symbol that is not there: a reader who
- * cannot see the box has to hear why, and the symbol's label would replace the
- * message the whole state exists to deliver.
- */
-
 import type { Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
@@ -38,31 +18,23 @@ import {
   type QrMode,
 } from "./qr/encode.js";
 
-/** The ink a symbol paints: near-black, as a scanner expects. */
 export const QR_INK = "#111111";
 
-/** The paper a symbol paints: white, so the quiet zone is truly light. */
 export const QR_PAPER = "#FFFFFF";
 
-/** {@link QrCode} props. */
 export interface QrCodeProps extends Omit<Props, "children"> {
-  /** The text or URL the symbol carries. A value that is not text carries nothing. */
   readonly value: string;
-  /** The error correction level. Default `"M"`. */
+
   readonly level?: QrLevel;
-  /**
-   * The painted side in points, quiet zone included. Default `160`; a value
-   * that is not a positive number reads as the default. The refusal an
-   * over-long value paints reserves the same square.
-   */
+
   readonly size?: number;
-  /** The quiet zone in modules. Default `4`. */
+
   readonly quietZone?: number;
-  /** The modules' colour. Default {@link QR_INK}. */
+
   readonly ink?: string;
-  /** The background and quiet zone's colour. Default {@link QR_PAPER}. */
+
   readonly paper?: string;
-  /** The symbol's accessible name. Default `"QR code"`; a blank name reads as the default. */
+
   readonly label?: string;
   readonly className?: string;
 }
@@ -70,11 +42,6 @@ export interface QrCodeProps extends Omit<Props, "children"> {
 const DEFAULT_SIZE = 160;
 const DEFAULT_LABEL = "QR code";
 
-/**
- * The square a caller reserved, read the way the symbol's placement reads it: a
- * side the runtime cannot lay out is the default. The refusal paints into this
- * box, so a thumbnail grid that reserved a cell does not jump as a value grows.
- */
 const frameSide = (size: number): number =>
   Number.isFinite(size) && size > 0 ? size : DEFAULT_SIZE;
 
@@ -93,20 +60,12 @@ const errorText = (theme: Theme): StyleDesc => ({
   color: theme.colors.destructive,
 });
 
-/** The units an overflow is measured in, per mode. */
 const OVERFLOW_UNITS: Readonly<Record<QrMode, string>> = {
   numeric: "digits",
   alphanumeric: "characters",
   byte: "bytes",
 };
 
-/**
- * The capacity message an over-long value paints.
- *
- * The unit is the mode's own: a numeric payload is counted in digits and a
- * byte-mode one in UTF-8 bytes, so the sentence names the length the encoder
- * actually measured rather than a byte count of something that is not bytes.
- */
 export const qrOverflowMessage = (
   mode: QrMode,
   length: number,
@@ -114,7 +73,6 @@ export const qrOverflowMessage = (
 ): string =>
   `A QR code holds ${capacity} ${OVERFLOW_UNITS[mode]} at this level; the value is ${length}.`;
 
-/** The element `QrCode` renders. Pure in its arguments. */
 export const renderQrCode = (
   props: QrCodeProps,
   theme: Theme,
@@ -131,13 +89,9 @@ export const renderQrCode = (
     style,
     ...rest
   } = props;
-  // A level restored from storage arrives untyped; read it at this boundary so
-  // the encoder is never handed a name its block table does not carry.
+
   const level = levelOf(levelProp);
-  // A paint is read the way every other caller string is: a stored blank or
-  // non-text colour is an absence, so the symbol keeps the scanner pair rather
-  // than handing the runtime a colour it cannot paint (a quiet zone on the page
-  // is unscannable in a dark theme).
+
   const inkPaint = accessibleName(ink, QR_INK);
   const paperPaint = accessibleName(paper, QR_PAPER);
   const encoding = encodeQr(value, { level });
@@ -198,7 +152,6 @@ export const renderQrCode = (
   });
 };
 
-/** A QR symbol for a value, composed from one tinted `<svg>` mask. */
 export const QrCode = (props: QrCodeProps): ReactElement => {
   const theme = useTheme();
   return renderQrCode(props, theme);

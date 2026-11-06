@@ -1,20 +1,3 @@
-/**
- * Toolbar: a horizontal action strip with a roving tab stop and an overflow menu.
- *
- * A `role="toolbar"` row of actions: one tab stop roves between them, the arrow
- * keys move it (wrapping and skipping disabled actions), and an optional `max`
- * overflows the tail into a menu behind an ellipsis trigger. The roving and the
- * overflow split are pure (`logic.ts`); this component wires them to focus and
- * renders the strip.
- *
- * The strip's anatomy is the window's: a leading group of actions, a flexible
- * spacer, then the trailing group — an optional `ToggleGroup` of view modes and
- * the overflow trigger. Actions are the primitives' `Button` (a `ghost`, `sm`
- * one, with its icon as the leading slot), the trigger is an `IconButton`, the
- * rule between groups is a `Separator`, and a mode group is a `ToggleGroup`, so
- * the chrome owns no button of its own.
- */
-
 import type { KeyEvent, Props, PublicInstance, StyleDesc } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
@@ -49,44 +32,39 @@ const TOOLBAR =
   "flex w-full flex-row items-center gap-1 border-b border-input bg-card px-2 py-1";
 const TOOLBAR_ITEM_LABEL = "text-sm font-medium font-sans";
 
-/** One action in the strip. */
 export interface ToolbarAction {
   readonly id: string;
   readonly label: string;
   readonly icon?: IconName;
-  /** A label shared by adjacent actions; a separator falls between groups. */
+
   readonly group?: string;
   readonly disabled?: boolean;
 }
 
-/** One mode the toolbar's trailing `ToggleGroup` offers. */
 export interface ToolbarMode {
   readonly id: string;
   readonly label: string;
   readonly disabled?: boolean;
 }
 
-/** {@link Toolbar} props. */
 export interface ToolbarProps extends Omit<Props, "children"> {
-  /** The toolbar's accessible name. */
   readonly label?: string;
   readonly actions: ReadonlyArray<ToolbarAction>;
-  /** Maximum visible slots (a count); the overflow trigger takes one. */
+
   readonly max?: number;
-  /** Called when an action is activated. */
+
   readonly onAction?: (id: string) => void;
-  /** The trailing mode group. Omit to draw no group. */
+
   readonly modes?: ReadonlyArray<ToolbarMode>;
-  /** The pressed mode, when the group is controlled. */
+
   readonly mode?: string;
-  /** Called when a mode is pressed. */
+
   readonly onModeChange?: (id: string) => void;
-  /** The modes group's accessible name. Defaults to `View`. */
+
   readonly modesLabel?: string;
   readonly className?: string;
 }
 
-/** A slot is a visible action, or the overflow trigger after them. */
 const isOverflowSlot = (slot: number, visibleCount: number): boolean =>
   slot === visibleCount;
 
@@ -96,7 +74,6 @@ const overflowItemStyle = (theme: Theme, disabled: boolean): StyleDesc => ({
   cursor: disabled ? "not-allowed" : "pointer",
 });
 
-/** The horizontal action strip. */
 export const Toolbar = ({
   label,
   actions,
@@ -171,7 +148,6 @@ export const Toolbar = ({
   };
 
   return (
-    // Its actions are toolbar buttons: on AppKit they keep the bezel hover.
     <ToolbarScope.Provider value>
       <div
         role="toolbar"

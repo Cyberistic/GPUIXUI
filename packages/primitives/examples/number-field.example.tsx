@@ -1,18 +1,7 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Number field example: export settings.
- *
- * Two bounded numbers where typing is the point — a copy count and a render
- * resolution — with the panel's state controlling both and the summary derived
- * from it. The copy count shows the `1–99` guard a print dialog actually has;
- * the resolution shows a larger step, so the arrows are visibly coarser and a
- * drag across the spin column travels twelve dots per step.
- */
-
 import { useState, type ReactElement } from "react";
 import { Box, NumberField, Separator, Stack, Text } from "../src/index.js";
 
-/** A labelled row with the field's current value on the right. */
 const Row = ({
   title,
   description,
@@ -40,7 +29,6 @@ const Row = ({
   </Stack>
 );
 
-/** Export settings: two bounded number fields and a derived summary. */
 export const NumberFieldExample = (): ReactElement => {
   const [copies, setCopies] = useState(2);
   const [dpi, setDpi] = useState(144);

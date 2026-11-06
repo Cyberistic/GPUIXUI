@@ -1,12 +1,3 @@
-/**
- * `@gpuixui/runtime` — the pinned GPUix runtime's capability matrix, typed
- * refusals, and runtime-detected helpers.
- *
- * Dependency-light on purpose: `effect` for the typed error and `@gpuix/react`
- * for the runtime surface it describes. Nothing here renders or depends on the
- * component/token layers.
- */
-
 export {
   capabilities,
   unsupportedFeatures,

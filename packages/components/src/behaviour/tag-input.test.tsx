@@ -1,14 +1,3 @@
-/**
- * TagInput behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a comma that leaves a stray draft, a duplicate token, a
- * cap that truncates existing tokens, Backspace that removes when a draft is
- * present, a disabled chip that still removes, a draft that stops the field from
- * keeping focus, and a **disabled** group that still committed the draft its
- * field was carrying (a caller disables the field while saving, and Enter used to
- * add a token to a group that refuses every edit).
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -19,7 +8,6 @@ import {
 } from "../internal/test-root.js";
 import { TagInput, TagInputChip, TagInputField } from "../tag-input.js";
 
-/** A caller-owned token list. */
 const Harness = ({
   initial = [],
   max,
@@ -57,20 +45,17 @@ const Harness = ({
   );
 };
 
-/** Focus the field and send each character as a real key press. */
 const type = (root: ComponentTestRoot, text: string): void => {
   root.renderer.focusElement(root.renderer.findByTestId("tag-field")?.id ?? -1);
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
 };
 
-/** The chip's removal control: the chip's second child. */
 const removeControlOf = (root: ComponentTestRoot, chipTestId: string) => {
   const chip = root.renderer.findByTestId(chipTestId);
   const id = chip?.children[1];
   return id === undefined ? undefined : root.renderer.getElement(id);
 };
 
-/** Click an element by its measured bounds. */
 const clickElement = (
   root: ComponentTestRoot,
   element: ReturnType<typeof removeControlOf>,
@@ -88,17 +73,12 @@ describe("TagInput", () => {
   it("renders the chips and the field, named as a group", () => {
     const tags = renderComponent(<Harness initial={["design", "docs"]} />);
 
-    // The empty field paints its own hint, because the host's placeholder is a
-    // fixed grey no theme can reach (`@gpuixui/primitives/hint`).
     expect(tags.renderer.getAllText()).toEqual(["design", "docs", "Add a tag"]);
 
     tags.unmount();
   });
 
   it("keeps the inline field borderless inside the group's field", () => {
-    // The bug guarded: the field painted its own ring and box inside the
-    // bordered group, so a reader saw a field inside a field and the add
-    // control read as a separate, squat box.
     const tags = renderComponent(<Harness />);
     const field = tags.renderer.findByTestId("tag-field");
     if (field === undefined) throw new Error("no tag field");
@@ -172,7 +152,6 @@ describe("TagInput", () => {
     type(tags, "design");
     tags.renderer.simulateKeystrokes("enter");
 
-    // The draft cleared with the refused token, so the hint is back.
     expect(tags.renderer.getAllText()).toEqual(["design", "Add a tag"]);
 
     tags.unmount();
@@ -226,8 +205,7 @@ describe("TagInput", () => {
     const tags = renderComponent(<Harness onValueChange={onValueChange} />);
 
     type(tags, "design");
-    // The caller disables the field while the draft is still in it: Enter used
-    // to commit that draft into a group that refuses every edit.
+
     tags.rerender(<Harness onValueChange={onValueChange} disabled />);
     tags.renderer.focusElement(
       tags.renderer.findByTestId("tag-field")?.id ?? -1,
@@ -236,8 +214,7 @@ describe("TagInput", () => {
 
     expect(onValueChange).not.toHaveBeenCalled();
     expect(tags.renderer.findByTestId("chip-design")).toBeUndefined();
-    // The refused commit did not clear the draft either: it is still in the
-    // field, ready for a caller that re-enables it.
+
     expect(tags.renderer.findByTestId("tag-field")?.customProps?.value).toBe(
       "design",
     );
@@ -263,10 +240,6 @@ describe("TagInput", () => {
   });
 
   it("adds the first token to a group whose saved token list is not a list", () => {
-    // The tokens are saved with the control — a settings pane, a tag field in a
-    // record — and JSON writes `null` for a list a record never carried. The add
-    // rule reduced over that value, so typing the first token threw out of the
-    // edit instead of reporting it.
     const onValueChange = vi.fn();
     const tags = renderComponent(
       <TagInput

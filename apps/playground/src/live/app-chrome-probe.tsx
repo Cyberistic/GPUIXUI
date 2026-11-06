@@ -1,24 +1,3 @@
-/**
- * The `app-chrome-lifecycle` probe: the shipped application chrome in a window.
- *
- * `@gpuixui/shell` shipped its three parts with pure navigation suites, so no
- * renderer had ever mounted them. This view is the window that does: a menu bar
- * at the top, a toolbar under it and a status bar at the bottom, with a readout
- * carrying the two selections the caller hears.
- *
- * The checks are the window facts a pure suite cannot state:
- *
- * 1. **The bar opens and navigates.** A press paints the dropdown below its
- *    trigger; Down skips the disabled row and Enter reports it; Right moves the
- *    open menu, wrapping past the disabled Help entry; Escape closes the surface
- *    and puts the native focus back on the trigger.
- * 2. **The toolbar roves the native focus.** Right moves focus to an action
- *    element (not only the component's internal stop), skips the disabled
- *    action, and the overflow trigger opens the tail the `max` split away.
- * 3. **The status tone is a role, not a literal.** The two named tones paint
- *    their `statusTone` ink inside the trailing group's own pixels and nowhere
- *    in the leading group.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -60,16 +39,12 @@ import {
   type AppChromeState,
 } from "./app-chrome.js";
 
-/** A dropdown's entry and the focus move a key starts need a frame. */
 const SETTLE = Duration.millis(120);
 
-/** The capture a reader can look at. */
 const FRAME = "app-chrome";
 
-/** The open dropdown's capture, so the placement is visible beside the numbers. */
 const OPEN_FRAME = "app-chrome-menu";
 
-/** The probe's window: the three chrome parts and its own readout. */
 export const AppChromeProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -143,14 +118,12 @@ export const AppChromeProbe = (): ReactNode => {
   );
 };
 
-/** The painted box of `testId`, or `null` while the runtime paints none. */
 const painted = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
 ): Effect.Effect<Smoke.Bounds | null, Smoke.SmokeHostError> =>
   ctx.host.bounds(testId);
 
-/** Waits until `testId` paints, then asserts it. */
 const expectPainted = (
   ctx: Smoke.AsyncSmokeContext,
   label: string,
@@ -167,7 +140,6 @@ const expectPainted = (
     return yield* ctx.expectSome(label, Option.fromNullishOr(box));
   });
 
-/** Waits until `testId` stops painting, then asserts it. */
 const expectGone = (
   ctx: Smoke.AsyncSmokeContext,
   label: string,
@@ -181,7 +153,6 @@ const expectGone = (
     yield* ctx.expectEqual(label, box === null, true);
   });
 
-/** Waits until `testId` holds the native focus, then asserts it. */
 const expectFocused = (
   ctx: Smoke.AsyncSmokeContext,
   label: string,
@@ -199,7 +170,6 @@ const expectFocused = (
     );
   });
 
-/** Waits until the readout prints `expected`, then asserts it. */
 const expectReadout = (
   ctx: Smoke.AsyncSmokeContext,
   label: string,
@@ -213,24 +183,11 @@ const expectReadout = (
     yield* ctx.expectEqual(label, text, expected);
   });
 
-/**
- * Presses a menu-bar trigger the way a pointer does: move onto it, then press.
- *
- * A window delivers the pointer's entry on the move that arrives first, so the
- * trigger's own `onMouseEnter` has run before its press. The automation's
- * `click` dispatches a down/up at the element's centre with **no** preceding
- * move, and a trigger that follows the pointer (`AppMenu` opens a sibling on
- * enter) then reads the entry after the press. A window can deliver that order
- * too, and the component's stale read is recorded in `.agents/slop/TODO.md` → Interlocks;
- * the press measured here is the gesture a pointer makes.
- */
 const pressTrigger = (
   ctx: Smoke.AsyncSmokeContext,
   menu: string,
 ): Effect.Effect<void, Smoke.SmokeHostError> =>
   Effect.gen(function* () {
-    // Park first: the pointer leaves the bar, so the move onto the trigger is a
-    // real entry rather than a repeat of a point it already holds.
     yield* ctx.host.hover(APP_CHROME_IDS.readout);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.hover(triggerId(menu));
@@ -239,11 +196,9 @@ const pressTrigger = (
     yield* Effect.sleep(SETTLE);
   });
 
-/** The status ink of one tone, as the theme's own role. */
 const toneInk = (tone: StatusTone, theme: Theme): string =>
   statusTone(theme, tone).foreground;
 
-/** How many pixels of `region` are `ink` within {@link TONE_TOLERANCE}. */
 const countInk = (region: Pixels.Pixels, ink: Pixels.Rgba): number =>
   Arr.reduce(
     Arr.range(0, Math.floor(region.data.length / 4) - 1),
@@ -259,7 +214,6 @@ const countInk = (region: Pixels.Pixels, ink: Pixels.Rgba): number =>
         : count,
   );
 
-/** The ink count of a logical box inside a capture, or `0` when it is absent. */
 const countInBox = (
   frame: Pixels.Pixels,
   scale: number,
@@ -281,7 +235,6 @@ const countInBox = (
     { onNone: () => 0, onSome: (region) => countInk(region, ink) },
   );
 
-/** The leading or trailing slice of a box, as a box of its own. */
 const sideOf = (
   box: Smoke.Bounds,
   side: "leading" | "trailing",
@@ -293,16 +246,8 @@ const sideOf = (
   height: box.height,
 });
 
-/** The theme the runner mounts the probe under. */
 const THEME: Theme = palettes.dark;
 
-/**
- * The status bar's two named tones, read out of one frame.
- *
- * The trailing slice must hold both inks and the leading slice neither: the
- * tones are roles, and a bar that painted the trailing group in the leading
- * colour — or painted nothing — fails by count.
- */
 const expectToneInk = (
   ctx: Smoke.AsyncSmokeContext,
   box: Smoke.Bounds,
@@ -355,7 +300,6 @@ export const appChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       actionReports: 0,
     });
 
-    // 1. The bar is one row of triggers, and the initial readout hears nothing.
     yield* expectReadout(ctx, "the readout starts with no selection", blank);
     const file = yield* expectPainted(
       ctx,
@@ -378,7 +322,6 @@ export const appChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 2. A press opens the dropdown below its trigger.
     yield* pressTrigger(ctx, "file");
     const first = yield* expectPainted(
       ctx,
@@ -397,8 +340,6 @@ export const appChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture(OPEN_FRAME);
 
-    // 3. Down lands on the first row and Enter reports it once. The highlight
-    // is React state, so the key that runs it waits for the render it started.
     yield* ctx.host.key("down");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("enter");
@@ -414,7 +355,6 @@ export const appChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* expectGone(ctx, "a chosen row closes the dropdown", itemId("new"));
 
-    // 4. A second Down skips the disabled row.
     yield* pressTrigger(ctx, "file");
     yield* expectPainted(ctx, "the dropdown opens again", itemId("new"));
     yield* ctx.host.key("down");
@@ -438,7 +378,6 @@ export const appChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       itemId("save"),
     );
 
-    // 5. Right moves the open menu, and wraps past the disabled Help entry.
     yield* pressTrigger(ctx, "file");
     yield* expectPainted(
       ctx,
@@ -456,7 +395,6 @@ export const appChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* expectGone(ctx, "the skipped menu never paints", itemId("about"));
 
-    // 6. Escape closes the surface and returns focus to the trigger.
     yield* ctx.host.key("escape");
     yield* expectGone(ctx, "Escape closes the dropdown", itemId("new"));
     yield* expectFocused(
@@ -465,7 +403,6 @@ export const appChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       triggerId("file"),
     );
 
-    // 7. The toolbar's max splits its tail behind the overflow trigger.
     yield* expectPainted(ctx, "the first action paints", actionId("open"));
     yield* expectPainted(
       ctx,
@@ -484,7 +421,6 @@ export const appChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       actionId("link"),
     );
 
-    // 8. Right moves the native focus, skipping the disabled action.
     yield* ctx.host.focusElement(actionId("open"));
     yield* ctx.host.key("right");
     yield* expectFocused(
@@ -504,7 +440,6 @@ export const appChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       }),
     );
 
-    // 9. The overflow trigger opens the tail, and a row runs it.
     yield* ctx.host.key("right");
     yield* expectFocused(
       ctx,
@@ -544,9 +479,6 @@ export const appChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       overflowItemId("link"),
     );
 
-    // 10. The trigger's own key closes the menu it opened. Escape is measured
-    // as the gap it is: the surface never takes the focus, so the key reaches
-    // the trigger and no handler owns it (the shell workstream's fix).
     yield* ctx.host.focusElement(OVERFLOW_ID);
     yield* ctx.host.key("enter");
     yield* expectPainted(
@@ -568,7 +500,6 @@ export const appChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       overflowItemId("link"),
     );
 
-    // 11. The status bar paints both groups and the two tone roles.
     const status = yield* expectPainted(
       ctx,
       "the status bar paints",

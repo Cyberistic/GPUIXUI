@@ -1,28 +1,3 @@
-/**
- * `virtual-list-rows` — a `<virtual-list>` measures each row, not a uniform one.
- *
- * Every other virtual-list probe declares fixed-height rows, so "rows do not
- * need equal heights" was the runtime's claim and nothing here had measured it.
- * A table with a wrapped description, a tree with a two-line label and an
- * expandable row (`motion` height) all depend on the measured path, and so does
- * the anchoring a growing row needs: a row above the reader that grows must not
- * move the rows the reader is looking at.
- *
- * The list declares 400 rows whose heights cycle 24 / 48 / 72px, so a uniform
- * row would be visible immediately in the painted boxes. Measured on 0.11.0:
- *
- *   - the painted rows carry those three heights and each row starts where the
- *     previous one ended, so the list stacks measured heights rather than
- *     assuming one;
- *   - `scrollToItem(150)` lands that row at the viewport's top edge even though
- *     most rows above it were only ever estimated;
- *   - growing row 0 by 40px while the reader sits at row 150 leaves the painted
- *     rows and the scroll offset untouched, because a row outside the window is
- *     not measured until it paints again — the reader cannot be jolted by a row
- *     they cannot see, and no compensation is owed;
- *   - the grown row reports its new height once it is painted again, and the row
- *     after it moves down by the growth.
- */
 import { useRef, useState } from "react";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance } from "@gpuix/react";
@@ -36,13 +11,12 @@ import { Pressable } from "../ui.js";
 import type { ScenarioBody } from "../types.js";
 import type { Smoke } from "@gpuixui/testing";
 
-/** Rows declared; far more than the viewport with mixed heights. */
 const ROWS = 400;
-/** The three heights a row cycles through, in pixels. */
+
 const HEIGHTS = [24, 48, 72] as const;
-/** The row the far reveal jumps to. */
+
 const REVEAL = 150;
-/** How much row 0 grows by, while the reader is at the tail. */
+
 const GROWTH = 40;
 
 const heightAt = (index: number): number =>
@@ -112,7 +86,6 @@ const VariableRowsProbe = () => {
   );
 };
 
-/** The rows the list currently paints, as the `Row N` labels become `N`s. */
 const paintedRows = (lines: ReadonlyArray<string>): ReadonlyArray<number> =>
   Arr.filterMap(lines, (line) =>
     pipe(
@@ -142,7 +115,6 @@ export const virtualListRowsScenario: ScenarioBody = {
           () => -1,
         );
 
-      // 1. Three different heights, stacked by their own measured sizes.
       yield* ctx.expectEqual(
         "the first row keeps its declared height",
         heightOf("vrow-0"),
@@ -171,7 +143,6 @@ export const virtualListRowsScenario: ScenarioBody = {
         1,
       );
 
-      // 2. A far reveal lands on a row it never measured, from estimates.
       ctx.host.click("vrows-reveal");
       ctx.host.advance(50);
       yield* ctx.expectContains(
@@ -191,9 +162,6 @@ export const virtualListRowsScenario: ScenarioBody = {
         heightAt(REVEAL),
       );
 
-      // 3. A row above the reader grows: nothing moves, because it is unmeasured
-      //    until it paints again (a row outside the window has no layout to
-      //    change, so the reader cannot be jolted by it).
       const offsetBefore = yield* ctx.expectSome(
         "the list reports an offset before the grow",
         Option.fromNullishOr(ctx.host.scrollOffset("vrows")),
@@ -224,7 +192,6 @@ export const virtualListRowsScenario: ScenarioBody = {
         1,
       );
 
-      // 4. The grown row reports its new height when it paints again.
       ctx.host.click("vrows-top");
       ctx.host.advance(50);
       yield* ctx.expectEqual(

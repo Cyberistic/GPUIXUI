@@ -1,14 +1,3 @@
-/**
- * `NumberField` in the real GPUix runtime.
- *
- * GPUix's `<input>` is a text field with no numeric mode, so everything that
- * makes this a number field — parsing, clamping, stepping, and the draft text
- * that keeps `1.` from becoming `1` under the caret — is ours. The runtime suite
- * is the only place where the native input's edits and the field's chrome can be
- * observed together: typing goes through GPUI's text pipeline, stepping through
- * real keys and hit-tested button presses.
- */
-
 import { useState, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
@@ -50,7 +39,6 @@ const lastValue = (values: ReadonlyArray<number>): number =>
     expect.fail("the field reported no change at all"),
   );
 
-/** A grouped display and the reading that pairs with it: `1,234` is 1234. */
 const grouped = (value: number): string => value.toLocaleString("en-US");
 const readGrouped = (text: string): Option.Option<number> => {
   const digits = text.replaceAll(",", "").trim();
@@ -59,7 +47,6 @@ const readGrouped = (text: string): Option.Option<number> => {
     : Option.none();
 };
 
-/** The native `<input>` inside the field's chrome and its hint frame. */
 const inputOf = (runtime: Runtime, testId: string) =>
   Option.getOrElse(
     Option.flatMap(runtime.element(testId), (element) =>
@@ -82,17 +69,15 @@ const mount = async (node: ReactNode): Promise<Runtime> => {
   return runtime;
 };
 
-/** The text the field's input holds, as assistive technology reads it. */
 const textOf = (runtime: Runtime, label: string): string => {
   const node = Option.getOrElse(
     a11yNode(runtime.a11y(), { role: "TextInput", label }),
     () => expect.fail(`the field ${label} announced nothing`),
   );
-  // An empty field announces no value at all, which is an empty field.
+
   return Option.getOrElse(Option.fromNullishOr(node.aria?.value), () => "");
 };
 
-/** A controlled field whose owner pushes a value into it. */
 const Owner = () => {
   const [value, setValue] = useState<number | undefined>(undefined);
   return (
@@ -143,8 +128,7 @@ it("keeps a trailing dot as a draft instead of rewriting it mid-edit", async () 
   runtime.type("1 .");
   runtime.type("5");
   expect(lastValue(field.values)).toBe(1.5);
-  // The bug guarded: a reformat on every keystroke would turn "1." into "1"
-  // and the next digit would land at the wrong place.
+
   expect(inputOf(runtime, "nf").type).toBe("input");
 });
 
@@ -161,9 +145,7 @@ it("paints the number it holds, including the decimals its step needs", async ()
       onChange={field.onChange}
     />,
   );
-  // The bug guarded: the display defaulted to zero decimals, so a field holding
-  // 1.5 painted "2" and the first press looked like it did nothing — and the
-  // 2.5 maximum painted "3", a number past the bound the field declares.
+
   expect(textOf(runtime, "Score")).toBe("1.5");
   const input = inputOf(runtime, "nf");
   runtime.renderer.nativeSimulateKeyDown(input.id, "up");
@@ -175,13 +157,8 @@ it("paints the number it holds, including the decimals its step needs", async ()
 });
 
 it("paints the number it holds when a stored precision is absent", async () => {
-  // The bug guarded: a precision is a display setting saved beside the form, and
-  // a record that never carried one hands over `null` — JSON's absence.
-  // Compared with `undefined`, that absence reached `toFixed` as **zero**
-  // decimals, so a restored field holding 1.5 painted "2" (the number it does
-  // not hold) and its 2.5 maximum painted "3", past the bound it declares.
   const field = recorder();
-  // The cast is the storage boundary: a saved record stores absence as null.
+
   const stored = { precision: null } as unknown as { precision?: number };
   const runtime = await mount(
     <NumberField
@@ -206,12 +183,6 @@ it("paints the number it holds when a stored precision is absent", async () => {
 });
 
 it("hears no Home or End in a window, because the text host owns them", async () => {
-  // The defect guarded: the page promised the bounds jump on Home/End, but a
-  // native `<input>` consumes both as caret keys before React — measured on
-  // 0.11.0 through the raw dispatch and through a wrapper's `onKeyDown` (a key
-  // the host swallows reaches neither), while PageDown arrives. The keys the
-  // field can answer in a window are the arrows and the page pair, so a
-  // document may not teach a bounds jump a window cannot deliver.
   const field = recorder();
   const runtime = await mount(
     <NumberField
@@ -286,11 +257,6 @@ it("steps from a hit-tested click on the spin column and refocuses the input", a
 });
 
 it("scrubs the value by dragging vertically on the spin column", async () => {
-  // A number field's only pointer affordance used to be two clicks. GPUix
-  // captures the pointer for an element listening to both `mouseDown` and
-  // `mouseMove` (the `pointer-capture` probe), so the column can follow a drag
-  // that leaves it: 40px up is ten steps, and the click the platform delivers
-  // at the end of that gesture must not step again.
   const field = recorder();
   const runtime = await mount(
     <NumberField
@@ -312,19 +278,13 @@ it("scrubs the value by dragging vertically on the spin column", async () => {
     expect.fail("the scrub did not return focus to the input"),
   );
   expect(focused.id).toBe(inputOf(runtime, "nf").id);
-  // A fresh press that does not travel is still exactly one step. (The platform
-  // turns the press/release pair into the click the field steps on, which is
-  // the gesture a reader makes.)
+
   runtime.mouseDownAt(x, y);
   runtime.mouseUpAt(x, y);
   expect(lastValue(field.values)).toBe(61);
 });
 
 it("declares the keyboard ring on the input, the element that holds focus", async () => {
-  // The bug this guards: the ring was declared on the field's wrapper, and the
-  // runtime paints `focusVisible` only on an element it tracks focus for
-  // (`apply_focus_visible` is gated on a focus handle — measured by
-  // `groups.runtime.test.tsx`), so Tab painted no ring on this field at all.
   const runtime = await mount(
     <Stack direction="row">
       <Button testId="before">Before</Button>
@@ -348,9 +308,6 @@ it("declares the keyboard ring on the input, the element that holds focus", asyn
 });
 
 it("keeps its value out of the keyboard dim, so a Tab elsewhere leaves it readable", async () => {
-  // The runtime fades every other focusable element to 40% while one has
-  // keyboard focus; on a field that composites the reader's value into its own
-  // fill (`keyboardDimFailures`), so the input opts out.
   const runtime = await mount(<NumberField testId="nf" label="Quantity" />);
   const input = inputOf(runtime, "nf");
   expect(input.style["keyboardFocusDim"]).toBe(false);
@@ -401,11 +358,6 @@ it("paints a caller's composition from the field's own state", async () => {
 });
 
 it("leaves the caret keys to the host's text field", async () => {
-  // The bug guarded: left and right moved the caret in the host's field, and
-  // the field changed its value while the caret moved — a number a user could
-  // not edit, because the caret could never cross a digit. The runtime's text
-  // field takes those two keys for the caret, so the field never sees them:
-  // the contrast with the up arrow, which does arrive, is the measurement.
   const field = recorder();
   const runtime = await mount(
     <NumberField
@@ -423,16 +375,12 @@ it("leaves the caret keys to the host's text field", async () => {
   runtime.renderer.nativeSimulateKeyUp(input.id, "right");
   expect(field.values).toStrictEqual([]);
   expect(textOf(runtime, "Quantity")).toBe("50");
-  // The up arrow does arrive, so the field above was not simply deaf.
+
   runtime.renderer.nativeSimulateKeyDown(input.id, "up");
   expect(lastValue(field.values)).toBe(51);
 });
 
 it("leaves a field that never had a value empty when its edit ends", async () => {
-  // The bug guarded: `commitNumberDraft` marked every draft touched, so a blur
-  // over a field with no value painted the state's starting `0` — a number the
-  // reader never typed, and one `onValueChange` never reported. Typing text the
-  // field cannot read is the same case: it is not a value.
   const field = recorder();
   const runtime = await mount(
     <Stack direction="column">
@@ -458,9 +406,6 @@ it("leaves a field that never had a value empty when its edit ends", async () =>
 });
 
 it("commits the draft on Enter and reports it through onSubmit", async () => {
-  // The bug guarded: a single-line GPUix `<input>` binds Enter to the runtime's
-  // own Submit action, so Enter never reaches `onKeyDown` — the field's commit
-  // branch was unreachable in a window and a form could not send from it.
   const submitted = vi.fn();
   const runtime = await mount(
     <NumberField
@@ -480,11 +425,6 @@ it("commits the draft on Enter and reports it through onSubmit", async () => {
 });
 
 it("reads back the display format its caller's formatValue painted", async () => {
-  // The bug guarded: `formatValue` is display-only, and a grouped "1,234" is
-  // not decimal notation — so every keystroke typed into a field that showed a
-  // grouped number was dropped (measured before `parseValue`: zero reported
-  // changes after typing "5"). `parseValue` is the counterpart that reads the
-  // text the caller's own format painted, and committing reformats through it.
   const field = recorder();
   const runtime = await mount(
     <NumberField
@@ -507,11 +447,6 @@ it("reads back the display format its caller's formatValue painted", async () =>
 });
 
 it("keeps a grouped draft the controlled owner echoes", async () => {
-  // The bug guarded: the draft an owner echoes is compared with its value
-  // through the same reading the field edits with. Before that, a controlled
-  // field showing `1,234` reformatted to `12,345` on the first keystroke — the
-  // owner's echo was judged meaningless because the decimal grammar could not
-  // read the grouped text, so the draft was dropped under the caret.
   const Owner = () => {
     const [value, setValue] = useState(1234);
     return (
@@ -529,8 +464,7 @@ it("keeps a grouped draft the controlled owner echoes", async () => {
   const runtime = await mount(<Owner />);
   expect(textOf(runtime, "Amount")).toBe("1,234");
   runtime.type("5");
-  // The text being typed survives the owner's echo, exactly as the `1.` draft
-  // does in an unformatted field.
+
   expect(textOf(runtime, "Amount")).toBe("1,2345");
   const input = inputOf(runtime, "nf");
   runtime.renderer.nativeSimulateKeyDown(input.id, "enter");
@@ -539,11 +473,6 @@ it("keeps a grouped draft the controlled owner echoes", async () => {
 });
 
 it("paints the value it holds when its caller's format says nothing", async () => {
-  // The bug guarded: `formatValue?.(value) ?? displayNumber(...)` read a blank
-  // answer as a value, and a locale table with a missing row answers `""` (a
-  // masked format answers spaces). The field then painted an **empty** input
-  // while it still held the number: the reader saw a blank field, the steppers
-  // moved the hidden value, and every frame after it repainted nothing.
   const field = recorder();
   const runtime = await mount(
     <NumberField
@@ -556,8 +485,7 @@ it("paints the value it holds when its caller's format says nothing", async () =
     />,
   );
   expect(textOf(runtime, "Amount")).toBe("5");
-  // The field formats blank, it does not hold blank: a step still moves the
-  // value and the paint follows it.
+
   const input = inputOf(runtime, "nf");
   runtime.renderer.nativeSimulateKeyDown(input.id, "up");
   expect(lastValue(field.values)).toBe(6);
@@ -565,8 +493,6 @@ it("paints the value it holds when its caller's format says nothing", async () =
 });
 
 it("shows the value its owner pushes", async () => {
-  // The bug guarded: a controlled field kept the text it was given, so a value
-  // the owner pushed was never seen by the user.
   const runtime = await mount(<Owner />);
   expect(textOf(runtime, "Quantity")).toBe("");
   runtime.click("push");
@@ -575,8 +501,6 @@ it("shows the value its owner pushes", async () => {
 });
 
 it("shows a value that arrives after the field was mounted", async () => {
-  // The bug guarded: a field that mounted empty and was given a value later
-  // kept showing nothing — the value was dropped on the floor.
   const runtime = await mount(
     <NumberField testId="nf" label="Quantity" defaultValue={50} />,
   );
@@ -590,12 +514,6 @@ it("shows a value that arrives after the field was mounted", async () => {
 });
 
 it("mounts a value it cannot paint, and steps from the bound it paints", async () => {
-  // The bug guarded: the field compared its owner's value with `===`, and `NaN`
-  // never equals itself — so the draft folded on every render, `setDraft` ran on
-  // each pass and React threw "Too many re-renders" before the field painted at
-  // all. The value now reads as the nearest bound (the rule `core/value.ts`
-  // already states for a slider), so the field shows it and an arrow moves from
-  // it rather than adding to `NaN`.
   const field = recorder();
   const runtime = await mount(
     <NumberField
@@ -615,9 +533,6 @@ it("mounts a value it cannot paint, and steps from the bound it paints", async (
 });
 
 it("commits a scrub once, with the value the whole drag ended on", async () => {
-  // The bug guarded: a scrub reports a value every four pixels of travel, so a
-  // caller that saves on `onValueChange` writes dozens of times per drag. The
-  // commit channel is the end of the gesture: one value, on release.
   const changes: Array<number> = [];
   const commits: Array<number> = [];
   const runtime = await mount(
@@ -643,8 +558,7 @@ it("commits a scrub once, with the value the whole drag ended on", async () => {
   runtime.mouseUpAt(x, y - 40);
   runtime.flush();
   expect(commits).toStrictEqual([60]);
-  // The click the release leaves behind is the same gesture: it must not step
-  // the value or report a second commit.
+
   expect(changes.at(-1)).toBe(60);
 });
 
@@ -667,8 +581,7 @@ it("commits each step that moved the value, and no step that could not", async (
   const input = inputOf(runtime, "nf");
   runtime.renderer.nativeSimulateKeyDown(input.id, "up");
   expect(commits).toStrictEqual([51, 52]);
-  // At the ceiling the arrow decides the value the field already holds, so it
-  // is not a gesture that ended on a new one.
+
   runtime.renderer.nativeSimulateKeyDown(input.id, "up");
   expect(commits).toStrictEqual([51, 52]);
 });
@@ -697,9 +610,6 @@ it("commits a typed edit on Enter, and not again when the field blurs", async ()
 });
 
 it("commits a blur only when the edit produced a number", async () => {
-  // A field that was merely focused and left reports nothing, and text the
-  // field cannot read leaves the last number standing rather than inventing a
-  // value — neither is a gesture that ended on one.
   const commits: Array<number> = [];
   const runtime = await mount(
     <Stack direction="column">
@@ -715,8 +625,6 @@ it("commits a blur only when the edit produced a number", async () => {
   runtime.focusNext();
   expect(commits).toStrictEqual([]);
 
-  // `runtime.focus` names the field's chrome; typing has to reach the input the
-  // runtime tracks, so focus it by the host instance the field resolved.
   const input = inputOf(runtime, "nf");
   const focusInput = (): void => {
     runtime.renderer.focusElement(input.id);
@@ -735,7 +643,6 @@ it("commits a blur only when the edit produced a number", async () => {
 });
 
 describe("NumberFieldScrubHandle", () => {
-  /** A row whose label scrubs and whose field types, both on one value. */
   const Row = ({
     initial,
     min,
@@ -790,7 +697,6 @@ describe("NumberFieldScrubHandle", () => {
     return runtime;
   };
 
-  /** Press the handle's centre and drag `dx` pixels, optionally with Shift. */
   const dragHandle = (runtime: Runtime, dx: number, shift = false): void => {
     const box = boundsOf(runtime, "scrub");
     const x = box.x + box.width / 2;
@@ -819,8 +725,6 @@ describe("NumberFieldScrubHandle", () => {
       />,
     );
 
-    // Eight pixels is two steps at the scrub scale, and the release is the one
-    // commit the gesture reports.
     dragHandle(runtime, 8);
     expect(changes).toStrictEqual([52]);
     expect(commits).toStrictEqual([52]);
@@ -831,8 +735,6 @@ describe("NumberFieldScrubHandle", () => {
     const changes: Array<number> = [];
     const runtime = await mountRow(<Row initial={50} changes={changes} />);
 
-    // A press that does not travel is a click: no value moves. The field beside
-    // the handle still types, so the click path is intact.
     dragHandle(runtime, 0);
     expect(changes).toStrictEqual([]);
     const input = inputOf(runtime, "nf");
@@ -859,7 +761,6 @@ describe("NumberFieldScrubHandle", () => {
       <Row initial={50} min={0} max={1000} changes={changes} />,
     );
 
-    // Eight pixels is two steps; a held Shift makes that twenty.
     dragHandle(runtime, 8, true);
     expect(Arr.last(changes)).toStrictEqual(Option.some(70));
   });

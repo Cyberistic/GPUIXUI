@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Hexagon page.
- *
- * The native field tiles hexagon outlines for its box and breathes their ink;
- * the preview reproduces the same grid as one `<svg>` and pulses its opacity.
- */
-
 const width = 520;
 const height = 260;
 const radius = 26;

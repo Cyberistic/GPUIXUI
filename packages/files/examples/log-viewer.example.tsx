@@ -1,12 +1,3 @@
-/**
- * A log viewer over a stream of lines: filter by level, follow the tail, and
- * read each line in its level's tint.
- *
- * The toolbar composes the level filter and the follow-tail toggle; the list is
- * `@gpuixui/data`'s `VirtualList`, bottom-anchored and following appends until
- * the reader scrolls up.
- */
-
 import { useState } from "react";
 import { LogViewer, type LogLevel } from "../src/index.js";
 
@@ -25,7 +16,6 @@ const lines = [
   "debug heartbeat sent",
 ];
 
-/** The viewer and the filter/follow state it edits. */
 export const LogViewerExample = () => {
   const [levels, setLevels] = useState<ReadonlyArray<LogLevel>>([
     "error",

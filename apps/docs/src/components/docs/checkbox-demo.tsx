@@ -9,19 +9,6 @@ import {
   toggleChannel,
 } from "./checkbox-preview";
 
-/**
- * Browser previews for the Checkbox page.
- *
- * The library's box draws at an icon step inside a 24px press target, so the
- * preview takes both from the theme bridge (`--icon-size-*`, `--target-size`)
- * and the press target carries the role, the tab stop and the ring. The
- * keyboard edges are the component's — Enter on key down, Space on key up, no
- * repeat — and the group's arithmetic lives in `checkbox-preview.ts` so the
- * page's parent rules can be tested. The preview labels its own controls with
- * `aria-checked` because it is a browser; the native box has no such attribute
- * and announces `aria-valuetext`, which the page says.
- */
-
 interface CheckTargetProps {
   readonly label: string;
   readonly checked: boolean;
@@ -35,14 +22,6 @@ interface CheckTargetProps {
   readonly onToggle?: () => void;
 }
 
-/**
- * One box in its press target.
- *
- * The drawing is a child that takes no pointer input, exactly as the shipped
- * box's mark does: a press anywhere in the 24px target activates once. Escape
- * and arrows do nothing, Tab is the only way out, and a managed or disabled box
- * is out of the tab order.
- */
 const CheckTarget = ({
   label,
   checked,
@@ -78,7 +57,6 @@ const CheckTarget = ({
       data-state={state}
       onClick={toggle}
       onKeyDown={(event) => {
-        // Space must not scroll while the box waits for the release.
         if (event.key === " ") event.preventDefault();
         if (activates(event.key, "down", event.repeat)) {
           event.preventDefault();
@@ -105,7 +83,6 @@ const CheckTarget = ({
   );
 };
 
-/** A notification-settings group with an indeterminate parent. */
 const ChannelGroup = () => {
   const [chosen, setChosen] = useState<ReadonlyArray<string>>(["email"]);
   const state = groupState(chosen);

@@ -1,13 +1,3 @@
-/**
- * The primitives' recipes, as Tailwind class strings.
- *
- * Each builder turns a component's semantic props into the class string that,
- * compiled through {@link recipeTw}, resolves to the same `StyleDesc` the
- * pre-migration `core/style.ts` resolvers produced. The string is the single
- * source of truth for a component's resting appearance; the caller's `className`
- * is joined last so it wins conflicts exactly as `cn` resolves them.
- */
-
 import type { ControlSize, TextRole } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import { elevationLevel, isTextRole, radiusStep } from "../core/theme.js";
@@ -48,35 +38,13 @@ import {
 } from "../core/variants.js";
 import type { ButtonVariant, ToggleVariant } from "../core/variants.js";
 
-// ── Button ───────────────────────────────────────────────────────────
-
 const BUTTON_BASE =
   "flex flex-row items-center justify-center gap-sm rounded-md type-label cursor-pointer disabled:cursor-not-allowed";
 
-/**
- * A disabled control's paint.
- *
- * A filled action wears the neutral pair (`disabled` behind `disabledForeground`
- * — `disabledAction` in `@gpuixui/tokens`), the same roles `contrastPairs`
- * measures on every surface a control sits on. The old 50% fade composited the
- * label into the card behind it and landed at 1.47:1–1.49:1 on four light
- * styles, so the state was invisible exactly where people read it. A control
- * with no fill of its own — an `outline`, `ghost` or `link` action, a toggle —
- * has nothing to collapse into and keeps the fade.
- */
 const FILLED_DISABLED =
   "disabled:bg-disabled disabled:text-disabled-foreground";
 const UNFILLED_DISABLED = "disabled:opacity-50";
 
-/**
- * A filled action's feedback is a **derived, opaque** fill.
- *
- * `hover:fill-primary` is the theme's own hover fill for the primary action and
- * `active:fill-primary-pressed` its press fill — both derived from the fill
- * toward the theme's foreground. The old `bg-primary/90` lifted the fill's
- * alpha, so the surface behind the control showed through and the same action
- * read as two colours on a card and on a dialog.
- */
 const BUTTON_VARIANT: Readonly<Record<ButtonVariant, string>> = {
   primary:
     "bg-primary text-primary-foreground border-0 hover:fill-primary active:fill-primary-pressed",
@@ -107,7 +75,6 @@ export interface ButtonRecipeOptions {
   readonly fullWidth?: boolean;
 }
 
-/** The class string a `Button` resolves from its variant, size and shape. */
 export const buttonClass = (
   variant: ButtonVariant,
   size: ControlSize,
@@ -123,19 +90,9 @@ export const buttonClass = (
   );
 };
 
-// ── Input ────────────────────────────────────────────────────────────
-
 const FIELD_BASE =
   "flex flex-row items-center justify-start gap-sm rounded-md type-body cursor-text select-text bg-input text-input-foreground border border-border hover:border-border-strong active:border-ring disabled:opacity-50 disabled:cursor-not-allowed";
 
-/**
- * A failed validation is an **edge**, not a fill.
- *
- * `destructive` carries `destructiveForeground`; painting it behind a field's
- * value leaves the text unreadable (`inputForeground` on it measures 2.45:1 in
- * the dark theme). The value keeps the field's own `input` fill — the pair
- * `contrastPairs` measures — and the border plus the ring say invalid.
- */
 const FIELD_INVALID = "aria-invalid:border-destructive";
 
 export interface FieldRecipeOptions {
@@ -144,7 +101,6 @@ export interface FieldRecipeOptions {
   readonly invalid?: boolean;
 }
 
-/** The class string a single-line field resolves from its size and state. */
 export const fieldClass = (options: FieldRecipeOptions): string =>
   cn(
     FIELD_BASE,
@@ -152,8 +108,6 @@ export const fieldClass = (options: FieldRecipeOptions): string =>
     options.invalid === true && FIELD_INVALID,
     options.fullWidth === true && "w-full",
   );
-
-// ── Text ─────────────────────────────────────────────────────────────
 
 const ROLE_CLASS: Readonly<Record<TextRole, string>> = {
   display: "display",
@@ -171,14 +125,9 @@ const ROLE_CLASS: Readonly<Record<TextRole, string>> = {
 const TONE_CLASS: Readonly<Record<TextTone, string | undefined>> = {
   default: "text-foreground",
   muted: "text-muted-foreground",
-  // Brand text is derived from the brand, not the brand fill role: `primary`
-  // carries `primaryForeground` and is measured as a surface, so written as
-  // text it lands under the floor (4.30:1 on the base light `active` wash,
-  // 3.10:1 in macOS dark). `text-brand` holds every surface a link sits on.
+
   primary: "text-brand",
-  // The status text role, not the solid fill: `destructive` is a background a
-  // white label sits on, and reads at 3:1 as body text. `destructiveSoftForeground`
-  // is the role tokens measure as page text, so an error is legible.
+
   destructive: "text-destructiveSoftForeground",
   inherit: undefined,
 };
@@ -203,15 +152,6 @@ export interface TextRecipeOptions {
   readonly selectable?: boolean;
 }
 
-/**
- * The class string a `Text` resolves from its role, tone and modifiers.
- *
- * A role is content before it is a literal — a saved markdown node or a restored
- * inspector row carries the role it was written with — so a name the scale does
- * not carry reads as `body`, the answer `typeOf` gives and the default every run
- * of text documents. Read here rather than at the component because the class is
- * the paint seam: `type-undefined` resolves to no size, leading or weight at all.
- */
 export const textClass = (options: TextRecipeOptions): string => {
   const role = isTextRole(options.role) ? options.role : "body";
   const align = textAlignOf(options.align);
@@ -223,13 +163,10 @@ export const textClass = (options: TextRecipeOptions): string => {
     align === undefined ? undefined : ALIGN_CLASS[align],
     options.selectable === true ? "select-text" : "select-none",
     options.truncate === true && "whitespace-nowrap text-ellipsis",
-    // The role travels in the class name because a clamp's height is that
-    // role's own leading: `clamp-body-2` and `clamp-h1-2` are different boxes.
+
     clamp === undefined ? undefined : `clamp-${ROLE_CLASS[role]}-${clamp}`,
   );
 };
-
-// ── Stack ────────────────────────────────────────────────────────────
 
 const ALIGN_TO_CLASS: Readonly<Record<StackAlign, string>> = {
   start: "items-start",
@@ -250,7 +187,6 @@ const JUSTIFY_TO_CLASS: Readonly<Record<StackJustify, string>> = {
 const directionClass = (direction: unknown): string =>
   stackDirection(direction) === "row" ? "flex-row" : "flex-col";
 
-/** The class string a `Stack` resolves from its layout spec. */
 export const stackClass = (spec: StackSpec): string =>
   cn(
     "flex",
@@ -264,9 +200,6 @@ export const stackClass = (spec: StackSpec): string =>
     spec.fullHeight === true && "h-full",
   );
 
-// ── Grid ─────────────────────────────────────────────────────────────
-
-/** The class string a `Grid` resolves from its fixed track spec. */
 export const gridClass = (spec: GridSpec): string =>
   cn(
     "grid",
@@ -275,8 +208,6 @@ export const gridClass = (spec: GridSpec): string =>
     spec.gap === undefined ? undefined : `gap-${spec.gap}`,
     spec.grow === true && "flex-grow",
   );
-
-// ── Box ──────────────────────────────────────────────────────────────
 
 const SURFACE_BG: Readonly<Record<SurfaceTone, string | undefined>> = {
   none: undefined,
@@ -289,7 +220,6 @@ const SURFACE_BG: Readonly<Record<SurfaceTone, string | undefined>> = {
   skeleton: "bg-skeleton",
 };
 
-/** `overlay` is a reserved, empty elevation level, so it paints no shadow. */
 const ELEVATION_SHADOW: Readonly<Record<ElevationLevel, string | undefined>> = {
   sm: "shadow-sm",
   md: "shadow-md",
@@ -297,16 +227,11 @@ const ELEVATION_SHADOW: Readonly<Record<ElevationLevel, string | undefined>> = {
   overlay: undefined,
 };
 
-/**
- * The shadow class a box paints: a stored level reads as the default lift, and
- * an absent one as no lift — the rule {@link elevationLevel} states.
- */
 const elevationClass = (level: unknown): string | undefined => {
   const resolved = elevationLevel(level);
   return resolved === undefined ? undefined : ELEVATION_SHADOW[resolved];
 };
 
-/** The padding classes a `Box` resolves: one shorthand or four sides. */
 const boxPaddingClass = (spec: BoxSpec): string | undefined => {
   const sides = paddingSides(spec);
   if (spec.paddingX === undefined && spec.paddingY === undefined) {
@@ -320,13 +245,6 @@ const boxPaddingClass = (spec: BoxSpec): string | undefined => {
   );
 };
 
-/**
- * The class string a `Box` resolves from its surface and layout spec.
- *
- * A stored corner name the release does not carry paints no corner — the
- * `Box`'s documented default — instead of a `rounded-<name>` the compiler
- * records as unsupported and nobody reads (`radiusStep`).
- */
 export const boxClass = (spec: BoxSpec): string => {
   const corner = radiusStep(spec.radius);
   return cn(
@@ -347,8 +265,6 @@ export const boxClass = (spec: BoxSpec): string => {
   );
 };
 
-// ── Toggle ───────────────────────────────────────────────────────────
-
 const TOGGLE_PAINT: Readonly<
   Record<ToggleVariant, { readonly rest: string; readonly pressed: string }>
 > = {
@@ -364,7 +280,6 @@ const TOGGLE_PAINT: Readonly<
   },
 };
 
-/** The class string a `Toggle` resolves from its variant, state and size. */
 export const toggleClass = (
   variant: ToggleVariant,
   pressed: boolean,
@@ -374,22 +289,11 @@ export const toggleClass = (
   cn(
     BUTTON_BASE,
     TOGGLE_PAINT[toggleVariantOf(variant)][pressed ? "pressed" : "rest"],
-    // A pressed toggle wears the accent face, which the disabled contract
-    // measures like a filled action; at rest it has no fill to collapse into.
+
     pressed ? FILLED_DISABLED : UNFILLED_DISABLED,
     options.square === true ? BUTTON_SQUARE[size] : BUTTON_SIZE[size],
   );
 
-// ── Separator ────────────────────────────────────────────────────────
-
-/**
- * The class string a separator rule resolves from its orientation and inset.
- *
- * A stored orientation this release does not carry draws the horizontal rule,
- * the rule a region divider is drawn in — the same answer `ruleStyle` gives
- * (`orientationOf`). Read raw, the recipe painted a vertical hairline while the
- * caption branch kept the caption, so a stale name painted a row around a rule.
- */
 export const separatorClass = (
   orientation: Orientation,
   inset?: SpaceStep,
@@ -400,17 +304,8 @@ export const separatorClass = (
     : cn("w-px shrink-0 bg-border", `mt-${step}`, `mb-${step}`);
 };
 
-/** The labelled separator's row: a rule, a caption, a rule. */
 export const separatorGroupClass = "flex flex-row items-center gap-sm";
 
-// ── ScrollArea ───────────────────────────────────────────────────────
-
-/**
- * The class string a scroll container resolves from its axis.
- *
- * The axis is read through `scrollAxis`, so a stored name the union does not
- * carry paints the documented `vertical` region rather than both scrollbars.
- */
 export const scrollClass = (axis: unknown): string => {
   const resolved = scrollAxis(axis);
   return resolved === "horizontal"
@@ -420,7 +315,6 @@ export const scrollClass = (axis: unknown): string => {
       : "overflow-y-scroll overflow-x-scroll";
 };
 
-/** The frame around a scroll area: its padding is outside the scroller. */
 export const scrollFrameClass = (spec: {
   readonly padding?: SpaceStep;
   readonly radius?: RadiusStep;
@@ -435,9 +329,6 @@ export const scrollFrameClass = (spec: {
   );
 };
 
-// ── ButtonGroup ──────────────────────────────────────────────────────
-
-/** The class string a button group resolves from its mode and gap. */
 export const buttonGroupClass = (
   mode: "attached" | "separated",
   gap: SpaceStep,
@@ -446,21 +337,14 @@ export const buttonGroupClass = (
   cn(
     "flex",
     orientation === "vertical"
-      ? // A column shares one width: a text action's label decides it
-        // otherwise, so two actions in one group would end at different
-        // edges. A square action keeps its own width, because an explicit
-        // size wins over `stretch`.
-        "flex-col items-stretch"
+      ? "flex-col items-stretch"
       : "flex-row items-center",
     mode === "attached" ? "gap-0 rounded-md overflow-hidden" : `gap-${gap}`,
   );
 
-// ── OTP field ────────────────────────────────────────────────────────
-
 const FIELD_SQUARE_BASE =
   "flex flex-row items-center justify-center gap-sm rounded-md type-body text-center bg-input text-input-foreground border border-border cursor-text hover:border-border-strong active:border-ring disabled:opacity-50 disabled:cursor-not-allowed";
 
-/** The class string an OTP cell resolves from its size and invalid state. */
 export const fieldSquareClass = (options: {
   readonly size: ControlSize;
   readonly invalid?: boolean;
@@ -472,41 +356,28 @@ export const fieldSquareClass = (options: {
     options.invalid === true && FIELD_INVALID,
   );
 
-/** The class string the OTP row resolves to. */
 export const otpGroupClass = "flex flex-row items-center gap-sm";
 
-// ── Rating ───────────────────────────────────────────────────────────
-
-/** The class string a rating star resolves from its interactivity. */
 export const ratingStarClass = (options: {
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
 }): string => {
   const interactive = options.disabled !== true && options.readOnly !== true;
   return cn(
-    // The glyph is icon-sized, so the hairline padding alone is a 20px target at
-    // `md`; `min-target` reserves the pressable floor and centres the glyph.
     "relative flex items-center justify-center p-2xs rounded-full min-target",
     interactive ? "cursor-pointer" : "cursor-not-allowed",
     options.disabled === true && "disabled:opacity-50",
   );
 };
 
-/** The class string the rating row resolves to. */
 export const ratingGroupClass = "flex flex-row items-center gap-2xs";
 
-// ── Tooltip ──────────────────────────────────────────────────────────
-
-/** The class string a tooltip's content surface resolves to. */
 export const tooltipClass =
   "flex flex-col bg-popover text-popover-foreground rounded-sm border border-border pl-sm pr-sm pt-xs pb-xs type-size-caption whitespace-nowrap";
-
-// ── Select ───────────────────────────────────────────────────────────
 
 const SELECT_TRIGGER_BASE =
   "flex flex-row items-center justify-between gap-sm rounded-md type-label bg-input text-input-foreground border border-border cursor-pointer hover:border-border-strong active:border-ring disabled:opacity-50 disabled:cursor-not-allowed";
 
-/** The class string a select trigger resolves from its size and states. */
 export const selectTriggerClass = (options: {
   readonly size: ControlSize;
   readonly invalid?: boolean;
@@ -519,29 +390,23 @@ export const selectTriggerClass = (options: {
     options.fullWidth === true && "w-full",
   );
 
-/** The class string the select list's popover surface resolves to. */
 export const selectContentClass =
   "flex flex-col bg-popover rounded-md border border-border p-xs gap-2xs min-w-full shadow-lg";
 
-/** The row inside a select item: the label, then the selected mark at the end. */
 export const selectItemRowClass =
   "flex flex-row items-center justify-between w-full";
 
-/** A group's name: the caption role, quieter than the rows it heads. */
 export const selectLabelClass =
   "flex flex-row items-center pl-sm pr-sm py-2xs type-size-caption text-muted-foreground";
 
-/** The rule between two option groups, spanning the list. */
 export const selectSeparatorClass = "h-px w-full bg-border";
 
-/** The three states a select item paints, reported by GPUix's own Select. */
 export interface SelectItemPaint {
   readonly selected: boolean;
   readonly highlighted: boolean;
   readonly disabled: boolean;
 }
 
-/** The class string a select item resolves from its reported state. */
 export const selectItemClass = (state: SelectItemPaint): string =>
   cn(
     "flex flex-row items-center h-sm pl-sm pr-sm rounded-sm type-size-label",
@@ -557,17 +422,12 @@ export const selectItemClass = (state: SelectItemPaint): string =>
           : undefined,
   );
 
-// ── NumberField ──────────────────────────────────────────────────────
-
-/** The field chrome plus a zero right pad, so the stepper hugs the border. */
 export const numberFieldClass = (options: FieldRecipeOptions): string =>
   cn(fieldClass(options), "pr-0");
 
-/** The class string the spin column resolves to. */
 export const numberStepperColumnClass =
   "flex flex-col h-full shrink-0 w-stepper-column";
 
-/** The class string a step button resolves from its enabled state. */
 export const numberStepperClass = (disabled: boolean): string =>
   cn(
     "flex items-center justify-center flex-grow rounded-sm",
@@ -576,12 +436,8 @@ export const numberStepperClass = (disabled: boolean): string =>
       : "cursor-pointer hover:bg-hover active:bg-active",
   );
 
-/** The class string the inner numeric input resolves to. */
 export const numberInputClass = "flex-grow h-full min-w-0 px-0 border-0";
 
-// ── Selection controls ───────────────────────────────────────────────
-
-/** The two roles an accent can paint a filled selection with. */
 const SELECTION_ROLE: Readonly<
   Record<SelectionAccent, { readonly bg: string; readonly fg: string }>
 > = {
@@ -589,7 +445,6 @@ const SELECTION_ROLE: Readonly<
   destructive: { bg: "destructive", fg: "destructive-foreground" },
 };
 
-/** The shared inputs a selection recipe resolves from. */
 export interface SelectionRecipeInput {
   readonly size: ControlSize;
   readonly accent: SelectionAccent;
@@ -598,7 +453,6 @@ export interface SelectionRecipeInput {
   readonly invalid?: boolean;
 }
 
-/** The class string a checkbox or radio box resolves from. */
 export const selectionBoxClass = ({
   size,
   accent,
@@ -616,16 +470,10 @@ export const selectionBoxClass = ({
     filled
       ? cn(
           `bg-${bg} border-${bg} text-${fg}`,
-          // The fill *is* the edge once the box is filled, and the feedback is
-          // the theme's derived opaque fill (`fill-<role>`), not an alpha lift:
-          // the mark is painted on this fill, so it has to stay measurable.
+
           `hover:fill-${bg} hover:border-transparent active:fill-${bg}-pressed active:border-transparent`,
         )
       : cn(
-          // The edge *is* the control while the box is empty, so it takes the
-          // measured boundary role: the field fill it used to paint is 1.00:1
-          // on a card. Feedback is a state wash, so the edge — including an
-          // invalid one — is never replaced under the pointer.
           invalid === true ? "border-destructive" : "border-strong",
           invalid === true ? "text-destructive" : "text-muted-foreground",
           "hover:bg-hover active:bg-active",
@@ -633,7 +481,6 @@ export const selectionBoxClass = ({
   );
 };
 
-/** The class string a checked radio's centre dot resolves to. */
 export const radioDotClass = ({
   size,
   accent,
@@ -652,7 +499,6 @@ export const radioDotClass = ({
   );
 };
 
-/** The class string a switch's track resolves from. */
 export const switchTrackClass = ({
   size,
   accent,
@@ -662,16 +508,13 @@ export const switchTrackClass = ({
   const filled = state !== "unchecked";
   const { bg } = SELECTION_ROLE[selectionAccentOf(accent)];
   return cn(
-    // The thumb is absolutely positioned inside this pill, so it is the
-    // positioning context and its own size comes from the derived token.
     "relative flex flex-row items-center shrink-0 rounded-full border cursor-pointer",
     `switch-track-${size}`,
     "disabled:opacity-50 disabled:cursor-not-allowed",
     filled
       ? cn(
           `bg-${bg} border-${bg}`,
-          // A checked track's feedback is the derived opaque fill, like the
-          // checkbox's: the thumb and any glyph on it sit on this fill.
+
           `hover:fill-${bg} hover:border-transparent active:fill-${bg}-pressed active:border-transparent`,
         )
       : cn(
@@ -682,7 +525,6 @@ export const switchTrackClass = ({
   );
 };
 
-/** The class string a switch's thumb resolves from. */
 export const switchThumbClass = ({
   size,
   accent,
@@ -690,9 +532,6 @@ export const switchThumbClass = ({
 }: SelectionRecipeInput): string => {
   const filled = state !== "unchecked";
   return cn(
-    // `left` is the slide: the checked utility replaces the resting inset with
-    // the far position, and the component animates between the two. `top` is
-    // derived from the box so every platform and size is centred.
     "absolute shrink-0 rounded-full pointer-events-none",
     `switch-thumb-${size}`,
     `size-thumb-${size}`,
@@ -703,15 +542,6 @@ export const switchThumbClass = ({
   );
 };
 
-// ── Slider / RangeSlider ─────────────────────────────────────────────
-
-/**
- * The class string a slider's hit area resolves from.
- *
- * The vertical axis is the same box turned on its side: the control's height
- * becomes the hit area's width, the caller supplies the length, and the insets
- * move to the vertical edges so the thumb is centred at both ends.
- */
 export const sliderTrackClass = (
   size: ControlSize,
   orientation: SliderOrientation = "horizontal",
@@ -730,7 +560,6 @@ export const sliderTrackClass = (
         "disabled:opacity-50 disabled:cursor-not-allowed",
       );
 
-/** The class string a slider's rail resolves to. */
 export const sliderRailClass = (
   orientation: SliderOrientation = "horizontal",
 ): string =>
@@ -738,7 +567,6 @@ export const sliderRailClass = (
     ? "h-full w-space-xs rounded-full bg-muted flex flex-col justify-end items-center pointer-events-none"
     : "w-full h-space-xs rounded-full bg-muted flex flex-row items-center pointer-events-none";
 
-/** The class string a slider's filled span resolves from. */
 export const sliderFillClass = (
   invalid: boolean,
   orientation: SliderOrientation = "horizontal",
@@ -749,7 +577,6 @@ export const sliderFillClass = (
     invalid ? "bg-destructive" : "bg-primary",
   );
 
-/** The class string a slider's thumb resolves from. */
 export const sliderThumbClass = (
   size: ControlSize,
   invalid: boolean,
@@ -763,26 +590,14 @@ export const sliderThumbClass = (
     invalid ? "border-destructive" : "border-primary",
   );
 
-// ── Meter / Progress ─────────────────────────────────────────────────
-
-/** The spacing step each progress size sits at. */
 const PROGRESS_HEIGHT_STEP: Readonly<Record<ProgressSize, SpaceStep>> = {
   sm: "xs",
   md: "sm",
 };
 
-/**
- * The bar's background and the row its segments sit in.
- *
- * `flex-row` is load-bearing: the indeterminate bar is a spacer **and** a fill,
- * and a buffer is a segment after the value's. Without the row they stacked, so
- * the moving fill stayed at the start (measured in a window: its `x` never left
- * the track's) and every segment after the first was clipped below the bar.
- */
 export const progressTrackClass = (size: ProgressSize): string =>
   `flex flex-row w-full h-space-${PROGRESS_HEIGHT_STEP[progressSizeOf(size)]} rounded-full bg-muted overflow-hidden`;
 
-/** The colour role each progress tone paints. */
 const PROGRESS_TONE_CLASS: Readonly<Record<ProgressTone, string>> = {
   primary: "bg-primary",
   success: "bg-success",
@@ -790,22 +605,9 @@ const PROGRESS_TONE_CLASS: Readonly<Record<ProgressTone, string>> = {
   muted: "bg-muted-foreground",
 };
 
-/** The class string a progress or meter fill resolves from. */
 export const progressFillClass = (tone: ProgressTone): string =>
   cn("h-full rounded-full", PROGRESS_TONE_CLASS[progressToneOf(tone)]);
 
-/**
- * The class string a progress's held-ahead segment resolves from.
- *
- * The buffer is a **mark on the track**, so it paints the readable
- * `mutedForeground` role — the one `indicatorRoles` measures on `muted` — rather
- * than a translucent share of the fill's own tone, which no contract can
- * measure. A `muted` fill *is* that role: the same colour on the same track made
- * `value={20} buffer={80}` paint one continuous 80% bar that read as finished, so
- * that tone's buffer takes the boundary role `borderStrong` — the next neutral
- * step down, whose `muted` pair `contrastPairs` holds to the same floor, and the
- * only quieter role on the track that clears it.
- */
 export const progressBufferClass = (tone: ProgressTone): string =>
   cn(
     "h-full shrink-0",
@@ -814,20 +616,15 @@ export const progressBufferClass = (tone: ProgressTone): string =>
       : "bg-muted-foreground",
   );
 
-// ── Spinner / Skeleton ───────────────────────────────────────────────
-
-/** The class string a spinner's ring resolves to. */
 export const spinnerGroupClass = "relative shrink-0";
 
-/** The class string a skeleton's resting shape resolves from. */
 export const skeletonClass = (spec: {
   readonly circle?: boolean;
   readonly radius?: RadiusStep;
 }): string =>
   cn(
     "shrink-0 bg-skeleton",
-    // A stored corner the release does not carry keeps the documented `sm`
-    // rather than a `rounded-<name>` the compiler reports and drops.
+
     spec.circle === true
       ? "rounded-full"
       : `rounded-${radiusStep(spec.radius) ?? "sm"}`,

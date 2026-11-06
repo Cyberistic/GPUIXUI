@@ -1,16 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * SegmentedControl: one choice among a few, as AppKit's segmented control.
- *
- * A quiet `muted` track holds equal-width segments; the chosen one is raised —
- * the `background` fill with the `sm` lift. Unlike a tab list or a toggle
- * group, the arrow keys **select** as they move, which is how a Mac view
- * switcher behaves, and the group is one tab stop on the chosen segment.
- *
- * Each segment is the primitives' action, so Enter/Space, the focus ring and
- * the disabled stop are the shared contract.
- */
-
 import {
   useGpuix,
   type KeyEvent,
@@ -24,7 +12,6 @@ import * as Option from "effect/Option";
 import { useEffect, useRef } from "react";
 import { elevationShadow, useTheme } from "./internal/theme.js";
 
-/** One segment. */
 export interface SegmentedControlItem {
   readonly value: string;
   readonly label: string;
@@ -32,21 +19,15 @@ export interface SegmentedControlItem {
   readonly disabled?: boolean;
 }
 
-/** {@link SegmentedControl} props. */
 export interface SegmentedControlProps extends Omit<Props, "children"> {
-  /** The group's accessible name. */
   readonly label: string;
   readonly items: ReadonlyArray<SegmentedControlItem>;
   readonly value: string;
   readonly onValueChange: (value: string) => void;
-  /** The segments' control size. Defaults to `sm`, a toolbar's. */
+
   readonly size?: "sm" | "md";
 }
 
-/**
- * The segment an arrow selects: the next or previous enabled one, stopping at
- * either end.
- */
 export const stepSegment = (
   items: ReadonlyArray<SegmentedControlItem>,
   value: string,
@@ -66,7 +47,6 @@ export const stepSegment = (
   );
 };
 
-/** The segmented control. */
 export const SegmentedControl = ({
   label,
   items,
@@ -79,8 +59,7 @@ export const SegmentedControl = ({
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const segments = useRef(new Map<string, PublicInstance>());
-  // An arrow moves the tab stop with the choice; focus follows once the new
-  // stop has rendered, or the runtime focuses the segment that is leaving it.
+
   const follow = useRef(false);
 
   useEffect(() => {
@@ -163,7 +142,6 @@ export const SegmentedControl = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Segmented control row. */
 export const segmentedControlMeta = {
   name: "Segmented control",
   tier: 2,

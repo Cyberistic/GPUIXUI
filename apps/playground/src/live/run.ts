@@ -1,18 +1,3 @@
-/**
- * The live-window CLI: the playground scenarios a **real** GPUix window can
- * prove, driven through `@gpuix/native/automation`.
- *
- * The headless suite runs on the offscreen `TestRenderer`; a live run is the
- * confirmation that focus routing, keyboard input and paint survive a window.
- * It reports through the same `Smoke` model and exit codes, so a live pass is
- * citable evidence rather than a second log format.
- *
- * It exits `2` — never `1` — when the host cannot open a window (no desktop
- * session, a missing binding): no window means no evidence. `--list` and an
- * argument error are answered before the native modules load, and `--list`
- * waits for the argument guards so a typo beside it is reported rather than
- * printed over.
- */
 import {
   Clock,
   Console,
@@ -64,10 +49,8 @@ import {
 } from "./chrome.js";
 import { withWindowFacts, type WindowFacts } from "./window-facts.js";
 
-/** One live probe: its metadata, its body and the view the window mounts. */
 export type LiveProbe = LiveProbeMeta & LiveProbeBody;
 
-/** The two app-level window handlers the root owns and a probe registers for. */
 interface WindowHandlers {
   readonly key: WindowHandlerRegister;
   readonly selection: WindowHandlerRegister;
@@ -75,18 +58,11 @@ interface WindowHandlers {
 
 const TITLE = "GPUIXUI live smoke";
 const WINDOW = { width: 900, height: 520 } as const;
-/** The single host element the window mounts: a full-window, unpainted frame. */
+
 export const ROOT_VIEW = "live-probe-root";
-/** Two frames plus the protocol round-trip, so a keyed view switch has painted. */
+
 const SETTLE = Duration.millis(60);
 
-/**
- * The options the window is opened with.
- *
- * The backdrop the probe asserts comes from this one value, so the window and
- * the fact the probe reads cannot drift: `--window-background transparent`
- * either reaches `init` or the CLI rejects it as an unknown argument.
- */
 const windowOptionsOf = (
   background: WindowBackground,
   chrome: TitlebarChrome,
@@ -97,7 +73,6 @@ const windowOptionsOf = (
   ...titlebarOptions(chrome),
 });
 
-/** A window that could not be opened or driven: this run has no evidence. */
 class NoWindowError extends Schema.TaggedError<NoWindowError>()(
   "NoWindowError",
   {
@@ -106,14 +81,6 @@ class NoWindowError extends Schema.TaggedError<NoWindowError>()(
   },
 ) {}
 
-/**
- * The report's host line.
- *
- * The backdrop is part of the window the evidence came from — a
- * `window-background=transparent` run proves something an opaque one does not —
- * so it is printed rather than left to the command line the reader no longer
- * has.
- */
 export const hostLabel = (
   background: WindowBackground,
   chrome: TitlebarChrome = defaultTitlebarChrome,
@@ -122,14 +89,12 @@ export const hostLabel = (
 
 export { liveRegistry };
 
-/** Every registry id joined with its body, in registry order. */
 export const liveProbes = (): ReadonlyArray<LiveProbe> =>
   Arr.map(liveRegistry, (meta) => ({
     ...meta,
     ...liveProbeBodies[meta.id],
   }));
 
-/** The probes `--only` selected, in registry order; every probe when none. */
 export const selectProbes = (
   only: ReadonlyArray<string>,
 ): ReadonlyArray<LiveProbe> =>
@@ -160,15 +125,6 @@ const unavailable = (error: NoWindowError): string =>
     "\n",
   );
 
-/**
- * Mounts one probe's view in the window, keyed so no tree reconciles onto the
- * last, and waits for the marker rendered in the **same commit** before the
- * probe's first step.
- *
- * The wait is the fix for a shared window: a fixed settle let a probe read the
- * previous probe's screen. The marker carries this scenario's id, so only this
- * mount can satisfy it.
- */
 export const mountProbe =
   (
     root: Pick<Root, "render">,
@@ -186,8 +142,7 @@ export const mountProbe =
         selected,
         (candidate) => candidate.id === scenario.id,
       );
-      // Before the first paint: a family the runtime did not know when the text
-      // was laid out has already fallen back.
+
       const fonts = Option.match(probe, {
         onNone: () => [],
         onSome: (found) => found.fonts ?? [],
@@ -198,10 +153,6 @@ export const mountProbe =
       const view = Option.map(probe, (found) => found.view);
       yield* Effect.sync(() =>
         root.render(
-          // One **host** child at the root, and the marker inside it: the
-          // runtime renders only the last child of a top-level fragment
-          // (measured on 0.11.0), so a marker beside the view there would hide
-          // one of them.
           createElement(
             Fragment,
             { key: scenario.id },
@@ -234,16 +185,10 @@ export const mountProbe =
         ),
       );
       yield* waitFor(mountMarker(scenario.id));
-      // The marker proves the commit; one more settle covers the layout pass a
-      // probe's first measurement reads.
+
       yield* Effect.sleep(SETTLE);
     });
 
-/**
- * Opens the window, mounts each selected probe and writes the report.
- *
- * `Effect.runPromise`/`process.exit` stay at the entrypoint (EF-21).
- */
 export const program = (
   flags: CliFlags,
   selected: ReadonlyArray<LiveProbe>,
@@ -283,10 +228,7 @@ export const program = (
     const loop = modules.gpuix.startFrameLoop(renderer, {
       onTerminated: () => {},
     });
-    // The app-level window handlers: a window delivers window keys and text
-    // selection only through `render({ ... })`, so the runner is the "app" that
-    // owns both and forwards to whatever the mounted probe registered
-    // (`useWindowKey`, `useWindowSelection`).
+
     const windowKey: { current: Option.Option<WindowHandler> } = {
       current: Option.none(),
     };
@@ -301,7 +243,7 @@ export const program = (
         windowSelection.current = handler;
       },
     };
-    /** Hands one window event to the probe that registered for it, if any. */
+
     const forward = (
       sink: { readonly current: Option.Option<WindowHandler> },
       event: EventPayload,
@@ -330,8 +272,7 @@ export const program = (
       app,
       renderer,
       capturePath: (name) => path.join(captures, `${name}.png`),
-      // The filesystem is the Effect service; zlib has no Effect equivalent, so
-      // the runner injects it and the decoder stays platform-free.
+
       readCapture: (name) =>
         fileSystem.readFile(path.join(captures, `${name}.png`)).pipe(
           Effect.mapError(
@@ -362,10 +303,9 @@ export const program = (
     );
     yield* Console.log(Report.formatReport(report));
     if (flags.json) yield* Console.log(Report.reportJson(report));
-    // Release the window before the effect completes: the frame loop and the
-    // window keep Node's event loop alive.
+
     yield* Effect.sync(() => root.unmount());
-    // The report is already written: a close failure cannot change the verdict.
+
     yield* Effect.tryPromise({
       try: () => app.close(),
       catch: (cause) => cause,
@@ -374,14 +314,12 @@ export const program = (
     return Report.exitCode(report);
   });
 
-/** The process inputs the CLI needs, injected so the argument guard is testable. */
 export interface MainDeps {
   readonly argv: ReadonlyArray<string>;
-  /** Loads the native binding; the argument guard must run first. */
+
   readonly load: () => Promise<unknown>;
 }
 
-/** The live CLI's usage: the shared flags plus the one only a window can take. */
 const liveUsage: string = Arr.join(
   [
     usage,
@@ -391,11 +329,8 @@ const liveUsage: string = Arr.join(
   "\n",
 );
 
-/** Validates the arguments, then wires the preflight and the window. */
 export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
   Effect.gen(function* () {
-    // The backdrop flag is this CLI's alone: the headless suite has no window,
-    // so it is split off before the shared parser sees the arguments.
     const windowArgs = splitWindowBackground(deps.argv);
     const chromeArgs = splitTitlebarChrome(windowArgs.rest);
     const parsed = parseArgs(chromeArgs.rest);
@@ -480,9 +415,6 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
     );
   });
 
-// Run only when executed directly, never on import, so the pure tests can
-// import this module without opening a window. `Effect.runPromise` is the
-// entrypoint boundary (EF-21).
 const entry = process.argv[1];
 if (entry !== undefined && import.meta.filename === entry) {
   const code = await Effect.runPromise(
@@ -491,7 +423,6 @@ if (entry !== undefined && import.meta.filename === entry) {
       load: () => import("@gpuix/native"),
     }),
   );
-  // The native frame loop and window keep Node's event loop alive, so the
-  // entrypoint exits explicitly once the report is written.
+
   process.exit(code);
 }

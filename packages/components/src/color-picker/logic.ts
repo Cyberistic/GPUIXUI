@@ -1,16 +1,3 @@
-/**
- * The colour model behind `ColorPicker`: HSV in, hex out, and the WCAG readout.
- *
- * Hex is the only grammar. `@gpuix/native@0.11.0` paints a colour string, but
- * the picker's value has to survive a round trip through a control and a store,
- * and a colour function (`rgb()`, `hsl()`, `oklch()`) is a second grammar to
- * decode, format and keep in step. A hex value is one form: uppercase
- * `#RRGGBB`, with two alpha digits when the colour is not opaque.
- *
- * Shorthand is expanded at the boundary, because it is input rather than a
- * value: `#f0a` commits `#FF00AA`, and `#f0a8` commits `#FF00AA88`.
- */
-
 import { contrastRatio } from "@gpuixui/tokens";
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
@@ -19,7 +6,6 @@ import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 
-/** Hue in degrees, saturation and value from 0 to 1, alpha from 0 to 1. */
 export class Hsva extends Schema.Class<Hsva>("Hsva")({
   h: Schema.Number,
   s: Schema.Number,
@@ -27,23 +13,18 @@ export class Hsva extends Schema.Class<Hsva>("Hsva")({
   a: Schema.Number,
 }) {}
 
-/** A colour the picker can paint: an opaque hex byte triple. */
 export class OpaqueRgb extends Schema.Class<OpaqueRgb>("OpaqueRgb")({
   r: Schema.Number,
   g: Schema.Number,
   b: Schema.Number,
 }) {}
 
-/** The WCAG grade a contrast ratio earns. */
 export type Grade = "AAA" | "AA" | "AA large" | "Fails";
 
-/** The colour the picker starts from when the caller gave none. */
 export const DEFAULT_COLOUR = "#000000";
 
-/** The name a picker publishes when the caller's label says nothing. */
 export const DEFAULT_COLOR_PICKER_LABEL = "Color picker";
 
-/** The hex grammar, after the leading `#` is dropped and the text lowercased. */
 const HEX_DIGITS = /^(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/;
 
 const clamp = (value: number, min = 0, max = 1): number =>
@@ -54,17 +35,14 @@ const round = (value: number, digits = 0): number => {
   return Math.round(value * factor) / factor;
 };
 
-/** A channel from 0 to 1 as the byte the runtime paints. */
 const byteOf = (channel: number): number => Math.round(clamp(channel) * 255);
 
-/** A channel from 0 to 1 as two uppercase hex digits. */
 const hexByte = (channel: number): string =>
   byteOf(channel).toString(16).padStart(2, "0").toUpperCase();
 
 const hexOf = ({ r, g, b }: OpaqueRgb): string =>
   `#${hexByte(r)}${hexByte(g)}${hexByte(b)}`;
 
-/** HSV as sRGB channels from 0 to 1. */
 export const hsvToRgb = ({ h, s, v }: Hsva): OpaqueRgb => {
   const channel = (n: number): number => {
     const k = (n + h / 60) % 6;
@@ -73,12 +51,6 @@ export const hsvToRgb = ({ h, s, v }: Hsva): OpaqueRgb => {
   return new OpaqueRgb({ r: channel(5), g: channel(3), b: channel(1) });
 };
 
-/**
- * sRGB channels as HSV.
- *
- * A grey has no hue, so the caller's `hue` stands: a picker that reset it would
- * jump a drag through the middle of the area to red.
- */
 export const rgbToHsva = (
   { r, g, b }: OpaqueRgb,
   alpha: number,
@@ -97,14 +69,11 @@ export const rgbToHsva = (
   return new Hsva({ h, s: max === 0 ? 0 : distance / max, v: max, a: alpha });
 };
 
-/** The colour as uppercase hex, with alpha digits when it is not opaque. */
 export const toHex = (hsva: Hsva): string =>
   `${hexOf(hsvToRgb(hsva))}${hsva.a < 0.999 ? hexByte(hsva.a) : ""}`;
 
-/** The colour with its alpha dropped. */
 export const opaqueHex = (hsva: Hsva): string => hexOf(hsvToRgb(hsva));
 
-/** Read `#RGB`, `#RGBA`, `#RRGGBB` or `#RRGGBBAA`; absence for anything else. */
 export const parseColor = (input: string, hue = 0): Option.Option<Hsva> => {
   const digits = pipe(Str.trim(input), Str.replace(/^#/, ""), Str.toLowerCase);
   if (!HEX_DIGITS.test(digits)) return Option.none();
@@ -122,14 +91,12 @@ export const parseColor = (input: string, hue = 0): Option.Option<Hsva> => {
   return Option.some(rgbToHsva(rgb, expanded.length === 8 ? at(6) : 1, hue));
 };
 
-/** Whether two written colours describe the same value. */
 export const sameColor = (left: string, right: string): boolean =>
   pipe(
     Option.all([parseColor(left), parseColor(right)]),
     Option.exists(([a, b]) => toHex(a) === toHex(b)),
   );
 
-/** The colour with `amount` of it mixed into `background`. */
 export const composite = (hsva: Hsva, background: Hsva): OpaqueRgb => {
   const fg = hsvToRgb(hsva);
   const bg = hsvToRgb(background);
@@ -142,13 +109,6 @@ export const composite = (hsva: Hsva, background: Hsva): OpaqueRgb => {
   });
 };
 
-/**
- * The WCAG ratio of the colour, composited over `background`, against it.
- *
- * `None` when the background is not a colour the picker can read: a ratio needs
- * two opaque fills, and inventing the missing one would report a number about a
- * surface nobody named.
- */
 export const contrast = (
   hsva: Hsva,
   background: string,
@@ -162,21 +122,12 @@ export const contrast = (
     ),
   );
 
-/** The grade a ratio earns. */
 export const grade = (ratio: number): Grade =>
   ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : ratio >= 3 ? "AA large" : "Fails";
 
-/** The draft a stored value carries: the text as written, or absence. */
 export const storedDraft = (value: unknown): Option.Option<string> =>
   P.isString(value) ? Option.some(value) : Option.none();
 
-/**
- * The swatch list a stored value carries: its text entries, or absence.
- *
- * A palette is saved data as often as a literal, so only a list is a list, and
- * an entry that is not a non-blank colour is dropped rather than painted as an
- * unnamed cell. An empty list stays empty: it is the caller's own choice.
- */
 export const storedSwatches = (
   value: unknown,
 ): Option.Option<ReadonlyArray<string>> =>
@@ -190,7 +141,6 @@ export const storedSwatches = (
       )
     : Option.none();
 
-/** The visually different stops a six-segment hue rail paints, in order. */
 export const HUE_STOPS = [
   "#FF0000",
   "#FFFF00",
@@ -201,5 +151,4 @@ export const HUE_STOPS = [
   "#FF0000",
 ] as const;
 
-/** The fraction a hue sits at on the rail. */
 export const hueFraction = (hue: number): number => round(clamp(hue / 360), 4);

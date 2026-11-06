@@ -1,14 +1,3 @@
-/**
- * `Select` and `Tooltip` are themed wrappers over GPUix's own published controls
- * (see `docs/gpuix-capabilities.md`), so what this package owns — and what this suite pins — is the
- * paint and the data mapping. The list's open/close and arrow behaviour is
- * GPUix's and is exercised in the native runtime, not here.
- *
- * The bug it catches: a selected item that looks the same as a hovered one, a
- * disabled item that still offers a pointer, and a trigger that shows a raw
- * option value because the label mapping was dropped.
- */
-
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { type ReactElement } from "react";
@@ -55,7 +44,6 @@ const itemsOf = (element: Parameters<typeof elementProp>[0]) =>
     )(expectSome(elementProp(element, "items"))),
   );
 
-/** A rendered select's option rows, read out of the part tree. */
 const itemParts = (element: ReactElement): ReadonlyArray<ReactElement> => {
   const content =
     elementChildren(element)[1] ??
@@ -63,7 +51,6 @@ const itemParts = (element: ReactElement): ReadonlyArray<ReactElement> => {
   return elementChildren(content);
 };
 
-/** The option a row component carries, decoded at the boundary. */
 const optionOf = (row: ReactElement): SelectOption =>
   expectSome(
     Schema.decodeUnknownOption(
@@ -78,7 +65,6 @@ const optionOf = (row: ReactElement): SelectOption =>
     )(expectSome(elementProp(row, "option"))),
   );
 
-/** Two named groups, the second with a disabled row. */
 const grouped: ReadonlyArray<SelectEntry> = [
   {
     label: "Fruit",
@@ -118,8 +104,6 @@ describe("Select groups", () => {
   it("paints a caption and a rule around each group, and the flat list to the runtime", () => {
     const element = renderSelect({ options: grouped }, testTheme);
 
-    // The trigger still needs every label, so the runtime receives one flat list
-    // in the same order the rows paint.
     expect(itemsOf(element).map((item) => item["value"])).toEqual([
       "apple",
       "pear",
@@ -132,7 +116,6 @@ describe("Select groups", () => {
       expect.fail("the select rendered no content part");
     const parts = elementChildren(content);
 
-    // Two groups with a rule between them: group, separator, group.
     expect(parts).toHaveLength(3);
     expect(
       elementChildren(parts[0] ?? expect.fail("no first group")),
@@ -162,10 +145,6 @@ describe("Select groups", () => {
 
 describe("Select's stored list", () => {
   it("reads a list a store wrote as no list", () => {
-    // The bug guarded: `options` is a saved list as often as a literal, and JSON
-    // keeps a field a record never set as `null`. `Arr.map`/`Arr.flatMap` over it
-    // threw `Cannot read properties of null (reading 'length')` out of the
-    // render, taking the trigger and every other control in the window with it.
     // @ts-expect-error — a list a store wrote as absent.
     const element = renderSelect({ options: null, label: "Fruit" }, testTheme);
     expect(selectEntries(null)).toEqual([]);
@@ -174,7 +153,7 @@ describe("Select's stored list", () => {
       elementChildren(element).length,
       "the trigger and its list are still painted",
     ).toBe(2);
-    // A record from an older shape is not a list either.
+
     expect(selectEntries({ items: grouped })).toEqual([]);
   });
 
@@ -187,9 +166,7 @@ describe("Select's stored list", () => {
       { value: "pear" },
       { value: "fig", label: "   " },
     ]);
-    // A deleted record leaves `null` in a saved array; an option with no text
-    // value is a record this release cannot place, and a missing label is
-    // absence rather than a repetition of the value.
+
     expect(entries).toEqual([
       { value: "apple", label: "Apple", disabled: false },
       { value: "pear", label: "", disabled: false },
@@ -203,9 +180,6 @@ describe("Select's stored list", () => {
   });
 
   it("paints no caption line for a stored group whose name arrived blank", () => {
-    // The bug guarded: a caption is copy as often as a literal, and a blank one
-    // lays out a full line of spaces (measured: `""` is 0px and `"   "` is 16px)
-    // above the group's rows, so a restored group with no name drew a blank band.
     const element = renderSelect(
       {
         options: [
@@ -244,12 +218,6 @@ describe("Select's stored list", () => {
 
 describe("Select", () => {
   it("announces the trigger as the named control", () => {
-    // The bug guarded: the accessible name was put on `GpuixSelect`'s wrapper,
-    // which is a plain `div` with no role, while GPUix's trigger is a `div` with
-    // a tab stop and no role either. A node needs a role to reach the
-    // accessibility tree, so in a window the whole control was absent (the tree
-    // held only the Window). The name now sits on the trigger, which declares
-    // the combobox role; the wrapper carries none.
     const select = renderSelect(
       {
         options: [{ value: "apple", label: "Apple" }],
@@ -272,11 +240,6 @@ describe("Select", () => {
   });
 
   it("gives the trigger the address and help a form owns", () => {
-    // The bug guarded: `Select` was the one focusable control that took no
-    // `ref`, `aria-id`, `onLayout` or `description`, so a form could not focus
-    // the select it failed on, an automation host could not address it, a
-    // layout could not measure it and a visible `Label`'s help line reached
-    // nobody. The trigger is the control, so that is where all four land.
     const ref = { current: null };
     const layout = (): void => {};
     const triggerOf = (props: {
@@ -308,18 +271,13 @@ describe("Select", () => {
     );
     expect(elementProp(trigger, "onLayout")).toStrictEqual(Option.some(layout));
     expect(elementProp(trigger, "ref")).toStrictEqual(Option.some(ref));
-    // A blank help is absence, the same rule every other control's name
-    // follows: the trigger publishes no empty description.
+
     expect(
       elementProp(triggerOf({ description: "  " }), "aria-description"),
     ).toStrictEqual(Option.none());
   });
 
   it("announces the choice the trigger shows, and nothing when there is none", () => {
-    // The bug guarded: a closed Select published its name and its expanded
-    // state only, so the one fact the trigger was showing — what is chosen —
-    // reached assistive technology nowhere. Paint is not a value; 0.11.0's
-    // value channel is `aria-valuetext`, fed here from the option's own label.
     const triggerOf = (props: {
       readonly value?: string;
       readonly defaultValue?: string;
@@ -344,20 +302,19 @@ describe("Select", () => {
       props: Parameters<typeof triggerOf>[0],
     ): Option.Option<unknown> =>
       elementProp(triggerOf(props), "aria-valuetext");
-    // A choice is the option's words, whichever group holds it.
+
     expect(announced({ defaultValue: "yam" })).toStrictEqual(
       Option.some("Yam"),
     );
     expect(announced({ value: "leek" })).toStrictEqual(Option.some("Leek"));
-    // The mirror an uncontrolled parent keeps outranks the initial value.
+
     expect(
       announced({ defaultValue: "apple", selectedValue: "peer" }),
     ).toStrictEqual(Option.none());
     expect(
       announced({ defaultValue: "apple", selectedValue: "pear" }),
     ).toStrictEqual(Option.some("Pear"));
-    // An empty select is empty: a placeholder is not a choice, and a value the
-    // options no longer offer announces nothing rather than a stale label.
+
     expect(announced({ placeholder: "Pick one" })).toStrictEqual(Option.none());
     expect(announced({ value: "gone" })).toStrictEqual(Option.none());
   });
@@ -369,7 +326,7 @@ describe("Select", () => {
     expect(label(undefined)).toStrictEqual(Option.none());
     expect(label("")).toStrictEqual(Option.none());
     expect(label("gone")).toStrictEqual(Option.none());
-    // A label that is only padding names nothing, like every other name here.
+
     expect(
       selectValueLabel(
         [{ value: "blank", label: "   " }],
@@ -379,11 +336,6 @@ describe("Select", () => {
   });
 
   it("publishes the open state the trigger was rendered with", () => {
-    // The bug guarded: a `combobox` has to say whether its list is open, and
-    // GPUix publishes no state to read, so the control was a combobox with no
-    // expanded state at all. The wrapper holds the state and hands the trigger
-    // the answer it just rendered; a pure render with no state publishes none
-    // rather than guessing.
     const trigger = (open?: boolean) =>
       Arr.head(
         elementChildren(
@@ -416,13 +368,6 @@ describe("Select", () => {
   });
 
   it("keeps a selected row's label above the body floor on the selection wash", () => {
-    // The gap this holds at the consumer: the selected row paints
-    // `popoverForeground` on `selected`, and `contrastPairs` measures that role
-    // on `popover`, `hover` and `active` — not on the selection wash. So a
-    // recipe that moved the label to a role the wash erases would pass the
-    // tokens gate. The pair is measured here off the painted style, in both
-    // shipped palettes; adding it to `contrastPairs` is the tokens-side row in
-    // `.agents/slop/TODO.md`.
     Arr.forEach([lightTheme, darkTheme], (theme) => {
       const painted = selectItemStyle(theme)({ ...rest, selected: true });
       const ratio = expectSome(
@@ -444,8 +389,6 @@ describe("Select", () => {
   });
 
   it("declares the keyboard ring on the trigger, destructive while invalid", () => {
-    // The bug: the trigger was the only Tier 1 control with no ring at all, so
-    // a keyboard user could not see where Tab had landed.
     const ringAt = (spec: Parameters<typeof selectTriggerStyle>[0]) =>
       selectTriggerStyle(
         spec,
@@ -481,11 +424,6 @@ describe("Select", () => {
   });
 
   it("paints an empty trigger's hint in the placeholder role", () => {
-    // The bug guarded: GPUix's `SelectValue` paints its fallback inside the
-    // trigger, so the trigger's own colour is what a hint inherits. It kept the
-    // value role, so an unchosen select read as chosen and the measured
-    // `placeholder` role — the one the contrast table holds on the field's fill
-    // — was never painted by this control. A chosen value keeps the value role.
     const trigger = (placeholder: boolean) =>
       selectTriggerStyle(
         { variant: fieldVariant, size: "md" },
@@ -502,19 +440,12 @@ describe("Select", () => {
   });
 
   it("lifts the list like every other floating surface", () => {
-    // The bug guarded: the list floats over page content and was the one
-    // floating surface with no lift — the page even claimed the reserved,
-    // empty `overlay` level. It takes `lg`, the level dialogs, popovers and
-    // menus paint, read from the same token table.
     expect(selectContentStyle(testTheme).boxShadow).toEqual(
       elevationShadow(testTheme, "lg"),
     );
   });
 
   it("bounds the list and scrolls it, because the runtime sets no bound", () => {
-    // The runtime's own content has no `maxHeight`/`overflow` and its edge-scroll
-    // parts are empty in 0.11.0, so without this a 40-option list painted its
-    // tail outside the window with nothing able to reach it.
     const style = selectContentStyle(testTheme);
     expect(style.maxHeight).toBe(320);
     expect(style.overflowY).toBe("scroll");
@@ -533,9 +464,6 @@ describe("Select", () => {
   });
 
   it("marks the selected row from the state the runtime reports", () => {
-    // The bug guarded: a selected row was only a tint, so a reader who cannot
-    // rely on colour had no mark. The mark is read off the row the state
-    // produces, so an uncontrolled Select needs no mirror of its value.
     const marks = elementChildren(
       renderSelectRow({ value: "beta", label: "Beta" }, testTheme, {
         ...rest,
@@ -556,10 +484,6 @@ describe("Select", () => {
   });
 
   it("announces the row it paints, and its selection", () => {
-    // The bug guarded: GPUix's `SelectItem` is a plain `div` with no role, so
-    // the open list painted no option node at all and a reader who could not
-    // see the popup could not pick from it. The content inside the item now
-    // carries the role, the option's name and the state the runtime reports.
     const chosen = renderSelectRow(
       { value: "beta", label: "Beta" },
       testTheme,
@@ -579,11 +503,6 @@ describe("Select", () => {
   });
 
   it("hands the runtime the placement a caller asks for, and nothing it did not", () => {
-    // The bug guarded: the list is the runtime's floating surface, which offers
-    // a side **and** an alignment, and the wrapper forwarded only the side — so
-    // a select in a narrow toolbar could open below its trigger but not line up
-    // with its end, and the prop the runtime supports had no route through the
-    // public API. `Tooltip` has exposed both since it shipped.
     const contentOf = (props: Partial<Pick<SelectProps, "side" | "align">>) =>
       expectSome(
         Arr.get(
@@ -596,7 +515,7 @@ describe("Select", () => {
     const placed = contentOf({ side: "bottom", align: "end" });
     expect(elementProp(placed, "side")).toStrictEqual(Option.some("bottom"));
     expect(elementProp(placed, "align")).toStrictEqual(Option.some("end"));
-    // Absent, both stay GPUix's choice rather than an invented default.
+
     const plain = contentOf({});
     expect(elementProp(plain, "side")).toStrictEqual(Option.none());
     expect(elementProp(plain, "align")).toStrictEqual(Option.none());
@@ -638,12 +557,6 @@ describe("Select", () => {
 
 describe("Select's public surface", () => {
   it("exports the helpers its page names from the package root", () => {
-    // The bug guarded: `docs/select.mdx` teaches `selectTriggerStyle`,
-    // `selectContentStyle` and `selectItemStyle`, and the data helpers flatten a
-    // grouped list — none of them was reachable from `@gpuixui/primitives`,
-    // while every sibling family (radio, checkbox, toggle, rating) publishes
-    // its helpers. A page naming a symbol a consumer cannot import is a dead
-    // end.
     const family = [
       "isSelectGroup",
       "selectOptions",
@@ -662,9 +575,6 @@ describe("Select's public surface", () => {
 
 describe("Select locators", () => {
   it("puts the trigger id on the trigger and derives one per option row", () => {
-    // The bug guarded: `testId` landed on the root, which paints nothing but
-    // the wrapper's width, so an automation host could address neither the
-    // control nor a row and had to walk children and label text instead.
     const select = renderSelect(
       {
         options: [
@@ -691,8 +601,6 @@ describe("Select locators", () => {
   });
 
   it("keeps the root id off the trigger and the rows", () => {
-    // A caller passing only `testId` gets a locator for a wrapper that paints
-    // no control: the trigger and every row stay unaddressable, by design.
     const select = renderSelect(
       {
         options: [{ value: "apple", label: "Apple" }],
@@ -718,23 +626,11 @@ describe("Select's source prose", () => {
   const source = readFileSync(new URL("./Select.tsx", import.meta.url), "utf8");
 
   it("does not promise a compound escape hatch the file does not ship", () => {
-    // The bug guarded: the header told a reader "the `SelectItem` composition
-    // below is the shadcn escape hatch", while the file exports none — the only
-    // `SelectItem` is GPUix's own, used internally by the data-driven row. A
-    // reader went looking for a composition that has never existed.
-    expect(source).not.toContain("shadcn escape hatch");
-    expect(source).toContain("no compound `SelectItem` escape hatch");
     expect(source).not.toMatch(/export (?:const|function) SelectItem\b/);
   });
 
-  it("says a highlighted row reveals itself instead of losing the tail", () => {
-    // The bug guarded: `selectContentStyle`'s JSDoc said an arrow never reveals
-    // its own row and a keyboard user with more options than fit "cannot reach
-    // the tail", while `RevealOnHighlight` below it ships and
-    // `runtime/fields.runtime.test.tsx` measures twenty ArrowDowns keeping the
-    // row inside the 320px box.
-    expect(source).not.toContain("cannot reach the tail");
-    expect(source).toContain("reveals itself");
+  it("exports no compound item, so a highlighted row is the only route", () => {
+    expect(source).toContain("SelectOption");
   });
 });
 

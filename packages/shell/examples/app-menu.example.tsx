@@ -1,8 +1,3 @@
-/**
- * AppMenu example: a File / Edit / View menu bar with accelerator labels.
- * `mod` renders ⌘ on macOS and Ctrl elsewhere; the app binds the chords.
- */
-
 import { AppMenu } from "../src/app-menu/app-menu.js";
 import type { AppMenuEntry } from "../src/app-menu/app-menu.js";
 
@@ -37,5 +32,4 @@ const MENUS: ReadonlyArray<AppMenuEntry> = [
   },
 ];
 
-/** The editor's in-window menu bar. */
 export const AppMenuExample = () => <AppMenu label="Editor" menus={MENUS} />;

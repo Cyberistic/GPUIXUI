@@ -158,19 +158,6 @@ wrapper; the SVG is not rendered again.
 | `violet`, `rose` | purple / pink |
 | `slate`, `charcoal` | dark family |
 
-## Notes
-- **Pele is the renderer, not Mermaid.js.** Pele targets Mermaid 12.1.0 syntax
-  with its own layout and visual style. Mermaid's `look: "handdrawn"` and its
-  `flowchart`/`sequence` config keys are not part of Pele's contract; the theme
-  is CSS variables, not a renderer config.
-- **Pinch is not in the React wrapper.** Wheel, drag and the buttons are
-  implemented. Pele's own `enableZoom` carries pinch when the canvas is a Pele
-  mount rather than React content.
-- **The playground exports SVG only.** Copy and download hand back Pele's SVG;
-  a PNG would need a canvas raster step and is not part of this pass.
-- **A malformed diagram is a sentence, not a picture.** The renderer shows the
-  parser's message instead of an empty frame.
-
 ## The category
 
 This is the **Graphics** category: the things the library draws.

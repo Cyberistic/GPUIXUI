@@ -1,8 +1,3 @@
-/**
- * The bench's parsers (plan 730). Bug guarded: a landing number is a claim, so
- * a malformed reading must be `None` — a parser that answered 0 for a line it
- * could not read would print "0 MB" as a measurement.
- */
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { median, parseDu, parseRss } from "./parse.js";

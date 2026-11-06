@@ -1,14 +1,5 @@
 import * as Arr from "effect/Array";
 
-/**
- * The icon names, in the order documentation and navigation should show them.
- *
- * This is the single source of truth for *which* icons exist: `registry.ts`
- * must satisfy `Record<IconName, IconMarkup>`, so TypeScript rejects both a
- * missing and an unforeseen icon. Keep the list sorted — `registry.test.ts`
- * fails otherwise, which is what keeps a generated icon index stable across
- * builds.
- */
 export const ICON_NAMES = [
   "arrow-down",
   "arrow-left",
@@ -95,19 +86,9 @@ export const ICON_NAMES = [
   "x",
 ] as const;
 
-/** Every icon this library can render. */
 export type IconName = (typeof ICON_NAMES)[number];
 
-/** The names, typed for a membership test over a decoded value. */
 const ICON_SET: ReadonlyArray<string> = ICON_NAMES;
 
-/**
- * Whether a value names an icon the set carries.
- *
- * `name` is `unknown` because it is often a stored value rather than a literal:
- * a saved toolbar, a workspace layout or an action record keeps the name a
- * release may rename or drop, and the type only protects the callers who write
- * a name in source.
- */
 export const isIconName = (name: unknown): name is IconName =>
   typeof name === "string" && Arr.contains(ICON_SET, name);

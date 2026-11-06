@@ -1,29 +1,3 @@
-/**
- * Guards the order of every named scale a theme carries.
- *
- * The bug this guards: a scale is selected by name — `size="sm"` against `md`
- * and `lg`, `radius="xl"` against a card's `lg`, `textStyle(theme, "h3")` under
- * an `h2` — so a brand whose steps repeat or invert paints the wrong size in
- * silence. `invalidNumbers` answers whether one number can be laid out, and it
- * was the only numeric contract: a theme computed from a factor could ship a
- * `sm` control taller than its `lg`, a dialog as square as a card, or a second
- * heading smaller than its body text, with every number finite, positive and
- * pressable. The shipped scales were held to their order by `scale.test.ts` and
- * `typography.test.ts`; a brand's were held to nothing.
- *
- * The rule also found a shipped style: the Windows platform carried `lg: 8` and
- * `xl: 8`, so `radius="xl"` and `radius="lg"` painted the same surface and the
- * larger step named nothing. It is Fluent 2 today, whose controls round at 4 and
- * surfaces at 8, so both pairs are aliases on purpose and radius is the one
- * scale that permits an equal adjacent pair.
- *
- * `invalidScales` is one of `auditTheme`'s reports: it shipped as a public
- * function *beside* the gate while the docs site's readout worded every report
- * the gate returned, so a brand whose `sm` control was taller than its `lg`
- * passed every colour report the gate ran. The suite now proves the gate holds
- * the ladder, not only that a report exists.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -81,8 +55,6 @@ describe("every shipped theme keeps its scales ordered", () => {
   });
 
   it("lets the Windows platform's control and surface corners alias", () => {
-    // Fluent 2's 4px grid: every control corners at 4, every surface at 8. The
-    // names are still ordered, but two names per kind share a corner.
     expect(platformStyles.win32.radius).toMatchObject({
       sm: 4,
       md: 4,
@@ -91,7 +63,6 @@ describe("every shipped theme keeps its scales ordered", () => {
     });
     expect(invalidScales(platformTheme(lightTheme, "win32"))).toEqual([]);
 
-    // A smaller rung is still a lie: `xl: 6` is below `lg`.
     const broken = brand({
       radius: { ...platformStyles.win32.radius, xl: 6 },
     });
@@ -107,19 +78,6 @@ describe("every shipped theme keeps its scales ordered", () => {
   });
 });
 
-/**
- * The Windows fix the Fluent 2 style undid, and the example it left behind.
- *
- * The bug this guards: `invalidScales`' first shipped catch was the Windows
- * platform's `lg: 8` beside its `xl: 8`, and the catalogue, the design system
- * and the inventory row all teach it as "`xl` is 10 now". The style was
- * reshaped to Fluent 2 afterwards, where a control corners at 4 and a surface
- * at 8, so `sm`/`md` and `lg`/`xl` are aliases on purpose and `radius` is the
- * one ladder that accepts an equal pair. The catalogue's example kept the
- * older claim too: it printed an equal `xl: 8` with a failure report beside it,
- * which the report no longer returns, so a reader copying it saw `[]` where the
- * page promised a finding.
- */
 describe("the equal radius the Fluent 2 style aliases", () => {
   const flat = (text: string): string => text.replace(/\s+/g, " ");
   const read = (path: string): string =>
@@ -134,7 +92,6 @@ describe("the equal radius the Fluent 2 style aliases", () => {
     return start === -1 ? "" : inventory.slice(start, end);
   })();
 
-  /** The Windows ladder as the style ships it, so a palette edit moves the page. */
   const winLadder = (): string => {
     const { sm, md, lg, xl } = platformStyles.win32.radius;
     return `${sm}/${md}/${lg}/${xl}`;
@@ -154,8 +111,6 @@ describe("the equal radius the Fluent 2 style aliases", () => {
   });
 
   it("prints the equal pair as the accepted example, not a finding", () => {
-    // The executed brand is the page's claim: the pair above `lg` is an alias,
-    // so the report is empty rather than "the larger step named nothing".
     expect(equalRadiusBrand.radius.lg).toBe(equalRadiusBrand.radius.xl);
     expect(equalRadiusReport).toEqual([]);
     expect(flat(catalogue)).toContain(
@@ -180,8 +135,7 @@ describe("the equal radius the Fluent 2 style aliases", () => {
     );
     expect(flat(catalogue)).toContain('path: "xl", value: 6');
     expect(flat(catalogue)).toContain('previous: { path: "lg", value: 8 }');
-    // The catalogue and the design system both name the alias rule, so a
-    // reader is not told an equal rung is a defect one page later.
+
     expect(flat(catalogue)).toContain("alias");
     expect(flat(designSystem)).toContain("alias");
     expect(flat(readme)).toContain("alias");
@@ -195,10 +149,6 @@ describe("the equal radius the Fluent 2 style aliases", () => {
   });
 });
 
-/**
- * One elevation shadow in the shape a brand supplies: a design-tool export hands
- * the caller a geometry and a colour, not the shipped level's share of `shadow`.
- */
 const shadow = (
   offsetY: number,
   blurRadius: number,
@@ -211,10 +161,6 @@ const shadow = (
   color: "#191D25A6",
 });
 
-/**
- * One broken step per scale, with the report it must produce. Each case names
- * the step that breaks and the neighbouring step it failed to exceed.
- */
 const breaks: ReadonlyArray<{
   readonly label: string;
   readonly overrides: ThemeOverrides;
@@ -294,8 +240,7 @@ const breaks: ReadonlyArray<{
   },
   {
     label: "elevation",
-    // The dialog's geometry copied onto the menu level: `md` now reaches 68px
-    // below its box while `lg` reaches 48.
+
     overrides: { elevation: { md: [shadow(24, 56, -12)] } },
     expected: {
       group: "elevation",
@@ -344,19 +289,6 @@ describe("the step that breaks a scale", () => {
   });
 });
 
-/**
- * A rung the ladder forgets is a size no contract compares.
- *
- * The bug this guards: the scales are data — `Spacing` is ten steps, `Radius`
- * six — and each ladder in `invalidScales` was a second hand-written list. A
- * release that adds a step to a scale (the interface, the record and the
- * catalogue all move together) could leave the ladder behind, so the shipped
- * theme carried a size nothing measured and a brand could invert the new rung
- * with every report empty. `scales.ts` now fails its own type check when a
- * scale gains a step the ladder does not list, and this suite walks **every
- * adjacent pair** the shipped theme carries, not one sample per group: lower a
- * step below the one before it and the report must name that step.
- */
 const lower = {
   spacing: (step: string, value: number): Theme => ({
     ...lightTheme,
@@ -376,7 +308,6 @@ const lower = {
   }),
 } as const;
 
-/** Lower every step of a numeric scale below the one before it, once each. */
 const everyPair = (
   group: keyof typeof lower,
   entries: ReadonlyArray<readonly [string, number]>,
@@ -411,8 +342,7 @@ describe("every rung the ladder walks", () => {
 
     expect(entries.length).toBeGreaterThan(5);
     expect(everyPair("spacing", entries)).toEqual([]);
-    // A step added to the scale has to join the ladder, and the page says so:
-    // the type-level guard in `scales.ts` is the other half of the contract.
+
     expect(page).toContain(
       "A step added to a scale fails the package's type check until it joins the ladder",
     );
@@ -433,10 +363,6 @@ describe("every rung the ladder walks", () => {
   });
 
   it("is a report the gate returns, and both pages say so", () => {
-    // The report was a public function *beside* the gate when it landed, and
-    // `docs/design-system.md` §6 kept teaching that after `auditTheme` folded it
-    // in — so a reader was told to run a second check the one call already runs,
-    // while §11 of the same page said the opposite.
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8")
         .replace(/\s+/g, " ")
@@ -447,8 +373,6 @@ describe("every rung the ladder walks", () => {
       "docs/tokens.md": read("../../../docs/tokens.md"),
     };
 
-    // The claim is the source's: the report is a field of the audit and of the
-    // one passing result.
     expect(audit).toContain("scales,");
     expect(audit).toContain("scales.length === 0");
 
@@ -467,8 +391,6 @@ describe("every rung the ladder walks", () => {
   });
 
   it("compares each type pair, and leaves the roles that are not rungs", () => {
-    // The three roles the size ladder leaves out, for the reasons `scales.ts`
-    // records: an emphasis that shares body's size and the two mono roles.
     const notRungs = new Set(["bodyStrong", "code", "codeBlock"]);
     const rungs = Object.entries(lightTheme.typography)
       .filter(
@@ -513,8 +435,6 @@ describe("every rung the ladder walks", () => {
 
 describe("a value that cannot be laid out", () => {
   it("is left to invalidNumbers instead of being compared", () => {
-    // `NaN` already has an owner; comparing it here would report the same token
-    // twice and say nothing about the order.
     const unlayable = brand({ radius: { md: Number.NaN } });
 
     expect(invalidScales(unlayable)).toEqual([]);
@@ -526,8 +446,6 @@ describe("a value that cannot be laid out", () => {
 
 describe("the elevation ladder", () => {
   it("reads the distance a shadow reaches, not one rung of its geometry", () => {
-    // Offset and blur alone say 56px below the box, which would pass; the
-    // negative spread is what pulls the softest edge up under the menu level.
     const tightened = brand({ elevation: { lg: [shadow(16, 40, -60)] } });
 
     expect(invalidScales(tightened)).toEqual([
@@ -541,8 +459,6 @@ describe("the elevation ladder", () => {
   });
 
   it("compares a reserved level once it paints, and not while it is empty", () => {
-    // The shipped scale's `overlay` is reserved and empty, so `lg` is the last
-    // rung; a brand that fills it has raised a surface above `lg`.
     expect(invalidScales(lightTheme)).toEqual([]);
 
     const filled = brand({ elevation: { overlay: [shadow(1, 2, 0)] } });
@@ -558,8 +474,6 @@ describe("the elevation ladder", () => {
   });
 
   it("reads the shadow the level paints, not another entry in its list", () => {
-    // `elevationShadow` paints the first entry. Read the second and `md` would
-    // measure 3, passing against `lg`'s 48.
     const listed = brand({
       elevation: { md: [shadow(24, 56, -12), shadow(1, 2, 0)] },
     });
@@ -622,9 +536,6 @@ describe("the shipped example", () => {
   });
 
   it("fails the gate, whose other reports cannot see it", () => {
-    // Every number is layable and pressable, so the other reports are empty —
-    // and the gate still refuses the theme, because the ladder is the one
-    // contract that can say the `sm` control is taller than its `lg`.
     expect(invalidNumbers(computedBrand)).toEqual([]);
     expect(auditTheme(computedBrand).passed).toBe(false);
     expect(auditTheme(computedBrand).scales).toEqual(brandScaleReport);
@@ -648,12 +559,6 @@ describe("the shipped example", () => {
 });
 
 describe("a type role the theme does not carry", () => {
-  // The bug this guards: the type ladder read `typography[role].fontSize`
-  // directly, so a theme restored from storage that predates a role the library
-  // added — the one way a complete theme becomes incomplete — threw
-  // `TypeError: Cannot read properties of undefined (reading 'fontSize')` at
-  // every rung but the two mono roles. A step the theme does not carry is not a
-  // rung, the same rule the elevation ladder already follows.
   const withoutRole = (role: "h3") => {
     const { [role]: _gone, ...typography } = lightTheme.typography;
     return { ...lightTheme, typography };
@@ -664,9 +569,6 @@ describe("a type role the theme does not carry", () => {
   });
 
   it("keeps the ladder compared across the gap", () => {
-    // Body raised above `h2` is still reported: the steps either side of the
-    // missing name are adjacent once it is gone, and the report names the
-    // preceding step it is actually compared with.
     const raised = brand({ typography: { body: { fontSize: 22 } } });
     const { h3: _gone, ...typography } = raised.typography;
 
@@ -693,13 +595,6 @@ describe("a type role the theme does not carry", () => {
 });
 
 describe("a theme that lost a whole numeric group", () => {
-  // The bug this guards: the ladder reads the first rung of every group
-  // directly (`theme.spacing["2xs"]`, `theme.density.controlHeight`), so a
-  // stored theme that lost a whole group threw
-  // `TypeError: Cannot read properties of undefined (reading '2xs')` from a
-  // report whose sibling cases already name an absent rung instead of throwing.
-  // A ladder with no rungs is the one absence the report cannot measure: it now
-  // makes the gate's own refusal, naming the group and the release it predates.
   const lost = missingTokens({}).filter(({ kind }) => kind === "group");
 
   it("refuses every group it lost, by name", () => {
@@ -710,14 +605,12 @@ describe("a theme that lost a whole numeric group", () => {
       expect(() => invalidScales(stored), group).toThrow(
         `a theme must carry every numeric group: \`${group}\` is missing`,
       );
-      // The direction the message is *not*: the runtime's own TypeError.
+
       expect(() => invalidScales(stored), group).not.toThrow(TypeError);
     });
   });
 
   it("still skips a single absent rung in a group it carries", () => {
-    // The counterweight: absence inside a group is skipped, and the gate names
-    // it by path — the rule the type-role case above holds.
     const { h3: _gone, ...typography } = lightTheme.typography;
 
     expect(invalidScales({ ...lightTheme, typography })).toEqual([]);
@@ -725,12 +618,6 @@ describe("a theme that lost a whole numeric group", () => {
 });
 
 describe("a type role a store wrote as something else", () => {
-  // The bug this guards: the role skip tested `undefined` only, while JSON
-  // writes `null` for a key a theme never carried — the absence the rest of the
-  // package reads as one. A stored theme whose `typography.body` came back
-  // `null` threw `TypeError: Cannot read properties of null (reading
-  // 'fontSize')` out of the ladder, so the report could not run beside the gate
-  // that names the role.
   const nulledRole = (role: keyof Theme["typography"]): Theme =>
     ({
       ...lightTheme,
@@ -751,13 +638,6 @@ describe("a type role a store wrote as something else", () => {
 });
 
 describe("a control-size scale the theme does not carry", () => {
-  // The bug this guards: `invalidScales` reads the first rung of each density
-  // scale (`theme.density.controlHeight[size]`), and `density` holds two scales
-  // rather than one, so a stored theme whose density record lost
-  // `controlHeight` or `controlPaddingX` — dropped, kept as `null` (JSON has no
-  // `undefined`) or written as a string where the record belongs — threw
-  // `TypeError: Cannot read properties of null (reading 'sm')` from the report.
-  // A ladder with no rungs is the absence `missingTokens` names step by step.
   const lostScale = (
     metric: "controlHeight" | "controlPaddingX",
     shape: "dropped" | "nulled" | "string",
@@ -787,8 +667,6 @@ describe("a control-size scale the theme does not carry", () => {
   });
 
   it("still compares the scale the theme carries", () => {
-    // The skip is per scale: an inverted control height is still the report it
-    // was while the padding scale is gone.
     const stored = {
       ...lightTheme,
       density: {
@@ -836,16 +714,6 @@ describe("a control-size scale the theme does not carry", () => {
 });
 
 describe("a level a store wrote as something else", () => {
-  // The bug this holds: the scale report read a level's shadow directly and
-  // destructured it, so a stored theme whose entry a store dropped (`null` —
-  // JSON has no `undefined`) threw `TypeError: Cannot destructure property
-  // 'offsetY' of 'object null'` at the first rung. The report sat *beside* the
-  // gate, so the gate read a theme the shadow report had already explained and
-  // threw instead of naming it.
-  //
-  // The cast is the package's own idiom for a stored value (`incomplete.test.ts`
-  // has the same helper): the type says complete, the value is not, and the
-  // report is the thing that has to read it.
   const holed = {
     ...lightTheme,
     elevation: { ...lightTheme.elevation, lg: [null] },
@@ -857,8 +725,7 @@ describe("a level a store wrote as something else", () => {
 
   it("leaves the gate a report rather than an exception", () => {
     expect(() => auditTheme(holed)).not.toThrow();
-    // The shadow report is the one that names the hole; the scale report has
-    // nothing to say about a level that paints nothing.
+
     expect(auditTheme(holed).invalidShadows).toEqual([
       { level: "lg", index: 0, color: undefined },
     ]);

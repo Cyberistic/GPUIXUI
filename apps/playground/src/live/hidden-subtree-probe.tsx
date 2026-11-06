@@ -1,26 +1,3 @@
-/**
- * The `hidden-subtree-lifecycle` probe: what the runtime's two hiding words do
- * to paint, layout and the Tab traversal.
- *
- * The pinned renderer's `apply_styles` only acts on `display` of `flex` or
- * `grid`, while `visibility: "hidden"` becomes GPUI's `invisible()`. Both are
- * in the style type, so a component can write either and the difference is
- * invisible to the type checker — which is why it is measured in a window.
- *
- * The shipped `Carousel` is the one component that leaned on the first word: it
- * used to keep every slide mounted so a form on slide two survived a visit to
- * slide three, and hid the spare ones with `display`. Because `display: none`
- * is ignored, every slide painted and the frame was as wide as all of them. It
- * now mounts only the slide on screen, so this window proves the fixed shape
- * beside the two words: one slide box, one frame wide, and a traversal that
- * never visits the spare slide's control.
- *
- * The invisible control counts the keys it hears, so a focus it takes from code
- * is proved live rather than assumed.
- *
- * The view and the steps live here rather than in `scenarios.tsx` so the
- * measurement is one module; the registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -40,10 +17,8 @@ import {
   hiddenReadout,
 } from "./hidden-subtree.js";
 
-/** A key may arrive a frame after the press that focused the target. */
 const SETTLE = Duration.millis(40);
 
-/** A focusable control a probe can read back, hidden or not. */
 const ProbeControl = ({
   testId,
   label,
@@ -80,7 +55,6 @@ const ProbeControl = ({
   );
 };
 
-/** The probe's window: the two hiding words around a shipped carousel. */
 export const HiddenSubtreeProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -166,7 +140,6 @@ export const HiddenSubtreeProbe = (): ReactNode => {
   );
 };
 
-/** The focused `testId`, with `"none"` for no focus so a failure reads clearly. */
 const focusedId = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<string, Smoke.SmokeHostError> =>
@@ -174,19 +147,16 @@ const focusedId = (
     Option.getOrElse(Option.fromNullishOr(id), () => "none"),
   );
 
-/** The focused `testId` once the frame settles after the input that moved it. */
 const focusedAfterPaint = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<string, Smoke.SmokeHostError> =>
   Effect.flatMap(Effect.sleep(SETTLE), () => focusedId(ctx));
 
-/** One Tab press, and the focus it left behind. */
 const tab = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<string, Smoke.SmokeHostError> =>
   Effect.flatMap(ctx.host.key("tab"), () => focusedAfterPaint(ctx));
 
-/** The walk up to its first repeat, which is one full traversal of the window. */
 const cycleOf = (walked: ReadonlyArray<string>): ReadonlyArray<string> =>
   Option.match(
     Option.filter(
@@ -199,7 +169,6 @@ const cycleOf = (walked: ReadonlyArray<string>): ReadonlyArray<string> =>
     },
   );
 
-/** The colour at a logical point of a capture, failing by name if outside. */
 const sampleAt = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -209,7 +178,6 @@ const sampleAt = (
 ): Effect.Effect<Pixels.Rgba, Smoke.SmokeAssertionError> =>
   ctx.expectSome(label, colourAt(frame, point, scale));
 
-/** Whether `sample` is the paint `expected` within the frame's tolerance. */
 const expectPaint = (
   ctx: Smoke.AsyncSmokeContext,
   label: string,
@@ -218,7 +186,6 @@ const expectPaint = (
 ): Effect.Effect<void, Smoke.SmokeAssertionError> =>
   ctx.expectEqual(label, differs(sample, expected), false);
 
-/** A box's centre, which is inside the control and clear of its label. */
 const centreOf = (box: Smoke.Bounds): Point => ({
   x: box.x + box.width / 2,
   y: box.y + box.height / 2,
@@ -245,8 +212,6 @@ export const hiddenSubtreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       captureScale(frame, window),
     );
 
-    // 1. The two words, read on the same frame. A `display: none` control is
-    //    still laid out and painted; an invisible one is not.
     const displayed = yield* ctx.expectSome(
       "the display:none control still reports a laid-out box",
       Option.fromNullishOr(yield* ctx.host.bounds(HIDDEN_IDS.displayControl)),
@@ -302,8 +267,6 @@ export const hiddenSubtreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       page,
     );
 
-    // 2. The traversal. A `display: none` control keeps its stop; an invisible
-    //    one is measured, not assumed.
     yield* ctx.host.focusElement(HIDDEN_IDS.before);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -323,10 +286,6 @@ export const hiddenSubtreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Arr.join(Arr.drop(HIDDEN_STOPS, 1), " > "),
     );
 
-    // 3. The mount window: the slide on screen is the only one in the tree, and
-    //    it is the frame's whole width. A spare slide kept mounted would paint
-    //    beside it and keep its control as a tab stop, because `display: none`
-    //    is not a hiding word here.
     const carousel = yield* ctx.expectSome(
       "the carousel lays out",
       Option.fromNullishOr(yield* ctx.host.bounds(HIDDEN_IDS.carousel)),
@@ -344,8 +303,7 @@ export const hiddenSubtreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
       true,
     );
-    // The track draws one 1-point edge each side, and the slide is its content
-    // box, so the frame's width less the slide's is the track's edge.
+
     const trackEdge = 2 * palettes.dark.borderWidth.thin;
     yield* ctx.expectNear(
       "the one mounted slide fills the frame the carousel lays out",
@@ -354,8 +312,6 @@ export const hiddenSubtreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 4. A step moves the mount window with it: the slide the reader left is
-    //    gone from the tree and the one now on screen is the only box painted.
     yield* ctx.host.focusElement(HIDDEN_IDS.carousel);
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
@@ -386,8 +342,6 @@ export const hiddenSubtreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 5. The invisible control from code: the traversal's answer is not the
-    //    window's last word about focus.
     yield* ctx.host.focusElement(HIDDEN_IDS.visibilityControl);
     yield* ctx.expectEqual(
       "focusing the visibility:hidden control reports what the window did",

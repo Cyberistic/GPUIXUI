@@ -1,22 +1,3 @@
-/**
- * Bubbles in the real GPUix renderer.
- *
- * The bugs these guard: a field seeded outside the box it was measured in; a
- * seed that is not the identity it claims (a background that reshuffles between
- * mounts); a rise that stops after one lap because the runtime tweens a target
- * once; a fresh lap that starts on-stage, so a reader sees the bubble pop back to
- * the bottom; a rise that ends on-stage, so the restart is visible; a reduced
- * preference that deletes the field instead of stilling it; a decorative field
- * that leaks into the accessibility tree or swallows presses; and a field whose
- * entrance ignores the house level.
- *
- * The motion clock is paused before the mount, so the first frame is the declared
- * initial frame rather than wherever the frame loop had got. A headless tree
- * reports bounds and the motion description, not paint, so the rise is read from
- * the targets the component hands the runtime — the sampler that paints them is
- * measured by the overlay and mote suites.
- */
-
 import type { TestElement, TestRoot } from "@gpuix/react/testing";
 import { motionLevels } from "@gpuixui/motion/timing";
 import * as Arr from "effect/Array";
@@ -38,10 +19,8 @@ import {
 import { Bubbles } from "../bubbles.js";
 import { MotionProvider } from "@gpuixui/components/motion";
 
-/** The rise the cases run with, short enough to finish in a test. */
 const riseMs = 2_000;
 
-/** The pure layout for the box the renderer measured. */
 const fieldIn = (
   page: ReturnType<typeof renderComponent>,
   overrides: Partial<BubbleFieldInput> = {},
@@ -59,7 +38,6 @@ const fieldIn = (
   });
 };
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   renderer: TestRoot["renderer"],
   testId: string,
@@ -71,7 +49,6 @@ const byTestId = (
   return element;
 };
 
-/** Mount under a paused motion clock, then let the box measurement land. */
 const mountFrozen = (node: ReactNode) => {
   const page = renderComponent(<div />);
   page.renderer.clockPause();
@@ -80,8 +57,7 @@ const mountFrozen = (node: ReactNode) => {
     page.renderer.flush();
   };
   show(node);
-  // The field positions itself from its own layout, so the bubbles arrive on the
-  // second frame; the second settle paints what the measurement changed.
+
   settle(page);
   settle(page);
   return { page, show };
@@ -121,7 +97,7 @@ describe("Bubbles", () => {
         const bubble = byTestId(page.renderer, `bubble-${index}`);
         expect(bubble.style.left).toBeCloseTo(spec.x, 0);
         expect(bubble.style.width).toBe(spec.size);
-        // A rise starts with the bubble's top edge at the box's bottom.
+
         expect(bubble.style.top).toBe(requireBounds(page, "field").height);
       });
     } finally {
@@ -158,9 +134,6 @@ describe("Bubbles", () => {
       page.renderer.clockFastForward(spec.durationMs + spec.delayMs);
       settle(page);
 
-      // The element is a new lap: back at the bottom, still invisible, heading
-      // for the same off-stage end. The runtime element id is the proof that a
-      // fresh bubble mounted rather than the old one resting at the top.
       const bubble = byTestId(page.renderer, "bubble-0");
       expect(bubble.id).not.toBe(firstLap.id);
       expect(bubble.style.top).toBe(field.height);
@@ -169,7 +142,6 @@ describe("Bubbles", () => {
         animate: { top: -spec.size },
       });
 
-      // And again, so one completion is not a one-off.
       page.renderer.clockFastForward(spec.durationMs + spec.delayMs);
       settle(page);
       const thirdLap = byTestId(page.renderer, "bubble-0");
@@ -227,7 +199,7 @@ describe("Bubbles", () => {
       const bubble = byTestId(page.renderer, "bubble-1");
 
       expect(bubble).not.toHaveProperty("customProps.motion");
-      // The field stays where it was drawn; the rise is what is removed.
+
       expect(bubble.style.left).toBeCloseTo(spec.x, 0);
       expect(bubble.style.top).toBeCloseTo(spec.y, 0);
       expect(bubble.style.opacity).toBe(spec.peak);
@@ -251,7 +223,6 @@ describe("Bubbles", () => {
   it("publishes no accessibility node and takes no pointer input", () => {
     const { page } = mountFrozen(<Field />);
     try {
-      // The window itself is the only node: the field adds no role and no name.
       expect(Arr.map(a11yNodes(page.renderer), (node) => node.role)).toEqual([
         "window",
       ]);

@@ -1,10 +1,3 @@
-/**
- * The Netherite terminal client.
- *
- * The C engine's verbs, a log of what they print, and the keys to drive them —
- * painted by GPUix in a terminal rather than a window (`render(..., {
- * terminal: true })`). GPUixUI supplies the status bar and the theme roles.
- */
 import { useCallback, useMemo, useRef, useState } from "react";
 import { StatusBar } from "@gpuixui/shell";
 import { useTheme } from "@gpuixui/tokens/react";

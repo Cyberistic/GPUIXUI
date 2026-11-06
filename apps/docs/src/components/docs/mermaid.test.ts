@@ -4,22 +4,11 @@ import { describe, expect, it } from "vitest";
 import { renderMermaid } from "./mermaid";
 import { mermaidFence } from "../../lib/remark-mermaid";
 
-/**
- * The diagram bridge: Pele's render, the fence rewrite, and the theme mapping.
- *
- * Guarded defects: a diagram that does not parse must be a typed failure rather
- * than a thrown render (it is user text, so the parser refusing it is expected),
- * and a `mermaid` fence must become a diagram at compile time — Fumadocs paints
- * fences through its own `CodeBlock`, so an MDX `pre` override never sees them
- * and the page silently shipped the source instead of the picture.
- */
-
 const css = readFileSync(
   new URL("../../styles/demos.css", import.meta.url),
   "utf8",
 );
 
-/** The declarations of the first `selector { … }` block in the sheet. */
 const rule = (selector: string): string => {
   const start = css.indexOf(`\n${selector} {`);
   if (start === -1) throw new Error(`no ${selector} block`);
@@ -43,7 +32,7 @@ describe("Pele's render", () => {
     expect(result.svg).toContain("<svg");
     expect(result.svg).toContain("Ingest");
     expect(result.svg).toContain("Frame");
-    // The root carries the class the stylesheet's `--pele-*` roles reach.
+
     expect(result.svg).toContain('class="pele');
   });
 
@@ -62,7 +51,7 @@ describe("Pele's render", () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    // The parser's own sentence, not a stack trace.
+
     expect(result.message.length).toBeGreaterThan(0);
     expect(result.message).toContain("diagram");
   });
@@ -100,7 +89,7 @@ describe("the fence rewrite", () => {
       mermaid?.attributes?.find((attribute) => attribute.name === "source")
         ?.value,
     ).toBe("flowchart LR\n  A --> B");
-    // A fence of another language is still code.
+
     expect(typescript?.type).toBe("code");
     expect(typescript?.lang).toBe("ts");
   });
@@ -133,8 +122,6 @@ describe("the theme mapping", () => {
       ["--pele-border", "--border"],
       ["--pele-accent", "--ring"],
     ] as const) {
-      // A literal would fix the diagram to one palette; a `var()` lets the
-      // surface re-theme a diagram that was rendered once.
       expect(figure).toContain(`${role}: var(${source})`);
     }
   });

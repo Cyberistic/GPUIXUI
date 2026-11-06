@@ -1,16 +1,3 @@
-/**
- * The class reference on `/styling`, resolved by the compiler itself.
- *
- * `@gpuixui/tw` decides what a class paints; a table copied from its source
- * goes stale the moment a utility moves, and `/styling` showed ten
- * representative classes with no way to find the other eighty. Every row here
- * is compiled through `classesToStyle` and `unsupportedReason` against the theme
- * the platform switch resolved, so a reader sees the number this release paints
- * — a control's height on macOS, the radius a Linux surface takes — and the
- * docs suite holds the list to the compiler's own vocabulary in both
- * directions.
- */
-
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -18,19 +5,12 @@ import type { StyleDesc } from "@gpuix/react";
 import type { Theme } from "@gpuixui/tokens";
 import { classesToStyle, unsupportedReason } from "@gpuixui/tw";
 
-/** A family of classes a recipe may write, with the rule that governs it. */
 export interface ClassGroup {
   readonly name: string;
   readonly note: string;
   readonly classes: ReadonlyArray<string>;
 }
 
-/**
- * Every class the default registry resolves, grouped the way a recipe is read.
- *
- * The suite parses `utilities.ts` for the literals and families it accepts, so
- * a utility landing there without a row here fails the docs until it is taught.
- */
 export const classGroups: ReadonlyArray<ClassGroup> = [
   {
     name: "Flow and alignment",
@@ -200,11 +180,6 @@ export const classGroups: ReadonlyArray<ClassGroup> = [
   },
 ];
 
-/**
- * Classes the runtime cannot carry. The compiler spells each one in
- * `TwResult.unsupported`; the reason printed beside it is
- * `unsupportedReason`'s own sentence, never a docs rewrite.
- */
 export const refusedClasses: ReadonlyArray<string> = [
   "w-[calc(100%)]",
   "top-1/2",
@@ -219,16 +194,14 @@ export const refusedClasses: ReadonlyArray<string> = [
   "transition-opacity",
 ];
 
-/** What one class compiled to, or why the compiler refused it. */
 export type ResolvedClass =
   | {
       readonly _tag: "Painted";
-      /** The properties it paints, in declaration order. */
+
       readonly paints: ReadonlyArray<string>;
     }
   | { readonly _tag: "Refused"; readonly reason: string };
 
-/** A shadow, a nested state record, or a scalar as a reader reads it. */
 const printable = (key: string, value: unknown): Option.Option<string> =>
   typeof value === "string" || typeof value === "number"
     ? Option.some(String(value))
@@ -240,7 +213,6 @@ const printable = (key: string, value: unknown): Option.Option<string> =>
         )
       : Option.none();
 
-/** Flattens a style to `property: value` lines, with nested states prefixed. */
 const properties = (
   prefix: string,
   entries: ReadonlyArray<readonly [string, unknown]>,
@@ -259,15 +231,12 @@ const properties = (
     );
   });
 
-/** The lines one compiled style prints. */
 export const formatStyle = (style: StyleDesc): ReadonlyArray<string> =>
   properties("", Object.entries(style));
 
-/** The lines a component's state bucket prints, under the bucket's name. */
 const bucket = (name: string, style: StyleDesc): ReadonlyArray<string> =>
   properties(`${name}.`, Object.entries(style));
 
-/** Compiles one class against the theme the platform switch resolved. */
 export const resolveClass = (
   theme: Theme,
   className: string,

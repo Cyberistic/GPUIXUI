@@ -52,23 +52,3 @@ A disabled slider stays out of the tab order and answers none of these keys.
 | `testId` | `string` | — |
 | `style` | `StyleDesc` | — |
 | `ref` / `aria-id` / `onLayout` | host props | — |
-
-## Accessibility
-
-- A single slider is one `slider` node; a range is a named `group` with two
-  `slider` nodes, named from the group's label with a minimum and maximum
-  suffix (`Price minimum`, `Price maximum`).
-- Each thumb announces its value through `aria-valuetext`, which `formatValue`
-  words (a percentage, a price, a time).
-- 0.11.0 publishes no `aria-valuenow`, `aria-valuemin`, `aria-valuemax` or
-  `aria-orientation`; the value is text and the axis is the caller's layout
-  fact.
-- A disabled slider is out of the tab order and refuses every key and press.
-
-## Notes
-- **No value tooltip**: the primitive publishes no popup beside a thumb, so a
-  visible value is a label the caller composes above the track.
-- A vertical track has no natural length; give it a definite height.
-- A stored array with a missing or non-numeric end is a single slider with no
-  value rather than a range with a hole.
-- `invalid` paints the destructive role; there is no `aria-invalid` in 0.11.0.

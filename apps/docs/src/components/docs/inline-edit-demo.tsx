@@ -10,21 +10,6 @@ import {
   type Rename,
 } from "./inline-edit-preview";
 
-/**
- * Browser previews for the Inline edit page.
- *
- * The shipped control swaps a `role="button"` display for a real `<input>`; the
- * library renders through GPUix, so the preview mirrors the contract with HTML
- * and says so. What a picture cannot show is the half this page is about: one
- * finish per edit (Enter can arrive twice), no commit for an unchanged draft,
- * Escape as the only discard, a blur commit that leaves the focus where the
- * reader put it, and an app that may refuse a value the component accepted.
- *
- * The rules live in `inline-edit-preview.ts` so a test can fail on them; this
- * file only renders them. The Code tab always shows the native usage.
- */
-
-/** The display half: a `sm` row that washes `accent` under the pointer. */
 const Display = ({
   disabled = false,
   empty,
@@ -47,7 +32,6 @@ const Display = ({
   </button>
 );
 
-/** The edit half: the input the display swaps to. */
 const Editor = ({
   draft,
   label,
@@ -72,11 +56,10 @@ const Editor = ({
   />
 );
 
-/** A project rename whose save the app gates on its own name rule. */
 export const InlineEditWorkflow = () => {
   const [rename, setRename] = useState<Rename>(() => renameOf("Docs site"));
   const [saved, setSaved] = useState("Docs site");
-  // The app's refusal message; empty means the last commit was accepted.
+
   const [refused, setRefused] = useState("");
 
   const finish = (reason: FinishReason): void => {
@@ -89,8 +72,7 @@ export const InlineEditWorkflow = () => {
       setRefused("");
       return;
     }
-    // The component reported the commit; this app keeps the name it had, so the
-    // display is re-seeded with the caller's value on the next render.
+
     setRename({ ...next, value: saved, draft: saved });
     setRefused(verdict.message ?? "");
   };
@@ -103,7 +85,6 @@ export const InlineEditWorkflow = () => {
       onChange={(draft) => setRename((state) => editDraft(state, draft))}
       onKeyDown={(event) => {
         if (event.key === "Enter") {
-          // Enter also fires `submit` in the native field; one finish per edit.
           event.preventDefault();
           finish("enter");
         } else if (event.key === "Escape") {
@@ -129,15 +110,13 @@ export const InlineEditWorkflow = () => {
       <span className="gx-inline-readout" role="status">
         {`reported commits ${rename.commits} · discards ${rename.discards} · focus ${rename.focus}`}
       </span>
-      {/* The app's refusal keeps its line whether or not it has words, so a
-          refused commit cannot push the hint it sits above. */}
+      {}
       <span className="gx-inline-refusal">{refused}</span>
       <span className="gx-inline-hint">{`Committed: "${saved}"`}</span>
     </div>
   );
 };
 
-/** The states the control draws, side by side. */
 export const InlineEditStates = () => {
   const [controlled, setControlled] = useState(false);
 

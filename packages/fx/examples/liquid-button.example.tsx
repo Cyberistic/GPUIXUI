@@ -1,18 +1,8 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Liquid button example: a save bar whose actions flood from whichever edge the
- * pointer crosses into them, and the same action under the reduced preference.
- *
- * The component reads its own pointer, so the example only shows the looks: a
- * filled primary, an outlined secondary, a ghost action on the page, and a
- * reduced row that still acts without the flood.
- */
-
 import { useState } from "react";
 import { LiquidButton } from "../src/liquid-button.js";
 import { MotionProvider } from "@gpuixui/components/motion";
 
-/** A save counter over three looks, plus a reduced primary action. */
 export const LiquidButtonExample = () => {
   const [saves, setSaves] = useState(0);
 

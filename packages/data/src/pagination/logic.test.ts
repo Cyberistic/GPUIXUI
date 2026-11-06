@@ -1,14 +1,3 @@
-/**
- * The page arithmetic a grid paints from.
- *
- * The bugs these guard: a page size of every row is `Infinity`, and JSON has no
- * `Infinity` — a saved grid writes `null` and must read it as the same one page
- * rather than dividing by nothing (`pageCountOf(10, 0)` would be `Infinity`
- * pages and the grid would paint an empty one); and a saved page index outlives
- * the set it was measured against, so a narrowed grid asked for page six must
- * paint its last page instead of a blank one past the end.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   ALL_ROWS,
@@ -29,7 +18,6 @@ describe("a page size", () => {
   });
 
   it("is every row for a value the grid cannot lay out", () => {
-    // The `null` is the one JSON keeps for `Infinity`, and it is the default.
     expect(
       [
         null,
@@ -84,7 +72,6 @@ describe("the pages a set holds", () => {
   });
 
   it("is one page for a set whose size cannot be read", () => {
-    // A count that has not arrived is no rows, not a division by nothing.
     expect(pageCountOf(Number.NaN, 4)).toBe(1);
     expect(pageCountOf(-3, 4)).toBe(1);
   });
@@ -97,7 +84,6 @@ describe("the page a set can paint", () => {
   });
 
   it("clamps an index past the last page the set holds", () => {
-    // The reader saved page six of ten rows at four a page: two pages exist.
     expect(clampPageIndex(5, 10, 4)).toBe(2);
     expect(clampPageIndex(9, 9, 4)).toBe(2);
   });
@@ -110,12 +96,11 @@ describe("the page a set can paint", () => {
 
 describe("a page size change", () => {
   it("keeps the reader's top row in view", () => {
-    // Page 2 at four a page starts at row 8; six a page puts row 8 on page 1.
     expect(withPageSize({ pageIndex: 2, pageSize: 4 }, 6)).toEqual({
       pageIndex: 1,
       pageSize: 6,
     });
-    // Halving the size keeps row 4 at the top of the page it lands on.
+
     expect(withPageSize({ pageIndex: 1, pageSize: 4 }, 2)).toEqual({
       pageIndex: 2,
       pageSize: 2,
@@ -159,8 +144,6 @@ describe("the page record a store restored", () => {
   });
 
   it("reads a size a store wrote as `null` back as every row", () => {
-    // A saved workspace writes `Infinity` as `null`, because JSON has no
-    // infinity: the value that reaches this read is the null, not the size.
     expect(readPagination({ pageSize: null })).toEqual(DEFAULT_PAGINATION);
   });
 });

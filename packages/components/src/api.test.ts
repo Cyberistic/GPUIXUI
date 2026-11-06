@@ -1,34 +1,3 @@
-/**
- * The public API contract in `docs/component-api.md`, checked against code.
- *
- * §8 is the parts spec, and §3 is the state vocabulary: `focused` arrives on
- * every focus path, so the six parts that expose it are held to the ring that
- * carries the cue — the flag is presentational, not the cue — and their pages to
- * the measured rule.
- *
- * The bug these guard: §8 is the spec a consumer reads, and §9 claims every
- * shipped Tier 2 component exports the parts its row names — but nothing read
- * the table against the package. A renamed part, or a row promising a part
- * nobody wrote, shipped silently.
- *
- * Both directions are checked: every part a row names is an exported function,
- * and every exported function in a component's family is named by some row. The
- * reverse check uses the row's root part as the family prefix, so a part that
- * shares no prefix with its root (KeyboardShortcuts' `Keycap`) is covered only
- * by the forward direction; the forward direction is exact.
- *
- * The props half reads each recorded component page's `## API` against the
- * `*Props` interfaces its own source declares for its **exported** parts, so a
- * prop added to a public type is reported until the page names it while an
- * internal part's own props (a field's loop, not its caller's surface) are not.
- * The shape props every part carries (`className`, `children`, `style`, `ref`,
- * `testId`, `aria-id`, `onLayout`) are the package-wide convention in
- * `docs/component-api.md` and are exempt.
- *
- * `node:fs` is a test-time repository read, as in `inventory.test.ts`; no
- * component runtime imports it.
- */
-
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Source } from "@gpuixui/testing";
@@ -42,14 +11,12 @@ import { inventory, type ComponentMeta } from "./inventory.js";
 
 const repoRoot = new URL("../../../", import.meta.url);
 
-/** The contract document, read once per test that needs a section of it. */
 const contract = (): string =>
   readFileSync(
     fileURLToPath(new URL("docs/component-api.md", repoRoot)),
     "utf8",
   );
 
-/** A `##` section's text, from its heading to the next one. */
 const section = (heading: string): string => {
   const markdown = contract();
   const start = markdown.indexOf(heading);
@@ -58,14 +25,6 @@ const section = (heading: string): string => {
   return next < 0 ? markdown.slice(start) : markdown.slice(start, next);
 };
 
-/**
- * The implemented parts of §8, Tier 1 and Tier 2.
- *
- * The Tier 1 rows matter here because six components in this package are the
- * shadcn-shaped surface of a primitive concept (`Progress`, `Slider`,
- * `Separators`, `Skeletons`, `Toggle`, `Toggle group`); their parts are exported
- * from this package too, so the rows that name them are the same rows.
- */
 const partsTable = (): string => {
   const parts = section("## 8. Parts by component");
   const start = parts.indexOf("### Tier 1 — foundational");
@@ -74,7 +33,6 @@ const partsTable = (): string => {
   return parts.slice(start, end);
 };
 
-/** One row's component name and the parts it names in backticks. */
 const rowOf = (
   line: string,
 ): Result.Result<
@@ -101,7 +59,6 @@ const rows: ReadonlyArray<{
   readonly parts: ReadonlyArray<string>;
 }> = Arr.filterMap(partsTable().split("\n"), rowOf);
 
-/** The §8 reservation table: parts fixed before their component lands. */
 const plannedTable = (): string => {
   const tier2 = section("## 8. Parts by component");
   const start = tier2.indexOf("**Planned Tier 2 additions**");
@@ -131,7 +88,6 @@ const isExportedPart = (name: string): boolean =>
     ([key, value]) => key === name && typeof value === "function",
   );
 
-/** A top-level part file's source, read from this test's own directory. */
 const sourceOf = (file: string): string =>
   readFileSync(fileURLToPath(new URL(`./${file}`, import.meta.url)), "utf8");
 
@@ -140,14 +96,11 @@ const partFiles: ReadonlyArray<string> = Arr.filter(
   (name) => Str.endsWith(".tsx")(name) && !Str.endsWith(".test.tsx")(name),
 );
 
-/** The page an inventory record points at, read from this suite's own package. */
 const pageOf = (docs: string): string =>
   readFileSync(fileURLToPath(new URL(`../${docs}`, import.meta.url)), "utf8");
 
-/** The rule line of a Markdown table, e.g. `| ---- | ---- |`. */
 const tableRule = /^\|[\s:|-]*-[\s:|-]*$/;
 
-/** A table row's cells inside a page's `## API` section, header and rule dropped. */
 const apiRows = (page: string): ReadonlyArray<ReadonlyArray<string>> => {
   const start = page.indexOf("\n## API\n");
   if (start < 0) return [];
@@ -165,32 +118,16 @@ const apiRows = (page: string): ReadonlyArray<ReadonlyArray<string>> => {
   });
 };
 
-/** Whether one row documents `part`: its first two cells name it in a code span. */
 const rowNamesPart = (cells: ReadonlyArray<string>, part: string): boolean =>
   Arr.some(Arr.take(cells, 2), (cell) => cell.includes(`\`${part}\``));
 
-/**
- * The props a page must name, including the surface every part inherits.
- *
- * The shape props (`className`, `children`, `style`, `ref`, `testId`,
- * `aria-id`, `onLayout`) used to be exempt because they are the package-wide
- * convention documented once in `docs/component-api.md` — and that exemption is
- * exactly the gap this contract had: `Card` documented one of its three props
- * and `BreadcrumbLink` none of its three, while every suite stayed green.
- * A reader copies a part's row, so the row says what the part takes; the
- * convention section teaches the meaning of the shared half.
- */
-
-/** The two package trees a components page's props resolve through. */
 const packageRoots: ReadonlyArray<Source.PropsRoot> = [
   { pkg: "components", dir: new URL("./", import.meta.url) },
   { pkg: "primitives", dir: new URL("../../primitives/src/", import.meta.url) },
 ];
 
-/** Every props declaration the two packages carry, read once. */
 const types = Source.indexProps(packageRoots);
 
-/** The identifiers a page's `## API` tables name in code spans. */
 const documentedProps = (page: string): ReadonlySet<string> =>
   new Set(
     Arr.flatMap(apiRows(page), (cells) =>
@@ -206,22 +143,9 @@ const documentedProps = (page: string): ReadonlySet<string> =>
     ),
   );
 
-/** The docs page's slug: the source file and directory a record's page owns. */
 const slugOf = (meta: ComponentMeta): string =>
   Str.replace(/\.mdx$/, "")(Str.replace(/^docs\//, "")(meta.docs));
 
-/** The `*Props` types the record's own source file or directory declares. */
-/**
- * The props types one page is held to: the exported parts declared in its own
- * source.
- *
- * An **internal** part is not public API — `Bubbles`' `Bubble`, `Stars`' `Star`
- * and `Gradient`'s `Breath` are the implementation behind the field a caller
- * names, and their `spec`/`ink`/`radius` props are the field's own loop, not
- * something a consumer passes. Holding a page to them would demand it document
- * a type nobody can import. A part this package exports, or one named in the §8
- * parts table, is the surface a reader compiles against.
- */
 const pageTypes = (
   meta: ComponentMeta,
   index: Source.PropsIndex,
@@ -296,13 +220,6 @@ describe("component API contract", () => {
   });
 
   it("documents every part its §8 row names on the page it owns", () => {
-    // §8 is what the package exports; the page is the API a consumer copies.
-    // The dialog page named two of its eight parts, so a reader learned
-    // `DialogTrigger`, `DialogClose`, `DialogHeader`, `DialogTitle`,
-    // `DialogDescription` and `DialogFooter` existed only by reading the usage
-    // snippet — and the alert page named three of seven. A one-part component
-    // documents its props directly (the primitives' convention), so the row
-    // rule applies to a family with more than one part.
     const problems = Arr.flatMap(inventory, (meta) =>
       Option.match(partsOf(meta.name), {
         onNone: () => [],
@@ -323,10 +240,6 @@ describe("component API contract", () => {
   });
 
   it("names no part on a page that its §8 row does not carry", () => {
-    // The other direction: a page whose part column names a part the contract
-    // dropped (a rename, or a part moved to another family) teaches a symbol
-    // the package no longer exports. Only a bare part cell is read, so a
-    // prop-only table (`| `List` prop | …`) is left to the page's own contract.
     const barePart = /^`([A-Z][A-Za-z0-9]*)`$/;
     const problems = Arr.flatMap(inventory, (meta) =>
       Option.match(partsOf(meta.name), {
@@ -346,15 +259,6 @@ describe("component API contract", () => {
   });
 
   it("states the focus a traversal does not deliver, and keeps the cue on the ring", () => {
-    // A `Tab` traversal focuses an element **without running its `onFocus`**:
-    // `tabs-lifecycle` reads `focuses=0` while `focusedId` names the trigger,
-    // and `tooltip-lifecycle`'s tip does not open. `blur-delivery-lifecycle`
-    // measured the cause — the automation window never becomes active, so no
-    // route delivers the pair, while the offscreen host fakes activation and
-    // does — and an earlier run read one, so the handler is not a channel to
-    // depend on. The ring, declared at rest, is the cue. This holds the spec's
-    // sentence and every part that carries the `focused` flag to that rule, so
-    // a new part cannot ship `focused` as its only feedback.
     const vocabulary = section("## 3. State-aware styling");
 
     expect(vocabulary).toContain("without running its `onFocus`");
@@ -366,14 +270,11 @@ describe("component API contract", () => {
       Str.includes("readonly focused: boolean")(sourceOf(file)),
     );
 
-    // The audit's result: six parts expose the flag today. A seventh must add
-    // its name to the sentence above and the ring to its source.
     expect(Arr.length(flagged)).toBe(6);
 
     const missingRing = Arr.filter(flagged, (file) => {
       const source = sourceOf(file);
-      // A part that can be disabled declares `controlRing`, which is the same
-      // ring while it can act and none once it cannot.
+
       return (
         !Str.includes("keyboardRing(")(source) &&
         !Str.includes("controlRing(")(source)
@@ -384,12 +285,6 @@ describe("component API contract", () => {
   });
 
   it("keeps a planned part out of the package until its row lands", () => {
-    // The reservation table called Tag / token input, Countdown and Inline
-    // edit "not implemented" long after all three shipped, so the spec a
-    // consumer reads denied components they could already import. A part in
-    // that table must move to its §8 row in the same change that ships it.
-    // The table is empty now (Chat and Message were the last reservation,
-    // plan 207); the check still runs over any row a later plan reserves.
     const landed = Arr.flatMap(planned, (row) =>
       Arr.filter(row.parts, isExportedPart).map(
         (part) =>
@@ -401,17 +296,6 @@ describe("component API contract", () => {
   });
 
   it("documents every prop its parts declare", () => {
-    // Bug guarded: a page that lists the props it remembers drifts from the
-    // type a consumer compiles against. `ChatComposer` shipped `submitLabel`,
-    // `stopLabel` and `attachments` — the two words its controls say and the
-    // one slot above its field — and `DropdownMenuContent` shipped
-    // `alignOffset`, with none of the four named anywhere on their pages. The
-    // shape props are no longer exempt: the shared `className`/`children`/
-    // `style`/`ref`/`testId`/`aria-id`/`onLayout` surface is the half a reader
-    // copies most often, and the pages omitted it from Accordion to Field.
-    // Every recorded component page is held, the specialised row included:
-    // `MultiStepForm` is a Tier 5 component like the Tier 2 ones, and its page
-    // was the one place a prop could ship undocumented.
     const recorded: ReadonlyArray<ComponentMeta> = Arr.filter(
       inventory,
       (meta) => meta.tier === 1 || meta.tier === 2 || meta.tier === 5,
@@ -429,19 +313,11 @@ describe("component API contract", () => {
     });
 
     expect(problems).toEqual([]);
-    // A reader that resolved nothing would pass vacuously: every Tier 2 page
-    // declares its props several times over, and a field inherits the
-    // primitives' whole input surface, so the check counts them.
+
     expect(checked).toBeGreaterThan(250);
   });
 
   it("reads a props type through an alias union, a parent and the runtime", () => {
-    // The reader itself, measured against the package's real declarations: an
-    // alias union of intersections (`ListProps`, `AccordionProps`), a field of
-    // an interface that declares it directly, and a runtime alias whose
-    // surface this package does not own. A reader that resolved nothing would
-    // report every page clean, so this case fails first.
-
     expect(Source.propsOf("ChatComposerProps", types)).toEqual(
       expect.arrayContaining(["attachments", "submitLabel"]),
     );
@@ -452,9 +328,7 @@ describe("component API contract", () => {
       expect.arrayContaining(["dense", "onActivate", "selectionMode"]),
     );
     expect(Source.propsOf("PaginationNextProps", types)).toEqual([]);
-    // The cross-package parent: a field extends the primitives' input surface,
-    // so a reader that scans only this package sees three props where the field
-    // actually carries twenty-five and every shape row would pass unmeasured.
+
     expect(Source.propsOf("FieldInputProps", types)).toEqual(
       expect.arrayContaining(["placeholder", "ref", "aria-id", "fullWidth"]),
     );

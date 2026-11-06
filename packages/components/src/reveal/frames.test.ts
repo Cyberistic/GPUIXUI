@@ -1,12 +1,3 @@
-/**
- * The reveal's direction rule, without a renderer.
- *
- * The bugs these guard: an edge that travels the wrong way (content that should
- * rise arriving from above), a horizontal reveal that owns the wrong axis, a
- * "none" that still moves, and a distance that reaches the runtime as `NaN` or
- * as a fractional pixel it cannot paint.
- */
-
 import { describe, expect, it } from "vitest";
 import { revealFrames } from "./frames.js";
 
@@ -54,9 +45,6 @@ describe("revealFrames", () => {
   });
 
   it("takes the house edge for an edge it does not name", () => {
-    // A stored `from` is not type-checked: `Match.exhaustive` threw out of the
-    // render for a name the union does not carry, so a persisted direction took
-    // the whole surface down with it. The house arrival is `below`.
     const frames = revealFrames("diagonal", 12);
     expect(frames.initial).toEqual({ opacity: 0, top: 12 });
     expect(frames.animate).toEqual({ opacity: 1, top: 0 });

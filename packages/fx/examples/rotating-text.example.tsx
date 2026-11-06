@@ -1,15 +1,7 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Rotating text example: a value proposition that cycles.
- *
- * The list lives here, the clock lives in the component. The second line runs
- * under the reduced preference, so the same words arrive without the fade.
- */
-
 import { MotionProvider } from "@gpuixui/components/motion";
 import { RotatingText } from "../src/rotating-text.js";
 
-/** Three reasons, one at a time. */
 export const RotatingTextExample = () => (
   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <RotatingText

@@ -2,13 +2,6 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { legacyDocsRedirect } from "./legacy-docs";
 
-/**
- * Bug guarded: the docs moved from `/docs/<path>` to the site root, and a
- * published link must keep working. A retired page answers **301** to its root
- * twin, `/docs` answers **301** to the landing, and the query a reader followed
- * travels with them — a `?scene=` link keeps the view it was shared with.
- */
-
 const legacyRoutes = new URL("../routes/docs/", import.meta.url);
 
 describe("the docs' old prefix", () => {

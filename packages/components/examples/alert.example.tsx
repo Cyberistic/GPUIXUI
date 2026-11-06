@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Alert example: an updater banner you can dismiss, and a failure with a retry.
- *
- * The banner keeps its own dismissal state, which is what a real screen does, and
- * the failure alert puts a real control in its description — an alert is in the
- * flow, so the action belongs with it rather than in a floating surface.
- */
-
 import { useState } from "react";
 import {
   Alert,
@@ -19,7 +11,6 @@ import {
 import { Button } from "../src/internal/button.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** Four alerts: a dismissable notice, two statuses, and a failure with an action. */
 export const AlertExample = () => {
   const theme = useTheme();
   const [dismissed, setDismissed] = useState(false);

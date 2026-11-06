@@ -1,11 +1,5 @@
-/**
- * StatusBar example: a branch/position group on the left, encoding and a
- * destructive error count on the right.
- */
-
 import { StatusBar } from "../src/status-bar/status-bar.js";
 
-/** The editor's bottom status bar. */
 export const StatusBarExample = () => (
   <StatusBar
     label="Editor status"

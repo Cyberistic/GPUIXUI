@@ -1,15 +1,3 @@
-/**
- * `Checkbox` — the element tree the runtime receives.
- *
- * The bug this suite guards is invisible to the runtime's own tests: GPUix has
- * no `aria-checked` (see `docs/gpuix-capabilities.md`), so state must stay legible through
- * `aria-valuetext` and the unsupported attribute must stay absent rather than
- * being written for the DOM's benefit. The mark is its own part
- * (`CheckboxIndicator`), and the second half guards the two ways a split can go
- * wrong: a caller's glyph replacing the default one, and a custom glyph taking
- * the press that toggles the box.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
@@ -44,14 +32,9 @@ const checked = (value: boolean): ValueState<boolean> =>
   initValueState(Option.some(value), false);
 const customMark = <Icon name="star" color="red" size={12} />;
 
-/** The box a checkbox draws inside its press target. */
 const drawingOf = (element: ReactElement): ReactElement =>
   elementChildren(element)[0] ?? expect.fail("the checkbox drew no box");
 
-/**
- * The mark a box draws: the target wraps the drawing, which wraps the indicator
- * in the part's context, so the path is target → drawing → provider → indicator.
- */
 const markOf = (element: ReactElement): ReactElement => {
   const provider =
     elementChildren(drawingOf(element))[0] ??
@@ -61,16 +44,11 @@ const markOf = (element: ReactElement): ReactElement => {
   );
 };
 
-/** The one element inside the mark — the default glyph or the caller's. */
 const glyphOf = (element: ReactElement): ReactElement =>
   elementChildren(markOf(element))[0] ?? expect.fail("the mark drew no glyph");
 
 describe("Checkbox", () => {
   it("draws a size name the scale does not carry at the default size", () => {
-    // The bug guarded: the box's side comes from the icon scale through
-    // `size-icon-<size>`, and a stored size from another release is a name the
-    // scale no longer carries — the utility then resolves to no width or
-    // height, so the box vanished while its 24px target stayed clickable.
     const stored = renderCheckbox(
       { size: "xl" as ControlSize },
       testTheme,
@@ -94,10 +72,6 @@ describe("Checkbox", () => {
   });
 
   it("paints an accent name the table does not carry as the brand", () => {
-    // The bug guarded: `accent` is a stored preference too, and the recipe read
-    // `SELECTION_ROLE[name].bg` — a name a release renamed threw on the
-    // destructuring, emptying the window instead of painting the brand every
-    // selection control defaults to.
     const stored = renderCheckbox(
       { accent: "brand" as SelectionAccent },
       testTheme,
@@ -158,8 +132,6 @@ describe("Checkbox", () => {
   });
 
   it("declares the keyboard ring at rest and never a shadow ring", () => {
-    // The bug: the ring was merged only while focused, so a mouse press looked
-    // like a Tab. The runtime paints `focusVisible` after keyboard input only.
     const element = renderCheckbox(
       {},
       testTheme,
@@ -183,7 +155,7 @@ describe("Checkbox", () => {
       idle,
       onValueChange,
     );
-    // A disabled control installs no press handler at all, so nothing can run.
+
     expect(hostHandler(element, "onClick")).toStrictEqual(Option.none());
     expect(onValueChange).toHaveBeenCalledTimes(0);
   });
@@ -219,11 +191,6 @@ describe("Checkbox", () => {
   });
 
   it("reserves the pressable floor and keeps the drawing out of the press", () => {
-    // The box is icon-sized (16px at `md`) and was its own press target — under
-    // WCAG 2.2 SC 2.5.8's 24px floor. The target grows around it, the drawing
-    // takes `pointerEvents: "none"` so a press anywhere activates once (a
-    // painted drawing owns a mouse-blocking hitbox and would swallow it), and
-    // the ring stays on the element that holds focus.
     const element = renderCheckbox(
       {},
       testTheme,
@@ -266,8 +233,6 @@ describe("CheckboxIndicator", () => {
   });
 
   it("paints the default glyph in the accent's readable foreground", () => {
-    // Proves the part receives the root's *resolved* spec, not a stale one: a
-    // destructive box marks in the destructive foreground, not the brand's.
     const box = renderCheckbox(
       { checked: true, accent: "destructive" },
       testTheme,
@@ -307,8 +272,6 @@ describe("CheckboxIndicator", () => {
   });
 
   it("keeps a custom mark out of the press that toggles the box", () => {
-    // The regression: GPUI hit-tests to the deepest element and does not bubble
-    // an unhandled press, so a glyph that took the click made the box dead.
     const box = renderCheckbox(
       { checked: true, children: customMark },
       testTheme,
@@ -352,11 +315,6 @@ describe("checkedChange", () => {
 
 describe("a checkbox's address and help", () => {
   it("hands its element the caller's ref, id, layout and help", () => {
-    // Bug guarded: a checkbox was reachable only by its `testId`, and the help
-    // a visible `Label` painted was announced to nobody. A form focuses the
-    // failed control, an automation host addresses it by `aria-id`, a layout
-    // measures it, and there is no `aria-describedby` — so the words ride the
-    // control itself.
     const ref = vi.fn();
     const layout = vi.fn();
     const element = renderCheckbox(
@@ -394,11 +352,6 @@ describe("a checkbox's address and help", () => {
   });
 
   it("forwards a tooltip trigger's pointer pair and description", () => {
-    // Bug guarded: a box in a toolbar is described by a tip, and GPUix's
-    // `TooltipTrigger asChild` merges its handlers into the child element while
-    // the runtime delivers a hover only to the element that registered the
-    // listener — so a checkbox without the pair opened the tip on focus but
-    // never on hover, and its text stopped at the component.
     const entered = vi.fn();
     const left = vi.fn();
     const element = renderCheckbox(
@@ -425,8 +378,6 @@ describe("a checkbox's address and help", () => {
   });
 
   it("keeps its own help over a tooltip's description", () => {
-    // Both channels publish `aria-description`; the visible help a form writer
-    // chose is the words the reader needs, so it wins.
     const element = renderCheckbox(
       {
         description: "Required to continue.",
@@ -443,8 +394,6 @@ describe("a checkbox's address and help", () => {
   });
 
   it("is what `labelledBy` writes when the label paints help", () => {
-    // One string names the box and describes it, so the visible `Label` and the
-    // announced help cannot disagree.
     const element = renderCheckbox(
       labelledBy("Accept the terms", "Required to continue."),
       testTheme,

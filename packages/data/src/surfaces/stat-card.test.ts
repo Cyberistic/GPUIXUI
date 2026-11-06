@@ -1,15 +1,3 @@
-/**
- * A statistic card's trend is **text on the card**, not a mark.
- *
- * The bug this guards: `trendTone` returned the solid `success`/`destructive`
- * fill roles, which the tokens contract measures at the 3:1 **mark** floor. A
- * trend's words are read, so they need the text floor — on the base light card
- * `success` is 4.54:1, on the same theme's page 4.26:1, and one authored light
- * look lands at 3.92:1, under the 4.5:1 floor while `auditTheme` passes. The
- * trend takes `statusTone(...).foreground`, which the contrast table already
- * holds to the body floor on `card` and `background`.
- */
-
 import {
   contrastFloorsFor,
   contrastRatio,
@@ -27,7 +15,6 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { trendTone } from "./stat-card.js";
 
-/** Every shipped, high-contrast, platform and authored style. */
 const shippedStyles = [
   ...Object.values(themes),
   ...Object.values(highContrastThemes),
@@ -39,7 +26,6 @@ const shippedStyles = [
   ),
 ] as const;
 
-/** The cells the sweep measures: both directions, on both card surfaces. */
 const trendCells = shippedStyles.flatMap((theme) => {
   const floor = contrastFloorsFor(theme).body;
   return (["up", "down"] as const).flatMap((direction) => [
@@ -63,7 +49,6 @@ const trendCells = shippedStyles.flatMap((theme) => {
   ]);
 });
 
-/** The Tier 3 row that owns the sweep. */
 const statisticRow = readFileSync(
   new URL("../../../../.agents/slop/COMPONENTS.md", import.meta.url),
   "utf8",
@@ -79,7 +64,7 @@ describe("trendTone", () => {
     expect(trendTone("down", darkTheme)).toBe(
       statusTone(darkTheme, "destructive").foreground,
     );
-    // The retracted painter: a solid fill role is a mark, not a label.
+
     expect(trendTone("up", lightTheme)).not.toBe(lightTheme.colors.success);
     expect(trendTone("down", lightTheme)).not.toBe(
       lightTheme.colors.destructive,
@@ -97,25 +82,20 @@ describe("trendTone", () => {
   });
 
   it("prints the sweep it measures on the card's row", () => {
-    // The row outlived Omarchy's two styles: it still claimed a 64-placement
-    // sweep over sixteen, while the suite walks eighteen styles and four cells
-    // each. A reader plans the contract by that number, so derive it.
     expect(shippedStyles).toHaveLength(18);
     expect(trendCells).toHaveLength(72);
     expect(statisticRow).toBeDefined();
-    // The row emphasises its figures; the claim is the numbers it prints.
+
     const printed = (statisticRow ?? "").replaceAll("**", "");
     expect(printed).toContain(
       `${trendCells.length}-placement sweep over the ${shippedStyles.length} shipped`,
     );
-    // The retracted pair, refused where the row is the only thing printing it.
+
     expect(printed).not.toContain("64-placement");
     expect(printed).not.toContain("sixteen");
   });
 
   it("would report the fill role it replaced as unreadable on a page", () => {
-    // The measured premise: a solid role can pass as a card fill and fail on
-    // the page, so a suite that only reads one surface cannot hold this.
     const under = shippedStyles.flatMap((theme) => {
       const floor = contrastFloorsFor(theme).body;
       return (["success", "destructive"] as const).flatMap((tone) => {
@@ -129,8 +109,6 @@ describe("trendTone", () => {
       });
     });
 
-    // A premise, not a bug: if every palette became readable the case for the
-    // text role would still hold, but this suite's negative control would not.
     expect(under.length).toBeGreaterThan(0);
   });
 });

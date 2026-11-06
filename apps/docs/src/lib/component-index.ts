@@ -6,103 +6,53 @@ import { servedPages } from "./curated-twins";
 import { frontmatterField, frontmatterOf } from "./frontmatter";
 import * as Arr from "effect/Array";
 
-/**
- * The component index.
- *
- * The Components section had forty pages and no way to scan them: the sidebar
- * lists names, the search box needs a query, and a reader arriving from the
- * landing page had prose to read before finding a component. The index is built
- * from the same frontmatter the pages render, so its titles and descriptions
- * cannot drift from the pages, and a page added to any collection appears here
- * without a docs change.
- */
-
-/** One docs file, as the glob read it: a repo-relative path and its source. */
 export interface ComponentPage {
-  /** `content/docs/components/dialog.mdx`, `packages/components/docs/card.mdx`. */
   readonly file: string;
   readonly source: string;
 }
 
-/**
- * The `.agents/slop/COMPONENTS.md` row a page reports: its status and its GPUix verdict.
- *
- * The row, not the page, decides whether a component is shipped and how much of
- * it the runtime supports. The index and the page's status strip read the same
- * two cells, so they cannot disagree.
- */
 export interface PageVerdict {
   readonly status: string;
   readonly support: string;
 }
 
-/** A page as the verdict is resolved: its title, and the address that pins it. */
 export interface PageIdentity {
   readonly title: string;
   readonly url: string;
 }
 
-/**
- * The inventory row for a page, or `undefined` when it has none.
- *
- * Injected rather than imported: the index stays a function of its pages, and
- * the data module resolves the title aliases the status strip already uses. The
- * address travels with the title because two pages can share one.
- */
 export type VerdictOf = (page: PageIdentity) => PageVerdict | undefined;
 
-/** One row the index renders. */
 export interface ComponentEntry {
   readonly title: string;
   readonly description: string;
   readonly url: string;
-  /** The sidebar section the page belongs to, e.g. `Primitives` or `Data display`. */
+
   readonly section: string;
-  /** The inventory row the page reports, when `.agents/slop/COMPONENTS.md` has one. */
+
   readonly verdict: PageVerdict | undefined;
-  /** The compound parts the page documents, e.g. `DialogFooter`. */
+
   readonly parts: ReadonlyArray<string>;
-  /** The props the page's API table documents, e.g. `onCheckedChange`. */
+
   readonly props: ReadonlyArray<string>;
-  /** The named types those props take, e.g. `StateStyle`. */
+
   readonly types: ReadonlyArray<string>;
-  /** What the page says the component cannot do. */
+
   readonly limitations: string;
-  /**
-   * True when the page opens with a browser preview (`<ComponentPreview`).
-   *
-   * A page that ships a demo mounts one — curated pages and the component and
-   * primitive package pages do — and a lane with no demo shows none. The note
-   * above a package page labels the drawing an approximation, because the
-   * shipped code renders through GPUix. The index keeps the flag for the
-   * `preview` query.
-   */
+
   readonly preview: boolean;
-  /**
-   * The demo the page mounts, e.g. `button-variants`, or `undefined` when it
-   * mounts none. The index's tile renders it compactly.
-   */
+
   readonly demo: string | undefined;
 }
 
-/** The section the site's own component pages belong to. */
 const siteSection = "Components";
 
-/** The sidebar order: primitives first, then the composed components. */
 const sectionOrder = packageCollections.reduce<ReadonlyArray<string>>(
   (order, collection) =>
     order.includes(collection.section) ? order : [...order, collection.section],
   [],
 );
 
-/**
- * The collection that owns a docs file.
- *
- * A collection may sit **inside** a package's own `docs` — the charts live in
- * `packages/data/docs/charts`, which is inside `packages/data/docs` — so the
- * collection that owns the file is the **most specific** one: the longest
- * directory that holds it. The data lane would otherwise claim the charts.
- */
 const collectionOf = (file: string): PackageCollection | undefined =>
   Arr.reduce(
     packageCollections,
@@ -115,7 +65,6 @@ const collectionOf = (file: string): PackageCollection | undefined =>
     },
   );
 
-/** Where a docs file is served, or `undefined` when it is not a component page. */
 export const pageUrl = (file: string): string | undefined => {
   const site = /^content\/docs\/components\/(.+)\.mdx$/.exec(file);
   if (site !== null) return indexUrl("/components", site[1]);
@@ -124,42 +73,28 @@ export const pageUrl = (file: string): string | undefined => {
   const directory = packaged?.[1];
   if (directory === undefined) return undefined;
 
-  // A collection's directory may sit **inside** a package's own `docs` — the
-  // charts are `packages/data/docs/charts`, so the data lane mounts the rest
-  // and the Graphics category mounts the charts. The collection whose
-  // directory the file is in is the one that serves it.
   const collection = collectionOf(directory);
   if (collection === undefined) return undefined;
   const name = directory.slice(collection.dir.length + 1);
   return indexUrl(collection.route, name);
 };
 
-/** `index.mdx` is its folder's landing page, not a component. */
 const indexUrl = (
   route: string,
   name: string | undefined,
 ): string | undefined =>
   name === undefined || name === "index" ? undefined : `${route}/${name}`;
 
-/** The sidebar section a docs file belongs to. */
-/** The sidebar section a docs file belongs to. */
 const sectionOf = (file: string): string | undefined => {
   if (file.startsWith("content/docs/components/")) return siteSection;
   return collectionOf(file)?.section;
 };
 
-/** One page's section: its `##` heading and the text under it. */
 interface PageSection {
   readonly heading: string;
   readonly text: string;
 }
 
-/**
- * The `##` sections of a page.
- *
- * A page is prose with headings, and the two the index needs are the parts a
- * component is made of and the limits it has.
- */
 const sectionsOf = (source: string): ReadonlyArray<PageSection> =>
   source
     .split(/^## /m)
@@ -172,16 +107,6 @@ const sectionsOf = (source: string): ReadonlyArray<PageSection> =>
       };
     });
 
-/**
- * The compound parts a page documents.
- *
- * The pages name their parts in three ways: a parts table (`## Parts`,
- * `## Anatomy`, or the curated template's `## Composition`), an API table headed
- * by the part's name (`| `Dialog` prop |`), and a heading per part
- * (`### DialogContent`, or `### `CheckboxIndicator``).
- * All three are read, so a reader who searches "DialogFooter" finds the page
- * that documents it.
- */
 export const partsOf = (source: string): ReadonlyArray<string> => {
   const names = sectionsOf(source).flatMap((section) => {
     const isParts =
@@ -198,7 +123,7 @@ export const partsOf = (source: string): ReadonlyArray<string> => {
     const headings = [
       ...section.text.matchAll(/^###\s+`?([A-Z][A-Za-z0-9]*)`?\s*$/gm),
     ].map((match) => match[1] ?? "");
-    // A composition tree draws the parts where a table is not worth writing.
+
     const tree = [
       ...(section.text.match(/^```text\n([\s\S]*?)^```/m)?.[1] ?? "").matchAll(
         /[├└│─\s]*([A-Z][A-Za-z0-9]*)/g,
@@ -211,12 +136,6 @@ export const partsOf = (source: string): ReadonlyArray<string> => {
   return [...new Set(names.filter((name) => !notAPart.has(name)))];
 };
 
-/**
- * The headings a page uses for something other than a part.
- *
- * `### Parts` inside an API section is a table of contents, not a part, and a
- * row headed `Part` is a column label.
- */
 const notAPart = new Set([
   "Part",
   "Parts",
@@ -229,23 +148,19 @@ const notAPart = new Set([
   "Responsibility",
 ]);
 
-/** The props a page documents, and the named types those props take. */
 export interface PageProps {
   readonly props: ReadonlyArray<string>;
   readonly types: ReadonlyArray<string>;
 }
 
-/** A fenced block is an example, not documentation: its `|` rows are not tables. */
 const withoutCodeFences = (text: string): string =>
   text.replace(/^```[\s\S]*?^```/gm, "");
 
-/** One table: its header cells and the body rows that carry data. */
 interface Table {
   readonly header: ReadonlyArray<string>;
   readonly rows: ReadonlyArray<ReadonlyArray<string>>;
 }
 
-/** A row's cells, with a `\\|` kept inside its cell instead of splitting it. */
 const cellsOf = (line: string): ReadonlyArray<string> =>
   line
     .replace(/^\|/, "")
@@ -253,16 +168,9 @@ const cellsOf = (line: string): ReadonlyArray<string> =>
     .split(/(?<!\\)\|/)
     .map((cell) => cell.replace(/\\\|/g, "|").trim());
 
-/** A row of dashes (`---`, `:--:`) marks the header boundary. */
 const separator = (cells: ReadonlyArray<string>): boolean =>
   cells.every((cell) => /^-+$/.test(cell.replace(/:/g, "")));
 
-/**
- * The tables in a section.
- *
- * A table is a blank-line-delimited block of `|` rows, so prose between two
- * tables does not join them and a fenced example is already gone.
- */
 const tablesOf = (text: string): ReadonlyArray<Table> =>
   withoutCodeFences(text)
     .split(/\n\s*\n/)
@@ -278,7 +186,6 @@ const tablesOf = (text: string): ReadonlyArray<Table> =>
       return body.length === 0 ? [] : [{ header, rows: body }];
     });
 
-/** The identifiers inside one cell's code spans, split on `/` for pairs. */
 const codeNames = (cell: string): ReadonlyArray<string> =>
   [...cell.matchAll(/`([^`]+)`/g)].flatMap((match) =>
     (match[1] ?? "")
@@ -287,13 +194,6 @@ const codeNames = (cell: string): ReadonlyArray<string> =>
       .filter((name) => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name)),
   );
 
-/**
- * The props named in a free-form props cell.
- *
- * Some pages describe a part's props in one sentence — "`value` (required),
- * `max?`, children" — so the names are the code spans and the words marked
- * optional with `?`. A capitalised name is the part or a type, not a prop.
- */
 const listedNames = (cell: string): ReadonlyArray<string> => [
   ...[...cell.matchAll(/`([^`]+)`/g)].flatMap((match) =>
     (match[1] ?? "")
@@ -306,28 +206,14 @@ const listedNames = (cell: string): ReadonlyArray<string> => [
   ].flatMap((match) => (match[1] === undefined ? [] : [match[1]])),
 ];
 
-/** The capitalised type names a cell writes in code. */
 const namedTypes = (cell: string): ReadonlyArray<string> =>
   [...cell.matchAll(/`([^`]+)`/g)].flatMap(
     (match) => match[1]?.match(/\b[A-Z][A-Za-z0-9]*\b/g) ?? [],
   );
 
-/** The column a header names, or `-1`. */
 const columnOf = (header: ReadonlyArray<string>, pattern: RegExp): number =>
   header.findIndex((cell) => pattern.test(cell.trim()));
 
-/**
- * The props a page documents, read from its API tables.
- *
- * A reader who knows the prop but not the component — "which pages take
- * `onCheckedChange`?" — has nothing else to search: the sidebar shows names and
- * the parts table shows parts. The pages write three table shapes: one prop per
- * row (`Prop | Type`), one part per row with a prop column (`Part | Prop |
- * Type`), and one part per row with its props in a sentence (`Part | Renders |
- * Props`). All three are read. The named types come along for the same reason
- * ("which components take a `StateStyle`?"), limited to capitalised identifiers
- * so a `boolean` does not match every page in the library.
- */
 export const propsOf = (source: string): PageProps => {
   const rows = sectionsOf(source)
     .filter((section) => /^(API|Props)\b/.test(section.heading))
@@ -373,26 +259,16 @@ export const propsOf = (source: string): PageProps => {
   };
 };
 
-/** Column labels a table repeats, and words that are never a prop. */
 const notAProp = new Set([
   "Prop",
   "Props",
   "Part",
   "Parts",
-  // A default value a page writes in a code span (`(default `true`)`) is data,
-  // not a prop: counting it made "true" a prop of every menu page, so the
-  // index's prop list and its filter both matched a value.
+
   "true",
   "false",
 ]);
 
-/**
- * What a page says its component cannot do.
- *
- * The limits are the reason a reader searches at all — "which component has no
- * `aria-current`?" — and they are written under three different headings
- * across the packages.
- */
 export const limitationsOf = (source: string): string =>
   sectionsOf(source)
     .filter((section) =>
@@ -405,29 +281,17 @@ export const limitationsOf = (source: string): string =>
     .replace(/\s+/g, " ")
     .trim();
 
-/**
- * The mark a row wears when its inventory verdict is not whole.
- *
- * `done` with `yes` support is the shipped component, so it needs no badge: an
- * unmarked row is complete on both axes. Anything else names the axis that is
- * not — `partial` support, a `todo` status, a `?` nobody measured — because the
- * page says status is per component and a reader scanning the list cannot see
- * the strip on a page they have not opened.
- */
 export interface VerdictMark {
-  /** The words the row wears, e.g. `partial` or `todo · unknown`. */
   readonly label: string;
-  /** The inventory cells those words summarise, for the mark's tooltip. */
+
   readonly detail: string;
 }
 
-/** The first word of a cell, with `?` read as the absence it stands for. */
 const verdictWord = (cell: string): string => {
   const first = cell.split(/[\s(]/)[0] ?? "";
   return first === "?" ? "unknown" : first;
 };
 
-/** The badge a verdict earns, or `undefined` when the row is whole. */
 export const verdictMark = (
   verdict: PageVerdict | undefined,
 ): VerdictMark | undefined => {
@@ -447,11 +311,9 @@ export const verdictMark = (
       };
 };
 
-/** The first demo a page mounts, or `undefined` when it mounts none. */
 export const demoOf = (source: string): string | undefined =>
   /<ComponentPreview\s+name="([^"]+)"/.exec(source)?.[1];
 
-/** One page's row, or `undefined` when it has no title or is not a component. */
 const entryOf = (
   page: ComponentPage,
   verdictOf: VerdictOf,
@@ -478,12 +340,6 @@ const entryOf = (
   };
 };
 
-/**
- * Every component page, one row per URL.
- *
- * A curated page shadows the package page that shares its URL, so the first
- * page read wins; the data module reads the site's pages first for that reason.
- */
 export const buildIndex = (
   pages: ReadonlyArray<ComponentPage>,
   verdictOf: VerdictOf,
@@ -503,17 +359,6 @@ export const buildIndex = (
   );
 };
 
-/**
- * The rows a reader's query keeps.
- *
- * Every whitespace-separated term must appear in the row, so "search input"
- * finds the search field and not every input, and a term matches the section so
- * "primitives" narrows to that lane. A part name finds the page that
- * documents it, a prop or its type finds the page whose API table declares it,
- * a limitation finds the pages that carry it, and "preview" finds the pages
- * that open with a browser rendering. The inventory verdict is indexed too, so
- * "partial" finds every component the runtime covers only in part.
- */
 export const filterEntries = (
   entries: ReadonlyArray<ComponentEntry>,
   query: string,
@@ -535,28 +380,11 @@ export const filterEntries = (
   });
 };
 
-/** The pages another lane holds for a query, grouped by the lane that holds them. */
 export interface LaneMatches {
   readonly lane: string;
   readonly entries: ReadonlyArray<ComponentEntry>;
 }
 
-/**
- * The pages outside the composed lane that a query does match.
- *
- * The Components page lists one lane, and a reader who types a primitive's name
- * ("slider") has not made a mistake — the page would otherwise answer "no
- * component matches" while the component's page is one section down the
- * sidebar. The empty state names the lanes that do hold the query rather than
- * sending the reader to a search box that repeats the same empty answer.
- *
- * An empty query is not a lane question, so it answers with no groups: the
- * full grid is already every composed page.
- *
- * A primitive page a curated page in another section replaces is not offered
- * as a second result for a component the reader can already see
- * (`curated-twins.ts`).
- */
 export const otherLaneMatches = (
   entries: ReadonlyArray<ComponentEntry>,
   query: string,

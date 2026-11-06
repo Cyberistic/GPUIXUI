@@ -1,14 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { reloadOnPreloadError } from "./preload-recovery";
 
-/**
- * One reload when a route's chunk has gone, and never a loop.
- *
- * Guarded bug class: after a deploy every hashed asset changes, so a tab that
- * loaded the previous build fails every route import until the reader reloads
- * by hand — the error page on each navigation.
- */
-
 const store = (): Storage => {
   const held = new Map<string, string>();
   return {
@@ -31,11 +23,9 @@ describe("a failed preload", () => {
     reloadOnPreloadError(1_000, reload);
     expect(reload).toHaveBeenCalledTimes(1);
 
-    // A second failure inside the window is the deployment's problem.
     reloadOnPreloadError(1_500, reload);
     expect(reload).toHaveBeenCalledTimes(1);
 
-    // A minute later the guard has expired and a reload is allowed again.
     reloadOnPreloadError(62_000, reload);
     expect(reload).toHaveBeenCalledTimes(2);
     vi.unstubAllGlobals();

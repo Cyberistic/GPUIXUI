@@ -1,19 +1,3 @@
-/**
- * Holds the `blur-delivery-lifecycle` fixture, the probe that mounts it and the
- * section a component author plans from.
- *
- * The bug this guards: every component that commits on blur — `InlineEdit`, a
- * hex field, a form that needs a field's final value — rests on React's
- * `onFocus`/`onBlur`, and no live probe had ever driven the pair. The probe now
- * does, and the answer is that this window delivers **neither** on any route:
- * GPUI dispatches focus listeners only for an active window and the automation
- * window never becomes one. The suite keeps the trace, the routes, the focus ids
- * the steps assert and the README's account of the cause pointing at one another,
- * so a prose that returns to "the traversal skips the handler" fails by name.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -34,7 +18,6 @@ const scenarios = read("./scenarios.tsx");
 const readme = read("../../README.md");
 const host = read("./host.ts");
 
-/** This probe's own README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `blur-delivery-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -43,7 +26,6 @@ const sectionOf = (): string => {
   return readme.slice(start, end === -1 ? undefined : end);
 };
 
-/** The whole trace the probe measured, in the order the window delivered it. */
 const MEASURED_TRACE = `${TRACE_PREFIX}target:press plain:press toggle:press unmount:c edit:change after:press`;
 
 describe("the trace codec", () => {
@@ -67,8 +49,6 @@ describe("the trace codec", () => {
 
 describe("the view", () => {
   it("mounts the shipped controls the README's table names", () => {
-    // The two fields and the edit are the shipped controls, so the measurement
-    // is a consumer's path rather than a raw host element.
     expect(probe).toContain('from "@gpuixui/primitives"');
     expect(probe).toContain('from "@gpuixui/components"');
     expect(probe).toContain("<InlineEdit");
@@ -77,7 +57,6 @@ describe("the view", () => {
   });
 
   it("records every focus route in the one trace, in order", () => {
-    // A counter pair could not say whether the blur landed before the press.
     expect(probe).toContain("setTrace((entries) => [...entries, entry])");
     expect(probe).toContain("onFocus={() => note(`${name}:focus`)}");
     expect(probe).toContain("onBlur={() => note(`${name}:blur`)}");
@@ -90,8 +69,7 @@ describe("the view", () => {
   it("addresses every part with a distinct id, and uses all of them", () => {
     const ids = Object.values(BLUR_IDS);
     expect(new Set(ids).size).toBe(ids.length);
-    // The view and the steps name them through the fixture (`BLUR_IDS.fieldA`),
-    // so every key must be referenced; a renamed key left behind reads as unused.
+
     const used = Arr.filter(Arr.fromIterable(Object.keys(BLUR_IDS)), (key) =>
       probe.includes(`BLUR_IDS.${key}`),
     );
@@ -101,7 +79,7 @@ describe("the view", () => {
   it("prints the committed draft beside the trace, so a lost commit is data", () => {
     expect(probe).toContain("onCommit={(next) => {");
     expect(probe).toContain("note(`commit:${next}`)");
-    // The typing route is noted too, so "no commit" cannot be read as "no draft".
+
     expect(probe).toContain('onChange={() => note("edit:change")}');
   });
 });
@@ -123,8 +101,6 @@ describe("the steps", () => {
   });
 
   it("asserts the focus the window is left with on each route", () => {
-    // The positive half: the runtime's focus model works in this window even
-    // though its React pair is inert.
     expect(probe).toContain("BLUR_IDS.fieldA,");
     expect(probe).toContain("BLUR_IDS.fieldB,");
     expect(probe).toContain("BLUR_IDS.target,");
@@ -135,13 +111,10 @@ describe("the steps", () => {
   });
 
   it("asserts the trace it measured, event for event", () => {
-    // The source builds the line from the codec's prefix, so the fragment is
-    // what the probe holds; the README prints the resolved line.
     expect(probe).toContain(
       "target:press plain:press toggle:press unmount:c edit:change after:press",
     );
-    // The commit the blur would have made is absent from that trace, and the
-    // typing that fed it is present — the pair a reader needs to see both halves.
+
     expect(probe).toContain('note("edit:change")');
     expect(MEASURED_TRACE).toContain("edit:change");
     expect(MEASURED_TRACE).not.toContain("commit:");
@@ -173,7 +146,7 @@ describe("the registry and the README", () => {
     expect(section).toContain(`${BLUR_CHECKS} checks`);
     expect(section).toContain("`src/live/blur-delivery.ts`");
     expect(section).toContain("blur-delivery.test.ts");
-    // The trace a reader compares with is printed whole.
+
     expect(section.replace(/\s+/g, " ")).toContain(MEASURED_TRACE);
   });
 
@@ -181,11 +154,10 @@ describe("the registry and the README", () => {
     const flat = sectionOf().replace(/\s+/g, " ");
     expect(flat).toContain("rendered_frame.window_active");
     expect(flat).toContain("set_active_for_tests(true)");
-    // The caret measurement is a second, independent reading of the same fact.
+
     expect(flat).toContain("no caret");
     expect(flat).toContain("`editor-overlay`");
-    // The cause is stated as the window's, and the retracted attribution is not
-    // taught: this window is not active, so every route reads zero.
+
     expect(flat).toContain(
       "the window is not active, so *every* route reads 0",
     );

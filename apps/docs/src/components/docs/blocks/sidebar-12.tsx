@@ -6,10 +6,6 @@ import {
   SbShell,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 12 — the calendar panel: the account, a month grid, the calendar
- * lists and New Calendar in the footer, beside the month's page.
- */
 export const Sidebar12Render = () => (
   <SbShell height="tall">
     <SbCalendarPanel className="gx-sb-panel--docs" rail />

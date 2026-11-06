@@ -20,14 +20,6 @@ import {
   shellDocsRoute,
 } from "./shared";
 
-/**
- * The loaders for the package-owned documentation.
- *
- * `defineDocs` is a macro: the directory and options must be string and boolean
- * literals, so each collection is written out here. Everything else — routes,
- * sidebar folders, note copy — comes from `collection-routes.ts`.
- */
-
 const primitiveDocs = defineDocs({
   dir: "../../packages/primitives/docs",
   docs: {
@@ -58,8 +50,6 @@ const componentDocs = defineDocs({
 const dataDocs = defineDocs({
   dir: "../../packages/data/docs",
   docs: {
-    // The charts live in their own directory so the Graphics category can
-    // mount them on their own route; the data lane mounts the rest.
     files: ["**/*.mdx", "!charts/**"],
     async: true,
     postprocess: { includeProcessedMarkdown: true },
@@ -212,25 +202,10 @@ export const sourceByOrigin = {
   fx: fxSource,
 } satisfies Record<PackageOrigin, typeof primitiveSource>;
 
-/** Every mounted package source, in sidebar order. */
 export const packageSources = packageCollections.map(
   (collection) => sourceByOrigin[collection.origin],
 );
 
-/**
- * The pages a sidebar section lists, ready for `completeSection`.
- *
- * A primitive page a curated page in another section replaces is not listed
- * twice (`curated-twins.ts`).
- *
- * A collection serves only the files **its own** directory holds. The charts
- * live in `packages/data/docs/charts`, inside the data package's own docs
- * directory, and the data collection's glob could not be made to leave them
- * out — so the data lane listed the charts page under `/data-display` as
- * well, at a URL that answered **404**. The owner is decided by the
- * directory, and the **longest** matching directory wins: the charts
- * directory is inside the data one, so the charts collection owns the file.
- */
 export const sectionPages = (origins: ReadonlyArray<PackageOrigin>) =>
   origins.flatMap((origin) =>
     servedPages(sourceByOrigin[origin].getPages())

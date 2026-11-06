@@ -1,21 +1,3 @@
-/**
- * The theme, on screen: both palettes and a live switch.
- *
- * `core/style.test.ts` proves each resolver reads the theme it is given. This
- * proves the two things only a mounted tree can: that `ThemeProvider`'s value
- * actually reaches the style the runtime applies, and that **switching the theme
- * repaints the same tree** — a provider that memoises its first theme shows the
- * old palette for ever and no resolver test would notice.
- *
- * The two themes are the **shipped** `lightTheme` and `darkTheme` from
- * `@gpuixui/tokens`, not test doubles, so this is the real
- * both-themes verification. The invariant is structural: every painted colour
- * must be a value of the active palette, so adding a role cannot silently
- * satisfy it. The other runtime suites keep the deterministic fixture
- * (`core/testing/theme.fixture.ts`) because they assert geometry against theme
- * numbers and gain nothing from a system font.
- */
-
 import { expect, it } from "vitest";
 import {
   darkTheme,
@@ -48,7 +30,6 @@ import type { Runtime } from "./harness.js";
 import { openWindow } from "./fixture.js";
 import { painted, paintedColours, rgbOf } from "./theme.js";
 
-/** The scene: one element per themed role, all on the background surface. */
 const scene = (theme: PrimitiveTheme) => (
   <ThemeProvider theme={theme}>
     <Box tone="background" padding="lg" testId="box">
@@ -69,12 +50,6 @@ const rendered = (node: React.ReactElement): Promise<Runtime> =>
     return runtime;
   });
 
-/**
- * A caller's element that reads `@gpuixui/tokens/react` directly, which is how
- * every `@gpuixui/components` part gets its theme. It paints both a colour and
- * a metric from that context, so a provider that fed only primitives' own tree
- * would leave this element on the token package's light fallback.
- */
 const SharedProbe = ({ testId }: { readonly testId: string }) => {
   const theme = useSharedTheme();
   return (
@@ -100,10 +75,6 @@ it("supplies the shared token context a mixed tree reads", async () => {
 });
 
 it("paints a primitive under the token package's provider alone", async () => {
-  // The bug: this package kept a presence marker of its own, so a tree wrapped
-  // only in the provider `@gpuixui/components` uses made every primitive throw
-  // `MissingThemeProviderError`. The shared context answers presence now, so one
-  // wrapper serves a mixed tree.
   const runtime = await rendered(
     <TokensThemeProvider theme={darkTheme}>
       <Box tone="background" testId="box" />
@@ -128,13 +99,6 @@ it("carries the density override into the shared context", async () => {
 });
 
 it("keeps the theme's density when a stored override is absent", async () => {
-  // The bug guarded: a density override is read from a settings row, and JSON
-  // writes `null` for a field the record never carried. Read as an override, it
-  // replaced a brand's compact box with a hole: this probe — the way every
-  // `@gpuixui/components` part reads the shared context — threw on
-  // `theme.density.controlHeight`, and a primitive fell back to the library's
-  // metrics while the brand's palette stayed. `null` is absence, so the theme's
-  // own density paints.
   const stored: Density | null = null;
   const brand = extendTheme(lightTheme, { density: densityPresets.compact });
   const runtime = await rendered(
@@ -173,7 +137,7 @@ it("paints nothing the palette does not contain", async () => {
   const runtime = await rendered(scene(lightTheme));
   const palette = Arr.map(R.values(lightTheme.colors), rgbOf);
   const painted = paintedColours(runtime);
-  // The palette test is only meaningful if the frame painted colours at all.
+
   expect(painted).toContain(rgbOf(lightTheme.colors.background));
   expect(
     Arr.filter(painted, (colour) => !palette.includes(colour)),
@@ -197,7 +161,6 @@ it("repaints the mounted tree when the theme changes", async () => {
     darkTheme.colors.input,
   );
 
-  // And the old values are gone, not merely shadowed.
   expect(painted(runtime, "button", "backgroundColor")).not.toBe(lightButton);
   expect(painted(runtime, "box", "backgroundColor")).not.toBe(lightBackground);
 });
@@ -227,8 +190,7 @@ it("paints every stateful surface from the dark palette", async () => {
   );
   const palette = Arr.map(R.values(darkTheme.colors), rgbOf);
   const painted = paintedColours(runtime);
-  // The checked and accent-bearing controls must take the dark primary, and no
-  // light-only value may survive the switch to dark.
+
   expect(painted).toContain(rgbOf(darkTheme.colors.primary));
   expect(painted).not.toContain(rgbOf(lightTheme.colors.primary));
   expect(

@@ -5,14 +5,6 @@ import {
   type LaneGroup,
 } from "../../lib/inventory";
 
-/**
- * The two cells every generated component table shares.
- *
- * The lane pages and the implementation-status page print the same inventory,
- * so the badge and the note are one implementation: a new status group or a
- * new inline-Markdown form moves both pages in the same change.
- */
-
 const statusClass: Readonly<Record<LaneGroup, string>> = {
   shipped: "bg-accent text-accent-foreground",
   pending: "bg-muted text-muted-foreground",
@@ -20,7 +12,6 @@ const statusClass: Readonly<Record<LaneGroup, string>> = {
   unsupported: "bg-destructive/10 text-destructive",
 };
 
-/** A row's own status words, grouped into the four paints. */
 export function InventoryStatus({ row }: { readonly row: InventoryRow }) {
   return (
     <span
@@ -31,7 +22,6 @@ export function InventoryStatus({ row }: { readonly row: InventoryRow }) {
   );
 }
 
-/** A note with its inline code and bold resolved. */
 export function InventoryNote({ text }: { readonly text: string }) {
   return (
     <>

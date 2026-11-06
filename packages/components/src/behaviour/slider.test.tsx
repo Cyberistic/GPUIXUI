@@ -1,12 +1,3 @@
-/**
- * Slider behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a stored pair reached the one-thumb primitive (so only
- * its first end painted), a disabled slider still answered a key, the two ends
- * could cross under the keyboard, and the track painted a literal instead of the
- * active platform's roles.
- */
-
 import { platformTheme } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { pressKey } from "../internal/interaction.js";
@@ -17,7 +8,6 @@ import {
 } from "../internal/test-root.js";
 import { Slider } from "../slider.js";
 
-/** Every `slider` node, in tree order, with its announced value. */
 const thumbs = (
   root: ComponentTestRoot,
 ): ReadonlyArray<{
@@ -36,11 +26,9 @@ const thumbs = (
       tabIndex: element.customProps?.["tabIndex"],
     }));
 
-/** The values the slider announces, in tree order. */
 const values = (root: ComponentTestRoot): ReadonlyArray<string> =>
   thumbs(root).map((thumb) => thumb.value);
 
-/** The background colours the tree painted. */
 const painted = (root: ComponentTestRoot): ReadonlyArray<unknown> =>
   root.renderer
     .findByType("div")
@@ -104,7 +92,6 @@ describe("Slider", () => {
     slider.renderer.focusElement(start.id);
     pressKey(slider, "end");
 
-    // The start stops on the end rather than passing it: from ≤ to.
     expect(values(slider)).toEqual(["70", "70"]);
 
     slider.unmount();
@@ -129,7 +116,7 @@ describe("Slider", () => {
     expect(paint(windows)).toEqual(
       expect.arrayContaining([windows.colors.muted, windows.colors.primary]),
     );
-    // The premise: the two styles do not paint the same rail.
+
     expect(macOS.colors.muted).not.toBe(windows.colors.muted);
   });
 });

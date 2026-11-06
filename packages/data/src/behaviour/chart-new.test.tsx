@@ -1,11 +1,3 @@
-/**
- * The three types the reference charts have and this package did not: a
- * scatter, a candle and a funnel.
- *
- * These cases guard the claims each type makes — a point per datum, a candle
- * that paints in its own direction's colour, and a stage that is a share of
- * the first.
- */
 import { afterEach, describe, expect, it } from "vitest";
 import {
   CandleChart,
@@ -63,16 +55,13 @@ describe("the sharper chart types", () => {
     settle(root);
     const source = chartMarkupOf(root, "candles-layer-candles");
     expect(source).toContain("<rect");
-    // Two candles, each a wick and a body, and each in its **own**
-    // direction's colour: the document carries the grid's rules too, so the
-    // candles are the shapes that are not the grid's.
+
     const candles = [...source.matchAll(/<rect\b[^>]*fill="([^"]+)"[^>]*\/>/g)]
       .map((match) => match[1] ?? "")
       .filter((fill) => fill !== "#2A303B");
-    // Two colours: the up day and the down day.
+
     expect(new Set(candles).size).toBe(2);
-    // And the direction is the rule: the first candle closed above its open,
-    // the second at or below it.
+
     const up = candles[0] ?? "";
     const down = candles[candles.length - 1] ?? "";
     expect(up).not.toBe(down);
@@ -91,7 +80,7 @@ describe("the sharper chart types", () => {
       />,
     );
     settle(root);
-    // No pointer, no crosshair: the rule marks the datum the pointer names.
+
     expect(root.renderer.findByTestId("crossed-crosshair")).toBeUndefined();
 
     const zone = root.renderer.findByTestId("crossed-zone-1");
@@ -106,7 +95,7 @@ describe("the sharper chart types", () => {
 
     const crosshair = root.renderer.findByTestId("crossed-crosshair");
     expect(crosshair).toBeDefined();
-    // The rule stands at the middle of the hovered column.
+
     const rule = root.renderer.getElementBounds(crosshair?.id ?? 0);
     const column = root.renderer.getElementBounds(zone.id);
     if (rule === null || column === null)
@@ -151,7 +140,7 @@ describe("the sharper chart types", () => {
     root.renderer.dispatchNativeEvents();
 
     const after = radiiOf();
-    // One point grew; the other two did not.
+
     expect(after.filter((radius) => radius > (before[0] ?? 0)).length).toBe(1);
   });
 
@@ -169,15 +158,12 @@ describe("the sharper chart types", () => {
     );
     settle(root);
     const source = chartMarkupOf(root, "funnel-layer-funnel");
-    // Three stages; the document carries the grid's rules too, so the stages
-    // are the shapes that are not the grid's.
+
     const stages = [...source.matchAll(/<rect\b[^>]*\/>/g)]
       .map((match) => match[0])
       .filter((shape) => !shape.includes("#2A303B"));
     expect(stages.length).toBe(3);
-    // The stages narrow: the last is a fifth of the first, and each is
-    // centred, so a funnel reads as a funnel rather than as bars of
-    // different widths stacked to one side.
+
     const widths = stages.map((shape) =>
       Number(/width="([\d.]+)"/.exec(shape)?.[1] ?? 0),
     );

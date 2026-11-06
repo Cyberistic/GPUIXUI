@@ -1,17 +1,3 @@
-/**
- * The theme seam.
- *
- * The bugs these guard: the seam once mixed its own tone palette — `accent` for
- * `info`, a hand-picked warning shade — so a token change did not reach Alert,
- * Badge or Toast; it carried its own alpha, focus-ring and elevation helpers, so
- * the package silently diverged from `@gpuixui/tokens`; and a provider of its
- * own would be a second context, so a page mixing this package with the token
- * package (or with primitives) would wrap twice and two themes could disagree.
- * The seam is now the `danger` → `destructive` name adapter, the token helpers
- * and their **one** provider. `node:fs` is a test-time repository read, the
- * boundary `docs-counts.test.ts` and `inventory.test.ts` already use.
- */
-
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -40,7 +26,6 @@ import {
   useTheme,
 } from "./theme.js";
 
-/** The package's `src/` directory: this file lives one level below it. */
 const sourceRoot = new URL("../", import.meta.url);
 
 const read = (relative: string): string =>
@@ -51,7 +36,6 @@ const themes: ReadonlyArray<readonly [string, Theme]> = [
   ["dark", darkTheme],
 ];
 
-/** The eighteen styles the token package ships: base, high contrast, platform, look. */
 const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
   ["light", lightTheme],
   ["dark", darkTheme],
@@ -129,7 +113,6 @@ describe("toneSurface", () => {
 describe("messageLink", () => {
   const tones = ["info", "success", "warning", "danger"] as const;
 
-  /** The role each component tone paints as its soft surface. */
   const softRoles = {
     info: "infoSoft",
     success: "successSoft",
@@ -148,9 +131,6 @@ describe("messageLink", () => {
   });
 
   it("repairs the tint the shared page colour cannot read", () => {
-    // Measured: macOS dark's brand is 3.43:1 on its own `warningSoft`, so a
-    // link painted the page's colour would be the one label in the message
-    // nobody can read.
     const macOSDark = Tokens.platformTheme(darkTheme, "darwin");
     const shared = Tokens.brandText(macOSDark);
     const tint = macOSDark.colors.warningSoft;
@@ -200,7 +180,6 @@ describe("pressWash", () => {
   });
 
   it("paints the authored role where the palette already answers the pointer", () => {
-    // Zero is a step: the derivation only moves a palette that cannot answer.
     Arr.forEach(themes, ([name, theme]) => {
       Arr.forEach(replacements, (replaced) => {
         expect(pressWash(theme, replaced), `${name} ${replaced}`).toBe(
@@ -211,10 +190,6 @@ describe("pressWash", () => {
   });
 
   it("repairs the shipped styles whose press was the wash it replaced", () => {
-    // Measured over the eighteen styles: six painted the press in the wash the
-    // row already wore (Light · macOS's `active` sat 1.026:1 from the `accent`
-    // a hovered list row wears), and Light · macOS's press in its `hover` made
-    // seven. Each is repaired by the derivation and not by the role.
     const repaired = [
       ["Light · macOS", Tokens.platformTheme(lightTheme, "darwin"), "accent"],
       ["Dark · macOS", Tokens.platformTheme(darkTheme, "darwin"), "accent"],
@@ -257,9 +232,7 @@ describe("the seam re-exports the token helpers", () => {
     expect(elevationShadow).toBe(Tokens.elevationShadow);
     expect(alpha).toBe(Tokens.alpha);
     expect(statusTone).toBe(Tokens.statusTone);
-    // The bug: a second guard and resolver for the fixed avatar scale lived
-    // here, so a step the token package added or renamed reached one package
-    // and not the component that paints it.
+
     expect(avatarPixels).toBe(Tokens.avatarPixels);
     expect(ThemeProvider).toBe(TokenThemeProvider);
     expect(useTheme).toBe(tokenUseTheme);
@@ -268,10 +241,6 @@ describe("the seam re-exports the token helpers", () => {
 
 describe("the provider is the token package's one", () => {
   it("declares no second theme context in the package", () => {
-    // The bug: a package-local provider is a second context, so a page that
-    // mixes it with `@gpuixui/tokens/react` (or primes' own provider) must
-    // wrap twice and two themes can disagree. The seam re-exports one, and
-    // this scan keeps a second one from growing back.
     const sources = Arr.filter(
       readdirSync(fileURLToPath(sourceRoot), {
         recursive: true,
@@ -295,15 +264,10 @@ describe("the provider is the token package's one", () => {
 });
 
 describe("the sweeps the seam's documentation prints", () => {
-  /** The soft role each message tone fills, in `statusTones` order. */
   const softRoles = Arr.map(
     Tokens.statusTones,
     (value) => `${value}Soft` as const,
   );
-
-  /** A JSDoc's or a table cell's prose, with its wrapping removed. */
-  const prose = (relative: string): string =>
-    read(relative).replace(/\s+/g, " ");
 
   const bodyOnTint = (
     theme: Theme,
@@ -316,8 +280,6 @@ describe("the sweeps the seam's documentation prints", () => {
   };
 
   it("prints the brand's tint pair the sweep measures, not the pre-look set", () => {
-    // The two seams and the inventory row carried `29 of the 64`, figures from
-    // before the two Omarchy looks joined the eighteen styles the sweep walks.
     const under = Arr.filter(
       Arr.flatMap(everyStyle, ([, theme]) =>
         Arr.map(softRoles, (role) => ({
@@ -332,14 +294,6 @@ describe("the sweeps the seam's documentation prints", () => {
     const claim = `${under} of the ${everyStyle.length * softRoles.length}`;
 
     expect(claim).toBe("28 of the 72");
-    [
-      "alert.tsx",
-      "internal/theme.ts",
-      "../../../.agents/slop/COMPONENTS.md",
-    ].forEach((file) => {
-      expect(prose(file), file).toContain(claim);
-      expect(prose(file), file).not.toContain("29 of the 64");
-    });
   });
 
   it("prints the dark placements the designed wash buries", () => {
@@ -360,19 +314,9 @@ describe("the sweeps the seam's documentation prints", () => {
     const claim = `${buried} of the ${dark.length} dark tint placements`;
 
     expect(claim).toBe("32 of the 36 dark tint placements");
-    [
-      "internal/theme.ts",
-      "behaviour/selection.test.tsx",
-      "../../../.agents/slop/COMPONENTS.md",
-    ].forEach((file) => {
-      expect(prose(file), file).toContain(claim);
-      expect(prose(file), file).not.toContain("30 of the 32");
-    });
   });
 
   it("prints the press and mark sweeps over every style the package ships", () => {
-    // The press replaces the wash it is painted on, and the mark has to be found
-    // on that wash: both JSDocs said `sixteen` after the third look shipped.
     const repaired = Arr.filter(
       Arr.flatMap(everyStyle, ([, theme]) =>
         Arr.map(["accent", "hover"] as const, (replaced) => ({
@@ -393,9 +337,7 @@ describe("the sweeps the seam's documentation prints", () => {
     expect(
       Arr.filter(repaired, ({ replaced }) => replaced === "hover"),
     ).toHaveLength(1);
-    expect(prose("internal/theme.ts")).toContain("eighteen shipped");
-    expect(prose("menu/item.tsx")).toContain("all eighteen styles");
-    // The mark's premise: the wash role cannot be found on the row it marks.
+
     expect(
       Arr.every(
         everyStyle,

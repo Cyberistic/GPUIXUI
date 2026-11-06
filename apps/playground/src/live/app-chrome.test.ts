@@ -1,20 +1,3 @@
-/**
- * Holds the `app-chrome-lifecycle` fixture, the window probe that paints it and
- * the section a plan reads.
- *
- * The bug this guards: `@gpuixui/shell`'s three chrome parts shipped with pure
- * navigation suites only, so no renderer had mounted them — a dropdown that
- * never paints below its trigger, a roving stop that moves an internal number
- * but not the native focus, or a status tone painted in the label's role would
- * have passed every test. The probe reads those three facts in a window, and
- * this suite holds the fixture values those readings depend on: the tone
- * tolerance stays under the gap between the label and every tone, the overflow
- * split agrees with the package's own `splitOverflow`, and the printed count
- * and section cannot drift from the probe.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -51,13 +34,11 @@ const registry = read("./registry.ts");
 const scenarios = read("./scenarios.tsx");
 const readme = read("../../README.md");
 
-/** The step function alone, so a count cannot be read out of the view. */
 const stepsOf = (): string => {
   const start = probe.indexOf("export const appChromeSteps");
   return start === -1 ? "" : probe.slice(start);
 };
 
-/** This probe's README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `app-chrome-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -66,13 +47,11 @@ const sectionOf = (): string => {
   return readme.slice(start, end === -1 ? undefined : end);
 };
 
-/** The dark palette's label ink, which sits beside both tones in the bar. */
 const label = palettes.dark.colors.foreground;
 
 const destructive = statusTone(palettes.dark, "destructive").foreground;
 const success = statusTone(palettes.dark, "success").foreground;
 
-/** The distance between two `#rrggbb` colours. */
 const distance = (left: string, right: string): number => {
   const channel = (hex: string, at: number): number =>
     Number.parseInt(hex.slice(1 + at * 2, 3 + at * 2), 16);
@@ -109,8 +88,6 @@ describe("the readout", () => {
 
 describe("the tone ink", () => {
   it("separates a tone from the label painted beside it", () => {
-    // Both status tones are pale; the label is paler still. The tolerance is
-    // small enough that a tone count cannot read a plain label's antialiasing.
     expect(distance(label, destructive)).toBeGreaterThan(TONE_TOLERANCE * 3);
     expect(distance(label, success)).toBeGreaterThan(TONE_TOLERANCE * 3);
     expect(distance(destructive, success)).toBeGreaterThan(TONE_TOLERANCE * 3);
@@ -222,17 +199,11 @@ describe("the probe", () => {
       Arr.fromIterable(stepsOf().matchAll(/ctx\.expect\w+\(/g)),
     );
     expect(sites).toBeGreaterThan(0);
-    // Each helper site asserts once, and the loops and tone checks assert more,
-    // so the printed count has the sites as a floor.
+
     expect(APP_CHROME_CHECKS).toBeGreaterThanOrEqual(sites);
   });
 
   it("presses a trigger the way a pointer reaches one", () => {
-    // The bug this guards: the automation's `click` dispatches a down/up at the
-    // element's centre with **no** preceding move, so a trigger that follows the
-    // pointer heard its own `onMouseEnter` *after* the press — the probe's
-    // presses depended on an ordering the runtime does not promise. A press is
-    // now park, enter, press: the move is what a pointer makes first.
     const steps = stepsOf();
     expect(probe).toContain("const pressTrigger = (");
     expect(probe).toContain("ctx.host.hover(APP_CHROME_IDS.readout)");
@@ -281,7 +252,7 @@ describe("the registry and the record", () => {
     expect(section).toContain("The bar is one keyboard surface");
     expect(section).toContain("A roving move must name a real element");
     expect(section).toContain("A tone is a role");
-    // The printed tone values are the dark roles the probe counts.
+
     expect(section).toContain(destructive);
     expect(section).toContain(success);
   });

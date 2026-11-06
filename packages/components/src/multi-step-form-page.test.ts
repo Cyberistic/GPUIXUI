@@ -1,17 +1,3 @@
-/**
- * The `MultiStepForm` page against the two shapes it declares.
- *
- * The bug guarded: the props table is the only place a consumer learns what the
- * wizard takes, and a step's own fields were taught by the example alone — the
- * page never said that `id` and `title` are required, that a `gate` answers
- * `Option<string>`, or that only the current step's `content` is mounted. A
- * prop or step field added to the type later would be documented nowhere, the
- * same drift the package's Tier 2 pages are already held against.
- *
- * The check is exact in both directions for each shape: a declared field must
- * have a row and a row must name a declared field.
- */
-
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -21,10 +7,6 @@ import { describe, expect, it } from "vitest";
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
 
-/**
- * The surface `MultiStepFormProps` inherits rather than declares, which the
- * page may document beside the props its own interface carries.
- */
 const INHERITED: ReadonlySet<string> = new Set([
   "aria-id",
   "children",
@@ -34,7 +16,6 @@ const INHERITED: ReadonlySet<string> = new Set([
   "testId",
 ]);
 
-/** The body of one interface, however its `extends` list is wrapped. */
 const interfaceBody = (source: string, type: string): string => {
   const header = source.indexOf(`export interface ${type}`);
   if (header < 0) return "";
@@ -43,7 +24,6 @@ const interfaceBody = (source: string, type: string): string => {
   return open < 0 || end < 0 ? "" : source.slice(open + 1, end);
 };
 
-/** The fields one interface declares, from its own body. */
 const declaredFields = (source: string, type: string): ReadonlyArray<string> =>
   Arr.map(
     Arr.fromIterable(
@@ -52,13 +32,11 @@ const declaredFields = (source: string, type: string): ReadonlyArray<string> =>
     (match) => match[1] ?? "",
   );
 
-/** Every name a row's first cell documents, in backticks. */
 const namesIn = (cell: string): ReadonlyArray<string> =>
   Arr.map(Arr.fromIterable(cell.matchAll(/`([A-Za-z][\w-]*)`/g)), (match) =>
     String(match[1]),
   );
 
-/** The names a page's named section documents in its table. */
 const documentedIn = (page: string, heading: string): ReadonlyArray<string> => {
   const start = page.indexOf(`## ${heading}`);
   if (start < 0) return [];
@@ -91,14 +69,12 @@ describe("the MultiStepForm page", () => {
   });
 
   it("documents every field a step declares, and nothing else", () => {
-    // A step's own fields plus the gate contract it extends.
     const declared = [
       ...declaredFields(source(), "MultiStep"),
       ...declaredFields(read("./wizard/logic.ts"), "StepGate"),
     ];
     const documented = documentedIn(page(), "Steps");
 
-    // A page with no `## Steps` table resolves nothing and must not pass.
     expect(declared.length).toBeGreaterThan(4);
     expect(Arr.filter(declared, (name) => !documented.includes(name))).toEqual(
       [],

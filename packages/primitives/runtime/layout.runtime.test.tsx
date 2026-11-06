@@ -1,16 +1,3 @@
-/**
- * Layout, type and scrolling in the real GPUix runtime.
- *
- * Every assertion here is on something the runtime produced — a painted box, a
- * `getElementBounds` measurement, a scroll offset, a string GPUI painted — not
- * on the `StyleDesc` a resolver returned. That distinction is the whole point of
- * this suite: `src/core/layout.test.ts` already proves the resolver's numbers,
- * and this proves the numbers survive layout.
- *
- * The frame and the theme are `fixture.tsx`'s, so a measurement is asserted
- * against the theme's own spacing step rather than a magic pixel.
- */
-
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -47,7 +34,6 @@ const boundsOf = (runtime: Runtime, testId: string): Bounds =>
     expect.fail(`the runtime painted no box for ${testId}`),
   );
 
-/** A card of an exact size, so a measurement has one unknown: the layout. */
 const card = (testId: string, width: number, height: number) => (
   <Box tone="card" style={{ width, height }} testId={testId} />
 );
@@ -88,14 +74,14 @@ it("pads each axis by the step it was given, and paints the edge it was given", 
   );
   const outer = boundsOf(runtime, "dashed");
   const inner = boundsOf(runtime, "inner");
-  // The frame's border sits outside the padding, so both offsets include it.
+
   const edge = testTheme.borderWidth.thin;
   expect(inner.x - outer.x).toBe(testTheme.spacing.sm + edge);
   expect(inner.y - outer.y).toBe(testTheme.spacing.md + edge);
   expect(outer.width - (inner.x - outer.x) - inner.width).toBe(
     testTheme.spacing.sm + edge,
   );
-  // A ratio of 2 fills the axis without a definite size: 200 wide → 100 tall.
+
   expect(outer.width).toBe(200);
   expect(outer.height).toBe(100);
   const element = Option.getOrElse(runtime.element("dashed"), () =>
@@ -105,20 +91,12 @@ it("pads each axis by the step it was given, and paints the edge it was given", 
   expect(element.style.aspectRatio).toBe(2);
 });
 
-// Bug guarded: an elevation level is a stored choice (a workspace records the
-// level it raised a panel to), and the recipe indexed the level raw while the
-// core resolver read it through `elevationShadow`. A name this release does not
-// carry therefore painted a **flat** panel from the shipped painter — the one
-// box nobody can tell apart from a card at rest — and the raised one from the
-// resolver. Both read the default `md` lift now; the reserved `overlay` level
-// still paints nothing, because the theme ships it empty.
 it("lifts a box whose stored elevation this release does not carry", async () => {
   const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Box
         tone="card"
-        // The cast is the storage boundary: a saved level is one string.
         elevation={"raised" as ElevationLevel}
         style={{ height: 20 }}
         testId="raised"
@@ -135,10 +113,7 @@ it("lifts a box whose stored elevation this release does not carry", async () =>
     Option.getOrElse(runtime.element(testId), () =>
       expect.fail(`the runtime painted no box for ${testId}`),
     );
-  // The exact shadow the theme designs for the default lift, not merely "some
-  // shadow": a class that resolved to the wrong level would still paint one.
-  // `toMatchObject` because the runtime adds its own `inset: false` to a painted
-  // shadow; the five fields the theme designs are what must match.
+
   const lift = Option.getOrElse(
     Option.fromNullishOr(elevationShadow(testTheme, "md")),
     () => expect.fail("the test theme designs no md shadow"),
@@ -149,12 +124,6 @@ it("lifts a box whose stored elevation this release does not carry", async () =>
   ).toStrictEqual(Option.none());
 });
 
-// Bug guarded: the layout primitives painted one element each and published no
-// way to reach it, so measuring a region, holding its instance or naming it for
-// automation meant wrapping it in a `div` — and in a flex parent the wrapper
-// becomes the item, so a `grow`ing box inside it has to repeat its own flex
-// facts on the wrapper. The element a caller measures here is the element the
-// primitive paints, and the ref is the runtime's own instance.
 it("measures and holds a layout primitive where it is painted", async () => {
   const runtime = await openWindow();
   const boxes: Array<{ width: number; height: number }> = [];
@@ -191,7 +160,7 @@ it("measures and holds a layout primitive where it is painted", async () => {
     width: painted.width,
     height: painted.height,
   });
-  // The stack is two rows: a 20px card, the gap, then the grid's 30px row.
+
   expect(painted.height).toBe(20 + testTheme.spacing.sm + 30);
   const held = Option.getOrElse(
     Option.flatMap(Arr.last(refs), (instance) => instance),
@@ -203,12 +172,6 @@ it("measures and holds a layout primitive where it is painted", async () => {
 });
 
 it("measures and names a run of type where it is painted", async () => {
-  // Bug guarded: `Text` painted one `<text>` and published no host trio, so the
-  // height a heading wraps to, the instance a caller holds and the node an
-  // automation host addresses were reachable only by wrapping the run — and in
-  // a flex parent the wrapper is the item that paints. The run is the element:
-  // its own box is reported, its own instance is held, and its own id reaches
-  // the accessibility tree's author id.
   const runtime = await openWindow();
   const boxes: Array<{ width: number; height: number }> = [];
   const refs: Array<Option.Option<number>> = [];
@@ -240,7 +203,7 @@ it("measures and names a run of type where it is painted", async () => {
     width: painted.width,
     height: painted.height,
   });
-  // One run of type paints one line of its role's leading.
+
   expect(painted.height).toBe(testTheme.typography.h3.lineHeight);
   const held = Option.getOrElse(
     Option.flatMap(Arr.last(refs), (instance) => instance),
@@ -293,13 +256,6 @@ it("stacks a column Stack's children by the theme's gap", async () => {
   expect(b.y - a.y).toBe(20 + testTheme.spacing.sm);
 });
 
-// Bug guarded: `stackStyle` is published for a consumer that paints its own
-// layout (a custom pane, a split), and a direction saved with that layout
-// arrives as a string the union may no longer name. Read raw, the resolver
-// handed the renderer `flexDirection: "vertical"` — not a value its flex
-// grammar carries, so the pane painted as a **row** — while the class recipe the
-// shipped `Stack` uses drew a column for the same name. One reader answers the
-// column both paths paint.
 it("paints the axis stackStyle answers for a stored direction", async () => {
   const runtime = await openWindow();
   runtime.render(
@@ -307,7 +263,6 @@ it("paints the axis stackStyle answers for a stored direction", async () => {
       <Box
         tone="none"
         testId="pane"
-        // The cast is the storage boundary: a saved direction is one string.
         style={stackStyle(
           {
             direction: "vertical" as StackDirection,
@@ -367,13 +322,6 @@ it("draws a horizontal Separator as one border step across the surface", async (
 });
 
 it("draws a separator's stored orientation this release does not carry as a horizontal rule", async () => {
-  // The bug guarded: a saved workspace records the axis each divider runs on,
-  // so an orientation this release renamed or dropped arrives as a string. The
-  // paint paths disagreed about that name — the recipe drew a **vertical**
-  // hairline for anything that was not `horizontal`, the caption branch kept
-  // the caption for anything that was not `vertical` — so a stale name painted
-  // a row of two vertical rules around a caption. Resolved once, the name reads
-  // as the horizontal rule a region divider is drawn in.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -392,12 +340,6 @@ it("draws a separator's stored orientation this release does not carry as a hori
 });
 
 it("keeps a rule a blank caption says nothing about one hairline tall", async () => {
-  // The bug this guards: `label` is copy a caller fills from an i18n table as
-  // often as a literal, and a missing row hands over `"   "`. A labelled rule is
-  // a row around a caption `Text`, and the runtime lays a run of spaces out as a
-  // full line — so a rule whose caption said nothing painted a blank line
-  // between two hairlines instead of reading as one rule. The caption is a rule
-  // only where it says something (`visibleCopy`).
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -412,12 +354,6 @@ it("keeps a rule a blank caption says nothing about one hairline tall", async ()
 });
 
 it("keeps a static rule out of the tree, because a separator maps to a splitter", async () => {
-  // The measured reason this component publishes no role. The one ARIA token a
-  // rule could carry, `separator`, maps to the platform's **Splitter** — the
-  // role of a draggable divider — so a static rule announced that way invites an
-  // interaction it does not have. A focusable divider is a split pane's job, so
-  // the rule stays decorative; this case proves the mapping and that the shipped
-  // rule adds no node of its own.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -452,12 +388,6 @@ it("lets a Spacer push its sibling to the far edge", async () => {
 });
 
 it("fills for a spacer's stored size name this release does not carry", async () => {
-  // A saved layout stores a step as a string, so a name this release renamed
-  // reached `theme.spacing[name]` and answered `undefined`: the spacer painted
-  // a fixed item with **no side** — measured 0px wide beside a 6px `sm` one —
-  // and the sibling it exists to push sat against the card next to it. The
-  // documented default for an omitted step is the flexible filler, so the
-  // stored name must paint the same row the omitted one does.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -477,9 +407,9 @@ it("fills for a spacer's stored size name this release does not carry", async ()
   const c = boundsOf(runtime, "c");
   const d = boundsOf(runtime, "d");
   const frame = boundsOf(runtime, SURFACE);
-  // The stored name fills: the trailing card ends at the frame's inner edge.
+
   expect(b.x + b.width).toBe(frame.x + frame.width - testTheme.spacing.lg);
-  // A step the theme paints is still a fixed gap, not a filler.
+
   expect(d.x).toBe(c.x + c.width + testTheme.spacing.sm);
 });
 
@@ -500,7 +430,7 @@ it("scrolls a ScrollArea by the wheel's delta", async () => {
     expect.fail("the ScrollArea painted no scrollable box"),
   );
   expect(before.y).toBe(0);
-  // GPUI's deltaY is negative to scroll down (measured on 0.11.0).
+
   runtime.wheel("s", 0, -100);
   const after = Option.getOrElse(runtime.scrollOffset("s"), () =>
     expect.fail("the ScrollArea lost its scroll offset"),
@@ -556,7 +486,7 @@ it("scrolls a focused ScrollArea with the keyboard", async () => {
   );
   runtime.keyDown("s", "home");
   expect(runtime.scrollOffset("s")).toStrictEqual(Option.some({ x: 0, y: 0 }));
-  // End is an overshoot the runtime clamps to the content's end (400 - 60).
+
   runtime.keyDown("s", "end");
   expect(runtime.scrollOffset("s")).toStrictEqual(
     Option.some({ x: 0, y: -340 }),
@@ -566,17 +496,11 @@ it("scrolls a focused ScrollArea with the keyboard", async () => {
   ).toBe(true);
 });
 
-// Bug guarded: `ScrollArea`'s axis is a stored layout choice as often as a
-// literal (a restored panel, a split-pane record), and read raw a name this
-// release does not carry painted **both** scrollbars and matched neither branch
-// of the key contract, so the region's tab stop moved nothing. It reads as the
-// documented `vertical` now, in both paint and keys.
 it("scrolls a region whose stored axis this release does not carry", async () => {
   const runtime = await openWindow();
   runtime.render(
     <Surface>
       <ScrollArea
-        // The cast is the storage boundary: a saved axis is one string.
         axis={"sideways" as ScrollAxis}
         style={{ height: 60, width: 200 }}
         viewportTestId="s"
@@ -586,9 +510,7 @@ it("scrolls a region whose stored axis this release does not carry", async () =>
       </ScrollArea>
     </Surface>,
   );
-  // The region is the documented tab stop, and its keys move it down the one
-  // axis it paints. Read raw, the stored name matched no axis, so every key
-  // answered `None` and this offset never moved.
+
   runtime.keyDown("s", "down");
   expect(runtime.focused()).toStrictEqual(Option.some("s"));
   expect(runtime.scrollOffset("s")).toStrictEqual(
@@ -598,7 +520,7 @@ it("scrolls a region whose stored axis this release does not carry", async () =>
   expect(runtime.scrollOffset("s")).toStrictEqual(
     Option.some({ x: 0, y: -(testTheme.density.rowHeight + 60) }),
   );
-  // A sideways key is still not this region's.
+
   runtime.keyDown("s", "right");
   expect(runtime.scrollOffset("s")).toStrictEqual(
     Option.some({ x: 0, y: -(testTheme.density.rowHeight + 60) }),
@@ -606,9 +528,6 @@ it("scrolls a region whose stored axis this release does not carry", async () =>
 });
 
 it("leaves a chorded scroll key to the platform", async () => {
-  // The bug this guards: the viewport read only `event.key`, so `Cmd+End` and
-  // `Alt+Down` — a document shortcut and a word move — scrolled the region as
-  // a plain key. A chord is not a scroll key; the plain keys still are.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -633,11 +552,6 @@ it("leaves a chorded scroll key to the platform", async () => {
 });
 
 it("pages a sideways ScrollArea by the width it shows", async () => {
-  // The bug guarded: a page step was the scroller's height and moved only the
-  // vertical axis, so `axis="horizontal"` had no key that moved more than a
-  // line — PageUp/PageDown were dropped as "not this container's axis". The
-  // page a reader sees sideways is the width in view, not a height it never
-  // paints.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -654,7 +568,7 @@ it("pages a sideways ScrollArea by the width it shows", async () => {
   const row = testTheme.density.rowHeight;
   const width = boundsOf(runtime, "s").width;
   expect(width).toBe(200);
-  // The wheel proves the region really scrolls sideways on this runtime.
+
   runtime.wheel("s", -100, 0);
   runtime.renderer.dispatchNativeEvents();
   runtime.flush();
@@ -702,10 +616,6 @@ it("pages a two-axis ScrollArea down without moving its sideways offset", async 
 });
 
 it("reports the scroll box's own height, not the frame's", async () => {
-  // The bug guarded: the area published no layout event for the element that
-  // scrolls, so a scroll reading (a fade, a progress bar) had to duplicate the
-  // viewport — and lose its keyboard contract — to measure the box it reads.
-  // The event is the viewport's, so the frame's padding is already excluded.
   const runtime = await openWindow();
   const heights: number[] = [];
   runtime.render(
@@ -731,10 +641,6 @@ it("reports the scroll box's own height, not the frame's", async () => {
 });
 
 it("mounts the scroll box through its published subpath", async () => {
-  // The route exists so another package's scroll reading can compose this
-  // scroller instead of duplicating a viewport without its keyboard contract.
-  // A re-export that drifted from the component would pass every static check
-  // and still paint nothing here.
   const runtime = await openWindow();
   const heights: number[] = [];
   runtime.render(
@@ -762,11 +668,6 @@ it("mounts the scroll box through its published subpath", async () => {
 });
 
 it("declares the keyboard ring on the scroll region that takes the stop", async () => {
-  // The bug guarded: the viewport is a tab stop with a keyboard contract
-  // (arrows, PageUp/PageDown, Home/End) and was the one focusable primitive in
-  // the package with no `focusVisible` declaration — so a keyboard reader who
-  // Tabbed into a scroller had no cue that the focus had moved. The runtime
-  // paints the outline only on an element that declares it.
   const runtime = await openWindow();
   const declaresRing = (): boolean =>
     Option.match(runtime.element("s"), {
@@ -795,8 +696,6 @@ it("declares the keyboard ring on the scroll region that takes the stop", async 
   runtime.focusNext();
   expect(runtime.focused()).toStrictEqual(Option.some("s"));
 
-  // `focusable={false}` removes the stop, so it owes neither the ring nor the
-  // cue — the same split every other focusable primitive uses.
   runtime.render(area(false));
   expect(declaresRing()).toBe(false);
 });
@@ -842,15 +741,9 @@ it("reports a ScrollArea's absolute offset, whatever moved it", async () => {
 });
 
 it("hands a caller the scroller it can restore", async () => {
-  // The bug guarded: `onScrollChange` reports where a scroller is, and the page
-  // told a caller to keep it "for a restored offset" — while the area handed
-  // out no way to set one. Only the renderer moves a scroller, by element id,
-  // and the element was private. `viewportRef` is that handle, and a
-  // Back-to-top action proves it is the scroller rather than the frame.
   const runtime = await openWindow();
   const offsets: number[] = [];
-  // A seat the ref writes into: a closure assignment does not narrow a local,
-  // so the element is read from a property instead.
+
   const held: { current: PublicInstance | null } = { current: null };
   const backToTop = (): void => {
     const scroller = held.current;
@@ -875,8 +768,7 @@ it("hands a caller the scroller it can restore", async () => {
   const instance = Option.getOrElse(Option.fromNullishOr(held.current), () =>
     expect.fail("the area handed no viewport to its viewportRef"),
   );
-  // The id the caller holds is the scrollable element: the runtime reports an
-  // offset for it, which the frame around it does not have.
+
   runtime.renderer.scrollTo(instance.id, 0, -120);
   runtime.renderer.flush();
   runtime.renderer.dispatchNativeEvents();
@@ -893,8 +785,6 @@ it("hands a caller the scroller it can restore", async () => {
 });
 
 it("composes a caller's ref with the viewport's own keyboard handle", async () => {
-  // The merge must not trade one for the other: a composed viewport that hands
-  // its element to the caller still consumes the scroll keys.
   const runtime = await openWindow();
   const held: { current: PublicInstance | null } = { current: null };
   runtime.render(
@@ -969,10 +859,7 @@ it("announces the scroll region that takes the tab stop", async () => {
       </ScrollArea>
     </Surface>,
   );
-  // GPUix builds an accessibility node only for an element with a role, so an
-  // unnamed viewport was a tab stop the tree could not hold: measured on
-  // 0.11.0, the window had 12 tab stops and 11 nodes. The region is a named
-  // group now; `label` replaces the default name.
+
   const node = Option.getOrElse(
     a11yNode(runtime.a11y(), { role: "Group", label: DEFAULT_SCROLL_NAME }),
     () =>
@@ -1003,7 +890,7 @@ it("publishes a heading's level, and leaves body copy plain", async () => {
     () => expect.fail("the h3 was not announced as a heading"),
   );
   expect(h3.aria?.level).toBe(3);
-  // Body copy is not a landmark, so it must not fabricate a role.
+
   expect(a11yNode(dump, { role: "Heading", label: "Body" })).toStrictEqual(
     Option.none(),
   );
@@ -1053,16 +940,11 @@ it("clamps a Text after its own line count", async () => {
 });
 
 it("paints every line of a run whose stored clamp is absence", async () => {
-  // The bug guarded: a clamp is a stored preference — a markdown node's line
-  // budget, a restored inspector row's preview — and JSON keeps a field the
-  // record never carried as `null`, not `undefined`. The paint asked
-  // `clamp !== undefined`, so a restored run was cut to a **one-line** box that
-  // hid everything below it, while the documented default is no clamp at all.
   const runtime = await openWindow();
   const line = testTheme.typography.body.lineHeight;
   const copy =
     "A sentence long enough that a hundred and sixty pixels wrap it over several lines.";
-  // The cast is the storage boundary: a saved record stores absence as null.
+
   const stored = { clamp: null } as unknown as TextProps;
   runtime.render(
     <Surface>
@@ -1077,7 +959,7 @@ it("paints every line of a run whose stored clamp is absence", async () => {
       </Box>
     </Surface>,
   );
-  // The negative control proves the copy wraps at all.
+
   expect(boundsOf(runtime, "clamped").height).toBe(line);
   const free = boundsOf(runtime, "free").height;
   expect(free).toBeGreaterThan(line);
@@ -1085,12 +967,6 @@ it("paints every line of a run whose stored clamp is absence", async () => {
 });
 
 it("clamps each node to its own line count, even sharing one string layout", async () => {
-  // **The clamp is the node's box, not the string's layout.** GPUI lays a
-  // string out once per window and reuses that layout for identical copy, which
-  // used to decide the clamp too: a two-line node and a one-line node with the
-  // same copy both painted two lines. The clamp is a definite height with a
-  // hidden overflow, so the box — and therefore the lines painted — belongs to
-  // each node while the shared layout only decides where the string wraps.
   const runtime = await openWindow();
   const line = testTheme.typography.body.lineHeight;
   const same =
@@ -1165,6 +1041,6 @@ it("moves a control's height with density and keeps its colour", async () => {
   expect(comfortable.height).toBe(testTheme.density.controlHeight.md);
   expect(tight.height).toBe(compact.controlHeight.md);
   expect(tight.height).toBeLessThan(comfortable.height);
-  // Density moves numbers, never colour.
+
   expect(tight.background).toBe(comfortable.background);
 });

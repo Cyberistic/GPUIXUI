@@ -1,21 +1,7 @@
-/**
- * The pagination preview's model: the window the component derives, and the
- * slice of rows one page shows.
- *
- * The window is a stable crop around the current page rather than one that
- * grows at the edges, and an ellipsis only stands where it hides **two or more**
- * pages — one hidden page is rendered as itself. Those rules are the component's
- * (`packages/components/src/pagination/logic.ts`), and a browser drawing can get
- * either of them wrong without looking wrong, so the arithmetic lives here and
- * `pagination-preview.test.ts` holds it to the component's own function.
- */
-
-/** A rendered entry in the page list; the ellipsis carries no page. */
 export type PageItem =
   | { readonly kind: "page"; readonly page: number }
   | { readonly kind: "ellipsis" };
 
-/** What the window needs: the page, how many exist, and the two knobs. */
 export interface WindowInput {
   readonly page: number;
   readonly pageCount: number;
@@ -32,10 +18,6 @@ const pages = (from: number, to: number): ReadonlyArray<PageItem> =>
     pageItem(from + i),
   );
 
-/**
- * What stands in for the pages strictly between two shown ones: nothing when
- * there are none, the page itself when there is one, an ellipsis otherwise.
- */
 const between = (low: number, high: number): ReadonlyArray<PageItem> => {
   const hidden = high - low - 1;
   if (hidden <= 0) return [];
@@ -46,12 +28,6 @@ const between = (low: number, high: number): ReadonlyArray<PageItem> => {
 const clamp = (value: number, low: number, high: number): number =>
   Math.min(Math.max(value, low), high);
 
-/**
- * The entries the component renders for a page, ascending and with no repeats.
- *
- * A list that fits (`siblingCount + 5` or fewer pages) is rendered whole, so a
- * small result set never grows an ellipsis it does not need.
- */
 export const pageWindow = ({
   page: rawPage,
   pageCount: rawPageCount,
@@ -89,18 +65,15 @@ export const pageWindow = ({
   return [...pages(1, to), ...between(to, pageCount), pageItem(pageCount)];
 };
 
-/** The page the root paints: a stored value clamped into the real range. */
 export const clampPage = (page: number, pageCount: number): number =>
   pageCount <= 0 ? 1 : clamp(Math.trunc(page), 1, pageCount);
 
-/** Where Previous/Next land; a control at an end is disabled, so it never moves. */
 export const stepPage = (
   page: number,
   pageCount: number,
   delta: 1 | -1,
 ): number => clampPage(clampPage(page, pageCount) + delta, pageCount);
 
-/** One deployment row: the list a page of the workflow preview shows. */
 export interface Deployment {
   readonly id: string;
   readonly service: string;
@@ -131,7 +104,6 @@ const STATUSES: ReadonlyArray<Deployment["status"]> = [
   "failed",
 ] as const;
 
-/** The rows the workflow preview pages through: 23, so page five is short. */
 export const DEPLOYMENTS: ReadonlyArray<Deployment> = Array.from(
   { length: 23 },
   (_, index) => ({
@@ -145,14 +117,11 @@ export const DEPLOYMENTS: ReadonlyArray<Deployment> = Array.from(
   }),
 );
 
-/** How many rows one page holds. */
 export const PAGE_SIZE = 5;
 
-/** The page count a result set needs. */
 export const pageCountFor = (rows: ReadonlyArray<unknown>): number =>
   Math.ceil(rows.length / PAGE_SIZE);
 
-/** The rows one page shows. */
 export const rowsOn = (
   rows: ReadonlyArray<Deployment>,
   page: number,
@@ -163,13 +132,6 @@ export const rowsOn = (
   return rows.slice(from, from + pageSize);
 };
 
-/**
- * The readout under the list: "Rows 6–10 of 23".
- *
- * The last page is short, so the second number is the row count rather than
- * the page's end — a footer that printed 25 of 23 is the arithmetic a reader
- * notices first.
- */
 export const rangeLabel = (
   rows: ReadonlyArray<unknown>,
   page: number,

@@ -1,11 +1,3 @@
-/**
- * `input-edit` — typing into `<input>` and `<textarea>`.
- *
- * GPUix requires `autoFocus` (or a click) before a field receives key events, so
- * the first step clicks the field. The readout is the controlled value, which
- * proves the native edit reached React through `onChange`; `onSubmit` proves
- * Enter is delivered.
- */
 import { useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";

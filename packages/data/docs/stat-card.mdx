@@ -30,14 +30,3 @@ import { StatCard } from "@gpuixui/data";
 | ----- | ---- | ----------- |
 | `direction` | `"up" \| "down" \| "flat"` | which way the reading moved; it chooses the status tone's readable role |
 | `text` | `string \| null` | the trend's own words, e.g. `+12%`; a nullish or blank one paints no words |
-
-## Notes
-- The card does not size itself; it fills the box it is given.
-- The reading is a node, not a number: the card formats nothing.
-- A saved card's `trend` is read as data: `null` means no trend, so the
-  reading, label and hint still paint.
-- The card's own copy is read before it paints: a blank `label`, `unit`, `hint`
-  or `trend.text` — a locale table's missing row, a saved record's empty field —
-  paints **no line** rather than an empty or whitespace run the runtime would
-  lay out as a full line. The reading is the caller's data and still paints
-  (`behaviour/surface-a11y.test.tsx`).

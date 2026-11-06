@@ -72,14 +72,3 @@ DatePicker
 | `DatePickerContent` | `className` | `string` | — |
 | `DatePickerContent` | `children` | `PartChildren` | — |
 | `DatePickerCalendar` | `label` | `string` | `"Calendar"` |
-
-## Notes
-- Disabling a picker with its calendar open closes it; neither a day nor `Clear` writes the value.
-- No `aria-current`; today is marked by a border.
-- No `aria-disabled`; an unavailable day leaves the tab order.
-
-## Related
-
-- **Calendar** — the grid this control anchors in a popover.
-- **Popover** — the surface and its dismissal rules.
-- **Time picker** — the time of day this control does not own.

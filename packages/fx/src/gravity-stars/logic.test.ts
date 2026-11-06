@@ -1,14 +1,3 @@
-/**
- * The gravity field's arithmetic, without a renderer.
- *
- * The bugs these guard: a field that reshuffles between mounts; a star born
- * inside the box instead of on its edge, or landing anywhere but the well; a
- * field that collapses in one beat because every star takes the same time; a
- * brightness, duration or delay the renderer cannot paint; a mid frame that is
- * not the hand-over between the two legs; an unmeasured box painting stars
- * anyway; and a stilled star that rests somewhere the fall never visits.
- */
-
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import {
@@ -24,7 +13,6 @@ import {
   type GravityStar,
 } from "./logic.js";
 
-/** A 360×240 field of thirty-six stars on a 3 second fall. */
 const field = (
   overrides: Partial<GravityFieldInput> = {},
 ): ReadonlyArray<GravityStar> =>

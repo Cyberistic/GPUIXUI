@@ -10,25 +10,6 @@ import { docsByOrigin, packageSources } from "@/lib/package-docs";
 import { absoluteUrl } from "@/lib/site";
 import { docs, source } from "@/lib/source";
 
-/**
- * `/llms-full.txt`, every page as Markdown in one response.
- *
- * The route is thin on purpose, like `/llms.txt`: the document's shape lives in
- * `src/lib/llms-full.ts`, where it is tested without the MDX build, and this
- * file only hands it the pages. The site's collection comes first, so a curated
- * page wins the URL it shares with a package page; then every mounted package
- * collection; then the section indexes a route generates for a package that
- * writes no landing page, so the document serves the addresses `/llms.txt`
- * lists.
- *
- * Each page's text is the collection's own processed Markdown, read from the
- * entry the collection keeps for the page's path — the same string the "Copy
- * page" action hands a reader (`page-markdown.ts`), so the full document cannot
- * describe a version of a page the site does not serve. The sidebar loaders
- * hand over a page's frontmatter, not the entry that owns its text, so the body
- * is read from the collection rather than from the listed page.
- */
-
 interface ListedPage {
   readonly url: string;
   readonly path: string;
@@ -40,7 +21,6 @@ interface ListedPage {
 
 type Origin = "site" | PackageOrigin;
 
-/** The page's own Markdown, or nothing when the collection does not hold it. */
 const markupOf = async (origin: Origin, path: string): Promise<string> => {
   const entry =
     origin === "site" ? docs.getPage(path) : docsByOrigin[origin].getPage(path);
@@ -57,11 +37,9 @@ const toPage = async (
   markdown: await markupOf(origin, page.path),
 });
 
-/** The site's own pages: a curated page is served at the URL it claims. */
 const sitePages = (): Promise<ReadonlyArray<LlmsFullPage>> =>
   Promise.all(source.getPages().map((page) => toPage("site", page)));
 
-/** Every mounted package collection's pages, in the sidebar's order. */
 const packagedPages = (): Promise<ReadonlyArray<LlmsFullPage>> =>
   Promise.all(
     packageCollections.flatMap((collection, index) =>
@@ -71,12 +49,6 @@ const packagedPages = (): Promise<ReadonlyArray<LlmsFullPage>> =>
     ),
   );
 
-/**
- * The indexes a collection route generates, as a page of links.
- *
- * The packages without a landing page have no Markdown of their own, so the
- * document writes the one thing the route serves: the rows it lists.
- */
 const generatedIndexes = (): ReadonlyArray<LlmsFullPage> =>
   packageCollections.flatMap((collection, index) => {
     if (collection.index === undefined) return [];

@@ -6,12 +6,6 @@ import {
 import { toDomKey } from "./key-names.js";
 import { toTanstackPlatform, type Platform } from "./platform.js";
 
-/**
- * The `@tanstack/hotkeys` adapter: a key name in TanStack's spelling. The key
- * becomes its DOM value first, which any hotkey library accepts, and only then
- * takes TanStack's own conventions (`" "` → `"Space"`, `"a"` → `"A"`). Another
- * library would swap this function and keep `toDomKey`.
- */
 export const canonicalKey = (key: string): string =>
   normalizeKeyName(toDomKey(key));
 

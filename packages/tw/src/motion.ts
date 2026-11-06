@@ -1,12 +1,3 @@
-/**
- * shadcn animation classes → GPUix `motion` props.
- *
- * GPUix animates opacity, size, position and radius; it has no `transform`.
- * `zoom-in-95`/`zoom-out-95` therefore stay in `unsupported` rather than being
- * faked. Fade and the `slide-in-from-*` offsets — the rest of shadcn's enter
- * recipe — map directly.
- */
-
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -15,7 +6,6 @@ import type { MotionProps, MotionStyle, MotionTransition } from "@gpuix/react";
 import type { Theme } from "@gpuixui/tokens";
 import { classesToStyle } from "./classes.js";
 
-/** The resolved motion plus the classes the runtime cannot animate. */
 export interface TwMotion extends MotionProps {
   readonly unsupported: ReadonlyArray<string>;
 }
@@ -26,7 +16,6 @@ const is = (token: string, value: string): boolean =>
 const has = (tokens: ReadonlyArray<string>, value: string): boolean =>
   Arr.some(tokens, (token) => is(token, value));
 
-/** The duration suffix (`duration-100`) in seconds. */
 const durationOf = (tokens: ReadonlyArray<string>): number =>
   Option.getOrElse(
     Option.map(
@@ -39,7 +28,6 @@ const durationOf = (tokens: ReadonlyArray<string>): number =>
     () => 0.1,
   );
 
-/** The offset for `slide-in-from-top-2` and friends, in pixels. */
 const slideOf = (
   tokens: ReadonlyArray<string>,
 ): { readonly top?: number; readonly left?: number } =>
@@ -73,7 +61,6 @@ const slideOf = (
     },
   );
 
-/** `ease-out` / `ease-[cubic-bezier(…)]` → the runtime's easing. */
 const easeOf = (
   tokens: ReadonlyArray<string>,
 ): NonNullable<MotionTransition["ease"]> =>
@@ -106,7 +93,6 @@ const easeOf = (
     },
   );
 
-/** Builds the motion props for a shadcn enter/exit recipe. */
 export const motionFromClasses = (
   className: string | undefined,
   theme: Theme,
@@ -144,21 +130,18 @@ export const motionFromClasses = (
   };
 };
 
-/** shadcn's dialog/popover enter/exit: fade, 100 ms. */
 export const dialogMotion = (theme: Theme): TwMotion =>
   motionFromClasses(
     "data-open:animate-in data-closed:animate-out data-open:fade-in-0 data-closed:fade-out-0 duration-100",
     theme,
   );
 
-/** shadcn's overlay: fade only. */
 export const overlayMotion = (theme: Theme): TwMotion =>
   motionFromClasses(
     "data-open:animate-in data-closed:animate-out data-open:fade-in-0 data-closed:fade-out-0 duration-100",
     theme,
   );
 
-/** Base UI toast's 500 ms cubic-bezier enter/exit. */
 export const toastMotion = (theme: Theme): TwMotion =>
   motionFromClasses(
     "data-open:animate-in data-closed:animate-out data-open:fade-in-0 data-closed:fade-out-0 duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",

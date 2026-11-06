@@ -1,15 +1,7 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Aspect ratio example: a media frame and a square tile.
- *
- * Each box takes the width of the column it sits in; the studio still is 16:9
- * and the palette swatch is square, so a resized window reshapes neither.
- */
-
 import { AspectRatio } from "../src/aspect-ratio.js";
 import { useTheme } from "../src/internal/theme.js";
 
-/** A 16:9 still over a square swatch. */
 export const AspectRatioExample = () => {
   const theme = useTheme();
   return (

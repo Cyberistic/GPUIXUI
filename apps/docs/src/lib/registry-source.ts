@@ -21,37 +21,15 @@ import {
   type RegistryItemFile,
 } from "./registry";
 
-/**
- * The registry, read from the component pages and their sources.
- *
- * A component page is the one place its title, description and module are
- * stated; the module's own relative imports are the list of files an install
- * needs. Both are read at build time and served as JSON, so the registry cannot
- * describe a component the documentation does not, or install a file the
- * repository does not ship.
- *
- * Node-only: this reads the workspace at build time, and the browser bundle
- * never sees it.
- */
-
-/** One served component page, before its module is resolved. */
 interface ServedPage {
   readonly url: string;
-  /** Repository-relative page, e.g. `packages/components/docs/accordion.mdx`. */
+
   readonly file: string;
   readonly slug: string;
-  /** The page the site writes, or one a package ships. */
+
   readonly origin: "site" | "package";
 }
 
-/**
- * The component pages the site actually serves.
- *
- * A curated page keeps the URL of the package page it shadows, so it is the
- * page the registry reads; a package URL a curated page replaces is a redirect
- * and is dropped (`curated-twins.ts`). The icon set documents a component too,
- * but it ships no per-item source, so its collection is not a registry lane.
- */
 const servedPages = (root: string): ReadonlyArray<ServedPage> => {
   const curated = readdirSync(join(root, "apps/docs/content/docs/components"))
     .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
@@ -90,11 +68,9 @@ const servedPages = (root: string): ReadonlyArray<ServedPage> => {
   ];
 };
 
-/** A path with the repository's separators, as a registry path is written. */
 const repoRelative = (root: string, path: string): string =>
   relative(root, path).replaceAll("\\", "/");
 
-/** Every source file a package ships, repository-relative. */
 const sourceFiles = (
   root: string,
   packageName: string,
@@ -111,7 +87,6 @@ const sourceFiles = (
     });
   })(join(root, "packages", packageName, "src"));
 
-/** The shallowest file whose name is the page's, which is the component itself. */
 const byStem = (
   files: ReadonlyArray<string>,
   slug: string,
@@ -128,7 +103,6 @@ const byStem = (
         left.localeCompare(right),
     )[0];
 
-/** A curated page names its module; a package page's module is resolved for it. */
 const moduleOf = (
   root: string,
   page: ServedPage,
@@ -150,7 +124,6 @@ const moduleOf = (
   );
 };
 
-/** The page's title and description, from the frontmatter it renders. */
 const metadataOf = (
   source: string,
 ): { readonly title: string; readonly description: string } => {
@@ -161,19 +134,11 @@ const metadataOf = (
   };
 };
 
-/** One export a package publishes: its specifier pattern and its file target. */
 interface ExportPattern {
   readonly pattern: string;
   readonly target: string;
 }
 
-/**
- * The paths a package's `exports` map publishes.
- *
- * A component imports `@gpuixui/tw`, `@gpuixui/motion/react/presence` and the
- * like; those specifiers resolve through the package manifest, so the registry
- * reads the same map a bundler would instead of guessing a file name.
- */
 const exportPatterns = (
   read: (path: string) => string,
   packageName: string,
@@ -190,7 +155,6 @@ const exportPatterns = (
   });
 };
 
-/** The part of a key a wildcard export pattern captures. */
 const wildcardValue = (pattern: string, key: string): string | undefined => {
   const star = pattern.indexOf("*");
   if (star === -1) return undefined;
@@ -201,7 +165,6 @@ const wildcardValue = (pattern: string, key: string): string | undefined => {
     : undefined;
 };
 
-/** The repository file a `@gpuixui/<package>[/<subpath>]` specifier names. */
 const workspaceModule = (
   read: (path: string) => string,
   specifier: string,
@@ -225,7 +188,6 @@ const workspaceModule = (
     : `packages/${packageName}/${target.replace(/^\.\//, "")}`;
 };
 
-/** The repository file a specifier in a source names, if the workspace ships it. */
 const resolveImport = (
   repo: string,
   read: (path: string) => string,
@@ -242,13 +204,6 @@ const resolveImport = (
   return found === undefined ? undefined : repoRelative(repo, found);
 };
 
-/**
- * The module and every workspace file its imports need, across packages.
- *
- * `@gpuixui/*` is followed through the package manifests, so a component that
- * borrows `@gpuixui/primitives` ships what it borrows — as its own files when
- * they share a package, as a runtime item when they do not.
- */
 const closureOf = (
   repo: string,
   module: string,
@@ -269,7 +224,6 @@ const closureOf = (
   return [...found].toSorted();
 };
 
-/** The runtime packages a set of files borrow from, outside their own package. */
 const borrowedPackages = (
   read: (path: string) => string,
   own: string,
@@ -288,7 +242,6 @@ const borrowedPackages = (
     ),
   ].toSorted();
 
-/** The shadcn file entry for one repository path, with its content on disk. */
 const fileEntry = (
   repo: string,
   path: string,
@@ -306,18 +259,15 @@ const fileEntry = (
   };
 };
 
-/** One served page whose module resolved to a package. */
 interface ResolvedPage {
   readonly page: ServedPage;
   readonly module: string;
   readonly packageName: string;
 }
 
-/** The repository root, without its trailing separator. */
 const rootOf = (root: string | URL): string =>
   (typeof root === "string" ? root : fileURLToPath(root)).replace(/\/+$/, "");
 
-/** A reader that reads each file once. */
 const reader = (repo: string): ((path: string) => string) => {
   const texts = new Map<string, string>();
   return (path) => {
@@ -329,13 +279,6 @@ const reader = (repo: string): ((path: string) => string) => {
   };
 };
 
-/**
- * The version every npm package in the workspace pins.
- *
- * The root catalog wins because it is exact (`effect: 4.0.5`, `@gpuix/react:
- * 0.11.0`); a package only a manifest declares keeps the range it names. The
- * registry installs what the source was written against, never `latest`.
- */
 const workspaceVersions = (
   repo: string,
   read: (path: string) => string,
@@ -371,13 +314,6 @@ const workspaceVersions = (
   };
 };
 
-/**
- * The served pages whose module resolved, and the package pages that did not.
- *
- * A page this site writes for a pattern rather than a library component (its
- * source block names a file under `apps/docs`) is not an item and is not a
- * failure; a package page with no module is, and is reported.
- */
 const resolvedPages = (
   repo: string,
   read: (path: string) => string,
@@ -413,21 +349,11 @@ const resolvedPages = (
   );
 };
 
-/** One served document: the address a client fetches and the JSON it gets. */
 export interface RegistryDocument {
   readonly path: string;
   readonly json: string;
 }
 
-/**
- * Every item, in page order, the documents that serve them, and the pages no
- * module resolved for.
- *
- * A page item ships its own package's files. Every package it borrows from is
- * a runtime item named in `registryDependencies`, whose files are the union of
- * everything the pages need from that package — so a component installs the
- * runtime once, not once per component.
- */
 export const readRegistry = (
   root: string | URL,
 ): {
@@ -517,7 +443,6 @@ export const readRegistry = (
   };
 };
 
-/** The machine paths the registry serves: the index and one document per item. */
 export const registryPaths = (root: string | URL): ReadonlyArray<string> =>
   readRegistry(root)
     .documents.map((document) => document.path)

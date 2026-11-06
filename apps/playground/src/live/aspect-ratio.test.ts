@@ -1,17 +1,3 @@
-/**
- * Holds the arithmetic the `aspect-ratio-paint` probe reads a window with, and
- * the claims its README section prints.
- *
- * The probe's whole answer is one pair of numbers per box, and both are easy to
- * get backwards: `aspectRatio` is width ÷ height, so a definite width divides
- * and a definite height multiplies, and a ratio below one makes the box taller
- * than it is wide rather than "smaller". The cases table below is the fixture's
- * expectation, so a probe that stops asking for one axis fails here before a
- * window is opened.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the
- * repository's own probe and prose, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { Order } from "effect";
@@ -41,7 +27,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The `aspectRatioSteps` effect, bounded by the first declaration after it. */
 const steps = (() => {
   const start = scenarios.indexOf("const aspectRatioSteps");
   if (start === -1) return "";
@@ -63,8 +48,6 @@ describe("the aspect-ratio arithmetic", () => {
   });
 
   it("reads a ratio below one as a portrait box", () => {
-    // A 0.5 ratio is not "half size": the width stays 100 and the height
-    // doubles, which is the direction a thumbnail or a book cover needs.
     expect(heightForWidth(ASPECT_PORTRAIT_WIDTH, ASPECT_PORTRAIT_RATIO)).toBe(
       200,
     );
@@ -95,8 +78,7 @@ describe("the aspect-ratio arithmetic", () => {
     expect(new Set(Arr.map(ASPECT_CASES, (box) => box.id)).size).toBe(
       ASPECT_CASES.length,
     );
-    // Every axis answer is covered: a ratio that only ever derived a height
-    // would leave the definite-height and stretch cases unmeasured.
+
     expect(
       Arr.sort(
         Arr.map(ASPECT_CASES, (box) => box.derives),
@@ -127,9 +109,6 @@ describe("the aspect-ratio-paint probe's record", () => {
   });
 
   it("prints the number of checks the probe asserts", () => {
-    // The steps assert the width and height of every case plus the two
-    // container comparisons, so the printed total is derived from the table
-    // rather than hand-maintained beside it.
     const printed = Number(
       /(\d+) checks, `--only aspect-ratio-paint`/.exec(readme)?.[1] ??
         Number.NaN,
@@ -140,9 +119,6 @@ describe("the aspect-ratio-paint probe's record", () => {
   });
 
   it("asks the fixture for every property the section teaches", () => {
-    // The section says which properties it measured; a fixture that stopped
-    // asking for one would leave the sentence claiming a paint nobody asked
-    // for. The reads below are the source's own expressions, not a copy.
     expect(scenarios).toContain("aspectRatio: ASPECT_RATIO");
     expect(scenarios).toContain("aspectRatio: ASPECT_PORTRAIT_RATIO");
     expect(scenarios).toContain("width: ASPECT_WIDTH");
@@ -165,9 +141,6 @@ describe("the aspect-ratio-paint probe's record", () => {
   });
 
   it("prints the geometry the fixture expects, not a remembered one", () => {
-    // The README table is the evidence a reader cites; each row is held to the
-    // case it describes, so a changed constant fails the sentence that prints
-    // the old box.
     Arr.forEach(ASPECT_CASES, (box) => {
       const printed = new RegExp(
         `\\|\\s*\\\`${box.id}\\\`[^\\n]*?\\*\\*${box.width}×${box.height}\\*\\*`,

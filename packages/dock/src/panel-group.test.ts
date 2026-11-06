@@ -1,13 +1,3 @@
-/**
- * The panel group's collapse, resize and persisted shape.
- *
- * `PanelLayout` is the one shape a workspace persists: it round-trips through a
- * JSON string at the app's boundary, and a corrupt string is a decode failure
- * the caller opens its default over (`workspace-restore`). The collapse and
- * resize reducers are pure, so the same flags and fractions an Effect-driven
- * workspace writes are the ones the group paints.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";

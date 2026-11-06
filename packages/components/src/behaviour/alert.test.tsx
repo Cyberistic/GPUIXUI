@@ -1,14 +1,3 @@
-/**
- * Alert behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a tone that does not tint the surface; a title that does
- * not take the tone's readable colour; a description that inherits that colour
- * and becomes unreadable; a dismiss control that renders without `onDismiss`,
- * cannot be reached and fired by keyboard, or fires twice; a lost alert role; a
- * description that swallows the click of the action inside it; and a part that
- * silently renders outside its root with the default tone.
- */
-
 import * as Arr from "effect/Array";
 import { contrastFloorsFor, contrastRatio } from "@gpuixui/tokens";
 import { describe, expect, it, vi } from "vitest";
@@ -34,7 +23,6 @@ import {
 } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
-/** Every tone, so a missing case fails rather than going unnoticed. */
 const tones: ReadonlyArray<AlertTone> = [
   "info",
   "success",
@@ -84,14 +72,6 @@ describe("Alert", () => {
   });
 
   it("paints a stored tone name it does not carry as the neutral family", () => {
-    // The bug guarded: the root indexed `ALERT_TONES[tone]` and the selection
-    // wash indexed its role table with the same raw name, so a status item a
-    // store wrote under a name this release does not carry (`"critical"`, an
-    // older spelling) dropped the fill, the edge and the tone's ink — the
-    // message painted as page text inside a bare border — while the palette
-    // beside it had already read the unknown name as `info` through
-    // `statusTone`. One boundary read makes the class, the palette and the wash
-    // agree on the tone the message paints.
     const alert = renderComponent(
       // @ts-expect-error a stored name is not the union's literal
       <Alert testId="alert" tone="critical">
@@ -106,7 +86,7 @@ describe("Alert", () => {
         color: tone(darkTheme, "info").fg,
         selectionColor: messageSelection(darkTheme, "info"),
       });
-      // The title reads the same resolved tone through the context.
+
       expect(alert.renderer.findByTestId("alert-title")?.style.color).toBe(
         tone(darkTheme, "info").fg,
       );
@@ -116,8 +96,6 @@ describe("Alert", () => {
   });
 
   it("keeps a shipped tone when it was stored as one", () => {
-    // The negative control: the guard must not flatten every message to
-    // `info`. A `danger` alert still paints its own fill, edge and wash.
     const alert = renderComponent(<Alert testId="alert" tone="danger" />);
 
     try {
@@ -304,8 +282,7 @@ describe("Alert", () => {
           alert.renderer.findByTestId("alert-link")?.style.color,
           `${name} ${value}`,
         ).toBe(messageLink(theme, value));
-        // The tint the message paints is the surface the colour must read on,
-        // and it is not a page surface `brandText` answers for.
+
         expect(
           contrastRatio(messageLink(theme, value), tone(theme, value).bg),
           `${name} ${value}`,

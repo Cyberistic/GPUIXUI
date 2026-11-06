@@ -1,11 +1,3 @@
-/**
- * Browser preview for the ToggleGroup page.
- *
- * A toggle group is a toolbar of related modes with one tab stop. The preview
- * shows a single-mode and a multiple-mode group, reusing the shared button
- * chrome. The Code tab shows the native usage.
- */
-
 import { useState } from "react";
 
 const formats = ["Bold", "Italic", "Underline"] as const;

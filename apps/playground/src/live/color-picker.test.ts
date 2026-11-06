@@ -1,17 +1,3 @@
-/**
- * Holds `color-picker-lifecycle` to the shipped component and to its own
- * arithmetic.
- *
- * The gap this guards: the window is the only place the panel's placement, an
- * area press and a refused draft's painted edge are measured, and a probe
- * rewritten around a local swatch grid or its own hex normal form would still
- * pass while the README called it the library's picker. The fixture's area
- * arithmetic is therefore executed beside the component's own colour model, and
- * the registry and the README are held to the probe that ran.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe, component and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -48,7 +34,6 @@ const parts = read(
 );
 const readme = read("../../README.md");
 
-/** The probe's README section, so a value printed elsewhere cannot pass. */
 const section = (() => {
   const heading = "### `color-picker-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -57,7 +42,6 @@ const section = (() => {
   return end === -1 ? readme.slice(start) : readme.slice(start, start + end);
 })();
 
-/** The `theme.colors.<role>` names the component's default presets name. */
 const componentSwatches = (): ReadonlyArray<string> => {
   const start = picker.indexOf("const defaultSwatches");
   const body = picker.slice(start, picker.indexOf("];", start));

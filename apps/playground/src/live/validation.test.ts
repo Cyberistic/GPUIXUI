@@ -1,13 +1,3 @@
-/**
- * Holds the schema and the readout `validation-lifecycle` is read against.
- *
- * The bugs these catch: a pattern that accepts the value the probe calls
- * invalid (the message check would pass on a stale frame), a message the
- * probe's assertion quotes but the schema never produces (a raw issue or a
- * formatter default would reach the reader), and a readout that hides a submit
- * or an applied value, which would make every count in the window vacuous.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -17,7 +7,6 @@ import {
   validationReadout,
 } from "./validation.js";
 
-/** The message a value earns, or `"none"`. */
 const messageFor = (value: string): string =>
   Option.getOrElse(submitSlug(value), () => "none");
 
@@ -31,8 +20,6 @@ describe("the validation the probe submits", () => {
   });
 
   it("rejects a value that keeps its words but breaks the separators", () => {
-    // Both are values a reader plausibly types, and both leave the description
-    // in place if the pattern is too loose.
     expect(messageFor("design system")).toBe(VALIDATION_MESSAGE);
     expect(messageFor("design--system")).toBe(VALIDATION_MESSAGE);
   });

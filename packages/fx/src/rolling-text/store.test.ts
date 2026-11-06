@@ -1,15 +1,3 @@
-/**
- * The rolling swap's clock, under `TestClock`.
- *
- * The bugs these guard: an exit window re-armed by every value that arrives
- * mid-exit, which pushed the swap back until the stream stopped and left the
- * clip empty; an entry that never settles, so the phase kept reporting a value
- * still arriving; and a window that outlives the component that started it.
- *
- * The window is a `TestClock` sleep, so every case advances the window the
- * exit armed rather than waiting on real time.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
@@ -39,8 +27,6 @@ describe("RollingStore", () => {
     "lands on the newest value without re-arming the exit it arrived in",
     () =>
       Effect.gen(function* () {
-        // The bug this guards: every arrival restarted the window, so a value
-        // changing faster than one swap never committed and the clip stayed empty.
         const roll = yield* makeRollingStore("v1");
         yield* roll.show("v2", policy);
         yield* TestClock.adjust("8 millis");
@@ -48,9 +34,6 @@ describe("RollingStore", () => {
         yield* TestClock.adjust("8 millis");
         yield* roll.show("v4", policy);
 
-        // The first change's window has run by now — four milliseconds after
-        // the last arrival, not one window after it — so a newer value is
-        // painted even though the stream never stopped.
         yield* TestClock.adjust("4 millis");
         expect(roll.local.read().shown).toBe("v4");
         expect(roll.local.read().phase).toBe("entering");
@@ -67,7 +50,7 @@ describe("RollingStore", () => {
 
       expect(roll.local.read().phase).toBe("entering");
       expect(Option.isNone(roll.local.read().pending)).toBe(true);
-      // The window belonged to the exit this return ended.
+
       expect(roll.local.running()).toBe(false);
     }),
   );

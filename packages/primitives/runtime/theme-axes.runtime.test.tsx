@@ -1,27 +1,3 @@
-/**
- * The remaining theme axes, on screen: high contrast, density, platform type.
- *
- * Plan `042` proved the shipped light and dark palettes on a handful of
- * controls. Three capabilities in `.agents/slop/COMPONENTS.md` were still values-only:
- *
- * - the high-contrast palettes had not been read on screen beyond a handful of
- *   controls;
- * - a density override had never been measured on a control;
- * - `platformTheme` had never reached a mounted tree — which is exactly the
- *   path the docs site's platform toggle uses.
- *
- * The invariants are structural, not decorative: every painted colour must be a
- * member of the active palette (or the one documented derived text colour, see
- * `bandOf`), a height must equal the active preset's metric, and a code role's
- * family must equal the platform's mono family. A component that hard-codes a
- * value fails here even though it looks right.
- *
- * The first bullet is now read on the **whole tier**, not seven controls: the
- * `everyTier` scene below mounts each component at rest in both high-contrast
- * variants, so a literal in a field, a group, a mark or a placeholder is named
- * rather than waiting for someone to look at it.
- */
-
 import { expect, it } from "vitest";
 import {
   brandText,
@@ -76,7 +52,6 @@ const rendered = (node: React.ReactElement): Promise<Runtime> =>
     return runtime;
   });
 
-/** One control per density-driven surface, plus an icon-sized selection box. */
 const densityScene = (density: Density) => (
   <ThemeProvider theme={lightTheme} density={density}>
     <Box tone="background" padding="lg" testId="surface">
@@ -92,16 +67,6 @@ const densityScene = (density: Density) => (
   </ThemeProvider>
 );
 
-/**
- * Every Tier 1 component at rest, with no variant that derives a colour.
- *
- * The high-contrast claims above were read off seven controls; the rest of the
- * tier — the fields, groups, marks, overlays and placeholders — had never
- * painted a high-contrast palette, so a literal in one of them was a colour the
- * gate could not see. Hover, press and disabled states are left out on purpose:
- * those are derived fills (`filledHover`/`filledPressed`, the washes, the fade)
- * and a derived value is measured by the tokens suite, not by membership.
- */
 const everyTier = (theme: PrimitiveTheme) => (
   <ThemeProvider theme={theme}>
     <Box tone="background" padding="lg" testId="surface">
@@ -181,7 +146,6 @@ const everyTier = (theme: PrimitiveTheme) => (
   </ThemeProvider>
 );
 
-/** A scene with one control per themed surface, at the theme's own density. */
 const controls = (theme: PrimitiveTheme) => (
   <ThemeProvider theme={theme}>
     <Box tone="background" padding="lg" testId="surface">
@@ -200,22 +164,14 @@ const controls = (theme: PrimitiveTheme) => (
   </ThemeProvider>
 );
 
-/** The active palette as RGB strings, ready to compare against the paint. */
 const paletteOf = (theme: PrimitiveTheme): ReadonlyArray<string> =>
   Arr.map(R.values(theme.colors), rgbOf);
 
-/** A pixel height the runtime painted for `testId`, failing when absent. */
 const heightOf = (runtime: Runtime, testId: string): number =>
   Option.getOrElse(runtime.bounds(testId), () =>
     expect.fail(`the runtime painted no ${testId}`),
   ).height;
 
-/**
- * The height of the drawing inside a control.
- *
- * A selection control's `testId` addresses its press target (the floor), and the
- * box it draws is the target's first child.
- */
 const drawingHeightOf = (runtime: Runtime, testId: string): number => {
   const target = Option.getOrElse(runtime.element(testId), () =>
     expect.fail(`the runtime retained no ${testId}`),
@@ -233,41 +189,26 @@ it("paints the high-contrast light palette, not the default one", async () => {
   const runtime = await rendered(controls(highContrastLightTheme));
   const colours = paintedColours(runtime);
   const palette = paletteOf(highContrastLightTheme);
-  // The scene must have painted something, or the membership check is vacuous.
+
   expect(colours).toContain(rgbOf(highContrastLightTheme.colors.background));
   expect(
     Arr.filter(colours, (colour) => !palette.includes(colour)),
   ).toStrictEqual([]);
-  // The surface is #FFFFFF here and neutral-50 in the default light theme: the
-  // frame proves the palette swapped rather than two palettes agreeing.
+
   expect(colours).not.toContain(rgbOf(lightTheme.colors.background));
 });
 
-/**
- * The band a Tier 1 paint may fall in: the theme's own roles, plus the one
- * derived text colour a mark and a link are designed with.
- *
- * `brandText` moves the brand toward the foreground until every surface it is
- * read on clears its floor, so it is the documented exception to "a painted
- * colour is a role" — a link, a `Text tone="primary"` and a progress fill use
- * it. Every other derived value (the pointer fills, the washes, the disabled
- * pair, the fade) belongs to a state this scene leaves at rest.
- */
 const bandOf = (theme: PrimitiveTheme): ReadonlyArray<string> => [
   ...paletteOf(theme),
   rgbOf(brandText(theme)),
 ];
 
 it("paints the high-contrast palettes on every Tier 1 component", async () => {
-  // The gap guarded: high contrast had been read off seven controls, so a
-  // literal in a field, a group, a mark or a placeholder was a colour no suite
-  // could see. This scene mounts the whole tier at rest and asks one question
-  // of every applied colour — is it a role of this palette? — in both variants.
   const runtime = await openWindow();
   const audit = (name: string, theme: PrimitiveTheme): void => {
     runtime.render(everyTier(theme));
     const colours = paintedColours(runtime);
-    // A scene that painted nothing would pass the membership check vacuously.
+
     expect(runtime.allText()).toContain("Refresh");
     expect(colours.length).toBeGreaterThan(40);
     const band = bandOf(theme);
@@ -303,15 +244,12 @@ it("a density override moves control heights and leaves colour alone", async () 
   const runtime = await openWindow();
   const expectMetrics = (density: Density): void => {
     expect(heightOf(runtime, "button")).toBe(density.controlHeight.md);
-    // A native `<input>` reports its content box: the runtime draws the border
-    // inside the declared height, so the paint is two thin borders shorter.
-    // Measured here; the contract is still the density metric.
+
     expect(heightOf(runtime, "input")).toBe(
       density.controlHeight.md - 2 * lightTheme.borderWidth.thin,
     );
     expect(heightOf(runtime, "number")).toBe(density.controlHeight.md);
-    // A selection control's target is the pressable floor and density must not
-    // move it; the box it draws stays icon-sized by design.
+
     expect(heightOf(runtime, "checkbox")).toBe(targetSize.minimum);
     expect(drawingHeightOf(runtime, "checkbox")).toBe(lightTheme.iconSize.md);
   };
@@ -321,12 +259,9 @@ it("a density override moves control heights and leaves colour alone", async () 
   const denseSurface = painted(runtime, "surface", "backgroundColor");
   const denseLabel = painted(runtime, "button", "color");
 
-  // The same mounted tree at a second density: a provider that keeps its first
-  // metrics shows the old heights here.
   runtime.render(densityScene(densityPresets.spacious));
   expectMetrics(densityPresets.spacious);
 
-  // Density is numeric only: the same theme still paints the same roles.
   expect(densityPresets.compact.controlHeight.md).not.toBe(
     densityPresets.spacious.controlHeight.md,
   );

@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Pagination example: a results footer driven by real page state.
- *
- * The component is controlled — `page` is the app's — which is what keeps the
- * rows below and the control in agreement when the rest of the screen also
- * changes the page.
- */
-
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
@@ -21,7 +13,6 @@ const TOTAL = 42;
 const PER_PAGE = 5;
 const PAGE_COUNT = Math.ceil(TOTAL / PER_PAGE);
 
-/** A page worth of rows plus the control. */
 export const PaginationExample = () => {
   const theme = useTheme();
   const [page, setPage] = useState(1);

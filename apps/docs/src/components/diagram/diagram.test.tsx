@@ -23,17 +23,6 @@ import {
   zoomTo,
 } from "./zoom";
 
-/**
- * diagram on Pele.
- *
- * The bugs these cases guard: a theme name that resolves to no palette would
- * paint every diagram in the page's roles while the picker says "ocean"; a
- * variable mapped to the wrong role would put a node's fill on the page
- * background; a zoom that scales around the origin instead of the pointer
- * would slide the diagram away under the cursor; and a template that Pele's
- * parser refuses would ship as a broken starting point.
- */
-
 const render = (
   source: string,
   options?: Parameters<typeof renderMermaid>[1],
@@ -169,7 +158,7 @@ describe("the zoom arithmetic", () => {
     const before = { scale: 1, x: 0, y: 0 };
     const after = zoomTo(before, 2, { x: 100, y: 50 });
     expect(after.scale).toBe(2);
-    // The content point at (100, 50) is still painted at (100, 50).
+
     expect(after.x + 100 * after.scale).toBeCloseTo(100, 6);
     expect(after.y + 50 * after.scale).toBeCloseTo(50, 6);
   });

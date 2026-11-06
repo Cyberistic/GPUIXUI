@@ -1,16 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * MentionInput: `@name` autocompletion in a text field.
- *
- * The token rules (where a query starts, how names rank, what replaces the
- * token) live in `mention/logic.ts`. 0.11.0 has no caret position, so the query
- * comes from the text's last `@` token — correct while typing at the end, and
- * documented as the limitation it is.
- *
- * The list filters and ranks the `MentionInputItem`s the consumer declares, so
- * the candidate set stays the consumer's data and the ranking stays ours.
- */
-
 import type { EventPayload, InputProps, Props } from "@gpuix/react";
 import {
   FloatingLayer,
@@ -78,13 +66,12 @@ import {
   useTheme,
 } from "./internal/theme.js";
 
-/** The rules a mention part follows; throws outside a {@link MentionInput}. */
 interface MentionContextValue {
   readonly text: string;
   readonly query: Option.Option<MentionQuery>;
   readonly highlighted: number;
   readonly maxVisible: number;
-  /** The field refuses every edit, so its list is gone rather than leaving. */
+
   readonly disabled: boolean;
   readonly select: (value: string) => void;
   readonly close: () => void;
@@ -95,19 +82,11 @@ const MentionContext = createContext<MentionContextValue | undefined>(
   undefined,
 );
 
-/**
- * Whether the row is the highlighted one, set by the list.
- *
- * `leaving` marks a row painted only for the list's exit: the runtime decides the
- * Tab order element by element, so a row that cannot be pressed must not be a
- * stop either.
- */
 const MentionItemContext = createContext<{
   readonly highlighted: boolean;
   readonly leaving: boolean;
 }>({ highlighted: false, leaving: false });
 
-/** The mention field a part belongs to. Throws when there is none. */
 const useMention = (): MentionContextValue => {
   const value = useContext(MentionContext);
   if (value === undefined) {
@@ -116,23 +95,21 @@ const useMention = (): MentionContextValue => {
   return value;
 };
 
-/** {@link MentionInput} props. */
 export interface MentionInputProps extends Omit<
   InputProps,
   "value" | "style" | "onChange" | "onSubmit"
 > {
-  /** The controlled text. `undefined` means uncontrolled. */
   readonly value?: string;
   readonly defaultValue?: string;
   readonly onValueChange?: (value: string) => void;
-  /** The inserted name, once per accepted mention. */
+
   readonly onMention?: (value: string) => void;
-  /** The field's accessible name. */
+
   readonly label: string;
-  /** Rows offered at once. Default `6`. */
+
   readonly maxVisible?: number;
   readonly disabled?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
@@ -144,7 +121,6 @@ const sameValues = (
   left.length === right.length &&
   left.every((value, index) => value === right[index]);
 
-/** The field: value, active query, highlight and the field surface. */
 export const MentionInput = ({
   value: valueProp,
   defaultValue = "",
@@ -170,9 +146,6 @@ export const MentionInput = ({
   const [visible, setVisible] = useState<ReadonlyArray<string>>([]);
   assertParts(mentionRoot, children);
 
-  // A disabled field refuses every edit path, so it never offers a row to
-  // insert into: a caller that disables the field mid-edit does not leave the
-  // list floating over it.
   const open = disabled || dismissed ? Option.none() : mentionQuery(text);
   const active =
     visible.length === 0
@@ -180,7 +153,7 @@ export const MentionInput = ({
       : ((highlighted % visible.length) + visible.length) % visible.length;
 
   const openKey = Option.isSome(open) ? "open" : "closed";
-  // A new query starts at its first candidate.
+
   useLayoutEffect(() => {
     setHighlighted(0);
   }, [openKey]);
@@ -210,7 +183,7 @@ export const MentionInput = ({
           sameValues(current, values) ? current : values,
         ),
     }),
-    // `select` closes over the current text and query.
+
     [active, disabled, maxVisible, open, text],
   );
 
@@ -248,13 +221,8 @@ export const MentionInput = ({
           >
             <input
               {...rest}
-              // The composite field paints the page role, so its value sits on
-              // `background` rather than a plain field's `input` fill; the hint
-              // is painted because the host's own placeholder is a fixed grey.
               theme={nativeTextTheme(theme, "background")}
               aria-label={label}
-              // The hint is painted; its words travel on the help channel
-              // while the field is empty.
               aria-description={fieldHelp(
                 { description: rest["aria-description"], placeholder },
                 text,
@@ -297,14 +265,11 @@ export const MentionInput = ({
   );
 };
 
-/** {@link MentionInputList} props. */
 export interface MentionInputListProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** An element with the item props the list ranks. */
 type ItemElement = ReactElement<{ readonly value: string }>;
 
 const isItemElement = (child: unknown): child is ItemElement =>
@@ -312,25 +277,18 @@ const isItemElement = (child: unknown): child is ItemElement =>
   child.type === MentionInputItem &&
   typeof (child.props as { readonly value?: unknown }).value === "string";
 
-/** One row the list paints: the value it inserts and the item it was declared as. */
 interface PaintedRow {
   readonly value: string;
   readonly item: ItemElement;
 }
 
-/** What a list last painted: its rows, and the one it had highlighted. */
 interface PaintedList {
   readonly rows: ReadonlyArray<PaintedRow>;
   readonly highlighted: number;
 }
 
-/**
- * The list's entry: the house fade plus 4px of travel out from the field's
- * bottom edge, the offset every anchored panel uses.
- */
 const listFrames = fadeFromAnchor("bottom", 4);
 
-/** The list: a suggestion surface that leaves the way it arrived. */
 export const MentionInputList = ({
   className,
   children,
@@ -366,17 +324,11 @@ export const MentionInputList = ({
   const key = ranked.join("\u0000");
   useLayoutEffect(() => {
     reportVisible(ranked);
-    // `key` is the value identity of the list; `ranked` is rebuilt each render.
   }, [key, reportVisible]);
 
-  // The box leaves when the query does, not when the filter empties: a list that
-  // merely narrowed to nothing is cut, because the field is still open and a
-  // ghost of rows the query no longer matches would be a lie about the search.
   const open = Option.isSome(query);
   const presence = useSurfacePresence(open, timing);
 
-  // The rows the box paints while it leaves are the ones it was dismissed with,
-  // so the reader sees the list they closed rather than an empty surface.
   const shown = useRef<Option.Option<PaintedList>>(Option.none());
   useLayoutEffect(() => {
     if (rows.length > 0) shown.current = Option.some({ rows, highlighted });
@@ -413,7 +365,6 @@ export const MentionInputList = ({
       {...rest}
       style={mergeStyles(
         mergeStyles(recipeStyle(cn(MENTION_INPUT_LIST, className), theme), {
-          // A positioned box is what the leaving guard is inset against.
           position: "relative",
           ...presenceStyle(presence.present),
         }),
@@ -433,17 +384,14 @@ export const MentionInputList = ({
   );
 };
 
-/** {@link MentionInputItem} props. */
 export interface MentionInputItemProps extends Omit<Props, "children"> {
-  /** The inserted name (without the `@`). */
   readonly value: string;
-  /** What the row shows; defaults to `@value`. */
+
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/** One suggestion row. Press it, or highlight it and press Enter. */
 export const MentionInputItem = ({
   value,
   label,
@@ -459,8 +407,6 @@ export const MentionInputItem = ({
     <div
       role="button"
       aria-selected={highlighted}
-      // A row of a surface painted only for its exit leaves the window's Tab
-      // order with it: it cannot take a press, so it must not be a stop either.
       tabIndex={leaving ? -1 : 0}
       {...rest}
       onMouseDown={() => select(value)}
@@ -482,7 +428,6 @@ export const MentionInputItem = ({
   );
 };
 
-/** Every part, so a misplaced sibling is named. */
 const mentionParts: ReadonlyArray<PartComponent> = [
   MentionInput,
   MentionInputList,
@@ -503,7 +448,6 @@ const mentionList: PartsContract = {
   hint: "Put MentionInputItem rows directly inside MentionInputList.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const mentionInputMeta = {
   name: "Mention input",
   tier: 2,

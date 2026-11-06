@@ -11,19 +11,6 @@ import {
   toggleChannel,
 } from "./checkbox-preview";
 
-/**
- * The checkbox preview's group arithmetic and keyboard edges.
- *
- * Two rules a drawing cannot show are the reason this model exists: the parent
- * is **indeterminate while some** editable channels are on, and pressing that
- * parent **selects all** (the box's underlying boolean was false, so the next
- * report is `true`) rather than clearing. The keyboard edge is the runtime's —
- * Enter on key down, Space on key up, no repeat — and is read from
- * `core/keyboard.ts` rather than trusted, because the wrong edge double-toggles.
- *
- * `node:fs` is the test's own read of a checked-in file, not runtime I/O.
- */
-
 const keyboard = readFileSync(
   new URL(
     "../../../../../packages/primitives/src/core/keyboard.ts",
@@ -38,8 +25,6 @@ const stateOf = (chosen: ReadonlyArray<string>) => groupState(chosen);
 
 describe("the checkbox preview", () => {
   it("reads the two activation edges off the runtime's key decisions", () => {
-    // The source is the contract: the preview may spell the browser's key
-    // names, but which edge fires has to be the component's rule.
     expect(keyboard).toContain('ENTER_KEY = "enter"');
     expect(keyboard).toContain('SPACE_KEY = "space"');
     expect(keyboard).toContain(
@@ -69,8 +54,7 @@ describe("the checkbox preview", () => {
     expect(stateOf(editable)).toBe("all");
     expect(stateOf(["email", "desktop"])).toBe("some");
     expect(stateOf([])).toBe("none");
-    // A managed row is never what makes the parent whole or partial: it can be
-    // off while every channel the reader owns is on.
+
     expect(stateOf(editable)).toBe("all");
   });
 
@@ -87,24 +71,20 @@ describe("the checkbox preview", () => {
   });
 
   it("selects every editable channel from an indeterminate parent", () => {
-    // The box's `checked` is false while indeterminate, so activation reports
-    // `true`. A preview that cleared here would teach the opposite of the
-    // component's documented behaviour.
     expect(toggleAll(["email"])).toEqual(["email", "desktop", "mobile"]);
     expect(toggleAll([])).toEqual(["email", "desktop", "mobile"]);
   });
 
   it("clears the editable channels from a checked parent and keeps the managed one", () => {
     expect(toggleAll(["email", "desktop", "mobile", "push"])).toEqual(["push"]);
-    // The managed selection survives: the reader never set it, so a group
-    // "off" cannot silently rewrite it.
+
     expect(toggleAll(["push"])).toEqual(["email", "desktop", "mobile", "push"]);
   });
 
   it("toggles one row in the order it was chosen, and refuses a managed one", () => {
     expect(toggleChannel(["email"], "mobile")).toEqual(["email", "mobile"]);
     expect(toggleChannel(["email", "mobile"], "email")).toEqual(["mobile"]);
-    // The managed row is shown with its state; a press changes nothing.
+
     const withManaged = ["email", "push"] as const;
     expect(toggleChannel(withManaged, "push")).toBe(withManaged);
     expect(toggleChannel(["email"], "unknown")).toEqual(["email"]);

@@ -1,17 +1,6 @@
 import { useRef, useState, type KeyboardEvent, type UIEvent } from "react";
 import { tokenize, type Token } from "./code-editor-preview";
 
-/**
- * Browser preview for the Code editor page.
- *
- * The native surface is the runtime's textarea with a token layer painted under
- * it. The preview draws the same two layers in the platform theme's variables
- * and runs the component's documented keyboard rule — Tab inserts `indent` at
- * the **end** because 0.11.0 exposes no caret position — so a reader can type in
- * it. The tokenizer is the preview's own (`code-editor-preview.ts`); the Code
- * tab shows the shipped component and its highlighter.
- */
-
 export const CODE_SAMPLE = `import { useState } from "react";
 
 export const Counter = () => {

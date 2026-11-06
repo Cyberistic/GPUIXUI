@@ -17,17 +17,6 @@ import {
   type ConversationsState,
 } from "./conversations-block";
 
-/**
- * The conversations block, as it renders.
- *
- * Each platform dress carries one marker that a wrong skin would lose: the
- * outgoing bubble's role (green / blue / info-blue), the selected row's fill
- * and the composer's placeholder. Those are asserted in the markup and in the
- * sheet that paints them, because a component that quietly fell back to the
- * macOS green would still build. The state cases hold the three interactions —
- * select, send, search — to the reducer the surface dispatches to.
- */
-
 const noop = () => {};
 
 const render = (
@@ -62,7 +51,6 @@ const css = readFileSync(
   "utf8",
 );
 
-/** One authored rule block, from its selector to its first closing brace. */
 const rule = (selector: string): string => {
   const start = css.indexOf(`${selector} {`);
   return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
@@ -153,8 +141,7 @@ describe("the conversations window", () => {
 
   it("fills Killua's row and opens Killua's thread", () => {
     expect(count(initial, /data-selected="true"/g)).toBe(1);
-    // The rail marks its own active section, so `aria-current` appears twice:
-    // once on Messages, once on the one selected row.
+
     expect(count(initial, /aria-current="true"/g)).toBe(2);
     expect(count(initial, /class="gx-conv-rail"/g)).toBe(1);
     const selected = selectedRow(initial);
@@ -306,9 +293,6 @@ describe("the four platform dresses", () => {
 
 describe("the conversations' state", () => {
   it("collapses the list pane to an icon strip and expands it again", () => {
-    // The bug this guards: the rail's toggle painted an icon and changed
-    // nothing. The reducer owns the state, so the aria state, the rail's
-    // collapsed flag and the labels' hidden class move together.
     const collapsed = conversationsReducer(initialConversationsState, {
       type: "toggle-rail",
     });
@@ -346,8 +330,6 @@ describe("the conversations' state", () => {
   });
 
   it("opens an empty state for a conversation with no thread", () => {
-    // Every shipped thread carries messages now; the empty state is still a
-    // route a saved list can reach, so it is exercised with a bare thread.
     const empty = {
       id: "empty",
       name: "Nobody",

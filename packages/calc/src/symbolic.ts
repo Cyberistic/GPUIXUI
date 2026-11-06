@@ -1,18 +1,3 @@
-/**
- * Symbolic display forms: the exact shape behind a decimal result.
- *
- * The numeric evaluator is what makes the calculator correct; this module is
- * what makes the Natural Display *look* like the manual. It evaluates the same
- * AST into a small closed form — a rational, a π multiple, and up to two
- * square-root terms — and the layout renderer turns that into a stacked
- * fraction, a radical or a π expression. If a result does not have such a form,
- * it falls back to the decimal the numeric evaluator produced.
- *
- * The two-term ceiling is the manual's √ form rule (`±a√b ± d√e`); a third
- * radical is deliberately rejected so the display never invents a
- * representation it cannot check.
- */
-
 import { add, divide, fraction, multiply } from "mathjs";
 import { Fraction } from "mathjs";
 import * as Arr from "effect/Array";
@@ -21,11 +6,10 @@ import type { Expr } from "./parser.js";
 
 export interface RadicalTerm {
   readonly coefficient: Fraction;
-  /** A square-free integer below 1000, per the manual's √ form ranges. */
+
   readonly radicand: number;
 }
 
-/** `rational + pi·π + Σ coefficient·√radicand`. */
 export interface Symbolic {
   readonly rational: Fraction;
   readonly pi: Fraction;
@@ -69,7 +53,6 @@ const symbolic = (
 
 export const symbolicZero: Symbolic = symbolic(zero);
 
-/** Pull square factors out of a radicand: √12 = 2√3. */
 const reduceRadicand = (
   radicand: number,
   coefficient: Fraction,
@@ -99,7 +82,6 @@ const term = (
     ? Option.none()
     : Option.some(reduceRadicand(radicand, coefficient));
 
-/** Combine equal radicands, drop zero terms, and refuse a third radical. */
 const normalizeRadicals = (
   terms: ReadonlyArray<RadicalTerm>,
 ): Option.Option<ReadonlyArray<RadicalTerm>> => {
@@ -229,7 +211,7 @@ const divideSymbolic = (
       })),
     );
   }
-  // (a + b√d) / (c√d) = b/c + a√d/(cd), with a second radicand when e ≠ d.
+
   const denominator = mulF(radical.coefficient, fraction(radical.radicand));
   if (isZeroF(denominator)) return Option.none();
   if (left.radicals.length > 1) return Option.none();
@@ -286,7 +268,7 @@ const sqrtSymbolic = (value: Symbolic): Option.Option<Symbolic> => {
   if (Number.isInteger(rootN) && Number.isInteger(rootD)) {
     return Option.some(symbolic(fraction(rootN, rootD)));
   }
-  // √(n/d) = √(n·d)/d
+
   return Option.map(term(divF(one, fraction(d)), n * d), (held) =>
     symbolic(zero, zero, [held]),
   );
@@ -295,7 +277,6 @@ const sqrtSymbolic = (value: Symbolic): Option.Option<Symbolic> => {
 const symbolicNumber = (text: string): Option.Option<Symbolic> =>
   Option.some(symbolic(fraction(text)));
 
-/** The exact shape of an expression, when it has one this display understands. */
 export const symbolicOf = (expression: Expr): Option.Option<Symbolic> => {
   if (expression._tag === "number") return symbolicNumber(expression.text);
   if (expression._tag === "constant") {
@@ -366,7 +347,6 @@ export const symbolicOf = (expression: Expr): Option.Option<Symbolic> => {
   return Option.none();
 };
 
-/** The decimal a symbolic form projects to, for checking it against the result. */
 export const projectSymbolic = (value: Symbolic): number =>
   numberValue(value.rational) +
   numberValue(value.pi) * Math.PI +
@@ -377,7 +357,6 @@ export const projectSymbolic = (value: Symbolic): number =>
       total + numberValue(held.coefficient) * Math.sqrt(held.radicand),
   );
 
-/** Whether a symbolic form and the numeric result agree. */
 export const agrees = (value: Symbolic, result: number): boolean => {
   const projected = projectSymbolic(value);
   const tolerance = Math.max(1e-9, Math.abs(result) * 1e-9);

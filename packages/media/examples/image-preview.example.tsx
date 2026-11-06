@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * ImagePreview example: the three states, over one frame size.
- *
- * The loaded preview composes the shipped `ImageZoom`, so a pointer over it
- * magnifies. The blank source paints the error state with a retry; the last
- * frame is a caller-driven loading state.
- */
-
 import { ImagePreview } from "../src/image-preview.js";
 
 const PNG =

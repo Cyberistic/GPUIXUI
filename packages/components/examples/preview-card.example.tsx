@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Preview card example: a document link that previews its content.
- *
- * The card is hoverable, so it holds a real action rather than only text. The
- * delays are the defaults here (300 ms open, 150 ms close).
- */
-
 import { Button } from "../src/internal/button.js";
 import {
   PreviewCard,
@@ -13,7 +6,6 @@ import {
   PreviewCardTrigger,
 } from "../src/preview-card.js";
 
-/** A file reference with a preview and an action. */
 export const PreviewCardExample = () => (
   <div
     style={{ display: "flex", flexDirection: "column", gap: 24, width: 360 }}

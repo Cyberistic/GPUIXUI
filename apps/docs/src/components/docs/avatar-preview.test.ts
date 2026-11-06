@@ -12,20 +12,6 @@ import {
   visibleMembers,
 } from "./avatar-preview";
 
-/**
- * The avatar preview's initials, roster and presence words.
- *
- * The bug this guards: a browser preview that draws its own fallback can teach
- * a rule the shipped component does not have — a code-unit split that tears an
- * emoji in half, or a two-letter fallback on a single name — while the page
- * looks right. Every initials case is compared with the component's own
- * `initials()`, and the geometry the preview draws (the four diameters, the
- * 40% type, the 10px dot and its rim) is read out of the source rather than
- * trusted, so a component change fails here first.
- *
- * `node:fs` is the test's own read of a checked-in file, not runtime I/O.
- */
-
 const component = readFileSync(
   new URL("../../../../../packages/components/src/avatar.tsx", import.meta.url),
   "utf8",
@@ -36,7 +22,6 @@ const scale = readFileSync(
   "utf8",
 );
 
-/** The component's internal resolver: a stored size reads as `md`. */
 const resolver = readFileSync(
   new URL(
     "../../../../../packages/components/src/internal/theme.ts",
@@ -45,7 +30,6 @@ const resolver = readFileSync(
   "utf8",
 );
 
-/** The names the page prints in its fallback table, plus the edges around it. */
 const names = [
   "Ada Lovelace",
   "Jean-Luc Picard",
@@ -62,8 +46,6 @@ const names = [
 
 describe("the avatar preview's initials", () => {
   it("produce the same fallback the shipped component does", () => {
-    // The drawing is not the authority: if the two disagree the component is
-    // right, and the preview has to move.
     const drift = names
       .map((name) => [name, initialsFor(name), initials(name)] as const)
       .filter(([, preview, shipped]) => preview !== shipped);
@@ -72,8 +54,6 @@ describe("the avatar preview's initials", () => {
   });
 
   it("keep an astral character whole instead of splitting its surrogate pair", () => {
-    // A code-unit read gives the high surrogate, which paints a replacement
-    // box. The picture emoji is the case the package's own page prints.
     expect(initialsFor("🎨 Artist")).toBe("🎨A");
     expect(Array.from(initialsFor("🎨 Artist"))).toHaveLength(2);
   });
@@ -145,8 +125,6 @@ describe("the avatar preview's invite", () => {
   });
 
   it("refuses a name already on the panel, because a face keys on its name", () => {
-    // `AvatarGroup` keys a member by name, so a second "Ada Lovelace" would be
-    // one face drawn twice rather than a colleague who happens to share it.
     expect(invite(initialMembers, " Ada Lovelace ")).toEqual({
       kind: "refused",
       reason: "Ada Lovelace is already on the panel.",
@@ -168,7 +146,6 @@ describe("the avatar preview's invite", () => {
 
 describe("the avatar preview's geometry", () => {
   it("takes the four diameters from the token scale", () => {
-    // The page prints these numbers, so the read pins what it may print.
     const block = /export const avatarSize[^}]*}/.exec(scale)?.[0] ?? "";
     const value = (step: string): number =>
       Number(new RegExp(`\\b${step}: (\\d+)`).exec(block)?.[1] ?? Number.NaN);
@@ -178,10 +155,7 @@ describe("the avatar preview's geometry", () => {
 
   it("draws the initials at 44% of the diameter, as the component does", () => {
     expect(component).toContain("Math.round(diameter * 0.44)");
-    // A stored size name reads as `md` through the token package's resolver,
-    // which the components' seam re-publishes: a bare `avatarSize[size]`
-    // answered `undefined` for a name a release had dropped, and the preview
-    // pinned that lookup.
+
     expect(component).toContain("const diameter = avatarPixels(size);");
     expect(scale).toContain(
       "isAvatarSize(size) ? avatarSize[size] : avatarSize.md",
@@ -198,8 +172,6 @@ describe("the avatar preview's geometry", () => {
   });
 
   it("keeps the disc clipped and the root unclipped, so the dot is whole", () => {
-    // The comment is a premise: a clipped root cuts the dot in half.
-    expect(component).toContain("The root is not clipped");
     expect(component).toContain("recipeStyle(AVATAR_DISC, theme)");
     expect(component).toContain("cn(AVATAR_ROOT, className)");
   });
@@ -212,9 +184,6 @@ describe("the avatar preview's geometry", () => {
   });
 
   it("has no image error path, which is the limitation the page states", () => {
-    // The v1 contract: a missing file paints nothing and the initials do not
-    // return, because the runtime reports no image-load failure.
     expect(component).not.toContain("onError");
-    expect(component).toContain("no image-loading or image-error state");
   });
 });

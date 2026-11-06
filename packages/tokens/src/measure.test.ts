@@ -1,17 +1,3 @@
-/**
- * Holds the measurement dialect to the grammar the renderer paints.
- *
- * The bug this guards: `isPaintableColor` accepted CSS Color 4 — a named colour,
- * `rgb()`, `hsl()` — while `contrastRatio`, `alphaOf`, `blend` and every
- * contract built on them resolved **hex only**. So a brand written the way a
- * design tool exports it painted correctly, passed the paint check, and then
- * failed the gate: every pair touching it was reported unmeasurable, and
- * `alpha()`/`blend()` returned the input unchanged, so a filled action's hover
- * was its resting fill. The seam now resolves the named colours and the
- * functional families whose channels are sRGB arithmetic, and reports the
- * perceptual spaces and relative colours instead of approximating them.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
@@ -48,7 +34,6 @@ const catalogue = read("../../../docs/tokens.md");
 const readme = read("../README.md");
 const designSystem = read("../../../docs/design-system.md");
 
-/** The four shipped palettes, so a contract is held over every one of them. */
 const themes: ReadonlyArray<{ readonly label: string; readonly theme: Theme }> =
   [
     { label: "light", theme: lightTheme },
@@ -57,7 +42,6 @@ const themes: ReadonlyArray<{ readonly label: string; readonly theme: Theme }> =
     { label: "high-contrast dark", theme: highContrastDarkTheme },
   ];
 
-/** The channels and the alpha byte of a shipped long-hex colour. */
 const channelsOf = (hex: string): readonly [number, number, number, number] => {
   const digits = hex.replace("#", "");
   const byteAt = (at: number): number =>
@@ -70,19 +54,16 @@ const channelsOf = (hex: string): readonly [number, number, number, number] => {
   ];
 };
 
-/** A share as the percentage a colour function carries, precise enough to round back. */
 const percent = (value: number): string => `${(value * 100).toFixed(6)}%`;
 
 const alphaSuffix = (alphaByte: number): string =>
   alphaByte === 255 ? "" : ` / ${percent(alphaByte / 255)}`;
 
-/** A shipped colour as the `rgb()` form a design tool exports. */
 const asRgb = (hex: string): string => {
   const [red, green, blue, alphaByte] = channelsOf(hex);
   return `rgb(${red} ${green} ${blue}${alphaSuffix(alphaByte)})`;
 };
 
-/** A shipped colour as the `hsl()` form a design tool exports. */
 const asHsl = (hex: string): string => {
   const [red, green, blue, alphaByte] = channelsOf(hex);
   const r = red / 255;
@@ -105,7 +86,6 @@ const asHsl = (hex: string): string => {
   return `hsl(${(hue % 360).toFixed(6)} ${percent(saturation)} ${percent(lightness)}${alphaSuffix(alphaByte)})`;
 };
 
-/** The palette with every role written by `convert`. */
 const recolour = (
   colors: ThemeColors,
   convert: (value: string) => string,
@@ -116,8 +96,6 @@ const recolour = (
 
 describe("the named colours the paint check accepts", () => {
   it("resolves every name to the channels the renderer paints", () => {
-    // Both halves derive from one table, so a name cannot be paintable and
-    // unmeasurable: the count is the CSS set plus `transparent`.
     expect(Object.keys(namedColours)).toHaveLength(149);
     const unresolved = Object.keys(namedColours).filter(
       (name) => !isPaintableColor(name) || measuredColour(name) === undefined,
@@ -145,12 +123,6 @@ describe("the named colours the paint check accepts", () => {
   });
 
   it("refuses a prototype key the table does not carry", () => {
-    // The tables are plain objects, so a key they do not carry can still answer
-    // through the prototype chain: `constructor` and `__proto__` were reported
-    // paintable while `measuredColour` resolved nothing, and a role written as
-    // one passed `invalidColorRoles` and then failed every pair as
-    // unmeasurable. The seam reads its own entries only, so the paint check and
-    // the measurement cannot disagree about a name.
     const inherited = Object.getOwnPropertyNames(Object.prototype);
     expect(inherited.length).toBeGreaterThan(10);
     expect(inherited.filter((key) => isNamedColour(key))).toEqual([]);
@@ -158,10 +130,10 @@ describe("the named colours the paint check accepts", () => {
     expect(
       inherited.filter((key) => measuredColour(key) !== undefined),
     ).toEqual([]);
-    // The functional families are the second table read at an authored key.
+
     expect(measuredColour("constructor(1 2 3)")).toBeUndefined();
     expect(measuredColour("__proto__(1 2 3)")).toBeUndefined();
-    // And the report a brand runs says so, rather than passing the role.
+
     expect(
       invalidColorRoles({ colors: { ...lightColors, primary: "constructor" } }),
     ).toEqual([{ role: "primary", value: "constructor" }]);
@@ -181,7 +153,7 @@ describe("the functional families whose channels are sRGB arithmetic", () => {
       rgb: "#FF0000",
       alpha: "80",
     });
-    // The parser clamps a channel outside its range rather than refusing it.
+
     expect(measuredColour("rgb(300 -20 0)")).toEqual({ rgb: "#FF0000" });
   });
 
@@ -213,16 +185,13 @@ describe("the functional families whose channels are sRGB arithmetic", () => {
   });
 
   it("resolves a value a store hands back as unmeasurable, not a crash", () => {
-    // JSON has no `undefined`, so a role absent when a theme was saved returns
-    // as `null`; a hand-written palette can inherit a function instead of a
-    // colour. The seam answers both the way it answers a perceptual space.
     expect(measuredColour(null)).toBeUndefined();
     expect(measuredColour(undefined)).toBeUndefined();
     expect(measuredColour(42)).toBeUndefined();
     expect(measuredColour({})).toBeUndefined();
     expect(opaqueRgb(null)).toBeUndefined();
     expect(alphaOf(null)).toBe(1);
-    // A blank value is a string the grammar cannot read, the same absence.
+
     expect(measuredColour("")).toBeUndefined();
   });
 });
@@ -242,9 +211,7 @@ describe("a brand written in a measured colour function", () => {
         const converted = extendTheme(theme, {
           colors: recolour(theme.colors, convert),
         });
-        // `auditTheme` is the promise the docs make to a brand: every report
-        // empty. Before the seam read the functional grammar, each pair that
-        // touched a converted role was reported unmeasurable.
+
         expect(auditTheme(converted).passed).toBe(true);
         contrastPairs.forEach(({ foreground, background }) => {
           expect(
@@ -279,9 +246,6 @@ describe("a brand written in a measured colour function", () => {
   });
 
   it("derives an opaque fill from a functional action colour", () => {
-    // `filledHover` and the presses blend the action role toward `foreground`;
-    // a colour the derivation cannot resolve would return the resting fill and
-    // the pointer would paint nothing.
     expect(blend("hsl(0 100% 50%)", "#000000", 0.5)).toBe("#800000");
     expect(blend("rebeccapurple", "#FFFFFF", 0.5)).toBe("#B399CC");
     expect(blend("#5F4BDB", "rgb(255 255 255)", 0.5)).toBe(
@@ -297,7 +261,7 @@ describe("a brand written in a measured colour function", () => {
 
   it("writes the derived forms in the hex dialect the contracts measure", () => {
     expect(alpha("hsl(258 88% 58%)", 0.3)).toBe("#6E36F24D");
-    // A fully opaque derived form is the colour every later contract measures.
+
     const opaque = alpha("hsl(258 88% 58%)", 1);
     expect(opaque).toBe("#6E36F2FF");
     expect(contrastRatio(opaque, "#FFFFFF")).toBeCloseTo(
@@ -320,9 +284,6 @@ describe("the colour spaces the contracts report rather than guess", () => {
 
   unresolved.forEach((value) => {
     it(`${value} paints and is reported unmeasurable`, () => {
-      // The paint check stays wider than the measurement one on purpose: the
-      // renderer resolves these, and a ratio computed from an approximation is
-      // worse than the honest absence the gate reports.
       expect(isPaintableColor(value)).toBe(true);
       expect(measuredColour(value)).toBeUndefined();
       expect(contrastRatio(value, "#FFFFFF")).toBeUndefined();
@@ -345,9 +306,7 @@ describe("the colour spaces the contracts report rather than guess", () => {
     expect(catalogue).toContain(
       'contrastRatio("hsl(0 0% 100%)", "#000"); // 21',
     );
-    // A printed ratio is derived from the same computation, so a palette or
-    // seam change cannot leave the page teaching a value the helper no longer
-    // returns.
+
     const named = contrastRatio("rebeccapurple", "#FFFFFF") ?? 0;
     expect(catalogue).toContain(
       `contrastRatio("rebeccapurple", "#FFFFFF"); // ${named.toFixed(2)}`,

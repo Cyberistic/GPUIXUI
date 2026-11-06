@@ -1,9 +1,3 @@
-/**
- * The window frame the film draws around a block. An offscreen capture has no
- * OS chrome, so the title bar each platform's window manager would paint is
- * drawn here: macOS's traffic lights, Windows 11's caption buttons, GNOME's
- * header bar. It is the frame, not a GPUIxUI component.
- */
 import {
   elevationShadow,
   type PlatformName,
@@ -13,8 +7,6 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import type { ReactNode } from "react";
 
-/** The film's ground (SPEC): the macOS look's own page, so the macro takes,
- * painted on it, meet the composition without a seam. */
 export const GROUND = "#F2F2F7";
 
 interface Chrome {
@@ -136,7 +128,6 @@ export interface WindowProps {
   readonly children: ReactNode;
 }
 
-/** A window of `width`×`height` (frame included) in `platform`'s chrome. */
 export const Window = ({
   theme,
   platform,
@@ -175,8 +166,6 @@ export const Window = ({
   );
 };
 
-/** macOS's traffic lights alone, for a block that is a whole native window and
- * leaves their box free under a transparent titlebar. */
 export const Lights = ({
   x = 20,
   y = 20,

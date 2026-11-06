@@ -1,10 +1,3 @@
-/**
- * The `@tanstack/hotkeys` adapter over `toDomKey`.
- *
- * The bug these guard: 0.24 compares key names case-sensitively and no longer
- * reads GPUI's names, so a binding written `Mod+Enter` never matched GPUix's
- * `enter`, and `meta+enter` rendered the word "enter" instead of ↵.
- */
 import type { EventPayload } from "@gpuix/react";
 import { describe, expect, it } from "vitest";
 import { canonicalKey, parseChord } from "./chord.js";

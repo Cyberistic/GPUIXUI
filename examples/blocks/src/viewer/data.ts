@@ -1,9 +1,3 @@
-/**
- * The viewer's sample album. A photo here is a colour swatch from the theme's
- * data series with a caption: the recipe is the layout and the HUD, and a
- * consumer's `ImagePreview` sources take the swatches' place.
- */
-
 export const albums = [
   { id: "arena", label: "Heavens Arena" },
   { id: "island", label: "Greed Island" },
@@ -13,7 +7,7 @@ export interface Photo {
   readonly id: string;
   readonly album: (typeof albums)[number]["id"];
   readonly caption: string;
-  /** Index into the theme's series colours. */
+
   readonly tint: 0 | 1 | 2 | 3 | 4;
 }
 

@@ -17,24 +17,6 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
 
-/**
- * Browser preview for the Advanced filtering / query builders page.
- *
- * `@gpuixui/data`'s `AdvancedFilter` is a GPUix host tree, so the page cannot
- * mount it and this drawing is a labelled approximation. What it does not
- * approximate is the query itself: the tree is evaluated by the package's
- * `filterByTree`, its words are `describeTree`'s sentence, and a stored query
- * is decoded through `readFilterTree`, so a query this release cannot read
- * keeps no rows and paints the refusal the component paints.
- *
- * The surfaces are the component's: the panel, clause, group and sentence are
- * `ADVANCED_FILTER`/`FILTER_CLAUSE`/`FILTER_GROUP`/`FILTER_SENTENCE`, each
- * clause is a field picker, a comparison picker and a value, and the
- * combinator is the `all`/`any` pair the builder writes with `setGroupKind`.
- * Only the paint is the browser's.
- */
-
-/** One file the demo's query reads. */
 export interface FilterFile {
   readonly id: string;
   readonly name: string;
@@ -42,7 +24,6 @@ export interface FilterFile {
   readonly size: number;
 }
 
-/** The rows the builder starts on: three tracked files of different sizes. */
 export const FILTER_FILES: ReadonlyArray<FilterFile> = [
   { id: "brand", name: "brand.svg", status: "tracked", size: 2048 },
   { id: "hero", name: "hero.png", status: "tracked", size: 512 },
@@ -51,7 +32,6 @@ export const FILTER_FILES: ReadonlyArray<FilterFile> = [
   { id: "notes", name: "notes.txt", status: "archived", size: 120 },
 ];
 
-/** The field a clause reads, in the caller's vocabulary. */
 export const filterDisplayFields: ReadonlyArray<{
   readonly field: string;
   readonly label: string;
@@ -60,7 +40,6 @@ export const filterDisplayFields: ReadonlyArray<{
   { field: "size", label: "Size" },
 ];
 
-/** A row's value for a field, read the way the page's snippet's `valueOf` does. */
 export const filterValueOf = (
   file: FilterFile,
   field: string,
@@ -70,7 +49,6 @@ export const filterValueOf = (
   return file.name;
 };
 
-/** The words a comparison is shown by, the table the component ships. */
 export const comparisonLabels: Readonly<Record<Comparison, string>> = {
   equals: "equals",
   notEquals: "does not equal",
@@ -79,7 +57,6 @@ export const comparisonLabels: Readonly<Record<Comparison, string>> = {
   lessThan: "less than",
 };
 
-/** The opening comparison: a tracked file. */
 const tracked = (status: string): FieldPredicate => ({
   kind: "predicate",
   field: "status",
@@ -87,7 +64,6 @@ const tracked = (status: string): FieldPredicate => ({
   value: status,
 });
 
-/** The second comparison, over the size the reader types. */
 const largerThan = (size: string): FieldPredicate => ({
   kind: "predicate",
   field: "size",
@@ -95,7 +71,6 @@ const largerThan = (size: string): FieldPredicate => ({
   value: size,
 });
 
-/** The two-clause tree the builder opens on, combined with `kind`. */
 export const filterTree = (
   kind: "all" | "any",
   size: string,
@@ -107,13 +82,6 @@ export const filterTree = (
     kind,
   );
 
-/**
- * A query a previous release wrote with a comparison this one does not carry.
- *
- * The page's own §A saved query rule is what the drawing demonstrates: the
- * decoder refuses it, so the table keeps no rows rather than the records the
- * query meant to hide.
- */
 export const filterStoredQuery = {
   kind: "all",
   children: [
@@ -126,7 +94,6 @@ export const filterStoredQuery = {
   ],
 };
 
-/** The tree the drawing applies, or the refusal a stored query crosses. */
 export const appliedFilter = (
   stored: boolean,
   kind: "all" | "any",
@@ -137,7 +104,6 @@ export const appliedFilter = (
     ? readFilterTree(filterStoredQuery)
     : Option.some(filterTree(kind, size, status));
 
-/** The files the applied tree keeps, in the caller's order. */
 export const filterFiles = (
   applied: Option.Option<FilterTree>,
 ): ReadonlyArray<FilterFile> =>
@@ -146,25 +112,21 @@ export const filterFiles = (
     onSome: (tree) => filterByTree(FILTER_FILES, tree, filterValueOf),
   });
 
-/** The sentence the tree reads as; a refused query is the builder's refusal. */
 export const filterSentence = (applied: Option.Option<FilterTree>): string =>
   Option.match(applied, {
     onNone: () => UNREADABLE_TREE,
     onSome: describeTree,
   });
 
-/** The words a field is shown by, its own name when the list does not carry it. */
 const fieldLabel = (field: string): string =>
   Option.match(
     Arr.findFirst(filterDisplayFields, (entry) => entry.field === field),
     { onNone: () => field, onSome: (entry) => entry.label },
   );
 
-/** The group's combinator, read as the pair the builder toggles. */
 const kindOf = (tree: FilterTree): "all" | "any" =>
   tree.kind === "any" ? "any" : "all";
 
-/** The badge a file's status paints. */
 const statusTone = (status: FilterFile["status"]): string =>
   status === "tracked"
     ? "gx-badge-success"
@@ -172,7 +134,6 @@ const statusTone = (status: FilterFile["status"]): string =>
       ? "gx-badge-warning"
       : "gx-badge-neutral";
 
-/** One clause: a field, a comparison, a value and a way out. */
 const Clause = ({
   clause,
   index,
@@ -274,7 +235,6 @@ const Clause = ({
   );
 };
 
-/** The builder's browser rendering. */
 export function AdvancedFilterDemo() {
   const [tree, setTree] = useState<FilterTree>(() => filterTree("all", "1024"));
   const [stored, setStored] = useState(false);
@@ -437,7 +397,6 @@ export function AdvancedFilterDemo() {
   );
 }
 
-/** The page's copyable native usage, shown in the preview's Code tab. */
 export const advancedFilterDemoSource = `import {
   AdvancedFilter,
   emptyTree,

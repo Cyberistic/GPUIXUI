@@ -1,8 +1,3 @@
-/**
- * The film's macro theme. The bug it guards: a magnified theme that left a length
- * unscaled (a control drawn at 1× inside an 8× frame) or scaled a colour, weight
- * or unitless ratio into nonsense.
- */
 import { lightTheme } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { magnify } from "./magnify.js";

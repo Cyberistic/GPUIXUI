@@ -1,11 +1,3 @@
-/**
- * The shape one `Slider` accepts.
- *
- * The bug these guard: a range written as a pair reached the single-value
- * primitive (so only its first end painted), and a stored array with a missing
- * or text end was read as a range and indexed as one.
- */
-
 import { describe, expect, it } from "vitest";
 import { isSliderSpan, sliderMode } from "./logic.js";
 

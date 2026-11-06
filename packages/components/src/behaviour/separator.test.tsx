@@ -1,12 +1,3 @@
-/**
- * Separator behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a decorative rule still published a node to assistive
- * technology, a semantic rule published nothing (0.11.0 needs a role for a node
- * to exist), an orientation painted the other axis, and the rule painted a
- * literal instead of the active platform's border role.
- */
-
 import { platformTheme } from "@gpuixui/tokens";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
@@ -16,11 +7,9 @@ import { lightTheme, type Theme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 import { Separator } from "../separator.js";
 
-/** The separator nodes the rule's tree published. */
 const rules = (root: ReturnType<typeof renderComponent>) =>
   nodesWithRole(root.renderer, "splitter");
 
-/** The rule's painted box, in a bounded column or row. */
 const sizeIn = (
   orientation: "horizontal" | "vertical" | undefined,
   theme: Theme,
@@ -55,7 +44,6 @@ describe("Separator", () => {
   it("publishes a semantic rule as a separator node", () => {
     const rule = renderComponent(<Separator testId="rule" />);
 
-    // 0.11.0 maps the separator token to the platform's `Splitter` role.
     expect(rules(rule)).toHaveLength(1);
     rule.unmount();
   });
@@ -78,7 +66,7 @@ describe("Separator", () => {
 
     expect(paint(macOS)).toBe(macOS.colors.border);
     expect(paint(windows)).toBe(windows.colors.border);
-    // The premise: the two styles do not paint the same rule.
+
     expect(macOS.colors.border).not.toBe(windows.colors.border);
   });
 });

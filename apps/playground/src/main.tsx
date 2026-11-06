@@ -1,15 +1,3 @@
-/**
- * The dev entrypoint: `nub run --filter playground dev`.
- *
- * It preflights **before** loading the app and the scenarios, so a host with no
- * GPUix binding gets the actionable remedy and exit `2`, not a stack trace from
- * deep inside the native loader. `@gpuix/react` (and therefore
- * `@gpuix/native`) must not be in this module's static import graph: `App` and
- * the scenario registry are imported only after the preflight. `render()` is
- * called exactly once, at the end (GPUix throws on a second call).
- *
- * `Effect.runPromise` here is the process entrypoint boundary (EF-21).
- */
 import { Console, Effect } from "effect";
 import { Runtime } from "@gpuixui/testing";
 
@@ -46,9 +34,7 @@ const program = Effect.gen(function* () {
     title: "GPUIXUI playground",
     width: 1100,
     height: 720,
-    // The shell is a 260px rail beside a scenario: below this the rail and the
-    // pane cannot both hold their own minimum, so the window stops shrinking
-    // rather than letting a pane collapse into a clipped column.
+
     minWidth: 720,
     minHeight: 480,
   });

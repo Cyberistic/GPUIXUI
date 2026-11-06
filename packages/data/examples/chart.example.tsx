@@ -1,17 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A metrics screen: every chart the package ships, on one card surface.
- *
- * Each chart is one `<svg>` per series, tinted from the theme's categorical
- * scale, with its labels as text beside the plot. Nothing paints a surface, so
- * the same charts sit on a card, a page or a dialog without a second palette.
- *
- * The sizes are definite on purpose: a chart draws at the size it was given,
- * and a caller that wants a chart to follow a splitter passes the width it
- * measured. There is no `onLayout`-driven auto-size here, because a chart that
- * re-draws its masks on every layout pass is a cost this example does not need.
- */
-
 import { StatCard } from "../src/surfaces/stat-card.js";
 import {
   AreaChart,
@@ -51,11 +38,10 @@ const sources = [
   { key: "direct", label: "Direct", value: 48 },
   { key: "search", label: "Search", value: 32 },
   { key: "social", label: "Social", value: 20 },
-  // A source nobody arrived from paints no slice: a zero is not a tiny slice.
+
   { key: "referral", label: "Referral", value: 0 },
 ];
 
-/** A screen of charts over one card surface. */
 export const ChartExample = () => {
   const theme = useTheme();
   return (
@@ -103,8 +89,7 @@ export const ChartExample = () => {
         </div>
       </div>
 
-      {/* A bar chart with two series, as the runtime paints it: one tinted mask
-          per series over the same plot box. */}
+      {}
       <div
         style={{
           display: "flex",

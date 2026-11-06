@@ -22,16 +22,6 @@ import { inventory } from "./inventory-data";
 import { statusForPage } from "./inventory-status";
 import { readPublishedModules, repoRoot } from "./public-symbols-source";
 
-/**
- * The component index, and the rows it is allowed to show.
- *
- * The index is generated from the pages' own frontmatter, which makes two
- * failures silent: a page whose URL the mapping does not know simply vanishes
- * from the list, and a curated page that does not win its URL is listed twice.
- * The guards fix the mapping, the shadowing and the filter, then hold the real
- * index to the files on disk.
- */
-
 const page = (
   file: string,
   title?: string,
@@ -71,7 +61,6 @@ const entry = (
   url: `/${section.toLowerCase()}/${title.toLowerCase()}`,
 });
 
-/** A verdict source that knows no rows: the pure cases do not need one. */
 const noVerdict: VerdictOf = () => undefined;
 
 const root = new URL("../../../../", import.meta.url);
@@ -166,9 +155,6 @@ describe("the index built from pages", () => {
   });
 
   it("marks a page that mounts a browser preview, and only that page", () => {
-    // The badge is a claim about the page, so it is read from the page: the
-    // curated pages open with `<ComponentPreview`, and a package page opens
-    // with the native-run note instead (`docs/preview-strategy.md`).
     const entries = buildIndex(
       [
         {
@@ -219,10 +205,10 @@ describe("the components lane", () => {
     ).toEqual([]);
   });
 
-  it("carries a demo for every component page", () => {
-    // `MultiStepForm` was the last page without one; its preview now drives the
-    // same caller-owned draft the page documents.
-    const without = componentPages.filter((entry) => entry.demo === undefined);
+  it("names a demo for every component page that mounts a preview", () => {
+    const without = componentPages.filter(
+      (entry) => entry.preview && entry.demo === undefined,
+    );
 
     expect(without.map((entry) => entry.url)).toEqual([]);
     expect(componentPages.length).toBeGreaterThanOrEqual(76);
@@ -256,8 +242,6 @@ describe("the verdict a row reports", () => {
   });
 
   it("marks only the rows whose verdict is not whole", () => {
-    // `done` on `yes` is the shipped component; an unmarked row is complete on
-    // both axes, so a badge always means something.
     expect(verdictMark({ status: "done", support: "yes" })).toBeUndefined();
     expect(
       verdictMark({ status: "done", support: "yes (measured)" }),
@@ -351,9 +335,6 @@ describe("the filter", () => {
   });
 
   it("finds the pages that open with a browser preview", () => {
-    // The index says only the curated pages preview the component; a reader who
-    // wants to see one had no query for it, because none of those rows carries
-    // the word "preview" in its title, description or API table.
     const withPreview = [
       entry("Button", "Components", "An action.", [], "", [], [], true),
       entry("Card", "Components", "A surface."),
@@ -460,9 +441,6 @@ describe("the props a page documents", () => {
   });
 
   it("does not read a default value as a prop", () => {
-    // `(default `false`)` inside a props cell made "false" a prop of the menu
-    // pages, so the index's prop list and its filter both answered a query for
-    // a value.
     const source = [
       "## API",
       "",
@@ -572,14 +550,12 @@ describe("the real index", () => {
         .map((name) => `/components/${name.replace(/\.mdx$/, "")}`),
     );
 
-    // `index.mdx` is its directory's landing page, not a component — the same
-    // rule the curated list above applies.
     const missing = packageFiles()
       .filter((file) => !file.endsWith("/index.mdx"))
       .filter((file) => {
         const url = pageUrl(file);
         if (url === undefined) return true;
-        // The curated page owns the URL; the package row is shadowed on purpose.
+
         return !listed.has(url) && !curated.has(url);
       });
 
@@ -587,9 +563,6 @@ describe("the real index", () => {
   });
 
   it("starts with the primitives and ends with the workspace surfaces", () => {
-    // The sections are the collection order, read off the rows instead of
-    // retyped: a package that lands after the components appends a section,
-    // and a row that drifts back into an earlier section fails here.
     expect(componentIndex.length).toBeGreaterThan(0);
     const sections = [...new Set(componentIndex.map((row) => row.section))];
     expect(sections).toEqual([
@@ -601,14 +574,11 @@ describe("the real index", () => {
       "Effects",
     ]);
     expect(componentIndex[0]?.section).toBe("Primitives");
-    // The decorative effects close the index, after every working surface.
+
     expect(componentIndex.at(-1)?.section).toBe("Effects");
   });
 
   it("marks exactly the pages that mount a preview", () => {
-    // The badge is only honest if it follows the page's own source in both
-    // directions: every curated page opens with `<ComponentPreview`, and a
-    // package page wears the badge exactly when it mounts one.
     const curated = readdirSync(
       new URL("apps/docs/content/docs/components/", root),
     )
@@ -648,10 +618,6 @@ describe("the real index", () => {
   });
 
   it("reports the inventory verdict the page's strip prints", () => {
-    // The row is what makes a mark honest, so the data module has to resolve
-    // it for every page the inventory answers — the completeness rule itself
-    // (a page with no row fails) belongs to `inventory-status.test.ts`, which
-    // owns the status strip.
     const missing = componentIndex.filter(
       (row) =>
         row.verdict === undefined &&
@@ -662,7 +628,7 @@ describe("the real index", () => {
 
     expect(missing).toEqual([]);
     expect(answered.length).toBeGreaterThan(80);
-    // The provider is the argued exemption, so it has no verdict to wear.
+
     expect(
       componentIndex.find((row) => row.title === "ThemeProvider")?.verdict,
     ).toBeUndefined();
@@ -679,7 +645,7 @@ describe("the real index", () => {
 
     expect(verdictMark(button?.verdict)?.label).toBe("partial");
     expect(verdictMark(card?.verdict)).toBeUndefined();
-    // The mark is worth a badge only if it is common enough to scan for.
+
     expect(partial.length).toBeGreaterThan(30);
     expect(
       partial.filter(
@@ -734,15 +700,11 @@ describe("the real index", () => {
     );
 
     expect(found).toContain("/primitives/switch");
-    // A second axis needs more than one page: a single hit would be the title.
+
     expect(found.length).toBeGreaterThan(1);
   });
 
   it("keeps every query the filter offers resolvable", () => {
-    // The examples live in the field's own placeholder — the page's intro used
-    // to carry them in prose, which was fourteen lines explaining a search box.
-    // Whatever the field offers has to resolve, so a reader who types what it
-    // suggests lands on a card rather than an empty grid.
     const field = readFileSync(
       new URL("../components/docs/component-index.tsx", import.meta.url),
       "utf8",

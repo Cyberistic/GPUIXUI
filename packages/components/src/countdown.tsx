@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Countdown: a formatted remaining duration.
- *
- * The component does not tick. A renderer timer would keep running after
- * unmount and would make the application's clock and the display disagree; the
- * application ticks with Effect `Clock` and passes `remainingMs` on each render.
- * Formatting lives in `countdown/logic.ts` so it is testable without a renderer.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -19,32 +10,23 @@ import { formatCountdown, readableRemaining } from "./countdown/logic.js";
 import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
 
-/** {@link Countdown} props. */
 export interface CountdownProps extends Omit<Props, "children" | "style"> {
-  /**
-   * Whole milliseconds left. A negative time, or one the clock cannot read
-   * (`NaN` from a deadline that never decoded, an infinity), renders `00:00`
-   * and reports `expired`.
-   */
   readonly remainingMs: number;
-  /** The accessible name; the value is the text. */
+
   readonly label?: string;
-  /** Render `Nd HH:MM:SS` for a day or more. Default `false`. */
+
   readonly showDays?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, or a function of the remaining time. */
+
   readonly style?: StateStyle<CountdownState>;
 }
 
-/** What the countdown draws: the duration it paints and whether it expired. */
 export interface CountdownState {
-  /** The remaining time the clock is drawn from, readable and never negative. */
   readonly remainingMs: number;
   readonly expired: boolean;
 }
 
-/** A remaining duration as clock text. */
 export const Countdown = ({
   remainingMs,
   label,
@@ -75,7 +57,6 @@ export const Countdown = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const countdownMeta = {
   name: "Countdown",
   tier: 2,

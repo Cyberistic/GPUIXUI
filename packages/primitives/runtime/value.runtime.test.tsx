@@ -1,19 +1,3 @@
-/**
- * The value controls in the real GPUix runtime.
- *
- * These are the Tier 1 components whose core interaction **only exists here**:
- * there is no slider host element, so the thumb's position, the pointer-to-value
- * mapping, the focus ring and the two-thumb crossing rule are this package's
- * geometry painted by the real layout engine. The element-tree suite can see the
- * props; only this suite can see that a click at 25% of the track reports 25,
- * that the thumb is centred on the value it represents, and that a disabled
- * slider is out of the tab order.
- *
- * Each test names the defect it guards — most importantly the negative-margin
- * thumb geometry (plan 053 §6), which is the one assumption a style resolver
- * cannot prove.
- */
-
 import type { ReactNode } from "react";
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -50,7 +34,6 @@ const trackOf = (runtime: Runtime, testId: string) =>
     expect.fail(`the runtime retained no ${testId}`),
   );
 
-/** The rail is the track's only child; the fill and thumbs live inside it. */
 const partsOf = (runtime: Runtime, testId: string) => {
   const rail = elementById(runtime, trackOf(runtime, testId).children[0] ?? -1);
   return rail.children.map((id) => elementById(runtime, id));
@@ -67,7 +50,6 @@ const announced = (runtime: Runtime, label: string): string =>
     expect.fail(`no accessibility node announced ${label}`),
   );
 
-/** The centre of a thumb, as the frame painted it. */
 const thumbCentre = (runtime: Runtime, testId: string): number => {
   const thumb = thumbOf(runtime, testId);
   const bounds = Option.getOrElse(runtime.boundsOfId(thumb.id), () =>
@@ -76,7 +58,6 @@ const thumbCentre = (runtime: Runtime, testId: string): number => {
   return bounds.x + bounds.width / 2;
 };
 
-/** The vertical centre of a thumb. */
 const thumbCentreY = (runtime: Runtime, testId: string): number => {
   const thumb = thumbOf(runtime, testId, true);
   const bounds = Option.getOrElse(runtime.boundsOfId(thumb.id), () =>
@@ -85,7 +66,6 @@ const thumbCentreY = (runtime: Runtime, testId: string): number => {
   return bounds.y + bounds.height / 2;
 };
 
-/** A point at `fraction` of the track's usable span. */
 const pointAt = (
   runtime: Runtime,
   testId: string,
@@ -98,10 +78,6 @@ const pointAt = (
   };
 };
 
-/**
- * A point at `fraction` of a vertical track, measured from its **bottom** —
- * a vertical value runs up, so 0 is the bottom edge and 1 the top.
- */
 const verticalPointAt = (
   runtime: Runtime,
   testId: string,
@@ -140,10 +116,6 @@ it("maps a real click to the value under the pointer", async () => {
 });
 
 it("ignores a press that is not the primary button", async () => {
-  // The bug guarded: the runtime delivers `mouseDown` for all three buttons, and
-  // the slider treated any press as a value gesture. A right press (the
-  // context-menu gesture) or a middle one moved the value, armed the drag, and
-  // then a move applied a second time — with no `onClick` for the caller to see.
   const single = values();
   const spans: Array<readonly [number, number]> = [];
   const runtime = await mount(
@@ -165,7 +137,7 @@ it("ignores a press that is not the primary button", async () => {
   const point = pointAt(runtime, "s", 0.75);
   runtime.renderer.nativeSimulateMouseDown(point.x, point.y, 2);
   runtime.renderer.nativeSimulateMouseUp(point.x, point.y, 2);
-  // A move with the primary button held is a drag only if the press armed one.
+
   runtime.mouseMoveAt(point.x, point.y, 0);
   runtime.flush();
   expect(single.seen).toStrictEqual([]);
@@ -181,9 +153,6 @@ it("ignores a press that is not the primary button", async () => {
 });
 
 it("does not report a range the pointer cannot move past a bound", async () => {
-  // The bug guarded: the span tuple was rebuilt on every pointer move, so a drag
-  // held against a bound reported the same span on every frame it stayed there —
-  // a stream of identical `onValueChange` calls while the pointer was still.
   const spans: Array<readonly [number, number]> = [];
   const runtime = await mount(
     <RangeSlider
@@ -196,7 +165,7 @@ it("does not report a range the pointer cannot move past a bound", async () => {
   const box = boundsOf(runtime, "r");
   const grab = pointAt(runtime, "r", 0.4);
   runtime.mouseDownAt(grab.x, grab.y);
-  // Three moves held at the start end: the first reaches 0, the next two cannot.
+
   Arr.forEach(Arr.range(1, 3), () => {
     runtime.mouseMoveAt(box.x + 1, box.y + box.height / 2, 0);
     runtime.flush();
@@ -206,8 +175,6 @@ it("does not report a range the pointer cannot move past a bound", async () => {
 });
 
 it("maps a vertical track from its bottom edge", async () => {
-  // The bug guarded: the vertical axis reuses the horizontal arithmetic, so the
-  // bar fills from the ceiling and a reader who drags up gets a *lower* value.
   const { seen, onChange } = values();
   const runtime = await mount(
     <Slider
@@ -225,8 +192,7 @@ it("maps a vertical track from its bottom edge", async () => {
   runtime.clickAt(quarter.x, quarter.y);
   expect(seen.at(-1)).toBe(25);
   expect(announced(runtime, "Level")).toBe("25");
-  // The thumb's centre sits on the point the pointer named, measured up from
-  // the bottom: the same half-thumb inset the horizontal axis proves.
+
   expect(Math.abs(thumbCentreY(runtime, "v") - quarter.y)).toBeLessThanOrEqual(
     1,
   );
@@ -312,10 +278,6 @@ it("moves the end a click grabbed on a vertical range", async () => {
 });
 
 it("delivers a caller's press and keys through the track", async () => {
-  // The host-handler contract measured where it matters: the tree suite can see
-  // that the track carries the caller's `onClick`, but only the renderer can say
-  // that a press on a slider's div actually reaches it — the pointer path is a
-  // `mousedown` drag, so a consumer observing a press has no other channel.
   const events: Array<string> = [];
   const { seen, onChange } = values();
   const runtime = await mount(
@@ -355,10 +317,6 @@ it("installs no press for a caller on a disabled slider but still delivers its k
 });
 
 it("delivers exactly one press when the pointer lands on a thumb", async () => {
-  // The caller's press is installed on the track and on the painted thumb, so a
-  // press on the knob is observed too — once, not twice. The runtime hit-tests
-  // one element, so the guard is that the handler is not also reached by a
-  // second path.
   const clicks: Array<number> = [];
   const runtime = await mount(
     <Slider
@@ -377,9 +335,6 @@ it("delivers exactly one press when the pointer lands on a thumb", async () => {
 });
 
 it("keeps the press and the mapping when the caller composes the parts", async () => {
-  // The bug this guards: a part split that leaves the custom tree without the
-  // root's pointer handling — a composed slider that looks right and answers
-  // nothing.
   const { seen, onChange } = values();
   const runtime = await mount(
     <Slider
@@ -438,11 +393,6 @@ it("moves by a step, a page and to the ends with the keyboard", async () => {
 });
 
 it("keeps its own words for a formatter that says nothing", async () => {
-  // The bug guarded: `aria-valuetext` is the only channel a slider has, and a
-  // formatter whose locale table had no row (`""`) published an announcement of
-  // nothing while the thumb still sat at a value. A blank answer is absence, so
-  // the clamped number is what the window reports — for the single track and for
-  // each end of a range.
   const runtime = await mount(
     <>
       <Slider
@@ -465,9 +415,6 @@ it("keeps its own words for a formatter that says nothing", async () => {
 });
 
 it("reaches its maximum when the step does not divide the span", async () => {
-  // The bug guarded: the snap made the maximum unreachable, so the thumb
-  // stopped at 9 and the end of the track was a place the control could not be
-  // taken to. Both the keyboard and a press at the end must land on 10.
   const runtime = await mount(
     <Slider
       testId="s"
@@ -486,10 +433,6 @@ it("reaches its maximum when the step does not divide the span", async () => {
 });
 
 it("steps down from an off-grid maximum onto the stop below it", async () => {
-  // The bug guarded: the maximum is a stop even when the step does not divide
-  // the span, but a move down measured the step from the off-grid value, so End
-  // then ArrowDown landed on 6 and the stop at 9 could be reached with an up
-  // move and never with a down one.
   const runtime = await mount(
     <Slider
       testId="s"
@@ -518,17 +461,13 @@ it("refuses a press and a key while disabled, and stays out of the tab order", a
   runtime.clickAt(point.x, point.y);
   runtime.keyDown("s", "right");
   expect(seen).toStrictEqual([]);
-  // The bug guarded: a disabled slider that is still a tab stop looks enabled to
-  // a keyboard user, who then lands on it and presses keys that do nothing.
+
   runtime.click("b");
   runtime.focusNext();
   expect(runtime.focused()).toStrictEqual(Option.some("b"));
 });
 
 it("paints the thumb centred on the value it represents", async () => {
-  // The negative-margin geometry: with the margins dropped the thumb sits half a
-  // thumb to the right of the fill's end. 1 px of slop is the layout engine's
-  // rounding, not a tolerance for a wrong formula.
   const runtime = await mount(
     <Stack direction="column" gap="md">
       {[0, 50, 100].map((value) => (
@@ -552,9 +491,6 @@ it("paints the thumb centred on the value it represents", async () => {
 });
 
 it("declares the keyboard ring on the slider's track, not its thumb", async () => {
-  // The bug: the ring was merged on the thumb while the track held focus, so a
-  // press painted a shadow ring. The track is the tab stop, so it declares the
-  // keyboard outline at rest and the runtime decides when to paint it.
   const runtime = await mount(
     <Stack direction="row">
       <Button testId="b">Elsewhere</Button>
@@ -578,12 +514,6 @@ it("declares the keyboard ring on the slider's track, not its thumb", async () =
 });
 
 it("keeps tracking a drag that leaves the track, and ends it on the release", async () => {
-  // The claim this measured: a slider drag does **not** stop at the track's
-  // edge. GPUix arms pointer capture on left mouse down for an element that
-  // listens to both `mouseDown` and `mouseMove` — this track does — so the
-  // moves keep arriving outside its box. The live `pointer-capture` probe
-  // measured the same on 0.11.0 (`slider=66 sliderChanges=9`); this holds the
-  // headless renderer to it.
   const { seen, onChange } = values();
   const runtime = await mount(
     <Slider
@@ -603,8 +533,7 @@ it("keeps tracking a drag that leaves the track, and ends it on the release", as
   const duringDrag = seen.length;
   runtime.mouseUpAt(box.x + box.width + 200, start.y);
   runtime.flush();
-  // The release ended the gesture even though it landed outside the track: a
-  // move afterwards must not keep dragging the value.
+
   runtime.mouseMoveAt(pointAt(runtime, "s", 0.1).x, start.y, 0);
   runtime.flush();
   expect(seen.length).toBe(duringDrag);
@@ -612,12 +541,6 @@ it("keeps tracking a drag that leaves the track, and ends it on the release", as
 });
 
 it("keeps a crossed range drag on the thumb the pointer now holds", async () => {
-  // The bug guarded: a drag remembered the thumb its **press** grabbed and
-  // moved it with `moveSpanEnd`, which refuses to cross. Pulling the low end
-  // past the high end clamped both onto one value, and the next move read the
-  // coincident pair as a fresh span around the original press — the thumb
-  // jumped back. A crossing now continues on the far thumb: the span stays
-  // ordered, the hand keeps the pointer, and the fill stays between the ends.
   const runtime = await mount(
     <RangeSlider testId="r" label="Price" defaultValue={[20, 60] as const} />,
   );
@@ -631,8 +554,6 @@ it("keeps a crossed range drag on the thumb the pointer now holds", async () => 
   expect(announced(runtime, "Price minimum")).toBe("60");
   expect(announced(runtime, "Price maximum")).toBe("90");
 
-  // The far thumb is the one being dragged now: it holds the focus, its
-  // painted centre is the pointer's value, and the next move still follows.
   const focused = Option.getOrElse(runtime.focusedElement(), () =>
     expect.fail("no thumb holds focus after the crossing"),
   );
@@ -647,7 +568,7 @@ it("keeps a crossed range drag on the thumb the pointer now holds", async () => 
     );
     return bounds.x + bounds.width / 2;
   };
-  // Thumbs are the rail's second and fourth children; the pair sits at 60/90.
+
   expect(centreOf(1)).toBeCloseTo(box.x + INSET + 0.6 * usable, 0);
   expect(centreOf(3)).toBeCloseTo(box.x + INSET + 0.9 * usable, 0);
   runtime.mouseMoveAt(pointAt(runtime, "r", 0.4).x, start.y, 0);
@@ -656,7 +577,6 @@ it("keeps a crossed range drag on the thumb the pointer now holds", async () => 
   expect(announced(runtime, "Price maximum")).toBe("60");
   runtime.mouseUpAt(pointAt(runtime, "r", 0.4).x, start.y);
 
-  // The fill is the segment between the thumbs: 40 → 60 of the track.
   const fill = partsOf(runtime, "r")[2] ?? expect.fail("no second fill");
   const fillBox = Option.getOrElse(runtime.boundsOfId(fill.id), () =>
     expect.fail("the range painted no second fill"),
@@ -674,8 +594,7 @@ it("keeps a range drag that leaves the track on the thumb it holds", async () =>
   expect(announced(runtime, "Price minimum")).toBe("25");
   runtime.mouseMoveAt(box.x + box.width + 150, start.y, 0);
   runtime.flush();
-  // The start crossed the end and the pointer kept its thumb: the pair is
-  // ordered and the dragged value is at the far end of the track.
+
   expect(announced(runtime, "Price minimum")).toBe("60");
   expect(announced(runtime, "Price maximum")).toBe("100");
   runtime.mouseUpAt(box.x + box.width + 150, start.y);
@@ -696,13 +615,6 @@ it("moves the nearer end of a range when its track is pressed", async () => {
 });
 
 it("pulls a coincident pair apart in either direction", async () => {
-  // The bug guarded: a filter opened with both ends on one value is **one
-  // point**, so the press picked the nearer end — the start — and the start's
-  // travel towards the end is the one move `moveSpanEnd` refuses. Dragging the
-  // visible thumb rightwards reported nothing at all (measured: the pair stayed
-  // `50,50`), and only a press landing off the thumb could separate it. The
-  // gesture is read as a span around the point it pressed, so the pair follows
-  // the pointer on either side and never collapses.
   const runtime = await mount(
     <RangeSlider testId="r" label="Price" defaultValue={[50, 50] as const} />,
   );
@@ -765,12 +677,11 @@ it("keeps the keyboard's two ends in order", async () => {
   const runtime = await mount(
     <RangeSlider testId="r" label="Price" defaultValue={[0, 0] as const} />,
   );
-  // Both thumbs at the start: a press beyond them must grab the end, not the
-  // start that cannot move right.
+
   const right = pointAt(runtime, "r", 0.9);
   runtime.clickAt(right.x, right.y);
   expect(announced(runtime, "Price maximum")).toBe("90");
-  // A start dragged past the end stops on it instead of swapping the pair.
+
   const left = pointAt(runtime, "r", 0.01);
   runtime.clickAt(left.x, left.y);
   runtime.keyDown("r", "end");
@@ -779,19 +690,12 @@ it("keeps the keyboard's two ends in order", async () => {
 });
 
 it("paints a slider's saved bound this release cannot read as the documented range", async () => {
-  // The bug guarded: a slider's bounds are saved with the form that draws it —
-  // a restored settings pane, a channel control in a record — so a bound
-  // arrives as whatever the store wrote, and a text `max` reached
-  // `normalizeRange`, which answers it with `min + 1`. Measured, a 0..1 slider
-  // pinned a value of 40 to the end of the track; the documented range reads it
-  // as 40%.
   const runtime = await mount(
     <Stack direction="column">
       <Slider
         testId="stored"
         label="Stored"
         defaultValue={40}
-        // The cast is the storage boundary: a saved bound is one string.
         max={"255" as unknown as number}
       />
       <Slider testId="documented" label="Documented" defaultValue={40} />
@@ -817,18 +721,12 @@ it("paints a slider's saved bound this release cannot read as the documented ran
 });
 
 it("paints a meter's saved bound this release cannot read as the documented range", async () => {
-  // The bug guarded: a meter is a widget a dashboard stores, so its bounds
-  // arrive as whatever the record carried. A text `max` reached
-  // `normalizeRange`, which answers a bound that is not a number with
-  // `min + 1` — a 0..1 range for a meter documented as 0..100 — so a 62%
-  // measurement painted the track full (measured: 100% of the rail).
   const runtime = await mount(
     <Stack direction="column">
       <Meter
         testId="stored-meter"
         label="Stored"
         value={62}
-        // The cast is the storage boundary: a saved bound is one string.
         max={"100" as unknown as number}
       />
       <Meter testId="documented-meter" label="Documented" value={62} />
@@ -875,12 +773,6 @@ it("announces a meter's measurement and paints it inside its own range", async (
 });
 
 it("paints no caption line for a meter label that arrived blank", async () => {
-  // The bug guarded: a meter's subject is copy from an i18n table or a saved
-  // record, so a missing row arrives as a run of spaces, and the runtime lays
-  // that out as a full line (16px on 0.11.0). The caption part painted it
-  // unconditionally, so the measurement grew a blank caption row while its
-  // accessible name was correctly absent. The part paints no element now, and a
-  // label that says something still paints.
   const blank = await mount(
     <Meter testId="m" label="   " value={25}>
       <MeterLabel testId="caption" />
@@ -897,13 +789,6 @@ it("paints no caption line for a meter label that arrived blank", async () => {
 });
 
 it("keeps a meter's stored label for a caption child that says nothing", async () => {
-  // The bug guarded: a caption's `children` is copy a caller forwards from an
-  // i18n table as often as a literal, and the blank rule had only reached the
-  // stored `label` — `children ?? label` covers an absent child, not one that
-  // arrived as `""` or spaces. So a missing translation both hid the meter's
-  // label and laid out a blank 16px caption row, while the label prop documents
-  // the part's default. A child that says nothing falls through to the label
-  // now, and a meter with no copy at all still paints no caption.
   const composed = (label: string, child: string) => (
     <Meter testId="m" label={label} value={25}>
       <MeterLabel testId="caption">{child}</MeterLabel>
@@ -932,11 +817,6 @@ it("keeps a meter out of the tab order", async () => {
 });
 
 it("reports a drag's frames to onValueChange and one commit on release", async () => {
-  // The bug guarded: a slider reports every frame of a drag, so a caller that
-  // persists or fetches on `onValueChange` does that work dozens of times per
-  // gesture. `onValueCommit` is the end of the gesture — once, on release, with
-  // the value the drag finished on — and a press the control refuses ends no
-  // gesture, so it commits nothing.
   const changes: Array<number> = [];
   const commits: Array<number> = [];
   const runtime = await mount(
@@ -961,8 +841,6 @@ it("reports a drag's frames to onValueChange and one commit on release", async (
   expect(commits).toStrictEqual([80]);
   expect(announced(runtime, "Volume")).toBe("80");
 
-  // A right press is refused by `primaryButton`, so it arms no drag and has no
-  // end to report.
   runtime.renderer.nativeSimulateMouseDown(grab.x, grab.y, 2);
   runtime.renderer.nativeSimulateMouseUp(grab.x, grab.y, 2);
   expect(commits).toStrictEqual([80]);
@@ -979,8 +857,7 @@ it("commits each key that moved it, and no key that could not", async () => {
     />,
   );
   runtime.keyDown("s", "right");
-  // At the ceiling the arrow decides the value it already holds, which is not a
-  // move; neither is a key the contract does not own.
+
   runtime.keyDown("s", "right");
   runtime.keyDown("s", "a");
   expect(commits).toStrictEqual([100]);
@@ -1012,8 +889,6 @@ it("commits the span a range gesture ended on, once", async () => {
   expect(commits).toStrictEqual([[20, 95]]);
   expect(announced(runtime, "Price maximum")).toBe("95");
 
-  // The thumb the gesture moved holds focus afterwards, so a key continues from
-  // it and commits its own move as it lands.
   const focused = Option.getOrElse(runtime.focusedElement(), () =>
     expect.fail("no thumb took focus"),
   );

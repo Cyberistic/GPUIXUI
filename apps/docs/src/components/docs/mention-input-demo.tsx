@@ -1,36 +1,11 @@
-/**
- * Browser preview for the Mention input page.
- *
- * The shipped field derives its query from the text — the last `@` that starts
- * the text or follows whitespace, with nothing after it — because 0.11.0
- * exposes no caret position. Candidates are the consumer's; the list ranks them
- * prefix-first and the item inserts `@value `.
- *
- * ## Why the field is a painted mirror
- *
- * A mention has to read as a link *inside the field*, and an `<input>` or
- * `<textarea>` paints one colour for its whole value: there is no way to style
- * the Nth character. So the composer is two layers that share one type scale:
- * a `div` that paints the runs, and the real `textarea` above it with
- * transparent ink and a visible caret. The reader types into the real field;
- * the colour they see is the mirror. The runtime has the same limit, which is
- * why the component reports the mention rather than painting it.
- *
- * The box below the field is the component's own surface: a popover recipe with
- * an avatar, the name, the handle and the role, the matched run in the accent
- * role, an empty state when nothing matches, and the keys the row answers to.
- */
-
 import { useMemo, useRef, useState } from "react";
 
-/** One candidate: the person, their handle and what they do. */
 export interface MentionPerson {
   readonly name: string;
   readonly handle: string;
   readonly role: string;
 }
 
-/** The names the caller offers, as a real candidate list would. */
 export const MENTION_PEOPLE: ReadonlyArray<MentionPerson> = [
   { name: "Ada Lovelace", handle: "ada", role: "Design systems" },
   { name: "Grace Hopper", handle: "grace", role: "Platform" },
@@ -38,7 +13,6 @@ export const MENTION_PEOPLE: ReadonlyArray<MentionPerson> = [
   { name: "Alan Turing", handle: "alan", role: "Compute" },
 ];
 
-/** A run of the field: plain text, or a mention that reads as a link. */
 export type MentionRun =
   | { readonly kind: "text"; readonly text: string }
   | {
@@ -47,19 +21,11 @@ export type MentionRun =
       readonly name: string;
     };
 
-/** The active token: the index of its `@` and the text typed after it. */
 export interface OpenToken {
   readonly start: number;
   readonly query: string;
 }
 
-/**
- * The last `@` token, when one is open.
- *
- * The rule is the component's `mentionQuery`: the last `@` that starts the text
- * or follows whitespace, with no whitespace after it. It is correct while
- * typing at the end, which is the limitation the page names.
- */
 export const openToken = (text: string): OpenToken | undefined => {
   const at = text.lastIndexOf("@");
   if (at < 0) return undefined;
@@ -70,7 +36,6 @@ export const openToken = (text: string): OpenToken | undefined => {
   return { start: at, query };
 };
 
-/** Rank candidates: prefix matches first, then substrings, each in turn. */
 export const rankPeople = (
   people: ReadonlyArray<MentionPerson>,
   query: string,
@@ -90,17 +55,6 @@ export const rankPeople = (
   return [...prefixes, ...rest];
 };
 
-/**
- * The runs a committed field paints.
- *
- * A mention is a `@handle` that names someone in the candidate list; anything
- * else is text. An unknown `@name` stays text, because a link that points at
- * nobody is not a link.
- *
- * The handle's grammar stops before a trailing full stop: `@ada.` ends a
- * sentence, and a rule that swallowed the dot would name the handle `ada.`
- * and paint a mention as plain text.
- */
 export const mentionRuns = (
   text: string,
   people: ReadonlyArray<MentionPerson>,
@@ -126,11 +80,9 @@ export const mentionRuns = (
           };
     });
 
-/** The handle a mention inserts, and the space the field adds after it. */
 export const completeWith = (person: MentionPerson): string =>
   `@${person.handle} `;
 
-/** The initials a disc paints. */
 export const initialsOf = (name: string): string =>
   name
     .split(/\s+/)
@@ -139,10 +91,6 @@ export const initialsOf = (name: string): string =>
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 
-/**
- * The halves of a label around the matched run, so the match can be painted in
- * the accent role without a second copy of the string.
- */
 export const matchParts = (
   label: string,
   query: string,
@@ -202,9 +150,7 @@ export function MentionInputDemo() {
         </div>
 
         <div className="gx-mention-composer">
-          {/* The painted layer: the reader sees these runs, the field below
-              owns the caret and the keys. Both are the same box, font and
-              leading, so a run cannot slide against the text it mirrors. */}
+          {}
           <div aria-hidden="true" className="gx-mention-mirror">
             {runs.map((run, index) =>
               run.kind === "mention" ? (
@@ -222,7 +168,7 @@ export function MentionInputDemo() {
                 <span key={index}>{run.text}</span>
               ),
             )}
-            {/* A trailing space keeps the mirror's last line measurable. */}
+            {}
             {"\u200b"}
           </div>
           <textarea
@@ -276,8 +222,6 @@ export function MentionInputDemo() {
                     data-highlighted={index === active ? "" : undefined}
                     key={person.handle}
                     onClick={() => complete(person)}
-                    /* A press must not blur the field: the token is still open
-                       when the row reads it. */
                     onMouseDown={(event) => event.preventDefault()}
                     role="option"
                     type="button"

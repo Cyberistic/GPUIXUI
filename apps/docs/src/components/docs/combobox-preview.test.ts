@@ -13,18 +13,6 @@ import {
   type PreviewComboboxOption,
 } from "./combobox-preview";
 
-/**
- * The combobox preview's ranking, highlight and selection model.
- *
- * The preview repeats the shipped component's ranking because a browser cannot
- * mount the native one, and the parts a reader cannot verify by looking are the
- * rules: prefix beats word prefix beats substring beats description, a disabled
- * row stays visible but unreachable, multiple mode keeps the picked order, and
- * a create row appears only when nothing matches. A preview that filtered in
- * place, hid disabled rows, or invented a selection from the query would teach
- * a behaviour the component does not have.
- */
-
 const team: ReadonlyArray<PreviewComboboxOption> = [
   {
     value: "ada",
@@ -49,8 +37,6 @@ const values = (options: ReadonlyArray<PreviewComboboxOption>): string[] =>
 
 describe("the combobox preview's ranking", () => {
   it("ranks a prefix above a word prefix above a substring above a description", () => {
-    // One option per rule, declared in the reverse of the order they must be
-    // shown in: the order has to come from the rank, not the declaration.
     const description: PreviewComboboxOption = {
       value: "description",
       label: "Ledger",
@@ -117,8 +103,6 @@ describe("the combobox preview's ranking", () => {
   });
 
   it("keeps a disabled row visible but drops an option that does not match", () => {
-    // A disabled row is unselectable, not hidden: it is what tells a reader the
-    // team exists and cannot be assigned. Hiding it would be a different list.
     expect(values(visibleOptions(team, "external"))).toEqual(["external"]);
     expect(values(visibleOptions(team, "turing"))).toEqual(["alan"]);
     expect(values(visibleOptions(team, "payroll"))).toEqual([]);
@@ -155,8 +139,6 @@ describe("the combobox preview's highlight", () => {
 
 describe("the combobox preview's selection", () => {
   it("appends a pick in the chosen order and removes it on a second pick", () => {
-    // Multiple mode reports the values in the order they were chosen, which is
-    // why a toggle appends rather than sorting: the order is the reader's.
     expect(toggleSelection([], "perf")).toEqual(["perf"]);
     expect(toggleSelection(["perf"], "docs")).toEqual(["perf", "docs"]);
     expect(toggleSelection(["perf", "docs"], "perf")).toEqual(["docs"]);
@@ -167,7 +149,7 @@ describe("the combobox preview's selection", () => {
       "Grace Hopper, Ada Lovelace",
     );
     expect(triggerLabel(team, [], "Choose…")).toBe("Choose…");
-    // A value with no option is shown as itself rather than dropped.
+
     expect(triggerLabel(team, ["gone"], "Choose…")).toBe("gone");
   });
 });
@@ -183,8 +165,6 @@ describe("the combobox preview's create row", () => {
   });
 
   it("carries a sentinel a caller option cannot collide with", () => {
-    // The component uses a NUL-prefixed value for the same reason: a typed
-    // query cannot produce it, so the row can never be mistaken for an option.
     const value = `${CREATE_ROW_PREFIX}Nina`;
 
     expect(isCreateRow(value)).toBe(true);

@@ -2,39 +2,18 @@ import { descriptionText } from "./page-description";
 import { absoluteUrl } from "./site";
 import { appName } from "./shared";
 
-/**
- * The document metadata of one docs page.
- *
- * Every docs page previously shared the root layout's title, so a reader with
- * three tabs open saw "GPUIxUI Docs" three times and a crawler saw one title for
- * seventy pages. The title, description and canonical URL come from the page
- * that is rendering; `page-meta.test.ts` holds them to an absolute URL and to
- * the frontmatter.
- */
-
-/** What a head needs from a page; the loader supplies it for both collections. */
 export interface DocsPageMeta {
-  /** The frontmatter title, without the site name. */
   readonly title: string;
-  /** The frontmatter description, if the page has one. */
+
   readonly description?: string;
-  /** The page's URL path, such as `/components/dialog`. */
+
   readonly url: string;
 }
 
 const fallbackDescription = `Documentation for ${appName}, the native UI component library for GPUix and React.`;
 
-/** The title as a browser tab, a search result and a share card show it. */
 export const pageTitle = (title: string): string => `${title} · ${appName}`;
 
-/**
- * The one share image.
- *
- * Every page published `og:title` and `og:description` but no image, so a link
- * to the docs or the landing rendered as a bare card. The image is the site's
- * own 512px mark, served from `public/`; the test holds the URL to the file so
- * renaming the asset cannot leave a broken card behind.
- */
 export const socialImage = {
   url: absoluteUrl("/logo.png"),
   type: "image/png",
@@ -43,7 +22,6 @@ export const socialImage = {
   alt: `${appName} mark`,
 } as const;
 
-/** The tags both page types publish for a share card. */
 const socialMeta = [
   { property: "og:image", content: socialImage.url },
   { property: "og:image:type", content: socialImage.type },
@@ -54,18 +32,8 @@ const socialMeta = [
   { name: "twitter:image:alt", content: socialImage.alt },
 ];
 
-/**
- * The landing page's document metadata.
- *
- * The landing is a route, not a collection document, so it never went through
- * `docsMetadata` — and a link to the site's front door shared without an
- * `og:description` or a canonical URL. It lives here rather than in the route
- * so the guard can read it: the route module imports `@/` components, which a
- * unit test cannot load.
- */
 export const landingTitle = "GPUIxUI — native Mac apps in React";
 
-/** What the landing page tells a search engine and a share card. */
 export const landingDescription =
   "GPUIxUI is a native UI library for GPUix + React: shadcn's API drawn on the GPU, with a vibrant sidebar, a unified toolbar and the system accent — and the same components on Windows 11 and Linux.";
 
@@ -90,12 +58,6 @@ export const landingMeta = () => {
   };
 };
 
-/**
- * The `head` contribution of a docs page.
- *
- * A canonical link is the page's own absolute URL. The platform switch lives in
- * the app, not the query string, so a page's search belongs to the page.
- */
 export const docsMetadata = ({
   title,
   description,

@@ -12,26 +12,8 @@ import {
   type InspectedObject,
 } from "./inspector-preview";
 
-/**
- * Browser preview for the Property panels page.
- *
- * The shipped panel, list and card are three readers of one object the caller
- * owns: an editable row reports a change, and the preview, the key-value table
- * and the metric repaint in the same frame — the composition the
- * `inspector-lifecycle` probe measured. The drawing mirrors that contract with
- * HTML and says so; the Code tab shows the native composition.
- *
- * Every surface is its component's own: `PropertyPanel`'s panel and header
- * (`SURFACE_PANEL`/`SURFACE_HEADER`), `KeyValue`'s fixed label track, and
- * `StatCard`'s label/reading/hint column. The rules live in
- * `inspector-preview.ts` so a test can fail on them; this file only renders
- * them.
- */
-
-/** The label column's width, the track the probe's fixture names. */
 const LABEL_WIDTH = 96;
 
-/** One read-only row: the label column is fixed, so values line up. */
 const Row = ({
   label,
   value,
@@ -47,7 +29,6 @@ const Row = ({
   </div>
 );
 
-/** The metric the card derives from the object, never a second copy of it. */
 const Metric = ({ object }: { readonly object: InspectedObject }) => (
   <div aria-label="Area" className="gx-dstat" role="group">
     <span className="gx-dstat-label">Area</span>
@@ -61,7 +42,7 @@ const Metric = ({ object }: { readonly object: InspectedObject }) => (
 
 export const PropertyPanelDemo = () => {
   const [object, setObject] = useState<InspectedObject>(INSPECTED);
-  // The rows after the four the panel edits: the object's static context.
+
   const context = propertyRows(object).slice(4);
 
   return (

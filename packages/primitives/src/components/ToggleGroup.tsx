@@ -1,22 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `ToggleGroup` — a toolbar of related modes.
- *
- * It is a group of `Toggle`s, not of `Switch`es or `Checkbox`es: each option
- * sets a mode for the next action, pressing one can clear it, and the group
- * holds **one** tab stop that the arrow keys move between options. `single`
- * keeps at most one mode on (an alignment palette); `multiple` lets any number
- * stay on (bold and italic together).
- *
- * **The accessibility limitation:** `@gpuix/native` 0.11.0 has no
- * `aria-pressed`, so each option announces its state through `aria-valuetext`
- * (the provider's `messages.press` words, shipped as `"pressed"` /
- * `"not pressed"`), exactly like `Toggle`. The group is a named `group`.
- *
- * Arrow keys move focus only — a toggle is a button, so moving focus must not
- * change what the next action does. `Space`/`Enter` toggles the focused option.
- */
-
 import type { ReactElement, ReactNode } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -73,25 +55,15 @@ import {
 import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
-/** How many options a toggle group can hold on at once. */
 export const TOGGLE_GROUP_MODES = ["single", "multiple"] as const;
 export type ToggleGroupMode = (typeof TOGGLE_GROUP_MODES)[number];
 
 export type ToggleGroupOption = GroupOption;
 
-/** {@link ToggleGroupItem} props: one option written as an element. */
 export type ToggleGroupItemProps = GroupItemProps;
 
-/**
- * One option as an element, for content the data prop cannot carry.
- *
- * `ToggleGroup` reads this part's props and renders the button itself, so the
- * roving index and the key contract stay one code path. The part draws nothing
- * on its own.
- */
 export const ToggleGroupItem = (_props: ToggleGroupItemProps): null => null;
 
-/** The option list a group renders: the data prop, or its item children. */
 export const toggleGroupItems = (props: {
   readonly options?: ReadonlyArray<ToggleGroupOption>;
   readonly children?: ReactNode;
@@ -100,16 +72,6 @@ export const toggleGroupItems = (props: {
     ? optionItems(props.children, ToggleGroupItem)
     : groupOptions(props.options);
 
-/**
- * The values a controlled or default prop stands for.
- *
- * A `single` group takes one string, a `multiple` group an array — but either
- * shape is accepted by both, because a caller who switches `type` should not
- * have to rewrite the value it passes. Both are saved selections as often as
- * literals, so a value this release cannot read is **no values at all**: a
- * stored `null` (JSON's absence) or a record from an older shape once reached
- * `Arr.contains` as itself and threw out of the group's render.
- */
 export const toggleGroupValues = (value: unknown): ReadonlyArray<string> =>
   P.isString(value)
     ? value === ""
@@ -119,14 +81,6 @@ export const toggleGroupValues = (value: unknown): ReadonlyArray<string> =>
       ? Arr.filter(value, P.isString)
       : [];
 
-/**
- * A stored selection, or absence when the value is a shape this release does
- * not write.
- *
- * A record saved by another release can hold a map of pressed ids rather than a
- * list. That is absence, not an empty choice: a controlled group stays
- * uncontrolled so a reader can still press a mode.
- */
 const storedSelection = (
   value: unknown,
 ): Option.Option<ReadonlyArray<string>> =>
@@ -134,7 +88,6 @@ const storedSelection = (
     ? Option.some(toggleGroupValues(value))
     : Option.none();
 
-/** The value a caller's `onValueChange` receives for the group's mode. */
 export function toggleGroupValue(
   mode: "single",
   values: ReadonlyArray<string>,
@@ -150,87 +103,67 @@ export function toggleGroupValue(
   return mode === "single" ? (values[0] ?? "") : values;
 }
 
-/** The props both modes share. */
 interface ToggleGroupBase extends InteractionProps, FieldHostProps, HelpProps {
-  /** The choices as data. Omit when the options are item children. */
   readonly options?: ReadonlyArray<ToggleGroupOption>;
-  /** The choices as items, when they carry rich content. */
+
   readonly children?: ReactNode;
-  /** Arrow-key axis. Defaults to `horizontal`, the toolbar's shape. */
+
   readonly orientation?: "vertical" | "horizontal";
-  /** Defaults to `default`. */
+
   readonly variant?: ToggleVariant;
-  /** Defaults to `md`. */
+
   readonly size?: ControlSize;
-  /** Equal width and height per option, for an icon-only group. */
+
   readonly square?: boolean;
-  /** Disables every option. */
+
   readonly disabled?: boolean;
-  /** Accessible name for the group. */
+
   readonly label?: string;
-  /** Extra style, resolved against the group's live state and merged last. */
+
   readonly style?: StateStyle<ToggleGroupState>;
-  /** Extra style for every option button, resolved against that button's live state. */
+
   readonly itemStyle?: StateStyle<ToggleItemState>;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** The group's own locator. A row is named by `itemTestId`. */
+
   readonly testId?: string;
-  /**
-   * One locator per option row, derived from its value.
-   *
-   * A row is a control of its own and the group's `testId` lands on the
-   * unfocusable wrapper, so without this an automation host can address the
-   * group but never press one mode (`Select`'s `itemTestId` is the same
-   * contract). The derivation is a function because rows are data.
-   */
+
   readonly itemTestId?: (value: string) => string;
 }
 
-/** At most one mode on; the value and its report are one string. */
 export interface SingleToggleGroupProps extends ToggleGroupBase {
   readonly type: "single";
-  /** Controlled pressed value. Omit to let the group hold its own. */
+
   readonly value?: string;
   readonly defaultValue?: string;
   readonly onValueChange?: (next: string) => void;
 }
 
-/** Any number of modes on (the default); the value and its report are an array. */
 export interface MultipleToggleGroupProps extends ToggleGroupBase {
   readonly type?: "multiple";
-  /** Controlled pressed values. Omit to let the group hold its own. */
+
   readonly value?: ReadonlyArray<string>;
   readonly defaultValue?: ReadonlyArray<string>;
   readonly onValueChange?: (next: ReadonlyArray<string>) => void;
 }
 
-/**
- * The group's props, discriminated by `type`, so a `single` group's
- * `onValueChange` is a `string` callback and a `multiple` group's is an array
- * callback — a caller never has to narrow inside its own handler.
- */
 export type ToggleGroupProps =
   | SingleToggleGroupProps
   | MultipleToggleGroupProps;
 
-/** What a `ToggleGroup` tells its `style` callback. */
 export interface ToggleGroupState {
   readonly disabled: boolean;
-  /** True while any option holds native focus. */
+
   readonly focused: boolean;
 }
 
-/** What a `ToggleGroup` tells its `itemStyle` callback, one option at a time. */
 export interface ToggleItemState {
   readonly disabled: boolean;
   readonly focused: boolean;
   readonly pressed: boolean;
 }
 
-/** What the renderer does with the group's own state. */
 export interface ToggleGroupHandlers extends GroupHandlers, GroupKeys {
-  /** Turn one option on or off. */
   readonly onToggle: (value: string) => void;
 }
 
@@ -244,19 +177,15 @@ export const renderToggleGroup = (
   messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
   const { variant = "default", square = false } = props;
-  // The axis a toolbar lays out and navigates on. `orientation` is a stored
-  // choice like a size, so a name this release does not carry reads as the
-  // documented horizontal (the layout and the keys must not disagree).
+
   const orientation = orientationOf(props.orientation, "horizontal");
   const size = controlSize(props.size);
   const options = toggleGroupItems(props);
   const count = Arr.length(options);
   const isDisabled = optionDisabled(options, props.disabled);
-  // A focus the group no longer draws is not focus: the option holding it was
-  // filtered out or the list shrank, so no row can carry the ring or the state.
+
   const focused = focusedOption(count, focus.focusedIndex);
-  // The preferred stop may be a disabled row, which takes no focus; the first
-  // option a user can reach is what keeps the group in the tab order.
+
   const activeIndex = rovingIndex(count, preferredIndex, isDisabled);
   const toggle = (index: number): void => {
     const option = options[index];
@@ -289,8 +218,7 @@ export const renderToggleGroup = (
     const key = event.key ?? "";
     if (swallowKeyDefault(key, "down")) event.preventDefault();
     if (move(key) || jump(key)) return;
-    // A typed prefix moves focus but never presses: this group's arrows do not
-    // change a mode either, so the keyboard contract stays one rule.
+
     const typed = Option.flatMap(
       Option.all([Option.fromNullishOr(handlers.typeAhead), activeIndex]),
       ([match, from]) => match(from, key),
@@ -298,8 +226,7 @@ export const renderToggleGroup = (
     if (Option.match(typed, { onNone: () => false, onSome: focusMove })) return;
     if (decideActivation(key, "down", event.isHeld === true)) activate();
   };
-  // Space toggles on the release, the way a platform button does; Enter has
-  // already toggled on the press, and this handler ignores it.
+
   const onKeyUp = (event: KeyEvent): void => {
     if (!isPlainKey(event.modifiers)) return;
     if (decideActivation(event.key ?? "", "up", false)) activate();
@@ -350,8 +277,7 @@ export const renderToggleGroup = (
             pressed,
           }),
         );
-        // The address lands on the option that holds the tab stop, so a form can
-        // focus the group's reachable mode rather than an unfocusable wrapper.
+
         const addressed = Option.contains(activeIndex, index);
         const register = handlers.registerItem(index);
         return (
@@ -391,22 +317,18 @@ export const renderToggleGroup = (
   );
 };
 
-/** A group of related modes with one tab stop. */
 export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
   const theme = useTheme();
   const messages = useMessages();
   const focus = useRovingFocus();
   const mode = props.type ?? "multiple";
-  /** Report in the shape the caller's `type` implies. */
+
   const notify = (next: ReadonlyArray<string>): void => {
     if (props.type === "single")
       props.onValueChange?.(toggleGroupValue("single", next));
     else props.onValueChange?.(toggleGroupValue("multiple", next));
   };
   const selected = useControlState<ReadonlyArray<string>>(
-    // `value` and `defaultValue` are saved selections: JSON keeps a field a
-    // record never set as `null`, and an older shape is not a list at all.
-    // Both are absence, not an empty choice.
     Option.getOrUndefined(storedSelection(props.value)),
     Option.getOrElse(storedSelection(props.defaultValue), () => []),
     notify,

@@ -1,14 +1,3 @@
-/**
- * GPUix event decode.
- *
- * The bug these guard: an adapter that reads the *produced* character
- * (`keyChar`) instead of the *physical* key (`key`), so a macOS Option+letter or
- * dead-key press would decode to the glyph (`Alt+ß`) instead of the base key
- * (`Alt+S`). GPUix's `key` is already the logical key name, so it plays the role
- * the DOM matcher's `code` fallback does — the adapter must never touch
- * `keyChar`.
- */
-
 import { describe, expect, it } from "vitest";
 import type { EventPayload } from "@gpuix/react";
 import { hasNonModifierKey } from "@tanstack/hotkeys";
@@ -79,7 +68,6 @@ describe("decodeGpuixEvent", () => {
   });
 
   it("decodes an Option+letter press to its base key, not the glyph", () => {
-    // Option+S produces `keyChar: "ß"` on macOS; the binding identity is "s".
     expect(decodeGpuixEvent(key("s", { alt: true }, "ß"), "darwin")).toEqual({
       key: "S",
       ctrl: false,

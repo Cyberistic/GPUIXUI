@@ -17,18 +17,10 @@ import { Sidebar14Render, sidebar14Source } from "./blocks/sidebar-14";
 import { Sidebar15Render, sidebar15Source } from "./blocks/sidebar-15";
 import { Sidebar16Render, sidebar16Source } from "./blocks/sidebar-16";
 
-/**
- * The sixteen sidebar examples, in shadcn's order.
- *
- * They were sixteen pages; they are now the sections of one page. The page
- * writes each heading and the shadcn link, and mounts the drawing with
- * `<SidebarExample slug="sidebar-01" />` so the section stays in the Markdown
- * table of contents while the drawing keeps its own state.
- */
 export interface SidebarExampleBlock {
   readonly slug: string;
   readonly title: string;
-  /** The section shadcn publishes the block in, anchored on its current page. */
+
   readonly href: string;
   readonly render: () => ReactNode;
   readonly source: string;
@@ -160,15 +152,12 @@ export const sidebarExample = (slug: string): SidebarExampleBlock => {
   return example;
 };
 
-/**
- * One example on the sidebar page, in the same frame as every other block
- * page. The page supplies the group, the heading and the shadcn link around it.
- */
 export function SidebarExample({ slug }: { readonly slug: string }) {
   const example = sidebarExample(slug);
 
   return (
     <BlockScreen
+      file={`apps/docs/src/components/docs/blocks/${example.slug}.tsx`}
       name={example.slug}
       render={example.render}
       source={example.source}

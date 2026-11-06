@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * MarkdownEditor example: one controlled document, three views.
- *
- * The value is the example's own state, so a keystroke in the source reaches
- * the preview in the same frame and the status line counts it.
- */
-
 import { useState } from "react";
 import { MarkdownEditor } from "../src/markdown/markdown-editor.js";
 

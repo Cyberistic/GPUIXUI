@@ -1,11 +1,3 @@
-/**
- * The mount boundary and the only place this example executes anything.
- *
- * `--terminal` (or `GPUIX_TERMINAL=1`) paints the same tree into kitty/Ghostty;
- * the window options are the shell's native chrome on macOS and the theme's
- * initial appearance. `--dark` / `GPUIX_DARK=1` starts in the dark look.
- */
-
 import { render } from "@gpuix/react";
 import { nativeWindowOptions } from "@gpuixui/shell";
 import { currentPlatform, darkTheme, lightTheme } from "@gpuixui/tokens";

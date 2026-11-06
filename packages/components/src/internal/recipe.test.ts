@@ -1,13 +1,3 @@
-/**
- * The package's seam over the compiler's recipe cache.
- *
- * The cache itself is `@gpuixui/tw`'s (`recipe-cache.test.ts` holds the hit,
- * the per-theme key, the cap and the freeze). What this file guards is that the
- * package still paints through that shared cache and hands the caller's recipe
- * and theme straight through: the same class string and theme answer the same
- * immutable style, and another theme is another entry.
- */
-
 import { createTheme } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { recipeStyle } from "./recipe.js";

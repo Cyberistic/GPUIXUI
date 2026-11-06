@@ -1,13 +1,3 @@
-/**
- * The rows a virtualized viewport shows, as opposed to the rows it mounts.
- *
- * `@gpuixui/data`'s window calculator answers the **mounted** window: the rows
- * in view plus the overdraw on either side. A drawing that painted every
- * mounted row as "in view" claimed four rows a reader cannot see above the
- * viewport's top edge. The two ranges are one subtraction apart, so this module
- * keeps the viewport's own intersection and both drawings read it.
- */
-
 import {
   clampScrollOffset,
   rowCount,
@@ -16,13 +6,6 @@ import {
   type WindowSpec,
 } from "@gpuixui/data/virtual/window";
 
-/**
- * The rows whose painted box meets the viewport at a scroll offset.
- *
- * The offset is clamped into the set first, so a scroll past the end names the
- * last rows rather than a range beyond them. `start` is inclusive and `end`
- * exclusive, the convention the package's `VirtualWindow` uses.
- */
 export const rowsInView = (
   spec: WindowSpec,
   scrollOffset: number,
@@ -36,7 +19,6 @@ export const rowsInView = (
   };
 };
 
-/** The line under a drawing: the rows in view, and the window that holds them. */
 export const viewReadout = (
   spec: WindowSpec,
   scrollOffset: number,

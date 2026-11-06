@@ -1,20 +1,3 @@
-/**
- * Holds the `radio-group-lifecycle` fixture, the probe that paints it and the
- * section a plan reads.
- *
- * The gap this guards: a radio group states its whole visible choice as one
- * filled disc in the chosen row, and its keyboard contract is one Tab stop with
- * the arrows selecting **and** moving real focus. The package's suites read
- * `aria-valuetext` and the resolved `StyleDesc`, so a disc that never reached
- * the glass, a ring that painted two stops wide, or a roving base taken from
- * the value a controlled owner kept would pass them. A window is the only place
- * those are measurable — and the group forwards its `testId` to the wrapper and
- * gives its rows none, so the probe presses the text a row paints and proves the
- * key arrived by the value it reported.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -47,13 +30,11 @@ const probe = read("./radio-group-probe.tsx");
 const registry = read("./registry.ts");
 const readme = read("../../README.md");
 
-/** The probe's own steps, so a count cannot be read out of another probe. */
 const stepsOf = (): string => {
   const start = probe.indexOf("export const radioGroupSteps");
   return start === -1 ? "" : probe.slice(start);
 };
 
-/** This probe's README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `radio-group-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -72,8 +53,7 @@ describe("the readout", () => {
     expect(fieldOf("value=a1 reports=2", "value")).toEqual(Option.some("a1"));
     expect(countOf("value=a1 reports=2", "reports")).toEqual(Option.some(2));
     expect(fieldOf("value=a1 reports=2", "last")).toEqual(Option.none());
-    // The field is matched after the start or a space, so an unbounded read for
-    // `ports` cannot answer out of `reports`.
+
     expect(fieldOf("value=a1 reports=2", "ports")).toEqual(Option.none());
     expect(fieldOf("a(b=1", "a(b")).toEqual(Option.some("1"));
   });
@@ -96,14 +76,12 @@ describe("the fixture", () => {
       ...RADIO_OFF_CHOICES,
       ...RADIO_PLAN_CHOICES,
     ];
-    // A repeated label would make a text press ambiguous, and a repeated value
-    // would let one group's report stand in for another's.
+
     const labels = Arr.map(all, (choice) => choice.label);
     const values = Arr.map(all, (choice) => choice.value);
     expect(new Set(labels).size).toBe(labels.length);
     expect(new Set(values).size).toBe(values.length);
-    // The rows are pressed by the words they paint, so a label may not be a
-    // substring of another (the protocol's text locator is a contains match).
+
     expect(
       Arr.filter(
         labels,
@@ -131,8 +109,7 @@ describe("the fixture", () => {
     expect(Arr.map(disabled, (choice) => choice.value)).toEqual(["s2"]);
     expect(RADIO_SKIP_INITIAL).toBe("s1");
     expect(RADIO_SKIP_AFTER).toBe("s3");
-    // The option the disabled one sits between is what the arrow has to skip,
-    // so the two ends are one step apart in the list.
+
     expect(Arr.map(RADIO_SKIP_CHOICES, (choice) => choice.value)).toEqual([
       "s1",
       "s2",
@@ -143,7 +120,7 @@ describe("the fixture", () => {
   it("addresses a row through the content it paints", () => {
     expect(radioRowId("pointer", "a1")).toBe("radio-row-pointer-a1");
     expect(radioRowId("skip", "s2")).toBe("radio-row-skip-s2");
-    // Every group/value pair is its own address.
+
     const ids = Arr.flatMap(
       [
         ["pointer", RADIO_CHOICES],
@@ -158,18 +135,15 @@ describe("the fixture", () => {
   });
 
   it("tells the selection disc from the keyboard ring by width", () => {
-    // The window measured a 16-point disc as 32 device pixels and the ring
-    // around a row as 516 device pixels, in a 250-point group at scale 2.
     const groupWidth = 250 * 2;
     expect(isDiscWidth(32, groupWidth)).toBe(true);
     expect(isRingWidth(516, groupWidth)).toBe(true);
-    // Neither test can be satisfied by the other shape.
+
     expect(isRingWidth(32, groupWidth)).toBe(false);
     expect(isDiscWidth(516, groupWidth)).toBe(false);
   });
 
   it("paints the disc and the ring in the theme's primary role", () => {
-    // One role, so a width is the only thing a frame can use to tell them apart.
     expect(selectionInk("#A7A9FF")).toBe("#A7A9FF");
   });
 });
@@ -178,11 +152,11 @@ describe("the probe", () => {
   it("mounts the shipped group in both of its option shapes", () => {
     expect(probe).toContain('from "@gpuixui/primitives"');
     expect(probe).toContain("RadioGroupItem");
-    // Five groups: the pointer, keys, skip, off and declined measurements.
+
     expect(Arr.fromIterable(probe.matchAll(/<RadioGroup\n/g))).toHaveLength(5);
-    // The keys group is data-driven (the other `radioItems` path) …
+
     expect(probe).toContain("options={RADIO_CHOICES}");
-    // … and the four pressed groups list items so each row's text is named.
+
     expect(Arr.fromIterable(probe.matchAll(/choiceRow\("/g))).toHaveLength(4);
     expect(probe).toContain('choiceRow("pointer", theme)');
     expect(probe).toContain('choiceRow("skip", theme)');
@@ -193,7 +167,7 @@ describe("the probe", () => {
     expect(probe).toContain("testId={RADIO_IDS.skip}");
     expect(probe).toContain("testId={RADIO_IDS.off}");
     expect(probe).toContain("testId={RADIO_IDS.plan}");
-    // The Tab-stop pair is addressable, which is what the one-stop read needs.
+
     expect(probe).toContain("testId={RADIO_IDS.before}");
     expect(probe).toContain("testId={RADIO_IDS.after}");
   });
@@ -204,8 +178,7 @@ describe("the probe", () => {
     expect(probe).toContain('ctx.host.click(radioRowId("skip", "s1"))');
     expect(probe).toContain('ctx.host.click(radioRowId("off", "o1"))');
     expect(probe).toContain('ctx.host.click(radioRowId("plan", "p1"))');
-    // The shipped rows carry no `testId`, and a text press is ambiguous
-    // because the row and the text it paints both carry the label.
+
     expect(stepsOf()).not.toContain("clickText");
   });
 
@@ -248,8 +221,7 @@ describe("the probe", () => {
       Arr.fromIterable(stepsOf().matchAll(/ctx\.expect\w+\(/g)),
     );
     expect(sites).toBeGreaterThan(0);
-    // The box, capture and crop helpers assert once per call, so the printed
-    // count floors the sites in the steps.
+
     expect(RADIO_CHECKS).toBeGreaterThanOrEqual(sites);
     expect(RADIO_CHECKS).toBe(39);
   });
@@ -278,8 +250,7 @@ describe("the registry and the record", () => {
 
   it("prints the readings the window took", () => {
     const section = sectionOf();
-    // The disc's count, its 32x32 device box, and the ring's 4576 pixels in a
-    // 516x64 box, inside one 250-point group at the capture's scale.
+
     expect(section).toContain("**0**");
     expect(section).toContain("**540**");
     expect(section).toContain("**32x32**");

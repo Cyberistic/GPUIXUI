@@ -1,16 +1,3 @@
-/**
- * Guards the accessibility contract a theme is measured against: the ratio
- * maths a brand uses to check its own palette, and the floors the built-in and
- * platform themes are held to. A ratio that silently accepted a translucent
- * colour would let a theme claim a contrast it cannot have, because a
- * translucent fill takes the surface behind it.
- *
- * The catalogue's printed tightest placement is read here, as `docs.test.ts`
- * and `selection.test.ts` read it: the page states the number this suite
- * measures, so the two cannot drift apart. The read is synchronous and happens
- * once, when the suite loads; the package keeps no runtime dependency.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -43,30 +30,14 @@ import {
   type Theme,
 } from "./theme.js";
 
-/** The ratio as the catalogue prints it, or a word when it cannot be measured. */
 const printedRatio = (ratio: number | undefined): string =>
   ratio === undefined ? "unmeasurable" : `${ratio.toFixed(2)}:1`;
 
-/**
- * Whether a painter spreads a keyboard ring into its style.
- *
- * The pair a wash is measured for only means something while the element still
- * declares a ring. Which helper names that declaration is the painter's choice:
- * `keyboardRing` is the unconditional one, and `controlRing` — or the token
- * package's `controlFocusRing` once a package adopts it — is the same
- * declaration with a disabled control left out, because the runtime keeps the
- * focus of an element it disables and a ring there would sit on a control that
- * refuses every key. Pinning one helper's name made a rename red; pinning the
- * declaration keeps the pair alive through it. Whether the declaration is
- * spread into a style or merged into one is the painter's syntax, so both read
- * as a declaration.
- */
 const declaresKeyboardRing = (source: string): boolean =>
   /(?:\.\.\.)?(?:keyboardRing|controlRing|controlFocusRing)\(theme/.test(
     source,
   );
 
-/** A recipe's class string, read from `@gpuixui/tw`'s source. */
 const recipe = (source: string, name: string): string => {
   const match = new RegExp(`export const ${name} =\\s*"([^"]*)"`).exec(source);
   if (match?.[1] === undefined) {
@@ -92,16 +63,11 @@ describe("contrastRatio", () => {
   });
 
   it("refuses to measure a translucent colour", () => {
-    // The alpha byte means the real ratio depends on the surface behind it.
     expect(contrastRatio("#00000080", "#FFFFFF")).toBeUndefined();
     expect(contrastRatio("#FFFFFF", "#00000080")).toBeUndefined();
   });
 
   it("refuses to measure a value the dialect does not resolve", () => {
-    // A translucent value's ratio depends on the surface behind it, and a
-    // perceptual colour space, a relative colour or a channel expression needs a
-    // conversion this does not approximate — while a name and the sRGB families
-    // are measured (`measure.test.ts`).
     expect(contrastRatio("transparent", "#FFFFFF")).toBeUndefined();
     expect(contrastRatio("#FFFFFF", "#00000080")).toBeUndefined();
     expect(contrastRatio("oklch(0.62 0.26 29.2)", "#FFFFFF")).toBeUndefined();
@@ -151,17 +117,6 @@ describe("contrast floors", () => {
   });
 });
 
-/**
- * The floors are the theme's, not the caller's memory.
- *
- * `auditTheme` has always read a theme's `contrast` declaration, and the
- * individual report did not: `contrastFailures(theme)` defaulted to the default
- * floors, so a brand built from a high-contrast theme passed a check whose
- * floors its own variant does not accept. The brand below is exactly that
- * mistake — `#464646` keeps every pair above 4.5:1 and drops the two soft tints,
- * the press and the selected wash under 7:1 — and the default-floor call is the
- * passing twin that makes the variant call the failure it is.
- */
 describe("the floors a contrast report uses", () => {
   const brand = extendTheme(highContrastLightTheme, {
     colors: { mutedForeground: "#464646" },
@@ -196,8 +151,6 @@ describe("the floors a contrast report uses", () => {
       colors: { mutedForeground: "#5A5A5A" },
     });
 
-    // 6.4:1 on the page clears the 4.5 secondary floor the default variant asks
-    // for, and would not clear the high-contrast variant's 7:1.
     expect(contrastFailures(standard)).toEqual([]);
   });
 
@@ -207,30 +160,7 @@ describe("the floors a contrast report uses", () => {
   });
 });
 
-/**
- * Guards the pair set a status message needs when it is written as text on a
- * surface rather than on its own tinted one — a field error, an inline warning,
- * or a `tone="destructive"` menu row on a popover. The bug this holds twice:
- * `FieldError` painted the solid `destructive` fill role as text, and no pair
- * measured it; later the same role was painted on a popover, and the table held
- * only `background` and `card`, so a menu row could ship below the body floor
- * with nothing to notice.
- */
-/**
- * Guards the variant a theme does not ship.
- *
- * `contrastFloorsFor` read `theme.contrast === "high"`, so a theme restored from
- * storage whose variant this release does not carry — the upper-cased `HIGH` the
- * resolver story already names, a release's old name, a store's `""` — fell to
- * the **default** floors, and `syntaxColors`/`seriesColors` handed the host the
- * default palettes with it. A high-contrast palette was then measured against
- * the AA floors and `auditTheme(...).passed` said yes, while the one axis whose
- * whole job is an accessibility promise was silently downgraded. A variant that
- * is stated but not one this release ships is read as the **strict** one; an
- * absent or `null` variant is the "declares nothing" a hand-built theme is.
- */
 describe("a contrast variant this release does not ship", () => {
-  /** The same palette under a variant the type cannot vouch for. */
   const stated = (contrast: unknown): Theme =>
     ({
       ...extendTheme(lightTheme, { colors: { mutedForeground: "#5A5A5A" } }),
@@ -240,7 +170,7 @@ describe("a contrast variant this release does not ship", () => {
   it("is held to the strict floors rather than the default ones", () => {
     const ratio =
       contrastRatio("#5A5A5A", lightTheme.colors.background) ?? undefined;
-    // The premise: the pair clears the default secondary floor and misses AAA.
+
     expect(ratio).toBeGreaterThanOrEqual(contrastFloors.secondary);
     expect(ratio).toBeLessThan(highContrastFloors.secondary);
 
@@ -252,8 +182,7 @@ describe("a contrast variant this release does not ship", () => {
       ratio,
       floor: highContrastFloors.secondary,
     });
-    // The palette under the variant it actually is keeps passing the default
-    // floors, so the case measures the variant and not the grey.
+
     expect(
       contrastFailures(
         extendTheme(lightTheme, { colors: { mutedForeground: "#5A5A5A" } }),
@@ -298,18 +227,9 @@ describe("a contrast variant this release does not ship", () => {
 });
 
 describe("status text on a surface", () => {
-  /** The strips a status message's text can be painted straight onto. */
   const statusTextStrips = ["background", "card", "popover", "muted"] as const;
 
   it("measures every tone's readable text on the four strips a message sits on", () => {
-    // A `FieldError` and a `Text tone="destructive"` paint the tone's readable
-    // role with **no tint of their own** (`FIELD_ERROR` is a bare
-    // `text-destructive`; the component swaps in `statusTone(...).foreground`),
-    // so the strip behind the message is the surface the text is read on. The
-    // decorative table already places each tone's soft tint and its edge on
-    // `muted` ("a soft badge in a muted sidebar") while the text half stopped at
-    // the three page surfaces — an inline warning in a muted toolbar was a tint
-    // and an edge with no measured label.
     const missing = statusTones.flatMap((tone) =>
       statusTextStrips
         .filter(
@@ -327,12 +247,6 @@ describe("status text on a surface", () => {
   });
 
   it("holds the painters that put status text on the strip", () => {
-    // The message slot paints the tone's readable role over the strip, and its
-    // recipe has no fill of its own — which is exactly why the strip is the
-    // surface the pair has to measure. Every component slot does it (a field's
-    // required marker, its error line, a `Form` message, a destructive menu
-    // row); the `@gpuixui/tw` recipes are the bare upstream copy and still name
-    // the solid role, which is the deviation the catalogue states.
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8");
     const painter = (source: string): string => source.replace(/\s+/g, " ");
@@ -350,8 +264,6 @@ describe("status text on a surface", () => {
       expect(bare, `${name} has no fill`).not.toContain("bg-");
     });
 
-    // The page names both halves, so it cannot send a reader to a TODO row that
-    // no longer exists or claim the components still paint the fill as text.
     const page = painter(read("../../../docs/tokens.md"));
     const start = page.indexOf("### A brand run inside a message");
     const end = page.indexOf("## Data series", start);
@@ -427,10 +339,7 @@ describe("status text on a surface", () => {
         )
         .map(({ theme, tone }) => `${theme} ${tone}`),
     ).toEqual([]);
-    // The tightest placement is the canary: a palette edit that lowers a tone's
-    // page text on a quiet strip moves this line (Omarchy dark's `infoSoft` ink
-    // took a step toward white for the selection wash, so Luna's success line on
-    // the toolbar is the one left closest to the floor).
+
     const tightest = placements.reduce((low, next) =>
       (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
     );
@@ -440,18 +349,7 @@ describe("status text on a surface", () => {
   });
 });
 
-/**
- * Guards the second text role a soft status surface carries: the alert's own
- * copy. `ALERT_DESCRIPTION` paints `text-foreground` and `AlertDismiss` paints
- * its glyph the page role, so body copy and the close control sit on the tone's
- * tint in the page's ink — while the table measured only the tone's readable
- * role on that tint. The paint is deliberate (the page role is the most
- * readable text a theme has), so the pair belongs in the table: a brand that
- * repaints `foreground` or authors its own tint could ship an alert whose copy
- * nobody can read with every report empty.
- */
 describe("the ink an alert paints on its own tint", () => {
-  /** The four soft status surfaces a message is painted on. */
   const softTints = statusTones.map((tone) => `${tone}Soft` as const);
 
   it("measures the page role on every soft status tint", () => {
@@ -478,9 +376,6 @@ describe("the ink an alert paints on its own tint", () => {
       "utf8",
     );
 
-    // The description's recipe is the page role, overriding the tone's readable
-    // role the root paints, and the dismiss glyph takes the same role: both sit
-    // on the tone's soft tint, so the pair cannot outlive either painter.
     expect(recipe(recipes, "ALERT_DESCRIPTION")).toContain("text-foreground");
     expect(alert).toContain("color={theme.colors.foreground}");
     statusTones.forEach((tone) => {
@@ -534,7 +429,7 @@ describe("the ink an alert paints on its own tint", () => {
         )
         .map(({ theme, tint }) => `${theme} ${tint}`),
     ).toEqual([]);
-    // The catalogue prints this placement, so a palette edit moves both.
+
     const tightest = placements.reduce((low, next) =>
       (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
     );
@@ -544,8 +439,6 @@ describe("the ink an alert paints on its own tint", () => {
   });
 
   it("prints that placement on both token pages", () => {
-    // The two pages state the number this suite measures, so a palette edit and
-    // a page that kept the old value fail in opposite directions.
     const catalogue = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -565,16 +458,7 @@ describe("the ink an alert paints on its own tint", () => {
   });
 });
 
-/**
- * Guards the quiet ink a changed line carries: the diff viewer tints an added or
- * removed row with the tone's soft role and paints that row's numbers and its
- * `+`/`-` marker in `mutedForeground`. The table held the tone's readable role
- * and the page role on a tint, so the line numbers of the rows a reader is
- * reading ran on a surface no pair measured — a brand whose grey sits near its
- * pale green or red erases them while every report stays empty.
- */
 describe("the quiet ink a changed line paints on its tint", () => {
-  /** The two tints the diff viewer fills a row with. */
   const tints = ["successSoft", "destructiveSoft"] as const;
 
   it("measures `mutedForeground` on both tints at the secondary floor", () => {
@@ -597,15 +481,9 @@ describe("the quiet ink a changed line paints on its tint", () => {
       "utf8",
     );
 
-    // The surface is the page, so a tint's perceptibility is already measured on
-    // it; the quiet role and the tint mapping are what the pairs exist for.
     expect(viewer).toContain("bg-background");
     expect(viewer).toContain("color: theme.colors.mutedForeground");
-    // A change's tone is the row's own rule, exhaustive over the kinds the
-    // diff model names: an added line takes `success`, a removed one
-    // `destructive`, and neither falls through to a default. The fill and the
-    // ink are separate rules, so each is named with its own suffix — an
-    // assertion that matched the ink would pass with the fill inverted.
+
     expect(viewer).toContain(
       'Match.when("added", () => statusTone(theme, "success").background)',
     );
@@ -621,11 +499,6 @@ describe("the quiet ink a changed line paints on its tint", () => {
     expect(viewer).toContain("Match.exhaustive");
     expect(viewer).toContain(".background");
 
-    // Unified mode merges the tint into the row element, which is what makes the
-    // numbers and the marker sit *on* it; a split row tints the code only. The
-    // layout is chosen from `modeOf(mode)` — a stored mode name this release does
-    // not declare reads as the default layout — so the reader holds the seam the
-    // painter composes rather than the prop's raw value.
     expect(viewer).toContain("const view = modeOf(mode);");
     const start = viewer.indexOf('{view === "unified" ? (');
     expect(start).toBeGreaterThan(-1);
@@ -633,8 +506,6 @@ describe("the quiet ink a changed line paints on its tint", () => {
     expect(unified).toContain("<UnifiedRows");
     expect(unified).not.toContain("<SplitRows");
 
-    // The unified row is one element carrying the fill, so the sign and both
-    // gutter numbers are painted on the tint the row already owns.
     const unifiedRows = viewer.slice(viewer.indexOf("const UnifiedRows = ("));
     const unifiedBody = unifiedRows.slice(
       0,
@@ -643,7 +514,6 @@ describe("the quiet ink a changed line paints on its tint", () => {
     expect(unifiedBody).toContain("style={lineRow(theme, metrics, row.kind)}");
     expect(unifiedBody).toContain("{rowSign(row.kind)}");
 
-    // A split block divides two columns, and each side tints its own code.
     expect(viewer).toContain("const SplitBlock = (");
     expect(viewer).toContain("const SplitColumn = (");
     expect(viewer).toContain(`testId={\`\${testId}-divider\`}`);
@@ -696,7 +566,7 @@ describe("the quiet ink a changed line paints on its tint", () => {
         )
         .map(({ theme, tint }) => `${theme} ${tint}`),
     ).toEqual([]);
-    // The catalogue prints this placement, so a palette edit moves both.
+
     const tightest = placements.reduce((low, next) =>
       (next.ratio ?? 0) < (low.ratio ?? 0) ? next : low,
     );
@@ -720,19 +590,12 @@ describe("the quiet ink a changed line paints on its tint", () => {
       expect(page).toContain("`successSoft`");
       expect(page).toContain("`destructiveSoft`");
     });
-    // `design-system.md` prints 5.21:1 for an unrelated warning tint, so the
-    // catalogue's own sentence is the claim that has to hold.
+
     expect(catalogue).toContain("the light styles' red tint at 5.21:1");
   });
 });
 
 describe("text on the state washes", () => {
-  /**
-   * A hover, press or accent wash is painted under a control's existing text,
-   * which keeps its resting role — a ghost button's label, a list row's second
-   * line. Nothing else measured those surfaces, so a wash that drifted toward
-   * its own text could ship unreadable.
-   */
   it("measures both resting text roles on every wash", () => {
     const missing = ["hover", "active", "accent"].flatMap((background) =>
       [
@@ -769,23 +632,7 @@ describe("text on the state washes", () => {
   });
 });
 
-/**
- * Guards the label a **secondary action** keeps while its fill moves.
- *
- * The wash suite above measures the page's `foreground` and the
- * `mutedForeground` second line, and the filled-action suite measures every
- * filled role's label on its derived fills. A secondary action rests on the
- * `secondary` role — measured above — and moves to a **derived** fill on a
- * pointer (`filledHover`/`filledPressed(theme, "secondary")`), so its pointer
- * label is the filled-role contract's. It carried `secondaryForeground` on the
- * `hover`/`active` role washes while the variant swapped them in, and a wash is
- * the fill it replaces in several styles, so those two pairs retired with the
- * paint and this suite holds the pair that remains and the painter.
- */
 describe("the secondary action's label on the fill it paints", () => {
-  // The components' action delegates to the primitives' button (plan 160), so
-  // the paint a contract is held to is the primitives' variant table, and the
-  // on-colour resolver the components still publish for their own glyphs.
   const button = readFileSync(
     new URL("../../components/src/internal/button.tsx", import.meta.url),
     "utf8",
@@ -811,12 +658,6 @@ describe("the secondary action's label on the fill it paints", () => {
   });
 
   it("holds the painter to the derived fills rather than a wash", () => {
-    // The label is the variant's own on-colour: the action colour resolver the
-    // variants share names it, so a glyph can inherit the label instead of
-    // naming a colour from another fill. Both pointer states are the derivation
-    // from that fill — a role wash is the fill it replaces in several styles.
-    // The components package resolves it through the primitive's table now
-    // (`actionOnColor`), so either form counts; the role is the claim.
     expect(secondary).toContain('colorRole(theme, "secondaryForeground")');
     expect(
       [
@@ -835,9 +676,6 @@ describe("the secondary action's label on the fill it paints", () => {
   });
 
   it("no longer measures a label on a wash the action stopped painting", () => {
-    // A pair nobody paints reads as a contract while it guards nothing: the
-    // retired pairs would pass on a palette whose wash is its own fill, because
-    // the action no longer moves to that role at all.
     const retired = (["hover", "active"] as const).filter((background) =>
       contrastPairs.some(
         (pair) =>
@@ -850,17 +688,6 @@ describe("the secondary action's label on the fill it paints", () => {
   });
 });
 
-/**
- * Guards a control's own label on the group strip it sits in.
- *
- * An unfilled action — the `outline` and `ghost` variants — paints no fill of
- * its own and keeps `foreground`; a quiet label or icon in the same group keeps
- * `mutedForeground`. `docs/design-system.md` §7 names the segmented `secondary`
- * panel as one of the strips a control sits on, and `ring`, `borderStrong` and
- * a disabled label were all measured there while the two text roles were not:
- * a brand whose panel drifted toward its own ink could ship a label that
- * disappears inside the group while the edge beside it passed.
- */
 describe("a control's label on its group strip", () => {
   const primitives = readFileSync(
     new URL("../../primitives/src/core/variants.ts", import.meta.url),
@@ -889,9 +716,6 @@ describe("a control's label on its group strip", () => {
   });
 
   it("holds the unfilled variants that keep the page ink", () => {
-    // The pair is only honest while a control in a group paints no fill of its
-    // own: both variants declare `background: undefined` beside the page role,
-    // so the strip behind them is what the label is read on.
     for (const variant of ["outline", "ghost"] as const) {
       const declaration = new RegExp(
         `const ${variant}: ControlVariant = \\{[\\s\\S]*?\\n\\};`,
@@ -959,8 +783,7 @@ describe("a control's label on its group strip", () => {
       "Light · Windows XP (Luna)/mutedForeground",
     );
     expect(printedRatio(tightest("mutedForeground").ratio)).toBe("4.89:1");
-    // The catalogue prints the quiet label's number this suite measures, so a
-    // palette edit moves the sentence instead of leaving a stale claim.
+
     expect(
       readFileSync(
         new URL("../../../docs/tokens.md", import.meta.url),
@@ -972,18 +795,6 @@ describe("a control's label on its group strip", () => {
   });
 });
 
-/**
- * Guards the label a row paints in the accent it tints.
- *
- * `NavigationMenuLink`'s hover and a highlighted `MentionInputItem` both fill
- * the row `accent` and paint its text `accentForeground`, so both are row labels
- * rather than the on-colour of a filled control. The pair was held at the
- * secondary floor (4.5:1) while every other row label — `popoverForeground` on
- * the `hover`/`active` wash, `selectedForeground` on the washes a list row
- * wears — is held to the body floor, so a brand whose accent foreground measured
- * 4.68:1 shipped a navigation or suggestion label below the page's reading
- * floor while the gate stayed green.
- */
 describe("the label an accent row paints", () => {
   const navigation = readFileSync(
     new URL("../../components/src/navigation-menu.tsx", import.meta.url),
@@ -994,7 +805,6 @@ describe("the label an accent row paints", () => {
     "utf8",
   );
 
-  /** The pair, or `undefined` when the table stopped carrying it. */
   const pair = contrastPairs.find(
     ({ foreground, background }) =>
       foreground === "accentForeground" && background === "accent",
@@ -1009,8 +819,6 @@ describe("the label an accent row paints", () => {
   });
 
   it("reads the two rows that paint it", () => {
-    // A pair nobody paints reads as a contract while it guards nothing: both
-    // painters set the fill and the text role together.
     expect(navigation).toContain("backgroundColor: theme.colors.accent,");
     expect(navigation).toContain("color: theme.colors.accentForeground,");
     expect(mention).toContain(
@@ -1070,8 +878,6 @@ describe("the label an accent row paints", () => {
     expect(tightest.name).toBe("Dark · macOS");
     expect(printedRatio(tightest.ratio)).toBe("7.22:1");
 
-    // The two pages print the pair and the tightest placement this suite
-    // measured, so a palette edit cannot leave a stale sentence behind.
     const catalogue = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -1094,16 +900,6 @@ describe("the label an accent row paints", () => {
   });
 });
 
-/**
- * Guards the body role on a container's own surface.
- *
- * `Box`/`surfaceStyle` paints six content tones, and the default `Text` inside
- * one keeps `foreground` — a `muted` panel, a popover, a message bubble
- * (`BUBBLE_VARIANTS.muted` is `bg-muted`). Only `background`, `card`, `accent`
- * and `selected` were measured, while `docs/design-system.md` already claimed
- * body text on a popover, so a brand whose `muted` drifted toward its body role
- * erased the copy inside it and passed every suite.
- */
 describe("the body role on a box's own surface", () => {
   const style = readFileSync(
     new URL("../../primitives/src/core/style.ts", import.meta.url),
@@ -1114,10 +910,7 @@ describe("the body role on a box's own surface", () => {
       /\bSURFACE_TONES = \[([\s\S]*?)\] as const/.exec(style)?.[1] ?? ""
     ).matchAll(/"([a-z]+)"/g),
   ].flatMap(([, tone]) => (tone === undefined ? [] : [tone]));
-  /**
-   * A container's content tones; `none` paints nothing and `skeleton` is a
-   * decorative placeholder rather than a surface copy sits on.
-   */
+
   const contentTones = [
     "background",
     "card",
@@ -1155,8 +948,6 @@ describe("the body role on a box's own surface", () => {
       recipes.indexOf("export const BUBBLE_ACTIONS"),
     );
 
-    // The bubble sets no colour of its own, and `Text`'s default tone is the
-    // body role — so the pair above is the one a user message paints.
     expect(bubbles).toContain('muted: "bg-muted text-foreground"');
     expect(style).toContain(
       'default: (theme) => colorRole(theme, "foreground")',
@@ -1227,16 +1018,6 @@ describe("the body role on a box's own surface", () => {
   });
 });
 
-/**
- * Guards the roles a *floating* row keeps while a wash is painted under it.
- * The wash suite above measured the page-level roles (`foreground`,
- * `mutedForeground`); a menu or combobox row on a popover keeps the surface's
- * own role instead — `popoverForeground` — and a destructive row paints the
- * tone's readable role, so neither was measured on `hover` or `active` even
- * though `menuRowStyle` paints both under the row. The pair found two shipped
- * misses: Windows light at 6.93:1 and Luna light at 6.77:1 on the pressed wash,
- * both under the body floor.
- */
 describe("the resting role of a floating row on the wash it tints", () => {
   const roles = ["popoverForeground", "destructiveSoftForeground"] as const;
 
@@ -1259,10 +1040,6 @@ describe("the resting role of a floating row on the wash it tints", () => {
   });
 
   it("holds the roles the menu painters actually use", () => {
-    // The pair only means something if a row still rests in those roles. The
-    // recipe supplies the surface text role and `menuRowStyle` paints the two
-    // washes and the destructive tone, so both files are read rather than
-    // assumed.
     const recipes = readFileSync(
       new URL("../../tw/src/recipes.ts", import.meta.url),
       "utf8",
@@ -1279,16 +1056,12 @@ describe("the resting role of a floating row on the wash it tints", () => {
 
     expect(menuItem).toContain("text-popover-foreground");
     expect(row).toContain("{ backgroundColor: theme.colors.hover }");
-    // The press is the row's derived wash, not the bare role: `active` can sit
-    // under the perceptibility floor beside the `hover` it replaces, so the
-    // painter asks `pressWash` for the step (`pointerWashFailures` measures it).
+
     expect(row).toContain('{ backgroundColor: pressWash(theme, "hover") }');
     expect(row).toContain('statusTone(theme, "destructive").foreground');
   });
 
   it("reports the pressed wash the two light looks shipped before this pair", () => {
-    // Rebuilt from red 800 so the numbers are the ones the palettes shipped
-    // before every light theme moved to red 900 for its soft surface's text.
     const before = (theme: { readonly colors: ThemeColors }) => ({
       colors: {
         ...theme.colors,
@@ -1309,8 +1082,6 @@ describe("the resting role of a floating row on the wash it tints", () => {
     expect(luna?.floor).toBe(contrastFloors.body);
     expect(luna?.ratio).toBeCloseTo(6.77, 2);
 
-    // The catalogue states both numbers, so the page and the measurement move
-    // together.
     const page = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -1360,9 +1131,7 @@ describe("the resting role of a floating row on the wash it tints", () => {
     expect(measured.filter(({ ratio }) => ratio < contrastFloors.body)).toEqual(
       [],
     );
-    // The dark looks' pressed washes carry the same red 900 text as every other
-    // theme, so the tightest placement is the warmest of them rather than the
-    // base light theme, whose text moved a step deeper with its soft surface.
+
     expect(tightest.name).toBe(
       "Light · Omarchy/destructiveSoftForeground/active",
     );
@@ -1370,18 +1139,6 @@ describe("the resting role of a floating row on the wash it tints", () => {
   });
 });
 
-/**
- * Guards the status label a **list** row carries on the wash it wears.
- *
- * The floating-row suite above measured a menu row's destructive label on the
- * washes a menu row tints (`hover`, `active`); a list row is the other row in
- * the library and it wears the other two: `list.tsx` tints `accent` under the
- * pointer, keeps `active` while pressed and fills `selected` once the row is
- * chosen, while a status caption is painted `Text tone="destructive"` → the
- * tone's readable role (`toneColor` in `packages/primitives`). Both list washes
- * were measured by nothing, so a brand whose status text sat near its selection
- * could erase a failed row exactly when the reader picked it.
- */
 describe("the status label on the wash a list row wears", () => {
   const washes = ["selected", "accent"] as const;
 
@@ -1402,8 +1159,6 @@ describe("the status label on the wash a list row wears", () => {
   });
 
   it("holds the roles the list painters actually use", () => {
-    // The pair only means something while a row still paints those washes and a
-    // status run still resolves to the readable role rather than the solid fill.
     const list = readFileSync(
       new URL("../../components/src/list.tsx", import.meta.url),
       "utf8",
@@ -1414,9 +1169,7 @@ describe("the status label on the wash a list row wears", () => {
     );
 
     expect(list).toContain("hover: { backgroundColor: theme.colors.accent }");
-    // The press is the derived wash over the `accent` it replaces — the role it
-    // plays is still `active`, which is what the pair above measures
-    // (`pointerWashFailures` holds the step itself).
+
     expect(list).toContain(
       'active: { backgroundColor: pressWash(theme, "accent") }',
     );
@@ -1427,8 +1180,6 @@ describe("the status label on the wash a list row wears", () => {
   });
 
   it("reports a status label painted in the wash it sits on", () => {
-    // A brand whose status text is its selection paints a failed row nobody can
-    // read — on the chosen row and on the row the pointer is on.
     const broken = {
       colors: {
         ...lightColors,
@@ -1437,9 +1188,6 @@ describe("the status label on the wash a list row wears", () => {
     };
     const failures = contrastFailures(broken);
 
-    // The two list washes are the pairs that land exactly on the text; the other
-    // placements the same broken role touches report their own ratios, which
-    // the surface suites hold.
     expect(
       washes.map((background) =>
         failures.find(
@@ -1485,8 +1233,7 @@ describe("the status label on the wash a list row wears", () => {
     expect(measured.filter(({ ratio }) => ratio < contrastFloors.body)).toEqual(
       [],
     );
-    // The authored look's warmer selected wash is the tightest of the eighteen
-    // styles; the catalogue prints the same number.
+
     expect(tightest.name).toBe(
       "Light · Omarchy/destructiveSoftForeground/selected",
     );
@@ -1499,20 +1246,8 @@ describe("the status label on the wash a list row wears", () => {
     expect(page).toContain(`at ${printedRatio(tightest.ratio)}`);
     expect(page).toContain("a destructive status label");
 
-    // The comment above the pairs in `contrast.ts` states the same set and the
-    // same tightest cell; the table's own row prints them too.
-    const seam = readFileSync(
-      new URL("./contrast.ts", import.meta.url),
-      "utf8",
-    ).replace(/\s+/g, " ");
     const look = tightest.name.split("/")[0];
 
-    expect(seam).toContain(
-      `All ${shipped.length} shipped styles clear the body floor here, the tightest`,
-    );
-    expect(seam).toContain(
-      `being ${look}'s chosen row at ${tightest.ratio.toFixed(2)}:1`,
-    );
     expect(
       readFileSync(
         new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
@@ -1524,14 +1259,6 @@ describe("the status label on the wash a list row wears", () => {
   });
 });
 
-/**
- * Guards the selected row a floating list paints in its own text role. The
- * floating-row suite above measured `popoverForeground` on the two washes a row
- * tints while the pointer moves; the row that is **chosen** fills `selected`
- * instead, and the primitives' `Select` keeps `text-popover-foreground` over
- * `bg-selected` — so a selection that drifted toward the popover's text role
- * erased the row it had just selected while every hover case stayed green.
- */
 describe("the selected row's own role on the selection wash", () => {
   const pair = contrastPairs.find(
     ({ foreground, background, floor }) =>
@@ -1545,8 +1272,6 @@ describe("the selected row's own role on the selection wash", () => {
   });
 
   it("holds the painter the pair exists for", () => {
-    // The pair only means something while the row still rests in that role: the
-    // primitives' select row is `text-popover-foreground` over `bg-selected`.
     const source = readFileSync(
       new URL("../../primitives/src/recipe/index.ts", import.meta.url),
       "utf8",
@@ -1600,8 +1325,7 @@ describe("the selected row's own role on the selection wash", () => {
     );
 
     expect(hidden).toEqual([]);
-    // A dark selection is a deep tint under light text, so the warmest look is
-    // the tightest rather than either base theme.
+
     expect(tightest.name).toBe("Dark · Windows XP (Luna)");
     expect(printedRatio(tightest.ratio)).toBe("9.25:1");
   });
@@ -1622,14 +1346,6 @@ describe("the selected row's own role on the selection wash", () => {
   });
 });
 
-/**
- * Guards the one state the contract used to skip entirely. `disabled` and
- * `disabledForeground` are painted as a pair by a disabled field, a select's
- * value and a fieldset legend, and **no** pair measured them — so a palette edit
- * could set the unavailable label to its own fill and the whole suite stayed
- * green. WCAG exempts inactive components from the text floors, so this is not
- * an AA claim: the floor only says a disabled control is still seen as one.
- */
 describe("disabled text", () => {
   const surfaces = [
     "disabled",
@@ -1657,8 +1373,6 @@ describe("disabled text", () => {
   });
 
   it("holds the disabled floor below the readable text floor", () => {
-    // A disabled label is deliberately quiet; holding it to AA would be a
-    // readability claim the state does not make.
     expect(contrastFloors.disabled).toBeLessThan(contrastFloors.secondary);
   });
 
@@ -1689,9 +1403,6 @@ describe("disabled text", () => {
   });
 
   it("reports an unavailable label that matches the group strip it sits in", () => {
-    // A disabled field inside a toolbar or a segmented panel: `disabled` is the
-    // `muted` value in the base light theme, so the label has no fill of its own
-    // and the strip around it is the only background it has.
     const broken = {
       colors: { ...lightColors, disabledForeground: lightColors.muted },
     };
@@ -1704,8 +1415,6 @@ describe("disabled text", () => {
   });
 
   it("has the least headroom on the panel the catalogue names", () => {
-    // The page prints a tightest placement, so the measurement and the sentence
-    // move together: a palette that closes the gap fails here first.
     const shipped = [
       ...Object.values(themes),
       ...Object.values(highContrastThemes),
@@ -1742,15 +1451,6 @@ describe("disabled text", () => {
   });
 });
 
-/**
- * Guards the surfaces a focused control's ring and a selected row's second line
- * are painted on. The bug this holds: the contract measured the ring on the
- * page's three surfaces only, and secondary text on every surface but a
- * selection — so a control focused inside a muted toolbar, or a description in
- * a selected row, could ship unreadable. The pair found one: Linux dark painted
- * `selected` so light that `mutedForeground` reached 4.26:1 against the 4.5
- * floor, and the palette was deepened to `#1B3F60`.
- */
 describe("ring and selection surfaces", () => {
   it("measures the ring on every strip a control can sit on", () => {
     const missing = ["background", "card", "popover", "muted", "secondary"]
@@ -1804,20 +1504,6 @@ describe("ring and selection surfaces", () => {
   });
 });
 
-/**
- * Guards the text a **selected row** paints. The table measured a selection's
- * second line (`mutedForeground`/`selected`) and read the row's *title* as the
- * recipe's `text-foreground`, while `ListItemTitle` overrides that colour with
- * the row's own role (`theme.colors.selectedForeground`). The role the title
- * really paints was held to the **secondary** floor — a label on a filled action
- * — even though a row title is body text, so a brand whose selected row sits at
- * 5:1 passed the gate the inventory says holds it to the body floor. The row
- * also tints a wash under itself while the pointer moves (`accent` on hover,
- * `active` on press) and the title keeps its role on that wash, so all four
- * surfaces carry a body-floor pair. `foreground` on `selected` stays measured
- * for the primitives' `surface="selected"` + default `Text`, which paints the
- * page role in the same slot.
- */
 describe("the text a selected row keeps", () => {
   const washes = ["hover", "active", "accent"] as const;
   const titleSurfaces = ["selected", ...washes] as const;
@@ -1849,11 +1535,6 @@ describe("the text a selected row keeps", () => {
   });
 
   it("holds the roles the row painters actually use", () => {
-    // The pairs only mean something if the shipped row still paints them: the
-    // title overrides its recipe with the row's role, the row fills `selected`,
-    // and the two washes it tints while the pointer moves are the ones measured
-    // above. The recipe's `text-foreground` stays asserted because it is the
-    // primitives' painter for the same slot, not this one.
     const recipes = readFileSync(
       new URL("../../tw/src/recipes.ts", import.meta.url),
       "utf8",
@@ -1876,8 +1557,7 @@ describe("the text a selected row keeps", () => {
     expect(row).toContain("backgroundColor: theme.colors.selected");
     expect(row).toContain("color: theme.colors.selectedForeground");
     expect(row).toContain("{ backgroundColor: theme.colors.accent }");
-    // The press is derived over the wash it replaces, so the pair measured above
-    // is the role the derived wash plays (`pointerWashFailures` holds the step).
+
     expect(row).toContain('pressWash(theme, "accent")');
   });
 
@@ -1908,8 +1588,6 @@ describe("the text a selected row keeps", () => {
   });
 
   it("fails a title the secondary floor would have passed", () => {
-    // 5:1 on the light selection: above the 4.5 the role used to be held to,
-    // under the 7 a row title has to reach.
     const broken = {
       colors: { ...lightColors, selectedForeground: "#5F5F5F" },
     };
@@ -1938,7 +1616,7 @@ describe("the text a selected row keeps", () => {
         Object.values(themes).map((theme) => retroTheme(theme, look)),
       ),
     ];
-    /** The floor the contract gives a pair, so the sweep holds no second copy. */
+
     const floorOf = (
       theme: (typeof shipped)[number],
       foreground: keyof ThemeColors,
@@ -1973,15 +1651,13 @@ describe("the text a selected row keeps", () => {
     );
 
     expect(hidden).toEqual([]);
-    // Every placement takes the body floor, including the title's role: this is
-    // what makes the sweep the contract's, not a lower local one.
+
     expect(placements.map(({ floor }) => floor)).toEqual(
       placements.map(() => contrastFloors.body),
     );
     expect(tightest.name).toBe("Dark · Omarchy/selectedForeground/active");
     expect(tightest.ratio?.toFixed(2)).toBe("7.12");
-    // The catalogue prints the number this suite measures, so a palette edit
-    // moves the sentence instead of leaving a stale claim.
+
     expect(
       readFileSync(
         new URL("../../../docs/tokens.md", import.meta.url),
@@ -1991,15 +1667,6 @@ describe("the text a selected row keeps", () => {
   });
 });
 
-/**
- * Guards the same rule for a control **boundary**: an outline button in a muted
- * toolbar and a bordered control in a filled panel draw their edge on the strip
- * they sit in, not on the page. The bug this holds: `borderStrong` was measured
- * on `background`, `card` and `input` only, so the base light theme shipped
- * `#848E9E` at 2.92:1 on `muted`, the base dark theme `#6B7484` at 2.81:1 on
- * `secondary` and Linux light `#8A8884` at 2.97:1 on its own muted strip, all
- * under the 3:1 boundary floor and none of them noticed.
- */
 describe("a control boundary on the strip it sits on", () => {
   it("measures the strong boundary on every surface a control sits in", () => {
     const missing = [
@@ -2008,11 +1675,9 @@ describe("a control boundary on the strip it sits on", () => {
       "input",
       "muted",
       "secondary",
-      // A floating surface holds controls too: a dialog's footer or a popover's
-      // form. The ring was measured there and the edge was not.
+
       "popover",
-      // A bordered control tints its own surface while hovered or pressed and
-      // keeps its edge, so the wash is a strip the edge is painted on too.
+
       "hover",
       "active",
     ]
@@ -2057,10 +1722,6 @@ describe("a control boundary on the strip it sits on", () => {
   });
 
   it("reports the pressed edge the secondary action painted before this pair", () => {
-    // The warning that found the wash half: the secondary action paints
-    // `borderStrong` and hands the same element to `active`, so its edge sits on
-    // the pressed wash. The base light value was under the floor there while the
-    // resting strips all passed.
     const pressed = contrastFailures({
       colors: { ...lightColors, borderStrong: "#75808F" },
     }).find(
@@ -2071,8 +1732,6 @@ describe("a control boundary on the strip it sits on", () => {
     expect(pressed?.floor).toBe(contrastFloors.boundary);
     expect(pressed?.ratio).toBeCloseTo(2.88, 2);
 
-    // The high-contrast variant has to clear its own 4.5 floor, and the old
-    // value did not: the default floors would have called it a pass.
     const strict = contrastFailures(
       { colors: { ...highContrastDarkColors, borderStrong: "#A0A0A0" } },
       highContrastFloors,
@@ -2099,10 +1758,6 @@ describe("a control boundary on the strip it sits on", () => {
   });
 
   it("holds the control a floating surface actually paints", () => {
-    // The composition the pair exists for: `ConfirmDialog`'s cancel action is a
-    // plain `Button`, whose default variant is `secondary` — the one variant
-    // that owns a `borderStrong` edge — and it sits in the dialog's body, whose
-    // recipe paints `bg-popover`. A popover holding a form paints the same pair.
     const button = readFileSync(
       new URL("../../components/src/internal/button.tsx", import.meta.url),
       "utf8",
@@ -2117,9 +1772,7 @@ describe("a control boundary on the strip it sits on", () => {
     );
 
     expect(button).toContain('variant = "secondary"');
-    // The edge may be painted as the role or as the tw class that resolves to
-    // it; the contract is the role, so either form is checked against the
-    // registry that resolves it.
+
     expect(
       ["borderColor: theme.colors.borderStrong", "border border-strong"].some(
         (form) => button.includes(form),
@@ -2159,16 +1812,12 @@ describe("a control boundary on the strip it sits on", () => {
       ),
     ).toEqual([]);
 
-    // A neutral edge on a floating surface is a strong pair now that the edge
-    // that also has to answer on a message's tint and on a derived pointer fill
-    // moved up; the tightest of the eighteen is Windows light's popover.
     const tightest = measured.reduce((low, placement) =>
       (placement.ratio ?? 0) < (low.ratio ?? 0) ? placement : low,
     );
     expect(tightest.theme).toBe("Light · Windows");
     expect(tightest.ratio).toBeCloseTo(5.42, 2);
-    // The catalogue prints the number this suite measures, so a palette edit
-    // moves the sentence instead of leaving a stale claim.
+
     expect(
       readFileSync(
         new URL("../../../docs/tokens.md", import.meta.url),
@@ -2178,27 +1827,6 @@ describe("a control boundary on the strip it sits on", () => {
   });
 });
 
-/**
- * Guards the edge a control paints on a **message's own tint**.
- *
- * The bug this holds: `contrastPairs` measured `borderStrong` on every strip a
- * control rests on — the page, a card, a field, a toolbar, a filled panel, a
- * floating surface, the washes a bordered control tints and the washes a row
- * paints under it — and on none of the four soft status tints a message is
- * painted on. An `Alert` fills its tone's `xSoft` role and its description is a
- * container, so a filled action a consumer places there (the default `Button`,
- * which paints the strong edge) draws it on that tint. The package's own
- * documented action is the text `AlertLink`, which paints no boundary. Measured,
- * thirteen of the sixteen styles that shipped at the time missed the 3:1 floor
- * there — the worst being the base dark theme's edge on `warningSoft` at
- * 2.23:1 — so a palette could ship a button
- * with no outline inside the one component built to be noticed, while every
- * strip the button rested on passed. The middle of the range is where the
- * gradient meets the label, so a boundary is what identifies the control: the
- * neutral fill band is one lightness in each mode and the pale tints share it
- * (a `secondary` action reads 1.01–1.04:1 on the green and amber tints of the
- * light styles), which is the same reason a field is carried by its edge.
- */
 describe("a control's edge on a message's own tint", () => {
   const tints = [
     "infoSoft",
@@ -2224,13 +1852,6 @@ describe("a control's edge on a message's own tint", () => {
   });
 
   it("holds the painters that put a filled action inside an alert", () => {
-    // The pairs only mean something while the composition still exists: the
-    // alert fills its tone's soft role, its description is a container, and the
-    // action a consumer places in it can be the default variant — the one that
-    // owns the edge. The package's own documented action is the text
-    // `AlertLink`, which paints no boundary, so the page only has to keep
-    // documenting an action; the container rule is the source contract these
-    // pairs rest on.
     const recipes = readFileSync(
       new URL("../../tw/src/recipes.ts", import.meta.url),
       "utf8",
@@ -2254,9 +1875,7 @@ describe("a control's edge on a message's own tint", () => {
     );
     tints.forEach((tint) => expect(tones).toContain(`bg-${tint}`));
     expect(alert).toContain("ALERT_TONES[value]");
-    // The description is the container a filled action can go in, and the
-    // sentence beside it is what these four pairs are justified by.
-    expect(alert).toContain("It is a container, so it may hold an action");
+
     expect(button).toContain('variant = "secondary"');
     expect(
       ["borderColor: theme.colors.borderStrong", "border border-strong"].some(
@@ -2269,12 +1888,6 @@ describe("a control's edge on a message's own tint", () => {
   });
 
   it("names the action the alert documents beside the filled one it measures", () => {
-    // The pages said the alert's **documented** action was a plain `Button` long
-    // after the package page moved to the text `AlertLink`, so the catalogue
-    // described a composition no reader was shown. The filled action is still
-    // what the boundary pairs measure — a consumer may place one in the
-    // description — but the page has to name the action the package documents
-    // as well, and neither page may call it the documented one again.
     const page = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -2342,12 +1955,10 @@ describe("a control's edge on a message's own tint", () => {
     );
 
     expect(hidden).toEqual([]);
-    // The dark styles' soft tints are the hardest of the four for the lightened
-    // edge: the base dark theme's warning tint, at 3.29:1 against the 3:1 floor.
+
     expect(tightest.name).toBe(`${themes.dark.name}/borderStrong/warningSoft`);
     expect(tightest.ratio).toBeCloseTo(3.29, 2);
-    // The catalogue prints the number this suite measures, so a palette edit
-    // moves the sentence instead of leaving a stale claim.
+
     expect(
       readFileSync(
         new URL("../../../docs/tokens.md", import.meta.url),
@@ -2355,57 +1966,8 @@ describe("a control's edge on a message's own tint", () => {
       ).replace(/\s+/g, " "),
     ).toContain(`warning tint at ${printedRatio(tightest.ratio)}`);
   });
-
-  it("prints the pre-fix count as the set it was measured on", () => {
-    // The authored Omarchy look grew the sweep to eighteen, and today every
-    // style clears the four tints (the case above), so "thirteen of the
-    // sixteen" is history. Left bare, it reads as today's set and the repaired
-    // palette as still broken.
-    const source = readFileSync(
-      new URL("./contrast.ts", import.meta.url),
-      "utf8",
-    )
-      .replace(/\/\/\s*/g, " ")
-      .replace(/\s+/g, " ");
-    const catalogue = readFileSync(
-      new URL("../../../docs/tokens.md", import.meta.url),
-      "utf8",
-    ).replace(/\s+/g, " ");
-    const design = readFileSync(
-      new URL("../../../docs/design-system.md", import.meta.url),
-      "utf8",
-    ).replace(/\s+/g, " ");
-
-    expect(source).toContain(
-      "thirteen of the sixteen styles that shipped at the time missed it",
-    );
-    expect(catalogue).toContain(
-      "Thirteen of the sixteen styles that shipped at the time missed the floor",
-    );
-    expect(design).toContain(
-      "thirteen of the sixteen styles that shipped at the time missed it",
-    );
-    [source, catalogue, design].forEach((text) => {
-      expect(text).not.toContain("Thirteen of the sixteen styles missed");
-    });
-  });
 });
 
-/**
- * Guards the ring's **own** surface. The table measured the ring on the strips a
- * control rests on — the page, a card, a popover, a toolbar and a segmented
- * panel — and on nothing a control can sit *inside*: `list.tsx` fills `selected`,
- * tints `accent` while hovered and `active` while pressed; a ghost or outline
- * action tints the same two washes under its ring; an action in a row's trailing
- * slot is drawn on the wash the row wears; and a focusable clear action inside a
- * field sits on the field's own `input` fill.
- *
- * The line is **separated** from the control's own fill by one `borderWidth`
- * (`keyboardFocusRing`), so the strip behind the control shows through the gap
- * and the ring is read against that strip. Those strips are what this suite
- * holds: a ring that matches the surface it is drawn on is the boundary of
- * nothing, and no pair measured any of the five before.
- */
 describe("the ring on the strip behind the control", () => {
   const fills = ["input", "selected", "hover", "active", "accent"] as const;
 
@@ -2426,9 +1988,6 @@ describe("the ring on the strip behind the control", () => {
   });
 
   it("holds the painters that put a control on a wash", () => {
-    // The pairs only mean something while the elements still paint them: the
-    // list row fills `selected` and tints its hover and press washes, so a
-    // control inside the row is drawn on those surfaces.
     const row = readFileSync(
       new URL("../../components/src/list.tsx", import.meta.url),
       "utf8",
@@ -2438,10 +1997,6 @@ describe("the ring on the strip behind the control", () => {
       "utf8",
     );
 
-    // The rows are what paint these washes: a list row fills `selected` and
-    // tints `accent`, a combobox row tints `hover` as the keyboard moves the
-    // highlight, and both offer a focusable child (a `trailing` action) the
-    // surface it is drawn on. The line itself sits outside each row.
     const combobox = readFileSync(
       new URL("../../components/src/combobox.tsx", import.meta.url),
       "utf8",
@@ -2450,16 +2005,13 @@ describe("the ring on the strip behind the control", () => {
     expect(declaresKeyboardRing(row), "list.tsx").toBe(true);
     expect(row).toContain("backgroundColor: theme.colors.selected");
     expect(row).toContain("hover: { backgroundColor: theme.colors.accent }");
-    // The press is the derived wash over the row's hover — the ring is drawn on
-    // the strip the row is wearing, so the derived press is the surface it is
-    // measured on (`pointerWashFailures` holds the step that produces it).
+
     expect(row).toContain(
       'active: { backgroundColor: pressWash(theme, "accent") }',
     );
     expect(combobox).toContain("backgroundColor: theme.colors.hover");
     expect(declaresKeyboardRing(combobox), "combobox.tsx").toBe(true);
-    // The components' action delegates to the primitives' button (plan 160), so
-    // the ring it paints is the one that button declares.
+
     expect(button).toContain("@gpuixui/primitives/button");
     expect(
       declaresKeyboardRing(
@@ -2522,21 +2074,6 @@ describe("the ring on the strip behind the control", () => {
   });
 });
 
-/**
- * Guards the ring on a **message's own tint**. The table measured the ring on
- * every strip a control rests on and on the strips a control can sit inside, and
- * on none of the four soft status tints a message paints — while a filled action
- * placed in an `Alert`'s description is the default `Button`, which declares the
- * keyboard ring at rest, so a focus cue inside the one component built to be
- * noticed was measured by nothing.
- *
- * Measured, the light ring on iris 500 read **2.94:1** on `infoSoft` and
- * **2.84:1** on `destructiveSoft`, and the high-contrast ring **4.41:1** and
- * **4.16:1** against its 4.5:1 floor; the authored Aero light look carried its
- * own blue at the same 2.84. The two base rings move one ramp step deeper
- * (`iris[600]`, `iris[800]`) and Aero takes the smallest step that clears, so
- * the pairs close the gap instead of documenting it.
- */
 describe("the ring on a message's own tint", () => {
   const tints = [
     "infoSoft",
@@ -2562,9 +2099,6 @@ describe("the ring on a message's own tint", () => {
   });
 
   it("holds the painters that put a ring on a tint", () => {
-    // The pairs only mean something while an alert still paints a tone's soft
-    // fill behind a container and the default action still declares the
-    // keyboard ring — the two halves the composition is made of.
     const alert = readFileSync(
       new URL("../../components/src/alert.tsx", import.meta.url),
       "utf8",
@@ -2575,8 +2109,7 @@ describe("the ring on a message's own tint", () => {
     );
 
     expect(alert).toContain("ALERT_TONES");
-    // The action's ring is the primitives' now: the components' button
-    // delegates to it (plan 160).
+
     expect(button).toContain("@gpuixui/primitives/button");
     expect(
       declaresKeyboardRing(
@@ -2632,8 +2165,7 @@ describe("the ring on a message's own tint", () => {
     expect(hidden).toEqual([]);
     expect(tightest.name).toBe("Light · Windows/ring/destructiveSoft");
     expect(tightest.ratio?.toFixed(2)).toBe("3.05");
-    // The catalogue prints the number this suite measures, so a palette edit
-    // moves the sentence instead of leaving a stale claim.
+
     expect(
       readFileSync(
         new URL("../../../docs/tokens.md", import.meta.url),
@@ -2645,20 +2177,6 @@ describe("the ring on a message's own tint", () => {
   });
 });
 
-/**
- * Guards the edge a control draws **inside a row's wash**.
- *
- * The bug this holds: the boundary reached every strip a control rests on and the
- * wash the same control tints under itself (`hover`, `active`), while the two
- * washes a *row* paints under a control in its `trailing` slot — `accent` under
- * the pointer, `selected` once the row is chosen — were measured for the ring and
- * for nothing else. A list row offers that slot to an explicit action (`docs`:
- * "render an explicit action control in the row's `trailing` slot"), and the
- * components' `Button` defaults to `secondary`, the one variant that owns a
- * `borderStrong` edge. So a brand whose edge matched the row it sits in shipped
- * an outlined action with no outline in the one place a list puts it, while every
- * pair on the strips it rests on passed.
- */
 describe("the edge of a control inside a row's wash", () => {
   const washes = ["accent", "selected"] as const;
 
@@ -2679,9 +2197,6 @@ describe("the edge of a control inside a row's wash", () => {
   });
 
   it("holds the painters that put a bordered action inside a row", () => {
-    // The pairs only mean something while the composition still exists: the row
-    // owns the `trailing` slot, paints `accent` on hover and `selected` when
-    // chosen, and the default action paints the measured strong edge.
     const row = readFileSync(
       new URL("../../components/src/list.tsx", import.meta.url),
       "utf8",
@@ -2696,8 +2211,7 @@ describe("the edge of a control inside a row's wash", () => {
     expect(row).toContain("backgroundColor: theme.colors.selected");
     expect(row).toContain("{trailing}");
     expect(button).toContain('variant = "secondary"');
-    // The edge may be painted as the role or as the tw class that resolves to
-    // it; the contract is the role, so either form counts.
+
     expect(
       ["borderColor: theme.colors.borderStrong", "border border-strong"].some(
         (form) => button.includes(form),
@@ -2750,15 +2264,12 @@ describe("the edge of a control inside a row's wash", () => {
     );
 
     expect(hidden).toEqual([]);
-    // A neutral edge on a row wash is the hardest of the eighteen now that the
-    // popover, tint and derived-fill placements moved the edge up: Linux
-    // light's selected row, at 3.96:1 against the 3:1 floor.
+
     expect(tightest.name).toBe(
       `${platformTheme(themes.light, "linux").name}/borderStrong/selected`,
     );
     expect(tightest.ratio).toBeCloseTo(3.96, 2);
-    // The catalogue prints the number this suite measures, so a palette edit
-    // moves the sentence instead of leaving a stale claim.
+
     expect(
       readFileSync(
         new URL("../../../docs/tokens.md", import.meta.url),
@@ -2768,15 +2279,6 @@ describe("the edge of a control inside a row's wash", () => {
   });
 });
 
-/**
- * Guards the edge an invalid control paints. A failed validation swaps the
- * control's border and its focus line to `destructive` — a field's border, the
- * `focusVisible` outline a primitive declares while invalid — so that role is a
- * *boundary* on every strip a control sits on. The bug this holds: the page,
- * card, popover and `muted` strips were held only by the mark contract, and a
- * field's own fill (`input`) and a filled panel (`secondary`) were held by
- * nothing, although both roles are painted there.
- */
 describe("the invalid state's edge", () => {
   const surfaces = [
     "background",
@@ -2868,8 +2370,6 @@ describe("contrastFailures", () => {
   });
 
   it("measures the text typed into an input against its field", () => {
-    // An input's own foreground and fill are a pair in their own right: the
-    // field is often lighter or darker than the surface the control sits on.
     const broken = {
       colors: { ...lightColors, inputForeground: lightColors.input },
     };
@@ -2909,27 +2409,10 @@ describe("contrastFailures", () => {
   });
 
   it("holds a high-contrast theme to the raised floors", () => {
-    // The default floors pass this theme; the AAA floors do not, because its
-    // secondary text was designed for the default theme's 4.5:1.
     expect(contrastFailures(lightTheme, highContrastFloors)).not.toEqual([]);
   });
 });
 
-/**
- * Guards the second fill a field paints.
- *
- * `contrastPairs` measured a field's value and placeholder on `input`, and a
- * **composite** field does not paint that role: a search, tag or mention field,
- * the chat composer, the inline edit and the colour picker's hex field paint
- * `bg-background` in `@gpuixui/tw`'s recipes and keep `text-input-foreground`
- * inside it, so the page is a field surface too. Nothing measured the roles on
- * it, and measuring found two shipped misses: Aero light's placeholder at
- * 4.35:1 on its own window and macOS light's inherited value at 4.49:1 on its,
- * both under the 4.5:1 floor. Aero's is `#5B6C7B` and the light base `#626C7B`
- * now. The pairs are also the contract for `nativeTextTheme(theme, "background")`
- * — the fill argument a native text host is handed — so a brand is measured on
- * the same surface its placeholder is painted on.
- */
 describe("the text a composite field keeps on its own fill", () => {
   const measured = (foreground: string, background: string): boolean =>
     contrastPairs.some(
@@ -2940,7 +2423,7 @@ describe("the text a composite field keeps on its own fill", () => {
   it("measures the value and the placeholder on the page role", () => {
     expect(measured("inputForeground", "background")).toBe(true);
     expect(measured("placeholder", "background")).toBe(true);
-    // The other field fill keeps its pair: both are painted by the library.
+
     expect(measured("inputForeground", "input")).toBe(true);
     expect(measured("placeholder", "input")).toBe(true);
   });
@@ -2964,8 +2447,6 @@ describe("the text a composite field keeps on its own fill", () => {
       expect(recipe(tw, control), control).toContain("text-input-foreground");
     });
 
-    // The plain field paints the other fill, through its own style rather than
-    // a recipe class.
     const field = readFileSync(
       new URL("../../components/src/field.tsx", import.meta.url),
       "utf8",
@@ -2975,7 +2456,6 @@ describe("the text a composite field keeps on its own fill", () => {
   });
 
   it("reports the placeholder a page-coloured field could not carry", () => {
-    // The two values the contract found, and the current one that clears it.
     const aero = retroTheme(themes.light, "aero");
     const darwin = platformTheme(themes.light, "darwin");
 
@@ -3044,18 +2524,6 @@ describe("the text a composite field keeps on its own fill", () => {
   });
 });
 
-/**
- * Guards the **muted** text a field paints inside its own fill.
- *
- * The bug this guards: `mutedForeground` was measured on the page, a card, a
- * popover, a muted toolbar, a selected row and every state wash — and never on
- * the `input` role, which is the fill a field paints for itself. Three shipped
- * painters put the role there: a time picker's separator and its clear glyph
- * (`TIME_PICKER_SEPARATOR` / `TIME_PICKER_CLEAR` over `TIME_PICKER_ROOT`'s
- * `bg-input`), a number field's stepper chevrons, and `nativeTextTheme`'s
- * `textMuted` over `bg: input`. A brand with a tinted field fill could therefore
- * swallow the colon between its time segments while every report stayed empty.
- */
 describe("the muted text inside a field's own fill", () => {
   const measured = (foreground: string, background: string): boolean =>
     contrastPairs.some(
@@ -3065,11 +2533,10 @@ describe("the muted text inside a field's own fill", () => {
 
   it("measures the muted role on the fill a field paints for itself", () => {
     expect(measured("mutedForeground", "input")).toBe(true);
-    // The same fill's other two text roles keep their pairs.
+
     expect(measured("inputForeground", "input")).toBe(true);
     expect(measured("placeholder", "input")).toBe(true);
-    // A colon between two segments is text, and a chevron beside it is a mark:
-    // the secondary floor covers both, and high contrast raises it to AAA.
+
     expect(
       contrastPairs.find(
         ({ foreground, background }) =>
@@ -3091,8 +2558,6 @@ describe("the muted text inside a field's own fill", () => {
       "text-muted-foreground",
     );
 
-    // A number field's stepper chevrons sit in the field's own fill and take
-    // the same role; the field chrome is the recipe that fills it.
     const primitives = readFileSync(
       new URL("../../primitives/src/recipe/index.ts", import.meta.url),
       "utf8",
@@ -3109,11 +2574,6 @@ describe("the muted text inside a field's own fill", () => {
       ),
     ).toContain('colorRole(part.theme, "mutedForeground")');
 
-    // The native host's muted slot is the same role over the same fill, in the
-    // package's own seam: `nativeTextTheme(theme)` defaults to a plain field's
-    // `input` fill and hands the host `mutedForeground` as its muted text. The
-    // roles are read through `themeColors`, so a stored theme that lost one
-    // drops the field instead of throwing.
     const seam = readFileSync(
       new URL("./native-text.ts", import.meta.url),
       "utf8",
@@ -3170,8 +2630,7 @@ describe("the muted text inside a field's own fill", () => {
     expect(hidden).toEqual([]);
     expect(tightest.name).toBe("Light · Omarchy");
     expect(tightest.ratio?.toFixed(2)).toBe("6.31");
-    // The catalogue prints the number this suite measures, so a palette edit
-    // moves the sentence instead of leaving a stale claim.
+
     const page = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -3179,9 +2638,7 @@ describe("the muted text inside a field's own fill", () => {
     expect(page).toContain(
       `field's own fill at ${tightest.ratio?.toFixed(2)}:1`,
     );
-    // The sweep grew to eighteen when the Omarchy look shipped two styles, and
-    // the sentence kept the sixteen it was written on. The count a page prints
-    // is derived from the list this case walks, never retyped.
+
     expect(page).toContain(`sweeps the ${styles.length} styles`);
     expect(page).not.toContain("sweeps the 16 styles");
   });

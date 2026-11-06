@@ -77,8 +77,3 @@ List
 | `children` | parts — `ListItemTitle`, `ListItemDescription` and the row's slots | — |
 | `className` | `string` — joined after the row recipe | — |
 | `style` | `StyleDesc` or a function of `{ active, disabled, selected }` | — |
-
-## Notes
-- Roles: `list`/`listitem` without a mode; `listbox`/`option` with one.
-- **No `aria-multiselectable`**: the mode is read from each row's `aria-selected`.
-- The row ring is keyboard-only: `focusVisible` paints after a key focus, not a click.

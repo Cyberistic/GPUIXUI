@@ -1,25 +1,3 @@
-/**
- * The row models the grid runs on.
- *
- * These are the rules that used to be this package's own reducers and are now
- * the core's: an unsorted table keeps the caller's order, a numeric column
- * sorts numerically (not lexically), a descending sort reverses the comparator,
- * and the filter field is a literal case-insensitive substring that matches
- * everything when blank. A grid that registered the wrong comparator or lost
- * the filter model fails here.
- *
- * The last case holds the premise the controller's render-time retention rests
- * on: the core keeps a chosen id a filter hides, so a query that widens back to
- * the record can paint it chosen again.
- *
- * A **restored state** is read, not dereferenced: `constructGrid` is the seam a
- * store-driven grid builds with, and JSON writes a slice that was never set as
- * `null`. Before the read, `globalFilter: null` threw `Cannot read properties of
- * null (reading 'trim')`, `sorting: null` threw `state.sorting is not iterable`
- * and a sorting entry that named no column threw `Cannot read properties of null
- * (reading 'id')` — the grid could not reopen with the state it saved.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import type { SortingState } from "@tanstack/table-core";
@@ -83,7 +61,6 @@ const grid = ({
     onRowSelectionChange: () => {},
   });
 
-/** The painted ids, in row-model order. */
 const ids = (state: GridState = {}): ReadonlyArray<string> =>
   Arr.map(grid(state).getRowModel().rows, (row) => row.id);
 
@@ -114,9 +91,6 @@ describe("the sorted row model", () => {
   });
 
   it("orders the records the first sort ties by the next entry", () => {
-    // The first sort ties every pair in a group, so only the second entry can
-    // decide the order inside it. A controller that wrote one entry — or a
-    // core that read one — leaves each group in source order.
     const tieRows: ReadonlyArray<Row> = [
       { id: "a", name: "beta", status: "x", size: 1 },
       { id: "b", name: "alpha", status: "y", size: 1 },
@@ -178,15 +152,12 @@ describe("the paginated row model", () => {
   });
 
   it("paints one page of the filtered and sorted set", () => {
-    // Sorted by size: r2 (20), r3 (30), r1 (100). Two a page: page 1 is r3, r1.
     const sorting = [{ id: "size", desc: false }];
     expect(ids({ sorting, page: page(0, 2) })).toEqual(["r2", "r3"]);
     expect(ids({ sorting, page: page(1, 2) })).toEqual(["r1"]);
   });
 
   it("slices the order a multi-entry sort produces", () => {
-    // The sort decides the whole set; the page only slices it, so page two of
-    // an order cannot hold a record the order put on page one.
     const order = [
       { id: "status", desc: false },
       { id: "size", desc: true },
@@ -209,14 +180,10 @@ describe("the paginated row model", () => {
   });
 
   it("paints no row for a page past the set", () => {
-    // The premise the controller's clamp rests on: the core slices by the index
-    // it is given, so nothing holds a stored index that outlived its set.
     expect(ids({ page: page(4, 2) })).toEqual([]);
   });
 
   it("keeps the whole set before the page, so selection can read it", () => {
-    // Retention reads the pre-paginated model: a chosen record on another page
-    // is not released by a page turn, only by a filter that hides it.
     const paged = grid({ page: page(0, 1), chosen: { r1: true } });
     expect(
       Arr.map(paged.getPrePaginatedRowModel().rows, (row) => row.id),
@@ -230,7 +197,7 @@ describe("a hidden column", () => {
   it("leaves the search, so no record is kept by text no cell shows", () => {
     expect(ids({ query: "modified", hidden: ["status"] })).toEqual([]);
     expect(ids({ query: "tracked", hidden: ["status"] })).toEqual([]);
-    // The painted columns still match — the hidden one is the only one gone.
+
     expect(ids({ query: "auth", hidden: ["status"] })).toEqual(["r3", "r1"]);
   });
 
@@ -246,14 +213,6 @@ describe("a hidden column", () => {
   });
 });
 
-/**
- * Build a grid from a value a store handed back.
- *
- * The `@ts-expect-error` is the point of the suite — a store hands over
- * `unknown`, and the boundary is what has to survive it. It is the one
- * suppression this package's tests carry for store-written values, rather than
- * an `as` that would hide the same crossing without a parser watching it.
- */
 const restoredGrid = (
   state: unknown,
   hiddenColumns?: unknown,
@@ -271,7 +230,6 @@ const restoredGrid = (
     onRowSelectionChange: () => {},
   });
 
-/** The painted ids of a restored grid, in row-model order. */
 const restoredIds = (state: unknown): ReadonlyArray<string> =>
   Arr.map(restoredGrid(state).getRowModel().rows, (row) => row.id);
 
@@ -302,7 +260,6 @@ describe("a grid state a store restored", () => {
   });
 
   it("builds the table from the slices that used to take the build down", () => {
-    // The three shapes a JSON round trip writes for slices it never set.
     const table = restoredGrid({
       sorting: null,
       globalFilter: null,
@@ -317,8 +274,6 @@ describe("a grid state a store restored", () => {
   });
 
   it("keeps the sort and the query the store wrote", () => {
-    // `desc` absent is the ascending direction it means; `auth` narrows first,
-    // then the sort orders what the query kept.
     expect(
       restoredIds({
         sorting: [{ id: "size" }],
@@ -329,8 +284,6 @@ describe("a grid state a store restored", () => {
   });
 
   it("hides only the text ids a stored column list names", () => {
-    // A number is not a list of ids, and a list holding one keeps the ids it
-    // does name: `status` leaves the search either way, `size` does not.
     const query = { sorting: [], globalFilter: "modified", rowSelection: {} };
     expect(restoredIds(query)).toEqual(["r3"]);
     expect(
@@ -345,11 +298,6 @@ describe("a grid state a store restored", () => {
   });
 
   it("drops a sort that names a column this grid does not hold", () => {
-    // The release that saved this order sorted by `path`; the column is gone.
-    // The row model already skipped it — there is no column to compare — while
-    // the controller counted it, so a Shift press on `name` announced
-    // "sort 2 of 2" above one sort and `sortOrder` named a field no header
-    // paints.
     const saved = readGridState({
       sorting: [
         { id: "path", desc: true },
@@ -361,8 +309,7 @@ describe("a grid state a store restored", () => {
     expect(retainSorting(saved.sorting, columns)).toEqual([
       { id: "size", desc: false },
     ]);
-    // The order the grid runs is the order it paints: the dropped entry never
-    // decided anything.
+
     expect(
       Arr.map(
         restoredGrid({
@@ -377,7 +324,6 @@ describe("a grid state a store restored", () => {
 });
 
 describe("a grid handed a row list a store wrote as absent", () => {
-  /** A grid over whatever row list the caller hands it. */
   const gridOver = (list: ReadonlyArray<Row>): GridTable<Row> =>
     constructGrid({
       rows: list,
@@ -390,12 +336,6 @@ describe("a grid handed a row list a store wrote as absent", () => {
     });
 
   it("builds an empty table instead of throwing", () => {
-    // The rows a grid is handed are stored data too: a saved workspace
-    // restores a panel's rows from JSON, and an app passes `snapshot?.rows`
-    // while the snapshot is absent, which is `undefined` at runtime. The core
-    // was handed the value raw (`data: rows`), so one absence threw
-    // `Cannot read properties of null (reading 'length')` out of the build and
-    // the grid could not paint its own empty state.
     // @ts-expect-error — a row list a store wrote as absent.
     const absent = gridOver(null);
     expect(Arr.map(absent.getRowModel().rows, (row) => row.id)).toEqual([]);
@@ -442,8 +382,6 @@ describe("the record a grid writes to a store", () => {
   });
 
   it("writes lists of its own, so a store never holds the controller's", () => {
-    // A store that kept the controller's arrays would see them change on the
-    // next sort, and a serialiser could not walk the record safely.
     const state = readGridState({
       sorting: [{ id: "size", desc: false }],
       globalFilter: "",

@@ -1,12 +1,3 @@
-/**
- * Browser preview for the IconButton page.
- *
- * The icon button is a square `Button` whose only content is a glyph, so the
- * preview reuses the shared button chrome and draws a glyph from the theme's
- * roles. The states are the resting, busy and disabled paint. The Code tab
- * shows the native usage.
- */
-
 const glyphs = [
   { label: "Delete layer", name: "trash", variant: "destructive", mark: "×" },
   {

@@ -1,19 +1,3 @@
-/**
- * The variant registry: one table per family of control.
- *
- * This is the single source of truth for what `variant="primary"` means. A
- * Button, a ButtonGroup and a docs page all read the same table, so a variant
- * cannot mean one thing in the library and another in its documentation.
- *
- * A variant references **theme roles**, never colours: `(theme) =>
- * colorRole(theme, "primary")`. A colour the theme does not ship is derived from a
- * role instead — a link paints `brandText`, the brand moved until it reads as
- * text. A filled action's feedback is derived the same way: `filledHover` and
- * `filledPressed` move the fill toward the theme's foreground and keep it
- * **opaque**, so one action reads as one colour on every surface. Resolution
- * happens in `style.ts`.
- */
-
 import * as Arr from "effect/Array";
 import type { StyleDesc } from "@gpuix/react";
 import {
@@ -38,45 +22,14 @@ export const BUTTON_VARIANTS = [
 
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 
-/** The table's names, as a list a stored value can be checked against. */
 const VARIANT_NAMES: ReadonlyArray<string> = BUTTON_VARIANTS;
 
-/**
- * Whether a value names a button variant.
- *
- * A variant is a stored choice as often as a literal — an action record, a
- * saved toolbar, a workspace layout — so a name a release renamed or dropped
- * arrives as a string the union no longer names. The table's own list is the
- * membership test, the rule `isControlSize` and `isTextRole` follow, so a
- * second list of the names cannot drift from the paint.
- */
 export const isButtonVariant = (value: unknown): value is ButtonVariant =>
   typeof value === "string" && Arr.contains(VARIANT_NAMES, value);
 
-/**
- * The variant a control paints with: the name, or the documented default.
- *
- * The paint seams are called mid-render, and an unknown name reached
- * `buttonVariants[name].filledAction` — a `TypeError` that emptied the window
- * instead of painting the action. A name the table does not carry is `primary`,
- * the default every button documents.
- */
 export const buttonVariantOf = (value: unknown): ButtonVariant =>
   isButtonVariant(value) ? value : "primary";
 
-/**
- * Hover and press for a control whose fill is a solid action role.
- *
- * The fill is **derived**, not lifted: `filledHover` / `filledPressed` move it
- * toward the theme's foreground and keep it opaque. A half-alpha lift
- * (`alpha(primary, 0.9)`) let the surface behind the control through, so the
- * same action read as two colours on a card and on a dialog — and a
- * translucent fill cannot be measured for label contrast at all.
- *
- * The action is also what marks the variant as a **filled action**, which is
- * the split the disabled paint reads: a filled action wears the neutral pair, a
- * field or an unfilled control fades (`core/style.ts`).
- */
 const filled = (
   action: FilledAction,
 ): Pick<ControlVariant, "hover" | "active" | "filledAction"> => ({
@@ -85,10 +38,6 @@ const filled = (
   active: (theme) => ({ backgroundColor: filledPressed(theme, action) }),
 });
 
-/**
- * Filled: the brand action. One per view is the rule, not a constraint the
- * component can enforce — but only one variant paints the primary role.
- */
 const primary: ControlVariant = {
   background: (theme) => colorRole(theme, "primary"),
   foreground: (theme) => colorRole(theme, "primaryForeground"),
@@ -96,16 +45,6 @@ const primary: ControlVariant = {
   ...filled("primary"),
 };
 
-/**
- * Filled, neutral: the second most important action in a view.
- *
- * The fill alone is not a surface: `secondary` measures under the 1.05:1
- * perceptibility floor against a row's `hover`, `active`, `accent` and
- * `selected` washes in most shipped styles, so a tonal action in a list row's
- * trailing slot was a label with no button around it. The edge is
- * `borderStrong` — the role `contrastPairs` holds to the 3:1 boundary floor —
- * which is what the components package adds to the same action.
- */
 const secondary: ControlVariant = {
   background: (theme) => colorRole(theme, "secondary"),
   foreground: (theme) => colorRole(theme, "secondaryForeground"),
@@ -113,27 +52,11 @@ const secondary: ControlVariant = {
   ...filled("secondary"),
 };
 
-/**
- * Hover and press for a control that paints no fill at rest.
- *
- * The hover is the wash on the strip the control rests on. The press is
- * **derived**: it replaces that hover, so it is measured against the wash the
- * control is already wearing rather than against the strip — and the raw
- * `active` role could not be seen against the hover in every shipped style
- * (`core/pointer.ts`).
- */
 const washed: Pick<ControlVariant, "hover" | "active"> = {
   hover: (theme) => ({ backgroundColor: colorRole(theme, "hover") }),
   active: (theme) => ({ backgroundColor: pressWash(theme) }),
 };
 
-/**
- * Border only: reads as a button on a surface without competing for weight.
- *
- * The edge is `borderStrong`, the role `contrastPairs` holds to the 3:1
- * boundary floor on every strip a control sits on; the decorative `border` role
- * is for dividers and card edges, where a control's shape is not a requirement.
- */
 const outline: ControlVariant = {
   background: undefined,
   foreground: (theme) => colorRole(theme, "foreground"),
@@ -141,7 +64,6 @@ const outline: ControlVariant = {
   ...washed,
 };
 
-/** No chrome at rest: for toolbars and dense rows. */
 const ghost: ControlVariant = {
   background: undefined,
   foreground: (theme) => colorRole(theme, "foreground"),
@@ -149,7 +71,6 @@ const ghost: ControlVariant = {
   ...washed,
 };
 
-/** Destructive: deletes, revokes, disconnects. Never the default action. */
 const destructive: ControlVariant = {
   background: (theme) => colorRole(theme, "destructive"),
   foreground: (theme) => colorRole(theme, "destructiveForeground"),
@@ -157,11 +78,9 @@ const destructive: ControlVariant = {
   ...filled("destructive"),
 };
 
-/** A text action: underlines on hover instead of painting a filled surface. */
 const link: ControlVariant = {
   background: undefined,
-  // The brand as *text*, not the `primary` fill role: it carries
-  // `primaryForeground` and no contract measures it on the page.
+
   foreground: brandText,
   border: undefined,
   hover: (theme) => ({
@@ -180,21 +99,6 @@ export const buttonVariants: Record<ButtonVariant, ControlVariant> = {
   link,
 };
 
-/**
- * The role a variant paints its label in: the on-colour of the fill it owns.
- *
- * A glyph inside an action is the control's label drawn in vectors, not a mark
- * with a colour of its own, so it takes the same role. Any other choice names a
- * colour picked for a different fill — `secondaryForeground` on a `primary` fill
- * measures 1.42:1 in Windows dark, and a chevron painted that way is invisible.
- *
- * Read from the variant table, so a variant added there answers here without a
- * second list, and a layer painted over an action (a busy loader, a chevron or
- * an effect's wash) tints in the role the action's own label paints.
- *
- * A complete theme answers a colour; a theme a store gave back answers the
- * absence of a role it lost, the pair `@gpuixui/tokens`' `statusTone` uses.
- */
 export function actionOnColor(
   theme: PrimitiveTheme,
   variant: ButtonVariant,
@@ -218,19 +122,6 @@ const FILLED_SPINNER_ACCENT: Readonly<
   destructive: "on-destructive",
 };
 
-/**
- * The spinner accent that reads on a button variant's fill.
- *
- * A filled action paints its own on-colour, which the contrast table already
- * measures on that fill; a variant that paints no fill keeps the brand accent,
- * which the mark contract measures on the page. A busy brand button used to
- * paint a brand spinner on a brand fill (1.00:1).
- *
- * A **disabled** filled action paints the neutral pair rather than its fill
- * (`core/style.ts`), so its spinner takes `on-disabled` — `disabledForeground`
- * — instead of the action's on-colour, which would be the fill's text colour on
- * a fill that is no longer there.
- */
 export const variantSpinnerAccent = (
   variant: ButtonVariant,
   disabled = false,
@@ -241,16 +132,6 @@ export const variantSpinnerAccent = (
     : (FILLED_SPINNER_ACCENT[name] ?? "primary");
 };
 
-/**
- * The spinner accent that reads on a toggle's current face.
- *
- * A pressed toggle paints the `accent` role, so its busy dots must take the
- * accent's own on-colour — a brand dot on the pressed face is the same
- * 1.00:1-class defect the filled button had. A **disabled pressed** toggle wears
- * the neutral disabled pair instead of the accent, so its dots move to
- * `on-disabled`; an unpressed toggle has no fill to be measured on and keeps the
- * brand accent, faded with the rest of the control.
- */
 export const toggleSpinnerAccent = (
   pressed: boolean,
   disabled = false,
@@ -259,28 +140,9 @@ export const toggleSpinnerAccent = (
   return "primary";
 };
 
-/**
- * Whether a variant paints a fill behind its label.
- *
- * The runtime dims every other focusable element to 40% while one control has
- * keyboard focus (`keyboardFocusDimOpacity`), which on a filled action
- * composites the label into its own fill: measured at 5.0–10.5:1 at rest and
- * 1.3–3.2:1 when dimmed (`keyboardDimFailures`). Those variants opt out with
- * `keyboardFocusDim: false`; an `outline`, `ghost` or `link` action has no fill
- * to collapse into and keeps the where-can-Tab-go cue.
- *
- * Read from the variant table rather than a second list, so a new filled
- * variant inherits the rule.
- */
 export const paintsFilledSurface = (variant: ButtonVariant): boolean =>
   buttonVariants[buttonVariantOf(variant)].filledAction !== undefined;
 
-/**
- * A field: an input, a textarea, a select trigger.
- *
- * It shares the control metrics with a button but not its variants — a field
- * has one appearance, and only `invalid` changes it.
- */
 export const fieldVariant: ControlVariant = {
   background: (theme) => colorRole(theme, "input"),
   foreground: (theme) => colorRole(theme, "inputForeground"),
@@ -289,7 +151,6 @@ export const fieldVariant: ControlVariant = {
   active: (theme) => ({ borderColor: colorRole(theme, "ring") }),
 };
 
-/** The live variant table, so a docs page can enumerate every variant. */
 export const variantTable: ReadonlyArray<{
   readonly name: ButtonVariant;
   readonly variant: ControlVariant;
@@ -311,24 +172,14 @@ export const TOGGLE_VARIANTS = ["default", "outline"] as const;
 
 export type ToggleVariant = (typeof TOGGLE_VARIANTS)[number];
 
-/** The toggle table's names, as a list a stored value can be checked against. */
 const TOGGLE_NAMES: ReadonlyArray<string> = TOGGLE_VARIANTS;
 
-/** Whether a value names a toggle variant. */
 export const isToggleVariant = (value: unknown): value is ToggleVariant =>
   typeof value === "string" && Arr.contains(TOGGLE_NAMES, value);
 
-/**
- * The variant a toggle paints with: the name, or the documented default.
- *
- * A stored name the table does not carry reached `TOGGLE_PAINT[name].rest` and
- * threw, so a saved toolbar's toggle emptied the window instead of painting the
- * default face.
- */
 export const toggleVariantOf = (value: unknown): ToggleVariant =>
   isToggleVariant(value) ? value : "default";
 
-/** No chrome at rest; the accent fill is what says "this mode is on". */
 const toggleRest: ControlVariant = {
   background: undefined,
   foreground: (theme) => colorRole(theme, "foreground"),
@@ -336,7 +187,6 @@ const toggleRest: ControlVariant = {
   ...washed,
 };
 
-/** Border only at rest, so a toggle reads as a control in a toolbar. */
 const toggleOutlineRest: ControlVariant = {
   background: undefined,
   foreground: (theme) => colorRole(theme, "foreground"),
@@ -344,26 +194,17 @@ const toggleOutlineRest: ControlVariant = {
   ...washed,
 };
 
-/** The accent role is the theme's "selected surface", so it marks a pressed mode. */
 const togglePressedBase = (
   border: ControlVariant["border"],
 ): ControlVariant => ({
   background: (theme) => colorRole(theme, "accent"),
   foreground: (theme) => colorRole(theme, "accentForeground"),
   border,
-  // A pressed toggle is a filled face, so its feedback is the theme's derived
-  // accent fill — opaque, and clamped where the label would lose its floor. The
-  // half-alpha lift it used showed the surface behind the mode.
+
   hover: (theme) => ({ backgroundColor: filledHover(theme, "accent") }),
   active: (theme) => ({ backgroundColor: filledPressed(theme, "accent") }),
 });
 
-/**
- * A toggle's two paints: at rest, and while pressed.
- *
- * Kept as data so the docs table and the component read one table, exactly like
- * `buttonVariants`.
- */
 export const toggleVariants: Readonly<
   Record<
     ToggleVariant,
@@ -380,7 +221,6 @@ export const toggleVariants: Readonly<
   },
 };
 
-/** A variant's resting paint, as a string a test or a docs table can compare. */
 export const variantKey = (
   variant: ControlVariant,
   theme: PrimitiveTheme,
@@ -391,7 +231,6 @@ export const variantKey = (
     variant.border === undefined ? "none" : variant.border(theme),
   ].join("/");
 
-/** Whether a variant declares any pointer feedback at all. */
 export const hasPointerFeedback = (
   variant: ControlVariant,
   theme: PrimitiveTheme,

@@ -1,23 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `NumberField` — a number in a text field, with steps and bounds.
- *
- * GPUix's `<input>` has no `type="number"`: it is a text field, so the whole
- * numeric contract is this package's. `core/number.ts` owns parsing and
- * stepping; this file keeps the one piece of state a numeric *text* field needs
- * — the draft string, so typing `1.` does not become `1` under the caret — and
- * the focus ring.
- *
- * The steppers are pointer affordances, not tab stops: a keyboard user presses
- * Up/Down on the field itself, which is what a native spinner does and keeps the
- * tab order to one stop per field.
- *
- * The parts (`NumberFieldInput`, `NumberFieldIncrement`, `NumberFieldDecrement`)
- * read one resolved state, so a caller can drop or restyle a stepper without a
- * second render path. The default composition calls the same paint functions
- * directly and stays the input plus its spin column.
- */
-
 import {
   createContext,
   useContext,
@@ -95,74 +76,41 @@ export interface NumberFieldProps
     InteractionProps,
     FieldHostProps,
     HelpProps {
-  /** Controlled value. Omit to let the field hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
-  /** No lower bound when omitted. */
+
   readonly min?: number;
-  /** No upper bound when omitted. */
+
   readonly max?: number;
-  /** Defaults to 1. */
+
   readonly step?: number;
-  /**
-   * A fixed number of decimals to paint on commit. Omit to paint the value's
-   * own decimals — a field must never show a number it does not hold, so a
-   * `step` of `0.5` is visible without this. A given precision rounds and pads
-   * the **painted** text; the value reported keeps the number it was given. A
-   * stored value that is not a number (a record's `null`, text) is no precision
-   * at all, the same absence an omitted prop is.
-   */
+
   readonly precision?: number;
-  /** Defaults to `md`. */
+
   readonly size?: ControlSize;
   readonly disabled?: boolean;
   readonly invalid?: boolean;
-  /** Accessible name. The visible name goes in a `Label` beside it. */
+
   readonly label?: string;
   readonly placeholder?: string;
   readonly autoFocus?: boolean;
-  /**
-   * Enter in the input. A single-line GPUix `<input>` binds Enter to the
-   * runtime's own Submit action, so it never reaches `onKeyDown`: the field
-   * commits its draft first (reformatting it to `precision`) and then reports
-   * here. No listener is installed while `disabled`.
-   */
+
   readonly onSubmit?: (event: EventPayload) => void;
-  /**
-   * The value a gesture ended on.
-   *
-   * `onValueChange` reports every edit frame — a scrub reports one value per
-   * four pixels — while this reports the value a whole gesture finished with:
-   * once per stepper press, once per scrub release, once per arrow or page key
-   * that moved the value, and once when a typed edit ends on a readable value
-   * (blur or Enter). A typed edit that ends with no readable number produced no
-   * value and commits nothing, and a key that could not move the value (an arrow
-   * at a bound) is not a gesture that ended in a new one. A caller that saves or
-   * fetches does that work here instead of debouncing `onValueChange`.
-   */
+
   readonly onValueCommit?: (value: number) => void;
-  /**
-   * Overrides the display text. Display-only: when the format its decimal
-   * grammar cannot read (grouped, locale), pair it with `parseValue`.
-   */
+
   readonly formatValue?: (value: number) => string;
-  /**
-   * Reads text `formatValue` painted. A grouped `1,234` or a locale `1,5` is
-   * not decimal notation, so a field whose display the decimal grammar cannot
-   * read is not editable without this counterpart. Text it declines still reads
-   * as decimal; an empty field is never a value.
-   */
+
   readonly parseValue?: ParseValue;
-  /** Extra style, resolved against the field's live state and merged last. */
+
   readonly style?: StateStyle<FieldState>;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** The parts to draw. Omit for the input and its two steppers. */
+
   readonly children?: ReactNode;
   readonly testId?: string;
 }
 
-/** The range a field was configured with. */
 export const numberRange = (props: {
   readonly min?: number;
   readonly max?: number;
@@ -174,7 +122,6 @@ export const numberRange = (props: {
     step: props.step ?? 1,
   });
 
-/** What the rendered field needs from the component that owns its state. */
 export interface NumberFieldHandlers {
   readonly onTextChange: (text: string) => void;
   readonly onCommit: () => void;
@@ -182,48 +129,25 @@ export interface NumberFieldHandlers {
   readonly registerInput: (instance: PublicInstance | null) => void;
 }
 
-/**
- * The vertical scrub a spin column runs on a pointer drag.
- *
- * A press that moves away from where it landed scrubs the value one step per
- * {@link SCRUB_PIXELS_PER_STEP} of upward travel; the gesture that scrubbed must
- * not also step, so its click is consumed. The state lives in the component, not
- * the pure renderer, because it is a pointer gesture with a lifetime — the tree
- * only carries the handlers.
- */
 export interface NumberFieldScrub {
   readonly onMouseDown: (event: EventPayload) => void;
   readonly onMouseMove: (event: EventPayload) => void;
   readonly onMouseUp: () => void;
-  /** Whether the gesture that just ended scrubbed; consumes the flag. */
+
   readonly consumedClick: () => boolean;
 }
 
 interface ScrubOptions {
-  /** The committed value the press starts from, as the field paints it. */
   readonly current: number;
   readonly range: NumberRange;
   readonly disabled: boolean;
-  /**
-   * The axis the gesture reads. `y` is the spin column's (up raises the
-   * value); `x` is the field's (right raises it, the inspector convention).
-   */
+
   readonly axis: "x" | "y";
   readonly onValue: (next: number) => void;
-  /** A gesture that moved the value is over: report the value it ended on. */
+
   readonly onEnd: (value: number) => void;
 }
 
-/**
- * The scrub gesture a number field's spin column owns.
- *
- * GPUix captures the pointer for an element that listens to both `mouseDown`
- * and `mouseMove` (measured by the playground's `pointer-capture` probe), so a
- * drag that leaves the small column keeps reporting until the release. The
- * origin is read once per press so every move aims from the same value: a
- * scrubbed field must follow the pointer's total travel, not accumulate its own
- * reports.
- */
 const useNumberScrub = ({
   current,
   range,
@@ -234,21 +158,19 @@ const useNumberScrub = ({
 }: ScrubOptions): NumberFieldScrub => {
   const at = (event: EventPayload): Option.Option<number> =>
     Option.fromNullishOr(axis === "y" ? event.y : event.x);
-  /** How far the pointer travelled toward the raising direction. */
+
   const travel = (origin: number, now: number): number =>
     axis === "y" ? origin - now : now - origin;
   const press = useRef<
     Option.Option<{ readonly at: number; readonly value: number }>
   >(Option.none());
   const scrubbed = useRef(false);
-  /** The value the gesture in flight has reached, so its end can report it. */
+
   const last = useRef<Option.Option<number>>(Option.none());
   return {
     onMouseDown: (event) => {
-      // A secondary or middle press is not a step gesture.
       if (!primaryButton(event)) return;
-      // A new gesture starts clean: the previous drag's click may never have
-      // arrived (the pointer was released outside the control).
+
       scrubbed.current = false;
       last.current = Option.some(current);
       press.current = Option.map(at(event), (at) => ({
@@ -291,8 +213,7 @@ const useNumberScrub = ({
       press.current = Option.none();
       last.current = Option.none();
       if (!moved) return;
-      // A carry on a scrub is one gesture, so it reports one value — the one the
-      // pointer released on — after every frame `onValue` reported.
+
       Option.match(ended, {
         onNone: () => {},
         onSome: onEnd,
@@ -306,7 +227,6 @@ const useNumberScrub = ({
   };
 };
 
-/** What every part reads from the number field that owns it. */
 export interface NumberFieldPart {
   readonly theme: PrimitiveTheme;
   readonly size: ControlSize;
@@ -316,28 +236,27 @@ export interface NumberFieldPart {
   readonly placeholder: string | undefined;
   readonly label: string | undefined;
   readonly autoFocus: boolean | undefined;
-  /** The address the caller gave the field; it lands on the input, not the chrome. */
+
   readonly address: FieldHostProps;
-  /** The field's stable locator, which its hint derives from. */
+
   readonly testId: string | undefined;
-  /** The announced help, already blank-filtered. */
+
   readonly description: string | undefined;
-  /** The caller's Enter report; the field's commit runs before it. */
+
   readonly onSubmit: ((event: EventPayload) => void) | undefined;
-  /** The committed value, which the arrow keys step from. */
+
   readonly current: number;
   readonly range: NumberRange;
   readonly focus: FocusState;
   readonly handlers: NumberFieldHandlers;
-  /** The spin column's vertical drag gesture; absent when the pure renderer is used. */
+
   readonly scrub: Option.Option<NumberFieldScrub>;
-  /** The caller's host handlers, installed on the input and the steppers. */
+
   readonly interaction: InteractionProps;
   readonly atMin: boolean;
   readonly atMax: boolean;
 }
 
-/** Resolve a field's shared state once, for its root and every part. */
 export const numberFieldPart = (
   props: NumberFieldProps,
   theme: PrimitiveTheme,
@@ -349,8 +268,7 @@ export const numberFieldPart = (
 ): NumberFieldPart => {
   const disabled = props.disabled === true;
   const range = numberRange(props);
-  // What the field paints is also what it steps from: a value it cannot lay out
-  // (a non-finite one) reads as a bound instead of reaching the text.
+
   const current = clampNumeric(state.current, range);
   return {
     theme,
@@ -363,8 +281,7 @@ export const numberFieldPart = (
     autoFocus: disabled ? undefined : props.autoFocus,
     address: props,
     testId: props.testId,
-    // The hint is painted, not handed to the host, so the field publishes the
-    // words itself while the box is empty (see `fieldHelp`).
+
     description: fieldHelp(props, text),
     onSubmit: disabled ? undefined : props.onSubmit,
     current,
@@ -388,15 +305,13 @@ const useNumberFieldPart = (name: string): NumberFieldPart => {
   return part;
 };
 
-/** {@link NumberFieldInput} props. */
 export interface NumberFieldInputProps {
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly testId?: string;
 }
 
-/** The input's positioning frame, so its hint can sit over the empty host. */
 const NUMBER_INPUT_FRAME: StyleDesc = {
   position: "relative",
   flexGrow: 1,
@@ -405,17 +320,12 @@ const NUMBER_INPUT_FRAME: StyleDesc = {
   height: "100%",
 };
 
-/** The field's text box. */
 export const renderNumberFieldInput = (
   { className, style, testId }: NumberFieldInputProps,
   part: NumberFieldPart,
 ): ReactElement => {
   const { disabled, focus, handlers } = part;
-  /**
-   * The chrome holds the ring and the dim opt-out, not the wrapper: the runtime
-   * paints `focusVisible` only on the element that holds the focus, which is
-   * this `<input>`.
-   */
+
   const chrome = mergeStyle(
     mergeStyle(
       mergeStyle(
@@ -494,44 +404,30 @@ export const renderNumberFieldInput = (
   );
 };
 
-/** The field's text box, inside a number field. */
 export const NumberFieldInput = (props: NumberFieldInputProps): ReactElement =>
   renderNumberFieldInput(props, useNumberFieldPart("NumberFieldInput"));
 
-/** {@link NumberFieldScrubHandle} props. */
 export interface NumberFieldScrubHandleProps {
-  /** The value a drag starts from. Bind it to the same record as the field. */
   readonly value: number;
-  /** No lower bound when omitted. */
+
   readonly min?: number;
-  /** No upper bound when omitted. */
+
   readonly max?: number;
-  /** The step one scrub count moves; defaults to 1. */
+
   readonly step?: number;
   readonly disabled?: boolean;
-  /** Receives every frame of a drag, clamped to the bounds. */
+
   readonly onValueChange: (next: number) => void;
-  /** Receives the value a whole drag ended on. */
+
   readonly onValueCommit?: (value: number) => void;
-  /** The visible words a reader drags — an inspector's row label. */
+
   readonly children?: ReactNode;
-  /** Extra style, merged after the handle's own. */
+
   readonly style?: StyleDesc;
   readonly className?: string;
   readonly testId?: string;
 }
 
-/**
- * The label an inspector scrubs.
- *
- * The runtime's `<input>` takes no mouse events of its own (the text host
- * consumes the press), so a horizontal scrub cannot live on a number field's
- * text. It lives on the label beside it: a painted run of words that answers a
- * press, drags one step per {@link SCRUB_PIXELS_PER_STEP} to the right, gives
- * {@link SHIFT_SCRUB_SCALE}× while Shift is held and reports the value it
- * ended on. A press that does not travel is a click — the words take no value —
- * so the field beside it stays a text field.
- */
 export const NumberFieldScrubHandle = ({
   value,
   min,
@@ -571,7 +467,7 @@ export const NumberFieldScrubHandle = ({
           alignItems: "center",
           minWidth: 0,
           cursor: inert ? "default" : "col-resize",
-          // The wash is the handle's one affordance: the words are the target.
+
           ...(wash === undefined
             ? {}
             : {
@@ -589,12 +485,10 @@ export const NumberFieldScrubHandle = ({
   );
 };
 
-/** {@link NumberFieldIncrement} and {@link NumberFieldDecrement} props. */
 export interface NumberFieldStepperProps {
-  /** A custom glyph, drawn instead of the chevron. */
   readonly children?: ReactNode;
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly testId?: string;
 }
@@ -606,17 +500,14 @@ const renderStepper = (
 ): ReactElement => {
   const blocked = direction === 1 ? part.atMax : part.atMin;
   const inert = part.disabled || blocked;
-  // A drag answers on a bound too — it may be dragging *away* from the end the
-  // stepper's own direction cannot move. Only a disabled field takes no gesture.
+
   const scrub = part.disabled ? Option.none<NumberFieldScrub>() : part.scrub;
   const consumedClick = (): boolean =>
     Option.match(scrub, {
       onNone: () => false,
       onSome: (gesture) => gesture.consumedClick(),
     });
-  // A stored theme that lost the colour group has no chevron tint; the stepper
-  // keeps its hit area and its words, and paints no glyph rather than a black
-  // one on a dark surface.
+
   const glyphColor = inert
     ? colorRole(part.theme, "placeholder")
     : colorRole(part.theme, "mutedForeground");
@@ -634,8 +525,6 @@ const renderStepper = (
         Option.map(scrub, (gesture) => gesture.onMouseUp),
       )}
       onClick={composeEvent<EventPayload>(part.interaction.onClick, () => {
-        // The gesture that scrubbed already moved the value; stepping again on
-        // the click a drag leaves behind would count one gesture twice.
         if (consumedClick() || inert) return;
         part.handlers.onValue(stepNumber(part.current, part.range, direction));
       })}
@@ -659,19 +548,16 @@ const renderStepper = (
   );
 };
 
-/** The step-up affordance. */
 export const NumberFieldIncrement = (
   props: NumberFieldStepperProps,
 ): ReactElement =>
   renderStepper(props, useNumberFieldPart("NumberFieldIncrement"), 1);
 
-/** The step-down affordance. */
 export const NumberFieldDecrement = (
   props: NumberFieldStepperProps,
 ): ReactElement =>
   renderStepper(props, useNumberFieldPart("NumberFieldDecrement"), -1);
 
-/** The element a number field renders. Pure in its arguments. */
 export const renderNumberField = (
   props: NumberFieldProps,
   theme: PrimitiveTheme,
@@ -730,7 +616,6 @@ export const renderNumberField = (
   );
 };
 
-/** A number with steps and optional bounds. */
 export const NumberField = (props: NumberFieldProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
@@ -751,13 +636,10 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   );
   const display = (value: number): string =>
     numberDisplay(value, props.precision, props.formatValue);
-  // One reading for typing and for committing: a caller's format is theirs to
-  // read back, and text it declines still reads as decimal.
+
   const read = (text: string): Option.Option<number> =>
     parseNumberText(text, props.parseValue);
-  // The owner's value moved: fold it into the draft, so a controlled field
-  // shows what its owner says — a value that arrives after mount included —
-  // while the text being typed survives only while it still means that value.
+
   const folded = syncNumberDraft(draft, incoming, range, props.parseValue);
   if (Option.isSome(folded)) setDraft(folded.value);
   const effective = Option.getOrElse(folded, () => draft);
@@ -771,22 +653,9 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
       onNone: () => {},
       onSome: (id) => renderer?.focusElement?.(id),
     });
-  /**
-   * Whether the draft holds text the reader typed since the last gesture ended.
-   *
-   * A blur or Enter commits the draft, but a field that was merely focused and
-   * left — or whose owner pushed a value in — holds nothing the reader produced,
-   * and a commit channel must not report work nobody did.
-   */
+
   const dirty = useRef(false);
-  /**
-   * Write one value and clear the typed draft.
-   *
-   * A step (a key, a click, a scrub frame) is a value the field produced, so the
-   * draft no longer describes an edit. The clamped value is returned because the
-   * caller compares it with the one that was showing to decide whether the step
-   * actually moved anything.
-   */
+
   const apply = (next: number): number => {
     const clamped = clampNumeric(next, range);
     state.set(clamped);
@@ -794,11 +663,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
     dirty.current = false;
     return clamped;
   };
-  // A scrub is a step gesture, so it commits the draft like a stepper click —
-  // but it does not pull the focus to the input mid-drag, which would interrupt
-  // the pointer gesture the runtime is capturing. The release does, so the next
-  // arrow key works exactly as it does after a click, and it reports the value
-  // the whole gesture ended on.
+
   const scrub = useNumberScrub({
     current: clampNumeric(state.value.current, range),
     range,
@@ -824,8 +689,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
       },
       onTextChange: (next) => {
         const parsed = read(next);
-        // Only readable text is an edit that produced a value; `abc` leaves the
-        // field holding the number it already had, so it commits nothing.
+
         dirty.current = Option.isSome(parsed);
         setDraft((current) => {
           const typed = withNumberDraftText(current, next);
@@ -853,9 +717,6 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
         });
       },
       onValue: (next) => {
-        // A step is one gesture: the value moves once and, when it moved, the
-        // gesture ends on it. A key at a bound still formats the draft but is
-        // not a new value a caller should save.
         const before = clampNumeric(state.value.current, range);
         const value = apply(next);
         focusInput();

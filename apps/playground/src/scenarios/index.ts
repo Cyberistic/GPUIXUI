@@ -1,15 +1,3 @@
-/**
- * The scenario registry — the join of the pure metadata and the GPUix views.
- *
- * `registry.ts` owns `id`/`title`/`capability` and imports nothing native, so the
- * CLI can validate arguments and print ids before the preflight. This module
- * attaches the one implementation per id; `Record<ScenarioId, ScenarioBody>`
- * makes a missing or misspelt implementation a compile error, and an extra id
- * cannot be added without an entry in the registry.
- *
- * Import it only after the runtime preflight: the views import `@gpuix/react`,
- * which loads the native binding.
- */
 import * as Arr from "effect/Array";
 import type { PlaygroundScenario, ScenarioBody } from "../types.js";
 import { registry, type ScenarioId } from "./registry.js";
@@ -61,7 +49,6 @@ import {
   themeTypeAndShadowScenario,
 } from "./theme.js";
 
-/** One implementation per registered scenario id. */
 export const implementations: Record<ScenarioId, ScenarioBody> = {
   "layout-flex": layoutScenario,
   "layout-flex-sizing": layoutFlexSizingScenario,
@@ -113,7 +100,6 @@ export const implementations: Record<ScenarioId, ScenarioBody> = {
   "examples-mount": examplesMountScenario,
 };
 
-/** The full scenarios, in registry order. */
 export const scenarios: ReadonlyArray<PlaygroundScenario> = Arr.map(
   registry,
   (meta) => ({ ...meta, ...implementations[meta.id] }),

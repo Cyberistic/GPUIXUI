@@ -1,13 +1,3 @@
-/**
- * Browser preview for the Separator component page.
- *
- * The shipped rule is a GPUix host tree, so the preview draws the rule from the
- * theme bridge and says so. The decision the drawing can teach is the role: a
- * semantic rule separates two regions and is announced, a decorative one is
- * only part of the drawing.
- */
-
-/** One region with a rule under it and a caption saying what it is. */
 const Region = ({
   label,
   note,

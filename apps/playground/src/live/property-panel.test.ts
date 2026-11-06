@@ -1,20 +1,3 @@
-/**
- * Holds `property-panel-lifecycle` to the shipped component and its own scene.
- *
- * The gap this guards: Tier 3's *Property panels* row cited `inspector-lifecycle`,
- * whose inspector is composed in the probe from primitives — no window had
- * mounted `@gpuixui/data`'s `PropertyPanel`, pressed an editable row's field or
- * measured the label column the panel's own header promises. If this probe is
- * rewritten around a local label/value list, the registry, the README and the
- * row would still name the shipped surface.
- *
- * The label column is derived from the package's `DEFAULT_LABEL_WIDTH` and the
- * scene's wide width, so the offset the record prints cannot drift from the
- * component's default without this file failing first.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own component, probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { DEFAULT_LABEL_WIDTH } from "@gpuixui/data";
 import * as Arr from "effect/Array";
@@ -37,7 +20,6 @@ const read = (path: string): string =>
 const probe = read("./property-panel-probe.tsx");
 const readme = read("../../README.md");
 
-/** The probe's README section, so a value printed elsewhere cannot pass. */
 const section = (() => {
   const heading = "### `property-panel-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -54,15 +36,13 @@ describe("the property scene's arithmetic", () => {
     const named = withTyped(PROPERTY_REST, "name");
     expect(named.name).toBe(PROPERTY_TYPED.name);
     expect(named.note).toBe("");
-    // The whole object is reported, and the caller's is not mutated.
+
     expect(withTyped(named, "note").note).toBe(PROPERTY_TYPED.note);
     expect(withTyped(named, "note").name).toBe(PROPERTY_TYPED.name);
     expect(PROPERTY_REST.name).toBe("");
   });
 
   it("derives the value column's offset from the label width it is given", () => {
-    // The wide panel's column is the width it adds over the package's default,
-    // so the probe's 80-point check follows a changed `DEFAULT_LABEL_WIDTH`.
     expect(PROPERTY_WIDE_LABEL - DEFAULT_LABEL_WIDTH).toBe(80);
     expect(propertyField("name")).toBe("property-name");
   });
@@ -82,7 +62,7 @@ describe("the probe mounts the shipped property panel", () => {
     expect(probe).toContain("<PropertyPanel");
     expect(probe).toContain('kind: "readonly"');
     expect(probe).toContain('kind: "editable"');
-    // A read-only row carries no change; an editable one reports it.
+
     expect(probe).toContain("onChange:");
     expect(probe).not.toContain("LabelValue");
   });
@@ -117,8 +97,6 @@ describe("the property-panel-lifecycle probe's record", () => {
   });
 
   it("prints the columns the window read", () => {
-    // The shared value column, the wide panel's column, the offset and the two
-    // row tops are the measurement the panel's fixed-label rule rests on.
     Arr.forEach(
       ["**152**", "**232**", "**80**", "property-panel-edited"],
       (fact) => {

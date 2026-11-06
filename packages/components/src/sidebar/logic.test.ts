@@ -1,13 +1,3 @@
-/**
- * The sidebar's arithmetic and its guards.
- *
- * The bug these guard: shadcn states the gap, the panel width and the inset's
- * margin in CSS variables and parent selectors, so the port has to compute them
- * from one layout value. If the gap and the panel disagree, the content jumps by
- * a width the panel does not lose; if a stored name is read raw, a renamed
- * variant paints an undefined box.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   collapsibleOf,
@@ -110,7 +100,7 @@ describe("a caller's widths", () => {
     expect(sidebarGap(wide)).toBe(304);
     expect(sidebarWidth({ ...wide, open: false })).toBe(56);
     expect(sidebarGap({ ...wide, open: false })).toBe(56);
-    // A floating rail pays its gutter on both sides of the caller's icon width.
+
     expect(sidebarWidth({ ...wide, open: false, variant: "floating" })).toBe(
       56 + 8 * 2,
     );

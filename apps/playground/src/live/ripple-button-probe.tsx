@@ -1,26 +1,3 @@
-/**
- * The `ripple-lifecycle` probe: what the shipped `RippleButton`'s disc really
- * paints.
- *
- * The catalogue's *Ripple button* row makes four claims about the glass: the
- * disc is the action's **own label ink at a faint share**, it is a **circle**,
- * it **grows from the press point** until it covers the control, and it is
- * **clipped by the control and takes no pointer input**. The component's
- * renderer suite reads the layer's reported box and its declarations, so a wash
- * painted in the action's fill, a square layer, a disc born at the window origin
- * or one that eats the next press would all pass there. This probe reads the
- * frame instead.
- *
- * The action carries **no visible label** on purpose: a text run inside the box
- * would be a second paint to tell from the wash. Its accessible name is the
- * `aria-label` it publishes, so the fixture is still a named action.
- *
- * Every measurement after the press is taken with the renderer's **motion clock
- * frozen**: the press starts the tween, the probe steps the clock until the
- * disc's reported box is the size it wants, and only then captures. A frame is
- * therefore a progress, not a race. The disc's removal is a real timer, so the
- * search is coarse and short — the whole tween is 500 ms of wall time.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -58,17 +35,14 @@ import {
   type RippleBox,
 } from "./ripple-button.js";
 
-/** The palette the live runner provides every probe. */
 const THEME: Theme = palettes.dark;
 
-/** Where a reader looks: one capture per measured state. */
 const REST = "ripple-rest";
 const HOVER = "ripple-hover";
 const SMALL = "ripple-small";
 const CLIP = "ripple-clip";
 const AFTER = "ripple-after";
 
-/** The view: one named action with no visible label, and a press counter. */
 export const RippleProbe = (): ReactNode => {
   const window = useWindowSize();
   const [presses, setPresses] = useState(0);
@@ -114,18 +88,14 @@ export const RippleProbe = (): ReactNode => {
   );
 };
 
-/** The probe's steps: the fill, a frozen press, the growth, the clip, the end. */
 export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(RIPPLE_IDS.action);
-    // A previous probe's screenshot stalls the animation clock, and its pointer
-    // may still rest over this probe's action: park the pointer away first, so
-    // the resting frame is a resting frame.
+
     yield* Effect.sleep(Duration.millis(600));
     yield* ctx.host.hoverAt(RIPPLE_IDS.probe, { x: 4, y: 4 });
     yield* Effect.sleep(Duration.millis(120));
 
-    /** The box `testId` paints, failing by name when it paints nothing. */
     const box = (
       testId: string,
     ): Effect.Effect<
@@ -139,13 +109,11 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** The box `testId` paints now, or `None` when it paints nothing. */
     const maybeBox = (
       testId: string,
     ): Effect.Effect<Option.Option<RippleBox>, Smoke.SmokeHostError> =>
       Effect.map(ctx.host.bounds(testId), Option.fromNullishOr);
 
-    /** Captures `name` and hands back the frame with its device scale. */
     const captureFrame = (
       name: string,
     ): Effect.Effect<
@@ -163,7 +131,6 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return { frame, scale };
       });
 
-    /** A logical point's exact colour, failing by name when it lies outside. */
     const sample = (
       captured: { readonly frame: Pixels.Pixels; readonly scale: number },
       point: { readonly x: number; readonly y: number },
@@ -173,7 +140,6 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Smoke.SmokeAssertionError | Smoke.SmokeHostError
     > => ctx.expectSome(label, colourAt(captured.frame, point, captured.scale));
 
-    /** How many of `points` paint something other than `reference`. */
     const paintedDifferently = (
       captured: { readonly frame: Pixels.Pixels; readonly scale: number },
       points: ReadonlyArray<{ readonly x: number; readonly y: number }>,
@@ -201,7 +167,6 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const press = pressPoint(action, RIPPLE_PRESS.first);
 
-    // ── Rest: the action's own fill, and no disc ─────────────────────────────
     const restFrame = yield* captureFrame(REST);
     const restFill = yield* sample(
       restFrame,
@@ -234,7 +199,6 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The pointer's fill: what the wash is laid over ───────────────────────
     yield* ctx.host.hoverAt(RIPPLE_IDS.action, pressOffset(RIPPLE_PRESS.first));
     yield* Effect.sleep(Duration.millis(120));
     const hoverFrame = yield* captureFrame(HOVER);
@@ -249,7 +213,6 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── A frozen clock: a press mounts a disc the tween has not grown ────────
     const pauseClock = yield* ctx.expectSome(
       "the window exposes a motion clock",
       Option.fromNullishOr(ctx.host.clockPause),
@@ -263,7 +226,6 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Option.fromNullishOr(ctx.host.clockResume),
     );
 
-    /** Steps the frozen clock until a frame's disc is a size the wash is read in. */
     const findSmall = (
       left: number,
     ): Effect.Effect<Option.Option<RippleBox>, Smoke.SmokeHostError> =>
@@ -274,7 +236,6 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return yield* findSmall(left - 1);
       });
 
-    /** Steps the frozen clock until the disc's box reaches past the left edge. */
     const findClip = (
       left: number,
     ): Effect.Effect<Option.Option<RippleBox>, Smoke.SmokeHostError> =>
@@ -288,7 +249,6 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return yield* findClip(left - 1);
       });
 
-    /** Presses at `fraction` and reads the counter the press reports. */
     const pressAt = (
       fraction: { readonly across: number; readonly down: number },
       presses: number,
@@ -349,8 +309,6 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // One capture per disc: the layer's removal is a real timer, so the whole
-    // measurement of one frame has to fit inside the 500 ms the tween runs for.
     const smallFrame = yield* captureFrame(SMALL);
     const wash = yield* sample(
       smallFrame,
@@ -394,7 +352,6 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // ── The disc leaves when its tween ends ─────────────────────────────────
     yield* resumeClock();
     const left = yield* settleUntil(maybeBox("ripple"), Option.isNone);
     yield* ctx.expectEqual(
@@ -403,7 +360,6 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── A disc late in its journey: clipped by the control, and fainter ─────
     yield* pauseClock();
     yield* pressAt(
       RIPPLE_PRESS.first,
@@ -467,14 +423,12 @@ export const rippleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The hit test: a disc never takes the press it marks ──────────────────
     yield* pressAt(
       RIPPLE_PRESS.second,
       3,
       "a press over a painted disc still reaches the action",
     );
 
-    // ── The end: the layer leaves and the action keeps its fill ──────────────
     yield* resumeClock();
     const gone = yield* settleUntil(maybeBox("ripple"), Option.isNone);
     yield* ctx.expectEqual(

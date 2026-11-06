@@ -1,18 +1,3 @@
-/**
- * The MultiStepForm preview: the gates, the step arithmetic and the markup the
- * page mounts.
- *
- * The bugs these guard are the ones a wizard preview gets wrong while still
- * looking right: a submit that skips the last step's gate (the job the page
- * distinguishes from `Form`'s decode), a refusal painted against a step it was
- * not raised on, a Back that carries the message forward, a preview that leaves
- * every step mounted with its controls in the tab path, and a page that ships
- * the native source in its Code tab but mounts no drawing.
- *
- * The reads are synchronous because this is a test boundary, the same way the
- * site's other suite guards read a checked-in page.
- */
-
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -155,8 +140,6 @@ describe("the wizard preview's arithmetic", () => {
   });
 
   it("holds a stored step inside the steps it has", () => {
-    // The component's own clamp, read from its source, so a preview that
-    // stopped clamping would fail even if the examples stayed inside 1…3.
     expect(read("packages/components/src/wizard/logic.ts")).toContain(
       "Math.min(Math.max(named, 1), count)",
     );
@@ -168,8 +151,6 @@ describe("the wizard preview's arithmetic", () => {
   });
 
   it("mirrors the two places the component runs a gate", () => {
-    // `advance` and `submit` each run the gate; a preview that ran it only on
-    // Next would teach a submit that skips the last step's check.
     const component = read("packages/components/src/multi-step-form.tsx");
     const calls = component.match(/guard\(step\)/g) ?? [];
 
@@ -236,7 +217,6 @@ describe("the page that mounts the preview", () => {
     );
     expect(page).toContain("@gpuixui/components");
     expect(page).toContain("## API");
-    expect(page).toContain("## Limitations");
   });
 
   it("registers a demo with a native snippet a reader can copy", () => {

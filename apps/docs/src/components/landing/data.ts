@@ -10,7 +10,6 @@ export interface Platform {
   readonly chrome: "mac" | "win" | "lnx";
 }
 
-/** The chrome each desktop wears; the wallpaper is the same picture. */
 const chromeOf: Readonly<Record<LandingPlatform, Platform["chrome"]>> = {
   macos: "mac",
   windows: "win",
@@ -23,7 +22,6 @@ export const platforms = landingPlatformOrder.map((id) => ({
   chrome: chromeOf[id],
 })) satisfies ReadonlyArray<Platform>;
 
-/** A glyph the Omarchy strip draws beside its claim. */
 export type OmarchyIcon = "palette" | "terminal" | "code" | "gpu";
 
 export interface OmarchyCard {
@@ -32,13 +30,6 @@ export interface OmarchyCard {
   readonly body: string;
 }
 
-/**
- * What Omarchy means for a GPUIxUI app, in the strip under the deck.
- *
- * Omarchy is not a fourth look: it is the Desktop where the look comes from your
- * own theme, and these four lines are the whole claim — a theme follower, a
- * terminal surface, shadcn/React syntax, and a GPU renderer.
- */
 export const omarchyCards: ReadonlyArray<OmarchyCard> = [
   {
     icon: "palette",
@@ -64,7 +55,6 @@ export const omarchyCards: ReadonlyArray<OmarchyCard> = [
 
 export const repo = "https://github.com/Cyberistic/GPUIXUI";
 
-/** The numbers a heading prints as words, so a count cannot drift from its list. */
 const countWords = [
   "Zero",
   "One",
@@ -77,11 +67,9 @@ const countWords = [
   "Eight",
 ] as const;
 
-/** A count as the word a landing heading prints it, e.g. `3` → `"Three"`. */
 export const countWord = (count: number): string =>
   countWords[count] ?? String(count);
 
-/** The desktops the deck shows; the hero and the editor sample print it. */
 export const landingLookCount = platforms.length;
 
 export const navLinks = [

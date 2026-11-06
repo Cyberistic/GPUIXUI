@@ -1,20 +1,8 @@
-/**
- * The scenario metadata — the single source of truth for the sidebar, the smoke
- * runner and `--list`.
- *
- * This module imports nothing from GPUix or React, so the CLI can validate its
- * arguments and print the ids on a host with no binding; the views and steps are
- * attached in `index.ts`, after the preflight.
- *
- * `scenarioProblems` is pure for the same reason: the integrity check must run
- * on any host.
- */
 import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 import { Smoke } from "@gpuixui/testing";
 
-/** The capabilities Phase B must prove in the real runtime. */
 export const CORE_CAPABILITIES = [
   "layout",
   "text",
@@ -29,7 +17,6 @@ export const CORE_CAPABILITIES = [
   "theme",
 ] as const;
 
-/** The Tier 3/4 capabilities the feasibility probes cover (plans `130`, `152`–`154`). */
 export const PROBE_CAPABILITIES = [
   "table",
   "tree",
@@ -39,14 +26,12 @@ export const PROBE_CAPABILITIES = [
   "search",
 ] as const;
 
-/** One scenario's identity: what it is called and which capability it proves. */
 export interface ScenarioMeta {
   readonly id: string;
   readonly title: string;
   readonly capability: Smoke.Capability;
 }
 
-/** One view per capability, in the order the suite runs them. */
 export const registry = [
   {
     id: "layout-flex",
@@ -306,18 +291,10 @@ export const registry = [
   },
 ] as const satisfies ReadonlyArray<ScenarioMeta>;
 
-/** The id of a registered scenario. */
 export type ScenarioId = (typeof registry)[number]["id"];
 
 const isCapability = Schema.is(Smoke.Capability);
 
-/**
- * Every integrity problem in `list`. An empty array means valid.
- *
- * The bug it guards: a scenario added with a duplicate or empty id, an unknown
- * capability, or a required capability left uncovered would make the smoke
- * report claim coverage it does not have.
- */
 export const scenarioProblems = (
   list: ReadonlyArray<ScenarioMeta>,
 ): ReadonlyArray<string> => {
@@ -343,7 +320,6 @@ export const scenarioProblems = (
   ]);
 };
 
-/** The scenarios a `--only` run selected, or all of them when none. */
 export const selectScenarios = <A extends ScenarioMeta>(
   list: ReadonlyArray<A>,
   only: ReadonlyArray<string>,

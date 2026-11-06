@@ -16,6 +16,7 @@ import {
   windowActionsSource,
 } from "./platform-demos";
 import { usePreviewInteractive } from "./preview-surface";
+import { TabStrip } from "./tab-strip";
 import {
   CountingNumberDemo,
   countingNumberDemoSource,
@@ -422,19 +423,10 @@ import { StarsDemo, starsDemoSource } from "./stars-demo";
 import { ThemeTogglerDemo, themeTogglerDemoSource } from "./theme-toggler-demo";
 import { TypingTextDemo, typingTextDemoSource } from "./typing-text-demo";
 
-/**
- * Browser previews for the docs pages.
- *
- * GPUIxUI renders through GPUix, never the DOM. A docs page therefore cannot
- * mount the shipped component; each demo below reproduces the component's
- * measured geometry, states and keyboard rules with HTML, and every page says
- * so. The Code tab always shows the real native usage.
- */
-
 export interface Demo {
   readonly render: () => ReactNode;
   readonly source: string;
-  /** A composition of parts rather than one component; the note says so. */
+
   readonly composition?: boolean;
 }
 
@@ -506,13 +498,6 @@ const PLAN_ROWS: ReadonlyArray<readonly [string, string]> = [
   ["Invoices", "Enabled"],
 ];
 
-/**
- * One card, drawn with the recipe's fixed metrics.
- *
- * The colours are the preview surface's roles; the geometry is the recipe's,
- * because the components compile `CARD_*` against the default registry
- * (shadcn's fixed metrics) rather than the primitives' density scale.
- */
 const PlanCard = ({
   variant,
 }: {
@@ -544,7 +529,6 @@ const PlanCard = ({
   </div>
 );
 
-/** The treatments, each with the caption that names what it paints. */
 const CARD_TREATMENTS = [
   {
     variant: "outline",
@@ -606,9 +590,6 @@ const CardComposition = () => (
 );
 
 const DialogDemo = () => {
-  // The scene opens on the surface, not an empty box: the first paint is a
-  // static dialog, and a press on the trigger reopens it for the interactive
-  // states. Only a reader's own open moves focus into the panel.
   const interactive = usePreviewInteractive();
   const [open, setOpen] = useState(true);
   const openedByReader = useRef(false);
@@ -629,9 +610,7 @@ const DialogDemo = () => {
 
   return (
     <div className="gx-demo-dialog">
-      {/* The page the dialog covers. The veil blurs what is behind it, and a
-          scene with only a trigger behind the veil had nothing to blur — the
-          drawer's blur read and the dialog's did not, for that reason alone. */}
+      {}
       <div aria-hidden="true" className="gx-dialog-behind">
         <div className="gx-dialog-behind-bar">
           <span className="gx-dialog-behind-title">Project</span>
@@ -752,75 +731,17 @@ const tabRows = [
 const TabsDemo = () => {
   const [selected, setSelected] = useState("profile");
   const id = useId();
-  const triggers = useRef<Array<HTMLButtonElement | null>>([]);
-  const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(
-    null,
-  );
-
-  useLayoutEffect(() => {
-    const index = tabRows.findIndex((tab) => tab.value === selected);
-    const element = triggers.current[index];
-    if (element === null || element === undefined) return;
-    const update = () =>
-      setIndicator({ x: element.offsetLeft, w: element.offsetWidth });
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [selected]);
-
-  const move = (event: ReactKeyboardEvent, index: number) => {
-    const last = tabRows.length - 1;
-    let target: number | undefined;
-    if (event.key === "ArrowRight") target = index === last ? 0 : index + 1;
-    else if (event.key === "ArrowLeft") target = index === 0 ? last : index - 1;
-    else if (event.key === "Home") target = 0;
-    else if (event.key === "End") target = last;
-    if (target === undefined) return;
-    const next = tabRows[target];
-    if (next === undefined) return;
-    event.preventDefault();
-    setSelected(next.value);
-    triggers.current[target]?.focus();
-  };
 
   return (
     <div className="gx-demo-tabs">
-      <div
-        aria-label="Account settings"
-        className="gx-tabs-list"
-        role="tablist"
-      >
-        {indicator === null ? null : (
-          <span
-            aria-hidden="true"
-            className="gx-tabs-indicator"
-            style={{
-              transform: `translateX(${indicator.x}px)`,
-              width: indicator.w,
-            }}
-          />
-        )}
-        {tabRows.map((tab, index) => (
-          <button
-            aria-controls={`${id}-${tab.value}-panel`}
-            aria-selected={selected === tab.value}
-            className="gx-tab"
-            id={`${id}-${tab.value}-tab`}
-            key={tab.value}
-            onClick={() => setSelected(tab.value)}
-            onKeyDown={(event) => move(event, index)}
-            ref={(element) => {
-              triggers.current[index] = element;
-            }}
-            role="tab"
-            tabIndex={selected === tab.value ? 0 : -1}
-            type="button"
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <TabStrip
+        idBase={id}
+        label="Account settings"
+        onChange={setSelected}
+        options={tabRows}
+        panelId={(value) => `${id}-${value}-panel`}
+        value={selected}
+      />
       {tabRows.map((tab) =>
         selected === tab.value ? (
           <div
@@ -847,12 +768,9 @@ const DropdownMenuDemo = () => {
   const trigger = useRef<HTMLButtonElement>(null);
   const surface = useRef<HTMLDivElement>(null);
   const rows = useRef(new Map<MenuEntry["id"], HTMLButtonElement>());
-  /** What to focus once the open render commits: a row, or the surface. */
+
   const initialFocus = useRef<MenuEntry["id"] | "surface" | null>(null);
 
-  /** Opening by pointer leaves the surface focused with no row highlighted,
-   * which is the desktop convention the native component follows. Opening by
-   * keyboard lands on a row, so the next Enter runs it. */
   const openWith = (target: MenuEntry["id"] | "surface") => {
     initialFocus.current = target;
     setOpen(true);
@@ -865,7 +783,7 @@ const DropdownMenuDemo = () => {
   const activate = (entry: MenuEntry) => {
     if (entry.id === "hidden") {
       setShowHidden(!showHidden);
-      return; // a checkbox row does not close the menu
+      return;
     }
     setLastAction(entry.label);
     setOpen(false);
@@ -942,7 +860,6 @@ const DropdownMenuDemo = () => {
       return;
     }
     if (key === "Tab") {
-      // A menu is not modal: Tab closes it and lets the focus move on.
       setOpen(false);
       setHighlight(null);
     }
@@ -985,9 +902,7 @@ const DropdownMenuDemo = () => {
           <p className="gx-menu-file-meta">Edited 2 min ago</p>
         </div>
       </div>
-      {/* The trigger is a row under the card, not inside it: the panel opens
-          4px below the button, and a button vertically centred in the card put
-          the panel over the card's bottom edge and its rounded corner. */}
+      {}
       <div className="gx-menu-actions">
         <div className="gx-menu-anchor" ref={anchor}>
           <button
@@ -1099,8 +1014,7 @@ const CommandMenuDemo = () => {
 
   const onInput = (value: string) => {
     setQuery(value);
-    // Typing resets the highlight to the first runnable match, as the
-    // component does — the query changes which row Enter would run.
+
     setHighlight(firstEnabled(commandMatches(value)) ?? null);
   };
 
@@ -1461,7 +1375,6 @@ export function Palette() {
   );
 }`;
 
-/** One browser rendering of an alert, mirroring `ALERT_*`'s parts. */
 const PreviewAlert = ({
   tone,
   title,
@@ -1486,8 +1399,7 @@ const PreviewAlert = ({
     <div className="gx-alert-content">
       <p className="gx-alert-title">{title}</p>
       <p className="gx-alert-desc">{description}</p>
-      {/* The action is a row of its own, under the copy: rendered inside the
-          description it sat on the text's baseline like a chip in the sentence. */}
+      {}
       {action === undefined ? undefined : (
         <div className="gx-alert-action">{action}</div>
       )}
@@ -1577,14 +1489,6 @@ const AlertComposition = () => {
   );
 };
 
-/**
- * The busy mark the confirm action paints while `loading`.
- *
- * The shipped mark is the package's `Spinner`: three dots whose lit position
- * advances, in the action's own label role. The preview cycles the dots'
- * opacity instead of rotating them, because 0.11.0 has no transform — a
- * rotating mark would be a behaviour the library cannot ship.
- */
 const ConfirmBusyMark = () => (
   <span
     aria-label="In progress"
@@ -1598,7 +1502,6 @@ const ConfirmBusyMark = () => (
   </span>
 );
 
-/** `ConfirmDialog`'s surface: the dialog's `sm`, without a close control. */
 const PreviewConfirm = ({
   title,
   description,
@@ -1618,17 +1521,14 @@ const PreviewConfirm = ({
   readonly error?: string;
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
-  /** Whether this render is a live surface the reader opened. */
+
   readonly takesFocus?: boolean;
 }) => {
   const cancel = useRef<HTMLButtonElement>(null);
-  // The last failure stays painted while the block collapses, so a retry does
-  // not empty the slot before its exit has run.
+
   const failure = useRef(error);
   if (error !== undefined) failure.current = error;
-  // The contract the component exists for: focus lands on Cancel, so Enter on an
-  // untouched dialog cancels instead of destroying something. A static preview
-  // (the page's first paint) leaves the reader's focus on the page.
+
   useEffect(() => {
     if (takesFocus && !loading) cancel.current?.focus();
   }, [takesFocus, loading]);
@@ -1690,18 +1590,7 @@ const PreviewConfirm = ({
   );
 };
 
-/**
- * The workflow the component encodes: Cancel first, a confirm that reports
- * instead of closing, and a failure the reader can see and retry.
- *
- * The first attempt always fails, so the preview shows the reason `onConfirm`
- * does not close the dialog: the error stays in the body until the caller
- * decides what happens next.
- */
 const ConfirmDialogDemo = () => {
-  // The scene opens on the dialog, so the page shows the component without a
-  // press. The trigger stays for the interactive pass and only its own open is
-  // a live surface that takes focus.
   const interactive = usePreviewInteractive();
   const [open, setOpen] = useState(true);
   const openedByReader = useRef(false);
@@ -1735,9 +1624,7 @@ const ConfirmDialogDemo = () => {
 
   return (
     <div className="gx-confirm-demo">
-      {/* The page the confirmation covers, so the veil has something to blur:
-          the drawer's blur read and this one did not, for want of content
-          behind it rather than for want of a filter. */}
+      {}
       <div aria-hidden="true" className="gx-dialog-behind">
         <div className="gx-dialog-behind-bar">
           <span className="gx-dialog-behind-title">Hunter License</span>
@@ -1794,7 +1681,6 @@ const ConfirmDialogDemo = () => {
   );
 };
 
-/** The two tones and the loading state, on one surface. */
 const ConfirmDialogStates = () => {
   const [state, setState] = useState<"default" | "danger" | "loading">(
     "danger",
@@ -2034,7 +1920,6 @@ const accordionSections = [
   },
 ] as const;
 
-/** The native keyboard contract, reproduced so the preview is explorable. */
 export const AccordionDemo = () => {
   const [open, setOpen] = useState<string | null>("surface");
   const rows = useRef<Array<HTMLButtonElement | null>>([]);
@@ -2124,7 +2009,6 @@ const accordionSettings = [
   },
 ] as const;
 
-/** A settings panel: one section open, a disabled one below it. */
 export const AccordionComposition = () => {
   const [open, setOpen] = useState<string | null>("appearance");
   const id = useId();
@@ -2246,10 +2130,6 @@ export const SettingsSections = () => {
 
 const workspaceSlugPattern = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-/**
- * The caller owns the value and the moment validation runs, so this preview
- * keeps the message until the next submit: typing does not clear it.
- */
 const FieldValidation = () => {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | undefined>();
@@ -2320,7 +2200,6 @@ const FieldValidation = () => {
   );
 };
 
-/** The four resting states of a field, including a disabled group. */
 const FieldStates = () => (
   <div className="gx-field-states">
     <div className="gx-field-block">
@@ -2454,38 +2333,26 @@ export interface PreviewToast {
   readonly description?: string;
   readonly tone: "info" | "success" | "warning" | "danger";
   readonly actionLabel?: string;
-  /** Milliseconds until it dismisses itself; zero keeps it. */
+
   readonly duration?: number;
 }
 
-/** The height of one peeking slice, in pixels (the native stack's `STACK_PEEK`). */
 const TOAST_PEEK = 12;
-/** How far each further card insets from each side, in pixels. */
+
 const TOAST_INSET = 8;
-/** How long a leaving card stays mounted for its exit tween. */
+
 const TOAST_EXIT_MS = 180;
-/** The auto-dismiss delay a draft without a `duration` takes. */
+
 const TOAST_DEFAULT_MS = 5_000;
-/** Cards kept before the oldest drops, mirroring the store's default `max`. */
+
 const TOAST_MAX = 3;
 
-/** One card's place in the preview stack. */
 export interface ToastStackSlot {
-  /** `undefined` means the measured content height; a number is the peek. */
   readonly height: number | undefined;
   readonly inset: number;
   readonly interactive: boolean;
 }
 
-/**
- * The preview's stack rule, the native `toast/stack.ts` in browser form.
- *
- * The newest card is last in the DOM (the order the store appends), so rank is
- * counted from the end. Collapsed: the newest is full, the two behind are short
- * inset peeks of the card's own top, and a fourth card has no height. Expanded:
- * every card is full, un-inset and interactive. A rank never changes a card's
- * paint — the peeks were dimmed once, and every push re-faded the whole stack.
- */
 export const toastStackSlot = (
   rank: number,
   expanded: boolean,
@@ -2500,13 +2367,11 @@ export const toastStackSlot = (
   };
 };
 
-/** How many cards newer than the one at `index` are still live. */
 export const rankAt = (
   entries: ReadonlyArray<{ readonly leaving: boolean }>,
   index: number,
 ): number => entries.slice(index + 1).filter((entry) => !entry.leaving).length;
 
-/** A 24px status glyph, tinted by `currentColor`; the tone colours it. */
 const ToastGlyph = ({ children }: { readonly children: ReactNode }) => (
   <svg
     aria-hidden="true"
@@ -2522,7 +2387,6 @@ const ToastGlyph = ({ children }: { readonly children: ReactNode }) => (
   </svg>
 );
 
-/** Sonner's four status marks: check, x, info and the warning triangle. */
 const toastGlyph: Readonly<Record<PreviewToast["tone"], ReactNode>> = {
   info: (
     <>
@@ -2547,24 +2411,12 @@ const toastGlyph: Readonly<Record<PreviewToast["tone"], ReactNode>> = {
   ),
 };
 
-/** A queued toast, whether it is leaving, and the slot it left with. */
 interface PreviewEntry {
   readonly toast: PreviewToast;
   readonly leaving: boolean;
   readonly frozen?: ToastStackSlot;
 }
 
-/**
- * One card.
- *
- * The slot is the rank's box and the card keeps its own measured height inside
- * it. A **whole** card used to leave the slot at `height: auto`, and CSS cannot
- * interpolate `auto` into the 12px peek the card drops to when the next toast
- * arrives — the collapse happened in one frame, so the toast a reader was
- * reading was cut in half the instant another appeared. The card measures
- * itself and the slot gets that number, so the peek is a tween like every other
- * move in the stack; a leaving card closes to nothing.
- */
 export const ToastCardPreview = ({
   toast,
   leaving,
@@ -2580,10 +2432,7 @@ export const ToastCardPreview = ({
 }) => {
   const card = useRef<HTMLDivElement | null>(null);
   const [natural, setNatural] = useState(0);
-  // A card that has just arrived grows into its box instead of appearing at full
-  // height, so the stack opens upward the way the native viewport's
-  // `height: 0 → measured` does. `born` flips on the next frame, which is the
-  // frame the transition starts from.
+
   const [born, setBorn] = useState(false);
 
   useLayoutEffect(() => {
@@ -2650,12 +2499,6 @@ export const ToastCardPreview = ({
   );
 };
 
-/**
- * The preview's queue: pushes, auto-dismiss timers, the hover fan and the pause
- * that holds every clock while the pointer rests on the stack. It mirrors the
- * store's `pause`/`resume` with `setTimeout` because the DOM shim owns its own
- * clock. `seed` pre-fills the tone comparison.
- */
 export const useToastPreview = (
   seed: ReadonlyArray<Omit<PreviewToast, "id">> = [],
   startExpanded = false,
@@ -2728,7 +2571,6 @@ export const useToastPreview = (
     if (ms > 0) arm(toast.id, ms);
   };
 
-  /** Stop every running clock, keeping the time each has left. */
   const pauseTimers = (): void => {
     running.current.forEach((handle, id) => {
       clearTimeout(handle);
@@ -2742,7 +2584,6 @@ export const useToastPreview = (
     deadlines.current.clear();
   };
 
-  /** Restart every held clock with its remaining time. */
   const resumeTimers = (): void => {
     remaining.current.forEach((ms, id) => {
       remaining.current.delete(id);
@@ -2764,10 +2605,7 @@ export const useToastPreview = (
   return { entries, hovered, push, dismiss, onStackEnter, onStackLeave };
 };
 
-/** A publish/undo workflow, capped at three cards like the store. */
 const ToastWorkflow = () => {
-  // The scene's first paint is a resting toast, not an empty viewport: the
-  // store's own success card is already on screen when the page opens.
   const { entries, hovered, push, dismiss, onStackEnter, onStackLeave } =
     useToastPreview([
       {
@@ -2881,7 +2719,6 @@ const toastToneSamples: ReadonlyArray<Omit<PreviewToast, "id">> = [
   },
 ];
 
-/** The four tones, held open so their colour and glyph can be compared. */
 const ToastTones = () => {
   const { entries, hovered, dismiss, onStackEnter, onStackLeave } =
     useToastPreview(toastToneSamples, true);
@@ -3003,7 +2840,6 @@ export const App = () => (
   </ToastProvider>
 );`;
 
-/** The gallery with the filter in its own state: a demo has no router to read. */
 const IconGalleryDemo = () => {
   const [query, setQuery] = useState("");
   return <IconGalleryView onQueryChange={setQuery} query={query} />;

@@ -98,19 +98,6 @@ painted into the reply.
 | `MessageActions` | a named action row, or `null` | `onCopy?`, `onRetry?`, `onFeedback?`, `copyLabel?`, `retryLabel?`, `helpfulLabel?`, `notHelpfulLabel?`, `className?` |
 | `MessageGroup` | consecutive rows, tighter | `gap?`, `className?`, `children` |
 
-## Notes
-- The bubble is a child: a caller can reuse `Bubble` on its own, and `Message`
-  never invents one.
-- No `aria-labelledby` or `aria-describedby`; a tool call's result and a
-  citation's href are not associated with the row that names them.
-- No clipboard write; `onCopy` is the consumer's path.
-- A citation is a row, not a link: the runtime has no anchor host.
-- A slot restored from storage that is not a list (`toolCalls`/`sources` as
-  `null`) carries nothing; a blank label or sentence reads as its documented
-  words; a role a release renamed reads as the `assistant` default.
-- A tool call's `status` a release renamed or dropped paints `Unknown`, never a
-  claimed `Done` or `Running`; only a shipped `error` paints the failure glyph.
-
 ## Breaking change
 
 `MessageRoot` is now `Message`. The old root built the bubble itself; the new
@@ -118,9 +105,3 @@ one does not. Every row must place a `Bubble` inside `MessageContent`, and
 actions move from `MessageContent` to `MessageFooter`. This is the shadcn
 structure the component is modelled on; the split is what lets a bubble be
 quoted, grouped or reused on its own.
-
-## Related
-
-- [Bubble](/components/bubble) — the surface inside the row.
-- [Message Scroller](/components/message-scroller) — the transcript.
-- [Chat](/components/chat) — the full conversation.

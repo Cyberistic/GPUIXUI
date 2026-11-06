@@ -1,12 +1,3 @@
-/**
- * Field validation messages.
- *
- * The bugs these guard: a message invented by this package instead of taken
- * from the schema's own `message` annotation; `validateAll` reporting one
- * composite blob instead of a message per failing field; the messages arriving
- * in an arbitrary order; and a message repeated once per failing field.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";

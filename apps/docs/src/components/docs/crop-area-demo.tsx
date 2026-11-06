@@ -18,21 +18,8 @@ import {
 import * as Option from "effect/Option";
 import { useRef, useState, type MouseEvent } from "react";
 
-/**
- * Browser preview for the CropArea page.
- *
- * The native frame paints a controlled hole with four veil bars around it and
- * four corner handles; the run of this preview is the package's own
- * `crop/logic` — the bars, the guides, the handle boxes, the drag and the arrow
- * step are the component's — so the drawing stands in for the paint, not for
- * the arithmetic. The picture is a labelled illustration of the bitmap the
- * native frame is handed.
- */
-
-/** The frame's coordinate space, in points. */
 export const CROP_FRAME = { width: 320, height: 200 } as const;
 
-/** The hole the page opens on, held to the square the page documents. */
 export const cropStart = (): CropRect =>
   clampCrop(
     new CropRect({ x: 60, y: 40, width: 120, height: 120 }),
@@ -47,7 +34,6 @@ const picture = `data:image/svg+xml,${encodeURIComponent(
 
 const CORNERS: ReadonlyArray<CropCorner> = ["nw", "ne", "sw", "se"];
 
-/** The arrow a browser key names, in the package's spelling. */
 const arrowOf = (key: string): string =>
   key.startsWith("Arrow") ? key.slice("Arrow".length).toLowerCase() : "";
 
@@ -84,13 +70,6 @@ export const CropAreaDemo = () => {
     });
   };
 
-  /**
-   * Start a drag and follow it on the window.
-   *
-   * A drag that ends at the frame's edge used to stop the moment the pointer
-   * left the picture, which is exactly where a corner drag goes; the listeners
-   * are the window's for the length of the gesture.
-   */
   const begin = (gesture: CropGesture): void => {
     drag.current = Option.some(gesture);
     const onMove = (event: globalThis.MouseEvent): void =>

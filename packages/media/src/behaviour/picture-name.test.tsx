@@ -1,15 +1,3 @@
-/**
- * A picture's name, read from the accessibility tree of a real window.
- *
- * The bug guarded: `ImagePreview` and `CropArea` handed the caller's `alt`
- * straight to an `<img>`, and the pinned runtime publishes an `<img>` as an
- * `Image` node named by that `alt`. A blank name from an i18n table, or a
- * `null` a saved record writes where it carried no name, therefore published
- * an `Image` node with no name at all while every other label in the package
- * already read a blank as its documented default. Both surfaces name the
- * picture `Picture` now, and this suite reads that name back off the dump.
- */
-
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
 import { lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -22,7 +10,6 @@ import { ImagePreview } from "../image-preview.js";
 
 const PNG = "data:image/png;base64,AA==";
 
-/** Every `Image` node's name, in tree order, after a real paint. */
 const imageNames = (root: TestRoot): ReadonlyArray<string> => {
   root.renderer.flush();
   const nodes = R.values(root.renderer.getA11yTree().nodes ?? {});

@@ -10,21 +10,9 @@ import {
 import { usePlatform } from "./platform-toggle";
 import { PreviewSurface } from "./preview-surface";
 
-/**
- * The class reference `/styling` mounts.
- *
- * Every cell is compiled by `@gpuixui/tw` against the theme the platform switch
- * resolved, so a reader sees this release's number — a macOS control height, a
- * Linux corner, a dark role — rather than a copy of the compiler's defaults.
- * The suite next to this file holds the table to the compiler's own vocabulary
- * and to the values it resolves, and the refusals to the sentences the compiler
- * records.
- */
-
 const cell = "px-2 py-1.5 font-mono text-xs";
 const headCell = "px-2 py-1.5 font-semibold";
 
-/** A group's rule, with the class names it backticks painted as code. */
 const Note = ({ text }: { readonly text: string }) => (
   <p className="mb-2 mt-1 text-xs leading-relaxed text-muted-foreground">
     {text
@@ -35,7 +23,6 @@ const Note = ({ text }: { readonly text: string }) => (
   </p>
 );
 
-/** What a compiled row reads in its second column. */
 const painted = (resolved: ResolvedClass): string =>
   Match.value(resolved).pipe(
     Match.tagsExhaustive({
@@ -45,7 +32,6 @@ const painted = (resolved: ResolvedClass): string =>
     }),
   );
 
-/** One class and what it painted, or the reason it painted nothing. */
 const Row = ({
   theme,
   className,
@@ -69,7 +55,6 @@ const Row = ({
   </tr>
 );
 
-/** The table, given a resolved theme (no context, so it is testable). */
 export function StyleReferenceBody({ theme }: { readonly theme: Theme }) {
   return (
     <div className="not-prose space-y-8">
@@ -135,7 +120,6 @@ export function StyleReferenceBody({ theme }: { readonly theme: Theme }) {
   );
 }
 
-/** The reference on the platform surface, so the switch repaints every cell. */
 export function StyleReference() {
   const { platform, theme } = usePlatform();
 

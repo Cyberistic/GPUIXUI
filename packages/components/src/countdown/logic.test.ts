@@ -1,12 +1,3 @@
-/**
- * Countdown formatting.
- *
- * The bug these guard: a countdown that rounds a partial second up, a negative
- * remainder that renders "-1:59", capped hours after a day, days appearing when
- * they were not asked for, and a remainder the clock cannot read (`NaN` from a
- * deadline that never decoded, an infinity) painted as the literal word `NaN`.
- */
-
 import { describe, expect, it } from "vitest";
 import { breakdown, formatCountdown, readableRemaining } from "./logic.js";
 
@@ -62,9 +53,6 @@ describe("formatCountdown", () => {
   });
 
   it("reads a remaining time it cannot paint as no time left", () => {
-    // A deadline is arithmetic over a timestamp the application decoded, so a
-    // field that never arrived reaches the clock as `NaN`, and an absent bound
-    // as an infinity. None of them can be laid out as clock text.
     expect(breakdown(Number.NaN)).toEqual({
       days: 0,
       hours: 0,

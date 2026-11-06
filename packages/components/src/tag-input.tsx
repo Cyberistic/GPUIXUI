@@ -1,17 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * TagInput: a set of tokens entered through a field.
- *
- * The root owns the tokens and the draft; the field writes the draft and the
- * chips remove by value. The add rules live in `tag-input/logic.ts`, so the
- * keyboard wiring has nothing to decide beyond which rule to call.
- *
- * A typed comma arrives through `onChange` (the field reports its whole text),
- * so the field treats any comma-containing edit as a batch: everything before
- * the last comma is committed and the remainder stays the draft. Pasting
- * `"a,b"` therefore adds two tokens, and typing `","` adds the one before it.
- */
-
 import type { KeyEvent, InputProps, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -64,7 +51,6 @@ import {
   useTheme,
 } from "./internal/theme.js";
 
-/** The rules a tag part follows; throws outside a {@link TagInput}. */
 interface TagInputContextValue {
   readonly tokens: ReadonlyArray<string>;
   readonly draft: string;
@@ -78,7 +64,6 @@ const TagInputContext = createContext<TagInputContextValue | undefined>(
   undefined,
 );
 
-/** The tag input a part belongs to. Throws when there is none. */
 const useTagInput = (): TagInputContextValue => {
   const value = useContext(TagInputContext);
   if (value === undefined) {
@@ -87,39 +72,26 @@ const useTagInput = (): TagInputContextValue => {
   return value;
 };
 
-/** {@link TagInput} props. */
 export interface TagInputProps extends Omit<Props, "children"> {
-  /** The tokens. The caller owns them; chips are rendered from this list. A value that is not a list — a saved record's `null` — carries no tokens, and an entry that is not text is dropped. */
   readonly value: ReadonlyArray<string>;
-  /** Every accepted token list, including a removal. */
+
   readonly onValueChange: (value: ReadonlyArray<string>) => void;
-  /** The group's accessible name. */
+
   readonly label: string;
-  /**
-   * Maximum tokens; additions past it are refused. A fractional cap is floored
-   * (a `2.7` budget admits two), and a cap that cannot be read (`NaN`, an
-   * infinity) is no cap, the same reading an absent `max` already has.
-   */
+
   readonly max?: number;
-  /** Keep repeated tokens. Default `false`. */
+
   readonly allowDuplicates?: boolean;
   readonly disabled?: boolean;
-  /**
-   * A quiet note at the end of the field — the limit, a key that commits, the
-   * preset the caller started from. Blank renders nothing.
-   */
+
   readonly hint?: string;
-  /**
-   * A caption under the field. The caller's own state belongs here (the preset
-   * or the limit), because the field itself carries no prose.
-   */
+
   readonly caption?: string;
-  /** A Tailwind class string, joined after the outer recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The token group: value, draft, rules and the focus ring. */
 export const TagInput = ({
   value,
   onValueChange,
@@ -138,9 +110,6 @@ export const TagInput = ({
   const [draft, setDraft] = useState("");
   assertParts(tagInputRoot, children);
 
-  // The tokens are a saved list as often as literals: a record's `null` is read
-  // as no tokens here, once, so adding the first one cannot throw out of the
-  // edit that carries it.
   const tokens = tokensOf(value);
 
   const add = (incoming: ReadonlyArray<string>): void => {
@@ -148,8 +117,6 @@ export const TagInput = ({
   };
 
   const commit = (): void => {
-    // A disabled group refuses every edit path, so neither the tokens nor the
-    // draft move: Enter, a submit and a cleared draft all arrive here.
     if (disabled) return;
     add(splitDraft(draft));
     setDraft("");
@@ -213,22 +180,18 @@ export const TagInput = ({
   );
 };
 
-/** {@link TagInputField} props. */
 export interface TagInputFieldProps extends Omit<
   InputProps,
   "value" | "onChange" | "onSubmit" | "style"
 > {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly style?: StateStyle<TagInputFieldState>;
 }
 
-/** What the field draws: whether the group is disabled. */
 export interface TagInputFieldState {
   readonly disabled: boolean;
 }
 
-/** The `<input>` that enters tokens. It reads and writes the root's draft. */
 export const TagInputField = ({
   className,
   style,
@@ -260,16 +223,10 @@ export const TagInputField = ({
     <div style={hintHost({ flexGrow: 1, minWidth: 0 })}>
       <input
         {...rest}
-        // The group paints the page role behind the tokens and this field; the
-        // hint is painted, because the host's own placeholder is a fixed grey.
         theme={nativeTextTheme(theme, "background")}
         readOnly={disabled}
-        // A disabled field leaves the tab order: the host has no `disabled`,
-        // and `readOnly` still takes focus.
         tabIndex={disabled ? -1 : 0}
         value={draft}
-        // The hint is painted, so the runtime's `aria_placeholder` left with
-        // the prop; the empty field announces the same words as help.
         aria-description={fieldHelp(
           { description: rest["aria-description"], placeholder },
           draft,
@@ -292,21 +249,17 @@ export const TagInputField = ({
   );
 };
 
-/** {@link TagInputChip} props. */
 export interface TagInputChipProps extends Omit<Props, "children" | "style"> {
-  /** The token this chip removes. */
   readonly value: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly style?: StateStyle<TagInputChipState>;
 }
 
-/** What a chip draws: whether the group is disabled. */
 export interface TagInputChipState {
   readonly disabled: boolean;
 }
 
-/** One token with a removal control. */
 export const TagInputChip = ({
   value,
   className,
@@ -325,9 +278,7 @@ export const TagInputChip = ({
         recipeStyle(cn(TAG_INPUT_CHIP, className), theme),
         mergeStyles(
           disabled ? {} : { hover: { backgroundColor: theme.colors.accent } },
-          // The group owns the field's disabled face: a second fade here would
-          // composite the chip's own ink twice, so a disabled chip inherits the
-          // root's fade and only loses its removal target.
+
           resolveStyle(style, { disabled }),
         ),
       )}
@@ -364,7 +315,6 @@ export const TagInputChip = ({
   );
 };
 
-/** Every part, so a misplaced sibling is named. */
 const tagInputParts: ReadonlyArray<PartComponent> = [
   TagInput,
   TagInputField,
@@ -378,7 +328,6 @@ const tagInputRoot: PartsContract = {
   hint: "Put TagInputChip and TagInputField directly inside TagInput.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const tagInputMeta = {
   name: "Tag / token input",
   tier: 2,

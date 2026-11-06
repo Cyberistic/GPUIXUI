@@ -1,18 +1,3 @@
-/**
- * The column rules a data grid owns, held against the two window probes.
- *
- * The defects these guard are the ones a table shows and a pure layout cannot:
- *
- * - a hide that leaves the hidden track's width in the content, so every later
- *   column starts off by that width (`table-columns-lifecycle`: 690 → 610 for
- *   an 80px column);
- * - a move that changes the width or a resize that changes the order;
- * - a resize that ignores the column's own bounds, or a second gesture that
- *   starts from the width at mount rather than the width the first one ended at;
- * - a menu that hides the last visible column, leaving a header no next press
- *   can restore.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -49,17 +34,14 @@ const defs: ReadonlyArray<ColumnDef> = [
 
 const opened = (): ColumnState => initialColumns(defs);
 
-/** The visible ids, in paint order. */
 const ids = (state: ColumnState): ReadonlyArray<string> =>
   visibleColumns(state).map((column) => column.id);
 
-/** A configured width, failing the case when the column is missing. */
 const widthOf = (state: ColumnState, id: string): number =>
   Option.getOrElse(columnWidth(state, id), () => {
     throw new Error(`no column ${id}`);
   });
 
-/** A visible column's left edge, failing the case when it is hidden. */
 const offsetOf = (state: ColumnState, id: string): number =>
   Option.getOrElse(columnOffset(state, id), () => {
     throw new Error(`no visible column ${id}`);
@@ -75,10 +57,10 @@ describe("column configuration", () => {
 
     expect(ids(hidden)).toEqual(["name", "size"]);
     expect(contentWidth(hidden)).toBe(350);
-    // Every later column moves left by exactly the hidden track's width.
+
     expect(offsetOf(hidden, "size")).toBe(370 - 110);
     expect(Option.isNone(columnOffset(hidden, "status"))).toBe(true);
-    // The configured width survives hiding, so restoring does not reset it.
+
     expect(widthOf(hidden, "status")).toBe(110);
     expect(ids(setColumnVisible(hidden, "status", true))).toEqual([
       "name",
@@ -92,8 +74,6 @@ describe("column configuration", () => {
 
     const hidden = setColumnVisible(opened(), "status", false);
 
-    // The row model reads this list to keep a hidden track out of the search,
-    // so it names the hidden columns and nothing else.
     expect(hiddenColumns(hidden)).toEqual(["status"]);
     expect(hiddenColumns(setColumnVisible(hidden, "name", false))).toEqual([
       "name",
@@ -120,7 +100,6 @@ describe("column configuration", () => {
     expect(widthOf(moved, "name")).toBe(260);
     expect(widthOf(moved, "status")).toBe(110);
 
-    // Both ends clamp rather than wrap.
     expect(moveColumn(state, "name", -1)).toBe(state);
     expect(moveColumn(state, "size", 1)).toBe(state);
   });
@@ -130,12 +109,11 @@ describe("column configuration", () => {
     const moved = moveColumn(hidden, "size", -1);
 
     expect(ids(moved)).toEqual(["size", "name"]);
-    // The hidden column keeps its place and its width.
+
     expect(isColumnVisible(moved, "status")).toBe(false);
     expect(widthOf(moved, "status")).toBe(110);
     expect(contentWidth(moved)).toBe(350);
-    // The hidden track keeps the slot it occupied, so restoring it returns it
-    // to the reader's own order rather than to the moved column's edge.
+
     expect(Arr.map(moved.columns, (column) => column.id)).toEqual([
       "size",
       "status",
@@ -146,9 +124,6 @@ describe("column configuration", () => {
   it("moves a column several places in one call, not only by swapping it", () => {
     const state = opened();
 
-    // A two-place move puts `name` after `size` and shifts both columns it
-    // stepped over left; swapping the source and the target would leave
-    // `status` after `size`, which is not the order a reader asked for.
     const moved = moveColumn(state, "name", 2);
     expect(ids(moved)).toEqual(["status", "size", "name"]);
     expect(contentWidth(moved)).toBe(460);
@@ -160,7 +135,6 @@ describe("column configuration", () => {
       "status",
     ]);
 
-    // A step past either end clamps at the end rather than stopping one short.
     expect(ids(moveColumn(state, "name", 9))).toEqual([
       "status",
       "size",
@@ -185,7 +159,6 @@ describe("column configuration", () => {
     expect(widthOf(atMin, "size")).toBe(70);
     expect(widthOf(atMin, "name")).toBe(260);
 
-    // A hidden track resizes too: a menu restores it at the width it was given.
     const hidden = resizeColumn(
       setColumnVisible(state, "status", false),
       "status",
@@ -215,10 +188,6 @@ describe("column configuration", () => {
   });
 
   it("reads a bound or a step it cannot use as its default", () => {
-    // A bound is often computed (a stored size, a measurement). `NaN` used to
-    // survive `widthBounds`, clamp every width to `NaN`, and take the content
-    // width and every later offset with it; a `NaN` step snapped a key resize
-    // to the column's minimum.
     expect(widthBounds(Number.NaN, 640)).toEqual({
       minWidth: 80,
       maxWidth: 640,
@@ -246,11 +215,6 @@ describe("column configuration", () => {
   });
 
   it("reads a width it cannot use as a track that paints", () => {
-    // A width is computed too — a stored size, a measurement, a fraction of the
-    // table — and `NaN` survived `clampWidth`, so one unreadable declaration
-    // took `contentWidth` and every later offset with it and the grid painted
-    // no track at all. Only `NaN` is unreadable: an infinite width is a legal
-    // declaration that clamps to the column's own maximum.
     const bounds = widthBounds(120, 420);
     expect(clampWidth(Number.NaN, bounds)).toBe(120);
     expect(clampWidth(Number.POSITIVE_INFINITY, bounds)).toBe(420);
@@ -264,12 +228,9 @@ describe("column configuration", () => {
     expect(contentWidth(computed)).toBe(210);
     expect(offsetOf(computed, "after")).toBe(120);
 
-    // The reducer leaves a legal track alone: a broken measurement must not
-    // shrink the column a later one reads.
     const state = opened();
     expect(resizeColumn(state, "name", Number.NaN)).toBe(state);
 
-    // A key press repairs the track and steps from the narrowest legal width.
     expect(resizeWidthByKey(Number.NaN, "right", bounds)).toBe(136);
     expect(resizeWidthByKey(Number.NaN, "left", bounds)).toBe(120);
     expect(resizeWidthByKey(Number.NaN, "end", bounds)).toBe(420);
@@ -291,8 +252,7 @@ describe("column configuration", () => {
   it("reads the runtime's own key names", () => {
     expect(isColumnResizeKey("right")).toBe(true);
     expect(isColumnResizeKey("home")).toBe(true);
-    // The DOM spelling is not the runtime's: a divider that tests for
-    // `ArrowRight` never hears a key.
+
     expect(isColumnResizeKey("ArrowRight")).toBe(false);
     expect(isColumnResizeKey("enter")).toBe(false);
   });
@@ -310,17 +270,7 @@ describe("column configuration", () => {
   });
 });
 
-/**
- * The configuration a store keeps, restored over the definitions a release
- * ships.
- *
- * A saved column set is data: the release that reads it may have added,
- * renamed or dropped a column since, and a store writes `null` for a field it
- * never set. Dereferencing it would take the first frame down, and applying it
- * whole would paint a column the grid no longer has — or drop one it now does.
- */
 describe("a saved column configuration", () => {
-  /** A value through the JSON a store writes and reads back. */
   const StoredJson = Schema.fromJsonString(Schema.Unknown);
   const throughStore = (value: unknown): unknown =>
     Schema.decodeSync(StoredJson)(Schema.encodeSync(StoredJson)(value));

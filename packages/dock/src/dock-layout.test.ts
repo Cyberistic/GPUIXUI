@@ -1,13 +1,3 @@
-/**
- * The dock's tree and the tab state it carries.
- *
- * `DockNode` is a named tree of splits and tabbed groups. It round-trips
- * through a JSON string, `activeTab` included, so a workspace is restored by
- * decoding one string — the contract `workspace-restore` measured, where a
- * decode failure opens the default. Switching a tab rewrites that group's
- * `activeTab` and leaves every other group alone, reported as a new tree.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
@@ -91,7 +81,7 @@ describe("active tab", () => {
     expect(next.kind).toBe("split");
     if (next.kind === "split") {
       expect(next.first).toMatchObject({ activeTab: "preview" });
-      // The sibling subtree is untouched: the same reference, not a rewrite.
+
       expect(next.second).toBe(right);
     }
   });

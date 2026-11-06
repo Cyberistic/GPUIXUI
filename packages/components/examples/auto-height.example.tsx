@@ -1,18 +1,9 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Auto height example: a settings disclosure that grows to its content.
- *
- * The trigger is the application's; the reveal owns the measurement and the
- * tween. A second, reduced-motion section shows the same content arriving
- * without the journey.
- */
-
 import { useState } from "react";
 import { AutoHeight } from "../src/auto-height.js";
 import { Button } from "../src/internal/button.js";
 import { MotionProvider } from "../src/motion.js";
 
-/** One disclosure: a trigger and a revealed body. */
 const Section = ({
   title,
   body,
@@ -40,7 +31,6 @@ const Section = ({
   );
 };
 
-/** Two disclosures: one animated, one reduced. */
 export const AutoHeightExample = () => (
   <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
     <Section

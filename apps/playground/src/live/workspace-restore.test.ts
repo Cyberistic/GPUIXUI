@@ -1,14 +1,3 @@
-/**
- * Guards the persisted-layout rule the `workspace-restore` probe measures.
- *
- * The probe asserts that a saved arrangement paints again after a remount, so a
- * fixture that dropped the tab, trusted an out-of-bounds width or decoded a
- * random string into a layout would make the probe compare the runtime against
- * a state no app should write. These cases hold the boundary the probe relies
- * on: a layout round-trips through the string an app persists, a string that is
- * not a layout falls back to the default rather than a partial state, and a
- * stored width is clamped to the pane this window paints.
- */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";

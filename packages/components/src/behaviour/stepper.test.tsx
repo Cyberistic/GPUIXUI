@@ -1,13 +1,3 @@
-/**
- * Stepper behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a status that is passed instead of derived from `value`;
- * an inverted comparison that swaps complete and upcoming; a current step that is
- * never announced; a `value` the caller cannot name leaving every marker
- * upcoming; labels that ignore the muted role for upcoming steps; and a `style`
- * callback that cannot see the derived status.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { darkTheme, lightTheme } from "../internal/theme.js";
@@ -18,7 +8,6 @@ import {
 } from "../internal/test-root.js";
 import { Stepper, StepperStep } from "../stepper.js";
 
-/** Three steps with the current one driven by props. */
 const Checkout = ({ value }: { readonly value: number }) => (
   <Stepper value={value} label="Checkout" testId="stepper">
     <StepperStep value={1} label="Account" description="Email and password" />
@@ -27,14 +16,12 @@ const Checkout = ({ value }: { readonly value: number }) => (
   </Stepper>
 );
 
-/** The host element that carries a text node's style. */
 const styledText = (root: ComponentTestRoot, value: string) => {
   const leaf = root.renderer.findByText(value);
   if (leaf?.parentId == null) return undefined;
   return root.renderer.getElement(leaf.parentId);
 };
 
-/** The marker box behind a step's number. */
 const marker = (root: ComponentTestRoot, step: number) => {
   const text = styledText(root, String(step));
   if (text?.parentId == null) return undefined;
@@ -96,10 +83,6 @@ describe("Stepper", () => {
   });
 
   it("reads a value it cannot name as the first step", () => {
-    // A step index computed before its total arrives is `NaN`; the indicator
-    // used to paint every marker upcoming and announce no current step at all,
-    // so it claimed the workflow had not started. The first step is the state a
-    // stepper can always mark, and the paint and the announcement agree on it.
     const stepper = renderComponent(<Checkout value={Number.NaN} />);
     try {
       expect(marker(stepper, 1)?.style.backgroundColor).toBe(
@@ -165,13 +148,6 @@ describe("Stepper", () => {
   });
 
   it("paints a stored orientation name it does not carry as the horizontal axis", () => {
-    // The bug guarded: the root indexed `STEPPER_ORIENTATION[orientation]` raw,
-    // so an axis a workspace saved under a name this release does not carry
-    // (`"column"`, an older spelling) answered `undefined`, the recipe dropped
-    // the entry, and the list painted with no axis and no alignment at all —
-    // a stepper a record saved as vertical laid its steps out side by side in
-    // the runtime's own row. The documented `horizontal` is the answer for a
-    // name the union does not carry, the rule `Tabs` follows for its axis.
     const stepper = renderComponent(
       // @ts-expect-error a stored name is not the union's literal
       <Stepper value={1} testId="stepper" orientation="column">
@@ -190,7 +166,6 @@ describe("Stepper", () => {
   });
 
   it("keeps a shipped orientation when it was stored as one", () => {
-    // The negative control: the guard must not flatten every list to a row.
     const stepper = renderComponent(
       <Stepper value={1} testId="stepper" orientation="vertical">
         <StepperStep value={1} label="Account" />
@@ -218,11 +193,6 @@ describe("Stepper", () => {
   });
 
   it("names a titleless step by its position and paints no blank line", () => {
-    // The bug guarded: a step's title and description are copy from an i18n
-    // table or a data record as often as literals, and this part published both
-    // raw — a title a table never filled left the list item unnamed (the wizard
-    // derived `Step 2` at its call site instead), and a run of spaces laid out a
-    // full blank line under the name.
     const stepper = renderComponent(
       <Stepper value={1} label="Checkout">
         <StepperStep value={1} label="Account" />
@@ -240,11 +210,6 @@ describe("Stepper", () => {
   });
 
   it("reads a step's stored copy that is not text as absence", () => {
-    // The bug guarded: a step's title and description are saved with the
-    // workflow as often as they are written here, and a record's number or
-    // object reached `accessibleName`/`visibleCopy`, whose `trim` threw
-    // `self.trim is not a function` out of the paint. The step is named by its
-    // position and paints no description, rather than the screen going down.
     const stepper = renderComponent(
       <Stepper value={1} label="Checkout">
         <StepperStep
@@ -267,10 +232,6 @@ describe("Stepper", () => {
   });
 
   it("publishes no name for a list a record left blank", () => {
-    // The bug guarded: the root published `aria-label` for every value but
-    // `undefined`, so a blank name from an i18n table reached the runtime as an
-    // empty one — an announcement of nothing, the state `accessibleName`
-    // exists to prevent. A name that says nothing leaves the list unnamed.
     const blank = renderComponent(
       <Stepper testId="blank" value={1} label="">
         <StepperStep value={1} label="Account" />

@@ -1,25 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Carousel: discrete slide stepping, with an animated selection indicator.
- *
- * The frame is sized by the slide on screen because only that slide is mounted.
- * The pinned renderer's `apply_styles` acts on `display` of `flex` and `grid`
- * only, so a mounted spare slide hidden with `display: none` still lays out,
- * paints beside the active one and keeps its controls as tab stops
- * (`hidden-subtree-lifecycle` measures both). The mount window is the
- * component's to keep, and its cost is stated where it is paid: a slide's local
- * state does not survive a visit. A track that travelled between two slides
- * would have to lay all of them out in one box, and the frame would take its
- * height from the tallest slide rather than the one being read, so the track
- * does not travel.
- *
- * What does move is the indicator: the active dot grows from the 6px circle to
- * the 18px pill on the runtime's own clock, because `motion` interpolates
- * `width` (it has no `transform`, upstream issue #102). The root owns the active
- * index; the track reports its slide count, so the controls and the arrow keys
- * share one clamp and one loop rule.
- */
-
 import type { KeyEvent, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -67,7 +46,6 @@ import {
   useTheme,
 } from "./internal/theme.js";
 
-/** The rules a carousel part follows; throws outside a {@link Carousel}. */
 interface CarouselContextValue {
   readonly active: number;
   readonly count: number;
@@ -82,7 +60,6 @@ const CarouselContext = createContext<CarouselContextValue | undefined>(
 
 const SlideIndexContext = createContext<number | undefined>(undefined);
 
-/** The carousel a part belongs to. Throws when there is none. */
 const useCarousel = (): CarouselContextValue => {
   const value = useContext(CarouselContext);
   if (value === undefined) {
@@ -91,27 +68,23 @@ const useCarousel = (): CarouselContextValue => {
   return value;
 };
 
-/** The count reporter the track uses; separate so the root owns the state. */
 const CountContext = createContext<((count: number) => void) | undefined>(
   undefined,
 );
 
-/** {@link Carousel} props. */
 export interface CarouselProps extends Omit<Props, "children"> {
-  /** The controlled active index. `undefined` means uncontrolled. */
   readonly value?: number;
   readonly defaultValue?: number;
   readonly onValueChange?: (value: number) => void;
-  /** Wrap at both ends. Default `false`. */
+
   readonly loop?: boolean;
-  /** The carousel's accessible name. */
+
   readonly label: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The slide container: one active slide, arrow/Home/End stepping. */
 export const Carousel = ({
   value: valueProp,
   defaultValue = 0,
@@ -134,11 +107,7 @@ export const Carousel = ({
   assertParts(carouselRoot, children);
 
   const active = count === 0 ? 0 : Math.min(Math.max(value, 0), count - 1);
-  // The clamp passes an unreadable index through, and a caller's index is often
-  // arithmetic (`Math.floor(offset / width)`, which is `NaN` when no width has
-  // been measured) — an unreadable index hides every slide and keeps hiding them,
-  // because the step compares against it and never matches. The first slide is
-  // the readable default.
+
   const current = Number.isFinite(active) ? active : 0;
 
   const context = useMemo<CarouselContextValue>(
@@ -183,9 +152,7 @@ export const Carousel = ({
         style={mergeStyles(
           mergeStyles(
             recipeStyle(cn(CAROUSEL_ROOT, className), theme),
-            // The root is a tab stop that owns the arrow keys, so a Tab must show
-            // where those keys will act — the runtime paints this outline only
-            // after keyboard focus, never after a pointer press.
+
             keyboardRing(theme),
           ),
           style,
@@ -199,14 +166,11 @@ export const Carousel = ({
   );
 };
 
-/** {@link CarouselTrack} props. */
 export interface CarouselTrackProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The slide container: reports the slide count and gives each slide its index. */
 export const CarouselTrack = ({
   className,
   children,
@@ -239,20 +203,16 @@ export const CarouselTrack = ({
   );
 };
 
-/** {@link CarouselSlide} props. */
 export interface CarouselSlideProps extends Omit<Props, "children" | "style"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly style?: StateStyle<CarouselSlideState>;
   readonly children?: PartChildren;
 }
 
-/** What a slide draws: its position in the track. */
 export interface CarouselSlideState {
   readonly index: number;
 }
 
-/** One slide. Only the slide on screen is mounted; the rest unmount. */
 export const CarouselSlide = ({
   className,
   style,
@@ -278,24 +238,15 @@ export const CarouselSlide = ({
   );
 };
 
-/** {@link CarouselControl} props. */
 export interface CarouselControlProps extends Omit<Props, "children"> {
-  /** `"previous"` moves back, `"next"` moves forward. */
   readonly direction: "previous" | "next";
-  /** The accessible name; defaults to "Previous slide" / "Next slide". */
+
   readonly label?: string;
   readonly disabled?: boolean;
 }
 
-/**
- * The controls' fill, pinned rather than left to `Button`'s default so the
- * chevron's on-colour and the fill it sits on are one decision. The pair is
- * `secondaryForeground` on `secondary`, which `contrastPairs` measures in every
- * shipped style.
- */
 const CONTROL_VARIANT = "secondary" as const;
 
-/** A previous/next control. It is disabled at an edge unless the carousel loops. */
 export const CarouselControl = ({
   direction,
   label,
@@ -325,52 +276,26 @@ export const CarouselControl = ({
   );
 };
 
-/** {@link CarouselIndicators} props. */
 export interface CarouselIndicatorsProps extends Omit<
   Props,
   "children" | "style"
 > {
-  /** The group's accessible name. Default "Choose a slide". */
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, or a function of the active slide and the count. */
+
   readonly style?: StateStyle<CarouselIndicatorsState>;
 }
 
-/** What the indicators draw: the active slide and how many there are. */
 export interface CarouselIndicatorsState {
   readonly active: number;
   readonly count: number;
 }
 
-/**
- * The drawn dot: a circle at rest, a pill on the active slide.
- *
- * Both inks are mark roles (`indicatorRoles`): `primary` for the active dot and
- * `mutedForeground` for the rest, each measured at the mark floor on the page.
- */
 const DOT_HEIGHT = 6;
 const DOT_REST_WIDTH = 6;
 const DOT_ACTIVE_WIDTH = 18;
 
-/**
- * One press target per slide, marking the active one.
- *
- * The dots are a **second** route to `goTo` beside the controls and the arrow
- * keys, so a reader can jump three slides without stepping through them. Each
- * target reserves the 24px press floor around a smaller drawing, the group holds
- * one roving tab stop on the active dot, and `aria-selected` carries the state
- * because `0.11.0` has no `aria-current` — the substitution Pagination, Stepper
- * and Breadcrumb use.
- *
- * The drawing's **width** is the state a reader who cannot separate the two inks
- * can still see, so it is a motion target: a selection retargets the two dots
- * from the widths on screen, and `initial: false` paints a rail that mounts with
- * a selection already at rest. `"fast"` is the level `@gpuixui/motion` names for
- * an indicator, and the reduced preference is the seam's zero-duration
- * assignment, so the dot lands rather than travelling.
- */
 export const CarouselIndicators = ({
   label,
   className,
@@ -421,8 +346,6 @@ export const CarouselIndicators = ({
           >
             <div
               motion={{
-                // A rail that mounts with a selection is already resting; only a
-                // change of slide travels, from the width painted on screen.
                 initial: false,
                 animate: {
                   width: selected ? DOT_ACTIVE_WIDTH : DOT_REST_WIDTH,
@@ -432,11 +355,7 @@ export const CarouselIndicators = ({
               style={{
                 height: DOT_HEIGHT,
                 borderRadius: DOT_HEIGHT / 2,
-                // The target is the press: the dot paints a fill, and a
-                // filled child is the boundary GPUI's hit test stops counting
-                // at, so a press on the middle of the dot would run nothing.
-                // Removing the drawing's hitbox is what lets the press reach
-                // the target (`press-routing-lifecycle`).
+
                 pointerEvents: "none",
                 backgroundColor: selected
                   ? theme.colors.primary
@@ -450,7 +369,6 @@ export const CarouselIndicators = ({
   );
 };
 
-/** Every part, so a misplaced sibling is named. */
 const carouselParts: ReadonlyArray<PartComponent> = [
   Carousel,
   CarouselTrack,
@@ -473,7 +391,6 @@ const carouselTrack: PartsContract = {
   hint: "Put CarouselSlide directly inside CarouselTrack.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const carouselMeta = {
   name: "Carousel",
   tier: 2,

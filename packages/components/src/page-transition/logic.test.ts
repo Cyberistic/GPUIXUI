@@ -1,15 +1,3 @@
-/**
- * The view swap's decisions, without a renderer.
- *
- * The bugs these guard: a swap that mounts the incoming view before the
- * outgoing one has left (two views in the accessibility tree); a second request
- * during the exit that restarts the window instead of replacing the waiting
- * view; a return to the view still on screen that leaves and remounts the same
- * content; a settle that runs twice and counts two runs; an instant swap that
- * still takes a phase; and frames that travel the wrong way or reach the
- * runtime as `NaN`.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -58,7 +46,7 @@ describe("a view swap's state", () => {
     expect(entering.pendingKey).toEqual(Option.none());
     expect(entering.phase).toBe("entering");
     expect(entering.run).toBe(leaving.run + 1);
-    // A late second settle must not mount a second view.
+
     expect(settlePage(entering)).toBe(entering);
   });
 
@@ -81,7 +69,7 @@ describe("a view swap's state", () => {
       phase: "rest",
       run: 1,
     });
-    // The same key is not a new view, even when instant.
+
     expect(requestPage(instant, "b", true)).toBe(instant);
   });
 
@@ -114,9 +102,6 @@ describe("the travel between two views", () => {
   });
 
   it("travels forward for a direction it does not name", () => {
-    // A stored `direction` is not type-checked: `Match.exhaustive` threw out of
-    // the render for a name the union does not carry, so a persisted direction
-    // took the whole region down with it. The house direction is `forward`.
     expect(pageFrames("sideways", 12)).toEqual({
       enterFrom: { opacity: 0, left: 12 },
       rest: { opacity: 1, left: 0 },

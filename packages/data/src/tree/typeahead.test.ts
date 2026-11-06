@@ -1,15 +1,3 @@
-/**
- * The tree reads the **published** type-ahead seam, not a second copy of it.
- *
- * The bug this guards: `tree/logic.ts` carried its own window, repeat rule and
- * character rule (`TYPE_AHEAD_WINDOW_MS`, `typeAheadPress`, a local
- * `typedChar`), because the components package's copy was private. A list, a
- * menu and a tree that each own the rule drift: a window moves in one and the
- * other keeps 500 ms, and a typed `Enter` is read as a newline in one surface
- * and an activation in another. `@gpuixui/components/typeahead` is the one
- * seam; the tree keeps only the position-to-key step.
- */
-
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -32,10 +20,9 @@ describe("the tree's type-ahead", () => {
     expect(controller).toContain(
       'import { typedChar, useTypeahead } from "@gpuixui/components/typeahead"',
     );
-    // The subpath a surface outside the components package reaches it through.
+
     expect(components).toContain('"./typeahead": "./src/typeahead.ts"');
-    // Both trees route their keys through the one controller, so neither can
-    // grow a buffer of its own beside it.
+
     expect(treeView).toContain("useTree({");
     expect(virtualTree).toContain("useTree({");
   });
@@ -54,7 +41,7 @@ describe("the tree's type-ahead", () => {
       expect(treeView).not.toContain(copy);
       expect(virtualTree).not.toContain(copy);
     });
-    // The 500 ms window is named in one place only.
+
     expect(logic).not.toMatch(/500/);
     expect(controller).not.toMatch(/500/);
     expect(treeView).not.toMatch(/500/);

@@ -1,19 +1,10 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Calendar example: a two-month range picker with a summary.
- *
- * The app owns the ISO span; the calendar owns the grid, its roving focus, the
- * keyboard and the paint. `09:00` and weekends are refused by the matchers, and
- * the summary is derived from the value the calendar reports.
- */
-
 import { useState } from "react";
 import { Calendar } from "../src/calendar.js";
 import { formatRangeLabel, type DayRange } from "../src/calendar/logic.js";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** A two-month booking calendar with a live summary. */
 export const CalendarExample = () => {
   const theme = useTheme();
   const [range, setRange] = useState<DayRange | null>({

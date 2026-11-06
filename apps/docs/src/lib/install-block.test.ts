@@ -2,22 +2,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { publishedNames } from "./doc-snippets.test-util";
 
-/**
- * The install block, held to the workspace it tells a reader to install from.
- *
- * `<Install packageName="…" importName="…" />` writes a `nub add` command and an
- * `import { … } from "…"` line as strings, and MDX does not check either prop:
- * a renamed package or a misspelled export would render a command that cannot
- * resolve and an import that cannot compile, on the one section a reader follows
- * first. The page-snippet walk only reads fenced code, so the props were the one
- * copyable thing on a page nothing resolved.
- *
- * `node:fs` is the test's own read of checked-in files, not runtime I/O.
- */
-
 const dir = new URL("../../content/docs/", import.meta.url);
 
-/** Every install block the site writes, with the page it is on. */
 const blocks = (): ReadonlyArray<{
   readonly page: string;
   readonly packageName: string;
@@ -40,7 +26,6 @@ const blocks = (): ReadonlyArray<{
 
 describe("the install blocks", () => {
   it("find a block on every page that walks a reader through installing", () => {
-    // A silent zero would pass every case below without reading a page.
     expect(blocks().length).toBeGreaterThanOrEqual(6);
     expect(
       new Set(blocks().map((block) => block.page)).size,

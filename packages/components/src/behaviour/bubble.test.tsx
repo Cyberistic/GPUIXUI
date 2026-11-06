@@ -1,14 +1,3 @@
-/**
- * Bubble behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a variant that paints the wrong role (or none); an
- * alignment that moves the content but not the avatar; a bubble that ignores
- * its 80% cap; a grouped run whose corners do not join; and an action strip
- * that only appears by taking height from the bubble — the layout shift the
- * chat rebuild removes. A focus event belongs to the focused element in
- * 0.11.0, so the strip's keyboard path is proven through a `BubbleAction`.
- */
-
 import { Component, type ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import {
@@ -28,7 +17,6 @@ import {
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 
-/** Catches a render throw so a placement error can be asserted on. */
 class Caught extends Component<
   { readonly children?: ReactNode },
   { readonly message: string | null }
@@ -48,7 +36,6 @@ class Caught extends Component<
   }
 }
 
-/** Render under the boundary and return the message a reader would see. */
 const caught = (node: ReactNode): string => {
   const root = renderComponent(<Caught>{node}</Caught>);
   const text = root.renderer.getAllText().join("\n");
@@ -78,7 +65,6 @@ const variants = [
   ],
 ] as const;
 
-/** One bubble with a content surface, and the parts a case adds. */
 const Surface = ({
   align = "start",
   group = "single",
@@ -209,8 +195,6 @@ describe("Bubble", () => {
     const pill = requireBounds(root, "bubble-reactions");
     const painted = root.renderer.findByTestId("bubble-reactions")?.style;
 
-    // The pill is a 14px line in 2px of padding: 24 tall, and shadcn hangs a
-    // quarter of it over the edge (`translate-y-3/4`).
     expect(pill.height).toBe(24);
     expect(content.y + content.height - pill.y).toBe(6);
     expect(painted?.fontSize).toBe(14);
@@ -221,10 +205,6 @@ describe("Bubble", () => {
   });
 
   it("keeps the reaction pill at the bubble's bottom right, on either side", () => {
-    // A reaction is a mark on the message, not a second voice: it does not
-    // change sides with the sender. (The bug: a start-aligned bubble put its
-    // pill at the bubble's left, so the same message reacted differently
-    // depending on who sent it.)
     const gapFromRight = (align: "start" | "end") => {
       const root = renderComponent(<Surface align={align} reactions />);
       const content = requireBounds(root, "bubble-content");
@@ -238,7 +218,7 @@ describe("Bubble", () => {
     for (const align of ["start", "end"] as const) {
       const { gap, leftGap, width } = gapFromRight(align);
       expect(gap).toBe(darkTheme.spacing.lg);
-      // The pill is at the far end, not a symmetric inset.
+
       expect(leftGap).toBeGreaterThan(width / 2);
     }
   });
@@ -269,8 +249,7 @@ describe("Bubble", () => {
       bottomLeft: 4,
       bottomRight: 4,
     });
-    // The sender-side bottom corner keeps the short tail; the outer one stays
-    // the full radius.
+
     expect(corners("last")).toEqual({
       topLeft: 4,
       topRight: 4,
@@ -292,7 +271,7 @@ describe("Bubble", () => {
     const first = requireBounds(run, "run-first");
     const middle = requireBounds(run, "run-middle");
     const last = requireBounds(run, "run-last");
-    // shadcn's `BubbleGroup` gap is 8px, tighter than the transcript's turns.
+
     expect(middle.y - (first.y + first.height)).toBe(8);
     expect(last.y - (middle.y + middle.height)).toBe(8);
     run.unmount();

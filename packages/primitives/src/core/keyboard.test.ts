@@ -16,20 +16,6 @@ import {
   TYPE_AHEAD_RESET_MS,
 } from "./keyboard.js";
 
-/**
- * Guards the keyboard contract every focusable control shares.
- *
- * These rules mirror the platform, and each one is a bug that has shipped
- * somewhere: an activation that repeats while the key is held, Space activating
- * on the way down so the control fires before the user has committed, a radio
- * group that walks off its own end.
- *
- * The decisions stay pure booleans — "should this event activate?" — so a
- * component can use them from any handler. Swallowing the platform default is a
- * separate decision (`swallowKeyDefault`) because it needs the event itself;
- * `@gpuix/native` 0.11.0's `KeyEvent` carries `preventDefault`.
- */
-
 describe("decideActivation", () => {
   it("activates on Enter key down", () => {
     expect(decideActivation("enter", "down", false)).toBe(true);
@@ -100,8 +86,7 @@ describe("decideMove", () => {
 
   it("has nowhere to go in an empty or a one-option group", () => {
     expect(decideMove(0, 0, "down", "vertical")).toEqual(Option.none());
-    // `Arr.range(1, 0)` is `[1]`, so the old candidate list made the only option
-    // its own neighbour and consumed an arrow the group could not act on.
+
     expect(decideMove(0, 1, "down", "vertical")).toEqual(Option.none());
     expect(decideMove(0, 1, "right", "horizontal")).toEqual(Option.none());
   });
@@ -127,11 +112,6 @@ describe("decideMove", () => {
   });
 
   it("answers nothing for an axis this release does not carry", () => {
-    // The bug guarded: `orientation` is a stored layout choice as often as a
-    // literal. Read raw, the name reached `ARROW_KEYS[orientation]` and
-    // destructuring threw `TypeError: Cannot destructure property 'forward'`
-    // on the first plain key press, so the group's whole keyboard contract
-    // died on a name; an axis with no arrow pair is `None`.
     const stored = "row" as "vertical";
     expect(decideMove(0, 3, "down", stored)).toEqual(Option.none());
     expect(decideMove(0, 3, "right", stored)).toEqual(Option.none());
@@ -140,8 +120,6 @@ describe("decideMove", () => {
 
 describe("a stored orientation", () => {
   it("is the caller's documented axis when the table does not carry the name", () => {
-    // A radio and checkbox group document `vertical`, a toggle group and a
-    // button group `horizontal`; the default belongs to the component.
     expect(orientationOf("row", "vertical")).toBe("vertical");
     expect(orientationOf(undefined, "horizontal")).toBe("horizontal");
   });
@@ -160,10 +138,6 @@ describe("a stored orientation", () => {
   });
 
   it("is published where a consumer with a stored orientation can reach it", () => {
-    // Every other persisted name's guard is on the package's core surface
-    // (`isTextTone`, `isProgressTone`, `isSelectionAccent`, …), so a caller
-    // restoring an orientation from storage has the same seam instead of
-    // casting. A guard that stays module-local is one nobody outside can use.
     expect(core.isOrientation).toBe(isOrientation);
     expect(core.orientationOf).toBe(orientationOf);
   });
@@ -208,8 +182,6 @@ describe("decideTypeAhead", () => {
   const labels = ["Alpha", "Alpine", "Bravo", "Charlie"];
 
   it("lands on the next option whose label starts with the prefix", () => {
-    // From `Alpha` the search continues forward, so `a` reaches the *second*
-    // "Al..." rather than the option it is already on.
     expect(decideTypeAhead(labels, 0, "a")).toEqual(Option.some(1));
     expect(decideTypeAhead(labels, 0, "b")).toEqual(Option.some(2));
   });
@@ -223,16 +195,11 @@ describe("decideTypeAhead", () => {
   });
 
   it("narrows with a longer buffer instead of replacing the match", () => {
-    // `al` is the pair a reader types to tell the two "Al..." options apart;
-    // from Bravo it finds the first one forward, which is Alpha (wrapping), and
-    // a fourth character narrows that to Alpine.
     expect(decideTypeAhead(labels, 2, "al")).toEqual(Option.some(0));
     expect(decideTypeAhead(labels, 2, "alpi")).toEqual(Option.some(1));
   });
 
   it("retries the last character when the whole buffer matches nothing", () => {
-    // A fast "qx" means "x": the standard rule, and the one that keeps a typo
-    // from stranding the reader with no move at all.
     expect(decideTypeAhead(["Xylophone"], 0, "qx")).toEqual(Option.some(0));
   });
 
@@ -272,9 +239,6 @@ describe("isPlainKey", () => {
   });
 
   it("leaves every shortcut chord to the platform", () => {
-    // Cmd+A selects all, Ctrl+Space switches the input source on macOS, and
-    // Alt+arrow moves by word: a control that read one of these as its own key
-    // would act on a shortcut it does not own.
     expect(isPlainKey({ cmd: true })).toBe(false);
     expect(isPlainKey({ ctrl: true })).toBe(false);
     expect(isPlainKey({ alt: true })).toBe(false);

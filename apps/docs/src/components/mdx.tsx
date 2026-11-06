@@ -24,7 +24,6 @@ import { ThemeEditor } from "./docs/theme-editor";
 import { TokenScales } from "./docs/token-scales";
 import { TypeScale } from "./docs/type-scale";
 
-/** The text a `<code>` element holds, or `undefined` when it is not a fence. */
 const codeOf = (
   child: ReactNode,
 ): { text: string; language: string } | undefined => {
@@ -38,14 +37,6 @@ const codeOf = (
   return language === undefined ? undefined : { text, language };
 };
 
-/**
- * A code fence whose language is `mermaid` is a diagram.
- *
- * The fence stays source: a page that wants the Mermaid text as text wraps it in
- * a plain fence, and a reader who wants to copy the diagram copies the source
- * the page shows. The diagram itself is rendered by Pele at build time, so the
- * prerendered page carries the SVG.
- */
 const pre = ({ children, ...rest }: ComponentProps<"pre">) => {
   const code = codeOf(children);
   if (code !== undefined && code.language === "mermaid") {
@@ -56,13 +47,6 @@ const pre = ({ children, ...rest }: ComponentProps<"pre">) => {
   );
 };
 
-/**
- * The MDX surface shared by every docs page.
- *
- * A page that needs something heavy imports it itself, so the shared map stays
- * small: `ApiReference` carries the whole public symbol index, and every page
- * would otherwise pay for it.
- */
 export const mdxComponents = {
   ...defaultMdxComponents,
   AllBlocks,

@@ -1,9 +1,3 @@
-/**
- * The taskbar. Luna: a blue bar, the green Start button, a button per window,
- * the lighter tray with its clock. Aero: a dark glass bar, the round orb, the
- * windows as squares of glass, a two-line clock. The Start button wears the Gon
- * mark — no operating system's logo.
- */
 import type { StyleDesc } from "@gpuix/react";
 import { Icon, type IconName } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
@@ -14,7 +8,6 @@ import { gradient } from "./wallpaper.js";
 
 export const MARK = fileURLToPath(new URL("./gon.png", import.meta.url));
 
-/** The bar's height per look. */
 export const taskbarHeight: Readonly<Record<DesktopLook, number>> = {
   luna: 30,
   aero: 40,

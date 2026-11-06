@@ -11,21 +11,6 @@ import {
   type ChoiceStorage,
 } from "./platform-storage";
 
-/**
- * The platform switch has two halves. The URL is the shareable one and is tested
- * with the query helpers; local storage is what keeps a reader's choice while
- * they navigate from one component page to the next, and nothing held it. A
- * renamed key or a default written over a real choice would silently reset every
- * preview to the identity.
- *
- * The store itself can refuse: a browser with site data blocked throws from the
- * `window.localStorage` getter, and a store with no room throws on write. The
- * switch used to read `window.localStorage` inside its mount effect, so such a
- * reader lost every preview page to a `SecurityError` rather than a forgotten
- * preference; these cases hold the adapter that turns a refusal into absence.
- */
-
-/** A `Storage` stand-in, so the rule is testable without a browser. */
 const fakeStorage = (entries: ReadonlyArray<readonly [string, string]>) => {
   const values = new Map(entries);
   return {
@@ -53,8 +38,6 @@ describe("the remembered platform choice", () => {
   });
 
   it("defaults each axis on its own when the stored value is unusable", () => {
-    // A value written by an older build must not reset the other choice, and a
-    // missing key must not throw.
     const storage = fakeStorage([
       [platformStorageKey, "windows"],
       [lookStorageKey, "aero"],
@@ -74,10 +57,6 @@ describe("the remembered platform choice", () => {
   });
 
   it("opens an older store on the palette the site opens in", () => {
-    // A reader who chose a platform and a look before the palette axis existed
-    // has no mode key at all: the switch must open on `previewMode`, not on
-    // whatever the first render guessed, and must keep the two axes it does
-    // have.
     const storage = fakeStorage([
       [platformStorageKey, "linux"],
       [lookStorageKey, "aero"],
@@ -101,7 +80,7 @@ describe("the remembered platform choice", () => {
     });
 
     expect(storage.values.get(platformStorageKey)).toBe("darwin");
-    // The old Luna choice must not survive a deliberate `native`.
+
     expect(storage.values.get(lookStorageKey)).toBe("native");
     expect(storage.values.get(modeStorageKey)).toBe("light");
     expect(readRememberedChoice(storage)).toEqual({
@@ -121,10 +100,9 @@ describe("the remembered platform choice", () => {
     expect(switchSource).toContain(
       "writeRememberedChoice(browserChoiceStorage()",
     );
-    // The raw property is the call that throws when a browser blocks site
-    // data, so the switch must not go near it.
+
     expect(switchSource).not.toContain("window.localStorage");
-    // A key written inline would bypass the parse and the both-axes rule.
+
     expect(switchSource).not.toContain('"gpuixui-platform"');
     expect(switchSource).not.toContain('"gpuixui-look"');
     expect(switchSource).not.toContain('"gpuixui-mode"');
@@ -152,8 +130,7 @@ describe("the remembered platform choice", () => {
         mode: "light",
       }),
     ).not.toThrow();
-    // No store at all is the same refusal, and is also how the adapter answers
-    // outside a browser (the node environment this suite runs in).
+
     expect(readRememberedChoice(undefined)).toEqual({
       platform: "default",
       look: "native",
@@ -194,14 +171,12 @@ describe("the remembered platform choice", () => {
       mode: "light",
     });
 
-    // One refused key must not stop the others from being remembered.
     expect(values.get(platformStorageKey)).toBeUndefined();
     expect(values.get(lookStorageKey)).toBe("luna");
     expect(values.get(modeStorageKey)).toBe("light");
   });
 
   it("reaches the browser store only through a guarded read", () => {
-    // The node environment has no `window` at all.
     expect(browserChoiceStorage()).toBeUndefined();
 
     vi.stubGlobal(

@@ -1,19 +1,3 @@
-/**
- * Guards the restore rule the `loading-row-correction` live probe paints.
- *
- * The probe's point is that the loading void is the list's anchor and that a
- * page splice therefore replaces the screen unless the app re-anchors. Two
- * mistakes would leave it green while it stopped measuring that:
- *
- *   - a rule that always returns `None` would make the "naive" and "corrected"
- *     lists behave identically, so the probe's difference checks — the only
- *     reason it mounts two lists — would assert nothing;
- *   - a rule that corrected a message-anchored reader would move them twice,
- *     because gpui already shifts the anchor index across the splice.
- *
- * Both are held here, along with the fixture's pixel arithmetic, so the
- * numbers the probe asserts are derived rather than copied.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
@@ -36,7 +20,6 @@ const readme = readFileSync(
   "utf8",
 );
 
-/** One Markdown section, from its heading to the next heading of any rank. */
 const section = (heading: string): string => {
   const start = readme.indexOf(heading);
   if (start === -1) return "";
@@ -46,7 +29,6 @@ const section = (heading: string): string => {
     .replace(/\s+/g, " ");
 };
 
-/** A reader waiting in the top void: the void is the anchor at offset 0. */
 const topVoid: PageArrival = {
   direction: "prepend",
   anchor: { itemIndex: 0, offsetInItem: 0, viewportHeight: VIEWPORT_HEIGHT },
@@ -55,7 +37,6 @@ const topVoid: PageArrival = {
   edgeHeight: EDGE_HEIGHT,
 };
 
-/** A reader resting on the at-end sentinel of a ten-message list. */
 const atEnd: PageArrival = {
   direction: "append",
   anchor: {
@@ -70,8 +51,6 @@ const atEnd: PageArrival = {
 
 describe("the loading row's restore", () => {
   it("anchors the message under the top void at the pixel it held", () => {
-    // The void is row 0, the page's two rows join at 1..2, the message is row 3,
-    // and a negative offset puts it back `EDGE_HEIGHT` below the viewport top.
     expect(loadingRowRestore(topVoid)).toEqual(
       Option.some({ index: 3, offsetInItem: -MESSAGE_TOP }),
     );
@@ -91,8 +70,6 @@ describe("the loading row's restore", () => {
   });
 
   it("pins the first new row where the bottom void began at the at-end sentinel", () => {
-    // The page's first row takes the trailing void's old row index, and the
-    // rule's offset is exactly the void's top edge.
     expect(loadingRowRestore(atEnd)).toEqual(
       Option.some({ index: 10, offsetInItem: -VOID_TOP }),
     );
@@ -128,8 +105,6 @@ describe("the loading row's restore", () => {
 
 describe("the loading row fixture", () => {
   it("keeps the void and the row above it inside one viewport", () => {
-    // The at-end formula is `edgeHeight - viewportHeight`; it lands the row at
-    // VOID_TOP only while the void's bottom is the viewport bottom.
     expect(VOID_TOP + EDGE_HEIGHT).toBe(VIEWPORT_HEIGHT);
     expect(READER_TOP).toBe(VOID_TOP - 40);
     expect(MESSAGE_TOP).toBe(EDGE_HEIGHT);
@@ -151,8 +126,6 @@ describe("the loading row fixture", () => {
 
 describe("the prepend section's correction claim", () => {
   it("sends the reader to the correction the window measured", () => {
-    // The prepend probe is headless and cannot drive `scrollToItem`, so it must
-    // name the window probe that does instead of calling the correction open.
     const prepend = section("## A prepended page");
     expect(prepend).not.toContain("Not measured here");
     expect(prepend).not.toContain("it is a TODO row below");

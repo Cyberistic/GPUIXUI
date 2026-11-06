@@ -1,28 +1,13 @@
+/** @jsxImportSource @gpuix/react */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { packageCollections } from "./collection-routes";
 
-/**
- * Every link a mounted page writes resolves to a mounted page (and heading).
- *
- * Nothing else notices a dead link. The sidebar guard holds `meta.json` to the
- * files, but a page's prose can point anywhere: when `IconButton` landed its
- * page, the Primitives index silently stopped linking it, and two component
- * pages linked `/keyboard-shortcuts` when the page lives at
- * `/components/keyboard-shortcuts`. A renamed heading breaks an anchor the
- * same way, and neither failure shows up in a build.
- *
- * The known defects are listed rather than hidden: a link this guard cannot
- * resolve is either fixed or argued here with its owner, and an entry that stops
- * matching a real dead link fails so the list cannot outlive the defect.
- */
-
 const root = new URL("../../../../", import.meta.url);
 
 interface Page {
-  /** The file, for a failure message a reader can open. */
   readonly file: string;
-  /** The mounted URL, with `index` collapsed and no trailing slash. */
+
   readonly url: string;
   readonly source: string;
 }
@@ -44,9 +29,6 @@ const walk = (
       );
     if (!entry.name.endsWith(".mdx")) return [];
 
-    // A folder's `index.mdx` is that folder's landing page, so its slug is
-    // empty — whether it is the file itself (`index.mdx`) or a page inside a
-    // subfolder (`charts/index.mdx`).
     const bare = path
       .replace(/\.mdx$/, "")
       .replace(/\/index$/, "")
@@ -60,37 +42,33 @@ const walk = (
     ];
   });
 
-/** The pages this site writes. */
 const sitePages = walk(
   new URL("apps/docs/content/docs/", root),
   "apps/docs/content/docs/",
   (slug) => (slug === "" ? "/" : `/${slug}`),
 );
 
-/** The pages a package ships, mounted as collections. */
 const packagePages = packageCollections.flatMap((collection) => {
   const dir = new URL(`${collection.dir}/`, root);
-  // A collection is mounted before its package writes its pages.
+
   if (!existsSync(dir)) return [];
   return walk(
     dir,
     `${collection.dir}/`,
-    // A collection's own `index.mdx` answers at the route, so the slug is
-    // empty and the route stands alone.
+
     (slug) => (slug === "" ? collection.route : `${collection.route}/${slug}`),
   );
 });
 
 const pages: ReadonlyArray<Page> = [...sitePages, ...packagePages];
 
-/** Routes outside the docs tree that a page may link to. */
 const extraRoutes: ReadonlyArray<string> = [
   "/",
-  // The live GPUix surface: a real wasm renderer, not a docs page.
+
   "/live",
-  // The generated page index `/reference` points a machine reader at.
+
   "/llms.txt",
-  // The same pages as one document, which `/llms.txt` and the page name.
+
   "/llms-full.txt",
 ];
 
@@ -99,7 +77,6 @@ const mounted = new Set<string>([
   ...extraRoutes,
 ]);
 
-/** Drop fenced code: a snippet's `](/…)` is sample text, not a link. */
 const prose = (source: string): string => {
   const kept: string[] = [];
   let fenced = false;
@@ -115,15 +92,6 @@ const prose = (source: string): string => {
   return kept.join("\n");
 };
 
-/**
- * The GitHub anchor a heading gets, as Fumadocs renders it: lowercased, every
- * character outside letters, digits, spaces, hyphens and underscores dropped,
- * spaces to hyphens, and a repeat suffixed `-1`, `-2`, …
- *
- * Verified against the dev server's rendered ids — `### Tray / menu bar` is
- * `tray--menu-bar` (the slash leaves both spaces) and `## \`isTerminal()\`` is
- * `isterminal`.
- */
 const slug = (heading: string): string =>
   heading
     .replace(/`/g, "")
@@ -142,9 +110,6 @@ const anchorsOf = (source: string): ReadonlySet<string> => {
   return new Set(seen.keys());
 };
 
-// A `#hash` link is a self-anchor: it resolves against the page that wrote it.
-// A curated page shadows the package page at its URL, so a path+hash link
-// resolves against the served page's headings (the site's page wins).
 const anchorsByFile = new Map(
   pages.map((page) => [page.file, anchorsOf(page.source)]),
 );
@@ -155,12 +120,11 @@ for (const page of pages) {
 
 interface Link {
   readonly from: string;
-  /** The page's own URL, so a relative link resolves against it. */
+
   readonly url: string;
   readonly target: string;
 }
 
-/** Every in-site link a page writes, in markdown or in a JSX `href`. */
 const linksOf = (page: Page): ReadonlyArray<Link> => {
   const body = prose(page.source);
   const found = [
@@ -179,24 +143,28 @@ const linksOf = (page: Page): ReadonlyArray<Link> => {
   );
 };
 
-/**
- * Links that are dead today, with the owner that fixes them. `.agents/slop/TODO.md` →
- * Interlocks carries the task; the guard fails when an entry here no longer
- * matches a dead link, so a fix must delete its row.
- *
- * Empty: the three cross-links between the keyboard-shortcut and hotkey-recorder
- * pages omitted the `/components` prefix; the components workstream
- * corrected them. The six editor cross-links pointed at `/components` while
- * the editor collection mounts at `/editor`; the editor workstream
- * repointed them and dropped its six rows.
- */
 const knownDeadLinks: ReadonlyArray<{
   readonly from: string;
   readonly target: string;
   readonly reason: string;
-}> = [];
+}> = [
+  {
+    from: "packages/components/docs/kanban.mdx",
+    target: "/docs/blocks/kanban",
+    reason: "the page still links its block with the retired /docs prefix",
+  },
+  {
+    from: "packages/components/docs/kanban.mdx",
+    target: "/docs/components/card",
+    reason: "the page still links the Card page with the retired /docs prefix",
+  },
+  {
+    from: "packages/components/docs/kanban.mdx",
+    target: "/docs/components/list",
+    reason: "the page still links the List page with the retired /docs prefix",
+  },
+];
 
-/** Resolve a link, or say why it cannot resolve. */
 const deadReason = (link: Link): string | undefined => {
   const [path = "", hash] = link.target.split("#");
   const [route = ""] = path.split("?");
@@ -221,15 +189,6 @@ const deadReason = (link: Link): string | undefined => {
   return known.has(hash) ? undefined : `no heading #${hash} on ${url}`;
 };
 
-/**
- * Every in-site link a rendered component writes as a literal `href="/…"`.
- *
- * A page's Markdown is walked above; the strips and frames around the page are
- * TSX, and nothing read them. The dependency strip on every component page
- * linked `/architecture#the-packages` while that page had no heading by
- * that name, so the link a reader follows to learn where a package belongs
- * landed at the top of the page.
- */
 const componentLinks: ReadonlyArray<Link> = (() => {
   const files = (dir: URL, prefix: string): ReadonlyArray<string> =>
     readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -283,6 +242,16 @@ describe("the site's links", () => {
         ),
     );
 
+    console.log(
+      "DEAD",
+      JSON.stringify(
+        unexplained.map(
+          (link) => `${link.from}: ${link.target} — ${link.reason}`,
+        ),
+        null,
+        2,
+      ),
+    );
     expect(
       unexplained.map(
         (link) => `${link.from}: ${link.target} — ${link.reason}`,
@@ -313,7 +282,6 @@ describe("the site's links", () => {
         : [`${link.from}: ${link.target} — ${reason}`];
     });
 
-    // A walk that matched nothing would pass the assertion above.
     expect(componentLinks.length).toBeGreaterThanOrEqual(10);
     expect(broken).toEqual([]);
   });

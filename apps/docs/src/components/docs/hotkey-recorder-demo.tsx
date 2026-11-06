@@ -1,15 +1,3 @@
-/**
- * Browser preview for the Hotkey recorder page.
- *
- * The shipped control captures the next chord the reader presses and shows it
- * as keycaps; clearing is a real control beside it, not Backspace (the test
- * renderer emits no key event for it). The preview records a real chord from
- * the browser's own keys through `chordOf` — the same `parseHotkey`,
- * `hasNonModifierKey` and `normalizeHotkey` the runtime path ends in — so ⌘⇧P
- * binds three keys instead of the letter the old drawing kept. Glyphs come from
- * `glyphsOf`, which is the component's own `formatSymbols`.
- */
-
 import { useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import * as Option from "effect/Option";
 import { chordOf, glyphsOf } from "./hotkey-chord";
@@ -33,7 +21,7 @@ const BOUND = "mod+shift+p";
 export function HotkeyRecorderDemo() {
   const [recording, setRecording] = useState(false);
   const [value, setValue] = useState<string | null>(BOUND);
-  /** The modifiers being held, painted while the recorder waits for a key. */
+
   const [held, setHeld] = useState<string | null>(null);
 
   const stop = () => {
@@ -50,7 +38,7 @@ export function HotkeyRecorderDemo() {
       setValue(chord.value);
       return stop();
     }
-    // Only modifiers so far: show them and keep listening.
+
     setHeld(
       [
         event.metaKey ? "mod" : null,

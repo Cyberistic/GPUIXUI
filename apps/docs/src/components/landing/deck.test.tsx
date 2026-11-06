@@ -7,19 +7,6 @@ import { rulesFor, widthInPixels } from "./css-rules";
 import { Hero, nextDesktop } from "./deck";
 import { omarchyCards, platforms } from "./data";
 
-/**
- * The landing deck after Omarchy stopped being a fourth desktop.
- *
- * The deck used to show four windows and called Omarchy the fourth native look;
- * it is not one. Omarchy is the Linux desktop following your own theme, so the
- * deck keeps the three platform windows and the claims that used to live in
- * Omarchy's Tokyo Night window now sit in four small cards under it.
- *
- * The cases below hold that shape: three desktops, three switch positions, four
- * cards. A regression that dressed a fourth window again — or that shipped the
- * cards without their icons — would still build.
- */
-
 const markup = renderToStaticMarkup(<Hero />);
 
 const css = readFileSync(
@@ -34,11 +21,9 @@ const rule = (selector: string, last = false): string => {
   return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
 };
 
-/** The Omarchy strip's markup, from its opening tag to the deck's footnote. */
 const strip = (): string => {
   const start = markup.indexOf('class="landing-omarchy"');
-  // The conversations block inside the deck carries a `</header>` of its own,
-  // so the slice ends at the hero's, which is the first one after the strip.
+
   const end = markup.indexOf("</header>", start);
   return start === -1 || end === -1 ? "" : markup.slice(start, end);
 };
@@ -59,8 +44,7 @@ describe("the landing deck", () => {
     expect(markup).toContain('class="landing-wall landing-wall-mac"');
     expect(markup).toContain('class="landing-wall landing-wall-win"');
     expect(markup).toContain('class="landing-wall landing-wall-lnx"');
-    // macOS menu bar and dock, the Windows taskbar, the Linux panel and dock —
-    // and no fourth shell: Omarchy's square dock left with its window.
+
     expect(markup.match(/class="landing-menubar"/g)).toHaveLength(1);
     expect(markup.match(/class="landing-taskbar"/g)).toHaveLength(1);
     expect(markup.match(/class="landing-lnx-panel"/g)).toHaveLength(1);
@@ -97,8 +81,7 @@ describe("the landing deck", () => {
     const gradients = walls.map((wall) => rule(wall));
     for (const gradient of gradients) expect(gradient).toContain("gradient");
     expect(new Set(gradients).size).toBe(3);
-    // The Tokyo Night scene is gone: it was the fourth desktop's wallpaper, and
-    // the strip under the deck is a theme claim, not a hidden window.
+
     expect(rule(".landing-wall-omarchy")).toBe("");
   });
 
@@ -126,8 +109,6 @@ describe("the landing deck", () => {
   it("puts the four Omarchy claims under the deck as cards", () => {
     const stripMarkup = strip();
 
-    // The cards stand where the fourth desktop stood: after the deck, before
-    // the hero closes.
     expect(markup.indexOf('class="landing-deck"')).toBeLessThan(
       markup.indexOf('class="landing-omarchy"'),
     );
@@ -140,7 +121,6 @@ describe("the landing deck", () => {
       expect(stripMarkup).toContain(card.body);
     }
 
-    // The four claims, in the order the brief names them.
     expect(omarchyCards.map((card) => card.title)).toEqual([
       "Follows your theme in Omarchy",
       "Your apps in the terminal",
@@ -150,8 +130,6 @@ describe("the landing deck", () => {
   });
 
   it("paints the strip in the page's own roles", () => {
-    // The strip is page copy, not a screenshot: it follows the docs theme in
-    // both schemes rather than carrying a palette of its own.
     expect(rule(".landing-omarchy-card")).toContain(
       "background: var(--bg-soft)",
     );
@@ -189,7 +167,7 @@ describe("the landing deck", () => {
     expect(nextDesktop(0)).toBe(1);
     expect(nextDesktop(1)).toBe(2);
     expect(nextDesktop(2)).toBe(0);
-    // The fan has three slots; the fourth desktop's slot is gone.
+
     expect(rule('.landing-deck .landing-window[data-pos="2"]')).toContain(
       "scale(0.92)",
     );
@@ -197,17 +175,11 @@ describe("the landing deck", () => {
   });
 
   it("narrows the hero's people list, and only the hero's", () => {
-    // The block's people list is 330px, which is right for a block page but
-    // took nearly half the hero's window and squeezed the thread beside it
-    // into a column of stubs. The hero is showing the conversation, so the
-    // list is a reference there and narrower.
     const hero = rule(".landing-desktop-stage .gx-conv-side");
     const width = Option.getOrNull(widthInPixels(hero));
     expect(width).not.toBeNull();
     expect(width ?? Number.POSITIVE_INFINITY).toBeLessThan(330);
 
-    // The block page keeps its own width: the landing's override is scoped to
-    // the deck's stage, so no bare `.gx-conv-side` rule leaks out of here.
     expect(rulesFor(css, ".gx-conv-side")).toEqual([]);
   });
 });

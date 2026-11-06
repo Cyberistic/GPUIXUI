@@ -49,44 +49,23 @@ import {
 import { DependencyTreeDemo, VirtualTreeDemo } from "./tree-demo";
 import { VirtualizationDemo } from "./virtualization-demo";
 
-/**
- * The data lane's pages, held to the components they draw.
- *
- * Every one of the fifteen `/data-display` previews is a browser
- * reproduction of a GPUix host, so nothing type-checks the paint: a drawing can
- * keep its rules and still drift into hand-rolled markup — which is exactly
- * what these pages did, with a raw `<table>`, a bare `<input>` and unstyled
- * `<button>`s while the rest of the library already had a shape.
- *
- * These cases are the seam. Each style rule the drawings read is compared with
- * the recipe the runtime compiles (`packages/data/src/**\/recipe.ts` through
- * `@gpuixui/tw`), so a component that changes a step fails here until the
- * drawing follows; and each page's rendered markup is held to the class family
- * of the component it says it mirrors, so a drawing cannot fall back to plain
- * HTML.
- */
-
 const css = readFileSync(
   new URL("../../styles/demos.css", import.meta.url),
   "utf8",
 );
 
-/** The declarations of the first `selector { … }` block in the sheet. */
 const rule = (selector: string): string => {
   const start = css.indexOf(`\n${selector} {`);
   if (start === -1) throw new Error(`no ${selector} block`);
   return css.slice(start, css.indexOf("}", start));
 };
 
-/** `successSoftForeground` → `success-soft-foreground`. */
 const kebab = (name: string): string =>
   name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 
-/** The variable a role paints, as the sheet writes it. */
 const rolePaint = (role: keyof typeof themes.dark.colors): string =>
   `var(--${kebab(role)})`;
 
-/** The role a compiled colour is, so a block's paint is held to the recipe. */
 const roleOf = (
   role: keyof typeof themes.dark.colors,
   value: string | undefined,
@@ -127,14 +106,10 @@ describe("the table skin mirrors the table's recipes", () => {
     const root = style(TABLE_ROOT);
     const frame = rule(".gx-dt");
 
-    // `rounded-lg border border-input bg-card`: the registry answers
-    // `border-input` with the `border` role (the tokens' `input` is a field
-    // fill), and the block reads that role rather than a literal.
     expect(roleOf("border", root.borderColor)).toBe(true);
     expect(roleOf("card", root.backgroundColor)).toBe(true);
     expect(frame).toContain(`border: 1px solid ${rolePaint("border")};`);
-    // `rounded-lg` compiles to the theme's `lg` corner, which the bridge
-    // writes as `--radius-lg`; both sides have to agree for this to hold.
+
     expect(themes.dark.radius.lg).toBe(root.borderRadius);
     expect(frame).toContain("border-radius: var(--radius-lg);");
     expect(frame).toContain(`background: ${rolePaint("card")};`);
@@ -146,8 +121,6 @@ describe("the table skin mirrors the table's recipes", () => {
   });
 
   it("paints the detail row on the muted strip the recipe names", () => {
-    // `TABLE_DETAIL_ROW` is `bg-muted text-muted-foreground`; the compiled
-    // backdrop is the muted role and the label the muted foreground.
     const detail = style("bg-muted text-muted-foreground");
     expect(rule(".gx-dt-detail")).toContain(
       `background: ${rolePaint("muted")};`,
@@ -241,7 +214,7 @@ describe("the tree skin mirrors the tree's rows", () => {
     expect(rule('.gx-dtree-row[data-current="true"]')).toContain(
       `background: ${rolePaint("selected")};`,
     );
-    // The height is the component's own reader, not a number the sheet chose.
+
     expect(
       readFileSync(
         new URL(
@@ -254,12 +227,6 @@ describe("the tree skin mirrors the tree's rows", () => {
   });
 });
 
-/**
- * One page's drawing: the component it mirrors, and the classes that prove it.
- *
- * `absent` names the hand-rolled markup the page used before the skin, so a
- * fallback is a failing case rather than a style nobody notices.
- */
 interface Scene {
   readonly page: string;
   readonly mirrors: string;
@@ -451,9 +418,6 @@ describe("every data page draws its component's own surfaces", () => {
   });
 
   it.each(scenes)("$page keeps no hand-rolled table markup", ({ body }) => {
-    // The pages this pass rebuilt all carried one of these families. A drawing
-    // that falls back to one of them is the regression this case exists for,
-    // so the sweep is wider than any single page's `absent` list.
     const html = renderToStaticMarkup(body);
     const legacy = [
       "<table",
@@ -482,7 +446,6 @@ describe("every data page draws its component's own surfaces", () => {
   it("keeps the column menu's rows and the divider's bounds", () => {
     const html = renderToStaticMarkup(<ColumnConfigurationDemo />);
 
-    // One divider per visible column, and the row cap the menu refuses.
     expect(html.match(/data-resize="/g) ?? []).toHaveLength(COLUMN_DEFS.length);
     COLUMN_DEFS.forEach((column) => {
       expect(html).toContain(`aria-valuenow="${column.width}"`);

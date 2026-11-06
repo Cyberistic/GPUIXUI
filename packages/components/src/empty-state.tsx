@@ -1,15 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * EmptyState: the "nothing here yet" panel for a list, table or panel.
- *
- * A panel, not a surface: it paints no background and no border, because it sits
- * inside a `Card`, a panel or a table body that already supplies one. Centred and
- * unfocusable — the only interactive thing in it is whatever the caller passes as
- * `action`. The resting appearance is a Tailwind recipe (`EMPTY_STATE_*`),
- * compiled against shadcn's fixed metrics; the caller's `className` is joined
- * after the root recipe and its `style` is merged last.
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import {
@@ -24,24 +13,20 @@ import type { ReactNode } from "react";
 import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
 
-/** The widest a description is allowed to run before it wraps. */
 const MEASURE = 360;
 
-/** {@link EmptyState} props. */
 export interface EmptyStateProps extends Props {
-  /** Optional glyph above the title. Purely decorative. */
   readonly icon?: ReactNode;
-  /** What is missing, in a few words. */
+
   readonly title: string;
-  /** Why it is missing, or what to do about it. */
+
   readonly description?: string;
-  /** The way out: usually a `Button`. */
+
   readonly action?: ReactNode;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/** A centred panel for a collection that has nothing in it. */
 export const EmptyState = ({
   icon,
   title,
@@ -81,7 +66,6 @@ export const EmptyState = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const emptyStateMeta = {
   name: "Empty states",
   tier: 2,

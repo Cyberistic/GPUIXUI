@@ -1,12 +1,3 @@
-/**
- * The component inventory: one record per implemented component.
- *
- * Each module owns its record, so the inventory cannot drift from the code it
- * describes; this file only collects them. `inventory.test.ts` checks the records
- * against the files on disk and the rows in `.agents/slop/COMPONENTS.md` — the Tier 2 table
- * and the animated-primitives table plan 600 fills.
- */
-
 import { accordionMeta } from "./accordion.js";
 import { alertMeta } from "./alert.js";
 import { aspectRatioMeta } from "./aspect-ratio.js";
@@ -89,24 +80,21 @@ import { toggleGroupMeta } from "./toggle-group.js";
 import { toastMeta } from "./toast.js";
 import { userMenuMeta } from "./user-menu.js";
 
-/** One component's inventory record. */
 export interface ComponentMeta {
-  /** Exactly the label used in `.agents/slop/COMPONENTS.md`. */
   readonly name: string;
   readonly tier: 1 | 2 | 3 | 4 | 5;
   readonly status: "todo" | "wip" | "done" | "blocked" | "unsupported";
   readonly gpuixSupport: "yes" | "partial" | "no";
-  /** Empty array when there is no limitation. Never omitted. */
+
   readonly limitations: ReadonlyArray<string>;
-  /** `docs/<name>.mdx` */
+
   readonly docs: string;
-  /** `examples/<name>.example.tsx` */
+
   readonly example: string;
-  /** `src/behaviour/<name>.test.tsx` */
+
   readonly testFile: string;
 }
 
-/** Every implemented Tier 2 component. */
 export const inventory: ReadonlyArray<ComponentMeta> = [
   accordionMeta,
   aspectRatioMeta,

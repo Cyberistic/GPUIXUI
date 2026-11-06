@@ -1,18 +1,10 @@
-/**
- * A deterministic scatter for the decorative-field previews (Bubbles, Stars,
- * Particles, Fireworks, Gravity stars). Each native field derives its points
- * from a seed; these previews reproduce a stable scatter with a small LCG so a
- * drawing does not reshuffle every render.
- */
-
 export interface ScatterPoint {
-  /** Horizontal position, 0..1 of the field's width. */
   readonly x: number;
-  /** Vertical position, 0..1 of the field's height. */
+
   readonly y: number;
-  /** Diameter in pixels. */
+
   readonly size: number;
-  /** A per-point phase in 0..1, for staggering the animation. */
+
   readonly phase: number;
 }
 

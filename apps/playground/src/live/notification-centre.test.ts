@@ -1,17 +1,3 @@
-/**
- * Holds the `notification-centre-lifecycle` fixture, the probe that paints it,
- * and the numbers the README teaches.
- *
- * The bug this guards: Tier 5's *Notification centre* row was `?` — "composition
- * over toasts + panels" — and nothing had measured which half could store the
- * history. The shipped toast store keeps three cards and expires the oldest, so
- * a centre panel must own its list while the viewport paints the live stack.
- * These cases keep that rule, the stack arithmetic and the prose pointing at the
- * same numbers.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -38,14 +24,10 @@ const scenarios = read("./scenarios.tsx");
 const readme = read("../../README.md");
 const store = read("../../../../packages/components/src/toast/store.ts");
 
-/** One card's painted box, oldest first in a stack. */
 const box = (y: number) => ({ x: 1044, y, width: 356, height: 54 });
 
 describe("the store's bound", () => {
   it("keeps the number the shipped store declares", () => {
-    // The probe's negative control measured a four-card expectation failing
-    // against the window's three, so this constant is the store's, not the
-    // probe's convenience.
     expect(store).toContain("const DEFAULT_MAX = 3;");
     expect(NOTIFICATION_MAX).toBe(3);
   });
@@ -92,9 +74,8 @@ describe("the stack geometry", () => {
   });
 
   it("refuses an overlap, a drift, a collapsed stack and a lone card", () => {
-    // Overlapping cards hide a message behind another one.
     expect(stackedInOrder([box(100), box(120), box(140)])).toBe(false);
-    // A right edge that drifts makes the stack read as two columns.
+
     expect(
       stackedInOrder([
         box(100),
@@ -102,9 +83,9 @@ describe("the stack geometry", () => {
         { ...box(232), x: 1020 },
       ]),
     ).toBe(false);
-    // Two cards on one origin are not a stack.
+
     expect(stackedInOrder([box(100), box(100)])).toBe(false);
-    // One card cannot prove a gap.
+
     expect(stackedInOrder([box(100)])).toBe(false);
   });
 
@@ -126,8 +107,6 @@ describe("the probe and the registry", () => {
   });
 
   it("drives both halves through the shipped components", () => {
-    // A probe that painted its own cards would leave the shipped stack
-    // unmeasured, so the composition is the claim.
     expect(probe).toContain("useToast()");
     expect(probe).toContain("<ToastViewport />");
     expect(probe).toContain("defaultDuration={Duration.minutes(5)}");
@@ -145,8 +124,6 @@ describe("the probe and the registry", () => {
   });
 
   it("counts the checks the probe can assert", () => {
-    // The printed count is the run's own, so it cannot be derived statically;
-    // the assertion sites are the floor a hollow probe cannot fall below.
     const steps = probe.slice(
       probe.indexOf("export const notificationCentreSteps"),
     );

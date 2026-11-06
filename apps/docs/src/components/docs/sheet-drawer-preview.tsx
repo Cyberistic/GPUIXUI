@@ -21,30 +21,12 @@ import {
 } from "./drawer-preview";
 import { usePreviewInteractive } from "./preview-surface";
 
-/**
- * The sheet and drawer drawings: the surface each page is about.
- *
- * Both scenes **open on the surface**. The server markup carries the dialog, so
- * the first paint is a picture of the drawer rather than an empty stage, and a
- * press on the visible trigger opens it again for the slide. The geometry,
- * corners, lift, grabber and travel live in `demos.css`, read out of
- * `drawer.tsx` by `sheet-drawer-preview.test.ts`; `drawer-preview.ts` owns the
- * arithmetic a drawing cannot show (the dismiss stack, the filter).
- */
-
-/** The focusable controls inside the surface, for the Tab wrap. */
 const focusableInside = (root: HTMLElement): ReadonlyArray<HTMLElement> => [
   ...root.querySelectorAll<HTMLElement>(
     'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
   ),
 ];
 
-/**
- * The modal's Tab trap.
- *
- * The native trap calls `focusNextWithin`/`focusPreviousWithin` after
- * cancelling the platform's default move; a page has to do the wrap itself.
- */
 const trapTab = (event: KeyboardEvent, root: HTMLElement): void => {
   const items = focusableInside(root);
   const first = items[0];
@@ -60,14 +42,6 @@ const trapTab = (event: KeyboardEvent, root: HTMLElement): void => {
   }
 };
 
-/**
- * The scene's open state, the opener to restore focus to, and the panel.
- *
- * The scene starts open, so the still is legible without a press, and only a
- * reader's own press moves focus into the panel. Every focus passes
- * `preventScroll`: the browser's `focus()` scrolls a mid-slide surface into
- * view, which cancels the animation, while the native renderer never scrolls.
- */
 const useDrawer = (dismissible: boolean) => {
   const interactive = usePreviewInteractive();
   const [open, setOpen] = useState(true);
@@ -116,28 +90,16 @@ interface DrawerSurfaceProps {
   readonly title: string;
   readonly description: string;
   readonly panelRef: RefObject<HTMLDivElement | null>;
-  /** The close control's action: it always closes. */
+
   readonly onClose: () => void;
-  /** A backdrop press. `undefined` while the drawer is not dismissible. */
+
   readonly onBackdrop?: () => void;
-  /**
-   * Whether the surface rests open. Default `true`. A closed surface stays in
-   * the DOM while its exit animation runs and is hidden once it ends, as the
-   * native surface stays mounted for its exit window.
-   */
+
   readonly open?: boolean;
   readonly children: ReactNode;
   readonly footer: ReactNode;
 }
 
-/**
- * The veil and the edge surface, at the component's own geometry.
- *
- * The backdrop is `inset: 0` over the drawing's window, as the native veil is
- * the whole window; the surface's box comes from `data-side`/`data-size` in the
- * style sheet, so it is anchored to an edge and clamped by the frame. A press
- * inside the surface stops there rather than closing.
- */
 const DrawerSurface = ({
   side,
   size,
@@ -203,7 +165,6 @@ const sizes: ReadonlyArray<DrawerSize> = ["sm", "md", "lg"];
 const isDrawerSize = (value: string): value is DrawerSize =>
   sizes.some((size) => size === value);
 
-/** The measurement the drawing's window is: every edge and size, live. */
 const SheetDrawing = () => {
   const [side, setSide] = useState<DrawerSide>("right");
   const [size, setSize] = useState<DrawerSize>("md");
@@ -213,7 +174,7 @@ const SheetDrawing = () => {
     { name: "dialog", dismissible: true },
     ...(open ? [{ name: "drawer", dismissible }] : []),
   ]);
-  // A readout of what the key did, not a paragraph about what it does.
+
   const story =
     outcome.closed === "drawer"
       ? "escape → closed: drawer"
@@ -310,7 +271,6 @@ const SheetDrawing = () => {
   );
 };
 
-/** The issue set the workflow drawer narrows. */
 const issues: ReadonlyArray<Issue> = [
   {
     id: "ISS-412",
@@ -361,7 +321,6 @@ const FilterChoice = ({
   </label>
 );
 
-/** The filter drawer over the list it narrows, on the window's right edge. */
 const DrawerDrawing = () => {
   const [applied, setApplied] = useState<IssueFilter>(initialFilter);
   const [draft, setDraft] = useState<IssueFilter>(initialFilter);

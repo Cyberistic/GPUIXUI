@@ -16,23 +16,11 @@ import {
 import { QUEUE_ROWS, matchingRows } from "../components/docs/data-toolbar-demo";
 import { packagePreviews } from "./package-preview";
 
-/**
- * The probe that presses the data lane's four drawings.
- *
- * `data-previews-probe.ts` is a browser run, not part of `nub run test`: it
- * needs a served build and Chrome. What a unit test can hold is the other half
- * — that the numbers it expects are the drawings' own (a record added to a
- * table asks the probe to expect it) and that the selectors it presses are the
- * classes the modules render, so a rename cannot leave the probe reading a
- * missing node and calling it a pass.
- */
-
 const root = new URL("../../../../", import.meta.url);
 
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
 
-/** The path a package collection mounts, for the page a probe scenario names. */
 const mounted = (path: string): boolean =>
   packagePreviews.some(
     (row) =>
@@ -52,7 +40,7 @@ describe("the data previews probe", () => {
     expect(expected.frozenRows).toBe(FROZEN_RECORDS.length);
     expect(expected.labelWidth).toBe(DEFAULT_LABEL_WIDTH);
     expect(expected.wideLabelWidth).toBe(WIDE_CHOICE.width);
-    // The unreadable width is the one the second key-value press picks.
+
     expect(Number.isNaN(UNUSABLE_CHOICE.width)).toBe(true);
     expect(LABEL_WIDTHS.map((choice) => choice.width)).toEqual([
       expected.labelWidth,
@@ -69,8 +57,6 @@ describe("the data previews probe", () => {
   });
 
   it("presses the selectors its drawings render", () => {
-    // A renamed class is a probe that reads `undefined` and a failed hand run,
-    // not a passing one; the modules are the source of the names.
     const modules = {
       expandable: read(
         "apps/docs/src/components/docs/expandable-rows-demo.tsx",
@@ -90,7 +76,6 @@ describe("the data previews probe", () => {
     expect(modules.frozen).toContain('className="gx-dt-frozen-body"');
     expect(modules.keyValue).toContain('className="gx-dkv-label"');
 
-    // Both choice groups share the one toggle, which the probe presses by label.
     expect(modules.keyValue).toContain(
       'className="gx-btn gx-btn-sm gx-toggle"',
     );
@@ -104,7 +89,7 @@ describe("the data previews probe", () => {
     expect(policy).toContain("2 of 4 panels open");
     expect(policy).toContain("3 of 6 rows");
     expect(policy).toContain("frozen:72,0 | data:72,0");
-    // The precondition the run found: props exist before the listeners.
+
     expect(policy).toContain(
       "a node's `__reactProps` exist **before** the commit that attaches its listeners",
     );

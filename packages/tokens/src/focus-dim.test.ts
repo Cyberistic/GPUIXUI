@@ -1,27 +1,3 @@
-/**
- * Guards the dim the runtime paints on every other focusable while one control
- * has keyboard focus.
- *
- * The bug this holds: `keyboardFocusDim` is on by default in `@gpuix/native`,
- * so pressing Tab fades every other control — fill and text — and no contract
- * measured it, because `contrastRatio` refuses a translucent result. The
- * composite is the disabled fade's with a different share, and the factor is
- * measured rather than assumed: the `keyboard-focus-dim` window capture measured
- * the share, and that the text lands on the control's **own dimmed fill** rather
- * than on the page — the two models read apart in the captured pixel, which is
- * how the composite was identified. The colours the capture read belong to the
- * palette the probe painted at the time; the pair the shipped palette composites
- * is `blend`'s arithmetic on today's roles.
- *
- * It also holds the runtime's one exclusion: `renderer.rs`'s
- * `keyboard_focus_path` returns no path when the focused element is an
- * `input`/`textarea` ("typing is keyboard input too, and dimming the window
- * while someone types is noise"), so a field dims nothing. The token pages
- * claimed every other focusable fades, full stop; the `filled-action-dim` probe
- * measured the opposite — tabbing into a shipped `Input` left a ghost action's
- * 611 label pixels untouched.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
@@ -46,7 +22,6 @@ import {
   themes,
 } from "./theme.js";
 
-/** Every shipped theme, then every style in both modes and both editions. */
 const allThemes = [
   lightTheme,
   darkTheme,
@@ -62,12 +37,6 @@ const allThemes = [
   ]),
 ] as const;
 
-/**
- * Every surface that describes the dim. `node:fs` is deliberate, as in
- * `fonts.test.ts` and `docs.test.ts`: this checks the repository's own prose,
- * and the package keeps zero runtime dependencies. Whitespace is flattened so a
- * Markdown line wrap cannot hide a missing clause.
- */
 const dimSurfaces = (): Record<string, string> => {
   const read = (path: string): string =>
     readFileSync(new URL(path, import.meta.url), "utf8");
@@ -98,16 +67,10 @@ describe("the dim a focused field casts", () => {
 
 describe("the dim the gate and the actions have adopted", () => {
   it("says the report is in the gate and the filled actions opt out", () => {
-    // The inventory row claimed both were still interlock rows after the fold
-    // and the two adoptions landed. The report is read from the gate's own
-    // keys, and each package's opt-out from the constant it declares.
     const audit = auditTheme(lightTheme);
     expect(Object.keys(audit)).toContain("keyboardDim");
     expect(audit.keyboardDim).toEqual([]);
 
-    // The components' action delegates to the primitives' (plan 160), so the
-    // declaration may live in either half of the chain; the claim is that the
-    // chain paints a filled action that opts out of the dim.
     const chain = [
       "../../components/src/internal/button.tsx",
       "../../primitives/src/core/focus.ts",
@@ -129,11 +92,6 @@ describe("the dim the gate and the actions have adopted", () => {
   });
 
   it("states the opt-out as landed in both packages, not as an owed interlock", () => {
-    // The page closed the paragraph with "That adoption is an interlock row in
-    // `.agents/slop/TODO.md`" after both packages had declared the opt-out. The claim is read
-    // against the sources: the primitives export the rule, merge it for a
-    // variant that paints a fill, and every field host declares it — and the
-    // components package re-states the same rule for its own parts.
     const source = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8");
     expect(source("../../primitives/src/core/focus.ts")).toContain(
@@ -168,11 +126,6 @@ describe("keyboardFocusDimOpacity", () => {
   });
 
   it("composites the pair the shipped palette paints at the captured share", () => {
-    // The `keyboard-focus-dim` probe measured two facts on 0.11.0: the share is
-    // 0.4, and a dimmed control's text lands on its **own dimmed fill** rather
-    // than on the page — the flatten-the-subtree model read a different pixel,
-    // which is how the composite was identified. The colours a reader sees are
-    // the shipped palette's, so a palette move follows them.
     const dim = fadedPair(
       darkColors,
       { fill: "muted", label: "foreground", over: "background" },
@@ -189,8 +142,7 @@ describe("keyboardFocusDimOpacity", () => {
     expect(dim.label).toBe(
       blend(darkColors.foreground, dim.fill ?? "", 1 - keyboardFocusDimOpacity),
     );
-    // The label does not fade against the page a second time: the two models
-    // read apart, which is the captured fact.
+
     expect(dim.label).not.toBe(
       blend(
         darkColors.foreground,
@@ -227,12 +179,6 @@ describe("keyboardDimPairs", () => {
   });
 
   it("names the surface as the fill for a row that has none", () => {
-    // A menu row, tab or checkbox label has no fill of its own, so the text
-    // fades over the page while the page stays: the surface is its own fill.
-    // A composite field's fill is the page role too, but it *has* a fill, so
-    // the row pairs are the two text roles a row carries, not every pair whose
-    // fill and strip happen to be the same role. A row under the pointer has a
-    // fill too — the wash it tints — so it is not one of these.
     const rows = keyboardDimPairs.filter(
       ({ label, fill, over }) =>
         ["foreground", "mutedForeground"].includes(label) && fill === over,
@@ -242,10 +188,6 @@ describe("keyboardDimPairs", () => {
   });
 
   it("measures the wash a row wears as the fill the dim composites over", () => {
-    // A hovered row is dimmed as a whole: the wash it tints and the label it
-    // carries fade together, so the label lands on the *dimmed wash*, not on the
-    // strip the row sits on. The table measured a row on the strip only, so the
-    // composite a reader sees while Tab is elsewhere was measured nowhere.
     const washed = keyboardDimPairs.filter(({ fill }) =>
       ["hover", "accent", "active"].includes(fill),
     );
@@ -264,11 +206,6 @@ describe("keyboardDimPairs", () => {
       ]);
     });
 
-    // The painters: a ghost action or a menu row tints `hover`, and the list row
-    // tints `accent` under the pointer and `active` while it is pressed. The
-    // press may be painted as the role or through the derived wash that keeps
-    // the step visible (`pressWash`), which names the wash it replaces; the
-    // contract is the role the row's press plays.
     const list = readFileSync(
       new URL("../../components/src/list.tsx", import.meta.url),
       "utf8",
@@ -306,9 +243,6 @@ describe("keyboardDimPairs", () => {
       next.ratio < low.ratio ? next : low,
     );
 
-    // The tightest wash placement is the Linux look's accent under a chosen
-    // row's title, on a muted strip — the dim moves the label and the wash
-    // toward the strip together, so the pair stays well above the floor.
     expect(tightest.theme).toBe("Light · Linux");
     expect(tightest.pair).toEqual({
       fill: "accent",
@@ -321,8 +255,6 @@ describe("keyboardDimPairs", () => {
       expect(keyboardDimFailures(theme), theme.name).toEqual([]);
     });
 
-    // The number the catalogue prints, so the page cannot teach a placement the
-    // table dropped or a value the table no longer holds.
     const page = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -331,12 +263,6 @@ describe("keyboardDimPairs", () => {
   });
 
   it("reports a wash the dim erases, not only a strip it erases", () => {
-    // A brand with a dark toolbar, a mid-grey body text and a light hover
-    // wash. The dim keeps 40% of the wash over the toolbar, and `#A4A4A4` at
-    // 40% over `#181818` is `#505050` — the label's own colour — so the dimmed
-    // label lands exactly on the dimmed wash and the row reads as one block.
-    // The same label on the strip still reads (the strip placement is a
-    // different composite), so only the wash placement is reported.
     const brand = extendTheme(lightTheme, {
       colors: {
         muted: "#181818",
@@ -350,8 +276,7 @@ describe("keyboardDimPairs", () => {
       failures.map(({ fill, label, over }) => ({ fill, label, over })),
     ).toEqual([{ fill: "hover", label: "foreground", over: "muted" }]);
     expect(failures[0]?.ratio).toBe(1);
-    // The same label on the strip is measured and passes: the wash is the
-    // row's own fill, and the report names the wash.
+
     expect(
       failures.filter(({ fill, over }) => fill === over && over === "muted"),
     ).toEqual([]);
@@ -387,9 +312,6 @@ describe("keyboardDimFailures", () => {
       next.ratio < low.ratio ? next : low,
     );
 
-    // A saturated brand fill dims toward a light page and closes on its white
-    // label: the label is still visible, but it is no longer readable, which is
-    // why a control that must keep its text opts out of the dim.
     expect(tightest.theme).toBe("Light · Windows");
     expect(tightest.pair).toEqual({
       fill: "primary",
@@ -402,10 +324,6 @@ describe("keyboardDimFailures", () => {
   });
 
   it("measures a field's two fills and its two labels, and the tightest", () => {
-    // A field is two fills — a plain field's `input`, a composite field's page
-    // role — and two labels: its value and its hint. The table carried one fill
-    // and one label, so a composite field (a toolbar's search, a mention field)
-    // dimmed into its own page with nothing measuring the hint it loses first.
     const field = keyboardDimPairs.filter(
       ({ fill, label }) =>
         (fill === "input" || fill === "background") &&
@@ -434,8 +352,6 @@ describe("keyboardDimFailures", () => {
     });
     expect(tightest.ratio).toBeCloseTo(1.68, 2);
 
-    // The number the catalogue prints, and the field coverage it names, so the
-    // page cannot teach a placement the table dropped.
     const page = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -445,9 +361,7 @@ describe("keyboardDimFailures", () => {
   });
 
   it("reports a dimmed label that lands on its own fill", () => {
-    // The label a reader sees on a dimmed control is the label faded over the
-    // *dimmed* fill, so a brand whose label is that value paints one block.
-    const dimmedFill = "#BAB3EE"; // blend(light primary, background, 0.6)
+    const dimmedFill = "#BAB3EE";
     const flat = extendTheme(lightTheme, {
       colors: {
         primary: lightColors.primary,
@@ -456,8 +370,6 @@ describe("keyboardDimFailures", () => {
     });
     const failures = keyboardDimFailures(flat);
 
-    // Over the page the label lands exactly on the fill; over a lighter strip
-    // the two composites separate by a hair and the floor still reports it.
     expect(
       failures.map(({ fill, label, over }) => ({ fill, label, over })),
     ).toEqual(

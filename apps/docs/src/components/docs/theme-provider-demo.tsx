@@ -1,11 +1,3 @@
-/**
- * Browser preview for the ThemeProvider page.
- *
- * `ThemeProvider` puts a theme in context; every primitive reads it. The
- * preview shows the same surface — a box, a heading and a button — painted by
- * the dark and light themes side by side. The Code tab shows the native usage.
- */
-
 import { darkTheme, lightTheme } from "@gpuixui/tokens";
 import { toCssVars } from "../../lib/theme-css";
 

@@ -1,21 +1,3 @@
-/**
- * Which primitives opt out of the runtime's keyboard dim.
- *
- * While one element has keyboard focus, `@gpuix/native@0.11.0` fades **every
- * other focusable element** to `keyboardFocusDimOpacity` (40%) — the
- * where-can-Tab-go cue measured by the `keyboard-focus-dim` probe and by
- * `keyboardDimFailures` in `@gpuixui/tokens`. The bug this suite guards is that
- * the cue was applied to text the reader is reading: a field's value and its
- * placeholder are content, not chrome, and a 40% composite over the field's own
- * fill is what makes them unreadable. The fields declare
- * `keyboardFocusDim: false`; a control whose content is not a value (a toggle,
- * a slider) keeps the cue, so the opt-out cannot quietly become the rule.
- *
- * The opt-back direction matters too: `keyboardFocusDim` is an ordinary style
- * property, and a caller's `style` merges last, so an application that wants the
- * cue on a field can still ask for it.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
@@ -42,13 +24,11 @@ const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
 
 const text = (value: string) => initValueState(Option.some(value), "");
 
-/** Every host element in the tree, depth first. */
 const hosts = (element: ReactElement): ReadonlyArray<ReactElement> => [
   ...(Option.isSome(hostTag(element)) ? [element] : []),
   ...elementChildren(element).flatMap(hosts),
 ];
 
-/** The host elements whose tag names a native text field. */
 const fields = (element: ReactElement): ReadonlyArray<ReactElement> =>
   hosts(element).filter((host) =>
     Option.match(hostTag(host), {
@@ -57,7 +37,6 @@ const fields = (element: ReactElement): ReadonlyArray<ReactElement> =>
     }),
   );
 
-/** The dim declaration an element carries: `none` means the cue stays on. */
 const dim = (element: ReactElement): Option.Option<boolean> =>
   Option.flatMap(
     hostStyle(element, "keyboardFocusDim"),

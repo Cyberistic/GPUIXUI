@@ -1,11 +1,3 @@
-/**
- * Guards two things in the colour maths. First the WCAG contrast floors of
- * every semantic text/surface pair in every shipped theme, including the
- * high-contrast variants: a palette edit that makes text unreadable fails here
- * rather than shipping. Second the derived fills a filled action paints while
- * it is hovered or pressed — a hover that costs its label legibility fails the
- * same way a bad role pair does.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -172,15 +164,12 @@ describe("colour roles", () => {
   });
 
   it("narrows a stored role with the index, not the palette", () => {
-    // Every role of every shipped palette is in the release's vocabulary.
     colourSets.forEach(({ label, colors }) => {
       Object.keys(colors).forEach((role) => {
         expect(isColorRole(role), `${label}.${role}`).toBe(true);
       });
     });
-    // `name in colors` would accept the prototype's own names, which is why the
-    // membership test is the index's; a name another release carried is the
-    // same refusal.
+
     [
       "toString",
       "constructor",
@@ -194,8 +183,7 @@ describe("colour roles", () => {
     [null, undefined, 1, {}, []].forEach((stored) => {
       expect(isColorRole(stored), String(stored)).toBe(false);
     });
-    // The narrowing a boundary consumer gets: a stored string becomes a role
-    // only where the index carries it.
+
     const stored: unknown = "selected";
     expect(isColorRole(stored) ? stored : "background").toBe("selected");
   });
@@ -217,9 +205,6 @@ describe("invalidColorRoles", () => {
   });
 
   it("accepts a named colour and a short hex, which the parser paints", () => {
-    // Both were reported before the grammar was matched to the runtime's
-    // parser: `rebeccapurple` and `#FFF` are CSS Color 4 values, and GPUix
-    // paints them. Reporting them failed a brand theme the renderer renders.
     const painted = {
       colors: { ...lightColors, ring: "rebeccapurple", selection: "#FFF" },
     };
@@ -247,11 +232,6 @@ describe("invalidColorRoles", () => {
   });
 
   it("keeps the value a store wrote apart from the absence of a role", () => {
-    // Every paint seam answers a cleared field and a role an older release never
-    // carried as the same absence, and for a paint that is right. This report is
-    // the one surface where the two part company: a reader repairing a theme has
-    // to see the `""` their editor wrote — or the number a hand-edited export
-    // carries — instead of being told the role is missing from their release.
     const stored = {
       colors: {
         background: "#FFFFFF",
@@ -270,26 +250,14 @@ describe("invalidColorRoles", () => {
     expect(reported.get("ring")).toBe("   ");
     expect(reported.get("card")).toBe(42);
     expect(reported.get("popover")).toEqual({ hex: "#FFFFFF" });
-    // `null` is what JSON writes for a key the theme never carried, so it reads
-    // as the absence `undefined` is rather than a value to print back.
+
     expect(reported.has("foreground")).toBe(true);
     expect(reported.get("foreground")).toBeUndefined();
-    // A role the store did write as a colour is not reported at all.
+
     expect(reported.has("background")).toBe(false);
   });
 });
 
-/**
- * A colour a store cleared is the absence a `null` role is.
- *
- * `null` is what JSON writes for a role a theme never carried; `""` — and
- * whitespace — is what a brand editor's empty field and an empty swatch in a
- * theme file write. The renderer parses neither, and a colour it cannot parse
- * paints black: a button whose `primary` a decoder handed over as `""` drew a
- * black fill while every paint seam believed the theme carried a colour.
- * `themeColors` answered the group as it was because a blank *is* a string, so
- * the role reached the runtime; the merge kept it too, erasing the base's role.
- */
 describe("the roles a store cleared", () => {
   const cleared = (role: keyof ThemeColors, value: string) => ({
     colors: { ...lightColors, [role]: value },
@@ -300,20 +268,16 @@ describe("the roles a store cleared", () => {
     expect(blank.primary).toBeUndefined();
     expect(blank.ring).toBe(lightColors.ring);
     expect(themeColors(cleared("primary", "  ")).primary).toBeUndefined();
-    // The values either side are untouched, and a padded hex is still a colour
-    // the renderer trims and paints.
+
     expect(
       themeColors({ colors: { primary: "", secondary: "#FFFFFF" } }),
     ).toEqual({ secondary: "#FFFFFF" });
     expect(themeColors(cleared("ring", " #FFF ")).ring).toBe(" #FFF ");
-    // The absent group and the null role were already read this way.
+
     expect(themeColors({ colors: { primary: null } })).toEqual({});
   });
 
   it("still names the role on the value the store wrote", () => {
-    // The report is the one place the store's value is visible: the paint seam
-    // answers the absence, and the gate still fails the theme rather than
-    // passing a role the renderer would paint black.
     expect(invalidColorRoles(cleared("primary", ""))).toEqual([
       { role: "primary", value: "" },
     ]);
@@ -323,34 +287,30 @@ describe("the roles a store cleared", () => {
   });
 
   it("paints the absence rather than the runtime's black", () => {
-    // A message's fill: `statusTone` answers no tone instead of a blank fill.
     expect(
       statusTone({ colors: { ...lightColors, infoSoft: "" } }, "info"),
     ).toBeUndefined();
-    // A brand run: no brand to move, the same absence a lost `primary` gives.
+
     expect(
       brandText({ colors: { ...lightColors, primary: "" } }),
     ).toBeUndefined();
-    // A native host: the value ink is dropped, so the host keeps its own.
+
     expect(
       nativeTextTheme({ colors: { ...lightColors, inputForeground: "" } }).text,
     ).toBeUndefined();
-    // A complete role beside the cleared one still paints.
+
     expect(
       nativeTextTheme({ colors: { ...lightColors, primary: "" } }).text,
     ).toBe(lightColors.inputForeground);
   });
 
   it("inherits the base's role when an override is cleared", () => {
-    // A cleared brand-editor field is no override: the theme returns to the
-    // base's role rather than carrying a value that paints nothing.
     const restored = extendTheme(lightTheme, {
       colors: { primary: "", secondary: "  " },
     });
     expect(restored.colors.primary).toBe(lightTheme.colors.primary);
     expect(restored.colors.secondary).toBe(lightTheme.colors.secondary);
-    // A named role beside them still lands, and a saved theme's cleared role
-    // restores onto the shipped theme it was saved from.
+
     const named = extendTheme(lightTheme, {
       colors: { primary: "", ring: "#7C5CF" },
     });
@@ -417,8 +377,6 @@ describe("alpha", () => {
   });
 
   it("resolves the measured grammar and returns the rest unchanged", () => {
-    // A name and a colour function paint, and the contracts resolve them, so a
-    // derived state is written in the long hex form every later contract reads.
     expect(alpha("transparent", 0.5)).toBe("#00000080");
     expect(alpha("rgb(1, 2, 3)", 0.5)).toBe("#01020380");
     expect(alpha("rebeccapurple", 0.5)).toBe("#66339980");
@@ -430,8 +388,6 @@ describe("alpha", () => {
   });
 
   it("returns the colour unchanged for a non-finite amount", () => {
-    // `NaN.toString(16)` is "NaN", so an unguarded amount emitted "#2559D6NaN"
-    // — a string the renderer ignores, painting black in silence.
     expect(alpha("#2559D6", Number.NaN)).toBe("#2559D6");
     expect(alpha("#2559D64D", Number.NaN)).toBe("#2559D64D");
     expect(alpha("#2559D6", Number.POSITIVE_INFINITY)).toBe("#2559D6");
@@ -449,7 +405,6 @@ describe("blend", () => {
   });
 
   it("rounds a channel to the nearest byte", () => {
-    // 127.5 would truncate to #7F7F7F; a half step must round up.
     expect(blend("#000000", "#FFFFFF", 0.5)).toBe("#808080");
   });
 
@@ -473,8 +428,6 @@ describe("blend", () => {
   });
 
   it("resolves the measured grammar and returns the rest unchanged", () => {
-    // `transparent` is black at zero alpha, so its channels blend and its share
-    // stays zero; a painted function blends as its channels.
     expect(blend("transparent", "#FFFFFF", 0.5)).toBe("#80808000");
     expect(blend("#000000", "rgb(0, 0, 0)", 0.5)).toBe("#000000");
     expect(blend("oklch(0.62 0.26 29.2)", "#FFFFFF", 0.5)).toBe(
@@ -494,15 +447,6 @@ describe("blend", () => {
   });
 });
 
-/**
- * The bug this holds: the measurement contracts read six- and eight-digit hex
- * only while the runtime paints hex in any of its four lengths, so a brand that
- * wrote the common shorthand — `#fff` for a page, `#000` for text — painted and
- * passed `invalidColorRoles`, then had **every** pair it touched reported
- * unmeasurable and failed the audit it is told to run. Shorthand is exactly
- * resolvable, so it is measured rather than guessed; a named colour or a colour
- * function still has no channels here and stays unmeasurable.
- */
 describe("the hex dialect the contracts measure", () => {
   it("widens shorthand before deriving a share or a blend", () => {
     expect(alpha("#fff", 0.5)).toBe("#FFFFFF80");
@@ -521,9 +465,6 @@ describe("the hex dialect the contracts measure", () => {
   });
 
   it("measures every hex length the renderer paints", () => {
-    // `isPaintableColor` is the renderer's grammar; each hex form it accepts
-    // must be a value the contrast contract can read, or the paint check and
-    // the gate disagree about the same theme.
     ["#fff", "#fff8", "#ffffff", "#ffffff80", "fff", "ffffff80"].forEach(
       (value) => {
         expect(isPaintableColor(value), value).toBe(true);
@@ -535,26 +476,17 @@ describe("the hex dialect the contracts measure", () => {
   });
 
   it("measures a fully opaque alpha byte", () => {
-    // `alpha(color, 1)` produces this form, and the renderer paints it: an
-    // alpha byte of `FF` is no share, so the colour measures exactly as its
-    // six-digit twin. Reading it as translucent reported every pair the role
-    // touched unmeasurable and failed the gate on a palette the runtime draws.
     expect(alpha("#FFFFFF", 1)).toBe("#FFFFFFFF");
     expect(contrastRatio("#FFFFFFFF", "#000000")).toBeCloseTo(21, 10);
     expect(contrastRatio("ffffffff", "000000")).toBeCloseTo(21, 10);
     expect(contrastRatio("#FFFF", "#000")).toBeCloseTo(21, 10);
     expect(contrastRatio(alpha("#FFFFFF", 1), "#000000")).toBeCloseTo(21, 10);
     expect(alphaOf("#FFFFFFff")).toBe(1);
-    // A derived fill keeps the measurable dialect rather than carrying an
-    // opaque byte every contract after it would refuse.
+
     expect(blend("#5F4BDBFF", "#FFFFFF", 0.5)).toBe("#AFA5ED");
   });
 
   it("still refuses a value the contracts cannot resolve", () => {
-    // A translucent value's contrast depends on the surface behind it, and a
-    // perceptual colour space or a relative colour resolves through a
-    // conversion this package does not guess at: both are reported rather than
-    // approximated.
     expect(contrastRatio("#00000080", "#FFFFFF")).toBeUndefined();
     expect(contrastRatio("transparent", "#FFFFFF")).toBeUndefined();
     expect(contrastRatio("oklch(0.62 0.26 29.2)", "#FFFFFF")).toBeUndefined();
@@ -564,7 +496,6 @@ describe("the hex dialect the contracts measure", () => {
   });
 });
 
-/** The action families that paint a solid fill, and their shared hover rule. */
 const filledActions: readonly FilledAction[] = [
   "primary",
   "secondary",
@@ -602,29 +533,18 @@ describe("filled action state fills", () => {
   });
 });
 
-/**
- * The bug this holds: the paint check accepted only 6- and 8-digit hex, while
- * the pinned `@gpuix/native@0.11.0` release parses colours with
- * `csscolorparser` 0.8.3 (`packages/native/src/color.rs` at `2e31b47`). So a
- * brand theme written in `hsl()`, in a CSS colour name, or in the shorthand
- * `#fff` the parser reads was reported as unpaintable and failed the audit the
- * docs tell a brand to run — a false failure on a theme the renderer paints.
- * Both directions are held here: every family the parser's own tests name is
- * accepted, and every typo class the old check caught is still rejected.
- */
 describe("the colour grammar GPUix paints", () => {
   const painted = [
-    // Hex, every length the parser reads, with and without the hash.
     "#fff",
     "#fff8",
     "#ffffff",
     "#ffffff80",
     "ff0000ff",
-    // Named colours and `transparent`.
+
     "rebeccapurple",
     "BLACK",
     "transparent",
-    // Absolute functions.
+
     "rgb(255 0 0)",
     "rgba(255, 0, 0, 1)",
     "hsl(0 100% 50%)",
@@ -639,9 +559,9 @@ describe("the colour grammar GPUix paints", () => {
     "oklch(0.62796 0.25768 29.23388)",
     "rgb(none none none / none)",
     "rgb(255 0 0 / 50%)",
-    // The parser trims the end of a function name before matching it.
+
     "hsl (0 100% 50%)",
-    // A channel may be an expression or a relative colour.
+
     "oklab(from #bad455 calc(l * 0.7) a b)",
     "rgb(from #bad455 b r g / alpha)",
     "lab(from #bad455 l a b / calc(alpha / 2))",
@@ -673,8 +593,6 @@ describe("the colour grammar GPUix paints", () => {
   });
 
   it("stops reporting a role a CSS colour family paints", () => {
-    // The old check reported every one of these; `invalidColorRoles` is what a
-    // brand's audit reads, so each false report failed the gate.
     expect(
       invalidColorRoles({
         colors: { ...lightColors, primary: "hsl(258 88% 58%)" },
@@ -697,8 +615,6 @@ describe("the colour grammar GPUix paints", () => {
   });
 
   it("writes the shipped palettes in the long hex dialect", () => {
-    // The contracts measure every hex length, but the catalogue prints the long
-    // form, so the shipped palettes are written the way the docs show them.
     colourSets.forEach(({ label, colors }) => {
       Object.entries(colors).forEach(([role, value]) => {
         expect(value, `${label}.${role}`).toMatch(

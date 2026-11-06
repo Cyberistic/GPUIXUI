@@ -1,15 +1,3 @@
-/**
- * Guards the live host's font, right-button and list-anchor verbs.
- *
- * The bug these catch: `fontInstaller` dropping or reshaping the probe's bytes
- * (the late-registration probe would then measure a face nobody installed), a
- * rejected font file surfacing as an unlabelled failure — the probe report must
- * name `registerFont`, not `unknown error` — a context-menu probe pressing the
- * primary button, which fires `onClick` and never `onAuxClick`, so the menu
- * stays shut and the probe measures nothing, and a `<virtual-list>` anchor read
- * out of a short tuple as index 0, which would make a tree reveal assert the
- * row it never reached.
- */
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
@@ -60,8 +48,7 @@ describe("rightPress", () => {
         catch: (cause) =>
           new Smoke.SmokeHostError({ verb: "rightPress", cause }),
       });
-      // The button is the whole press: no modifier rides along that could turn
-      // the aux click into a chorded one.
+
       expect(sent).toEqual([{ button: 2 }]);
     });
   });
@@ -89,8 +76,7 @@ describe("textPress", () => {
         catch: (cause) =>
           new Smoke.SmokeHostError({ verb: "textPress", cause }),
       });
-      // The words reach the protocol exactly as written, at the primary press:
-      // a trimmed label would match a phrase the window never painted.
+
       expect(asked).toEqual(["Logs"]);
       expect(presses).toBe(1);
     });
@@ -117,8 +103,7 @@ describe("modifiedPress", () => {
         catch: (cause) =>
           new Smoke.SmokeHostError({ verb: "modifiedPress", cause }),
       });
-      // One order, no modifiers when none are held: a probe's expectation
-      // cannot depend on how it spelled the chord.
+
       expect(sent).toEqual(["cmd-shift", ""]);
     });
   });

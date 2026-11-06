@@ -1,12 +1,3 @@
-/**
- * EmptyState behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a panel that renders placeholders for parts it was not
- * given; an action whose click never arrives because the panel sits over it; a
- * description painted as loudly as the title; and a panel that is not actually
- * centred.
- */
-
 import * as Arr from "effect/Array";
 import { describe, expect, it, vi } from "vitest";
 import { Button } from "../internal/button.js";
@@ -41,7 +32,7 @@ describe("EmptyState", () => {
     );
 
     expect(panel.renderer.getAllText()).toEqual(["No results"]);
-    // Title only: the panel itself and the title's own column.
+
     expect(panel.renderer.findByType("div")).toHaveLength(1);
 
     panel.unmount();
@@ -71,9 +62,6 @@ describe("EmptyState", () => {
       />,
     );
 
-    // A GPUix `<text>` host element wraps an anonymous child node that holds the
-    // string, so `findByType("text")` returns both and only the wrapper carries
-    // the style (measured 2026-10-17).
     const wrappers = Arr.filter(
       panel.renderer.findByType("text"),
       (element) => element.style.color !== undefined,

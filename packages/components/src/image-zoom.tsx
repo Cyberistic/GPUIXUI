@@ -1,30 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * ImageZoom: a picture that magnifies under the pointer and pans with it.
- *
- * The runtime has no `transform` (upstream issue #102), so the zoom is not a
- * scaled layer: the `<img>` host scales its own buffer to its box (measured by
- * the `chart-raster` probe), so a bigger box is a bigger picture and a `left`/
- * `top` offset is the pan. The frame is a fixed, clipped box, so the magnified
- * picture never spills onto the page and nothing around it re-lays out.
- *
- * The panning rule is the one that makes it read as a magnifier rather than a
- * moving picture: the share of the frame the pointer is over stays under the
- * pointer while the picture grows, and the picture always covers the frame, so a
- * pointer on an edge pins that edge instead of revealing the page behind it
- * (`image-zoom/logic.ts`).
- *
- * The pointer drives it, not the keyboard: an image publishes one image node and
- * takes no tab stop, so the zoom is feedback rather than a control. Under
- * `MotionProvider preference="reduced"` the magnification still happens — it is
- * the component's content — but the tween is gone, so the picture is already at
- * its new box in the frame the pointer moved.
- *
- * What the reader did — the pointer — is `image-zoom/store.ts`; the frame it is
- * read against is measurement (`internal/surface-box.tsx`), and this file paints
- * the snapshot.
- */
-
 import type { EventPayload, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -49,16 +23,8 @@ import { recipeStyle } from "./internal/recipe.js";
 import { surfaceOriginStyle, useSurfaceBox } from "./internal/surface-box.js";
 import { useTheme, type Theme } from "./internal/theme.js";
 
-/** The name a picture publishes when the caller gave it none. */
 const PICTURE_NAME = "Picture";
 
-/**
- * The corner a frame paints.
- *
- * A radius restored from storage may be a number the renderer cannot paint: the
- * batch drops a `NaN` and accepts a negative one that paints nothing usable, so
- * both read as the theme's corner. Zero is a real request and stays square.
- */
 const cornerOf = (radius: Option.Option<number>, theme: Theme): number =>
   Option.match(radius, {
     onNone: () => theme.radius.md,
@@ -66,51 +32,31 @@ const cornerOf = (radius: Option.Option<number>, theme: Theme): number =>
       Number.isFinite(value) && value >= 0 ? value : theme.radius.md,
   });
 
-/** What an image zoom paints at one frame. */
 export interface ImageZoomState {
-  /** Whether the picture is magnified right now. */
   readonly zoomed: boolean;
   readonly reducedMotion: boolean;
 }
 
-/** {@link ImageZoom} props. */
 export interface ImageZoomProps extends Omit<Props, "children" | "style"> {
-  /** A filesystem path, data URL or http(s) URL for the picture. */
   readonly src: string;
-  /**
-   * The picture's accessible name. Required: the image is the content, and the
-   * frame publishes no name of its own. A blank name reads as `"Picture"`.
-   */
+
   readonly alt: string;
-  /** The frame's width in pixels. Default `240`; a value below 1 falls back. */
+
   readonly width?: number;
-  /** The frame's height in pixels. Default `160`; a value below 1 falls back. */
+
   readonly height?: number;
-  /**
-   * The magnification while the pointer is over the frame. Default `1.6`,
-   * held to `1…4`; `1` turns the zoom off.
-   */
+
   readonly scale?: number;
-  /**
-   * The frame's corner radius. Default `theme.radius.md`; a value that cannot
-   * be painted (not finite, or negative) reads as that default, and `0` stays
-   * square.
-   */
+
   readonly radius?: number;
-  /** The retarget's duration. Default `"normal"` (200 ms) — it follows a pointer. */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string for the frame, joined after the resting style. */
+
   readonly className?: string;
-  /** A style for the frame, or a function of the zoom. */
+
   readonly style?: StateStyle<ImageZoomState>;
 }
 
-/**
- * A clipped frame whose picture magnifies and pans under the pointer.
- *
- * The frame keeps the size the caller gave it and takes no layout from the
- * picture, so a gallery does not reflow while a reader explores one image.
- */
 export const ImageZoom = ({
   src,
   alt,
@@ -213,7 +159,6 @@ export const ImageZoom = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const imageZoomMeta = {
   name: "Image zoom",
   tier: 5,

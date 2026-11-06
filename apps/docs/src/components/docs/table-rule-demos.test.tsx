@@ -24,18 +24,6 @@ import {
   sortedRows,
 } from "./table-rule-demos";
 
-/**
- * The Table sorting and selection previews.
- *
- * `packages/data/docs/table-sorting.mdx` and `table-selection.mdx` are the
- * package's Markdown, so the site mounts the drawings from `package-preview.ts`
- * and the pages themselves carry no `<ComponentPreview>`. The registry's guard
- * sees the demos; what it cannot see is whether the drawing still runs the
- * package's rules — the header cycle, the row model and the press semantics —
- * instead of a copy of them. These cases drive those rules and hold the markup
- * to the answer.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const source = readFileSync(
@@ -43,13 +31,11 @@ const source = readFileSync(
   "utf8",
 );
 
-/** The ids a rendered table paints, in the order it paints them. */
 const painted = (html: string): ReadonlyArray<string> =>
   [...html.matchAll(/data-row="([^"]+)"/g)].flatMap((match) =>
     match[1] === undefined ? [] : [match[1]],
   );
 
-/** The frame a reader sees, with a header press that does nothing. */
 const sortingMarkup = (order: SortOrder): string =>
   renderToStaticMarkup(
     <SortFrame
@@ -61,7 +47,6 @@ const sortingMarkup = (order: SortOrder): string =>
 
 describe("the Table sorting preview", () => {
   it("paints the rows the package's row model orders, not the source order", () => {
-    // The deploy queue's durations: 211, 148, 129, 92, 74, 36.
     const order = pressSortOrder([], "duration", "desc");
     const rows = sortedRows(order);
 
@@ -73,13 +58,12 @@ describe("the Table sorting preview", () => {
       "auth",
       "gateway",
     ]);
-    // The source order is the fixture's, so the drawing must have reordered.
+
     expect(rows[0]?.duration).toBe(211);
     expect(rows[5]?.duration).toBe(36);
   });
 
   it("walks every entry of a two-field order, not only the primary", () => {
-    // Environment decides; service breaks its ties, descending.
     const order = pressSortOrder(
       pressSortOrder([], "environment", "asc"),
       "service",
@@ -104,7 +88,6 @@ describe("the Table sorting preview", () => {
     ];
     const html = sortingMarkup(order);
 
-    // The announcement and the glyph are the package's, carrying the place.
     expect(html).toContain(
       `aria-label="${sortOrderLabel("Duration", order, "duration")}"`,
     );
@@ -115,11 +98,9 @@ describe("the Table sorting preview", () => {
     expect(glyphOf(order, "duration")).toBe("↓1");
     expect(glyphOf(order, "service")).toBe("↑2");
 
-    // An unsorted field says it is sortable, and paints the affordance.
     expect(glyphOf([], "status")).toBe("↕");
     expect(html).toContain(sortOrderLabel("Environment", order, "environment"));
 
-    // The rows paint in the package's order.
     expect(painted(html)).toEqual(sortedRows(order).map((row) => row.id));
   });
 
@@ -137,8 +118,7 @@ describe("the Table sorting preview", () => {
 describe("the sorting drawing's shape", () => {
   it("paints the table's header cell and its ghost sort button", () => {
     const html = sortingMarkup([]);
-    // `TableSortHeader` is a ghost `Button` inside a `TableHeaderCell`; the
-    // drawing reads the same two recipes rather than a table of its own.
+
     expect(html).toContain('class="gx-dt-hcell"');
     expect(html).toContain('class="gx-btn gx-btn-ghost gx-btn-sm gx-dt-sort"');
     expect(html).toContain('class="gx-dt"');
@@ -149,7 +129,7 @@ describe("the sorting drawing's shape", () => {
       "utf8",
     );
     const cell = css.slice(css.indexOf("\n.gx-dt-cell {"));
-    // `TABLE_CELL` compiles to `px-3 py-2 text-sm`.
+
     expect(cell.slice(0, cell.indexOf("}"))).toContain("padding: 8px 12px;");
     expect(cell.slice(0, cell.indexOf("}"))).toContain("font-size: 14px;");
   });
@@ -159,7 +139,6 @@ describe("the Table selection preview", () => {
   const rows = sortedRows(OPENING_ORDER);
   const keys = keysOf(rows);
 
-  /** Service ascending: auth, billing, gateway, media, reports, search. */
   it("orders the range by the painted order, not the fixture's", () => {
     expect(keys).toEqual([
       "auth",
@@ -240,8 +219,7 @@ describe("the Table selection preview", () => {
     expect(source).toContain('from "@gpuixui/data/grid-core"');
     expect(source).toContain('from "@gpuixui/data/sort/logic"');
     expect(source).toContain('from "@gpuixui/data/selection/logic"');
-    // A local `pressSortOrder`/`pressSelection` would be a copy the sweep in
-    // `table-preview.ts` exists to hold; these drawings run the package's.
+
     expect(source).not.toContain("export const pressSortOrder");
     expect(source).not.toContain("export const pressSelection");
   });

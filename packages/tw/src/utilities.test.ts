@@ -1,11 +1,3 @@
-/**
- * Guards the expanded shadcn utility table.
- *
- * Bug guarded: `ring-1` resolved through the spacing scale as 4px, and the
- * geometry/surface classes the Base UI and new-york-v4 recipes use had no
- * pinned values. Geometry is exact pixels; colours go through token roles.
- */
-
 import { describe, expect, it } from "vitest";
 import type { StyleDesc } from "@gpuix/react";
 import { alpha, elevationShadow, lightTheme } from "@gpuixui/tokens";

@@ -1,15 +1,3 @@
-/**
- * Guards the fixture `list-row-press` measures the shipped `List` with.
- *
- * The probe compares each press's selection against `LIST_ROW_PRESSES`; a case
- * that names a row the frame does not mount, two presses on one target, or a
- * README table that stopped printing the measured selection would all leave the
- * probe green against a fixture that no longer describes a list. The rule the
- * probe teaches lives in `press-routing-lifecycle`: a filled child is the
- * boundary a press stops at, so the shipped badge declares `pointerEvents:
- * "none"` to let the row hear the press, and the same badge with the pointer
- * handed back still swallows it.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -28,7 +16,6 @@ const readme = readFileSync(
   "utf8",
 );
 
-/** The `list-row-press` section, without the headings after it. */
 const section = (): string => {
   const start = readme.indexOf("### `list-row-press`");
   const end = readme.indexOf("\n### ", start + 1);

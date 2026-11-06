@@ -6,24 +6,11 @@ import {
   unresolvedImports,
 } from "./doc-snippets.test-util";
 
-/**
- * A block's copyable source is code the reader pastes into their own app.
- *
- * The MDX snippet walk (`page-snippets.test.ts`) reads fenced code on a page, and
- * a block's recipe is not a fence: it lives in `blocks.tsx` as a `source` string
- * rendered into the Code tab, so a renamed export in `@gpuixui/*` would leave
- * every block teaching a broken import while the build stayed green. This walks
- * the registry instead — every block's source is resolved against the entry
- * point's own source, and a block with an empty source fails, because a Code tab
- * that prints nothing is the same lie as a wrong import.
- */
-
 const registry = readFileSync(
   new URL("../components/docs/blocks.tsx", import.meta.url),
   "utf8",
 );
 
-/** The `source` a block's entry passes, read from the registry's own text. */
 const sourceBlocks = (): ReadonlyArray<{ name: string; source: string }> => {
   const entries = [
     ...registry.matchAll(/name: "([a-z0-9-]+)",\n[\s\S]*?source: (\w+),/g),
@@ -34,11 +21,6 @@ const sourceBlocks = (): ReadonlyArray<{ name: string; source: string }> => {
   }));
 };
 
-/**
- * The value a named source constant holds: a literal in the registry, one in
- * another docs module (the dashboard's lives in `dashboard.tsx`), or a compiled
- * block's whole file imported with `?raw`; `undefined` when none resolves.
- */
 const sourceText = (constant: string): string | undefined => {
   const declared = new RegExp(
     `const ${constant} = \`([\\s\\S]*?)\`;`,
@@ -46,7 +28,6 @@ const sourceText = (constant: string): string | undefined => {
   ).exec(registry);
   if (declared?.[1] !== undefined) return declared[1];
 
-  // A compiled block (`examples/blocks`, plan 728) is imported whole with `?raw`.
   const raw = new RegExp(`import ${constant} from "([^"]+)\\?raw"`).exec(
     registry,
   );

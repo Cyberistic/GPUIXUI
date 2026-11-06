@@ -1,27 +1,3 @@
-/**
- * Holds the `carousel-lifecycle` fixture, the probe that drives the shipped
- * component, and the numbers the README teaches.
- *
- * The gap this closes: `Carousel`'s offscreen suite proves the tree — which
- * slide is mounted, the index it reports, the dots' `aria-selected` — and three
- * of its claims are claims about paint. That only the slide on screen paints
- * (a spare slide mounted with `display: none` would paint here), that the frame
- * takes its height from that slide (the reason the track does not travel), and
- * that the indicator's inks change before its widths — none of them can be read
- * off a renderer that reports no style. The probe measures all three in a
- * window; this suite keeps the fixture, the drawing's declared geometry and the
- * prose a reader plans from pointing at the same numbers.
- *
- * The bug it guards is a drift between two copies of one geometry: the dot
- * widths and the level the tween runs on live in the component and in
- * `@gpuixui/motion`, and the fixture holds its own copy so the probe stays
- * native-free. A component that resized its pill, or a motion level that moved,
- * would leave the probe measuring a shape nothing paints — so the cases read
- * both sources and fail by name.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own component, recipe, scale and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -55,7 +31,6 @@ const recipes = read("../../../../packages/tw/src/recipes.ts");
 const scale = read("../../../../packages/tokens/src/scale.ts");
 const timing = read("../../../../packages/motion/src/timing.ts");
 
-/** A hex's channels, as the fixture declares them beside it. */
 const channelsOf = (hex: string) => {
   const value = Number.parseInt(hex.slice(1), 16);
   return {
@@ -80,8 +55,7 @@ describe("the slides", () => {
         g: slide.ink.g,
         b: slide.ink.b,
       });
-      // A fill or ink two slides share would let one slide's paint pass as the
-      // other's, which is the whole claim the capture reads.
+
       Arr.forEach(
         Arr.filter(slides, (other) => other.name !== slide.name),
         (other) => {
@@ -90,8 +64,7 @@ describe("the slides", () => {
           expect(other.height).not.toBe(slide.height);
         },
       );
-      // The fill is a colour the page around the frame does not paint: the
-      // fixture's inks are the only other paint inside it.
+
       expect(slide.ink.hex).not.toBe(slide.fill.hex);
     });
   });
@@ -105,7 +78,7 @@ describe("the slides", () => {
     expect(heights[0]?.derived).toBe(122);
     expect(heights[1]?.derived).toBe(162);
     expect(heights[2]?.derived).toBe(102);
-    // A frame sized by the tallest slide would paint 162 on every index.
+
     expect(new Set(Arr.map(heights, (entry) => entry.derived)).size).toBe(3);
   });
 
@@ -123,8 +96,6 @@ describe("the slides", () => {
 
 describe("the invariants", () => {
   it("reads a width through the point a rounded drawing loses", () => {
-    // Measured on this host at 2×: a 6px dot's exact ink is 5 points wide and an
-    // 18px pill's is 17. The band accepts both and refuses a swap.
     expect(sameWidth(5, CAROUSEL_DOT.rest)).toBe(true);
     expect(sameWidth(17, CAROUSEL_DOT.active)).toBe(true);
     expect(sameWidth(6, CAROUSEL_DOT.rest)).toBe(true);
@@ -158,7 +129,7 @@ describe("the component", () => {
     expect(CAROUSEL_DOT.rest).toBe(6);
     expect(component).toContain("const DOT_ACTIVE_WIDTH = 18;");
     expect(CAROUSEL_DOT.active).toBe(18);
-    // The press target around the drawing is the scale's 24px floor.
+
     expect(component).toContain("width: targetSize.minimum,");
     expect(scale).toContain("minimum: 24");
     expect(CAROUSEL_DOT.target).toBe(24);
@@ -168,29 +139,23 @@ describe("the component", () => {
     expect(component).toContain("backgroundColor: selected");
     expect(component).toContain("? theme.colors.primary");
     expect(component).toContain(": theme.colors.mutedForeground,");
-    // The drawing must not take the press the target exists for.
+
     expect(component).toContain('pointerEvents: "none"');
   });
 
   it("unmounts the slide that is not on screen, which is what the capture proves", () => {
     expect(component).toContain("if (index !== activeIndex) return null;");
-    // A spare slide kept mounted would paint beside the active one.
+
     expect(component).not.toContain('display: "none"');
   });
 
   it("travels the indicator on the fast level, from the width on screen", () => {
-    // The timing is the components' shared motion table, and the hook's name is
-    // the component's to choose: the presence module ships `useSurfaceTiming`
-    // for a surface that enters or leaves and `useMoveTiming` for a box that
-    // travels between two resting states. This holds the seam and the level, not
-    // the name, so either reading satisfies it and a removed timing fails.
     expect(component).toContain('from "./internal/presence.js"');
     expect(component).toMatch(/use(?:Move|Surface)Timing\("fast"\)/);
     expect(component).toContain("initial: false");
     expect(timing).toContain("fast: 160");
     expect(CAROUSEL_LEVEL_MS).toBe(160);
-    // The probe freezes a quarter of the way into the level, so the reading is
-    // a frame between the two widths rather than either end.
+
     expect(CAROUSEL_PARTIAL_MS).toBe(40);
     expect(CAROUSEL_PARTIAL_MS).toBeGreaterThan(0);
     expect(CAROUSEL_PARTIAL_MS).toBeLessThan(CAROUSEL_LEVEL_MS);
@@ -201,7 +166,7 @@ describe("the component", () => {
     expect(component).toContain("next < 0 || next >= count");
     expect(component).toContain("(next + count) % count");
     expect(component).toContain("Math.min(Math.max(next, 0), count - 1)");
-    // The edges disable the control rather than reporting a step that clamps.
+
     expect(component).toContain(
       "disabled={disabled || count === 0 || (atEdge && !loop)}",
     );
@@ -221,7 +186,7 @@ describe("the component", () => {
     Arr.forEach([0, 1, 2], (index) =>
       expect(dotId(index)).toBe(`${CAROUSEL_IDS.dots}-${index}`),
     );
-    // The indicators append their own index to the caller's id.
+
     expect(component).toContain("`${rest.testId}-${index}`");
   });
 });
@@ -246,8 +211,6 @@ describe("the probe and the registry", () => {
   });
 
   it("drives the shipped component through the fixture's own readings", () => {
-    // A probe that re-implemented a carousel could pass while the README taught
-    // the fixture's numbers, so the composition is the claim.
     expect(probe).toContain("<Carousel");
     expect(probe).toContain("<CarouselSlide");
     expect(probe).toContain(
@@ -260,13 +223,11 @@ describe("the probe and the registry", () => {
     expect(probe).toContain("clockPause");
     expect(probe).toContain("clockFastForward");
     expect(probe).toContain("clockResume");
-    // The loop rule is the caller's prop, so one window measures both rules.
+
     expect(probe).toContain("loop={loop}");
   });
 
   it("counts the checks the probe can assert", () => {
-    // The printed count is the run's own, so it cannot be derived statically;
-    // the assertion sites are the floor a hollow probe cannot fall below.
     const steps = probe.slice(probe.indexOf("export const carouselSteps"));
     const sites = Arr.length(
       Arr.fromIterable(steps.matchAll(/ctx\.expect[A-Za-z]+\(/g)),

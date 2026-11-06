@@ -34,8 +34,3 @@ import { Avatar } from "@gpuixui/components/avatar";
 | `clickThrough` | `boolean` | on, unless the avatar has its own press handler | lets a press fall through to the row, card or trigger the avatar sits in; an avatar given `onClick` keeps its press |
 | `className` | `string` | — | joined after the root recipe |
 | `style` | `StyleDesc \| (state) => StyleDesc` | — | merged last |
-
-## Notes
-- The root is one `role="img"` named `name`.
-- The presence dot is colour only, so `status` is the description.
-- **No load or error state**: a missing `src` paints nothing; initials do not return.

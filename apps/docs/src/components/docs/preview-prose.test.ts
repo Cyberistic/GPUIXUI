@@ -1,19 +1,8 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-/**
- * A preview is a picture, not a lecture.
- *
- * Every scene used to carry a paragraph under the drawing explaining the
- * component, its contract or what a control does — the page above it already
- * says all of that — so the picture read as a drawing with a caption. These
- * cases hold the scenes to the rule: a narration class cannot come back, and
- * the style sheet cannot keep a rule for one.
- */
-
 const dir = new URL(".", import.meta.url).pathname;
 
-/** Every narration class the scenes used to carry, none of which survives. */
 const proseClasses = `gx-demo-hint gx-toast-hint gx-toast-lede gx-form-lede
   gx-stepper-lede gx-timeline-lede gx-hotkey-note gx-aspect-note gx-avatar-foot
   gx-badge-foot gx-breadcrumb-hint gx-breadcrumb-tile-note gx-trule-hint

@@ -1,15 +1,3 @@
-/**
- * Browser preview for the Preview card page.
- *
- * The shipped card is a rich, hoverable surface — what separates it from a
- * tooltip is that it may hold a link or an action, so the pointer may travel
- * from the trigger into the content. It opens on hover or on a press, and it
- * takes the popover's `align`: `start`, `center` (the default) and `end`. The
- * drawing places the card with the popover's own arithmetic and fills the 6px
- * gap with a transparent bridge, so the pointer can cross onto the card and
- * press `Open file` instead of closing it on the way.
- */
-
 import { useState } from "react";
 import { alignLabel } from "./popover-alignment";
 import {

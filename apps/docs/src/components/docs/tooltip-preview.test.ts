@@ -11,30 +11,6 @@ import {
   type TipTiming,
 } from "./tooltip-preview";
 
-/**
- * The tooltip preview's clock.
- *
- * The preview teaches the tip's timing — the 0 ms provider delay, the 80 ms a
- * leaving pointer gets, the 300 ms reopen window and the immediate open on
- * focus — and a wrong number here would teach a behaviour the shipped component
- * does not have. The numbers are read out of the installed
- * `@gpuix/react/tooltip` source rather than trusted, and the machine is pinned
- * event by event, including the traversal a window measured as **not** running
- * the trigger's `onFocus`.
- *
- * The wrapper adds an exit the runtime does not have: a closed tip is held for
- * its tween and takes no presses while it leaves. That window and the travel it
- * fades from are read from the component and the presence seam the same way, so
- * a motion change upstream fails the page instead of leaving a stale paragraph.
- *
- * The rule itself is the motion package's: `packages/motion/src/presence.ts`
- * owns the frames, the hold window and the pointer a leaving surface refuses,
- * and the primitives module re-exports them rather than restating them. The
- * case therefore reads the house table for the rule and the primitives seam for
- * the re-export, so a move between the two packages fails here once instead of
- * leaving a copy to drift.
- */
-
 const runtime = new URL(
   "../../../../../packages/primitives/node_modules/@gpuix/react/dist/components/tooltip.js",
   import.meta.url,
@@ -57,7 +33,6 @@ const presence = new URL(
   import.meta.url,
 );
 
-/** The house presence table the primitives seam re-exports its rule from. */
 const housePresence = new URL(
   "../../../../../packages/motion/src/presence.ts",
   import.meta.url,
@@ -70,7 +45,6 @@ const motionTiming = new URL(
 
 const read = (url: URL): string => readFileSync(url, "utf8");
 
-/** The names the API table documents, one row each. */
 const apiRows = (): ReadonlyArray<string> => {
   const source = read(page);
   const start = source.indexOf("## API reference");
@@ -84,7 +58,6 @@ const apiRows = (): ReadonlyArray<string> => {
     .map((cell) => cell.replace(/`/g, ""));
 };
 
-/** Every prop the component declares, from its own interface. */
 const declaredProps = (): ReadonlyArray<string> => {
   const source = read(component);
   const start = source.indexOf("export interface TooltipProps {");
@@ -95,7 +68,6 @@ const declaredProps = (): ReadonlyArray<string> => {
   );
 };
 
-/** `slow`, so a scheduled open is distinguishable from an immediate one. */
 const slow: TipTiming = {
   delay: 600,
   closeGrace: 80,
@@ -103,7 +75,6 @@ const slow: TipTiming = {
   exitWindow: 160,
 };
 
-/** Run a list of events from the closed state. */
 const run = (
   events: ReadonlyArray<TipEvent>,
   timing: TipTiming = slow,
@@ -136,7 +107,7 @@ describe("the tooltip preview", () => {
       closeGrace: Number(grace),
       skipDelay: Number(skip),
     });
-    // The trigger's focus opens through `openImmediately`, not the delay.
+
     expect(source).toContain("onFocus: (event) => {");
     expect(source).toContain("context.openImmediately()");
   });
@@ -168,8 +139,7 @@ describe("the tooltip preview", () => {
 
   it("gives a leaving pointer the grace, and the tip cancels it", () => {
     const leaving = tipAfter(opened, { type: "leave" }, slow);
-    // The tip is still painted while the grace runs — the state a screenshot
-    // cannot tell from an idle tip.
+
     expect(leaving).toEqual({
       open: true,
       held: false,
@@ -177,29 +147,29 @@ describe("the tooltip preview", () => {
       timer: { after: 80, kind: "grace" },
     });
     expect(describeTip(leaving, slow)).toContain("closes it in 80 ms");
-    // Crossing the gap onto the tip cancels the close.
+
     expect(tipAfter(leaving, { type: "enter-tip" }, slow).timer).toBeNull();
-    // Without the crossing, the grace ends and the tip goes.
+
     const gone = tipAfter(leaving, { type: "elapsed" }, slow);
     expect(gone.open).toBe(false);
-    // The box is still painted for the wrapper's exit.
+
     expect(gone.leaving).toBe(true);
   });
 
   it("holds the tip shut after a press until the pointer leaves", () => {
     const pressed = tipAfter(opened, { type: "press" }, slow);
-    // Closed by the runtime, still painted for the wrapper's exit.
+
     expect(pressed).toEqual({
       open: false,
       held: true,
       leaving: true,
       timer: { after: 160, kind: "exit" },
     });
-    // Once the exit has run, the tip is gone and only leaving re-arms it.
+
     expect(describeTip(tipAfter(pressed, { type: "elapsed" }, slow))).toContain(
       "must leave",
     );
-    // Re-entering while the pointer never left opens nothing.
+
     expect(tipAfter(pressed, { type: "enter" }, slow)).toBe(pressed);
     expect(tipAfter(pressed, { type: "leave" }, slow).held).toBe(false);
   });
@@ -209,8 +179,7 @@ describe("the tooltip preview", () => {
     expect(describeTip(leaving, slow)).toBe(
       "leaving — 160 ms until it unmounts",
     );
-    // A leaving tip takes no presses: a press on the trigger is not the tip's,
-    // and crossing onto the box cannot cancel an exit that has already begun.
+
     expect(tipAfter(leaving, { type: "enter-tip" }, slow)).toBe(leaving);
     expect(tipAfter(leaving, { type: "elapsed" }, slow)).toEqual({
       open: false,
@@ -231,8 +200,7 @@ describe("the tooltip preview", () => {
       slow,
     );
     expect(leaving.leaving).toBe(true);
-    // The box never unmounted: an open request inside the window schedules the
-    // open, and elapsed returns the same box to its resting state.
+
     const reopening = tipAfter(leaving, { type: "enter" }, slow);
     expect(reopening.leaving).toBe(true);
     expect(tipAfter(reopening, { type: "elapsed" }, slow)).toEqual({
@@ -251,8 +219,7 @@ describe("the tooltip preview", () => {
       leaving: false,
       timer: null,
     });
-    // The frames still paint: a reduced tip opens on the same state change,
-    // without a journey.
+
     expect(
       tipAfter(
         tipAfter(closedTip, { type: "enter" }, reducedTipTiming),
@@ -273,10 +240,6 @@ describe("the tooltip preview", () => {
   });
 
   it("leaves the tip alone when a traversal reaches the trigger", () => {
-    // Measured in a window three times on 0.11.0: `Tab` moves the focus and the
-    // tip stays closed, because the traversal does not run the trigger's
-    // `onFocus`. A preview that opened here would teach a keyboard path the
-    // shipped component does not have.
     expect(run([{ type: "traversal" }])).toEqual(closedTip);
     expect(run([{ type: "traversal" }, { type: "escape" }])).toEqual(closedTip);
   });
@@ -296,9 +259,6 @@ describe("the tooltip preview", () => {
     const seam = read(presence);
     const house = read(housePresence);
 
-    // The travel is the tip's own, the timing and the window are the seam's.
-    // The preference is the provider's; the prop is the per-tip answer, so the
-    // wrapper resolves both before it asks the seam for a timing.
     expect(source).toContain("const TOOLTIP_OFFSET = 2;");
     expect(source).toContain("const reducedMotion = reducedMotionOf(");
     expect(source).toContain("useMotionPreference(),");
@@ -308,13 +268,12 @@ describe("the tooltip preview", () => {
     expect(source).toContain(
       "fadeFromAnchor(side, TOOLTIP_OFFSET), wanted, timing",
     );
-    // The rule lives in the motion package; the primitives seam publishes it.
+
     expect(house).toContain('pointerEvents: present ? "auto" : "none"');
     expect(house).toContain(
       'motionTiming(level, { phase: "exit", preference })',
     );
-    // A timing restored from storage may have lost its `exit` phase, so the
-    // window is read through `presenceTimingOf` rather than `timing.exit`.
+
     expect(house).toContain(
       "transitionWindowMs(presenceTimingOf(timing).exit)",
     );
@@ -323,14 +282,11 @@ describe("the tooltip preview", () => {
     expect(seam).toContain("surfaceTiming");
     expect(read(motionTiming)).toContain("fast: 160");
 
-    // The preview's own numbers are the seam's.
     expect(tipTiming.exitWindow).toBe(160);
     expect(reducedTipTiming.exitWindow).toBe(0);
   });
 
   it("prints the motion the component paints, and documents every prop", () => {
-    // The API table documents every prop the component declares, so a prop
-    // added to the wrapper cannot ship undocumented.
     expect(declaredProps().filter((prop) => !apiRows().includes(prop))).toEqual(
       [],
     );

@@ -1,14 +1,5 @@
 import { useState, type MouseEvent } from "react";
-
-/**
- * The notification centre block — a dark panel of grouped notifications, plus
- * the `@gpuixui/*` recipe a consumer copies.
- *
- * The panel owns only what a reader can watch: the selected filter, the rows
- * that were read, and the invite that was accepted. Those three rules live in
- * exported functions below, because "which rows does Verified show" and "is
- * this dot painted" are the parts a rendering cannot be checked on.
- */
+import { TabStrip } from "./tab-strip";
 
 export type NotificationFilter = "all" | "verified" | "mentions";
 
@@ -20,19 +11,19 @@ export type NotificationBody =
 
 export interface Notification {
   readonly id: string;
-  /** The day the row belongs to; a dashed rule separates two groups. */
+
   readonly group: "today" | "yesterday" | "earlier";
   readonly initials: string;
   readonly name: string;
   readonly action: string;
-  /** The timestamp under the name. */
+
   readonly at: string;
-  /** The right-aligned age. */
+
   readonly ago: string;
   readonly unread: boolean;
-  /** Show the row under the Verified tab. */
+
   readonly verified: boolean;
-  /** Show the row under the Mentions tab. */
+
   readonly mentions: boolean;
   readonly body: NotificationBody;
 }
@@ -212,9 +203,8 @@ export const notificationFilters: ReadonlyArray<{
 ];
 
 export interface NotificationState {
-  /** The rows this panel was told to mark read. */
   readonly read: ReadonlyArray<string>;
-  /** The invites that were accepted. */
+
   readonly accepted: ReadonlyArray<string>;
 }
 
@@ -223,7 +213,6 @@ export const initialNotificationState: NotificationState = {
   accepted: [],
 };
 
-/** A row's dot is painted when the notification arrived unread and stays unread. */
 export const isUnread = (
   state: NotificationState,
   row: Notification,
@@ -235,13 +224,11 @@ export const markRead = (
 ): NotificationState =>
   state.read.includes(id) ? state : { ...state, read: [...state.read, id] };
 
-/** Mark all read ignores the filter: every dot in the panel goes out. */
 export const markAllRead = (
   state: NotificationState,
   rows: ReadonlyArray<Notification>,
 ): NotificationState => ({ ...state, read: rows.map((row) => row.id) });
 
-/** Accepting an invite is a read plus a recorded decision. */
 export const acceptInvite = (
   state: NotificationState,
   id: string,
@@ -400,7 +387,6 @@ const Body = ({
 const DayGroups = ["today", "yesterday", "earlier"] as const;
 
 export interface NotificationCentreProps {
-  /** The tab the panel opens on. */
   readonly initialFilter?: NotificationFilter;
 }
 
@@ -441,27 +427,24 @@ export const NotificationCentreRender = ({
             </button>
           </div>
         </header>
-        <div
-          aria-label="Notification filters"
-          className="gx-tabs-list gx-notif-tabs"
-          role="tablist"
-        >
-          {notificationFilters.map(({ value, label }) => (
-            <button
-              aria-selected={filter === value}
-              className="gx-tab gx-notif-tab"
-              key={value}
-              onClick={() => setFilter(value)}
-              role="tab"
-              type="button"
-            >
-              {label}
-              {value === "all" ? (
-                <span className="gx-notif-count">{notifications.length}</span>
-              ) : null}
-            </button>
-          ))}
-        </div>
+        <TabStrip
+          className="gx-notif-tabs"
+          label="Notification filters"
+          onChange={setFilter}
+          options={notificationFilters.map(({ value, label }) => ({
+            value,
+            label: (
+              <>
+                {label}
+                {value === "all" ? (
+                  <span className="gx-notif-count">{notifications.length}</span>
+                ) : null}
+              </>
+            ),
+          }))}
+          tabClassName="gx-notif-tab"
+          value={filter}
+        />
         <div className="gx-notif-list">
           {groups.map(({ group, rows }, index) => (
             <div className="gx-notif-group" key={group}>

@@ -1,18 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A virtualized list of 2 000 rows: a window paints, the range is reported, and
- * a far row is revealed without mounting the rows above it.
- *
- * The list's children are all declared, and the runtime builds, lays out and
- * paints only the window near the viewport (`getPaintedText`, not the retained
- * child count, is what a probe can read). The readout is the range the runtime
- * last reported — the event lags the paint by one gesture, so the screen prints
- * it rather than treating it as the truth about what is visible.
- *
- * The reveal is the measured route for a far row: `renderer.scrollToItem` on the
- * list's own instance. It is why the ref matters.
- */
-
 import { useGpuix, type PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -21,16 +7,13 @@ import { Button } from "@gpuixui/primitives/button";
 import { VirtualList, type VisibleRange } from "../src/virtual/list.js";
 import { textStyle, useTheme } from "../src/theme.js";
 
-/** The logical row count. The screen paints a window of it. */
 export const VIRTUAL_ROWS = 2_000;
 
-/** The row the reveal action jumps to, and the row height every row declares. */
 export const REVEAL_ROW = 1_200;
 export const VIRTUAL_ROW_HEIGHT = 32;
 
 const rowIds: ReadonlyArray<number> = Arr.range(0, VIRTUAL_ROWS - 1);
 
-/** A list whose window the runtime owns. */
 export const VirtualListExample = () => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;

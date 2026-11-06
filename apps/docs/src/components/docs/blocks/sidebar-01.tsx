@@ -11,13 +11,6 @@ import {
   SbShell,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 01 — sectioned docs navigation, at `/blocks/sidebar-01`.
- *
- * shadcn's opening sidebar: a version switcher over a search field, four
- * labelled sections, and a breadcrumbed page beside it. The browser drawing and
- * the copyable recipe are two views of the same composition.
- */
 export const Sidebar01Render = () => (
   <SbShell>
     <SbPanel

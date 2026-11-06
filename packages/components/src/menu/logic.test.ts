@@ -1,12 +1,3 @@
-/**
- * Menu highlight transitions.
- *
- * The bugs these guard: `ArrowDown` from the last row stopped instead of
- * wrapping to the first; a keyboard move highlighted a disabled row, so Enter
- * did nothing while the highlight said it would; and focusing a row that is not
- * in the menu left the previous highlight in place with a stale id.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {

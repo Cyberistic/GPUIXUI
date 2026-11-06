@@ -1,15 +1,3 @@
-/**
- * Read the element tree a render function returns.
- *
- * These suites inspect the element tree rather than a painted frame: the
- * strongest honest check a pure unit test can make is the props and handlers the
- * runtime would receive, while painted behaviour is measured in the window
- * suites elsewhere in the repo. React gives the tree no prop type
- * (`JSX.Element` is `ReactElement<any, any>`), so this module decodes at the
- * boundary instead of assuming — the same rule the library applies to every
- * other unknown input.
- */
-
 import { Fragment, isValidElement, type ReactElement } from "react";
 import { expect } from "vitest";
 import * as Arr from "effect/Array";
@@ -24,11 +12,9 @@ const propsOf = (
 ): Option.Option<Record<string, unknown>> =>
   Schema.decodeUnknownOption(HostProps)(element.props);
 
-/** The host tag a host element renders — `div`, `img`, `text`. */
 export const hostTag = (element: ReactElement): Option.Option<string> =>
   Schema.decodeUnknownOption(Schema.String)(element.type);
 
-/** One named prop of any element, host or component. */
 export const elementProp = (
   element: ReactElement,
   name: string,
@@ -37,7 +23,6 @@ export const elementProp = (
     Option.flatMap(R.get(record, name), (value) => Option.fromNullishOr(value)),
   );
 
-/** One named prop of a host element, decoded. */
 export const hostProp = (
   element: ReactElement,
   name: string,
@@ -46,7 +31,6 @@ export const hostProp = (
 
 const StyleRecord = Schema.Record(Schema.String, Schema.Unknown);
 
-/** A `style` property decoded as a string — a width, a colour, a cursor. */
 export const hostStyleString = (
   element: ReactElement,
   name: string,
@@ -57,7 +41,6 @@ export const hostStyleString = (
     ),
   ).pipe(Option.flatMap(Schema.decodeUnknownOption(Schema.String)));
 
-/** A `style` property decoded as a number — a width, a height, a radius. */
 export const hostStyleNumber = (
   element: ReactElement,
   name: string,
@@ -74,7 +57,6 @@ const Handler = Schema.declare(
   { description: "A function the runtime calls with an event." },
 );
 
-/** A named event handler on any element, decoded. */
 export const elementHandler = (
   element: ReactElement,
   name: string,
@@ -83,7 +65,6 @@ export const elementHandler = (
     Schema.decodeUnknownOption(Handler)(value),
   );
 
-/** A named event handler on a host element, decoded. */
 export const hostHandler = (
   element: ReactElement,
   name: string,
@@ -92,7 +73,6 @@ export const hostHandler = (
     Schema.decodeUnknownOption(Handler)(value),
   );
 
-/** The decoded value, failing the test when the tree did not carry it. */
 export const expectSome = <A>(value: Option.Option<A>): A =>
   Option.getOrElse(value, () =>
     expect.fail("the element tree did not carry what this test asserts on"),
@@ -104,7 +84,6 @@ const ReactElement = Schema.declare(
   { description: "A React element, before the runtime sees it." },
 );
 
-/** An element's children as elements; fragments are flattened. */
 export const elementChildren = (
   element: ReactElement,
 ): ReadonlyArray<ReactElement> => {
@@ -137,7 +116,6 @@ const elementsOf = (child: unknown): ReadonlyArray<ReactElement> => {
   });
 };
 
-/** The first descendant carrying the `testId`, searched depth-first. */
 export const findByTestId = (
   element: ReactElement,
   testId: string,
@@ -157,7 +135,6 @@ export const findByTestId = (
   );
 };
 
-/** Every `<text>` host element in the tree, in paint order. */
 export const textElements = (
   element: ReactElement,
 ): ReadonlyArray<ReactElement> => {

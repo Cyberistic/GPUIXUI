@@ -1,16 +1,3 @@
-/**
- * The chat family's evidence frames, through the native test renderer.
- *
- * Four states a reviewer reads: an idle conversation, a streaming reply, a
- * reader scrolled up with the jump control visible, and the full chat block at
- * the docs page's size. Each frame is the real GPUix paint, and each assertion
- * proves the state actually painted before the file was written — a blank
- * window is not evidence.
- *
- * The files land under `apps/playground/.artifacts/live/`, which is gitignored:
- * local evidence for the run, never repository content.
- */
-
 import { mkdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -56,7 +43,6 @@ interface BlockProps {
   readonly height?: number;
 }
 
-/** The block the docs page mounts: header, transcript, composer. */
 const Block = ({ status, rows, grown, height = 560 }: BlockProps) => (
   <div
     style={{
@@ -125,7 +111,6 @@ const Block = ({ status, rows, grown, height = 560 }: BlockProps) => (
   </div>
 );
 
-/** The bubble's reaction pill, at the docs page's width. */
 const Reaction = () => (
   <div style={{ width: 420, display: "flex" }}>
     <Bubble variant="muted" testId="reaction-bubble">
@@ -142,7 +127,6 @@ const Reaction = () => (
   </div>
 );
 
-/** Wheel over the transcript. Positive scrolls toward older rows. */
 const wheel = (
   root: ReturnType<typeof renderComponent>,
   deltaY: number,

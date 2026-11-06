@@ -1,14 +1,7 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Inline edit example: rename a workspace where its name is shown.
- *
- * The caller owns the committed value; the component only owns the draft.
- */
-
 import { useState } from "react";
 import { InlineEdit } from "../src/inline-edit.js";
 
-/** A rename field beside an empty one that shows the placeholder. */
 export const InlineEditExample = () => {
   const [name, setName] = useState("Untitled workspace");
 

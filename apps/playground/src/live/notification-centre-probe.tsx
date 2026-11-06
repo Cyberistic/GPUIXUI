@@ -1,21 +1,3 @@
-/**
- * The `notification-centre-lifecycle` probe: the shipped toast system composed
- * as a notification centre, read back out of a window.
- *
- * Tier 5's **Notification centre** row was `?` — "composition over toasts +
- * panels" — and the composition had never been painted. The shipped toast
- * store is the transient half, and the question a centre asks of it is whether
- * it can also be the history: it keeps `DEFAULT_MAX` cards, so a fourth
- * notification expires the oldest. The probe measures both halves in one
- * window: the viewport stacks what is live (equal widths and right edges, push
- * order, the recipe's gap), and the app-owned panel keeps every title, the
- * expired one included. It also measures the overlay half a centre relies on —
- * a card's action reports once and dismisses its card, the survivors reflow,
- * and the auto-dismiss clock runs in the window rather than under a test clock.
- *
- * The view and the steps live here so the measurement is one module; the
- * registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -54,27 +36,21 @@ import {
   stackedInOrder,
 } from "./notification-centre.js";
 
-/** The card's enter tween (220 ms) plus a margin, before a box is read. */
 const ENTER = Duration.millis(320);
 
-/** The card's exit window (180 ms) plus a margin, before a card is gone. */
 const EXIT = Duration.millis(420);
 
-/** One title by index, so a step never retypes a string. */
 const titleAt = (index: number): string => NOTIFICATION_TITLES[index] ?? "";
 
-/** One tone by index, defaulted rather than asserted. */
 const toneAt = (index: number): (typeof NOTIFICATION_TONES)[number] =>
   NOTIFICATION_TONES[index] ?? "info";
 
-/** The page inside the provider: the app-owned centre and the push controls. */
 const NotificationCentrePage = (): ReactNode => {
   const theme = useTheme();
   const toast = useToast();
   const [notices, setNotices] = useState<ReadonlyArray<string>>([]);
   const [actions, setActions] = useState(0);
 
-  /** Pushes one draft and records it in the app's own history. */
   const notify = (
     title: string,
     tone: (typeof NOTIFICATION_TONES)[number],
@@ -201,7 +177,6 @@ const NotificationCentrePage = (): ReactNode => {
   );
 };
 
-/** The probe's window: one wrapper, the provider inside it, viewport last. */
 export const NotificationCentreProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -223,23 +198,17 @@ export const NotificationCentreProbe = (): ReactNode => {
   );
 };
 
-/** One painted box, with a failure that names the locator. */
 const boxOf = (ctx: Smoke.AsyncSmokeContext, testId: string) =>
   Effect.flatMap(ctx.host.bounds(testId), (bounds) =>
     ctx.expectSome(`the card ${testId} paints`, Option.fromNullishOr(bounds)),
   );
 
-/** Whether `testId` paints at all. */
 const isPainted = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
 ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
   Effect.map(ctx.host.bounds(testId), (bounds) => bounds !== null);
 
-/**
- * Waits out a card's exit: a dismissed card keeps painting through its exit
- * window, so the frame that removed it is the one that stops painting it.
- */
 const gone = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -315,7 +284,6 @@ export const notificationCentreSteps: Smoke.AsyncSmokeScenario["steps"] = (
       titleAt(2),
     );
 
-    // The stack rests folded; hovering it unfolds all three cards.
     yield* ctx.host.hover(notificationCardId("3"));
     yield* Effect.sleep(ENTER);
     const boxes = yield* Effect.forEach(
@@ -372,7 +340,6 @@ export const notificationCentreSteps: Smoke.AsyncSmokeScenario["steps"] = (
     );
     yield* ctx.host.capture("notification-expired");
 
-    // Expand again: only the front card answers while the stack is folded.
     yield* ctx.host.hover(notificationCardId("4"));
     yield* Effect.sleep(ENTER);
     yield* ctx.host.click(`toast-action-${notificationIds(4)[0]}`);

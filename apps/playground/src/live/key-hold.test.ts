@@ -1,17 +1,3 @@
-/**
- * Holds the `key-hold-lifecycle` fixture, the probe that drives it and the
- * section a reader plans from.
- *
- * The bug this guards: every activating control in the library refuses a repeat
- * (`decideActivation` returns `false` for `isHeld`), a guard that had only ever
- * been proved with synthetic events. If the binding never set the flag the guard
- * would be dead code and a held Enter would fire an action repeatedly — with
- * every unit test still green. The probe settles it in a window; this suite keeps
- * the fixture, the flags and the words the README prints pointing at one another.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe, host and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -35,7 +21,6 @@ const readme = read("../../README.md");
 const testingSmoke = read("../../../../packages/testing/src/smoke.ts");
 const testingReadme = read("../../../../packages/testing/README.md");
 
-/** This probe's own README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `key-hold-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -76,8 +61,6 @@ describe("the readouts", () => {
   });
 
   it("names the keys each half of the activation uses", () => {
-    // Enter acts on the press, Space on the release; the raw key is neither, so
-    // a repeat log cannot be read as an activation.
     expect(KEY_HOLD_KEYS.press).toBe("enter");
     expect(KEY_HOLD_KEYS.release).toBe("space");
     expect(KEY_HOLD_KEYS.raw).toBe("j");
@@ -88,8 +71,7 @@ describe("the host verb the probe needs", () => {
   it("declares a key down with the repeat flag, and documents it", () => {
     expect(testingSmoke).toContain("readonly keyDown?: (");
     expect(testingSmoke).toContain("isHeld: boolean");
-    // The window adapter is what makes the flag reachable: the automation
-    // protocol's `keyDown` command is the only route that carries it.
+
     expect(host).toContain('app.call("keyDown"');
     expect(host).toContain("isHeld");
     expect(testingReadme.replace(/\s+/g, " ")).toContain(
@@ -104,7 +86,7 @@ describe("the probe", () => {
     expect(probe).toContain("<Button");
     expect(probe).toContain("onActivate={");
     expect(probe).toContain("onClick={() => setPresses");
-    // The unguarded control is the payload reader: it must not filter `isHeld`.
+
     expect(probe).toContain("event.isHeld === true");
     expect(probe).toContain("<RawControl");
   });
@@ -123,7 +105,7 @@ describe("the probe", () => {
     expect(probe).toContain("a held Enter does not activate again");
     expect(probe).toContain("the Space release activates once");
     expect(probe).toContain("a pointer press runs onClick and onActivate");
-    // The count is the floor a planted assertion is held to.
+
     const sites = Arr.length(
       Arr.fromIterable(probe.matchAll(/ctx\.expect\w+\(/g)),
     );

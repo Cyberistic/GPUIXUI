@@ -1,17 +1,8 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Fieldset example: a billing address group, and the same group while saving.
- *
- * The group owns nothing but the grouping and the disabled state; the values are
- * the app's. `Fieldset` renders its own legend — the example never writes a
- * `FieldsetLegend` itself.
- */
-
 import { useState } from "react";
 import { Field, FieldInput } from "../src/field.js";
 import { Fieldset } from "../src/fieldset.js";
 
-/** One labelled text input inside a group. */
 const Row = ({
   label,
   description,
@@ -34,7 +25,6 @@ const Row = ({
   </Field>
 );
 
-/** The editable billing group: the values live here, the group only groups. */
 export const FieldsetExample = () => {
   const [street, setStreet] = useState("1 Infinite Loop");
   const [city, setCity] = useState("Cupertino");

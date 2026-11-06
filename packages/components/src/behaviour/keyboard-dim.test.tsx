@@ -1,18 +1,3 @@
-/**
- * The keyboard-dim opt-out, in the real GPUix renderer.
- *
- * The bug this guards: while one control holds keyboard focus the runtime dims
- * every other focusable element to `keyboardFocusDimOpacity` (40%) as a
- * "where can Tab go" cue. On a text-entry host that composites the reader's own
- * value and placeholder into the field's own fill, so the text they are reading
- * fades. `@gpuixui/primitives`' fields declare `keyboardFocusDim: false`; before
- * this suite every field host in this package still took the cue.
- *
- * `keyboardDimFailures` in `@gpuixui/tokens` measures the composite; this suite
- * holds the declaration itself on every host, plus the merge order that lets a
- * caller put the cue back.
- */
-
 import * as Arr from "effect/Array";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it } from "vitest";
@@ -43,7 +28,6 @@ import { SearchInput } from "../search-input.js";
 import { TagInput, TagInputField } from "../tag-input.js";
 import { TimePicker, TimePickerSegment } from "../time-picker.js";
 
-/** The declared dim of every text-entry host in the tree, in tree order. */
 const declarations = (root: ComponentTestRoot): ReadonlyArray<unknown> =>
   Arr.map(
     Arr.appendAll(
@@ -59,7 +43,6 @@ const options: ReadonlyArray<ComboboxOption> = [
 
 let mounted: ComponentTestRoot | undefined;
 
-/** Render one case; the cleanup below keeps a failed case from leaking its root. */
 const mount = (node: ReactNode): ComponentTestRoot => {
   mounted = renderComponent(node);
   return mounted;
@@ -72,7 +55,6 @@ const cleanup = (): void => {
 
 afterEach(cleanup);
 
-/** One minimal composition per component that paints a text-entry host. */
 const cases: ReadonlyArray<readonly [string, () => ComponentTestRoot]> = [
   ["SearchInput", () => mount(<SearchInput testId="search" />)],
   [
@@ -183,7 +165,7 @@ describe("keyboard dim", () => {
     );
 
     clickCentreOf(root, "combobox-trigger");
-    // The popup mounts and focuses its field in a microtask.
+
     await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();

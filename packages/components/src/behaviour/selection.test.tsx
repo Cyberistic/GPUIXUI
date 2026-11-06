@@ -1,23 +1,3 @@
-/**
- * The selection wash, in the real GPUix renderer.
- *
- * The bug this guards: `@gpuix/native@0.11.0` defaults `selectionColor` to the
- * theme accent at 35%, a colour no token contract measures, so every selectable
- * host in this package painted a wash the design system never checked. Each one
- * now declares the theme's own `selection` role — the wash `selectionFailures`
- * holds to a visibility and a legibility floor. The combobox's own search field
- * was the last `<input>` host still handing the runtime's default (it passes only
- * the recipe and the ring), so a run selected there kept a wash no contract
- * measured; the chat composer's `<textarea>` was the last host the suite did not
- * read back, and it is covered now too.
- *
- * The second bug these guard: a message's own tint is not one of those content
- * tones, so the designed role leaves a selectable run's copy under the body floor
- * in 32 of the 36 dark tint placements. `Alert` derives the wash per surface
- * (`selectionOn` through `messageSelection`), and the suite holds the paint and
- * the premise it is derived from.
- */
-
 import * as Arr from "effect/Array";
 import {
   alphaOf,
@@ -60,14 +40,12 @@ import { SearchInput } from "../search-input.js";
 import { TagInput, TagInputField } from "../tag-input.js";
 import { TimePicker, TimePickerSegment } from "../time-picker.js";
 
-/** The declared wash of every input host in the tree, in tree order. */
 const washes = (root: ComponentTestRoot): ReadonlyArray<unknown> =>
   Arr.map(
     root.renderer.findByType("input"),
     (element) => element.style.selectionColor,
   );
 
-/** One minimal composition per component that paints a selectable host. */
 const cases: ReadonlyArray<readonly [string, () => ComponentTestRoot]> = [
   ["SearchInput", () => renderComponent(<SearchInput testId="search" />)],
   [
@@ -199,8 +177,6 @@ describe("selection wash", () => {
   });
 
   it("is not the runtime's unmeasured accent default", () => {
-    // An accent default would pass a test that only compared the hosts with
-    // each other, so the role itself has to differ from the role it replaced.
     expect(darkTheme.colors.selection).not.toBe(darkTheme.colors.primary);
   });
 
@@ -231,9 +207,6 @@ describe("selection wash", () => {
         const derived = messageSelection(theme, value);
         expect(wash, `${name} ${value}`).toBe(derived);
 
-        // The description keeps the page ink, and a wash inherits down the
-        // subtree, so the pair is the copy the message paints read through the
-        // wash on the tone's own tint.
         const tint = tone(theme, value).bg;
         const composed = blend(tint, derived, alphaOf(derived));
 
@@ -252,9 +225,6 @@ describe("selection wash", () => {
   });
 
   it("does not leave a dark tint on the page's designed wash", () => {
-    // The premise: the role `selectionFailures` measures on the content tones is
-    // under the body floor when it washes a message's own tint, which is why the
-    // wash is derived against the surface the run is read on.
     const designed = blend(
       darkTheme.colors.warningSoft,
       darkTheme.colors.selection,
@@ -267,8 +237,7 @@ describe("selection wash", () => {
     expect(messageSelection(darkTheme, "warning")).not.toBe(
       darkTheme.colors.selection,
     );
-    // A light tint carries the designed role, so the derivation is per surface
-    // rather than a second wash for every message.
+
     expect(messageSelection(lightTheme, "warning")).toBe(
       lightTheme.colors.selection,
     );

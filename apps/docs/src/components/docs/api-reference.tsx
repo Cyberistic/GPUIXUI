@@ -5,11 +5,6 @@ import { publicSymbolIndex } from "../../lib/public-symbols-data";
 import { docsUrlFor, filterSymbols } from "../../lib/public-symbols";
 import { useIndexQuery } from "./use-index-query";
 
-/**
- * A symbol's name, linked to the page that documents it when its package mounts
- * one. The module path below says where the name is declared either way, so the
- * link is a shortcut rather than the only provenance on the row.
- */
 function SymbolName({
   name,
   module: modulePath,
@@ -32,26 +27,12 @@ function SymbolName({
   );
 }
 
-/**
- * The workspace's public surface, rendered from the packages themselves.
- *
- * Two tables. The first is the entry points — the specifiers a consumer may
- * import, read from each package's `exports` map. The second is every symbol
- * behind them, read from the source at build time, so the page answers "what
- * does this package give me" without the reader leaving it.
- *
- * Neither table is a copy: both are generated, so a page cannot advertise an
- * export the code does not have. The symbol filter travels in the URL (`?q=…`)
- * like the component index's, so a reader who found a name can link the view
- * that holds it instead of pointing at a page of two thousand rows.
- */
 export function ApiReference() {
   const { query, chooseQuery } = useIndexQuery();
 
   return <ApiReferenceView onQueryChange={chooseQuery} query={query} />;
 }
 
-/** The reference's markup, with the symbol filter the mount read off the URL. */
 export function ApiReferenceView({
   query,
   onQueryChange,

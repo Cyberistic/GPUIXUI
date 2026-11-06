@@ -1,17 +1,7 @@
 import { useReducer, useRef, useState } from "react";
 import { BlockIcon, type BlockIconName } from "./block-icons";
 import { RailToggle } from "./sidebar-rail";
-
-/**
- * Email inbox block — `/blocks/email-inbox`.
- *
- * A four-pane mail client: the folder rail, the message list, the reading pane
- * and the sender's contact card. `EmailInboxRender` is the browser reproduction
- * of the native geometry; `emailInboxSource` is the recipe a consumer copies.
- *
- * `inboxReducer` and `messagesInTab` are pure so the list's two filters — the
- * selected message and the Primary/Promotions/Social tab — are table-tested.
- */
+import { TabStrip } from "./tab-strip";
 
 export type MailTab = "primary" | "promotions" | "social";
 
@@ -36,11 +26,10 @@ export interface MailMessage {
   readonly unread: boolean;
   readonly attachment: boolean;
   readonly flagged: boolean;
-  /** A provider label, such as Gmail's `Promotion` chip. */
+
   readonly tag?: string;
 }
 
-/** The open thread: Killua's message is not in the list, as in a thread view. */
 export const bobThread: MailMessage = {
   id: "bob-dylan",
   sender: "Killua Zoldyck",
@@ -55,7 +44,6 @@ export const bobThread: MailMessage = {
   flagged: false,
 };
 
-/** The Primary tab, in the order the list lays it out. */
 export const inboxMessages: ReadonlyArray<MailMessage> = [
   {
     id: "em-client",
@@ -194,11 +182,9 @@ export const inboxReducer = (
   return { ...state, tab: action.tab };
 };
 
-/** The messages a tab lists. */
 export const messagesInTab = (tab: MailTab): ReadonlyArray<MailMessage> =>
   inboxMessages.filter((message) => message.category === tab);
 
-/** The message the reading pane shows; the thread is the fallback. */
 export const selectedMail = (state: InboxState): MailMessage =>
   [...inboxMessages, bobThread].find(
     (message) => message.id === state.selectedId,
@@ -280,7 +266,6 @@ function FolderRow({
   );
 }
 
-/** The history/attachments switch, and the card it belongs to. */
 function ContactRail() {
   const [tab, setTab] = useState<"history" | "attachments">("history");
 
@@ -306,30 +291,17 @@ function ContactRail() {
           <span className="gx-mail-contact-value">+1 (555) 014-2025</span>
         </div>
       </div>
-      <div
-        aria-label="Contact history"
-        className="gx-mail-contact-tabs"
-        role="tablist"
-      >
-        <button
-          aria-selected={tab === "history"}
-          className="gx-mail-contact-tab"
-          onClick={() => setTab("history")}
-          role="tab"
-          type="button"
-        >
-          History
-        </button>
-        <button
-          aria-selected={tab === "attachments"}
-          className="gx-mail-contact-tab"
-          onClick={() => setTab("attachments")}
-          role="tab"
-          type="button"
-        >
-          Attachments
-        </button>
-      </div>
+      <TabStrip
+        className="gx-mail-contact-tabs-list"
+        label="Contact history"
+        onChange={setTab}
+        options={[
+          { value: "history", label: "History" },
+          { value: "attachments", label: "Attachments" },
+        ]}
+        tabClassName="gx-mail-contact-tab"
+        value={tab}
+      />
       <div className="gx-mail-contact-panel" role="tabpanel">
         {tab === "history" ? (
           <ul className="gx-mail-contact-list">
@@ -363,7 +335,6 @@ export interface EmailInboxSurfaceProps {
   readonly onToggleRail: () => void;
 }
 
-/** The client at a given state; `EmailInboxRender` owns the reducer. */
 export function EmailInboxSurface({
   state,
   onSelectMessage,
@@ -455,6 +426,7 @@ export function EmailInboxSurface({
           >
             {toolbar.map((action) => (
               <button
+                aria-label={action.label}
                 className="gx-mail-action"
                 key={action.label}
                 onClick={
@@ -464,31 +436,27 @@ export function EmailInboxSurface({
                       }
                     : undefined
                 }
+                title={action.label}
                 type="button"
               >
                 <BlockIcon name={action.icon} size={14} />
-                {action.label}
+                <span className="gx-mail-action-label">{action.label}</span>
               </button>
             ))}
           </div>
-          <div
-            aria-label="Inbox categories"
+        </div>
+        <div className="gx-mail-tabbar">
+          <TabStrip
             className="gx-mail-tabs"
-            role="tablist"
-          >
-            {mailTabs.map((tab) => (
-              <button
-                aria-selected={state.tab === tab.id}
-                className="gx-mail-tab"
-                key={tab.id}
-                onClick={() => onSelectTab(tab.id)}
-                role="tab"
-                type="button"
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+            label="Inbox categories"
+            onChange={onSelectTab}
+            options={mailTabs.map((tab) => ({
+              value: tab.id,
+              label: tab.label,
+            }))}
+            tabClassName="gx-mail-tab"
+            value={state.tab}
+          />
         </div>
 
         <div className="gx-mail-panes">
@@ -542,24 +510,32 @@ export function EmailInboxSurface({
           </section>
 
           <section aria-label="Reading pane" className="gx-mail-read">
-            <h3 className="gx-mail-subject-lg">{message.subject}</h3>
-            <div className="gx-mail-from">
-              <span className="gx-mail-avatar gx-mail-avatar-lg">
-                {message.avatar}
-              </span>
-              <div className="gx-mail-from-text">
-                <p>
-                  <strong>{message.sender}</strong>
-                  <span className="gx-mail-to">
-                    to gon@hunterassociation.org
-                  </span>
-                </p>
-                <span className="gx-mail-date">{message.date}</span>
+            <header className="gx-mail-read-head">
+              <h3 className="gx-mail-subject-lg">{message.subject}</h3>
+              <div className="gx-mail-from">
+                <span className="gx-mail-avatar gx-mail-avatar-lg">
+                  {message.avatar}
+                </span>
+                <div className="gx-mail-from-text">
+                  <p className="gx-mail-from-line">
+                    <strong>{message.sender}</strong>
+                  </p>
+                  <p className="gx-mail-from-meta">
+                    <span className="gx-mail-to">
+                      to gon@hunterassociation.org
+                    </span>
+                    <span className="gx-mail-date">{message.date}</span>
+                  </p>
+                </div>
+                <button
+                  aria-label="Reply"
+                  className="gx-mail-icon"
+                  type="button"
+                >
+                  <BlockIcon name="reply" size={14} />
+                </button>
               </div>
-              <button aria-label="Reply" className="gx-mail-icon" type="button">
-                <BlockIcon name="reply" size={14} />
-              </button>
-            </div>
+            </header>
             <p className="gx-mail-body">{message.body}</p>
             <div className="gx-mail-reply">
               <textarea
@@ -591,7 +567,6 @@ export function EmailInboxSurface({
   );
 }
 
-/** The block's preview: the reducer, then the surface at its current state. */
 export function EmailInboxRender() {
   const [state, dispatch] = useReducer(inboxReducer, initialInboxState);
 
@@ -611,7 +586,6 @@ export const emailInboxPackages = [
   "@gpuixui/icons",
 ] as const;
 
-/** The recipe a consumer copies. */
 export const emailInboxSource = `import { Avatar } from "@gpuixui/components/avatar";
 import { Badge } from "@gpuixui/components/badge";
 import { Tabs, TabsList, TabsTrigger } from "@gpuixui/components/tabs";

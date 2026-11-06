@@ -12,17 +12,6 @@ import {
   liveStatus,
 } from "./live-scene";
 
-/**
- * `/live`'s screen, and the route that mounts it.
- *
- * The page is the one surface on the site whose pixels come from GPUix, so the
- * React tree it mounts is what the reader actually sees. Two things can go
- * wrong silently: a style that drifts from the library's recipe, and a handler
- * that stops being wired (the action still paints). The probe measures both in
- * a browser; these cases hold the same claims in Node against the element tree,
- * where the failure names the element.
- */
-
 const root = new URL("../../", import.meta.url);
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
@@ -30,7 +19,6 @@ const read = (path: string): string =>
 const theme = themes.dark;
 const box = { width: 1_000, height: 700 } as const;
 
-/** One element in the tree, read without asserting a React type. */
 interface Element {
   readonly type: unknown;
   readonly prop: (key: string) => unknown;
@@ -47,7 +35,6 @@ const elementOf = (value: unknown): Element | undefined => {
   };
 };
 
-/** The element a `testId` names, anywhere under `tree`. */
 const find = (tree: unknown, testId: string): Element | undefined => {
   const element = elementOf(tree);
   if (element === undefined) return undefined;
@@ -139,9 +126,6 @@ describe("the live surface's route", () => {
     const surface = read("src/components/docs/live-surface.tsx");
     const scene = read("src/lib/live-scene.tsx");
 
-    // The owed piece plan 440 recorded: `@gpuix/react` decides the tree and the
-    // renderer paints it. A batch fed by hand looks identical in a screenshot,
-    // so the source is the only thing that can tell the two apart.
     expect(surface).toContain("react.createRoot(host)");
     expect(surface).toContain("<LiveScene");
     expect(surface).toContain("handleGpuixEvent(event, renderer)");
@@ -158,11 +142,11 @@ describe("the live surface's route", () => {
       read("src/lib/live-scene.tsx"),
     ].join("\n");
 
-    // The platform refuses a second surface, and a module-scope import would
-    // evaluate the wasm in the Worker.
     expect(sources.match(/new glue\.GpuixRenderer\(/g) ?? []).toHaveLength(1);
     expect(sources.match(/\.init\(\{\}\)/g) ?? []).toHaveLength(1);
-    expect(surface).toContain('import("@gpuix/native/wasm/gpuix-web.js")');
+    expect(surface).toContain(
+      'await import("@gpuix/native/wasm/gpuix-web.js")',
+    );
     expect(surface).toContain('await import("@gpuix/react")');
     expect(surface.indexOf("useEffect")).toBeLessThan(
       surface.indexOf("await import("),
@@ -186,14 +170,11 @@ describe("the live surface's route", () => {
       "Cross-Origin-Embedder-Policy",
     ];
 
-    // The wasm shares its memory; without both headers it never starts.
     for (const header of headers) {
       expect(vite).toContain(header);
       expect(start.toLowerCase()).toContain(header.toLowerCase());
     }
 
-    // Both are scoped to the one route: isolating /live would lock the rest of
-    // the site's embeds for a renderer it never loads.
     expect(vite).toContain('startsWith("/live")');
     expect(start).toContain('pathname.startsWith("/live")');
     expect(start).toContain(
@@ -202,9 +183,6 @@ describe("the live surface's route", () => {
   });
 
   it("keeps the real surface mounted on its own route", () => {
-    // The preview's honesty note was removed, so /live is reached by its
-    // address rather than a link under every demo; the route must still mount
-    // the real renderer.
     expect(read("src/routes/live.tsx")).toContain("LiveSurface");
   });
 

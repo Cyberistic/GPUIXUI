@@ -1,10 +1,3 @@
-/**
- * Launcher — the ⌘K command HUD (plan 729): a large search field, grouped
- * results with their shortcuts, and an action footer, on the `hud` material.
- *
- * It is a centred panel in the window until plan 706 (overlay windows) gives
- * the runtime a borderless floating window.
- */
 import { Icon } from "@gpuixui/icons";
 import { Input, Stack, Text } from "@gpuixui/primitives";
 import { materialFill } from "@gpuixui/tokens";

@@ -1,19 +1,10 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * EmptyState example: a collection with nothing in it, twice.
- *
- * The first panel is the "never had anything" case with a way forward; the second
- * is the "your filters excluded everything" case, where the action clears them.
- * Both live inside a `Card`, because an empty state paints no surface of its own.
- */
-
 import { useState } from "react";
 import { Button } from "../src/internal/button.js";
 import { Card, CardHeader, CardTitle } from "../src/card.js";
 import { EmptyState } from "../src/empty-state.js";
 import { useTheme } from "../src/internal/theme.js";
 
-/** A project list with nothing in it, and a filter with no matches. */
 export const EmptyStateExample = () => {
   const theme = useTheme();
   const [filtered, setFiltered] = useState(true);

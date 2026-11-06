@@ -1,15 +1,3 @@
-/**
- * Toast behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a pushed toast never reaching the viewport; the stack
- * painting every card at one size (so a reader could not tell which card the
- * corner owned); a hover that folded before the pointer finished moving between
- * two cards; a swipe that dismissed on the first pixel or never; an action that
- * ran twice or outlived its card; a promise that queued a second card instead of
- * settling the loading one; a dismissed card that stayed a Tab stop while it
- * faded; and a viewport that moved the page when the stack unfolded.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import { Duration } from "effect";
 import * as Arr from "effect/Array";
@@ -36,7 +24,6 @@ import { ToastProvider, ToastViewport, useToast } from "../toast.js";
 import { STACK_GAP, STACK_PEEK } from "../toast/stack.js";
 import { SWIPE_THRESHOLD } from "../toast/swipe.js";
 
-/** A page with the controls every case drives, plus an unrelated sibling. */
 const Controls = ({
   onElsewhere,
   onAction,
@@ -203,8 +190,6 @@ const Harness = ({
   readonly swipe?: boolean;
   readonly reduced?: boolean;
 }) => (
-  // One root element: the native test renderer reports a single tree root, and a
-  // provider's children are siblings of each other.
   <div style={{ width: 1200, height: 760 }}>
     <MotionProvider preference={reduced === true ? "reduced" : "animated"}>
       <ToastProvider defaultDuration={duration}>
@@ -218,14 +203,12 @@ const Harness = ({
   </div>
 );
 
-/** The store updates through its runtime, so let the microtask queue drain. */
 const drain = async (): Promise<void> => {
   await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
 };
 
-/** Drain the store, deliver the layout reports, and land every entry tween. */
 const sync = async (root: ComponentTestRoot): Promise<void> => {
   await drain();
   settle(root);
@@ -234,19 +217,16 @@ const sync = async (root: ComponentTestRoot): Promise<void> => {
   await drain();
 };
 
-/** A measured height, or a broken-fixture failure. */
 const heightOf = (root: ComponentTestRoot, testId: string): number =>
   Option.getOrElse(boundsOf(root, testId), () => {
     throw new Error(`behaviour: no box for "${testId}"`);
   }).height;
 
-/** The measured x of a card, or a broken-fixture failure. */
 const xOf = (root: ComponentTestRoot, testId: string): number =>
   Option.getOrElse(boundsOf(root, testId), () => {
     throw new Error(`behaviour: no box for "${testId}"`);
   }).x;
 
-/** Walk the window's Tab order: focus `from`, then take `steps` stops. */
 const tabWalk = (
   root: ComponentTestRoot,
   from: string,
@@ -260,7 +240,6 @@ const tabWalk = (
   });
 };
 
-/** Press a card and drag it `dx` pixels sideways, then release. */
 const swipe = async (
   root: ComponentTestRoot,
   testId: string,
@@ -326,12 +305,10 @@ describe("Toast", () => {
       const middle = requireBounds(page, "toast-2");
       const oldest = requireBounds(page, "toast-1");
 
-      // The newest card is the corner's card: full width and readable height.
       expect(newest.height).toBeGreaterThan(STACK_PEEK * 2);
       expect(middle.height).toBeCloseTo(STACK_PEEK, 0);
       expect(oldest.height).toBeCloseTo(STACK_PEEK, 0);
 
-      // Each older card is inset from the right and sits above the one below.
       expect(middle.x).toBeGreaterThan(newest.x);
       expect(oldest.x).toBeGreaterThan(middle.x);
       expect(oldest.y + oldest.height).toBeLessThanOrEqual(middle.y + 1);
@@ -364,7 +341,7 @@ describe("Toast", () => {
       expect(middle.y - (oldest.y + oldest.height)).toBeCloseTo(STACK_GAP, 0);
 
       hoverCentreOf(page, "elsewhere");
-      // The release waits out the hold's grace before the stack folds.
+
       await new Promise((resolve) => setTimeout(resolve, 160));
       page.renderer.clockFastForward(800);
       await sync(page);
@@ -419,10 +396,6 @@ describe("Toast", () => {
   });
 
   it("keeps a card pushed during a hold until the stack is released", async () => {
-    // The bug this guards: a card queued while the pointer rested on the stack
-    // was scheduled with a running timer, so it expired under the pointer that
-    // had asked for time to read it. The second push is queued by a timer, so
-    // the pointer never leaves the stack between the two cards.
     const page = renderComponent(<Harness duration={Duration.millis(300)} />);
     try {
       clickCentreOf(page, "push-later");
@@ -507,7 +480,6 @@ describe("Toast", () => {
       clickCentreOf(page, "push-warning");
       await sync(page);
 
-      // The front card is the newest one.
       clickCentreOf(page, "toast-dismiss-2");
       await waitFor(() =>
         expect(page.renderer.findByTestId("toast-2")).toBeUndefined(),
@@ -521,11 +493,6 @@ describe("Toast", () => {
   });
 
   it("keeps a dismissed card's controls out of the window's tab order", async () => {
-    // The bug this guards: a dismissed card stays painted for its 180 ms exit
-    // and the shield takes the presses, but the runtime decides the Tab order
-    // element by element — neither `pointerEvents` nor the shield reaches a
-    // descendant's stop. A reader Tab-browsing while a card expired could land
-    // on its dismiss control and have it unmount under the keyboard.
     const page = renderComponent(<Harness duration={Duration.millis(600)} />);
     try {
       clickCentreOf(page, "push-action");
@@ -623,13 +590,12 @@ describe("Toast", () => {
       await waitFor(() =>
         expect(page.renderer.findByTestId("toast-3")).toBeUndefined(),
       );
-      // Leaving the stack folds it; the pointer is on the close that just went.
+
       hoverCentreOf(page, "elsewhere");
       await new Promise((resolve) => setTimeout(resolve, 160));
       page.renderer.clockFastForward(800);
       await sync(page);
 
-      // Two cards remain; the middle card is now the full one.
       expect(heightOf(page, "toast-2")).toBeGreaterThan(STACK_PEEK * 2);
       expect(heightOf(page, "toast-1")).toBeCloseTo(STACK_PEEK, 0);
     } finally {
@@ -701,8 +667,6 @@ describe("Toast", () => {
       settleMotion(page);
       const rest = xOf(page, "toast-1");
 
-      // A slow drag under the distance threshold: 20px over 120ms is a
-      // deliberate movement, not a flick, so the card springs back.
       await swipe(page, "toast-1", -(SWIPE_THRESHOLD - 20), 120);
       page.renderer.clockFastForward(400);
       await sync(page);
@@ -745,7 +709,6 @@ describe("Toast", () => {
       );
       await sync(page);
 
-      // One row changed state; it did not queue a second card.
       expect(page.renderer.findByTestId("toast-2")).toBeUndefined();
       expect(page.renderer.findByTestId("toast-1")?.customProps?.role).toBe(
         "status",
@@ -785,7 +748,6 @@ describe("Toast", () => {
       hoverCentreOf(page, "toast-3");
       await sync(page);
 
-      // No fast-forward: the reduced policy is an instant assignment.
       expect(heightOf(page, "toast-1")).toBeGreaterThan(STACK_PEEK * 2);
     } finally {
       page.unmount();
@@ -793,10 +755,6 @@ describe("Toast", () => {
   });
 
   it("keeps an evicted card the box it faded with", async () => {
-    // The bug this guards: pushing a fourth toast dropped the oldest from the
-    // store and the viewport re-slotted it by its position on the way out, so
-    // the leaving card widened from its rank's inset to the stack's full width
-    // as it faded — every push flashed a bright full-width bar above the stack.
     const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
     try {
       clickCentreOf(page, "push-three");
@@ -818,9 +776,6 @@ describe("Toast", () => {
   });
 
   it("moves the cards behind a push by a tween, never by their inset", async () => {
-    // The same flash seen from the other side: a rank's inset is part of the
-    // slot's width, so applying it as a style snapped every card in the stack
-    // sideways in the frame the push landed.
     const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
     try {
       clickCentreOf(page, "push-three");
@@ -835,9 +790,6 @@ describe("Toast", () => {
       settle(page);
       const after = [1, 2, 3].map((id) => requireBounds(page, `toast-${id}`));
 
-      // One frame of the stack's fast-out curve moves a card at most about half
-      // its inset; a snapped inset moved the whole width (16 px for a card one
-      // rank further back, 32 px for the card the push evicted) in that frame.
       Arr.forEach(after, (box, index) => {
         const previous = before[index];
         if (previous === undefined) return;
@@ -850,9 +802,6 @@ describe("Toast", () => {
   });
 
   it("closes the stack while the front card leaves, not after it is gone", async () => {
-    // The bug this guards: the cards behind a leaving one kept their ranks until
-    // its exit window ended, so the stack sat still for 180 ms and then jumped
-    // into its new shape once the ghost unmounted.
     const page = renderComponent(<Harness duration={Duration.seconds(300)} />);
     try {
       clickCentreOf(page, "push-three");
@@ -865,8 +814,6 @@ describe("Toast", () => {
       page.renderer.clockFastForward(120);
       settle(page);
 
-      // The ghost is still painted, and the card behind it has already taken
-      // the front and is growing into it.
       expect(page.renderer.findByTestId("toast-3")).toBeDefined();
       expect(heightOf(page, "toast-2")).toBeGreaterThan(STACK_PEEK * 2);
     } finally {

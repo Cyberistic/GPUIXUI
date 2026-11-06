@@ -39,12 +39,6 @@ import timePicker from "../../../../../packages/components/src/time-picker.tsx?r
 import toast from "../../../../../packages/components/src/toast.tsx?raw";
 import tooltip from "../../../../../packages/primitives/src/components/Tooltip.tsx?raw";
 
-/**
- * The real component implementation, shown under Installation as `?raw`.
- *
- * A docs page links the same file on GitHub; importing it read-only keeps the
- * page honest without making the native package a browser dependency.
- */
 export const componentSources = {
   auth,
   accordion,

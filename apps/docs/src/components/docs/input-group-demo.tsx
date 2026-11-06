@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Input group page.
- *
- * The page's drawing is the row itself: one border, one ring, and the field
- * inside wearing none of its own. `:focus-within` stands in for the native
- * component's focus state — the browser is the only part approximated.
- */
-
 import { BlockIcon } from "./block-icons";
 
 export function InputGroupDemo() {
@@ -15,9 +7,7 @@ export function InputGroupDemo() {
         Search
       </label>
       <div className="gx-ig-group">
-        {/* A field's leading glyph is the icon set's, at the size a field
-            uses: the text character it replaced rendered at 14px in the
-            page's own family and read as a punctuation mark. */}
+        {}
         <span aria-hidden="true" className="gx-ig-addon">
           <BlockIcon name="search" size={16} />
         </span>

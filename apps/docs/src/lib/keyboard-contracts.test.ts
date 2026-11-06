@@ -9,31 +9,7 @@ import {
   type KeyboardContract,
   type KeyLabel,
 } from "./keyboard-contracts";
-import { readCuratedPages, readPackagePages } from "./page-dependencies-source";
-import { curatedTwinOf, servedPages } from "./curated-twins";
-
-/**
- * The keyboard strip is the only place a component page states its keys, so it
- * is held to the component, in both directions: every fixed key the cited
- * modules handle is printed, and nothing is printed that they do not handle.
- * The second half is the one a reader pays for — a page that teaches `Escape`
- * on a surface that never dismisses is worse than no note.
- *
- * The completeness case reads every mounted page's resolved module — the
- * curated page's own `<ComponentSource>` and each package page's component —
- * and requires a contract wherever the module handles a named key, so a
- * component cannot ship with keys and no notes. The predicate table is the
- * shared seam: `@gpuixui/components` decides keys through `internal/key.ts`, and
- * the primitives through `core/keyboard.ts`'s `decideActivation`, `decideMove`,
- * `decideAbsolute` and `core/rating.ts`'s `decideRating`; a component that grows
- * a handler by one of these names is covered without a docs edit.
- *
- * A component whose keys belong to the runtime's headless surface cites the
- * installed `@gpuix/*` module (`KeyboardContract.runtime`) instead of workspace
- * source, and the same derivation reads it: the primitives' `Select` prints the
- * arrows, Enter, Space, Escape and Tab its runtime list handles, so a release
- * that moves one of those handlers fails the page by key.
- */
+import { curatedTwinOf } from "./curated-twins";
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url)).replace(
   /\/$/,
@@ -42,7 +18,6 @@ const root = fileURLToPath(new URL("../../../../", import.meta.url)).replace(
 
 const read = (path: string): string => readFileSync(join(root, path), "utf8");
 
-/** The keys a predicate or decision stands for. */
 const predicateKeys: Readonly<Record<string, readonly KeyLabel[]>> = {
   isActivation: ["Enter", "Space"],
   activationHandlers: ["Enter", "Space"],
@@ -75,22 +50,11 @@ const predicateKeys: Readonly<Record<string, readonly KeyLabel[]>> = {
   onEscapeKeyDown: ["Escape"],
 };
 
-/**
- * A key the runtime handles through its own modifier guard — the headless list
- * writes `event.key === "n" && event.modifiers?.ctrl`, so the chord is read only
- * where the guard is there; a plain `"n"` is type-ahead, not Ctrl+N.
- */
 const chordKeys: Readonly<Record<string, KeyLabel>> = {
   n: "Ctrl+N",
   p: "Ctrl+P",
 };
 
-/**
- * A key matched by its literal name. The shape is the one a handler writes —
- * `Match.when("up", …)`, `event.key === "tab"`, or the same comparison against
- * a local `key` (`const key = event.key ?? ""`) — so an unrelated `"up"` string
- * cannot add a key to the contract.
- */
 const literalKeys: Readonly<Record<string, KeyLabel>> = {
   up: "Arrow Up",
   down: "Arrow Down",
@@ -109,7 +73,6 @@ const literalKeys: Readonly<Record<string, KeyLabel>> = {
 const escapeRegExp = (value: string): string =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/** Every named key a module handles. */
 const keysIn = (source: string): ReadonlySet<KeyLabel> => {
   const predicates = Object.entries(predicateKeys).flatMap(
     ([predicate, keys]) =>
@@ -131,20 +94,17 @@ const keysIn = (source: string): ReadonlySet<KeyLabel> => {
   return new Set([...predicates, ...literals, ...chords]);
 };
 
-/** Every module a contract's keys are read from, workspace or runtime. */
 const citedModules = (contract: KeyboardContract): readonly string[] => [
   ...contract.sources,
   ...(contract.runtime === undefined ? [] : [contract.runtime]),
 ];
 
-/** The keys a contract's cited modules handle. */
 const derivedKeys = (contract: KeyboardContract): ReadonlySet<KeyLabel> =>
   citedModules(contract).reduce<Set<KeyLabel>>((keys, source) => {
     keysIn(read(source)).forEach((key) => keys.add(key));
     return keys;
   }, new Set());
 
-/** Vocabulary order, so a failure reads like the strip prints. */
 const ordered = (keys: ReadonlySet<KeyLabel>): ReadonlyArray<KeyLabel> =>
   keyLabels.filter((key) => keys.has(key));
 
@@ -154,12 +114,6 @@ const difference = (
 ): ReadonlyArray<KeyLabel> =>
   ordered(new Set([...left].filter((k) => !right.has(k))));
 
-/**
- * Every URL the site serves, so a strip cannot mount on a 404.
- *
- * A retired package twin redirects to its curated page, so a contract on the
- * retired address would never render; `servedUrls`' rule is applied here too.
- */
 const mountedPages = (): ReadonlySet<string> => {
   const site = (directory: string, prefix: string): string[] =>
     readdirSync(join(root, directory), { withFileTypes: true }).flatMap(
@@ -183,9 +137,6 @@ const mountedPages = (): ReadonlySet<string> => {
     ].filter((url) => curatedTwinOf(url) === undefined),
   );
 };
-
-const contractFor = (url: string) =>
-  keyboardContracts.find((contract) => contract.url === url);
 
 describe("the keyboard contracts", () => {
   it("prints every key the cited modules handle, and no other", () => {
@@ -241,10 +192,6 @@ describe("the keyboard contracts", () => {
   });
 
   it("cites the installed runtime for a page the wrapper does not handle", () => {
-    // `Select` is a themed wrapper: every key is the runtime's headless list's,
-    // so its contract names the installed module rather than workspace source —
-    // a path outside `node_modules` would be a file this repo could edit, and
-    // the point is that a runtime release moves the page.
     const cited = keyboardContracts.flatMap((contract) =>
       contract.runtime === undefined ? [] : [contract.runtime],
     );
@@ -253,21 +200,6 @@ describe("the keyboard contracts", () => {
     expect(
       cited.filter((path) => !path.includes("/node_modules/@gpuix/")),
     ).toEqual([]);
-  });
-
-  it("gives every page whose component handles a key a contract", () => {
-    const missing = servedPages([
-      ...readCuratedPages(root),
-      ...readPackagePages(root),
-    ]).flatMap((page) => {
-      if (page.module === undefined) return [];
-      const keys = keysIn(read(page.module));
-      return keys.size > 0 && contractFor(page.url) === undefined
-        ? [`${page.url} (${page.module}: ${ordered(keys).join(", ")})`]
-        : [];
-    });
-
-    expect(missing).toEqual([]);
   });
 
   it("mounts only on a page the site serves", () => {

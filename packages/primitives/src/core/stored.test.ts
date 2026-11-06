@@ -20,12 +20,6 @@ describe("storedText", () => {
 
 describe("storedNumber", () => {
   it("keeps a number a store wrote and reads everything else as absence", () => {
-    // The bug guarded: a measurement a store keeps — a bar's share, a count —
-    // was read with `Option.fromNullishOr`, which refuses only `null` and
-    // `undefined`. A share written as text therefore counted as a measurement
-    // and reached `Math.max` as `NaN`. Text is not a number this library
-    // coerces: `parseNumberText` is the one seam that reads text as a number,
-    // and it is explicit about it.
     expect(storedNumber(42.5)).toStrictEqual(Option.some(42.5));
     expect(storedNumber(0)).toStrictEqual(Option.some(0));
     expect(storedNumber(-3)).toStrictEqual(Option.some(-3));

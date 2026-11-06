@@ -1,26 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * NavigationMenu: a horizontal nav whose items open one anchored panel.
- *
- * Exactly one panel is open at a time. Triggers form a roving group: Left/Right
- * move focus without opening, Home/End jump, Enter/Space or ArrowDown opens.
- * Escape closes the topmost overlay (the shared dismiss stack) and returns focus
- * to the trigger; an outside press closes.
- *
- * The pointer is a second way in: resting on a trigger opens its panel after
- * `openDelay`, moving across the row switches panels, and leaving the trigger
- * and the panel closes it after `closeDelay`. An explicit press or key wins
- * over a pending hover timer, so a panel closed by a press does not spring back.
- *
- * Measured gaps in 0.11.0: no anchor/href element, so `NavigationMenuLink` is a
- * button with `onSelect`; no `aria-haspopup`. ArrowDown opens and moves focus to
- * the panel surface, not straight to the first link.
- *
- * The panel enters with the house appearance — a fade plus 4px of travel out
- * from its trigger — and stays mounted for its exit tween, taking no presses
- * while it leaves (`internal/presence.tsx`).
- */
-
 import type {
   EventPayload,
   KeyEvent,
@@ -89,7 +67,6 @@ import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
 
-/** The rules a nav part follows; throws outside a {@link NavigationMenu}. */
 interface NavigationMenuContextValue {
   readonly open: string | null;
   readonly setOpen: (value: string | null) => void;
@@ -102,21 +79,17 @@ interface NavigationMenuContextValue {
   readonly panelFocus: string | null;
   readonly requestPanelFocus: (value: string) => void;
   readonly clearPanelFocus: () => void;
-  /** The pointer entered a trigger: open it once `openDelay` passes. */
+
   readonly hoverOpen: (value: string) => void;
-  /** The pointer left a trigger: close once both surfaces are left. */
+
   readonly hoverClose: (value: string) => void;
-  /** The pointer entered or left the open panel. */
+
   readonly hoverPanel: (inside: boolean) => void;
-  /**
-   * Drop an armed hover open without touching a scheduled close.
-   *
-   * A trigger the caller disables mid-wait must not open when its timer fires.
-   */
+
   readonly cancelOpening: () => void;
-  /** An explicit press or key wins: drop pending hover timers and forget the pointer. */
+
   readonly stopHover: () => void;
-  /** Whether a window point falls on one of this nav's triggers. */
+
   readonly isTriggerPoint: (
     x: number | undefined,
     y: number | undefined,
@@ -131,25 +104,10 @@ const ItemContext = createContext<
   { readonly value: string; readonly open: boolean } | undefined
 >(undefined);
 
-/**
- * Whether the panel a link sits in is painted only for its exit.
- *
- * A dismissed panel stops taking presses — the seam's `presenceStyle` removes its
- * own hitbox and `PresenceShield` covers the content — but the runtime decides
- * its Tab order element by element, and neither a `pointerEvents` rule nor the
- * shield removes a descendant's tab stop. Measured on 0.11.0 with this page:
- * open a panel with ArrowDown, press Escape (the panel ghosts for its 200 ms
- * exit) and Tab, and the focus lands on a link that unmounts under the keyboard.
- * A link therefore reads this flag and drops its own stop while its panel
- * leaves — the rule the menu family's `MenuLeaving` follows, because the flag
- * cannot reach content the caller composes elsewhere.
- */
 const PanelLeaving = createContext(false);
 
-/** Whether the panel a link sits in is painted only for its exit. */
 const usePanelLeaving = (): boolean => useContext(PanelLeaving);
 
-/** The nav a part belongs to. Throws when there is none. */
 const useNavigationMenu = (): NavigationMenuContextValue => {
   const value = useContext(NavigationMenuContext);
   if (value === undefined) {
@@ -168,28 +126,24 @@ const useNavItem = (): { readonly value: string; readonly open: boolean } => {
   return value;
 };
 
-/** {@link NavigationMenu} props. */
 export interface NavigationMenuProps extends Omit<Props, "children"> {
-  /** The nav's accessible name. */
   readonly label: string;
-  /** The controlled open item's value, or `null`. */
+
   readonly value?: string | null;
   readonly defaultValue?: string | null;
   readonly onValueChange?: (value: string | null) => void;
-  /** Milliseconds of rest on a trigger before its panel opens. Default `150`. */
+
   readonly openDelay?: number;
-  /** Milliseconds after leaving the trigger and panel before closing. Default `150`. */
+
   readonly closeDelay?: number;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The waits a panel opens and closes after, when its props do not name one. */
 const OPEN_DELAY_MS = 150;
 const CLOSE_DELAY_MS = 150;
 
-/** The nav root: one open item, the dismiss layer and the roving triggers. */
 export const NavigationMenu = ({
   label,
   value: valueProp,
@@ -219,14 +173,10 @@ export const NavigationMenu = ({
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
-  // The pointer policy is two refs, not state: mouse events must not re-render
-  // the panel, and the timers read the latest position when they fire.
+
   const hovered = useRef<string | null>(null);
   const panelHovered = useRef(false);
-  // An explicit press, key or Escape suspends the pointer policy until the
-  // pointer next enters a trigger or panel: the runtime delivers the leave for
-  // the trigger it was resting on *after* the key that opened another panel, and
-  // that stale leave must not close the panel the caller just opened.
+
   const suspended = useRef(false);
   assertParts(navigationMenuRoot, children);
 
@@ -255,11 +205,6 @@ export const NavigationMenu = ({
     suspended.current = true;
   }, [clearCloseTimer, clearOpenTimer]);
 
-  /**
-   * The open timer alone, for a trigger that became inert mid-wait: the pointer
-   * that armed it is forgotten so a scheduled close still runs, but an open
-   * panel is not closed by a later disable.
-   */
   const cancelOpening = useCallback(() => {
     clearOpenTimer();
     hovered.current = null;
@@ -267,8 +212,6 @@ export const NavigationMenu = ({
 
   useLayoutEffect(() => stopHover, [stopHover]);
 
-  // A closed nav owns no panel, so the pointer cannot be inside one: drop a
-  // stale flag from a panel that unmounted under the pointer (a chosen link).
   useLayoutEffect(() => {
     if (open === null) panelHovered.current = false;
   }, [open]);
@@ -353,10 +296,6 @@ export const NavigationMenu = ({
     [renderer],
   );
 
-  // A press on a trigger is a mouse-down outside the open panel, but it is the
-  // nav's own press: treating it as a dismissal closes the panel on mouse-down
-  // and the trigger's click then reopens it, so an open panel could never be
-  // toggled shut by pressing its trigger again.
   const isTriggerPoint = useCallback(
     (x: number | undefined, y: number | undefined): boolean => {
       if (x === undefined || y === undefined) return false;
@@ -393,8 +332,6 @@ export const NavigationMenu = ({
     [focusTrigger, order],
   );
 
-  // One dismiss layer for the whole nav: Escape closes only this panel when the
-  // nav sits over a dialog, and focus returns to the open item's trigger.
   const dismiss = useRef<() => void>(() => undefined);
   useLayoutEffect(() => {
     dismiss.current = () => {
@@ -473,14 +410,11 @@ export const NavigationMenu = ({
   );
 };
 
-/** {@link NavigationMenuList} props. */
 export interface NavigationMenuListProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The row of items. */
 export const NavigationMenuList = ({
   children,
   className,
@@ -503,16 +437,13 @@ export const NavigationMenuList = ({
   );
 };
 
-/** {@link NavigationMenuItem} props. */
 export interface NavigationMenuItemProps extends Omit<Props, "children"> {
-  /** The item's identity in the nav's `value`. */
   readonly value: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** One nav item: its trigger and the panel that trigger owns. */
 export const NavigationMenuItem = ({
   value,
   className,
@@ -539,7 +470,6 @@ export const NavigationMenuItem = ({
   );
 };
 
-/** Opens its item's panel. An ordinary button in every other respect. */
 export const NavigationMenuTrigger = ({
   onClick,
   ref,
@@ -564,8 +494,7 @@ export const NavigationMenuTrigger = ({
   } = useNavigationMenu();
   const { value } = useNavItem();
   const expanded = open === value;
-  // The indicator is one fixed slot: both marks are painted, so opening the
-  // panel repaints the chevron without resizing the trigger under the pointer.
+
   const chevronId = (mark: "up" | "down"): string | undefined =>
     rest.testId === undefined ? undefined : `${rest.testId}-chevron-${mark}`;
   const register = useCallback(
@@ -574,8 +503,6 @@ export const NavigationMenuTrigger = ({
   );
   const setTrigger = useMergedRef<PublicInstance | null>(register, ref);
 
-  // A trigger disabled while a hover open is waiting must not open when the
-  // timer fires; an open panel keeps its own close paths.
   useLayoutEffect(() => {
     if (disabled) cancelOpening();
   }, [cancelOpening, disabled]);
@@ -633,21 +560,11 @@ export const NavigationMenuTrigger = ({
   );
 };
 
-/** {@link NavigationMenuContent} props. */
 export interface NavigationMenuContentProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/**
- * The anchored panel for its item, mounted while open and through its exit.
- *
- * The panel itself takes no presses while it leaves (`presenceStyle`) and the
- * shield covers the content, and every link inside it drops its own tab stop for
- * the same window ({@link PanelLeaving}): the runtime's Tab order is decided per
- * element, so a painted ghost would otherwise be reachable from the keyboard.
- */
 export const NavigationMenuContent = ({
   children,
   className,
@@ -704,7 +621,7 @@ export const NavigationMenuContent = ({
       style={mergeStyles(
         mergeStyles(
           overlaySurfaceStyle(NAVIGATION_MENU_CONTENT, className, theme),
-          // A positioned box is what the leaving guard is inset against.
+
           { position: "relative", ...presenceStyle(presence.present) },
         ),
         style,
@@ -720,23 +637,17 @@ export const NavigationMenuContent = ({
   );
 };
 
-/** {@link NavigationMenuLink} props. */
 export interface NavigationMenuLinkProps extends Omit<
   PrimitiveButtonProps,
   "variant"
 > {
-  /** Called when the link is chosen; the nav closes afterwards. */
   readonly onSelect?: () => void;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /**
-   * Called for a click or an activating key, closing the panel afterwards.
-   * @deprecated use `onActivate`; removed in the next release.
-   */
+
   readonly onClick?: (event: EventPayload) => void;
 }
 
-/** A navigation row. 0.11.0 has no anchor/href, so this is a button. */
 export const NavigationMenuLink = ({
   onSelect,
   onActivate,
@@ -748,9 +659,7 @@ export const NavigationMenuLink = ({
 }: NavigationMenuLinkProps) => {
   const theme = useTheme();
   const { setOpen, stopHover } = useNavigationMenu();
-  // A panel that is only painted for its exit is not a target: the shield takes
-  // the presses, and the row drops its own Tab stop so the keyboard cannot land
-  // on a link that unmounts under it.
+
   const leaving = usePanelLeaving();
   const linkStyle = mergeStyles(
     recipeStyle(cn(NAVIGATION_MENU_LINK, className), theme),
@@ -779,7 +688,6 @@ export const NavigationMenuLink = ({
   );
 };
 
-/** Every part, so a misplaced sibling is named. */
 const navigationMenuParts: ReadonlyArray<PartComponent> = [
   NavigationMenu,
   NavigationMenuList,
@@ -817,7 +725,6 @@ const navigationMenuContent: PartsContract = {
   hint: "Put NavigationMenuLink rows directly inside NavigationMenuContent.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const navigationMenuMeta = {
   name: "Navigation Menu",
   tier: 2,

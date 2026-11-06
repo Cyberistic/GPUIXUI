@@ -1,14 +1,3 @@
-/**
- * CommandMenu behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: the palette opening without focusing its input; a filter
- * that left non-matching labels visible; arrow keys that moved focus out of the
- * input (so typing stopped); Enter running the wrong row, running a disabled row,
- * or leaving the palette open; the empty label missing; a custom filter ignored;
- * Escape leaving the dialog up; a non-contiguous query that matched nothing; a
- * ranking that ran the wrong row; and a global sort that interleaved groups.
- */
-
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -72,7 +61,6 @@ const actions = (
   },
 ];
 
-/** The palette, controlled by a wrapper so `onOpenChange` really closes it. */
 const Palette = ({
   perform,
   filter,
@@ -98,7 +86,6 @@ const Palette = ({
   );
 };
 
-/** A palette with a trigger, so the close can be measured against its opener. */
 const OpenedPalette = ({
   perform,
 }: {
@@ -123,13 +110,10 @@ const OpenedPalette = ({
   );
 };
 
-/** Type one character into whatever holds focus. */
-
 const type = (root: ReturnType<typeof renderComponent>, text: string): void => {
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
 };
 
-/** A palette over a caller-supplied action set. */
 const LocalPalette = ({
   items,
 }: {
@@ -145,7 +129,6 @@ const LocalPalette = ({
   );
 };
 
-/** Two label matches where the better one is declared second. */
 const rankedActions = (
   perform: (id: string) => void,
 ): ReadonlyArray<CommandAction> => [
@@ -163,7 +146,6 @@ const rankedActions = (
   },
 ];
 
-/** The later group's row outranks the earlier one, so only per-group ranking keeps heading order. */
 const groupedActions = (
   perform: (id: string) => void,
 ): ReadonlyArray<CommandAction> => [
@@ -183,11 +165,6 @@ const groupedActions = (
 
 describe("CommandMenu", () => {
   it("paints the highlight as the wash alone, with no left rule", () => {
-    // The bug this guards: the palette's highlighted row inherited the menu
-    // row's emphasis bar, so the selection read as a wash with a second blue
-    // edge beside it — an edge no command palette paints. The bar is gone from
-    // every menu row now, so the row carries no left width at all rather than a
-    // zero one.
     const palette = renderComponent(<Palette perform={vi.fn()} />);
     try {
       const row = palette.renderer.findByTestId("command-open-file");
@@ -236,9 +213,9 @@ describe("CommandMenu", () => {
     expect(texts).toContain("Open recent");
     expect(texts).not.toContain("Save");
     expect(texts).not.toContain("Toggle sidebar");
-    // Fuzzy, not substring: the `o` of "Export" and the `p` of "PDF" match.
+
     expect(texts).toContain("Export as PDF");
-    // The input keeps focus while the list narrows.
+
     expect(focusedTestId(palette)).toEqual(Option.some("command-input"));
 
     palette.unmount();
@@ -276,12 +253,6 @@ describe("CommandMenu", () => {
   });
 
   it("reopens while its surface is still leaving", async () => {
-    // The reopen path, held where it can be seen: a reader's next press lands
-    // the frame after an action ran, so the surface must retarget its exit into
-    // an entry with the query of a fresh open. The window half is the
-    // playground's `command-palette` probe, which is red for a reason this
-    // renderer cannot see (the leaving layer's hit box swallows the press) —
-    // see `.agents/slop/TODO.md` → Interlocks.
     const perform = vi.fn();
     const palette = renderComponent(<OpenedPalette perform={perform} />);
     const opener = palette.renderer.findByTestId("palette-opener")?.id ?? -1;
@@ -292,14 +263,13 @@ describe("CommandMenu", () => {
     palette.renderer.simulateKeystrokes("enter");
     expect(perform).toHaveBeenCalledWith("save");
 
-    // Reopen in the exit window, before its tween could finish.
     clickCentreOf(palette, "palette-opener");
 
     await waitFor(() =>
       expect(palette.renderer.findByTestId("command-menu")).toBeDefined(),
     );
     expect(focusedTestId(palette)).toEqual(Option.some("command-input"));
-    // The query is the one a fresh open starts with, so every action is back.
+
     expect(palette.renderer.getAllText()).toContain("Toggle sidebar");
 
     palette.unmount();
@@ -450,7 +420,6 @@ describe("CommandMenu", () => {
     expect(texts.filter((text) => text === "Save")).toHaveLength(1);
     expect(texts.filter((text) => text === "Recent")).toHaveLength(1);
 
-    // The first recent row is the highlight, so Enter runs it.
     expect(
       palette.renderer.findByTestId("command-save")?.customProps?.[
         "aria-selected"
@@ -549,8 +518,6 @@ describe("CommandMenu", () => {
     const palette = renderComponent(<Named />);
     const input = palette.renderer.findByTestId("command-input");
 
-    // The host is handed no placeholder: the runtime shapes it in a fixed grey
-    // no token reaches, so the field paints the hint in the measured role.
     expect(input?.customProps?.placeholder).toBeUndefined();
     expect(input?.customProps?.["aria-label"]).toBe("Find");
     const hint = palette.renderer.findByTestId("command-input-hint");
@@ -561,10 +528,6 @@ describe("CommandMenu", () => {
   });
 
   it("opens a palette whose saved action and recents lists are not lists", () => {
-    // A palette's rows are built by the app and its recents are saved with it:
-    // a store writes `null` for either slot. The matcher reduced over the action
-    // list and the recents set was built from the ids before the first row
-    // painted, so an absent either threw out of the render.
     const palette = renderComponent(
       <CommandMenu
         open

@@ -1,20 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * PreviewCard: a rich card shown on hover, or on a press.
- *
- * Positioning is GPUix's `FloatingLayer` (as in Popover) and dismissal shares
- * the package's dismiss stack, so Escape closes only the topmost overlay.
- *
- * The card is **hoverable**: it may contain a link or a small action, which is
- * what separates it from a tooltip. The pointer may travel from the trigger into
- * the content; leaving both schedules the close. A press opens it at once and a
- * second press closes it. Focus does not open it: on 0.11.0 a `Tab` traversal
- * focuses the trigger without running its `onFocus` (`tabs-lifecycle` reads
- * `focuses=0`), and a preview under every traversal would be intrusive anyway;
- * the trigger's `Enter`/`Space` is the keyboard path. The delays are props so
- * tests need no 300 ms sleep.
- */
-
 import type { EventPayload, KeyEvent, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
@@ -60,16 +44,14 @@ import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
 
-/** The alignment a caller asked for, or this card's own `center` default. */
 const previewCardAlign = (align: unknown): FloatingAlign =>
   isAlign(align) ? align : "center";
 
-/** The rules a card part follows; throws outside a {@link PreviewCard}. */
 interface PreviewCardContextValue {
   readonly open: boolean;
   readonly hover: HoverControls;
   readonly trigger: RefObject<PublicInstance | null>;
-  /** Set by a dismissing outside press, consumed by the click that follows it. */
+
   readonly dismissedByOutsidePress: RefObject<boolean>;
 }
 
@@ -77,7 +59,6 @@ const PreviewCardContext = createContext<PreviewCardContextValue | undefined>(
   undefined,
 );
 
-/** The card a part belongs to. Throws when there is none. */
 const usePreviewCard = (): PreviewCardContextValue => {
   const value = useContext(PreviewCardContext);
   if (value === undefined) {
@@ -86,24 +67,20 @@ const usePreviewCard = (): PreviewCardContextValue => {
   return value;
 };
 
-/** {@link PreviewCard} props. */
 export interface PreviewCardProps {
-  /** The controlled open state. `undefined` means uncontrolled. */
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  /** Milliseconds between hover and open. Default `300`. */
+
   readonly openDelay?: number;
-  /** Milliseconds after leaving both surfaces before closing. Default `150`. */
+
   readonly closeDelay?: number;
   readonly children?: PartChildren;
 }
 
-/** The waits a preview opens and closes after, when its props do not name one. */
 const OPEN_DELAY_MS = 300;
 const CLOSE_DELAY_MS = 150;
 
-/** The open policy: hover/focus in, leave both to close. */
 export const PreviewCard = ({
   open: openProp,
   defaultOpen = false,
@@ -140,7 +117,6 @@ export const PreviewCard = ({
   );
 };
 
-/** Opens the card on hover, or on a press. */
 export const PreviewCardTrigger = ({
   onClick,
   ref,
@@ -150,9 +126,6 @@ export const PreviewCardTrigger = ({
   const { open, hover, trigger, dismissedByOutsidePress } = usePreviewCard();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
-  // A trigger disabled while a hover open is waiting must not open when the
-  // timer fires: the delay is the reader's pointer on an action that can no
-  // longer take one. A card already open keeps the close it scheduled.
   useLayoutEffect(() => {
     if (disabled) hover.cancelOpening();
   }, [disabled, hover]);
@@ -175,9 +148,7 @@ export const PreviewCardTrigger = ({
       }}
       onClick={(event: EventPayload) => {
         onClick?.(event);
-        // The press that dismissed the card owns this click: toggling here
-        // would re-open what the same gesture just closed. Any other press is
-        // explicit, so it opens now rather than after the hover delay.
+
         if (dismissedByOutsidePress.current) {
           dismissedByOutsidePress.current = false;
           return;
@@ -193,25 +164,22 @@ export const PreviewCardTrigger = ({
   );
 };
 
-/** {@link PreviewCardContent} props: a floating surface, side and alignment. */
 export interface PreviewCardContentProps extends FloatingContentProps {
-  /** The surface's accessible name. */
   readonly label: string;
-  /** Default `"bottom"`. */
+
   readonly side?: "top" | "right" | "bottom" | "left";
-  /** Default `"center"`. `"center"` is measured from the trigger, not the runtime's `center`. */
+
   readonly align?: "start" | "center" | "end";
-  /** Default `6`. */
+
   readonly sideOffset?: number;
-  /** Default `8`. */
+
   readonly collisionPadding?: number;
-  /** Added on top of the measured centre correction. Default `0`. */
+
   readonly alignOffset?: number;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/** The hoverable card, rendered while open. */
 export const PreviewCardContent = ({
   label,
   side = "bottom",
@@ -236,8 +204,6 @@ export const PreviewCardContent = ({
   const timing = useSurfaceTiming("fast");
   const presence = useSurfacePresence(open, timing);
   const placement = usePlacement({
-    // The surface is still painted while it leaves, so its measured side must
-    // not reset under the exit tween.
     open: presence.mounted,
     side,
     align: previewCardAlign(align),
@@ -251,8 +217,6 @@ export const PreviewCardContent = ({
     close.current = () => hover.request(false);
   });
 
-  // One dismiss layer for the card, as Popover does: Escape closes the topmost
-  // overlay only, and returns focus to the trigger.
   const depth = useDismissDepth();
   useLayoutEffect(() => {
     if (!open) return;
@@ -263,7 +227,7 @@ export const PreviewCardContent = ({
         if (target !== null) renderer?.focusElement?.(target.id);
         return;
       }
-      // Mark the press so the click it belongs to cannot re-open the card.
+
       dismissedByOutsidePress.current = true;
       queueMicrotask(() => {
         dismissedByOutsidePress.current = false;
@@ -305,7 +269,7 @@ export const PreviewCardContent = ({
       style={mergeStyles(
         mergeStyles(
           overlaySurfaceStyle(PREVIEW_CARD_CONTENT, className, theme),
-          // A positioned box is what the leaving guard is inset against.
+
           { position: "relative", ...presenceStyle(presence.present) },
         ),
         style,
@@ -317,7 +281,6 @@ export const PreviewCardContent = ({
   );
 };
 
-/** Every part, so a misplaced sibling is named. */
 const previewCardParts: ReadonlyArray<PartComponent> = [
   PreviewCard,
   PreviewCardTrigger,
@@ -331,7 +294,6 @@ const previewCardRoot: PartsContract = {
   hint: "Put PreviewCardTrigger and PreviewCardContent directly inside PreviewCard.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const previewCardMeta = {
   name: "Preview Card",
   tier: 2,

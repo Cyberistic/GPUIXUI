@@ -1,18 +1,3 @@
-/**
- * Holds the arithmetic the `elevation-paint` probe reads a frame with, and the
- * claims its README section prints.
- *
- * Three things decide the whole probe and none is visible from a passing run:
- * the sample points are a fixed distance from an edge (a box that moved would
- * sample the page and read as "no shadow"), the page a shadow falls on is the
- * role the fixture paints (a probe comparing against a literal would pass while
- * the theme repainted), and the shipped level's shade is a handful of bytes
- * (which a tolerance compares as "the same paint", so the level check uses
- * `distanceFrom` instead). The drawn cases below make each failure visible.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the repository's
- * own probe and prose, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -59,7 +44,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The section this probe's README heading opens. */
 const section = (() => {
   const heading = "### `elevation-paint` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -73,7 +57,6 @@ const section = (() => {
   );
 })();
 
-/** The `elevationSteps` effect, bounded by the first declaration after it. */
 const steps = (() => {
   const start = scenarios.indexOf("const elevationSteps");
   if (start === -1) return "";
@@ -88,7 +71,6 @@ const steps = (() => {
   );
 })();
 
-/** A 24×20 frame of the page colour, with one shadow-coloured pixel at (4, 4). */
 const frame = (): Pixels.Pixels => {
   const width = 24;
   const height = 20;
@@ -105,7 +87,6 @@ const frame = (): Pixels.Pixels => {
 
 const PAGE = new Pixels.Rgba({ r: 17, g: 20, b: 26, a: 255 });
 
-/** An `Option` the drawn frame guarantees, as a value a test can read. */
 const someOf = <A>(value: Option.Option<A>): A =>
   Option.match(value, {
     onNone: () => {
@@ -114,7 +95,6 @@ const someOf = <A>(value: Option.Option<A>): A =>
     onSome: (found) => found,
   });
 
-/** A shade the shipped level paints: five to eight bytes from the page. */
 const LEVEL_SHADE = new Pixels.Rgba({ r: 12, g: 14, b: 18, a: 255 });
 
 describe("the elevation-paint reader", () => {
@@ -122,19 +102,15 @@ describe("the elevation-paint reader", () => {
     const shadow = someOf(colourAt(frame(), { x: 4, y: 4 }, 1));
     expect([shadow.r, shadow.g, shadow.b]).toEqual([255, 59, 48]);
     expect(colourAt(frame(), { x: 40, y: 4 }, 1)).toEqual(Option.none());
-    // The capture is device-scaled, so a logical point converts first.
+
     expect(someOf(colourAt(frame(), { x: 2, y: 2 }, 2)).r).toBe(255);
   });
 
   it("compares a level's shade as the same paint at a tolerance and as a different one by distance", () => {
-    // The premise of the two level checks: a shipped level's composited shade is
-    // a few bytes, which the tolerance every colour comparison uses calls "the
-    // same", so "it paints" is measured as a non-zero distance instead.
     expect(differs(LEVEL_SHADE, PAGE)).toBe(false);
     expect(distanceFrom(LEVEL_SHADE, PAGE)).toBe(19);
     expect(distanceFrom(PAGE, PAGE)).toBe(0);
-    // The shade is real: the sum of its channel gaps is wider than the tolerance
-    // that calls it "the same colour", which is why the level reads a distance.
+
     expect(distanceFrom(LEVEL_SHADE, PAGE)).toBeGreaterThan(COLOUR_TOLERANCE);
   });
 
@@ -170,20 +146,15 @@ describe("the elevation-paint fixture", () => {
   });
 
   it("samples the page the fixture paints, not a literal", () => {
-    // The steps compare against the theme's background role and the view paints
-    // that same role, so a repainted palette moves both.
     expect(steps).toContain("palettes.dark.colors.background");
     expect(scenarios).toContain("backgroundColor: theme.colors.background");
     expect(palettes.dark.colors.background).toMatch(/^#[0-9A-Fa-f]{6}$/);
   });
 
   it("keeps every shadow sample inside the cell its row reserves", () => {
-    // A box sits at its row's top and the farthest sample is ELEVATION_FAR below
-    // it, so the row must be taller than that point: a sample past the row would
-    // land on the next row's box and read its fill as shade.
     expect(ELEVATION_HEIGHT + ELEVATION_FAR).toBeLessThan(ELEVATION_ROW);
     expect(ELEVATION_RAISED.height).toBeLessThan(ELEVATION_ROW);
-    // The level sample sits under the box rather than inside its fill.
+
     expect(ELEVATION_DEPTH).toBeGreaterThan(0);
     expect(ELEVATION_FADE_NEAR).toBeLessThan(ELEVATION_FADE_MID);
     expect(ELEVATION_FADE_MID).toBeLessThan(ELEVATION_FAR);
@@ -191,11 +162,9 @@ describe("the elevation-paint fixture", () => {
   });
 
   it("fits its widest row inside the window the live runner opens", () => {
-    // Four boxes and three 60-point gaps, inside the page's 16-point inset each
-    // side; a box pushed past the frame would be read from the wrong point.
     expect(ELEVATION_WIDTH * 4 + 60 * 3).toBeLessThan(900 - 32);
     expect(ELEVATION_UNREADABLE).toBe("notacolour");
-    // Two entries, two colours: the list check reads a different one on each side.
+
     expect(ELEVATION_SECOND).not.toBe(ELEVATION_SHADOW);
   });
 
@@ -207,7 +176,7 @@ describe("the elevation-paint fixture", () => {
     expect(scenarios).toContain("color: ELEVATION_SECOND");
     expect(scenarios).toContain("elevationShadow(theme, level)");
     expect(scenarios).toContain("ELEVATION_RAISED");
-    // The numbers the section prints are the fixture's, not a second copy.
+
     expect(ELEVATION_OFFSET).toBe(16);
     expect(ELEVATION_BLUR).toBe(24);
     expect(ELEVATION_SPREAD).toBe(8);
@@ -233,8 +202,6 @@ describe("the elevation-paint probe's record", () => {
   });
 
   it("prints the values the frame read", () => {
-    // Each measurement the table states, so a re-run that reads something else
-    // fails the sentence instead of leaving prose behind the paint.
     expect(section).toContain("`6608`");
     expect(section).toContain("`115,36,35`");
     expect(section).toContain("`74,29,31`");

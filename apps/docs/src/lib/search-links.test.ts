@@ -2,18 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { searchLinks } from "./search-links";
 
-/**
- * The search dialog's pre-query links are pages this site serves.
- *
- * Fumadocs validates nothing about a `links` entry, and it renders no list at
- * all until a query runs: a retired URL leaves the first panel of `⌘K` pointing
- * at a 404, and an unmounted list returns that panel to the blank box the links
- * exist to fill. Neither shows up in a build.
- */
-
 const app = new URL("../../", import.meta.url);
 
-/** The file that serves a docs URL: `/x` → `x.mdx` or `x/index.mdx`. */
 const serves = (href: string): boolean => {
   const slug = href.replace(/^\//, "").replace(/\/$/, "");
   return (
@@ -24,7 +14,6 @@ const serves = (href: string): boolean => {
 
 describe("the search dialog's quick links", () => {
   it("offers the entry points a reader arrives for", () => {
-    // A floor, so a list that emptied out cannot pass.
     expect(searchLinks.length).toBeGreaterThanOrEqual(5);
     expect(
       searchLinks.every(

@@ -1,13 +1,3 @@
-/**
- * The roll's direction, without a renderer.
- *
- * The bugs these guard: a roll whose entry and exit share an edge (the new value
- * would be visible before it arrives), and a distance that cannot be laid out
- * reaching the runtime as `null` instead of no travel. The two-phase state
- * machine and the split timing are shared with the horizontal slide and held by
- * `src/internal/text-swap.test.ts`.
- */
-
 import { describe, expect, it } from "vitest";
 import { rollFrames } from "./logic.js";
 

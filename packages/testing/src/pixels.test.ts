@@ -1,11 +1,3 @@
-/**
- * The pixel decoder's own rules.
- *
- * The bug this file catches: a live capture is the only evidence of what colour
- * the runtime painted, so a decoder that mishandled a PNG filter, a colour type
- * or the alpha channel would turn a wrong frame into a passing check. Every
- * fixture is hand-encoded from the PNG specification, not from the decoder.
- */
 import { crc32, deflateSync, inflateSync } from "node:zlib";
 import { describe, expect, it } from "@effect/vitest";
 import {
@@ -56,7 +48,6 @@ const concat = (parts: ReadonlyArray<Uint8Array>): Uint8Array => {
   return out;
 };
 
-/** A PNG with one filter byte per row, encoded exactly as the spec says. */
 const png = (
   width: number,
   height: number,
@@ -97,7 +88,6 @@ describe("decodePng", () => {
   });
 
   it("applies the Sub filter per channel, not per pixel", () => {
-    // Row 1 encodes blue relative to the previous pixel's red: 0-255, 0, 255+1.
     const frame = decode(
       png(2, 1, 6, [new Uint8Array([1, 255, 0, 0, 255, 1, 0, 255, 0])]),
     );
@@ -111,9 +101,6 @@ describe("decodePng", () => {
     );
   });
 
-  // Every filter is hand-encoded from the spec: the decoder resolves the filter
-  // once per row (a per-byte dispatch over a capture costs seconds), so a
-  // filter wired to the wrong rule would decode a plausible but wrong frame.
   const twoRows = (filter: number, row: ReadonlyArray<number>) =>
     png(2, 2, 6, [
       new Uint8Array([0, 255, 0, 0, 255, 0, 0, 255, 255]),
@@ -182,12 +169,11 @@ describe("countColour", () => {
       ]),
     );
     expect(countColour(frame, red)).toBe(2);
-    // The second blue is translucent, so an exact-alpha match sees one.
+
     expect(countColour(frame, blue)).toBe(1);
   });
 });
 
-/** Four colours, one per column: red, blue, green, white. */
 const coloursRow = new Uint8Array([
   0, 255, 0, 0, 255, 0, 0, 255, 255, 0, 255, 0, 255, 255, 255, 255, 255,
 ]);
@@ -209,7 +195,6 @@ describe("crop", () => {
   });
 
   it("clamps a region the capture's edge cuts", () => {
-    // A layout box wider than the window still leaves the paint it covers.
     const cut = crop(colourFrame(), at(3, 1, 4, 4));
     expect(cut?.width).toBe(1);
     expect(cut?.height).toBe(1);
@@ -236,7 +221,7 @@ describe("countDifferingPixels", () => {
     const opaque = decode(
       png(2, 1, 6, [new Uint8Array([0, 255, 0, 0, 255, 0, 0, 255, 255])]),
     );
-    // The second pixel differs only in alpha: a wash that changed opacity is paint.
+
     expect(countDifferingPixels(faded, opaque)).toBe(1);
   });
 
@@ -275,11 +260,6 @@ describe("hexToRgba", () => {
   });
 
   it("refuses a malformed value instead of decoding nonsense", () => {
-    // `parseInt` stops at the first character it cannot read, so a palette
-    // value with a typo in its tail used to decode the valid prefix as a
-    // different colour — `#12zz56` became near-transparent black instead of
-    // being refused, which is the silent-wrong-value class this check exists
-    // for. The whole value has to be hex, not only its start.
     expect(hexToRgba("#ff00")).toBeNull();
     expect(hexToRgba("#gggggg")).toBeNull();
     expect(hexToRgba("#12zz56")).toBeNull();

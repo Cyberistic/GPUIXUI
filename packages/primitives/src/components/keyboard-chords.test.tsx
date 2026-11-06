@@ -1,21 +1,3 @@
-/**
- * A shortcut chord is not a control's key.
- *
- * The guarded defect: every control read the key name off `KeyEvent` and
- * ignored `modifiers`, so a chord meant for the platform or the application
- * acted as a plain key. `Cmd+A` on a radio group chose the option whose label
- * starts with "a" (type-ahead), on an OTP cell typed an "a" into the code; a
- * chorded arrow moved a slider, a number field and a scroll region; `Ctrl+Space`
- * activated a focused action. This suite holds the other half of the rule
- * `activation.test.tsx` starts: each reader **ignores** a chord and still
- * answers its plain key, so a fix cannot pass by disabling the control.
- *
- * `activation.test.tsx` covers Enter/Space on the actions; this file covers the
- * arrow, Home/End, type-ahead and typing paths. The scroll region's chord is
- * measured in a window (`runtime/layout.runtime.test.tsx`), because its handler
- * reads the renderer.
- */
-
 import type { ReactElement } from "react";
 import type { KeyEvent } from "@gpuix/react";
 import { describe, expect, it, vi } from "vitest";
@@ -44,7 +26,6 @@ const CTRL: Chord = { shift: false, ctrl: true, alt: false, cmd: false };
 const CMD: Chord = { shift: false, ctrl: false, alt: false, cmd: true };
 const ALT: Chord = { shift: false, ctrl: false, alt: true, cmd: false };
 
-/** Every handler a tree installs for one key channel, in tree order. */
 const keyHandlers = (
   element: ReactElement,
   name: "onKeyDown" | "onKeyUp",
@@ -61,7 +42,6 @@ const keyHandlers = (
   ];
 };
 
-/** Deliver a key to every handler the tree installs, as the runtime would. */
 const send = (
   element: ReactElement,
   name: "onKeyDown" | "onKeyUp",
@@ -77,7 +57,6 @@ const idleGroupFocus = {
   onBlur: vi.fn(),
 };
 
-/** The labels a group's type-ahead searches, wired as the components wire it. */
 const matcher =
   (labels: ReadonlyArray<string>) => (from: number, key: string) =>
     decideTypeAhead(labels, from, key);
@@ -253,7 +232,7 @@ describe("a chord is not the control's key", () => {
     });
     expect(onSelect).not.toHaveBeenCalled();
     expect(onFocusMove).not.toHaveBeenCalled();
-    // The plain keys still act: the group is not simply switched off.
+
     send(element, "onKeyDown", keyEvent("s"));
     expect(onSelect).toHaveBeenLastCalledWith("spacious");
     send(element, "onKeyDown", keyEvent("down"));
@@ -296,8 +275,7 @@ describe("a chord is not the control's key", () => {
       send(element, "onKeyUp", keyUpEvent("a", { modifiers }));
     });
     expect(onKey).not.toHaveBeenCalled();
-    // The tree installs one handler per cell; the runtime dispatches to the
-    // focused one, and every cell would read the same typed character.
+
     send(element, "onKeyUp", keyUpEvent("a"));
     expect(onKey).toHaveBeenCalledWith(0, "a");
   });

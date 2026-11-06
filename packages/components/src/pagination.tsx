@@ -1,16 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Pagination: previous/next controls around a stable-width page window.
- *
- * The page arithmetic is `pagination/logic.ts`. This module maps the window onto
- * parts: the root owns the clamped page and the window, `PaginationList` renders
- * it, and Previous/Next are the caller's to place. Pressing the current page is
- * still the one meaningful no-op.
- *
- * `docs/component-api.md` §1: every region is a part; the root keeps the state
- * because the window is derived from it, not because it is the only composition.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -41,13 +29,11 @@ import {
   type PageItem,
 } from "./pagination/logic.js";
 
-/** The rules a pagination part follows; throws outside a {@link Pagination}. */
 interface PaginationContextValue {
-  /** The current page, already clamped into `[1, pageCount]`. */
   readonly current: number;
   readonly pageCount: number;
   readonly onPageChange: (page: number) => void;
-  /** The entries the list renders, in display order. */
+
   readonly window: ReadonlyArray<PageItem>;
 }
 
@@ -55,7 +41,6 @@ const PaginationContext = createContext<PaginationContextValue | undefined>(
   undefined,
 );
 
-/** The pagination a part belongs to. Throws when there is none. */
 const usePagination = (): PaginationContextValue => {
   const value = useContext(PaginationContext);
   if (value === undefined) {
@@ -64,26 +49,19 @@ const usePagination = (): PaginationContextValue => {
   return value;
 };
 
-/** {@link Pagination} props. */
 export interface PaginationProps extends Omit<Props, "children"> {
-  /** The current page, 1-based. Clamped into `[1, pageCount]`. */
   readonly page: number;
-  /** How many pages exist. Zero or fewer renders nothing. */
+
   readonly pageCount: number;
   readonly onPageChange: (page: number) => void;
-  /** Pages shown either side of the current one. Default 1. */
+
   readonly siblingCount?: number;
-  /** Keep the first and last page visible. Default `true`. */
+
   readonly showEdges?: boolean;
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/**
- * The landmarks, the clamped page and the window. Compose
- * {@link PaginationPrevious}, {@link PaginationList} and {@link PaginationNext}
- * inside it; the control renders nothing when there are no pages.
- */
 export const Pagination = ({
   page,
   pageCount,
@@ -131,10 +109,8 @@ export const Pagination = ({
   );
 };
 
-/** {@link PaginationPrevious} props. */
 export type PaginationPreviousProps = Props;
 
-/** The previous-page control; it leaves the tab order on the first page. */
 export const PaginationPrevious = ({
   style,
   ...rest
@@ -164,10 +140,8 @@ export const PaginationPrevious = ({
   );
 };
 
-/** {@link PaginationNext} props. */
 export type PaginationNextProps = Props;
 
-/** The next-page control; it leaves the tab order on the last page. */
 export const PaginationNext = ({ style, ...rest }: PaginationNextProps) => {
   const theme = useTheme();
   const { current, pageCount, onPageChange } = usePagination();
@@ -194,12 +168,10 @@ export const PaginationNext = ({ style, ...rest }: PaginationNextProps) => {
   );
 };
 
-/** {@link PaginationList} props. */
 export interface PaginationListProps extends Props {
   readonly className?: string;
 }
 
-/** The page window: page buttons and the ellipses that stand in for gaps. */
 export const PaginationList = ({
   className,
   style,
@@ -227,24 +199,16 @@ export const PaginationList = ({
   );
 };
 
-/** {@link PaginationItem} props. */
 export interface PaginationItemProps extends Omit<Props, "style"> {
-  /** The page this button goes to. */
   readonly page: number;
-  /** A style, or a function of the page's state. */
+
   readonly style?: StateStyle<PaginationItemState>;
 }
 
-/** What a page control draws. */
 export interface PaginationItemState {
-  /** This control is the current page. */
   readonly active: boolean;
 }
 
-/**
- * One page number. The current page is painted with the primary role, carries
- * `aria-selected`, and pressing it does nothing.
- */
 export const PaginationItem = ({
   page,
   style,
@@ -279,12 +243,10 @@ export const PaginationItem = ({
   );
 };
 
-/** {@link PaginationEllipsis} props. */
 export interface PaginationEllipsisProps extends Props {
   readonly className?: string;
 }
 
-/** A non-focusable stand-in for pages the window leaves out. */
 export const PaginationEllipsis = ({
   className,
   style,
@@ -310,7 +272,6 @@ export const PaginationEllipsis = ({
   );
 };
 
-/** Every part of Pagination, so a misplaced sibling is named. */
 const paginationParts: ReadonlyArray<PartComponent> = [
   Pagination,
   PaginationPrevious,
@@ -327,15 +288,13 @@ const paginationRoot: PartsContract = {
     PaginationPrevious,
     PaginationList,
     PaginationNext,
-    // A bare item is supported: it reads the root's page and can stand outside
-    // the window (the measurement in `pagination.test.tsx` relies on it).
+
     PaginationItem,
     PaginationEllipsis,
   ],
   hint: "Put PaginationPrevious, PaginationList and PaginationNext directly inside Pagination.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const paginationMeta = {
   name: "Pagination",
   tier: 2,

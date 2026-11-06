@@ -1,11 +1,3 @@
-/**
- * Browser preview for the ScrollArea page.
- *
- * A scroll area is a bounded container that scrolls on the chosen axes. The
- * preview draws a vertical frame around a list that overflows it, and a
- * horizontal strip. The Code tab shows the native usage.
- */
-
 const rows = Array.from({ length: 14 }, (_, index) => `Row ${index + 1}`);
 
 export const ScrollAreaDemo = () => (

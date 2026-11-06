@@ -1,23 +1,3 @@
-/**
- * `property-panel-lifecycle`: the shipped `@gpuixui/data` `PropertyPanel` in a
- * window.
- *
- * The panel's header says an edit is a callback and the panel owns no copy, and
- * its rows are data: an editable row carries the change it reports, a read-only
- * one carries none. A tree read can see the field is there; only a window can
- * answer whether a press lands in it, whether typing keeps the platform text
- * session and whether the caller's object repaints on the frame the edit lands.
- *
- * The label column is the other claim: every value starts at one `x`, and a
- * caller's `labelWidth` moves that column. Both panels paint the same component,
- * so the difference is the prop rather than a second layout.
- *
- * Every check is a `ctx.expect*` at the step that makes it — the helpers only
- * read — so the count the README prints is the number of assertion sites.
- *
- * Captures: `property-panel-edited`.
- */
-
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -44,13 +24,11 @@ import {
 } from "./property-panel.js";
 import { settleUntil } from "./settle.js";
 
-/** The one capture: both panels after the two edits. */
 const CAPTURE = "property-panel-edited";
 
 const CAPTION =
   "The shipped PropertyPanel: an editable row's field takes a press and typing, every edit reports the whole object, a read-only row paints no field, and the label column follows the width it is given.";
 
-/** The view: two shipped panels and the object they both describe. */
 export const PropertyPanelProbe = (): ReactNode => {
   const theme = useTheme();
   const [object, setObject] = useState<PropertyObject>(PROPERTY_REST);
@@ -118,7 +96,6 @@ export const PropertyPanelProbe = (): ReactNode => {
   );
 };
 
-/** The probe's steps: the two columns, then an edit in each field. */
 export const propertyPanelSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(PROPERTY_IDS.panel);
@@ -126,7 +103,6 @@ export const propertyPanelSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     type Failure = Smoke.SmokeAssertionError | Smoke.SmokeHostError;
 
-    /** A box the caller can read a column and a row from, or a named failure. */
     const box = (
       testId: string,
       label: string,
@@ -138,13 +114,11 @@ export const propertyPanelSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** The readout once it names `expected`, which an edit reports a frame later. */
     const readout = (expected: string): Effect.Effect<string, Failure> =>
       settleUntil(ctx.host.text(PROPERTY_IDS.readout), (line) =>
         line.includes(expected),
       );
 
-    /** Types `value` into the field `id`, the way a reader does. */
     const typeInto = (
       id: string,
       value: string,
@@ -159,13 +133,11 @@ export const propertyPanelSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         yield* Effect.sleep(Duration.millis(120));
       });
 
-    /** The field that holds the platform text session, or `none`. */
     const focused = (): Effect.Effect<string, Smoke.SmokeHostError> =>
       Effect.map(ctx.host.focused(), (id) =>
         Option.getOrElse(Option.fromNullishOr(id), () => "none"),
       );
 
-    // ── At rest: the object, the two kinds of row and the label column ──────
     yield* ctx.expectEqual(
       "the panel paints the object it was handed",
       yield* readout(propertyReadout(PROPERTY_REST)),
@@ -223,7 +195,6 @@ export const propertyPanelSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "Wide",
     );
 
-    // ── Editing the first field: the object repaints, the other row holds ───
     yield* typeInto(propertyField("name"), PROPERTY_TYPED.name);
     yield* ctx.expectContains(
       "an edit reports the whole object",
@@ -241,7 +212,6 @@ export const propertyPanelSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "note= tag=internal",
     );
 
-    // ── Editing the second field: both edits survive in the one object ──────
     yield* typeInto(propertyField("note"), PROPERTY_TYPED.note);
     yield* ctx.expectEqual(
       "the second edit reports the object with both values",
@@ -266,6 +236,5 @@ export const propertyPanelSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // Captures come last: a screenshot stalls the animation clock.
     yield* ctx.host.capture(CAPTURE);
   });

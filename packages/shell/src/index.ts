@@ -1,12 +1,3 @@
-/**
- * `@gpuixui/shell` — the application chrome: menu bars, status bars and toolbars.
- *
- * Each part renders through GPUix and is a thin composition of `@gpuixui/tw`
- * recipes, `@gpuixui/tokens` roles, `@gpuixui/keyboard` accelerators and the
- * `@gpuixui/primitives` keyboard arithmetic. The navigation rules are pure and
- * exported, so the chrome can be driven or tested without a renderer.
- */
-
 export { AppMenu } from "./app-menu/app-menu.js";
 export type {
   AppMenuEntry,

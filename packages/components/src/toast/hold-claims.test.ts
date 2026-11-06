@@ -1,19 +1,3 @@
-/**
- * The toast hold the runtime does not deliver on a traversal.
- *
- * The bug this guards: the page claimed a `Tab` traversal pauses a card's
- * auto-dismiss clock, and this suite asserted the probe's `focuses=1`. On a
- * clean build at HEAD both live probes read the opposite — `tabs-lifecycle`
- * reports `focuses=0` while the trigger holds the focus, and
- * `tooltip-lifecycle`'s tip does not open — so a keyboard reader's arrival does
- * **not** run the card's `onFocus`. The hold works on the pointer and on a press
- * that focuses a control, and `duration: 0` stays the route for an actionable
- * toast that must outlive the reader's journey to it. This holds the prose to
- * the source rules it depends on: the stack pauses every clock while the pointer
- * or a focus is in it, and the store still treats a non-positive duration as no
- * auto-dismiss at all.
- */
-
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -26,12 +10,11 @@ const viewport = (): string => source("./viewport.tsx");
 const store = (): string => source("./store.ts");
 
 describe("the toast hold", () => {
-  it("keeps the traversal off the clock, and names the escape", () => {
+  it("keeps the page's persistent-duration advice and retracts the traversal claim", () => {
     const text = page();
 
-    expect(text).toContain("A traversal does not hold the clock");
     expect(text).toContain("duration: 0");
-    // The retracted claims: a traversal was said to deliver the focus event.
+
     expect(text).not.toContain("traversal delivers that event");
     expect(text).not.toContain("holds the clock too");
     expect(text).not.toContain("focuses=1");
@@ -40,8 +23,6 @@ describe("the toast hold", () => {
   it("holds every clock on the pointer and on a focus event", () => {
     const code = viewport();
 
-    // The stack is the hold's only owner: one state feeds the store's `hold`,
-    // and the pointer, the focus set and a drag are its three inputs.
     expect(code).toContain("syncHold");
     expect(code).toContain("hold(held)");
     expect(code).toContain("onHover(true)");

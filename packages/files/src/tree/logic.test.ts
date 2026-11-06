@@ -1,17 +1,3 @@
-/**
- * The file tree's model: how a flat path list nests, and how the generic tree
- * primitives it composes with behave over that nesting.
- *
- * The bugs these guard:
- *
- * - a flat list that nests a file under the wrong folder, or a folder that
- *   paints even though its own entry is closed;
- * - an expansion set that does not return to the rows it started from;
- * - a type-ahead that finds a row hidden inside a collapsed branch, so the
- *   reader jumps to a file it cannot see;
- * - a duplicated path painting two rows that answer to one key.
- */
-
 import {
   collapseAll,
   expandAll,
@@ -114,8 +100,7 @@ describe("the declared rows", () => {
       Option.map(fileTreeTab(rows, selected), (row) => row.key);
 
     expect(tabOf("src/row.tsx")).toEqual(Option.some("src/row.tsx"));
-    // A selection inside a closed folder names no painted row, so the first
-    // row is the tab stop rather than a row the keyboard cannot reach.
+
     expect(tabOf("missing.ts")).toEqual(Option.some("src"));
     expect(tabOf(undefined)).toEqual(Option.some("src"));
   });
@@ -152,7 +137,7 @@ describe("type-ahead", () => {
 
   it("skips a collapsed branch", () => {
     const collapsed = flattenTree(roots, spec, collapseAll());
-    // `row` only matches the hidden `row.tsx`, so nothing visible matches.
+
     expect(typeAheadRow(collapsed, Option.none(), "row", labelOf)).toEqual(
       Option.none(),
     );
@@ -174,8 +159,6 @@ describe("kinds and glyphs", () => {
   });
 
   it("paints one glyph for folders and one for files, whatever the kind", () => {
-    // The reference paints a single file glyph; the chevron says whether a
-    // folder is open. Six glyphs in a column read as decoration.
     expect(fileIcon("folder", false)).toBe("folder");
     expect(fileIcon("folder", true)).toBe("folder");
     expect(fileIcon("code", false)).toBe("file");

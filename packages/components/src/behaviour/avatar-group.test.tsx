@@ -1,21 +1,3 @@
-/**
- * AvatarGroup in the real GPUix renderer.
- *
- * The bugs these guard: a row whose width disagrees with where its discs sit, so
- * the page reflows as the group animates; a cap that hides the front of the list
- * instead of the tail; a chip a reader hears as "+2" and nothing else; an
- * arrival that is already at rest when it mounts; a stagger counted per disc or
- * handed to the runtime in milliseconds; an appended face that replays the whole
- * row, and a removed one that remounts the faces after it; and a reduced run
- * that still travels; and a member list a store handed back as `null`, which
- * threw before a face painted.
- *
- * The motion clock is paused before the group mounts, so the first frame is the
- * declared target rather than wherever the frame loop had got. A headless tree
- * reports bounds, not paint, so the rise is the observable half of the
- * fade-and-offset pair.
- */
-
 import type { TestElement, TestRoot } from "@gpuix/react/testing";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
@@ -32,11 +14,9 @@ import {
   avatarStep,
 } from "../avatar-group/logic.js";
 
-/** The md face is 32px, so the house overlap is 8px and a disc advances 24. */
 const diameter = 32;
 const step = avatarStep(diameter, avatarOverlap(diameter, Option.none()));
 
-/** Five faces, so a cap always has a tail to hide. */
 const members: ReadonlyArray<AvatarGroupMember> = [
   { name: "Ada Lovelace" },
   { name: "Grace Hopper" },
@@ -45,7 +25,6 @@ const members: ReadonlyArray<AvatarGroupMember> = [
   { name: "Jean Bartik" },
 ];
 
-/** One face, failing on a missing index rather than casting it away. */
 const memberAt = (index: number): AvatarGroupMember => {
   const member = members[index];
   if (member === undefined) {
@@ -54,7 +33,6 @@ const memberAt = (index: number): AvatarGroupMember => {
   return member;
 };
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   renderer: TestRoot["renderer"],
   testId: string,
@@ -66,7 +44,6 @@ const byTestId = (
   return element;
 };
 
-/** Mount a group under a paused motion clock, so its first frame is exact. */
 const mountFrozen = (node: ReactNode) => {
   const page = renderComponent(<div />);
   page.renderer.clockPause();
@@ -91,8 +68,7 @@ describe("AvatarGroup", () => {
 
       expect(second.x - first.x).toBe(step);
       expect(last.x - first.x).toBe(step * 3);
-      // The row reserves exactly the discs plus the advances between them, so an
-      // absolutely positioned arrival cannot reflow the page.
+
       expect(row.width).toBe(diameter + step * 3);
       expect(row.height).toBe(diameter);
     } finally {
@@ -101,9 +77,6 @@ describe("AvatarGroup", () => {
   });
 
   it("reads a stored size the scale does not carry as the default row", () => {
-    // The group's own `size` is a preference an app reads back: the record once
-    // answered `undefined`, so every disc step was `NaN` and the row had no
-    // width to reserve.
     const page = renderComponent(
       <AvatarGroup
         testId="group"
@@ -129,7 +102,6 @@ describe("AvatarGroup", () => {
       const chip = requireBounds(page, "avatar-group-overflow");
       const third = requireBounds(page, "avatar-group-disc-2");
 
-      // The chip is the fourth disc in the row, and the only text it adds.
       expect(chip.x - third.x).toBe(step);
       expect(page.renderer.getAllText()).toEqual(["AL", "GH", "AT", "+2"]);
 
@@ -177,7 +149,6 @@ describe("AvatarGroup", () => {
             ?.motion,
       );
 
-      // A zero stagger adds nothing, so the first arrival carries no delay.
       expect(motions[0]).not.toHaveProperty("transition.delay");
       expect(motions[1]).toMatchObject({ transition: { delay: 0.04 } });
       expect(motions[2]).toMatchObject({ transition: { delay: 0.08 } });
@@ -216,7 +187,7 @@ describe("AvatarGroup", () => {
 
       expect(byTestId(page.renderer, "avatar-group-disc-0").id).toBe(ada);
       expect(byTestId(page.renderer, "avatar-group-disc-1").id).toBe(grace);
-      // The appended face is the one that arranges, at its own place in the row.
+
       expect(
         byTestId(page.renderer, "avatar-group-disc-2").customProps?.motion,
       ).toMatchObject({ transition: { delay: 0.08 } });
@@ -234,8 +205,6 @@ describe("AvatarGroup", () => {
       page.renderer.flush();
       const alan = byTestId(page.renderer, "avatar-group-disc-2").id;
 
-      // A member's key is its name, so Alan moves to index 1 without remounting
-      // and does not replay the arrival the reader already saw.
       show(<AvatarGroup testId="group" members={[memberAt(0), memberAt(2)]} />);
 
       const moved = byTestId(page.renderer, "avatar-group-disc-1");
@@ -289,7 +258,7 @@ describe("AvatarGroup", () => {
       expect(
         nodesWithRole(labelled.renderer, "group").map((node) => node.name),
       ).toEqual(["Project team"]);
-      // The default name is not painted twice beside the caller's.
+
       expect(
         a11yNodes(labelled.renderer).map((node) => node.name),
       ).not.toContain("5 avatars");
@@ -299,10 +268,6 @@ describe("AvatarGroup", () => {
   });
 
   it("paints a group whose stored member list is not a list", () => {
-    // The bug guarded: a group restored from a saved record carries JSON's
-    // `null` for a list it never carried, and `splitMembers` read `.length` off
-    // it — `Cannot read properties of null (reading 'length')` out of the
-    // render, taking the page with it where no members paints an empty row.
     const page = renderComponent(
       <div>
         <text testId="before">Before</text>
@@ -314,7 +279,6 @@ describe("AvatarGroup", () => {
       </div>,
     );
     try {
-      // The sibling is the counter: a render that threw takes the tree with it.
       expect(page.renderer.getAllText()).toContain("Before");
       expect(page.renderer.findByTestId("avatar-group-disc-0")).toBeUndefined();
     } finally {
@@ -323,9 +287,6 @@ describe("AvatarGroup", () => {
   });
 
   it("keeps the faces beside a stored entry that names nobody", () => {
-    // A deleted record leaves `null` inside the list, and a name that is not
-    // text has no key for the arrival and no words for the picture: the face
-    // threw on that name while its neighbours painted.
     const page = renderComponent(
       <AvatarGroup
         testId="group"

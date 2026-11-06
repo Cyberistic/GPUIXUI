@@ -15,11 +15,6 @@ import {
   SbSubRow,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 07 — a workspace nav that collapses to an icon rail: the team
- * switcher, Platform sections that open in place, Projects with row actions
- * and the account in the footer.
- */
 const OPEN = "Playground";
 
 export const Sidebar07Render = () => (

@@ -1,11 +1,3 @@
-/**
- * Guards the runner contract.
- *
- * If a failing scenario aborted the suite, a defect killed it, `expectNear`
- * compared exclusively, or `expectSome` ignored absence, the report could mark a
- * capability `verified` for checks that never ran — the exact lie the smoke
- * suite exists to prevent.
- */
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
@@ -94,9 +86,6 @@ describe("StyleSnapshot", () => {
   });
 
   it("refuses a whole snapshot whose property type changed", () => {
-    // A runtime that renames or retypes a property is a defect a scenario must
-    // see: silently coercing "13px" to 13 would let a token check pass against a
-    // style report that is no longer the one the tokens were written for.
     expect(Option.isNone(decode({ fontSize: "13px" }))).toBe(true);
     expect(Option.isNone(decode({ boxShadow: "#3B76F6" }))).toBe(true);
   });
@@ -157,8 +146,6 @@ describe("runScenarios", () => {
 });
 
 describe("formatModifiers", () => {
-  // The protocol reads a chord as one string, so the spelling is part of the
-  // measurement: two argument orders must not name two presses.
   it("spells a chord in one order whatever the caller's order", () => {
     expect(formatModifiers(["shift", "cmd"])).toBe("cmd-shift");
     expect(formatModifiers(["cmd", "shift"])).toBe("cmd-shift");
@@ -249,9 +236,6 @@ describe("a scoped run's capability verdict", () => {
   const registry: ReadonlyArray<SmokeScenario> = [first, second];
 
   it.effect("withholds verified from a capability it only sampled", () =>
-    // The bug: `--only first` printed `input=verified` while `second` — the
-    // other probe covering input — never ran, so a scoped run was citable as a
-    // capability total it had not measured.
     Effect.gen(function* () {
       const report = yield* runScoped([first], registry);
       expect(Option.getOrUndefined(statusOf(report, "input"))).toBe(
@@ -270,10 +254,6 @@ describe("a scoped run's capability verdict", () => {
   it.effect(
     "does not let a repeated probe stand in for the one it skipped",
     () =>
-      // The bug: the verdict compared the number of **results** to the number
-      // of declared probes, so `[first, first]` counted two and reported the
-      // capability `verified` while `second` had never run — the same evidence
-      // lie a scoped `--only` was already protected from.
       Effect.gen(function* () {
         const report = yield* runScoped([first, first], registry);
         expect(Option.getOrUndefined(statusOf(report, "input"))).toBe(
@@ -283,8 +263,6 @@ describe("a scoped run's capability verdict", () => {
   );
 
   it.effect("still fails a capability when its sampled probe failed", () =>
-    // `unverified` must not swallow a real failure: a scoped run that saw a
-    // failure has evidence, and it says so.
     Effect.gen(function* () {
       const failing = scenario("second", "input", (ctx) =>
         ctx.expectEqual("b", 1, 2),
@@ -297,9 +275,6 @@ describe("a scoped run's capability verdict", () => {
   it.effect(
     "keeps the run's own list as the fallback when no scope is given",
     () =>
-      // A caller that owns the whole list has nothing to declare against; the
-      // existing contract (every given scenario passed) stands, so no consumer
-      // that passes a registry-free list changes its verdict.
       Effect.gen(function* () {
         const report = yield* run([first]);
         expect(Option.getOrUndefined(statusOf(report, "input"))).toBe(
@@ -331,8 +306,7 @@ describe("a scoped run's capability verdict", () => {
     expect(coverageOf(registry)).toEqual([
       { capability: "input", declared: 2 },
     ]);
-    // A doubled registry is still two probes: counting entries would declare a
-    // scope bigger than the one that exists, and no run could ever cover it.
+
     expect(coverageOf([...registry, ...registry])).toEqual([
       { capability: "input", declared: 2 },
     ]);

@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Sliding text example: a status board whose value slides across its box.
- *
- * The clock is the application's — a sliding value is a controlled value, so the
- * example owns the interval it changes on. `Back` mirrors both halves, and the
- * last row runs under the reduced preference, which paints each value without
- * the journey.
- */
-
 import { useEffect, useState } from "react";
 import { Button } from "@gpuixui/components/authoring";
 import { MotionProvider } from "@gpuixui/components/motion";
@@ -15,7 +6,6 @@ import { SlidingText } from "../src/sliding-text.js";
 
 const views = ["Overview", "Deployments", "Settings"] as const;
 
-/** A view name that slides forward and one that slides back. */
 export const SlidingTextExample = () => {
   const [index, setIndex] = useState(0);
   const [auto, setAuto] = useState(true);

@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Item example: a shared drive's rows in the three surfaces.
- *
- * The row is a layout primitive — it paints no hover — so the actions are the
- * buttons that act on it, and the media carries the kind of file the row names.
- */
-
 import { Icon } from "@gpuixui/icons";
 import { Button } from "../src/internal/button.js";
 import { useTheme } from "../src/internal/theme.js";
@@ -19,7 +12,6 @@ import {
   ItemTitle,
 } from "../src/item.js";
 
-/** Three rows: default, outline and muted. */
 export const ItemExample = () => {
   const theme = useTheme();
   const rows = [

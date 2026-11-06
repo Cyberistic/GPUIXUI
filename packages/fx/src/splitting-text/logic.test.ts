@@ -1,14 +1,3 @@
-/**
- * The split, without a renderer.
- *
- * The bugs these guard: a character split that tears an emoji in half; a space
- * in character mode painted as `" "`, which the text layout trims so the words
- * collide; a delay that restarts per line, so the second line arrives before the
- * first; and a `stepMs` of `NaN` scheduling a stagger no tween can use. The
- * delay's seconds and the reduced rule are `@gpuixui/motion`'s
- * (`timing.test.ts`, "a staggered timing").
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { offsetOf, splitUnits } from "../splitting-text/logic.js";

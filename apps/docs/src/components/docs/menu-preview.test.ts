@@ -1,23 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { enabledEntries, highlightAfter, menuEntries } from "./menu-preview";
 
-/**
- * The dropdown-menu preview's arrow model.
- *
- * The preview claims the native component's keyboard contract — the highlight is
- * the focus, disabled rows are skipped, the ends wrap — but a reader cannot
- * check that by looking at a drawing. If the row arithmetic were wrong the
- * illustration would teach the wrong rule, so it is pinned here: the disabled
- * row is never a target, the wrap goes both ways, and an unhighlighted menu
- * starts where the native one does.
- */
-
 const ids = enabledEntries.map((entry) => entry.id);
 
 describe("the dropdown-menu preview", () => {
   it("has one row that cannot answer a key", () => {
-    // The premise of the skip case: exactly the disabled row is missing from
-    // the rows an arrow may land on.
     expect(menuEntries.length - enabledEntries.length).toBe(1);
     expect(menuEntries.filter((entry) => entry.disabled === true)).toHaveLength(
       1,

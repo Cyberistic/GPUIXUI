@@ -1,17 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `Separator` — a rule between regions.
- *
- * One border on the theme's border role, horizontal or vertical. A labelled
- * separator is a rule with a caption, which is a composition rather than a rule
- * property, so it is built from the same two elements here instead of growing
- * the resolver.
- *
- * The resting appearance is a Tailwind recipe (`recipe/separatorClass`),
- * compiled through `@gpuixui/tw`; the caller's `className` is joined last so it
- * wins conflicts exactly as `cn` resolves them.
- */
-
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
@@ -27,17 +14,11 @@ import { useTheme } from "./ThemeProvider.js";
 import { Text } from "./Text.js";
 
 export interface SeparatorProps extends RuleSpec {
-  /**
-   * A caption centred on the rule. A blank or whitespace-only caption is **no**
-   * caption — it is copy that arrived from data (an i18n table's missing row),
-   * and the runtime lays a run of spaces out as a full line, which would break a
-   * rule that reads as one hairline (`visibleCopy`).
-   */
   readonly label?: string;
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** Stable locator for automation. */
+
   readonly testId?: string;
 }
 
@@ -68,23 +49,15 @@ export const renderSeparator = (
   );
 };
 
-/** A horizontal or vertical rule. */
 export const Separator = (props: SeparatorProps): ReactElement =>
   renderSeparator(props, useTheme());
 
 export interface SpacerProps extends ElementHostProps {
-  /**
-   * A fixed gap on the spacing scale. Omit for a flexible filler.
-   *
-   * The step is a name, so it is read through {@link spaceStep}: a saved
-   * layout's name this release does not carry paints the **flexible** default
-   * the component documents, instead of a fixed item with no side at all.
-   */
   readonly size?: keyof PrimitiveTheme["spacing"];
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the fixed gap so it wins conflicts. */
+
   readonly className?: string;
-  /** Stable locator for automation. */
+
   readonly testId?: string;
 }
 
@@ -124,6 +97,5 @@ export const renderSpacer = (
   );
 };
 
-/** Empty space: a fixed gap, or a flexible filler that pushes siblings apart. */
 export const Spacer = (props: SpacerProps): ReactElement =>
   renderSpacer(props, useTheme());

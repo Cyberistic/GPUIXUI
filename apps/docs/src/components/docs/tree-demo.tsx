@@ -27,39 +27,23 @@ import { useState, type KeyboardEvent } from "react";
 import { treeKeyOf } from "./tree-keys";
 import { viewReadout } from "./window-preview";
 
-/**
- * Browser previews for the two tree pages.
- *
- * `TreeView` and `VirtualTree` are GPUix hosts, so neither page can mount its
- * component and both drawings are labelled approximations. What they do not
- * approximate is the tree: the rows are `@gpuixui/data`'s `flattenTree`, the
- * cursor is `useExpandedRows` over the same `treeCursorMove` the shipped
- * controller runs, the typed prefix is `typeAheadRow`, and the window is the
- * package's `createWindowCalculator`. Only the paint is the browser's.
- */
-
-/** One node of the dependency graph the drawings show. */
 export interface DependencyNode {
-  /** The stable identity the tree expands and focuses by. */
   readonly key: string;
-  /** The words the row is painted and named by. */
+
   readonly name: string;
-  /** The version the row paints as a muted suffix, when it has one. */
+
   readonly version?: string;
-  /** The packages this one depends on. */
+
   readonly children?: ReadonlyArray<DependencyNode>;
 }
 
-/** The accessors both controllers take. */
 export const dependencySpec: TreeSpec<DependencyNode> = {
   keyOf: (node) => node.key,
   childrenOf: (node) => node.children ?? [],
 };
 
-/** The words a row paints; `treeName` reads a blank one as the row's key. */
 export const dependencyLabel = (node: DependencyNode): string => node.name;
 
-/** The graph the `TreeView` page draws: a docs app and a playground. */
 export const DEPENDENCY_TREE: ReadonlyArray<DependencyNode> = [
   {
     key: "docs",
@@ -125,36 +109,30 @@ export const DEPENDENCY_TREE: ReadonlyArray<DependencyNode> = [
   },
 ];
 
-/** The branches `TreeView` opens at first paint. */
 export const OPEN_BRANCHES: ReadonlyArray<string> = [
   "docs",
   "docs/components",
   "docs/fumadocs",
 ];
 
-/** The row `TreeView`'s keyboard starts on. */
 export const OPEN_ACTIVE = "docs/components/tokens";
 
-/** The rows a reader can see, from the package's own flattening. */
 export const dependencyRows = (
   roots: ReadonlyArray<DependencyNode>,
   cursor: TreeCursor,
 ): ReadonlyArray<TreeRow<DependencyNode>> =>
   flattenTree(roots, dependencySpec, cursor.expanded);
 
-/** The cursor with `key` as the row the keyboard stands on. */
 export const withActive = (cursor: TreeCursor, key: string): TreeCursor => ({
   ...cursor,
   active: Option.some(key),
 });
 
-/** The index a row paints at, when the tree paints it. */
 export const rowIndexOf = (
   rows: ReadonlyArray<TreeRow<DependencyNode>>,
   key: string,
 ): Option.Option<number> => Arr.findFirstIndex(rows, (row) => row.key === key);
 
-/** The line under `TreeView`: what the cursor and the branches report. */
 export const treeReadout = (
   rows: ReadonlyArray<TreeRow<DependencyNode>>,
   cursor: TreeCursor,
@@ -171,11 +149,9 @@ export const treeReadout = (
   )} open · ${name}`;
 };
 
-/** The row's element id, so the tree can name the row it stands on. */
 export const rowId = (key: string): string =>
   `gx-tree-${key.replace(/[^A-Za-z0-9]+/g, "-")}`;
 
-/** One row's chevron, words and version, shared by both drawings. */
 function RowContent({
   row,
   onFlip,
@@ -203,8 +179,6 @@ function RowContent({
           {row.expanded ? "▾" : "▸"}
         </button>
       ) : (
-        // A leaf keeps the chevron's track so its label lines up with a branch's,
-        // and paints no control: the package's own row has nothing to flip.
         <span aria-hidden="true" className="gx-dtree-slot" />
       )}
       <span className="gx-dtree-name">
@@ -219,7 +193,6 @@ function RowContent({
   );
 }
 
-/** The `TreeView` page's drawing: a whole hierarchy, flattened and painted. */
 export function DependencyTreeDemo() {
   const tree = useExpandedRows({
     roots: DEPENDENCY_TREE,
@@ -276,14 +249,12 @@ export function DependencyTreeDemo() {
   );
 }
 
-/** The registries the virtual drawing's graph is built from. */
 export const VIRTUAL_REGISTRIES = 12;
-/** The namespaces under each registry. */
+
 export const VIRTUAL_NAMESPACES = 12;
-/** The packages under each namespace. */
+
 export const VIRTUAL_PACKAGES = 12;
 
-/** One namespace: a branch whose leaves are the packages it holds. */
 const namespaceNode = (registry: string, index: number): DependencyNode => ({
   key: `${registry}/ns-${String(index)}`,
   name: `namespace-${String(index).padStart(2, "0")}`,
@@ -294,7 +265,6 @@ const namespaceNode = (registry: string, index: number): DependencyNode => ({
   })),
 });
 
-/** The graph `VirtualTree` draws: a registry-sized set of thousands of rows. */
 export const virtualDependencyTree: ReadonlyArray<DependencyNode> = Arr.map(
   Arr.range(1, VIRTUAL_REGISTRIES),
   (registry) => {
@@ -309,33 +279,22 @@ export const virtualDependencyTree: ReadonlyArray<DependencyNode> = Arr.map(
   },
 );
 
-/** Every branch open, which is the set the virtual page's drawing starts on. */
 export const virtualTreeExpanded = expandAll(
   virtualDependencyTree,
   dependencySpec,
 );
 
-/** The whole flattened set the virtual tree is given. */
 export const virtualTreeRows = dependencyRows(virtualDependencyTree, {
   expanded: virtualTreeExpanded,
   active: Option.none(),
 });
 
-/** The viewport the page documents, in pixels. */
 export const VIRTUAL_TREE_VIEWPORT = 240;
 
-/** Every virtual row paints this height, which is the window's step. */
 export const VIRTUAL_TREE_ROW_HEIGHT = DEFAULT_ROW_HEIGHT;
 
-/** Rows mounted beyond the viewport on each side. */
 export const VIRTUAL_TREE_OVERDRAW = DEFAULT_OVERDRAW;
 
-/**
- * The window spec over a set of rows.
- *
- * The count is the caller's, because collapsing a branch shrinks the set the
- * shipped tree is given and its window is computed from the set it holds.
- */
 export const virtualTreeSpecFor = (count: number): WindowSpec => ({
   count,
   rowHeight: VIRTUAL_TREE_ROW_HEIGHT,
@@ -343,15 +302,12 @@ export const virtualTreeSpecFor = (count: number): WindowSpec => ({
   overdraw: VIRTUAL_TREE_OVERDRAW,
 });
 
-/** The farthest a drawing's scroll offset may go over `count` rows. */
 export const virtualTreeMaxOffset = (count: number): number =>
   maxScrollOffset(virtualTreeSpecFor(count));
 
-/** An offset the window clamps into the rows it holds. */
 export const treeOffset = (count: number, offset: number): number =>
   clampScrollOffset(virtualTreeSpecFor(count), offset);
 
-/** The absolute row indices the window mounts at an offset. */
 export const treeMountedRows = (
   count: number,
   offset: number,
@@ -360,7 +316,6 @@ export const treeMountedRows = (
     treeOffset(count, offset),
   );
 
-/** The mounted window, `start` inclusive and `end` exclusive. */
 export const treeMountedWindow = (
   count: number,
   offset: number,
@@ -369,11 +324,9 @@ export const treeMountedWindow = (
     treeOffset(count, offset),
   );
 
-/** The offset that reveals one row, the way the shipped tree moves its window. */
 export const revealOffsetFor = (count: number, index: number): number =>
   treeOffset(count, rowIndex(index) * VIRTUAL_TREE_ROW_HEIGHT);
 
-/** The row at the viewport's top edge: the one row a window is sure to hold. */
 export const anchorIndexFor = (count: number, offset: number): number =>
   Math.min(
     Math.max(count - 1, 0),
@@ -383,16 +336,6 @@ export const anchorIndexFor = (count: number, offset: number): number =>
     ),
   );
 
-/**
- * The cursor a scroll keeps.
- *
- * The runtime unmounts a row outside the window, and the tree mounts exactly
- * one window of the set, so a row the reader scrolled past cannot hold the tab
- * stop: its `aria-activedescendant` would name an element that is not in the
- * document. The row at the viewport's top edge is the one the new window is
- * guaranteed to hold, which is where the shipped tree moves the cursor. A row
- * the new window still mounts keeps the cursor exactly where it was.
- */
 export const cursorAfterScroll = (
   rows: ReadonlyArray<TreeRow<DependencyNode>>,
   cursor: TreeCursor,
@@ -410,7 +353,6 @@ export const cursorAfterScroll = (
   });
 };
 
-/** What the drawing reports about its window. */
 export const treeWindowReadout = (count: number, offset: number): string =>
   viewReadout(
     virtualTreeSpecFor(count),
@@ -418,11 +360,9 @@ export const treeWindowReadout = (count: number, offset: number): string =>
     treeMountedRows(count, offset).length,
   );
 
-/** A row's element id in the virtual tree's window. */
 export const windowRowId = (key: string): string =>
   `gx-vtree-${key.replace(/[^A-Za-z0-9]+/g, "-")}`;
 
-/** The `VirtualTree` page's drawing: one window of a few thousand rows. */
 export function VirtualTreeDemo() {
   const tree = useExpandedRows({
     roots: virtualDependencyTree,
@@ -437,8 +377,6 @@ export function VirtualTreeDemo() {
   const mounted = treeMountedRows(count, offset);
   const active = Option.getOrUndefined(tree.cursor.active);
 
-  // A cursor move mounts its row before the focus moves: the window is moved to
-  // the row's position in the same gesture, which is the shipped tree's rule.
   const commit = (cursor: TreeCursor): void => {
     tree.setCursor(cursor);
     Option.match(cursor.active, {
@@ -474,8 +412,6 @@ export function VirtualTreeDemo() {
     );
   };
 
-  // A scroll keeps the tab stop on a row the new window mounts, which is the
-  // shipped tree's rule: a row outside the window does not exist to focus.
   const scrollTo = (next: number): void => {
     const clamped = treeOffset(count, next);
     setOffset(clamped);
@@ -583,7 +519,6 @@ export function VirtualTreeDemo() {
   );
 }
 
-/** The `TreeView` page's copyable native usage, shown in the Code tab. */
 export const treeViewDemoSource = `import { TreeView, useExpandedRows } from "@gpuixui/data";
 
 const dependencies = [
@@ -615,7 +550,6 @@ export function DependencyTree() {
   );
 }`;
 
-/** The `VirtualTree` page's copyable native usage, shown in the Code tab. */
 export const virtualTreeDemoSource = `import { VirtualTree } from "@gpuixui/data";
 
 <VirtualTree

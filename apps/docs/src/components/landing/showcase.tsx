@@ -1,13 +1,3 @@
-/**
- * The landing's showcase grid: small, working components.
- *
- * Every tile is a live miniature — typing, toggling, selecting, paging a
- * calendar, firing a toast — because a product grid of pictures says less than
- * a grid you can touch. The compositions are built on the site's tokens rather
- * than mounting full demos: a demo in a tile brings its own dark preview
- * surface and its own page-sized layout.
- */
-
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTheme } from "fumadocs-ui/provider/base";
 import { themes } from "@gpuixui/tokens";
@@ -33,7 +23,6 @@ import {
 import { OTPFieldDemo } from "../docs/otp-field-demo";
 import { LandingScene } from "./landing";
 
-/** The ink that reads on a given colour, by its measured luminance. */
 const readableOn = (hex: string): string => {
   const value = hex.replace("#", "").slice(0, 6);
   const channel = (offset: number): number => {
@@ -45,7 +34,6 @@ const readableOn = (hex: string): string => {
   return luminance > 0.45 ? "#000000" : "#ffffff";
 };
 
-/** Marks an element the first time it enters the viewport. */
 const useInView = <T extends HTMLElement>() => {
   const element = useRef<T>(null);
   const [seen, setSeen] = useState(false);
@@ -84,8 +72,6 @@ const Tile = ({
   </div>
 );
 
-/** Four tones; each button plays a different toast. */
-/** The page's colour mode, read from the class the theme switch writes. */
 const usePageMode = (): "light" | "dark" => {
   const [dark, setDark] = useState(false);
   useEffect(() => {
@@ -144,7 +130,6 @@ const TOAST_PRESSES: ReadonlyArray<{
   },
 ];
 
-/** The toast tile: each press posts a toast onto the page itself. */
 function ToastTile({
   onToast,
 }: {
@@ -172,7 +157,6 @@ function ToastTile({
   );
 }
 
-/** The registry install line, in the terminal's own colours. */
 function CodeTile() {
   return (
     <Tile className="landing-grid-tile-code">
@@ -326,7 +310,6 @@ const MONTHS = [
   "December",
 ] as const;
 
-/** November 2026, the month the tile opens on. */
 const START = { year: 2026, month: 10 } as const;
 
 function CalendarTile() {
@@ -605,7 +588,6 @@ function ProgressTile() {
   );
 }
 
-/** The shipped colour picker, on the page's own theme. */
 function ColorTile({
   defaultValue,
   onPrimary,
@@ -631,8 +613,6 @@ function ColorTile({
   );
 }
 
-/** The toolbar above the grid: it themes every tile on the page. */
-/** The theme card: platform chrome around the page-wide theme switches. */
 function ThemeTile({
   platform,
   onPlatform,
@@ -703,10 +683,8 @@ function ThemeTile({
   );
 }
 
-/** The site's own address: the QR opens this documentation. */
 const SITE_URL = "https://gpuixui.sudokw.com";
 
-/** One path holding every dark module, quiet zone included. */
 const qrModules = (symbol: QrSymbol): string => {
   const quiet = Math.floor(QR_QUIET_ZONE);
   return Array.from({ length: symbol.modules }, (_, row) => row)
@@ -768,7 +746,6 @@ function QrTile() {
   );
 }
 
-/** A chart from the package's own geometry, on the tile's theme. */
 function ChartTile({
   mode,
   platform,
@@ -849,7 +826,6 @@ const HXH_THREAD: ReadonlyArray<Row> = [
   },
 ];
 
-/** Gon and Killua, on the library's chat drawing. */
 function ChatTile({
   platform,
   primary,
@@ -882,7 +858,6 @@ function ChatTile({
   );
 }
 
-/** One OTP field, not the docs page's valid/refused pair. */
 function OtpTile({
   platform,
   primary,

@@ -1,31 +1,17 @@
-/**
- * The launch film's take runner: one real GPUix tree, driven by real input and a
- * paused motion clock, captured one PNG per frame.
- *
- * A take is a pure function of its frame index: the tree it renders and where
- * the pointer is. The runner moves the pointer through GPUI's own hit testing
- * (a press is a real mouse-down, a drag is real moves holding the button), sets
- * the motion clock to the frame's time, flushes and captures. The pointer path
- * is written to `cursor.json` in output pixels, so the composition draws its
- * cursor exactly where the input went (an offscreen window has no OS pointer).
- */
 import { createTestRoot } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { writeFileSync } from "node:fs";
 import type { ReactNode } from "react";
 
-/** Frames per second of every take. */
 export const FPS = 30;
-/** The test renderer captures at 2× the window's logical size (measured). */
+
 export const DEVICE_SCALE = 2;
 
-/** Where the pointer aims: an element's centre (plus an offset) or a point. */
 export type Aim =
   | { readonly testId: string; readonly dx?: number; readonly dy?: number }
   | { readonly x: number; readonly y: number };
 
-/** The pointer at a frame: where it is aimed and whether the button is held. */
 export interface Waypoint {
   readonly frame: number;
   readonly aim: Aim;
@@ -37,9 +23,9 @@ export interface Take {
   readonly height: number;
   readonly frames: number;
   readonly view: (frame: number) => ReactNode;
-  /** Keyframes of the pointer, in frame order; it eases between them. */
+
   readonly pointer?: ReadonlyArray<Waypoint>;
-  /** Keystrokes sent to the focused element on a frame (`"a b enter"`). */
+
   readonly keys?: ReadonlyArray<{
     readonly frame: number;
     readonly keys: string;
@@ -58,7 +44,6 @@ type Bounds = { x: number; y: number; width: number; height: number };
 const easeInOut = (t: number): number =>
   t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 
-/** The pointer at `frame`: eased between the waypoints around it. */
 export const pointerAt = (
   path: ReadonlyArray<Waypoint>,
   frame: number,
@@ -85,7 +70,6 @@ export const pointerAt = (
     },
   );
 
-/** Capture `take` into `outDir` as `0000.png…` and `cursor.json`. */
 export const capture = (
   take: Take,
   outDir: string,
@@ -107,8 +91,6 @@ export const capture = (
     };
   };
 
-  // Each aim is resolved once, when the pointer first needs it, and kept: a
-  // press may remove its own target (a photo that opens full-screen).
   const resolved = new Map<Aim, { x: number; y: number }>();
   const located = (aim: Aim): { x: number; y: number } => {
     const point = resolved.get(aim) ?? locate(aim);
@@ -125,8 +107,7 @@ export const capture = (
   for (let frame = 0; frame < take.frames; frame += 1) {
     root.render(take.view(frame));
     renderer.flush();
-    // A measured layout (a grid sized by `onLayout`) appears once its layout
-    // events are delivered, on the paint after.
+
     renderer.dispatchNativeEvents();
     renderer.flush();
     for (const { keys } of Arr.filter(

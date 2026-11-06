@@ -12,17 +12,6 @@ import {
   type Issue,
 } from "./drawer-preview";
 
-/**
- * The drawer preview's model has to say two things the component does: an edge
- * either lays the surface across the window or down it, and one Escape/outside
- * gesture is offered to the topmost layer only.
- *
- * Both are easy to get subtly wrong in a browser drawing and impossible to
- * notice by looking at it: a non-dismissible drawer that lets the gesture
- * through closes the dialog the reader was told to answer. These cases fail when
- * the preview's arithmetic drifts from `drawer.tsx`.
- */
-
 const source = readFileSync(
   new URL("../../../../../packages/components/src/drawer.tsx", import.meta.url),
   "utf8",
@@ -66,9 +55,6 @@ const layers: ReadonlyArray<DismissLayer> = [
 
 describe("a drawer's edge", () => {
   it("lays a top or bottom sheet across the window, and a column down it", () => {
-    // The component's `isVertical` is the one rule the box, the layout and the
-    // travel read; a drawing that treated `top` as a column painted a panel on
-    // the wrong axis.
     expect(isVertical("top")).toBe(true);
     expect(isVertical("bottom")).toBe(true);
     expect(isVertical("left")).toBe(false);
@@ -89,8 +75,6 @@ describe("the dismiss stack", () => {
   });
 
   it("consumes the gesture without closing a layer that is not dismissible", () => {
-    // The dialog must not close either: the drawer is the surface the reader is
-    // being asked to answer, and one gesture closes at most one overlay.
     const result = dismissTop([
       { name: "dialog", dismissible: true },
       { name: "drawer", dismissible: false },

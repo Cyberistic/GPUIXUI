@@ -1,22 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * HighlightText: a phrase with a marker wash that sweeps across its matches.
- *
- * The wash is the runtime's own `highlight` — a paint behind the text, not a
- * coloured copy of it — so the glyphs stay the theme's body colour and the mark
- * is a quad the paint layer draws. `@gpuix/native@0.11.0` has no animated
- * `highlight`, so the component owns the sweep: it reveals the ranges a code
- * point at a time, and a mark grows as one range rather than a run of quads
- * (abutting translucent quads show their seams).
- *
- * The default wash is the theme's `findHighlight` pair — the colours
- * `@gpuixui/tokens` derives from `primary` so the matched text keeps the body
- * floor — with the active mark painted at the stronger share. A theme restored
- * from storage that cannot derive the pair hands the host **no colour**, so the
- * runtime's own wash paints instead of the search throwing on its first paint.
- * The reveal is a real-time timer, so a paused renderer clock does not hold it.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -41,74 +23,47 @@ import { recipeStyle } from "./internal/recipe.js";
 import { textOf } from "./internal/text.js";
 import { textStyle, useTheme, type TextRole } from "./internal/theme.js";
 
-/** What a highlight draws at one frame. */
 export interface HighlightTextState {
   readonly text: string;
-  /** How many code points of the marks are painted. */
+
   readonly revealed: number;
-  /** How many code points every mark spans. */
+
   readonly total: number;
   readonly complete: boolean;
   readonly reducedMotion: boolean;
 }
 
-/** {@link HighlightText} props. */
 export interface HighlightTextProps extends Omit<Props, "children" | "style"> {
-  /**
-   * The phrase to paint. A value a saved record left absent paints an empty
-   * phrase rather than taking the render down.
-   */
   readonly text: string;
-  /** The substring to mark; every occurrence, case-insensitively by default. */
+
   readonly query?: string;
-  /**
-   * Explicit `[start, end)` ranges in the phrase's UTF-16 units; wins over
-   * `query`. A pair is the part of it **inside** the phrase: each end is a
-   * whole number clamped to the phrase, and a pair that is not two numbers or
-   * whose ends meet after that is no range — so a find bar's `indexOf` may
-   * answer `-1` for no match without handing the runtime a negative offset.
-   */
+
   readonly ranges?: ReadonlyArray<Range>;
-  /** Match `query` case-sensitively. Default `false`. */
+
   readonly caseSensitive?: boolean;
-  /** Only mark a whole word. Default `false`. */
+
   readonly wholeWord?: boolean;
-  /**
-   * Milliseconds per swept code point. Default `60`; `0` paints every mark on
-   * the first frame.
-   */
+
   readonly stepMs?: number;
-  /** Every match's wash. Default: the theme's `findHighlight` colour. */
+
   readonly color?: string;
-  /** The active match's wash. Default: the theme's `findHighlight` active colour. */
+
   readonly activeColor?: string;
-  /**
-   * Which mark is the active match, by its index among this phrase's marks.
-   * The runtime paints it with `activeColor`; a find bar over a document
-   * converts its document-wide index first.
-   */
+
   readonly activeIndex?: number;
-  /** A typographic role from the theme. Default `"body"`. */
+
   readonly role?: TextRole;
-  /** A Tailwind class string, joined after the resting style so it wins. */
+
   readonly className?: string;
-  /** A style, or a function of the reveal. */
+
   readonly style?: StateStyle<HighlightTextState>;
 }
 
-/** The reveal progress, tagged with the run it belongs to. */
 interface Progress {
   readonly run: string;
   readonly revealed: number;
 }
 
-/**
- * A phrase whose matches a marker sweeps across.
- *
- * Under `MotionProvider preference="reduced"` — or with `stepMs={0}` — every
- * mark paints on the first frame: the resting appearance does not depend on the
- * preference, only the journey does.
- */
 export const HighlightText = ({
   text,
   query,
@@ -127,7 +82,7 @@ export const HighlightText = ({
   const theme = useTheme();
   const reducedMotion = useMotionPreference() === "reduced";
   const stepMs = stepOf(Option.fromNullishOr(stepMsProp));
-  /** The phrase a saved record may have lost; JSON writes `null` for it. */
+
   const phrase = textOf(text);
   const marks = useMemo(
     () => marksFor(phrase, { query, ranges, caseSensitive, wholeWord }),
@@ -136,16 +91,12 @@ export const HighlightText = ({
   const total = sweepLength(phrase, marks);
   const instant = reducedMotion || stepMs === 0;
 
-  // A parent that hands the same ranges in a new array must not restart the
-  // sweep, so the run is their values rather than their identity.
   const rangeKey = Arr.map(
     ranges ?? [],
     (range) => `${range[0]}:${range[1]}`,
   ).join(",");
   const run = `${phrase}|${query ?? ""}|${rangeKey}|${caseSensitive}|${wholeWord}|${stepMs}`;
 
-  // Progress belongs to the run it was measured for, so a changed query reads as
-  // zero immediately instead of flashing the previous mark.
   const [progress, setProgress] = useState<Progress>({ run, revealed: 0 });
   const revealed = instant
     ? total
@@ -211,7 +162,6 @@ export const HighlightText = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const highlightTextMeta = {
   name: "Highlight text",
   tier: 5,

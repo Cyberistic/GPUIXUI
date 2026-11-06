@@ -1,22 +1,3 @@
-/**
- * Fireworks in the real GPUix renderer.
- *
- * The bugs these guard: a field seeded outside the box it was measured in; a
- * spark that is already at its ring on the first frame, so nothing travels; a
- * fly phase that replays from the centre instead of retargeting, so the fade
- * starts over; a fade that never fires, so the burst stays lit at the rim; a
- * field that stops after one burst because the runtime tweens a target once; a
- * reduced preference that deletes the field instead of stilling it; a decorative
- * field that leaks into the accessibility tree or swallows presses; and an
- * entrance that ignores the house level.
- *
- * The motion clock is paused before the mount, so the first frame is the declared
- * initial frame rather than wherever the frame loop had got. A headless tree
- * reports bounds and the motion description, not paint, so the life is read from
- * the targets the component hands the runtime — the sampler that paints them is
- * measured by the overlay and mote suites.
- */
-
 import type { TestElement, TestRoot } from "@gpuix/react/testing";
 import { motionLevels } from "@gpuixui/motion/timing";
 import * as Arr from "effect/Array";
@@ -40,10 +21,8 @@ import {
 } from "@gpuixui/components/authoring/testing";
 import { MotionProvider } from "@gpuixui/components/motion";
 
-/** The burst the cases run with, short enough to finish in a test. */
 const burstMs = 1_000;
 
-/** The pure layout for the box the renderer measured. */
 const fieldIn = (
   page: ReturnType<typeof renderComponent>,
   overrides: Partial<FireworkFieldInput> = {},
@@ -62,7 +41,6 @@ const fieldIn = (
   });
 };
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   renderer: TestRoot["renderer"],
   testId: string,
@@ -74,7 +52,6 @@ const byTestId = (
   return element;
 };
 
-/** Mount under a paused motion clock, then let the box measurement land. */
 const mountFrozen = (node: ReactNode) => {
   const page = renderComponent(<div />);
   page.renderer.clockPause();
@@ -83,8 +60,7 @@ const mountFrozen = (node: ReactNode) => {
     page.renderer.flush();
   };
   show(node);
-  // The field positions itself from its own layout, so the sparks arrive on the
-  // second frame; the second settle paints what the measurement changed.
+
   settle(page);
   settle(page);
   return { page, show };
@@ -165,7 +141,6 @@ describe("Fireworks", () => {
       );
       settle(page);
 
-      // The fade retargets from the ring rather than replaying the entry.
       const fading = byTestId(page.renderer, "spark-0-0");
       expect(fading.id).toBe(born.id);
       expect(fading.customProps?.motion).toMatchObject({
@@ -181,7 +156,6 @@ describe("Fireworks", () => {
       page.renderer.clockFastForward(phases.fade.durationMs);
       settle(page);
 
-      // A fresh spark at the centre, heading out again.
       const next = byTestId(page.renderer, "spark-0-0");
       expect(next.id).not.toBe(born.id);
       expect(next.style.left).toBeCloseTo(spec.x, 0);
@@ -244,7 +218,7 @@ describe("Fireworks", () => {
       const spark = byTestId(page.renderer, "spark-0-1");
 
       expect(spark).not.toHaveProperty("customProps.motion");
-      // The field stays where it was drawn; the flight is what is removed.
+
       expect(spark.style.left).toBeCloseTo(rest.left, 0);
       expect(spark.style.top).toBeCloseTo(rest.top, 0);
       expect(spark.style.opacity).toBe(spec.peak);
@@ -268,7 +242,6 @@ describe("Fireworks", () => {
   it("publishes no accessibility node and takes no pointer input", () => {
     const { page } = mountFrozen(<Field />);
     try {
-      // The window itself is the only node: the field adds no role and no name.
       expect(Arr.map(a11yNodes(page.renderer), (node) => node.role)).toEqual([
         "window",
       ]);

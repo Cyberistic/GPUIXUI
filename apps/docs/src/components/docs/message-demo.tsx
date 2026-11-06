@@ -1,15 +1,3 @@
-/**
- * Browser preview for the Message page.
- *
- * A message is one row of a conversation: a variant (`user`, `assistant`,
- * `system`) plus optional slots — reasoning, tool calls, citations, a streaming
- * marker and an action row — that are data props, so a slot renders when it is
- * supplied. The preview draws a rich assistant reply (collapsed reasoning, a
- * done tool call, two citations, the action row) beside a user bubble and a
- * streaming reply, and lets the reader open the reasoning the way the native
- * `Collapsible` does.
- */
-
 import { useState, type ReactNode } from "react";
 
 type Variant = "user" | "assistant" | "system";

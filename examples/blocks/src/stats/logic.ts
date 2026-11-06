@@ -1,6 +1,3 @@
-/**
- * The stats block's rule: a value the range control reports is one of its ranges.
- */
 import * as Arr from "effect/Array";
 import { ranges, type Range } from "./data.js";
 

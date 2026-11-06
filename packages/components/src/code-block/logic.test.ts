@@ -1,14 +1,3 @@
-/**
- * The decisions a code block makes before it renders.
- *
- * The bugs these guard: a header that prints the path's extension for a file
- * whose extension no highlighter understands; a blank `language=""` painting an
- * empty chip instead of falling back to the path; a source that ends with a
- * newline claiming one row more than it paints; a whitespace-only source
- * counting as content and hiding the empty state; and a description that says
- * "1 lines" or drops the language a reader needs to know.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {

@@ -1,25 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Gradient: a two-stop gradient surface that breathes between two ramps.
- *
- * The runtime paints one gradient shape — a CSS angle and two stops — and it
- * does not interpolate one: a gradient is paint, and the tween targets it
- * animates are numbers. So a gradient that moves is **two ramps of the same
- * colours**, the second a quarter turn away, and the movement is the one value
- * the runtime animates natively: the second layer's `opacity`, tweened from
- * nothing to full and back. `@gpuixui/motion` owns the leg's floor and cap
- * through `gradient/logic.ts`, and `MotionProvider preference="reduced"` paints
- * the resting ramp alone instead of deleting the surface.
- *
- * The field is a surface, not a field to measure: a gradient fills whatever box
- * the layout gives it, so it needs no `onLayout` and paints from the first frame.
- * Its content is painted after the layers, because paint order is tree order and
- * the runtime has no `zIndex`.
- *
- * `transform` is not involved anywhere: the ramp is re-drawn at another angle
- * rather than rotated, which is what the runtime cannot do (upstream issue #102).
- */
-
 import type { MotionProps, Props, StyleDesc } from "@gpuix/react";
 import {
   mergeStyles,
@@ -47,43 +26,32 @@ import {
   shiftedRampOf,
 } from "./gradient/logic.js";
 
-/** What a field paints at one frame. */
 export interface GradientState {
-  /** The base ramp's angle, in degrees. */
   readonly angle: number;
-  /** The shift between the two ramps, in degrees; `0` means it does not breathe. */
+
   readonly shift: number;
-  /** Whether a second ramp is crossfading: false when still or unshifted. */
+
   readonly animated: boolean;
   readonly reducedMotion: boolean;
 }
 
-/** {@link Gradient} props. */
 export interface GradientProps extends Omit<Props, "style"> {
-  /** The ramp's start colour. Default the theme's `primary` role. */
   readonly from?: string;
-  /**
-   * The ramp's end colour. Default the start colour at zero alpha, so the ramp
-   * dissolves into whatever surface the field is painted on.
-   */
+
   readonly to?: string;
-  /** The base ramp's angle in degrees (0 points up, clockwise). Default `135`. */
+
   readonly angle?: number;
-  /**
-   * The second ramp's angle, relative to the first. Default `90`; `0` (or a
-   * whole turn) paints one still ramp, because two identical ramps have nothing
-   * to crossfade.
-   */
+
   readonly shift?: number;
-  /** One leg of the breath, in milliseconds. Default `6_000`; below 400 ms it falls back, 60 s is the cap. */
+
   readonly durationMs?: number;
-  /** The field's corner radius. Default `0`; the layers take it too, so a rounded field has no square corners. */
+
   readonly radius?: number;
-  /** The entrance level. Default `"slow"` (320 ms). */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string, merged last. */
+
   readonly className?: string;
-  /** A style for the field, or a function of {@link GradientState}. */
+
   readonly style?: StateStyle<GradientState>;
 }
 
@@ -93,12 +61,6 @@ interface BreathProps {
   readonly radius: number;
 }
 
-/**
- * The second ramp, breathing: born transparent, tweened to full, then back.
- *
- * The runtime tweens a target once, so a breath is a ping-pong driven by
- * `onMotionComplete` — the same rule the decorative fields follow.
- */
 const Breath = ({ ramp, legMs, radius }: BreathProps) => {
   const [lit, setLit] = useState(false);
   const motion: MotionProps = {
@@ -121,19 +83,13 @@ const Breath = ({ ramp, legMs, radius }: BreathProps) => {
         background: ramp,
         borderRadius: radius,
         opacity: 0,
-        // A background never takes the presses aimed at the content above it.
+
         pointerEvents: "none",
       }}
     />
   );
 };
 
-/**
- * A two-stop gradient surface, optionally breathing between two ramps.
- *
- * Give it a box — a height, a padding, or content with its own size — and paint
- * content as children; they sit above the gradient.
- */
 export const Gradient = ({
   from,
   to,
@@ -191,7 +147,6 @@ export const Gradient = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const gradientMeta = {
   name: "Gradient",
   tier: 5,

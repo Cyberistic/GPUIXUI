@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * QrCode example: one URL at three sizes and a value the symbol refuses.
- *
- * The symbol's ink and paper stay scanner-safe, so the frames read the same in
- * either theme; the quiet zone is part of the mask, which is why the smallest
- * frame is still a whole module grid.
- */
-
 import { QrCode } from "../src/qr-code.js";
 
 export const QrCodeExample = () => (

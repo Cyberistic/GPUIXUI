@@ -1,18 +1,3 @@
-/**
- * The tokenizer half of a code block.
- *
- * The bugs these guard: a run that loses a character of the source (the flat
- * runs must concatenate back to the input, newlines included); an unknown
- * language painting through the wrong grammar instead of plain text; a token
- * class the palette forgets; a run whose text crosses a line ending rendering
- * as one row instead of two; and a trailing newline producing an empty row the
- * row count does not claim.
- *
- * The suite runs under `environment: "node"` (no jsdom), which is itself the
- * proof `@tanstack/highlight` needs no DOM: importing and tokenizing here is a
- * DOM-free render path.
- */
-
 import { lightTheme, syntaxColors } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { codeLines, codeRuns, tokenRole } from "./tokenize.js";

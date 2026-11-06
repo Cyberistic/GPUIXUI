@@ -202,20 +202,23 @@ export const CalendarRender = () => {
                 {agenda.length} {agenda.length === 1 ? "event" : "events"}
               </p>
             </div>
-            <button
-              className="gx-btn gx-btn-primary gx-btn-sm"
-              type="button"
-            >
+            <button className="gx-btn gx-btn-primary gx-btn-sm" type="button">
               New event
             </button>
           </header>
 
           {agenda.length === 0 ? (
-            <p className="gx-cal-empty">Nothing scheduled. A good day to train.</p>
+            <p className="gx-cal-empty">
+              Nothing scheduled. A good day to train.
+            </p>
           ) : (
             <ul className="gx-cal-list">
               {agenda.map((event) => (
-                <li className="gx-cal-event" data-tone={event.tone} key={event.time}>
+                <li
+                  className="gx-cal-event"
+                  data-tone={event.tone}
+                  key={event.time}
+                >
                   <span className="gx-cal-time">{event.time}</span>
                   <span className="gx-cal-event-text">
                     <span className="gx-cal-event-title">{event.title}</span>

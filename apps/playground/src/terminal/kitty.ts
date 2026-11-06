@@ -1,22 +1,8 @@
-/**
- * Decode the escape stream a terminal-mode run writes to its tty.
- *
- * The terminal renderer paints each frame offscreen and sends it through the
- * kitty graphics protocol: an APC string carrying the image's parameters, then
- * the frame as zlib-compressed RGBA in base64, chunked across continuations.
- * The window's automation protocol sees none of this — the bytes on the pty are
- * the only evidence — so this module turns them into facts a probe can assert:
- * the protocols the platform enabled, and the frames it painted.
- *
- * Platform-free by construction: `inflate` is injected (node's `zlib` at the
- * runner's boundary), so the parser's tests run on any host.
- */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { Pixels } from "@gpuixui/testing";
 
-/** A stream that is not a kitty-graphics frame this module can read. */
 export class KittyParseError extends Schema.TaggedError<KittyParseError>()(
   "KittyParseError",
   { reason: Schema.String },
@@ -26,16 +12,13 @@ export class KittyParseError extends Schema.TaggedError<KittyParseError>()(
   }
 }
 
-/** One painted frame, decoded to row-major RGBA. */
 export class KittyFrame extends Schema.Class<KittyFrame>("KittyFrame")({
-  /** The image id the platform reuses for every frame of one window. */
   id: Schema.Int,
-  /** The placement id, so a frame can be replaced in place. */
+
   placement: Schema.Int,
   pixels: Pixels.Pixels,
 }) {}
 
-/** The terminal protocols a run enabled, and whether it put them back. */
 export class KittyHandshake extends Schema.Class<KittyHandshake>(
   "KittyHandshake",
 )({
@@ -54,11 +37,10 @@ export class KittyHandshake extends Schema.Class<KittyHandshake>(
   inBandResize: Schema.Boolean,
   inBandResizeOff: Schema.Boolean,
   imageDeletes: Schema.Int,
-  /** Frames are wrapped in a synchronized-update batch (`?2026h`). */
+
   syncBatches: Schema.Int,
 }) {}
 
-/** Everything a terminal-mode run's escape stream proves. */
 export class KittyStream extends Schema.Class<KittyStream>("KittyStream")({
   handshake: KittyHandshake,
   frames: Schema.Array(KittyFrame),
@@ -95,7 +77,6 @@ interface Pending {
   readonly chunks: ReadonlyArray<string>;
 }
 
-/** What one APC string contributes: a chunk of the frame being assembled. */
 interface Step {
   readonly pending: Option.Option<Pending>;
   readonly frames: ReadonlyArray<KittyFrame>;
@@ -134,14 +115,6 @@ const complete = (
   frames: Arr.append(state.frames, finish(pending, inflate)),
 });
 
-/**
- * One APC string in stream order.
- *
- * A frame's first chunk carries `a=T` and the geometry; each continuation
- * carries only `m` (`1` while more follow, `0` on the last), and the next
- * `a=T` starts a new image. Chunk bytes must be joined in arrival order — the
- * payload is one zlib stream.
- */
 const step =
   (inflate: (bytes: Uint8Array) => Uint8Array) =>
   (state: Step, match: RegExpMatchArray): Step => {
@@ -213,7 +186,6 @@ const handshakeOf = (text: string, imageDeletes: number): KittyHandshake => {
   });
 };
 
-/** Every frame and protocol fact a terminal-mode run wrote to its tty. */
 export const parseKittyStream = (
   stream: Uint8Array,
   inflate: (bytes: Uint8Array) => Uint8Array,

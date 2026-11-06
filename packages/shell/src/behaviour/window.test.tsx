@@ -1,15 +1,3 @@
-/**
- * The native window and its source list on the real renderer (plan 722).
- *
- * Bugs guarded: a sidebar that starts under a titlebar band instead of at the
- * window's top edge (the lights then float over nothing), content that starts
- * above the toolbar's bottom edge, a source-list row that paints a hover wash
- * Mac sidebars never paint, and an arrow key that moves focus without moving
- * the choice. Plan 731: a sidebar fixed at its width, a section that cannot
- * fold (or folds and leaves its rows on the arrows' path), and a list that
- * ignores a typed label.
- */
-
 import { readFileSync } from "node:fs";
 import type { TestRoot } from "@gpuix/react/testing";
 import { createTestRoot } from "@gpuix/react/testing";
@@ -105,8 +93,7 @@ describe("the window's anatomy", () => {
 
     expect(toolbar.y).toBe(0);
     expect(toolbar.height).toBe(52);
-    // The sidebar is 220 wide, so the toolbar starts at its trailing edge and
-    // the first row sits under the toolbar's band (the lights' row).
+
     expect(toolbar.x).toBe(220);
     expect(row.y).toBeGreaterThanOrEqual(52);
     expect(row.height).toBe(28);
@@ -118,15 +105,13 @@ describe("the window's anatomy", () => {
   });
 
   it("paints the sidebar and toolbar as materials, the content opaque", () => {
-    // 0.11.0 exposes a pane's fill only through a test id, which the window's
-    // own panes do not carry, so the reader is held at the source.
     const source = readFileSync(
       new URL("../window/window.tsx", import.meta.url),
       "utf8",
     );
     expect(source).toContain('materialFill(theme, "sidebar")');
     expect(source).toContain('materialFill(theme, "titlebar")');
-    // The opaque window's frame, the content and the inspector.
+
     expect(
       source.match(/backgroundColor: theme\.colors\.background/g)?.length,
     ).toBe(3);

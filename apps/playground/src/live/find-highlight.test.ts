@@ -1,14 +1,3 @@
-/**
- * Holds the `find-highlight` fixtures to the wash the probe asserts.
- *
- * The bug this guards: a find bar that hands a host no colour paints the
- * runtime's own accent, not the theme's `primary`, and a wash is a quad behind
- * the glyphs that no text read can see. The probe reads each block's own box,
- * so a reader that mistook a glyph's antialiased edge for a wash — or a fixture
- * that stopped deriving the composite from `findHighlight` — would turn the
- * defect into a silent pass. The frame cases draw the pixels the reader counts
- * and the theme cases read `findHighlight` itself.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -47,11 +36,9 @@ const scenarios = readFileSync(
 
 const readmeFlat = readme.replace(/\s+/g, " ");
 
-/** An opaque colour, as the RGBA a capture stores. */
 const rgba = (r: number, g: number, b: number): Pixels.Rgba =>
   new Pixels.Rgba({ r, g, b, a: 0xff });
 
-/** A frame filled with `fill`, with `marks` painted at their own coordinates. */
 const frameOf = (
   width: number,
   height: number,
@@ -80,7 +67,6 @@ const INK = "#EDEFF3";
 const WASH = "#5F4BDB66";
 const PAINTED = paintedWash(STRIP, WASH);
 
-/** {@link PAINTED} as the bytes a frame holds; the wash cases assert the hex. */
 const PAINTED_RGBA = Option.getOrElse(
   Option.fromNullishOr(Pixels.hexToRgba(PAINTED)),
   () => rgba(0, 0, 0),
@@ -88,7 +74,6 @@ const PAINTED_RGBA = Option.getOrElse(
 
 const BOX = { x: 0, y: 0, width: 6, height: 4 } as const;
 
-/** A frame whose block painted a wash band and a glyph core. */
 const drawn = (): Pixels.Pixels => {
   const strip = rgba(0x19, 0x1d, 0x25);
   const wash = PAINTED_RGBA;
@@ -103,7 +88,6 @@ const drawn = (): Pixels.Pixels => {
   return frameOf(6, 4, strip, marks);
 };
 
-/** A frame whose block painted only glyphs. */
 const glyphsOnly = (): Pixels.Pixels => {
   const strip = rgba(0x19, 0x1d, 0x25);
   const ink = rgba(0xed, 0xef, 0xf3);
@@ -121,7 +105,6 @@ describe("the find-highlight reader", () => {
   });
 
   it("reports no wash when a block painted only glyphs", () => {
-    // A glyph's solid core is not a wash: it is the ink the block already had.
     expect(dominantWash(glyphsOnly(), BOX, 1, STRIP, INK)).toEqual(
       Option.none(),
     );
@@ -162,9 +145,6 @@ describe("the find-highlight reader", () => {
 
 describe("the wash the fixture asks the theme for", () => {
   it("composites the translucent wash onto the block's strip", () => {
-    // An opaque wash is the colour itself; a fully transparent one leaves the
-    // strip; the share in between is a third colour, which is the composite the
-    // frame must carry.
     expect(paintedWash(STRIP, "#5F4BDB")).toBe("#5F4BDB");
     expect(paintedWash(STRIP, "#5F4BDB00")).toBe(STRIP);
     expect(PAINTED).toMatch(/^#[0-9A-F]{6}$/);
@@ -180,8 +160,6 @@ describe("the wash the fixture asks the theme for", () => {
   });
 
   it("keeps the marked text at the theme's body floor", () => {
-    // The composite is the colour the contract measured, not an approximation:
-    // a reader whose match sat under the reading floor would be the defect.
     const wash = themedWashes(darkTheme);
     const floor = contrastFloorsFor(darkTheme).body;
     expect(

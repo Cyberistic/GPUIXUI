@@ -1,15 +1,3 @@
-/**
- * Guards the geometry the `virtual-list-expand` probe asserts against.
- *
- * The probe's point is that a painted row's growth re-measures and that the
- * following row leaves the painted window until a scroll. Both depend on the
- * fixture's arithmetic, not on the runtime: a `DETAIL` that left a whole row of
- * viewport free would make "the row below leaves the painted window" assert the
- * opposite of the truth (measured: `DETAIL = 56` fails that check in the probe),
- * and a `REVEAL` inside the first window would make the reveal test nothing.
- * The bug this catches: an edited fixture that keeps the probe green while it
- * stops measuring the paint-window recomputation.
- */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import {

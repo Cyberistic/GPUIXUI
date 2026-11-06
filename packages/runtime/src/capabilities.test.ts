@@ -1,12 +1,3 @@
-/**
- * The capability matrix and its typed refusals.
- *
- * Bug guarded: a capability row drifts from the pinned runtime — a gap is
- * dropped, a `false` row loses its `reason`/`workaround`, or `unsupportedFeature`
- * builds a refusal whose `feature` is not one of the known gaps. The tests
- * hard-code the expected gap/closed sets so a silent matrix edit fails.
- */
-
 import { describe, expect, it } from "vitest";
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
@@ -16,7 +7,6 @@ import * as Schema from "effect/Schema";
 import { capabilities, unsupportedFeatures } from "./capabilities.js";
 import { UnsupportedRuntimeFeature, unsupportedFeature } from "./errors.js";
 
-/** The matrix keys with the given `supported` value, sorted for a stable set. */
 const keysWith = (supported: boolean): ReadonlyArray<string> =>
   pipe(
     capabilities,

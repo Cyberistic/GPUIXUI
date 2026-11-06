@@ -1,22 +1,3 @@
-/**
- * Prove the platform switch changes what a hydrated preview paints.
- *
- * The choice is the app's: React holds it for the page and local storage keeps
- * it for the next visit, so the address bar names the page and nothing else.
- * `platform-switch.test.ts` holds the state rules. This probe presses
- * **Windows**, then **macOS**, on a curated component page and reads the
- * consequence off every preview surface — its `data-platform`, the
- * `--control-height-md` the bridge wrote and the platform button the group
- * reports pressed — then requires the URL to carry none of the switch's axes.
- *
- * It is the mission's acceptance ("a reader toggles macOS -> Windows and every
- * preview changes") measured on the press path.
- *
- * Run (a dev or preview server is already up):
- * `nub apps/docs/scripts/platform-switch-probe.ts`
- * `--url <url>`, `--timeout <ms>` (hydration budget), `--chrome <path>`.
- */
-
 import {
   platformTheme,
   themes,
@@ -26,13 +7,10 @@ import {
 import { findChrome, openChrome } from "./chrome-session.ts";
 import { firstReady } from "./react-ready.ts";
 
-/** The page a preview server serves, and the switch every docs page carries. */
 export const defaultUrl = "http://localhost:4175/components/button";
 
-/** The platform group's accessible name. */
 export const platformGroup = "Platform style";
 
-/** What every preview surface reports at one instant. */
 export interface Surface {
   readonly platform: string;
   readonly mode: string;
@@ -40,7 +18,6 @@ export interface Surface {
   readonly pressed: string;
 }
 
-/** Read the probe's one-line readout; `undefined` when it is not one. */
 export const parseSurface = (text: string): Surface | undefined => {
   const [platform, mode, height, pressed] = text.split("|");
   if (
@@ -53,34 +30,17 @@ export const parseSurface = (text: string): Surface | undefined => {
   return { platform, mode, height, pressed };
 };
 
-/** The switch's three axes, none of which a docs URL may carry. */
 export const queryAxes = ["platform", "mode", "look", "appearance"] as const;
 
-/**
- * Whether a search string names any of the switch's axes.
- *
- * A clean URL names the page and the page's own parameters (`?q=`, `?scene=`);
- * a platform, palette or look in it would mean some path had written the
- * switch back into the address bar.
- */
 export const namesSwitchAxis = (search: string): boolean =>
   queryAxes.some((axis) => new URLSearchParams(search).has(axis));
 
-/** The control height a platform paints at `md`, as the bridge writes it. */
 export const expectedHeight = (
   mode: ThemeMode,
   platform: PlatformName,
 ): string =>
   `${platformTheme(themes[mode], platform).density.controlHeight.md}px`;
 
-/**
- * Every surface's state, as one line `parseSurface` reads.
- *
- * A just-hydrated dev page can hold the server's markup beside the tree React
- * committed for a moment, so a read of the first surface can name a platform
- * the rest of the page has left. The line says `mixed` until every surface
- * agrees, which is the contract the mission states ("every preview changes").
- */
 const readSurfaces = `(() => {
   const surfaces = [...document.querySelectorAll(".gx-demo[data-platform]")];
   const platforms = new Set(
@@ -99,7 +59,6 @@ const readSurfaces = `(() => {
   ].join("|");
 })()`;
 
-/** How many surfaces carry a platform, and how many carry `platform`. */
 const countSurfaces = (platform: string): string => `(() => {
   const all = document.querySelectorAll(".gx-demo[data-platform]");
   const lit = document.querySelectorAll(
@@ -108,7 +67,6 @@ const countSurfaces = (platform: string): string => `(() => {
   return all.length + ":" + lit.length;
 })()`;
 
-/** The first copy of this label whose press answers, painted first. */
 const readyButton = (group: string, label: string): string =>
   firstReady(
     `[aria-label="${group}"] button`,
@@ -116,7 +74,6 @@ const readyButton = (group: string, label: string): string =>
     `node.textContent === ${JSON.stringify(label)}`,
   );
 
-/** Whether the button with this label in `group` carries React's own handler. */
 const ready = (group: string, label: string): string => `(() => {
   const button = ${readyButton(group, label)};
   if (button !== undefined) return "ready";
@@ -126,7 +83,6 @@ const ready = (group: string, label: string): string => `(() => {
   return matches.length === 0 ? "no-button" : "cold";
 })()`;
 
-/** Press the button a reader would press in `group`. */
 const press = (group: string, label: string): string => `(() => {
   const button = ${readyButton(group, label)};
   if (button === undefined) return "no-button";
@@ -134,7 +90,6 @@ const press = (group: string, label: string): string => `(() => {
   return "pressed";
 })()`;
 
-/** Poll `read` until `accept` holds, or the budget runs out. */
 const until = async (
   read: () => Promise<string>,
   accept: (value: string) => boolean,
@@ -149,19 +104,16 @@ const until = async (
   return accept(value) ? value : undefined;
 };
 
-/** One pressed platform, checked against every surface that paints it. */
 export interface Step {
   readonly label: string;
   readonly platform: PlatformName;
 }
 
-/** The two presses the mission's acceptance names, in order. */
 export const steps: ReadonlyArray<Step> = [
   { label: "Windows", platform: "win32" },
   { label: "macOS", platform: "darwin" },
 ];
 
-/** Run the project. Returns the process exit code. */
 export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const argument = (flag: string): string | undefined => {
     const index = argv.indexOf(flag);

@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Context menu example: a project row whose right click offers actions.
- *
- * The menu owns only the open state and the pointer point; what "Delete" means
- * is the app's, reported through `onSelect`. Grouping is an exclusive choice, so
- * it is a radio group the app owns; choosing a row closes the menu.
- */
-
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import {
@@ -24,7 +16,6 @@ import {
 } from "../src/context-menu.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** A project row with a right-click menu. */
 export const ContextMenuExample = () => {
   const theme = useTheme();
   const [groupBy, setGroupBy] = useState("folder");

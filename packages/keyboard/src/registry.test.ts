@@ -1,10 +1,3 @@
-/**
- * Command registry resolution over real key events.
- *
- * The bugs these guard: a registry that ignores the scope stack, one that runs
- * a handler instead of resolving, and one that resolves an unbound chord.
- */
-
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import * as Option from "effect/Option";

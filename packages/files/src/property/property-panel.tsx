@@ -1,27 +1,3 @@
-/**
- * `PropertyPanel` — a labelled key/value editor over `@gpuixui/primitives` fields.
- *
- * Each row is discriminated by its `type` — text, number, boolean or select — so
- * the value's type rides with the row and the panel renders the matching field
- * (`Input`, `NumberField`, `Switch` or `Select`) without a cast. The panel owns
- * **no copy** of the object: every edit is `onChange` with the whole record
- * ({@link setProperty} returns a new one), so a preview and the panel can read
- * the same object and repaint in the frame the edit lands.
- *
- * ```tsx
- * <PropertyPanel
- *   title="Shape"
- *   rows={[
- *     { type: "text", key: "name", label: "Name", value: name },
- *     { type: "number", key: "count", label: "Count", value: count },
- *     { type: "boolean", key: "active", label: "Active", value: active },
- *     { type: "select", key: "kind", label: "Kind", value: kind, options: KINDS },
- *   ]}
- *   onChange={(record) => apply(record)}
- * />
- * ```
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import {
@@ -55,27 +31,23 @@ import {
   PROPERTY_ROW,
 } from "./recipe.js";
 
-/** The label column's width when the caller names none. */
 export const DEFAULT_LABEL_WIDTH = 120;
 
-/** {@link PropertyPanel} props. */
 export interface PropertyPanelProps extends Omit<
   Props,
   "children" | "onChange"
 > {
-  /** The rows, in the order they paint. */
   readonly rows: ReadonlyArray<PropertyRow>;
-  /** Receives the whole record after every edit. */
+
   readonly onChange: (record: PropertyRecord) => void;
-  /** The panel's title. */
+
   readonly title?: string;
-  /** The label column's width, in pixels. Defaults to `120`. */
+
   readonly labelWidth?: number;
   readonly className?: string;
   readonly testId?: string;
 }
 
-/** The field a row's `type` names, bound to the edit its row reports. */
 const renderField = (
   row: PropertyRow,
   edit: (value: PropertyValue) => void,
@@ -123,12 +95,6 @@ const renderField = (
     Match.exhaustive,
   );
 
-/**
- * A panel of property rows, one field per row.
- *
- * The label column is fixed, so every field begins at the same `x`; the field
- * fills the row. An edit reports the whole record, never a partial one.
- */
 export const PropertyPanel = ({
   rows,
   onChange,
@@ -184,9 +150,6 @@ export const PropertyPanel = ({
               }}
             >
               {isNumberRow(row) ? (
-                // A number's label is its scrub handle: the field's text takes
-                // no press of its own, so the words beside it drag the value and
-                // the field keeps the typing.
                 <NumberFieldScrubHandle
                   testId={labelTestId}
                   value={row.value}

@@ -1,12 +1,3 @@
-/**
- * `NumberField`'s text and step rules.
- *
- * The guarded defects are the ones a hand-rolled number field ships: a comma
- * decimal silently read as a thousands separator, `"0x10"` read as 16, a field
- * with no maximum jumping to an invented one on End, and a step of 0 freezing
- * the arrows.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -34,10 +25,9 @@ import {
 } from "./number.js";
 
 const RANGE: NumberRange = { min: 0, max: 100, step: 1 };
-/** A range with no bound, for a value a display format makes large. */
+
 const UNBOUNDED: NumberRange = { step: 1 };
 
-/** A reader for a grouped display: `1,234` is 1234. */
 const grouped: ParseValue = (text) => {
   const cleaned = text.replaceAll(",", "");
   return /^[+-]?\d+(?:\.\d+)?$/.test(cleaned)
@@ -45,7 +35,6 @@ const grouped: ParseValue = (text) => {
     : Option.none();
 };
 
-/** A reader for a comma-decimal display: `1,5` is 1.5. */
 const commaDecimal: ParseValue = (text) => {
   const cleaned = text.replace(",", ".");
   return /^[+-]?\d+(?:\.\d+)?$/.test(cleaned)
@@ -72,8 +61,6 @@ describe("parseNumericText", () => {
   });
 
   it("rejects a locale decimal, hex and Infinity instead of guessing", () => {
-    // The bugs guarded: Number("1,5") is NaN but Number("0x10") is 16 and
-    // Number("Infinity") is Infinity — neither belongs in a number field.
     expect(parseNumericText("1,5")).toStrictEqual(Option.none());
     expect(parseNumericText("0x10")).toStrictEqual(Option.none());
     expect(parseNumericText("Infinity")).toStrictEqual(Option.none());
@@ -82,9 +69,6 @@ describe("parseNumericText", () => {
 
 describe("parseNumberText", () => {
   it("reads the format a caller's formatValue painted", () => {
-    // The bug guarded: `formatValue` is display-only, so a grouped "1,234" or a
-    // locale "1,5" is not decimal notation — the field reported no change for
-    // every keystroke typed into it.
     expect(parseNumberText("1,234", grouped)).toStrictEqual(Option.some(1234));
     expect(parseNumberText("1,5", commaDecimal)).toStrictEqual(
       Option.some(1.5),
@@ -107,8 +91,6 @@ describe("parseNumberText", () => {
   });
 
   it("does not let a parser hand the field an unpaintable number", () => {
-    // A parser answering NaN or Infinity is not a reading: the value channel
-    // carries finite numbers only, and the decimal grammar still gets its turn.
     const broken: ParseValue = () => Option.some(Number.NaN);
     expect(parseNumberText("12", broken)).toStrictEqual(Option.some(12));
     expect(parseNumberText("twelve", broken)).toStrictEqual(Option.none());
@@ -120,9 +102,6 @@ describe("parseNumberText", () => {
 
 describe("normalizeNumberRange", () => {
   it("reads an inverted pair as the range it means", () => {
-    // The bug guarded: `clampNumeric` applied `min` and then `max`, so
-    // `min: 100, max: 0` clamped every value to 0 and both steppers read as
-    // inert — a field that could not be edited. A slider already swaps the pair.
     expect(normalizeNumberRange({ min: 100, max: 0, step: 2 })).toStrictEqual({
       min: 0,
       max: 100,
@@ -153,10 +132,6 @@ describe("clampNumeric", () => {
   });
 
   it("reads a value it cannot paint as the nearest bound", () => {
-    // The bug guarded: `Math.min`/`Math.max` pass `NaN` straight through, so a
-    // controlled field painted "NaN" and its arrows moved nothing. A slider
-    // already reads an unknown position as `min` (`core/value.ts`), and this is
-    // the same rule for a typed value.
     expect(clampNumeric(Number.NaN, RANGE)).toBe(0);
     expect(clampNumeric(Number.POSITIVE_INFINITY, RANGE)).toBe(0);
     expect(clampNumeric(Number.NaN, { step: 1 })).toBe(0);
@@ -164,8 +139,6 @@ describe("clampNumeric", () => {
   });
 
   it("does not treat a bound it cannot lay out as a bound", () => {
-    // A `max` of `NaN` used to poison every clamp: `Math.min(NaN, value)` is
-    // `NaN`, so the field lost the value it was given.
     expect(clampNumeric(50, { step: 1, max: Number.NaN })).toBe(50);
     expect(clampNumeric(50, { step: 1, min: Number.NEGATIVE_INFINITY })).toBe(
       50,
@@ -182,15 +155,11 @@ describe("formatNumber", () => {
 
   it("keeps a nonsensical precision from throwing", () => {
     expect(formatNumber(1.6, -1)).toBe("2");
-    // toFixed accepts at most 20 decimals; a larger precision is clamped, not
-    // handed to the runtime to fail on.
+
     expect(formatNumber(1.23456789, 40)).toHaveLength(22);
   });
 
   it("does not sign a value that rounds to zero", () => {
-    // The bug guarded: `(-0.004).toFixed(2)` is `-0.00`, so a field with
-    // `precision={2}` painted a negative number that means zero. The sign
-    // belongs to the value, not to the rounding.
     expect(formatNumber(-0.004, 2)).toBe("0.00");
     expect(formatNumber(-0.0001)).toBe("0");
     expect(formatNumber(-0.4)).toBe("0");
@@ -200,9 +169,6 @@ describe("formatNumber", () => {
   });
 
   it("keeps its fixed decimals past the exponential bound", () => {
-    // The bug guarded: `toFixed` switches to the exponential form at 1e21, so a
-    // value the parser accepts ("1e21") committed as "1e+21" under a promise of
-    // fixed decimals. Every double that large is an integer.
     expect(formatNumber(1e21)).toBe("1000000000000000000000");
     expect(formatNumber(1.5e21, 2)).toBe("1500000000000000000000.00");
     expect(formatNumber(-1e21)).toBe("-1000000000000000000000");
@@ -214,32 +180,22 @@ describe("numberDisplay", () => {
   it("paints the caller's format when it says something", () => {
     const grouped = (value: number): string => value.toLocaleString("en-US");
     expect(numberDisplay(1234, 2, grouped)).toBe("1,234");
-    // A format's own spacing is the caller's: only the *decision* is the copy
-    // rule's, so " 42 " is painted as written rather than trimmed.
+
     expect(numberDisplay(42, undefined, () => " 42 ")).toBe(" 42 ");
   });
 
   it("paints the value it holds when the caller's format says nothing", () => {
-    // The defect guarded: `formatValue?.(value) ?? displayNumber(...)` read a
-    // blank answer as a value. A locale table with a missing row answers `""`
-    // (and a masked format answers spaces), so the field painted an **empty**
-    // box while it held a number — the steppers moved the hidden value and every
-    // frame repainted nothing.
     expect(numberDisplay(5, undefined, () => "")).toBe("5");
     expect(numberDisplay(5, undefined, () => "   ")).toBe("5");
     expect(numberDisplay(1.5, 2, () => "")).toBe("1.50");
     expect(numberDisplay(-0.25, undefined, () => "\t")).toBe("-0.25");
-    // No formatter at all is the same absence, which is the `displayNumber` path.
+
     expect(numberDisplay(7, 1)).toBe("7.0");
   });
 });
 
 describe("displayNumber", () => {
   it("paints the value's own decimals when no precision is asked for", () => {
-    // The defect guarded: the field's display defaulted to zero decimals, so it
-    // painted a number it did not hold — a stored `1.5` read as `2`, and a press
-    // on a `0.5` step looked like it did nothing because the paint had already
-    // rounded the answer away.
     expect(displayNumber(1.5)).toBe("1.5");
     expect(displayNumber(2.5)).toBe("2.5");
     expect(displayNumber(-0.25)).toBe("-0.25");
@@ -248,38 +204,26 @@ describe("displayNumber", () => {
   });
 
   it("paints the double it holds, tail and all, unless a precision says otherwise", () => {
-    // A step is cleaned by `stepNumber`; a value the caller computes is painted
-    // as the caller's number, and `precision` is the way to round the text.
     expect(displayNumber(0.1 + 0.2)).toBe("0.30000000000000004");
     expect(displayNumber(0.1 + 0.2, 3)).toBe("0.300");
   });
 
   it("keeps a fixed precision the caller asked for", () => {
-    // The caller's own rounding: `1.50` is the column a money field wants, and
-    // the value channel keeps `1.5` regardless of the paint.
     expect(displayNumber(1.5, 2)).toBe("1.50");
     expect(displayNumber(1.5, 0)).toBe("2");
     expect(displayNumber(-1.5, 2)).toBe("-1.50");
   });
 
   it("paints the value's own decimals for a precision a store did not carry", () => {
-    // The bug guarded: a precision is a display setting saved beside the form,
-    // and JSON keeps a field a record never carried as `null`. Compared with
-    // `undefined`, that absence reached `toFixed` as **zero** decimals — so a
-    // restored field holding `1.5` painted `2`, the number it does not hold,
-    // and its `2.5` maximum painted `3`, past the bound it declares. Only a
-    // real number is a precision; text is not coerced (`storedNumber`'s rule).
     expect(displayNumber(1.5, null)).toBe("1.5");
     expect(displayNumber(2.5, null)).toBe("2.5");
     expect(displayNumber(1.5, "2")).toBe("1.5");
     expect(displayNumber(1.5, Number.NaN)).toBe("1.5");
-    // An omitted precision is the same absence, which is the control.
+
     expect(displayNumber(1.5)).toBe("1.5");
   });
 
   it("expands the exponent a shortest text uses", () => {
-    // A field paints digits: the parser accepts `1e21`, so the number it means
-    // must be legible in the box, and a small number must not read as `5e-324`.
     expect(displayNumber(1e21)).toBe("1000000000000000000000");
     expect(displayNumber(-2.5e-7)).toBe("-0.00000025");
     expect(displayNumber(1.5e-9)).toBe("0.0000000015");
@@ -298,8 +242,6 @@ describe("stepNumber", () => {
   });
 
   it("keeps a decimal step free of binary noise", () => {
-    // The bug: `0.2 + 0.1` is 0.30000000000000004, which a controlled field
-    // then reports and a form submits. The step lands on the decimal.
     expect(stepNumber(0.2, { step: 0.1 }, 1)).toBe(0.3);
     expect(stepNumber(0.05, { step: 0.1 }, 1)).toBe(0.15);
     expect(stepNumber(1.1, { step: 0.2 }, 1)).toBe(1.3);
@@ -314,9 +256,6 @@ describe("stepNumber", () => {
   });
 
   it("steps from the value it paints when that value is not a number", () => {
-    // The bug guarded: `NaN + 1` is `NaN`, so the arrow moved nothing. The
-    // field paints a bound for such a value, and the move has to start there —
-    // including a value the owner left outside the range before it shrank.
     expect(stepNumber(Number.NaN, RANGE, 1)).toBe(1);
     expect(stepNumber(-5, { step: 1, min: 0 }, 1)).toBe(1);
     expect(stepNumber(140, { step: 1, max: 100 }, -1)).toBe(99);
@@ -338,8 +277,6 @@ describe("scrubNumber", () => {
   });
 
   it("answers a travel the same either side of the half step", () => {
-    // The bug guarded: plain `Math.round` sends +6px two steps and -6px one, so
-    // the same gesture answered differently depending on its direction.
     expect(scrubNumber(50, 6, RANGE)).toBe(52);
     expect(scrubNumber(50, -6, RANGE)).toBe(48);
   });
@@ -371,9 +308,6 @@ describe("scrubNumber", () => {
   });
 
   it("multiplies the counted steps by a held modifier's scale", () => {
-    // The bug guarded: Shift is the coarse gesture an inspector promises, and a
-    // scale applied to the *pixels* rather than the steps would answer 2 at
-    // 8px instead of 20.
     expect(SHIFT_SCRUB_SCALE).toBe(10);
     expect(
       scrubNumber(50, 8, RANGE, SCRUB_PIXELS_PER_STEP, SHIFT_SCRUB_SCALE),
@@ -381,7 +315,7 @@ describe("scrubNumber", () => {
     expect(
       scrubNumber(50, -8, RANGE, SCRUB_PIXELS_PER_STEP, SHIFT_SCRUB_SCALE),
     ).toBe(30);
-    // A scale the field cannot read is no multiplier, not a NaN.
+
     expect(scrubNumber(50, 8, RANGE, SCRUB_PIXELS_PER_STEP, Number.NaN)).toBe(
       52,
     );
@@ -399,9 +333,6 @@ describe("decideNumberKey", () => {
   });
 
   it("leaves the caret keys to the host's text field", () => {
-    // The bug guarded: left and right moved the caret in the host's field, and
-    // the field changed its value while the caret moved — a number a user
-    // could not edit, because the caret could never cross a digit.
     expect(decideNumberKey(50, RANGE, "right")).toStrictEqual(Option.none());
     expect(decideNumberKey(50, RANGE, "left")).toStrictEqual(Option.none());
   });
@@ -409,8 +340,7 @@ describe("decideNumberKey", () => {
   it("jumps only to a bound the field actually has", () => {
     expect(decideNumberKey(50, RANGE, "home")).toStrictEqual(Option.some(0));
     expect(decideNumberKey(50, RANGE, "end")).toStrictEqual(Option.some(100));
-    // The bug guarded: End in an unbounded field must do nothing rather than
-    // jump to a number this component made up.
+
     expect(decideNumberKey(50, { step: 1 }, "end")).toStrictEqual(
       Option.none(),
     );
@@ -420,11 +350,6 @@ describe("decideNumberKey", () => {
   });
 
   it("reads the bounds the range actually has, not the raw pair", () => {
-    // The bug guarded: `clampNumeric` swaps an inverted pair and drops a bound
-    // that cannot be measured, but Home/End read the raw props — so
-    // `min: 100, max: 0` sent Home to the top of the range and End to the
-    // bottom, and a `min: NaN` answered a floor the field does not have. A key
-    // jumps to the bound the arithmetic uses, or nowhere.
     const inverted: NumberRange = { min: 100, max: 0, step: 1 };
     expect(decideNumberKey(50, inverted, "home")).toStrictEqual(Option.some(0));
     expect(decideNumberKey(50, inverted, "end")).toStrictEqual(
@@ -479,22 +404,14 @@ describe("the draft a number field keeps", () => {
   });
 
   it("leaves an empty field empty instead of showing the zero its state starts from", () => {
-    // The bug guarded: `commitNumberDraft` marked every draft touched, so a
-    // blur over a field that had never held a value painted the state's `0` —
-    // a number the reader never typed and no `onValueChange` reported.
     const untouched = initNumberDraft(Option.none(), false);
     expect(numberDraftText(commitNumberDraft(untouched), 0, display)).toBe("");
 
-    // Text that never became a number is not a value either: typing letters
-    // into an empty field and leaving it must not invent one.
     const garbage = withNumberDraftText(untouched, "abc");
     expect(numberDraftText(commitNumberDraft(garbage), 0, display)).toBe("");
   });
 
   it("keeps the last number when a field that had one is cleared", () => {
-    // The decided absence story: the value channel is a number, so an empty box
-    // is a cancelled edit, not a new value. A field with a value shows it again;
-    // a field without one stays empty (the case above).
     const valued = initNumberDraft(Option.none(), true);
     const cleared = withNumberDraftText(valued, "");
     expect(numberDraftText(commitNumberDraft(cleared), 5, display)).toBe("5");
@@ -502,8 +419,6 @@ describe("the draft a number field keeps", () => {
   });
 
   it("keeps the draft while the owner's value does not move", () => {
-    // The owner's value is the user's to type into; a re-render must not take
-    // the text away.
     const draft = withNumberDraftText(
       initNumberDraft(Option.some(0), true),
       "1.",
@@ -514,8 +429,6 @@ describe("the draft a number field keeps", () => {
   });
 
   it("keeps the draft while it still means the value the owner pushed", () => {
-    // The bug guarded: the owner's echo of the user's own edit used to throw
-    // the draft away, so `1.` became `1` under the caret.
     const draft = withNumberDraftText(
       initNumberDraft(Option.some(0), true),
       "1.",
@@ -527,10 +440,6 @@ describe("the draft a number field keeps", () => {
   });
 
   it("keeps a grouped draft while it means the value the owner echoes", () => {
-    // The bug guarded: the controlled-field echo was compared through the
-    // decimal grammar only, so typing a fifth digit into a grouped `1,234` made
-    // the owner echo `12345`, the draft was judged meaningless, and the field
-    // reformatted to `12,345` under the caret.
     const draft = withNumberDraftText(
       initNumberDraft(Option.some(1234), true),
       "1,2345",
@@ -544,7 +453,7 @@ describe("the draft a number field keeps", () => {
     expect(Option.getOrElse(folded, () => draft).text).toStrictEqual(
       Option.some("1,2345"),
     );
-    // Without the reading it is the decimal grammar's call, which drops it.
+
     const decimal = syncNumberDraft(draft, Option.some(12345), UNBOUNDED);
     expect(Option.getOrElse(decimal, () => draft).text).toStrictEqual(
       Option.none(),
@@ -563,8 +472,6 @@ describe("the draft a number field keeps", () => {
   });
 
   it("shows a value that arrives after the field was mounted", () => {
-    // The bug guarded: a field that mounted empty and was given a value later
-    // kept showing nothing — the value was dropped on the floor.
     const draft = initNumberDraft(Option.none(), false);
     const folded = syncNumberDraft(draft, Option.some(5), RANGE);
     const next = Option.getOrElse(folded, () => draft);
@@ -579,10 +486,6 @@ describe("the draft a number field keeps", () => {
   });
 
   it("does not fold a value that never equals itself", () => {
-    // The bug guarded: the owner's value was compared with `===` and `NaN`
-    // never equals itself, so the draft folded on every render and called
-    // `setDraft` each time — React threw "Too many re-renders" and the field
-    // never painted. `Object.is` is the identity reading: `NaN` has not moved.
     const draft = initNumberDraft(Option.some(Number.NaN), true);
     expect(
       syncNumberDraft(draft, Option.some(Number.NaN), RANGE),

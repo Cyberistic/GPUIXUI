@@ -59,8 +59,3 @@ Accordion
 | `AccordionTrigger` | `style` | `StateStyle<{ open, disabled, focused }>` | the recipe |
 | `AccordionContent` | `children` | `ReactNode` | — |
 | any part | `className` | `string` | — |
-
-## Notes
-- Each trigger publishes `aria-expanded` and names its own section.
-- **No `aria-controls`**: a panel cannot be referenced from its header.
-- The indicator's `aria-label` names the action, not a glyph.

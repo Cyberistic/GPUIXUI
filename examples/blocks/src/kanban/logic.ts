@@ -1,6 +1,3 @@
-/**
- * The board's rules: which column a point is over, and a card's move.
- */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { columns, type Column, type Task } from "./data.js";
@@ -10,7 +7,6 @@ export interface Bounds {
   readonly width: number;
 }
 
-/** The column whose measured bounds hold `x`. */
 export const columnAt = (
   bounds: Partial<Record<Column, Bounds>>,
   x: number,
@@ -22,7 +18,6 @@ export const columnAt = (
     }),
   );
 
-/** `tasks` with `id` moved from `from` to the end of `to`. */
 export const moveTask = (
   tasks: Readonly<Record<Column, ReadonlyArray<Task>>>,
   id: string,

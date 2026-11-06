@@ -1,12 +1,3 @@
-/**
- * The slide's direction, without a renderer.
- *
- * The bugs these guard: a slide whose entry and exit share an edge (the new
- * value is visible before it arrives), a direction that reads backwards, and a
- * clip that has not reported its width yet producing a `NaN` inset instead of a
- * fade in place.
- */
-
 import { describe, expect, it } from "vitest";
 import { slideFrames } from "./logic.js";
 

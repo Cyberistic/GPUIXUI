@@ -1,14 +1,5 @@
-/**
- * Browser preview for the Toggle component page.
- *
- * The shipped toggle is a GPUix host tree, so the preview paints the button
- * chrome from the theme bridge and says so. It teaches the three forms a caller
- * builds: a pressed mode, an outlined mode and a named icon-only action.
- */
-
 import { useState } from "react";
 
-/** One toggle: a button with a persistent pressed state. */
 const Mode = ({
   label,
   outline = false,

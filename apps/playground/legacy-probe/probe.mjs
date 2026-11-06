@@ -1,17 +1,3 @@
-/**
- * GPUix 0.5.1 capability probe (the last release with a darwin-x64 binding).
- *
- * Why this exists: the library targets 0.10.0, and this Intel Mac has no
- * binding for it (ADR 0001). 0.5.1 *does* run here, so this probe answers the
- * mission's underlying feasibility question — does GPUI on this hardware do
- * layout, text, input, overlay anchoring, pointer-capture resizing, virtual
- * lists and scrolling? — with real GPU output instead of prose.
- *
- * Every step is isolated, so one absent API does not hide the rest. Run it with
- * `nub install && nub run probe` in this directory. `REPORT.md` records what it
- * measured. It never sets a component status: its verdicts are evidence about
- * the hardware and runtime, not verification of a 0.10 component.
- */
 import { createElement as h, useRef, useState } from "react";
 import * as testing from "@gpuix/react/testing";
 import * as automation from "@gpuix/react/automation";

@@ -7,19 +7,9 @@ import {
 } from "../../lib/keyboard-contracts";
 import { KeyboardStrip } from "./keyboard-strip";
 
-/**
- * The strip is the only place a component page states its keys, so it has to
- * print every note the model carries, name the module they were read from, and
- * stay silent where the page already writes its own `## Keyboard` section.
- *
- * The mount case reads both frames: a strip that renders but is mounted only on
- * the curated frame would leave every package page without its keys.
- */
-
 const strip = (url: string, sections: readonly string[] = []): string =>
   renderToStaticMarkup(<KeyboardStrip sections={sections} url={url} />);
 
-/** The text a reader sees, so an apostrophe is compared as one. */
 const decode = (markup: string): string =>
   markup
     .replace(/&#x27;/g, "'")
@@ -44,14 +34,11 @@ describe("the keyboard strip", () => {
   });
 
   it("names the module the keys were read from", () => {
-    // The reader should be able to check the strip against the handler.
     expect(strip("/components/dialog")).toContain("modal.ts");
     expect(strip("/components/time-picker")).toContain("time-picker.tsx");
   });
 
   it("names the runtime a wrapper's keys belong to", () => {
-    // `Select` handles none of its keys itself; the strip says which module the
-    // runtime owns rather than implying the wrapper implements them.
     const markup = decode(strip("/components/select"));
     expect(markup).toContain("select.js");
     expect(markup).toContain("in the pinned GPUix runtime");
@@ -77,7 +64,6 @@ describe("the keyboard strip", () => {
     const contract = keyboardContractFor("/components/dialog");
     expect(contract).toBeDefined();
 
-    // The page's own headings arrive as the table of contents it built.
     expect(strip("/components/dialog", ["#keyboard"])).toBe("");
     expect(strip("/components/dialog", ["#usage", "#api"])).not.toBe("");
   });
@@ -89,7 +75,7 @@ describe("the keyboard strip", () => {
 
   it("is mounted on both frames", () => {
     expect(view).toContain("<KeyboardStrip");
-    // One mount per frame: the curated page and the package page.
+
     expect(view.match(/<KeyboardStrip/g)?.length).toBe(2);
     expect(view).toContain("sections={toc.map((entry) => entry.url)}");
   });

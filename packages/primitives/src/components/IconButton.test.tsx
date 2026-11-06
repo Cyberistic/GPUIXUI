@@ -1,14 +1,3 @@
-/**
- * The IconButton contract.
- *
- * An icon-only action has no text to name it, so the two things worth guarding
- * are the name and the shape: the label must be what assistive technology
- * hears (the glyph must never become the name), and the control must be square
- * at the density's height (an icon button that is wider than tall reads as a
- * truncated text button). `Button` alone allowed an unnamed, non-square
- * icon-only control, which is why this component exists.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
@@ -44,8 +33,6 @@ const press = (
 
 describe("IconButton", () => {
   it("uses the label as the name, never the glyph", () => {
-    // The bug: an icon-only button was announced by nothing at all, because a
-    // div with a rich child has no text for the wrapper to publish.
     expect(
       expectSome(
         hostProp(resting({ label: "Delete layer", icon: glyph }), "aria-label"),
@@ -54,9 +41,6 @@ describe("IconButton", () => {
   });
 
   it("passes a tooltip trigger's pointer pair and description to its button", () => {
-    // Bug guarded: the icon action is the usual tooltip trigger, and this
-    // component narrowed `Button`'s props without the trigger pair, so a
-    // hover could not open a tip and the tip's description stopped here.
     const entered = vi.fn();
     const left = vi.fn();
     const props = iconButtonProps({
@@ -72,9 +56,6 @@ describe("IconButton", () => {
   });
 
   it("carries a trigger's host props onto its button", () => {
-    // The bug guarded: an icon action is the usual menu or popover trigger, so
-    // a `ref` and `aria-expanded` have to reach the element here too — the
-    // props were narrowed away when only the tooltip pair was forwarded.
     const ref = vi.fn();
     const element = resting({
       label: "Open filters",
@@ -126,13 +107,11 @@ describe("IconButton", () => {
     });
     press(disabled, "enter", "down");
     expect(onActivate).toHaveBeenCalledTimes(2);
-    // Out of the Tab order, still addressable from code — `Button`'s contract.
+
     expect(hostProp(disabled, "tabIndex")).toStrictEqual(Option.some(-1));
   });
 
   it("squares its corners inside an attached group", () => {
-    // The bug: an icon action in an attached group kept its own radius, so the
-    // seam to its neighbour showed the page through.
     const radius = (attached: boolean): unknown =>
       expectSome(
         hostStyleRecord(
@@ -149,9 +128,6 @@ describe("IconButton", () => {
   });
 
   it("forwards the activation event Button reports", () => {
-    // The bug guarded: an icon trigger is the one a toolbar uses for its
-    // overflow action, and `onActivate` reached it with no payload, so the
-    // caller could not tell a click from a key or read the press point.
     const onActivate = vi.fn();
     const element = resting({ label: "Layers", icon: glyph, onActivate });
     const click = { elementId: 0, eventType: "click", x: 4, y: 5 } as const;
@@ -177,8 +153,6 @@ describe("IconButton", () => {
   });
 
   it("forwards the caller's busy words to its button", () => {
-    // Bug guarded: `IconButton` narrows `Button`'s props, so a prop it does not
-    // name is dropped — a localised icon action would still say "Loading".
     const loading = resting({
       label: "Saving",
       icon: glyph,
@@ -199,9 +173,6 @@ describe("IconButton", () => {
   });
 
   it("hands the busy spinner the caller's reduced-motion preference", () => {
-    // The bug guarded: `Button` forwarded `reducedMotion` to its spinner while
-    // `IconButton` — the same `Button` with an icon slot — dropped it, so a
-    // toolbar built from icon actions could not honour the preference.
     const preference = (reducedMotion: boolean): Option.Option<unknown> =>
       elementProp(
         elementChildren(
@@ -248,10 +219,6 @@ describe("IconButton", () => {
   });
 
   it("carries the Tab stop a leaving surface names", () => {
-    // The bug guarded: the icon action narrows `Button`'s props, and a surface
-    // that keeps its close action painted through an exit tween takes it out of
-    // the Tab order with `tabIndex={-1}`. Dropped here, the prop never reaches
-    // the element and the ghost's own controls stay walkable.
     expect(
       hostProp(
         resting({ label: "Close", icon: glyph, tabIndex: -1 }),

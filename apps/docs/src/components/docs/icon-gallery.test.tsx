@@ -4,18 +4,6 @@ import { describe, expect, it } from "vitest";
 import { filterIcons, galleryIcons } from "../../lib/icon-gallery";
 import { IconGalleryView } from "./icon-gallery";
 
-/**
- * The gallery as it renders.
- *
- * The page mounts this component instead of listing icon names by hand, so the
- * guard is that the markup carries every entry of the model — a tile dropped
- * here has no other symptom — that each glyph is the shipped string, and that a
- * query narrows the grid to exactly the tiles the model names. The last case
- * reads the mount and the page, which a server render cannot show: the filter
- * has to reach the URL, and the page has to say that the browser paints the
- * geometry with the page's ink rather than with GPUix's tint.
- */
-
 const noop = (): void => undefined;
 
 const markup = renderToStaticMarkup(
@@ -34,9 +22,6 @@ describe("the icon gallery", () => {
   });
 
   it("draws each icon's shipped markup exactly once", () => {
-    // Two tiles sharing geometry would mean one entry was painted from the
-    // wrong name; the registry already refuses duplicate shapes, so any repeat
-    // here is the gallery's.
     const missing = galleryIcons.filter(
       ({ markup: glyph }) => markup.split(glyph).length - 1 !== 1,
     );
@@ -45,8 +30,6 @@ describe("the icon gallery", () => {
   });
 
   it("takes the glyphs out of the accessibility tree", () => {
-    // The name is the figcaption's text; an announced SVG would read the shape
-    // twice, and a decorative icon must not claim a role.
     expect((markup.match(/aria-hidden="true"/g) ?? []).length).toBe(
       galleryIcons.length,
     );
@@ -103,16 +86,14 @@ describe("the icon gallery", () => {
     expect(mount).toContain(
       "<IconGalleryView onQueryChange={chooseQuery} query={query} />",
     );
-    // The icons page mounts the URL-backed grid through the site's preview
-    // table, so the glyphs and the reference are one page.
+
     expect(previews).toContain(
       '{ origin: "icons", path: "icon.mdx", demo: "icon-gallery-demo" }',
     );
-    // Mounted once: the primitives index points at the page, it does not draw
-    // a second grid.
+
     expect(primitives).not.toContain("<IconGallery");
     expect(primitives).toContain("](/graphics/icons/icon)");
-    // Honesty: the drawings are the package's markup, painted by the browser.
+
     expect(page).toContain("drawn from the markup the package ships");
     expect(page).toContain("style.color");
   });

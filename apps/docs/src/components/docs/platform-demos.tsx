@@ -1,15 +1,5 @@
-/**
- * Browser drawings for the platform section.
- *
- * The native surface is the OS's: a window whose chrome the app paints under the
- * traffic lights, and the system's own path panel. A browser cannot mount
- * either, so these mirror the shipped geometry and read the preview surface's
- * theme roles.
- */
-
 import { WindowFrame } from "./window-frame";
 
-/** The native window: a source list under the lights, a unified toolbar. */
 export const WindowDemo = () => (
   <div className="gx-demo gx-platform-scene">
     <WindowFrame
@@ -38,7 +28,6 @@ export const WindowDemo = () => (
   </div>
 );
 
-/** The system's path panel, with its source list and file table. */
 export const FilePanelDemo = () => (
   <div className="gx-demo gx-platform-scene">
     <div className="gx-platform-panel">

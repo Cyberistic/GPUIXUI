@@ -1,19 +1,3 @@
-/**
- * The terminal-mode probe: does the runtime really paint an app into the
- * terminal, and does a key reach it there?
- *
- * The capability record lists terminal rendering as supported, and the only
- * route to it is `render(<App />, { terminal: true })` — a platform behind the
- * same view, not a window, so no automation protocol can see it. This runner
- * starts `main.js` inside a pty (`script` with a sized `stty`), reads the escape
- * stream the platform writes, and decodes its kitty-graphics frames. The proof
- * is a paint: the app's page colour, its glyphs, the repaint a key causes, and
- * the terminal restored when the run ends.
- *
- * Exit codes are the playground's: `0` passed, `1` a real failure, `2` no
- * evidence (no pty, no binding, no frame). A missing frame never reads as a
- * pass.
- */
 import {
   Clock,
   Console,
@@ -46,52 +30,25 @@ import {
   TERMINAL_REST,
 } from "./logic.js";
 
-/** The pty grid the child is given, in character cells. */
 export const TERMINAL_GRID = { columns: 100, rows: 40 } as const;
 
-/**
- * The pixel size of one character cell when the terminal reports none.
- *
- * A pty opened by `script` answers no pixel-size query, so the platform falls
- * back to an 8×16 cell; the frame's own size is held to the grid times this
- * cell, which is the measurement this probe exists to make rather than an
- * assumption the probe reads back.
- */
 export const TERMINAL_CELL = { width: 8, height: 16 } as const;
 
-/** The share of the frame a page must cover before it counts as painted. */
 export const PAGE_SHARE = 0.9;
 
-/** The key the probe sends: `t` as a kitty keyboard event. */
 export const KEY_T = "\x1b[116u";
 
-/** The quit gesture: ctrl-c, which the platform leaves unhandled and quits on. */
 export const CTRL_C = "\u0003";
 
-/**
- * A left press and release at the frame's centre, in SGR pixel coordinates.
- *
- * The platform enables `?1016h` (SGR-Pixels), so a coordinate is a pixel of the
- * 800×640 frame; the centre is over the word's box, which is the app's page.
- */
 export const POINTER_AT = {
   x: (TERMINAL_GRID.columns * TERMINAL_CELL.width) / 2,
   y: (TERMINAL_GRID.rows * TERMINAL_CELL.height) / 2,
 } as const;
 
-/** The grid the resize message asks for. */
 export const RESIZED_GRID = { columns: 50, rows: 20 } as const;
 
-/**
- * The terminal's in-band resize, as kitty terminals send it.
- *
- * `CSI 48 ; rows ; cols ; height ; width t` — the protocol the platform
- * negotiates with `?2048h`. A pty `stty` alone does not repaint: measured, the
- * app kept its 800×640 frame until this sequence arrived.
- */
 export const RESIZE_SEQUENCE = `\x1b[48;${RESIZED_GRID.rows};${RESIZED_GRID.columns};0;0t`;
 
-/** The press and release a click is, as the terminal reports one. */
 export const POINTER_CLICK = `\x1b[<0;${POINTER_AT.x};${POINTER_AT.y}M\x1b[<0;${POINTER_AT.x};${POINTER_AT.y}m`;
 
 const FIRST_FRAME_ATTEMPTS = 150;
@@ -99,7 +56,6 @@ const KEY_FRAME_ATTEMPTS = 100;
 const POLL = Schedule.spaced(Duration.millis(100));
 const EXIT_TIMEOUT = Duration.seconds(20);
 
-/** What a run could not prove, named by the stage that broke. */
 class TerminalError extends Schema.TaggedError<TerminalError>()(
   "TerminalError",
   {
@@ -108,20 +64,12 @@ class TerminalError extends Schema.TaggedError<TerminalError>()(
   },
 ) {}
 
-/** One probe in the terminal suite. */
 export interface TerminalScenarioMeta {
   readonly id: string;
   readonly title: string;
   readonly capability: Smoke.Capability;
 }
 
-/**
- * The two scenarios one run proves.
- *
- * `terminal-render` is the paint — a page, a frame, and glyphs in it — and
- * `terminal-input` is the key that reaches the app and the restore that ends
- * the run. Both read one capture, so a run costs one pty.
- */
 export const terminalRegistry: ReadonlyArray<TerminalScenarioMeta> = [
   {
     id: "terminal-render",
@@ -149,7 +97,6 @@ export const terminalRegistry: ReadonlyArray<TerminalScenarioMeta> = [
   },
 ];
 
-/** The scenarios `--only` selected, in registry order; every one when none. */
 export const selectScenarios = (
   only: ReadonlyArray<string>,
 ): ReadonlyArray<TerminalScenarioMeta> =>
@@ -161,7 +108,6 @@ export const selectScenarios = (
       ),
   });
 
-/** The usage text, printed with every argument error. */
 export const usage: string = Arr.join(
   [
     "usage:",
@@ -186,16 +132,13 @@ const concat = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
   return out;
 };
 
-/** The share of a frame `colour` paints. */
 export const shareOf = (frame: KittyFrame, colour: Pixels.Rgba): number =>
   Pixels.countColour(frame.pixels, colour) /
   (frame.pixels.width * frame.pixels.height);
 
-/** How many pixels of a frame paint `colour` exactly. */
 const inkPixelsOf = (frame: KittyFrame, colour: Pixels.Rgba): number =>
   Pixels.countColour(frame.pixels, colour);
 
-/** The first frame in `frames` whose `colour` covers `share` of it. */
 export const firstPainted = (
   frames: ReadonlyArray<KittyFrame>,
   colour: Pixels.Rgba,
@@ -203,7 +146,6 @@ export const firstPainted = (
 ): Option.Option<KittyFrame> =>
   Arr.findFirst(frames, (frame) => shareOf(frame, colour) >= share);
 
-/** The app's page colour in a run of frames, and the ink its word paints. */
 export interface Painted {
   readonly rest: KittyFrame;
   readonly clicked: Option.Option<KittyFrame>;
@@ -211,7 +153,6 @@ export interface Painted {
   readonly pressed: Option.Option<KittyFrame>;
 }
 
-/** The page frame, and the first press frame after it. */
 export const paintedOf = (
   frames: ReadonlyArray<KittyFrame>,
 ): Option.Option<Painted> =>
@@ -223,8 +164,7 @@ export const paintedOf = (
     (index) =>
       Option.map(Arr.get(frames, index), (rest) => ({
         rest,
-        // A click repaints a few hundred ink pixels, not a page, so it is
-        // found by ink count rather than by the page share.
+
         clicked: Arr.findFirst(
           Arr.drop(frames, index + 1),
           (frame) => inkPixelsOf(frame, TERMINAL_CLICK_INK) > 100,
@@ -244,14 +184,6 @@ export const paintedOf = (
       })),
   );
 
-/**
- * The paint a report measures, or the first frame when the page never came.
- *
- * A run that painted *something* is evidence: a wrong page colour has to fail
- * its checks with the measured pixels, not exit `2` as though no window had
- * opened. The first frame carries that measurement; `null` only when the stream
- * has no frame at all.
- */
 export const evidenceOf = (
   frames: ReadonlyArray<KittyFrame>,
 ): Option.Option<Painted> =>
@@ -264,7 +196,6 @@ export const evidenceOf = (
     })),
   );
 
-/** The snapshot of everything the child has written so far. */
 const snapshot = (
   output: () => ReadonlyArray<Uint8Array>,
 ): Effect.Effect<KittyStream, TerminalError> =>
@@ -284,7 +215,6 @@ const snapshot = (
     });
   });
 
-/** Polls the stream until `ready`, or returns the last read after `attempts`. */
 const settle = (
   output: () => ReadonlyArray<Uint8Array>,
   ready: (stream: KittyStream) => boolean,
@@ -297,13 +227,6 @@ const settle = (
 const text = (chunks: ReadonlyArray<Uint8Array>): string =>
   new TextDecoder().decode(concat(chunks));
 
-/**
- * What a reader would have seen in the pty, with the control stream removed.
- *
- * A child that never paints usually says why on the terminal it was given — the
- * preflight's "no GPUix binding" remedy is printed there, not on the wrapper's
- * stderr, so a no-frame failure has to quote it or the run reads as silence.
- */
 export const plainText = (chunks: ReadonlyArray<Uint8Array>): string => {
   /* oxlint-disable no-control-regex -- the value being stripped is a terminal stream */
   const stripped = text(chunks)
@@ -312,7 +235,7 @@ export const plainText = (chunks: ReadonlyArray<Uint8Array>): string => {
     .replace(/\x1b\[[0-9;?<>=]*[A-Za-z]/g, "")
     .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "")
     .replace(/\r/g, "");
-  /* oxlint-enable no-control-regex */
+
   return stripped.trim().length <= 300
     ? stripped.trim()
     : `…${stripped.trim().slice(-300)}`;
@@ -323,7 +246,6 @@ const rgbaText = (value: Pixels.Rgba): string =>
     .map((channel) => channel.toString(16).padStart(2, "0"))
     .join("")}`;
 
-/** One assertion, in the report's own vocabulary. */
 interface Verdict {
   readonly label: string;
   readonly holds: boolean;
@@ -341,7 +263,6 @@ const check = (verdict: Verdict): Smoke.CheckResult =>
         }),
   });
 
-/** The center of the ink's bounding box, relative to the frame's centre. */
 const inkOffset = (
   frame: KittyFrame,
 ): Option.Option<{ readonly x: number; readonly y: number }> =>
@@ -353,11 +274,9 @@ const inkOffset = (
     }),
   );
 
-/** One shell word, quoted for `sh`. */
 const shellWord = (value: string): string =>
   `'${Str.replaceAll("'", "'\\''")(value)}'`;
 
-/** The command that runs the terminal app inside a sized pty. */
 export const terminalCommand = (main: string): string =>
   Arr.join(
     [
@@ -367,39 +286,22 @@ export const terminalCommand = (main: string): string =>
     "; ",
   );
 
-/**
- * The command this runner spawns.
- *
- * `script` needs a **pipe** on stdin (see `spawnTerminal`), so the app runs
- * behind a `cat` that forwards our writes into the pty.
- */
 export const ptyCommand = (main: string): string =>
   `cat | /usr/bin/script -q /dev/null /bin/sh -c ${shellWord(terminalCommand(main))}`;
 
-/** A child process driven through pipes: the pty wrapper's read and write ends. */
 export interface TerminalProcess {
-  /** Every byte the child has written so far, in arrival order. */
   readonly output: () => ReadonlyArray<Uint8Array>;
-  /** Every byte the child's stderr has carried, for a failure's detail. */
+
   readonly errors: () => ReadonlyArray<Uint8Array>;
-  /** Spawn and exit facts a stream cannot carry (a failure to exec, a signal). */
+
   readonly diagnostics: () => ReadonlyArray<string>;
   readonly write: (bytes: Uint8Array) => Effect.Effect<void>;
-  /** Ends stdin, so the `cat` in front of the pty wrapper sees EOF and exits. */
+
   readonly close: Effect.Effect<void>;
   readonly exitCode: Effect.Effect<number>;
   readonly stop: Effect.Effect<void>;
 }
 
-/**
- * Starts the pty wrapper in front of a `cat` that forwards our writes.
- *
- * macOS `script` calls `tcgetattr` on its stdin and treats a libuv socketpair
- * (`ENOTSUP`, which reads "Operation not supported on socket") as fatal, while
- * a plain pipe (`ENOTTY`) is accepted — so the child is `cat | script`, and our
- * stdin is the `cat`'s. This one boundary uses the platform's own spawner; there
- * is no pty in Effect and the file descriptors are the point.
- */
 const spawnTerminal = (
   main: string,
 ): Effect.Effect<TerminalProcess, TerminalError> =>
@@ -408,10 +310,9 @@ const spawnTerminal = (
       const child = spawn("/bin/sh", ["-c", ptyCommand(main)], {
         stdio: ["pipe", "pipe", "pipe"],
       });
-      // The pty closes with the child; a write that races the exit is not a
-      // probe failure, and the probe writes only while a page is painted.
+
       child.stdin.on("error", () => {});
-      /** The streams push bytes as they arrive; the probe polls this array. */
+
       const output: Uint8Array[] = [];
       const errors: Uint8Array[] = [];
       const diagnostics: string[] = [`spawned pid=${child.pid ?? "none"}`];
@@ -455,7 +356,6 @@ const spawnTerminal = (
     catch: (cause) => new TerminalError({ stage: "spawn", detail: `${cause}` }),
   });
 
-/** The assertions a capture supports, split by the scenario that owns each. */
 interface Checks {
   readonly render: ReadonlyArray<Verdict>;
   readonly resize: ReadonlyArray<Verdict>;
@@ -683,7 +583,6 @@ const checksOf = (
   };
 };
 
-/** The report for one capture, restricted to the scenarios the run selected. */
 const reportOf = (
   stream: KittyStream,
   exitCode: number,
@@ -725,7 +624,6 @@ const reportOf = (
   });
 };
 
-/** The unfilled report when the child never painted: no frame, no evidence. */
 const noFrame = (
   attempts: number,
   stream: KittyStream,
@@ -760,14 +658,6 @@ const noFrame = (
     ),
   });
 
-/**
- * Runs the child, drives the key, and reports.
- *
- * The child's frames arrive while it runs, so the run polls the accumulator:
- * first for a page frame (the app mounted), then for the press frame the key
- * causes. The restore is only visible after the quit, so the report is built
- * from the final snapshot.
- */
 const capture = (
   selected: ReadonlyArray<TerminalScenarioMeta>,
   artifacts: string,
@@ -803,10 +693,6 @@ const capture = (
         );
       }
 
-      // A key is only worth sending once a page has painted: before the app
-      // mounts there is no handler to receive it. A run whose page never came
-      // still quits and reports, so the wrong paint is measured rather than
-      // hidden behind "no evidence".
       if (Option.isSome(paintedOf(first.frames))) {
         yield* child.write(new TextEncoder().encode(POINTER_CLICK));
         yield* settle(
@@ -846,8 +732,7 @@ const capture = (
         onNone: () => child.stop.pipe(Effect.as(-1)),
         onSome: (code) => Effect.succeed(Number(code)),
       });
-      // The restore trailer is written while the terminal closes, so it can
-      // land after the exit event; poll for the trailer rather than sleeping.
+
       const final = yield* snapshot(child.output).pipe(
         Effect.repeat({
           schedule: Schedule.spaced(Duration.millis(50)),
@@ -914,14 +799,6 @@ const capture = (
     }),
   );
 
-/**
- * Parses the command line, gates the host, then captures one terminal run.
- *
- * `--list` and an argument error are answered before anything spawns. A host
- * without a pty wrapper (`script` is this harness's macOS route) exits `2`:
- * terminal rendering is supported by the runtime on Linux too, but this runner
- * is not a claim about that host.
- */
 export const main = (
   argv: ReadonlyArray<string>,
 ): Effect.Effect<ExitCode, never, FileSystem.FileSystem | Path.Path> =>
@@ -988,8 +865,6 @@ export const main = (
     );
   });
 
-// Run only when executed directly, never on import, so the pure tests can import
-// this module without a pty. `Effect.runPromise` is the entrypoint boundary.
 const entry = process.argv[1];
 if (entry !== undefined && import.meta.filename === entry) {
   const code = await Effect.runPromise(

@@ -1,12 +1,3 @@
-/**
- * UserMenu behaviour in the real GPUix renderer.
- *
- * The bugs these guard: a standalone account row that cannot be opened because
- * its avatar swallows the press, a row that runs its callback twice (once from
- * the pointer and once from the menu's close), and a menu that stays painted
- * after an action.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import {
   clickCentreOf,
@@ -19,7 +10,6 @@ import { UserMenu } from "../user-menu.js";
 
 const user = { name: "Benji van der Brand", email: "benji@example.com" };
 
-/** The standalone menu with one spy per row. */
 const account = () => ({
   onUpgrade: vi.fn(),
   onAccount: vi.fn(),
@@ -54,8 +44,6 @@ describe("UserMenu", () => {
   });
 
   it("paints only the rows the caller handles", async () => {
-    // The menu's own rule (#1): a row with no handler is not offered, and a
-    // group whose every row is unhandled takes its separator with it.
     const root = renderComponent(
       <UserMenu user={user} onAccount={() => undefined} />,
     );

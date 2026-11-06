@@ -1,22 +1,3 @@
-/**
- * Holds the `multi-step-form-lifecycle` fixture, its view and the claims it
- * prints.
- *
- * The bug this guards: Tier 5's *multi-step forms* row is marked `?` because a
- * wizard is composition — the shipped `Form`, `Stepper`, `Field` and `Checkbox`
- * — and nothing had measured the layers a caller writes between them. The
- * first measured pass found that a `Form` whose schema failure is reported on a
- * field path could not be submitted again: form-core kept that error in the
- * field's meta, the next field-validation pass never cleared it, and the form
- * returned before re-running the schema. The components half fixed it (a `Form`
- * clears the per-field `onSubmit` errors its own validator owns), so the probe
- * now asserts the recovery: a refused review records no submit, and the
- * re-accepted one reaches the caller a second time. The README must not return
- * to the measured-limit wording.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
@@ -50,12 +31,6 @@ const view = read("./scenarios.tsx");
 const readme = read("../../README.md");
 const todo = read("../../../../.agents/slop/TODO.md");
 
-/**
- * The checks `multiStepSteps` asserts.
- *
- * Read out of the probe rather than typed here, so the README and the interlock
- * row cannot print a count the scenario no longer has.
- */
 const assertedChecks = ((): number => {
   const steps = view.slice(view.indexOf("const multiStepSteps"));
   const body = steps.slice(0, steps.indexOf("const checkboxSteps"));
@@ -67,14 +42,12 @@ const assertedChecks = ((): number => {
   );
 })();
 
-/** The `|` table row that names `needle`, or `""` when no row carries it. */
 const rowOf = (source: string, needle: string): string =>
   Option.getOrElse(
     Arr.findFirst(Str.split(source, "\n"), Str.includes(needle)),
     () => "",
   );
 
-/** The step's refusal, read as a string for a readable assertion. */
 const refusal = (step: 1 | 2 | 3, value: string): string =>
   Option.getOrElse(stepError(step, { name: value, port: value }), () => "none");
 
@@ -84,7 +57,7 @@ describe("the two gates", () => {
     expect(refusal(1, "Ab")).toBe(MULTI_STEP_NAME_MESSAGE);
     expect(refusal(1, "desk")).toBe("none");
     expect(refusal(1, "design-system")).toBe("none");
-    // The review's acceptance is the form's rule, so its step gate is open.
+
     expect(refusal(3, "")).toBe("none");
   });
 
@@ -170,10 +143,6 @@ describe("the view and the registry", () => {
   });
 
   it("polls a cleared message instead of reading one frame", () => {
-    // A loaded box paints a field a frame or two after the keystrokes land, so
-    // a single read after a fixed sleep measured the message the previous frame
-    // carried (measured under a five-agent build: `expected false, got true` at
-    // 823 ms, green alone). Both message checks wait on the state they assert.
     const steps = view.slice(view.indexOf("const multiStepSteps"));
     const body = steps.slice(0, steps.indexOf("const checkboxSteps"));
     expect(body).toContain("const nameAfterTyping = yield* settleUntil(");
@@ -202,16 +171,13 @@ describe("the README", () => {
       "### `multi-step-form-lifecycle` — measured on 0.11.0 here",
     );
     expect(readme).toContain(MULTI_STEP_TERMS_MESSAGE);
-    // The fix's own proof is named so the window case cannot drift from it.
-    // Prose wraps, so the sentences are read from one flat line.
+
     const flat = readme.replace(/\s+/g, " ");
     expect(flat).toContain("submits a corrected value after a schema failure");
     expect(flat).toContain("submits=2");
   });
 
   it("does not report the repaired retry as a measured limit", () => {
-    // The retracted claim: a reader was told a wizard could never submit again
-    // after one schema failure. Either sentence returning fails this case.
     const flat = readme.replace(/\s+/g, " ");
     expect(flat).not.toContain("cannot submit again after a schema failure");
     expect(flat).not.toContain("never reaches the caller");
@@ -223,8 +189,6 @@ describe("the README", () => {
   });
 
   it("records the playground half as landed, with this probe's own run", () => {
-    // The row told a reader the probe still asserted the limit after the
-    // components fix landed and this wizard re-measured it.
     const row = rowOf(todo, "Form` whose second submit is swallowed");
     expect(row).not.toBe("");
     expect(row).not.toContain("playground half is open");

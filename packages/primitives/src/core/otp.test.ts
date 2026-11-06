@@ -1,16 +1,3 @@
-/**
- * `OTPField`'s distribution and focus rules.
- *
- * The defects guarded here are the ones a hand-rolled code field ships: a
- * pasted code landing entirely in one cell, the last cell swallowing focus at
- * the end, Backspace on an empty cell doing nothing, and the runtime's
- * accumulated edit text ("1" + a typed "2" reports "12") being read as a
- * two-character paste and overwriting the next cell.
- *
- * The runtime fact behind the last one was measured on 2026-10-17: typing into
- * a filled `<input>` appends to its text and reports the whole string.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -26,10 +13,6 @@ import {
 
 describe("otpCellCount", () => {
   it("draws the documented six cells for a length that is not a number", () => {
-    // Bug guarded: a cell count is a setting saved beside the form, and a
-    // record can keep it as text. Read through `otpLength` alone, a stored
-    // `"4"` painted **one** cell and called the code complete on its first
-    // character — a verifier handed a one-character code.
     expect(otpCellCount("4")).toBe(DEFAULT_OTP_LENGTH);
     expect(otpCellCount(null)).toBe(DEFAULT_OTP_LENGTH);
     expect(otpCellCount(undefined)).toBe(DEFAULT_OTP_LENGTH);
@@ -51,11 +34,6 @@ describe("normalizeOtp", () => {
   });
 
   it("reads a stored code that is not text as no code", () => {
-    // A code is content a form record carries, and a verification code is
-    // numeric often enough that the record keeps it as one. Read raw,
-    // `Str.replace` answered `self.replace is not a function` out of the
-    // field's first paint. Only text is a code, so any other shape is the
-    // empty field an omitted value means.
     expect(normalizeOtp(123456, 6)).toBe("");
     expect(normalizeOtp(0, 6)).toBe("");
     expect(normalizeOtp(true, 6)).toBe("");
@@ -98,8 +76,6 @@ describe("applyOtpInput", () => {
   });
 
   it("strips the character the runtime accumulated in the edited cell", () => {
-    // The bug guarded: a filled cell reports "12" after typing "2", and reading
-    // that as a paste would write "1" and "2" into two cells.
     expect(applyOtpInput("1", 0, "12", 4)).toStrictEqual({
       value: "2",
       focus: 1,
@@ -177,8 +153,6 @@ describe("decideOtpKey", () => {
   });
 
   it("leaves Backspace on a filled cell to the native input", () => {
-    // The input deletes its own character and reports it through `onChange`;
-    // handling the key here too would delete twice.
     expect(decideOtpKey("123", 1, "backspace", 4)).toStrictEqual(Option.none());
     expect(decideOtpKey("", 0, "backspace", 4)).toStrictEqual(Option.none());
   });
@@ -186,15 +160,10 @@ describe("decideOtpKey", () => {
 
 describe("otpEmptiedCell", () => {
   it("reports the cell the key's own edit cleared", () => {
-    // Backspace on the last filled cell is the input's edit; its key up runs
-    // after and must not clear the cell before it as well.
     expect(otpEmptiedCell("12", "1", 1, 4)).toBe(true);
   });
 
   it("answers false for a middle cell, whose neighbour shifts into it", () => {
-    // The code is contiguous, so clearing cell 1 of "123" leaves "13" and the
-    // cell now holds "3"; `decideOtpKey` sees a filled cell and answers none,
-    // so the double delete cannot happen either way.
     expect(otpEmptiedCell("123", "13", 1, 4)).toBe(false);
   });
 

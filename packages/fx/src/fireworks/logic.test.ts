@@ -1,14 +1,3 @@
-/**
- * The firework field's arithmetic, without a renderer.
- *
- * The bugs these guard: a field that reshuffles between mounts; a burst whose
- * sparks all leave on one angle, so it reads as a jet rather than an explosion;
- * a spark that ends outside the box, or a ring that clips on the wall its centre
- * sits nearest; a fly phase that is already at the ring, so the spark never
- * travels; a fade phase that starts bright or waits, so the burst twinkles
- * instead of going dark; and an unmeasured box painting a field anyway.
- */
-
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import {
@@ -24,7 +13,6 @@ import {
   type FireworkSpark,
 } from "./logic.js";
 
-/** A 360×240 field of three bursts of twelve sparks on a 1 second burst. */
 const field = (
   overrides: Partial<FireworkFieldInput> = {},
 ): ReadonlyArray<FireworkSpark> =>

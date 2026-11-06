@@ -1,24 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * AvatarGroup: a facepile — overlapping avatars plus the count it stands for.
- *
- * The discs overlap by tucking each one under the last, so the row's width is
- * arithmetic over the diameter and the overlap (`avatar-group/logic.ts`) rather
- * than a measurement. That is what lets the group keep a stable box while its
- * discs travel in: each disc lives in an absolutely positioned wrapper, so a
- * member's arrival moves a disc and never reflows the row.
- *
- * An arrival is the house entrance — a fade plus a few pixels of rise on a
- * relative `top`, staggered by `@gpuixui/motion` — because the runtime has no
- * `transform` (upstream issue #102). A member appended to `members` is a new
- * key, so it arrives while the faces already on screen stay put; a member
- * removed does not replay the rest, which is why a member's key is its name.
- *
- * A capped group names the people behind the chip instead of painting "+2" as
- * the whole story: the chip carries no interaction, so its accessible name is
- * the only way a reader learns who is hidden.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -48,68 +28,47 @@ import { recipeStyle } from "./internal/recipe.js";
 import { nameOf } from "./internal/text.js";
 import { avatarPixels, textStyle, useTheme } from "./internal/theme.js";
 
-/** One face in a group. */
 export interface AvatarGroupMember {
-  /** The accessible name, and the source of the initials fallback. */
   readonly name: string;
-  /** Image path, data URL or `http(s)` URL. Without it the initials show. */
+
   readonly src?: string;
-  /** Renders the presence dot on this face. Omit for no dot. */
+
   readonly status?: AvatarStatus;
 }
 
-/** What an avatar group draws at one frame. */
 export interface AvatarGroupState {
   readonly total: number;
-  /** The faces on screen, before the overflow chip. */
+
   readonly visible: number;
-  /** The faces behind the chip. */
+
   readonly hidden: number;
   readonly reducedMotion: boolean;
 }
 
-/** {@link AvatarGroup} props. */
 export interface AvatarGroupProps extends Omit<Props, "children" | "style"> {
-  /** The faces, in reading order. A member's key is its `name`: a value that is not a list — a saved record's `null` — paints no faces, and an entry without a text name is not a member. */
   readonly members: ReadonlyArray<AvatarGroupMember>;
-  /**
-   * The faces shown before the overflow chip. Omit to show everyone; `0` shows
-   * only the chip.
-   */
+
   readonly max?: number;
-  /** The faces' diameter. Default `"md"`. */
+
   readonly size?: AvatarSize;
-  /**
-   * How far each disc tucks under the previous one, in pixels. Default a
-   * quarter of the diameter.
-   */
+
   readonly overlap?: number;
-  /**
-   * The ring around each disc, which separates two overlapping faces. Pass the
-   * surface role the group sits on (a card group passes `card`). Default the
-   * theme's `background` role.
-   */
+
   readonly ringColor?: string;
-  /** The group's accessible name. Default the number of faces. */
+
   readonly label?: string;
-  /** Milliseconds between two arrivals. Default `40`; `0` arrives at once. */
+
   readonly stepMs?: number;
-  /** Pixels a disc rises from. Default `6`. */
+
   readonly rise?: number;
-  /** The arrival's duration. Default `"normal"` (200 ms). */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string for the row, joined after the resting style. */
+
   readonly className?: string;
-  /** A style for the row, or a function of the group. */
+
   readonly style?: StateStyle<AvatarGroupState>;
 }
 
-/**
- * A row of overlapping faces with one chip for the members it does not show.
- *
- * The row owns no role beyond `group`, no tab stop and no handlers: the faces
- * are pictures with their own names, and the chip is one labelled picture.
- */
 export const AvatarGroup = ({
   members: storedMembers,
   max,
@@ -147,7 +106,6 @@ export const AvatarGroup = ({
     reducedMotion: timing.duration === 0,
   };
 
-  /** The wrapper every face and the chip share: position, entrance and ring. */
   const discStyle = (index: number) => ({
     position: "absolute" as const,
     left: avatarDiscLeft(index, step),
@@ -239,7 +197,6 @@ export const AvatarGroup = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const avatarGroupMeta = {
   name: "Avatar group",
   tier: 5,

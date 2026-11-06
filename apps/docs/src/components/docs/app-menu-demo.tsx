@@ -10,27 +10,14 @@ import {
   type MenuBarState,
 } from "@/lib/shell-logic";
 
-/**
- * Browser preview for the Application menu page.
- *
- * `@gpuixui/shell`'s `AppMenu` is a GPUix host bar, so the page cannot mount it
- * and this drawing is a labelled approximation. The navigation is the package's:
- * `step` folds a keyboard action into the bar's state, `hoverOpen` is the
- * macOS rule that a sibling title takes over while a menu is open, and
- * `dismiss` closes the dropdown and names the trigger that takes the focus
- * back. Only the paint is the browser's.
- */
-
-/** One runnable entry in a menu's dropdown. */
 export interface AppMenuItem {
   readonly id: string;
   readonly label: string;
-  /** A display-only accelerator, e.g. `"mod+s"`. The app binds the chord. */
+
   readonly accelerator?: string;
   readonly disabled?: boolean;
 }
 
-/** One top-level menu: a labelled button and its dropdown rows. */
 export interface AppMenuEntry {
   readonly id: string;
   readonly label: string;
@@ -38,7 +25,6 @@ export interface AppMenuEntry {
   readonly items: ReadonlyArray<AppMenuItem>;
 }
 
-/** The menus the drawing opens with. */
 export const APP_MENU_ENTRIES: ReadonlyArray<AppMenuEntry> = [
   {
     id: "file",
@@ -67,7 +53,6 @@ export const APP_MENU_ENTRIES: ReadonlyArray<AppMenuEntry> = [
   },
 ];
 
-/** The menus reduced to what the package's navigation needs. */
 export const appMenuSpecs = (
   menus: ReadonlyArray<AppMenuEntry>,
 ): ReadonlyArray<AppMenuSpec> =>
@@ -80,13 +65,11 @@ export const appMenuSpecs = (
     })),
   }));
 
-/** The row the state highlights, when it names one a reader can run. */
 export interface AppMenuSelection {
   readonly menuId: string;
   readonly itemId: string;
 }
 
-/** The row the state highlights, and the menu it belongs to. */
 export const activeRow = (
   state: MenuBarState,
   menus: ReadonlyArray<AppMenuEntry>,
@@ -111,7 +94,6 @@ export const activeRow = (
       }),
   });
 
-/** The label of the row the state highlights, when it names one. */
 export const activeRowLabel = (
   state: MenuBarState,
   menus: ReadonlyArray<AppMenuEntry>,
@@ -138,7 +120,6 @@ export const activeRowLabel = (
       ),
   });
 
-/** What the drawing reports under the bar. */
 export const appMenuReadout = (
   state: MenuBarState,
   menus: ReadonlyArray<AppMenuEntry>,
@@ -158,7 +139,6 @@ export const appMenuReadout = (
     },
   });
 
-/** The drawing itself: the bar, its dropdown and the highlighted row. */
 export interface AppMenuFrameProps {
   readonly menus: ReadonlyArray<AppMenuEntry>;
   readonly state: MenuBarState;
@@ -166,7 +146,6 @@ export interface AppMenuFrameProps {
   readonly onSelect: (menuId: string, itemId: string) => void;
 }
 
-/** The bar, the dropdown and the readout. */
 export function AppMenuFrame({
   menus,
   state,
@@ -312,7 +291,6 @@ export function AppMenuFrame({
   );
 }
 
-/** The page's preview: the bar, its dropdown and the row a reader chose. */
 export function AppMenuDemo() {
   const [state, setState] = useState<MenuBarState>(initial);
   const [chosen, setChosen] = useState<Option.Option<string>>(Option.none());

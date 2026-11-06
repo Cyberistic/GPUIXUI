@@ -1,28 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Fireworks: a decorative field of small bursts.
- *
- * A burst is a seeded centre with sparks flying out on evenly spaced angles. The
- * runtime has no `transform` (upstream issue #102) and no canvas, so a spark is
- * an absolutely positioned dot whose `left`/`top` the runtime tweens and whose
- * brightness is `opacity`, the one paint value it animates natively. The layout
- * is a pure function of the measured box and one seed (`fireworks/logic.ts`), so
- * the same seed paints the same sequence on every mount.
- *
- * One tween cannot brighten and dim, so a spark's life is two phases: it flies
- * out to `0.7` of its ring while fading in, then on to the last pixel while
- * fading out. When the fade reports `onMotionComplete` the element is re-keyed
- * into a fresh spark at the centre, so the field keeps bursting. Bursts are
- * staggered by index, so the field is a sequence of explosions rather than one
- * ring of light. `@gpuixui/motion` owns the timing policy through
- * `internal/presence.tsx`, and `MotionProvider preference="reduced"` paints the
- * sparks held at their ring instead of deleting the field.
- *
- * The field is decoration: it publishes no accessibility node and takes no
- * pointer input, so the content it sits behind owns the name and the presses. It
- * also measures itself, so the caller must bound it.
- */
-
 import type { EventPayload, MotionProps, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -62,39 +38,32 @@ import {
   type FireworkSpark,
 } from "./fireworks/logic.js";
 
-/** What a field draws at one frame. */
 export interface FireworksState {
-  /** The sparks on screen; `0` before the box has been measured. */
   readonly count: number;
   readonly reducedMotion: boolean;
   readonly width: number;
   readonly height: number;
 }
 
-/** {@link Fireworks} props. */
 export interface FireworksProps extends Omit<Props, "children" | "style"> {
-  /** The bursts to paint. Default `3`; `0` paints none and `6` is the cap. */
   readonly bursts?: number;
-  /** The sparks in one burst. Default `18`; `0` paints none and `40` is the cap. */
+
   readonly sparks?: number;
-  /** The layout seed. Default `1`; the same seed paints the same sequence. */
+
   readonly seed?: number;
-  /** The smallest spark, in pixels. Default `2`. */
+
   readonly minSize?: number;
-  /** The largest spark, in pixels. Default `4`. */
+
   readonly maxSize?: number;
-  /** The spark colour. Default the theme's `primary` role. */
+
   readonly color?: string;
-  /**
-   * The base time for one burst, in milliseconds. Default `1_400`; every spark
-   * runs `0.6…1` of it, split `0.7` flying and `0.3` fading.
-   */
+
   readonly burstMs?: number;
-  /** The entrance level. Default `"slow"` (320 ms). */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string for the box, merged last. */
+
   readonly className?: string;
-  /** A style for the box, or a function of the field. */
+
   readonly style?: StateStyle<FireworksState>;
 }
 
@@ -105,21 +74,12 @@ interface SparkProps {
   readonly still: boolean;
 }
 
-/**
- * One spark: flies out brightening, fades at the ring, then another lap.
- *
- * The root element is keyed by the lap, so the completed fade mounts a fresh
- * spark at the centre; the phase lives in this component so the two targets are
- * handed over without a caller-driven timer.
- */
 const Spark = ({ spec, ink, radius, still }: SparkProps) => {
   const [life, setLife] = useState({ lap: 0, fading: false });
   const phases = sparkPhases(spec);
   const rest = sparkRest(spec);
   const phase = life.fading ? phases.fade : phases.fly;
   const motion: MotionProps = {
-    // The fade retargets from where the fly left the spark; only a new lap
-    // starts from the centre.
     initial: life.fading ? false : { left: spec.x, top: spec.y, opacity: 0 },
     animate: { left: phase.left, top: phase.top, opacity: phase.opacity },
     transition: {
@@ -153,20 +113,13 @@ const Spark = ({ spec, ink, radius, still }: SparkProps) => {
         borderRadius: radius,
         backgroundColor: ink,
         opacity: still ? spec.peak : 0,
-        // A spark is decoration too: a press lands on what is behind the field.
+
         pointerEvents: "none",
       }}
     />
   );
 };
 
-/**
- * A bounded box of bursting sparks.
- *
- * Give it a height — directly or through a sized flex parent — because the field
- * positions itself from its own measured box and paints nothing before the first
- * layout.
- */
 export const Fireworks = ({
   bursts,
   sparks,
@@ -208,8 +161,7 @@ export const Fireworks = ({
   );
   const ink = color ?? theme.colors.primary;
   const still = preference === "reduced";
-  // The box the field is laid out in. Reporting the same size again must not
-  // churn the tree; a new size re-draws the sequence from the same seed.
+
   const [box, setBox] = useState<
     Option.Option<{ readonly width: number; readonly height: number }>
   >(Option.none());
@@ -261,7 +213,7 @@ export const Fireworks = ({
         mergeStyles(recipeStyle(cn(className), theme), {
           position: "relative",
           overflow: "hidden",
-          // Decoration: the content in front of the field keeps every press.
+
           pointerEvents: "none",
         }),
         resolveStyle(style, state),
@@ -280,7 +232,6 @@ export const Fireworks = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const fireworksMeta = {
   name: "Fireworks",
   tier: 5,

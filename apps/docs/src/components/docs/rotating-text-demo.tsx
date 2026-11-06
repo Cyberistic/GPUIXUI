@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Rotating text page.
- *
- * The native line changes phrase on an interval with a short fade; the preview
- * runs the same interval and fades each step in place.
- */
-
 import { useEffect, useState } from "react";
 
 const phrases = ["Faster builds", "Safer releases", "One runtime"];

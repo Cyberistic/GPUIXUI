@@ -1,14 +1,3 @@
-/**
- * The selected surface's geometry.
- *
- * The bug this guards: the tab set used to paint the selected tab as a
- * background on that trigger, so "the selected surface" existed once per
- * trigger and only that draw call knew its box. The shared pill is placed from
- * measured boxes instead, and a wrong subtraction (rail box instead of the
- * absolute containing block, or a size copied from the rail) puts it off its
- * trigger.
- */
-
 import type { EventPayload } from "@gpuix/react";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
@@ -21,7 +10,6 @@ const event = (payload: Partial<EventPayload>): EventPayload => ({
   ...payload,
 });
 
-/** The box, or the string `none` so a failing case prints something honest. */
 const boxOrDefault = (measured: Option.Option<TabBox>): TabBox | "none" =>
   Option.match(measured, { onNone: () => "none", onSome: (box) => box });
 
@@ -46,9 +34,6 @@ describe("measuredBox", () => {
   });
 
   it("is the seam's decoder, not a copy", () => {
-    // The tab pill measured its own boxes with a second decoder shaped like the
-    // seam's, so a rule the seam gained — a side it cannot paint is no box —
-    // would have reached every measuring surface except this one.
     expect(measuredBox).toBe(seamMeasuredBox);
   });
 });

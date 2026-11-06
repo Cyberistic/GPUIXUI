@@ -1,24 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `Avatar`: a person or entity, as a picture with an initials fallback.
- *
- * The fallback is deterministic (see `avatar/logic.ts`), so an avatar is never
- * blank and never shifts when an image is missing. The component owns no state:
- * there is no image-loading or image-error state in this version, and the
- * initials are what a consumer sees until the image paints.
- *
- * **One accessible node**: the root carries the name, so the initials and the
- * picture are `role="presentation"` — otherwise a reader heard "AL" as its own
- * label beside the name, and a picture published a second image node
- * (`src/behaviour/avatar.test.tsx` measures both). A presence state is published
- * as the root's description, because a dot is colour-only information.
- *
- * The static structure is a Tailwind recipe (`AVATAR_*`) compiled against
- * shadcn's fixed metrics; the diameter and presence dot are the dynamic values
- * that stay in `style`, and the caller's `className` is joined after the root
- * recipe.
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { AVATAR_DISC, AVATAR_FALLBACK, AVATAR_ROOT, cn } from "@gpuixui/tw";
@@ -34,50 +14,26 @@ import {
   type Theme,
 } from "./internal/theme.js";
 
-/** The four diameters, in pixels. */
 export type AvatarSize = keyof typeof avatarSize;
 
-/** The presence dot's state. */
 export type { AvatarStatus };
 
-/** {@link Avatar} props. */
 export interface AvatarProps extends Props {
-  /** The accessible name, and the source of the initials fallback. */
   readonly name: string;
-  /** Image path, data URL or `http(s)` URL. Without it the initials show. */
+
   readonly src?: string;
-  /** Default `"md"`. */
+
   readonly size?: AvatarSize;
-  /** Renders the presence dot. Omit for no dot. */
+
   readonly status?: AvatarStatus;
-  /**
-   * Let a press fall through to the control that labels the avatar.
-   *
-   * `pointerEvents` is not inherited on 0.11.0: the disc paints a fill and takes
-   * the press itself, so an avatar inside a button or a row would swallow the
-   * activation. Both boxes declare it here.
-   *
-   * Defaults to **on** unless the avatar is given a press handler of its own
-   * (plan 731): an avatar is an identity mark inside a row, a card or a menu
-   * trigger far more often than it is a control, and every block that forgot
-   * the flag had initials a press could not get through.
-   */
+
   readonly clickThrough?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/** The presence dot's diameter and its outline against the surface behind it. */
 const DOT = 10;
 
-/**
- * The role each presence state's dot paints.
- *
- * A dot is a **mark**, not text, so it paints a role the token contract holds to
- * its mark floor (`indicatorRoles`). `warning`'s solid fill is designed to carry
- * near-black text and measures 1.89:1 as a dot on the light card, so `away`
- * paints the tone's readable role instead.
- */
 const statusFill = (theme: Theme, status: AvatarStatus): string =>
   Match.value(status).pipe(
     Match.when("online", () => theme.colors.success),
@@ -87,7 +43,6 @@ const statusFill = (theme: Theme, status: AvatarStatus): string =>
     Match.exhaustive,
   );
 
-/** A circular identity mark: `name`'s picture, or its initials, plus presence. */
 export const Avatar = ({
   name,
   src,
@@ -105,22 +60,16 @@ export const Avatar = ({
       rest.onMouseUp === undefined);
   const theme = useTheme();
   const diameter = avatarPixels(size);
-  // A stored presence state the union does not name is no dot, not a thrown
-  // exhaustive match: the dot is optional content, and announcing a state the
-  // data no longer carries would be worse than saying nothing.
+
   const status = isAvatarStatus(statusProp) ? statusProp : undefined;
 
   return (
     <div
       role="img"
       aria-label={name}
-      // A presence dot is colour-only, so the state it paints is announced
-      // here; a caller's own help is used when there is no status.
       aria-description={status ?? rest["aria-description"]}
       {...rest}
       style={mergeStyles(
-        // The root is not clipped so the presence dot can sit on the rim; the
-        // inner disc is what clips the picture into a circle.
         mergeStyles(recipeStyle(cn(AVATAR_ROOT, className), theme), {
           width: diameter,
           height: diameter,
@@ -129,8 +78,7 @@ export const Avatar = ({
         style,
       )}
     >
-      {/* The disc and the dot are never the target: the root is, so a press
-          reaches the avatar's own handler or, click-through, its row. */}
+      {}
       <div
         style={mergeStyles(recipeStyle(AVATAR_DISC, theme), {
           pointerEvents: "none",
@@ -140,8 +88,6 @@ export const Avatar = ({
           <text
             role="presentation"
             style={mergeStyles(recipeStyle(AVATAR_FALLBACK, theme), {
-              // shadcn's fallback is text-sm at the default 32px disc: 44% of the
-              // diameter, not the 40% that read small beside it.
               fontSize: Math.round(diameter * 0.44),
             })}
           >
@@ -177,7 +123,6 @@ export const Avatar = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const avatarMeta = {
   name: "Avatars",
   tier: 2,

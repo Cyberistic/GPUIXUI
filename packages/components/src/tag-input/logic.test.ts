@@ -1,12 +1,3 @@
-/**
- * Tag-input rules.
- *
- * The bugs these guard: a whitespace-only token, a duplicate chip, a cap that
- * truncates existing tokens or admits one token more than it names, an
- * unreadable cap that hides the field, and a removal that takes more than one
- * match.
- */
-
 import { describe, expect, it } from "vitest";
 import { addTokens, removeToken, splitDraft, tokensOf } from "./logic.js";
 
@@ -50,8 +41,6 @@ describe("addTokens", () => {
   });
 
   it("floors a maximum that names part of a token", () => {
-    // A cap is often a budget over a measured width (`width / chipWidth`), and
-    // a maximum is a whole count: 2.7 admits two tokens, not three.
     expect(addTokens([], ["a", "b", "c", "d"], { max: 2.7 })).toEqual([
       "a",
       "b",
@@ -59,8 +48,6 @@ describe("addTokens", () => {
   });
 
   it("reads a maximum it cannot measure as no cap", () => {
-    // An unreadable cap is not an observation: the field keeps accepting, the
-    // way it does with no `max` at all, rather than refusing every token.
     expect(addTokens([], ["a", "b"], { max: Number.NaN })).toEqual(["a", "b"]);
     expect(
       addTokens([], ["a", "b"], { max: Number.POSITIVE_INFINITY }),
@@ -89,8 +76,6 @@ describe("tokensOf", () => {
   });
 
   it("answers no tokens for a value that is not a list", () => {
-    // A saved record writes `null` for the field it never carried; appending to
-    // that value threw out of the edit that would have added the first token.
     expect(tokensOf(null)).toEqual([]);
     expect(tokensOf(undefined)).toEqual([]);
     expect(tokensOf("design")).toEqual([]);

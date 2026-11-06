@@ -1,28 +1,3 @@
-/**
- * The cursor, the tab stop and the keyboard both trees share.
- *
- * The measured focus rule lives here once: the tree holds **one** tab stop, and
- * every cursor move focuses the new row in a layout effect **after** the row's
- * `tabIndex` commits. A call from the key handler moved nothing, because the
- * row was still outside the tab order (`virtual-tree-lifecycle`).
- *
- * A move the **caller** produced (a reveal from a search hit) answers a press on
- * another control, and the runtime hands that control the press's focus after
- * the commit (`data-tree-lifecycle` measured the Reveal button keeping it), so
- * the row is taken again on the next tick. The first paint is the baseline, so
- * mounting a tree does not steal focus.
- *
- * The typed prefix is `@gpuixui/components/typeahead`'s rule; the tree supplies
- * the rows' labels as the words they **paint** (`treeName`), so a blank label
- * reads as the row's key for the paint, the name and the match alike, and maps
- * the position the seam answers back onto the row key.
- *
- * A key is dispatched along the **focus path**, so a key typed in a field inside
- * a row reaches the row's handler too (`press-routing-lifecycle`'s `field-cell`
- * route). The tree answers only while one of its **rows** holds native focus,
- * so a descendant control keeps its space, its Enter and its characters.
- */
-
 import { useGpuix, type EventPayload, type PublicInstance } from "@gpuix/react";
 import { typedChar, useTypeahead } from "@gpuixui/components/typeahead";
 import * as Arr from "effect/Array";
@@ -46,51 +21,40 @@ import {
   type TreeRow,
 } from "./logic.js";
 
-/** {@link useTree} options. */
 export interface UseTreeOptions<T> {
-  /** The visible rows, in paint order. */
   readonly rows: ReadonlyArray<TreeRow<T>>;
-  /** The row's accessible name and what a typed prefix matches. */
+
   readonly labelOf: (node: T) => string;
-  /** The cursor, when the caller holds it. Omit it for an uncontrolled tree. */
+
   readonly cursor?: TreeCursor;
-  /** Reports every cursor the keys or a press produce. */
+
   readonly onCursorChange?: (cursor: TreeCursor) => void;
-  /** The cursor an uncontrolled tree starts on. Defaults to nothing open. */
+
   readonly defaultCursor?: TreeCursor;
-  /** A press or Enter on a row. */
+
   readonly onActivate?: (row: TreeRow<T>) => void;
 }
 
-/** How a committed cursor reaches the focus effect. */
 export interface TreeCommitOptions {
-  /**
-   * Focus the row the cursor lands on. `false` updates the tab stop silently —
-   * the window moved the cursor because the runtime unmounted the old row, but
-   * the tree did not hold the focus, so it must not take it.
-   */
   readonly focus?: boolean;
 }
 
-/** {@link useTree}'s controller. */
 export interface TreeController<T> {
-  /** The cursor the tree paints. */
   readonly cursor: TreeCursor;
-  /** The key the single tab stop sits on. */
+
   readonly tabKey: Option.Option<string>;
-  /** Commit a cursor, reporting it to the caller when controlled. */
+
   readonly commit: (cursor: TreeCursor, options?: TreeCommitOptions) => void;
-  /** A press on a row: open a branch and report it. */
+
   readonly activate: (row: TreeRow<T>) => void;
-  /** Apply one key event: a tree key, else type-ahead. */
+
   readonly handleKey: (event: EventPayload) => void;
-  /** Attach a row's runtime instance so a move can focus it. */
+
   readonly attach: (key: string) => (instance: PublicInstance | null) => void;
-  /** Whether the platform focus is on one of this tree's rows. */
+
   readonly holdsFocus: () => boolean;
 }
 
-/** Hold one tree's cursor and move native focus with it. */
 export const useTree = <T>({
   rows,
   labelOf,
@@ -100,10 +64,7 @@ export const useTree = <T>({
   onActivate,
 }: UseTreeOptions<T>): TreeController<T> => {
   const renderer = useGpuix().renderer;
-  // The rows are stored data as often as a caller's model (`recordsOf`): a
-  // saved flattened list can carry a hole the store wrote, and every walk below
-  // reads a row's own key. Read once per list so the callbacks below keep their
-  // identity between renders.
+
   const visible = useMemo(() => recordsOf(rows), [rows]);
   const [uncontrolled, setUncontrolled] = useState<TreeCursor>(
     defaultCursor ?? emptyCursor,
@@ -111,13 +72,7 @@ export const useTree = <T>({
   const resolved = cursor ?? uncontrolled;
   const elements = useRef(new Map<string, number>());
   const focused = useRef<Option.Option<string>>(resolved.active);
-  /**
-   * Whether the current cursor came from this tree's own keys or presses.
-   *
-   * A move the tree produced is already the one the reader made, so the row is
-   * focused in the same commit. A move the caller produced is retried on the
-   * next tick, after the runtime has handed the press its focus.
-   */
+
   const fromKeys = useRef(false);
   const deferred = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -141,8 +96,7 @@ export const useTree = <T>({
   const typeahead = useTypeahead(
     Arr.map(visible, (row) => ({
       key: row.key,
-      // The words the row paints and is named by: a blank label reads as the
-      // key (`treeName`), so a typed prefix can reach the row the tree shows.
+
       label: treeName(labelOf(row.node), row.key),
       disabled: false,
     })),
@@ -152,21 +106,11 @@ export const useTree = <T>({
     (match) => commit({ ...resolved, active: Option.some(match.key) }),
   );
 
-  // Focus follows the committed tab stop: `focusElement` refuses an element
-  // outside the tab order, so focusing the new row in the key handler (before
-  // `tabIndex` reaches it) moved nothing (`virtual-tree-lifecycle`). The effect
-  // runs after every paint and acts only on a row the cursor has just moved to,
-  // so mounting a tree does not take focus from the rest of the window.
   useLayoutEffect(() => {
     if (
       Option.getOrUndefined(resolved.active) ===
       Option.getOrUndefined(focused.current)
     ) {
-      // A commit that leaves the cursor where it was (a key clamped at an end,
-      // a press on the row already active, a branch opening under it) has no
-      // row to focus. Its "this tree moved" mark must not outlive it: the next
-      // caller-driven reveal would then be taken for the tree's own move and
-      // skip the retake that lands its focus after the press's.
       fromKeys.current = false;
       return;
     }
@@ -182,10 +126,7 @@ export const useTree = <T>({
         };
         focusRow();
         if (ours) return;
-        // The caller's reveal answered a press on another control, and the
-        // runtime focuses that control after this commit. Re-take the row on the
-        // next tick, and once more through the ref in case the row was mounted
-        // by this same commit.
+
         if (deferred.current !== undefined) clearTimeout(deferred.current);
         deferred.current = setTimeout(() => {
           deferred.current = undefined;
@@ -198,9 +139,7 @@ export const useTree = <T>({
   const activate = useCallback(
     (row: TreeRow<T>) => {
       const onRow = { ...resolved, active: Option.some(row.key) };
-      // A press on a branch opens or closes it; every press also reports the
-      // row, so a file tree can preview a file and a folder can be opened by its
-      // row.
+
       commit(row.hasChildren ? treeCursorMove(visible, onRow, "enter") : onRow);
       onActivate?.(row);
     },
@@ -218,10 +157,6 @@ export const useTree = <T>({
 
   const handleKey = useCallback(
     (event: EventPayload) => {
-      // A key is dispatched along the focus path, so a key typed in a field
-      // inside a row reaches the row's handler too (`press-routing-lifecycle`'s
-      // `field-cell` route). Only a key the row itself holds is the tree's: a
-      // descendant control keeps its space, its Enter and its characters.
       if (!holdsFocus()) return;
       if (isTreeKey(event.key)) {
         const next = treeCursorMove(visible, resolved, event.key);

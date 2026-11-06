@@ -1,22 +1,3 @@
-/**
- * Stars in the real GPUix renderer.
- *
- * The bugs these guard: a sky seeded outside the box it was measured in; a seed
- * that is not the identity it claims (a background that reshuffles between
- * mounts); a star handed one target and never the other, because the runtime
- * tweens a target once and a twinkle has to turn around; a twinkle that starts
- * from the peak instead of its own floor; a reduced preference that deletes the
- * sky instead of stilling it; a decorative field that leaks into the
- * accessibility tree or swallows presses; and a field whose entrance ignores the
- * house level.
- *
- * The motion clock is paused before the mount, so the first frame is the declared
- * initial frame rather than wherever the frame loop had got. A headless tree
- * reports bounds and the motion description, not paint, so the twinkle is read
- * from the targets the component hands the runtime — the sampler that paints them
- * is measured by the overlay and mote suites.
- */
-
 import type { TestElement, TestRoot } from "@gpuix/react/testing";
 import { motionLevels } from "@gpuixui/motion/timing";
 import * as Arr from "effect/Array";
@@ -39,10 +20,8 @@ import {
   type StarSpec,
 } from "../stars/logic.js";
 
-/** The twinkle the cases run with, short enough to finish in a test. */
 const twinkleMs = 2_000;
 
-/** A sky's pure layout for the box the renderer measured. */
 const skyIn = (
   page: ReturnType<typeof renderComponent>,
   overrides: Partial<StarFieldInput> = {},
@@ -60,7 +39,6 @@ const skyIn = (
   });
 };
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   renderer: TestRoot["renderer"],
   testId: string,
@@ -72,7 +50,6 @@ const byTestId = (
   return element;
 };
 
-/** Mount under a paused motion clock, then let the box measurement land. */
 const mountFrozen = (node: ReactNode) => {
   const page = renderComponent(<div />);
   page.renderer.clockPause();
@@ -81,14 +58,12 @@ const mountFrozen = (node: ReactNode) => {
     page.renderer.flush();
   };
   show(node);
-  // The field positions itself from its own layout, so the stars arrive on the
-  // second frame; the second settle paints what the measurement changed.
+
   settle(page);
   settle(page);
   return { page, show };
 };
 
-/** How far a star's top-left sits from the field's own top-left. */
 const offsetOf = (
   page: ReturnType<typeof renderComponent>,
   index: number,
@@ -98,7 +73,6 @@ const offsetOf = (
   return { x: star.x - field.x, y: star.y - field.y };
 };
 
-/** The target opacity the component handed the runtime for one star. */
 const expectTarget = (
   page: ReturnType<typeof renderComponent>,
   index: number,
@@ -184,7 +158,7 @@ describe("Stars", () => {
     const { page } = mountFrozen(<Sky />);
     try {
       const spec = specAt(skyIn(page), 0);
-      // Born at its own floor and heading for its own peak.
+
       expect(byTestId(page.renderer, "star-0").style.opacity).toBe(spec.dim);
       expectTarget(page, 0, starAt(spec, 1));
 
@@ -192,7 +166,6 @@ describe("Stars", () => {
       settle(page);
       expectTarget(page, 0, starAt(spec, -1));
 
-      // The next completion turns it around again, so the sky keeps breathing.
       page.renderer.clockFastForward(spec.durationMs + spec.delayMs);
       settle(page);
       expectTarget(page, 0, starAt(spec, 1));
@@ -227,7 +200,6 @@ describe("Stars", () => {
   it("publishes no accessibility node and takes no pointer input", () => {
     const { page } = mountFrozen(<Sky />);
     try {
-      // The window itself is the only node: the field adds no role and no name.
       expect(Arr.map(a11yNodes(page.renderer), (node) => node.role)).toEqual([
         "window",
       ]);

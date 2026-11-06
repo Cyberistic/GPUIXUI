@@ -1,21 +1,3 @@
-/**
- * Guards the one native host-theme mapping.
- *
- * A GPUix `<input>`/`<textarea>`/`<code>` takes its palette through a `theme`
- * prop, and a host given none layers its text on the runtime's built-in dark
- * palette — so a field in a light theme would paint a hint and a caret chosen
- * for a dark surface. The mapping from a `Theme` to that object is owned by
- * `@gpuixui/tokens`, which measures the roles on both field fills; this package
- * used to keep a second copy, so a token change could reach the field's chrome
- * and not the text inside it. The identity case fails the moment a local copy
- * returns, the source scan fails if the shape is written out again under
- * another name, and the wiring case keeps every native field passing it.
- *
- * Node's `fs` is used directly on purpose, as in `core/theme.test.ts`: this is a
- * test boundary making a one-shot read of the package's own source, not runtime
- * domain code, and the package does not resolve `vite/client` types.
- */
-
 import type { ReactElement } from "react";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -52,17 +34,14 @@ const walk = (dir: string): ReadonlyArray<string> =>
         : [],
   );
 
-/** The two properties only the token package's mapping may set. */
 const HOST_MAPPING = /textFaint\s*:|caret\s*:/;
 
-/** The files that render a native text host of their own. */
 const FIELD_HOSTS = [
   "src/components/Input.tsx",
   "src/components/NumberField.tsx",
   "src/components/OTPField.tsx",
 ];
 
-/** A theme whose hint and caret roles differ from the fixture's. */
 const themed: PrimitiveTheme = {
   ...testTheme,
   colors: {
@@ -74,7 +53,6 @@ const themed: PrimitiveTheme = {
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
 
-/** The host theme prop a field element carries. */
 const hostThemeOf = (element: ReactElement) =>
   expectSome(
     Schema.decodeUnknownOption(
@@ -101,7 +79,7 @@ describe("the native host theme", () => {
 
   it("writes the mapping down once in the package", () => {
     const scanned = walk(sourceDir);
-    // The walk must see the resolvers, or the scan proves nothing.
+
     expect(scanned.length).toBeGreaterThan(4);
     const offenders = Arr.flatMap(scanned, (path) =>
       HOST_MAPPING.test(readFileSync(path, "utf8"))

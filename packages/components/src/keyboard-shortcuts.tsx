@@ -1,17 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Keyboard shortcuts: a cheat sheet of chords, rendered as keycaps.
- *
- * The chord grammar and the platform glyphs come from `@gpuixui/keyboard`
- * (`formatSymbols`), which the hotkey recorder reuses. This component is
- * display-only: a shortcut row is documentation, not a key binding, so it never
- * registers a handler.
- *
- * A group is a `role="group"` named by its heading; rows are `listitem`s inside
- * the root's `role="list"`. Separators are 1px elements, not borders: 0.11.0 has
- * per-side border widths but a single `borderColor`.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -42,16 +29,13 @@ import {
 import { recipeStyle } from "./internal/recipe.js";
 import { currentPlatform, useTheme } from "./internal/theme.js";
 
-/** {@link KeyboardShortcuts} props. */
 export interface KeyboardShortcutsProps extends Omit<Props, "children"> {
-  /** The list's accessible name. */
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** A vertical list of shortcut groups. */
 export const KeyboardShortcuts = ({
   label,
   className,
@@ -77,16 +61,13 @@ export const KeyboardShortcuts = ({
   );
 };
 
-/** {@link KeyboardShortcutsGroup} props. */
 export interface KeyboardShortcutsGroupProps extends Omit<Props, "children"> {
-  /** The group's heading, also its accessible name. */
   readonly label: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** One named group of shortcuts. */
 export const KeyboardShortcutsGroup = ({
   label,
   className,
@@ -135,28 +116,17 @@ export const KeyboardShortcutsGroup = ({
   );
 };
 
-/** {@link Keycap} props. */
 export interface KeycapProps extends Omit<Props, "children" | "style"> {
-  /** One key's label, e.g. `"⌘"` or `"Ctrl"`. A single text node. */
   readonly children?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly style?: StateStyle<KeycapState>;
 }
 
-/** What a keycap draws: nothing stateful today, kept for the style contract. */
 export interface KeycapState {
   readonly label: string;
 }
 
-/** One key cap. Compose several for a chord that is not an accelerator.
- *
- * Display-only, so it takes no pointer input: a cap paints a fill, and a filled
- * child is the boundary the runtime's hit test stops counting at, so a chord
- * drawn inside a press target — the recorder's own box, a menu row — would take
- * the press the target never hears. A style callback is merged last and can hand
- * the pointer back.
- */
 export const Keycap = ({
   children,
   className,
@@ -181,29 +151,25 @@ export const Keycap = ({
   );
 };
 
-/** {@link KeyboardShortcut} props. */
 export interface KeyboardShortcutProps extends Omit<
   Props,
   "children" | "style"
 > {
-  /** What the chord does. */
   readonly label: string;
-  /** The chord, in the accelerator grammar: `"mod+shift+p"`. */
+
   readonly accelerator: string;
-  /** Render the chord with another platform's glyphs. Default: the host. */
+
   readonly platform?: Platform;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, or a function of the formatted keycaps. */
+
   readonly style?: StateStyle<KeyboardShortcutState>;
 }
 
-/** What a row draws: its formatted keycaps. */
 export interface KeyboardShortcutState {
   readonly keys: ReadonlyArray<string>;
 }
 
-/** One label-and-chord row. */
 export const KeyboardShortcut = ({
   label,
   accelerator,
@@ -234,7 +200,6 @@ export const KeyboardShortcut = ({
   );
 };
 
-/** Every part, so a misplaced sibling is named. */
 const shortcutParts: ReadonlyArray<PartComponent> = [
   KeyboardShortcuts,
   KeyboardShortcutsGroup,
@@ -256,7 +221,6 @@ const shortcutsGroup: PartsContract = {
   hint: "Put KeyboardShortcut rows directly inside KeyboardShortcutsGroup.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const keyboardShortcutsMeta = {
   name: "Keyboard shortcuts / keycap display",
   tier: 2,

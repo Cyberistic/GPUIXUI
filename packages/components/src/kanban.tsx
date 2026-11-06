@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 // No `@dnd-kit/core`: it reads `document`/`getBoundingClientRect`, which 0.11.0 lacks.
 // Drag is pointer capture plus `renderer.getElementBounds` (`docs/gpuix-capabilities.md`).
 import type {

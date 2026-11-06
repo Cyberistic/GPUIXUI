@@ -59,8 +59,3 @@ export const ReviewDate = () => {
 | `label` | `string` | `"Calendar"` | the grid's accessible name, followed by the selection summary |
 | `onDismiss` | `() => void` | none | called by `Escape`; a popover passes its close |
 | `className` | `string` | none | joined after the recipe, so it wins conflicts |
-
-## Notes
-- No `aria-current`, so today is a border rather than an attribute.
-- No `aria-disabled` and no live region: an unavailable day leaves the tab order; a selection change is not announced.
-- Fixed English labels; no week numbers and no time of day.

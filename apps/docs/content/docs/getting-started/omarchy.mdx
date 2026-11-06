@@ -3,9 +3,6 @@ title: Omarchy
 description: Develop on Hyprland/Arch, and follow the theme the desktop is running.
 ---
 
-Omarchy is an Arch-based Hyprland desktop. This guide runs the repo there and
-reads the palette the desktop has staged.
-
 ## Run
 
 ```sh
@@ -15,13 +12,7 @@ nub install
 nub run dev:playground
 ```
 
-`nub run dev:docs` serves the docs. The terminal route is in the
-[Terminal guide](/getting-started/terminal).
-
 ## Follow the live theme
-
-`omarchy-theme-set` stages the active theme at
-`~/.local/state/omarchy/current/theme/colors.toml`:
 
 ```tsx
 import { readFileSync } from "node:fs";
@@ -37,7 +28,3 @@ const file = decodeOmarchyPalette(
 
 <ThemeProvider theme={paletteToTokens(file.palette)}>{app}</ThemeProvider>;
 ```
-
-`accent` maps to `primary`, `red` to `destructive`, and `muted` is both the quiet
-strip and the border. An Alacritty palette names `color4`, `color1` and `color8`
-instead; unreadable values are reported in `file.problems` and left out.

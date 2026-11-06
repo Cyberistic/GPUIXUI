@@ -3,15 +3,6 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-/**
- * The landing page is the site's front door, and its links are written in
- * components, not MDX: the page-level link guard walks `content/docs`, so a CTA
- * pointing at a page that was renamed or never mounted would 404 from the only
- * page a first-time reader sees, and the build would stay green.
- *
- * The mounted set is read from the collections the site serves.
- */
-
 const appDir = fileURLToPath(new URL("../../", import.meta.url));
 
 interface Mounted {
@@ -46,12 +37,10 @@ const mounted: ReadonlyArray<Mounted> = [
   ),
 ];
 
-/** The plain static routes (`src/routes/live.tsx` → `/live`). */
 const staticRoutes = readdirSync(join(appDir, "src/routes"))
   .filter((name) => /^[a-z-]+\.tsx$/.test(name) && name !== "index.tsx")
   .map((name) => `/${name.replace(/\.tsx$/, "")}`);
 
-/** The agent-readable text routes (`src/routes/llms[.]txt.tsx`). */
 const agentRoutes = ["/llms.txt", "/llms-full.txt"];
 
 const urls = new Set([
@@ -67,7 +56,6 @@ const landingFiles: ReadonlyArray<string> = readdirSync(
   .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
   .map((name) => join(appDir, `src/components/landing/${name}`));
 
-/** Every internal path the landing's components and data write. */
 const links: ReadonlyArray<{ readonly file: string; readonly href: string }> =
   landingFiles.flatMap((file) =>
     [...readFileSync(file, "utf8").matchAll(/href[=:]\s*"(\/[^"#?]*)/g)].map(
@@ -80,7 +68,6 @@ const links: ReadonlyArray<{ readonly file: string; readonly href: string }> =
 
 describe("the landing page's links", () => {
   it("point only at pages the site mounts", () => {
-    // A silent zero would pass the dead-link filter without reading anything.
     expect(links.length).toBeGreaterThanOrEqual(8);
     expect(urls.size).toBeGreaterThanOrEqual(50);
 

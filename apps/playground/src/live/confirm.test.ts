@@ -1,18 +1,3 @@
-/**
- * Holds the premise the `confirm-dialog-lifecycle` probe is read against.
- *
- * The bugs these catch: a confirm that is counted twice (the probe's
- * single-report check would pass a dialog that fired `onConfirm` per render), a
- * cancel that reports a confirm (the destructive action would run on the safe
- * path), a locator that no longer names the shipped control (the window
- * probe would fail on a locator error instead of naming the contract that
- * moved), and a README check count that disagrees with the probe (it printed
- * **18** while `confirmSteps` asserts **17**).
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the repository's
- * own source, not a runtime path.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -45,26 +30,18 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/**
- * The `confirmSteps` effect, bounded to the next top-level declaration.
- *
- * It has no loop or helper that adds a check, so its `ctx.expect*` call sites
- * are the number of checks the window runs — which is what the README prints.
- */
 const confirmSteps = (() => {
   const start = scenarios.indexOf("const confirmSteps");
   const end = scenarios.indexOf("\nconst ", start + 1);
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
 })();
 
-/** The count the README prints for the confirmation probe, if any. */
 const printedCheckCount = (): number =>
   Number(
     /(\d+) checks, `--only confirm-dialog-lifecycle`/.exec(readme)?.[1] ??
       Number.NaN,
   );
 
-/** Replays `events` from a fresh flow. */
 const replay = (events: ReadonlyArray<ConfirmEvent>): ConfirmFlow =>
   events.reduce(confirmFlow, initialConfirmFlow);
 
@@ -85,8 +62,6 @@ describe("the confirmation flow the probe records", () => {
   });
 
   it("a second confirm is a second report, so the single-report check can fail", () => {
-    // The negative control duplicates the call: if the reducer collapsed two
-    // confirms into one, the probe's `confirms=1` would pass a real double-fire.
     expect(replay(["open", "confirm", "open", "confirm"]).confirms).toBe(2);
   });
 
@@ -102,12 +77,11 @@ describe("the confirmation flow the probe records", () => {
   it("names the shipped controls and the caller-owned close", () => {
     expect(shipped).toContain(`testId="${CONFIRM_CANCEL}"`);
     expect(shipped).toContain(`testId="${CONFIRM_ACCEPT}"`);
-    // Cancel is the surface's initial focus: `Enter` on an untouched dialog
-    // must take the safe path.
+
     expect(shipped).toContain(
       "initialFocus={() => cancel.current?.id ?? null}",
     );
-    // Confirm only reports: a dialog that closed itself would lose a failed save.
+
     expect(shipped).toContain("onClick={onConfirm}");
   });
 
@@ -119,9 +93,6 @@ describe("the confirmation flow the probe records", () => {
   });
 
   it("prints the check count the probe actually asserts", () => {
-    // The README printed 18 while the probe asserts 17: a count a reader uses
-    // to tell a partial run from a complete one, so both directions are held —
-    // an assertion added without the sentence, and a sentence edited alone.
     const asserted = confirmSteps.match(/ctx\.expect[A-Za-z]+\(/g)?.length ?? 0;
     expect(asserted).toBeGreaterThan(1);
     expect(printedCheckCount()).toBe(asserted);

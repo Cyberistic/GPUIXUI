@@ -12,14 +12,6 @@ import {
   type PreviewComboboxOption,
 } from "./combobox-preview";
 
-/**
- * Lucide geometry, inline.
- *
- * The preview draws in the browser, so it cannot use `@gpuixui/icons` — those
- * are markup strings for GPUix's native `<svg source>` host. The shipped
- * combobox already paints `chevron-down` and a check; the preview drew text
- * glyphs instead, which is why it read unlike the component.
- */
 const ChevronDown = () => (
   <svg
     aria-hidden="true"
@@ -66,18 +58,6 @@ const Search = () => (
   </svg>
 );
 
-/**
- * Browser previews for the Combobox page.
- *
- * The shipped component wraps GPUix's headless combobox: the runtime owns focus,
- * the highlighted row and the Enter/arrow/Escape handling while this package
- * owns the ranking, the option shape and the selection payload. The previews
- * below mirror the parts a reader can check by pressing — the ranked list, the
- * disabled row that is skipped, the create row that only appears when nothing
- * matches, and the trigger's value-vs-label split — and they say they are
- * browser renderings, like every other preview on the site.
- */
-
 interface PreviewComboboxProps {
   readonly id: string;
   readonly options: ReadonlyArray<PreviewComboboxOption>;
@@ -85,20 +65,12 @@ interface PreviewComboboxProps {
   readonly placeholder: string;
   readonly selected: ReadonlyArray<string>;
   readonly onSelect: (values: ReadonlyArray<string>) => void;
-  /** Absent when the preview does not offer a create row. */
+
   readonly onCreate?: (option: PreviewComboboxOption) => void;
   readonly multiple?: boolean;
   readonly disabled?: boolean;
 }
 
-/**
- * One preview control: the field-shaped trigger and the anchored popup.
- *
- * The popup is a sibling of the trigger inside a positioned root, because the
- * preview is not portalled — the shipped popup is an anchored layer too. Escape
- * returns the focus to the trigger; an outside press does not, because the
- * press already took the focus with it.
- */
 const PreviewCombobox = ({
   id,
   options,
@@ -181,7 +153,6 @@ const PreviewCombobox = ({
     if (key === "Enter" || key === " " || key === "ArrowDown") {
       event.preventDefault();
       if (!open) {
-        // The component starts on the chosen row when there is one.
         const chosen = options.find(
           (option) => option.value === selected[0] && option.disabled !== true,
         );
@@ -204,7 +175,7 @@ const PreviewCombobox = ({
 
   const onSearchChange = (next: string) => {
     setQuery(next);
-    // `autoHighlight="always"`: the first row that can be chosen is active.
+
     setHighlight(firstEnabled(visibleOptions(options, next)));
   };
 
@@ -350,7 +321,6 @@ const people: ReadonlyArray<PreviewComboboxOption> = [
   },
 ];
 
-/** A realistic composition: assign a reviewer by searching the whole team. */
 export const ComboboxDemo = () => {
   const [reviewer, setReviewer] = useState<ReadonlyArray<string>>(["ada"]);
   const [created, setCreated] = useState<ReadonlyArray<PreviewComboboxOption>>(
@@ -396,7 +366,6 @@ const labels: ReadonlyArray<PreviewComboboxOption> = [
   },
 ];
 
-/** Multiple mode: the popup stays open, the chosen order is the picked order. */
 export const ComboboxMultiple = () => {
   const [chosen, setChosen] = useState<ReadonlyArray<string>>(["perf", "docs"]);
 

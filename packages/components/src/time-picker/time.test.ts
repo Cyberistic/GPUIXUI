@@ -1,12 +1,3 @@
-/**
- * TimePicker's clock arithmetic.
- *
- * The bugs this suite guards: a canonical parser that accepted `9:30`; a
- * formatter that dropped the leading zero; minute arithmetic that did not carry
- * at the hour or wrap at midnight; an out-of-range segment that was stored
- * instead of clamped; and a `minuteStep` of zero that made arrow keys a no-op.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";

@@ -1,21 +1,3 @@
-/**
- * The `text-undo-lifecycle` probe: what `cmd-z` does to a controlled field and a
- * controlled text area in a window.
- *
- * The binding keeps the undo history itself (`cmd-z` / `shift-cmd-z`), so this
- * is one of the few input behaviours no component can implement and no headless
- * suite can prove: the `TestRenderer` reports a keystroke, not a restored
- * snapshot. The probe drives the shipped `Input` and `TextArea` and reads the
- * app's own state, so an undo the component never hears about fails by name.
- *
- * It also measures the two rules a plan needs beside that:
- *
- * - **A value pushed in from outside the field clears the history.** The app's
- *   "load" control sets the state without an edit; a `cmd-z` afterwards restores
- *   nothing, and the next edit undoes back to the pushed value.
- * - **The chord stays in the field.** A window handler registered beside the
- *   field sees none of it, exactly as it sees no `cmd-a`/`cmd-c`/`cmd-x`.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -41,10 +23,8 @@ import {
   textUndoReadout,
 } from "./text-undo.js";
 
-/** A key and the state it produces need a frame to commit. */
 const SETTLE = Duration.millis(40);
 
-/** Long enough that the next edit is its own undo step, not a coalesced one. */
 const GROUP = Duration.millis(900);
 
 const fieldStyle = {
@@ -71,7 +51,6 @@ export const TextUndoProbe = (): ReactNode => {
     setKeys((seen) => (Arr.contains(seen, key) ? seen : Arr.append(seen, key)));
   });
 
-  /** The app's edit path: the value the field reported, and one more edit. */
   const edited = (next: string): void => {
     setValue(next);
     setChanges((count) => count + 1);
@@ -190,14 +169,12 @@ export const textUndoSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const key = (chord: string) =>
       Effect.flatMap(ctx.host.key(chord), () => Effect.sleep(SETTLE));
 
-    // 1. An empty controlled field: nothing typed, no edit reported.
     yield* ctx.expectEqual(
       "the field starts empty and the app has seen no edit",
       yield* readout(),
       textUndoReadout("", 0, 0),
     );
 
-    // 2. A press focuses it, as the clipboard probe measured: keys follow focus.
     yield* press(TEXT_UNDO_IDS.field);
     yield* ctx.expectEqual(
       "a press focuses the field",
@@ -208,7 +185,6 @@ export const textUndoSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       TEXT_UNDO_IDS.field,
     );
 
-    // 3. One typed character is one edit the app hears.
     yield* key(TEXT_UNDO_TEXT.typed);
     yield* ctx.expectEqual(
       "a typed key reaches the controlled onChange",
@@ -216,8 +192,6 @@ export const textUndoSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       textUndoReadout(TEXT_UNDO_TEXT.typed, 1, 0),
     );
 
-    // 4. A re-render of the page keeps both the value and the history: the
-    //    binding only clears it when the *value prop* changes.
     yield* press(TEXT_UNDO_IDS.rerender);
     yield* ctx.expectEqual(
       "an unrelated re-render keeps the value",
@@ -225,7 +199,6 @@ export const textUndoSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       textUndoReadout(TEXT_UNDO_TEXT.typed, 1, 1),
     );
 
-    // 5. The field's own undo restores the snapshot and reports it as a change.
     yield* press(TEXT_UNDO_IDS.field);
     yield* key(TEXT_UNDO_KEYS.undo);
     yield* ctx.expectEqual(
@@ -234,14 +207,12 @@ export const textUndoSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       textUndoReadout("", 2, 1),
     );
 
-    // 6. The chord was the field's: the window handler beside it saw nothing.
     yield* ctx.expectEqual(
       "the field's undo reaches no window handler",
       yield* keyLog(),
       textUndoKeyLog([]),
     );
 
-    // 7. Redo restores the edit the undo took away.
     yield* key(TEXT_UNDO_KEYS.redo);
     yield* ctx.expectEqual(
       "shift-cmd-z redoes the edit the undo removed",
@@ -249,7 +220,6 @@ export const textUndoSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       textUndoReadout(TEXT_UNDO_TEXT.typed, 3, 1),
     );
 
-    // 8. And the history is a stack, not one snapshot: a second undo empties it.
     yield* key(TEXT_UNDO_KEYS.undo);
     yield* ctx.expectEqual(
       "a second cmd-z undoes the redone edit again",
@@ -257,8 +227,6 @@ export const textUndoSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       textUndoReadout("", 4, 1),
     );
 
-    // 9. A value pushed in from outside the field is the app's state, not an
-    //    edit: it paints, and it does not count as one.
     yield* press(TEXT_UNDO_IDS.load);
     yield* ctx.expectEqual(
       "the loaded value paints without an edit event",
@@ -266,7 +234,6 @@ export const textUndoSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       textUndoReadout(TEXT_UNDO_TEXT.loaded, 4, 1),
     );
 
-    // 10. The push cleared the history: there is nothing left to undo.
     yield* press(TEXT_UNDO_IDS.field);
     yield* key(TEXT_UNDO_KEYS.undo);
     yield* ctx.expectEqual(
@@ -275,7 +242,6 @@ export const textUndoSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       textUndoReadout(TEXT_UNDO_TEXT.loaded, 4, 1),
     );
 
-    // 11. The history starts again from the pushed value.
     yield* Effect.sleep(GROUP);
     yield* key(TEXT_UNDO_TEXT.later);
     yield* ctx.expectEqual(
@@ -290,7 +256,6 @@ export const textUndoSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       textUndoReadout(TEXT_UNDO_TEXT.loaded, 6, 1),
     );
 
-    // 12. A text area is a host of its own: its undo must reach the app too.
     yield* press(TEXT_UNDO_IDS.area);
     yield* key(TEXT_UNDO_TEXT.areaTyped);
     yield* ctx.expectEqual(
@@ -305,7 +270,6 @@ export const textUndoSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       textUndoAreaReadout("", 2),
     );
 
-    // 13. The positive control: a chord no field binds does reach the window.
     yield* press(TEXT_UNDO_IDS.control);
     yield* key(TEXT_UNDO_KEYS.control);
     yield* ctx.expectEqual(

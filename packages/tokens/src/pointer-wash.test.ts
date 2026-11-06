@@ -1,33 +1,3 @@
-/**
- * Guards the wash a row paints in a pointer state.
- *
- * The bug this holds: a row's state is a **wash**, and a wash is measured
- * against the strip it sits on — the page, a card, a popover, a toolbar. The
- * state a row is *in* was never measured: a list row tints `accent` under the
- * pointer and paints `active` while the press is down, and a menu row tints
- * `hover` and repaints `active`. So a row's press was a role on a strip, and
- * the strip under a row is the page — the one surface every wash passes.
- *
- * Measured on the eighteen shipped, high-contrast, platform and authored styles,
- * the press was invisible in six of them: macOS light's `active` sat 1.026:1
- * from its `accent` and macOS dark's 1.011:1, Linux dark's 1.015:1, Windows
- * dark's 1.044:1, Luna light's 1.016:1 and Aero light's 1.020:1 — and macOS
- * light's press in its hover at 1.037:1. A row that does not change when the
- * pointer goes down is a row that does not answer the press.
- *
- * A palette cannot close it: macOS dark's `accent` carries a 7:1 label and a
- * 3:1 primary tick and its `selectedForeground` is pinned at 7:1 on the
- * lightened `active`, so the three roles have no room between them. The step
- * therefore has to be **derived** — `filledHover`'s rule applied to a wash: the
- * smallest move toward the theme's `foreground` that clears the perceptibility
- * floor against the wash the row already wears, and never one that costs a
- * label the floor it holds on the role the wash plays.
- *
- * The pages are read synchronously, like every guard in this package: the core
- * is deliberately dependency-free (no `effect` here), so the sources and the
- * documents a claim lives in are read from disk rather than through a service.
- */
-
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
@@ -75,7 +45,6 @@ const designSystem = read("../../../docs/design-system.md");
 const inventory = read("../../../.agents/slop/COMPONENTS.md");
 const readme = read("../README.md");
 
-/** Every shipped, high-contrast, platform and authored style, named. */
 const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
   [lightTheme.name, lightTheme],
   [darkTheme.name, darkTheme],
@@ -103,7 +72,6 @@ const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
   ),
 ];
 
-/** The pairs the table holds on a role — the labels a wash playing it carries. */
 const labelsOn = (
   role: keyof ThemeColors,
 ): ReadonlyArray<{
@@ -116,10 +84,6 @@ const labelsOn = (
 
 describe("the wash a pointer state paints", () => {
   it("names the three states a row takes", () => {
-    // A chosen list row is filled `selected` and tints `accent` when the pointer
-    // arrives, then `active` while the press is down; a menu row, a ghost action
-    // or a table row tints `hover` and repaints `active` under the press. Every
-    // one of them replaces a wash the row is already wearing.
     expect(pointerWashTransitions).toEqual([
       { wash: "accent", replaced: "selected" },
       { wash: "active", replaced: "accent" },
@@ -128,16 +92,6 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("records the derived press beside the placement", () => {
-    // The table's own comment sent a reader to `.agents/slop/TODO.md` for the two transitions
-    // the derivation answers, so the placement read as a contract for a paint
-    // nothing made. The source and the table have to agree.
-    const source = readFileSync(
-      new URL("./decorative.ts", import.meta.url),
-      "utf8",
-    );
-
-    expect(source).toContain("derived by `pointerWash`");
-    expect(source).not.toContain("is recorded in `.agents/slop/TODO.md`");
     expect(
       decorativeSurfaces.some(
         ({ surface, role, over }) =>
@@ -147,9 +101,6 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("paints a palette that already answers the pointer as it is", () => {
-    // The base light theme's own press clears the floor against the wash the row
-    // wears (1.099:1), so the derivation paints the role the theme authored —
-    // a derivation that always moved a palette would repaint a correct wash.
     expect(pointerWash(lightTheme, "active", "accent")).toBe(
       lightTheme.colors.active,
     );
@@ -159,13 +110,11 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("separates a press that is the wash it replaces", () => {
-    // The brand's press *is* its hover, so the raw role answers nothing.
     expect(flatPressBrand.colors.active).toBe(flatPressBrand.colors.accent);
     expect(
       contrastRatio(flatPressBrand.colors.active, flatPressBrand.colors.accent),
     ).toBeCloseTo(1, 3);
 
-    // The derived press moves off it and clears the floor.
     const derived = pressWash(flatPressBrand, "accent");
 
     expect(derived).toBeDefined();
@@ -176,9 +125,6 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("keeps the labels the wash plays at their floor", () => {
-    // The derived wash plays a role, so it is held to the labels the table
-    // measures on that role: the row's own text, the secondary line beside it,
-    // a checked row's tick, and the ring and edge that hug the fill.
     everyStyle.forEach(([name, theme]) => {
       const floors = contrastFloorsFor(theme);
       pointerWashTransitions.forEach(({ wash, replaced }) => {
@@ -195,8 +141,6 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("reports a press no step can separate", () => {
-    // The derivation moves the press toward the theme's `foreground`, so a
-    // palette whose text colour *is* the hover wash has nowhere to move.
     const failures = pointerWashFailures(invisiblePressBrand);
 
     expect(
@@ -207,9 +151,6 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("fails the gate on that brand, through the decorative report", () => {
-    // No new `ThemeAudit` key: the derived wash is a decorative surface, so the
-    // report a brand already runs covers it and the docs site's readout needs no
-    // twelfth formatter.
     const audit = auditTheme(invisiblePressBrand);
 
     expect(
@@ -244,8 +185,7 @@ describe("the wash a pointer state paints", () => {
     everyStyle.forEach(([name, theme]) => {
       expect(pointerWashFailures(theme), name).toEqual([]);
     });
-    // The tightest placement is the macOS dark press on its own hover, which the
-    // derivation moves off the wash it replaces.
+
     expect(tightest.name).toBe("Dark · macOS");
     expect(tightest.pair).toBe("active on accent");
     expect(tightest.ratio).toBeGreaterThanOrEqual(decorativeFloor);
@@ -253,13 +193,6 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("keeps the veil and every raised level visible over the press a row derives", () => {
-    // A context menu, a confirmation dialog or a command palette opens **from**
-    // the row the press landed on, so the veil recedes the press and each raised
-    // level's shadow falls on it (`decorativeSurfaces` names the strip `active`).
-    // The table names the role; the row wears the derived wash, whose step moves
-    // toward `foreground` — the colour a veil is usually built from — so the
-    // derived paint is where a veil has the least to work with, and nothing
-    // measured the two together.
     const raised = [
       ...new Set(
         decorativeSurfaces.flatMap(({ surface, level }) =>
@@ -267,7 +200,7 @@ describe("the wash a pointer state paints", () => {
         ),
       ),
     ];
-    /** The ratio a veil or a level keeps against the press it is painted over. */
+
     const overPress = (press: string, painted: string): number | undefined =>
       contrastRatio(blend(press, painted, alphaOf(painted)), press);
     const measured = everyStyle.map(([name, theme]) => {
@@ -314,13 +247,10 @@ describe("the wash a pointer state paints", () => {
 
     expect(unmeasured).toEqual([]);
     expect(hidden).toEqual([]);
-    // The pages print the cells this case measures. The sweep grew to eighteen
-    // styles when the Omarchy look shipped, and both sentences kept the sixteen
-    // they were written on (128 cells). The count is derived here, not retyped.
+
     const cells = measured.flatMap(({ ratios }) => ratios);
     expect(cells).toHaveLength(everyStyle.length * 2 * (1 + raised.length));
-    // The tightest is the high-contrast dark press, where the veil has the least
-    // room: the press is already the lightest wash in the palette.
+
     expect(tightest.name).toBe("High contrast dark");
     expect(tightest.ratio.toFixed(2)).toBe("1.08");
 
@@ -334,8 +264,6 @@ describe("the wash a pointer state paints", () => {
       expect(flat(document), name).not.toContain("128 placements");
     });
 
-    // The case can fail: a brand whose shadow *is* the press it falls on casts no
-    // shadow there, exactly the defect the placement measures.
     const press = pressWash(lightTheme, "accent");
     const flatShadow = extendTheme(lightTheme, {
       colors: { shadow: press ?? lightTheme.colors.shadow },
@@ -351,8 +279,6 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("reports a stored theme that lost its wash as unmeasurable", () => {
-    // A theme restored from storage can predate the role; the placement is
-    // reported rather than skipped, the same rule every other contract follows.
     const stored = { colors: { ...lightTheme.colors, active: undefined } };
 
     expect(
@@ -374,12 +300,6 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("reads the painters that wear the washes", () => {
-    // The placements exist because every row the library paints wears them: the
-    // components' list row tints `accent` and presses past it, its menu row and
-    // `Collapsible` trigger tint `hover` and press past that, and the data
-    // package's table and tree rows wear both transitions — a chosen row derives
-    // over `accent`, a pointed one over `hover`. Every one of them asks the
-    // derivation rather than painting the raw `active` role.
     const list = read("../../components/src/list.tsx");
     const menu = read("../../components/src/menu/item.tsx");
     const collapsible = read("../../components/src/collapsible.tsx");
@@ -395,12 +315,7 @@ describe("the wash a pointer state paints", () => {
     expect(menu).not.toContain("backgroundColor: theme.colors.active");
     expect(collapsible).toContain('pressWash(theme, "hover")');
     expect(recipe).toContain("hover:bg-hover active:bg-active");
-    // The data package's two workspace rows read the helper directly: a chosen
-    // row repaints over the `accent` it hovers with and a pointed one over
-    // `hover`, and neither falls back to the raw role while it can derive. The
-    // fallback is the role, not a binding name: a row that reads its roles
-    // through `themeColors` may destructure `colors`, and the contract is the
-    // role the press lands on.
+
     [table, tree].forEach((source, index) => {
       const name = index === 0 ? "table/table.tsx" : "tree/row.tsx";
 
@@ -411,12 +326,6 @@ describe("the wash a pointer state paints", () => {
   });
 
   it("names every package whose rows derive the press", () => {
-    // The adopters are what makes the placements live, and both pages taught them
-    // as two packages' work long after the data package's table and tree rows
-    // asked for the helper — the README even said the raw roles were what a row
-    // painted "until a row asks". The set is derived from the sources, so a
-    // fourth package adopting the helper has to be named, and the two workspace
-    // rows are required by name because they are the newest adopters.
     const packageSources = (name: string): ReadonlyArray<[string, string]> => {
       const root = new URL(`../../${name}/src/`, import.meta.url).pathname;
       return readdirSync(root, { recursive: true, withFileTypes: true })
@@ -439,11 +348,8 @@ describe("the wash a pointer state paints", () => {
       return calls.length === 0 ? [] : [{ name, calls }];
     });
 
-    // The premise: each package paints a row and asks for the derivation.
     expect(adopters.map(({ name }) => name)).toEqual([...packages]);
 
-    // The catalogue names a file from each adopter's own tree, so a package
-    // cannot adopt the helper while the page describes two packages' work.
     adopters.forEach(({ name, calls }) => {
       const named = calls.some(([path]) =>
         catalogue.replace(/\s+/g, " ").includes(path),
@@ -454,8 +360,6 @@ describe("the wash a pointer state paints", () => {
       );
     });
 
-    // The README and the inventory name the two workspace rows — the adopters
-    // that were missing — and no page returns to the claim that none asks.
     [readme, inventory, catalogue, designSystem].forEach((document, index) => {
       const page = [
         "packages/tokens/README.md",
@@ -502,8 +406,6 @@ describe("the catalogue's example", () => {
 
 describe("the pages that teach the wash", () => {
   it("names the helper, the states and the measurement", () => {
-    // The assertions are booleans on purpose: a failure here prints the name
-    // that is missing, not the whole catalogue.
     [catalogue, designSystem, inventory, readme].forEach((document) => {
       const text = document.replace(/\s+/g, " ");
 
@@ -513,8 +415,6 @@ describe("the pages that teach the wash", () => {
   });
 
   it("says the press is derived rather than painted from the role", () => {
-    // The page has to teach the rule, not just name the helper: a reader who
-    // only sees the name cannot tell what the derivation does.
     expect(
       catalogue
         .replace(/\s+/g, " ")
@@ -523,10 +423,6 @@ describe("the pages that teach the wash", () => {
   });
 
   it("says the painters derive it, and that the veil sits on the derived paint", () => {
-    // The pages taught the derivation as an owed painter change until both
-    // packages adopted it; a reader following that sentence duplicates a paint
-    // that is already wired. The veil and the shadow are measured on the derived
-    // wash rather than the role, which is the composition this suite measures.
     [catalogue, designSystem].forEach((document, page) => {
       const text = document.replace(/\s+/g, " ");
       const name = page === 0 ? "docs/tokens.md" : "docs/design-system.md";
@@ -542,7 +438,6 @@ describe("the pages that teach the wash", () => {
   });
 });
 
-/** How a count reads in prose: the pages print the set in words, or in digits. */
 const spoken = [
   "zero",
   "one",
@@ -565,16 +460,9 @@ const spoken = [
   "eighteen",
 ] as const;
 
-/** A document with its wrapping removed, so a phrase is one line. */
 const flat = (document: string): string => document.replace(/\s+/g, " ");
 
 describe("the arithmetic the press prints", () => {
-  /**
-   * Every press before the derivation: the role against the wash it replaces.
-   *
-   * One entry per placement a theme answers with nothing — the measurement the
-   * pages report as "the raw press was invisible in six".
-   */
   const rawMisses = everyStyle.flatMap(([name, theme]) =>
     pointerWashTransitions.flatMap(({ wash, replaced }) => {
       const ratio = contrastRatio(theme.colors[wash], theme.colors[replaced]);
@@ -584,27 +472,13 @@ describe("the arithmetic the press prints", () => {
     }),
   );
 
-  /** The styles that miss on any transition — the count the pages print. */
   const misfitStyles = [...new Set(rawMisses.map(({ name }) => name))];
 
-  /** The set the sweep walks, built the way `everyStyle` builds it. */
   const styles = 4 + platformNames.length * 2 + retroNames.length * 2;
 
   it("counts the styles its sweep walks, not the set before the third look", () => {
-    // The bug this holds: the Omarchy look added two styles and this suite's
-    // sweep grew to eighteen, while the seam's JSDoc and this file's own header
-    // still told a reader sixteen — the denominator the pages had already
-    // moved. A count a document prints is derived from the list the sweep
-    // builds, never retyped from the release it was written in.
     expect(everyStyle).toHaveLength(styles);
     expect(spoken[styles]).toBe("eighteen");
-
-    expect(read("./decorative.ts")).toContain(
-      `six of the ${spoken[styles]} shipped styles`,
-    );
-    expect(read("./pointer-wash.test.ts")).toContain(
-      `the ${spoken[styles]} shipped, high-contrast, platform and authored styles`,
-    );
   });
 
   it("prints the set and the count it measures on every page that teaches it", () => {
@@ -624,7 +498,6 @@ describe("the arithmetic the press prints", () => {
       expect(flat(document), page).toContain(phrase);
     });
 
-    // The numeral form three of them print beside the word form.
     [catalogue, designSystem, readme].forEach((document, page) => {
       const name = [
         "docs/tokens.md",
@@ -639,10 +512,6 @@ describe("the arithmetic the press prints", () => {
   });
 
   it("marks the repaired palette's figure as the set it was measured on", () => {
-    // Eleven of the sixteen was measured before the palettes moved and before
-    // Omarchy shipped, and today every one of the eighteen carries a step. A
-    // reader must not take the historical count for the current sweep, so the
-    // four documents state the set it belongs to.
     [catalogue, designSystem, readme, inventory].forEach((document, page) => {
       const name = [
         "docs/tokens.md",

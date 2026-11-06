@@ -9,22 +9,9 @@ import {
 } from "./collection-index";
 import { collectionByOrigin, packageCollections } from "./collection-routes";
 
-/**
- * The index a collection serves at its own route.
- *
- * The bug guarded: `/icons`, `/editor`, `/files`, `/shell`,
- * `/dock` and `/media` answered **404** while every page under them
- * answered, because only three packages write an `index.mdx`. The fix derives
- * the page from the collection, so the failures are a collection with neither a
- * landing page nor the metadata that generates one (a dead section route) and
- * metadata for a route a site page already owns (a description of a page that
- * cannot be reached). Both are measured against the directories on disk.
- */
-
 const root = new URL("../../../../", import.meta.url);
 const docsDir = new URL("apps/docs/content/docs/", root);
 
-/** Every index page the site writes, as the URL it is served at. */
 const siteIndexes = (
   dir: URL,
   slugs: ReadonlyArray<string> = [],
@@ -45,7 +32,6 @@ interface Frontmatter {
   readonly description: string;
 }
 
-/** A mounted page's frontmatter, as the index would print it. */
 const frontmatterOf = (
   collection: (typeof packageCollections)[number],
   file: string,
@@ -71,7 +57,6 @@ const frontmatterOf = (
   return { title, description };
 };
 
-/** The rows a collection's index must print, read from the files on disk. */
 const rowsOnDisk = (
   collection: (typeof packageCollections)[number],
 ): ReadonlyArray<Frontmatter & { readonly url: string }> =>
@@ -98,8 +83,7 @@ const coverage = (): Coverage => {
   return packageCollections.reduce<Coverage>(
     (state, collection) => {
       const files = collectionPages(root, collection);
-      // A collection is mounted before its package writes a page, so an empty
-      // directory is not a route that needs an index yet.
+
       if (files.length === 0) return state;
 
       if (site.has(collection.route) || files.includes("index.mdx")) {
@@ -149,13 +133,11 @@ describe("the index a collection route serves", () => {
   it("lists nothing for a route a site page or a package's own index owns", () => {
     const page = { title: "Probe", description: "A page.", url: "/x" };
 
-    // The components, primitives and data lanes open with a site-written page,
-    // so generating a second one would describe a route nobody serves.
     expect(collectionIndexOf(collectionByOrigin.components, [page])).toBe(
       undefined,
     );
     expect(collectionIndexOf(collectionByOrigin.data, [page])).toBe(undefined);
-    // A package that has written no page has nothing for an index to list.
+
     expect(collectionIndexOf(collectionByOrigin.media, [])).toBe(undefined);
   });
 

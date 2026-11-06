@@ -18,26 +18,8 @@ import {
   type DividerKey,
 } from "@gpuixui/dock/logic";
 
-/**
- * Browser preview for the Workspace lane's panel group.
- *
- * `@gpuixui/dock`'s `PanelGroup` owns the shape: a fraction per pane, a
- * collapse flag, one divider between every adjacent pair, and the reducers that
- * resize, step and collapse. The preview draws that shape in the platform
- * theme's variables and calls the package's own reducers
- * (`normalizePanels`, `resizePanels`, `resizePanelsByKey`,
- * `togglePanelCollapsed`), so a drag, an arrow press and a collapse report the
- * layout the shipped control would report. Only the paint is the browser's.
- *
- * The shipped group converts a pixel delta against the pane space it measures
- * once in `onLayout`; the drawing is a fixed frame, so the conversion uses
- * `GROUP_WIDTH`. That number is the preview's, not the component's.
- */
-
-/** The frame's main axis, in pixels — the drawing's stand-in for `onLayout`. */
 export const GROUP_WIDTH = 620;
 
-/** The layout the preview opens at: a collapsible rail and two panes. */
 export const groupStart = (): PanelLayout =>
   new PanelLayout({
     orientation: "horizontal",
@@ -53,16 +35,9 @@ export const groupStart = (): PanelLayout =>
     ],
   });
 
-/** The main axis a group's fractions divide, minus its dividers. */
 export const groupAvailable = (count: number): number =>
   GROUP_WIDTH - (count - 1) * DIVIDER_WIDTH;
 
-/**
- * The layout a pointer drag produces.
- *
- * `start` is the pane list the press found, the way `PanelGroup` records it in
- * `onDragStart`; `delta` is the cumulative pixel distance from the press.
- */
 export const dragLayout = (
   layout: PanelLayout,
   index: number,
@@ -78,7 +53,6 @@ export const dragLayout = (
     ),
   });
 
-/** The layout a divider key produces, stepped in pixels like the component. */
 export const keyLayout = (
   layout: PanelLayout,
   index: number,
@@ -96,12 +70,6 @@ export const keyLayout = (
   });
 };
 
-/**
- * The divider key a browser `KeyboardEvent.key` names.
- *
- * The runtime hands the native divider its own key names (`left`, `home`), so
- * this map is the DOM boundary, not a second copy of the key list.
- */
 export const browserDividerKey = (key: string): DividerKey | undefined => {
   const keys: Readonly<Record<string, DividerKey>> = {
     ArrowLeft: "left",
@@ -114,7 +82,6 @@ export const browserDividerKey = (key: string): DividerKey | undefined => {
   return keys[key];
 };
 
-/** The readout under the frame: each pane's share of the group. */
 export const shareLabel = (layout: PanelLayout): string =>
   normalizePanels(layout.panels)
     .map(
@@ -170,13 +137,11 @@ const PaneBody = ({ id }: { readonly id: string }): ReactNode => {
 };
 
 export interface PanelGroupFrameProps {
-  /** The persisted shape, controlled the way `PanelGroup` takes it. */
   readonly layout: PanelLayout;
-  /** Reports the next shape after a drag, a key or a collapse. */
+
   readonly onChange: (layout: PanelLayout) => void;
 }
 
-/** The drawing itself: `PanelGroup`'s parts, over the package's reducers. */
 export const PanelGroupFrame = ({ layout, onChange }: PanelGroupFrameProps) => {
   const panels = normalizePanels(layout.panels);
   const drag = useRef<
@@ -299,7 +264,6 @@ export const PanelGroupFrame = ({ layout, onChange }: PanelGroupFrameProps) => {
   );
 };
 
-/** The page's preview: the frame and the shares it currently paints. */
 export const PanelGroupDemo = () => {
   const [layout, setLayout] = useState(groupStart);
 

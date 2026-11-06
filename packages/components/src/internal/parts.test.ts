@@ -1,14 +1,3 @@
-/**
- * The position-check unit suite.
- *
- * The bug these guard: a part of one component used inside the wrong parent of
- * the same component (`TabsContent` inside `TabsList`) used to render silently.
- * `assertParts` now rejects it, while leaving decoration — a Button, a Badge, a
- * `div`, text — alone, because decorative children are not misplaced parts.
- *
- * The real-renderer half of this guard is `src/behaviour/parts.test.tsx`.
- */
-
 import { createElement, Fragment, type ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import {

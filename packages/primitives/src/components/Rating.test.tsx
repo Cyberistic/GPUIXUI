@@ -1,12 +1,3 @@
-/**
- * `Rating` — the element tree the runtime receives.
- *
- * The guarded defects: an arrow that wraps instead of clamping, a group with one
- * tab stop per star instead of one for the whole rating, an unrated group with
- * no tab stop at all, and a selected star painting the same icon as an empty one.
- * The native focus movement is the runtime suite's job.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
@@ -80,12 +71,6 @@ describe("Rating", () => {
   });
 
   it("paints one star for a count it cannot lay out, instead of throwing", () => {
-    // The bug guarded: `max` is caller arithmetic (a measured total, a config
-    // value), and a non-finite count reached `Arr.range(1, max)`, whose
-    // `new Array(Infinity)` throws `RangeError: Invalid array length` — the
-    // whole render died — while `NaN` painted one star but named it "1 of NaN",
-    // a count no reader can use. One star is the count the value, the keys and
-    // the tab stop already read for it (`core/rating.ts`'s `starCount`).
     const infinite = render(
       { label: "Quality", max: Number.POSITIVE_INFINITY },
       0,
@@ -97,12 +82,6 @@ describe("Rating", () => {
   });
 
   it("paints the documented five for a count a store never wrote", () => {
-    // The bug guarded: a widget is saved with its star count, and JSON keeps a
-    // field the record never carried as `null` rather than `undefined`. `max`
-    // was read with `=== undefined`, so a restored rating painted **one** star
-    // and clamped every score onto it, although the prop's documented default
-    // is five. A count that *is* there and cannot be laid out is still one star.
-    // The cast is the storage boundary: a saved record stores absence as null.
     const stored = { max: null } as unknown as RatingProps;
     expect(
       starsOf(render({ ...stored, label: "Quality" }, 0)).map(labelOf),
@@ -180,10 +159,6 @@ describe("Rating", () => {
   });
 
   it("cuts a half star from the filled glyph instead of faking the score", () => {
-    // The bug guarded: a half score could only be approximated — the recorded
-    // limitation said clipping did not exist, while the runtime clips an
-    // `overflow: hidden` box. The half star is the outline plus the filled
-    // glyph in a box half the star wide, painted whole and cut at the midpoint.
     const stars = starsOf(render({ allowHalf: true }, 3.5));
     const half = stars[3] ?? expect.fail("no fourth star");
     const children = elementChildren(half);
@@ -201,8 +176,6 @@ describe("Rating", () => {
     expect(style["overflow"]).toBe("hidden");
     expect(style["pointerEvents"]).toBe("none");
 
-    // The clipped cell repeats the resting cell, so the glyph is the outline's
-    // own size in the outline's own place — cut, never scaled.
     const cell = elementChildren(clip)[0] ?? expect.fail("no cell");
     expect(expectSome(hostStyle(cell, "minWidth"))).toBe(targetSize.minimum);
     expect(expectSome(hostStyle(cell, "padding"))).toBe(
@@ -216,7 +189,6 @@ describe("Rating", () => {
       testTheme.colors.primary,
     );
 
-    // The whole stars around it are untouched: one glyph each.
     expect(
       elementChildren(stars[2] ?? expect.fail("no third star")),
     ).toHaveLength(1);
@@ -240,9 +212,6 @@ describe("Rating", () => {
   });
 
   it("asks where on the star a press landed", () => {
-    // The half is the pointer's: the renderer hands the event to the component,
-    // which measures the star, so the pure tree must call the score seam rather
-    // than reporting the star index.
     const onSelect = vi.fn();
     const scoreAt = vi.fn(() => 3.5);
     const stars = starsOf(
@@ -260,8 +229,6 @@ describe("Rating", () => {
   });
 
   it("previews the half a pointer moves over", () => {
-    // The preview answers the pointer the way the press will, so hovering the
-    // left half of a star previews the half score, not the whole star.
     const onHover = vi.fn();
     const scoreAt = vi.fn(() => 3.5);
     const element = renderRating(
@@ -290,14 +257,11 @@ describe("Rating", () => {
     expect(
       hostProp(stars[3] ?? expect.fail("no star"), "onMouseMove"),
     ).toStrictEqual(Option.none());
-    // A whole-star rating still drops the fraction rather than painting it.
+
     expect(elementChildren(stars[3] ?? expect.fail("no star"))).toHaveLength(1);
   });
 
   it("previews the star under the pointer in the paint only", () => {
-    // The bug guarded: a rating had no hover preview, so a pointer gave no hint
-    // which score a press would choose. The preview must not become the answer:
-    // the announced state and the tab stop keep reading the value.
     const onHover = vi.fn();
     const onHoverEnd = vi.fn();
     const element = renderRating({}, testTheme, state(2), focus(), handlers(), {
@@ -331,7 +295,6 @@ describe("Rating", () => {
       stars.map((star) => Option.getOrUndefined(hostProp(star, "tabIndex"))),
     ).toStrictEqual([-1, 0, -1, -1, -1]);
 
-    // The star under the pointer reports it; leaving the group clears it.
     expectSome(hostHandler(stars[3] ?? expect.fail("no star"), "onMouseEnter"))(
       keyEvent("click"),
     );
@@ -387,15 +350,11 @@ describe("Rating", () => {
   });
 
   it("keeps one star when an arrow is nudged at the rated end", () => {
-    // The bug guarded: ArrowLeft at one star reported 0, so the group cleared a
-    // rating the docs say only Delete clears — one keystroke of data loss while
-    // the reader was trying to stay put.
     const onMove = vi.fn();
     const rated = render({}, 1, undefined, { onMove });
     expectSome(hostHandler(rated, "onKeyDown"))(keyEvent("left"));
     expect(onMove).toHaveBeenLastCalledWith(1);
-    // An unrated group stays unrated on the same key, and zero is still the
-    // clear key's report.
+
     const unrated = render({}, 0, undefined, { onMove });
     expectSome(hostHandler(unrated, "onKeyDown"))(keyEvent("left"));
     expect(onMove).toHaveBeenLastCalledWith(0);
@@ -420,15 +379,12 @@ describe("Rating", () => {
       const onSelect = vi.fn();
       const clicked = render(props, 3, undefined, { onSelect });
       const target = starsOf(clicked)[1] ?? expect.fail("no star");
-      // A control that refuses input installs no press handler at all, so a
-      // caller's `onClick` is not installed either (the `composePress` rule).
+
       expect(hostHandler(target, "onClick")).toStrictEqual(Option.none());
     });
   });
 
   it("declares the keyboard ring on every interactive star, never a shadow", () => {
-    // Every star is a tab stop candidate, so every star declares the outline;
-    // the runtime paints it on the one that holds keyboard focus.
     const element = render({}, 3, 2);
     const ringed = starsOf(element).map((star) => {
       const style = expectSome(hostStyleRecord(star));
@@ -441,8 +397,6 @@ describe("Rating", () => {
   });
 
   it("reserves the pressable-target floor around every star", () => {
-    // The bug: the glyph plus a 2px hairline was the whole press target (20px at
-    // `md`, 18px at `sm`), under WCAG 2.2 SC 2.5.8's 24px floor.
     Arr.forEach(starsOf(render({}, 3)), (star) => {
       expect(expectSome(hostStyle(star, "minWidth"))).toBe(targetSize.minimum);
       expect(expectSome(hostStyle(star, "minHeight"))).toBe(targetSize.minimum);
@@ -450,11 +404,6 @@ describe("Rating", () => {
   });
 
   it("forgets a focused star the rating no longer draws", () => {
-    // The bug guarded: `max` is caller arithmetic, so a rating shrunk from five
-    // stars to three kept reporting `focused: true` to its `style` callback
-    // while the star that held native focus was unmounted, and the next
-    // activating key clamped the stale index onto the new tail instead of
-    // choosing the star the group can actually reach.
     const seen: RatingState[] = [];
     const onSelect = vi.fn();
     const element = render(
@@ -509,9 +458,6 @@ describe("Rating", () => {
 
 describe("a rating's address and help", () => {
   it("announces the help on the group and addresses the star that holds the tab stop", () => {
-    // Bug guarded: a form could not focus the rating it failed on, and the help
-    // a `Label` paints reached nobody. Stars are the focusable elements, so the
-    // address lands on the tab stop rather than the unfocusable group.
     const ref = vi.fn();
     const layout = vi.fn();
     const element = render(

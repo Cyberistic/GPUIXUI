@@ -1,16 +1,3 @@
-/**
- * The hero deck: one platform window per desktop in `landingPlatformOrder`,
- * each running the **conversations block** in its own dress — macOS Messages,
- * Windows 11 Fluent and Linux Breeze — so each card is recognisably its
- * desktop.
- *
- * macOS and Windows show on the light palette, Linux on the dark one. The
- * shuffle pauses on hover; the stack is a clean fan with no rotation.
- *
- * Omarchy is not a fourth desktop: it is the Linux desktop following your own
- * theme, so its claims sit under the deck as four small cards instead of a
- * fourth window.
- */
 import { Fragment, useEffect, useState, type CSSProperties } from "react";
 import {
   darkTheme,
@@ -28,27 +15,18 @@ import { usePrefersReducedMotion } from "./reduced-motion";
 
 const SHUFFLE_MS = 1600;
 
-/** The library's platform name for a landing card. */
 const platformOfDesktop: Readonly<Record<Platform["id"], PlatformName>> = {
   macos: "darwin",
   windows: "win32",
   linux: "linux",
 };
 
-/** The theme a card paints: Linux on the dark palette, the others on light. */
 const desktopTheme = (id: Platform["id"]): Theme =>
   platformTheme(id === "linux" ? darkTheme : lightTheme, platformOfDesktop[id]);
 
-/** The card the shuffle raises next; a pure function so the wrap is testable. */
 export const nextDesktop = (top: number): number =>
   (top + 1) % platforms.length;
 
-/**
- * The recipe line: the five things GPUIxUI is made of, read as one equation.
- *
- * The hero says what the library looks like; this says what it is built from,
- * so a reader who knows shadcn or Base UI can place it before scrolling.
- */
 export function LandingFormula() {
   const parts = ["GPUI", "React", "shadcn", "Base UI", "Tailwind"] as const;
 
@@ -88,8 +66,6 @@ export function Hero() {
     setPaused(true);
   };
 
-  // The showcase's theme tile names a platform; the deck is the page's
-  // platform surface, so it follows that choice instead of keeping its own.
   useEffect(() => {
     const onPlatform = (event: Event): void => {
       const id = event instanceof CustomEvent ? String(event.detail) : "";
@@ -149,12 +125,6 @@ export function Hero() {
   );
 }
 
-/**
- * The four claims Omarchy makes, under the deck.
- *
- * They sit where the fourth desktop stood: same width as the deck, four small
- * cards in one row on a desktop and two columns on a phone.
- */
 function OmarchyStrip() {
   return (
     <div className="landing-omarchy">
@@ -177,7 +147,6 @@ function OmarchyStrip() {
   );
 }
 
-/** One card's mark: a palette, a terminal, code brackets, a chip. */
 function OmarchyGlyph({ name }: { name: OmarchyIcon }) {
   return (
     <svg
@@ -221,10 +190,6 @@ function OmarchyGlyph({ name }: { name: OmarchyIcon }) {
   );
 }
 
-/**
- * The desktop's app tiles. Decorative only: the dock and taskbar are
- * illustration, not controls.
- */
 const DOCK_TONES = [
   "sky",
   "teal",
@@ -239,7 +204,6 @@ const DOCK_TONES = [
 
 const WINDOW_TONES = ["blue", "green", "amber", "sky"] as const;
 
-/** One platform desktop, with the conversations block floating on it. */
 function PlatformMini({
   platform,
   position,
@@ -274,7 +238,6 @@ function PlatformMini({
   );
 }
 
-/** macOS: the thin menu bar and the translucent dock. */
 function MacMenuBar() {
   return (
     <div aria-hidden="true" className="landing-menubar">
@@ -306,7 +269,6 @@ function MacDock() {
   );
 }
 
-/** Windows 11: the centred acrylic taskbar. */
 function WindowsTaskbar() {
   return (
     <div aria-hidden="true" className="landing-taskbar">
@@ -333,7 +295,6 @@ function WindowsTaskbar() {
   );
 }
 
-/** Linux: the top panel and the floating dock. */
 function LinuxPanel() {
   return (
     <div aria-hidden="true" className="landing-lnx-panel">
@@ -365,7 +326,6 @@ function LinuxDock() {
   );
 }
 
-/** The menu bar's marks; the desktop is decoration, not iconography. */
 function AppleGlyph() {
   return (
     <svg

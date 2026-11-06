@@ -11,12 +11,6 @@ const copyLabel = {
 
 type CopyState = keyof typeof copyLabel;
 
-/**
- * A page's copyable source, in the disclosure a block page ends with.
- *
- * The block pages and the sidebar page share it: both show a rendering first,
- * then the `@gpuixui/*` recipe a reader copies.
- */
 export function RecipeSource({
   label,
   source,

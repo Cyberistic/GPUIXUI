@@ -1,19 +1,3 @@
-/**
- * The offscreen host's own rules, measured against a fake renderer.
- *
- * A real `TestRenderer` can only tell you that a scenario passed, not *why*: a
- * click aimed at a `<virtual-list>` paints bounds nowhere, a subtree's text is a
- * join, and a style the runtime reports with the wrong type must fail the
- * scenario rather than be coerced. Those are this adapter's decisions, so they
- * are tested on a renderer a test can inspect — the real renderer is exercised by
- * the playground's smoke suite.
- *
- * The bug the drag cases guard: the host sent moves with **no** held button
- * while a window's own drag reports the primary one, so a component that ends a
- * gesture on an unheld move (a divider, because a window the pointer left never
- * delivers the release) cancelled the whole drag and the suite measured a
- * column that never resized.
- */
 import { describe, expect, it } from "@effect/vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -24,7 +8,6 @@ import {
   type NativeRenderer,
 } from "./native.js";
 
-/** The tree every case shares: a painted ancestor, an unpainted list, a row. */
 const elements: ReadonlyArray<NativeElement> = [
   { id: 1, children: [2] },
   { id: 2, children: [3, 4], parentId: 1, testId: "list" },
@@ -46,12 +29,10 @@ const elements: ReadonlyArray<NativeElement> = [
   { id: 6, children: [], parentId: 1, testId: "focused" },
 ];
 
-/** Only the root paints: the list and its rows report no bounds of their own. */
 const painted: Readonly<Record<number, Bounds>> = {
   1: { x: 0, y: 0, width: 200, height: 100 },
 };
 
-/** The renderer the cases share; `fake` wraps it in a host. */
 const fakeRenderer = (focusedId: number | null = 6) => {
   const calls: Array<string> = [];
   const byId = new Map(elements.map((element) => [element.id, element]));
@@ -89,7 +70,7 @@ const fakeRenderer = (focusedId: number | null = 6) => {
         rects: [{ x: 1, y: 2, width: 3, height: 4 }],
       },
     ],
-    // The pinned `index.d.ts` says string; the runtime returns this object.
+
     getA11yTree: () => ({
       root: "a",
       nodes: {
@@ -121,8 +102,7 @@ describe("createTestHost", () => {
     const tree = host.a11yTree();
     expect(tree?.root).toEqual(Option.some("a"));
     const nodes = tree?.nodes ?? [];
-    // The dump keys nodes by an ephemeral letter and lists one with no `aria`:
-    // a scenario must see the described node and never the key.
+
     expect(nodes).toHaveLength(1);
     expect(nodes[0]?.role).toEqual(Option.some("Button"));
     expect(nodes[0]?.label).toEqual(Option.some("Delete note"));
@@ -132,8 +112,6 @@ describe("createTestHost", () => {
   });
 
   it("reports an a11y dump it cannot decode as absent", () => {
-    // The typings declare a string, so a renderer that really returns one is
-    // the shape change this guards: absence, never a coerced empty tree.
     const host = createTestHost({
       ...fakeRenderer().renderer,
       getA11yTree: () => "text: painted",
@@ -177,9 +155,7 @@ describe("createTestHost", () => {
   it("drops files at the nearest painted ancestor with every path", () => {
     const { host, calls } = fake();
     host.fileDrop("row", ["/tmp/alpha.txt", "/tmp/beta.txt"]);
-    // Flush first: the drop hit-tests the painted layout, which a scenario that
-    // just replaced the view has not painted yet. Dispatch and flush after: the
-    // raw native call queues its event.
+
     expect(calls).toEqual([
       "flush",
       "drop 100,50 /tmp/alpha.txt,/tmp/beta.txt",
@@ -203,8 +179,7 @@ describe("createTestHost", () => {
       (style) => style.backgroundColor,
     );
     expect(background).toEqual(Option.some("#ff0000"));
-    // A value the runtime reported with an unexpected type is a defect a
-    // scenario must see, so the snapshot is absent rather than coerced.
+
     expect(host.paintedStyle("malformed")).toBeNull();
     expect(host.paintedStyle("row")).toBeNull();
   });
@@ -248,12 +223,6 @@ describe("createTestHost", () => {
   });
 
   it("reports the held button on every move a drag synthesises", () => {
-    // The bug this guards: the host sent moves with **no** held button, while a
-    // window's own drag reports the primary one (`pressedButton: 0`). A component
-    // that ends its gesture on a move holding none — the rule the dock's and the
-    // data table's dividers follow, because a window the pointer left never
-    // delivers the release — then cancelled every move the offscreen host
-    // produced, so a drag that works in a window resized nothing in the suite.
     const { host, calls } = fake();
     host.drag("row", 40, 0, 2);
     expect(Arr.filter(calls, (call) => call.startsWith("move "))).toEqual([

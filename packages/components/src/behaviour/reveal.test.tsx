@@ -1,18 +1,3 @@
-/**
- * Reveal in the real GPUix renderer.
- *
- * The bugs these guard: content that paints at rest on its first frame (no
- * arrival at all); a direction that travels the wrong way or owns the wrong
- * axis; a "none" that still moves; a reduced run that still waits for the clock;
- * an `open={false}` that paints against its contract; an exit that unmounts
- * before its tween; and a delay handed to the runtime in milliseconds where it
- * reads seconds.
- *
- * The motion clock is paused for the frame readings, so an entry's offset is the
- * declared distance rather than wherever real time had got. The exit's unmount is
- * a real timer, so that half polls.
- */
-
 import { describe, expect, it } from "vitest";
 import type { ReactNode } from "react";
 import { requireBounds, settle, waitFor } from "../internal/interaction.js";
@@ -20,14 +5,12 @@ import { renderComponent } from "../internal/test-root.js";
 import { MotionProvider } from "../motion.js";
 import { Reveal } from "../reveal.js";
 
-/** A reveal inside a fixed frame, so a shifted child is measurable. */
 const framed = (node: ReactNode): ReactNode => (
   <div testId="frame" style={{ display: "flex", flexDirection: "column" }}>
     {node}
   </div>
 );
 
-/** How far the reveal sits from the frame's top-left corner on one axis. */
 const offsetOf = (
   page: ReturnType<typeof renderComponent>,
   axis: "x" | "y",
@@ -125,9 +108,6 @@ describe("Reveal", () => {
   });
 
   it("drops the stagger with the journey under the reduced preference", () => {
-    // The bug this guards: `delayMs` was spread onto the reduced timing, and the
-    // runtime waits a delay out *before* an instant assignment — so a reduced
-    // reveal sat at its first frame for the whole stagger before appearing.
     const shown = (
       <MotionProvider preference="reduced">
         {framed(<Reveal testId="reveal" distance={12} delayMs={300} />)}
@@ -161,7 +141,7 @@ describe("Reveal", () => {
 
       page.rerender(framed(<Reveal testId="reveal" open={false} />));
       settle(page);
-      // The exit tween runs before the subtree goes away.
+
       expect(page.renderer.findByTestId("reveal")).toBeDefined();
       await waitFor(() =>
         expect(page.renderer.findByTestId("reveal")).toBeUndefined(),

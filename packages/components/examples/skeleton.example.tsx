@@ -1,17 +1,8 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Skeleton example: a card whose content has not arrived.
- *
- * The blocks reserve the box the real content will paint: a caption line, two
- * body lines and an avatar circle. The last line keeps its still frame, the
- * shape a reduced-motion preference asks for.
- */
-
 import { Card } from "../src/card.js";
 import { useTheme } from "../src/internal/theme.js";
 import { Skeleton } from "../src/skeleton.js";
 
-/** The loading shape of a profile card. */
 export const SkeletonExample = () => {
   const theme = useTheme();
   return (

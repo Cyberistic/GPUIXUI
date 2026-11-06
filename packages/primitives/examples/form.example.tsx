@@ -1,16 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Form example: a project-creation form.
- *
- * A controlled form, not a field sampler: every value lives in the caller, the
- * save button shows the busy state the library supports, and the progress bars
- * appear only while the request is in flight — one reporting work buffered
- * ahead of the value. Each field's copy is written once and spread into both the
- * visible `Label` and the control, because the runtime has neither
- * `aria-labelledby` nor `aria-describedby` (see `docs/label.mdx`). The two text
- * fields hand their ref to both, so pressing a label focuses the field it names.
- */
-
 import { useRef, useState, type ReactElement } from "react";
 import type { PublicInstance } from "@gpuix/react";
 import {
@@ -37,26 +25,16 @@ const REGIONS = [
   { value: "legacy", label: "Legacy region (read-only)", disabled: true },
 ] as const;
 
-/**
- * One field's copy, written once.
- *
- * The `Label` paints `description`; the field's own prop is what assistive
- * technology hears, because 0.11.0 has neither `aria-labelledby` nor
- * `aria-describedby` to connect the two nodes.
- */
 const copy = (label: string, description: string) => ({ label, description });
 
 const NAME = copy("Project name", "Shown in the workspace switcher.");
 const OWNER = copy("Owner email", "The person who receives access requests.");
 const NOTES = copy("Description", "Markdown is not interpreted.");
 
-/** A project name longer than this is refused by the action, not the field. */
 const NAME_LIMIT = 60;
 
-/** Whether the name is past the length the action accepts. */
 const overLimit = (name: string): boolean => name.length > NAME_LIMIT;
 
-/** A form with four controls, a byte-sized progress state and a busy action. */
 export const FormExample = (): ReactElement => {
   const [name, setName] = useState("Atlas");
   const [owner, setOwner] = useState("");
@@ -98,9 +76,7 @@ export const FormExample = (): ReactElement => {
             invalid={overLimit(name)}
             testId="form-example-name"
           />
-          {/* The runtime applies a field's `value` only when it changed, so a
-              cap cannot take the sixty-first character back; the form counts and
-              refuses instead (`docs/input.mdx` §Theming). */}
+          {}
           <Text
             role="caption"
             tone={overLimit(name) ? "destructive" : "muted"}
@@ -164,8 +140,7 @@ export const FormExample = (): ReactElement => {
                 <ProgressIndicator />
               </ProgressTrack>
             </Progress>
-            {/* A download's held-ahead share: the segment between the value
-                and the buffer is what is already received. */}
+            {}
             <Progress value={42} buffer={78} label="Uploading assets" />
           </Stack>
         ) : null}

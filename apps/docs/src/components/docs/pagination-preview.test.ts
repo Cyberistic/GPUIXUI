@@ -15,16 +15,6 @@ import {
   type PageItem,
 } from "./pagination-preview";
 
-/**
- * The pagination preview's arithmetic is the component's, and a drawing cannot
- * show whether it is: a window that grows at the edges still looks like a
- * pagination control, and an ellipsis over a single hidden page still reads as
- * "more pages" until the reader counts. These cases hold the preview's copy of
- * `pageWindow` to the component's own function over a sweep, and pin the two
- * things the page prints — the crops and the row range.
- */
-
-/** The component's entries, in the preview's shape: the ellipsis carries no page. */
 const shape = (
   entries: ReadonlyArray<ComponentPageItem>,
 ): ReadonlyArray<PageItem> =>
@@ -34,7 +24,6 @@ const shape = (
       : { kind: "ellipsis" },
   );
 
-/** The window as a page prints it: numbers, with `…` for a gap. */
 const trail = (entries: ReadonlyArray<PageItem>): string =>
   entries
     .map((entry) => (entry.kind === "page" ? String(entry.page) : "…"))
@@ -46,8 +35,6 @@ const pagesFrom = (count: number): ReadonlyArray<number> =>
 
 describe("the preview's page window", () => {
   it("matches the component for every page, sibling count and edge setting", () => {
-    // The equality is the guard: every crop the preview paints is the crop the
-    // component would paint, including the clamped ones outside the range.
     interface Drift {
       readonly input: string;
       readonly preview: string;
@@ -88,10 +75,10 @@ describe("the preview's page window", () => {
     expect(trail(pageWindow({ page: 10, pageCount: 10 }))).toBe(
       "1 … 6 7 8 9 10",
     );
-    // A gap of one renders the page itself, so the crop collapses to the trail.
+
     expect(trail(pageWindow({ page: 8, pageCount: 8 }))).toBe("1 … 4 5 6 7 8");
     expect(trail(pageWindow({ page: 2, pageCount: 7 }))).toBe("1 2 3 4 5 6 7");
-    // The two knobs the page documents.
+
     expect(trail(pageWindow({ page: 3, pageCount: 20, siblingCount: 2 }))).toBe(
       "1 2 3 4 5 6 7 … 20",
     );
@@ -102,8 +89,6 @@ describe("the preview's page window", () => {
   });
 
   it("never puts an ellipsis over a gap of one or less", () => {
-    // The defect the component's own sweep guards: `1 … 2 3 4 5 6 7 8` was wider
-    // than the trail it was cropping.
     const broken = pagesFrom(12).flatMap((page) =>
       [{ page, pageCount: 12 }].flatMap((input) => {
         const entries = pageWindow(input);

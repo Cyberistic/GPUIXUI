@@ -1,9 +1,3 @@
-/**
- * The launch film's takes (plan 060), one per shot that shows GPUIxUI. Each is
- * a real tree under real input; `take.ts` captures it.
- *
- *   nub apps/playground/dist/film/takes.js <take> <outDir>
- */
 import { Tabs, TabsList, TabsTrigger } from "@gpuixui/components/tabs";
 import {
   Button,
@@ -44,7 +38,6 @@ import { capture, type Take, type Waypoint } from "./take.js";
 
 const mac = platformTheme(lightTheme, "darwin");
 
-/** A 960×540 stage (1920×1080 captured) holding one control, centred. */
 const stage = (theme: Theme, child: ReactNode) => (
   <ThemeProvider theme={theme}>
     <div
@@ -64,14 +57,11 @@ const stage = (theme: Theme, child: ReactNode) => (
 
 const macro = (k: number) => magnify(mac, k);
 
-/** A beat of the score (120 BPM) in frames: 15. */
 const BEAT = (30 * 60) / 120;
 
-/** The Omarchy shot's theme, one new `colors.toml` per beat. */
 const omarchyAt = (frame: number): OmarchyLook =>
   omarchyLooks[Math.min(3, Math.floor(frame / BEAT))] ?? "tokyo-night";
 
-/** The Settings block in its window, restyled by its own Look control. */
 const SettingsWindow = () => {
   const [look, setLook] = useState<Look>("darwin");
   const [dark, setDark] = useState(false);
@@ -105,11 +95,8 @@ const SettingsWindow = () => {
   );
 };
 
-/** The macOS look with an opaque window: what the offscreen renderer can paint
- * of a vibrant one (the blur is the window server's). */
 const macWindow = extendTheme(mac, { window: "opaque" });
 
-/** A Mac-app block, 1100×700, with the lights the OS would draw over it. */
 const macApp = (
   view: ReactNode,
   pointer: ReadonlyArray<Waypoint>,
@@ -131,7 +118,6 @@ const macApp = (
   keys,
 });
 
-/** A press on `testId` at `frame`, arriving from `from` and settling near it. */
 const pressAt = (
   testId: string,
   frame: number,
@@ -141,11 +127,10 @@ const pressAt = (
   { frame: frame - 4, aim: { testId } },
   { frame, aim: { testId }, down: true },
   { frame: frame + 3, aim: { testId } },
-  // At rest on a fixed point: the press may remove its own target (a photo opens).
+
   { frame: 74, aim: { x: from.x - 80, y: from.y - 60 } },
 ];
 
-/** `text` typed one character every `every` frames from `frame`. */
 const typing = (
   text: string,
   frame: number,
@@ -156,7 +141,6 @@ const typing = (
     keys: char === " " ? "space" : char,
   }));
 
-/** The desktop block: Start pressed at frame 24, a window raised at 60. */
 const desktop = (look: DesktopLook): Take => ({
   width: 1280,
   height: 800,
@@ -174,7 +158,6 @@ const desktop = (look: DesktopLook): Take => ({
   ],
 });
 
-/** An opening close-up: half a second (one beat) of one control at `k`×. */
 const closeUp = (
   k: number,
   child: ReactNode,
@@ -189,7 +172,6 @@ const closeUp = (
   keys,
 });
 
-/** A tap on `testId` on frame 5 of a close-up. */
 const tap = (testId: string): ReadonlyArray<Waypoint> => [
   { frame: 0, aim: { testId, dx: 70, dy: 60 } },
   { frame: 4, aim: { testId } },
@@ -343,13 +325,13 @@ export const takes: Readonly<Record<string, Take>> = {
   ),
   "desktop-luna": desktop("luna"),
   "desktop-aero": desktop("aero"),
-  /** Shot 1: the first press. Down at 0.70 s, up at 0.83 s. */
+
   switch: {
     width: 960,
     height: 540,
     frames: 70,
     view: () => stage(macro(8), <Switch testId="switch" label="Wi-Fi" />),
-    // Pressed on the intro's second tap (beat 2 of bar 0, frame 35).
+
     pointer: [
       { frame: 0, aim: { testId: "switch", dx: 150, dy: 120 } },
       { frame: 30, aim: { testId: "switch", dx: -40, dy: 10 } },
@@ -358,7 +340,7 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 69, aim: { testId: "switch", dx: -20, dy: 40 } },
     ],
   },
-  /** Shot 2: a drag across ten detents, 0 → 80. */
+
   slider: {
     width: 960,
     height: 540,
@@ -383,7 +365,7 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 69, aim: { testId: "slider", dx: 240, dy: 60 } },
     ],
   },
-  /** Shot 3: one primary press. Down at 0.6 s, up at 0.9 s. */
+
   button: {
     width: 960,
     height: 540,
@@ -403,7 +385,7 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 43, aim: { testId: "save", dx: 80, dy: 50 } },
     ],
   },
-  /** Shots 4–5: the pull-back to the block, then Windows (10.8 s) and Linux (12.4 s). */
+
   settings: {
     width: 1024,
     height: 576,
@@ -423,7 +405,7 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 59, aim: { testId: "dark", dx: 30, dy: 40 } },
     ],
   },
-  /** Shots 7–8: four Omarchy themes, then a card dragged to Done. */
+
   omarchy: {
     width: 1280,
     height: 720,

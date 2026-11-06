@@ -1,24 +1,6 @@
-/**
- * Measure the data lane's four pressing drawings in a hydrated page.
- *
- * The four previews added to `/data-display` are *interactions* — a row
- * that opens a panel, a field that reports a debounced query, two panes
- * mirrored through one offset, and a label column that falls back when a width
- * cannot paint. Their unit guards prove the rules; a server-rendered read
- * proves the markup. Neither proves the React handler is attached, so this
- * probe presses each control in a real browser and reads the consequence off
- * the drawing itself.
- *
- * Run (a dev or preview server is already up):
- * `nub apps/docs/scripts/data-previews-probe.ts`
- * `--url <base>` (default `http://127.0.0.1:4175`), `--timeout <ms>`,
- * `--chrome <path>`.
- */
-
 import { findChrome, openChrome, type ChromePage } from "./chrome-session.ts";
 import { propsOfScript } from "./react-ready.ts";
 
-/** The pages this probe visits, and the drawing each one carries. */
 export const previewPages = {
   expandable: "/data-display/expandable-rows",
   toolbar: "/data-display/data-toolbar",
@@ -26,39 +8,28 @@ export const previewPages = {
   keyValue: "/data-display/key-value",
 } as const;
 
-/**
- * The numbers the drawings must report.
- *
- * `data-previews.test.ts` derives each one from the demo module that paints it,
- * so a record added to a drawing asks this probe to expect the new count rather
- * than printing a stale one.
- */
 export const expected = {
-  /** `LISTED_FILES` and the one panel the expandable page opens on. */
   expandableRows: 4,
   openOnMount: 1,
   openAfterPress: 2,
-  /** `QUEUE_ROWS`, and the records a "staging" query keeps. */
+
   toolbarRows: 6,
   toolbarMatches: 3,
-  /** `FROZEN_RECORDS`, and the offset the probe scrolls one pane by. */
+
   frozenRows: 10,
   frozenOffset: 72,
-  /** `LABEL_WIDTHS`: the default track, and the wide one. */
+
   labelWidth: 120,
   wideLabelWidth: 168,
 } as const;
 
-/** True when a node carries React's props — i.e. its handlers are attached. */
 const hydrated = (selector: string): string => `(() => {
   const node = document.querySelector(${JSON.stringify(selector)});
   return node !== null && ${propsOfScript}(node) !== undefined ? "yes" : "no";
 })()`;
 
-/** The React prop key a node carries, so a press is not a no-op on markup. */
 export const hydrateScript = (selector: string): string => hydrated(selector);
 
-/** The expandable-rows state: how many rows, which are open, and the readout. */
 export const expandableState = (): string => `(() => {
   const rows = [...document.querySelectorAll(".gx-dt-row[data-file]")];
   return [
@@ -68,7 +39,6 @@ export const expandableState = (): string => `(() => {
   ].join("|");
 })()`;
 
-/** Press the row whose name is `name`, the way a reader does. */
 export const pressRow = (name: string): string => `(() => {
   const row = [...document.querySelectorAll(".gx-dt-row[data-file]")]
     .find((candidate) => (candidate.textContent ?? "").includes(${JSON.stringify(name)}));
@@ -77,7 +47,6 @@ export const pressRow = (name: string): string => `(() => {
   return "pressed";
 })()`;
 
-/** Type `query` into the toolbar's field through the native value setter. */
 export const typeQuery = (query: string): string => `(() => {
   const input = document.querySelector(".gx-dtoolbar input[type=search]");
   if (input === null) return "no-field";
@@ -87,13 +56,11 @@ export const typeQuery = (query: string): string => `(() => {
   return "typed";
 })()`;
 
-/** What the toolbar reports: the readout's text and the rows it kept. */
 export const toolbarState = (): string => `(() => [
   document.querySelector(".gx-data-readout")?.textContent?.trim() ?? "no-readout",
   [...document.querySelectorAll('.gx-dt[role=table] [data-row]')].length,
 ].join("|"))()`;
 
-/** Scroll one frozen pane, then report both panes' offsets. */
 export const scrollPane = (
   pane: "frozen" | "data",
   top: number,
@@ -107,7 +74,6 @@ export const scrollPane = (
   return "scrolled";
 })()`;
 
-/** Both panes' offsets, as `frozen:top,left|data:top,left`. */
 export const frozenState = (): string => `(() => {
   const read = (pane) => {
     const body = document.querySelector('[data-pane="' + pane + '"] .gx-dt-frozen-body');
@@ -116,7 +82,6 @@ export const frozenState = (): string => `(() => {
   return ["frozen:" + read("frozen"), "data:" + read("data")].join("|");
 })()`;
 
-/** Press the key-value column's choice with `label`. */
 export const pressChoice = (label: string): string => `(() => {
   const button = [...document.querySelectorAll(".gx-toggle")]
     .find((candidate) => (candidate.textContent ?? "").trim() === ${JSON.stringify(label)});
@@ -125,7 +90,6 @@ export const pressChoice = (label: string): string => `(() => {
   return "pressed";
 })()`;
 
-/** The width every label cell paints, and the readout. */
 export const keyValueState = (): string => `(() => {
   const ticks = [...document.querySelectorAll(".gx-dkv-label")].map((cell) => Math.round(cell.getBoundingClientRect().width));
   return [
@@ -134,7 +98,6 @@ export const keyValueState = (): string => `(() => {
   ].join("|");
 })()`;
 
-/** Poll an expression until it stops answering `waitingFor`. */
 const until = async (
   read: () => Promise<string>,
   accept: (value: string) => boolean,
@@ -149,7 +112,6 @@ const until = async (
   return accept(value) ? value : undefined;
 };
 
-/** Navigate the open page and wait for its drawing to hydrate. */
 const visit = async (
   page: ChromePage,
   url: string,
@@ -163,15 +125,11 @@ const visit = async (
       (value) => value === "yes",
       budget,
     )) !== undefined;
-  // React's props appear on the first hydrated node before the commit that
-  // attaches the listeners: a press in that window is a no-op (measured — the
-  // expandable row kept its panel and the toolbar reported nothing). One quiet
-  // moment after `ready` is the page a reader presses.
+
   if (ready) await new Promise((wait) => setTimeout(wait, 300));
   return ready;
 };
 
-/** Run the probe. Returns the process exit code. */
 export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const argument = (flag: string): string | undefined => {
     const index = argv.indexOf(flag);
@@ -269,8 +227,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       await page.text(frozenState()),
       `frozen:${expected.frozenOffset},0|data:${expected.frozenOffset},0`,
     );
-    // The frozen pane is not a scroller: it keeps its x when its own body is
-    // asked to move, which is the rule the two-pane composition exists for.
+
     await page.run(scrollPane("frozen", expected.frozenOffset, 40));
     check(
       "frozen: the frozen pane never pans sideways",

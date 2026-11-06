@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * MediaPlayer example: a four-frame clip with Mux's chrome over it.
- *
- * The frames are generated here because the runtime has no playback host: the
- * caller owns decoding, and this screen hands the player one colour per second.
- * The same player without `frameAt` is the poster-less form. Press the timeline
- * to seek to that share of the clip, drag it while the primary button is held,
- * or use Space, the arrows, `M` and `F` on the player.
- */
-
 import * as Option from "effect/Option";
 import { MediaPlayer, type MediaFrame } from "../src/media-player.js";
 
@@ -19,7 +9,6 @@ const FRAMES: ReadonlyArray<readonly [number, number, number]> = [
   [4, 120, 87],
 ];
 
-/** One second per frame, as straight RGBA bytes. */
 const frameAt = (playhead: number): Option.Option<MediaFrame> => {
   const colour =
     FRAMES[Math.min(FRAMES.length - 1, Math.floor(playhead / 1000))];

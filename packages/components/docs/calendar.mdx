@@ -57,15 +57,3 @@ and the default window is **1900 to a century past today** — a calendar is not
 limited to the decade it is looked at in.
 
 <ComponentPreview name="calendar-dropdowns" />
-
-## Notes
-- No `aria-current`, so today is a border rather than an attribute.
-- No `aria-disabled` and no live region: an unavailable day leaves the tab order,
-  and a selection change is named by the focused cell, not announced.
-- Fixed English labels; no week numbers and no time of day.
-
-## Related
-
-- **Date picker** — the calendar inside a popover field.
-- **Popover** — the surface the picker anchors it in.
-- **Time picker** — the time of day this control does not own.

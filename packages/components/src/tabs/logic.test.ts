@@ -1,14 +1,3 @@
-/**
- * Tab activation and move-anchor rules.
- *
- * The bugs these guard: `activation="manual"` selected a tab as soon as the arrow
- * keys moved focus, so Enter had nothing left to do and every visited panel
- * rendered anyway — manual mode behaved exactly like automatic. And a move that
- * anchored on recorded focus alone re-anchored at the first enabled tab when no
- * focus event had recorded the row the reader is on (a key that reaches the
- * rail, or one sent before the event lands).
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
@@ -36,10 +25,6 @@ describe("orientationOf", () => {
   });
 
   it("reads a stored axis this release does not name as the documented horizontal set", () => {
-    // A tab set is stored in a workspace layout, so `orientation` arrives as a
-    // string as often as a literal. The raws read treated an unknown name as
-    // "not horizontal": the root painted the vertical axis and the arrows
-    // stepped Down/Up, while the component documents a horizontal default.
     expect(orientationOf("diagonal")).toBe("horizontal");
     expect(orientationOf(undefined)).toBe("horizontal");
     expect(orientationOf(2)).toBe("horizontal");
@@ -59,13 +44,11 @@ describe("activationOf", () => {
   });
 });
 
-/** The tab order the component moves through. */
 const values: ReadonlyArray<string> = ["profile", "billing", "danger"];
 
 const indexOf = (value: string): Option.Option<number> =>
   Arr.findFirstIndex(values, (candidate) => candidate === value);
 
-/** The start index for one set of anchors, with `None` for an unnamed anchor. */
 const origin = (anchors: {
   readonly keyOrigin?: string;
   readonly active?: string;

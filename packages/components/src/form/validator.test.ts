@@ -1,14 +1,3 @@
-/**
- * The `@tanstack/form-core` adoption, run where `window` and `document` are
- * undefined.
- *
- * The bugs these guard: a form reducer that needs a DOM global (so the core
- * could not run in a Node boundary); a field error that appears before its
- * configured cause (submit, change or blur); a whole-value schema failure that
- * lands on the wrong field; a cross-field validator that cannot read its
- * sibling; and a reset that does not restore the initial values.
- */
-
 import { FieldApi, FormApi } from "@tanstack/form-core";
 import { describe, expect, it } from "vitest";
 import * as Schema from "effect/Schema";
@@ -30,7 +19,6 @@ class Signup extends Schema.Class<Signup>("Signup")({
   name: Schema.NonEmptyString,
 }) {}
 
-/** The errors form-core recorded, kept as strings only. */
 const messages = (errors: ReadonlyArray<unknown>): ReadonlyArray<string> =>
   errors.filter((error): error is string => typeof error === "string");
 
@@ -110,7 +98,7 @@ describe("@tanstack/form-core in Node", () => {
 
     expect(email).toEqual([addressMessage]);
     expect(name).toEqual(["Expected a value with a length of at least 1"]);
-    // Each field carries its own message, never the sibling's.
+
     expect(email).not.toContain("Expected a value with a length of at least 1");
     expect(name).not.toContain(addressMessage);
   });

@@ -1,14 +1,3 @@
-/**
- * Menu bar navigation transitions.
- *
- * The bugs these guard: `ArrowLeft`/`ArrowRight` from the first or last menu
- * stopped instead of wrapping; `ArrowUp`/`ArrowDown` in a dropdown stopped at
- * the ends instead of wrapping; a move landed on a disabled menu or row; a
- * pointer crossing a sibling's title opened nothing while a menu was open (or
- * opened one while the bar was closed); and Escape closed the dropdown without
- * saying where focus should return.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";

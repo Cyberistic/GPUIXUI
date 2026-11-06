@@ -2,28 +2,11 @@ import { readFileSync } from "node:fs";
 import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 
-/**
- * The landing page's own palette.
- *
- * `src/styles/app.css` is held to the library's contrast floors by
- * `docs-theme.test.ts`, and the landing declared a second palette nothing
- * measured. It painted its captions, labels and the hero window's chat input in
- * `--dim: #a1a1a1` — **2.59:1** on the page — and its secondary paragraphs in
- * `--muted: #737373` — **4.29:1** on the `--bg-soft` panels they sit on, under
- * the 4.5 floor — so the first page a reader sees taught less than the library
- * asks of every component.
- *
- * The values are the library's own (`@gpuixui/tokens`), so the landing is held
- * to the contract the components are. The terminal and VS Code illustrations
- * this guard also measured left the page with plan 727.
- */
-
 const css = readFileSync(
   new URL("../styles/landing.css", import.meta.url),
   "utf8",
 );
 
-/** The custom properties of one selector's block. */
 const variables = (selector: string): Readonly<Record<string, string>> => {
   const start = css.indexOf(`${selector} {`);
   const end = css.indexOf("\n}", start);
@@ -53,7 +36,6 @@ interface Pair {
   readonly floor: number;
 }
 
-/** Every text role the landing paints, on every surface it paints it on. */
 const pairs: ReadonlyArray<Pair> = [
   { text: "--fg", surface: "--bg", floor: contrastFloors.body },
   { text: "--fg", surface: "--bg-soft", floor: contrastFloors.body },
@@ -76,13 +58,11 @@ const pairs: ReadonlyArray<Pair> = [
   },
 ];
 
-/** The colour roles, i.e. every variable but the two families. */
 const colourRoles = (palette: Readonly<Record<string, string>>): string[] =>
   Object.keys(palette).filter(
     (name) => !name.startsWith("--sans") && !name.startsWith("--mono"),
   );
 
-/** The lines a pair fails to clear, worded for the failure. */
 const below = (
   palette: Readonly<Record<string, string>>,
   table: ReadonlyArray<Pair>,
@@ -99,7 +79,6 @@ const below = (
       : [];
   });
 
-/** The variables that carry a text colour, and the raw values they name. */
 const textColours = (block: string): ReadonlyArray<string> =>
   [...block.matchAll(/(?:^|[^-])color:\s*([^;]+);/g)].flatMap((match) =>
     match[1] === undefined ? [] : [match[1].trim()],
@@ -107,8 +86,6 @@ const textColours = (block: string): ReadonlyArray<string> =>
 
 describe("the landing's palette", () => {
   it("names its guard on the site ledger", () => {
-    // The ledger says which guard holds which palette, so a rename cannot leave
-    // a reader looking for a suite that is gone.
     const readme = readFileSync(
       new URL("../../README.md", import.meta.url),
       "utf8",
@@ -119,8 +96,6 @@ describe("the landing's palette", () => {
   });
 
   it("declares the same roles in both schemes", () => {
-    // A role only in `.landing` leaves the dark scheme on the light value. The
-    // two families are scheme-independent, so they are declared once.
     const onlyInLight = colourRoles(schemes.light).filter(
       (name) => !(name in schemes.dark),
     );
@@ -141,8 +116,6 @@ describe("the landing's palette", () => {
   );
 
   it("paints text through a role, never a literal", () => {
-    // The two schemes are the only place a text colour is chosen: a raw hex on
-    // a `color` declaration would sit outside every pair above.
     const literals = [
       ...new Set(
         textColours(css).filter(

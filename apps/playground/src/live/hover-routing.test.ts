@@ -1,20 +1,3 @@
-/**
- * Holds the `hover-routing-lifecycle` fixture and the claims it prints.
- *
- * The bug this guards: every list, table and tree row in the library paints its
- * pointer feedback through the runtime's native `style.hover`, and a Tier 3 row
- * nests a badge, a metric or a control inside it. The press rule was measured
- * (a painted child is the boundary a press stops at); the hover half was not,
- * and a fill between the pointer and the row can take the row's feedback away
- * without taking its press. The window measured that it does — the row misses
- * both the enter event and its hover fill — while an unfilled label and a
- * `pointerEvents: "none"` child leave both intact (the inert child still hears
- * its own listener, because opting out removes the fill's hitbox and not the
- * registered handler).
- *
- * `node:fs` is deliberate, as in `press-routing.test.ts`: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";

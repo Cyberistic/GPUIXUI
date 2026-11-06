@@ -1,23 +1,7 @@
-/**
- * Guards keyframes, stagger, and the keyed sequence driver: offsets interpolate
- * with the segment easing, stagger distributes delays, and steps move through
- * pending → active → completed. Reverting any of these fails its assertion.
- *
- * The last suite guards the totality the package promises for a timeline a
- * caller **built by hand**: a frame or a step whose offset, value or duration
- * cannot be read must be repaired rather than reach the formulas, because a
- * `NaN` there painted nothing and left a driver sampling forever — and so must
- * the list itself, because a timeline decoded from storage can arrive with no
- * list at all or with an entry that is not a frame. It reads the
- * sequence's own arithmetic too: an end its sum cannot represent made
- * `complete()` false forever (and `append` land before the steps it follows),
- * and an offset that overflows put a staggered member before its group.
- */
 import { describe, expect, it } from "vitest";
 import { anticipate, easeOut, type Easing } from "./easing.js";
 import { Sequence, keyframe, sampleKeyframes, stagger } from "./timeline.js";
 
-/** The steps a stagger cannot wait for: each is "no wait". */
 const unusableSteps: readonly (readonly [string, number])[] = [
   ["a negative step", -20],
   ["an unreadable step", Number.NaN],
@@ -38,16 +22,11 @@ describe("sampleKeyframes", () => {
       keyframe(0.5, 50, easeOut),
       keyframe(1, 100),
     ];
-    // Segment [0, 0.5] with local progress 0.5 → `easeOut(0.5)`, the renderer's
-    // own curve (0.685), not the linear progress the sampler would use if it
-    // ignored the upper stop's easing.
+
     expect(sampleKeyframes(frames, 0.25)).toBeCloseTo(50 * easeOut(0.5), 5);
   });
 
   it("lands on the value a segment ends at, whatever curve it names", () => {
-    // The bug this guards: `anticipate` converged on 1 without reaching it
-    // (0.99951), so a frame that ended a segment landed a hundredth of a percent
-    // short of the value it names. A curve shapes the journey, never the stop.
     const frames = [
       keyframe(0, 0),
       keyframe(0.5, 50, anticipate),
@@ -57,9 +36,6 @@ describe("sampleKeyframes", () => {
   });
 
   it("interpolates between two finite frames whose difference overflows", () => {
-    // Each stop is a number the runtime paints; the segment between them used to
-    // overflow twice: `NaN` at the first stop (`Infinity * 0`) and `Infinity`
-    // once the segment moved.
     const frames = [keyframe(0, -1e308), keyframe(1, 1e308)];
     expect(sampleKeyframes(frames, 0)).toBe(-1e308);
     expect(sampleKeyframes(frames, 0.5)).toBe(0);
@@ -67,34 +43,23 @@ describe("sampleKeyframes", () => {
   });
 
   it("reads a NaN progress as the first frame, an infinity as the last", () => {
-    // The clamp only maps a comparable number: `NaN` used to pass straight into
-    // the easing and paint a `NaN` value.
     const frames = [keyframe(0, 10), keyframe(1, 20)];
     expect(sampleKeyframes(frames, Number.NaN)).toBe(10);
     expect(sampleKeyframes(frames, Number.POSITIVE_INFINITY)).toBe(20);
   });
 
   it("samples the stops a list names, in whatever order it declared them", () => {
-    // The bug this guards: the sampler read the **first and last entries** of
-    // the list as its ends, so a set built from a map — where the offsets arrive
-    // in the source's key order, not ascending — answered the frame declared
-    // first for every progress below its offset. These three frames describe the
-    // same journey as `[0.2 → 0, 0.8 → 1]`; declared in this order the sample
-    // used to answer `1` everywhere below `0.8`.
     const frames = [keyframe(0.8, 1), keyframe(0.2, 0)];
     expect(sampleKeyframes(frames, 0.1)).toBe(0);
     expect(sampleKeyframes(frames, 0.5)).toBeCloseTo(0.5, 6);
     expect(sampleKeyframes(frames, 0.9)).toBe(1);
-    // A third stop declared out of order keeps its own segment.
+
     const three = [keyframe(0.5, 40), keyframe(0, 0), keyframe(1, 100)];
     expect(sampleKeyframes(three, 0.25)).toBe(20);
     expect(sampleKeyframes(three, 0.75)).toBe(70);
   });
 
   it("changes over at an offset two frames share, holding the last value", () => {
-    // A repeated offset is an instant jump: from that offset on the value
-    // declared last at it is in effect. The sampler used to return the **first**
-    // declaration at the shared offset for the whole span after it.
     const frames = [keyframe(0.5, 1), keyframe(0.5, 3), keyframe(1, 5)];
     expect(sampleKeyframes(frames, 0.25)).toBe(1);
     expect(sampleKeyframes(frames, 0.5)).toBe(3);
@@ -117,10 +82,6 @@ describe("stagger", () => {
   });
 
   it("starts from the default for a direction it does not name", () => {
-    // `from` is a name a consumer can read back from stored settings. The
-    // distance arithmetic was a ternary ladder whose final arm was `center`, so
-    // a name outside the three (`"middle"`, a stored `"Start"`) silently placed
-    // the group from the **middle** instead of the documented default.
     const unreadable = ["middle", "Start"];
     unreadable.forEach((from) => {
       // @ts-expect-error — a persisted direction the library did not type-check.
@@ -128,17 +89,13 @@ describe("stagger", () => {
       // @ts-expect-error — the same stored direction at the group's last index.
       expect(stagger(10, 3, 4, from)).toBe(30);
     });
-    // The three real directions keep their own arithmetic, and the default too.
+
     expect(stagger(10, 0, 4, "center")).toBe(15);
     expect(stagger(10, 0, 4, "end")).toBe(30);
     expect(stagger(10, 0, 4)).toBe(0);
   });
 
   it("waits for nothing when the group cannot be read", () => {
-    // `index` and `count` are caller arithmetic too (a measured position, a
-    // filtered length). A delay the helper cannot compute used to be returned as
-    // `NaN` or `Infinity`, which the runtime paints as no wait at best and
-    // forever at worst; the package's rule is that it is no wait.
     expect(stagger(20, Number.NaN, 4)).toBe(0);
     expect(stagger(20, 2, Number.NaN)).toBe(0);
     expect(stagger(20, 2, Number.POSITIVE_INFINITY)).toBe(0);
@@ -176,9 +133,6 @@ describe("Sequence", () => {
   });
 
   it("reads a NaN elapsed time as the start, and an infinity as the end", () => {
-    // `Math.max(NaN, 0)` is `NaN`, so a caller's unreadable clock used to produce
-    // an `active` step whose value was `NaN` — a frame the runtime paints as
-    // nothing — instead of the pending start.
     const sequence = new Sequence<string>().at("a", 0, 100);
     expect(sequence.sample(Number.NaN)).toEqual(sequence.sample(0));
     expect(sequence.sample(Number.POSITIVE_INFINITY)[0]?.state).toBe(
@@ -191,11 +145,6 @@ describe("Sequence", () => {
 
 describe("a timeline built by hand", () => {
   it("reads a clock before the sequence as its start, in both entry points", () => {
-    // `sample` already clamps a clock before the sequence to `0`, while
-    // `complete` compared the raw value. On a sequence with nothing left to run
-    // — empty, a zero-duration step, or a step that ended before the clock
-    // starts — the two entry points therefore disagreed about the same clock,
-    // and a driver waiting on `complete` saw it false forever.
     const empty = new Sequence<string>();
     expect(empty.sample(-5)).toEqual([]);
     expect(empty.complete(-5)).toBe(true);
@@ -212,8 +161,6 @@ describe("a timeline built by hand", () => {
   });
 
   it("does not stop on a frame whose value cannot be read", () => {
-    // A frame is a value a caller computed (a measured height, a counter). One
-    // that cannot be read used to interpolate the whole segment to `NaN`.
     const frames = [keyframe(0, 10), keyframe(1, Number.NaN)];
     expect(sampleKeyframes(frames, 0.5)).toBe(10);
     expect(sampleKeyframes(frames, 1)).toBe(10);
@@ -234,32 +181,16 @@ describe("a timeline built by hand", () => {
   });
 
   it("reads a stored frame set as the stops it actually carries", () => {
-    // A timeline decoded from storage is a list the render did not build: JSON
-    // has no `undefined`, so a field the config never carried comes back as
-    // `null`, and a list assembled from stored rows can carry an entry that is
-    // not a frame. The reader called `.filter` on the list and `.at` on every
-    // entry, so a missing list threw `TypeError: Cannot read properties of null
-    // (reading 'filter')` and a null entry threw `(reading 'at')` — out of the
-    // render, from a sampler whose rule is that an input it cannot read is
-    // repaired rather than thrown.
     expect(sampleKeyframes(null, 0.5)).toBe(0);
     expect(sampleKeyframes(undefined, 0.5)).toBe(0);
 
     const entries = [keyframe(0, 0), null, undefined, keyframe(1, 100)];
     expect(sampleKeyframes(entries, 0.5)).toBe(50);
-    // An entry that is not a frame is dropped like an unreadable stop, so it
-    // cannot become a segment's endpoint nor the set's first stop.
+
     expect(sampleKeyframes([null, keyframe(1, 100)], 0)).toBe(100);
   });
 
   it("places no step for a group of keys the caller does not have", () => {
-    // The bug this guards: a workspace rebuilds an animation's steps from the
-    // layer list it decoded, and a config that did not decode carries no list at
-    // all — JSON keeps `null` for a key it never wrote. `Sequence.stagger` read
-    // `.length`/`.forEach` off the value, so building the sequence threw
-    // `TypeError: Cannot read properties of null (reading 'length')` out of the
-    // render that built it. A group with no keys places no step, the answer an
-    // empty group already gives.
     const missing = new Sequence<string>().stagger(null, 10, 20, 50);
     expect(missing.sample(0)).toEqual([]);
     expect(missing.duration()).toBe(0);
@@ -268,15 +199,12 @@ describe("a timeline built by hand", () => {
       new Sequence<string>().stagger(undefined, 0, 10, 50).sample(0),
     ).toEqual([]);
 
-    // A readable list still places every step it names.
     expect(
       new Sequence<string>().stagger(["a", "b"], 0, 10, 50).sample(0),
     ).toHaveLength(2);
   });
 
   it("waits for nothing when the step cannot be read", () => {
-    // A delay that is not a wait is no wait: `delayedTiming` already drops a
-    // zero one, and `NaN`/negative steps used to reach the runtime as `NaN`.
     expect(stagger(Number.NaN, 2, 4)).toBe(0);
     expect(stagger(Number.POSITIVE_INFINITY, 2, 4)).toBe(0);
     expect(stagger(-10, 2, 4)).toBe(0);
@@ -293,8 +221,6 @@ describe("a timeline built by hand", () => {
   });
 
   it("completes a step whose duration cannot be read", () => {
-    // A step that cannot be timed is not a step that runs forever: it is done
-    // on the first sample, and the sequence's own end stays a number.
     const sequence = new Sequence<string>().at("a", 0, Number.NaN);
     expect(sequence.sample(0)).toEqual([
       { key: "a", state: "completed", value: 1 },
@@ -304,10 +230,6 @@ describe("a timeline built by hand", () => {
   });
 
   it("does not end the sequence before a step it still has to run", () => {
-    // A step's own sample reads a duration it cannot run as no duration — the
-    // step is done at its start — but `duration()` added a negative one to the
-    // start time, so the sequence's end landed *before* the step and
-    // `complete()` answered true while the step was still pending.
     const sequence = new Sequence<string>().at("a", 100, -50);
 
     expect(sequence.duration()).toBe(100);
@@ -318,12 +240,6 @@ describe("a timeline built by hand", () => {
   });
 
   it("ends on a number the clock can reach", () => {
-    // The bug this guards: a step's end is its start plus its duration, and two
-    // readable numbers can add to an `Infinity` no clock reaches. `duration()`
-    // was infinite, so `complete()` never answered true — a driver sampled the
-    // sequence for the life of the tree — and the step's own sample said it was
-    // still running at a moment the end time denied. An end the arithmetic
-    // cannot represent is no duration at all.
     const sequence = new Sequence<string>().at("a", 1e308, 1e308);
     expect(sequence.duration()).toBe(1e308);
     expect(sequence.complete(1e308)).toBe(true);
@@ -331,15 +247,12 @@ describe("a timeline built by hand", () => {
   });
 
   it("appends after a step rather than before it when its end overflows", () => {
-    // `append` places the next step at `duration()`; an infinite end reached
-    // `at` as an unreadable start, which it repaired to `0`, so the appended
-    // step landed before every step it was meant to follow.
     const sequence = new Sequence<string>()
       .at("a", 1e308, 1e308)
       .append("b", 10);
 
     expect(sequence.duration()).toBe(1e308);
-    // `b` waits behind `a`; it used to be running from the first sample.
+
     expect(sequence.sample(0).map((step) => step.state)).toEqual([
       "pending",
       "pending",
@@ -351,11 +264,6 @@ describe("a timeline built by hand", () => {
   });
 
   it("keeps a group at its own start when an offset overflows", () => {
-    // The group's delay is a step times a distance, and a member is placed at
-    // the group's start plus that wait. Both products and sums can be numbers the
-    // clock cannot show; an offset the arithmetic cannot represent put the member
-    // at `0` — before the group — instead of at the group's start, where every
-    // wait it cannot sit out already leaves it.
     expect(stagger(1e308, 2, 3)).toBe(0);
 
     const group = new Sequence<string>().stagger(["a", "b"], 1e308, 1e308, 5);
@@ -372,8 +280,6 @@ describe("a timeline built by hand", () => {
   it("reads a group's end from the steps it still has to run", () => {
     const sequence = new Sequence<string>().stagger(["a", "b"], 10, 20, -50);
 
-    // The last step starts at 30 and runs for no time at all, so the group's
-    // end is that start — not a moment before it.
     expect(sequence.duration()).toBe(10 + 20);
     expect(sequence.complete(29)).toBe(false);
     expect(sequence.complete(30)).toBe(true);
@@ -382,11 +288,6 @@ describe("a timeline built by hand", () => {
   it.each(unusableSteps)(
     "staggers a group with the rule the package publishes (%s)",
     (_name, step) => {
-      // The sequence's own group used to place a step at `startMs + stepMs * index`
-      // directly, so an unusable step behaved differently from the standalone
-      // `stagger()`: a negative one put a member *before* the group — already
-      // running when the sequence began — and an unreadable one collapsed the
-      // whole group to the start of the clock, losing the group's own start.
       expect(stagger(step, 1, 2)).toBe(0);
 
       const group = new Sequence<string>().stagger(["a", "b"], 10, step, 50);
@@ -403,8 +304,6 @@ describe("a timeline built by hand", () => {
   );
 
   it("keeps a staggered group's end readable", () => {
-    // `stagger()`'s `NaN` start used to make `duration()` `NaN`, so `complete`
-    // never answered true and a driver loop never stopped.
     const sequence = new Sequence<string>().stagger(
       ["a", "b"],
       0,
@@ -417,9 +316,6 @@ describe("a timeline built by hand", () => {
   });
 
   it("applies only a curve that can read the frame", () => {
-    // A frame's easing is the caller's function, so it can answer `NaN`. Both
-    // samplers used to take it straight into the value, so a timeline with one
-    // such curve painted `NaN` for the whole segment.
     const broken: Easing = () => Number.NaN;
     const frames = [keyframe(0, 0), keyframe(1, 100, broken)];
     expect(sampleKeyframes(frames, 0.5)).toBeCloseTo(50, 5);

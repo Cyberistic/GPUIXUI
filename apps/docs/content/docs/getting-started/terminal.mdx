@@ -23,15 +23,3 @@ The playground in this repository:
 nub run --filter playground build
 GPUIX_TERMINAL=1 nub apps/playground/dist/main.js
 ```
-
-## What changes
-
-| | In a terminal |
-| --- | --- |
-| Surface | fills the terminal; `width`, `height` and the window chrome options are ignored |
-| Titlebar | none, so do not reserve space for traffic lights |
-| Detection | `isTerminal()` reads `true` while rendering; `false` before `init()` |
-| Hosts | macOS and Linux |
-| Exit | ctrl-c restores the terminal: alternate screen, cursor and the enabled protocols |
-
-The editor tabs inside the terminal are their own browser component: [Reorderable tabs](/components/reorderable-tabs).

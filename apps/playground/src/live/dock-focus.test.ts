@@ -1,13 +1,3 @@
-/**
- * Guards the stop rule the `dock-focus-lifecycle` probe measures.
- *
- * The probe asserts that a Tab traversal visits exactly `dockStops`, so the
- * list is part of the measurement rather than a note beside it: if it grew a
- * stop per tab, or if the closed sidebar lost the wrong action, the probe would
- * still be comparing the runtime against a fixture that no longer describes a
- * dock. The rule the probe teaches lives here: one rail stop, one pane field,
- * and a closed sidebar with only its guarded action's stop removed.
- */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -24,7 +14,6 @@ import {
   stepTab,
 } from "./dock-focus.js";
 
-/** Every sidebar state with every selected tab. */
 const permutations: ReadonlyArray<{
   readonly sidebarOpen: boolean;
   readonly stops: ReadonlyArray<string>;
@@ -51,7 +40,7 @@ describe("the dock-focus fixture", () => {
     expect(closed).toEqual(
       Arr.filter(open, (stop) => stop !== dockActionId(DOCK_GUARDED_ACTION)),
     );
-    // The unguarded sample is what the runtime's behaviour is measured with.
+
     expect(closed).toContain(dockActionId("new"));
   });
 

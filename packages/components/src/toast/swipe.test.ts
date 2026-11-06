@@ -1,14 +1,3 @@
-/**
- * The swipe's two rules.
- *
- * The bug these guard: a drag with no threshold either dismissed on the first
- * pixel or never dismissed at all, and a velocity rule with no minimum travel
- * read a one-pixel jitter as a flick. The tests pin the distance rule, the
- * flick rule, the floor that keeps a fast gesture from dismissing nothing, and
- * the arithmetic that keeps a failed measurement from throwing a card off
- * screen.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   SWIPE_MIN_TRAVEL,
@@ -39,8 +28,6 @@ describe("a flick", () => {
   });
 
   it("keeps a jitter that never travelled", () => {
-    // One pixel in one millisecond is a speed past the rule; it is not a
-    // gesture, because the card never moved.
     expect(swipeEdge(1, 1)).toBe(undefined);
     expect(swipeEdge(-(SWIPE_MIN_TRAVEL - 1), 1)).toBe(undefined);
   });

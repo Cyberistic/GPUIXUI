@@ -1,11 +1,3 @@
-/**
- * A named workspace: an editor and a preview in one tabbed group, beside a
- * vertical split of an outline and a terminal. The tree is one `DockNode` held
- * in `useState`, so a tab press rewrites the group's `activeTab` and a divider
- * drag rewrites the split's `size` — both reported as a new tree through
- * `onLayoutChange`.
- */
-
 import { useState } from "react";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import { darkTheme } from "@gpuixui/tokens";
@@ -66,7 +58,6 @@ const TabPane = ({ id }: { id: string }) => {
   );
 };
 
-/** A tabbed editor beside a nested split, rendered from one schema tree. */
 export const DockLayoutExample = () => {
   const [layout, setLayout] = useState<DockNode>(initial);
   return (

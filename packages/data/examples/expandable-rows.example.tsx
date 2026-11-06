@@ -1,17 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A files table whose rows open a detail panel under themselves.
- *
- * The panel is a **sibling row**, not a spanning cell: 0.11.0 has no row span,
- * and a detail panel must be as wide as the table's content and push the rows
- * below it (`virtual-list-expand` measured the growth, the shift and the
- * re-measure). The press is the row's — the chevron is an `<svg>` that takes no
- * hit test, so a press anywhere on the row opens it.
- *
- * The expansion is the app's: `toggleExpanded` is the tree package's reducer, so
- * a table and a tree cannot disagree about what "open" means.
- */
-
 import { Order } from "effect";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
@@ -46,7 +33,6 @@ const files: ReadonlyArray<FileRow> = [
   { id: "theme", name: "theme.ts", status: "untracked", size: 320 },
 ];
 
-/** A files table with one detail panel per row. */
 export const ExpandableRowsExample = () => {
   const theme = useTheme();
   const [open, setOpen] = useState<HashSet.HashSet<string>>(HashSet.empty());

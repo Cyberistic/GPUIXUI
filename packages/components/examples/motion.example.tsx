@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Motion example: the same dialog and accordion with the reader's preference.
- *
- * The two preferences are rendered side by side rather than toggled, so the
- * difference is one glance: the left column animates, the right paints the same
- * resting frames with a zero duration. GPUix exposes no reduced-motion query,
- * so the application owns the flag — this card is the smallest honest version of
- * that decision.
- */
-
 import { useState } from "react";
 import {
   Accordion,
@@ -30,7 +20,6 @@ import {
 import { MotionProvider } from "../src/motion.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** One column: a dialog opener over a two-section accordion. */
 const Column = ({
   motion,
   label,
@@ -99,7 +88,6 @@ const Column = ({
   );
 };
 
-/** The two preferences, side by side. */
 export const MotionExample = () => {
   const theme = useTheme();
 

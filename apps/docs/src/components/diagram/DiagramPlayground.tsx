@@ -16,18 +16,6 @@ import {
   type DiagramTemplate,
 } from "./templates";
 
-/**
- * The full diagram playground: a source field, a live Pele preview, a
- * template picker, a theme picker and the preview's zoom controls.
- *
- * The preview is deferred one render behind the field, so a fast typist does
- * not pay for a diagram parse on every keystroke while the source still
- * follows the caret. Pele is synchronous, so there is no loading state between
- * the deferred source and the picture; an invalid diagram shows the parser's
- * sentence in the preview.
- */
-
-/** Props for {@link DiagramPlayground}. */
 export interface DiagramPlaygroundProps {
   readonly defaultValue?: string;
   readonly className?: string;
@@ -52,7 +40,6 @@ const THEMES: ReadonlyArray<{
 const findTemplate = (id: string): DiagramTemplate | undefined =>
   diagramTemplates.find((template) => template.id === id);
 
-/** The playground. See {@link DiagramPlaygroundProps}. */
 export function DiagramPlayground({
   defaultValue,
   className,

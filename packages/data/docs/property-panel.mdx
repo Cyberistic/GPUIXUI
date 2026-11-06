@@ -39,13 +39,3 @@ import { PropertyPanel } from "@gpuixui/data";
 | `label` | `string` | both | the words in the label column, and an editable field's accessible name |
 | `value` | `string` | both | the value the row shows, or the text the field edits |
 | `onChange` | `(next: string) => void` | editable | receives every edit of the row's value |
-
-## Notes
-- The panel does not validate; a row reports its own change or message.
-- The panel does not scroll.
-- One editable row is one text session.
-- `rows` is read as data: a saved panel that carried `null` for its rows
-  paints the title and no rows rather than throwing out of the render, and a row
-  that does not name itself with a `key` is not a row — the panel addresses a
-  row by its key, so a keyless editable row would otherwise paint a nameless
-  field at `property-undefined`.

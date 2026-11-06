@@ -2,15 +2,6 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { rateAt } from "./rating-preview";
 
-/**
- * A press on a star rates the half it landed in, and the page still hands the
- * press to a star.
- *
- * Guarded bug: the Rating page printed "press a star to rate" beside stars that
- * were `aria-hidden` spans, and the only way to change the score was a row of
- * number buttons — so pressing a star did nothing.
- */
-
 const BOX = { x: 100, width: 40 };
 
 describe("a press on a star", () => {

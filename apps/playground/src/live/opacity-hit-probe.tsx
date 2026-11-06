@@ -1,18 +1,3 @@
-/**
- * The `faded-hitbox-lifecycle` probe: what a box painted at `opacity: 0` still
- * does to the pointer and the keyboard.
- *
- * `opacity-paint` measured the paint of the share; this measures the hitbox the
- * same box keeps. That is the question the motion seam turns on: a leaving
- * surface fades to zero and `presenceStyle` has to guard its pointer path, and
- * a dismissed shell that keeps its controls mounted is covered by
- * `PresenceShield`. If the fade removed the hitbox those guards would be
- * ceremony; if it does not, a ghost swallows the press meant for the screen
- * behind it.
- *
- * The view and the steps live here rather than in `scenarios.tsx` so the
- * measurement is one module; the registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { Pixels, Smoke } from "@gpuixui/testing";
@@ -32,10 +17,8 @@ import {
   type FadedPresses,
 } from "./opacity-hit.js";
 
-/** A press may arrive a frame after the input that moved the target. */
 const SETTLE = Duration.millis(40);
 
-/** The resting counters the readout starts from. */
 const NO_PRESSES: FadedPresses = {
   faded: 0,
   keys: 0,
@@ -45,7 +28,6 @@ const NO_PRESSES: FadedPresses = {
   inertTarget: 0,
 };
 
-/** A control-shaped box a press can reach, with its own count. */
 const PressTarget = ({
   testId,
   label,
@@ -83,7 +65,6 @@ const PressTarget = ({
   );
 };
 
-/** A target with a transparent layer over it, the shape a leaving shell paints. */
 const CoveredTarget = ({
   target,
   cover,
@@ -123,7 +104,6 @@ const CoveredTarget = ({
   </div>
 );
 
-/** The probe's window: a faded control and two covered targets. */
 export const FadedHitboxProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -211,7 +191,6 @@ export const FadedHitboxProbe = (): ReactNode => {
   );
 };
 
-/** The focused `testId`, with `"none"` for no focus so a failure reads clearly. */
 const focusedId = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<string, Smoke.SmokeHostError> =>
@@ -219,7 +198,6 @@ const focusedId = (
     Option.getOrElse(Option.fromNullishOr(id), () => "none"),
   );
 
-/** The colour at a logical point of a capture, failing by name if outside. */
 const sampleAt = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -229,7 +207,6 @@ const sampleAt = (
 ): Effect.Effect<Pixels.Rgba, Smoke.SmokeAssertionError> =>
   ctx.expectSome(label, colourAt(frame, point, scale));
 
-/** Whether `sample` is the paint `expected` within the frame's tolerance. */
 const expectPaint = (
   ctx: Smoke.AsyncSmokeContext,
   label: string,
@@ -238,13 +215,11 @@ const expectPaint = (
 ): Effect.Effect<void, Smoke.SmokeAssertionError> =>
   ctx.expectEqual(label, differs(sample, expected), false);
 
-/** A box's centre, which is inside the control and clear of its label. */
 const centreOf = (box: Smoke.Bounds): Point => ({
   x: box.x + box.width / 2,
   y: box.y + box.height / 2,
 });
 
-/** A point past the label a target paints at its left edge. */
 const paintPointOf = (box: Smoke.Bounds): Point => ({
   x: box.x + box.width * 0.8,
   y: box.y + box.height / 2,
@@ -271,8 +246,6 @@ export const fadedHitboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       captureScale(frame, window),
     );
 
-    // 1. The fade removes the ink, not the box: it still lays out at its own
-    //    size and paints the page where its fill would be.
     const faded = yield* ctx.expectSome(
       "the faded control still reports a laid-out box",
       Option.fromNullishOr(yield* ctx.host.bounds(FADED_IDS.control)),
@@ -302,8 +275,6 @@ export const fadedHitboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       page,
     );
 
-    // 2. The Tab traversal still visits it: a fade removes neither the stop nor
-    //    the focus. This is the order the probe is built in.
     yield* ctx.host.focusElement(FADED_IDS.before);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("tab");
@@ -314,7 +285,6 @@ export const fadedHitboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       FADED_IDS.control,
     );
 
-    // 3. A press and a key reach it while it holds the focus.
     yield* ctx.host.click(FADED_IDS.control);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -332,9 +302,6 @@ export const fadedHitboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "keys=1",
     );
 
-    // 4. The transparent cover is still in the pointer's path: the press lands on
-    //    it and the target behind keeps its count, while the target's fill is
-    //    what the reader sees through the cover.
     const coverBox = yield* ctx.expectSome(
       "the transparent cover reports the target's box",
       Option.fromNullishOr(yield* ctx.host.bounds(FADED_IDS.cover)),
@@ -359,10 +326,6 @@ export const fadedHitboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "cover=1 target=0",
     );
 
-    // 5. The opt-out the library's shields declare: the press reaches the target
-    //    under the cover. The cover's own handler still runs — opting out removes
-    //    the fill's hitbox, not the handler (the rule `hover-routing-lifecycle`
-    //    measured for hover).
     const inertBox = yield* ctx.expectSome(
       "the inert cover reports the target's box",
       Option.fromNullishOr(yield* ctx.host.bounds(FADED_IDS.inertTarget)),

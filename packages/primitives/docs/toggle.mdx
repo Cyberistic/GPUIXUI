@@ -43,8 +43,3 @@ const [grid, setGrid] = useState(true);
 | `style` | `StateStyle<ToggleState>` | — | resolved against the live state, merged last |
 | `children` | `ReactNode` | — | the visible label |
 | `testId` | `string` | — | stable locator |
-
-## Notes
-- No `aria-pressed`: the state is announced through `aria-valuetext`.
-- `square` sizes the button, not the icon.
-- A disabled pressed toggle paints the neutral pair rather than the accent.

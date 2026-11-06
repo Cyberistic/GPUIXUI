@@ -1,20 +1,8 @@
-/**
- * AspectRatio in the real GPUix renderer.
- *
- * The bugs these guard: a box that ignores the width its parent gives it; a
- * ratio painted as the reciprocal (a 2:1 box that is twice as tall as it is
- * wide); and a shape that keeps the height it was first laid out with when the
- * parent's width changes, so a resized pane shows a letterboxed child for a
- * frame. The height is the renderer's arithmetic, so every claim is read from
- * painted bounds rather than from the style the component asked for.
- */
-
 import { describe, expect, it } from "vitest";
 import { AspectRatio } from "../aspect-ratio.js";
 import { requireBounds, settle } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 
-/** A parent of a known width, holding a ratio box and a filling child. */
 const Frame = ({
   width,
   ratio,
@@ -31,7 +19,6 @@ const Frame = ({
   </div>
 );
 
-/** The painted width and height of `testId`. */
 const size = (
   page: ReturnType<typeof renderComponent>,
   testId: string,
@@ -46,7 +33,7 @@ describe("AspectRatio", () => {
     try {
       settle(page);
       expect(size(page, "box")).toMatchObject({ width: 200, height: 100 });
-      // The child fills the box it was given, not a box of its own.
+
       expect(size(page, "child")).toMatchObject({ width: 200, height: 100 });
     } finally {
       page.unmount();
@@ -64,8 +51,6 @@ describe("AspectRatio", () => {
   });
 
   it("re-measures when the parent's width changes", () => {
-    // The bug this guards: a height captured from the first layout, so the
-    // resized box kept the old shape until something forced a second pass.
     const page = renderComponent(<Frame width={200} ratio={2} />);
     try {
       settle(page);

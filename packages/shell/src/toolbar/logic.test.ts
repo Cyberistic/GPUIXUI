@@ -1,11 +1,3 @@
-/**
- * Toolbar roving and overflow.
- *
- * The bugs these guard: the roving stop landed on a disabled action, an arrow
- * past the end stopped instead of wrapping, the overflow split hid the first
- * action it should have kept, and an empty budget still showed a strip.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";

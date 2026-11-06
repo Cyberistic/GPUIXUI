@@ -1,21 +1,3 @@
-/**
- * Menu radio rows, in the real GPUix renderer.
- *
- * The bug these guard: the menu family had an on/off row and nothing for an
- * exclusive choice, so a "sort by" or an "appearance" menu had to be built from
- * checkbox rows — several rows could read as chosen at once, and each announced
- * itself as a checkbox.
- *
- * A radio row is its group's choice, so the group is what decides which row is
- * marked: `value` is the only truth, a press reports the row's value and closes
- * the menu (a checkbox row stays open), a press on the chosen row reports
- * nothing, and a disabled row reports nothing and keeps the menu open. Both menu
- * families share the row, so both are mounted here.
- *
- * 0.11.0 has no `aria-checked`, so the row's state is `aria-selected` plus a
- * check mark — the substitution the checkbox row already uses.
- */
-
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -44,17 +26,14 @@ import {
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 
-/** The chosen value, as the renderer reads it off a row. */
 const selectedOf = (root: ComponentTestRoot, testId: string): unknown =>
   root.renderer.findByTestId(testId)?.customProps?.["aria-selected"];
 
-/** The accessible names of the check marks painted in the menu. */
 const checkMarks = (root: ComponentTestRoot): ReadonlyArray<string> =>
   nodesWithRole(root.renderer, "image")
     .map((node) => node.name)
     .filter((name) => name === "Checked");
 
-/** An appearance menu whose choice lives in the caller, as a radio group must. */
 const AppearanceMenu = ({
   onValueChange,
   triggerDisabled,
@@ -105,7 +84,6 @@ const AppearanceMenu = ({
   );
 };
 
-/** The same choice offered from a context menu, to prove the row is shared. */
 const SortRow = ({
   onValueChange,
 }: {
@@ -141,7 +119,6 @@ const SortRow = ({
   );
 };
 
-/** Focus the trigger, as Tab would. */
 const focusTrigger = (root: ComponentTestRoot): void => {
   root.renderer.focusElement(root.renderer.findByTestId("trigger")?.id ?? -1);
 };
@@ -154,13 +131,11 @@ describe("menu radio rows", () => {
     expect(selectedOf(menu, "system")).toBe(true);
     expect(selectedOf(menu, "light")).toBe(false);
     expect(selectedOf(menu, "dark")).toBe(false);
-    // One mark on screen, and it is the chosen row's.
+
     expect(checkMarks(menu)).toEqual(["Checked"]);
 
     clickCentreOf(menu, "dark");
 
-    // The menu closes on a choice (a checkbox row would stay open) and the
-    // caller's value is what the next open paints.
     await waitFor(() =>
       expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
     );
@@ -189,10 +164,6 @@ describe("menu radio rows", () => {
   });
 
   it("names the choice its rows belong to", () => {
-    // 0.11.0 has no `aria-labelledby`, so a painted `MenuLabel` above the rows
-    // is invisible to a reader entering the group: the group node would read
-    // only "group". The `label` prop is the name, and the two directions show
-    // it is the prop that carries it rather than the row text.
     const named = renderComponent(
       <AppearanceMenu onValueChange={vi.fn()} label="Appearance" />,
     );
@@ -267,7 +238,6 @@ describe("menu radio rows", () => {
     );
     focusTrigger(menu);
 
-    // Open on the first row, step to the second, then choose it.
     menu.renderer.simulateKeystrokes("down");
     menu.renderer.simulateKeystrokes("down");
     menu.renderer.simulateKeystrokes("enter");

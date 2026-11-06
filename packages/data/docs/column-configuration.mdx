@@ -200,11 +200,3 @@ an empty and a whitespace label and reads both names off the tree.
 | `widthOf` / `offsetOf` / `isVisible` | `(id) => …` | per-column reads |
 | `apply` | `(next: ColumnState) => void` | stores a state a menu produced |
 | `setVisible` / `toggle` / `move` / `resize` / `reset` | functions | the reducers, applied |
-
-## Notes
-- The menu is `DropdownMenu`; its keyboard contract is the component's.
-- The last visible column's row is disabled rather than absent.
-- The divider is a `separator` tab stop announcing `aria-valuetext`; its
-  announcement, a drag's start and an arrow's step all read the caller's width
-  through the column's bounds, so an unreadable width is announced as the floor
-  and an out-of-bounds one as the bound.

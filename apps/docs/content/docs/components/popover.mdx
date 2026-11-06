@@ -73,11 +73,6 @@ Popover
 | `onActivate` | `(event) => void` | — |
 | `onClick` | `(event) => void` | — |
 
-## Notes
-- `aria-expanded` is on the trigger.
-- **No `aria-haspopup`, `aria-controls` or `aria-labelledby`**: the link between trigger and surface is positional.
-- **Anchored, non-modal layer**: no arrow, no custom anchor, no backdrop or blur; it measures its containing block, so a `left`/`right` popover needs a shrink-to-fit container.
-
 ## Theming
 
 The surface paints the theme's `elevation.lg` beside its 1px `foreground` ring. Its corner is the recipe's fixed **24px** (`rounded-3xl`); the preview follows the platform radius and is the approximation.

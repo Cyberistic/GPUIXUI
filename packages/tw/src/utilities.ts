@@ -1,12 +1,3 @@
-/**
- * Tailwind utility → GPUix `StyleDesc`.
- *
- * This is the only place a class name becomes a native style. Values are the
- * Tailwind defaults the shadcn recipes are written against (`h-9` = 36,
- * `px-3` = 12, `rounded-md` = 6); colours resolve through semantic theme roles,
- * so the same recipe works in light, dark and high-contrast themes.
- */
-
 import type { StyleDesc } from "@gpuix/react";
 import {
   alpha,
@@ -17,10 +8,8 @@ import {
 } from "@gpuixui/tokens";
 import { CalcResult, evaluateCalc } from "./calc.js";
 
-/** A resolved utility, or a function that needs the theme. */
 export type Utility = StyleDesc | ((theme: Theme) => StyleDesc);
 
-/** The shadcn/Tailwind colour name → token role. */
 const ROLE: Readonly<Record<string, keyof ThemeColors>> = {
   background: "background",
   foreground: "foreground",
@@ -59,7 +48,7 @@ const ROLE: Readonly<Record<string, keyof ThemeColors>> = {
   skeleton: "skeleton",
   selection: "selection",
   placeholder: "placeholder",
-  // Soft status surfaces the Alert, Badge and Toast tones paint.
+
   infoSoft: "infoSoft",
   infoSoftForeground: "infoSoftForeground",
   successSoft: "successSoft",
@@ -70,7 +59,6 @@ const ROLE: Readonly<Record<string, keyof ThemeColors>> = {
   destructiveSoftForeground: "destructiveSoftForeground",
 };
 
-/** The literal colours Tailwind writes by name. */
 const LITERAL: Readonly<Record<string, string>> = {
   white: "#FFFFFF",
   black: "#000000",
@@ -79,7 +67,6 @@ const LITERAL: Readonly<Record<string, string>> = {
 
 const SPACING = (value: number): number => value * 4;
 
-/** shadcn's control heights, by the density step they resolve to. */
 const CONTROL_HEIGHT: Readonly<Record<string, "sm" | "md" | "lg">> = {
   "8": "sm",
   "9": "md",
@@ -98,13 +85,11 @@ const RADIUS: Readonly<Record<string, number>> = {
   full: 9999,
 };
 
-/** The named `max-w-*` steps shadcn uses, in pixels. */
 const MAX_WIDTH: Readonly<Record<string, number>> = {
   sm: 384,
   md: 448,
 };
 
-/** Tailwind's shadow names on the three native elevation levels. */
 const ELEVATION: Readonly<Record<string, ElevationLevel>> = {
   xs: "sm",
   sm: "sm",
@@ -132,7 +117,6 @@ const FONT_WEIGHT: Readonly<Record<string, number>> = {
   bold: 700,
 };
 
-/** The semantic colour for `name`, or nothing when the name is not a role. */
 export const colorRole = (theme: Theme, name: string): string | undefined => {
   const role = ROLE[name];
   return role === undefined ? undefined : theme.colors[role];
@@ -140,7 +124,6 @@ export const colorRole = (theme: Theme, name: string): string | undefined => {
 
 const literal = (name: string): string | undefined => LITERAL[name];
 
-/** A colour, with an optional Tailwind `/alpha` suffix. */
 const paint = (theme: Theme, value: string): string | undefined => {
   const slash = value.indexOf("/");
   const name = slash === -1 ? value : value.slice(0, slash);
@@ -152,7 +135,6 @@ const paint = (theme: Theme, value: string): string | undefined => {
   return Number.isFinite(percent) ? alpha(color, percent / 100) : undefined;
 };
 
-/** Parses a Tailwind spacing value (`3`, `1.5`, `[12px]`) to pixels. */
 const spacingValue = (value: string): number | undefined => {
   if (value.startsWith("[") && value.endsWith("px]")) {
     const px = Number(value.slice(1, -3));
@@ -162,7 +144,6 @@ const spacingValue = (value: string): number | undefined => {
   return Number.isFinite(n) ? SPACING(n) : undefined;
 };
 
-/** A `calc(...)` expression in a value, or nothing when it is not one. */
 const calcExpression = (value: string): string | undefined => {
   if (value.startsWith("calc(") && value.endsWith(")")) return value;
   if (value.startsWith("[") && value.endsWith("]")) {
@@ -172,11 +153,6 @@ const calcExpression = (value: string): string | undefined => {
   return undefined;
 };
 
-/**
- * A geometry length: a spacing step, an `[Npx]` value, or a compile-time
- * `calc(...)`. A rejected `calc()` returns `undefined`, so the class lands in
- * `unsupported` (with the reason from `unsupportedReason`).
- */
 const lengthValue = (value: string, theme: Theme): number | undefined => {
   const calc = calcExpression(value);
   if (calc !== undefined) {
@@ -188,25 +164,19 @@ const lengthValue = (value: string, theme: Theme): number | undefined => {
   return spacingValue(value);
 };
 
-/**
- * A positive integer track count. GPUix exposes `gridTemplateColumns` /
- * `gridTemplateRows` as numbers (no track strings, no `repeat()`), so only an
- * integer count resolves; arbitrary templates and fractions fall through.
- */
 const trackCount = (value: string): number | undefined => {
   const n = Number(value);
   return Number.isInteger(n) && n >= 1 ? n : undefined;
 };
 
-/** Resolves one unprefixed utility name. */
 export const resolveUtility = (
   name: string,
   theme: Theme,
 ): StyleDesc | undefined => {
   if (name === "border") return { borderWidth: 1 };
-  // shadcn's `--input` is a border role; our tokens' `input` is the field fill.
+
   if (name === "border-input") return { borderColor: theme.colors.border };
-  // The picker triggers' strong edge, a role shadcn has no name for.
+
   if (name === "border-strong")
     return { borderColor: theme.colors.borderStrong };
   if (name === "border-t") return { borderTopWidth: 1 };
@@ -259,9 +229,6 @@ export const resolveUtility = (
   if (name === "w-px") return { width: 1 };
 
   if (name.startsWith("h-")) {
-    // shadcn sizes its controls `h-8`/`h-9`/`h-10`; those are the density
-    // scale's three control heights, so a compact theme (macOS) gets 24/28/32
-    // rather than Tailwind's 32/36/40. Other heights stay Tailwind lengths.
     const control = CONTROL_HEIGHT[name.slice(2)];
     if (control !== undefined) {
       return { height: theme.density.controlHeight[control] };
@@ -289,8 +256,6 @@ export const resolveUtility = (
     return value === undefined ? undefined : { maxWidth: value };
   }
   if (name.startsWith("size-")) {
-    // `size-9` is the square control (an icon button), so it takes the same
-    // density step as `h-9` rather than Tailwind's fixed 36.
     const control = CONTROL_HEIGHT[name.slice(5)];
     if (control !== undefined) {
       const side = theme.density.controlHeight[control];
@@ -404,12 +369,9 @@ export const resolveUtility = (
     return value === undefined ? undefined : { gap: value };
   }
   if (name.startsWith("rounded-")) {
-    // The corner is the theme's, not Tailwind's: macOS rounds a control at 6,
-    // the default look at 8. `2xl` folds into `xl` (the theme has no 2xl).
     const key = name.slice(8);
     if (key === "full") return { borderRadius: 9999 };
-    // A step the theme names resolves from it; a Tailwind step it does not
-    // (2xl/3xl/4xl, used by the style presets) falls back to Tailwind's value.
+
     const radius = theme.radius[key as keyof Theme["radius"]] ?? RADIUS[key];
     return radius === undefined ? undefined : { borderRadius: radius };
   }
@@ -450,10 +412,8 @@ export const resolveUtility = (
   return undefined;
 };
 
-/** Whether a utility is a ring declaration, resolved separately. */
 export const isRing = (name: string): boolean => name.startsWith("ring-");
 
-/** The width of `ring-1` / `ring-[3px]`; undefined for a colour-only ring. */
 export const ringWidth = (name: string): number | undefined => {
   if (!name.startsWith("ring-")) return undefined;
   const value = name.slice(5);
@@ -462,11 +422,9 @@ export const ringWidth = (name: string): number | undefined => {
   return value.length > 0 && Number.isFinite(width) ? width : undefined;
 };
 
-/** The colour of `ring-ring/50` / `ring-destructive/20`. */
 export const ringColor = (theme: Theme, name: string): string | undefined =>
   paint(theme, name.slice(5));
 
-/** A ring as the one native shape GPUix can draw: a zero-blur box shadow. */
 export const ringShadow = (
   theme: Theme,
   width: number,

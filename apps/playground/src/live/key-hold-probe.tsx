@@ -1,14 +1,3 @@
-/**
- * The `key-hold-lifecycle` probe: the repeat flag a window delivers, and the
- * activation guard every control in the library rests on.
- *
- * `decideActivation` refuses an activation whose event says `isHeld`, and that
- * is what keeps a held Enter from firing a menu row's action over and over. The
- * guard was proved with synthetic events only: no window had delivered an
- * `isHeld` payload, so nothing here could tell it from a branch the binding
- * never reaches. This probe drives both halves at once — a plain control that
- * logs the flag it was handed, and the shipped `Button` whose guard has to hold.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -33,10 +22,8 @@ import {
   type HeldKey,
 } from "./key-hold.js";
 
-/** A key and the state it produces need a frame to commit. */
 const SETTLE = Duration.millis(40);
 
-/** The plain control the window's payload is read from, with no guard of its own. */
 const RawControl = ({
   onDown,
   onUp,
@@ -172,8 +159,6 @@ export const keyHoldSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const focus = (testId: string) =>
       Effect.flatMap(ctx.host.focusElement(testId), () => Effect.sleep(SETTLE));
 
-    // 1. The payload first: an unguarded control hears every down, with the
-    //    flag that carried it. This is the measurement the guard depends on.
     yield* focus(KEY_HOLD_IDS.raw);
     yield* ctx.expectEqual(
       "the code focus reaches the unguarded control",
@@ -211,8 +196,6 @@ export const keyHoldSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
     );
 
-    // 2. The app-level channel carries the same flag, so a window gesture can
-    //    tell a repeat from a press too.
     yield* ctx.expectEqual(
       "the window handler saw both halves with the flag they carried",
       yield* windowLog(),
@@ -222,8 +205,6 @@ export const keyHoldSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ]),
     );
 
-    // 3. The guard uses it: the shipped Button activates once on Enter and
-    //    stays at one through the repeats.
     yield* focus(KEY_HOLD_IDS.button);
     yield* ctx.expectEqual(
       "a code focus lands on the button without activating it",
@@ -265,8 +246,6 @@ export const keyHoldSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       keyHoldReadout(1, 0),
     );
 
-    // 4. Space is the other half: it acts on the release, so its repeats are
-    //    inert by phase and the release runs the one activation.
     yield* down(KEY_HOLD_KEYS.release, false);
     yield* ctx.expectEqual(
       "a Space press does not activate yet",
@@ -286,8 +265,6 @@ export const keyHoldSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       keyHoldReadout(2, 0),
     );
 
-    // 5. A pointer press is the other route: it runs `onClick` and `onActivate`
-    //    together, where every key above ran `onActivate` alone.
     yield* Effect.flatMap(ctx.host.click(KEY_HOLD_IDS.button), () =>
       Effect.sleep(SETTLE),
     );

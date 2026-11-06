@@ -1,18 +1,3 @@
-/**
- * The column page's API tables, held to the props the types declare.
- *
- * The bug this guards: `docs/column-configuration.mdx` is the only page a
- * consumer reads for `ColumnMenu`, `TableColumnDivider` and `useColumns`, and
- * nothing tied its tables to the interfaces. A prop added to a type left the
- * page teaching an older API (a reader writes a prop the component ignores),
- * and a row removed from a table left the prop undocumented with every suite
- * green. The reader is deliberately small — these three interfaces are flat —
- * and it fails by name in both directions.
- *
- * `node:fs` is test-only, the shape `readme.test.ts` uses: this checks the
- * repository's Markdown from a plain vitest suite.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -25,7 +10,6 @@ const menu = read("./menu.tsx");
 const divider = read("./divider.tsx");
 const controller = read("./use-columns.ts");
 
-/** The flat `readonly` fields an exported interface declares. */
 const declaredProps = (source: string, name: string): ReadonlyArray<string> => {
   const body = new RegExp(
     `export interface ${name} \\{([\\s\\S]*?)\\n\\}`,
@@ -36,13 +20,6 @@ const declaredProps = (source: string, name: string): ReadonlyArray<string> => {
   );
 };
 
-/**
- * The props one heading's table documents: every backticked token in the first
- * cell, in source order.
- *
- * A row may document several props at once (`widthOf` / `offsetOf` /
- * `isVisible`), so the cell is split rather than read as one name.
- */
 const documentedProps = (
   source: string,
   heading: string,
@@ -61,7 +38,6 @@ const documentedProps = (
   );
 };
 
-/** A page table against its interface, failing with the symmetric difference. */
 const undocumented = (
   source: string,
   name: string,
@@ -100,10 +76,6 @@ describe("the column page's API tables", () => {
   });
 
   it("names the divider from the column's own words", () => {
-    // Bug guarded: the divider's name was interpolated from the raw label, so a
-    // column restored without a title said `Resize the  column` — the one
-    // control that resizes a column named after nothing — while the header and
-    // the menu named the same column by its id.
     const example = read("../../examples/table.example.tsx");
     const readme = read("../../README.md");
     expect(example).toContain("columnName(column.label, column.id)");
@@ -115,10 +87,6 @@ describe("the column page's API tables", () => {
   });
 
   it("teaches the configuration the controller restores", () => {
-    // Bug guarded: a saved column set is data the release may not recognise.
-    // The page, the seam and the hook must agree that the reader exists, that
-    // the hook reads the caller's `stored` value, and that the page names both
-    // the save and the restore.
     const logic = read("./logic.ts");
     expect(logic).toContain("export const columnConfig");
     expect(logic).toContain("export const restoreColumns");

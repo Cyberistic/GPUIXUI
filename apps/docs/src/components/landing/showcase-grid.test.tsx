@@ -5,22 +5,12 @@ import { describe, expect, it } from "vitest";
 import { rulesFor } from "./css-rules";
 import { Showcase } from "./showcase";
 
-/**
- * The landing's showcase grid, held to a masonry.
- *
- * The gallery cascades down four columns so a short tile is followed
- * immediately by the next one. The tiles are ordered to land within a few
- * dozen pixels of one another, and the bottom edge fades so the last row runs
- * off the page rather than ending on a hard card edge.
- */
-
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 
 const css = read("../../styles/landing.css");
 const markup = renderToStaticMarkup(<Showcase />);
 
-/** The declarations a selector heads, across every rule that names it. */
 const rule = (selector: string): string =>
   rulesFor(css, selector)
     .map((found) => found.declarations)

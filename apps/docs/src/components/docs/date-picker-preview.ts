@@ -1,42 +1,16 @@
 import * as Arr from "effect/Array";
-/**
- * The calendar rules the Date picker preview runs on.
- *
- * The shipped grid (`packages/components/src/date-picker/calendar.ts`) is civil
- * arithmetic over Effect's `DateTime`: no `Date`, no `Intl`, no locale lookup.
- * This module is the same model, small enough to read and with no runtime
- * dependency, so the browser preview and the native grid cannot disagree about
- * which column a month starts in, how many rows it paints, or where an arrow key
- * lands when the day sits on a bound.
- *
- * Days are `YYYY-MM-DD` strings and months are `YYYY-MM` strings. **`parseDay`
- * is the only entry for untrusted input**; every other function takes a day it
- * has already validated, so it reads the string's own fields instead of
- * re-checking them. Weeks start on Sunday (`0`) or Monday (`1`); every movement
- * is clamped to the inclusive `min`/`max` bounds, exactly like the component.
- *
- * `null` is the "no value" of the browser boundary (a blank grid cell, an
- * unset bound), not of the native API, which models absence as `Option`. The
- * docs site is a web app with no Effect runtime of its own, so a preview module
- * stays plain TypeScript rather than pulling the runtime in for a drawing.
- */
 
-/** A calendar day, `YYYY-MM-DD`. */
 export type IsoDay = string;
 
-/** A calendar month, `YYYY-MM`. */
 export type IsoMonth = string;
 
-/** Which weekday a week starts on: Sunday (`0`) or Monday (`1`). */
 export type WeekStart = 0 | 1;
 
-/** Inclusive day bounds; a `null` side is unbounded. */
 export interface DayBounds {
   readonly min: IsoDay | null;
   readonly max: IsoDay | null;
 }
 
-/** The keys the grid owns. Anything else is left to the page. */
 export type GridKey =
   | "ArrowLeft"
   | "ArrowRight"
@@ -62,7 +36,6 @@ const MONTHS: ReadonlyArray<string> = [
   "December",
 ];
 
-/** Sunday-first; the grid rotates this for a Monday start. */
 const WEEKDAYS: ReadonlyArray<string> = [
   "Sun",
   "Mon",
@@ -77,7 +50,6 @@ const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 const pad = (value: number): string => String(value).padStart(2, "0");
 
-/** Days since 1970-01-01 for a civil date (Howard Hinnant's algorithm). */
 const daysFromCivil = (year: number, month: number, day: number): number => {
   const shifted = month <= 2 ? year - 1 : year;
   const era = Math.floor(shifted / 400);
@@ -92,7 +64,6 @@ const daysFromCivil = (year: number, month: number, day: number): number => {
   return era * 146097 + dayOfEra - 719468;
 };
 
-/** The civil date of an epoch day. */
 const civilFromDays = (
   epoch: number,
 ): { readonly year: number; readonly month: number; readonly day: number } => {
@@ -121,7 +92,6 @@ const isoOf = (epoch: number): IsoDay => {
   return `${String(year).padStart(4, "0")}-${pad(month)}-${pad(day)}`;
 };
 
-/** Days since the epoch for a day `parseDay` accepted. */
 export const epochDay = (day: IsoDay): number =>
   daysFromCivil(
     Number(day.slice(0, 4)),
@@ -129,10 +99,6 @@ export const epochDay = (day: IsoDay): number =>
     Number(day.slice(8, 10)),
   );
 
-/**
- * Parse a `YYYY-MM-DD` day. A malformed or out-of-range date — including one a
- * lenient parser would normalise, such as `2026-02-30` — is `null`.
- */
 export const parseDay = (value: string): IsoDay | null => {
   const match = DAY.exec(value);
   if (match === null) return null;
@@ -143,24 +109,18 @@ export const parseDay = (value: string): IsoDay | null => {
   return isoOf(daysFromCivil(year, month, day)) === value ? value : null;
 };
 
-/** The month a day belongs to, `YYYY-MM`. */
 export const monthOf = (day: IsoDay): IsoMonth => day.slice(0, 7);
 
-/** The first day of the month a day belongs to. */
 export const firstOfMonth = (day: IsoDay): IsoDay => `${monthOf(day)}-01`;
 
-/** The day-of-month a validated day carries. */
 export const dayOfMonth = (day: IsoDay): number => Number(day.slice(8, 10));
 
-/** `0` for Sunday through `6` for Saturday. */
 export const weekdayOf = (day: IsoDay): number =>
   ((epochDay(day) % 7) + 7 + 4) % 7;
 
-/** A day moved by whole calendar days. */
 export const addDays = (day: IsoDay, amount: number): IsoDay =>
   isoOf(epochDay(day) + amount);
 
-/** A month moved by whole calendar months; always the first of a month. */
 export const addMonths = (month: IsoMonth, amount: number): IsoMonth => {
   const months = Number(month.slice(5, 7)) - 1 + amount;
   const year = Number(month.slice(0, 4)) + Math.floor(months / 12);
@@ -168,23 +128,15 @@ export const addMonths = (month: IsoMonth, amount: number): IsoMonth => {
   return `${String(year).padStart(4, "0")}-${pad(index + 1)}`;
 };
 
-/** The month's last day. */
 export const lastDayOfMonth = (month: IsoMonth): IsoDay =>
   addDays(`${addMonths(month, 1)}-01`, -1);
 
-/** How many days the month has. */
 export const daysInMonth = (month: IsoMonth): number =>
   dayOfMonth(lastDayOfMonth(month));
 
-/** The weekday labels in the column order the grid uses. */
 export const weekdayLabels = (weekStartsOn: WeekStart): ReadonlyArray<string> =>
   weekStartsOn === 1 ? [...WEEKDAYS.slice(1), WEEKDAYS[0] ?? ""] : WEEKDAYS;
 
-/**
- * Six weeks of seven cells for `month`. A cell is the day it paints; with
- * outside days hidden the leading and trailing cells are `null`, and with them
- * shown (the shipped default) they carry their own day.
- */
 export const monthGrid = (
   month: IsoMonth,
   weekStartsOn: WeekStart,
@@ -203,39 +155,26 @@ export const monthGrid = (
   );
 };
 
-/**
- * The ISO day a local date is, e.g. `"2026-10-29"`.
- *
- * Read from the local calendar, not UTC: a reader west of Greenwich is still on
- * yesterday's date for part of their morning, and a grid that opened on the UTC
- * day marked the wrong one as today.
- */
 export const isoDayOf = (date: Date): IsoDay =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
-/** The month names, January first. */
 export const MONTH_NAMES: ReadonlyArray<string> = MONTHS;
 
-/** The month number an `IsoMonth` names, 1 for January. */
 export const monthNumber = (month: IsoMonth): number =>
   Number(month.slice(5, 7));
 
-/** The year an `IsoMonth` names. */
 export const yearOfMonth = (month: IsoMonth): number =>
   Number(month.slice(0, 4));
 
-/** The years a caption's year select offers, oldest first. */
 export const yearChoices = (
   fromYear: number,
   toYear: number,
 ): ReadonlyArray<number> =>
   fromYear <= toYear ? Arr.range(fromYear, toYear) : [];
 
-/** `"October 2026"`. */
 export const monthLabel = (month: IsoMonth): string =>
   `${MONTHS[Number(month.slice(5, 7)) - 1] ?? month.slice(5, 7)} ${month.slice(0, 4)}`;
 
-/** `"17 October 2026"`, the accessible name of a day cell. */
 export const dayLabel = (day: IsoDay): string =>
   `${dayOfMonth(day)} ${monthLabel(monthOf(day))}`;
 
@@ -243,24 +182,19 @@ const SHORT_MONTHS: ReadonlyArray<string> = MONTHS.map((name) =>
   name.slice(0, 3),
 );
 
-/** `"Oct 17"`, the month and day a span prints once. */
 const shortDayOfMonth = (day: IsoDay): string =>
   `${SHORT_MONTHS[Number(day.slice(5, 7)) - 1] ?? ""} ${dayOfMonth(day)}`;
 
-/** `"Oct 17, 2026"`, the way the shipped trigger prints a day. */
 export const shortDayLabel = (day: IsoDay): string =>
   `${shortDayOfMonth(day)}, ${day.slice(0, 4)}`;
 
-/** One span of days, both ends inclusive; `to` is `null` until it is chosen. */
 export interface PreviewRange {
   readonly from: IsoDay;
   readonly to: IsoDay | null;
 }
 
-/** How a cell is painted in a range. */
 export type RangePaint = "start" | "middle" | "end" | null;
 
-/** The paint a day takes in a span, or `null` outside it. */
 export const rangePaint = (
   range: PreviewRange | null,
   day: IsoDay,
@@ -275,7 +209,6 @@ export const rangePaint = (
     : null;
 };
 
-/** The next span after a press: a completed span starts again. */
 export const nextRange = (
   range: PreviewRange | null,
   day: IsoDay,
@@ -284,7 +217,6 @@ export const nextRange = (
     ? { from: day, to: null }
     : { from: range.from, to: day };
 
-/** The trigger's span label: `"Jan 20 – Feb 4, 2026"` inside one year. */
 export const formatRange = (
   range: PreviewRange | null,
   placeholder: string,
@@ -296,17 +228,12 @@ export const formatRange = (
     : `${shortDayLabel(range.from)} – ${shortDayLabel(range.to)}`;
 };
 
-/** The months a calendar paints, starting at `month`. */
 export const monthWindow = (
   month: IsoMonth,
   count: 1 | 2,
 ): ReadonlyArray<IsoMonth> =>
   Array.from({ length: count }, (_, index) => addMonths(month, index));
 
-/**
- * The window's first month once `day` is focused: a day already painted leaves
- * the window alone, and one outside it pulls the window to keep itself visible.
- */
 export const windowMonth = (
   month: IsoMonth,
   count: 1 | 2,
@@ -318,7 +245,6 @@ export const windowMonth = (
   return target > last ? addMonths(target, -(count - 1)) : month;
 };
 
-/** Parse the public bound props; an absent or malformed side is unbounded. */
 export const boundsOf = (
   min?: string | null,
   max?: string | null,
@@ -327,7 +253,6 @@ export const boundsOf = (
   max: max === undefined || max === null ? null : parseDay(max),
 });
 
-/** Whether the day may be chosen: both bounds are inclusive. */
 export const isAvailable = (day: IsoDay, bounds: DayBounds): boolean => {
   const value = epochDay(day);
   return (
@@ -336,7 +261,6 @@ export const isAvailable = (day: IsoDay, bounds: DayBounds): boolean => {
   );
 };
 
-/** The day moved inside the bounds; an unbounded side leaves it unchanged. */
 export const clampToBounds = (day: IsoDay, bounds: DayBounds): IsoDay => {
   const lower =
     bounds.min !== null && epochDay(day) < epochDay(bounds.min)
@@ -347,7 +271,6 @@ export const clampToBounds = (day: IsoDay, bounds: DayBounds): IsoDay => {
     : lower;
 };
 
-/** Whether the previous (`-1`) or next (`1`) month is browseable. */
 export const canBrowseMonth = (
   month: IsoMonth,
   direction: -1 | 1,
@@ -357,14 +280,6 @@ export const canBrowseMonth = (
     ? bounds.min === null || month > monthOf(bounds.min)
     : bounds.max === null || month < monthOf(bounds.max);
 
-/**
- * Where a key moves the focused day.
- *
- * Arrow keys step a day or a week, `Home`/`End` jump to the week's edges in the
- * grid's own week order, and `PageUp`/`PageDown` keep the day-of-month unless
- * the new month is shorter — a 31st is February's last day, never March's third.
- * Every result is clamped to the bounds.
- */
 export const moveFocus = (
   from: IsoDay,
   key: GridKey,
@@ -374,7 +289,6 @@ export const moveFocus = (
   const weekOffset = (weekdayOf(from) - weekStartsOn + 7) % 7;
   const reach = (day: IsoDay): IsoDay => clampToBounds(day, bounds);
 
-  /** The same day-of-month in an adjacent month, clamped to its last day. */
   const inMonth = (month: IsoMonth, amount: -1 | 1): IsoDay => {
     const target = addMonths(month, amount);
     return `${target}-${pad(Math.min(dayOfMonth(from), daysInMonth(target)))}`;
@@ -394,13 +308,11 @@ export const moveFocus = (
   return moves[key]();
 };
 
-/** The trigger's label: the chosen day, or the placeholder while none is set. */
 export const formatValue = (
   value: IsoDay | null,
   placeholder: string,
 ): string => (value === null ? placeholder : shortDayLabel(value));
 
-/** The readout under a preview: the value the control would report. */
 export const describeValue = (value: IsoDay | null): string =>
   value === null
     ? "No date selected — the field reports null."

@@ -1,31 +1,3 @@
-/**
- * The data surfaces' words reach the accessibility tree.
- *
- * The bug this guards: `KeyValue`, `StatCard`, `PropertyPanel`'s title and the
- * advanced filter's own words were painted as `div`s holding a string, and
- * GPUix reaches its tree only through an element that carries a role — a
- * `<text>` is the runtime's `Label` node, a roleless `div` paints nothing a
- * reader hears. Measured before the fix, a window holding a key-value list and
- * a statistic card reported **one** node, the `Window`: the inspector's labels,
- * every value and the metric's reading were silent.
- *
- * The guards below read the rendered tree back through the schema decoder, so
- * they hold the announced shape rather than a screenshot: a key-value list is a
- * named `List` of `ListItem`s, a statistic card is a named `Group` whose reading
- * is a `Label`, and a property panel announces its title and rows.
- *
- * A documented default is not a name until it covers the blank string a locale
- * table or a saved record hands over: a default only applies to an *absent*
- * prop, so these surfaces also read an empty label as the words they document —
- * and a panel's blank title as no heading, not an unnamed one. The grid's own
- * controls follow the same rule: a column menu's trigger and surface and the
- * select-all box were left unnamed by a blank default, because their fallback
- * was written in the destructuring where only `undefined` reaches it. The
- * column divider is the same shape one step further out: its name is copy, and
- * a blank one left the only control that resizes a column a nameless
- * `separator` while its width stayed announced.
- */
-
 import * as Arr from "effect/Array";
 import { afterEach, describe, expect, it } from "vitest";
 import {
@@ -63,14 +35,12 @@ afterEach(() => {
   root = undefined;
 });
 
-/** Render one surface in a real window and hand back its accessibility tree. */
 const treeOf = (node: Parameters<typeof renderData>[0]) => {
   root = renderData(node);
   settle(root);
   return decodeA11yTree(root.renderer.getA11yTree());
 };
 
-/** The words a node's `Label` descendants announce, in paint order. */
 const labelsUnder = (
   tree: ReturnType<typeof decodeA11yTree>,
   id: string,
@@ -80,7 +50,6 @@ const labelsUnder = (
     (node) => tree.nodes[node]?.aria.value ?? "",
   );
 
-/** A node's own accessible name. */
 const nameOf = (tree: ReturnType<typeof decodeA11yTree>, id: string): string =>
   tree.nodes[id]?.aria.label ?? "";
 
@@ -123,12 +92,6 @@ describe("the data surfaces announce what they paint", () => {
   });
 
   it("paints no line for the copy a card was handed blank", () => {
-    // A label, unit, hint and trend are this card's copy, and a locale table's
-    // missing row or a saved record hands over `""` — or a run of spaces, which
-    // the runtime lays out as a full line where `""` lays out none. The reading
-    // is the caller's data and still paints; the four copy slots paint nothing
-    // at all, where a painted blank unit sat beside the reading and a blank
-    // label pushed the whole card down.
     const tree = treeOf(
       <StatCard
         aria-label="Area"
@@ -141,7 +104,7 @@ describe("the data surfaces announce what they paint", () => {
     );
 
     const group = onlyRole(tree, "Group");
-    // The control is the case above: every readable slot paints its own label.
+
     expect(labelsUnder(tree, group)).toEqual(["9600"]);
   });
 
@@ -198,9 +161,6 @@ describe("the data surfaces announce what they paint", () => {
     const labels = Arr.map(nodes, (node) => node.aria.value ?? "");
     expect(labels).toContain("any of (status equals tracked)");
 
-    // The combinator is the group's own control, not a word beside the tree:
-    // a reader changes it in place, so it has to be a named button, described
-    // with what a press does to the group.
     const combinator = Arr.filter(
       nodes,
       (node) => node.aria.label === "any of",
@@ -221,8 +181,6 @@ describe("the data surfaces announce what they paint", () => {
       />,
     );
 
-    // A locale table with a missing row answers `""`; the default only covers
-    // an absent prop, so the field used to publish no name at all.
     expect(nameOf(tree, onlyRole(tree, "TextInput"))).toBe(
       DEFAULT_FILTER_LABEL,
     );
@@ -254,14 +212,12 @@ describe("the data surfaces announce what they paint", () => {
       </div>,
     );
 
-    // The builder's blank title reads as its documented words…
     expect(
       Arr.map(
         withRole(tree, tree.root, "Heading"),
         (id) => tree.nodes[id]?.aria.value,
       ),
     ).toEqual([DEFAULT_FILTER_TITLE]);
-    // …while the panel's blank title is absence: no second, unnamed heading.
   });
 
   it("reads a blank select-all name as the documented default", () => {
@@ -274,19 +230,12 @@ describe("the data surfaces announce what they paint", () => {
       />,
     );
 
-    // A blank i18n row used to leave the header box with no name at all, while
-    // the prop's documented default sat unused.
     expect(nameOf(tree, onlyRole(tree, "CheckBox"))).toBe(
       DEFAULT_SELECTION_LABEL,
     );
   });
 
   it("reads a blank row box name as the documented default", () => {
-    // Bug guarded: a row's box label is content — a record restored without a
-    // title interpolates `Select ` and a saved label answers `""` — and the
-    // box's name is the only channel a reader has to tell one row's box from
-    // another. A blank label left it unnamed while the header box already read
-    // its own default.
     const blank = treeOf(
       <TableSelectionCell
         checked={false}
@@ -329,9 +278,7 @@ describe("the data surfaces announce what they paint", () => {
     );
     settle(root);
     const before = decodeA11yTree(root.renderer.getA11yTree());
-    // The picker's trigger and the value field are controls, so each needs the
-    // field's words; a blank label used to leave the trigger unnamed and the
-    // value field named `" value"`.
+
     expect(
       Arr.map(withRole(before, before.root, "Button"), (id) =>
         nameOf(before, id),
@@ -359,18 +306,13 @@ describe("the data surfaces announce what they paint", () => {
     root.renderer.flush();
 
     const open = decodeA11yTree(root.renderer.getA11yTree());
-    // The choice inside the menu is named by the same words, not left blank.
+
     expect(
       Arr.map(withRole(open, open.root, "MenuItem"), (id) => nameOf(open, id)),
     ).toContain("status");
   });
 
   it("names a clause that names no field, instead of opening on its comparison", () => {
-    // A clause's field is stored data: a saved query can carry a blank one (a
-    // builder saved before a field was picked), and a builder with no field to
-    // offer appends exactly that. The picker used to be a **nameless** button,
-    // the value field read `" value"`, and the sentence opened on the
-    // comparison (`" equals "`), so nothing said which part was missing.
     const tree = treeOf(
       <AdvancedFilter
         fields={[]}
@@ -405,12 +347,6 @@ describe("the data surfaces announce what they paint", () => {
   });
 
   it("reads a blank property row's label as the key it is stored by", () => {
-    // Bug guarded: a property row's label is content — a saved object answers
-    // `""` for a row whose name key is missing — and the panel paints it in the
-    // label column and hands it to the editable row's `Input` as its name. A
-    // blank one left that field unnamed while the row was still editable, and
-    // the label column empty. The row's key is the identity the panel addresses
-    // it by, so a blank label reads as the key.
     const tree = treeOf(
       <PropertyPanel
         aria-label="Properties"
@@ -429,19 +365,13 @@ describe("the data surfaces announce what they paint", () => {
 
     const field = onlyRole(tree, "TextInput");
     expect(nameOf(tree, field)).toBe("name");
-    // The label column paints the same word the field is named by.
+
     expect(labelsUnder(tree, onlyRole(tree, "List"))).toEqual(
       expect.arrayContaining(["tag", "name"]),
     );
   });
 
   it("reads a blank key-value label as the key it is stored by", () => {
-    // Bug guarded: a key-value entry's label is content — a saved object
-    // answers `""` (or whitespace) for a row whose name key is missing — and
-    // the list painted it straight into the fixed label column, so the row's
-    // value sat beside an empty cell and the entry never said what it named.
-    // The key is the identity the list addresses the row by, the reading the
-    // property panel's rows already follow (`propertyName`).
     const tree = treeOf(
       <KeyValue
         aria-label="Properties"
@@ -489,8 +419,7 @@ describe("the data surfaces announce what they paint", () => {
     root.renderer.flush();
 
     const tree = decodeA11yTree(root.renderer.getA11yTree());
-    // Both the trigger and the surface it opens are names a reader hears; a
-    // blank label used to leave them empty while `Columns` sat in the default.
+
     expect(nameOf(tree, onlyRole(tree, "Button"))).toBe(
       DEFAULT_COLUMN_MENU_LABEL,
     );
@@ -500,10 +429,6 @@ describe("the data surfaces announce what they paint", () => {
   });
 
   it("reads a blank column label as the id the column is stored by", () => {
-    // Bug guarded: a column label is content — a locale table missing its row
-    // and a saved column configuration both hand over `""` — and the menu's
-    // visibility row is named by its children, so a blank label left the one
-    // control that decides visibility unnamed while its Move row read `Move `.
     root = renderData(
       <ColumnMenu
         state={{
@@ -545,10 +470,6 @@ describe("the data surfaces announce what they paint", () => {
   });
 
   it("reads a blank divider name as the documented default", () => {
-    // Bug guarded: the divider's name is copy — a locale table missing its row
-    // and a saved label both hand over `""` — so the one control that resizes a
-    // column was a nameless `separator` tab stop while its width stayed
-    // announced.
     const tree = treeOf(
       <div style={{ display: "flex", flexDirection: "row" }}>
         <TableColumnDivider

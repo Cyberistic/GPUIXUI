@@ -14,20 +14,6 @@ import {
 } from "../../lib/lane-pages";
 import { LanePages } from "./lane-pages";
 
-/**
- * The lane pages' shipped-page list.
- *
- * Bug guarded: `/data-display` and `/workspace` are the pages a
- * reader arrives on when the question is "what does this lane ship", and both
- * answered with a hand-written list. The data lane's table had lost `Table
- * selection`, `Table sorting` and `Column configuration`, and the workspace
- * lane had no list at all — the editor, file, shell and media packages were
- * reachable only through the sidebar. The rows are generated from the mounted
- * collections now, so this suite reads the packages' own docs folders with a
- * different walker and requires every page's link, title and description in the
- * rendered list.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const laneSections: Readonly<Record<PackageLane, string>> = {
@@ -37,7 +23,6 @@ const laneSections: Readonly<Record<PackageLane, string>> = {
 
 const lanes = ["data-display", "workspace"] as const;
 
-/** One page a lane's packages ship, read straight off the disk. */
 interface ShippedPage {
   readonly url: string;
   readonly title: string;
@@ -72,7 +57,6 @@ const shippedPages = (lane: PackageLane): ReadonlyArray<ShippedPage> =>
 const render = (lane: PackageLane): string =>
   renderToStaticMarkup(<LanePages lane={lane} />);
 
-/** The escaping `renderToStaticMarkup` applies to text. */
 const html = (text: string): string =>
   text
     .replace(/&/g, "&amp;")
@@ -98,8 +82,7 @@ describe("the lane page list", () => {
       pages.filter((page) => !markup.includes(`href="${page.url}"`)),
     ).toEqual([]);
     expect(pages.filter((page) => !markup.includes(page.title))).toEqual([]);
-    // The description is the reason the row exists: a bare link list would
-    // make a reader open every page to learn what it gives the lane.
+
     expect(
       pages.filter((page) => !markup.includes(html(page.description))),
     ).toEqual([]);
@@ -124,9 +107,6 @@ describe("the lane page list", () => {
   );
 
   it("names the three data pages the hand-written table had lost", () => {
-    // Measured before the change: the table stopped at twelve and omitted
-    // these three, so the lane entry sent a reader looking for table selection,
-    // sorting and column configuration to the sidebar and nothing linked them.
     const markup = render("data-display");
 
     expect(markup).toContain('href="/data-display/table-selection"');
@@ -154,10 +134,6 @@ describe("the lane page list", () => {
   });
 
   it("links each package's name to the section entry it opens", () => {
-    // The caption used to print the package as text, so the only way from the
-    // lane to a package's own list was the sidebar. Every mounted collection
-    // route answers now (a site page, a package index, or the generated index),
-    // so the name is the link a reader expects.
     const markup = render("workspace");
     const routes = packageCollections
       .filter((collection) => collection.section === "Workspace")
@@ -197,8 +173,7 @@ describe("the lane page list", () => {
     expect(
       lanePageGroups(rows, "data-display").flatMap((g) => g.pages),
     ).toEqual([dataPage]);
-    // The charts moved to the Graphics category, so the data lane has no page
-    // of its own for them and the lane drops the group.
+
     expect(lanePageGroups([chartsPage], "data-display")).toEqual([]);
     expect(lanePageGroups([], "workspace")).toEqual([]);
     expect(lanePageTotal(groups)).toBe(1);

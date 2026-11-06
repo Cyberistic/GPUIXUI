@@ -1,23 +1,3 @@
-/**
- * The JSX runtime every published file is written for.
- *
- * The package compiles its JSX through `@gpuix/react` (`tsconfig.json`'s
- * `jsxImportSource`), but a consumer that compiles the files **from source**
- * with its own automatic runtime resolves every host element against that
- * runtime's props: `@gpuixui/docs` reported 68 `TS2322`/`TS2739` errors in this
- * package — `StyleDesc` where `CSSProperties` is expected, an `EventPayload`
- * React's `JSX.IntrinsicElements` cannot hold — in files no docs change touched.
- *
- * The `@jsxImportSource @gpuix/react` pragma pins each file's JSX to the runtime
- * it was written for, the way `@gpuixui/tokens`' `react.tsx` pins its own to
- * React, so a consumer's compiler setting cannot reinterpret a file the consumer
- * did not write. `src` and `examples` are both published (`examples/index.ts` is
- * the `./examples` export), so both are held.
- *
- * `node:fs` is the test-time repository boundary the package's other guards use;
- * runtime code stays on Effect's platform services.
- */
-
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -28,17 +8,14 @@ import { describe, expect, it } from "vitest";
 
 const root = new URL("../", import.meta.url);
 
-/** The two published trees that render JSX. */
 const roots = ["src", "examples"] as const;
 
 const text = (file: string): string =>
   readFileSync(fileURLToPath(new URL(file, root)), "utf8");
 
-/** The automatic runtime the package's compiler options name. */
 const jsxRuntime = (config: string): Option.Option<string> =>
   Option.fromNullishOr(/^\s*"jsxImportSource":\s*"([^"]+)"/m.exec(config)?.[1]);
 
-/** The runtime a file's opening line pins, when it pins one. */
 const pinnedRuntime = (source: string): Option.Option<string> =>
   Option.flatMap(Arr.head(source.split("\n")), (line) =>
     Option.fromNullishOr(
@@ -46,12 +23,6 @@ const pinnedRuntime = (source: string): Option.Option<string> =>
     ),
   );
 
-/**
- * The published `.tsx` files of one tree, relative to the package.
- *
- * A test file is compiled by its own package only, so it is never the JSX a
- * consumer's program sees; the files published under `src` and `examples` are.
- */
 const publishedTsx = (tree: string): ReadonlyArray<string> =>
   Arr.filter(
     readdirSync(fileURLToPath(new URL(`${tree}/`, root)), {
@@ -61,13 +32,11 @@ const publishedTsx = (tree: string): ReadonlyArray<string> =>
     (file) => Str.endsWith(".tsx")(file) && !Str.endsWith(".test.tsx")(file),
   );
 
-/** Every published file, with the tree it sits in. */
 const files = (): ReadonlyArray<readonly [string, string]> =>
   Arr.flatMap(roots, (tree) =>
     Arr.map(publishedTsx(tree), (file) => [tree, file] as const),
   );
 
-/** The fault one file has, or none when it pins the runtime it should. */
 const pinFault = (
   name: string,
   source: string,
@@ -94,7 +63,6 @@ describe("the JSX runtime a published file is written for", () => {
   });
 
   it("walks the two trees the package publishes", () => {
-    // A walk that read nothing would pass the case above for the wrong reason.
     expect(Arr.map(roots, (tree) => publishedTsx(tree).length > 0)).toEqual([
       true,
       true,
@@ -115,7 +83,7 @@ describe("the JSX runtime a published file is written for", () => {
       pinnedRuntime("import x;\n/** @jsxImportSource @gpuix/react */"),
     ).toEqual(Option.none());
     expect(pinnedRuntime("import x;")).toEqual(Option.none());
-    // A file pinned to the browser's runtime is the defect, not an absence.
+
     expect(
       pinFault(
         "probe.tsx",

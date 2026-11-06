@@ -1,8 +1,3 @@
-/**
- * Guards the easing curves: the monotonic family stays monotonic, the
- * overshooting family overshoots by the expected sign, and the Bezier inversion
- * hits its endpoints. Reverting any curve's formula fails its assertion.
- */
 import { describe, expect, it } from "vitest";
 import {
   anticipate,
@@ -79,17 +74,6 @@ describe("easing", () => {
   });
 
   it("traces the renderer's own curve for every easing name it accepts", () => {
-    // The bug this guards: the named curves were cubic polynomials — `easeOut`
-    // was `1 - (1 - t)³`, **0.875** at its midpoint — while the timing table
-    // hands the runtime the *name* `"easeOut"`, which the binding resolves to
-    // `cubic-bezier(0, 0, 0.58, 1)` and paints at **0.685** there. A movement
-    // sampled in JavaScript beside a runtime tween of the same phase therefore
-    // eased a different path, and neither surface showed which one was wrong.
-    //
-    // The oracle is the binding's own algorithm — `cubic_bezier` in
-    // `packages/native/src/motion.rs` at `@gpuix/native@0.11.0`: 20 bisection
-    // steps over the `x` control points, the `y` polynomial at the result,
-    // clamped to [0, 1].
     const bindingSample = (t: number, a: number, b: number): number => {
       const c = 3 * a;
       const second = 3 * (b - a) - c;
@@ -110,8 +94,6 @@ describe("easing", () => {
       return Math.min(1, Math.max(0, bindingSample((low + high) / 2, y1, y2)));
     };
 
-    /** The binding's control points, and `null` for the one name it does not
-     *  resolve to a Bezier (`linear` returns the progress itself). */
     const controlPoints: Readonly<
       Record<MotionEasingName, MotionCurve | null>
     > = {
@@ -121,9 +103,7 @@ describe("easing", () => {
       easeOut: [0, 0, 0.58, 1],
       easeInOut: [0.42, 0, 0.58, 1],
     };
-    // Every name the grammar accepts has a curve, so a name added to the list
-    // cannot reach `motionCurve` with no entry (the record's key type is the
-    // union, and this holds the table and the list together at run time).
+
     expect(
       motionEasingNames.filter((name) => Object.hasOwn(controlPoints, name)),
     ).toEqual([...motionEasingNames]);
@@ -144,9 +124,6 @@ describe("easing", () => {
   });
 
   it("resolves a phase's name to the curve that name stands for", () => {
-    // One home for the meaning of a name: the timing table publishes names for
-    // the phases, and the curves are the same bindings rather than a second
-    // table that agrees by hand.
     const phases: ReadonlyArray<MotionPhase> = ["enter", "exit", "standard"];
     const curves: Readonly<Record<MotionEasingName, Easing>> = {
       linear,
@@ -160,8 +137,7 @@ describe("easing", () => {
         curves[motionEasings[phase]],
       );
     });
-    // A name this release does not carry is the linear progress, the fallback
-    // `eased` takes for a curve it cannot call.
+
     expect(motionCurve("easeOutBack")(0.5)).toBe(0.5);
     expect(motionCurve(undefined)(0.5)).toBe(0.5);
   });
@@ -186,11 +162,6 @@ describe("easing", () => {
   });
 
   it("reads a progress it cannot read as the start of the run", () => {
-    // Every curve promises a value over `t` clamped to `[0, 1]`, and the
-    // package's totality rule is that a number a formula cannot read is
-    // replaced before it arrives. `clamp01` let `NaN` through, so a presenter
-    // whose progress read failed got `NaN` from every curve — a value the
-    // runtime paints as nothing.
     const curves: readonly [string, Easing][] = [
       ...monotonic,
       ["backIn", backIn],

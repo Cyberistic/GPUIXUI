@@ -1,14 +1,3 @@
-/**
- * The disabled fade, in the real GPUix renderer.
- *
- * The bug these guard: every disabled part painted its own copy of the share
- * (`opacity: disabled ? 0.5 : 1`), and the tag chip painted **0.6** inside a
- * root that already faded — two fades of one control, the second a number no
- * token names. `internal/theme.ts`'s `disabledFade` is the one declaration; these
- * cases read the share back off three different kinds of part so the seam cannot
- * be imported without painting.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as P from "effect/Predicate";
@@ -27,7 +16,6 @@ import {
 import { TagInput, TagInputChip, TagInputField } from "../tag-input.js";
 import { TimePicker } from "../time-picker.js";
 
-/** The opacity a part paints, or `undefined` when it declares none. */
 const opacityOf = (
   root: ComponentTestRoot,
   testId: string,
@@ -83,8 +71,7 @@ describe("the disabled fade", () => {
       );
 
       expect(opacityOf(tags, "tags"), mode).toBe(disabledOpacity);
-      // One fade per control: a second share here would composite the chip's own
-      // ink twice, which is the 0.6 the suite replaced.
+
       expect(opacityOf(tags, "chip-a"), mode).toBeUndefined();
 
       tags.unmount();

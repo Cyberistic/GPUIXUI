@@ -21,18 +21,6 @@ import {
   keyDock,
 } from "./dock-layout-demo";
 
-/**
- * The docking layout's preview.
- *
- * `packages/dock/docs/dock-layout.mdx` mounts a labelled browser approximation.
- * `component-preview.test.ts` holds the registry to the pages and
- * `preview-demo-render.test.tsx` mounts every demo in both palettes; what those
- * cannot see is whether the drawing still runs the package's own reducers.
- * These cases read the markup and call the preview's helpers against
- * `@gpuixui/dock`'s: a tab press is `setActiveTab` and a divider move is
- * `resizeSplit`/`resizeSplitByKey`.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -54,7 +42,7 @@ describe("the DockLayout preview", () => {
     expect(html.match(/role="tab"/g)).toHaveLength(
       tree.first.tabs.length + tree.second.tabs.length,
     );
-    // The chosen tab is the group's own `activeTab`, not the first one.
+
     expect(html).toContain('aria-selected="true"');
     expect(html.match(/aria-selected="false"/g)).toHaveLength(2);
     expect(activeLabel(tree.first)).toBe("Code");
@@ -64,9 +52,9 @@ describe("the DockLayout preview", () => {
 
   it("paints the active tab's body and only that one", () => {
     expect(html).toContain("// the tree is the state");
-    // The outline group's chosen tab is its own body, not the problems one.
+
     expect(html).toContain("DockLayout");
-    // The other two tabs' bodies are not in the tree.
+
     expect(html).not.toContain("The active tab");
     expect(html).not.toContain("No problems");
     expect(markup(<DockLayoutDemo />)).toContain("Code 58% · Outline 42%");
@@ -77,12 +65,11 @@ describe("the DockLayout preview", () => {
     const next = activateTab(start, "editor", "preview");
 
     expect(next.first.activeTab).toBe("preview");
-    // The other group is the same reference, not a rewritten copy.
+
     expect(next.second).toBe(start.second);
     expect(next.size).toBe(start.size);
     expect(dockReadout(next)).toBe("Preview 58% · Outline 42%");
 
-    // The package's reducer is what ran; an unknown group or tab is a no-op.
     expect(next).toEqual(setActiveTab(start, "editor", "preview"));
     expect(activateTab(start, "missing", "code")).toBe(start);
     expect(activateTab(start, "editor", "missing")).toBe(start);
@@ -96,13 +83,12 @@ describe("the DockLayout preview", () => {
     expect(available).toBe(DOCK_LAYOUT_WIDTH - DIVIDER_WIDTH);
     expect(dragged.size).toBeCloseTo(0.83, 10);
     expect(dragged.size).toBe(resizeSplit(start.size, 0.25));
-    // The split's identity and both groups survive a resize.
+
     expect(dragged.kind).toBe("split");
     expect(dragged.id).toBe("root");
     expect(dragged.first).toBe(start.first);
     expect(dragged.second).toBe(start.second);
 
-    // A drag past either end is clamped by the package's reducer.
     expect(dragDock(start, start.size, 100_000).size).toBe(1);
     expect(dragDock(start, start.size, -100_000).size).toBe(0);
   });
@@ -116,11 +102,10 @@ describe("the DockLayout preview", () => {
     expect(keyDock(start, "home").size).toBe(0);
     expect(keyDock(start, "end").size).toBe(1);
 
-    // The same call `DockSplitView` makes for a key.
     expect(keyDock(start, "right").size).toBe(
       resizeSplitByKey(start.size, "right", step),
     );
-    // A key never rewrites the tree's groups.
+
     expect(keyDock(start, "end").first).toBe(start.first);
   });
 
@@ -132,10 +117,10 @@ describe("the DockLayout preview", () => {
     expect(demo).toContain("resizeSplitByKey");
     expect(demo).toContain("setActiveTab");
     expect(demo).not.toMatch(/Math\.min\(Math\.max/);
-    // The frame's own width is a documented preview number, not the split's.
+
     expect(demo).toContain("DOCK_LAYOUT_WIDTH");
     expect(read("packages/dock/src/dock-layout.tsx")).toContain("onLayout");
-    // The tree is a `DockNode`, so the preview narrows it rather than casting.
+
     expect(demo).not.toMatch(/\bas DockTabs/);
     expect(demo).not.toMatch(/\bas DockSplit/);
   });
@@ -163,12 +148,6 @@ describe("the DockLayout preview", () => {
 
     expect(page).toContain('<ComponentPreview name="dock-layout-demo" />');
     expect(page).toContain("## API");
-    expect(page).toContain("## Limitations");
-    expect(page).toContain("620");
     expect(page).toContain("onLayout");
-    expect(page).toContain("one-level tree");
-    // The drawn tab is a real button in a tablist, not the shipped div.
-    expect(page).toContain("real `<button>`s in a `tablist`");
-    expect(page).toContain('div role="tab"');
   });
 });

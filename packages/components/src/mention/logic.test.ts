@@ -1,12 +1,3 @@
-/**
- * Mention token rules.
- *
- * The bugs these guard: an email address treated as a mention, a query that
- * survives whitespace, a token replaced from the wrong position, prefix matches
- * ranked behind substrings, a cap that reorders names, and a cap a caller
- * computed before its row height was measured hiding every suggestion.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -84,9 +75,6 @@ describe("rankMentions", () => {
   });
 
   it("reads a cap that cannot be measured as the house default", () => {
-    // `maxVisible` is usually `Math.floor(availableHeight / rowHeight)`, which
-    // is `NaN` until the first layout. `Math.max(0, NaN)` stayed `NaN` and
-    // `Arr.take(list, NaN)` is empty, so the suggestion list painted nothing.
     expect(rankMentions(["ana", "anna"], "", Number.NaN)).toEqual(
       rankMentions(["ana", "anna"], "", mentionMaxVisible),
     );

@@ -28,33 +28,12 @@ import * as Order from "effect/Order";
 import { useState, type MouseEvent } from "react";
 import { TABLE_ROWS, type PreviewTableRow } from "./table-preview";
 
-/**
- * Browser previews for the Table sorting and selection pages.
- *
- * The shipped table's headers and rows are GPUix hosts, so the pages cannot
- * mount them and these drawings are labelled approximations. What they do not
- * approximate is the table's reasoning: the order a header press produces is
- * `@gpuixui/data`'s `pressSortOrder`, the painted order is the package's own
- * row model (`constructGrid`, the core `useTable` runs on), and a row press is
- * its `pressSelection` over the visible keys. Only the paint is the browser's.
- *
- * The fixture is the curated Table page's deploy queue, so the two pages show
- * one set of records under the same rules.
- *
- * The drawing mirrors `TableSortHeader` (a ghost `Button` filling a
- * `TableHeaderCell`) and `TableRow`/`TableCell` on `Table`'s recipe: the card
- * frame, the header rule, the cell inset and the selection wash are the
- * component's, not a second table skin.
- */
-
-/** One column the previews sort by: its field, its visible label and the direction a first press starts at. */
 export interface SortColumn {
   readonly field: string;
   readonly label: string;
   readonly initial: SortDirection;
 }
 
-/** The four columns, in paint order. `duration` starts descending because that is the useful reading. */
 export const SORT_COLUMNS: ReadonlyArray<SortColumn> = [
   { field: "service", label: "Service", initial: "asc" },
   { field: "environment", label: "Environment", initial: "asc" },
@@ -62,7 +41,6 @@ export const SORT_COLUMNS: ReadonlyArray<SortColumn> = [
   { field: "duration", label: "Duration", initial: "desc" },
 ];
 
-/** The value a column reads: the numeric duration, else the field of that name. */
 const valueOf = (row: PreviewTableRow, field: string): string | number =>
   field === "duration"
     ? row.duration
@@ -72,7 +50,6 @@ const valueOf = (row: PreviewTableRow, field: string): string | number =>
         ? row.status
         : row.service;
 
-/** The column list the core sorts and filters by — one list for the header and the rows. */
 const gridColumns: ReadonlyArray<GridColumn<PreviewTableRow>> = Arr.map(
   SORT_COLUMNS,
   (column) => ({
@@ -81,20 +58,12 @@ const gridColumns: ReadonlyArray<GridColumn<PreviewTableRow>> = Arr.map(
   }),
 );
 
-/** The core's sorting state for a press-cycle order, primary first. */
 const sortingOf = (order: SortOrder): GridState["sorting"] =>
   Arr.map(order, (entry) => ({
     id: entry.field,
     desc: entry.direction === "desc",
   }));
 
-/**
- * The rows the package's row model paints for an order.
- *
- * `constructGrid` is the function `useTable` hands every part, so the preview
- * sorts exactly as the shipped table does; the core's change callbacks are
- * inert because this drawing owns the order itself.
- */
 export const sortedRows = (
   order: SortOrder,
 ): ReadonlyArray<PreviewTableRow> => {
@@ -110,17 +79,14 @@ export const sortedRows = (
   return Arr.map(table.getRowModel().rows, (row) => row.original);
 };
 
-/** The order the selection preview opens on: the service column, ascending. */
 export const OPENING_ORDER: SortOrder = [
   { field: "service", direction: "asc" },
 ];
 
-/** The visible keys, in paint order — the order a Shift range spans. */
 export const keysOf = (
   rows: ReadonlyArray<PreviewTableRow>,
 ): ReadonlyArray<string> => Arr.map(rows, (row) => row.id);
 
-/** The line under a preview: the order it is in, in the headers' own words. */
 export const sortReadout = (order: SortOrder): string =>
   Arr.match(order, {
     onEmpty: () => "source order — press a header",
@@ -135,18 +101,15 @@ export const sortReadout = (order: SortOrder): string =>
       ),
   });
 
-/** A field's visible label. */
 const labelOf = (field: string): string =>
   Option.match(
     Arr.findFirst(SORT_COLUMNS, (column) => column.field === field),
     { onNone: () => field, onSome: (column) => column.label },
   );
 
-/** The glyph a header paints: the package's arrow, or the unsorted affordance. */
 export const glyphOf = (order: SortOrder, field: string): string =>
   sortOrderGlyph(order, field) || "↕";
 
-/** The direction a field is in, or nothing when it is unsorted. */
 export const directionOf = (
   order: SortOrder,
   field: string,
@@ -156,11 +119,9 @@ export const directionOf = (
     (entry) => entry.direction,
   ).pipe(Option.getOrUndefined);
 
-/** The chosen keys, in documentation order. */
 export const chosenKeys = (state: SelectionState): ReadonlyArray<string> =>
   Arr.sort(Arr.fromIterable(state.selected), Order.String);
 
-/** The line under the selection preview: what the grid reports chosen. */
 export const selectionReadout = (
   state: SelectionState,
   total: number,
@@ -172,11 +133,10 @@ export const selectionReadout = (
 };
 
 export interface SortFrameProps {
-  /** The order to draw, primary first. */
   readonly order: SortOrder;
-  /** The rows in that order, from the package's row model. */
+
   readonly rows: ReadonlyArray<PreviewTableRow>;
-  /** Reports a header press: its field, the first direction to start at, and Shift. */
+
   readonly onSort: (
     field: string,
     initial: SortDirection,
@@ -184,7 +144,6 @@ export interface SortFrameProps {
   ) => void;
 }
 
-/** The drawing itself: one sortable header per column and the rows it orders. */
 export function SortFrame({ order, rows, onSort }: SortFrameProps) {
   return (
     <div className="gx-data-scene">
@@ -244,7 +203,6 @@ export function SortFrame({ order, rows, onSort }: SortFrameProps) {
   );
 }
 
-/** The page's sorting preview: the order the presses produce and the rows it paints. */
 export function TableSortingDemo() {
   const [order, setOrder] = useState<SortOrder>([]);
 
@@ -260,19 +218,17 @@ export function TableSortingDemo() {
 }
 
 export interface SelectionFrameProps {
-  /** The rows to draw, in the order the range is measured over. */
   readonly rows: ReadonlyArray<PreviewTableRow>;
-  /** What the grid currently holds chosen. */
+
   readonly selection: SelectionState;
-  /** Reports a row press and the modifier flags the browser reported. */
+
   readonly onPress: (key: string, modifiers: PressModifiers) => void;
-  /** Reports one record's checkbox, without disturbing the rest of the set. */
+
   readonly onToggle: (key: string) => void;
-  /** Reports the header checkbox: choose every visible record, or clear the set. */
+
   readonly onToggleAll: () => void;
 }
 
-/** The drawing itself: a checkbox column, the rows, and what the grid reports chosen. */
 export function SelectionFrame({
   rows,
   selection,
@@ -357,7 +313,6 @@ export function SelectionFrame({
   );
 }
 
-/** The page's selection preview: the chosen records, and the readout they feed. */
 export function TableSelectionDemo() {
   const rows = sortedRows(OPENING_ORDER);
   const keys = keysOf(rows);

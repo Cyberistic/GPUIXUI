@@ -1,21 +1,3 @@
-/**
- * `PanelGroup` — N panes in a row or column, built on the split divider.
- *
- * The group is a flex box whose panes take `flexGrow` from their fractions, so
- * the persisted {@link PanelLayout} needs no pixel measurement to paint: a
- * fraction is the share directly. Between every adjacent pair sits the same
- * {@link Divider} a `SplitPane` uses, so the resize interaction (pointer
- * capture on the pair, the keyboard step, the ring, the clamp) is one control,
- * not a second copy. A divider reports a cumulative pixel delta; the group
- * converts it to a fraction against the pane space it measures once on layout.
- *
- * A collapsible pane carries a header toggle (the primitives' `Button`); while
- * collapsed it shrinks to that header and its content leaves the tree, so the
- * other panes fill the space. The whole shape — fractions, collapse flags,
- * orientation — round-trips through {@link PanelLayout} at the app's
- * persistence boundary.
- */
-
 import type { ReactElement, ReactNode } from "react";
 import { Fragment, useRef, useState } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
@@ -36,24 +18,19 @@ import { PANE, PANEL_ROOT, mergeStyle, recipeStyle } from "./recipe.js";
 import { useTheme, type Theme } from "./theme.js";
 
 export interface PanelGroupProps {
-  /** The group's persisted shape, fractions and all. Controlled. */
   readonly layout: PanelLayout;
-  /** Reports the next layout after a resize or a collapse. */
+
   readonly onLayoutChange?: (layout: PanelLayout) => void;
-  /** Renders one panel's content by its id. */
+
   readonly renderPanel: (id: string) => ReactNode;
-  /**
-   * The divider's accessible name for the gap at `index`. Omitted, it is
-   * `Resize <left panel>`; `ResizableHandle` passes its own label through here.
-   */
+
   readonly dividerLabel?: (index: number) => string | undefined;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** Stable locator for automation. */
+
   readonly testId?: string;
 }
 
-/** A group's pane, expanded to its share or collapsed to its header. */
 const paneStyle = (panel: Panel, theme: Theme): StyleDesc =>
   mergeStyle(recipeStyle(PANE, theme), {
     display: "flex",
@@ -63,7 +40,6 @@ const paneStyle = (panel: Panel, theme: Theme): StyleDesc =>
     ...(panel.collapsed ? {} : { flexBasis: 0 }),
   });
 
-/** N panes in a row or column, built on the split divider. */
 export const PanelGroup = ({
   layout,
   onLayoutChange,
@@ -75,7 +51,7 @@ export const PanelGroup = ({
   const theme = useTheme();
   const orientation = layout.orientation;
   const panels = normalizePanels(layout.panels);
-  // The pane space a fraction maps onto: the group's main axis minus its dividers.
+
   const [total, setTotal] = useState(0);
   const dragStart = useRef<ReadonlyArray<Panel> | null>(null);
 

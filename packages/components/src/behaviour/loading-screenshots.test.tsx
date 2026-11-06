@@ -1,15 +1,3 @@
-/**
- * The loading surfaces' evidence frames, through the native test renderer.
- *
- * The five states a reviewer reads: a card skeleton, a list skeleton, the three
- * spinner sizes, the button row that carries the busy mark, and the confirmation
- * dialog mid-write. Each case proves the surface painted before the frame is
- * written (a blank window is not evidence).
- *
- * The files land under `apps/playground/.artifacts/live/`, which is gitignored:
- * local evidence for the run, never repository content.
- */
-
 import { mkdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { useState } from "react";
@@ -44,7 +32,6 @@ const capture = (
   return statSync(path).size;
 };
 
-/** A card whose heading and body have not arrived. */
 const SkeletonCard = () => {
   const theme = useTheme();
   return (
@@ -68,7 +55,6 @@ const SkeletonCard = () => {
   );
 };
 
-/** Three list rows: an avatar placeholder beside two lines each. */
 const SkeletonList = () => {
   const theme = useTheme();
   return (
@@ -112,7 +98,6 @@ const SkeletonList = () => {
   );
 };
 
-/** The three sizes, and the action that carries the mark. */
 const LoadingRow = () => {
   const theme = useTheme();
   return (
@@ -166,7 +151,6 @@ const LoadingRow = () => {
   );
 };
 
-/** The confirmation dialog while its action is in flight. */
 const ConfirmFrame = () => {
   const [open, setOpen] = useState(true);
   return (
@@ -228,7 +212,7 @@ describe.skipIf(process.platform !== "darwin")("Loading frames", () => {
       width: 520,
       height: 360,
     });
-    // The dialog enters with a fade; the frame shows where it rests.
+
     settleMotion(root);
 
     expect(nodesWithRole(root.renderer, "status").map((n) => n.name)).toEqual([

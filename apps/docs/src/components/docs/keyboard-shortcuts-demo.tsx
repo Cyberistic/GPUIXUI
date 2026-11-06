@@ -1,13 +1,3 @@
-/**
- * Browser preview for the Keyboard shortcuts page.
- *
- * The shipped sheet is display-only: a `role="list"` of groups, each a
- * `role="group"` named by its heading, of label-and-chord rows rendered as
- * platform keycaps. It registers no handler. The preview draws two groups with
- * the macOS glyphs the host resolves, and a separator drawn as a 1px element —
- * the runtime has one border colour per element, not a per-side border.
- */
-
 const Keycap = ({ children }: { readonly children: string }) => (
   <kbd className="gx-keycap">{children}</kbd>
 );

@@ -41,17 +41,6 @@ import {
 } from "./tree-demo";
 import { treeKeyOf } from "./tree-keys";
 
-/**
- * The two tree previews.
- *
- * `packages/data/docs/tree-view.mdx` and `virtual-tree.mdx` are the package's
- * Markdown, so the site mounts both drawings from `package-preview.ts`. The
- * registry's guard sees that each demo exists and is mounted; what it cannot
- * see is whether a drawing still runs the package's rules. These cases hold the
- * rows to `flattenTree`, the cursor to `treeCursorMove`, the typed prefix to
- * `typeAheadRow` and the window to `createWindowCalculator`.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -70,7 +59,6 @@ describe("the TreeView preview", () => {
     const cursor = openCursor();
     const rows = dependencyRows(DEPENDENCY_TREE, cursor);
 
-    // The drawing's rows are the package's flattening, not a second walk.
     expect(rows).toEqual(
       flattenTree(DEPENDENCY_TREE, dependencySpec, cursor.expanded),
     );
@@ -79,7 +67,6 @@ describe("the TreeView preview", () => {
       markup(<DependencyTreeDemo />).match(/role="treeitem"/g),
     ).toHaveLength(rows.length);
 
-    // A closed branch's children are absent from the drawing, not hidden.
     const closed = dependencyRows(DEPENDENCY_TREE, {
       expanded: HashSet.empty(),
       active: Option.none(),
@@ -95,7 +82,7 @@ describe("the TreeView preview", () => {
     expect(Option.getOrNull(treeCursorMove(rows, cursor, "down").active)).toBe(
       "docs/components/tw",
     );
-    // Right on an open branch steps into its first child; Left closes it.
+
     expect(
       Option.getOrNull(
         treeCursorMove(rows, withActive(cursor, "docs/components"), "right")
@@ -115,7 +102,7 @@ describe("the TreeView preview", () => {
         "docs/components",
       ),
     ).toBe(false);
-    // A leaf's Enter moves nowhere: there is no branch under it to flip.
+
     expect(
       Option.getOrNull(
         treeCursorMove(rows, withActive(cursor, "docs/effect"), "enter").active,
@@ -137,7 +124,7 @@ describe("the TreeView preview", () => {
         ),
       ),
     ).toBe("docs/fumadocs");
-    // A prefix nothing carries answers `None`, so the cursor stays put.
+
     expect(
       Option.isNone(
         typeAheadRow(rows, cursor.active, "zzz", (row) =>
@@ -160,10 +147,10 @@ describe("the TreeView preview", () => {
     expect(html).toContain('id="gx-tree-docs-components-tokens"');
     expect(html).toContain('aria-level="2"');
     expect(html).toContain('aria-level="3"');
-    // The version is the node's own, not a label the drawing invented.
+
     expect(html).toContain("15.8.5");
     expect(html).toContain("4.0.0");
-    // A blank label paints the row's key, the package's own rule.
+
     expect(treeName("", "docs/effect")).toBe("docs/effect");
   });
 
@@ -172,14 +159,10 @@ describe("the TreeView preview", () => {
     const chevrons = html.match(/class="gx-dtree-slot"/g) ?? [];
     const buttons = html.match(/<button[^>]*class="gx-dtree-slot"/g) ?? [];
 
-    // The tree itself is the tab stop. A branch's chevron stays clickable but
-    // out of the tab order, so a keyboard reader does not traverse one button
-    // per row — the arrows and Enter own expansion, exactly as the page says.
     expect(html.match(/tabindex="0"/g) ?? []).toHaveLength(1);
     expect(html.match(/tabindex="-1"/g) ?? []).toHaveLength(buttons.length);
     expect(buttons.length).toBeGreaterThan(0);
-    // A leaf keeps the chevron's track and paints no control: the package's own
-    // row has nothing to flip under a leaf.
+
     expect(chevrons.length).toBeGreaterThan(buttons.length);
     expect(
       html.match(/<span aria-hidden="true" class="gx-dtree-slot">/g) ?? [],
@@ -212,8 +195,7 @@ describe("the tree drawing's shape", () => {
     expect(html).toContain('class="gx-dtree"');
     expect(html).toContain('class="gx-dtree-row"');
     expect(html).toContain('class="gx-dtree-slot"');
-    // `TREE_ROW` is `text-sm` and the row height is the density's `rowHeight`;
-    // `TREE_INDENT` is the measured 16px a level insets by.
+
     expect(row.slice(0, row.indexOf("}"))).toContain(
       "height: var(--row-height);",
     );
@@ -221,7 +203,7 @@ describe("the tree drawing's shape", () => {
     expect(read("packages/data/src/tree/row.tsx")).toContain(
       "paddingLeft: TREE_INSET + row.depth * TREE_INDENT",
     );
-    // Every painted row carries the measured inset, and a deeper row by one step.
+
     const insets = (html.match(/padding-left:(\d+)px/g) ?? []).map((one) =>
       Number(/\d+/.exec(one)?.[0]),
     );
@@ -235,16 +217,16 @@ describe("the VirtualTree preview", () => {
 
   it("holds the whole graph while the package's window mounts a slice", () => {
     expect(count).toBe(1884);
-    // A registry-sized set: the page's subject is thousands of rows.
+
     expect(count).toBeGreaterThan(1500);
     const mounted = treeMountedRows(count, 0);
     const calculator = createWindowCalculator(virtualTreeSpecFor(count));
     expect(mounted).toEqual(calculator.indicesAt(0));
-    // A non-zero offset is the case a fixed slice would still pass at the top.
+
     expect(treeMountedRows(count, 900)).toEqual(calculator.indicesAt(900));
     expect(treeMountedWindow(count, 900)).toEqual({ start: 20, end: 35 });
     expect(mounted.length).toBeLessThan(100);
-    // The whole set is what the tree holds; only the window is mounted.
+
     expect(virtualTreeRows.length).toBeGreaterThan(mounted.length * 10);
     expect(VIRTUAL_TREE_ROW_HEIGHT).toBe(37);
   });
@@ -256,12 +238,12 @@ describe("the VirtualTree preview", () => {
     expect(treeOffset(count, -40)).toBe(0);
     expect(treeOffset(count, 1e9)).toBe(revealed);
     expect(Arr.contains(treeMountedRows(count, revealed), last)).toBe(true);
-    // The window at the top of the set: seven rows in view, four either side.
+
     expect(treeWindowReadout(count, 0)).toBe(
       `1–7 in view · 11 mounted of 1884`,
     );
     expect(treeMountedWindow(count, 0)).toEqual({ start: 0, end: 11 });
-    // The overdraw the page prints is the package's default.
+
     expect(VIRTUAL_TREE_OVERDRAW).toBe(4);
     expect(HashSet.size(virtualTreeExpanded)).toBeGreaterThan(100);
   });
@@ -276,8 +258,6 @@ describe("the VirtualTree preview", () => {
       active: Option.some(last.key),
     };
 
-    // The scroll landed on a row the new window does not hold: the cursor goes
-    // to the viewport's top row, which the window is guaranteed to mount.
     const anchor = anchorIndexFor(count, 900);
     expect(anchor).toBe(24);
     expect(Arr.contains(treeMountedRows(count, 900), anchor)).toBe(true);
@@ -285,13 +265,12 @@ describe("the VirtualTree preview", () => {
     const moved = cursorAfterScroll(rows, atEnd, count, 900);
     expect(Option.getOrNull(moved.active)).toBe(rows[anchor]?.key);
 
-    // A row the window still mounts keeps the cursor, and its identity.
     const top = rows[0];
     expect(top).toBeDefined();
     if (top === undefined) return;
     const inside: TreeCursor = { ...atEnd, active: Option.some(top.key) };
     expect(cursorAfterScroll(rows, inside, count, 0)).toBe(inside);
-    // A cursor with no row takes the anchor rather than naming no row at all.
+
     expect(
       Option.getOrNull(
         cursorAfterScroll(
@@ -309,22 +288,17 @@ describe("the VirtualTree preview", () => {
     const host = read("packages/data/src/virtual/tree.tsx");
     const drawing = read("apps/docs/src/components/docs/tree-demo.tsx");
 
-    // The package's window handler keeps the tab stop on a mounted row: the row
-    // at the viewport's top edge, and only once the active row has unmounted.
     expect(host).toContain(
       "if (Arr.contains(window.mountedAt(offset), index)) return;",
     );
     expect(host).toContain("Math.floor(offset / rowHeight)");
     expect(host).toContain("active: Option.some(anchorRow.key)");
 
-    // The drawing scrolls through that rule, not through a bare offset write.
     expect(drawing).toContain(
       "cursorAfterScroll(tree.rows, tree.cursor, count, clamped)",
     );
     expect(drawing).toContain("onChange={(event) => scrollTo(");
 
-    // The anchor is the row the viewport's top edge lands in, and the window
-    // mounts it, so the tab stop can name it at every scroll position.
     Arr.forEach([0, VIRTUAL_TREE_ROW_HEIGHT, 900, 5000], (offset) => {
       const settled = treeOffset(count, offset);
       const anchor = anchorIndexFor(count, settled);
@@ -353,7 +327,6 @@ describe("the VirtualTree preview", () => {
       ).toBe(true);
     });
 
-    // A scroll past the end still names a row the window holds.
     const end = treeOffset(count, 1e9);
     expect(anchorIndexFor(count, end)).toBeLessThan(count);
     expect(
@@ -367,12 +340,10 @@ describe("the VirtualTree preview", () => {
 
     expect(html.match(/role="treeitem"/g)).toHaveLength(mounted.length);
     expect(html).toContain('id="gx-vtree-registry-01"');
-    // A mounted branch offers its flip; a mounted leaf offers no Expand control
-    // at all, so the window cannot claim a press that would change nothing.
+
     expect(html).toContain("Collapse registry-01");
     expect(html).not.toContain("Expand package-01");
-    // The first mounted row sits at the top of the window; the next is one row
-    // height below it, which is the package's step.
+
     expect(html).toContain("top:0");
     expect(html).toContain(`top:${String(VIRTUAL_TREE_ROW_HEIGHT)}px`);
   });
@@ -390,8 +361,7 @@ describe("the tree drawings run the package's rules", () => {
     expect(source).toContain("typeAheadRow");
     expect(source).toContain("createWindowCalculator");
     expect(source).toContain("useExpandedRows");
-    // A second copy of the walk, the order or the window would show up as the
-    // shape it re-implements.
+
     expect(source).not.toContain("split(");
     expect(source.match(/\.sort\(/g) ?? []).toHaveLength(
       source.match(/Arr\.sort\(/g)?.length ?? 0,

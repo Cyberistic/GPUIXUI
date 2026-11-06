@@ -1,12 +1,3 @@
-/**
- * The magnetic pointer store, without a renderer.
- *
- * The bugs these guard: a held pointer re-writing the point it already holds
- * (a frame the runtime would paint identically, per move), and a preference
- * turned back on leaning from the point it removed — the plate must lean only
- * from the next move, so `release` has to clear what `follow` wrote.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
@@ -51,7 +42,6 @@ describe("MagneticStore", () => {
     Effect.gen(function* () {
       const store = yield* makeMagneticStore;
 
-      // A held pointer emits a move per frame; only the first is a change.
       let signals = 0;
       const unsubscribe = store.local.subscribe(() => {
         signals += 1;

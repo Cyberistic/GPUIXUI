@@ -1,17 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Field: the label, control and message block around one input.
- *
- * The components do not own the value and do not validate on every keystroke —
- * `validation/logic.ts` turns a schema into a message, and the caller decides
- * when to run it. A field only paints what the caller tells it.
- *
- * Measured limitation: `@gpuix/native@0.11.0` has no `aria-describedby`, so the
- * message is passed to the control as `aria-description` (a description, not an
- * id reference). The control is the package's own host field, painted by the
- * fixed field recipe; the primitives' `Input` is density-scaled (ADR 0006).
- */
-
 import type { InputProps, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -54,7 +41,6 @@ import {
   useTheme,
 } from "./internal/theme.js";
 
-/** What a {@link FieldInput} inherits from the field around it. */
 interface FieldContextValue {
   readonly label: string;
   readonly description: string | undefined;
@@ -64,21 +50,18 @@ interface FieldContextValue {
 
 const FieldContext = createContext<FieldContextValue | undefined>(undefined);
 
-/** {@link Field} props. */
 export interface FieldProps extends Props {
-  /** The visible label and the input's accessible name. */
   readonly label: string;
-  /** Supporting copy under the control; hidden while `error` is present. */
+
   readonly description?: string;
-  /** The message to show; also paints the control as invalid. */
+
   readonly error?: string;
   readonly required?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** One labelled field. Compose a {@link FieldInput} or any other control. */
 export const Field = ({
   label,
   description,
@@ -116,15 +99,12 @@ export const Field = ({
   );
 };
 
-/** {@link FieldLabel} props. */
 export interface FieldLabelProps extends Props {
-  /** Appends a destructive `*`; the accessible name stays clean. */
   readonly required?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/** The field's label row. */
 export const FieldLabel = ({
   required = false,
   className,
@@ -159,13 +139,10 @@ export const FieldLabel = ({
   );
 };
 
-/** Supporting copy under the control. */
 export interface FieldDescriptionProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** Supporting copy under the control. */
 export const FieldDescription = ({
   className,
   style,
@@ -183,17 +160,10 @@ export const FieldDescription = ({
   );
 };
 
-/** {@link FieldError} props. */
 export interface FieldErrorProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/**
- * The message slot used when the field is invalid. Announced as an alert, and
- * painted in the status tone's measured page-text role — the solid
- * `destructive` fill is not a role any contrast pair measures as text.
- */
 export const FieldError = ({ className, style, ...rest }: FieldErrorProps) => {
   const theme = useTheme();
   return (
@@ -211,32 +181,22 @@ export const FieldError = ({ className, style, ...rest }: FieldErrorProps) => {
   );
 };
 
-/** {@link FieldInput} props: an input that knows whether its field is invalid. */
 export interface FieldInputProps extends Omit<InputProps, "style"> {
-  /** Overrides the field's own error as the validity signal. */
   readonly invalid?: boolean;
-  /**
-   * Leaves the tab order and ignores edits; 0.11.0 has no `aria-disabled`.
-   * Inferred from a disabled `Fieldset` as well as set directly.
-   */
+
   readonly disabled?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, or a function of the input's state. */
+
   readonly style?: StateStyle<FieldInputState>;
 }
 
-/** What the control draws: input state plus the field's validity. */
 export interface FieldInputState {
   readonly disabled: boolean;
   readonly focused: boolean;
   readonly invalid: boolean;
 }
 
-/**
- * A single-line input wired to its field: it takes the label as its accessible
- * name, the message as its description, and the destructive border when invalid.
- */
 export const FieldInput = ({
   invalid,
   disabled = false,
@@ -253,8 +213,7 @@ export const FieldInput = ({
   const field = useContext(FieldContext);
   const fieldsetDisabled = useFieldsetDisabled();
   const [focused, setFocused] = useState(false);
-  // The host edits its own text, so the field keeps the same draft the hint
-  // reads. A controlled `value` stays authoritative.
+
   const [draft, setDraft] = useState("");
   const text = value ?? draft;
   const isInvalid = invalid ?? field?.error !== undefined;
@@ -270,8 +229,7 @@ export const FieldInput = ({
     onNone: () => (field?.required === true ? "Required" : undefined),
     onSome: (text) => (field?.required === true ? `${text}. Required` : text),
   });
-  // The painted hint has to be said as well: the host is handed no
-  // `placeholder`, so the runtime's own `aria_placeholder` is gone too.
+
   const help = fieldHelp(
     { description: description ?? rest["aria-description"], placeholder },
     text,
@@ -305,9 +263,6 @@ export const FieldInput = ({
     <div style={hintHost()}>
       <input
         {...rest}
-        // The host draws its own value and caret but not its hint: 0.11.0
-        // shapes a placeholder in a fixed grey no token reaches, so the field
-        // paints the hint itself in the measured `placeholder` role.
         theme={nativeTextTheme(theme, "input")}
         value={value}
         {...(isDisabled ? { readOnly: true, tabIndex: -1 } : {})}
@@ -335,7 +290,6 @@ export const FieldInput = ({
   );
 };
 
-/** Every part of Field, so a misplaced sibling is named. */
 const fieldParts: ReadonlyArray<PartComponent> = [
   Field,
   FieldLabel,
@@ -351,7 +305,6 @@ const fieldRoot: PartsContract = {
   hint: "Field renders its label and message itself; put only the control inside it.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const fieldMeta = {
   name: "Inline validation",
   tier: 2,

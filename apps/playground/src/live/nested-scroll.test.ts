@@ -1,13 +1,3 @@
-/**
- * The `nested-scroll-lifecycle` fixture, held to the geometry its probe reads.
- *
- * Every claim the probe makes about a wheel needs the layout to be true first:
- * a wheel aimed at the inner scroller must be over the inner and inside the
- * outer, the outer-only wheel must aim below the inner rather than over it, and
- * both scrollers must have travel left when the probe asks. A layout change
- * that breaks any of those would let the probe pass while measuring one
- * scroller instead of two.
- */
 import { describe, expect, it } from "vitest";
 import {
   FILLER_ROW_HEIGHT,

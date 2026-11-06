@@ -26,22 +26,6 @@ import {
   type PreviewTableRow,
 } from "./table-preview";
 
-/**
- * Browser previews for the Table page.
- *
- * The shipped table is presentational: `@gpuixui/data`'s parts paint the frame
- * and the controllers own the sort, the selection and the filter. These
- * previews paint the same decisions in the browser so a reader can press
- * them — they are **illustrative approximations** of the native table, labelled
- * on the page, and their rules come from `table-preview.ts`, which the suite
- * holds to the package's own rules.
- *
- * The workflow preview borrows a data table's shell from shadcn — a filter
- * field, a Columns menu, sortable headers, a select column, per-row actions and
- * a paginated footer — while its sort, selection and filter stay the package's.
- */
-
-/** The header labels, in the order the columns toggle. */
 const COLUMN_LABELS: Readonly<Record<ColumnId, string>> = {
   service: "Service",
   environment: "Environment",
@@ -49,7 +33,6 @@ const COLUMN_LABELS: Readonly<Record<ColumnId, string>> = {
   duration: "Duration",
 };
 
-/** The direction a header starts a column at, when it is not the sorted one. */
 const COLUMN_INITIAL: Readonly<Record<ColumnId, "asc" | "desc">> = {
   service: "asc",
   environment: "asc",
@@ -57,11 +40,9 @@ const COLUMN_INITIAL: Readonly<Record<ColumnId, "asc" | "desc">> = {
   duration: "desc",
 };
 
-/** The glyph a sortable header paints: the order's, or the unsorted affordance. */
 const sortGlyph = (order: PreviewSortOrder, id: ColumnId): string =>
   sortOrderGlyph(order, id) || "↕";
 
-/** A drawn checkbox in the select column, reusing the checkbox page's parts. */
 const TableCheck = ({
   label,
   checked,
@@ -113,7 +94,6 @@ const TableCheck = ({
   );
 };
 
-/** One data cell, painted from the column the row is showing. */
 const DataCell = ({
   row,
   id,
@@ -139,7 +119,6 @@ const DataCell = ({
   return <td className="gx-table-cell gx-table-number">{row.duration}s</td>;
 };
 
-/** A deploy queue: filter it, hide a column, sort it, page it, act on a row. */
 export const TableWorkflow = () => {
   const [rows, setRows] = useState<ReadonlyArray<PreviewTableRow>>(TABLE_ROWS);
   const [query, setQuery] = useState("");
@@ -156,8 +135,6 @@ export const TableWorkflow = () => {
   const columnsAnchor = useRef<HTMLDivElement>(null);
   const menuAnchor = useRef<HTMLDivElement>(null);
 
-  // Both menus close on an outside press or Escape, the way the menu preview
-  // does: a menu that stayed open would keep a reader's press hostage.
   useEffect(() => {
     const onDown = (event: globalThis.MouseEvent) => {
       const target = event.target;
@@ -189,7 +166,6 @@ export const TableWorkflow = () => {
   const allSelected = allPageSelected(selection, pageIds);
   const someSelected = somePageSelected(selection, pageIds);
 
-  /** Narrowing the set releases a chosen record it no longer paints. */
   const onQuery = (next: string) => {
     setQuery(next);
     setPage(0);
@@ -457,7 +433,6 @@ export const TableWorkflow = () => {
   );
 };
 
-/** A card that holds one small table, with the frame the previews share. */
 const StateCard = ({
   title,
   meta,
@@ -476,7 +451,6 @@ const StateCard = ({
   </div>
 );
 
-/** The states a table spends its life in: chosen, empty and loading. */
 export const TableStates = () => {
   const sorted = visibleRows(TABLE_ROWS, "", [
     { field: "duration", direction: "desc" },

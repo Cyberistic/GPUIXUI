@@ -1,31 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The toast viewport: a stacked notice queue in a corner.
- *
- * GPUix has no `transform` and no `zIndex`, so the stack is **flow plus
- * height** rather than a scaled fan: the newest card is the last child and the
- * only full one, and every older card is a short inset **slice of the card's own
- * top** above it. Hovering or focusing the stack gives every card its measured
- * height and one shared gap, so the peeks unfold into a readable column; leaving
- * folds them back. The viewport is `position: absolute`, so neither shape moves
- * the page.
- *
- * A card is a **slot** that owns the rank's box and clips, around a **surface**
- * that keeps the border, radius and elevation at its measured height. That is
- * what makes a peek read as a card behind this one rather than a bar — the cut
- * is the slot's bottom edge, not the card's — and it is what lets a leaving card
- * close its own slot while the content inside stays whole.
- *
- * The measure is the surface's `onLayout`, the same rule `AutoHeight` uses: the
- * slot clips, the surface keeps its natural height, so a rank change cannot
- * change what the card measured.
- *
- * Timers are the store's Effect `Clock`, not animation frames; this file only
- * tells the store when the stack is held. The hold is the pointer anywhere in
- * the stack or a focus in one card's controls, with a short release grace so
- * moving between two cards cannot fold the stack between them.
- */
-
 import type { EventPayload, Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
@@ -80,7 +53,6 @@ import { useToast } from "./provider.js";
 import { stackGap, toastSlotOf, type ToastSlot } from "./stack.js";
 import { swipeEdge } from "./swipe.js";
 
-/** The status tone behind a toast's bar and icon. */
 const asTone = (value: ToastTone): Tone =>
   Match.value(value).pipe(
     Match.when("info", () => "info" as const),
@@ -90,7 +62,6 @@ const asTone = (value: ToastTone): Tone =>
     Match.exhaustive,
   );
 
-/** The icon each tone shows beside its title. */
 const glyph = (
   value: ToastTone,
 ): "info" | "success" | "warning" | "error" | "loader" =>
@@ -102,26 +73,12 @@ const glyph = (
     Match.exhaustive,
   );
 
-/** The toast's own timing: it arrives a touch slower than a menu and leaves
- *  faster than it entered, so the stack reads as arriving gently and leaving
- *  promptly. They are the toast's, not a shared level's, so its feel never drags
- *  another surface along (or the reverse).
- *
- *  `move` is the stack's own displacement — a card taking the rank in front of
- *  it, a peek unfolding, a row closing, a swipe returning to its edge — and it
- *  is longer than the arrival because a card that changes size must not outrun
- *  the card that arrived. It eases on Base UI's stack curve (`[0.22, 1, 0.36,
- *  1]`): a fast departure and a long settle, which is the closest a `motion`
- *  prop gets to sonner's spring, because the runtime clamps a tween to its
- *  target and a bezier cannot overshoot. Base UI's own 500 ms reads as sluggish
- *  at this size beside a 240 ms arrival. */
 interface ToastTiming {
   readonly enter: MotionTiming;
   readonly exit: MotionTiming;
   readonly move: MotionTiming;
 }
 
-/** Base UI's stack curve: leaves fast, settles slowly, never past the edge. */
 const STACK_CURVE: MotionCurve = [0.22, 1, 0.36, 1];
 
 const useToastTiming = (): ToastTiming => {
@@ -137,13 +94,10 @@ const useToastTiming = (): ToastTiming => {
   };
 };
 
-/** The horizontal distance a card arrives from and leaves toward, in pixels. */
 const EDGE_TRAVEL = 16;
 
-/** How long a lost pointer or focus may stay lost before the stack folds. */
 const HOLD_GRACE_MS = 120;
 
-/** A slot no card should need: a broken measurement paints nothing, not the stack. */
 const EMPTY_SLOT: ToastSlot = {
   rank: 0,
   height: 0,
@@ -151,29 +105,16 @@ const EMPTY_SLOT: ToastSlot = {
   interactive: false,
 };
 
-/** One painted card: a live toast, or one playing out its exit. */
 interface StackEntry {
   readonly toast: Toast;
   readonly present: boolean;
 }
 
-/** A scheduled removal of a leaving card, and the window it was scheduled for. */
 interface ExitTimer {
   readonly handle: ReturnType<typeof setTimeout>;
   readonly ms: number;
 }
 
-/**
- * The stack with the cards that have just left it, kept for their exit tween.
- *
- * The store removes a dismissed toast immediately — its timers are Effect
- * `Clock` time, not animation frames — so the viewport is what remembers the
- * card long enough to run its exit. The entry list keeps its order: a card
- * leaving does not reorder the stack under the reader. A leave is timed by the
- * seam's exit window, not by the runtime's clock, so a frozen motion clock
- * cannot strand a card on screen; a preference change rescales a leave already
- * in progress, so turning reduced motion on removes the card at once.
- */
 const useToastStack = (
   toasts: ReadonlyArray<Toast>,
   timing: SurfaceTiming,
@@ -183,9 +124,7 @@ const useToastStack = (
   );
   const painted = useRef(entries);
   const timers = useRef(new Map<string, ExitTimer>());
-  // The window a leave occupies: the tween plus the wait it sits out first. The
-  // timers are keyed by this value, so a preference change (or a timing that
-  // gains a wait) rescales a leave already in flight.
+
   const windowMs = exitWindowMs(timing);
 
   useLayoutEffect(() => {
@@ -211,9 +150,7 @@ const useToastStack = (
       (toast): StackEntry => ({ toast, present: true }),
     );
     const merged = [...kept, ...appended];
-    // `toasts` can be a fresh array on every render (the store's snapshot);
-    // writing an equal stack back would schedule another render and loop until
-    // React's update-depth guard fires.
+
     setEntries((list) =>
       list.length === merged.length &&
       list.every(
@@ -228,8 +165,7 @@ const useToastStack = (
       if (entry.present) return;
       const id = entry.toast.id;
       const running = timers.current.get(id);
-      // Re-running for a new toast must not restart a leave already timed, but
-      // a new window (the preference changed) must replace the old one.
+
       if (running !== undefined && running.ms === windowMs) return;
       if (running !== undefined) clearTimeout(running.handle);
       timers.current.set(id, {
@@ -255,20 +191,6 @@ const useToastStack = (
   return entries;
 };
 
-/**
- * One card: a slot that clips to the rank's box, around the card's own surface.
- *
- * The split is what makes a peeking card read as **the top of a card** rather
- * than a small one: the slot owns the rank's height and width and clips, and the
- * surface inside keeps its border, radius and shadow at its measured height. A
- * card arriving has no measured height yet, so it waits off its edge behind
- * `opacity: 0` and enters on the first frame that has one — the runtime reads
- * `initial` at mount only, and a card that replayed it would flash on every push.
- *
- * A leaving card keeps the slot it left with (the viewport freezes it) and
- * collapses that slot to nothing, so the stack closes as the card fades instead
- * of holding a hole for the exit to finish in.
- */
 const ToastCard = ({
   toast,
   present,
@@ -285,9 +207,9 @@ const ToastCard = ({
   readonly toast: Toast;
   readonly present: boolean;
   readonly slot: ToastSlot;
-  /** The surface's measured height: the box it keeps while a slot clips it. */
+
   readonly naturalHeight: number;
-  /** The stack's measured width, `0` until it reports. */
+
   readonly stackWidth: number;
   readonly timing: ToastTiming;
   readonly swipe: boolean;
@@ -306,7 +228,7 @@ const ToastCard = ({
   >(Option.none());
   const exitLeft = useRef(EDGE_TRAVEL);
   const fired = useRef(false);
-  /** Whether the card has painted a measured frame — its arrival is over. */
+
   const placed = useRef(false);
 
   useEffect(() => {
@@ -316,9 +238,7 @@ const ToastCard = ({
   const action = Option.flatMap(toast.action, (candidate) =>
     Option.map(actionFor(toast.id), (onSelect) => ({ candidate, onSelect })),
   );
-  // The provider prunes a toast's handler when it leaves the queue, while this
-  // card is still painted for its exit: a ghost keeps the content it was
-  // dismissed with, so the action it showed does not vanish under the fade.
+
   const lastAction = useRef(action);
   if (Option.isSome(action)) lastAction.current = action;
 
@@ -329,7 +249,6 @@ const ToastCard = ({
     });
   };
 
-  /** Pointer travel is the horizontal axis only; the card paints on `left`. */
   const startDrag = (event: EventPayload): void => {
     if (!present || !slot.interactive) return;
     Option.match(measuredPoint(event), {
@@ -381,12 +300,9 @@ const ToastCard = ({
 
   const dragTransition: MotionTiming = { duration: 0 };
 
-  // The rank's box, in the runtime's own fields: the slot narrows by its inset
-  // and the surface inside clips to it. `width` is absent until the stack
-  // reports, so a card never animates from a width nothing measured.
   const width = stackWidth > 0 ? stackWidth - slot.inset * 2 : undefined;
   const frame = width === undefined ? {} : { width };
-  /** A card paints once its height is known: until then it waits off its edge. */
+
   const live = present && slot.height > 0;
 
   const motion = present
@@ -406,18 +322,13 @@ const ToastCard = ({
               : timing.enter,
       }
     : {
-        // A leaving card keeps the slot it left with and closes it: the fade and
-        // the travel play out while the row collapses under them.
         initial: false as const,
         animate: { opacity: 0, left: exitLeft.current, height: 0, ...frame },
         transition: timing.exit,
       };
 
   const surface = overlaySurfaceStyle(TOAST_CARD, undefined, theme);
-  // A card that fills its slot paints the card's edge — radius and lift, from
-  // the surface's own recipe, because a shadow on the clipped surface would go
-  // with its content. A peeking slot is a cut through that card, so it carries
-  // neither: the corners a reader sees are the surface's top ones.
+
   const whole = naturalHeight > 0 && slot.height >= naturalHeight;
   const edge = whole
     ? { borderRadius: surface.borderRadius, boxShadow: surface.boxShadow }
@@ -433,9 +344,7 @@ const ToastCard = ({
         position: "relative",
         overflow: "hidden",
         width: width === undefined ? "100%" : undefined,
-        // The slot is the card's visible box, so it is a target while the card
-        // is live; a leaving slot takes no presses, and the shield covers the
-        // surface it still paints.
+
         ...presenceStyle(present, "target"),
       })}
     >
@@ -450,8 +359,6 @@ const ToastCard = ({
         <div
           onLayout={measure}
           style={mergeStyles(recipeStyle(TOAST_BODY, theme), {
-            // The body always measures at the full stack width: a peeking card is
-            // clipped, not reflowed, so expanding it cannot change its answer.
             width: stackWidth > 0 ? stackWidth : "100%",
           })}
         >
@@ -494,9 +401,6 @@ const ToastCard = ({
                 variant="secondary"
                 testId={`toast-action-${toast.id}`}
                 disabled={!present || !slot.interactive}
-                // A live card's controls are the window's; a ghost's and a
-                // peeking card's are not (the runtime decides the Tab order
-                // element by element, so the control owns its own stop).
                 {...presenceTabStop(present && slot.interactive)}
                 onClick={() => {
                   if (fired.current) return;
@@ -529,7 +433,6 @@ const ToastCard = ({
   );
 };
 
-/** The invisible spacer that opens a gap between full cards. */
 const ToastGap = ({
   open,
   timing,
@@ -547,20 +450,14 @@ const ToastGap = ({
   />
 );
 
-/** {@link ToastViewport} props: where the stack sits in the app root. */
 export interface ToastViewportProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
-  /** An optional element before the toasts, e.g. a "dismiss all" action. */
+
   readonly children?: ReactNode;
-  /** Whether a card may be swiped sideways to dismiss it. Default `true`. */
+
   readonly swipe?: boolean;
 }
 
-/**
- * The corner stack. Render it **last** in the app root: the runtime paints in
- * order, so anything after it would cover the toasts.
- */
 export const ToastViewport = ({
   children,
   className,
@@ -577,11 +474,7 @@ export const ToastViewport = ({
   const [heights, setHeights] = useState<HashMap.HashMap<string, number>>(
     HashMap.empty,
   );
-  // The hold is built from three inputs and applied through one state, so a
-  // card's mount, leave and drag cannot each own a competing pause. Hover and
-  // focus are **sets of card ids**, read against the cards on screen: a card
-  // dismissed under the pointer unmounts without hearing its leave, and a
-  // boolean would keep the whole stack held forever.
+
   const hovered = useRef(HashSet.empty<string>());
   const focused = useRef(HashSet.empty<string>());
   const dragging = useRef(false);
@@ -594,7 +487,6 @@ export const ToastViewport = ({
     grace.current = null;
   };
 
-  /** Apply a hold; a release waits out the grace so a card-to-card move holds. */
   const applyHold = (next: boolean): void => {
     if (next) {
       clearGrace();
@@ -627,8 +519,6 @@ export const ToastViewport = ({
     [],
   );
 
-  // A toast pushed while the stack is held is born paused; releasing the stack
-  // resumes every clock with the time it has left.
   useEffect(() => {
     hold(held);
   }, [held, hold]);
@@ -640,9 +530,6 @@ export const ToastViewport = ({
     [hold],
   );
 
-  // A card that leaves cannot blur: the runtime unmounts the focused control
-  // without a blur event on 0.11.0. Its id is dropped from the focus set with
-  // the card, and an empty stack forgets a hover whose leave it never heard.
   useEffect(() => {
     if (!Arr.some(stack, (entry) => entry.present)) {
       hovered.current = HashSet.empty();
@@ -662,8 +549,6 @@ export const ToastViewport = ({
     syncHold();
   }, [stack]);
 
-  // The height a card reported belongs to that card; a card that unmounts does
-  // not keep an entry in the measurement map.
   useEffect(() => {
     const live = HashSet.fromIterable(
       Arr.map(stack, (entry) => entry.toast.id),
@@ -703,12 +588,6 @@ export const ToastViewport = ({
     syncHold();
   };
 
-  // Ranks count the cards a reader can see, and a leaving card is not one: the
-  // cards behind it take their new places in the commit that dismisses it and
-  // tween there, while the ghost keeps the slot it left with (below) and closes
-  // its own row. Ranking by position instead — the shape this had — re-slotted
-  // the ghost on the way out, so an evicted card widened to the stack's full
-  // width as it faded: the flash every older card seemed to share.
   const present = Arr.filter(stack, (entry) => entry.present);
   const presentCount = Arr.length(present);
   const liveSlots = HashMap.fromIterable(
@@ -725,7 +604,7 @@ export const ToastViewport = ({
         ] as const,
     ),
   );
-  /** The slot a card last painted while it was live; what a ghost keeps. */
+
   const lastSlots = useRef(HashMap.empty<string, ToastSlot>());
 
   const slotFor = (entry: StackEntry): ToastSlot =>
@@ -810,7 +689,6 @@ export const ToastViewport = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const toastMeta = {
   name: "Toasts / notifications",
   tier: 2,

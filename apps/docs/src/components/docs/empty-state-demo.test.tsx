@@ -2,16 +2,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { EmptyStateDemo, emptyStateDemoSource } from "./empty-state-demo";
 
-/**
- * The Empty state preview, as it renders, and the sample under its Code tab.
- *
- * The drawing is the only place a reader sees the three shapes a caller
- * reaches, and the Code tab is what they copy: it named an `Icon` it never
- * imported, with no colour and a name the icon registry does not paint, so the
- * snippet could not compile. The cases hold the markup to the three panels and
- * the sample to the imports, the icon's colour and a real icon name.
- */
-
 const markup = renderToStaticMarkup(<EmptyStateDemo />);
 
 describe("the empty state preview", () => {
@@ -40,7 +30,7 @@ describe("the empty state preview", () => {
     expect(emptyStateDemoSource).toContain(
       "color={theme.colors.mutedForeground}",
     );
-    // The named glyph is one the registry paints, not a guessed inbox.
+
     expect(emptyStateDemoSource).toContain('name="folder-open"');
     expect(emptyStateDemoSource).not.toContain('name="inbox"');
   });

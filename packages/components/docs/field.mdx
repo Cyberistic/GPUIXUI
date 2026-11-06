@@ -51,8 +51,3 @@ Field
 | `FieldInput` | `style` | `StateStyle<FieldInputState>` | recipe |
 | `FieldInput` | value and text | `value`, `defaultValue`, `onSubmit`, `onValueChange`, `onChange`, `placeholder`, `readOnly`, `autoFocus`, `label`, `description` | the primitives' field contract |
 | `FieldInput` | box, address and handlers | `className`, `size`, `fullWidth`, `tabIndex`, `testId`, `ref`, `aria-id`, `onLayout`, `onClick`, `onFocus`, `onBlur`, `onKeyDown`, `onKeyUp` | — |
-
-## Notes
-- The error replaces the description rather than stacking under it.
-- A `Tab` traversal focuses the input **without running its `onFocus`**; the ring is declared at rest.
-- No `aria-describedby`, `aria-invalid` or `aria-required`.

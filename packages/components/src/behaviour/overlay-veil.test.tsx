@@ -1,15 +1,3 @@
-/**
- * The house veil, across every modal overlay family.
- *
- * The bug this guards: each family painted the token package's opaque `overlay`
- * scrim, so a modal blacked the page out. The house behaviour is a **wash** —
- * the page's own background at 55% — which keeps the page legible under the
- * surface and matches the drawings in `apps/docs`. The 6px blur a shadcn veil
- * carries has no native route (`StyleDesc` has no `filter`), so it is the
- * drawing's; these cases hold the half the runtime can paint, and the outside
- * press that every modal offers beside it.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { CommandMenu, CommandMenuList } from "../command-menu.js";
@@ -22,11 +10,9 @@ import { boundsOf, waitFor } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import { OVERLAY_WASH } from "../internal/overlay.js";
 
-/** The veil's expected fill for one theme. */
 const wash = (theme: Theme): string =>
   alpha(theme.colors.background, OVERLAY_WASH);
 
-/** The measured box of a backdrop is the window, so the wash covers the page. */
 const coversWindow = (
   root: ReturnType<typeof renderComponent>,
   testId: string,
@@ -42,12 +28,10 @@ const coversWindow = (
   });
 };
 
-/** Each modal family's trigger, its veil's test id and a way to open it. */
 const FAMILIES = ["dialog", "confirm", "command", "drawer", "sheet"] as const;
 
 type Family = (typeof FAMILIES)[number];
 
-/** One family opened, and the action that dismisses it. */
 const open = (
   family: Family,
 ): {
@@ -176,8 +160,6 @@ describe("the modal veil", () => {
   });
 
   it("keeps the page behind a modal legible: the wash is translucent", () => {
-    // The scrim it replaced was opaque enough to read as a blackout. A wash is
-    // a share of the page's own background, so some of the page always shows.
     const { root, veil } = open("dialog");
     try {
       const painted = root.renderer.findByTestId(veil)?.style.backgroundColor;

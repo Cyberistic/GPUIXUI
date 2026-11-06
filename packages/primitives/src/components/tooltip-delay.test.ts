@@ -1,8 +1,3 @@
-/**
- * AppKit's tooltip wait (plan 724). Bug guarded: a tip on macOS appeared at
- * the web's 300 ms, where AppKit waits about a second of rest; and the wait
- * must stay the runtime's own on every pointer theme.
- */
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { APPKIT_TOOLTIP_DELAY_MS, tooltipDelayFor } from "./Tooltip.js";

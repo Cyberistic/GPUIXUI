@@ -12,17 +12,6 @@ import {
   sitemapXml,
 } from "./sitemap";
 
-/**
- * The sitemap and the file that points crawlers at it.
- *
- * The sitemap is generated from the collections at request time, so the unit
- * below fixes its shape and the guards close two silent failures: a duplicate
- * URL (a curated page and its shadowed package page both listed) and a
- * `robots.txt` naming a route that does not exist. The collections themselves
- * are held to disk by `package-docs.test.ts`, so the chain is
- * disk → collections → sitemap.
- */
-
 const root = new URL("../../../../", import.meta.url);
 
 const packagedPages = (): string[] =>
@@ -68,17 +57,11 @@ describe("the sitemap", () => {
   });
 
   it("lists both of the site's routes, which no collection carries", () => {
-    // `/live` is the real GPUix surface and is linked from every component
-    // page's preview note, but it is a route rather than a collection
-    // document, so a sitemap derived from the collections alone omitted it and
-    // a crawler had no path to the site's strongest preview.
     const paths = sitemapPaths(["/"], []);
 
     expect([...siteRoutes]).toEqual(["/", "/live"]);
     expect(paths).toEqual(["/", "/live"]);
 
-    // The document does not re-add the routes to a list it was handed: the
-    // route composes `sitemapPaths`, and a second `<loc>` is a duplicate.
     const xml = sitemapXml(["/getting-started", "/", "/"]);
     expect(
       [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]),
@@ -92,8 +75,6 @@ describe("the sitemap", () => {
   });
 
   it("lists every page the site serves, and no page a curated page replaces", () => {
-    // The five primitives documented under Components have a second page in
-    // their package; only the curated URL is served, so only it is advertised.
     const site = sitePageUrls(root);
     const packaged = packagedPages();
     const served = servedUrls(packaged);

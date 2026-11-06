@@ -1,12 +1,3 @@
-/**
- * Every page's frontmatter parses as YAML.
- *
- * Bug guarded: eight block pages wrote `description: A week view: …` — an
- * unquoted `: ` inside a plain scalar — and Fumadocs' parser refused it
- * (`Nested mappings are not allowed in compact mappings`), so the dev server
- * answered 500 on every page while every unit suite stayed green, because none
- * of them parsed the frontmatter the site actually reads.
- */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";

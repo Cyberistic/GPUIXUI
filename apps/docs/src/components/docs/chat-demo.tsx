@@ -1,22 +1,3 @@
-/**
- * Browser block for the Chat page — the conversation, drawn as HTML.
- *
- * The shipped parts are GPUix host elements, so the docs mirror the composition
- * instead of mounting it: a fixed header, the transcript as the only flexible
- * row, a composer that never moves, and a jump control floating over the
- * transcript's bottom edge. Every turn is a `Message` row — an avatar and a meta
- * line where a speaker starts a run, then a `Bubble`; two consecutive replies
- * share one run and join their corners. The reader's bubble is the primary fill,
- * the agent's is muted, and one reply carries a reaction pill that crosses its
- * bottom edge.
- *
- * The conversation is the guild's: a dossier moves through its intel bank, its
- * seals, the exam and the register. The transport is scripted. The transcript
- * follows the live edge only while the reader is at it; scrolling up releases
- * the view and the floating control counts what arrived. The third send fails on
- * purpose so Retry is one press away.
- */
-
 import {
   useCallback,
   useEffect,
@@ -37,7 +18,7 @@ export interface Row {
   readonly at: string;
   readonly live: boolean;
   readonly reaction?: string;
-  /** A picture the speaker sent, painted inside the bubble. */
+
   readonly image?: { readonly src: string; readonly alt: string };
 }
 
@@ -82,7 +63,6 @@ const STATUS_COPY: Readonly<Record<ChatStatus, string>> = {
   error: "The reply failed. Retry, or send a shorter message.",
 };
 
-/** The turns of the transcript: consecutive rows from one speaker share a run. */
 const runsOf = (rows: ReadonlyArray<Row>): ReadonlyArray<ReadonlyArray<Row>> =>
   rows.reduce<ReadonlyArray<ReadonlyArray<Row>>>((runs, row) => {
     const last = runs[runs.length - 1];
@@ -91,7 +71,6 @@ const runsOf = (rows: ReadonlyArray<Row>): ReadonlyArray<ReadonlyArray<Row>> =>
       : [...runs, [row]];
   }, []);
 
-/** Where a row sits in its run, so a grouped bubble joins its inner corners. */
 const groupOf = (index: number, length: number): Group =>
   length === 1
     ? "single"
@@ -101,7 +80,6 @@ const groupOf = (index: number, length: number): Group =>
         ? "last"
         : "middle";
 
-/** One turn: the avatar and meta line where a speaker starts, then the bubble. */
 function Row({
   row,
   first,
@@ -172,18 +150,17 @@ function Row({
 }
 
 export interface ChatDemoProps {
-  /** The opening transcript; the default is the docs page's agent thread. */
   readonly seed?: ReadonlyArray<Row>;
-  /** What the assistant streams back after a send. */
+
   readonly reply?: string;
   readonly title?: string;
-  /** The idle line under the title. */
+
   readonly idleSummary?: string;
   readonly placeholder?: string;
   readonly participants?: { readonly user: string; readonly assistant: string };
-  /** Whether the transcript opens at the newest message. */
+
   readonly startPinned?: boolean;
-  /** Whether the "jump to latest" affordance is drawn. */
+
   readonly showJump?: boolean;
 }
 
@@ -218,16 +195,12 @@ export function ChatDemo({
     if (pinned) scrollToEnd();
   }, [pinned, rows, scrollToEnd]);
 
-  // A thread that opens at the top stays there even when the browser restores
-  // the scroll position of the page's scroll containers.
   useLayoutEffect(() => {
     if (startPinned) return;
     const element = transcript.current;
     if (element !== null) element.scrollTop = 0;
   }, [startPinned]);
 
-  // The native field grows to its content; the drawing measures the same way,
-  // so the row's cross axis is the line count's, not one fixed row.
   useLayoutEffect(() => {
     const element = field.current;
     if (element === null) return;

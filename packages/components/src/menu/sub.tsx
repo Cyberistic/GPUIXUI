@@ -1,18 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The shared submenu parts: one secondary level behind a menu row.
- *
- * The Dropdown and Context menus both compose these; their public part names
- * differ, the behaviour does not. A submenu owns its open state and its own
- * dismiss layer, so `Escape` closes one level at a time.
- *
- * A press on the submenu surface is **outside the parent surface** (the runtime
- * compares geometry), so the parent's outside handler offers it to this layer
- * first. The layer must ignore that press: closing would unmount the row before
- * the click lands on it. {@link MenuSubContent} therefore checks its own painted
- * bounds before treating a mouse-down as a dismissal.
- */
-
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
@@ -66,26 +52,24 @@ import {
 } from "./state.js";
 import { MenuSurface } from "./surface.js";
 
-/** The rules a {@link MenuSubContent} follows; throws outside a sub. */
 interface SubContextValue {
   readonly open: boolean;
-  /** Open now, from a key or a press; a pending hover wait is not the reader's. */
+
   readonly openNow: () => void;
-  /** Close this level only; the menu it sits in decides for itself. */
+
   readonly close: (reason: MenuCloseReason) => void;
-  /** The pointer on the trigger row: hold the submenu, or rest towards opening it. */
+
   readonly hoverTrigger: (present: boolean) => void;
-  /** The pointer on the submenu surface: hold it, or start the grace to close. */
+
   readonly hoverContent: (present: boolean) => void;
-  /** The SubTrigger row: it positions the surface and receives returned focus. */
+
   readonly trigger: RefObject<PublicInstance | null>;
-  /** Set by the content while mounted: focus the submenu's first or last row. */
+
   readonly focusEdge: RefObject<((edge: "first" | "last") => void) | null>;
 }
 
 const SubContext = createContext<SubContextValue | undefined>(undefined);
 
-/** The submenu a part belongs to. Throws when there is none (plan 110 §8.6). */
 const useSubContext = (): SubContextValue => {
   const value = useContext(SubContext);
   if (value === undefined) {
@@ -94,16 +78,10 @@ const useSubContext = (): SubContextValue => {
   return value;
 };
 
-/** {@link MenuSub} props. */
 export interface MenuSubProps {
   readonly children?: PartChildren;
 }
 
-/**
- * A group of actions behind one secondary level. It owns its open state, its
- * hover intent and its close, so only one submenu per menu is open at a time and
- * every route into and out of it is decided here.
- */
 export const MenuSub = ({ children }: MenuSubProps) => {
   const renderer = useGpuix().renderer;
   const parent = useMenuContext();
@@ -112,7 +90,6 @@ export const MenuSub = ({ children }: MenuSubProps) => {
   const focusEdge = useRef<((edge: "first" | "last") => void) | null>(null);
   const restoreFocus = useRef(false);
 
-  /** Put the focus back on the row that opens this level. */
   const focusTrigger = useCallback(() => {
     Option.match(Option.fromNullishOr(trigger.current), {
       onNone: () => undefined,
@@ -120,11 +97,6 @@ export const MenuSub = ({ children }: MenuSubProps) => {
     });
   }, [renderer, trigger]);
 
-  // One timer for this submenu: a rest on the trigger opens it, a grace after
-  // the pointer leaves the trigger or the surface closes it. A hover close is
-  // silent but hands the focus back to the row that opened the level, because
-  // here the highlight is real focus — and it is silent about the parent, which
-  // the whole menu's own pointer leave closes.
   const hover = useHoverDelays({
     open,
     setOpen: (next) => {
@@ -145,8 +117,7 @@ export const MenuSub = ({ children }: MenuSubProps) => {
       restoreFocus.current = reason === "dismiss" || reason === "pointer";
       hover.cancel();
       setOpen(false);
-      // A hover close is this submenu's alone: the whole menu's pointer leave is
-      // the root's, and it closes every level with it.
+
       if (reason === "pointer") return;
       Match.value(reason).pipe(
         Match.when("activate", () => parent.close("activate")),
@@ -182,18 +153,11 @@ export const MenuSub = ({ children }: MenuSubProps) => {
   return <SubContext.Provider value={value}>{children}</SubContext.Provider>;
 };
 
-/** {@link MenuSubTrigger} props: an ordinary row that opens a submenu. */
 export interface MenuSubTriggerProps extends Omit<
   MenuItemProps,
   "onSelect" | "closeOnSelect" | "tone"
 > {}
 
-/**
- * The row that opens its submenu. It is a normal menu row: arrow keys and
- * type-ahead treat it like an action. `Enter`/`Space` toggle it, `ArrowRight`
- * opens it and moves into it, and a pointer that rests on the row opens it after
- * Base UI's delay — a disabled row opens nothing.
- */
 export const MenuSubTrigger = ({
   children,
   trailing,
@@ -221,9 +185,6 @@ export const MenuSubTrigger = ({
       textValue={textValue}
       onSelect={() => (open ? close("dismiss") : openNow())}
       onFocus={(event) => {
-        // A pointer press focuses the row after React has opened the submenu
-        // and moved focus to its first row; the row's own focus event is the
-        // last word, so hand focus back into the submenu.
         if (open) focusEdge.current?.("first");
         onFocus?.(event);
       }}
@@ -237,12 +198,8 @@ export const MenuSubTrigger = ({
       }}
       onKeyDown={(event) => {
         if (!open) {
-          // A rest is not the only way in: the arrow that points at the submenu,
-          // and the arrows that travel it, open it at once.
           if (isRight(event) || isDown(event) || isUp(event)) openNow();
         } else if (isDown(event) || isUp(event)) {
-          // Focus is still on the trigger (a pointer open): Down/Up enter the
-          // submenu instead of moving the parent highlight past it.
           claimEvent(event);
           focusEdge.current?.(isDown(event) ? "first" : "last");
         } else if (isRight(event)) {
@@ -268,25 +225,15 @@ export const MenuSubTrigger = ({
   );
 };
 
-/** The gap between the trigger row and its submenu surface, in pixels. */
 const SUBMENU_GAP = 4;
 
-/** The height the submenu's rows scroll within, in pixels. */
 const SUBMENU_MAX_HEIGHT = 320;
 
-/** {@link MenuSubContent} props: the secondary menu surface. */
 export interface MenuSubContentProps extends Omit<Props, "children"> {
-  /** The submenu's accessible name. */
   readonly label?: string;
   readonly children?: PartChildren;
 }
 
-/**
- * The floating second level, mounted while open and through its exit tween. Its
- * position is the trigger row's right edge in window coordinates, clamped by the
- * runtime's `fit="snap"`; it owns its dismiss layer so Escape closes one level
- * only.
- */
 export const MenuSubContent = ({
   label,
   children,
@@ -310,8 +257,6 @@ export const MenuSubContent = ({
 
   const depth = useDismissDepth();
 
-  // The trigger stays focusable while its submenu is open. Down/Up and the
-  // row's own focus event use this to enter the submenu at the right edge.
   useLayoutEffect(() => {
     focusEdge.current = (edge) =>
       menu.step({ _tag: edge === "first" ? "First" : "Last" });
@@ -324,15 +269,11 @@ export const MenuSubContent = ({
     [focusEdge],
   );
 
-  // The dismiss handler must keep reading the latest `close`, but the layer
-  // itself must not be re-pushed on every render: that would move it above an
-  // overlay opened after it.
   const closeRef = useRef(close);
   useLayoutEffect(() => {
     closeRef.current = close;
   });
 
-  /** Whether a pointer event landed on this submenu's own surface. */
   const insideSurface = useCallback(
     (event: EventPayload): boolean => {
       const instance = surface.current;
@@ -378,8 +319,6 @@ export const MenuSubContent = ({
   const timing = useSurfaceTiming("normal");
   const presence = useSurfacePresence(open, timing);
 
-  // The measured corner is kept while the surface leaves: the exit tween runs
-  // from where the open submenu was painted, not from a re-measure.
   useLayoutEffect(() => {
     if (!open) return;
     const instance = trigger.current;
@@ -397,8 +336,6 @@ export const MenuSubContent = ({
     );
   }, [open, renderer, trigger]);
 
-  // Focus the first row once the submenu's rows have registered. The ref keeps
-  // the effect from re-running after its own focus move changes the highlight.
   const pendingFocus = useRef(true);
   useLayoutEffect(() => {
     if (!open) {
@@ -420,8 +357,6 @@ export const MenuSubContent = ({
         snapMargin={8}
         deferred
         priority={1}
-        // A leaving submenu keeps its box for the exit tween without blocking
-        // the menu underneath it.
         occlude={presence.present}
       >
         <MenuSurface
@@ -432,13 +367,11 @@ export const MenuSubContent = ({
           motion={presenceMotion(fadeFromAnchor("right", 4), presence)}
           {...rest}
           onKeyDown={(event) => {
-            // Claim every key: the parent menu must not also move its highlight.
             claimEvent(event);
             if (isLeft(event)) close("dismiss");
             onKeyDown?.(event);
           }}
           style={mergeStyles(
-            // A relative box is what the travel offset is measured against.
             {
               position: "relative",
               ...presenceStyle(presence.present),
@@ -446,8 +379,7 @@ export const MenuSubContent = ({
             style,
           )}
         >
-          {/* The rows scroll inside the surface, so the seam's leaving guard
-              (inset against the surface) cannot be scrolled off the box. */}
+          {}
           <div
             style={{
               display: "flex",
@@ -464,7 +396,6 @@ export const MenuSubContent = ({
   );
 };
 
-/** Every part of a submenu, so a misplaced sibling is named. */
 const subParts: ReadonlyArray<PartComponent> = [
   MenuSub,
   MenuSubTrigger,

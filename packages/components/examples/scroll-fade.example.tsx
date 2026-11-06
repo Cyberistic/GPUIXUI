@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * ScrollFade example: release notes longer than the box that holds them.
- *
- * The bottom edge fades while there is more below it; scrolling moves the hint
- * to the top, then away at the end. The strips are the surface colour, so the
- * example also shows the caller passing the card's role when the reader sits on
- * something other than the page.
- */
-
 import { ScrollFade } from "../src/scroll-fade.js";
 import { useTheme } from "../src/internal/theme.js";
 
@@ -39,7 +30,6 @@ const notes: ReadonlyArray<{ readonly title: string; readonly body: string }> =
     },
   ];
 
-/** A card whose overflowing release notes fade at the edges. */
 export const ScrollFadeExample = () => {
   const theme = useTheme();
   return (

@@ -1,13 +1,3 @@
-/**
- * Spinner behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a spinner with no accessible name (a decorative ring a
- * screen reader walks into), a name the caller sets being ignored, a size name
- * that does not reach the ring, a ring whose ticks paint outside its box (the
- * arc loses a piece), and a reduced-motion preference that leaves the mark
- * stepping.
- */
-
 import { SPINNER_RING_TICKS } from "@gpuixui/primitives/spinner";
 import { describe, expect, it } from "vitest";
 import { nodesWithRole } from "../internal/a11y.js";
@@ -18,7 +8,6 @@ import { Spinner, type SpinnerSize } from "../spinner.js";
 
 type Root = ReturnType<typeof renderComponent>;
 
-/** The elements a spinner painted, plus the ring's own box. */
 const ringOf = (root: Root) => {
   const element = root.renderer.findByTestId("spinner");
   if (element === undefined) throw new Error("the spinner painted no ring");
@@ -35,7 +24,6 @@ const ringOf = (root: Root) => {
   };
 };
 
-/** The opacity each tick painted on the frame just read. */
 const tickOpacities = (root: Root): ReadonlyArray<unknown> =>
   ringOf(root).ticks.map((style) => style.opacity);
 
@@ -80,8 +68,6 @@ describe("Spinner", () => {
   });
 
   it("keeps every tick inside the ring's box", () => {
-    // The bug guarded: a tick placed at a radius that ignored its own side
-    // painted past the ring's edge, and a parent clip removed part of the arc.
     const spinner = renderComponent(
       <Spinner testId="spinner" size="lg" />,
       "light",

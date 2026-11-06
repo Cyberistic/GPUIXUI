@@ -1,16 +1,3 @@
-/**
- * No painted or positioned part swallows a press meant for its control
- * (plan 731).
- *
- * The runtime's rule (`@gpuix/native` 0.11.0 `host.d.ts`): an element with no
- * `pointerEvents` blocks a press when it paints a fill or is positioned. So an
- * avatar disc in a list row, a colour chip in a trigger, a chevron in an
- * accordion header or a card under a press wrapper takes the press, and the
- * row, trigger or header never hears it. The audit that found 46 such parts
- * across the blocks and the examples is this test: it mounts every block and
- * every component and effect example, and lists any descendant of a pressable
- * element that would block without handling the press itself.
- */
 import { createTestRoot } from "@gpuix/react/testing";
 import { examples as componentExamples } from "@gpuixui/components/examples";
 import { examples as fxExamples } from "@gpuixui/fx/examples";
@@ -72,7 +59,6 @@ const blocksPress = (e: Element) => {
   return painted || style["position"] === "absolute";
 };
 
-/** Every swallowing part one screen paints, in both a macOS and a dark theme. */
 const swallowers = (
   name: string,
   Screen: ComponentType,

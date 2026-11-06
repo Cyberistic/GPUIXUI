@@ -18,19 +18,6 @@ import {
 } from "./popover-preview";
 import { PopoverAligned } from "./popover-sides";
 
-/**
- * The popover's three alignments, held to the component and to the stage.
- *
- * The bug these guard: `PopoverContent` defaulted to `align="start"`, so the
- * page's `Columns` trigger sat on its panel's left corner while shadcn centres
- * a popover on its trigger. Each alignment case below holds the relation its
- * name promises against the trigger's own box, and the collision case holds the
- * shift that keeps a panel inside the stage without re-aligning it.
- *
- * `node:fs` is a test-time read of the component's source, as the sides and
- * collision drawing's test already does.
- */
-
 const component = readFileSync(
   new URL(
     "../../../../../packages/components/src/popover.tsx",
@@ -45,7 +32,6 @@ const trigger = {
   width: POPOVER_TRIGGER_WIDTH,
 };
 
-/** React writes a zero length without its unit. */
 const cssLength = (value: number): string => (value === 0 ? "0" : `${value}px`);
 
 const panelOf = (align: PopoverAlign) => {
@@ -76,8 +62,6 @@ const relations: ReadonlyArray<
 
 describe("the popover's alignments", () => {
   it("gives each alignment the edge its name promises, inside the stage", () => {
-    // Each case fails on a swapped rule: `start` sharing the centre line, or
-    // `end` sharing the left edge, is a different number below.
     for (const [align, expectRelation] of relations) {
       const panel = panelOf(align);
 
@@ -115,15 +99,12 @@ describe("the popover's alignments", () => {
     expect(control).toBeGreaterThanOrEqual(0);
     expect(control).toBeLessThan(stage);
     expect(stage).toBeLessThan(panel);
-    // The library's own toggle family, not a second control shape.
+
     expect(markup).toContain('class="gx-tgroup"');
     expect(markup).toContain("gx-toggle gx-toggle-outline");
   });
 
   it("shifts a panel that would leave the stage without re-aligning it", () => {
-    // The collision drawing's trigger: 24px from the frame's right edge. A
-    // start-aligned panel would put its right edge at 576 and leave the frame
-    // at 592, so the clamp slides it back to the collision margin.
     const edge = stageWidth - POPOVER_FRAME_PADDING - POPOVER_TRIGGER_WIDTH;
     const placement = alignedPlacement({
       align: "start",
@@ -140,8 +121,7 @@ describe("the popover's alignments", () => {
       stageWidth - POPOVER_COLLISION_PADDING,
     );
     expect(placement.shifted).toBeGreaterThan(0);
-    // Shifted, not silently re-aligned: an end placement would sit 16px left of
-    // this box, with the panel's right edge on the trigger's.
+
     expect(placement.left).not.toBe(
       edge + POPOVER_TRIGGER_WIDTH - POPOVER_PANEL_WIDTH,
     );
@@ -151,8 +131,6 @@ describe("the popover's alignments", () => {
   });
 
   it("keeps the component's names and its centred default", () => {
-    // The default is read from the component, not from the drawing: the page
-    // may only paint what the shipped `PopoverContent` defaults to.
     expect(component).toContain('align = "center"');
     expect(component).toContain('align?: "start" | "center" | "end";');
     expect(component).not.toContain('align = "start"');

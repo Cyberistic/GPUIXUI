@@ -1,14 +1,3 @@
-/**
- * Combobox with a remote list, in the real GPUix renderer.
- *
- * The bugs these guard: a searchable list behind a network call had no way to
- * hear the query, so a caller could not fetch for it at all; the local ranking
- * then hid a result the remote chose (a synonym, a tag, a description the query
- * never appears in); and an in-flight fetch was indistinguishable from "no
- * matches". A separate file from the interaction suite because the counts a
- * page prints belong to it.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   clickCentreOf,
@@ -35,7 +24,6 @@ const reviewers: ReadonlyArray<ComboboxOption> = [
   { value: "grace", label: "Grace Hopper", description: "Compilers" },
 ];
 
-/** A picker whose list the caller owns, the shape a remote search needs. */
 const RemotePicker = ({
   options = reviewers,
   onQueryChange,
@@ -69,20 +57,17 @@ const RemotePicker = ({
   </div>
 );
 
-/** Let the runtime's microtask (focus) and React's updates settle. */
 const settle = async (): Promise<void> => {
   await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
 };
 
-/** Open the popup and wait for its input. */
 const open = async (root: ComponentTestRoot): Promise<void> => {
   clickCentreOf(root, "combobox-trigger");
   await settle();
 };
 
-/** Type into the focused search field. */
 const type = (root: ComponentTestRoot, text: string): void => {
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
 };
@@ -96,7 +81,7 @@ describe("Combobox with a remote list", () => {
 
     await open(picker);
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-input"));
-    // Each open is a new search, so the caller can fetch its default list.
+
     expect(queries).toEqual([""]);
 
     type(picker, "ca");
@@ -105,8 +90,6 @@ describe("Combobox with a remote list", () => {
     expect(queries).toContain("c");
     expect(queries.at(-1)).toBe("ca");
 
-    // A closed popup is not a search: the close path clears the query, and
-    // reporting that empty string would ask a caller to fetch nothing.
     picker.renderer.simulateKeystrokes("escape");
     await settle();
     expect(queries.at(-1)).toBe("ca");
@@ -121,8 +104,6 @@ describe("Combobox with a remote list", () => {
     type(picker, "eng");
     await settle();
 
-    // "Ada Lovelace" matched a tag the remote searched, and the caller chose
-    // the order, so the row is painted rather than ranked or hidden.
     expect(picker.renderer.getAllText()).toContain("Ada Lovelace");
 
     picker.unmount();
@@ -139,17 +120,13 @@ describe("Combobox with a remote list", () => {
     await settle();
     const before = queries.length;
 
-    // Disabling closes the popup and clears the query in one commit; that
-    // cleared string is not a search and must not reach the caller.
     picker.rerender(
       <RemotePicker onQueryChange={(query) => queries.push(query)} disabled />,
     );
     await settle();
 
     expect(queries).toHaveLength(before);
-    // The dismissed box is painted for its exit window, the rule the interaction
-    // suite states ("the claim is that the box goes rather than that it has
-    // already gone"), so the popup leaves rather than cutting.
+
     await waitFor(() =>
       expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined(),
     );
@@ -164,8 +141,6 @@ describe("Combobox with a remote list", () => {
     type(picker, "eng");
     await settle();
 
-    // The premise: the default ranking reads the label and the description
-    // only, so a caller-supplied result the query never appears in is dropped.
     expect(picker.renderer.getAllText()).not.toContain("Ada Lovelace");
     expect(picker.renderer.getAllText()).toContain("No matches");
 

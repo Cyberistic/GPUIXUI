@@ -20,22 +20,11 @@ import {
   WIDTH_MIN,
 } from "./files-property-panel-demo";
 
-/**
- * The Property panels preview for `@gpuixui/files`.
- *
- * `packages/files/docs/property-panel.mdx` is the package's Markdown, so the
- * site mounts this drawing from `package-preview.ts`. The page promises that
- * the panel owns no copy of its object and reports the whole record on every
- * edit; these cases hold the drawing to the package's `propertyRecord` and
- * `setProperty`, and to the object the two produce.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
 
-/** The declarations of the first `selector { … }` block in a style sheet. */
 const block = (css: string, selector: string): string => {
   const start = css.indexOf(`${selector} {`);
   if (start === -1) return "";
@@ -43,7 +32,6 @@ const block = (css: string, selector: string): string => {
   return end === -1 ? "" : css.slice(start, end);
 };
 
-/** The row a key names; the fixture's keys are fixed, so a miss is a bug. */
 const row = (key: string): PropertyRow => {
   const found = PANEL_ROWS.find((candidate) => candidate.key === key);
   if (found === undefined) throw new Error(`no property row named ${key}`);
@@ -74,7 +62,7 @@ describe("the files PropertyPanel preview", () => {
     const html = markup();
 
     expect(html).toContain('type="text"');
-    // A number is a text field, never the browser's spinner.
+
     expect(html).not.toContain('type="number"');
     expect(html).toContain('inputMode="numeric"');
     expect(html).toContain('type="checkbox"');
@@ -85,10 +73,6 @@ describe("the files PropertyPanel preview", () => {
   });
 
   it("scrubs a number's label and leaves the typing to its field", () => {
-    // Guarded bug: the width row was `<input type="number">` — the browser
-    // painted a spinner and the label was inert. In an inspector the label is
-    // the scrub handle: horizontal travel moves the value, Shift coarsens it,
-    // the row's bounds clamp it, and a click without travel is still a click.
     const html = markup();
     const css = read("apps/docs/src/styles/demos.css");
 
@@ -123,7 +107,7 @@ describe("the files PropertyPanel preview", () => {
 
     expect(numberValueOf(widened, row("width"))).toBe(320);
     expect(html).toContain('style="width:320px"');
-    // The source record is untouched: the panel reports, it does not mutate.
+
     expect(panelRecord().width).toBe(240);
 
     const hidden = setProperty(widened, "visible", false);
@@ -161,8 +145,7 @@ describe("the files PropertyPanel preview", () => {
     expect(source).toContain("isNumberRow");
     expect(source).toContain("isBooleanRow");
     expect(source).toContain("isSelectRow");
-    // A local record builder would show up as a spread beside `setProperty`, and
-    // a `switch` on the row type would duplicate the package's `Match`.
+
     expect(source).not.toContain("...record");
     expect(source).not.toContain("switch (");
   });

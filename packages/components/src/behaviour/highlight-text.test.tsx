@@ -1,16 +1,3 @@
-/**
- * HighlightText in the real GPUix renderer.
- *
- * The bugs these guard: a wash that never paints (the spec is on the wrong
- * host); a sweep that is already complete when it mounts, so nothing moves; a
- * step that marks the whole word at once; a reduced run that still waits; a
- * changed query that keeps the previous mark; and ranges that lose to the query
- * they were meant to override.
- *
- * The wash is a painted quad, not text, so `getPaintedHighlights()` is the only
- * seam that can see it; `getAllText()` reports the phrase either way.
- */
-
 import type { TestRoot } from "@gpuix/react/testing";
 import { describe, expect, it } from "vitest";
 import { waitFor } from "../internal/interaction.js";
@@ -18,13 +5,11 @@ import { renderComponent } from "../internal/test-root.js";
 import { HighlightText } from "../highlight-text.js";
 import { MotionProvider } from "../motion.js";
 
-/** The washes the last frame painted, after a flush. */
 const washes = (renderer: TestRoot["renderer"]) => {
   renderer.flush();
   return renderer.getPaintedHighlights();
 };
 
-/** The matched text of every wash, in paint order. */
 const marked = (renderer: TestRoot["renderer"]): ReadonlyArray<string> =>
   washes(renderer).map((wash) => wash.text.slice(wash.start, wash.end));
 
@@ -103,13 +88,6 @@ describe("HighlightText", () => {
   });
 
   it("marks the part of a caller's range that lies inside the phrase", () => {
-    // The bug this guards: `ranges` is caller arithmetic — a find bar's
-    // `indexOf` answers -1 for no match — and the pair was passed to the
-    // runtime's `highlight` as it arrived. A negative start is "from the end"
-    // to `String#slice` and an absolute offset to the host, so the mark painted
-    // nothing (and `[NaN, NaN]` was handed over for a failed reading). A range
-    // is the part of it inside the phrase, so the in-range part is marked and
-    // the unreadable pair is no range at all.
     const page = renderComponent(
       <HighlightText
         testId="hint"
@@ -177,9 +155,6 @@ describe("HighlightText", () => {
   });
 
   it("paints an empty phrase for a stored text that was not text", () => {
-    // The bug guarded: a phrase restored from a saved record is `null` when the
-    // record carried none, and `marksFor` handed it to `String.matchAll`, which
-    // threw `Cannot read properties of null (reading 'matchAll')`.
     const page = renderComponent(
       <HighlightText
         testId="hint"

@@ -1,20 +1,3 @@
-/**
- * The published type-ahead seam: the buffer's window and repeat rules, the
- * prefix matcher, the character a keystroke types, and the subpath a surface
- * outside this package reaches them through.
- *
- * The bugs these guard: a buffer with no window made every later letter part of
- * an old search; a repeated letter appended into a prefix that matches nothing
- * instead of advancing to the next row; an uppercase keystroke never matched a
- * lower-case label; matching was case-sensitive; a disabled row won the match;
- * an empty prefix matched every row; a matcher that returned the first match
- * could not advance on a repeated letter; and a typed `Enter` (whose `keyChar`
- * is a newline) was read as text instead of an activation. The window rule also
- * has to be reachable from another package: it lived in `src/internal/`, which a
- * tree could not import, so `@gpuixui/data` kept a copy (.agents/slop/TODO.md tracks the
- * adoption).
- */
-
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { EventPayload } from "@gpuix/react";
@@ -74,7 +57,6 @@ describe("typeaheadPress", () => {
   });
 });
 
-/** A labelled row, so assertions can name the id instead of the whole item. */
 interface Row extends TypeaheadItem {
   readonly id: number;
 }
@@ -88,7 +70,6 @@ const rows = (
     label: label ?? `row ${id}`,
   }));
 
-/** The matcher's answer as an id, so the assertions stay readable. */
 const matchedId = (
   items: ReadonlyArray<Row>,
   from: Option.Option<number>,
@@ -111,7 +92,6 @@ describe("typeaheadMatch", () => {
   });
 
   it("advances to the next match and wraps", () => {
-    // `from` is a position, not a row id: Duplicate is at index 1.
     expect(matchedId(actions, Option.some(1), "d")).toEqual(Option.some(203));
     expect(matchedId(actions, Option.some(2), "d")).toEqual(Option.some(202));
   });
@@ -159,8 +139,7 @@ describe("typeaheadMatch", () => {
     expect(typeaheadMatchIndex(actions, Option.none(), "d")).toEqual(
       Option.some(1),
     );
-    // The position survives a surface whose rows are not the matched items: a
-    // tree maps labels onto this answer instead of copying the rule.
+
     const labels = ["alpha", "beta", "delta"].map((label) => ({
       label,
       disabled: false,
@@ -205,7 +184,6 @@ describe("typedChar", () => {
   });
 
   it("reads no named key, not even one carrying a character", () => {
-    // Measured: Enter's keyChar is a newline, so keyChar alone is not text.
     expect(typedChar(keyEvent("enter", "\n"))).toEqual(Option.none());
     expect(typedChar(keyEvent("space", " "))).toEqual(Option.none());
     expect(typedChar(keyEvent("down", undefined))).toEqual(Option.none());
@@ -225,7 +203,7 @@ describe("the published seam", () => {
   it("is declared as its own subpath, not reached through the barrel", () => {
     const manifest = read("../package.json");
     expect(manifest).toContain('"./typeahead": "./src/typeahead.ts"');
-    // The wildcard export cannot serve it: `./*` maps to a `.tsx` file.
+
     expect(manifest).toContain('"./*": "./src/*.tsx"');
   });
 
@@ -234,8 +212,7 @@ describe("the published seam", () => {
     expect(production).toContain('from "./typeahead.js"');
     const menu = read("../src/menu/state.ts");
     expect(menu).toContain('from "../typeahead.js"');
-    // The private module is gone: a surface outside the package reaches the
-    // same file rather than a copy of it.
+
     expect(() => read("../src/internal/typeahead.ts")).toThrow();
   });
 });

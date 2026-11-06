@@ -1,14 +1,3 @@
-/**
- * `FileUpload` — the queue view: retry only for an errored file, remove for all.
- *
- * The state machine itself lives in `upload/queue.ts` (tested there); this suite
- * guards the *view's* decision: an errored row offers a retry that reaches the
- * caller, a done row offers none (the negative control), and the remove action
- * reaches the caller for every row. A blank label also reads as its documented
- * default — the group, the empty state and both actions keep a name a copy
- * table's empty string would have erased.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -81,9 +70,6 @@ describe("FileUpload", () => {
   });
 
   it("names a row by its id when the stored file name is blank", () => {
-    // The bug guarded: a file record restored without a name reached the row
-    // and its remove action as `null`, so the action published "Remove null"
-    // and the row painted no name. The queue names such a file by its id.
     const named = enqueue(emptyQueue, [
       { id: "notes.txt", name: null as unknown as string },
     ]).items;
@@ -99,9 +85,6 @@ describe("FileUpload", () => {
   });
 
   it("reads a blank name as the documented default, never an unnamed row", () => {
-    // A label table is copy as often as a literal: an empty string reached
-    // `aria-label` and the action names, so the group, the empty state, the
-    // retry and the remove said nothing while their defaults sat unused.
     const errored = renderFileUpload(
       {
         upload: async () => undefined,

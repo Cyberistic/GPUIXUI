@@ -3,13 +3,6 @@ import { Effect, Exit } from "effect";
 import { pickedPaths } from "./logic.js";
 import { FilePanelError, windowActions, type WindowHost } from "./window.js";
 
-/**
- * The native surface's window verbs and the path prompt's answer.
- *
- * Bug guarded: a cancelled prompt read as an empty pick, so a caller reported
- * "0 files" for a reader who chose nothing.
- */
-
 const host = (overrides: Partial<WindowHost> = {}): WindowHost => ({
   activate: vi.fn(),
   minimize: vi.fn(),

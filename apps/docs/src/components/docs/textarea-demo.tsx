@@ -1,11 +1,3 @@
-/**
- * Browser preview for the TextArea page.
- *
- * `TextArea` is `Input`'s multi-line sibling, so the preview draws the shared
- * field chrome on a `textarea` with the resting, invalid and disabled paint.
- * The Code tab shows the native usage.
- */
-
 export const TextAreaDemo = () => (
   <div className="gx-demo gx-demo-column gx-input-scene">
     <div className="gx-input-block">

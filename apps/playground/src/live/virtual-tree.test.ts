@@ -1,13 +1,3 @@
-/**
- * Guards the virtualized tree fixture.
- *
- * The probe's claims are index arithmetic — the row count after expanding one
- * directory, the label at the reveal index, one testId per node — so a fixture
- * that flattened in the wrong order, repeated an id, or answered a different
- * row count would make every measurement read as a pass while proving nothing.
- * The bug this file guards is exactly that: the README states the reveal lands
- * on the thirtieth directory, and that number must come from the data.
- */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -27,7 +17,6 @@ import {
   type TreeFile,
 } from "./virtual-tree.js";
 
-/** The ids the tree would paint, for presence checks. */
 const visibleIds = (expanded: ReadonlyArray<string>): ReadonlyArray<string> =>
   Arr.map(visibleRows(expanded), (node) => node.id);
 
@@ -86,8 +75,7 @@ describe("the virtualized tree fixture", () => {
     expect(
       Option.map(Arr.get(rows, TREE_REVEAL_INDEX), (node) => node.label),
     ).toEqual(Option.some("dir 030"));
-    // The neighbour is that directory's own first file, so the reveal is not a
-    // one-row island: the window it paints is a contiguous block.
+
     expect(
       Option.map(Arr.get(rows, TREE_REVEAL_INDEX + 1), (node) => node.label),
     ).toEqual(Option.some("file 030/000"));

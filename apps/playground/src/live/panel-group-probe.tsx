@@ -1,26 +1,3 @@
-/**
- * `panel-group-lifecycle`: the shipped `PanelGroup` painted by a real window.
- *
- * The group's fractions, its collapse flag and its keyboard step are arithmetic
- * the offscreen renderer already holds (`panel-group-core`). What no tree read
- * answers is whether that arithmetic reaches the glass: a pane's fill at the
- * width its fraction names, a collapsed pane painting its freed share **blank**,
- * the native traversal reaching the header toggle and the divider, and a real
- * arrow key resizing the split it is focused on.
- *
- * The controls are the group's own: the sides collapse through the primitives'
- * `Button` the package renders (no `testId`, so the traversal and the collapse
- * it causes are the proof it was the one pressed), and the dividers are the
- * package's `role="separator"` tab stops. The pointer drag is **not** measured
- * here: the dividers share the highlight layer `dock-split-lifecycle` records as
- * blocked, and this probe measures the group's layout, paint and keyboard.
- *
- * Every check is a `ctx.expect*` at the step that makes it — the helpers only
- * read — so the count the README prints is the number of assertion sites.
- *
- * Captures: `panel-group-rest`, `panel-group-collapsed`.
- */
-
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -68,7 +45,6 @@ const initialLayout = new PanelLayout({
   ),
 });
 
-/** A pane's body: a caller's fill and one line that names it. */
 const PaneBody = ({ id }: { readonly id: string }): ReactNode => {
   const theme = useTheme();
   const content = paneContent(id, {
@@ -92,7 +68,6 @@ const PaneBody = ({ id }: { readonly id: string }): ReactNode => {
   );
 };
 
-/** The view: the shipped group between a parked focus stop and a readout. */
 export const PanelGroupProbe = (): ReactNode => {
   const theme = useTheme();
   const [layout, setLayout] = useState<PanelLayout>(initialLayout);
@@ -141,29 +116,24 @@ export const PanelGroupProbe = (): ReactNode => {
   );
 };
 
-/** The probe's steps: the painted shares, a collapse, and the keyboard step. */
 export const panelGroupSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(PANEL_IDS.group);
-    // The group measures its pane space on its own layout pass, and a fraction
-    // paints on the frame after that.
+
     yield* Effect.sleep(Duration.millis(200));
 
     type Failure = Smoke.SmokeAssertionError | Smoke.SmokeHostError;
 
-    /** The box that eventually paints `testId`, or `None` while it does not. */
     const box = (
       testId: string,
     ): Effect.Effect<Smoke.Bounds | null, Smoke.SmokeHostError> =>
       settleUntil(ctx.host.bounds(testId), (value) => value !== null);
 
-    /** The box as absence, so a missing paint fails by name at the check. */
     const optionBox = (
       testId: string,
     ): Effect.Effect<Option.Option<Smoke.Bounds>, Smoke.SmokeHostError> =>
       Effect.map(box(testId), Option.fromNullishOr);
 
-    /** Captures `name` with its device scale, or `None` when it is not the window. */
     const capture = (
       name: string,
     ): Effect.Effect<
@@ -180,13 +150,11 @@ export const panelGroupSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }));
       });
 
-    /** A pane's sample point: clear of its header and its one line of copy. */
     const fillPoint = (painted: Smoke.Bounds): Point => ({
       x: painted.x + painted.width / 2,
       y: painted.y + painted.height * 0.75,
     });
 
-    /** The readout once it names `expected`. */
     const readout = (expected: string): Effect.Effect<string, Failure> =>
       settleUntil(ctx.host.text(PANEL_IDS.readout), (line) =>
         line.includes(expected),
@@ -289,7 +257,6 @@ export const panelGroupSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // ── The paint: each pane covers the share it was given ───────────────────
     const rest = yield* ctx.expectSome(
       "the rest capture is the window at a whole device scale",
       yield* capture(REST),
@@ -328,7 +295,6 @@ export const panelGroupSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The collapse: the traversal reaches the header's toggle ──────────────
     yield* ctx.host.focusElement(PANEL_IDS.before);
     yield* ctx.host.focusNext();
     yield* ctx.host.key("enter");
@@ -352,7 +318,6 @@ export const panelGroupSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // ── The measured gap: the freed share paints the page, not a pane ────────
     const reopenedSum =
       (yield* ctx.expectSome(
         "the editor pane paints after the collapse",
@@ -415,7 +380,6 @@ export const panelGroupSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The same toggle expands it, and the shares come back ─────────────────
     yield* ctx.host.key("enter");
     yield* ctx.expectContains(
       "the toggle expands the pane again",
@@ -432,7 +396,6 @@ export const panelGroupSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       3,
     );
 
-    // ── The divider is a control the native traversal reaches ────────────────
     yield* ctx.host.focusNext();
     yield* ctx.expectEqual(
       "the traversal lands on the first divider",

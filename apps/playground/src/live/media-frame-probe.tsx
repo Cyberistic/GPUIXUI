@@ -1,23 +1,3 @@
-/**
- * The `media-frame-lifecycle` probe: what a clip is on this runtime, composed
- * the only way the runtime allows it.
- *
- * Tier 5's *Video / audio player + waveform* row says playback "needs a
- * platform surface — **unverified**". The typings are half the answer: the JSX
- * runtime declares `div`, `text`, `img`, `svg`, `canvas`, `input`, `textarea`,
- * `anchored`, `code`, `diff`, `markdown` and `virtual-list`, and no `video` or
- * `audio` — so there is nothing to mount and nothing to play. The other half is
- * what a media card can be built from, and that had never been painted: an
- * `<img>` whose buffer is re-pushed once per frame, an app-owned clock, and a
- * transport the app draws.
- *
- * The probe measures all three in one window. The clip is four seconds divided
- * into four frames, one colour each, so the picture names the playhead it is
- * on; the buffer is re-pushed in a layout effect whenever the playhead moves, so
- * "the picture moved" is a pixel count and not a state read. The view and the
- * steps live here so the measurement is one module; the registry and
- * `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -56,29 +36,22 @@ import {
   type MediaState,
 } from "./media-frame.js";
 
-/** The captures a reader can look at, one per painted state. */
 const REST = "media-rest";
 const PLAYING = "media-playing";
 const PAUSED = "media-paused";
 const SOUGHT = "media-sought";
 
-/** Long enough for a state change to reach the frame before it is captured. */
 const SETTLE = Duration.millis(140);
 
-/** How often a poll re-reads a readout before it answers with the last value. */
 const POLL = Duration.millis(50);
 const POLL_ATTEMPTS = 100;
 
-/** The page: one poster, one transport, and the app's own playhead. */
 const MediaFramePage = (): ReactNode => {
   const theme = useTheme();
   const image = useRef<ImgInstance>(null);
   const [playing, setPlaying] = useState(false);
   const [playhead, setPlayhead] = useState(0);
 
-  // The app's clock. A clip is not a host feature, so the playhead is an
-  // interval the app owns — the measurement is whether the window paints the
-  // frames it produces, not whether the runtime plays anything.
   useEffect(() => {
     if (!playing) return;
     const timer = setInterval(() => {
@@ -87,13 +60,10 @@ const MediaFramePage = (): ReactNode => {
     return () => clearInterval(timer);
   }, [playing]);
 
-  // The clip ran out: the transport stops itself where the picture ends.
   useEffect(() => {
     if (playing && playhead >= MEDIA_CLIP_MS) setPlaying(false);
   }, [playing, playhead]);
 
-  // The frame surface: every playhead move pushes the frame it sits on, and the
-  // pixels are on the element before the frame that paints it.
   useLayoutEffect(() => {
     const instance = image.current;
     if (instance === null) return;
@@ -105,7 +75,6 @@ const MediaFramePage = (): ReactNode => {
   }, [playhead]);
 
   const toggle = (): void => {
-    // Play from a finished clip restarts it, the way a player's own button does.
     if (!playing && playhead >= MEDIA_CLIP_MS) setPlayhead(0);
     setPlaying((current) => !current);
   };
@@ -219,7 +188,6 @@ const MediaFramePage = (): ReactNode => {
   );
 };
 
-/** The probe's window: one page, laid out at the window's own size. */
 export const MediaFrameProbe = (): ReactNode => {
   const window = useWindowSize();
   const theme = useTheme();
@@ -236,20 +204,17 @@ export const MediaFrameProbe = (): ReactNode => {
   );
 };
 
-/** One painted box, with a failure that names the locator. */
 const boxOf = (ctx: Smoke.AsyncSmokeContext, testId: string) =>
   Effect.flatMap(ctx.host.bounds(testId), (bounds) =>
     ctx.expectSome(`the ${testId} paints a box`, Option.fromNullishOr(bounds)),
   );
 
-/** Captures the window and decodes it. */
 const frameOf = (ctx: Smoke.AsyncSmokeContext, name: string) =>
   Effect.gen(function* () {
     yield* ctx.host.capture(name);
     return yield* ctx.host.pixels(name);
   });
 
-/** How many pixels of `hex` a decoded frame carries. */
 const countOf = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -263,7 +228,6 @@ const countOf = (
     (colour) => Pixels.countColour(frame, colour),
   );
 
-/** The capture's device scale, which the poster's area is counted in. */
 const scaleOf = (ctx: Smoke.AsyncSmokeContext, frame: Pixels.Pixels) =>
   Effect.gen(function* () {
     const size = yield* ctx.host.windowSize();
@@ -273,7 +237,6 @@ const scaleOf = (ctx: Smoke.AsyncSmokeContext, frame: Pixels.Pixels) =>
     );
   });
 
-/** Polls `testId`'s text until it satisfies `ready`, or answers the last read. */
 const waitForText = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -287,7 +250,6 @@ const waitForText = (
     return yield* waitForText(ctx, testId, ready, attempts - 1);
   });
 
-/** The playhead a readout names, as a failed check rather than a thrown one. */
 const playheadIn = (ctx: Smoke.AsyncSmokeContext, readout: string) =>
   ctx.expectSome(
     `the readout ${readout} names a playhead`,
@@ -299,7 +261,6 @@ export const mediaFrameSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor(MEDIA_IDS.poster);
     yield* ctx.host.waitFor(MEDIA_IDS.readout);
 
-    // The poster and the transport at rest.
     const poster = yield* boxOf(ctx, MEDIA_IDS.poster);
     yield* ctx.expectNear(
       "the poster paints the card's box",
@@ -349,7 +310,6 @@ export const mediaFrameSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // Play: the app's own interval advances the playhead in its ticks.
     yield* ctx.host.click(MEDIA_IDS.play);
     const started = yield* waitForText(ctx, MEDIA_IDS.readout, (text) =>
       Option.match(playheadOf(text), {
@@ -391,7 +351,6 @@ export const mediaFrameSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // Pause: the clock and the picture both hold, so the fill is static.
     yield* ctx.host.click(MEDIA_IDS.play);
     const paused = yield* waitForText(ctx, MEDIA_IDS.readout, (text) =>
       text.includes("playing=false"),
@@ -428,7 +387,6 @@ export const mediaFrameSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Math.round(area * 0.05),
     );
 
-    // Seek: the transport's own keys move the playhead and repaint the frame.
     yield* ctx.host.focusElement(MEDIA_IDS.seek);
     yield* ctx.host.key("home");
     yield* ctx.expectEqual(
@@ -493,9 +451,6 @@ export const mediaFrameSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // A playhead that reaches the clip's end stops the transport. The press on
-    // the action moves the focus to it (the runtime's own rule), so the seek pad
-    // takes it back before the key is sent.
     yield* ctx.host.click(MEDIA_IDS.play);
     yield* ctx.host.focusElement(MEDIA_IDS.seek);
     yield* ctx.host.key("end");

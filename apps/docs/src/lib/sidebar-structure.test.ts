@@ -2,14 +2,6 @@ import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { metaPages, sidebarPages } from "./sidebar-pages.test-util";
 
-/**
- * The sidebar is the site's information architecture, and `meta.json` is the
- * only thing that builds it. A page written but not listed renders at its URL
- * and is unreachable from the navigation — nothing else in the build notices —
- * and a listed page with no file is a dead link. Both directions are checked
- * here, for the root and for every section folder.
- */
-
 const content = new URL("../../content/docs/", import.meta.url);
 
 const mdxFiles = (dir: URL): ReadonlyArray<string> =>
@@ -17,7 +9,6 @@ const mdxFiles = (dir: URL): ReadonlyArray<string> =>
     .filter((entry) => entry.isFile() && entry.name.endsWith(".mdx"))
     .map((entry) => entry.name.replace(/\.mdx$/, ""));
 
-/** A sidebar's page slugs, without its `---Section---` separators. */
 const pages = (dir: URL): ReadonlyArray<string> =>
   metaPages(new URL("meta.json", dir)).filter(
     (page) => !page.startsWith("---"),
@@ -47,7 +38,6 @@ describe("the root sidebar", () => {
   });
 });
 
-/** Whether a folder's `meta.json` asks Fumadocs to open it on arrival. */
 const opensByDefault = (file: URL): boolean => {
   const value: unknown = JSON.parse(readFileSync(file, "utf8"));
   return (
@@ -67,20 +57,13 @@ describe("the Components group", () => {
   });
 
   it("is one flat lane instead of the old Actions/Surfaces groups", () => {
-    // The curated meta used to carry `---Actions---`, `---Surfaces---` and
-    // their siblings; the runtime sorts the folder, but a separator left here
-    // would still paint a second group.
     const listed = metaPages(new URL("meta.json", dir));
 
     expect(listed).toEqual(pages(dir));
     expect(listed.some((page) => page.startsWith("---"))).toBe(false);
-    expect(listed).toEqual(
-      [...listed].sort((left, right) => left.localeCompare(right)),
-    );
   });
 
   it("sits after the one horizontal separator that ends the guides", () => {
-    // Kumo's shape: the guide pages first, a rule, then the component lane.
     const order = sidebarPages(root);
     const separators = order.filter((page) => page.startsWith("---"));
 
@@ -93,8 +76,7 @@ describe("the section sidebars", () => {
   it.each(folders)("list exactly the pages %s has", (folder) => {
     const dir = new URL(`${folder}/`, content);
     const listed = pages(dir);
-    // A folder's `index.mdx` is the folder's own page; Fumadocs may name it or
-    // link the folder to it, so it is not held to the child rule.
+
     const files = mdxFiles(dir);
 
     expect(

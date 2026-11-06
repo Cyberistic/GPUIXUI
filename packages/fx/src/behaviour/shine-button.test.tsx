@@ -1,18 +1,3 @@
-/**
- * ShineButton in the real GPUix renderer.
- *
- * The bugs these guard: a sheen that is never painted on hover; a band that
- * starts inside the control (a pop); halves that do not travel together; a
- * layer that outlives its sweep; a re-entry that does not restart the sweep; a
- * reduced-motion reader who still gets the journey; a disabled action that
- * shines — including one disabled under a sheen already crossing; and a sheen
- * painted in the action's own fill, where it would vanish.
- *
- * The motion clock is paused for the frame readings, so the band's position is
- * the declared fraction rather than wherever real time had got. Its removal is a
- * real timer, so that half polls.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import { actionOnColor, alpha, darkTheme } from "@gpuixui/components/authoring";
 import {
@@ -26,7 +11,6 @@ import { MotionProvider } from "@gpuixui/components/motion";
 import { ShineButton, type ShineButtonProps } from "../shine-button.js";
 import { sheenOpacity } from "../shine-button/logic.js";
 
-/** A wide primary action, so a quarter of it is a whole band. */
 const width = 240;
 
 const render = (props: Partial<ShineButtonProps> = {}) => {
@@ -46,10 +30,6 @@ const render = (props: Partial<ShineButtonProps> = {}) => {
   return { page, onClick };
 };
 
-/**
- * One mounted action whose preference the case can change, so a flip keeps the
- * component (and the sheen it is running) rather than remounting it.
- */
 const Hoverable = ({ reduced }: { readonly reduced: boolean }) => (
   <MotionProvider preference={reduced ? "reduced" : "animated"}>
     <ShineButton testId="action" style={{ width }}>
@@ -58,20 +38,17 @@ const Hoverable = ({ reduced }: { readonly reduced: boolean }) => (
   </MotionProvider>
 );
 
-/** The same, for a control disabled while it is already wearing a sheen. */
 const Disablable = ({ disabled }: { readonly disabled: boolean }) => (
   <ShineButton testId="action" style={{ width }} disabled={disabled}>
     Ship
   </ShineButton>
 );
 
-/** Every painted half of the sheen. */
 const shines = (page: ReturnType<typeof renderComponent>) =>
   page.renderer
     .findByType("div")
     .filter((element) => element.testId === "shine");
 
-/** The painted box of the half at `index`: the lead is first, the trail second. */
 const half = (page: ReturnType<typeof renderComponent>, index: number) => {
   const element = shines(page)[index];
   if (element === undefined) {
@@ -127,9 +104,6 @@ describe("ShineButton", () => {
   });
 
   it("drops a sheen already crossing when the setting turns on", async () => {
-    // A sheen is pure journey. The preference is read on every render, so the
-    // band a hovered action is wearing goes with the travel the setting
-    // removed instead of staying mounted for the rest of the level.
     const page = renderComponent(<Hoverable reduced={false} />);
     try {
       page.renderer.clockPause();
@@ -142,7 +116,6 @@ describe("ShineButton", () => {
       page.rerender(<Hoverable reduced />);
       settle(page);
 
-      // Well inside the 500 ms window the animated sweep would still be running.
       await waitFor(() => expect(shines(page)).toHaveLength(0), 80);
     } finally {
       page.unmount();
@@ -204,11 +177,6 @@ describe("ShineButton", () => {
   });
 
   it("drops a sheen already crossing when the action is disabled", async () => {
-    // A sheen marks a hover, so it belongs to a control that can still answer
-    // one: a disabled action keeps no band, and the rule is about the control
-    // rather than only about the pointer that entered it. The sweep's removal is
-    // a real timer, so this half polls: the animated band would still be
-    // crossing for the rest of its 500 ms window.
     const page = renderComponent(<Disablable disabled={false} />);
     try {
       page.renderer.clockPause();
@@ -221,10 +189,8 @@ describe("ShineButton", () => {
       page.rerender(<Disablable disabled />);
       settle(page);
 
-      // Well inside the window the animated sweep would still be running.
       await waitFor(() => expect(shines(page)).toHaveLength(0), 80);
 
-      // Re-enabling waits for the next entry rather than reviving the sweep.
       page.rerender(<Disablable disabled={false} />);
       settle(page);
       expect(shines(page)).toHaveLength(0);

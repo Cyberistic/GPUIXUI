@@ -6,38 +6,20 @@ import {
 import { parseBinding } from "./chord.js";
 import { toTanstackPlatform, type Platform } from "./platform.js";
 
-/** Options for {@link makeSequenceMatcher}. */
 export interface SequenceMatcherOptions {
-  /** Milliseconds before a partial sequence is abandoned. */
   readonly timeoutMs: number;
-  /** The platform `Mod` resolves against. */
+
   readonly platform: Platform;
 }
 
-/**
- * A multi-step sequence matcher, driven by decoded chords instead of a DOM
- * `KeyboardEvent`.
- *
- * `@tanstack/hotkeys`' `createSequenceMatcher` reads `event.key`/`event.code`
- * and `event.repeat`, none of which a GPUix `KeyEvent` has, so this package
- * mirrors its step machine over {@link decodeGpuixEvent} output and an injected
- * clock (`now`). Time is injected so tests drive the timeout deterministically;
- * the caller owns the real clock.
- */
 export interface SequenceMatcher {
-  /** Feed one decoded chord at time `now`; `true` when the sequence completed. */
   readonly advance: (chord: ParsedHotkeyChord, now: number) => boolean;
-  /** Abandon any partial progress. */
+
   readonly reset: () => void;
-  /** How many steps are matched so far. */
+
   readonly progress: () => number;
 }
 
-/**
- * Build a matcher for one chord sequence, e.g. `["g", "g"]`. Modifier-only
- * chords are ignored; a step that does not match the next expected chord but
- * does match the first step restarts from step two (the Vim `gg` convention).
- */
 export const makeSequenceMatcher = (
   sequence: ReadonlyArray<string>,
   options: SequenceMatcherOptions,

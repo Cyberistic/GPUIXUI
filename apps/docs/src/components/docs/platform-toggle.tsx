@@ -24,65 +24,33 @@ import {
   writeRememberedChoice,
 } from "../../lib/platform-storage";
 
-/**
- * The preview switch: platform, palette and look.
- *
- * The platform is a library token decision, not a docs style: the switch
- * resolves `platformTheme` from `@gpuixui/tokens`, and every preview reads the
- * families that theme names. The palette is the library's other axis — its
- * light and dark themes, so a component can be seen in both — and the look is
- * the third: the authored looks `retroStyles` ships, applied over the
- * platform's theme, so a picker shows a real library style rather than a
- * docs-only skin. Every choice lives in the app — React holds it for the page
- * and local storage keeps it for the next visit — so the address bar names the
- * page and not the switch. A first visit has nothing stored, so it opens on the
- * platform the browser reports.
- */
-
 interface PlatformState {
-  /** The platform every preview shows. */
   readonly platform: PlatformName;
-  /** The look painted over that platform. */
+
   readonly look: LookName;
-  /** The palette every preview paints: the library's light or dark theme. */
+
   readonly mode: ThemeMode;
-  /** The library theme the three resolve to. */
+
   readonly theme: Theme;
-  /**
-   * Whether the page content — the previews a choice changes — has mounted.
-   *
-   * The sidebar hydrates before the page: a choice made in that window moves
-   * the group and the URL while every preview keeps the server's palette, and
-   * no later render recovers it. So the choice buttons stay disabled until the
-   * content boundary reports itself.
-   */
+
   readonly contentReady: boolean;
-  /** Choose a platform. */
+
   readonly setPlatform: (platform: PlatformName) => void;
-  /** Choose a look; `native` keeps the platform's own style. */
+
   readonly setLook: (look: LookName) => void;
-  /** Choose a palette. */
+
   readonly setMode: (mode: ThemeMode) => void;
-  /** Report that the page content the choices act on has mounted. */
+
   readonly markContentMounted: () => void;
 }
 
 const PlatformContext = createContext<PlatformState | null>(null);
 
-/** Provides the platform, palette and look every preview on the page renders. */
 export function PlatformProvider({ children }: { children: ReactNode }) {
-  // Resolved in the initializer rather than an effect: the first render already
-  // paints the visitor's platform, so no page opens on a theme it then replaces.
-  // A prerendered page cannot know that choice, so the surfaces that paint it
-  // declare `suppressHydrationWarning`: the client is deliberately right and the
-  // HTML deliberately the site's default, and React's mismatch message for those
-  // two attributes would be noise on every page.
   const [choice, setChoice] = useState<PreviewChoice>(() =>
     openingChoice(browserChoiceStorage()),
   );
-  // A choice made before the page content hydrates would repaint the switch
-  // while every preview kept the server's palette, so the boundary below the
-  // switch reports when there is something to repaint.
+
   const [contentReady, setContentReady] = useState(false);
   const markContentMounted = useCallback(() => setContentReady(true), []);
 
@@ -116,7 +84,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** The platform and look the page is showing. */
 export function usePlatform(): PlatformState {
   const value = usePlatformOptional();
   if (value === null) {
@@ -125,16 +92,10 @@ export function usePlatform(): PlatformState {
   return value;
 }
 
-/**
- * The platform and look, or `null` where no switch is above the component. A
- * preview must not render without one (it would paint the site's palette); the
- * theme editor may, because its own base is then the built-in theme it shows.
- */
 export function usePlatformOptional(): PlatformState | null {
   return useContext(PlatformContext);
 }
 
-/** One group of pressed buttons: the same look for both axes. */
 function ChoiceGroup<T extends string>({
   label,
   choices,
@@ -166,7 +127,6 @@ function ChoiceGroup<T extends string>({
   );
 }
 
-/** The switch's markup, given the state it reads — so the gate is testable. */
 export function PlatformSwitch({
   mode,
   platform,
@@ -206,22 +166,10 @@ export function PlatformSwitch({
   );
 }
 
-/**
- * The switch itself: the platforms the library names, the palette the previews
- * paint, and the theme they resolve to.
- */
 export function PlatformToggle() {
   return <PlatformSwitch {...usePlatform()} />;
 }
 
-/**
- * Reports that the content after it has mounted, so the switch can act on it.
- *
- * A marker rather than a hook on the page: it sits inside the same `Suspense`
- * boundary as the page content and after it, so its effect only runs once there
- * is a preview to repaint. On the server and during hydration it reports
- * nothing, which is why the choice buttons start disabled.
- */
 export function ContentMounted() {
   const { markContentMounted } = usePlatform();
 

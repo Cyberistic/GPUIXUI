@@ -1,22 +1,3 @@
-/**
- * The motion seam, in the real GPUix renderer.
- *
- * The bugs these guard: a surface that pops into place instead of travelling
- * from its edge; a surface that vanishes on dismiss instead of running its exit
- * (and focus that leaves a duration late because the surface stayed mounted); a
- * reduced-motion run that still animates; an accordion that mounts its body
- * instantly; a tab pill that jumps between triggers although both boxes
- * were measured; a context menu whose exit tween still swallowed a press
- * meant for the control underneath it; and a dismissed palette's field that
- * stayed in the window's Tab order while the panel was a ghost.
- *
- * A headless assertion can read **geometry** (the native tree reports bounds, not
- * the painted opacity), so every case moves the surface on purpose: the offset
- * is the observable half of the fade-and-offset pair, and the live probes prove
- * the fade in a window. The motion clock is paused before each interaction, so
- * the entry frame is exact rather than however far the frame loop had got.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -96,7 +77,6 @@ import { Reveal } from "../reveal.js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs.js";
 import { ToastProvider, ToastViewport, useToast } from "../toast.js";
 
-/** A page under one motion preference, with room for a floating surface. */
 const Page = ({
   reducedMotion = false,
   children,
@@ -109,22 +89,12 @@ const Page = ({
   </MotionProvider>
 );
 
-/** Let the renderer's frame loop publish what the last commit queued. */
 const delay = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 30));
 
-/** Whether `testId` is painted at all. */
 const painted = (renderer: TestRoot["renderer"], testId: string): boolean =>
   renderer.findByTestId(testId) !== undefined;
 
-/**
- * The test ids the window's Tab order visits after `from`, one per move.
- *
- * `focusNext` is the runtime's own traversal, so this reads the order a reader's
- * Tab key follows rather than the tree order a suite could mistake for it. The
- * moves are synchronous: a ghost only lives for its exit window, so a walk that
- * waited between steps would watch the surface it measures unmount.
- */
 const tabWalk = (
   page: ReturnType<typeof renderComponent>,
   from: string,
@@ -138,7 +108,6 @@ const tabWalk = (
   });
 };
 
-/** The painted y (or x) of `testId`, failing when nothing was painted. */
 const where = (
   renderer: TestRoot["renderer"],
   testId: string,
@@ -185,13 +154,6 @@ describe("a modal surface", () => {
   });
 
   it("keeps a dismissed dialog's own close control out of the window's tab order", async () => {
-    // The bug this guards: the modal stays painted for its 320 ms exit, and its
-    // close control is the one control the **library** paints inside it — the
-    // seam's shield stops the pointer, but the runtime's Tab order is decided
-    // element by element, so the ghost was still a stop and a reader who pressed
-    // Escape and then Tabbed landed on it as it unmounted. Caller content is the
-    // documented gap (the runtime has no inherited `inert`); the library's own
-    // control stops the reader falling out of the window.
     const page = renderComponent(
       <Page>
         <Button testId="before">Before</Button>
@@ -208,13 +170,10 @@ describe("a modal surface", () => {
     try {
       clickCentreOf(page, "open");
       await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(true));
-      // While the surface is open its close controls are stops, or the ghost
-      // walk below would pass on a tree that never had them.
+
       expect(tabWalk(page, "before", 5)).toContain("dialog-close");
       expect(tabWalk(page, "before", 5)).toContain("cancel");
 
-      // Escape has to be delivered inside the surface: the dismiss stack reads
-      // the key a surface's own handler is offered.
       page.renderer.focusElement(
         page.renderer.findByTestId("cancel")?.id ?? -1,
       );
@@ -224,9 +183,7 @@ describe("a modal surface", () => {
       expect(Option.getOrElse(focusedTestId(page), () => "none")).toBe("open");
 
       expect(tabWalk(page, "before", 5)).not.toContain("dialog-close");
-      // The same rule reaches the close action the library composes into the
-      // body: it is the library's control too, so a footer's Cancel must not
-      // stay a stop while the surface it closes is a ghost.
+
       expect(tabWalk(page, "before", 5)).not.toContain("cancel");
     } finally {
       page.unmount();
@@ -234,10 +191,6 @@ describe("a modal surface", () => {
   });
 
   it("keeps a dismissed drawer's own close controls out of the window's tab order", async () => {
-    // The same defect one surface over: a drawer keeps its panel painted for the
-    // exit tween, and both the close control the library paints and the
-    // `DrawerClose` a caller composes into the footer would otherwise stay stops
-    // a reader can land on as they unmount.
     const page = renderComponent(
       <Page>
         <Button testId="before">Before</Button>
@@ -270,11 +223,6 @@ describe("a modal surface", () => {
   });
 
   it("keeps a dismissed command palette's field out of the window's tab order", async () => {
-    // The same rule inside the palette: the dialog keeps the panel painted for
-    // its exit, and the search field is the one control the **library** paints
-    // in it. The shield takes the press, but the runtime decides the Tab order
-    // element by element, so a reader who pressed Escape and then Tabbed landed
-    // on a field that unmounted under the keyboard.
     const Palette = () => {
       const [open, setOpen] = useState(true);
       return (
@@ -296,8 +244,7 @@ describe("a modal surface", () => {
       await waitFor(() =>
         expect(painted(page.renderer, "command-menu")).toBe(true),
       );
-      // While the palette is open the field is a stop, or the ghost walk below
-      // could pass on a tree that never had one.
+
       expect(tabWalk(page, "before", 6)).toContain("command-input");
 
       page.renderer.focusElement(
@@ -363,9 +310,9 @@ describe("a modal surface", () => {
 
     clickCentreOf(page, "cancel");
     await delay();
-    // The exit tween is running: the surface is still painted...
+
     expect(painted(page.renderer, "dialog")).toBe(true);
-    // ...but it no longer owns focus, which is back on the opener.
+
     expect(Option.getOrElse(focusedTestId(page), () => "none")).toBe("open");
 
     await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(false));
@@ -411,9 +358,9 @@ describe("a modal surface", () => {
 
     page.renderer.simulateKeystrokes("escape");
     await delay();
-    // The veil is still painted for the exit tween...
+
     expect(painted(page.renderer, "dialog-backdrop")).toBe(true);
-    // ...but the press belongs to the page, not to the fading modal.
+
     clickCentreOf(page, "behind");
     expect(onBehind).toHaveBeenCalledTimes(1);
 
@@ -444,7 +391,6 @@ describe("a modal surface", () => {
     page.unmount();
   });
 
-  /** A modal a case opens and dismisses by the state its owner holds. */
   const ControlledDialog = ({ open }: { readonly open: boolean }) => (
     <Page>
       <Dialog open={open} onOpenChange={() => undefined}>
@@ -459,11 +405,6 @@ describe("a modal surface", () => {
   );
 
   it("keeps the instance a re-open finds, and outlives the leave it cancelled", async () => {
-    // The bug this guards: a leave arms a timer for the exit's whole window, and
-    // re-opening has to cancel it — otherwise the surface the reader just
-    // reopened unmounts when the interrupted leave would have ended. The README
-    // promises the mounted instance is kept, so the run retargets from the frame
-    // on screen instead of restarting at the entry frame.
     const page = renderComponent(<ControlledDialog open={false} />);
     page.rerender(<ControlledDialog open />);
     await waitFor(() => expect(painted(page.renderer, "dialog")).toBe(true));
@@ -481,11 +422,9 @@ describe("a modal surface", () => {
 
     page.rerender(<ControlledDialog open />);
     await delay();
-    // The same instance: the run retargets from the frame on screen, so no
-    // entry frame is painted again.
+
     expect(where(page.renderer, "dialog", "y")).toBe(leaving);
-    // The leave it interrupted armed a 320 ms timer; a stale one would unmount
-    // the reopened surface while its owner still holds it open.
+
     await new Promise((resolve) => setTimeout(resolve, 400));
     expect(painted(page.renderer, "dialog")).toBe(true);
     page.renderer.clockFastForward(400);
@@ -501,9 +440,6 @@ describe("a modal surface", () => {
 
 describe("the preference", () => {
   it("is the motion package's provider, not one of this package's own", () => {
-    // The bug this guards: the preference context lived here, so a tree wrapped
-    // in `@gpuixui/motion/react`'s provider still animated every surface below
-    // it — the reveal mounted at its distance and named the animated transition.
     const page = renderComponent(
       <PackageMotionProvider preference="reduced">
         <div
@@ -529,15 +465,6 @@ describe("the preference", () => {
     }
   });
 
-  /**
-   * The bug this guards: the preference is a **stored** value — an application
-   * persists its motion setting and hands the row to the provider — and every
-   * surface reads it as `preference === "reduced"`. A setting that came back as
-   * a name the union never described (a renamed value, a `"true"` from a
-   * checkbox column) therefore animated a reader who had asked for less motion,
-   * with nothing on screen to show the request was lost. The provider publishes
-   * the name the library carries, so the surface never sees the stored one.
-   */
   it("fails safe when the stored preference is not a name the library carries", () => {
     const tree = (preference: string | null) => (
       <PackageMotionProvider preference={preference}>
@@ -553,7 +480,7 @@ describe("the preference", () => {
     try {
       page.renderer.clockPause();
       settle(page);
-      // The resting frame, not the entry offset, and no journey behind it.
+
       expect(
         where(page.renderer, "reveal", "y") -
           where(page.renderer, "frame", "y"),
@@ -565,10 +492,6 @@ describe("the preference", () => {
       page.unmount();
     }
 
-    // Absence is the house default, not the fail-safe: a `NULL` column is a
-    // setting the application never stored, and a tree that states no
-    // preference keeps its motion. A fresh mount, because the entry frame is
-    // the mount's.
     const absent = renderComponent(tree(null));
     try {
       absent.renderer.clockPause();
@@ -588,9 +511,6 @@ describe("the preference", () => {
 
 describe("an edge panel", () => {
   it("keeps a dismissed drawer's own close control out of the window's tab order", async () => {
-    // The drawer's twin of the dialog case: the panel stays painted for its exit,
-    // and the close control the library paints inside it must not stay a stop
-    // while the ghost can only take a press the shield swallows.
     const page = renderComponent(
       <Page>
         <Button testId="before">Before</Button>
@@ -607,8 +527,6 @@ describe("an edge panel", () => {
       await waitFor(() => expect(painted(page.renderer, "drawer")).toBe(true));
       expect(tabWalk(page, "before", 5)).toContain("drawer-close");
 
-      // A key is read by the surface that owns the dismiss layer, so Escape is
-      // delivered from a control inside the drawer.
       page.renderer.focusElement(page.renderer.findByTestId("done")?.id ?? -1);
       page.renderer.simulateKeystrokes("escape");
       await delay();
@@ -638,8 +556,7 @@ describe("an edge panel", () => {
 
     page.renderer.clockFastForward(400);
     await delay();
-    // A right-hand panel starts outside the window, one surface width past its
-    // resting place, and slides in; the veil is the window that clips it.
+
     expect(entering - where(page.renderer, "drawer", "x")).toBe(400);
     page.unmount();
   });
@@ -662,7 +579,7 @@ describe("an anchored surface", () => {
 
     page.renderer.clockFastForward(400);
     await delay();
-    // Below its trigger, the surface enters from the trigger's side.
+
     expect(where(page.renderer, "popover", "y") - entering).toBe(8);
     page.unmount();
   });
@@ -730,7 +647,6 @@ describe("an anchored surface", () => {
 });
 
 describe("a submenu", () => {
-  /** A menu with one secondary level, so the submenu's own motion is measured. */
   const SubmenuPage = ({
     reducedMotion = false,
   }: {
@@ -764,17 +680,17 @@ describe("a submenu", () => {
 
     page.renderer.clockFastForward(400);
     await delay();
-    // Opened to its row's right, the surface enters from the row's side.
+
     expect(where(page.renderer, "submenu", "x") - entering).toBe(4);
 
     page.renderer.simulateKeystrokes("left");
     await delay();
-    // Still painted while it leaves, and no longer a target...
+
     expect(painted(page.renderer, "submenu")).toBe(true);
     expect(page.renderer.findByTestId("submenu")?.style.pointerEvents).toBe(
       "none",
     );
-    // ...then unmounted when the tween's duration has elapsed.
+
     await waitFor(() => expect(painted(page.renderer, "submenu")).toBe(false));
     page.unmount();
   });
@@ -799,7 +715,6 @@ describe("a submenu", () => {
 });
 
 describe("a context menu", () => {
-  /** A menu over a full-surface control, so a press into the ghost is visible. */
   const OverlapPage = ({
     onBehind,
     onRow,
@@ -848,17 +763,13 @@ describe("a context menu", () => {
     });
 
   it("stays painted for its exit without any control answering", async () => {
-    // The bug this guards: the row a dismissed menu keeps painted for its exit
-    // kept its own hitbox — `pointerEvents` does not inherit — so a press
-    // aimed at what the menu uncovered ran the ghost row instead. The seam's
-    // shield covers the box for the exit window.
     const onBehind = vi.fn();
     const onRow = vi.fn();
     const page = renderComponent(
       <OverlapPage onBehind={onBehind} onRow={onRow} />,
     );
     const row = originOf(page, "row");
-    // The pointer sits inside the row's lower half, so the menu hangs below it.
+
     page.renderer.nativeSimulateClick(row.x + 10, row.y + row.height / 2, 2);
     await waitFor(() => expect(painted(page.renderer, "menu")).toBe(true));
     const menu = originOf(page, "menu");
@@ -866,18 +777,16 @@ describe("a context menu", () => {
     page.renderer.simulateKeystrokes("escape");
     await delay();
 
-    // The box is still painted while it fades, but it is no longer a target...
     const leaving = page.renderer.findByTestId("menu");
     expect(leaving).toBeDefined();
     expect(leaving?.style.pointerEvents).toBe("none");
-    // ...and its rows do not answer a press either: the ghost takes the press
-    // rather than running one of its own controls.
+
     page.renderer.nativeSimulateClick(menu.x + menu.width / 2, menu.y + 20);
     expect(onRow).not.toHaveBeenCalled();
     expect(onBehind).not.toHaveBeenCalled();
 
     await waitFor(() => expect(painted(page.renderer, "menu")).toBe(false));
-    // Once the exit window has elapsed the page answers again.
+
     page.renderer.nativeSimulateClick(menu.x + menu.width / 2, menu.y + 20);
     expect(onBehind).toHaveBeenCalledTimes(1);
     page.unmount();
@@ -923,7 +832,7 @@ describe("a section", () => {
 
     clickCentreOf(page, "trigger");
     await delay();
-    // Still painted while it collapses...
+
     expect(painted(page.renderer, "body")).toBe(true);
     await waitFor(() => expect(painted(page.renderer, "body")).toBe(false));
     page.unmount();
@@ -958,22 +867,17 @@ describe("a tab pill", () => {
     page.renderer.clockPause();
     clickCentreOf(page, "two");
     await delay();
-    // One frame into the move the pill is still where it was...
+
     expect(where(page.renderer, "tabs-indicator", "x")).toBe(from);
 
     page.renderer.clockFastForward(400);
     await delay();
-    // ...and it settles exactly on the trigger's own box.
+
     expect(where(page.renderer, "tabs-indicator", "x")).toBe(target);
     page.unmount();
   });
 
   it("eases between two resting places instead of arriving", async () => {
-    // The bug this guards: the pill is not a surface entering the window — it
-    // moves from one resting place to another, which the timing table names
-    // `standard` and eases at both ends. It painted the *enter* curve
-    // (`easeOut`), so at the move's own midpoint an arriving surface sits at ~68%
-    // of the distance while a between-states movement sits at 50%.
     const page = renderComponent(
       <Page>
         <Tabs defaultValue="one">
@@ -1015,7 +919,6 @@ describe("a tab pill", () => {
   });
 });
 
-/** Two cards from one press, so a hover can fan a real stack. */
 const FanPage = () => {
   const toast = useToast();
   return (
@@ -1044,7 +947,6 @@ const FanPage = () => {
   );
 };
 
-/** A page that pushes one stays-put toast, so a dismissal can be observed. */
 const ToastPage = () => {
   const toast = useToast();
   return (
@@ -1069,12 +971,6 @@ const ToastPage = () => {
 
 describe("a notice", () => {
   it("slides in from the right edge and slides away toward it", async () => {
-    // The toast moves on its own timing (`motionTimingOf`), not a shared level:
-    // it arrives 16 px to the right of its slot on a 220 ms `left` travel and
-    // leaves by fading while it slides 16 px further right on a 180 ms one. The
-    // horizontal axis is measured because the fade is a paint value the native
-    // tree does not report (`surface-fade` proves it in a window) and because
-    // the stack's height animation moves `y` for an unrelated reason.
     const page = renderComponent(
       <ToastProvider>
         <ToastPage />
@@ -1095,8 +991,7 @@ describe("a notice", () => {
       clickCentreOf(page, "toast-dismiss-1");
       await delay();
       expect(painted(page.renderer, "toast-1")).toBe(true);
-      // Start the exit under the paused clock, then advance half of its 180 ms:
-      // the ghost has begun to move right, and has not covered the whole 16 px.
+
       page.renderer.clockFastForward(1);
       await delay();
       page.renderer.clockFastForward(80);
@@ -1116,11 +1011,6 @@ describe("a notice", () => {
   });
 
   it("unfolds the strips and folds them back on leave", async () => {
-    // The bug this guards: the collapsed stack had no movement of its own — the
-    // older cards were full and lifted 8px, so a hover only shifted the stack.
-    // The rebuild gives the older cards their measured height on the `standard`
-    // phase; this measures the two resting shapes in the real renderer, and the
-    // table's own row holds the 200 ms phase (`presence-contract.test.ts`).
     const page = renderComponent(
       <ToastProvider>
         <FanPage />
@@ -1143,7 +1033,6 @@ describe("a notice", () => {
       const unfolded = heightOf(page.renderer, "toast-1");
       expect(unfolded).toBeGreaterThan(folded);
 
-      // The release waits out the hold's grace before the fold begins.
       hoverCentreOf(page, "push-two");
       await new Promise((resolve) => setTimeout(resolve, 160));
       settle(page);
@@ -1158,7 +1047,6 @@ describe("a notice", () => {
   });
 });
 
-/** Controlled state, so the page itself decides when the palette is open. */
 const ControlledDialog = () => {
   const [open, setOpen] = useState(false);
   return (
@@ -1195,7 +1083,6 @@ describe("the command palette", () => {
   });
 });
 
-/** A page whose motion preference the test can change while a surface moves. */
 const PreferencePage = ({ reduced }: { readonly reduced: boolean }) => (
   <Page reducedMotion={reduced}>
     <Dialog>
@@ -1209,7 +1096,6 @@ const PreferencePage = ({ reduced }: { readonly reduced: boolean }) => (
   </Page>
 );
 
-/** The painted height of `testId`, failing when nothing was painted. */
 const heightOf = (renderer: TestRoot["renderer"], testId: string): number => {
   const instance = renderer.findByTestId(testId);
   if (instance === undefined) {
@@ -1222,7 +1108,6 @@ const heightOf = (renderer: TestRoot["renderer"], testId: string): number => {
   return bounds.height;
 };
 
-/** A toast stack whose motion preference the test can change mid-flight. */
 const PreferenceToast = ({ reduced }: { readonly reduced: boolean }) => (
   <ToastProvider>
     <Page reducedMotion={reduced}>
@@ -1242,7 +1127,6 @@ const PreferenceToast = ({ reduced }: { readonly reduced: boolean }) => (
   </ToastProvider>
 );
 
-/** Pushes one toast; it sits under the provider so it can reach the store. */
 const ToastPusher = () => {
   const toast = useToast();
   return (
@@ -1254,9 +1138,6 @@ const ToastPusher = () => {
 
 describe("the preference", () => {
   it("settles a surface that is still moving when the setting turns on", async () => {
-    // The reader turns Reduce Motion on mid-entry. The seam reads the preference
-    // on every render, so the in-flight run's duration becomes zero and the
-    // resting frame is what is left — the journey does not finish.
     const page = renderComponent(<PreferencePage reduced={false} />);
     try {
       page.renderer.clockPause();
@@ -1267,7 +1148,7 @@ describe("the preference", () => {
       page.rerender(<PreferencePage reduced />);
       await delay();
       const settled = where(page.renderer, "dialog", "y");
-      // Nothing is left to run: the frozen clock has not moved the surface since.
+
       expect(entering - settled).toBe(8);
 
       page.renderer.clockFastForward(400);
@@ -1280,9 +1161,6 @@ describe("the preference", () => {
   });
 
   it("paints a section at its measured height on the first frame", async () => {
-    // The reveal's target is a measurement that arrives after a paint, so under
-    // the reduced preference the section must already be at its full height in
-    // the frame it opens rather than growing from zero.
     const page = renderComponent(
       <Page reducedMotion>
         <Accordion type="single" collapsible>
@@ -1314,16 +1192,12 @@ describe("the preference", () => {
   });
 
   it("removes a dismissed notice at once when the setting turns on", async () => {
-    // A dismissed card is kept painted for its exit window (180 ms, the toast's
-    // own `left` travel) so that leave can run. A reader who turns Reduce Motion
-    // on while it leaves asked not to watch that journey: the stack rescales the
-    // window it already scheduled instead of finishing it.
     const page = renderComponent(<PreferenceToast reduced={false} />);
     try {
       page.renderer.clockPause();
       clickCentreOf(page, "push-notice");
       await waitFor(() => expect(painted(page.renderer, "toast-1")).toBe(true));
-      // Let the card land, so its dismiss control is where the pointer is.
+
       settle(page);
       page.renderer.clockFastForward(700);
       settle(page);
@@ -1336,7 +1210,7 @@ describe("the preference", () => {
       page.rerender(<PreferenceToast reduced />);
       await delay();
       await delay();
-      // Well inside the 180 ms the animated window would still be running.
+
       expect(painted(page.renderer, "toast-1")).toBe(false);
     } finally {
       page.renderer.clockResume();
@@ -1345,12 +1219,6 @@ describe("the preference", () => {
   });
 
   it("removes a panel at once when the setting turns on while it leaves", async () => {
-    // The same rule for the seam itself, which a panel uses rather than the
-    // toast stack: a dismissed dialog is kept painted for its `slow` window
-    // (320 ms) and the window is read from the timing on every render, so the
-    // preference must rescale the leave already in flight — not only the next
-    // one. The bug this guards: a window read once at the start of the leave,
-    // which would keep the panel on screen for the journey the reader removed.
     const page = renderComponent(<PreferencePage reduced={false} />);
     try {
       clickCentreOf(page, "open");
@@ -1363,7 +1231,7 @@ describe("the preference", () => {
       page.rerender(<PreferencePage reduced />);
       await delay();
       await delay();
-      // Well inside the 320 ms the animated window would still be running.
+
       expect(painted(page.renderer, "dialog")).toBe(false);
     } finally {
       page.unmount();
@@ -1372,22 +1240,6 @@ describe("the preference", () => {
 });
 
 describe("a control inside a leaving surface", () => {
-  /**
-   * The bug these guard: `presenceStyle` removes only a surface's **own**
-   * hitbox, and `pointerEvents` does not inherit in `@gpuix/native@0.11.0`, so a
-   * control a surface keeps mounted for its exit kept its own box and answered
-   * a press. Measured: a dismissed `Dialog` still painted for its tween ran its
-   * confirm action once.
-   *
-   * Every surface that keeps its controls mounted for an exit paints the seam's
-   * `PresenceShield`: the modal pair, the anchored family (popover, dropdown and
-   * context menu, the submenu, the navigation menu, the preview card) and the
-   * toast card. The shield is a handler-less layer over the surface's own
-   * positioned box, so a press inside a fading box stops there instead of
-   * running a control the reader can no longer see — and instead of falling
-   * through to whatever the box covers, which is what the press would otherwise
-   * reach once the surface's own hitbox is gone.
-   */
   it("does not answer a press in a dismissed dialog", async () => {
     const confirm = vi.fn();
     const page = renderComponent(
@@ -1449,10 +1301,6 @@ describe("a control inside a leaving surface", () => {
   });
 
   it("paints the seam's shield over a dismissed notice", async () => {
-    // A dismiss is idempotent, so a press on the dismiss ghost is invisible; the
-    // card still keeps its controls mounted for its exit, so the shield is what
-    // stops them being targets. Its action is the non-idempotent one — the case
-    // below measures that press — and this one measures the layer itself.
     const NoticePage = () => {
       const toast = useToast();
       return (
@@ -1501,12 +1349,6 @@ describe("a control inside a leaving surface", () => {
   });
 
   it("keeps the action a dismissed notice was thrown with", async () => {
-    // The bug this guards: the provider prunes a toast's action handler when the
-    // toast leaves the queue, and the viewport keeps the card painted for its
-    // exit — so in the frame the card was dismissed its action vanished, the
-    // description reflowed into the freed width, and the ghost stopped being the
-    // box the reader dismissed. A leaving card keeps the content it was thrown
-    // with, in the box it had, and the shield makes that content inert.
     const onAction = vi.fn();
     const NoticePage = () => {
       const toast = useToast();
@@ -1560,7 +1402,6 @@ describe("a control inside a leaving surface", () => {
         resting.height,
       ]);
 
-      // A ghost answers nothing: the shield, not the action, takes the press.
       clickCentreOf(page, "toast-action-1");
       expect(onAction).not.toHaveBeenCalled();
 
@@ -1603,8 +1444,6 @@ describe("a control inside a leaving surface", () => {
         ).toBeGreaterThan(0),
       );
 
-      // The clock stays paused, so the body is still at its measured height
-      // when the press lands in the frame the collapse starts.
       clickCentreOf(page, "trigger");
       settle(page);
       expect(painted(page.renderer, "body")).toBe(true);
@@ -1700,8 +1539,7 @@ describe("a control inside a leaving surface", () => {
         ghost.x + ghost.width / 2,
         ghost.y + ghost.height / 2,
       );
-      // The row the reader can still see is a ghost: its host has left the hit
-      // test, so the press never reaches its action.
+
       expect(ghostPress).not.toHaveBeenCalled();
       expect(behindPress).not.toHaveBeenCalled();
 
@@ -1712,15 +1550,6 @@ describe("a control inside a leaving surface", () => {
   });
 
   it("keeps a dismissed menu's rows out of the window's tab order", async () => {
-    // The keyboard twin of the case above. The seam stops a leaving surface
-    // taking presses, and the runtime decides its Tab order element by element:
-    // neither `pointerEvents` nor the shield reaches a child's `tabIndex` or the
-    // traversal. Measured on 0.11.0 with this page, the order is the trigger,
-    // the control after it, then the menu's rows — so a reader who pressed
-    // Escape and then two Tabs landed on a row that unmounted under them, and
-    // the window kept no focused element. A row of a surface that is only
-    // painted for its exit drops its own stop; the first walk is the control,
-    // because the same rows must stay reachable while the menu is open.
     const page = renderComponent(
       <Page>
         <Button testId="before">Before</Button>
@@ -1741,8 +1570,6 @@ describe("a control inside a leaving surface", () => {
       const live = tabWalk(page, "before", 4);
       expect(live).toEqual(expect.arrayContaining(["rename", "delete"]));
 
-      // The walk ends on a row, so Escape is delivered inside the menu: the
-      // dismissal returns the focus to the trigger and the rows become a ghost.
       page.renderer.simulateKeystrokes("escape");
       await delay();
       expect(Option.getOrElse(focusedTestId(page), () => "none")).toBe("open");
@@ -1757,10 +1584,6 @@ describe("a control inside a leaving surface", () => {
   });
 
   it("does the same for a context menu, which paints the shared surface", async () => {
-    // The Dropdown composes its own floating layer around the rows; the context
-    // menu and the submenu paint `MenuSurface`, whose provider is the second
-    // half of the flag. This case holds that half: the same row is a stop while
-    // the menu is open and none once it is only painted for its exit.
     const page = renderComponent(
       <Page>
         <Button testId="before">Before</Button>
@@ -1781,7 +1604,7 @@ describe("a control inside a leaving surface", () => {
       });
       page.renderer.nativeSimulateClick(row.x + 10, row.y + row.height / 2, 2);
       await waitFor(() => expect(painted(page.renderer, "menu")).toBe(true));
-      // Three moves end on the row, so Escape is delivered inside the surface.
+
       expect(tabWalk(page, "before", 3)).toContain("open-project");
 
       page.renderer.simulateKeystrokes("escape");
@@ -1798,20 +1621,6 @@ describe("a control inside a leaving surface", () => {
 });
 
 describe("a leaving subtree", () => {
-  /**
-   * The bug this guards: a reveal is a **wrapper**, not a surface. `auto` on it
-   * inserts the runtime's blocking hitbox between the control that paints under
-   * it and the content it wraps (`press-routing-lifecycle` measured the rule:
-   * a hitbox from the topmost down to the first painted fill), so a wrapped
-   * glyph would stop the press that belongs to its action — and a leaving
-   * reveal that kept the hitbox did the same while it faded. The wrapper
-   * therefore paints nothing at rest and `none` while it leaves. The measured
-   * limit is the runtime's: `pointerEvents` does not inherit and inserts no
-   * hitbox for the element that declares it only, so a control *inside* a
-   * leaving box keeps its own hitbox (GPUix `AGENTS.md`; the headless renderer
-   * dispatches a simulated click by bounds, so routing is the live probes'
-   * claim, not this one). What this case can hold is the guard itself.
-   */
   const leaving = (page: ReturnType<typeof renderComponent>) =>
     page.renderer.findByTestId("reveal")?.style.pointerEvents;
 
@@ -1825,7 +1634,7 @@ describe("a leaving subtree", () => {
     );
     try {
       settleMotion(page);
-      // At rest the wrapper adds no hitbox over the content it wraps.
+
       expect(leaving(page)).toBeUndefined();
 
       page.rerender(
@@ -1836,7 +1645,7 @@ describe("a leaving subtree", () => {
         </Page>,
       );
       settle(page);
-      // Still painted for the tween, and no longer a target.
+
       expect(painted(page.renderer, "reveal")).toBe(true);
       expect(leaving(page)).toBe("none");
     } finally {
@@ -1845,13 +1654,6 @@ describe("a leaving subtree", () => {
   });
 });
 
-/**
- * A bare surface that owns only the seam's mount window.
- *
- * The two windows a shipped surface reads are fixed by its level, so the case
- * below drives the seam directly: it is the one way to change a wait without
- * changing the duration, which is the half the timer used to ignore.
- */
 const WindowProbe = ({
   open,
   waitMs,
@@ -1873,28 +1675,19 @@ const WindowProbe = ({
 };
 
 describe("the seam's mount window", () => {
-  /**
-   * The bug this guards: `useSurfacePresence` holds a leaving box for
-   * `exitWindowMs(timing)` — the tween plus the wait it sits out first — but the
-   * effect that schedules the unmount listened to `timing.exit.duration` alone.
-   * A leave already timed therefore kept its old window when the wait changed,
-   * so a delayed journey could lose its box before it started. `PageTransition`
-   * had the same shape and was closed on its own window; this is the seam's
-   * half, and the toast stack's timers now read the same value.
-   */
   it("re-times a leave when the window changes, not only its duration", async () => {
     const page = renderComponent(<WindowProbe open waitMs={0} />);
     try {
       await delay();
       page.rerender(<WindowProbe open={false} waitMs={0} />);
       await delay();
-      // Same 50 ms duration, a 200 ms longer window.
+
       page.rerender(<WindowProbe open={false} waitMs={200} />);
       await new Promise((resolve) => setTimeout(resolve, 120));
-      // The 50 ms window has passed; the re-timed one has not.
+
       expect(painted(page.renderer, "seam-window")).toBe(true);
       await new Promise((resolve) => setTimeout(resolve, 200));
-      // The longer window still ends, so the timer was re-armed rather than lost.
+
       expect(painted(page.renderer, "seam-window")).toBe(false);
     } finally {
       page.unmount();
@@ -1902,13 +1695,6 @@ describe("the seam's mount window", () => {
   });
 });
 
-/**
- * A host element painted on one motion description, at a fixed box.
- *
- * The description is handed over whole — not through a component — because the
- * value under test is what the seam publishes to the runtime, and the runtime's
- * own validation is what decides whether the element moves at all.
- */
 const MotionProbe = ({
   testId,
   motion,
@@ -1925,25 +1711,12 @@ const MotionProbe = ({
   </div>
 );
 
-/** The description a frame set becomes for an entering surface. */
 const entering = (
   frames: PresenceFramesInput,
   timing: PresenceTiming = { enter: { duration: 10 }, exit: { duration: 10 } },
 ): MotionProps => motionOfPresence(frames, true, timing);
 
 describe("a frame the renderer refuses", () => {
-  /**
-   * The bug this guards: the runtime validates the **whole** motion
-   * description and paints no frame for one it rejects
-   * (`@gpuix/native@0.11.0`, `packages/native/src/motion.rs`'s `validate_style`:
-   * every inset must be finite and fit a 32-bit float, a size must be
-   * non-negative, and `opacity` must be `0..1`). The seam dropped a field it
-   * could not read only when it was non-finite, so one out-of-range field a
-   * caller had stored — a designer's `1.5` opacity, a negative measured height —
-   * rejected the description and the surface painted **no** motion at all: an
-   * entering one appeared without its fade and a leaving one kept its resting
-   * look for its exit window, including the fields beside it that were readable.
-   */
   it("drops the field, not the whole surface's motion", async () => {
     const page = renderComponent(
       <div>
@@ -1972,8 +1745,7 @@ describe("a frame the renderer refuses", () => {
       const refused = where(page.renderer, "refused", "y");
       page.renderer.clockFastForward(20_000);
       await delay();
-      // Both travel the 8px they ask for; the refused field is beside the one
-      // that names the travel, so losing it would take the whole run with it.
+
       expect(readable - where(page.renderer, "readable", "y")).toBe(8);
       expect(refused - where(page.renderer, "refused", "y")).toBe(8);
     } finally {
@@ -1982,7 +1754,6 @@ describe("a frame the renderer refuses", () => {
   });
 });
 
-/** The description a surface built from a millisecond duration paints. */
 const storedDuration = (durationMs: number): MotionProps =>
   motionOfPresence(
     { initial: { top: 8 }, animate: { top: 0 }, exit: { top: 8 } },
@@ -1994,16 +1765,6 @@ const storedDuration = (durationMs: number): MotionProps =>
   );
 
 describe("a duration the renderer refuses", () => {
-  /**
-   * The bug this guards: the binding converts a transition's seconds into a
-   * `Duration` and rejects the **whole** description for a value it cannot
-   * represent (`@gpuix/native@0.11.0`, `packages/native/src/motion.rs`'s
-   * `validate_seconds`; its own suite pins `duration: 1e300` as refused), which
-   * paints no frame at all. `motionTimingOf` read only finiteness and sign, so a
-   * surface built from a stored duration above the clock's range was handed a
-   * description the runtime refused: measured on the painted box, it asked for
-   * 8px of travel and moved 0 — no fade and no travel, at either end.
-   */
   it("travels on a stored duration past the clock, read as the house arrival", async () => {
     const page = renderComponent(
       <div>
@@ -2018,8 +1779,7 @@ describe("a duration the renderer refuses", () => {
       const past = where(page.renderer, "past", "y");
       page.renderer.clockFastForward(20_000);
       await delay();
-      // The readable duration travels; the past-clock one is read as the house
-      // arrival, so it travels the same 8px instead of painting no frame.
+
       expect(scheduled - where(page.renderer, "scheduled", "y")).toBe(8);
       expect(past - where(page.renderer, "past", "y")).toBe(8);
     } finally {

@@ -82,14 +82,3 @@ Popover
 The panel fades and travels 8px out from the side it opens on, at the `normal`
 level (200 ms); `MotionProvider preference="reduced"` paints the resting frame at
 once. A leaving panel stays painted for its exit and takes no presses.
-
-## Notes
-- No `aria-haspopup`, `aria-controls` or `aria-labelledby`.
-- No arrow, custom anchor or backdrop; a popover is non-modal, so it paints no
-  veil and does not blur the page (the modal families do).
-- `align="center"` cannot centre a surface at the window edge.
-- The anchored layer measures its **containing block** — the popover's own
-  positioning root — so put a side-anchored popover in a shrink-to-fit container
-  (a toolbar row, a button's wrapper). In a block that stretches its children the
-  root is wider than the trigger and a `left`/`right` panel opens from the
-  root's edge, not the trigger's.

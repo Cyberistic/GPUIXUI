@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Disclosure: an inspector section headed by a triangle, as AppKit draws one.
- *
- * A `Collapsible` whose trigger is a 13-point semibold title after a triangle
- * that points right when the section is folded and down when it is open. The
- * runtime has no `transform` to rotate one glyph, so the triangle is the
- * chevron pair swapped. The body opens through the collapsible's measured
- * reveal.
- */
-
 import { Icon } from "@gpuixui/icons";
 import { useState, type ReactNode } from "react";
 import {
@@ -18,16 +8,14 @@ import {
 } from "./collapsible.js";
 import { textStyle, useTheme } from "./internal/theme.js";
 
-/** {@link Disclosure} props. */
 export interface DisclosureProps {
   readonly title: string;
-  /** Whether the section starts open. Defaults to open, as an inspector does. */
+
   readonly defaultOpen?: boolean;
   readonly testId?: string;
   readonly children?: ReactNode;
 }
 
-/** The disclosure section. */
 export const Disclosure = ({
   title,
   defaultOpen = true,
@@ -46,8 +34,7 @@ export const Disclosure = ({
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
-          // The collapsible recipe spreads its trigger (`justify-between`); a
-          // disclosure's title follows its triangle.
+
           justifyContent: "flex-start",
           gap: 4,
           height: 24,
@@ -73,7 +60,6 @@ export const Disclosure = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`'s Disclosure row. */
 export const disclosureMeta = {
   name: "Disclosure",
   tier: 2,

@@ -15,19 +15,6 @@ import {
   type Task,
 } from "./tasks-block";
 
-/**
- * The tasks block's arithmetic and its shape.
- *
- * The block is one array of tasks and one of documents, and every count the
- * cards print is derived from the tasks: a tick takes a task out of the open
- * list, and the card's "N tasks to do" follows without a second source. These
- * cases hold that derivation, the pin toggle that splits the two card rows,
- * and the regions the reference draws.
- *
- * They must be able to fail: each asserts a value the code computes, not a
- * literal it stubbed.
- */
-
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 
@@ -57,7 +44,7 @@ describe("the tasks block", () => {
     const ticked = toggleTask(initialTasks, first.id);
 
     expect(openTasksOf(ticked, "exam-prep")).toHaveLength(open.length - 1);
-    // The task is still there, only done — so unticking brings it back.
+
     expect(ticked).toHaveLength(initialTasks.length);
     expect(openTasksOf(toggleTask(ticked, first.id), "exam-prep")).toHaveLength(
       open.length,
@@ -74,7 +61,7 @@ describe("the tasks block", () => {
     const added = twice.slice(initialTasks.length);
     const ids = added.map((task: Task) => task.id);
     expect(new Set(ids).size).toBe(2);
-    // A new task lands in the inbox, so it has no document.
+
     expect(added.every((task: Task) => Option.isNone(task.doc))).toBe(true);
   });
 
@@ -91,7 +78,6 @@ describe("the tasks block", () => {
     expect(after.pinned.some((doc) => doc.id === unpinned.id)).toBe(true);
     expect(after.rest.some((doc) => doc.id === unpinned.id)).toBe(false);
 
-    // Unpinning puts it back.
     const back = splitPinned(setPinned(initialDocs, unpinned.id, true));
     const restored = splitPinned(
       setPinned(setPinned(initialDocs, unpinned.id, true), unpinned.id, false),
@@ -111,8 +97,6 @@ describe("the tasks block", () => {
   });
 
   it("opens the views in the shared reorderable tabs", () => {
-    // The strip is the site's `ReorderableTabs`, not a hand-rolled row: the
-    // drag, the close and the roving tab stop are one component's.
     expect(markup).toContain('role="tablist"');
     expect(markup).toContain('aria-label="Open views"');
     expect(markup).toContain('data-reorder-tab="tasks"');
@@ -123,15 +107,13 @@ describe("the tasks block", () => {
 
   it("gives every card the count and the tasks it holds", () => {
     expect(markup).toContain("tasks to do");
-    // A card's first open task is printed inside it.
+
     const exam = openTasksOf(initialTasks, "exam-prep")[0];
     expect(exam).toBeDefined();
     if (exam !== undefined) expect(markup).toContain(exam.title);
   });
 
   it("writes one task in the singular", () => {
-    // A count of one reads "1 task to do"; the reference never wrote
-    // "1 tasks to do".
     expect(markup).toContain("1 task to do");
     expect(markup).not.toContain("1 tasks to do");
   });

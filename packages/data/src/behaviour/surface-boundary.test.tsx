@@ -1,15 +1,3 @@
-/**
- * The data surfaces a store handed back with a slot it wrote `null` for.
- *
- * The bug these guard: JSON keeps `null` for a field a record never set, so a
- * panel, toolbar, card or builder restored from storage arrives with a nullish
- * optional slot. The components read those slots as present because the prop
- * types say they are, and one dereference (`trend.direction`, `search.value`,
- * `rows.map`) threw out of the render and took every other part of the surface
- * down — the title, the toolbar's own actions, the card's reading. A surface
- * with no slot paints without it; a stored absence is not a broken surface.
- */
-
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { paintedText } from "../internal/interaction.js";
@@ -38,7 +26,6 @@ afterEach(() => {
   root = undefined;
 });
 
-/** A tree with one clause, so the builder paints a row and reads its fields. */
 const SAVED: FilterTree = {
   kind: "all",
   children: [

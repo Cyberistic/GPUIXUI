@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The LCD: reflective grey-green glass with dark segments, the indicator row
- * along the top, the entry on the first line and the result right-aligned on
- * the second — the fx-991ES Plus's Natural Display. A Natural Display result is
- * painted by `MathView`; linear results and matrix/table rows stay text. The
- * MODE menu paints here too, as it does on the device.
- */
-
 import type { DisplayState } from "@gpuixui/calc";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -14,7 +6,6 @@ import type { Theme } from "@gpuixui/tokens";
 import { MathView } from "./mathview.js";
 import { device } from "./theme.js";
 
-/** The device's segment for each indicator; a mode the LCD has no segment for is absent. */
 const SEGMENT: Readonly<Record<string, string>> = {
   SHIFT: "S",
   ALPHA: "A",
@@ -32,12 +23,12 @@ const SEGMENT: Readonly<Record<string, string>> = {
 export interface DisplayProps {
   readonly display: DisplayState;
   readonly theme: Theme;
-  /** 0–10, the device's contrast wheel. */
+
   readonly contrast: number;
   readonly poweredOff: boolean;
-  /** The MODE menu's lines, when it is open. */
+
   readonly menu: Option.Option<ReadonlyArray<string>>;
-  /** The device unit: 1 at the design size. */
+
   readonly u: number;
 }
 

@@ -1,22 +1,3 @@
-/**
- * Holds `file-tree-lifecycle` to the shipped tree, its arithmetic and its prose.
- *
- * The gap this guards: Tier 4's *File trees* row cited `virtual-tree-lifecycle`,
- * which measures the runtime's `<virtual-list>` around a probe-local
- * flattening — no window had mounted `@gpuixui/files`' `FileTree`, pressed one
- * of its rows or read its parts. If this probe is rewritten around a local
- * list, the registry, the README and the row would still claim the component
- * while measuring a fixture.
- *
- * The second guard is the surface: the tree now declares its rows with
- * `FileTreeFolder` / `FileTreeFile`, selects one file path and reports folder
- * expansion separately. A probe that fell back to the old `roots` accessors, or
- * a page that still taught a checkbox, would pass a loose test and fail the
- * reader.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own component, probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -53,7 +34,6 @@ const inventory = read("../../../../.agents/slop/COMPONENTS.md");
 const todo = read("../../../../.agents/slop/TODO.md");
 const readme = read("../../README.md");
 
-/** The probe's README section, so a value printed elsewhere cannot pass. */
 const section = (() => {
   const heading = "### `file-tree-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -62,7 +42,6 @@ const section = (() => {
   return readme.slice(start, end === -1 ? undefined : end);
 })();
 
-/** The .agents/slop/COMPONENTS.md row named `title`. */
 const row = (title: string): string => {
   const start = inventory.indexOf(`| ${title} |`);
   if (start === -1) return "";
@@ -70,7 +49,6 @@ const row = (title: string): string => {
   return inventory.slice(start, end === -1 ? undefined : end);
 };
 
-/** The Interlocks row that names `needle`, or an empty string. */
 const interlock = (needle: string): string => {
   const line = Arr.findFirst(
     Arr.filter(todo.split("\n"), (text) => text.startsWith("| ")),
@@ -94,8 +72,7 @@ describe("the workspace the scene builds", () => {
         Arr.map(node.children ?? [], (child) => child.path),
       ),
     ).toEqual(Option.some([FILE_TREE_BUTTON, FILE_TREE_INDEX]));
-    // Opening `src` is the only expansion the probe drives, so the row count it
-    // scrolls to is the fixture's own: four roots plus the two files.
+
     const files = Option.map(src, (node) => node.children?.length ?? 0);
     expect(FILE_TREE_ROWS_OPEN).toBe(
       Arr.length(roots) + Option.getOrElse(files, () => 0),
@@ -149,8 +126,6 @@ describe("the component the probe measures", () => {
   });
 
   it("moves the pointer onto a row before pressing it", () => {
-    // Measured: a click sent without a preceding move lands on whatever the last
-    // move hovered — after the probe's wheel, the row press reached nothing.
     expect(probe).toContain("yield* ctx.host.hover(fileTreeRow(path));");
     expect(probe).toContain("yield* ctx.host.click(fileTreeRow(path));");
     expect(
@@ -162,14 +137,12 @@ describe("the component the probe measures", () => {
   });
 
   it("selects one file path and reports expansion separately", () => {
-    // The component's mechanism: a file press calls `onSelect`, a folder press
-    // only flips the cursor's expanded set.
     expect(component).toContain("if (row.node.children === undefined)");
     expect(component).toContain("onSelect?.(row.key)");
     expect(component).toContain("onExpandedChange?.(fileTreePaths(next))");
     expect(component).not.toContain("Checkbox");
     expect(component).not.toContain("pressSelection");
-    // …and the page teaches the same two props.
+
     expect(page).toContain("defaultExpanded");
     expect(page).toContain("onSelect");
     expect(page).toContain("guide");
@@ -203,7 +176,6 @@ describe("the record the probe leaves", () => {
   });
 
   it("prints the rows, the box and the scroll the probe measured", () => {
-    // 6 rows of 32 in a 4-row box: the tree is 128 tall and the end is −64.
     expect(section).toContain("**128**");
     expect(section).toContain("**−64**");
     expect(section).toContain("**32**");

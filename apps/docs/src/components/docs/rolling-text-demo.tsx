@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Rolling text page.
- *
- * The native value rolls vertically into a single clipped line on change; the
- * preview clips one line and rolls the current value up into it.
- */
-
 import { useState } from "react";
 
 const states = ["Idle", "Building", "Deploying", "Live"];

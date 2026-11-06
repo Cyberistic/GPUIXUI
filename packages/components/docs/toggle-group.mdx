@@ -71,20 +71,3 @@ stop: the arrow keys move focus between options without pressing them.
 | `ToggleGroupItem` | `description` | `string` | — |
 | `ToggleGroupItem` | `disabled` | `boolean` | `false` |
 | `ToggleGroupItem` | `children` | `ReactNode` | `label` |
-
-## Accessibility
-
-- The group is a named `group` node; each option is a `button`.
-- Each option announces its state through `aria-valuetext`, because 0.11.0
-  publishes no `aria-pressed`.
-- One option holds the tab stop — the focused one, or the selected one while
-  nothing holds focus — so Tab enters and leaves the toolbar once.
-- `label` on an item is the accessible name even when `children` paints richer
-  content, so a glyph-only option is still named.
-
-## Notes
-- **No `aria-pressed`** on an option.
-- No attached `spacing={0}` variant: the options keep the theme's `xs` gap
-  because the runtime's flex layout has no negative margin to close it.
-- An option a stored list marks `disabled` leaves the tab and arrow rotation
-  but keeps its place in the drawing.

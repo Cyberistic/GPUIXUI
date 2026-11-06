@@ -1,14 +1,3 @@
-/**
- * The bubble field's arithmetic, without a renderer.
- *
- * The bugs these guard: a field that reshuffles between mounts; a bubble born
- * outside the box it was measured in, or travelling out of it on its sway; a
- * rise that starts on-stage or ends on-stage, so the restart shows a pop; a
- * field where every bubble rises on the same beat; a peak so faint the bubble
- * cannot be seen, or so strong it stops reading as decoration; and an unmeasured
- * box painting a field anyway.
- */
-
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import {
@@ -21,7 +10,6 @@ import {
   type BubbleSpec,
 } from "./logic.js";
 
-/** A 360×240 field of twelve bubbles on a 2 second rise. */
 const field = (
   overrides: Partial<BubbleFieldInput> = {},
 ): ReadonlyArray<BubbleSpec> =>

@@ -1,15 +1,3 @@
-/**
- * `scroll-horizontal` — an `overflowX: "scroll"` strip moves on the X axis.
- *
- * A wide table, a tab strip and a code block all need a horizontal scroller, and
- * no scenario measured one: `scroll-container` is vertical. The probe checks the
- * three facts a component depends on — a `deltaX` wheel moves the strip's own
- * offset, it leaves the vertical axis at `0`, and `onScroll` reports the delta so
- * an app can react.
- *
- * Measured on this host: `deltaX` is **negative to scroll right**, the same
- * convention `deltaY` uses for down (the opposite of the DOM's `WheelEvent`).
- */
 import { useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
@@ -87,8 +75,6 @@ export const scrollHorizontalScenario: ScenarioBody = {
         true,
       );
 
-      // The far column is 18 * 80 = 1440px wide inside a 320px viewport, so a
-      // large wheel cannot pass the clamped end.
       ctx.host.wheel("h-scroll-view", -4000, 0);
       const clamped = yield* ctx.expectSome(
         "the clamped strip reports an offset",

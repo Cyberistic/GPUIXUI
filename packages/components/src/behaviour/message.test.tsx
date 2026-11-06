@@ -1,16 +1,3 @@
-/**
- * Message behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a row whose variant changes nothing (a user message
- * that reads as an assistant's); a bubble that borrows the wrong role; a
- * reasoning panel that is open by default (the plan's contract is closed); a
- * tool call whose failed state is invisible; a stored tool status that paints no
- * state word; citations that are not a list; a
- * streaming marker that stays after the stream ends; an action row that renders
- * controls no handler can serve — and a part used in the wrong parent of its own
- * family, which must name both sides instead of painting in the wrong place.
- */
-
 import * as Option from "effect/Option";
 import { Component, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -39,7 +26,6 @@ const themes: ReadonlyArray<readonly [TestTheme, Theme]> = [
   ["dark", darkTheme],
 ];
 
-/** One row with the slots a test supplies. */
 const Row = ({
   variant = "assistant",
   body = "The layout pass is done.",
@@ -101,7 +87,6 @@ const Row = ({
   </div>
 );
 
-/** The background a `testId` paints, `None` when it paints none. */
 const fillOf = (
   root: ComponentTestRoot,
   testId: string,
@@ -111,7 +96,6 @@ const fillOf = (
     (element) => Option.fromNullishOr(element.style.backgroundColor),
   );
 
-/** Click the element whose painted text is `label`. */
 const clickText = (root: ComponentTestRoot, label: string): void => {
   const element = root.renderer.findByText(label);
   const bounds =
@@ -127,7 +111,6 @@ const clickText = (root: ComponentTestRoot, label: string): void => {
   );
 };
 
-/** Catches a render throw so a placement error can be asserted on. */
 class Caught extends Component<
   { readonly children?: ReactNode },
   { readonly message: string | null }
@@ -147,7 +130,6 @@ class Caught extends Component<
   }
 }
 
-/** Render under the boundary and return the message a reader would see. */
 const caught = (node: ReactNode): string => {
   const root = renderComponent(<Caught>{node}</Caught>);
   const text = root.renderer.getAllText();
@@ -173,12 +155,6 @@ describe("Message", () => {
   });
 
   it("reads a stored variant name it does not ship as the documented default", () => {
-    // A row's variant arrives with a saved transcript as often as a literal, so
-    // a name this release renamed or dropped reaches the component as a string
-    // the union no longer names: `AUTHOR[variant]` answered `undefined`, so the
-    // row published no accessible name and painted neither the mirror nor the
-    // bubble the reader's role documents — the row silently became an unnamed
-    // assistant line.
     // @ts-expect-error — a variant a store wrote, not the union the props declare.
     const stored: MessageVariant = "customer";
 
@@ -198,11 +174,6 @@ describe("Message", () => {
   });
 
   it("paints no slot for a saved reply whose slots are not lists", () => {
-    // The slots are conversation data: a transcript restored from storage writes
-    // `null` where it carried no tool calls or citations, and the row read
-    // `.map`/`.length` off the prop, so one absent slot threw out of the render
-    // and took the whole reply — avatar, prose, actions — down instead of
-    // painting the reply without it.
     const root = renderComponent(
       <div style={{ width: 520, padding: 24 }}>
         <Message testId="row" variant="assistant">
@@ -232,11 +203,6 @@ describe("Message", () => {
   });
 
   it("reads a blank slot name or sentence as the documented words", () => {
-    // The three labels are copy like every other name in the library, and a
-    // default covers only `undefined`: an i18n row with a missing key reached
-    // the citations list as an empty accessible name, the reasoning trigger as
-    // an icon with no word, and the streaming marker as a dot that said nothing
-    // — while a whitespace sentence painted a full blank line in the panel.
     const root = renderComponent(
       <div style={{ width: 520, padding: 24 }}>
         <Message variant="assistant">
@@ -272,8 +238,7 @@ describe("Message", () => {
     expect(lists).toContain("Sources");
     expect(root.renderer.findByText("Reasoning")).toBeDefined();
     expect(root.renderer.findByText("Streaming…")).toBeDefined();
-    // Exactly one disclosure: the row whose sentence says nothing paints none,
-    // where the whitespace used to be an unnamed trigger and a blank line.
+
     expect(
       root.renderer.getAllText().filter((line) => line === "Reasoning"),
     ).toHaveLength(1);
@@ -283,11 +248,6 @@ describe("Message", () => {
   });
 
   it("reads a slot name that is not text as the documented words", () => {
-    // The bug guarded: the three labels are copy a saved reply writes as readily
-    // as a literal, and `accessibleName` trims the string it is handed — a label
-    // the record kept as a number or an object threw
-    // `self.trim is not a function` before the row painted, taking the whole
-    // transcript down with it.
     const root = renderComponent(
       <div style={{ width: 520, padding: 24 }}>
         <Message variant="assistant">
@@ -347,7 +307,7 @@ describe("Message", () => {
       user.unmount();
 
       const assistant = renderComponent(<Row variant="assistant" />, name);
-      // No bubble: the recipe paints no surface, so the strip behind it shows.
+
       expect(fillOf(assistant, "message-bubble")).toEqual(
         Option.some("transparent"),
       );
@@ -418,13 +378,6 @@ describe("Message", () => {
   });
 
   it("reads a stored tool status it does not name as Unknown, not a blank line", () => {
-    // The bug this guards: `TOOL_STATUS[call.status]` read the status straight
-    // off the table, and a tool call's status arrives with a saved transcript as
-    // often as from a live transport. A status a release renamed or dropped
-    // answered `undefined`, so the call painted its name, its result and no
-    // state word at all — a finished or failed call read like a blank slot.
-    // `Unknown` is the honest word for a state this release cannot name; `Done`
-    // or `Running` would claim one.
     const root = renderComponent(
       <Row
         toolCalls={[
@@ -440,7 +393,7 @@ describe("Message", () => {
       expect(text).toEqual(
         expect.arrayContaining(["search", "Unknown", "deploy", "Failed"]),
       );
-      // The unknown state is not a failure: only the error call carries the glyph.
+
       expect(root.renderer.findByType("svg")).toHaveLength(1);
     } finally {
       root.unmount();
@@ -471,7 +424,7 @@ describe("Message", () => {
     );
     expect(text).toContain("42 lines");
     expect(text).toContain("No credentials");
-    // Only the failed call carries the error glyph.
+
     expect(root.renderer.findByType("svg")).toHaveLength(1);
 
     root.unmount();

@@ -10,15 +10,6 @@ import {
 } from "./layout.js";
 import { testTheme } from "./testing/theme.fixture.js";
 
-/**
- * Guards the geometry resolvers, because nothing else can.
- *
- * A wrong `gap` step or an inverted `direction` is a layout that is subtly off
- * on screen and perfectly valid to the compiler. With no runtime to render into
- * (see `docs/gpuix-capabilities.md`), the numeric contract asserted here is the only proof that a
- * Stack and a Box agree about direction, spacing and flex behaviour.
- */
-
 describe("stackStyle", () => {
   it("maps the logical direction onto the runtime's flex value", () => {
     expect(stackStyle({ direction: "column" }, testTheme).flexDirection).toBe(
@@ -29,12 +20,6 @@ describe("stackStyle", () => {
     );
   });
 
-  // Bug guarded: `direction` is stored with the layout that draws it (a saved
-  // workspace records each pane's axis), and the two paint paths read it
-  // differently — the class recipe drew a column for anything that was not
-  // `row`, while this resolver handed the runtime the stored string, which its
-  // flex grammar does not carry and quietly laid out as a row. One reader now
-  // answers the column the shipped painter already drew.
   it("reads a stored direction this release does not carry as the column it painted", () => {
     const stored: ReadonlyArray<unknown> = [
       "vertical",
@@ -51,7 +36,7 @@ describe("stackStyle", () => {
     expect(stackDirection("column")).toBe("column");
     Arr.forEach(stored, (value) => {
       expect(stackDirection(value), String(value)).toBe("column");
-      // The cast is the storage boundary: a saved direction is one string.
+
       expect(
         stackStyle({ direction: value as "row" | "column" }, testTheme)
           .flexDirection,
@@ -63,7 +48,7 @@ describe("stackStyle", () => {
   it("tests membership against the two axes the runtime draws", () => {
     expect(isStackDirection("row")).toBe(true);
     expect(isStackDirection("column")).toBe(true);
-    // A name the union does not carry, including one inherited from `Object`.
+
     expect(isStackDirection("row-reverse")).toBe(false);
     expect(isStackDirection("toString")).toBe(false);
     expect(isStackDirection(null)).toBe(false);
@@ -122,9 +107,6 @@ describe("gridStyle", () => {
   });
 
   it("reads a count it cannot draw as one track", () => {
-    // The bug guarded: `Math.max(1, Math.floor(NaN))` is `NaN`, so a count from
-    // a measurement that never arrived reached the runtime as no template at all
-    // and the element painted as a block — not a grid, and nothing said so.
     expect(
       gridStyle({ columns: Number.NaN }, testTheme).gridTemplateColumns,
     ).toBe(1);
@@ -144,10 +126,6 @@ describe("gridStyle", () => {
 
 describe("fieldRows", () => {
   it("floors a fractional row count the runtime would drop", () => {
-    // The bug guarded: the runtime reads `minRows`/`maxRows` as whole rows and
-    // discards a fractional count rather than flooring it, so a floor computed
-    // from a measured height (2.5 rows) painted ONE row — fewer than
-    // `minRows={2}` — and a fractional cap painted the whole field.
     expect(fieldRows(2.5, undefined)).toEqual({
       minRows: 2,
       maxRows: undefined,
@@ -180,20 +158,10 @@ describe("fieldRows", () => {
   });
 
   it("never caps a field below the floor it paints", () => {
-    // The runtime paints the floor when the pair is inverted, so a passed-through
-    // cap of 2 described a box the field never drew (it painted four rows).
     expect(fieldRows(4, 2)).toEqual({ minRows: 4, maxRows: 4 });
   });
 
   it("leaves a saved row count it cannot read to the runtime", () => {
-    // The bug guarded: the row floor and cap are saved with the form that draws
-    // them, and JSON keeps a field the record never carried as `null`. Compared
-    // with `undefined`, that `null` reached the whole-row rule as **one row** —
-    // and a cap is not a floor, so a restored six-line text area with
-    // `maxRows: null` collapsed to a single row (measured in a window: 38px
-    // against the 128px the same field paints with no cap). Text a store wrote
-    // is not a count either (`storedNumber`'s rule), and the two counts are
-    // read independently: a lost cap does not take the floor with it.
     expect(fieldRows(null, null)).toEqual({
       minRows: undefined,
       maxRows: undefined,

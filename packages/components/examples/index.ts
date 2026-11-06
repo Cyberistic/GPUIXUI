@@ -1,16 +1,3 @@
-/**
- * The example registry: `id → example`, for the **native** playground.
- *
- * `apps/playground` mounts these in real GPUix. The browser docs site must not
- * render them as live components: they are GPUix host elements, not DOM, so a
- * browser render would be a fake native preview (.agents/slop/MISSION.md's preview rules).
- * The docs pages carry the same source as a code block.
- *
- * `src/examples.test.ts` holds the registry to the directory: every
- * `*.example.tsx` file is registered under its own name and exports the symbol
- * the registry imports, so a new example cannot be unplayable.
- */
-
 import type { ComponentType } from "react";
 import { AccordionExample } from "./accordion.example.js";
 import { AlertExample } from "./alert.example.js";
@@ -95,7 +82,6 @@ import { ToggleExample } from "./toggle.example.js";
 import { ToggleGroupExample } from "./toggle-group.example.js";
 import { UserMenuExample } from "./user-menu.example.js";
 
-/** Every example, by the id a docs page and the playground both use. */
 export const examples: Readonly<Record<string, ComponentType>> = {
   accordion: AccordionExample,
   alert: AlertExample,

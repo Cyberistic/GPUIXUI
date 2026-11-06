@@ -1,12 +1,3 @@
-/**
- * Status bar behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a `center` group that painted in tree order but ignored
- * its neighbours (so a one-sided bar centred labels against nothing), an item
- * painted in the sans scale instead of the mono readout, a tone that never
- * reached the label, and an empty group that still painted a separator.
- */
-
 import type { TestRoot } from "@gpuix/react/testing";
 import { createTestRoot } from "@gpuix/react/testing";
 import { darkTheme } from "@gpuixui/tokens";
@@ -75,9 +66,6 @@ describe("StatusBar", () => {
   });
 
   it("ends the middle region against a lone leading group", () => {
-    // The bug guarded: the centre kept `center` without a trailing group, so a
-    // bar whose only pinned content was on the left floated its middle labels
-    // in the middle of the strip.
     const root = renderBar(
       <StatusBar
         center={center}

@@ -1,18 +1,3 @@
-/**
- * CopyButton in the real GPUix renderer.
- *
- * The bugs these guard: a press that acknowledges without handing the text to
- * the caller's write (or hands it twice); an acknowledgement that never clears,
- * or clears early because a second press did not restart its window; a checked
- * glyph that arrives without the house entrance, or one that still moves for
- * `level="none"` and the reduced preference; and a disabled action that copies.
- *
- * The acknowledgement's arrival is measured on the runtime's motion clock as
- * geometry: the checked glyph starts 3 px low and settles. The fade itself is a
- * paint value the tree does not expose — the `surface-fade` live probe proves it
- * for the seam this action shares with every overlay.
- */
-
 import { describe, expect, it } from "vitest";
 import type { TestRenderer } from "@gpuix/react/testing";
 import { nodesWithRole } from "../internal/a11y.js";
@@ -27,11 +12,9 @@ import { renderComponent } from "../internal/test-root.js";
 import { CopyButton } from "../copy-button.js";
 import { MotionProvider, surfaceLevelOf } from "../motion.js";
 
-/** The one `button` node's accessible name, `""` when there is none. */
 const buttonName = (renderer: TestRenderer): string =>
   nodesWithRole(renderer, "button")[0]?.name ?? "";
 
-/** The glyph's offset from its centred place inside the control, in pixels. */
 const glyphOffset = (page: ReturnType<typeof renderComponent>): number => {
   const button = requireBounds(page, "copy-button");
   const glyph = requireBounds(page, "copy-button-glyph");
@@ -83,8 +66,6 @@ describe("CopyButton", () => {
       clickCentreOf(page, "copy-button");
       settle(page);
 
-      // Past the first window, before the restarted one: a stacked timer has
-      // cleared the acknowledgement by now, a restarted one has not.
       await after(window * 0.75);
       expect(copies).toHaveLength(2);
       expect(buttonName(page.renderer)).toBe("Copied");
@@ -148,9 +129,6 @@ describe("CopyButton", () => {
   });
 
   it("paints a stored none at rest on the acknowledgement's first frame", () => {
-    // A saved action carries its acknowledgement level; decoding `"none"` with
-    // the table's own reader would answer `normal` and move a glyph the caller
-    // asked to paint still.
     const saved: unknown = "none";
     const page = renderComponent(
       <CopyButton

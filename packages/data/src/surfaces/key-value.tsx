@@ -1,25 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A key-value list: the property rows an inspector reads.
- *
- * The measured rule (`inspector-lifecycle`) is a **fixed label column**: every
- * label cell holds one `x`, every value cell holds one `x`, and a value begins
- * at its label's right edge — so the list scans down its two columns instead
- * of drifting row by row.
- *
- * The list holds no state: the entries are the caller's, so a panel, a
- * preview and a card can all read the same object without a second copy of it.
- *
- * ```tsx
- * <KeyValue
- *   entries={[
- *     { key: "width", label: "Width", value: "120" },
- *     { key: "height", label: "Height", value: "80" },
- *   ]}
- * />
- * ```
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { spaceValue } from "@gpuixui/primitives/core";
@@ -33,60 +12,27 @@ import { useTheme } from "../theme.js";
 import { propertyName } from "./logic.js";
 import { KEY_VALUE_LABEL, KEY_VALUE_ROW, KEY_VALUE_VALUE } from "./recipe.js";
 
-/** One row of the list. */
 export interface KeyValueEntry {
-  /** The stable identity a row is addressed by. */
   readonly key: string;
-  /**
-   * The label the value sits beside.
-   *
-   * A blank label reads as {@link key}: a locale table with a missing row
-   * answers `""`, and the key is the identity the row is stored by.
-   */
+
   readonly label: string;
-  /** The value, already rendered by the caller. */
+
   readonly value: ReactNode;
 }
 
-/** {@link KeyValue} props. */
 export interface KeyValueProps extends Omit<Props, "children"> {
-  /**
-   * The rows, in the order they paint.
-   *
-   * A saved list is stored twice: a value that is not a list paints no rows,
-   * and an entry that does not name itself with a `key` is not a row
-   * (`recordsOf`) — it has no identity to address or key by, so a migrated
-   * or hand-built record cannot paint a nameless row.
-   */
   readonly entries: ReadonlyArray<KeyValueEntry>;
-  /** The label column's width, in pixels. Defaults to `120`. */
+
   readonly labelWidth?: number;
-  /** The width of the value column, in pixels. Omit it to fill the row. */
+
   readonly valueWidth?: number;
   readonly className?: string;
-  /**
-   * The list's test id. Every cell derives from it:
-   * `${testId}-label-${key}` and `${testId}-value-${key}`.
-   */
+
   readonly testId?: string;
 }
 
-/** The label column's width when the caller names none. */
 export const DEFAULT_LABEL_WIDTH = 120;
 
-/**
- * A two-column list of labels and values.
- *
- * The label column is fixed, so every value begins at the same `x` — the
- * measured rule that lets a reader scan the column instead of the rows.
- *
- * A width is often computed — the widest label, a share of a pane, a measurement
- * taken before the first layout — and a track the layout cannot paint reads as
- * the default: `NaN` is dropped by the runtime, so the label column fell back to
- * each label's own text width and every value started somewhere else. A label
- * width that cannot paint is {@link DEFAULT_LABEL_WIDTH}; a `valueWidth` that
- * cannot paint fills the row like an omitted one. A fractional width is kept.
- */
 export const KeyValue = ({
   entries,
   labelWidth = DEFAULT_LABEL_WIDTH,

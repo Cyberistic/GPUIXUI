@@ -1,14 +1,3 @@
-/**
- * Browser preview for the Slider component page.
- *
- * The shipped slider is a GPUix host tree, so the preview draws the track, its
- * fill and the thumbs from the theme bridge and says so. It teaches the one API
- * fact a drawing can — one component takes a number or a pair — and it is live:
- * a press on the track jumps, a drag keeps reporting after the pointer leaves
- * the rail, a key steps, and the `−`/`+` pair steps the window through the same
- * `stepValue` an arrow key uses.
- */
-
 import { useState } from "react";
 import {
   stepValue,
@@ -21,7 +10,6 @@ import { shiftSpan } from "./slider-preview";
 const QUALITY: ValueRange = { min: 0, max: 100, step: 1 };
 const PRICE: ValueRange = { min: 0, max: 200, step: 5 };
 
-/** A live value: the readout, the track, and the stepping pair. */
 const Point = ({
   label,
   range,
@@ -64,7 +52,6 @@ const Point = ({
   </div>
 );
 
-/** A live window: both ends, and a stepper that slides the window. */
 const Window = ({
   label,
   range,

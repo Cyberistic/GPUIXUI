@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Form example: a signup form that validates against a schema and shows a real
- * success state.
- *
- * The value stays here — `Form` never reads the runtime for it. `onSubmit`
- * receives the decoded `Signup`, so the example uses the class rather than the
- * draft object.
- */
-
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
@@ -32,7 +23,6 @@ class Signup extends Schema.Class<Signup>("Signup")({
   name: Schema.NonEmptyString,
 }) {}
 
-/** A signup form: two fields, a real submit and a success line. */
 export const FormExample = () => {
   const theme = useTheme();
   const [email, setEmail] = useState("");

@@ -1,20 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Drawer: a modal panel anchored to a window edge.
- *
- * Positioning and dismissal are the same as Dialog's (the styled Dialog is a
- * local overlay that does not use `@gpuix/react/dialog`'s portal, so the veil is
- * an `<anchored position={{x:0,y:0}}>` at window coordinates, plan 112 §1c).
- * What differs is where the surface sits: a full-height column on the left or
- * right, or a full-width sheet at the bottom. The shared rules — open state,
- * dismiss layer, focus in/return, Tab trap — live in `internal/modal.ts`.
- *
- * Known gaps in 0.11.0: no `aria-modal` or `aria-labelledby` (the surface is
- * named with `aria-label`), no swipe gesture (no drag host feature), and no
- * slide animation (`motion` has no transform; animating width/left would reflow
- * the content).
- */
-
 import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
@@ -64,16 +48,12 @@ import { DismissScope } from "./internal/dismiss-scope.js";
 import { overlaySurfaceStyle, overlayVeilColor } from "./internal/overlay.js";
 import { useTheme, type Theme } from "./internal/theme.js";
 
-/** The window edge a drawer opens from. */
 export type DrawerSide = "left" | "right" | "top" | "bottom";
 
-/** The edges a drawer can open from, as the guard reads them. */
 const DrawerEdges = Schema.Literals(["left", "right", "top", "bottom"]);
 
-/** The surface sizes a drawer offers. */
 export type DrawerSize = "sm" | "md" | "lg";
 
-/** The sizes a drawer can paint, as the guard reads them. */
 const DrawerSizes = Schema.Literals(["sm", "md", "lg"]);
 
 const WIDTH: Readonly<Record<DrawerSize, number>> = {
@@ -88,7 +68,6 @@ const HEIGHT: Readonly<Record<DrawerSize, number>> = {
   lg: 420,
 };
 
-/** The rules a {@link DrawerContent} follows; throws outside a {@link Drawer}. */
 interface DrawerContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
@@ -97,7 +76,6 @@ interface DrawerContextValue {
 
 const DrawerContext = createContext<DrawerContextValue | undefined>(undefined);
 
-/** The drawer a part belongs to. Throws when there is none (plan 110 §8.6). */
 const useDrawerContext = (): DrawerContextValue => {
   const value = useContext(DrawerContext);
   if (value === undefined) {
@@ -106,18 +84,15 @@ const useDrawerContext = (): DrawerContextValue => {
   return value;
 };
 
-/** {@link Drawer} props. */
 export interface DrawerProps {
-  /** The controlled open state. `undefined` means uncontrolled. */
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  /** Whether Escape and an outside press close the drawer. Default `true`. */
+
   readonly dismissible?: boolean;
   readonly children?: PartChildren;
 }
 
-/** The drawer's state and its dismiss layer. It paints nothing itself. */
 export const Drawer = ({
   open: openProp,
   defaultOpen = false,
@@ -144,7 +119,6 @@ export const Drawer = ({
   );
 };
 
-/** Opens the drawer it sits in. An ordinary button in every other respect. */
 export const DrawerTrigger = ({ onClick, ...rest }: ButtonProps) => {
   const { open, setOpen } = useDrawerContext();
   return (
@@ -159,7 +133,6 @@ export const DrawerTrigger = ({ onClick, ...rest }: ButtonProps) => {
   );
 };
 
-/** Closes the drawer it sits in. An ordinary button in every other respect. */
 export const DrawerClose = ({ onClick, ...rest }: ButtonProps) => {
   const { open, setOpen } = useDrawerContext();
   return (
@@ -174,78 +147,34 @@ export const DrawerClose = ({ onClick, ...rest }: ButtonProps) => {
   );
 };
 
-/** {@link DrawerContent} props. */
 export interface DrawerContentProps extends Omit<Props, "children"> {
-  /**
-   * The edge to open from. Default `"right"`.
-   *
-   * The box, the layout and the entry travel read the same edge, so a value
-   * restored from storage that names no window edge (a logical `"end"`, a side
-   * a release dropped) opens on the default right edge rather than painting a
-   * right-hand panel that rises from the bottom.
-   */
   readonly side?: DrawerSide;
-  /** Default `"md"`. A value restored from storage that names no variant (a
-   * size a release dropped, or a `null`) paints the default box rather than an
-   * unmeasured one. */
+
   readonly size?: DrawerSize;
-  /** The accessible name — required, because 0.11.0 has no `aria-labelledby`. */
+
   readonly label: string;
-  /** Renders the top-right close control. Default `true`. */
+
   readonly showClose?: boolean;
-  /**
-   * A top sheet hangs this many points below the window's top edge, centred
-   * and at most the window's width less 80: AppKit's sheet, dropped from the
-   * toolbar's bottom edge (pass the toolbar's height, plan 724). Other edges
-   * ignore it.
-   */
+
   readonly inset?: number;
-  /**
-   * Paints the grabber a top or bottom sheet wears. Default `true`; a column
-   * never paints one. It is decoration: the runtime has no drag host, so no
-   * gesture follows it (vaul's handle without the drag).
-   */
+
   readonly grabber?: boolean;
-  /** The native id focus should land on after the drawer takes focus. */
+
   readonly initialFocus?: () => number | null;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/**
- * The edge a drawer opens from, read from a value a caller may have stored.
- *
- * `DrawerSide` is a compile-time guarantee, but a persisted setting is not: a
- * logical name a store wrote (`"start"`/`"end"`) or a name a release dropped
- * reaches the component at runtime. The box, the layout and the entry travel
- * must read the **one** edge — before this, the box took its right-hand branch
- * while `fadeFromSide` took its house `bottom`, so a stored name painted the
- * panel on the right and rose it from the bottom.
- *
- * An edge the table does not name is the component's own default, `"right"`.
- */
 const drawerSide = (side: unknown): DrawerSide =>
   Schema.is(DrawerEdges)(side) ? side : "right";
 
-/**
- * The surface size a drawer paints, read from a value a caller may have stored.
- *
- * `DrawerSize` is a compile-time guarantee, but a persisted setting is not: a
- * name a release dropped or renamed reaches the component at runtime, and the
- * table lookup then hands `Math.min` an `undefined` — the renderer serialises
- * the resulting `NaN` as `null` and drops the width and height, so the panel
- * shrank to its content. A size the table does not name is the component's own
- * default, `md`.
- */
 const drawerSize = (size: unknown): DrawerSize =>
   Schema.is(DrawerSizes)(size) ? size : "md";
 
-/** Whether a side lays the surface across the window's width. */
 const isVertical = (side: DrawerSide): boolean =>
   side === "bottom" || side === "top";
 
-/** The surface's measured box for a side and size. */
 const surfaceSize = (
   side: DrawerSide,
   size: DrawerSize,
@@ -255,11 +184,6 @@ const surfaceSize = (
     ? { width: window.width, height: Math.min(HEIGHT[size], window.height) }
     : { width: Math.min(WIDTH[size], window.width), height: window.height };
 
-/**
- * The corner radius each edge wears: the **inner** corners only, so the surface
- * still reads flush to the window edge it opens from (shadcn's sheet is square
- * to its edge; vaul's drawer rounds the top it rises out of).
- */
 const innerCorners = (side: DrawerSide, radius: number) => ({
   borderTopLeftRadius: side === "right" || side === "bottom" ? radius : 0,
   borderTopRightRadius: side === "left" || side === "bottom" ? radius : 0,
@@ -267,12 +191,6 @@ const innerCorners = (side: DrawerSide, radius: number) => ({
   borderBottomRightRadius: side === "left" || side === "top" ? radius : 0,
 });
 
-/**
- * The grabber a top or bottom sheet wears: the vaul handle, painted as a bar on
- * the inner edge. It is decoration — 0.11.0 has no drag host, so nothing follows
- * the pointer — and it travels with the surface because it belongs to the box
- * that slides.
- */
 const GRABBER_WIDTH = 40;
 const GRABBER_HEIGHT = 4;
 
@@ -294,9 +212,6 @@ const grabberBarStyle = (theme: Theme) => ({
   backgroundColor: theme.colors.borderStrong,
 });
 
-/** The surface's look: the popover role, a border, the largest elevation and the
- * inner corners. The measured box, `position` and `overflow` stay here — the
- * renderer owns them. */
 const surfaceStyle = (
   theme: Theme,
   box: { width: number; height: number },
@@ -311,25 +226,11 @@ const surfaceStyle = (
   ...innerCorners(side, theme.radius.xl),
 });
 
-/**
- * The distance the surface slides on entry and exit: its own span, so a sheet
- * arrives from outside the window rather than nudging 12px.
- *
- * The runtime has no `transform`, so this is a numeric `left`/`top` offset on
- * the surface's box. The veil is the window-sized box with `overflow: hidden`,
- * so the travelling surface is clipped at the window edge; the surface's content
- * keeps its layout because a relative offset moves the box, not the flow.
- */
 const entryTravel = (
   side: DrawerSide,
   box: { readonly width: number; readonly height: number },
 ): number => (isVertical(side) ? box.height : box.width);
 
-/**
- * The veil and the edge surface, rendered while the drawer is open. Focus enters
- * the surface, Tab stays inside it, Escape and an outside press close it, and
- * closing returns focus to whatever had it before.
- */
 export const DrawerContent = ({
   side: requestedSide,
   size: requestedSize = "md",
@@ -354,11 +255,9 @@ export const DrawerContent = ({
   assertParts(drawerContent, children);
   const timing = useSurfaceTiming("slow");
   const presence = useSurfacePresence(open, timing);
-  // One edge for the box, the layout and the entry travel: a side a store
-  // wrote that names no window edge lands on the component's own default.
+
   const side = drawerSide(requestedSide);
-  // One size for the box the panel paints; a stored name the table does not
-  // carry is the component's default rather than an `undefined` side.
+
   const size = drawerSize(requestedSize);
   const [content, setContent] = useState<PublicInstance | undefined>(undefined);
   const contentRef = useCallback((next: PublicInstance | null) => {
@@ -370,9 +269,7 @@ export const DrawerContent = ({
   );
 
   const contentId = content?.id;
-  // The surface's outline: the scroller plus the box's own close control. The
-  // Tab trap and the keys belong here rather than to the scroller, because the
-  // close control sits outside it and must stay a stop and a way out.
+
   const [outline, setOutline] = useState<PublicInstance | undefined>(undefined);
   const outlineRef = useCallback((next: PublicInstance | null) => {
     setOutline(next ?? undefined);
@@ -406,11 +303,10 @@ export const DrawerContent = ({
         style={mergeStyles(
           overlaySurfaceStyle(DRAWER_OVERLAY, undefined, theme),
           {
-            // The house veil: the page's own background at 55%, not a blackout.
             backgroundColor: overlayVeilColor(theme),
             width: window.width,
             height: window.height,
-            // A sheet slides its own span; the veil is the window that clips it.
+
             overflow: "hidden",
             display: "flex",
             flexDirection: isVertical(side) ? "column" : "row",
@@ -422,9 +318,7 @@ export const DrawerContent = ({
           },
         )}
       >
-        {/* The shield's box sits outside the surface's own scroller, so a
-            drawer scrolled down cannot carry the leaving guard off screen. The
-            surface, its grabber and its close control slide as one box. */}
+        {}
         <div
           ref={outlineRef}
           onMouseDownOutside={(event) => {
@@ -498,14 +392,11 @@ export const DrawerContent = ({
   );
 };
 
-/** The surface's heading block: title, description and any meta row. */
 export interface DrawerHeaderProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The surface's heading block. The close-control clearance stays in style. */
 export const DrawerHeader = ({
   children,
   className,
@@ -528,13 +419,10 @@ export const DrawerHeader = ({
   );
 };
 
-/** {@link DrawerTitle} props. */
 export interface DrawerTitleProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** The drawer's heading, announced as a level-2 heading. */
 export const DrawerTitle = ({
   className,
   style,
@@ -554,13 +442,10 @@ export const DrawerTitle = ({
   );
 };
 
-/** {@link DrawerDescription} props. */
 export interface DrawerDescriptionProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** One paragraph of supporting copy under {@link DrawerTitle}. */
 export const DrawerDescription = ({
   className,
   style,
@@ -578,13 +463,10 @@ export const DrawerDescription = ({
   );
 };
 
-/** {@link DrawerFooter} props. */
 export interface DrawerFooterProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** The actions row, right-aligned. */
 export const DrawerFooter = ({
   className,
   style,
@@ -602,7 +484,6 @@ export const DrawerFooter = ({
   );
 };
 
-/** Every part of Drawer, so a misplaced sibling is named. */
 const drawerParts: ReadonlyArray<PartComponent> = [
   Drawer,
   DrawerTrigger,
@@ -634,7 +515,6 @@ const drawerContent: PartsContract = {
   hint: "Put the header, title, description, footer and close control inside DrawerContent.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const drawerMeta = {
   name: "Drawer",
   tier: 2,

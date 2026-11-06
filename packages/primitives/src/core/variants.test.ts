@@ -1,13 +1,3 @@
-/**
- * Guards the variant registry — the bug it catches is drift.
- *
- * A variant declared in `BUTTON_VARIANTS` with no table entry renders silently
- * as the default; two variants that resolve to the same paint are one variant
- * pretending to be two; a variant that declares no hover/press feedback cannot
- * be told apart from a disabled control; and a variant that hardcodes a colour
- * stops following the theme.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";

@@ -12,16 +12,6 @@ import {
   type PreviewListRow,
 } from "./list-preview";
 
-/**
- * Browser previews for the List page.
- *
- * The shipped `List` is a collection with a roving tab stop, so the previews
- * below focus a real row and move the focus with the keys — the parts a screenshot
- * cannot show. The rules are held to the component by `list-preview.ts` and its
- * suite: disabled rows are skipped, the ends wrap, a typed prefix searches after
- * the current row, and a range never includes a disabled row.
- */
-
 const files: ReadonlyArray<PreviewListRow> = [
   {
     value: "readme",
@@ -70,7 +60,6 @@ interface PreviewRowProps {
   readonly register: (element: HTMLButtonElement | null) => void;
 }
 
-/** One row: the shared paint, the two lines and the trailing metadata. */
 const PreviewRow = ({
   row,
   active,
@@ -104,7 +93,6 @@ const PreviewRow = ({
   </button>
 );
 
-/** A realistic composition: the file list a reader picks a document from. */
 export const ListDemo = () => {
   const [selected, setSelected] = useState<string | null>("readme");
   const [active, setActive] = useState<string | null>("readme");
@@ -141,16 +129,13 @@ export const ListDemo = () => {
     if (key === "Enter" || key === " ") {
       event.preventDefault();
       if (active === null) return;
-      // Enter activates; Space only selects.
+
       if (key === "Enter") open(active);
       else setSelected(active);
       return;
     }
 
     if (key.length === 1 && !event.metaKey && !event.ctrlKey) {
-      // Type-ahead: the prefix lives 500ms, and a repeated letter cycles. The
-      // shipped `List` reads Effect's monotonic clock; a browser preview has no
-      // runtime to ask, so it reads the browser's monotonic clock instead.
       const typed = press(buffer.current, key, performance.now());
       buffer.current = typed;
       focus(typeaheadMatch(files, active, typed.text));
@@ -225,7 +210,6 @@ const reviewers: ReadonlyArray<PreviewListRow> = [
   },
 ];
 
-/** Multiple mode: plain, Cmd and Shift clicks, plus the range that skips a row. */
 export const ListMultiple = () => {
   const [selected, setSelected] = useState<ReadonlyArray<string>>(["grace"]);
   const [anchor, setAnchor] = useState("grace");
@@ -265,7 +249,7 @@ export const ListMultiple = () => {
     if (key === "ArrowDown" || key === "ArrowUp") {
       event.preventDefault();
       const next = nextRow(reviewers, active, key === "ArrowDown" ? 1 : -1);
-      // A plain move re-anchors; a Shift move extends from the anchor.
+
       if (event.shiftKey && next !== null) {
         setSelected(range(reviewers, anchor, next));
       } else if (next !== null) {

@@ -1,14 +1,3 @@
-/**
- * Selection's rules, as data.
- *
- * The bugs these guard, all measured by `modifier-select-lifecycle` and
- * `table-filter-lifecycle`: a plain press that adds instead of replacing; a
- * Shift range that moves the anchor so a second Shift extends from the wrong
- * row; a toggle that keeps the old anchor; a filter that keeps a selection it
- * no longer paints; a clear that also forgets the anchor it needs; and an
- * arrow step that wraps from the last row to the first.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
@@ -108,11 +97,6 @@ describe("the visible set's ownership", () => {
   });
 
   it("paints the record again when a wider set brings it back", () => {
-    // The retention `useTable` applies is a view, not a write: the reader's
-    // record stays chosen through a narrowing query and a widening one paints
-    // it chosen again (`table-filter-lifecycle`: 1 rows · 0 selected, then
-    // 60 rows · 2 selected with the same two records). A permanent clear is
-    // `clearSelection`, not a narrowing filter.
     const state = pressSelection(emptySelection, "r4", "replace", order);
     const narrowed = retainSelection(state, ["r1", "r2"]);
     expect(chosen(narrowed)).toEqual([]);
@@ -162,10 +146,6 @@ describe("the header checkbox's three states", () => {
   });
 
   it("reads the visible order, not every record the state still holds", () => {
-    // A query that hides a chosen record paints a table with nothing chosen, so
-    // the header cannot claim a hidden record is visible. The retention is the
-    // controller's view (`retainSelection`), and this is the same rule stated
-    // over the keys the header actually paints.
     const state = pressSelection(emptySelection, "r4", "replace", order);
     const visible = ["r1", "r2"];
 
@@ -174,8 +154,6 @@ describe("the header checkbox's three states", () => {
   });
 
   it("does not call an empty table fully chosen", () => {
-    // Both false is what leaves the header unchecked and `disabled` over no
-    // rows; `every` over an empty array would otherwise claim the whole set.
     expect([
       allSelected(emptySelection, []),
       someSelected(emptySelection, []),

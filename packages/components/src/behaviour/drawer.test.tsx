@@ -1,15 +1,3 @@
-/**
- * Drawer behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a drawer that opens from the wrong edge, a veil that
- * dims only its parent or blackens it instead of washing it, focus left outside
- * or not returned, Escape closing the wrong layer, Tab escaping a modal, an
- * uninterruptible drawer that closes, a controlled drawer that moves on its own,
- * a sheet that nudges 12px instead of arriving from outside the window, a
- * surface with no inner corners and no grabber, and a reduced reader made to
- * watch the slide.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import type { DrawerSide, DrawerSize } from "../drawer.js";
 import {
@@ -39,7 +27,6 @@ import { renderComponent } from "../internal/test-root.js";
 import { a11yNodes } from "../internal/a11y.js";
 import * as Option from "effect/Option";
 
-/** A filter drawer with a real cancel/apply path. */
 const Workspace = ({
   open,
   onOpenChange,
@@ -182,9 +169,6 @@ describe("Drawer", () => {
   });
 
   it("keeps its close control outside the body's scroller", async () => {
-    // The same bug the Dialog guards: the control was painted inside the
-    // surface's `overflow: "scroll"` box, so a long body scrolled the one
-    // visible way out of the panel.
     const LongDrawer = () => (
       <Drawer defaultOpen>
         <DrawerContent label="Long body" testId="drawer" side="right">
@@ -253,11 +237,6 @@ describe("Drawer", () => {
   });
 
   it("opens on the house edge when the side it was stored as names no edge", async () => {
-    // The bug this guards: `side` is a stored choice, so the union the props
-    // declare is not a runtime guarantee. The box read an unnamed value as its
-    // right-hand branch while `fadeFromSide` read it as its house `bottom`: the
-    // panel painted on the right and rose from the bottom. The house answer is
-    // the component's own default — the right edge, travelled from the right.
     // @ts-expect-error — a side a store wrote, not the union the props declare.
     const stored: DrawerSide = "end";
 
@@ -273,10 +252,8 @@ describe("Drawer", () => {
       const resting = requireBounds(page, "drawer");
       const window = page.renderer.getWindowSize();
 
-      // The resting box is the default edge's: a column against the right edge.
       expect(resting.x + resting.width).toBe(window.width);
-      // The travel comes from that edge too, so the panel arrives from the
-      // right — its own width — and does not rise.
+
       expect(entering.x - resting.x).toBe(resting.width);
       expect(entering.y).toBe(resting.y);
     } finally {
@@ -285,11 +262,6 @@ describe("Drawer", () => {
   });
 
   it("slides its whole span from the named edge and lands flush", async () => {
-    // The bug this guards: a sheet that "is not animating in". The surface used
-    // to nudge 12px; a vaul/shadow sheet arrives from outside the window, so the
-    // first frame is the whole box past the edge it owns, and the last frame is
-    // flush to it. The runtime has no `transform`, so this is a numeric offset
-    // on the surface's own box, clipped by the window-sized veil.
     const window = { width: 1280, height: 800 };
 
     const right = renderComponent(<Workspace side="right" />);
@@ -328,10 +300,6 @@ describe("Drawer", () => {
   });
 
   it("travels back out its span and stays painted for the exit", async () => {
-    // The bug this guards: a dismissed drawer vanished in the frame it was
-    // dismissed, so the panel and veil the reader had just been reading were
-    // gone rather than leaving. It travels its own span back past the edge it
-    // owns, on the exit curve, and unmounts only when the window ends.
     const page = renderComponent(<Workspace side="right" />);
     try {
       clickCentreOf(page, "open");
@@ -376,7 +344,6 @@ describe("Drawer", () => {
       expect(first).toEqual(settled);
       expect(first.x + first.width).toBe(page.renderer.getWindowSize().width);
 
-      // And the leave snaps too: no exit frames to sit through.
       clickCentreOf(page, "drawer-close");
       await waitFor(() =>
         expect(page.renderer.findByTestId("drawer")).toBeUndefined(),
@@ -387,11 +354,6 @@ describe("Drawer", () => {
   });
 
   it("rounds the inner corners and paints the vaul grabber on a sheet", () => {
-    // The bug this guards: every surface was square, so a bottom sheet looked
-    // like a docked column rather than the drawer shadcn/vaul draws. Only the
-    // corners inside the window round; the edge the surface opens from stays
-    // flush. The grabber is the handle the sheet wears — decoration, because
-    // 0.11.0 has no drag host.
     const right = renderComponent(<Workspace side="right" />);
     try {
       clickCentreOf(right, "open");
@@ -418,12 +380,6 @@ describe("Drawer", () => {
   });
 
   it("paints the default box when the size it was stored as names no variant", () => {
-    // The bug this guards: `size` is a stored choice, so the union the props
-    // declare is not a runtime guarantee. The table lookup handed `Math.min` an
-    // `undefined`, the renderer dropped the resulting `NaN` width and height,
-    // and the panel shrank to its content instead of opening at the default
-    // 400×window box — a stored size the library no longer ships resized the
-    // surface rather than ignoring it.
     // @ts-expect-error — a size a store wrote, not the union the props declare.
     const stored: DrawerSize = "xl";
 
@@ -449,8 +405,7 @@ describe("Drawer", () => {
     expect(theme.renderer.findByTestId("drawer")?.style.backgroundColor).toBe(
       lightTheme.colors.popover,
     );
-    // The house veil is the page's own background at 55% — a wash, not the
-    // opaque `overlay` scrim the token package keeps for captions.
+
     expect(
       theme.renderer.findByTestId("drawer-backdrop")?.style.backgroundColor,
     ).toBe(alpha(lightTheme.colors.background, 0.55));

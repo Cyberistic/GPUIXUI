@@ -1,17 +1,3 @@
-/**
- * The `second-window-lifecycle` probe: what happens when a running application
- * asks the binding for a second window.
- *
- * Tier 4's *detachable tabs* and the cross-window half of drag-and-drop rest on
- * "the binding opens one window per process", a sentence five documents state
- * and none cites. This probe makes the attempt where an application would — a
- * second renderer's `init()`, the only published verb that opens a window —
- * while its own window is running, and then proves the first window still
- * paints and still takes a press.
- *
- * The view and the steps live here rather than in `scenarios.tsx` so the
- * measurement is one module; the registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { GpuixRenderer } from "@gpuix/react";
@@ -34,24 +20,17 @@ import {
   type SecondWindowTally,
 } from "./second-window.js";
 
-/** A press may arrive a frame after the input that moved the target. */
 const SETTLE = Duration.millis(40);
 
-/** The capture the paint check reads. */
 const CAPTURE = "second-window";
 
-/** The running window's marker, painted in the literal the check counts. */
 const MARKER_SIZE = 40;
 
-/** The probe's window: an attempt, the running window's marker and the readout. */
 export const SecondWindowProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
   const [tally, setTally] = useState<SecondWindowTally>(NO_SECOND_WINDOW);
 
-  // The press handler is the boundary: `init` is an imperative native call that
-  // may throw, and there is no Effect runtime inside a render, so the answer is
-  // captured as the readout the steps assert on.
   const attempt = (): void => {
     const second = new GpuixRenderer();
     const answer = Effect.runSync(
@@ -161,8 +140,6 @@ export const secondWindowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       SECOND_WINDOW_REFUSAL,
     );
 
-    // A refusal that only happened once would be an artefact of the first call;
-    // the rule is that no attempt opens a window while one is running.
     yield* ctx.host.click(SECOND_WINDOW_IDS.attempt);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -171,8 +148,6 @@ export const secondWindowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "attempts=2 refused=2 opened=0 started=false",
     );
 
-    // The application is unharmed: its own window still reports a size, paints
-    // its own content and hears a press after both refusals.
     const window = yield* ctx.host.windowSize();
     yield* ctx.expectEqual(
       "the running window still reports a paintable size",

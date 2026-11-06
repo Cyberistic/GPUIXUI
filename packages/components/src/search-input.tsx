@@ -1,15 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * SearchInput: a single-line search field with a clear affordance.
- *
- * The field owns the text in uncontrolled mode and reports every edit; Enter
- * submits and Escape clears. `Enter` reaches the component as the input's
- * `submit` event — measured in 0.11.0 — while Escape arrives as `keyDown`.
- *
- * There is no debounce: the component reports keystrokes as they happen, and a
- * consumer that queries on each one debounces its own effect.
- */
-
 import type { KeyEvent, InputProps, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
@@ -48,36 +37,32 @@ import {
   useTheme,
 } from "./internal/theme.js";
 
-/** {@link SearchInput} props. */
 export interface SearchInputProps extends Omit<
   InputProps,
   "onSubmit" | "style"
 > {
-  /** The controlled text. `undefined` means uncontrolled. */
   readonly value?: string;
   readonly defaultValue?: string;
-  /** Every edit, including the clear and Escape paths. */
+
   readonly onValueChange?: (value: string) => void;
-  /** Enter, with the current text. */
+
   readonly onSubmit?: (value: string) => void;
-  /** The clear control and Escape, when the field was not already empty. */
+
   readonly onClear?: () => void;
-  /** Default `"Search…"`. */
+
   readonly placeholder?: string;
   readonly disabled?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, or a function of the field's state. */
+
   readonly style?: StateStyle<SearchInputState>;
 }
 
-/** What the field draws: its input state. */
 export interface SearchInputState {
   readonly disabled: boolean;
   readonly focused: boolean;
 }
 
-/** A search field with a leading icon and a conditional clear control. */
 export const SearchInput = ({
   value: valueProp,
   defaultValue = "",
@@ -108,9 +93,6 @@ export const SearchInput = ({
   const setInput = useMergedRef<PublicInstance | null>(attach, ref);
 
   const clear = (): void => {
-    // A disabled field refuses every edit path — Escape and the clear target
-    // alike. The target stays painted so the query still reads, and
-    // `internal/button.tsx` states the same rule for a disabled action.
     if (disabled) return;
     if (value === "") return;
     setValue("");
@@ -147,20 +129,12 @@ export const SearchInput = ({
       <div style={hintHost({ flexGrow: 1, alignSelf: "stretch", minWidth: 0 })}>
         <input
           {...rest}
-          // A composite field paints the page role as its own fill, so the
-          // caret is measured against `background`; the hint is painted rather
-          // than handed to the host, whose placeholder is a fixed grey.
           theme={nativeTextTheme(theme, "background")}
           ref={setInput}
           testId={testId}
           value={value}
           readOnly={disabled}
-          // A disabled field leaves the tab order: the runtime has no
-          // `disabled` on a host input, and `readOnly` still takes focus.
           tabIndex={disabled ? -1 : 0}
-          // The hint is painted, so the host is handed no placeholder and the
-          // runtime's `aria_placeholder` is gone; the same words go on the
-          // help channel while the box is empty.
           aria-description={fieldHelp(
             { description: rest["aria-description"], placeholder },
             value,
@@ -202,8 +176,7 @@ export const SearchInput = ({
             width: targetSize.minimum,
             height: targetSize.minimum,
             flexShrink: 0,
-            // A disabled target answers nothing, so it must not advertise a
-            // press either: the house rule for a disabled action.
+
             cursor: disabled ? "not-allowed" : "pointer",
             hover: disabled
               ? undefined
@@ -217,7 +190,6 @@ export const SearchInput = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const searchInputMeta = {
   name: "Search inputs",
   tier: 2,

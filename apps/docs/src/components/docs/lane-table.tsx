@@ -2,15 +2,6 @@ import { laneData } from "../../lib/inventory-data";
 import { summarize, supportLabel, type LaneName } from "../../lib/inventory";
 import { InventoryNote, InventoryStatus } from "./inventory-cells";
 
-/**
- * The lane's inventory, rendered from `.agents/slop/COMPONENTS.md`.
- *
- * A lane page does not restate its rows: it mounts this table, so a component
- * that ships is marked shipped here in the same commit that ticks its inventory
- * row. The page's prose can then talk about the lane without duplicating a
- * status. A lane that names a row the inventory does not have throws at render,
- * because a docs page and the inventory disagreeing is a build bug.
- */
 export function LaneTable({ lane }: { lane: LaneName }) {
   const view = laneData(lane);
   if (view.unmatched.length > 0) {

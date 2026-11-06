@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Command menu example: a ⌘K-style palette over three groups, with recents.
- *
- * The palette is controlled; the button below stands in for the application
- * shortcut, which belongs to the app — the component binds no global keys. The
- * app owns the recent ids, because only the app knows what a use is.
- */
-
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import {
@@ -19,14 +11,12 @@ import {
 import { Button } from "../src/internal/button.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** Three groups of commands, with display-only shortcuts. */
 export const CommandMenuExample = () => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [ran, setRan] = useState("none");
   const [recents, setRecents] = useState<ReadonlyArray<string>>([]);
 
-  /** The app records a use; the palette itself keeps no history. */
   const perform =
     (id: string, label: string): (() => void) =>
     () => {

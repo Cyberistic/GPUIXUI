@@ -1,18 +1,3 @@
-/**
- * Holds the `typing-text-lifecycle` fixture, the probe that paints it and the
- * section a plan reads.
- *
- * The gap this guards: the catalogue's *Typing text* row claims the reveal is a
- * timer over the string's **code points**, that a zero pace and the reduced
- * preference paint the whole string on the first frame, and that the caret
- * belongs to the journey — while the component's renderer suite reads its text
- * nodes only. This suite keeps the prefix algebra, the sample rule, the probe's
- * polling discipline and the printed count pointing at one another, so a probe
- * that stopped measuring the shaped run would fail here rather than pass there.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -38,16 +23,13 @@ const probe = read("./typing-text-probe.tsx");
 const scenarios = read("./scenarios.tsx");
 const readme = read("../../README.md");
 
-/** The frames the probe sampled on 0.11.0 here. */
 const EMOJI_SAMPLES: ReadonlyArray<string> = ["🦊", "🦊🦊", "🦊🦊🦊", "🦊🦊🦊"];
 
-/** The probe's own steps, so a count cannot be read out of another probe. */
 const stepsOf = (): string => {
   const start = probe.indexOf("export const typingTextSteps");
   return probe.slice(start);
 };
 
-/** This probe's README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `typing-text-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -58,8 +40,6 @@ const sectionOf = (): string => {
 
 describe("the fixture", () => {
   it("counts characters as code points, not UTF-16 units", () => {
-    // Three foxes are six UTF-16 units and three characters: the reveal counts
-    // the second number.
     expect(codePointCount(TYPING_TEXT.emoji)).toBe(3);
     expect(TYPING_TEXT.emoji.length).toBe(6);
     expect(codePointPrefixes(TYPING_TEXT.emoji)).toEqual([
@@ -73,7 +53,6 @@ describe("the fixture", () => {
   });
 
   it("keeps the strings long enough to be seen part way", () => {
-    // A reveal shorter than the mount's own settle could only be sampled whole.
     expect(codePointCount(TYPING_TEXT.slow)).toBeGreaterThan(20);
     expect(codePointCount(TYPING_TEXT.instant)).toBeGreaterThan(0);
     expect(codePointCount(TYPING_TEXT.reduced)).toBeGreaterThan(0);
@@ -91,8 +70,6 @@ describe("the fixture", () => {
   });
 
   it("accepts exactly the frames the window sampled", () => {
-    // The lone fox is the measurement: a reveal cut by UTF-16 units would show
-    // half a surrogate pair, which is neither a prefix nor a glyph.
     expect(allPrefixes(EMOJI_SAMPLES, TYPING_TEXT.emoji)).toBe(true);
     expect(sawPartial(EMOJI_SAMPLES, TYPING_TEXT.emoji)).toBe(true);
     expect(sawPartial([TYPING_TEXT.emoji], TYPING_TEXT.emoji)).toBe(false);
@@ -133,13 +110,13 @@ describe("the probe", () => {
     expect(probe).toContain("testId={TYPING_IDS.reduced}");
     expect(probe).toContain("text={TYPING_TEXT.slow}");
     expect(probe).toContain('<MotionProvider preference="reduced">');
-    // The instant frame is the pace, not a reduced provider.
+
     expect(probe).toContain("speed={0}");
   });
 
   it("polls the real-time reveal rather than freezing a clock", () => {
     const steps = stepsOf();
-    // The reveal is a timer, so a frozen renderer clock would not hold it.
+
     expect(steps).not.toContain("clockPause");
     expect(steps).not.toContain("clockFastForward");
     expect(probe).toContain("real-time timer");
@@ -151,8 +128,7 @@ describe("the probe", () => {
       Arr.fromIterable(stepsOf().matchAll(/ctx\.expect\w+\(/g)),
     );
     expect(sites).toBeGreaterThan(0);
-    // The printed count is the run's own (the closures assert per call), so it
-    // can only floor a probe: a site added without a count fails here.
+
     expect(TYPING_CHECKS).toBe(23);
     expect(TYPING_CHECKS).toBeGreaterThanOrEqual(sites);
   });
@@ -185,9 +161,6 @@ describe("the record", () => {
   });
 
   it("states the half it does not claim", () => {
-    // A window exposes no accessibility tree on this host, so the name is the
-    // renderer suite's measurement — a section that dropped the caveat would be
-    // claiming a tree it never read.
     expect(sectionOf()).toContain("automation tree");
     expect(sectionOf()).toContain("`typing-text.test.tsx`");
   });

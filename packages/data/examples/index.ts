@@ -1,13 +1,3 @@
-/**
- * The data-package example registry: `id → example`, for the native playground.
- *
- * The browser docs site must not render these as live components — they are
- * GPUix host elements, not DOM — so the docs pages carry the same source as a
- * code block. `examples/examples.test.ts` holds this registry to the directory:
- * every `*.example.tsx` file is registered under its own name and exports the
- * symbol the entry imports, so a screens worth copying cannot be unplayable.
- */
-
 import type { ComponentType } from "react";
 import { ChartExample } from "./chart.example.js";
 import { ParityGallery } from "./chart-parity.example.js";
@@ -23,7 +13,6 @@ import { VirtualListExample } from "./virtual-list.example.js";
 import { VirtualTableExample } from "./virtual-table.example.js";
 import { VirtualTreeExample } from "./virtual-tree.example.js";
 
-/** One mountable screen per data surface. */
 export const examples: Readonly<Record<string, ComponentType>> = {
   table: TableExample,
   "table-pagination": TablePaginationExample,

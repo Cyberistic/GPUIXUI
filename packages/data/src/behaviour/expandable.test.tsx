@@ -1,19 +1,3 @@
-/**
- * The expandable row in the real GPUix renderer, mounted through the shipped
- * example.
- *
- * The bugs these guard are the ones a table without row spans can ship:
- *
- * - a detail panel painted **inside** the row, so it is one cell wide instead
- *   of as wide as the table's content;
- * - a panel that does not push the rows below it, so the table's rows overlap
- *   the panel the reader just opened;
- * - a press on the panel that closes the row it belongs to, because the panel
- *   sits under the row's own handler;
- * - a chevron that paints and takes the press, so pressing the chevron does not
- *   open the row (`press-routing-lifecycle`).
- */
-
 import { Input } from "@gpuixui/primitives";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -43,21 +27,18 @@ import {
 
 let root: DataTestRoot | undefined;
 
-/** Mount the example; `afterEach` tears it down even when an assertion fails. */
 const mount = (): DataTestRoot => {
   root = renderData(<ExpandableRowsExample />);
   settle(root);
   return root;
 };
 
-/** The renderer's id for `testId`, failing with the id it looked for. */
 const testIdOf = (root: DataTestRoot, testId: string): number => {
   const element = root.renderer.findByTestId(testId);
   if (element === undefined) throw new Error(`behaviour: no ${testId}`);
   return element.id;
 };
 
-/** The test id of whatever holds the platform focus. */
 const focusedTestId = (root: DataTestRoot): Option.Option<string> =>
   Option.flatMap(
     Option.fromNullishOr(root.renderer.getFocusedElementId()),
@@ -69,15 +50,6 @@ afterEach(() => {
   root = undefined;
 });
 
-/**
- * A row whose cells hold a field, beside a disabled row.
- *
- * The key half of the runtime's routing is the focus path: a key typed in a
- * field inside a row **reaches the row's handler**, so a disclosure row that
- * toggles on every Enter turns the panel open while the reader confirms a value
- * (`press-routing-lifecycle`'s `field-cell` route). A row that cannot act must
- * refuse its keys for the same reason it refuses its press.
- */
 const RowFocusFixture = () => {
   const [note, setNote] = useState("");
   const [open, setOpen] = useState(false);
@@ -142,8 +114,6 @@ describe("the expandable table row", () => {
       root.renderer.findByTestId("expandable-detail-readme"),
     ).toBeDefined();
 
-    // A second press closes it again, so the row is a toggle rather than an
-    // open-only action.
     clickCentreOf(root, "expandable-row-readme");
     root.renderer.flush();
     expect(paintedText(root)).not.toContain("src/readme.md");
@@ -159,9 +129,6 @@ describe("the expandable table row", () => {
     const panel = requireBounds(root, "expandable-detail-index");
     const cell = requireBounds(root, "expandable-detail-index-cell");
 
-    // A detail row is a sibling, so it starts where the row starts and fills the
-    // same content width — no column spans on 0.11.0. Its one cell fills the
-    // row, so a panel's content is not a narrow column at the left edge.
     expect(panel.x).toBe(row.x);
     expect(panel.width).toBe(row.width);
     expect(cell.x).toBe(panel.x);
@@ -179,8 +146,6 @@ describe("the expandable table row", () => {
     const panel = requireBounds(root, "expandable-detail-index");
     const after = requireBounds(root, "expandable-row-table");
 
-    // The panel takes its own room in the column: the row it opened over is
-    // exactly one panel height higher than it was.
     expect(after.y - before.y).toBe(panel.height);
   });
 
@@ -190,8 +155,6 @@ describe("the expandable table row", () => {
     clickCentreOf(root, "expandable-row-index");
     root.renderer.flush();
 
-    // The panel's own content is not inside the row, so its press is not the
-    // row's press.
     clickCentreOf(root, "expandable-kv-index-label-path");
     root.renderer.flush();
 
@@ -203,9 +166,6 @@ describe("the expandable table row", () => {
     const root = mount();
     const row = requireBounds(root, "expandable-row-theme");
 
-    // The chevron's own `<svg>` sits at the row's leading edge. It must not
-    // take the press: a painted child is the hit-test boundary, so an icon that
-    // paints without `pointerEvents: "none"` would be a dead zone.
     root.renderer.nativeSimulateClick(row.x + 16, row.y + row.height / 2);
     root.renderer.flush();
 
@@ -215,11 +175,6 @@ describe("the expandable table row", () => {
   it("opens the row the Tab order lands on, from the keyboard", () => {
     const root = mount();
 
-    // A disclosure row is a control: it is a stop in the Tab order, so Tab from
-    // the toolbar reaches it, and Enter/Space toggle the panel. A focusable
-    // `div` has no activation of its own — only the pointer path runs `onClick`
-    // — so a row that answered the pointer alone left a keyboard reader no way
-    // to open a panel at all.
     root.renderer.focusElement(testIdOf(root, "expandable-expand-all"));
     root.renderer.flush();
     root.renderer.focusNext();
@@ -240,21 +195,14 @@ describe("the expandable table row", () => {
     root = renderData(<RowFocusFixture />);
     settle(root);
 
-    // Space inside the field decides the field's value; it must not also open
-    // the disclosure row the field sits in (`press-routing-lifecycle` measured
-    // the key reaching the row's handler through the focus path).
     pressKey(root, "focus-field", "space");
     root.renderer.flush();
     expect(paintedText(root)).not.toContain("detail panel");
 
-    // The row itself is still the disclosure's control.
     pressKey(root, "focus-row", "enter");
     root.renderer.flush();
     expect(paintedText(root)).toContain("detail panel");
 
-    // A disabled row refuses the pointer and the keyboard: a negative tab index
-    // is ordered before the zero stops rather than removed from the chain, so
-    // programmatic focus can reach it.
     pressKey(root, "focus-disabled-row", "space");
     root.renderer.flush();
     expect(paintedText(root)).not.toContain("disabled panel");

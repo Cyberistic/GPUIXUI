@@ -1,13 +1,3 @@
-/**
- * The toolbar in a window: its anatomy, its tab stop and its overflow.
- *
- * The bug these guard: the strip hand-rolled a second button chrome and put the
- * overflow trigger directly after the last action, so it had no trailing group,
- * no flexible spacer and no mode group — the things the package's own docs call
- * the toolbar's anatomy. The geometry is the renderer's; the button family is a
- * source read, because 0.11.0 publishes no recipe query.
- */
-
 import { readFileSync } from "node:fs";
 import type { TestRoot } from "@gpuix/react/testing";
 import { createTestRoot } from "@gpuix/react/testing";
@@ -94,8 +84,7 @@ describe("the toolbar's anatomy", () => {
     const overflow = boundsOf(root, "toolbar-overflow");
 
     expect(bar.width).toBe(FRAME.width);
-    // Leading actions, then the spacer, then the mode group, then the trigger.
-    // Adjacent controls are a gap apart; the spacer is the frame's spare width.
+
     expect(mode.x - (first.x + first.width)).toBeGreaterThan(100);
     expect(overflow.x).toBeGreaterThan(mode.x);
     expect(overflow.x + overflow.width).toBeLessThanOrEqual(bar.x + bar.width);
@@ -130,7 +119,7 @@ describe("the toolbar's paint", () => {
     expect(source).toContain("IconButton,");
     expect(source).toContain("ToggleGroup,");
     expect(source).toContain("Separator,");
-    // The old strip drew its own action: a recipe, a role and a keyboard pair.
+
     expect(source).not.toContain("TOOLBAR_ACTION");
     expect(source).not.toContain('role="button"');
   });

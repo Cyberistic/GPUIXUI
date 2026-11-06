@@ -1,15 +1,3 @@
-/**
- * MarkdownEditor behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a source field that cannot take a keystroke; a preview
- * that does not follow the text; a view button that does not change the panes;
- * a read-only or disabled editor that still edits; a disabled editor that keeps
- * its field, divider and preview as tab stops and paints as though it were
- * live; an empty preview that paints nothing rather than saying why; and a
- * draft restored from storage that is not text, which threw out of the render
- * instead of painting an empty document.
- */
-
 import { useState, type ReactNode } from "react";
 import { DIVIDER_STEP, DIVIDER_WIDTH } from "@gpuixui/dock";
 import { Button } from "@gpuixui/primitives";
@@ -48,11 +36,6 @@ afterEach(() => {
   current?.unmount();
 });
 
-/**
- * Every text channel: the chrome's `<text>` nodes and the `<markdown>` host's
- * painted runs (the offscreen renderer reports a markdown source as its own
- * painted text, which is enough to prove the preview received it).
- */
 const text = (root: Root): ReadonlyArray<string> => [
   ...root.renderer.getAllText(),
   ...root.renderer.getPaintedText().join("\n").split("\n"),
@@ -70,7 +53,6 @@ const visible = (root: Root, testId: string): boolean => {
   return found !== undefined && found !== null;
 };
 
-/** The test id of the element holding focus, if it names one. */
 const focused = (root: Root): Option.Option<string> =>
   Option.flatMap(
     Option.fromNullishOr(root.renderer.getFocusedElementId()),
@@ -116,7 +98,6 @@ const dragDivider = (root: Root, delta: number): void => {
   root.renderer.nativeSimulateMouseUp(x + delta, y);
 };
 
-/** A controlled editor whose value the harness owns. */
 const Controlled = ({
   initial = "# Title",
   ...props
@@ -170,10 +151,6 @@ describe("MarkdownEditor", () => {
   });
 
   it("publishes which view is showing", () => {
-    // The bug guarded: the three view buttons differed only by colour, so a
-    // reader could not tell which view was painted. 0.11.0 has no
-    // `aria-current`, and `aria-selected` is the substitution Pagination,
-    // Stepper and Timeline use for the same job.
     const editor = render(<Controlled />);
     const selected = (root: Root, testId: string): unknown =>
       root.renderer.findByTestId(testId)?.customProps?.["aria-selected"];
@@ -195,10 +172,6 @@ describe("MarkdownEditor", () => {
   });
 
   it("reads a stored draft that is not text as an empty document", async () => {
-    // A draft restored from storage writes `null` where it carried no document.
-    // The status line and the preview read the text directly, so that value
-    // threw out of the render and the editor painted nothing at all — not the
-    // empty state it documents.
     const Stored = () => {
       const [draft, setDraft] = useState<string | null>(null);
       return (
@@ -392,9 +365,7 @@ describe("MarkdownEditor", () => {
       textMuted: lightTheme.colors.mutedForeground,
       fontMono: lightTheme.typography.mono,
     });
-    // The seam is a host prop, not a style: the runtime reads `appearance`,
-    // `bg` and `caret` off the theme object, and a spread into `style` is
-    // ignored, which left a light editor with the built-in dark caret.
+
     expect(host?.style.appearance).toBeUndefined();
     editor.unmount();
   });
@@ -406,9 +377,6 @@ describe("MarkdownEditor", () => {
   });
 
   it("names every part from one name, and reads a blank name as the default", () => {
-    // The bug guarded: a label from an i18n table or a saved record may arrive
-    // empty, and the parts derive their names from it — a blank label published
-    // " source", " preview" and " split", names that identify nothing.
     const nameOf = (root: Root, testId: string): unknown =>
       root.renderer.findByTestId(testId)?.customProps?.["aria-label"];
     const blank = render(
@@ -432,9 +400,6 @@ describe("MarkdownEditor", () => {
     expect(nameOf(padded, "markdown-preview-viewport")).toBe("Notes preview");
     padded.unmount();
 
-    // A saved record writes the field it kept, and a label that is not text is
-    // no name at all: every part keeps the default prefix instead of the render
-    // throwing `self.trim is not a function` out of `accessibleName`.
     const stored = render(
       <MarkdownEditor
         defaultValue="# Title"

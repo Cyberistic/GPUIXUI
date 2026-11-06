@@ -9,21 +9,6 @@ import {
   type CrumbEntry,
 } from "./breadcrumb-preview";
 
-/**
- * Browser previews for the Breadcrumb page.
- *
- * The shipped trail is declarative and `maxItems` collapses its middle; the
- * drawing takes the same rule (`collapseCrumbs` mirrors the component's
- * `collapse`, and its test holds the two together), so changing the budget
- * hides an entry *and* its separator instead of re-labelling a picture.
- *
- * The paint is the library's: the list is `flex-wrap` at the caption type role,
- * a link is `mutedForeground` and hovers to `foreground`, and the current page
- * is plain `foreground` text marked `aria-selected` — 0.11.0 has no
- * `aria-current`. The preview's crumbs are `<button>`s because a drawing has to
- * be pressable; the component's are `role="link"` divs.
- */
-
 function Trail({
   entries,
   separator = "/",
@@ -69,7 +54,6 @@ function Trail({
   );
 }
 
-/** A repository trail with the budget as a control, the composition the component is for. */
 const BreadcrumbWorkflow = (): ReactNode => {
   const [budget, setBudget] = useState<number | "all">(BUDGETS[1]);
   const [, setOpened] = useState("Nothing opened yet");
@@ -152,7 +136,6 @@ const BreadcrumbTile = ({
   );
 };
 
-/** Two levels, a custom separator, a collapsed middle and a clamped budget. */
 const BreadcrumbStates = (): ReactNode => (
   <div className="gx-demo-breadcrumb">
     <div className="gx-breadcrumb-tiles">

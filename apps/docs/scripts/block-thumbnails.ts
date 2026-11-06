@@ -1,35 +1,16 @@
-/**
- * Capture the Blocks index thumbnails from the blocks' own pages.
- *
- * The index used to mount a live scene per tile: twelve compositions with their
- * own state and window listeners, all repainted by one platform switch. It now
- * paints a checked-in image per block, and the images are captures of the real
- * renderings — `<BlockPreview>` on `/blocks/<slug>` — never a drawing made
- * for the index.
- *
- * The list of files is the index's own: the run opens `/blocks`, reads the
- * `src` of every tile image, and captures the page each one names. A block
- * added to the registry with a page is therefore captured with no edit here,
- * and an index that names no image fails instead of writing nothing.
- *
- * Run: `nub run --filter @gpuixui/docs blocks:thumbnails`
- * Pass `--url http://localhost:4175` to reuse a running docs server.
- * Writes: `apps/docs/public/blocks/<slug>.webp` (checked in).
- */
+import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { findChrome, openChrome, type ChromePage } from "./chrome-session.ts";
-import { docsServer } from "./docs-server.ts";
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const publicDir = join(appRoot, "public");
 
-/** The desktop frame the block pages lay their column out in. */
 const viewport = { width: 1440, height: 1000 } as const;
-/** The tile's own aspect (`16 / 10` in `blocks.css`). */
+
 const tileAspect = 16 / 10;
-/** How long a page gets to paint its scene, and to settle after it. */
+
 const paintTimeoutMs = 30_000;
 const settleMs = 800;
 
@@ -43,7 +24,12 @@ interface Box {
 const sleep = (ms: number): Promise<void> =>
   new Promise((done) => setTimeout(done, ms));
 
-/** The scene's box, from the page's own report (`x,y,width,height`). */
+const reachable = (url: string): Promise<boolean> =>
+  fetch(url).then(
+    (response) => response.ok,
+    () => false,
+  );
+
 const boxOf = (text: string): Box | undefined => {
   const [x, y, width, height] = text.split(",").map(Number);
   if (
@@ -60,7 +46,6 @@ const boxOf = (text: string): Box | undefined => {
   return { x, y, width, height };
 };
 
-/** The block page's scene box once its fonts are in, or a timeout. */
 const sceneBox = async (page: ChromePage): Promise<Box> => {
   const deadline = Date.now() + paintTimeoutMs;
   while (Date.now() < deadline) {
@@ -79,7 +64,6 @@ const sceneBox = async (page: ChromePage): Promise<Box> => {
   throw new Error("the block page painted no scene");
 };
 
-/** The tile images the index asks for, in its own order. */
 const tileSources = async (
   page: ChromePage,
 ): Promise<ReadonlyArray<string>> => {
@@ -98,7 +82,46 @@ const tileSources = async (
   return [];
 };
 
-/** Capture every tile the index names, and return the files it wrote. */
+const docsServer = async (
+  url: string | undefined,
+): Promise<{ readonly url: string; readonly close: () => Promise<void> }> => {
+  const base = url ?? "http://localhost:4175";
+  if (await reachable(`${base}/blocks`)) {
+    return { url: base, close: () => Promise.resolve() };
+  }
+  if (url !== undefined) {
+    throw new Error(`no docs server answers at ${url}`);
+  }
+
+  const server = spawn("nub", ["run", "dev"], {
+    cwd: appRoot,
+    detached: true,
+    stdio: "ignore",
+  });
+  let spawnError: Error | undefined;
+  server.once("error", (error) => {
+    spawnError = error;
+  });
+  const stop = async (): Promise<void> => {
+    if (server.pid !== undefined) process.kill(-server.pid, "SIGTERM");
+  };
+
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    if (spawnError !== undefined) {
+      await stop();
+      throw new Error(`\`nub run dev\` did not start: ${spawnError.message}`);
+    }
+    if (await reachable(`${base}/blocks`)) {
+      return { url: base, close: stop };
+    }
+    await sleep(500);
+  }
+  await stop();
+  throw new Error(
+    `the docs server never answered at ${base}; run \`nub run dev:docs\` and pass --url`,
+  );
+};
+
 const capture = async (
   base: string,
   chrome: string,
@@ -156,7 +179,6 @@ const capture = async (
   }
 };
 
-/** Run the capture. Returns the process exit code. */
 export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const urlIndex = argv.indexOf("--url");
   const url = urlIndex === -1 ? undefined : argv[urlIndex + 1];

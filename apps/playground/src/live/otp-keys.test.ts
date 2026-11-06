@@ -1,17 +1,3 @@
-/**
- * Holds the premise the `otp-keys-lifecycle` probe is read against.
- *
- * The field's header states the window contract this probe measures: the native
- * text editor consumes Left/Right/Home/End/Backspace on key **down**, so the
- * field's own navigation runs on key **up**, and a Backspace whose native edit
- * already emptied a cell must not clear the cell before it too. Nothing pinned
- * the readout that makes those visible, the cell ids the window presses, or the
- * README's check count — so a probe could quietly stop asserting the guard.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the
- * repository's own probe and prose, not a runtime path.
- */
-
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -36,7 +22,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The `otpKeysSteps` effect, bounded to the next top-level declaration. */
 const otpKeysSteps = (() => {
   const start = scenarios.indexOf("const otpKeysSteps");
   const end = scenarios.indexOf("\nconst ", start + 1);
@@ -63,16 +48,13 @@ describe("the OTP key fixture", () => {
     expect(otpKeysReadout(state("12"))).toBe(
       "value=12 cells=1,2,,,, completes=0 edits=0",
     );
-    // A value the field should never report is still visible as a seventh
-    // character beside the six cells the field paints.
+
     expect(otpKeysReadout(state("1234567"))).toBe(
       "value=1234567 cells=1,2,3,4,5,6 completes=0 edits=0",
     );
   });
 
   it("keeps every key in order, so a doubled press is visible", () => {
-    // The probe must be able to see the same arrow twice: a field that moved
-    // the focus twice for one press would otherwise log exactly one entry.
     expect(otpKeysChannels(state("", ["left", "left"], ["left"]))).toBe(
       "down=left,left up=left",
     );

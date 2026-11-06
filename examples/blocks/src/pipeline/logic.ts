@@ -1,20 +1,12 @@
-/**
- * The pipeline's rules, pure: which items a view shows, in which order, and
- * how many each stage holds.
- */
-
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import * as Str from "effect/String";
 import { stages, type Project, type Stage, type WorkItem } from "./data.js";
 
-/** What the sidebar narrows to: everyone's work, the viewer's, or one project. */
 export type Scope = "all" | "mine" | Project;
 
-/** How the list is sorted. */
 export type SortKey = "due" | "title";
 
-/** The view a reader has chosen. */
 export interface PipelineView {
   readonly stage: Stage;
   readonly scope: Scope;
@@ -27,7 +19,6 @@ const byKey: Readonly<Record<SortKey, Order.Order<WorkItem>>> = {
   title: Order.mapInput(Order.String, (item: WorkItem) => item.title),
 };
 
-/** The items in a scope, matching a query, before the stage is applied. */
 export const inScope = (
   work: ReadonlyArray<WorkItem>,
   view: Omit<PipelineView, "stage" | "sort">,
@@ -45,7 +36,6 @@ export const inScope = (
   );
 };
 
-/** The rows the list shows: one stage of the scope, sorted. */
 export const itemsIn = (
   work: ReadonlyArray<WorkItem>,
   view: PipelineView,
@@ -59,7 +49,6 @@ export const itemsIn = (
     byKey[view.sort],
   );
 
-/** How many items of the scope each stage holds, in stage order. */
 export const stageCounts = (
   work: ReadonlyArray<WorkItem>,
 ): ReadonlyArray<readonly [Stage, number]> =>

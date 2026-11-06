@@ -1,14 +1,3 @@
-/**
- * The React↔Effect seam, without a component.
- *
- * The bugs these guard: a store that writes state React never hears about until
- * a later turn (the component would paint the value it first read, one frame
- * behind the handler), a timer that replaces another but leaves both running (a
- * roll would settle on the value of the window before it), and work a component
- * started that outlives the component — the timer behind a roll would fire into
- * an unmounted tree.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as TestClock from "effect/testing/TestClock";
@@ -31,9 +20,6 @@ describe("LocalState", () => {
 
       yield* local.write("second");
 
-      // No flush between the write and the read: `useSyncExternalStore` reads
-      // its snapshot as soon as the handler that wrote returns. It is the
-      // snapshot the subscriber reads, so the initial value is not replayed.
       expect(seen).toEqual(["second"]);
     }),
   );
@@ -61,8 +47,6 @@ describe("LocalState", () => {
       yield* local.after(100, local.write(1));
       yield* local.after(50, local.write(2));
 
-      // The first window was replaced, not joined: only the second lands, and
-      // it lands on its own deadline.
       yield* TestClock.adjust("50 millis");
       expect(local.read()).toBe(2);
       expect(local.running()).toBe(false);

@@ -1,17 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `FileUpload`: a queue of files, each with a lifecycle, progress, retry and
- * remove.
- *
- * The component owns only the queue and the state machine (`upload/queue.ts`);
- * the transfer is the caller's `upload(file, onProgress)`, which resolves on
- * success and rejects on failure. Files are added through the controlled `files`
- * prop and auto-started; an errored file retries, and a remove drops the file
- * and cancels its attempt — a late progress or completion report for the removed
- * file's token is a no-op. The queue's attempt counter outlives the row, so a
- * file re-added under the same id cannot inherit the removed transfer's token.
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
@@ -39,32 +26,28 @@ import {
   type UploadQueue,
 } from "./upload/queue.js";
 
-/** The caller's transfer: resolve on success, reject on failure. */
 export type UploadFunction = (
   file: UploadFile,
   onProgress: (progress: number) => void,
 ) => Promise<void>;
 
-/** {@link FileUpload} props. */
 export interface FileUploadProps extends Omit<Props, "children"> {
-  /** The transfer, called once per file with a `0…1` progress reporter. */
   readonly upload: UploadFunction;
-  /** The files to upload. Adding a new id starts it; removing drops it. A value that is not a list — a saved queue's `null` — carries no files. */
+
   readonly files: ReadonlyArray<UploadFile>;
-  /** Called when the reader removes a row, so the caller drops it from `files`. */
+
   readonly onRemoveFile?: (id: string) => void;
-  /** The list's accessible name. Default `"Upload files"`. */
+
   readonly label?: string;
-  /** Shown when `files` is empty. Default `"No files"`. */
+
   readonly emptyLabel?: string;
-  /** The retry action's label. Default `"Retry"`. */
+
   readonly retryLabel?: string;
-  /** The remove action's name prefix. Default `"Remove"`. */
+
   readonly removeLabel?: string;
   readonly className?: string;
 }
 
-/** The actions each row's controls call. */
 export interface FileUploadActions {
   readonly onRetry: (id: string) => void;
   readonly onRemove: (id: string) => void;
@@ -144,7 +127,6 @@ const renderRow = (
   </div>
 );
 
-/** The element `FileUpload` renders. Pure in its arguments. */
 export const renderFileUpload = (
   props: FileUploadProps,
   theme: Theme,
@@ -188,7 +170,6 @@ export const renderFileUpload = (
   );
 };
 
-/** A file queue that owns the lifecycle; the transfer is the caller's. */
 export const FileUpload = (props: FileUploadProps): ReactElement => {
   const theme = useTheme();
   const { upload, files, onRemoveFile } = props;
@@ -196,11 +177,6 @@ export const FileUpload = (props: FileUploadProps): ReactElement => {
 
   const launch = useCallback(
     (item: UploadItem): void => {
-      // The caller's transfer can throw before it returns its promise — a
-      // missing token, a transport that was never configured. Lifting the call
-      // into a promise keeps that failure on the file it was handed: the row
-      // paints `error` and offers Retry, the state a rejection paints, instead
-      // of the throw escaping this effect and unmounting the queue.
       const attempt = Promise.resolve().then(() =>
         upload({ id: item.id, name: item.name }, (progress) =>
           setQueue((current) =>

@@ -1,18 +1,3 @@
-/**
- * `tree-view` — indentation, expand/collapse and keyboard delivery.
- *
- * A tree is pure React state over flat rows, so the runtime questions are the
- * ones a file-tree/inspector component depends on: does `paddingLeft` shift a
- * label by depth, does toggling a directory paint and unpaint its subtree, and
- * do arrow keys reach a clicked row's `onKeyDown`?
- *
- * Honest limit: this probe proves key delivery and state. It does not move
- * focus itself; `modal-focus-trap` measures the renderer's `focusElement` /
- * `focusNextWithin` from component code, which is what a roving-tabindex
- * file tree would build on.
- *
- * Measured facts: plan `140` §4, plan `153` §8 and plan `155` §8.
- */
 import { useState } from "react";
 import { Effect, pipe } from "effect";
 import * as Arr from "effect/Array";
@@ -27,7 +12,7 @@ interface TreeNode {
   readonly label: string;
   readonly kind: "dir" | "file";
   readonly depth: number;
-  /** The directory ids above this node; a node is visible when all are open. */
+
   readonly ancestors: ReadonlyArray<string>;
 }
 
@@ -70,7 +55,6 @@ const NODES: ReadonlyArray<TreeNode> = [
   },
 ];
 
-/** The rows a tree paints: every ancestor of a node must be expanded. */
 export const visibleNodes = (
   nodes: ReadonlyArray<TreeNode>,
   expanded: ReadonlyArray<string>,
