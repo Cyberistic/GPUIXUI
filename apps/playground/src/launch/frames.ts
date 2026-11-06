@@ -33,19 +33,30 @@ const parseFrame = (
 };
 
 export const firstContentFrame = (
-  lines: ReadonlyArray<string>,
+  output: string,
   spawnedAtUs: number,
 ): Option.Option<ContentFrame> =>
   Arr.findFirst(
-    Arr.getSomes(Arr.map(lines, (line) => parseFrame(line, spawnedAtUs))),
+    Arr.getSomes(
+      Arr.map(Arr.dropRight(Str.split(output, "\n"), 1), (line) =>
+        parseFrame(line, spawnedAtUs),
+      ),
+    ),
     (frame) => frame.pixels > 0,
   );
 
-const at = (sorted: ReadonlyArray<number>, fraction: number): number =>
-  Option.getOrElse(
-    Arr.get(sorted, Math.floor((sorted.length - 1) * fraction)),
+const at = (sorted: ReadonlyArray<number>, fraction: number): number => {
+  const position = (sorted.length - 1) * fraction;
+  const lower = Math.floor(position);
+  return Option.getOrElse(
+    Option.zipWith(
+      Arr.get(sorted, lower),
+      Arr.get(sorted, Math.ceil(position)),
+      (low, high) => low + (high - low) * (position - lower),
+    ),
     () => Number.NaN,
   );
+};
 
 export const summarize = (samples: ReadonlyArray<number>): Summary => {
   const sorted = Arr.sort(samples, Order.Number);

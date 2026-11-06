@@ -83,7 +83,7 @@ const sample = (variant: Variant, settle: Duration.Duration) =>
       }, Duration.toMillis(settle));
     child.stdio[3]?.on("data", (chunk: Buffer) => {
       output += chunk.toString();
-      const frame = firstContentFrame(Str.split(output, "\n"), spawnedAtUs);
+      const frame = firstContentFrame(output, spawnedAtUs);
       if (found || Option.isNone(frame)) return;
       found = true;
       finish(frame.value);
