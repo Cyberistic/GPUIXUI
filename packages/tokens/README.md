@@ -175,6 +175,10 @@ record with `restoreTheme` instead (`theme-overrides.test.ts` holds the round tr
 over every shipped, platform, authored and brand theme, and executes
 `theme-export.example.ts`).
 
+A platform's palette is written in shadcn's variables plus an `extras` block for
+the roles shadcn does not name, and mapped with
+`shadcnOverrides(vars, { derive: false })`.
+
 A style is a look over a base, not a layer over a look: `platformTheme` and
 `retroTheme` overlay a *partial* palette that is designed against the base it
 lands on, and a theme does not record that it already wears one, so two shipped
@@ -239,6 +243,32 @@ export const brandTheme = createTheme({
 
 A complete, executed example lives in
 [`src/brand-theme.example.ts`](./src/brand-theme.example.ts).
+
+## shadcn themes
+
+A shadcn project's theme is a `styles.css`: `:root` for light, `.dark` for dark.
+`shadcnTheme` maps it onto this package's roles, so the palette a reader already
+has is the palette the native components paint.
+
+```ts
+import { shadcnTheme } from "@gpuixui/tokens";
+
+const theme = shadcnTheme(css, "dark");
+```
+
+The roles shadcn names are taken, and the rest of each family is derived from
+them — input text is the foreground, a hover wash is the muted surface, the
+selection wash is the primary at 25%. Roles shadcn has no name for (`success`,
+`warning`, `info` and their soft surfaces) keep the shipped theme of the same
+mode, so the result is a complete theme. `--chart-1` … `--chart-5` become the
+data scale and `--radius` becomes `radius.md`.
+
+Bare HSL channels (`222.2 84% 4.9%`) are wrapped in `hsl()`; a value already
+written as `hsl()`, `oklch()`, a hex or a named colour is kept.
+
+`shadcnCss(theme)` and `shadcnStylesheet(light, dark)` write a theme back out in
+the same variables for a web surface beside the native window. The round trip is
+exact for every shared role.
 
 ## Persisted choices
 
@@ -1542,7 +1572,9 @@ const rows = colorRoles.map((role) => ({
 - No imports from any other workspace package.
 - No component-specific tokens: components name intent with the semantic roles.
 - No CSS variables or CSS pipeline. GPUix paints inline style values, so theme
-  switching is a re-render with a different `Theme`.
+  switching is a re-render with a different `Theme`. The package *writes* CSS
+  (`shadcnCss`) for web surfaces beside a native window, but never reads CSS to
+  paint.
 - Components must not use `palette` directly; it exists for documentation and
   rare cases with no semantic role.
 - The React entry begins with `/** @jsxImportSource react */`. A consumer that

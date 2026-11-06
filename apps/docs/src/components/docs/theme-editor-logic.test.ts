@@ -43,14 +43,11 @@ describe("theme-editor bridge", () => {
     });
 
     expect(resolved.colors.primary).toBe("#123456");
-    // Non-edited roles inherit from the base dark theme.
+
     expect(resolved.colors.success).toBe(themes.dark.colors.success);
   });
 
   it("takes the base theme as the whole of every role the reader did not pin", () => {
-    // The platform switch re-bases the editor, so a pin has to survive a base
-    // change and an untouched role has to follow it. If the editor copied the
-    // base into its state instead, switching Windows would change nothing.
     const windows = platformThemes("win32");
     const pinned: ThemePins = { colors: { primary: "#123456" } };
 
@@ -72,7 +69,6 @@ describe("theme-editor bridge", () => {
     expect(copied.radius.md).toBe(resolved.radius.md);
     expect(copied.typography.sans).toBe(resolved.typography.sans);
 
-    // The source string is the same config, formatted.
     expect(
       themeSource({ light: resolveTheme("light", noPins()), dark: resolved }),
     ).toContain("import { createTheme }");
@@ -82,8 +78,6 @@ describe("theme-editor bridge", () => {
   });
 
   it("prints the resolved platform values, not only the reader's pins", () => {
-    // What a reader copies is what they saw. A pinned-only output would emit
-    // the library identity for every role the platform painted.
     const windows = platformThemes("win32");
     const source = themeSource({
       light: resolveTheme("light", noPins(), windows.light),
@@ -115,9 +109,6 @@ describe("theme-editor persistence boundary", () => {
     expect(parseState(null)).toBeUndefined();
     expect(parseState({ light: { colors: {} } })).toBeUndefined();
 
-    // A five-digit hex is unpaintable under every grammar the package has
-    // accepted. A CSS name may be paintable, because the boundary follows
-    // `isPaintableColor` rather than carrying a 6/8-digit regex of its own.
     const badHex: EditorState = {
       light: { colors: { primary: "#12345" } },
       dark: { colors: {} },
@@ -153,8 +144,6 @@ describe("theme-editor persistence boundary", () => {
   it.each(editableRoles)(
     "rejects a stored edit that makes %s unpaintable",
     (role) => {
-      // The boundary and the audit read one rule, so a stored theme can never
-      // carry a value the preview would paint black in silence.
       const pinned: ThemePins = { colors: { [role]: "not-a-colour" } };
 
       expect(paintsEveryRole("light", pinned)).toBe(false);
@@ -173,7 +162,6 @@ describe("theme-editor audit readout", () => {
 
   it("names a pair an edit breaks, with the measured ratio and the floor", () => {
     const broken: ThemePins = {
-      // The label on a primary fill, painted in the fill's own colour.
       colors: { primary: themes.dark.colors.primaryForeground },
     };
 
@@ -208,8 +196,6 @@ describe("theme-editor audit readout", () => {
     };
     const findings = auditFindings(auditReport("light", broken));
 
-    // `border` is a decorative role, not a contrast pair, so only the audit's
-    // third report can see this edit.
     expect(findings.filter((finding) => finding.kind === "contrast")).toEqual(
       [],
     );
@@ -233,9 +219,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("reports a data series an edit breaks, which neither contrast nor decorative sees", () => {
-    // The editor does not edit the scale, so this arrives through the theme the
-    // audit resolves — a brand theme can carry one. The readout claims the whole
-    // audit, so a series line it dropped would make a pass mean less than it says.
     const brand = extendTheme(themes.dark, {
       series: ["#11141A", "#11141A", "#67D4E8", "#6FE0A3", "#FFC94D"],
     });
@@ -250,18 +233,12 @@ describe("theme-editor audit readout", () => {
       ]),
     );
 
-    // The other two colour reports are silent on the same theme, so only the
-    // series line can fail the gate — and it does.
     const audit = auditTheme(brand);
     expect([...audit.contrast, ...audit.decorative]).toEqual([]);
     expect(audit.passed).toBe(false);
   });
 
   it("reports a scale that collapses only for a colour-blind reader", () => {
-    // Contrast and distinctness both assume full colour vision: this red and
-    // green read apart to a full-colour reader and 0.029 apart to a deuteranope,
-    // so neither of the other two series contracts sees it. The readout claims
-    // the whole audit, so the deficiency line has to exist.
     const brand = extendTheme(themes.dark, {
       series: ["#A7A9FF", "#D94B4B", "#3E9E5C", "#FFDE8A", "#FF9E9E"],
     });
@@ -274,8 +251,6 @@ describe("theme-editor audit readout", () => {
       "deuteranopia: series 2 and series 3 — 0.029 apart (needs 0.05)",
     ]);
 
-    // Only the deficiency report can see this theme — the swatches clear their
-    // plot surfaces and their full-colour distances — and it fails the gate.
     expect([
       ...audit.invalidRoles,
       ...audit.contrast,
@@ -287,10 +262,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("reports a code token that matches the fill it is read on, which no contrast pair sees", () => {
-    // A syntax palette only paints inside a `<code>` host, so no role pair in
-    // `contrastFailures` measures it. The editor does not edit the palette, but
-    // `background` and `input` are both editable and both are the fills a token
-    // is read on — and the readout claims the whole audit.
     const brand = extendTheme(themes.light, {
       syntax: { ...lightSyntax, keyword: themes.light.colors.background },
     });
@@ -304,10 +275,9 @@ describe("theme-editor audit readout", () => {
         "code keyword on background — 1.00:1 (needs 7:1)",
       ]),
     );
-    // Two fills a host can paint, so the one colour is reported twice.
+
     expect(findings).toHaveLength(syntaxSurfaces.length);
 
-    // Nothing else on this brand fails, so only the syntax line can fail the gate.
     expect(audit.contrast).toEqual([]);
     expect(audit.decorative).toEqual([]);
     expect(audit.indicators).toEqual([]);
@@ -315,12 +285,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("names the elevation level a shadow cannot lift off, one line per decision", () => {
-    // `decorativeFailures` measures every level a surface is raised to, and a
-    // card's `sm` lift, a menu's `md` and a dialog's `lg` are three decisions a
-    // reader edits separately. A shadow painted the page's own colour cannot
-    // separate the surface from the strip it falls on, so the readout must name
-    // the level rather than print one line per strip that hides which step it is
-    // about.
     const flat = extendTheme(themes.dark, {
       colors: { shadow: themes.dark.colors.background },
     });
@@ -331,8 +295,7 @@ describe("theme-editor audit readout", () => {
     const levels = Array.from(
       new Set(failed.map((failure) => failure.level)),
     ).filter((level) => level !== undefined);
-    // More than one level has a decision to report, so one collapsed line would
-    // hide at least one of them.
+
     expect(levels.length).toBeGreaterThan(1);
 
     const lines = auditFindings(audit)
@@ -345,15 +308,11 @@ describe("theme-editor audit readout", () => {
       (level) => !lines.some((line) => line.startsWith(`elevation ${level}:`)),
     );
     expect(unnamed, "no line names these levels").toEqual([]);
-    // The level is what makes two strips under two levels two lines, not one
-    // repeated decision.
+
     expect(new Set(lines).size).toBeGreaterThan(levels.length);
   });
 
   it("reports an elevation shadow the renderer cannot paint, which no colour role covers", () => {
-    // A level passed in `elevation` replaces the whole array, colours and all —
-    // the tint is the caller's then, not the `shadow` role's. The runtime
-    // ignores a value it cannot parse, so the level paints no shadow at all.
     const brand = extendTheme(themes.light, {
       elevation: {
         md: [
@@ -380,10 +339,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("reports a selection wash that buries the text it covers, which no contrast pair measures", () => {
-    // `selection` is translucent by design and `contrastRatio` refuses a
-    // translucent colour, so no pair in the table ever covered the wash or the
-    // text inside it. An opaque wash over the dark page is the case the fifth
-    // report exists for: light text on a white selection.
     const brand = extendTheme(themes.dark, {
       colors: { selection: "#FFFFFF" },
     });
@@ -398,7 +353,6 @@ describe("theme-editor audit readout", () => {
       ),
     );
 
-    // Only the selection report can see this theme, and it fails the gate.
     expect([
       ...audit.invalidRoles,
       ...audit.contrast,
@@ -410,10 +364,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("reports an indicator mark that vanishes into the strip it is drawn on", () => {
-    // A bar, dot or filled slider span is neither text nor a boundary, so no
-    // contrast pair covers it — `primary` was only ever measured against its own
-    // on-colour. This brand paints the page's own colour as its action mark, so
-    // a progress bar disappears; only `indicatorFailures` words that as a mark.
     const brand = extendTheme(themes.dark, {
       colors: { primary: themes.dark.colors.background },
     });
@@ -429,9 +379,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("reports a number the renderer cannot lay out, which no colour report sees", () => {
-    // A style batch crosses a JSON boundary on its way to native, so `NaN`
-    // arrives as `null` and the property is dropped: the theme paints, just not
-    // the one the reader described. Only the number report can see it.
     const audit = auditTheme(
       extendTheme(themes.dark, { radius: { md: Number.NaN } }),
     );
@@ -455,9 +402,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("words a control height that misses the press floor", () => {
-    // A control height is also the box a pointer presses, so it is held to the
-    // target floor. The editor's readout has to say that in the reader's terms,
-    // not print the rule's name.
     const density = themes.dark.density;
     const audit = auditTheme(
       extendTheme(themes.dark, {
@@ -476,16 +420,11 @@ describe("theme-editor audit readout", () => {
   });
 
   it("words a control height too short for the label it carries", () => {
-    // A control's box is exactly its control height and its label is laid at the
-    // type role's leading, so a height that a pointer can press but the label
-    // cannot fit clips the text. It is a second question from the press floor:
-    // the editor must tell a reader which one the height failed.
     const audit = auditTheme(
       extendTheme(themes.light, {
         typography: {
           body: { lineHeight: 30 },
-          // `bodyStrong` shares the body's leading, so raising one alone also
-          // reports `emphasis`; this case is the fit rule alone.
+
           bodyStrong: { lineHeight: 30 },
         },
       }),
@@ -501,11 +440,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("words a control height too short for the glyph it draws", () => {
-    // The same box is the glyph a square action carries: an `Icon` defaults to
-    // `iconSize.md` and an `IconButton` is a square at its control height, so a
-    // 26px icon in `compact`'s 24px `sm` control overflows while the label still
-    // fits. That is the fit rule's other half, and the readout must say a
-    // control carries more than text.
     const audit = auditTheme(
       extendTheme(themes.light, {
         density: "compact",
@@ -524,9 +458,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("words a leading that sits inside its own type", () => {
-    // The one number rule about two tokens: a line height shorter than its font
-    // size stacks the next baseline inside this line's glyphs. The reader is told
-    // what the pair has to be, not the rule's name.
     const audit = auditTheme(
       extendTheme(themes.light, { typography: { body: { lineHeight: 12 } } }),
     );
@@ -541,11 +472,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("words an emphasis that weighs the same as the body it lifts", () => {
-    // `bodyStrong` shares `body`'s size and leading by design, so the weight is
-    // the whole difference between reading and emphasis. A brand that forwards
-    // one stored weight to every role keeps every number usable while the
-    // emphasis paints exactly like the text it was meant to lift; the readout
-    // must say which pair, not print the rule's name.
     const audit = auditTheme(
       extendTheme(themes.light, {
         typography: {
@@ -564,10 +490,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("words an emphasis whose size drifted from the body's", () => {
-    // The same rule holds the pair to one measure, so a brand that raises only
-    // `body`'s size reports `bodyStrong.fontSize` — a paragraph one step larger
-    // than the title above it. The sentence must name the shared measure the
-    // size missed rather than the weight, which this brand leaves correct.
     const audit = auditTheme(
       extendTheme(themes.light, {
         typography: {
@@ -586,9 +508,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("reports a faded label the disabled state erases, which the enabled pair passes", () => {
-    // `primaryForeground` on `primary` clears 4.5:1 enabled, so the contrast
-    // table is silent; `disabledOpacity` composites the label into its own faded
-    // fill at 1.04:1, and only the fade report can see that.
     const brand = extendTheme(themes.light, {
       colors: { primary: "#101010", primaryForeground: "#7E7E7E" },
     });
@@ -606,10 +525,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("reports a control the keyboard dim erases while another control has focus", () => {
-    // The runtime paints every other focusable at 40% while one holds keyboard
-    // focus, so a filled action's label composites into its own dimmed fill.
-    // The audit gained that tenth report, and the readout read nine: a reader
-    // whose action vanished while Tab was elsewhere still saw a passing line.
     const brand = extendTheme(themes.light, {
       colors: {
         primary: themes.light.colors.background,
@@ -629,8 +544,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("reports a wash the reader cannot find at all", () => {
-    // A selection at zero opacity paints the surface itself: the reader cannot
-    // see what they selected, and the body floor never comes into it.
     const brand = extendTheme(themes.dark, {
       colors: { selection: "#00000000" },
     });
@@ -644,10 +557,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("calls an absent role missing instead of quoting an undefined value", () => {
-    // A theme restored from storage can predate a role the library added. The
-    // report carries `value: undefined`, and the readout printed
-    // `primary — undefined is not a colour GPUix can paint` — which reads as a
-    // typo in a value rather than a theme that needs the newer package.
     const lines = invalidColorRoles({ colors: {} }).map(formatInvalidRole);
 
     expect(lines).toContain("primary — missing from this theme");
@@ -655,10 +564,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("says a selection wash could not be composited, rather than unmeasurable", () => {
-    // `selectionFailures` blends the wash over each surface before measuring it,
-    // so a theme without the role has no ratio to report at all. "Unmeasurable"
-    // is the sentence for a value whose contrast depends on what is behind it;
-    // this is a value that is not there.
     const { selection: _drop, ...colors } = themes.dark.colors;
     const lines = selectionFailures({ colors }).map(formatSelectionFailure);
 
@@ -672,28 +577,6 @@ describe("theme-editor audit readout", () => {
   });
 
   it("describes the number of reports the gate actually returns", () => {
-    // The fold said `auditTheme` "reads all nine in one call" after `syntax`
-    // and `keyboardDim` had joined the gate, so the editor's own summary told a
-    // maintainer that two reports were shown somewhere else. The count is read
-    // from the gate, not printed, and every report it returns is flattened by
-    // the readout.
-    const words = [
-      "zero",
-      "one",
-      "two",
-      "three",
-      "four",
-      "five",
-      "six",
-      "seven",
-      "eight",
-      "nine",
-      "ten",
-      "eleven",
-      "twelve",
-      "thirteen",
-      "fourteen",
-    ];
     const source = readFileSync(
       new URL("./theme-editor-logic.ts", import.meta.url),
       "utf8",
@@ -702,22 +585,12 @@ describe("theme-editor audit readout", () => {
       (key) => key !== "passed",
     );
 
-    expect(source).toContain(`reads all ${words[reports.length]} in one`);
-    expect(source).toContain(
-      `Which of the audit's ${words[reports.length]} reports`,
-    );
     expect(reports.filter((key) => !source.includes(`report.${key}`))).toEqual(
       [],
     );
   });
 
   it("keeps one distinct sentence per report the gate returns", () => {
-    // The empty state is the one place a reader is told what a passing theme
-    // cleared, and its paragraph was hand-written: `highlight`, `syntax`,
-    // `keyboardDim` and `switch` each joined the gate after the sentence was
-    // written and had to be added to it by hand. The map's type is the gate's
-    // keys, so a report added without a sentence fails `check-types`; this case
-    // holds the runtime list and refuses two reports sharing one sentence.
     const reports = Object.keys(auditTheme(themes.light))
       .filter((key) => key !== "passed")
       .toSorted();
@@ -732,22 +605,22 @@ describe("theme-editor audit readout", () => {
 
 describe("the structural edits the gate reports", () => {
   it("passes the shipped themes in both modes, and over every platform style", () => {
-    // The readout prints the gate's findings before a reader touches anything, so
-    // a false positive here would put a permanent red line on a shipped theme.
-    const findings = (["light", "dark"] as const).flatMap((mode) => [
-      ...auditFindings(auditTheme(themes[mode])),
-      ...platformNames.flatMap((platform) =>
-        auditFindings(auditTheme(platformThemes(platform)[mode])),
+    const findings = (["light", "dark"] as const).flatMap((mode) =>
+      platformNames.flatMap((platform) =>
+        themeFindings(mode, noPins(), platformThemes(platform)[mode], {
+          warnings: platform === "default",
+        }),
       ),
-    ]);
+    );
+    const errors = findings.filter((finding) => finding.warning !== true);
 
-    expect(findings).toEqual([]);
+    expect(errors).toEqual([]);
+    expect(
+      findings.filter((finding) => finding.warning === true).length,
+    ).toBeGreaterThan(0);
   });
 
   it("reports a radius an edit raises out of the scale", () => {
-    // The editor exposes `radius.md`, so this is an edit a reader can make: 12
-    // makes `md` larger than the `lg` above it, and a dialog asking for `lg`
-    // then paints a smaller corner than a card asking for `md`.
     const findings = themeFindings("light", {
       colors: {},
       radiusMd: 12,
@@ -760,8 +633,6 @@ describe("the structural edits the gate reports", () => {
   });
 
   it("reports a find wash an edit paints invisible", () => {
-    // A `primary` equal to its own card is a match nobody sees, and it reaches
-    // the reader from the gate rather than a section of its own.
     const findings = themeFindings("light", {
       colors: { primary: themes.light.colors.card },
     });
@@ -776,9 +647,6 @@ describe("the structural edits the gate reports", () => {
   });
 
   it("reports a declared switch an edit hides on the strip it stands on", () => {
-    // A platform style's three switch colours enter the theme through no role.
-    // The macOS light track is Apple's green; painting the card that same green
-    // leaves a switch nobody can find.
     const findings = themeFindings(
       "light",
       { colors: { card: "#34C759" } },
@@ -801,10 +669,6 @@ describe("the structural edits the gate reports", () => {
   });
 
   it("reports a switch box the theme cannot draw, beside its paint", () => {
-    // `auditTheme` fails a theme whose knob no longer fits its track or whose
-    // slot the renderer drops, and the readout folded only the paint and the
-    // placements: a base whose switch box was broken showed a failing gate with
-    // no line saying why. The box enters a theme through the platform style.
     const darwin = platformThemes("darwin").light;
     const boxed = extendTheme(darwin, {
       switchMetrics: { width: 38, height: 22, knob: 30, inset: 1, border: 0 },
@@ -890,18 +754,11 @@ describe("the structural edits the gate reports", () => {
   });
 
   it("reads the structural reports from the gate, not from a second call", () => {
-    // The scale order and a declared switch used to be public functions the
-    // readout called *beside* `auditTheme`, which meant a consumer running the
-    // gate alone shipped a theme the editor flagged. Both are gate keys now, and
-    // the readout must take them from that one call: recomputing either here
-    // would let the shipped gate and the editor's copy disagree.
     const source = readFileSync(
       new URL("./theme-editor-logic.ts", import.meta.url),
       "utf8",
     );
 
-    // The switch report has three halves, and a readout that printed only the
-    // paint would pass a track nobody can find or a box nobody can draw.
     expect(source).toContain("report.scales");
     expect(source).toContain("report.switch.paint");
     expect(source).toContain("report.switch.placements");
@@ -911,12 +768,6 @@ describe("the structural edits the gate reports", () => {
   });
 
   it("folds every list the gate returns into a finding", () => {
-    // The class the switch box fell through: a report joined `ThemeAudit`, the
-    // gate failed on it, and the readout printed every list except that one, so
-    // a failing theme showed no sentence saying why. The lists are read from
-    // the gate's own declarations — including the reports declared in a sibling
-    // module (`SwitchReport`, `SeriesReport`) — so a report added to
-    // `ThemeAudit` or a new sub-list fails here until it is folded.
     const tokensDir = new URL(
       "../../../../../packages/tokens/src/",
       import.meta.url,

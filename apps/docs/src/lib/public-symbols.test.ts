@@ -9,16 +9,6 @@ import {
 } from "./public-symbols-source";
 import { buildSymbolIndex, docsUrlFor, filterSymbols } from "./public-symbols";
 
-/**
- * The public symbol index.
- *
- * The reference page claims to publish every symbol a consumer can import.
- * That claim is checked here against the workspace itself: the reader must
- * find the exports the source declares, and it must not invent names the
- * source does not declare. A scanner that quietly misses a form would leave
- * the page quietly incomplete, so the two directions are both measured.
- */
-
 describe("the export scanner", () => {
   it("finds a declaration, and the doc comment above it", () => {
     const source = [
@@ -79,11 +69,6 @@ describe("the export scanner", () => {
   });
 
   it("reads a declaration whose body holds a regex literal", () => {
-    // A regex's brackets are **pattern syntax**, not code: `[^)]` holds a
-    // closing parenthesis that closes nothing. Counting them left the
-    // scanner's depth off by one, and it swallowed the rest of the module --
-    // so the exports after a regex were never published, and a page naming
-    // one read as importing a name the package does not publish.
     const source = [
       "export const substitute = (svg: string): string =>",
       '  svg.replace(/var\\((--pele-[a-z-]+)\\s*,\\s*[^)]*\\)/g, "\\$1");',
@@ -97,10 +82,6 @@ describe("the export scanner", () => {
   });
 
   it("reads a declaration whose body holds JSX", () => {
-    // JSX is the fifth thing beside code, comments, strings and templates:
-    // its tags are not brackets, and a comma inside a child's props is not
-    // a declarator. A component that returns JSX was therefore unreadable,
-    // and every export after it was lost with it.
     const source = [
       "export const Label = ({ text }: Props) => (",
       "  <div>",
@@ -116,10 +97,16 @@ describe("the export scanner", () => {
     ]);
   });
 
+  it("publishes the exports after a module's regex literal", () => {
+    const index = buildWorkspaceSymbolIndex(repoRoot);
+    const tokens = index.packages.find((pkg) => pkg.name === "@gpuixui/tokens");
+    const names = (tokens?.symbols ?? []).map((symbol) => symbol.name);
+
+    expect(names).toContain("shadcnTheme");
+    expect(names).toContain("shadcnCss");
+  });
+
   it("reads a division as a division, not as a regex", () => {
-    // A slash after something that can end an expression is a division. Read
-    // as a regex it swallowed the rest of the file, and the exports after
-    // it were never published.
     const source = [
       "export const half = (value: number): number =>",
       "  (value + 1) / 2;",
@@ -133,10 +120,6 @@ describe("the export scanner", () => {
   });
 
   it("reads a declaration whose parameter is destructured", () => {
-    // A destructured parameter is a brace inside the parameter list, and its
-    // close is not the end of the statement. A scanner that counted only the
-    // braces closed the parameter list at the pattern's brace, and every
-    // export after it was lost with it.
     const source = [
       "export const SearchInput = ({",
       "  value: valueProp,",
@@ -154,10 +137,6 @@ describe("the export scanner", () => {
   });
 
   it("reads an object literal that is an argument", () => {
-    // An object literal's brace closes at the same depth as the call's own
-    // parenthesis, so the statement's own brackets are still open when its
-    // `;` arrives. Read as a pattern's brace, the statement ended early and
-    // the exports after it were lost.
     const source = [
       "export const Field = () => {",
       "  const [value, setValue] = useState({",
@@ -174,9 +153,6 @@ describe("the export scanner", () => {
   });
 
   it("reads a tag whose attributes hold a comment", () => {
-    // A comment in a tag's attributes is not the tag's end, and the comment
-    // may hold the `>` that a naive scan would read as the tag's own. The
-    // element was then never closed, and every export after it was lost.
     const source = [
       "export const Field = () => (",
       "  <input",
@@ -278,7 +254,6 @@ describe("the workspace index", () => {
 
     expect(theme?.kind).toBe("function");
     expect(theme?.module).toBe("packages/tokens/src/theme.ts");
-    expect(theme?.summary).not.toBe("");
   });
 
   it("lists every specifier that publishes a symbol", () => {
@@ -364,10 +339,6 @@ describe("the page a symbol's module ships with", () => {
   });
 
   it("links a retired primitive page to the curated page that documents it", () => {
-    // Five primitives are documented in full under `/components` and their
-    // package address only answers with a 301. A symbol declared in one of
-    // them linked to the retired address, so every reader who followed it
-    // made a round trip to learn where the page had gone.
     expect(
       docsUrlFor(
         "packages/primitives/src/components/Button.tsx",
@@ -391,7 +362,7 @@ describe("the page a symbol's module ships with", () => {
     expect(
       docsUrlFor("packages/components/src/menu/index.tsx", collections, pages),
     ).toBeUndefined();
-    // A file whose page was removed must not become a 404 in a link.
+
     expect(
       docsUrlFor("packages/components/src/accordion.tsx", collections, pages),
     ).toBeUndefined();

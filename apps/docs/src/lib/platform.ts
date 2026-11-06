@@ -4,6 +4,7 @@ import {
   platformTypes,
   retroNames,
   retroStyles,
+  shadcnNeutralTheme,
   themes,
   type PlatformName,
   type RetroName,
@@ -11,16 +12,6 @@ import {
   type ThemeMode,
 } from "@gpuixui/tokens";
 
-/**
- * The platform a preview shows.
- *
- * The platform is a library decision, not a docs style: the switch resolves
- * `platformTheme` from `@gpuixui/tokens`, so a preview reads the families (and,
- * as the token platform styles land, the shape) the library names rather than a
- * style sheet written for the browser.
- */
-
-/** The platforms the switch offers, in the order it shows them. */
 export const platformOrder = [
   "darwin",
   "linux",
@@ -28,22 +19,11 @@ export const platformOrder = [
   "default",
 ] as const satisfies readonly PlatformName[];
 
-/** The label the library gives a platform. */
 export const platformLabel = (platform: PlatformName): string =>
   platformTypes[platform].label;
 
-/**
- * The desktops the landing deck shows, in card order.
- *
- * These are the three native looks, not every desktop the library talks about:
- * Omarchy is a Linux desktop that follows your theme, and the deck says that in
- * a strip of its own rather than by dressing a fourth window. The platform axis
- * is what a consumer persists and what the preview switch offers, so the docs
- * toggle stays the library's three platforms plus the default.
- */
 export const landingPlatformOrder = ["macos", "windows", "linux"] as const;
 
-/** A desktop the landing deck shows. */
 export type LandingPlatform = (typeof landingPlatformOrder)[number];
 
 const landingPlatformLabels: Readonly<Record<LandingPlatform, string>> = {
@@ -52,90 +32,46 @@ const landingPlatformLabels: Readonly<Record<LandingPlatform, string>> = {
   linux: "Linux / Arch",
 };
 
-/** The label the landing switch shows a desktop under. */
 export const landingPlatformLabel = (platform: LandingPlatform): string =>
   landingPlatformLabels[platform];
 
-/**
- * Parse a stored value. A value the library does not name is rejected rather
- * than guessed, so a value written by an older build falls back per axis.
- */
 export const parsePlatform = (
   raw: string | null | undefined,
 ): PlatformName | undefined => platformOrder.find((option) => option === raw);
 
-/**
- * The authored look a preview paints, or `native` for the platform's own style.
- *
- * A look is not a platform: `platformNames` is the persisted key for the
- * operating systems an application runs on, and `luna`/`aero` are styles of the
- * same shape (`retroStyles`). Offering them here is the extension mechanism in
- * practice, not a fifth platform — the mission's toggle stays macOS · Linux ·
- * Windows · Default.
- */
 export type LookName = "native" | RetroName;
 
-/** The looks the switch offers, in order: the platform's own style first. */
 export const lookOrder = [
   "native",
   ...retroNames,
 ] as const satisfies readonly LookName[];
 
-/** The label a look shows: `Platform` for the native style, the style's own name otherwise. */
 export const lookLabel = (look: LookName): string =>
   look === "native" ? "Platform" : retroStyles[look].label;
 
-/** Parse a stored look. A name the library does not ship is rejected, not guessed. */
 export const parseLook = (
   raw: string | null | undefined,
 ): LookName | undefined => lookOrder.find((look) => look === raw);
 
-/**
- * The palettes a preview offers, in switch order: the library's identity first,
- * because that is what a first visit shows.
- */
 export const modeOrder = [
   "dark",
   "light",
 ] as const satisfies readonly ThemeMode[];
 
-/** The label a palette shows in the switch. */
 export const modeLabel = (mode: ThemeMode): string =>
   mode === "dark" ? "Dark" : "Light";
 
-/**
- * Parse a stored mode. A value the library does not name is rejected rather
- * than guessed, so a value written by an older build falls back per axis.
- */
 export const parseMode = (
   raw: string | null | undefined,
 ): ThemeMode | undefined => modeOrder.find((mode) => mode === raw);
 
-/**
- * The palette a preview opens in.
- *
- * The docs site has its own light/dark switch (Fumadocs' theme provider), and a
- * preview deliberately does not follow it: a preview is a picture of the
- * library, and its identity is the dark theme. The palette a reader compares is
- * the switch's own palette axis, so the site resolves one opening mode and says
- * which — the guide prints this value rather than typing "dark", so a page and
- * the provider cannot disagree.
- */
 export const previewMode: ThemeMode = "dark";
 
-/**
- * What the browser says about the visitor's desktop.
- *
- * `maxTouchPoints` is the only difference an iPad in desktop mode reports: it
- * sends the Macintosh user agent a Mac sends, but reports touches where a Mac
- * reports none.
- */
 export interface PlatformSignals {
   readonly userAgent: string;
   readonly maxTouchPoints: number;
 }
 
-/** The browser's signals, or none on the server, where `navigator` is absent. */
 export const browserSignals = (): PlatformSignals =>
   typeof navigator === "undefined"
     ? { userAgent: "", maxTouchPoints: 0 }
@@ -144,16 +80,8 @@ export const browserSignals = (): PlatformSignals =>
         maxTouchPoints: navigator.maxTouchPoints,
       };
 
-/** The desktop family a user agent names, before the library picks a platform. */
 export type PlatformFamily = "ios" | "macos" | "windows" | "linux" | "unknown";
 
-/**
- * The family `signals` name.
- *
- * The order is the rule: an iPad in desktop mode says Macintosh, and the touch
- * count is what separates it from the Mac it imitates. A user agent none of the
- * patterns names is `unknown`, not a guess at a desktop.
- */
 export const platformFamily = (
   { userAgent, maxTouchPoints }: PlatformSignals = browserSignals(),
 ): PlatformFamily => {
@@ -173,78 +101,41 @@ const platformOfFamily = {
   unknown: "darwin",
 } as const satisfies Record<PlatformFamily, PlatformName>;
 
-/**
- * The platform a first visit opens on.
- *
- * iOS, macOS and every desktop the library does not name resolve to `darwin`,
- * the site's own identity; Windows and Linux resolve to the styles the library
- * ships for them.
- */
 export const detectPlatform = (
   signals: PlatformSignals = browserSignals(),
 ): PlatformName => platformOfFamily[platformFamily(signals)];
 
-/**
- * The authored look an Omarchy desktop shows, once `retroStyles` ships it.
- *
- * Omarchy is a Linux desktop with its own authored look, so it is a look rather
- * than a platform. Reading the same `lookOrder` the switch offers keeps the
- * answer absent — and the style `native` — until the style exists.
- */
 export const omarchyLook = parseLook("omarchy");
 
-/** Whether a user agent or a stored marker names Omarchy. */
 export const namesOmarchy = (marker: string | null | undefined): boolean =>
   /omarchy/i.test(marker ?? "");
 
-/** The look a first visit paints: Omarchy's when shipped, else the platform's. */
 export const detectLook = (omarchy: boolean): LookName =>
   omarchy ? (omarchyLook ?? "native") : "native";
 
-/** One choice of platform, look and palette: what the switch shows. */
 export interface PreviewChoice {
   readonly platform: PlatformName;
   readonly look: LookName;
   readonly mode: ThemeMode;
 }
 
-/**
- * Choosing a platform returns to that platform's own style.
- *
- * The authored look is an overlay chosen on the Theming page: it repaints over
- * whatever platform is showing, so leaving it in place made the sidebar's
- * platform press change only the label — the look had already fixed the
- * palette, radii and density. A platform press therefore clears it, which is
- * what keeps the switch's promise ("every preview changes") true.
- */
 export const choosingPlatform = (
   choice: PreviewChoice,
   platform: PlatformName,
 ): PreviewChoice => ({ ...choice, platform, look: "native" });
 
-/**
- * The theme a preview shows: the library's platform variant over one of its
- * built-in modes, then the authored look over that when one is chosen.
- *
- * `applyStyle` keeps the base's contrast: a high-contrast base takes a look's
- * families, radii and density but keeps its own palette, so the look cannot
- * undo the floors the base was chosen for.
- */
 export const resolvePlatformTheme = (
   platform: PlatformName,
   mode: ThemeMode = previewMode,
   look: LookName = "native",
 ): Theme => {
-  const base = platformTheme(themes[mode], platform);
+  const base =
+    platform === "default"
+      ? shadcnNeutralTheme(mode)
+      : platformTheme(themes[mode], platform);
   return look === "native" ? base : applyStyle(base, retroStyles[look]);
 };
 
-/**
- * The theme editor's two bases: the selected platform style (and authored look)
- * in each mode. The editor pins only what a reader changes, so a switch of the
- * platform re-bases the preview while the edits stay — the same
- * `extendTheme(platformStyle, edits)` a consumer writes by hand.
- */
 export const platformThemes = (
   platform: PlatformName,
   look: LookName = "native",

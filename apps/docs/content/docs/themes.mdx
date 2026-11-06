@@ -27,6 +27,21 @@ keeps the editor and the URL.
 A platform style is one of four identity variants; an authored look applies a
 style over one. The picker remembers the look in the app, not the URL.
 
+## Bring a shadcn theme
+
+```tsx
+import { shadcnTheme } from "@gpuixui/tokens";
+
+const theme = shadcnTheme(css, "dark");
+```
+
+`css` is a shadcn `styles.css`: `:root` is light, `.dark` is dark. The roles it
+names are taken, `--chart-1…5` become the data scale, and the rest keep the
+shipped theme. `shadcnCss(theme)` writes one back out in the same variables.
+
+The **Default** platform is shadcn's neutral black-and-white theme exactly
+(`shadcnNeutralTheme`). Its contrast misses are listed as warnings, not errors.
+
 ## The style reference
 
 <StyleReference />
