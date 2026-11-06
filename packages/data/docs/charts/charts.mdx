@@ -183,6 +183,8 @@ its own holds its subtree's.
 | `nodeColors` | `Map<string, string>` | — | a node's own colour, by its path |
 | `legend` | `boolean` | `true` | the legend paints under the cells |
 | `valueFormat` | `(value: number) => string` | — | how a value prints in the legend |
+| `animate` | `boolean` | `true` | a mount and a data change animate |
+| `animationDuration` | `number` | `1500` | how long a mount or a data change takes, in ms |
 | `testId` | `string` | — | the chart's test id; a cell is `${testId}-cell-${path}` |
 | `label` | `string` | the chart's own name | the name the document announces |
 
@@ -213,6 +215,8 @@ once.
 | `colors` | `string[]` | the theme's series scale | the categorical palette |
 | `legend` | `boolean` | `true` | the legend paints under the bars |
 | `valueFormat` | `(value: number) => string` | — | how a value prints in the legend |
+| `animate` | `boolean` | `true` | a mount and a data change animate |
+| `animationDuration` | `number` | `1500` | how long a mount or a data change takes, in ms |
 | `testId` | `string` | — | the chart's test id; a cell is `${testId}-cell-${path}` |
 | `label` | `string` | the chart's own name | the name the document announces |
 
@@ -249,6 +253,8 @@ flow that is.
 | `nodeColors` | `Map<string, string>` | — | a node's own colour, by its id |
 | `legend` | `boolean` | `true` | the legend paints under the flow |
 | `valueFormat` | `(value: number) => string` | — | how a value prints in the legend |
+| `animate` | `boolean` | `true` | a mount and a data change animate |
+| `animationDuration` | `number` | `1500` | how long a mount or a data change takes, in ms |
 | `testId` | `string` | — | the chart's test id; a cell is `${testId}-cell-${path}` |
 | `label` | `string` | the chart's own name | the name the document announces |
 
@@ -280,6 +286,8 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 | `nodeColors` | `Map<string, string>` | — | a node's own colour, by its path |
 | `legend` | `boolean` | `true` | the legend paints under the rings |
 | `valueFormat` | `(value: number) => string` | — | how a value prints in the legend |
+| `animate` | `boolean` | `true` | a mount and a data change animate |
+| `animationDuration` | `number` | `1500` | how long a mount or a data change takes, in ms |
 | `testId` | `string` | — | the chart's test id; a cell is `${testId}-cell-${path}` |
 | `label` | `string` | the chart's own name | the name the document announces |
 
@@ -513,5 +521,4 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 - **Measured in a window**: `chart-surface-lifecycle` (41 checks, 0.11.0)
   samples the bar, the stack, the ring and the line the shipped geometry draws.
 - A category label wider than its slot is **clipped at the slot's edge**.
-- A mark cannot answer a press, so there is no per-mark tooltip, no zoom and no
-  tween between data sets.
+- A mark cannot answer a press, so there is no per-mark tooltip and no zoom.

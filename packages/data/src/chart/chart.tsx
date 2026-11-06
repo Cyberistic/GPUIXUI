@@ -1,28 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Charts, drawn as stacked `<svg>` masks.
- *
- * `@gpuix/native@0.11.0` has no chart host and no canvas, and an `<svg source>`
- * is rasterised into **one** tinted mask (`chart-raster` measured an icon with
- * five layers painting five colours as one). The route this module takes is the
- * one that measurement leaves: **one `<svg>` per series per layer**, each
- * carrying its geometry in the plot's viewBox and tinted through `style.color`,
- * stacked in paint order inside one relatively positioned plot. Labels, ticks
- * and the hover readout are ordinary `<text>` beside the plot; a legend is a row
- * of swatches in the series' own colours.
- *
- * Nothing paints a surface: a chart inherits the card or page it sits on, which
- * is also what the probe measured of a transparent raster margin.
- *
- * ```tsx
- * <AreaChart
- *   aria-label="Revenue by quarter"
- *   labels={["Q1", "Q2", "Q3", "Q4"]}
- *   series={[{ key: "revenue", label: "Revenue", values: [32, 48, 41, 60] }]}
- *   curve="smooth"
- * />
- * ```
- */
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
@@ -84,7 +60,14 @@ import {
   type ChartView,
   type Curve,
 } from "./geometry.js";
-import { DEFAULT_ANIMATION_DURATION, useAnimatedValues } from "./animation.js";
+import {
+  DEFAULT_ANIMATION_DURATION,
+  scaleSeries,
+  scaleValue,
+  useAnimatedValues,
+  useMountReveal,
+} from "./animation.js";
+import type { MarkClip } from "./mark.js";
 import {
   ChartFrame,
   ChartMask,
@@ -115,132 +98,74 @@ export {
 } from "./legend.js";
 export type { LegendShape, TooltipIndicator } from "./frame.js";
 
-/** The side of a donut's square plot when the caller names none. */
 const DEFAULT_RING_SIZE = 160;
 
-/** The width of a sparkline's plot when the caller names none. */
 const DEFAULT_SPARKLINE_WIDTH = 120;
 
-/** The height of a sparkline's plot when the caller names none. */
 const DEFAULT_SPARKLINE_HEIGHT = 32;
 
-/**
- * The name a sparkline paints when the caller names none.
- *
- * The name is a stored value as often as a literal (a locale table with a
- * missing row, a preference a store saved empty), so a blank one reads as this
- * word rather than an unnamed image — the rule `spokenText` applies.
- */
 export const DEFAULT_SPARKLINE_LABEL = "Trend";
 
-/** The colour a caller names, or the fallback when it names none. */
 const chosenColour = (colour: string | undefined, fallback: string): string =>
   Option.match(Option.fromNullishOr(colour), {
     onNone: () => fallback,
     onSome: (value) => (Str.isNonEmpty(Str.trim(value)) ? value : fallback),
   });
 
-/** One legend entry. */
-/** The rules every series chart shares. */
+const revealOf = (reveal: number | undefined): number => reveal ?? 1;
+
+const revealClip = (
+  reveal: number | undefined,
+  box: ChartBox,
+): MarkClip | undefined =>
+  revealOf(reveal) >= 1
+    ? undefined
+    : { x: 0, y: 0, width: box.width * revealOf(reveal), height: box.height };
+
+const scaleCandles = (
+  candles: ReadonlyArray<Candle>,
+  progress: number,
+): ReadonlyArray<Candle> =>
+  Arr.map(candles, (candle) => ({
+    open: scaleValue(candle.open, progress),
+    high: scaleValue(candle.high, progress),
+    low: scaleValue(candle.low, progress),
+    close: scaleValue(candle.close, progress),
+  }));
+
 export interface ChartProps extends Omit<Props, "children"> {
-  /**
-   * The series, painted in the theme's categorical order.
-   *
-   * A saved chart writes `null` where it carried no series, so only a list is a
-   * list: a chart with no series paints its frame and no layer.
-   */
-  /**
-   * The series, painted in the theme's categorical order.
-   *
-   * A chart that names a `config` **and** a `data` paints the series the two
-   * make, and needs no `series` of its own — so the prop is optional beside a
-   * config. A chart that names neither paints nothing.
-   */
   readonly series?: ReadonlyArray<ChartSeries>;
-  /**
-   * One label per category, under the plot.
-   *
-   * A chart that names a `data` reads the categories the data carries, so the
-   * prop is optional beside one.
-   */
   readonly labels?: ReadonlyArray<string>;
-  /**
-   * The chart's **config**: a keyed table of label, icon and colour.
-   *
-   * The config is shadcn's `ChartConfig`, and it is **decoupled from the
-   * data**: one table can be shared by several charts, and a theme can own the
-   * colours. A chart that names a config **and** a `data` paints the series
-   * the config and the data make; a chart that names no config keeps the
-   * caller's own `series`.
-   */
   readonly config?: ChartConfig;
-  /**
-   * The chart's data: one row per category, one field per series.
-   *
-   * A row is a record, and the series' key is the field it is read by — the
-   * `dataKey` route a Recharts chart takes.
-   */
   readonly data?: ReadonlyArray<ChartRow>;
-  /** The plot's width, in pixels. Defaults to `320`. */
   readonly width?: number;
-  /** The plot's height, in pixels. Defaults to `160`. */
   readonly height?: number;
-  /** Where the legend paints; `false` hides it. Defaults to below for 2+ series. */
   readonly legend?: boolean | LegendSide;
-  /** The mark beside each legend row: a square, a dot or a line. */
   readonly legendShape?: LegendShape;
-  /** The y-axis tick column paints. Defaults to `true`. */
   readonly axis?: boolean;
-  /** The horizontal grid lines paint. Defaults to `true`. */
   readonly grid?: boolean;
-  /** The category labels paint under the plot. Defaults to `true`. */
   readonly xLabels?: boolean;
-  /** How many steps the axis divides its range into. Defaults to `4`. */
   readonly ticks?: number;
-  /** The categorical palette; defaults to the theme's series scale. */
   readonly colors?: ReadonlyArray<string>;
-  /** A hovered column shows every series' value. Defaults to `true`. */
   readonly tooltip?: boolean;
-  /** The mark beside a readout row: a dot (default), a line, an icon or none. */
   readonly tooltipIndicator?: TooltipIndicator;
-  /** An icon per series, used when `tooltipIndicator` is `"icon"`. */
   readonly tooltipIcons?: ReadonlyArray<IconName>;
-  /** How the hovered category's name prints. */
   readonly labelFormat?: (label: string) => string;
-  /** A wash paints behind the hovered column. Defaults to `false`. */
   readonly activeBand?: boolean;
-  /**
-   * A vertical rule paints at the hovered column.
-   *
-   * The crosshair is the cue a reader follows from the pointer to the value
-   * it names, and it is what a line chart's pointer cue is in every chart
-   * library: Recharts' `cursor`, GPUI Kit's crosshair.
-   */
   readonly crosshair?: boolean;
-  /** The category window a brush leaves in the plot, as `[start, end)` indexes. */
   readonly domain?: readonly [number, number];
-  /** The continuous window a zoom or pan shows, in category units. */
   readonly view?: readonly [number, number];
-  /** A navigation strip under the plot pans on drag and zooms on the wheel. */
   readonly zoom?: boolean;
-  /** The window a zoom or pan reports, in category units. */
   readonly onViewChange?: (view: readonly [number, number]) => void;
-  /** A brush strip under the plot reports a dragged category window. */
   readonly brush?: boolean;
-  /** The dragged window, as `[start, end)` category indexes. */
   readonly onDomainChange?: (domain: readonly [number, number]) => void;
-  /** A data change tweens its values over `animationDuration`. Defaults to `false`. */
   readonly animate?: boolean;
-  /** How long a data change takes, in milliseconds. Defaults to `320`. */
   readonly animationDuration?: number;
-  /** How a value prints in the tooltip. Defaults to one decimal. */
   readonly valueFormat?: (value: number) => string;
   readonly className?: string;
-  /** The chart's test id. A series layer is `${testId}-layer-${key}`. */
   readonly testId?: string;
 }
 
-/** The series a saved chart hands over, read through the stored-list rules. */
 const seriesOf = (
   series: ReadonlyArray<ChartSeries> | undefined,
 ): ReadonlyArray<ChartSeries> =>
@@ -249,16 +174,6 @@ const seriesOf = (
     values: listOf(one.values),
   }));
 
-/**
- * The series a chart paints: the caller's own, or the ones its **config**
- * and its **data** make.
- *
- * The config is shadcn's `ChartConfig` — a keyed table of label, icon and
- * colour, decoupled from the data — so one table can be shared by several
- * charts and a theme can own the colours. A chart that names no config keeps
- * the caller's own series, so the config is an addition rather than a
- * replacement.
- */
 const seriesFor = (
   series: ReadonlyArray<ChartSeries> | undefined,
   config: ChartConfig | undefined,
@@ -268,14 +183,6 @@ const seriesFor = (
     ? seriesOf(series)
     : seriesFromConfig(config, data);
 
-/**
- * The categories a chart paints: the caller's own, or the ones its data
- * names.
- *
- * The data's **first** row carries the category, so a table of
- * `{ month, desktop, mobile }` reads `January … June` under the plot. A
- * chart that names no data keeps the caller's own `labels`.
- */
 const labelsFor = (
   labels: ReadonlyArray<string> | undefined,
   data: ReadonlyArray<ChartRow> | undefined,
@@ -286,19 +193,16 @@ const labelsFor = (
   return fromData.length === 0 ? own : fromData;
 };
 
-/** The labels a saved chart hands over, at their own slots. */
 const labelsOf = (
   labels: ReadonlyArray<string> | undefined,
 ): ReadonlyArray<string> => textsOf(labels);
 
-/** The continuous window a chart paints, normalized to its categories. */
 const viewOf = (
   labels: ReadonlyArray<string>,
   view: readonly [number, number] | undefined,
 ): ChartView | undefined =>
   Option.getOrUndefined(chartView(labels.length, view));
 
-/** The categories a brush leaves in the plot, when it names a window. */
 const windowOf = (
   rows: ReadonlyArray<ChartSeries>,
   labels: ReadonlyArray<string>,
@@ -321,18 +225,14 @@ const windowOf = (
     },
   });
 
-/** The data a saved ring hands over. */
 const dataOf = (
   data: ReadonlyArray<ChartDatum> | undefined,
 ): ReadonlyArray<ChartDatum> =>
   Arr.map(recordsOf(data), (one) => ({
     ...one,
-    // A stored value the geometry cannot draw keeps its place and its reading:
-    // a `NaN` announces `no value` rather than the zero the paint substitutes.
     value: one.value,
   }));
 
-/** The layers one series paints, named and decorative. */
 const layersFor = (
   series: ReadonlyArray<ChartSeries>,
   layers: ReadonlyArray<ReadonlyArray<ChartMark>>,
@@ -346,14 +246,20 @@ const layersFor = (
     },
   ]);
 
-/** The value labels a bar chart paints over its bars. */
 const barValueLabels =
   (
     format: (value: number, one: ChartSeries, category: string) => string,
     horizontal: boolean,
     view: ChartView | undefined,
   ) =>
-  ({ series, box, range, labels }: PaintContext): ReadonlyArray<ValueLabel> => {
+  ({
+    series,
+    box,
+    range,
+    labels,
+    reveal,
+  }: PaintContext): ReadonlyArray<ValueLabel> => {
+    if (revealOf(reveal) < 1) return [];
     if (series.length !== 1) return [];
     const [layer] = horizontal
       ? horizontalBarMarks(series, box, range, labels.length)
@@ -376,10 +282,16 @@ const barValueLabels =
     });
   };
 
-/** The value labels a line or an area paints over its points. */
 const pointValueLabels =
   (format: (value: number) => string) =>
-  ({ series, box, range, labels }: PaintContext): ReadonlyArray<ValueLabel> => {
+  ({
+    series,
+    box,
+    range,
+    labels,
+    reveal,
+  }: PaintContext): ReadonlyArray<ValueLabel> => {
+    if (revealOf(reveal) < 1) return [];
     if (series.length !== 1) return [];
     const [one] = series;
     if (one === undefined) return [];
@@ -393,15 +305,10 @@ const pointValueLabels =
     }));
   };
 
-/** {@link BarChart} props. */
 export interface BarChartProps extends ChartProps {
-  /** Bars run up (vertical) or right (horizontal). Defaults to `vertical`. */
   readonly orientation?: "vertical" | "horizontal";
-  /** The bar's corner radius in pixels. Defaults to `3`. */
   readonly radius?: number;
-  /** Each bar's value paints above it. Defaults to `false`. */
   readonly valueLabels?: boolean;
-  /** What a bar's label says. Defaults to `valueFormat`, then the value. */
   readonly valueLabelFormat?: (
     value: number,
     series: ChartSeries,
@@ -409,12 +316,6 @@ export interface BarChartProps extends ChartProps {
   ) => string;
 }
 
-/**
- * Bars: every series stands in the same category slot, up from zero.
- *
- * A negative value stands below the axis; a zero paints no bar but keeps its
- * slot, so the labels still line up.
- */
 export const BarChart = ({
   orientation = "vertical",
   radius = 3,
@@ -441,14 +342,15 @@ export const BarChart = ({
       domainLabels={labelsFor(props.labels, props.data)}
       range={range}
       grid={props.grid ?? !horizontal}
-      paint={({ series, labels, box }) =>
-        layersFor(
-          series,
+      paint={({ series, labels, box, reveal }) => {
+        const shown = scaleSeries(series, revealOf(reveal));
+        return layersFor(
+          shown,
           horizontal
-            ? horizontalBarMarks(series, box, range, labels.length, radius)
-            : barMarksInRange(series, box, range, labels.length, radius, view),
-        )
-      }
+            ? horizontalBarMarks(shown, box, range, labels.length, radius)
+            : barMarksInRange(shown, box, range, labels.length, radius, view),
+        );
+      }}
       valueLabels={
         valueLabels
           ? barValueLabels(
@@ -476,15 +378,11 @@ export const BarChart = ({
   );
 };
 
-/** {@link StackedBar} props. */
 export interface StackedBarProps extends ChartProps {
-  /** The bar's corner radius in pixels. Defaults to `3`. */
   readonly radius?: number;
-  /** Each category reads as 100%, and its stacks as shares of it. */
   readonly percent?: boolean;
 }
 
-/** A series' values as shares of each category's total. */
 const percentOf = (
   series: ReadonlyArray<ChartSeries>,
   categories: number,
@@ -501,12 +399,6 @@ const percentOf = (
     }),
   }));
 
-/**
- * Stacked bars: the first series on the floor, each later one above it.
- *
- * The axis is measured over the totals, so a stack of `120` is not labelled
- * `100`. `percent` divides each category by its own total and scales to 100.
- */
 export const StackedBar = ({
   radius = 3,
   percent = false,
@@ -531,12 +423,13 @@ export const StackedBar = ({
       labels={labels}
       domainLabels={labelsFor(props.labels, props.data)}
       range={range}
-      paint={({ series, labels: slots, box }) =>
-        layersFor(
-          series,
-          stackedLayers(series, box, range, slots.length, radius, view),
-        )
-      }
+      paint={({ series, labels: slots, box, reveal }) => {
+        const shown = scaleSeries(series, revealOf(reveal));
+        return layersFor(
+          shown,
+          stackedLayers(shown, box, range, slots.length, radius, view),
+        );
+      }}
       legendNode={() => (
         <LegendFor
           series={rows}
@@ -552,7 +445,6 @@ export const StackedBar = ({
   );
 };
 
-/** Stacked bars, first series on the floor, each later one above it. */
 const stackedLayers = (
   series: ReadonlyArray<ChartSeries>,
   box: ChartBox,
@@ -594,26 +486,11 @@ const stackedLayers = (
   });
 };
 
-/** {@link ComposedChart} props. */
 export interface ComposedChartProps extends ChartProps {
-  /**
-   * The series painted as lines; every other series paints as a bar.
-   *
-   * The bar-mixed example's shape: a count as bars and a rate beside it as a
-   * line, over one shared axis.
-   */
   readonly lineKeys?: ReadonlyArray<string>;
-  /** The bar's corner radius in pixels. Defaults to `3`. */
   readonly radius?: number;
 }
 
-/**
- * Bars and lines on one axis.
- *
- * A key named in `lineKeys` paints as a stroked path through its slot centres;
- * the rest paint as grouped bars. The scale is measured over both, so a line
- * and a bar at the same value land on the same axis reading.
- */
 export const ComposedChart = ({
   lineKeys = [],
   radius = 3,
@@ -638,8 +515,10 @@ export const ComposedChart = ({
       domainLabels={labelsFor(props.labels, props.data)}
       view={props.view}
       range={range}
-      paint={({ series, labels: slots, box }) => {
-        const bars = Arr.filter(series, (one) => !isLine(one.key));
+      paint={({ series, labels: slots, box, reveal }) => {
+        const shown = scaleSeries(series, revealOf(reveal));
+        const clip = revealClip(reveal, box);
+        const bars = Arr.filter(shown, (one) => !isLine(one.key));
         const barMarks = barMarksInRange(
           bars,
           box,
@@ -658,7 +537,7 @@ export const ComposedChart = ({
             ).pipe(Option.getOrElse(() => barIndex)),
             marks: barMarks[barIndex] ?? [],
           })),
-          Arr.flatMap(series, (one, seriesIndex) => {
+          Arr.flatMap(shown, (one, seriesIndex) => {
             if (!isLine(one.key)) return [];
             const points = seriesPoints(one.values, box, range, slots.length);
             return [
@@ -666,6 +545,7 @@ export const ComposedChart = ({
                 key: one.key,
                 series: one,
                 seriesIndex,
+                ...(clip === undefined ? {} : { clip }),
                 marks: Option.match(curvePath(points, "linear"), {
                   onNone: () => [],
                   onSome: (d): ReadonlyArray<ChartMark> => [
@@ -692,37 +572,20 @@ export const ComposedChart = ({
   );
 };
 
-/** {@link LineChart} props. */
 export interface LineChartProps extends ChartProps {
-  /** How a line joins its points. Defaults to `linear`. */
   readonly curve?: Curve;
-  /** A dot paints on every point. Defaults to `false`. */
   readonly dots?: boolean;
-  /** The line paints dashes. Defaults to `false`. */
   readonly dashed?: boolean;
-  /** The stroke's weight in pixels. Defaults to `2`. */
   readonly lineWidth?: number;
-  /** Each point's value paints above it. Defaults to `false`. */
   readonly showLabels?: boolean;
-  /** An icon per category paints on each point, in place of a dot. */
   readonly dotIcons?: ReadonlyArray<IconName>;
-  /** A hit zone on every point shows that datum's readout. */
   readonly pointTooltip?: boolean;
 }
 
-/** {@link ScatterChart} props. */
 export interface ScatterChartProps extends ChartProps {
-  /** The radius of each point, in pixels. Defaults to `3`. */
   readonly radius?: number;
 }
 
-/**
- * Scatter: one point per datum, and no line between them.
- *
- * A point sits where its value sits, so a point outside the range is clipped
- * to the plot's edge rather than drawing outside the frame. A datum with no
- * number paints no point — the rule every mark follows.
- */
 export const ScatterChart = ({ radius = 3, ...props }: ScatterChartProps) => {
   const windowed = windowOf(
     seriesFor(props.series, props.config, props.data),
@@ -739,14 +602,26 @@ export const ScatterChart = ({ radius = 3, ...props }: ScatterChartProps) => {
       labels={labels}
       domainLabels={labelsFor(props.labels, props.data)}
       range={range}
-      paint={({ series, labels: slots, box }) =>
-        layersFor(
-          series,
-          Arr.map(series, (one) =>
-            scatterMarks(one.values, box, range, slots.length, radius),
-          ),
-        )
-      }
+      paint={({ series, labels: slots, box, reveal }) => {
+        const progress = revealOf(reveal);
+        return progress <= 0
+          ? layersFor(
+              series,
+              Arr.map(series, () => []),
+            )
+          : layersFor(
+              series,
+              Arr.map(series, (one) =>
+                scatterMarks(
+                  one.values,
+                  box,
+                  range,
+                  slots.length,
+                  radius * progress,
+                ),
+              ),
+            );
+      }}
       legendNode={() => (
         <LegendFor
           series={rows}
@@ -762,30 +637,13 @@ export const ScatterChart = ({ radius = 3, ...props }: ScatterChartProps) => {
   );
 };
 
-/** {@link CandleChart} props. */
 export interface CandleChartProps extends ChartProps {
-  /**
-   * The candles, one per category.
-   *
-   * A candle is the open, high, low and close of a period, and a candle that
-   * closed above its open is an **up** day.
-   */
   readonly candles: ReadonlyArray<Candle>;
-  /** The width of each candle's body, in pixels. Defaults to `6`. */
   readonly width?: number;
-  /** The colour an up day paints. Defaults to the theme's positive role. */
   readonly upColor?: string;
-  /** The colour a down day paints. Defaults to the theme's negative role. */
   readonly downColor?: string;
 }
 
-/**
- * Candle: the open, high, low and close of each period.
- *
- * A candle that closed above its open paints in the **up** colour and one
- * that closed at or below it in the **down** colour, so a reader who cannot
- * separate two hues still reads the direction.
- */
 export const CandleChart = ({
   candles,
   width = 6,
@@ -814,6 +672,22 @@ export const CandleChart = ({
   );
   const up = upColor ?? colors.success ?? "#22c55e";
   const down = downColor ?? colors.destructive ?? "#ef4444";
+  const tweened = useAnimatedValues(
+    [
+      Arr.map(candles, (one) => one.open),
+      Arr.map(candles, (one) => one.high),
+      Arr.map(candles, (one) => one.low),
+      Arr.map(candles, (one) => one.close),
+    ],
+    props.animate ?? true,
+    props.animationDuration ?? DEFAULT_ANIMATION_DURATION,
+  );
+  const shownCandles = Arr.map(candles, (candle, index) => ({
+    open: tweened[0]?.[index] ?? candle.open,
+    high: tweened[1]?.[index] ?? candle.high,
+    low: tweened[2]?.[index] ?? candle.low,
+    close: tweened[3]?.[index] ?? candle.close,
+  }));
   return (
     <ChartFrame
       {...props}
@@ -821,26 +695,32 @@ export const CandleChart = ({
       labels={labels}
       domainLabels={labelsFor(props.labels, props.data)}
       range={range}
-      paint={({ box }) => [
+      paint={({ box, reveal }) => [
         {
           key: "candles",
           series: { key: "candles", label: "Candles", values: [] },
           seriesIndex: 0,
-          // Each candle paints in the colour of **its own** direction: a
-          // candle that closed above its open is an up day and one that
-          // closed at or below it is a down day. A reader who cannot
-          // separate two hues still reads the direction.
-          marks: Arr.flatMap(candles, (candle, index) =>
-            // Each candle's own marks, so the colour follows **its**
-            // direction rather than the list's position.
-            Arr.map(
-              candleAtMarks(candle, index, labels.length, box, range, width),
-              (mark) => ({
-                ...mark,
-                fill: { color: candleUp(candle) ? up : down },
-              }),
-            ),
-          ),
+          marks:
+            revealOf(reveal) <= 0
+              ? []
+              : Arr.flatMap(
+                  scaleCandles(shownCandles, revealOf(reveal)),
+                  (candle, index) =>
+                    Arr.map(
+                      candleAtMarks(
+                        candle,
+                        index,
+                        labels.length,
+                        box,
+                        range,
+                        width,
+                      ),
+                      (mark) => ({
+                        ...mark,
+                        fill: { color: candleUp(candle) ? up : down },
+                      }),
+                    ),
+                ),
         },
       ]}
       legendNode={() => (
@@ -858,20 +738,11 @@ export const CandleChart = ({
   );
 };
 
-/** {@link FunnelChart} props. */
 export interface FunnelChartProps extends ChartProps {
-  /** The stages, one per category, each a share of the first. */
   readonly stages: ReadonlyArray<number>;
-  /** The labels the stages answer to. */
   readonly stageLabels?: ReadonlyArray<string>;
 }
 
-/**
- * Funnel: a stage per datum, each a share of the first.
- *
- * The stages are centred and narrow, so a funnel reads as a funnel rather than
- * as bars of different widths stacked to one side.
- */
 export const FunnelChart = ({
   stages,
   stageLabels,
@@ -888,6 +759,12 @@ export const FunnelChart = ({
     [{ key: "stage", label: "Stage", values: stages }],
     labels.length,
   );
+  const tweened =
+    useAnimatedValues(
+      [stages],
+      props.animate ?? true,
+      props.animationDuration ?? DEFAULT_ANIMATION_DURATION,
+    )[0] ?? stages;
   return (
     <ChartFrame
       {...props}
@@ -895,14 +772,19 @@ export const FunnelChart = ({
       labels={labels}
       domainLabels={labelsFor(props.labels, props.data)}
       range={range}
-      paint={({ box }) => [
-        {
-          key: "funnel",
-          series: { key: "funnel", label: "Funnel", values: stages },
-          seriesIndex: 0,
-          marks: funnelMarks(stages, box),
-        },
-      ]}
+      paint={({ box, reveal }) => {
+        const shown = Arr.map(tweened, (value) =>
+          scaleValue(value, revealOf(reveal)),
+        );
+        return [
+          {
+            key: "funnel",
+            series: { key: "funnel", label: "Funnel", values: shown },
+            seriesIndex: 0,
+            marks: funnelMarks(shown, box),
+          },
+        ];
+      }}
       legendNode={() => (
         <LegendFor
           series={rows}
@@ -918,12 +800,6 @@ export const FunnelChart = ({
   );
 };
 
-/**
- * One path per series through its points, left to right.
- *
- * The path is spaced over the **labelled** categories, like the bars, so a
- * point sits above its own label.
- */
 export const LineChart = ({
   curve = "linear",
   dots = false,
@@ -951,8 +827,9 @@ export const LineChart = ({
       domainLabels={labelsFor(props.labels, props.data)}
       view={props.view}
       range={range}
-      paint={({ series, labels, box, hovered }) =>
-        Arr.flatMap(series, (one, seriesIndex) => {
+      paint={({ series, labels, box, hovered, reveal }) => {
+        const clip = revealClip(reveal, box);
+        return Arr.flatMap(series, (one, seriesIndex) => {
           const points = seriesPoints(
             one.values,
             box,
@@ -965,6 +842,7 @@ export const LineChart = ({
             key: one.key,
             series: one,
             seriesIndex,
+            ...(clip === undefined ? {} : { clip }),
             marks: Option.match(path, {
               onNone: () => [],
               onSome: (d): ReadonlyArray<ChartMark> => [
@@ -987,8 +865,8 @@ export const LineChart = ({
                 line,
               ]
             : [line];
-        })
-      }
+        });
+      }}
       valueLabels={
         showLabels
           ? pointValueLabels(props.valueFormat ?? valueLabel)
@@ -997,7 +875,7 @@ export const LineChart = ({
       overlay={
         dotIcons === undefined && !pointTooltip
           ? undefined
-          : ({ series, labels, box, range, palette, origin }) => {
+          : ({ series, labels, box, range, palette, origin, reveal }) => {
               const zones = pointTooltip
                 ? Arr.flatMap(series, (one, seriesIndex) =>
                     Arr.map(
@@ -1026,7 +904,7 @@ export const LineChart = ({
                       testId={props.testId}
                     />
                   ) : null}
-                  {dotIcons === undefined
+                  {dotIcons === undefined || revealOf(reveal) < 1
                     ? null
                     : Arr.flatMap(series, (one, seriesIndex) =>
                         Arr.map(
@@ -1081,35 +959,18 @@ export const LineChart = ({
   );
 };
 
-/** {@link AreaChart} props. */
 export interface AreaChartProps extends ChartProps {
-  /** How the area's edge joins its points. Defaults to `smooth`. */
   readonly curve?: Curve;
-  /** Each series stands on the one before it. Defaults to `false`. */
   readonly stacked?: boolean;
-  /** The fill fades toward the axis. Defaults to `true`. */
   readonly gradient?: boolean;
-  /** The fill's top opacity, 0–1. Defaults to `0.35`. */
   readonly fillOpacity?: number;
-  /** A dot paints on every point. Defaults to `false`. */
   readonly dots?: boolean;
-  /** The edge's stroke weight in pixels. Defaults to `2`. */
   readonly lineWidth?: number;
-  /** Each point's value paints above it. Defaults to `false`. */
   readonly showLabels?: boolean;
-  /** A hit zone on every point shows that datum's readout. */
   readonly pointTooltip?: boolean;
-  /** An icon per category paints on each point. */
   readonly dotIcons?: ReadonlyArray<IconName>;
 }
 
-/**
- * A filled area under each series' line, with a fade toward the axis.
- *
- * The fade is a stack of nested bands at equal opacity, because the runtime has
- * no gradient inside a one-tint mask: the region nearest the line is covered by
- * every band, the baseline by one.
- */
 export const AreaChart = ({
   curve = "smooth",
   stacked = false,
@@ -1140,8 +1001,9 @@ export const AreaChart = ({
       domainLabels={labelsFor(props.labels, props.data)}
       view={props.view}
       range={range}
-      paint={({ series, labels, box, hovered }) =>
-        Arr.flatMap(series, (one, seriesIndex) => {
+      paint={({ series, labels, box, hovered, reveal }) => {
+        const clip = revealClip(reveal, box);
+        return Arr.flatMap(series, (one, seriesIndex) => {
           const points = seriesPoints(
             one.values,
             box,
@@ -1159,6 +1021,7 @@ export const AreaChart = ({
                 series: one,
                 seriesIndex,
                 opacity: fillOpacity,
+                ...(clip === undefined ? {} : { clip }),
                 marks: Option.match(fill, {
                   onNone: () => [],
                   onSome: (d): ReadonlyArray<ChartMark> => [
@@ -1174,6 +1037,7 @@ export const AreaChart = ({
               kind: `fade-${bandIndex}`,
               decorative: true,
               opacity: gradient ? fillOpacity / 3 : 0,
+              ...(clip === undefined ? {} : { clip }),
               marks: [{ kind: "path" as const, d }],
             })),
             gradient
@@ -1185,6 +1049,7 @@ export const AreaChart = ({
                     seriesIndex,
                     kind: "fade",
                     decorative: true,
+                    ...(clip === undefined ? {} : { clip }),
                     marks: [],
                   } satisfies PaintLayer,
                 ],
@@ -1195,6 +1060,7 @@ export const AreaChart = ({
                 seriesIndex,
                 kind: "line",
                 decorative: true,
+                ...(clip === undefined ? {} : { clip }),
                 marks: Option.match(line, {
                   onNone: () => [],
                   onSome: (d): ReadonlyArray<ChartMark> => [
@@ -1211,6 +1077,7 @@ export const AreaChart = ({
                     seriesIndex,
                     kind: "dots",
                     decorative: true,
+                    ...(clip === undefined ? {} : { clip }),
                     marks: emphasisedPointMarks(
                       points,
                       lineWidth + 1.5,
@@ -1220,8 +1087,8 @@ export const AreaChart = ({
                 ]
               : [],
           ]);
-        })
-      }
+        });
+      }}
       valueLabels={
         showLabels
           ? pointValueLabels(props.valueFormat ?? valueLabel)
@@ -1236,6 +1103,7 @@ export const AreaChart = ({
               range: window,
               palette,
               origin,
+              reveal,
             }) => (
               <>
                 {pointTooltip ? (
@@ -1267,7 +1135,7 @@ export const AreaChart = ({
                     testId={props.testId}
                   />
                 ) : null}
-                {dotIcons === undefined
+                {dotIcons === undefined || revealOf(reveal) < 1
                   ? null
                   : Arr.flatMap(series, (one, seriesIndex) =>
                       Arr.map(
@@ -1328,12 +1196,6 @@ export const AreaChart = ({
   );
 };
 
-/**
- * The cumulative series a stacked area draws.
- *
- * Each series' value becomes the running total up to it, so its band sits on
- * the one before and the top band reaches the category's total.
- */
 const cumulativeSeries = (
   series: ReadonlyArray<ChartSeries>,
 ): ReadonlyArray<ChartSeries> => {
@@ -1354,13 +1216,6 @@ const cumulativeSeries = (
   }));
 };
 
-/**
- * The legend a series chart paints, in its series' colours.
- *
- * The colour is the one the **plot** paints the series in, so the legend and
- * the plot cannot disagree: the config's colour when it names one, and the
- * theme's categorical scale otherwise.
- */
 const LegendFor = ({
   series,
   colors,
@@ -1392,56 +1247,34 @@ const LegendFor = ({
   );
 };
 
-/** One slice of a ring. */
 export interface ChartDatum {
   readonly key: string;
-  /** The datum's name in the legend. A blank label reads as `key`. */
   readonly label: string;
   readonly value: number;
 }
 
-/** {@link PieChart} props. */
 export interface PieChartProps extends Omit<Props, "children"> {
-  /** One slice per datum, in the theme's categorical order. */
   readonly data: ReadonlyArray<ChartDatum>;
-  /** The plot's size, in pixels. Defaults to `160` square. */
   readonly size?: number;
-  /** The hole's share of the radius, 0–0.95. Defaults to `0` (a pie). */
   readonly innerRadius?: number;
-  /** The gap between slices, in radians. Defaults to `0.02`. */
   readonly padAngle?: number;
-  /** The legend paints under the ring. Defaults to `true`. */
   readonly legend?: boolean;
-  /** The legend rows print their value. Defaults to `true`. */
   readonly legendValues?: boolean;
-  /** The categorical palette; defaults to the theme's series scale. */
   readonly colors?: ReadonlyArray<string>;
-  /** How a value prints in the legend. Defaults to one decimal. */
   readonly valueFormat?: (value: number) => string;
-  /** A label paints in the ring's centre. */
   readonly centerLabel?: string;
-  /** Each slice's label paints on its own arc. Defaults to `false`. */
   readonly showLabels?: boolean;
-  /** Where a slice's label sits: inside the arc, or outside with a leader. */
   readonly labelPosition?: "inside" | "outside";
-  /** What a slice's label says. Defaults to the datum's label. */
   readonly labelFormat?: (datum: ChartDatum, share: number) => string;
-  /** The slice that stands proud of the ring, as the active example's cue. */
   readonly activeIndex?: number;
-  /** Each datum owns a concentric band instead of a slice of one ring. */
   readonly stacked?: boolean;
-  /** A press on a slice reports the datum it belongs to. */
   readonly onSliceActivate?: (datum: ChartDatum, index: number) => void;
-  /** A data change tweens the ring's values. Defaults to `false`. */
   readonly animate?: boolean;
-  /** How long a data change takes, in milliseconds. Defaults to `320`. */
   readonly animationDuration?: number;
   readonly className?: string;
-  /** The chart's test id. A slice is `${testId}-layer-${key}`. */
   readonly testId?: string;
 }
 
-/** The ring a pie, a donut and a radial chart paint in. */
 const Ring = ({
   data,
   size,
@@ -1642,7 +1475,6 @@ const Ring = ({
   );
 };
 
-/** The legend a ring paints: one row per datum, with its value beside it. */
 const RingLegend = ({
   data,
   colors,
@@ -1676,7 +1508,6 @@ const RingLegend = ({
   );
 };
 
-/** A pie: one slice per datum, from twelve o'clock. */
 export const PieChart = ({
   data,
   size = DEFAULT_RING_SIZE,
@@ -1693,7 +1524,7 @@ export const PieChart = ({
   activeIndex,
   stacked = false,
   onSliceActivate,
-  animate = false,
+  animate = true,
   animationDuration = DEFAULT_ANIMATION_DURATION,
   className,
   testId,
@@ -1707,9 +1538,10 @@ export const PieChart = ({
     animate,
     animationDuration,
   );
+  const reveal = useMountReveal(animate, animationDuration);
   const shown = Arr.map(rows, (one, index) => ({
     ...one,
-    value: animated[index]?.[0] ?? one.value,
+    value: scaleValue(animated[index]?.[0] ?? one.value, reveal),
   }));
   return (
     <div
@@ -1725,7 +1557,7 @@ export const PieChart = ({
         padAngle={padAngle}
         colors={colors}
         centerLabel={centerLabel}
-        showLabels={showLabels}
+        showLabels={showLabels && reveal >= 1}
         labelPosition={labelPosition}
         labelFormat={labelFormat}
         activeIndex={activeIndex}
@@ -1746,52 +1578,30 @@ export const PieChart = ({
   );
 };
 
-/** {@link DonutChart} props: the ring takes every pie option. */
 export type DonutChartProps = PieChartProps;
 
-/** A ring: a pie with a hole, the value at its centre when one is named. */
 export const DonutChart = ({ innerRadius = 0.62, ...props }: PieChartProps) => (
   <PieChart {...props} innerRadius={innerRadius} />
 );
 
-/** The spokes a circular grid draws: four, or one per axis on a polygon. */
 const circleAxes = (shape: "polygon" | "circle", axes: number): number =>
   shape === "circle" ? 4 : axes;
 
-/** {@link RadarChart} props. */
 export interface RadarChartProps extends ChartProps {
-  /** How many webs the grid draws. Defaults to `4`. */
   readonly levels?: number;
-  /** A dot paints on every corner. Defaults to `false`. */
   readonly dots?: boolean;
-  /** The series polygon's opacity, 0–1. Defaults to `0.25`. */
   readonly fillOpacity?: number;
-  /** The webs and spokes paint. Defaults to `true`. */
   readonly webs?: boolean;
-  /** The web's shape: a polygon through the axes, or a circle per level. */
   readonly gridShape?: "polygon" | "circle";
-  /** The webs fill at a low opacity, so the grid reads as a target. */
   readonly gridFill?: boolean;
-  /** The series polygon fills. Defaults to `true`; `false` draws lines only. */
   readonly fill?: boolean;
-  /** The outer radius in pixels; defaults to the box's half, less its padding. */
   readonly radius?: number;
-  /** The webs at these radii, as fractions of the outer radius. */
   readonly gridAt?: ReadonlyArray<number>;
-  /** An icon per axis paints on every corner. */
   readonly dotIcons?: ReadonlyArray<IconName>;
-  /** How an axis label prints. Defaults to the label as given. */
   readonly axisLabelFormat?: (label: string, index: number) => string;
-  /** A hit zone on every corner shows that axis' datum. */
   readonly pointTooltip?: boolean;
 }
 
-/**
- * Radar: one closed polygon per series over a shared set of axes.
- *
- * A point sits on its axis at its share of the widest value, so a series keeps
- * its shape as the axes grow. The labels are painted at each axis' rim.
- */
 export const RadarChart = ({
   levels = 4,
   dots = false,
@@ -1822,8 +1632,9 @@ export const RadarChart = ({
       grid={false}
       xLabels={false}
       range={range}
-      paint={({ series, box }) =>
-        Arr.flatMap(series, (one, seriesIndex) => {
+      paint={({ series, box, reveal }) => {
+        const shown = scaleSeries(series, revealOf(reveal));
+        return Arr.flatMap(shown, (one, seriesIndex) => {
           const points = radarPoints(one.values, axes, box, max, radius);
           const outline = polygonPath(points);
           return Arr.flatten([
@@ -1921,9 +1732,9 @@ export const RadarChart = ({
                 ]
               : [],
           ]);
-        })
-      }
-      overlay={({ box, series, palette, origin }) => (
+        });
+      }}
+      overlay={({ box, series, palette, origin, reveal }) => (
         <>
           {Arr.map(labels, (label, index) => {
             const angle = -Math.PI / 2 + (index / axes) * Math.PI * 2;
@@ -1952,7 +1763,7 @@ export const RadarChart = ({
               </text>
             );
           })}
-          {pointTooltip ? (
+          {pointTooltip && revealOf(reveal) >= 1 ? (
             <PointTooltip
               zones={Arr.flatMap(series, (one, seriesIndex) =>
                 Arr.map(
@@ -1975,7 +1786,7 @@ export const RadarChart = ({
               testId={props.testId}
             />
           ) : undefined}
-          {dotIcons === undefined
+          {dotIcons === undefined || revealOf(reveal) < 1
             ? undefined
             : Arr.flatMap(series, (one, seriesIndex) =>
                 Arr.map(
@@ -2023,49 +1834,26 @@ export const RadarChart = ({
   );
 };
 
-/** {@link RadialChart} props. */
 export interface RadialChartProps extends Omit<Props, "children"> {
-  /** One ring per datum, outermost first. */
   readonly data: ReadonlyArray<ChartDatum>;
-  /** The plot's size, in pixels. Defaults to `160` square. */
   readonly size?: number;
-  /** The value a full ring stands for. Defaults to the largest datum. */
   readonly max?: number;
-  /** One ring's thickness in pixels. Defaults to `10`. */
   readonly thickness?: number;
-  /** The gap between rings in pixels. Defaults to `4`. */
   readonly gap?: number;
-  /** A muted ring paints behind each value, so the dial reads as a gauge. */
   readonly track?: boolean;
-  /** Guide rings paint at each quarter of the radius. */
   readonly grid?: boolean;
-  /** Each arc's ends round off with a cap. Defaults to `false`. */
   readonly rounded?: boolean;
-  /** Each ring's value prints at the end of its arc. Defaults to `false`. */
   readonly showLabels?: boolean;
-  /** A data change tweens the rings' values. Defaults to `false`. */
   readonly animate?: boolean;
-  /** How long a data change takes, in milliseconds. Defaults to `320`. */
   readonly animationDuration?: number;
-  /** The legend paints under the rings. Defaults to `true`. */
   readonly legend?: boolean;
-  /** The categorical palette; defaults to the theme's series scale. */
   readonly colors?: ReadonlyArray<string>;
-  /** How a value prints in the legend. Defaults to one decimal. */
   readonly valueFormat?: (value: number) => string;
-  /** A label paints in the rings' centre. */
   readonly centerLabel?: string;
   readonly className?: string;
-  /** The chart's test id. A ring is `${testId}-layer-${key}`. */
   readonly testId?: string;
 }
 
-/**
- * Radial bars: one concentric ring per datum, filled to its share of `max`.
- *
- * The rings start at twelve o'clock and grow clockwise, the dial every gauge
- * uses; a zero keeps its ring in the stack and paints no arc.
- */
 export const RadialChart = ({
   data,
   size = DEFAULT_RING_SIZE,
@@ -2076,7 +1864,7 @@ export const RadialChart = ({
   grid = false,
   rounded = false,
   showLabels = false,
-  animate = false,
+  animate = true,
   animationDuration = DEFAULT_ANIMATION_DURATION,
   legend = true,
   colors,
@@ -2095,9 +1883,10 @@ export const RadialChart = ({
     animate,
     animationDuration,
   );
+  const reveal = useMountReveal(animate, animationDuration);
   const shown = Arr.map(rows, (one, index) => ({
     ...one,
-    value: animated[index]?.[0] ?? one.value,
+    value: scaleValue(animated[index]?.[0] ?? one.value, reveal),
   }));
   const box = chartBox(size, size, {
     width: DEFAULT_RING_SIZE,
@@ -2234,7 +2023,7 @@ export const RadialChart = ({
             box={box}
           />
         ))}
-        {showLabels
+        {showLabels && reveal >= 1
           ? Arr.map(rows, (one, index) => {
               const span =
                 ceiling <= 0
@@ -2299,17 +2088,11 @@ export const RadialChart = ({
   );
 };
 
-/** {@link Sparkline} props. */
 export interface SparklineProps extends Omit<Props, "children"> {
-  /** The values, one point each, in paint order. */
   readonly values: ReadonlyArray<number>;
-  /** The plot's width, in pixels. Defaults to `120`. */
   readonly width?: number;
-  /** The plot's height, in pixels. Defaults to `32`. */
   readonly height?: number;
-  /** The line's colour; defaults to the theme's first categorical swatch. */
   readonly color?: string;
-  /** How the line joins its points. Defaults to `smooth`. */
   readonly curve?: Curve;
   /** The line is filled down to the floor. Defaults to `false`. */
   readonly filled?: boolean;
@@ -2321,12 +2104,6 @@ export interface SparklineProps extends Omit<Props, "children"> {
   readonly testId?: string;
 }
 
-/**
- * A word-sized line: no axis, no labels, no legend.
- *
- * It is one `<svg>` in the first categorical colour, so a stat card's trend and
- * a chart's first series agree without the caller naming a colour twice.
- */
 export const Sparkline = ({
   values,
   width = DEFAULT_SPARKLINE_WIDTH,
@@ -2334,7 +2111,7 @@ export const Sparkline = ({
   color,
   curve = "smooth",
   filled = false,
-  animate = false,
+  animate = true,
   animationDuration = DEFAULT_ANIMATION_DURATION,
   className,
   testId,
@@ -2350,6 +2127,11 @@ export const Sparkline = ({
   const points = Arr.filter(listOf(values), Number.isFinite);
   const tweened = useAnimatedValues([points], animate, animationDuration);
   const shownPoints = tweened[0] ?? points;
+  const reveal = useMountReveal(animate, animationDuration);
+  const clip =
+    reveal >= 1
+      ? undefined
+      : { x: 0, y: 0, width: box.width * reveal, height: box.height };
   const series: ChartSeries = {
     key: "sparkline",
     label: "sparkline",
@@ -2391,6 +2173,7 @@ export const Sparkline = ({
               kind: "area",
               decorative: true,
               opacity: 0.2,
+              ...(clip === undefined ? {} : { clip }),
               marks: [{ kind: "path", d: Option.getOrElse(area, () => "") }],
             }}
             label=""
@@ -2408,6 +2191,7 @@ export const Sparkline = ({
             key: "sparkline",
             series,
             seriesIndex: 0,
+            ...(clip === undefined ? {} : { clip }),
             marks: Option.match(path, {
               onNone: () => [],
               onSome: (d): ReadonlyArray<ChartMark> => [

@@ -1,39 +1,23 @@
-/**
- * Chart geometry beyond the first charts: a signed axis, curves, areas, radar,
- * radial rings and horizontal bars.
- *
- * These are pure functions over the caller's numbers, like `./logic.ts`, and
- * they paint into the same one-tint-per-`<svg>` model: a stroke keeps the
- * markup's own coverage (`svg-pattern` measured a stroked square painting its
- * stroke), and opacity is an element style, so a fade is a stack of clipped
- * area bands rather than a gradient element.
- */
-
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { ChartBox, ChartMark, ChartSeries } from "./logic.js";
 
-/** A point in the plot's pixel space. */
 export interface Point {
   readonly x: number;
   readonly y: number;
 }
 
-/** How a line joins its points. */
 export type Curve = "linear" | "smooth" | "step";
 
-/** A signed scale: the smallest and largest value a chart draws. */
 export interface ChartRange {
   readonly min: number;
   readonly max: number;
 }
 
-/** A number the geometry can place: anything else reads as zero. */
 export const finite = (value: number): number =>
   Number.isFinite(value) ? value : 0;
 
-/** How many slots the chart paints: the labels it was given, else the data. */
 const slotCount = (
   series: ReadonlyArray<ChartSeries>,
   categories?: number,
@@ -46,7 +30,6 @@ const slotCount = (
   );
 };
 
-/** The values a series paints: only the labelled slots exist. */
 const paintedValues = (
   values: ReadonlyArray<number>,
   categories?: number,
@@ -55,12 +38,6 @@ const paintedValues = (
     ? values
     : Arr.take(values, Math.max(0, Math.floor(categories)));
 
-/**
- * A rounded step above a positive number, or below a negative one.
- *
- * The negative floor is the positive ceiling mirrored, so a `-93` axis reaches
- * `-100` and the plot's floor and ceiling are the same kind of number.
- */
 export const niceBound = (raw: number): number => {
   const value = Math.abs(finite(raw));
   if (value === 0) return 0;
@@ -70,14 +47,6 @@ export const niceBound = (raw: number): number => {
   return (raw < 0 ? -1 : 1) * nice * magnitude;
 };
 
-/**
- * The range a signed chart draws against.
- *
- * A chart of positives starts at zero; a negative value widens the range down
- * to its own rounded floor, so a negative bar has a floor to stand under. A
- * chart with no drawable value still spans `0…1`, so an empty plot lays out
- * instead of dividing by zero.
- */
 export const chartRange = (
   series: ReadonlyArray<ChartSeries>,
   categories?: number,
@@ -114,7 +83,6 @@ export const chartRange = (
   return { min: Math.min(0, min), max: Math.max(max > 0 ? max : 1, 0) };
 };
 
-/** The plot's height a value sits at on a signed axis. */
 export const scaleY = (
   value: number,
   box: ChartBox,
@@ -125,7 +93,6 @@ export const scaleY = (
   return box.height - ((finite(value) - range.min) / span) * box.height;
 };
 
-/** The plot's x a value sits at on a horizontal axis. */
 export const scaleX = (
   value: number,
   box: ChartBox,
@@ -136,17 +103,9 @@ export const scaleX = (
   return ((finite(value) - range.min) / span) * box.width;
 };
 
-/** The y where a signed axis crosses zero. */
 export const zeroY = (box: ChartBox, range: ChartRange): number =>
   scaleY(0, box, range);
 
-/**
- * A series' points, one per labelled category, at the slot centres.
- *
- * A point sits where a bar stands and where the label under it is centred —
- * the rule the first line chart follows, so a line and a bar read the same
- * category the same way.
- */
 export const seriesPoints = (
   values: ReadonlyArray<number>,
   box: ChartBox,
@@ -168,26 +127,11 @@ export const seriesPoints = (
   }));
 };
 
-/** A number as the markup spells it. */
 const at = (value: number): string =>
   `${Math.round((Number.isFinite(value) ? value : 0) * 100) / 100}`;
 
-/** A point as a path command spells it. */
 const pair = (point: Point): string => `${at(point.x)} ${at(point.y)}`;
 
-/**
- * The tangent at each point of a **monotone** cubic curve.
- *
- * A chart line must never invent a value: a spike from 409 down to 59 is a
- * spike, and a curve through it that dips below 59 — or below zero — draws a
- * number the data does not have. A Catmull-Rom spline does exactly that,
- * because it bends to reach its neighbours.
- *
- * The Fritsch–Carlson rule is the curve that cannot: where a point is a local
- * extreme its tangent is **zero**, and where it is not, the tangent is the
- * weighted harmonic mean of the slopes either side, which is never steeper
- * than both. The result passes through every point and stays inside the data.
- */
 const monotoneTangents = (
   points: ReadonlyArray<Point>,
 ): ReadonlyArray<number> => {
@@ -209,7 +153,6 @@ const monotoneTangents = (
   for (let index = 1; index < count - 1; index += 1) {
     const before = slope[index - 1] ?? 0;
     const after = slope[index] ?? 0;
-    // A peak or a trough: the curve flattens, so it cannot overshoot.
     if (before * after <= 0) {
       tangent[index] = 0;
       continue;
@@ -221,15 +164,6 @@ const monotoneTangents = (
   return tangent;
 };
 
-/**
- * The path through points, in the join the caller asked for.
- *
- * `smooth` is a Catmull-Rom spline written as cubics, which passes through
- * every point (a Bezier that only approached them would put a dot off its own
- * value). `step` holds each value until the next one, the step chart's shape.
- * A single point paints a half-pixel run rather than a zero-length path some
- * rasterisers drop.
- */
 export const curvePath = (
   points: ReadonlyArray<Point>,
   curve: Curve,
@@ -264,7 +198,6 @@ export const curvePath = (
   return Option.some(`M${pair(head)}${Arr.join(body, "")}`);
 };
 
-/** The closed shape under a line, down to the axis' zero. */
 export const areaPath = (
   points: ReadonlyArray<Point>,
   box: ChartBox,
@@ -279,13 +212,6 @@ export const areaPath = (
     return `${line}L${at(last.value.x)} ${at(floor)}L${at(first.value.x)} ${at(floor)}Z`;
   });
 
-/**
- * The area clipped above one horizontal cut, as a closed path.
- *
- * The clip is arithmetic, not a `clipPath`: the polyline is walked segment by
- * segment and each crossing is interpolated, so the band's top edge follows the
- * line exactly. It is what lets a fade be a stack of nested bands.
- */
 export const clipArea = (
   points: ReadonlyArray<Point>,
   cut: number,
@@ -319,13 +245,6 @@ export const clipArea = (
   );
 };
 
-/**
- * The nested bands a faded area fill is painted in.
- *
- * Band `k` is the whole area above the k-th horizontal cut, so the region
- * nearest the line is covered by every band and the region near the baseline by
- * one: equal opacity on each band fades the fill toward the axis.
- */
 export const areaBands = (
   points: ReadonlyArray<Point>,
   box: ChartBox,
@@ -347,7 +266,6 @@ export const areaBands = (
   );
 };
 
-/** Dots at each painted point. */
 export const pointMarks = (
   points: ReadonlyArray<Point>,
   radius: number,
@@ -362,14 +280,6 @@ export const pointMarks = (
     }),
   );
 
-/**
- * Dots at each painted point, with the **hovered** one larger.
- *
- * The emphasis is the cue every chart library gives: the point under the
- * pointer grows, so a reader sees which value they are reading. The hovered
- * point is the **only** one that grows, so the growth marks the datum rather
- * than the chart.
- */
 export const emphasisedPointMarks = (
   points: ReadonlyArray<Point>,
   radius: number,
@@ -385,12 +295,6 @@ export const emphasisedPointMarks = (
     }),
   );
 
-/**
- * Bars from the zero line, up or down, with rounded corners.
- *
- * A negative value stands below the axis instead of a zero-height bar claiming
- * it; the corner is the bar's own, so a group still reads as one shape.
- */
 export const barMarksInRange = (
   series: ReadonlyArray<ChartSeries>,
   box: ChartBox,
@@ -435,7 +339,6 @@ export const barMarksInRange = (
   );
 };
 
-/** Horizontal bars: one row per category, from the zero line rightwards. */
 export const horizontalBarMarks = (
   series: ReadonlyArray<ChartSeries>,
   box: ChartBox,
@@ -477,13 +380,11 @@ export const horizontalBarMarks = (
   );
 };
 
-/** The radius a radar paints in: the caller's, clamped to the box. */
 const clampRadius = (reach: number | undefined, fallback: number): number =>
   reach === undefined || !Number.isFinite(reach)
     ? fallback
     : Math.max(0, Math.min(fallback * 2 + 4, reach));
 
-/** The corner a radar runs to for one value, clockwise from twelve o'clock. */
 const radarPoint = (
   value: number,
   index: number,
@@ -506,12 +407,6 @@ const radarPoint = (
   };
 };
 
-/**
- * One series' radar outline: a closed polygon through its axes.
- *
- * A radar point sits where its axis is, not where its slot would be, so a
- * series keeps its shape as the label list grows.
- */
 export const radarPoints = (
   values: ReadonlyArray<number>,
   axes: number,
@@ -523,7 +418,6 @@ export const radarPoints = (
     radarPoint(values[index] ?? 0, index, axes, box, max, radius),
   );
 
-/** A closed polygon through points. */
 export const polygonPath = (
   points: ReadonlyArray<Point>,
 ): Option.Option<string> =>
@@ -534,7 +428,6 @@ export const polygonPath = (
     )}Z`;
   });
 
-/** The webs a radar is read against: one closed ring per level. */
 export const radarGrid = (
   levels: number,
   axes: number,
@@ -560,12 +453,6 @@ export const radarGrid = (
   );
 };
 
-/**
- * The webs at the radii a caller names, as fractions of the outer radius.
- *
- * A custom grid is what shadcn's grid-custom example draws: the ticks are the
- * caller's numbers, not an even split of the levels.
- */
 export const radarGridAt = (
   fractions: ReadonlyArray<number>,
   axes: number,
@@ -594,7 +481,6 @@ export const radarGridAt = (
     );
   });
 
-/** The circular webs at the fractions a caller names. */
 export const radarCircleGridAt = (
   fractions: ReadonlyArray<number>,
   box: ChartBox,
@@ -612,7 +498,6 @@ export const radarCircleGridAt = (
   });
 };
 
-/** The spoke from the centre to each radar axis' rim. */
 export const radarSpokes = (
   axes: number,
   box: ChartBox,
@@ -624,17 +509,9 @@ export const radarSpokes = (
     return `M${pair({ x: box.width / 2, y: box.height / 2 })}L${pair(rim)}`;
   });
 
-/** A full circle as one path: two half turns, because an arc to itself is empty. */
 export const circlePath = (cx: number, cy: number, radius: number): string =>
   `M${at(cx - radius)} ${at(cy)}A${at(radius)} ${at(radius)} 0 1 0 ${at(cx + radius)} ${at(cy)}A${at(radius)} ${at(radius)} 0 1 0 ${at(cx - radius)} ${at(cy)}Z`;
 
-/**
- * The rings a circular radar grid draws: one circle per level.
- *
- * A circular grid reads a radar the way a bullseye does — every level is the
- * same distance from the centre whichever axis it crosses — where the polygon
- * grid follows the axes' corners.
- */
 export const radarCircleGrid = (
   levels: number,
   box: ChartBox,
@@ -650,7 +527,6 @@ export const radarCircleGrid = (
   );
 };
 
-/** The full ring a radial track paints, from twelve o'clock. */
 export const fullRing = (
   cx: number,
   cy: number,
@@ -659,7 +535,6 @@ export const fullRing = (
 ): string =>
   `${ringArc(cx, cy, outer, inner, -Math.PI / 2, 0)}${ringArc(cx, cy, outer, inner, 0, (Math.PI * 3) / 2)}`;
 
-/** The ring segment between two angles, in radians. */
 export const ringArc = (
   cx: number,
   cy: number,
@@ -681,12 +556,6 @@ export const ringArc = (
   ].join("");
 };
 
-/**
- * Concentric radial bars: datum `i` is a ring of its own, filled to its share.
- *
- * A full turn is two half turns, because an arc from an angle to itself is
- * empty; a zero paints no arc but keeps its ring in the stack.
- */
 export const radialArcs = (
   values: ReadonlyArray<number>,
   box: ChartBox,
@@ -734,13 +603,6 @@ export const radialArcs = (
   });
 };
 
-/**
- * Ring segments for a pie or a donut, one entry per datum.
- *
- * `innerRatio` is the hole as a share of the radius (`0` is a pie), and
- * `padAngle` is the gap between slices in radians — the separator shadcn's pie
- * examples draw with a stroke, painted here as space.
- */
 export const ringSegments = (
   values: ReadonlyArray<number>,
   box: ChartBox,
@@ -772,8 +634,6 @@ export const ringSegments = (
       0,
       Math.round(((angle - start) / Math.max(1e-9, full)) * drawable.length),
     );
-    // The active slice stands proud of the ring, the press cue shadcn's active
-    // example paints.
     const rim = index === emphasis ? outer + 6 : outer;
     if (span >= full - 1e-9) {
       return [
@@ -798,12 +658,6 @@ export const ringSegments = (
   return segments;
 };
 
-/**
- * Where a slice's label sits: the middle of its arc, inside the ring.
- *
- * A label is placed from the same cumulative angles the slices are, so it
- * follows a datum when its neighbours change size.
- */
 export const ringLabelPoints = (
   values: ReadonlyArray<number>,
   box: ChartBox,
@@ -831,23 +685,12 @@ export const ringLabelPoints = (
   return points;
 };
 
-/** Where a slice's outside label sits, and the line that leads to it. */
 export interface RingLabel {
-  /** The label's anchor point, past the ring's rim. */
   readonly point: Point;
-  /** Whether the label runs to the right of its anchor. */
   readonly right: boolean;
-  /** The leader from the slice's rim to the label's anchor. */
   readonly leader: string;
 }
 
-/**
- * The outside labels a pie draws: one anchor and one leader per slice.
- *
- * The anchor sits past the rim on the slice's mid-angle, then steps out
- * horizontally, so two labels on the same side never collide; the leader is the
- * elbow from the rim to that anchor.
- */
 export const ringOutsideLabels = (
   values: ReadonlyArray<number>,
   box: ChartBox,
@@ -881,20 +724,11 @@ export const ringOutsideLabels = (
   return labels;
 };
 
-/** A continuous window over the category axis, in category units. */
 export interface ChartView {
   readonly start: number;
   readonly end: number;
 }
 
-/**
- * The continuous window a zoom or a pan shows.
- *
- * Edges are fractional category positions; a span under one category is
- * widened to one, and the window is clamped inside `[0, length]` — a zoom stops
- * when a single category fills the plot. A view that names nothing readable is
- * no view, and the chart paints every category.
- */
 export const chartView = (
   length: number,
   view: readonly [number, number] | undefined,
@@ -909,21 +743,11 @@ export const chartView = (
   return Option.some({ start, end });
 };
 
-/** A window over the plotted categories: `[start, end)` indexes. */
 export interface ChartWindow {
   readonly start: number;
   readonly end: number;
 }
 
-/**
- * The category window a chart draws, clamped to what the data has.
- *
- * A brush reports the two edges as indexes into the label list; a stored one
- * may be reversed, fractional, past the end or unreadable, so the window is
- * normalized: whole indexes, inside the list, and at least one category wide.
- * A window that leaves nothing (both edges past the end, or the chart has no
- * categories) is no window at all — the chart paints what it was given.
- */
 export const chartWindow = (
   length: number,
   domain: readonly [number, number] | undefined,
@@ -946,14 +770,6 @@ export const chartWindow = (
   return Option.some({ start: low, end: high });
 };
 
-/**
- * Concentric pie bands: one ring per datum, each arc its own share.
- *
- * A stacked pie reads as a sunburst — the first datum owns the outer band, the
- * next one the band inside it, and so on to the hole — so the reader compares
- * shares by arc length at nested radii instead of by one ring's slices. A zero
- * keeps its band and paints no arc, the rule the flat ring follows.
- */
 export const ringBands = (
   values: ReadonlyArray<number>,
   box: ChartBox,
@@ -1003,17 +819,9 @@ export const ringBands = (
   });
 };
 
-/** A value as a label prints it: at most one decimal, never `NaN`. */
 export const valueLabel = (value: number): string =>
   Number.isFinite(value) ? `${Math.round(value * 10) / 10}` : "0";
 
-/**
- * The values an axis divides a signed range into, floor to ceiling inclusive.
- *
- * A count the axis cannot read reads as four steps and a count past the axis
- * limit is capped, so a computed `ticks` cannot empty the axis or mount an
- * unbounded column of labels.
- */
 export const rangeTicks = (
   range: ChartRange,
   count = 4,
@@ -1025,15 +833,6 @@ export const rangeTicks = (
   return Arr.makeBy(steps + 1, (index) => range.min + (span / steps) * index);
 };
 
-/**
- * A range the caller pins, so a series that never nears zero is not pressed
- * flat against the top of the plot.
- *
- * GPUI Kit's `y_domain`: a price or a balance has its own scale, and the
- * chart draws against that rather than against a zero it never approaches.
- * A range the caller cannot read — a `NaN`, an inverted pair, a span of
- * nothing — is **no range**, and the chart measures its own.
- */
 export const pinnedRange = (
   range: readonly [number, number] | undefined,
 ): Option.Option<ChartRange> => {
@@ -1042,19 +841,10 @@ export const pinnedRange = (
   if (!Number.isFinite(low) || !Number.isFinite(high)) return Option.none();
   const min = Math.min(low, high);
   const max = Math.max(low, high);
-  // A range with no span cannot divide a scale, and every value would sit on
-  // one line; the chart measures its own instead.
   if (max - min <= 0) return Option.none();
   return Option.some({ min, max });
 };
 
-/**
- * The range a chart draws against: the caller's, else the data's own.
- *
- * This is the seam the `pinnedRange` prop reaches. A pinned range keeps the
- * headroom the measured range would have left, so the plot's top is the
- * caller's ceiling and not a rounded one above it.
- */
 export const chartRangeWith = (
   series: ReadonlyArray<ChartSeries>,
   categories?: number,
@@ -1065,13 +855,6 @@ export const chartRangeWith = (
     chartRange(series, categories, stacked),
   );
 
-/**
- * The horizontal rules a reference line draws.
- *
- * A reference line marks a value across the plot — a target, a budget, the
- * previous close — and it is drawn darker than the grid so it reads as a
- * different kind of rule.
- */
 export const referenceLines = (
   values: ReadonlyArray<number>,
   box: ChartBox,
@@ -1082,13 +865,6 @@ export const referenceLines = (
     value,
   }));
 
-/**
- * The vertical rules a grid draws, one per category.
- *
- * GPUI Kit's `grid_columns`: the vertical grid, the counterpart to the
- * horizontal one the frame draws. A count the chart cannot read draws no
- * rule, and a count past the categories is capped by them.
- */
 export const verticalGrid = (
   count: number,
   box: ChartBox,
@@ -1107,13 +883,6 @@ export const verticalGrid = (
   );
 };
 
-/**
- * A point per datum: a scatter plot's marks.
- *
- * A datum with no number paints nothing — the rule every mark follows — and
- * a value outside the range is clipped to the plot's edge, so a point never
- * draws outside the frame that holds it.
- */
 export const scatterMarks = (
   values: ReadonlyArray<number>,
   box: ChartBox,
@@ -1136,23 +905,13 @@ export const scatterMarks = (
       kind: "circle",
       cx: cell.x,
       cy: Math.max(0, Math.min(box.height, scaleY(cell.value, box, range))),
-      r: Math.max(1, radius),
+      r: Math.max(0.01, radius),
     }),
   );
 };
 
-/**
- * One candle's body and wick: the open, high, low and close of a period.
- *
- * A candle that closed above its open is an **up** day and a candle that
- * closed at or below it is a **down** day, and the two paint in different
- * roles — a reader who cannot separate two hues still reads the direction.
- * A period whose four numbers are not finite paints nothing.
- */
 export interface Candle {
-  /** The price the period opened at. */
   readonly open: number;
-  /** The highest price the period reached. */
   readonly high: number;
   /** The lowest price the period reached. */
   readonly low: number;
@@ -1163,15 +922,6 @@ export interface Candle {
 /** A candle's direction: an up day or a down day. */
 export const candleUp = (candle: Candle): boolean => candle.close > candle.open;
 
-/**
- * The marks one candle paints: its wick, then its body.
- *
- * The wick runs from the high to the low and the body from the open to the
- * close, so a body inside its own wick reads as a period that went further
- * than it ended. A body of no height — a period that opened where it closed
- * — paints a line of the minimum height rather than nothing, so the period is
- * still on the plot.
- */
 export const candleMarks = (
   candle: Candle,
   x: number,
@@ -1205,13 +955,6 @@ export const candleMarks = (
   ];
 };
 
-/**
- * One candle's marks, at its own slot.
- *
- * The slot is the **category's**, so a candle sits over its own label: a
- * caller that paints one candle at a time says which category it is, and the
- * geometry places it there.
- */
 export const candleAtMarks = (
   candle: Candle,
   index: number,
@@ -1233,12 +976,6 @@ export const candleAtMarks = (
   );
 };
 
-/**
- * The candles of a series, one per category.
- *
- * The candles are laid out over the categories, each in its own slot, so a
- * candle sits over its own label.
- */
 export const candleSeriesMarks = (
   candles: ReadonlyArray<Candle>,
   box: ChartBox,
@@ -1262,14 +999,6 @@ export const candleSeriesMarks = (
   );
 };
 
-/**
- * A funnel's stages: one band per datum, each a share of the first.
- *
- * A funnel is read as a narrowing, so each stage is a share of the **first**
- * stage's value — the widest one — and the stages are centred, so a funnel
- * reads as a funnel rather than as bars of different widths stacked to one
- * side.
- */
 export const funnelMarks = (
   values: ReadonlyArray<number>,
   box: ChartBox,

@@ -1,19 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The three charts that lay **themselves** out: a treemap, a sankey and a
- * sunburst.
- *
- * Each one draws a **structure** rather than a set of categories: a hierarchy
- * as nested rectangles, a flow between nodes, and the same hierarchy read as
- * rings. The library's own geometry cannot lay them out — a treemap's cell
- * area is its value's share of the whole, and a sunburst's arc angle is its
- * value's share of its parent — so the **scene compiler** resolves the
- * layout and the chart paints the document it produced.
- *
- * The paint is the same **document route** every other chart takes: one image
- * carrying every mark's own colour, decoded by the runtime's own SVG
- * renderer.
- */
 
 import { useMemo } from "react";
 import * as Arr from "effect/Array";
@@ -30,16 +15,13 @@ import {
 import { sceneSvg, type SceneChartKind } from "./scene.js";
 import type { ChartBox, ChartSeries } from "./logic.js";
 import type { ChartRange } from "./geometry.js";
+import {
+  DEFAULT_ANIMATION_DURATION,
+  scaleValue,
+  useAnimatedValues,
+  useMountReveal,
+} from "./animation.js";
 
-/**
- * The colour each node paints in.
- *
- * The colours come from the theme's categorical scale, and each node takes
- * the next one — so a hierarchy's branches are told apart by their colour,
- * the same rule every other chart follows. A node's own colour is looked up
- * by the **path the caller wrote**, so a caller may name a node's colour
- * itself.
- */
 export const nodeColours = (
   rows: ReadonlyArray<HierarchyRow>,
   colours: ReadonlyArray<string>,
@@ -60,12 +42,6 @@ export const nodeColours = (
   return map;
 };
 
-/**
- * The colour each flow node paints in.
- *
- * The nodes take the palette in order, and a caller may name a node's own
- * colour by its id.
- */
 const sankeyColours = (
   graph: { readonly nodes: ReadonlyArray<FlowNode> },
   colours: ReadonlyArray<string>,
@@ -83,13 +59,6 @@ const sankeyColours = (
   return map;
 };
 
-/**
- * A chart whose layout the scene compiler resolved.
- *
- * The markup is computed when the props change and the surface pushes it —
- * the same push every other chart's document takes, so the runtime's own
- * decoder reads it.
- */
 const SceneChart = ({
   kind,
   rows,
@@ -111,6 +80,8 @@ const SceneChart = ({
   innerRadius,
   ringPadding,
   visibleDepth,
+  animate = true,
+  animationDuration = DEFAULT_ANIMATION_DURATION,
   testId,
 }: {
   readonly kind: SceneChartKind;
@@ -120,17 +91,9 @@ const SceneChart = ({
     readonly links: ReadonlyArray<FlowLink>;
   };
   readonly colours: ReadonlyArray<string>;
-  /**
-   * The colour each node paints in, by its own key.
-   *
-   * The key is the path a hierarchy node was given, and the id a flow node
-   * was given — the names the **caller** wrote.
-   */
   readonly named?: ReadonlyMap<string, string>;
   readonly range?: ChartRange;
-  /** The series the cartesian marks read. */
   readonly series?: ReadonlyArray<ChartSeries>;
-  /** The categories, in order. */
   readonly labels?: ReadonlyArray<string>;
   readonly size: number;
   readonly label: string;
@@ -144,13 +107,49 @@ const SceneChart = ({
   readonly innerRadius?: number;
   readonly ringPadding?: number;
   readonly visibleDepth?: number;
+  readonly animate?: boolean;
+  readonly animationDuration?: number;
   readonly testId?: string;
 }) => {
   const box: ChartBox = { width: size, height: size };
+  const reveal = useMountReveal(animate, animationDuration);
+  const hierarchyTween =
+    useAnimatedValues(
+      [Arr.map(rows, (row) => row.value)],
+      animate,
+      animationDuration,
+    )[0] ?? [];
+  const linkTween =
+    useAnimatedValues(
+      [Arr.map(flow.links, (link) => link.value)],
+      animate,
+      animationDuration,
+    )[0] ?? [];
+  const seriesTween = useAnimatedValues(
+    Arr.map(series ?? [], (one) => one.values),
+    animate,
+    animationDuration,
+  );
+  const shownRows = Arr.map(rows, (row, index) => ({
+    ...row,
+    value: scaleValue(hierarchyTween[index] ?? row.value, reveal),
+  }));
+  const tweenedLinks = Arr.map(flow.links, (link, index) => ({
+    ...link,
+    value: linkTween[index] ?? link.value,
+  }));
+  // A sankey cannot use zero link values: its compiler rejects them and
+  // normalises ribbons to the layout, so `reveal` scales ribbon width instead.
+  const shownSeries = Arr.map(series ?? [], (one, index) => ({
+    ...one,
+    values: Arr.map(one.values, (value, at) =>
+      scaleValue(seriesTween[index]?.[at] ?? value, reveal),
+    ),
+  }));
   const markup = useMemo(
     () =>
       sceneSvg({
-        series: series ?? [],
+        series: shownSeries,
         labels: labels ?? [],
         box,
         range: range ?? { min: 0, max: 1 },
@@ -158,10 +157,11 @@ const SceneChart = ({
         kind,
         label,
         description,
-        hierarchy: rows,
+        hierarchy: shownRows,
         flowNodes: flow.nodes,
-        flowLinks: flow.links,
+        flowLinks: tweenedLinks,
         nodeColours: named ?? nodeColours(rows, colours),
+        reveal,
         ...(method === undefined ? {} : { method }),
         ...(ratio === undefined ? {} : { ratio }),
         ...(paddingInner === undefined ? {} : { paddingInner }),
@@ -178,14 +178,15 @@ const SceneChart = ({
       colours,
       range?.min,
       range?.max,
-      series,
+      shownSeries,
       labels,
       kind,
       label,
       description,
-      rows,
+      shownRows,
       flow.nodes,
-      flow.links,
+      tweenedLinks,
+      reveal,
       method,
       ratio,
       paddingInner,
@@ -209,12 +210,6 @@ const SceneChart = ({
   );
 };
 
-/**
- * The rows a hierarchy paints: its **leaves**.
- *
- * The root is the whole, and the whole is the plot's background, so it is
- * not painted. A treemap draws its leaves, and a sunburst its rings.
- */
 export const leafRows = (
   rows: ReadonlyArray<HierarchyRow>,
 ): ReadonlyArray<HierarchyRow> =>
@@ -226,46 +221,23 @@ export const leafRows = (
       ),
   );
 
-/** {@link TreemapChart} props. */
 export interface TreemapChartProps {
-  /**
-   * The hierarchy, one row per node.
-   *
-   * A node's **path** is its route through the tree — `"root/engineering"`
-   * is a node named `engineering` under `root` — and the caller's list may
-   * name only the leaves: a root is added when the list names none.
-   */
   readonly nodes: ReadonlyArray<HierarchyNode>;
-  /** The plot's size, in pixels. Defaults to `200` square. */
   readonly size?: number;
-  /** How the cells are squared. Defaults to `squarify`. */
   readonly method?: "squarify" | "binary" | "dice" | "slice" | "slice-dice";
-  /** The target aspect ratio of a cell. Defaults to the compiler's own. */
   readonly ratio?: number;
-  /** The gap between adjacent cells, in pixels. */
   readonly paddingInner?: number;
-  /** The gap between a parent's edge and its children, in pixels. */
   readonly paddingOuter?: number;
-  /** The categorical palette; defaults to the theme's series scale. */
   readonly colors?: ReadonlyArray<string>;
-  /** The colour a named node paints in, by its path. */
   readonly nodeColors?: ReadonlyMap<string, string>;
-  /** The legend paints under the cells. Defaults to `true`. */
   readonly legend?: boolean;
-  /** How a value prints in the legend. */
   readonly valueFormat?: (value: number) => string;
-  /** The chart's test id. A cell is `${testId}-cell-${path}`. */
+  readonly animate?: boolean;
+  readonly animationDuration?: number;
   readonly testId?: string;
-  /** The chart's name, for the document's accessible label. */
   readonly label?: string;
 }
 
-/**
- * Treemap: a hierarchy as nested rectangles, each area its value's share.
- *
- * The cells are squared by the compiler, so a cell's shape reads as its
- * value's shape: a large value is a wide cell, not a tall one.
- */
 export const TreemapChart = ({
   nodes,
   size = 200,
@@ -277,6 +249,8 @@ export const TreemapChart = ({
   nodeColors,
   legend = true,
   valueFormat,
+  animate = true,
+  animationDuration = DEFAULT_ANIMATION_DURATION,
   testId,
   label = "Treemap",
 }: TreemapChartProps) => {
@@ -296,6 +270,8 @@ export const TreemapChart = ({
         size={size}
         label={label}
         description={description}
+        animate={animate}
+        animationDuration={animationDuration}
         {...(method === undefined ? {} : { method })}
         {...(ratio === undefined ? {} : { ratio })}
         {...(paddingInner === undefined ? {} : { paddingInner })}
@@ -322,39 +298,24 @@ export const TreemapChart = ({
   );
 };
 
-/** {@link RadialBarChart} props. */
 export interface RadialBarChartProps {
-  /** One row per category. */
   readonly data: ReadonlyArray<{
     readonly key: string;
     readonly label?: string;
     readonly value: number;
   }>;
-  /** The plot's size, in pixels. Defaults to `200` square. */
   readonly size?: number;
-  /** The share of the plot the bars' ring occupies. Defaults to `0.8`. */
   readonly radiusRatio?: number;
-  /** The share of each category's slot left empty. Defaults to `0.12`. */
   readonly bandPadding?: number;
-  /** The categorical palette; defaults to the theme's series scale. */
   readonly colors?: ReadonlyArray<string>;
-  /** The legend paints under the bars. Defaults to `true`. */
   readonly legend?: boolean;
-  /** How a value prints in the legend. */
   readonly valueFormat?: (value: number) => string;
-  /** The chart's test id. */
+  readonly animate?: boolean;
+  readonly animationDuration?: number;
   readonly testId?: string;
-  /** The chart's name, for the document's accessible label. */
   readonly label?: string;
 }
 
-/**
- * Radial bar: one bar per category, each extending out from the centre.
- *
- * The bar's length is its value's share of the largest, and the categories
- * own their own slots around the circle — so a reader compares the lengths
- * and the sectors at once.
- */
 export const RadialBarChart = ({
   data,
   size = 200,
@@ -363,6 +324,8 @@ export const RadialBarChart = ({
   colors,
   legend = true,
   valueFormat,
+  animate = true,
+  animationDuration = DEFAULT_ANIMATION_DURATION,
   testId,
   label = "Radial bar",
 }: RadialBarChartProps) => {
@@ -386,6 +349,8 @@ export const RadialBarChart = ({
         size={size}
         label={label}
         description={description}
+        animate={animate}
+        animationDuration={animationDuration}
         range={{ min: 0, max: largest }}
         series={[
           {
@@ -416,39 +381,22 @@ export const RadialBarChart = ({
   );
 };
 
-/** {@link SankeyChart} props. */
 export interface SankeyChartProps {
-  /** The nodes the flow runs through. */
   readonly nodes: ReadonlyArray<FlowNode>;
-  /** The edges the flow runs along. */
   readonly links: ReadonlyArray<FlowLink>;
-  /** The plot's size, in pixels. Defaults to `200` square. */
   readonly size?: number;
-  /** A node's width in pixels. Defaults to the compiler's own. */
   readonly nodeWidth?: number;
-  /** The gap between same-column nodes, in pixels. */
   readonly nodePadding?: number;
-  /** The categorical palette; defaults to the theme's series scale. */
   readonly colors?: ReadonlyArray<string>;
-  /** The colour a named node paints in, by its id. */
   readonly nodeColors?: ReadonlyMap<string, string>;
-  /** The legend paints under the flow. Defaults to `true`. */
   readonly legend?: boolean;
-  /** How a value prints in the legend. */
   readonly valueFormat?: (value: number) => string;
-  /** The chart's test id. */
+  readonly animate?: boolean;
+  readonly animationDuration?: number;
   readonly testId?: string;
-  /** The chart's name, for the document's accessible label. */
   readonly label?: string;
 }
 
-/**
- * Sankey: a flow between nodes, each ribbon's thickness its value.
- *
- * A link naming a node the graph does not hold is **dropped**: the compiler
- * rejects such a link, and a reader who drew a flow to a node that is not
- * there would rather see the flow that is.
- */
 export const SankeyChart = ({
   nodes,
   links,
@@ -459,6 +407,8 @@ export const SankeyChart = ({
   nodeColors,
   legend = true,
   valueFormat,
+  animate = true,
+  animationDuration = DEFAULT_ANIMATION_DURATION,
   testId,
   label = "Sankey",
 }: SankeyChartProps) => {
@@ -479,6 +429,8 @@ export const SankeyChart = ({
         size={size}
         label={label}
         description={description}
+        animate={animate}
+        animationDuration={animationDuration}
         {...(nodeWidth === undefined ? {} : { nodeWidth })}
         {...(nodePadding === undefined ? {} : { nodePadding })}
         testId={testId}
@@ -489,9 +441,6 @@ export const SankeyChart = ({
           items={Arr.map(graph.nodes, (node, index) => ({
             key: node.id,
             label: node.name ?? node.id,
-            // A node's row carries the flow **through** it: what leaves it
-            // and what reaches it, so a reader sees the size of the node and
-            // not the size of one edge.
             value: (() => {
               const through = Arr.filter(
                 graph.links,
@@ -517,43 +466,22 @@ export const SankeyChart = ({
   );
 };
 
-/** {@link SunburstChart} props. */
 export interface SunburstChartProps {
-  /**
-   * The hierarchy, one row per node.
-   *
-   * The paths are the same the treemap's are: a node's route through the
-   * tree, and the caller's list may name only the leaves.
-   */
   readonly nodes: ReadonlyArray<HierarchyNode>;
-  /** The plot's size, in pixels. Defaults to `200` square. */
   readonly size?: number;
-  /** The hole at the centre, as a share of the outer radius. */
   readonly innerRadius?: number;
-  /** The gap between the rings, in pixels. */
   readonly ringPadding?: number;
-  /** How many rings of the hierarchy are drawn. */
   readonly visibleDepth?: number;
-  /** The categorical palette; defaults to the theme's series scale. */
   readonly colors?: ReadonlyArray<string>;
-  /** The colour a named node paints in, by its path. */
   readonly nodeColors?: ReadonlyMap<string, string>;
-  /** The legend paints under the rings. Defaults to `true`. */
   readonly legend?: boolean;
-  /** How a value prints in the legend. */
   readonly valueFormat?: (value: number) => string;
-  /** The chart's test id. */
+  readonly animate?: boolean;
+  readonly animationDuration?: number;
   readonly testId?: string;
-  /** The chart's name, for the document's accessible label. */
   readonly label?: string;
 }
 
-/**
- * Sunburst: a hierarchy as concentric rings, each arc its value's share.
- *
- * The rings are drawn from the centre out, and a hierarchy deeper than
- * `visibleDepth` is not drawn.
- */
 export const SunburstChart = ({
   nodes,
   size = 200,
@@ -564,6 +492,8 @@ export const SunburstChart = ({
   nodeColors,
   legend = true,
   valueFormat,
+  animate = true,
+  animationDuration = DEFAULT_ANIMATION_DURATION,
   testId,
   label = "Sunburst",
 }: SunburstChartProps) => {
@@ -583,6 +513,8 @@ export const SunburstChart = ({
         size={size}
         label={label}
         description={description}
+        animate={animate}
+        animationDuration={animationDuration}
         {...(innerRadius === undefined ? {} : { innerRadius })}
         {...(ringPadding === undefined ? {} : { ringPadding })}
         {...(visibleDepth === undefined ? {} : { visibleDepth })}

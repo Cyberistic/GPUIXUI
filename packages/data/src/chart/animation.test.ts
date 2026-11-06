@@ -1,24 +1,13 @@
-/**
- * The numbers between two data sets.
- *
- * The bugs these guard are the ones a tween ships with:
- *
- * - a progress past 1 overshooting the target, so the last frame is not the
- *   data the caller handed over;
- * - a series matched by position, so reordering the legend repaints every bar
- *   from another series' value;
- * - a series the new set adds jumping in at its full height instead of growing
- *   from zero;
- * - a non-finite value reaching the geometry, which paints nothing at all.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import {
+  DEFAULT_ANIMATION_DURATION,
   between,
   easeOutCubic,
   interpolateSeries,
   interpolateValues,
+  scaleSeries,
+  scaleValue,
 } from "./animation.js";
 
 const series = (key: string, values: ReadonlyArray<number>) => ({
@@ -89,5 +78,36 @@ describe("a data set blended toward another", () => {
   it("blends a bare list the same way", () => {
     expect(interpolateValues([0, 10], [10, 20], 0.5)).toEqual([5, 15]);
     expect(interpolateValues([], [4], 0.25)).toEqual([1]);
+  });
+});
+
+describe("a mount's zero state", () => {
+  it("takes Recharts' duration rather than the old 320ms tween", () => {
+    expect(DEFAULT_ANIMATION_DURATION).toBe(1500);
+  });
+
+  it("starts at zero and lands exactly on the data", () => {
+    expect(scaleValue(100, 0)).toBe(0);
+    expect(scaleValue(100, 0.5)).toBe(50);
+    expect(scaleValue(100, 1)).toBe(100);
+    expect(scaleValue(-40, 0.5)).toBe(-20);
+    expect(scaleValue(100, 2)).toBe(100);
+    expect(scaleValue(100, -1)).toBe(0);
+  });
+
+  it("keeps a value the geometry cannot draw", () => {
+    expect(Number.isNaN(scaleValue(Number.NaN, 0))).toBe(true);
+    expect(Number.isNaN(scaleValue(Number.NaN, 1))).toBe(true);
+    expect(scaleValue(Number.POSITIVE_INFINITY, 1)).toBe(
+      Number.POSITIVE_INFINITY,
+    );
+  });
+
+  it("moves a series' numbers while its identity stays at the target", () => {
+    const target = [series("a", [10, -4])];
+    expect(scaleSeries(target, 0)).toEqual([
+      { key: "a", label: "a", values: [0, 0] },
+    ]);
+    expect(scaleSeries(target, 1)).toEqual(target);
   });
 });

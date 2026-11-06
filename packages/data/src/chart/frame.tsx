@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A chart's shared frame: axis, grid, plot, labels, legend and hover readout.
- *
- * The frame owns everything a chart type does not: where the plot sits, how the
- * axis divides its range, the hovered column, and the legend. A type supplies
- * marks per series — its geometry — and the frame paints them as one `<svg>`
- * layer per series, tinted through `style.color`.
- */
 
 import type { Props } from "@gpuix/react";
 import { Icon, isIconName, type IconName } from "@gpuixui/icons";
@@ -26,6 +18,7 @@ import {
   type ChartMark,
   type ChartSeries,
 } from "./logic.js";
+import type { MarkClip } from "./mark.js";
 import {
   chartRange,
   chartView,
@@ -36,7 +29,11 @@ import {
   type ChartView,
   type Point,
 } from "./geometry.js";
-import { DEFAULT_ANIMATION_DURATION, useAnimatedSeries } from "./animation.js";
+import {
+  DEFAULT_ANIMATION_DURATION,
+  useAnimatedSeries,
+  useMountReveal,
+} from "./animation.js";
 import { ChartPlot } from "./plot.js";
 import type { ChartRender } from "./surface.js";
 import type { ChartGradient } from "./svg.js";
@@ -63,182 +60,99 @@ import {
   CHART_VALUE_LABEL,
 } from "./recipe.js";
 
-/** The plot's width when the caller names none. */
 export const DEFAULT_CHART_WIDTH = 320;
 
-/** The plot's height when the caller names none. */
 export const DEFAULT_CHART_HEIGHT = 160;
 
-/** The y-axis column's width: a measurement of the widest tick it holds. */
 export const CHART_AXIS_WIDTH = 36;
 
-/** One painted layer: a series' marks at one opacity. */
 export interface PaintLayer {
-  /** The series the layer belongs to. */
   readonly key: string;
   readonly series: ChartSeries;
   readonly seriesIndex: number;
   readonly marks: ReadonlyArray<ChartMark>;
-  /** The layer's own alpha; a named layer paints at 1. */
   readonly opacity?: number;
-  /** The suffix the layer's test id carries (`area`, `dots`, `line`). */
   readonly kind?: string;
-  /** Decorative layers carry no role and no name. */
   readonly decorative?: boolean;
+  readonly clip?: MarkClip;
 }
 
-/** One point a per-point readout can be hovered over. */
 export interface PointZone {
   readonly key: string;
   readonly x: number;
   readonly y: number;
-  /** The category the point belongs to. */
   readonly category: string;
-  /** The series' name. */
   readonly label: string;
-  /** The value, already formatted. */
   readonly value: string;
   readonly colour: string;
 }
 
-/** A bar's value, placed over its own bar. */
 export interface ValueLabel {
   readonly key: string;
   readonly x: number;
   readonly y: number;
   readonly width: number;
-  /** The text painted; a caller formats before handing it over. */
   readonly text: string;
 }
 
-/** Where a legend sits relative to the plot. */
 export type LegendSide = "top" | "bottom";
 
-/** How a legend draws the mark beside each row. */
 export type LegendShape = "square" | "dot" | "line";
 
-/** How the hover readout marks each series. */
 export type TooltipIndicator = "dot" | "line" | "none" | "icon";
 
-/** What a type's geometry is given: the lists, the box, the range and colours. */
 export interface PaintContext {
   readonly series: ReadonlyArray<ChartSeries>;
   readonly labels: ReadonlyArray<string>;
   readonly box: ChartBox;
   readonly range: ChartRange;
   readonly palette: ReadonlyArray<string>;
-  /** The plot's origin in the window, when the runtime reported it. */
   readonly origin: Option.Option<Point>;
-  /** The continuous window a zoom shows, when the caller named one. */
   readonly view?: ChartView;
-  /**
-   * The category the pointer is over, when it is over one.
-   *
-   * The type that paints it reads this to **emphasise** the hovered datum —
-   * a line's point grows under the pointer, which is the cue every chart
-   * library gives.
-   */
   readonly hovered?: Option.Option<number>;
+  readonly reveal?: number;
 }
 
-/** The frame's props: everything a type inherits and nothing it paints. */
 export interface ChartFrameProps extends Omit<Props, "children"> {
   readonly series: ReadonlyArray<ChartSeries>;
   readonly labels: ReadonlyArray<string>;
   readonly width?: number;
   readonly height?: number;
-  /** Where the legend paints; `false` hides it. Defaults to below for 2+ series. */
   readonly legend?: boolean | LegendSide;
-  /** The mark beside each legend row. Defaults to a square. */
   readonly legendShape?: LegendShape;
-  /** The y-axis tick column paints. Defaults to `true`. */
   readonly axis?: boolean;
-  /** The horizontal grid lines paint. Defaults to `true`. */
   readonly grid?: boolean;
-  /** The category labels paint under the plot. Defaults to `true`. */
   readonly xLabels?: boolean;
-  /** How many steps the axis divides its range into. Defaults to `4`. */
   readonly ticks?: number;
-  /** The categorical palette; defaults to the theme's series scale. */
   readonly colors?: ReadonlyArray<string>;
-  /** A hovered column shows every series' value. Defaults to `true`. */
   readonly tooltip?: boolean;
-  /** The mark beside a readout row: a dot (default), a line, an icon or none. */
   readonly tooltipIndicator?: TooltipIndicator;
-  /** An icon per series, used when `tooltipIndicator` is `"icon"`. */
   readonly tooltipIcons?: ReadonlyArray<IconName>;
-  /** How the hovered category's name prints. */
   readonly labelFormat?: (label: string) => string;
-  /** A wash paints behind the hovered column. Defaults to `false`. */
   readonly activeBand?: boolean;
-  /**
-   * A vertical rule paints at the hovered column.
-   *
-   * The crosshair is the cue a reader follows from the pointer to the value
-   * it names, and it is what a line chart's pointer cue is in every chart
-   * library: Recharts' `cursor`, GPUI Kit's crosshair.
-   */
   readonly crosshair?: boolean;
-  /** The category window the chart paints, as `[start, end)` indexes. */
   readonly domain?: readonly [number, number];
-  /** The continuous window a zoom or pan shows, in category units. */
   readonly view?: readonly [number, number];
-  /** A navigation strip under the plot pans on drag and zooms on the wheel. */
   readonly zoom?: boolean;
-  /** The window a zoom or pan reports, in category units. */
   readonly onViewChange?: (view: readonly [number, number]) => void;
-  /** A brush strip under the plot reports a dragged category window. */
   readonly brush?: boolean;
-  /** The dragged window, as `[start, end)` category indexes. */
   readonly onDomainChange?: (domain: readonly [number, number]) => void;
-  /** Every category, so a brushed chart's strip is not windowed by its own drag. */
   readonly domainLabels?: ReadonlyArray<string>;
-  /** A data change tweens its values over `animationDuration`. Defaults to `false`. */
   readonly animate?: boolean;
-  /** How long a data change takes, in milliseconds. Defaults to `320`. */
   readonly animationDuration?: number;
-  /** How a value prints in the tooltip. */
   readonly valueFormat?: (value: number) => string;
-  /** Each bar's value prints above it; a type that cannot place one ignores it. */
   readonly valueLabels?: (context: PaintContext) => ReadonlyArray<ValueLabel>;
-  /** The signed range the marks were laid out against. */
   readonly range?: ChartRange;
-  /** The layered marks a type paints, in paint order. */
   readonly paint: (context: PaintContext) => ReadonlyArray<PaintLayer>;
-  /**
-   * The gradients the layers' fills use.
-   *
-   * A gradient belongs to the document, so the type that knows its fade
-   * names it here and the frame puts it in the document's `defs`.
-   */
   readonly gradients?: (context: PaintContext) => ReadonlyArray<ChartGradient>;
-  /**
-   * The route the marks take to the frame.
-   *
-   * `"document"` paints one image carrying the chart's whole markup, so every
-   * series paints in its own colour and a fill can be a real gradient.
-   * `"mask"` paints one tinted element per series — the route a host that
-   * cannot decode an image needs.
-   */
   readonly render?: ChartRender;
-  /**
-   * The chart's config: the colours the series paint in.
-   *
-   * The config's colour is read in the **mode the theme is in**, so a table
-   * that names one colour per mode follows a light/dark switch. A series the
-   * config names no colour for paints in the theme's categorical scale, which
-   * is the rule every other series follows.
-   */
   readonly config?: ChartConfig;
-  /** The legend a type wants; the frame places it. */
   readonly legendNode?: (side: LegendSide) => ReactNode;
-  /** Extra marks painted over the plot: axis labels, a centre label. */
   readonly overlay?: (context: PaintContext) => ReactNode;
   readonly className?: string;
   readonly testId?: string;
 }
 
-/** One mask, tinted by the element's `color`. */
 export const ChartMask = ({
   chartTestId,
   layer,
@@ -257,7 +171,7 @@ export const ChartMask = ({
   const decorative = layer.decorative === true;
   return (
     <svg
-      source={chartMarkup(layer.marks, box)}
+      source={chartMarkup(layer.marks, box, layer.clip)}
       role={decorative ? undefined : "img"}
       aria-label={decorative ? undefined : label}
       aria-description={decorative ? undefined : description}
@@ -282,12 +196,6 @@ export const ChartMask = ({
   );
 };
 
-/**
- * The palette a chart paints: the caller's, else the theme's categorical scale.
- *
- * A stored palette can carry a blank swatch; a blank is absence, so it falls
- * back rather than handing `style.color` a colour the runtime drops.
- */
 export const paletteOf = (
   theme: ReturnType<typeof useTheme>,
   colors: ReadonlyArray<string> | undefined,
@@ -296,7 +204,6 @@ export const paletteOf = (
   return chosen.length > 0 ? chosen : seriesColors(theme);
 };
 
-/** The colour one series paints: its own, else its palette position. */
 export const seriesColourOf = (
   palette: ReadonlyArray<string>,
   series: ChartSeries,
@@ -313,7 +220,6 @@ export const seriesColourOf = (
     },
   );
 
-/** The icon a readout row paints: the caller's, else a plain dot mark. */
 const tooltipIcon = (
   icons: ReadonlyArray<IconName> | undefined,
   index: number,
@@ -322,7 +228,6 @@ const tooltipIcon = (
   return name !== undefined && isIconName(name) ? name : "circle";
 };
 
-/** The category position a window x names, in category units. */
 const pointerIndex = (
   windowX: number | undefined,
   origin: Option.Option<Point>,
@@ -340,7 +245,6 @@ const pointerIndex = (
     },
   });
 
-/** How many slots the plot paints. */
 const slotsOf = (
   series: ReadonlyArray<ChartSeries>,
   labels: ReadonlyArray<string>,
@@ -352,14 +256,6 @@ const slotsOf = (
         Arr.reduce(series, 0, (most, one) => Math.max(most, one.values.length)),
       );
 
-/**
- * The frame every cartesian chart paints in.
- *
- * A series keeps its named layer while it has a labelled slot, even when no
- * value draws: a zero paints no bar but the series' numbers still reach the
- * tree. Decorative layers — an area fill, its fade, the dots — carry no name,
- * so a reader hears each series once.
- */
 export const ChartFrame = ({
   series,
   labels,
@@ -384,7 +280,7 @@ export const ChartFrame = ({
   brush = false,
   onDomainChange,
   domainLabels,
-  animate = false,
+  animate = true,
   animationDuration = DEFAULT_ANIMATION_DURATION,
   valueFormat,
   valueLabels,
@@ -402,9 +298,6 @@ export const ChartFrame = ({
 }: ChartFrameProps) => {
   const theme = useTheme();
   const palette = paletteOf(theme, colors);
-  // The config's colour is read in the **mode the theme is in**, so a table
-  // that names one colour per mode follows a light/dark switch. A series the
-  // config names no colour for paints in the theme's categorical scale.
   const mode = themeModeOf(theme);
   const colourOf = (series: ChartSeries, index: number): string =>
     Option.getOrElse(configSeriesColour(config, series.key, mode), () =>
@@ -419,6 +312,7 @@ export const ChartFrame = ({
     values: Arr.take(one.values, Math.max(1, labels.length)),
   }));
   const rows = useAnimatedSeries(targetRows, animate, animationDuration);
+  const reveal = useMountReveal(animate, animationDuration);
   const categories = labels;
   const shownView = Option.getOrUndefined(chartView(categories.length, view));
   const labelView = shownView ?? {
@@ -451,6 +345,7 @@ export const ChartFrame = ({
     origin,
     view: shownView,
     hovered,
+    reveal,
   };
   const layers = paint(context);
   const legendBody =
@@ -888,13 +783,6 @@ export const ChartFrame = ({
   );
 };
 
-/**
- * Per-point readout: a hit zone on every mark, and the one under the pointer.
- *
- * A chart with dots and a line has no natural column to hover when the pointer
- * is between categories; this is the reference set's point tooltip, and it is
- * one zone per series point, so the card names the series and the datum.
- */
 export const PointTooltip = ({
   zones,
   box,
@@ -1119,13 +1007,6 @@ const ChartZoom = ({
   );
 };
 
-/**
- * The brush strip: drag across it to window the plotted categories.
- *
- * The strip spans the plot's own width, so an edge maps to a category by
- * proportion. `onDomainChange` reports every step of the drag (a live window) —
- * the chart is controlled, and `domain` is what paints the selection.
- */
 const ChartBrush = ({
   labels,
   domain,
@@ -1263,12 +1144,6 @@ const ChartBrush = ({
   );
 };
 
-/**
- * The hovered column's readout: the category and each series' value.
- *
- * The card is the theme's surface, so it reads over the plot the way a tooltip
- * does elsewhere in the library.
- */
 const ChartTooltip = ({
   series,
   labels,

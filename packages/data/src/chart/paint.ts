@@ -1,25 +1,9 @@
-/**
- * The whole chart as one document: the grid, every series' marks, and the
- * colours they paint in.
- *
- * The frame owns the plot — its box, its range, its palette and the layers a
- * type supplies. This is where those become **one** SVG document: the grid's
- * rules first, then each layer's marks in the layer's own colour.
- *
- * The colour is resolved **here**, not in the geometry. The geometry knows a
- * line's weight and a shape's place; the colour belongs to the series, and
- * the series' colour is the frame's palette. That split is what lets the
- * same marks feed two painters — this document and the one-tint mask — with
- * neither of them knowing about the other.
- */
-
 import * as Arr from "effect/Array";
 import type { ChartBox } from "./logic.js";
 import type { ChartMark } from "./mark.js";
 import type { ChartDocument, ChartGradient } from "./svg.js";
 import type { PaintLayer } from "./frame.js";
 
-/** One layer's marks, in the colour the layer paints. */
 export interface LayerPaint {
   readonly layer: PaintLayer;
   /** The colour the layer's marks paint in. */
@@ -28,23 +12,22 @@ export interface LayerPaint {
   readonly opacity?: number;
 }
 
-/**
- * The marks one layer paints, in its own colour.
- *
- * A mark that names a fill keeps it — a gradient is the layer's own — and a
- * mark that names only a stroke has the stroke coloured here, because a
- * stroke's colour is the series' colour just as a fill's is.
- */
 export const layerMarks = (paint: LayerPaint): ReadonlyArray<ChartMark> =>
   Arr.map(paint.layer.marks, (mark): ChartMark => {
     const alpha = paint.opacity;
+    const clip =
+      paint.layer.clip === undefined ? {} : { clip: paint.layer.clip };
     if (mark.fill === undefined && mark.stroke === undefined) {
-      // A mark with no paint of its own takes the layer's colour, so a shape
       // the geometry placed is never colourless.
-      return { ...mark, fill: { color: paint.colour, opacity: alpha } };
+      return {
+        ...mark,
+        ...clip,
+        fill: { color: paint.colour, opacity: alpha },
+      };
     }
     return {
       ...mark,
+      ...clip,
       fill:
         mark.fill === undefined
           ? undefined
@@ -67,13 +50,6 @@ export const layerMarks = (paint: LayerPaint): ReadonlyArray<ChartMark> =>
     };
   });
 
-/**
- * The grid's rules, in the border role.
- *
- * The grid is one layer like any other: the horizontal rules at the tick
- * heights, and the vertical rules when the chart asks for them. A grid the
- * chart does not draw is no layer at all.
- */
 export const gridLayer = (
   box: ChartBox,
   tickValues: ReadonlyArray<number>,
@@ -107,12 +83,6 @@ export const gridLayer = (
   ],
 });
 
-/**
- * The document a chart's layers make.
- *
- * The layers paint in the order they are given — the grid first, so a series
- * paints over it — and each layer's marks carry that layer's colour.
- */
 export const chartDocument = (
   box: ChartBox,
   layers: ReadonlyArray<LayerPaint>,
@@ -123,13 +93,6 @@ export const chartDocument = (
   marks: Arr.flatten(Arr.map(layers, (paint) => layerMarks(paint))),
 });
 
-/**
- * A gradient for a series' area fill: its own colour, fading to nothing.
- *
- * The fade is a **real gradient** now, not a stack of nested bands — the
- * document route carries `linearGradient`, and the mask route cannot. The
- * gradient's id is the series' key, so a document names each gradient once.
- */
 export const areaGradient = (
   key: string,
   colour: string,

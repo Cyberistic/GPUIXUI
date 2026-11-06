@@ -1,68 +1,41 @@
-/**
- * The chart's marks: a shape, its paint, and nothing else.
- *
- * A mark is the smallest thing a chart draws. It is a pure value — no host
- * element, no theme, no colour lookup — so the geometry can be tested without
- * a renderer and the paint can be tested without a chart.
- *
- * The shape is one of four: a `rect`, a `path`, a `circle` or an `ellipse`.
- * The paint is a fill, a stroke, or both.
- *
- * The colours are **the caller's**, resolved before the mark is built: a mark
- * names `#2ECC71` or `none`, never a theme role. That is what lets the same
- * mark model feed two painters — the SVG document the runtime decodes and the
- * one-tint mask it cannot — without either of them knowing about the other.
- */
-
 import { Match } from "effect";
+import * as Arr from "effect/Array";
 
-/** How a shape is filled: a colour, or a gradient the document defines. */
 export interface MarkFill {
-  /** The colour, as the markup spells it. */
   readonly color: string;
-  /** The fill's alpha, 0–1. */
   readonly opacity?: number;
-  /**
-   * The gradient the fill is painted with, when it is not a flat colour.
-   *
-   * The name is a gradient's id in the document's `defs`, so a mark is still
-   * a pure value: the document that owns the gradient defines it.
-   */
   readonly gradient?: string;
 }
 
-/** How a shape is stroked: a colour, a weight, and a dash. */
 export interface MarkStroke {
-  /** The stroke's colour. */
   readonly color: string;
-  /** The stroke's weight in pixels. */
   readonly width: number;
-  /** The stroke's alpha, 0–1. */
   readonly opacity?: number;
-  /** The dash pattern, as the markup spells it (`"4 2"`). */
   readonly dash?: string;
 }
 
-/** The paint every shape carries. */
-export interface MarkPaint {
-  /** The shape's fill, when it has one. */
-  readonly fill?: MarkFill;
-  /** The shape's stroke, when it has one. */
-  readonly stroke?: MarkStroke;
+export interface MarkClip {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
 }
 
-/** A rectangle, with its paint. */
+export interface MarkPaint {
+  readonly fill?: MarkFill;
+  readonly stroke?: MarkStroke;
+  readonly clip?: MarkClip;
+}
+
 export interface RectMark extends MarkPaint {
   readonly kind: "rect";
   readonly x: number;
   readonly y: number;
   readonly width: number;
   readonly height: number;
-  /** The corner radius, when the shape is rounded. */
   readonly rx?: number;
 }
 
-/** A path, with its paint. */
 export interface PathMark extends MarkPaint {
   readonly kind: "path";
   readonly d: string;
@@ -85,20 +58,8 @@ export interface EllipseMark extends MarkPaint {
   readonly ry: number;
 }
 
-/**
- * A shape with its paint.
- *
- * A mark with neither a fill nor a stroke paints nothing, and the markup says
- * so rather than the painter guessing a colour.
- */
 export type ChartMark = RectMark | PathMark | CircleMark | EllipseMark;
 
-/**
- * A number as the markup spells it: at most two decimals, never `NaN`.
- *
- * The markup is read by a human in a test failure, so `12.34567` is noise
- * and `NaN` is a lie.
- */
 export const num = (value: number): string =>
   Number.isFinite(value) ? `${Math.round(value * 100) / 100}` : "0";
 
@@ -132,12 +93,6 @@ const paintAttributes = (mark: ChartMark): string => {
   return parts.join(" ");
 };
 
-/**
- * One mark as the markup spells it.
- *
- * A path's `fill` is `none` unless the caller gives it one, so an open path
- * does not close itself with a fill the caller never asked for.
- */
 export const markMarkup = (mark: ChartMark): string => {
   const paint = paintAttributes(mark);
   return Match.value(mark).pipe(
@@ -160,47 +115,48 @@ export const markMarkup = (mark: ChartMark): string => {
   );
 };
 
-/**
- * A mark painted in one flat colour — the one-tint mask route's shape.
- *
- * The mask painter has no colour of its own: the runtime tints the whole
- * document through `style.color`, so a mark's own fill would be ignored.
- * This drops the gradient a flat colour cannot carry and leaves the fill.
- */
+export const marksMarkup = (
+  marks: ReadonlyArray<ChartMark>,
+): { readonly defs: string; readonly body: string } => {
+  const indexed: ReadonlyArray<{
+    readonly mark: ChartMark;
+    readonly index: number;
+  }> = Arr.map(marks, (mark, index) => ({ mark, index }));
+  const defs = Arr.join(
+    Arr.flatMap(indexed, (entry) =>
+      entry.mark.clip === undefined
+        ? []
+        : [
+            `<clipPath id="chart-clip-${entry.index}"><rect x="${num(entry.mark.clip.x)}" y="${num(entry.mark.clip.y)}" width="${num(entry.mark.clip.width)}" height="${num(entry.mark.clip.height)}"/></clipPath>`,
+          ],
+    ),
+    "",
+  );
+  const body = Arr.join(
+    Arr.map(marks, (mark, index) =>
+      mark.clip === undefined
+        ? markMarkup(mark)
+        : `<g clip-path="url(#chart-clip-${index})">${markMarkup(mark)}</g>`,
+    ),
+    "",
+  );
+  return { defs, body };
+};
+
 export const flatMark = (mark: ChartMark): ChartMark => ({
   ...mark,
   fill:
     mark.fill === undefined ? undefined : { ...mark.fill, gradient: undefined },
 });
 
-/**
- * The colour a mark's paint takes, when it has none yet.
- *
- * The geometry names a mark's **weight** and whether it is dashed; the
- * **colour** is resolved at paint time, because the colour belongs to the
- * series and the series' colour is a palette the frame owns. A mark built
- * without a colour is painted in the frame's fallback.
- */
 export const FALLBACK_MARK_COLOUR = "#000000";
 
-/**
- * The stroke a line paints: a weight, and the dash a dashed line carries.
- *
- * The dash is derived from the weight, so a dashed line's dashes scale with
- * its stroke rather than being a fixed pattern that a thin line drowns in.
- */
 export const lineStroke = (width: number, dashed = false): MarkStroke => ({
   color: FALLBACK_MARK_COLOUR,
   width,
   dash: dashed ? `${num(width * 2)} ${num(width * 1.6)}` : undefined,
 });
 
-/**
- * The fill a shape paints, at an alpha.
- *
- * A fill with no colour takes the fallback, so a mark is never colourless by
- * accident.
- */
 export const solidFill = (color: string, opacity?: number): MarkFill => ({
   color,
   opacity,
