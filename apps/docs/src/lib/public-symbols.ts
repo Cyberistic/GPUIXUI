@@ -11,6 +11,8 @@
  * over. The page never imports a package, and nothing here touches the disk.
  */
 
+import { curatedTwinOf } from "./curated-twins";
+
 /** How a published symbol is declared. */
 export type PublicSymbolKind =
   | "component"
@@ -108,6 +110,11 @@ export interface DocsCollection {
  * no page, and a link to a page the site does not serve would be worse than no
  * link at all. This is a convenience for the reader, not a completeness claim:
  * the module path is still printed.
+ *
+ * A page a **curated page replaces** is not served: five primitives are
+ * documented in full under `/components` and their package address redirects
+ * there. So a symbol declared in one of them links to the page that documents
+ * it, and not to the address that only answers with a 301.
  */
 export const docsUrlFor = (
   module: string,
@@ -131,6 +138,11 @@ export const docsUrlFor = (
   if (base === undefined || base === "" || base === "index") return undefined;
 
   const url = `${collection.route}/${kebabCase(base)}`;
+  // A page a curated page replaces is **not served**: five primitives are
+  // documented in full under `/components` and their package address only
+  // answers with a 301. So the symbol links to the page that documents it.
+  const curated = curatedTwinOf(url);
+  if (curated !== undefined) return curated;
   return pages.some((page) => page.url === url) ? url : undefined;
 };
 

@@ -29,9 +29,12 @@ import { darkTheme, seriesColors } from "@gpuixui/tokens";
 import { ChartExample } from "../../examples/chart.example.js";
 import { BarChart, LineChart, Sparkline, StackedBar } from "../chart/chart.js";
 import {
+  chartMarkupOf,
   paintedText,
   requireBounds,
   requireStyle,
+  seriesMarkupOf,
+  seriesShapesOf,
 } from "../internal/interaction.js";
 import {
   renderData,
@@ -60,20 +63,28 @@ const colourAt = (index: number): string => {
 };
 
 /**
- * The top edge of a layer's marks, in plot pixels.
+ * The top edge of a series' marks, in plot pixels.
  *
- * A chart's geometry lives in the `<svg source>` document the layer paints, so
- * a claim about where a mark lands has to be read from the markup it paints
- * rather than from the layer's own box (which covers the whole plot).
+ * A chart's geometry lives in the document it paints, so a claim about where a
+ * mark lands has to be read from the markup rather than from the layer's own
+ * box (which covers the whole plot). The document carries the grid and every
+ * series, so the marks counted are the ones in the **series' own colour** —
+ * the one thing that tells its bars from the grid's rules.
  */
-const topOfLayer = (root: DataTestRoot, testId: string): number => {
-  const source = root.renderer.findByTestId(testId)?.customProps?.source;
-  if (typeof source !== "string") {
-    throw new Error(`behaviour: no SVG source on "${testId}"`);
-  }
+const topOfLayer = (
+  root: DataTestRoot,
+  testId: string,
+  key: string,
+  colour: string,
+): number => {
   const tops = Arr.filter(
-    Arr.map([...source.matchAll(/<rect\b[^>]*\by="(-?[\d.]+)"/g)], (match) =>
-      Number(match[1]),
+    Arr.map(
+      [
+        ...seriesShapesOf(root, testId, key, colour)
+          .join(" ")
+          .matchAll(/<rect\b[^>]*\by="(-?[\d.]+)"/g),
+      ],
+      (match) => Number(match[1]),
     ),
     Number.isFinite,
   );
@@ -83,6 +94,19 @@ const topOfLayer = (root: DataTestRoot, testId: string): number => {
   }
   return top;
 };
+
+/**
+ * The shapes a series painted, in the document's own order.
+ *
+ * The document carries the grid and every series, so a suite that counts a
+ * series' shapes counts the ones in the **series' own colour**.
+ */
+const shapesOf = (
+  root: DataTestRoot,
+  testId: string,
+  key: string,
+  colour: string,
+): ReadonlyArray<string> => seriesShapesOf(root, testId, key, colour);
 
 afterEach(() => {
   root?.unmount();
@@ -191,17 +215,13 @@ describe("the charts", () => {
         root.renderer.findByTestId(`chart-donut-layer-${key}`),
       ).toBeDefined();
     });
-    const sourceOf = (key: string): string => {
-      const source = root.renderer.findByTestId(`chart-donut-layer-${key}`)
-        ?.customProps?.source;
-      if (typeof source !== "string") {
-        throw new Error(`behaviour: no SVG source on the ${key} slice`);
-      }
-      return source;
-    };
-    expect(sourceOf("direct")).toContain("<path");
-    expect(sourceOf("social")).toContain("<path");
-    expect(sourceOf("referral")).not.toContain("<path");
+    // The slices paint in the palette's own colours, so a slice's marks are
+    // the ones in its colour. The zero datum paints none, so it has none.
+    const sourceOf = (key: string, colour: string): string =>
+      seriesMarkupOf(root, "chart-donut", key, colour);
+    expect(sourceOf("direct", colourAt(0))).toContain("<path");
+    expect(sourceOf("social", colourAt(2))).toContain("<path");
+    expect(sourceOf("referral", colourAt(3))).not.toContain("<path");
   });
 
   it("draws a sparkline in the first series colour", () => {
@@ -272,7 +292,7 @@ describe("the charts", () => {
     expect(root.renderer.findByTestId("chart-totals-tick-25")).toBeUndefined();
     // …and the top of the stack lands where that axis says it does: 120 of 200
     // leaves the stack 40px down from the plot's ceiling.
-    expect(topOfLayer(root, "chart-totals-layer-b")).toBe(40);
+    expect(topOfLayer(root, "chart-totals", "b", colourAt(1))).toBe(40);
   });
 
   it("paints no bar in a column the labels do not name", () => {
@@ -291,17 +311,18 @@ describe("the charts", () => {
     );
     settle(root);
 
-    const source = root.renderer.findByTestId("chart-past-labels-layer-revenue")
-      ?.customProps?.source;
-    if (typeof source !== "string") {
-      throw new Error("behaviour: no SVG source on the bar layer");
-    }
-    expect([...source.matchAll(/<rect\b/g)]).toHaveLength(1);
+    // The document carries the grid's rules too, so the bar is counted by the
+    // colour the series paints in.
+    expect(
+      shapesOf(root, "chart-past-labels", "revenue", colourAt(0)),
+    ).toHaveLength(1);
     // The discarded 500 draws nowhere, so it cannot raise the axis either: the
     // scale is the labelled 5, and its bar stands the whole plot at y = 0. A
     // scale that still read the tail would paint the same bar one pixel tall
     // under a 500 ceiling, which reads as a value of almost nothing.
-    expect(topOfLayer(root, "chart-past-labels-layer-revenue")).toBe(0);
+    expect(topOfLayer(root, "chart-past-labels", "revenue", colourAt(0))).toBe(
+      0,
+    );
   });
 
   it("measures the axis over the slots the labels name", () => {
@@ -328,7 +349,9 @@ describe("the charts", () => {
       root.renderer.findByTestId("chart-ragged-bars-tick-1000"),
     ).toBeUndefined();
     // The 6 of a 10 ceiling leaves the bar 40px down the plot.
-    expect(topOfLayer(root, "chart-ragged-bars-layer-revenue")).toBe(40);
+    expect(topOfLayer(root, "chart-ragged-bars", "revenue", colourAt(0))).toBe(
+      40,
+    );
   });
 
   it("lays out the default plot when a computed size cannot paint", () => {
@@ -353,11 +376,7 @@ describe("the charts", () => {
     expect(plot.width).toBe(320);
     expect(plot.height).toBe(160);
 
-    const source = root.renderer.findByTestId("chart-unreadable-layer-revenue")
-      ?.customProps?.source;
-    if (typeof source !== "string") {
-      throw new Error("behaviour: no SVG source on the layer");
-    }
+    const source = chartMarkupOf(root, "chart-unreadable-layer-revenue");
     expect(source).toContain('viewBox="0 0 320 160"');
     // The labels keep their slots: 320 / two categories.
     expect(requireBounds(root, "chart-unreadable-label-0").width).toBe(160);
@@ -464,13 +483,68 @@ describe("the charts", () => {
     );
     settle(root);
 
-    const source = root.renderer.findByTestId("chart-ragged-line-layer-churn")
-      ?.customProps?.source;
-    if (typeof source !== "string") {
-      throw new Error("behaviour: no SVG source on the line layer");
-    }
+    const source = chartMarkupOf(root, "chart-ragged-line-layer-churn");
     // The scale is the widest value (20), so y = 50 and 0.
     expect(source).toContain("M25 50L75 0");
     expect(source).not.toContain("M0");
+  });
+
+  it("paints the series a config and a data make, in the config's colours", () => {
+    // The config is shadcn's: a keyed table of label and colour, decoupled
+    // from the data. A chart that names one and a table of rows paints the
+    // series the two make — so one table can be shared by several charts and
+    // a theme can own the colours.
+    root = renderData(
+      <BarChart
+        aria-label="Visitors"
+        config={{
+          desktop: { label: "Desktop", color: "#2563eb" },
+          mobile: { label: "Mobile", color: "#60a5fa" },
+        }}
+        data={[
+          { month: "January", desktop: 186, mobile: 80 },
+          { month: "February", desktop: 305, mobile: 200 },
+        ]}
+        width={200}
+        height={100}
+        testId="chart-configured"
+      />,
+    );
+    settle(root);
+
+    // The two series the config names, each in its own colour.
+    expect(requireStyle(root, "chart-configured-layer-desktop").color).toBe(
+      "#2563eb",
+    );
+    expect(requireStyle(root, "chart-configured-layer-mobile").color).toBe(
+      "#60a5fa",
+    );
+    // The categories the data names, and the legend's own rows.
+    expect(paintedText(root)).toContain("January");
+    expect(paintedText(root)).toContain("February");
+    expect(
+      requireStyle(root, "chart-configured-legend-swatch-desktop")
+        .backgroundColor,
+    ).toBe("#2563eb");
+  });
+
+  it("keeps the caller's own series when no config is named", () => {
+    // The config is an addition, not a replacement: a chart that names none
+    // keeps the series it was given.
+    root = renderData(
+      <BarChart
+        aria-label="Revenue"
+        labels={["Q1"]}
+        series={[{ key: "revenue", label: "Revenue", values: [3] }]}
+        width={200}
+        height={100}
+        testId="chart-unconfigured"
+      />,
+    );
+    settle(root);
+
+    expect(requireStyle(root, "chart-unconfigured-layer-revenue").color).toBe(
+      colourAt(0),
+    );
   });
 });

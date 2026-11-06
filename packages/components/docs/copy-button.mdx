@@ -32,8 +32,7 @@ const [mirror, setMirror] = useState("");
 | `className` | `string` | — |
 | `style` | `StateStyle<CopyButtonState>` | — |
 
-## Limitations
-
+## Notes
 - `level` is read through `surfaceLevelOf`, so a saved `"none"` paints at rest; the table's own `motionLevelOf` would animate it.
 - No clipboard write; the control calls `onCopy` and acknowledges the press.
 - The confirmation is the button's name; no live region exists.

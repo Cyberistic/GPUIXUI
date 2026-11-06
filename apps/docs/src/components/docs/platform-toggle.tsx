@@ -1,4 +1,3 @@
-import { useRouterState } from "@tanstack/react-router";
 import {
   createContext,
   useCallback,
@@ -10,31 +9,18 @@ import {
 } from "react";
 import type { PlatformName, Theme, ThemeMode } from "@gpuixui/tokens";
 import {
-  browserSignals,
   choosingPlatform,
-  detectLook,
-  detectPlatform,
-  lookFromSearch,
-  lookParam,
-  modeFromSearch,
   modeLabel,
   modeOrder,
-  modeParam,
-  namesOmarchy,
-  openingChoice,
-  platformFromSearch,
   platformLabel,
   platformOrder,
-  platformParam,
-  previewMode,
   resolvePlatformTheme,
   type LookName,
   type PreviewChoice,
 } from "../../lib/platform";
 import {
   browserChoiceStorage,
-  readDesktopMarker,
-  readRememberedChoice,
+  openingChoice,
   writeRememberedChoice,
 } from "../../lib/platform-storage";
 
@@ -47,9 +33,10 @@ import {
  * light and dark themes, so a component can be seen in both — and the look is
  * the third: the authored looks `retroStyles` ships, applied over the
  * platform's theme, so a picker shows a real library style rather than a
- * docs-only skin. Every choice lives in the URL, so a link carries it, and in
- * local storage, so a navigation does not reset it. A first visit has neither,
- * so it opens on the platform the browser reports.
+ * docs-only skin. Every choice lives in the app — React holds it for the page
+ * and local storage keeps it for the next visit — so the address bar names the
+ * page and not the switch. A first visit has nothing stored, so it opens on the
+ * platform the browser reports.
  */
 
 interface PlatformState {
@@ -82,76 +69,26 @@ interface PlatformState {
 
 const PlatformContext = createContext<PlatformState | null>(null);
 
-/** Put every choice in the address bar without navigating. */
-const writeUrl = (
-  platform: PlatformName,
-  mode: ThemeMode,
-  look: LookName,
-): void => {
-  const url = new URL(window.location.href);
-  url.searchParams.set(platformParam, platform);
-  url.searchParams.set(modeParam, mode);
-  if (look === "native") url.searchParams.delete(lookParam);
-  else url.searchParams.set(lookParam, look);
-  window.history.replaceState(null, "", url.toString());
-};
-
-/** The choice a visit opens with: the URL, then the store, then the browser. */
-const opening = (search: string): PreviewChoice => {
-  const storage = browserChoiceStorage();
-  const signals = browserSignals();
-  const omarchy =
-    namesOmarchy(readDesktopMarker(storage)) || namesOmarchy(signals.userAgent);
-
-  return openingChoice(
-    search,
-    readRememberedChoice(storage, {
-      platform: detectPlatform(signals),
-      look: detectLook(omarchy),
-      mode: previewMode,
-    }),
-  );
-};
-
 /** Provides the platform, palette and look every preview on the page renders. */
 export function PlatformProvider({ children }: { children: ReactNode }) {
-  const search = useRouterState({
-    select: (state) => state.location.searchStr,
-  });
   // Resolved in the initializer rather than an effect: the first render already
   // paints the visitor's platform, so no page opens on a theme it then replaces.
   // A prerendered page cannot know that choice, so the surfaces that paint it
   // declare `suppressHydrationWarning`: the client is deliberately right and the
   // HTML deliberately the site's default, and React's mismatch message for those
   // two attributes would be noise on every page.
-  const [choice, setChoice] = useState<PreviewChoice>(() => opening(search));
-  // A choice made before the page content hydrates would repaint the switch and
-  // the URL while every preview kept the server's palette, so the boundary
-  // below the switch reports when there is something to repaint.
+  const [choice, setChoice] = useState<PreviewChoice>(() =>
+    openingChoice(browserChoiceStorage()),
+  );
+  // A choice made before the page content hydrates would repaint the switch
+  // while every preview kept the server's palette, so the boundary below the
+  // switch reports when there is something to repaint.
   const [contentReady, setContentReady] = useState(false);
   const markContentMounted = useCallback(() => setContentReady(true), []);
-
-  // The URL is the source of truth: a shared link carries every choice, and a
-  // navigation that drops a parameter restores the remembered one and puts it
-  // back, so the address bar always says what is showing.
-  useEffect(() => {
-    const storage = browserChoiceStorage();
-    const next = opening(search);
-
-    setChoice(next);
-    writeRememberedChoice(storage, next);
-    if (
-      platformFromSearch(search) === undefined ||
-      lookFromSearch(search) === undefined ||
-      modeFromSearch(search) === undefined
-    )
-      writeUrl(next.platform, next.mode, next.look);
-  }, [search]);
 
   const choose = useCallback((next: PreviewChoice) => {
     setChoice(next);
     writeRememberedChoice(browserChoiceStorage(), next);
-    writeUrl(next.platform, next.mode, next.look);
   }, []);
 
   const { look, mode, platform } = choice;

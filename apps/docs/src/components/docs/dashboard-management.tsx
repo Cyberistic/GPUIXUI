@@ -1,17 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
 
-/**
- * Dashboard management block — a dense three-column console for the
- * `/blocks/dashboard-management` recipe. Like every block, the preview is a
- * browser reproduction of the native geometry and palette (the shipped tree
- * renders through GPUix, not the DOM); the source is the `@gpuixui/*` recipe a
- * consumer copies.
- *
- * Every state lives in one record so the preview and the tests see the same
- * values: the chosen runtime, the dismissed toasts, the acknowledged key, the
- * selected deploy, and whether the upload was cancelled.
- */
-
 export type Runtime = "kubernetes" | "vm";
 
 export type UploadPhase = "uploading" | "cancelled";
@@ -103,6 +91,18 @@ const GLYPHS = {
       <path d="m9 12 2 2 4-4" />
     </>
   ),
+  key: (
+    <>
+      <circle cx="8" cy="16" r="4" />
+      <path d="m11 13 9-9 2 2-2 2 2 2-3 3-2-2-2 2" />
+    </>
+  ),
+  bell: (
+    <>
+      <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6" />
+      <path d="M10 20a2 2 0 0 0 4 0" />
+    </>
+  ),
   plus: <path d="M12 5v14M5 12h14" />,
   check: <path d="m5 12 4 4 10-10" />,
   warning: (
@@ -138,10 +138,10 @@ const Glyph = ({
 );
 
 const STATS = [
-  { label: "Requests", value: "12,847", delta: "+4.2%", tone: "up" },
-  { label: "P95", value: "421ms", delta: "-3ms", tone: "down" },
-  { label: "Errors", value: "12", delta: "-8.1%", tone: "down" },
-  { label: "Uptime", value: "99.98%", delta: "", tone: "flat" },
+  { label: "Requests", value: "12,847", delta: "+4.2%", tone: "good" },
+  { label: "P95", value: "421ms", delta: "-3ms", tone: "good" },
+  { label: "Errors", value: "12", delta: "-8.1%", tone: "good" },
+  { label: "Uptime", value: "99.98%", delta: "30d", tone: "flat" },
 ] as const;
 
 const ACTIONS = [
@@ -152,6 +152,8 @@ const ACTIONS = [
 const NAVIGATION = [
   { id: "overview", label: "Overview", glyph: "shield" },
   { id: "deployments", label: "Deployments", glyph: "terminal" },
+  { id: "keys", label: "API keys", glyph: "key" },
+  { id: "notifications", label: "Notifications", glyph: "bell" },
 ] as const;
 
 const RUNTIMES = [
@@ -193,7 +195,7 @@ const MENU = [
   { id: "rename", label: "Rename", key: "⌘R", glyph: "pencil" },
   { id: "duplicate", label: "Duplicate", key: "⌘D", glyph: "copy" },
   { id: "move", label: "Move to…", key: "", glyph: "folder" },
-  { id: "delete", label: "Delete", key: "", glyph: "trash", tone: "danger" },
+  { id: "delete", label: "Delete", key: "", glyph: "trash" },
 ] as const;
 
 const API_KEYS = [
@@ -201,23 +203,22 @@ const API_KEYS = [
     id: "production",
     label: "production",
     masked: "sk_live_**********8ra2",
-    calls: "12,847",
+    calls: "12,847 calls",
   },
   {
     id: "staging",
     label: "staging",
     masked: "sk_test_**********kf91",
-    calls: "3,201",
+    calls: "3,201 calls",
   },
   {
     id: "legacy-cron",
     label: "legacy-cron",
     masked: "sk_live_**********abc4",
-    calls: "—",
+    calls: "No calls",
   },
 ] as const;
 
-/** What the view may do; a static render passes none of it. */
 export interface DashboardManagementActions {
   readonly selectRuntime: (runtime: Runtime) => void;
   readonly dismissToast: (id: string) => void;
@@ -239,10 +240,16 @@ const NO_ACTIONS: DashboardManagementActions = {
 const Card = ({
   children,
   className = "",
+  id,
 }: {
   readonly children: ReactNode;
   readonly className?: string;
-}) => <div className={`gx-mgmt-card ${className}`.trim()}>{children}</div>;
+  readonly id?: string;
+}) => (
+  <section className={`gx-mgmt-card ${className}`.trim()} id={id}>
+    {children}
+  </section>
+);
 
 const Head = ({
   title,
@@ -252,46 +259,92 @@ const Head = ({
   readonly description?: string;
 }) => (
   <div className="gx-mgmt-head">
-    <p className="gx-mgmt-title">{title}</p>
+    <h2 className="gx-mgmt-title">{title}</h2>
     {description === undefined ? null : (
       <p className="gx-mgmt-desc">{description}</p>
     )}
   </div>
 );
 
-const ServiceCard = () => (
-  <Card>
-    <div className="gx-mgmt-service">
-      <span className="gx-mgmt-dot" />
-      <div>
-        <p className="gx-mgmt-service-name">atlas-edge · production</p>
-        <p className="gx-mgmt-service-meta">Last deploy 2m ago · main@a9f3b1</p>
-      </div>
-    </div>
-    <div className="gx-mgmt-stats">
-      {STATS.map((stat) => (
-        <div className="gx-mgmt-stat" key={stat.label}>
-          <p className="gx-mgmt-stat-label">{stat.label}</p>
-          <div className="gx-mgmt-stat-row">
-            <span className="gx-mgmt-stat-value">{stat.value}</span>
-            {stat.delta === "" ? null : (
-              <span className="gx-mgmt-delta" data-tone={stat.tone}>
-                {stat.delta}
-              </span>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
+const Section = ({
+  title,
+  description,
+  id,
+  className,
+  children,
+}: {
+  readonly title: string;
+  readonly description?: string;
+  readonly id?: string;
+  readonly className?: string;
+  readonly children: ReactNode;
+}) => (
+  <Card className={className} id={id}>
+    <Head description={description} title={title} />
+    {children}
   </Card>
 );
 
+const ServiceCard = () => (
+  <Card id="gx-mgmt-overview">
+    <div className="gx-mgmt-service">
+      <span aria-hidden="true" className="gx-mgmt-dot" />
+      <div>
+        <h2 className="gx-mgmt-service-name">atlas-edge · production</h2>
+        <p className="gx-mgmt-service-meta">Last deploy 2m ago · main@a9f3b1</p>
+      </div>
+    </div>
+    <dl className="gx-mgmt-stats">
+      {STATS.map((stat) => (
+        <div className="gx-mgmt-stat" key={stat.label}>
+          <dt className="gx-mgmt-stat-label">{stat.label}</dt>
+          <dd className="gx-mgmt-stat-row">
+            <span className="gx-mgmt-stat-value">{stat.value}</span>
+            <span className="gx-mgmt-delta" data-tone={stat.tone}>
+              {stat.delta}
+            </span>
+          </dd>
+        </div>
+      ))}
+    </dl>
+  </Card>
+);
+
+const WorkspaceNav = () => (
+  <nav aria-label="Workspace" className="gx-mgmt-nav">
+    <p className="gx-mgmt-group-label">Workspace</p>
+    {NAVIGATION.map((item) => (
+      <button
+        aria-current={item.id === "overview" ? "page" : undefined}
+        className="gx-mgmt-row"
+        key={item.id}
+        onClick={() => {
+          const main = document.querySelector(".gx-mgmt-main");
+          if (main === null) return;
+          const target = document.getElementById(`gx-mgmt-${item.id}`);
+          if (target === null || !main.contains(target)) {
+            main.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+          }
+          const delta =
+            target.getBoundingClientRect().top -
+            main.getBoundingClientRect().top;
+          main.scrollBy({ top: delta - 12, behavior: "smooth" });
+        }}
+        type="button"
+      >
+        <Glyph name={item.glyph} />
+        <span className="gx-mgmt-row-label">{item.label}</span>
+      </button>
+    ))}
+  </nav>
+);
+
 const CommandPaletteCard = () => (
-  <Card>
-    <Head
-      description="Search + jump across the entire app"
-      title="Command palette"
-    />
+  <Section
+    description="Search + jump across the entire app"
+    title="Command palette"
+  >
     <div className="gx-search-field gx-mgmt-search">
       <span className="gx-search-mark">
         <Glyph name="search" />
@@ -321,30 +374,19 @@ const CommandPaletteCard = () => (
         </button>
       ))}
     </div>
-    <div className="gx-mgmt-group">
-      <p className="gx-mgmt-group-label">Navigate</p>
-      {NAVIGATION.map((item) => (
-        <button
-          className="gx-mgmt-row"
-          data-nav={item.id}
-          key={item.id}
-          type="button"
-        >
-          <Glyph name={item.glyph} />
-          <span className="gx-mgmt-row-label">{item.label}</span>
-        </button>
-      ))}
-    </div>
-  </Card>
+  </Section>
 );
 
 const ErrorCallout = () => (
   <Card className="gx-mgmt-danger">
     <div className="gx-mgmt-error-head">
       <Glyph className="gx-mgmt-glyph gx-mgmt-error-glyph" name="warning" />
-      <p className="gx-mgmt-error-text">
-        TypeError at line 42 of main.ts: Missing env DATABASE_URL
-      </p>
+      <div>
+        <h2 className="gx-mgmt-title">Deployment failed</h2>
+        <p className="gx-mgmt-error-text">
+          TypeError at line 42 of main.ts: Missing env DATABASE_URL
+        </p>
+      </div>
     </div>
     <div className="gx-mgmt-actions">
       <button className="gx-btn gx-btn-primary gx-btn-sm" type="button">
@@ -368,15 +410,15 @@ const UploadCard = ({
 }) => {
   const cancelled = upload === "cancelled";
   return (
-    <Card className="gx-mgmt-upload">
-      <Head
-        description={
-          cancelled
-            ? "Upload cancelled · dataset.parquet"
-            : "Chunked multipart upload in progress"
-        }
-        title="Upload · dataset.parquet"
-      />
+    <Section
+      className="gx-mgmt-upload"
+      description={
+        cancelled
+          ? "Upload cancelled · dataset.parquet"
+          : "Chunked multipart upload in progress"
+      }
+      title="Upload · dataset.parquet"
+    >
       <div
         aria-label="Upload progress"
         aria-valuemax={100}
@@ -405,7 +447,7 @@ const UploadCard = ({
           {cancelled ? "Resume" : "Cancel"}
         </button>
       </div>
-    </Card>
+    </Section>
   );
 };
 
@@ -416,11 +458,10 @@ const RuntimeCard = ({
   readonly runtime: Runtime;
   readonly onSelect: (runtime: Runtime) => void;
 }) => (
-  <Card>
-    <Head
-      description="Select the runtime for this cluster"
-      title="Compute environment"
-    />
+  <Section
+    description="Select the runtime for this cluster"
+    title="Compute environment"
+  >
     <div
       aria-label="Compute environment"
       className="gx-mgmt-radios"
@@ -454,7 +495,7 @@ const RuntimeCard = ({
         );
       })}
     </div>
-  </Card>
+  </Section>
 );
 
 const ToastStack = ({
@@ -507,8 +548,7 @@ const DeploymentsCard = ({
   readonly selectedBuild: string | null;
   readonly onSelect: (build: string) => void;
 }) => (
-  <Card>
-    <Head title="Recent deployments" />
+  <Section id="gx-mgmt-deployments" title="Recent deployments">
     <table className="gx-mgmt-table">
       <thead>
         <tr>
@@ -544,44 +584,57 @@ const DeploymentsCard = ({
         ))}
       </tbody>
     </table>
-  </Card>
+    <button className="gx-btn gx-btn-outline gx-mgmt-debug" type="button">
+      <Glyph className="gx-mgmt-glyph gx-mgmt-debug-glyph" name="terminal" />
+      <span>Debug prod deploy failure</span>
+      <Glyph className="gx-mgmt-glyph gx-mgmt-debug-chevron" name="chevron" />
+    </button>
+  </Section>
 );
 
-const DebugRow = () => (
-  <button className="gx-btn gx-btn-outline gx-mgmt-debug" type="button">
-    <Glyph className="gx-mgmt-glyph gx-mgmt-debug-glyph" name="terminal" />
-    <span>Debug prod deploy failure</span>
-    <Glyph className="gx-mgmt-glyph gx-mgmt-debug-chevron" name="chevron" />
-  </button>
-);
-
-const MenuCard = () => (
-  <Card>
-    <p className="gx-mgmt-group-label">Popover · context menu</p>
-    <div className="gx-mgmt-menu" role="menu">
-      {MENU.map((item) => (
+const MenuCard = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Section
+      description="Rename, duplicate, move or delete atlas-edge."
+      title="Deployment actions"
+    >
+      <p className="gx-mgmt-group-label">Popover · context menu</p>
+      <div className="gx-mgmt-menu-wrap">
         <button
-          className="gx-mgmt-menu-row"
-          data-menu={item.id}
-          data-tone={item.id === "delete" ? "danger" : undefined}
-          key={item.id}
-          role="menuitem"
+          aria-expanded={open}
+          aria-haspopup="menu"
+          className="gx-btn gx-btn-outline gx-btn-sm gx-mgmt-menu-trigger"
+          onClick={() => setOpen((current) => !current)}
           type="button"
         >
-          <Glyph name={item.glyph} />
-          <span className="gx-mgmt-row-label">{item.label}</span>
-          {item.key === "" ? (
-            item.id === "move" ? (
-              <Glyph className="gx-mgmt-glyph" name="chevron" />
-            ) : null
-          ) : (
-            <span className="gx-keycap">{item.key}</span>
-          )}
+          <span>Service actions</span>
+          <Glyph className="gx-mgmt-glyph" name="chevron" />
         </button>
-      ))}
-    </div>
-  </Card>
-);
+        {open ? (
+          <div className="gx-mgmt-menu" role="menu">
+            {MENU.map((item) => (
+              <button
+                className="gx-mgmt-menu-row"
+                data-menu={item.id}
+                data-tone={item.id === "delete" ? "danger" : undefined}
+                key={item.id}
+                role="menuitem"
+                type="button"
+              >
+                <Glyph name={item.glyph} />
+                <span className="gx-mgmt-row-label">{item.label}</span>
+                {item.key === "" ? null : (
+                  <span className="gx-keycap">{item.key}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </Section>
+  );
+};
 
 const AllClearCard = () => (
   <Card className="gx-mgmt-clear">
@@ -604,8 +657,11 @@ const ApiKeysCard = ({
   readonly copiedKey: string | null;
   readonly onCopy: (id: string) => void;
 }) => (
-  <Card>
-    <Head description="Issued against atlas-edge" title="API keys" />
+  <Section
+    description="Issued against atlas-edge"
+    id="gx-mgmt-keys"
+    title="API keys"
+  >
     <div className="gx-mgmt-keys">
       {API_KEYS.map((key) => (
         <div className="gx-mgmt-key" data-key={key.id} key={key.id}>
@@ -631,7 +687,7 @@ const ApiKeysCard = ({
     >
       + New key
     </button>
-  </Card>
+  </Section>
 );
 
 export const DashboardManagementView = ({
@@ -642,37 +698,52 @@ export const DashboardManagementView = ({
   readonly actions?: DashboardManagementActions;
 }) => (
   <div className="gx-mgmt">
-    <div className="gx-mgmt-col">
-      <ServiceCard />
-      <CommandPaletteCard />
-      <ErrorCallout />
-      <UploadCard
-        onCancel={actions.cancelUpload}
-        onResume={actions.resumeUpload}
-        upload={state.upload}
-      />
+    <div className="gx-mgmt-bar">
+      <span aria-hidden="true" className="gx-mgmt-lights">
+        <i />
+        <i />
+        <i />
+      </span>
+      <span className="gx-mgmt-bar-title">atlas-edge — Settings</span>
+      <span className="gx-mgmt-env">Production</span>
     </div>
-    <div className="gx-mgmt-col">
-      <RuntimeCard onSelect={actions.selectRuntime} runtime={state.runtime} />
-      <ToastStack
-        dismissed={state.dismissedToasts}
-        onDismiss={actions.dismissToast}
-      />
-      <DeploymentsCard
-        onSelect={actions.selectBuild}
-        selectedBuild={state.selectedBuild}
-      />
-      <DebugRow />
-    </div>
-    <div className="gx-mgmt-col">
-      <MenuCard />
-      <AllClearCard />
-      <ApiKeysCard copiedKey={state.copiedKey} onCopy={actions.copyKey} />
+    <div className="gx-mgmt-body">
+      <div className="gx-mgmt-side">
+        <ServiceCard />
+        <WorkspaceNav />
+        <p className="gx-mgmt-side-foot">main@a9f3b1 · us-east-1</p>
+      </div>
+      <div className="gx-mgmt-main">
+        <ErrorCallout />
+        <RuntimeCard onSelect={actions.selectRuntime} runtime={state.runtime} />
+        <UploadCard
+          onCancel={actions.cancelUpload}
+          onResume={actions.resumeUpload}
+          upload={state.upload}
+        />
+        <DeploymentsCard
+          onSelect={actions.selectBuild}
+          selectedBuild={state.selectedBuild}
+        />
+        <ApiKeysCard copiedKey={state.copiedKey} onCopy={actions.copyKey} />
+        <AllClearCard />
+        <Section
+          description="Deploy and quota events from the workspace."
+          id="gx-mgmt-notifications"
+          title="Notifications"
+        >
+          <ToastStack
+            dismissed={state.dismissedToasts}
+            onDismiss={actions.dismissToast}
+          />
+        </Section>
+        <CommandPaletteCard />
+        <MenuCard />
+      </div>
     </div>
   </div>
 );
 
-/** The live block: the view plus the state every control moves. */
 export const DashboardManagementRender = () => {
   const [state, setState] = useState(initialDashboardManagementState);
 
@@ -717,9 +788,9 @@ import { useTheme } from "@gpuixui/tokens/react";
 
 const stats = [
   { label: "Requests", value: "12,847", delta: "+4.2%", tone: "success" },
-  { label: "P95", value: "421ms", delta: "-3ms", tone: "danger" },
-  { label: "Errors", value: "12", delta: "-8.1%", tone: "danger" },
-  { label: "Uptime", value: "99.98%", delta: "", tone: "neutral" },
+  { label: "P95", value: "421ms", delta: "-3ms", tone: "success" },
+  { label: "Errors", value: "12", delta: "-8.1%", tone: "success" },
+  { label: "Uptime", value: "99.98%", delta: "30d", tone: "neutral" },
 ] as const;
 
 const deployments = [
@@ -730,10 +801,22 @@ const deployments = [
 ] as const;
 
 const keys = [
-  { label: "production", value: "sk_live_**********8ra2", calls: "12,847" },
-  { label: "staging", value: "sk_test_**********kf91", calls: "3,201" },
-  { label: "legacy-cron", value: "sk_live_**********abc4", calls: "—" },
+  { label: "production", value: "sk_live_**********8ra2", calls: "12,847 calls" },
+  { label: "staging", value: "sk_test_**********kf91", calls: "3,201 calls" },
+  { label: "legacy-cron", value: "sk_live_**********abc4", calls: "No calls" },
 ] as const;
+
+function Stat({ stat }: { stat: (typeof stats)[number] }) {
+  return (
+    <Stack direction="column" gap="2xs" grow>
+      <Text role="label" tone="muted">{stat.label}</Text>
+      <Stack direction="row" gap="2xs" align="center">
+        <Text role="h3">{stat.value}</Text>
+        <Badge variant={stat.tone}>{stat.delta}</Badge>
+      </Stack>
+    </Stack>
+  );
+}
 
 function ServiceCard() {
   const theme = useTheme();
@@ -749,77 +832,35 @@ function ServiceCard() {
         </Stack>
       </CardHeader>
       <CardContent>
-        <Stack direction="row" gap="sm">
-          {stats.map((stat) => (
-            <Stack direction="column" gap="2xs" grow key={stat.label}>
-              <Text role="label" tone="muted">{stat.label}</Text>
-              <Stack direction="row" gap="2xs" align="center">
-                <Text role="h3">{stat.value}</Text>
-                {stat.delta === "" ? null : <Badge variant={stat.tone}>{stat.delta}</Badge>}
-              </Stack>
-            </Stack>
-          ))}
+        <Stack direction="column" gap="sm">
+          <Stack direction="row" gap="sm"><Stat stat={stats[0]} /><Stat stat={stats[1]} /></Stack>
+          <Stack direction="row" gap="sm"><Stat stat={stats[2]} /><Stat stat={stats[3]} /></Stack>
         </Stack>
       </CardContent>
     </Card>
   );
 }
 
-function CommandPalette({ onNavigate }: { onNavigate: (id: string) => void }) {
+function WorkspaceNav() {
   return (
-    <Card variant="outline">
-      <CardHeader>
-        <CardTitle>Command palette</CardTitle>
-        <Text role="caption" tone="muted">Search + jump across the entire app</Text>
-      </CardHeader>
-      <CardContent>
-        <Stack direction="row" align="center" gap="sm">
-          <SearchInput placeholder="Search commands…" onSubmit={onNavigate} />
-          <Keycap>⌘K</Keycap>
-        </Stack>
-        <Stack direction="column" gap="2xs">
-          <Text role="label" tone="muted">Actions</Text>
-          <Button variant="ghost" onActivate={() => onNavigate("deploy")}>New deployment</Button>
-          <Button variant="ghost" onActivate={() => onNavigate("logs")}>Open logs</Button>
-        </Stack>
-        <Stack direction="column" gap="2xs">
-          <Text role="label" tone="muted">Navigate</Text>
-          <Button variant="ghost" onActivate={() => onNavigate("overview")}>Overview</Button>
-          <Button variant="ghost" onActivate={() => onNavigate("deployments")}>Deployments</Button>
-        </Stack>
-      </CardContent>
-    </Card>
+    <Stack direction="column" gap="2xs">
+      {["Overview", "Deployments", "API keys", "Notifications"].map((label) => (
+        <Button key={label} variant="ghost">{label}</Button>
+      ))}
+    </Stack>
   );
 }
 
 function ErrorCallout({ onRestore, onDismiss }: { onRestore: () => void; onDismiss: () => void }) {
   return (
     <Alert tone="danger">
-      <AlertTitle>TypeError at line 42 of main.ts</AlertTitle>
-      <AlertDescription>Missing env DATABASE_URL</AlertDescription>
+      <AlertTitle>Deployment failed</AlertTitle>
+      <AlertDescription>TypeError at line 42 of main.ts: Missing env DATABASE_URL</AlertDescription>
       <Stack direction="row" gap="sm">
         <Button variant="primary" onActivate={onRestore}>Restore env</Button>
         <Button variant="ghost" onActivate={onDismiss}>Dismiss</Button>
       </Stack>
     </Alert>
-  );
-}
-
-function UploadCard({ progress, onCancel }: { progress: number; onCancel: () => void }) {
-  return (
-    <Card variant="outline">
-      <CardHeader>
-        <CardTitle>Upload · dataset.parquet</CardTitle>
-        <Text role="caption" tone="muted">Chunked multipart upload in progress</Text>
-      </CardHeader>
-      <CardContent>
-        <Progress value={progress} label="Upload progress" />
-        <Stack direction="row" justify="between" align="center">
-          <Text role="caption" tone="muted">{progress}%</Text>
-          <Button variant="ghost" onActivate={onCancel}>Cancel</Button>
-        </Stack>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -845,37 +886,25 @@ function RuntimeCard({ runtime, onRuntime }: { runtime: string; onRuntime: (valu
   );
 }
 
-// The store owns the cards: the deploy handler pushes the success, the quota
-// watcher pushes the warning. The column renders what the queue holds.
-function StatusWatchers() {
-  const { push } = useToast();
-  useEffect(() => {
-    push({ title: "Deployment succeeded", description: "atlas-edge built in 1.2s", tone: "success" });
-    push({ title: "Rate limit approaching", description: "92% of monthly quota used", tone: "warning" });
-  }, [push]);
-  return null;
-}
-
-function ToastColumn() {
-  const { toasts, dismiss } = useToast();
+function UploadCard({ progress, cancelled, onCancel, onResume }: { progress: number; cancelled: boolean; onCancel: () => void; onResume: () => void }) {
   return (
-    <Stack direction="column" gap="sm">
-      {toasts.map((toast) => (
-        <Card variant="outline" key={toast.id}>
-          <CardContent style={{ padding: 12 }}>
-            <Stack direction="row" align="center" gap="sm">
-              <Stack direction="column" gap="2xs" grow>
-                <Text role="label">{toast.title}</Text>
-                {Option.isSome(toast.description) ? (
-                  <Text role="caption" tone="muted">{toast.description.value}</Text>
-                ) : null}
-              </Stack>
-              <Button variant="ghost" onActivate={() => dismiss(toast.id)}>×</Button>
-            </Stack>
-          </CardContent>
-        </Card>
-      ))}
-    </Stack>
+    <Card variant="outline">
+      <CardHeader>
+        <CardTitle>Upload · dataset.parquet</CardTitle>
+        <Text role="caption" tone="muted">
+          {cancelled ? "Upload cancelled · dataset.parquet" : "Chunked multipart upload in progress"}
+        </Text>
+      </CardHeader>
+      <CardContent>
+        <Progress value={cancelled ? 0 : progress} label="Upload progress" />
+        <Stack direction="row" justify="between" align="center">
+          <Text role="caption" tone="muted">{cancelled ? "Cancelled" : progress + "%"}</Text>
+          <Button variant="ghost" onActivate={cancelled ? onResume : onCancel}>
+            {cancelled ? "Resume" : "Cancel"}
+          </Button>
+        </Stack>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -904,53 +933,8 @@ function DeploymentsCard({ selected, onSelect }: { selected: string | null; onSe
             ))}
           </TableBody>
         </Table>
+        <Button variant="outline">Debug prod deploy failure</Button>
       </CardContent>
-    </Card>
-  );
-}
-
-function MenuCard() {
-  const theme = useTheme();
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger>
-        <Button variant="ghost">Popover · context menu</Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent label="Deployment actions">
-        <DropdownMenuItem
-          leading={<Icon name="pencil" color={theme.colors.mutedForeground} />}
-          trailing={<Keycap>⌘R</Keycap>}
-        >
-          Rename
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          leading={<Icon name="copy" color={theme.colors.mutedForeground} />}
-          trailing={<Keycap>⌘D</Keycap>}
-        >
-          Duplicate
-        </DropdownMenuItem>
-        <DropdownMenuItem leading={<Icon name="folder" color={theme.colors.mutedForeground} />}>
-          Move to…
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem tone="danger" leading={<Icon name="trash" color={theme.colors.destructive} />}>
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function AllClearCard({ onAudit }: { onAudit: () => void }) {
-  const theme = useTheme();
-  return (
-    <Card variant="outline">
-      <EmptyState
-        icon={<Icon name="shield" color={theme.colors.success} size="lg" />}
-        title="All clear"
-        description="No security alerts in the last 24 hours. Your agents, deploys, and keys are healthy."
-        action={<Button variant="ghost" onActivate={onAudit}>View audit log</Button>}
-      />
     </Card>
   );
 }
@@ -979,30 +963,141 @@ function ApiKeysCard() {
   );
 }
 
+// The store owns the cards: the deploy handler pushes the success, the quota
+// watcher pushes the warning. The section renders what the queue holds.
+function StatusWatchers() {
+  const { push } = useToast();
+  useEffect(() => {
+    push({ title: "Deployment succeeded", description: "atlas-edge built in 1.2s", tone: "success" });
+    push({ title: "Rate limit approaching", description: "92% of monthly quota used", tone: "warning" });
+  }, [push]);
+  return null;
+}
+
+function NotificationsCard() {
+  const { toasts, dismiss } = useToast();
+  return (
+    <Card variant="outline">
+      <CardHeader>
+        <CardTitle>Notifications</CardTitle>
+        <Text role="caption" tone="muted">Deploy and quota events from the workspace.</Text>
+      </CardHeader>
+      <CardContent>
+        {toasts.length === 0 ? (
+          <Text role="caption" tone="muted">No new notifications</Text>
+        ) : null}
+        {toasts.map((toast) => (
+          <Stack direction="row" align="center" gap="sm" key={toast.id}>
+            <Stack direction="column" gap="2xs" grow>
+              <Text role="label">{toast.title}</Text>
+              {Option.isSome(toast.description) ? (
+                <Text role="caption" tone="muted">{toast.description.value}</Text>
+              ) : null}
+            </Stack>
+            <Button variant="ghost" onActivate={() => dismiss(toast.id)}>×</Button>
+          </Stack>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CommandPalette() {
+  return (
+    <Card variant="outline">
+      <CardHeader>
+        <CardTitle>Command palette</CardTitle>
+        <Text role="caption" tone="muted">Search + jump across the entire app</Text>
+      </CardHeader>
+      <CardContent>
+        <Stack direction="row" align="center" gap="sm">
+          <SearchInput placeholder="Search commands…" />
+          <Keycap>⌘K</Keycap>
+        </Stack>
+        <Text role="label" tone="muted">Actions</Text>
+        <Button variant="ghost">New deployment</Button>
+        <Button variant="ghost">Open logs</Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function MenuCard() {
+  const theme = useTheme();
+  return (
+    <Card variant="outline">
+      <CardHeader>
+        <CardTitle>Deployment actions</CardTitle>
+        <Text role="caption" tone="muted">Rename, duplicate, move or delete atlas-edge.</Text>
+      </CardHeader>
+      <CardContent>
+        <Text role="caption" tone="muted">Popover · context menu</Text>
+        <DropdownMenu>
+          <DropdownMenuTrigger><Button variant="outline">Service actions</Button></DropdownMenuTrigger>
+          <DropdownMenuContent label="Deployment actions">
+            <DropdownMenuItem leading={<Icon name="pencil" color={theme.colors.mutedForeground} />} trailing={<Keycap>⌘R</Keycap>}>
+              Rename
+            </DropdownMenuItem>
+            <DropdownMenuItem leading={<Icon name="copy" color={theme.colors.mutedForeground} />} trailing={<Keycap>⌘D</Keycap>}>
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuItem leading={<Icon name="folder" color={theme.colors.mutedForeground} />}>
+              Move to…
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem tone="danger" leading={<Icon name="trash" color={theme.colors.destructive} />}>
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AllClearCard({ onAudit }: { onAudit: () => void }) {
+  const theme = useTheme();
+  return (
+    <Card variant="outline">
+      <EmptyState
+        icon={<Icon name="shield" color={theme.colors.success} size="lg" />}
+        title="All clear"
+        description="No security alerts in the last 24 hours. Your agents, deploys, and keys are healthy."
+        action={<Button variant="ghost" onActivate={onAudit}>View audit log</Button>}
+      />
+    </Card>
+  );
+}
+
 export function DashboardManagementPage() {
   const [runtime, setRuntime] = useState("kubernetes");
   const [selected, setSelected] = useState<string | null>(null);
+  const [cancelled, setCancelled] = useState(false);
 
   return (
     <ToastProvider>
       <StatusWatchers />
       <Stack direction="row" gap="md" align="start">
-        <Stack direction="column" gap="md" grow>
+        <Stack direction="column" gap="md" style={{ width: 320 }}>
           <ServiceCard />
-          <CommandPalette onNavigate={() => {}} />
+          <WorkspaceNav />
+          <Text role="caption" tone="muted">main@a9f3b1 · us-east-1</Text>
+        </Stack>
+        <Stack direction="column" gap="md" grow>
           <ErrorCallout onRestore={() => {}} onDismiss={() => {}} />
-          <UploadCard progress={55} onCancel={() => {}} />
-        </Stack>
-        <Stack direction="column" gap="md" grow>
           <RuntimeCard runtime={runtime} onRuntime={setRuntime} />
-          <ToastColumn />
+          <UploadCard
+            progress={55}
+            cancelled={cancelled}
+            onCancel={() => setCancelled(true)}
+            onResume={() => setCancelled(false)}
+          />
           <DeploymentsCard selected={selected} onSelect={setSelected} />
-          <Button variant="ghost">Debug prod deploy failure</Button>
-        </Stack>
-        <Stack direction="column" gap="md" grow>
-          <MenuCard />
-          <AllClearCard onAudit={() => {}} />
           <ApiKeysCard />
+          <AllClearCard onAudit={() => {}} />
+          <NotificationsCard />
+          <CommandPalette />
+          <MenuCard />
         </Stack>
       </Stack>
     </ToastProvider>

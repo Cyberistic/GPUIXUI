@@ -3,17 +3,16 @@
   "pages": [
     "introduction",
     "getting-started",
-    "diagrams",
     "registry",
     "themes",
     "---",
+    "blocks",
     "components",
     "primitives",
-    "icons",
+    "graphics",
     "data-display",
     "workspace",
     "platform",
-    "blocks",
     "examples",
     "reference"
   ]

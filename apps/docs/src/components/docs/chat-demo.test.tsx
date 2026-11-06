@@ -149,6 +149,18 @@ describe("the chat block", () => {
     expect(markup).not.toContain("Jump to latest");
   });
 
+  it("keeps the scrollbar off the avatar", () => {
+    // A macOS overlay scrollbar takes no space and draws over whatever is
+    // under it, so the avatar on the right-hand rows sat in the strip the
+    // scrollbar would cover. The transcript's right padding reserves that
+    // strip, and the gutter holds it open on platforms with a classic
+    // scrollbar so the two do not add up.
+    const messages = block(".gx-chat-messages");
+    expect(messages).toContain("overflow-y: auto");
+    expect(messages).toContain("padding-right: 10px");
+    expect(messages).toContain("scrollbar-gutter: stable");
+  });
+
   it("puts Send, Stop and the field in the composer", () => {
     expect(markup).toContain('class="gx-chat-field"');
     expect(markup).toContain('aria-label="Send"');

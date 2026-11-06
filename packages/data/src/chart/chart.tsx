@@ -1,386 +1,1548 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Charts, drawn as stacked `<svg>` masks.
- *
- * `@gpuix/native@0.11.0` has no chart host, no canvas and no transform, and an
- * `<svg source>` is rasterised into **one** tinted mask — `chart-raster`
- * measured an icon with five layers painting five colours as one. The route this
- * module takes is the one that measurement leaves: **one `<svg>` per series**,
- * each carrying that series' whole geometry in the plot's viewBox and tinted
- * through `style.color`, stacked in paint order inside one relatively positioned
- * plot. Labels and ticks are ordinary `<text>` beside the plot; a legend is a row
- * of swatches in the series' own colours.
- *
- * Nothing paints a surface: a chart inherits the card or page it sits on, which
- * is also what the probe measured of a transparent raster margin.
- *
- * ```tsx
- * <BarChart
- *   aria-label="Revenue by quarter"
- *   labels={["Q1", "Q2", "Q3", "Q4"]}
- *   series={[{ key: "revenue", label: "Revenue", values: [32, 48, 41, 60] }]}
- * />
- * ```
- */
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { iconStepValue, spokenText } from "@gpuixui/primitives/core";
-import { seriesColors } from "@gpuixui/tokens";
+import { Icon, isIconName, type IconName } from "@gpuixui/icons";
+import { spokenText } from "@gpuixui/primitives/core";
+import { themeModeOf } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { listOf, recordsOf, textsOf } from "../internal/list.js";
-import { recipeStyle } from "../recipe.js";
-import { textStyle, themeColors, useTheme } from "../theme.js";
+import type { ChartBox, ChartMark, ChartSeries } from "./logic.js";
 import {
-  axisTicks,
-  barSlot,
+  categoriesFromData,
+  configSeriesColour,
+  seriesFromConfig,
+  type ChartConfig,
+  type ChartRow,
+} from "./config.js";
+import { lineStroke } from "./mark.js";
+import {
   chartBox,
-  chartMarkup,
   chartScale,
-  donutSegments,
-  groupedBarMarks,
-  areaPath,
-  insetLine,
-  lineMarks,
-  seriesColour,
-  tickRules,
   seriesDescription,
   seriesName,
-  stackedBarMarks,
-  stackedScale,
-  tickLabel,
-  type ChartBox,
-  type ChartMark,
-  type ChartSeries,
 } from "./logic.js";
 import {
-  CHART_AXIS,
-  CHART_AXIS_LABEL,
-  CHART_CATEGORIES,
-  CHART_CATEGORY,
-  CHART_CATEGORY_LABEL,
-  CHART_LEGEND,
-  CHART_LEGEND_ITEM,
-  CHART_PLOT,
-  CHART_ROOT,
-  CHART_SWATCH,
-} from "./recipe.js";
+  areaBands,
+  areaPath,
+  barMarksInRange,
+  candleAtMarks,
+  candleUp,
+  chartRange,
+  curvePath,
+  emphasisedPointMarks,
+  funnelMarks,
+  horizontalBarMarks,
+  pointMarks,
+  polygonPath,
+  radarCircleGrid,
+  radarGrid,
+  radarPoints,
+  radarSpokes,
+  radialArcs,
+  fullRing,
+  scatterMarks,
+  chartView,
+  chartWindow,
+  radarCircleGridAt,
+  radarGridAt,
+  ringBands,
+  ringLabelPoints,
+  ringOutsideLabels,
+  ringSegments,
+  scaleY,
+  seriesPoints,
+  valueLabel,
+  type Candle,
+  type ChartView,
+  type Curve,
+} from "./geometry.js";
+import {
+  DEFAULT_ANIMATION_DURATION,
+  scaleSeries,
+  scaleValue,
+  useAnimatedValues,
+  useMountReveal,
+} from "./animation.js";
+import type { MarkClip } from "./mark.js";
+import {
+  ChartFrame,
+  ChartMask,
+  PointTooltip,
+  paletteOf,
+  seriesColourOf,
+  type LegendShape,
+  type LegendSide,
+  type TooltipIndicator,
+  type PaintContext,
+  type PaintLayer,
+  type ValueLabel,
+} from "./frame.js";
+import { recipeStyle } from "../recipe.js";
+import { ChartLegend } from "./legend.js";
+import { textStyle, themeColors, useTheme } from "../theme.js";
+import { CHART_PLOT, CHART_ROOT } from "./recipe.js";
 
-/** The plot's width when the caller names none. */
-export const DEFAULT_CHART_WIDTH = 320;
+export {
+  CHART_AXIS_WIDTH,
+  DEFAULT_CHART_HEIGHT,
+  DEFAULT_CHART_WIDTH,
+} from "./frame.js";
+export {
+  ChartLegend,
+  type ChartLegendItem,
+  type ChartLegendProps,
+} from "./legend.js";
+export type { LegendShape, TooltipIndicator } from "./frame.js";
 
-/** The plot's height when the caller names none. */
-export const DEFAULT_CHART_HEIGHT = 160;
+const DEFAULT_RING_SIZE = 160;
 
-/**
- * The colour a caller names, or the fallback when it names none.
- *
- * A colour is a stored value as often as a literal: a saved card keeps a
- * preference, and a store or a locale table writes `""` where it carried
- * nothing. `??` only covers an **absent** prop, so a blank colour reached
- * `style.color` and the runtime dropped it — the layer painted no tint and the
- * chart's marks vanished while its accessibility description still read them.
- * A blank (or whitespace) colour is absence; any colour the caller wrote is
- * kept as written.
- */
+const DEFAULT_SPARKLINE_WIDTH = 120;
+
+const DEFAULT_SPARKLINE_HEIGHT = 32;
+
+export const DEFAULT_SPARKLINE_LABEL = "Trend";
+
 const chosenColour = (colour: string | undefined, fallback: string): string =>
   Option.match(Option.fromNullishOr(colour), {
     onNone: () => fallback,
     onSome: (value) => (Str.isNonEmpty(Str.trim(value)) ? value : fallback),
   });
 
-/** The side of a donut's square plot when the caller names none. */
-const DEFAULT_DONUT_SIZE = 160;
+const revealOf = (reveal: number | undefined): number => reveal ?? 1;
 
-/** The width of a sparkline's plot when the caller names none. */
-const DEFAULT_SPARKLINE_WIDTH = 120;
+const revealClip = (
+  reveal: number | undefined,
+  box: ChartBox,
+): MarkClip | undefined =>
+  revealOf(reveal) >= 1
+    ? undefined
+    : { x: 0, y: 0, width: box.width * revealOf(reveal), height: box.height };
 
-/** The height of a sparkline's plot when the caller names none. */
-const DEFAULT_SPARKLINE_HEIGHT = 32;
+const scaleCandles = (
+  candles: ReadonlyArray<Candle>,
+  progress: number,
+): ReadonlyArray<Candle> =>
+  Arr.map(candles, (candle) => ({
+    open: scaleValue(candle.open, progress),
+    high: scaleValue(candle.high, progress),
+    low: scaleValue(candle.low, progress),
+    close: scaleValue(candle.close, progress),
+  }));
 
-/**
- * The name a sparkline paints when the caller names none.
- *
- * The name is a stored value as often as a literal (a locale table with a
- * missing row, a preference a store saved empty), so a blank one reads as this
- * word rather than an unnamed image — the rule `spokenText` applies.
- */
-export const DEFAULT_SPARKLINE_LABEL = "Trend";
-
-/** The y-axis column's width: a measurement of the widest tick it holds. */
-export const CHART_AXIS_WIDTH = 36;
-
-/** One legend entry. */
-export interface ChartLegendItem {
-  readonly key: string;
-  /** The row's words. A blank label reads as `key`. */
-  readonly label: string;
-  /** A theme colour, usually a swatch from `seriesColors`. */
-  readonly color: string;
-}
-
-/** {@link ChartLegend} props. */
-export interface ChartLegendProps extends Omit<Props, "children"> {
-  /**
-   * The rows, in paint order.
-   *
-   * A saved legend writes `null` where it carried no rows, so only a list is a
-   * list: a slot with no list paints no rows rather than throwing out of the
-   * render. An entry the store wrote as a hole or as something other than a
-   * keyed record is not a row either (`recordsOf`).
-   */
-  readonly items: ReadonlyArray<ChartLegendItem>;
+export interface ChartProps extends Omit<Props, "children"> {
+  readonly series?: ReadonlyArray<ChartSeries>;
+  readonly labels?: ReadonlyArray<string>;
+  readonly config?: ChartConfig;
+  readonly data?: ReadonlyArray<ChartRow>;
+  readonly width?: number;
+  readonly height?: number;
+  readonly legend?: boolean | LegendSide;
+  readonly legendShape?: LegendShape;
+  readonly axis?: boolean;
+  readonly grid?: boolean;
+  readonly xLabels?: boolean;
+  readonly ticks?: number;
+  readonly colors?: ReadonlyArray<string>;
+  readonly tooltip?: boolean;
+  readonly tooltipIndicator?: TooltipIndicator;
+  readonly tooltipIcons?: ReadonlyArray<IconName>;
+  readonly labelFormat?: (label: string) => string;
+  readonly activeBand?: boolean;
+  readonly crosshair?: boolean;
+  readonly domain?: readonly [number, number];
+  readonly view?: readonly [number, number];
+  readonly zoom?: boolean;
+  readonly onViewChange?: (view: readonly [number, number]) => void;
+  readonly brush?: boolean;
+  readonly onDomainChange?: (domain: readonly [number, number]) => void;
+  readonly animate?: boolean;
+  readonly animationDuration?: number;
+  readonly valueFormat?: (value: number) => string;
+  readonly className?: string;
   readonly testId?: string;
 }
 
-/**
- * The legend: one swatch and one label per series, in the colours they paint.
- *
- * The words are painted beside the colour, so a colour repeats what the text
- * already says — a reader who cannot separate two hues still reads the series.
- */
-export const ChartLegend = ({
-  items,
-  testId,
-  style,
-  ...rest
-}: ChartLegendProps) => {
+const seriesOf = (
+  series: ReadonlyArray<ChartSeries> | undefined,
+): ReadonlyArray<ChartSeries> =>
+  Arr.map(recordsOf(series), (one) => ({
+    ...one,
+    values: listOf(one.values),
+  }));
+
+const seriesFor = (
+  series: ReadonlyArray<ChartSeries> | undefined,
+  config: ChartConfig | undefined,
+  data: ReadonlyArray<ChartRow> | undefined,
+): ReadonlyArray<ChartSeries> =>
+  config === undefined || data === undefined
+    ? seriesOf(series)
+    : seriesFromConfig(config, data);
+
+const labelsFor = (
+  labels: ReadonlyArray<string> | undefined,
+  data: ReadonlyArray<ChartRow> | undefined,
+): ReadonlyArray<string> => {
+  const own = labelsOf(labels);
+  if (data === undefined || data.length === 0) return own;
+  const fromData = categoriesFromData(data);
+  return fromData.length === 0 ? own : fromData;
+};
+
+const labelsOf = (
+  labels: ReadonlyArray<string> | undefined,
+): ReadonlyArray<string> => textsOf(labels);
+
+const viewOf = (
+  labels: ReadonlyArray<string>,
+  view: readonly [number, number] | undefined,
+): ChartView | undefined =>
+  Option.getOrUndefined(chartView(labels.length, view));
+
+const windowOf = (
+  rows: ReadonlyArray<ChartSeries>,
+  labels: ReadonlyArray<string>,
+  domain: readonly [number, number] | undefined,
+): {
+  readonly rows: ReadonlyArray<ChartSeries>;
+  readonly labels: ReadonlyArray<string>;
+} =>
+  Option.match(chartWindow(labels.length, domain), {
+    onNone: () => ({ rows, labels }),
+    onSome: (window) => {
+      const width = window.end - window.start;
+      return {
+        rows: Arr.map(rows, (one) => ({
+          ...one,
+          values: Arr.take(Arr.drop(one.values, window.start), width),
+        })),
+        labels: Arr.take(Arr.drop(labels, window.start), width),
+      };
+    },
+  });
+
+const dataOf = (
+  data: ReadonlyArray<ChartDatum> | undefined,
+): ReadonlyArray<ChartDatum> =>
+  Arr.map(recordsOf(data), (one) => ({
+    ...one,
+    value: one.value,
+  }));
+
+const layersFor = (
+  series: ReadonlyArray<ChartSeries>,
+  layers: ReadonlyArray<ReadonlyArray<ChartMark>>,
+): ReadonlyArray<PaintLayer> =>
+  Arr.flatMap(series, (one, seriesIndex) => [
+    {
+      key: one.key,
+      series: one,
+      seriesIndex,
+      marks: layers[seriesIndex] ?? [],
+    },
+  ]);
+
+const barValueLabels =
+  (
+    format: (value: number, one: ChartSeries, category: string) => string,
+    horizontal: boolean,
+    view: ChartView | undefined,
+  ) =>
+  ({
+    series,
+    box,
+    range,
+    labels,
+    reveal,
+  }: PaintContext): ReadonlyArray<ValueLabel> => {
+    if (revealOf(reveal) < 1) return [];
+    if (series.length !== 1) return [];
+    const [layer] = horizontal
+      ? horizontalBarMarks(series, box, range, labels.length)
+      : barMarksInRange(series, box, range, labels.length, 0, view);
+    const one = series[0];
+    if (one === undefined) return [];
+    return Arr.flatMap(layer ?? [], (mark, index) => {
+      if (mark.kind !== "rect") return [];
+      return [
+        {
+          key: one.key,
+          x: horizontal ? mark.x + mark.width + 4 : mark.x,
+          y: horizontal
+            ? mark.y + mark.height / 2 - 8
+            : Math.max(0, mark.y - 16),
+          width: horizontal ? 40 : mark.width,
+          text: format(one.values[index] ?? 0, one, labels[index] ?? one.key),
+        },
+      ];
+    });
+  };
+
+const pointValueLabels =
+  (format: (value: number) => string) =>
+  ({
+    series,
+    box,
+    range,
+    labels,
+    reveal,
+  }: PaintContext): ReadonlyArray<ValueLabel> => {
+    if (revealOf(reveal) < 1) return [];
+    if (series.length !== 1) return [];
+    const [one] = series;
+    if (one === undefined) return [];
+    const points = seriesPoints(one.values, box, range, labels.length);
+    return Arr.map(points, (point, index) => ({
+      key: one.key,
+      x: point.x - 24,
+      y: Math.max(0, point.y - 16),
+      width: 48,
+      text: format(one.values[index] ?? 0),
+    }));
+  };
+
+export interface BarChartProps extends ChartProps {
+  readonly orientation?: "vertical" | "horizontal";
+  readonly radius?: number;
+  readonly valueLabels?: boolean;
+  readonly valueLabelFormat?: (
+    value: number,
+    series: ChartSeries,
+    category: string,
+  ) => string;
+}
+
+export const BarChart = ({
+  orientation = "vertical",
+  radius = 3,
+  valueLabels = false,
+  valueLabelFormat,
+  valueFormat,
+  ...props
+}: BarChartProps) => {
+  const windowed = windowOf(
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
+    props.domain,
+  );
+  const rows = windowed.rows;
+  const labels = windowed.labels;
+  const range = chartRange(rows, labels.length);
+  const view = viewOf(labels, props.view);
+  const horizontal = orientation === "horizontal";
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      domainLabels={labelsFor(props.labels, props.data)}
+      range={range}
+      grid={props.grid ?? !horizontal}
+      paint={({ series, labels, box, reveal }) => {
+        const shown = scaleSeries(series, revealOf(reveal));
+        return layersFor(
+          shown,
+          horizontal
+            ? horizontalBarMarks(shown, box, range, labels.length, radius)
+            : barMarksInRange(shown, box, range, labels.length, radius, view),
+        );
+      }}
+      valueLabels={
+        valueLabels
+          ? barValueLabels(
+              (value, one, category) =>
+                valueLabelFormat === undefined
+                  ? (valueFormat ?? valueLabel)(value)
+                  : valueLabelFormat(value, one, category),
+              horizontal,
+              view,
+            )
+          : undefined
+      }
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
+
+export interface StackedBarProps extends ChartProps {
+  readonly radius?: number;
+  readonly percent?: boolean;
+}
+
+const percentOf = (
+  series: ReadonlyArray<ChartSeries>,
+  categories: number,
+): ReadonlyArray<ChartSeries> =>
+  Arr.map(series, (one) => ({
+    ...one,
+    values: Arr.map(Arr.take(one.values, categories), (value, index) => {
+      const total = Arr.reduce(
+        series,
+        0,
+        (sum, entry) => sum + Math.max(0, entry.values[index] ?? 0),
+      );
+      return total <= 0 ? 0 : (Math.max(0, value) / total) * 100;
+    }),
+  }));
+
+export const StackedBar = ({
+  radius = 3,
+  percent = false,
+  ...props
+}: StackedBarProps) => {
+  const windowed = windowOf(
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
+    props.domain,
+  );
+  const labels = windowed.labels;
+  const source = windowed.rows;
+  const rows = percent ? percentOf(source, labels.length) : source;
+  const range = percent
+    ? { min: 0, max: 100 }
+    : chartRange(rows, labels.length, true);
+  const view = viewOf(labels, props.view);
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      domainLabels={labelsFor(props.labels, props.data)}
+      range={range}
+      paint={({ series, labels: slots, box, reveal }) => {
+        const shown = scaleSeries(series, revealOf(reveal));
+        return layersFor(
+          shown,
+          stackedLayers(shown, box, range, slots.length, radius, view),
+        );
+      }}
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
+
+const stackedLayers = (
+  series: ReadonlyArray<ChartSeries>,
+  box: ChartBox,
+  range: { readonly min: number; readonly max: number },
+  categories: number,
+  radius: number,
+  view?: ChartView,
+): ReadonlyArray<ReadonlyArray<ChartMark>> => {
+  const span = view === undefined ? categories : view.end - view.start;
+  const offset = view === undefined ? 0 : view.start;
+  const slot = box.width / Math.max(1, span);
+  const width = series.length === 0 ? 0 : Math.max(1, (slot * 0.8) / 1);
+  const [, levels] = Arr.mapAccum(series, [] as Array<number>, (stack, one) => {
+    const next = Arr.makeBy(Math.max(0, categories), (index) => {
+      const sum = (stack[index] ?? 0) + Math.max(0, one.values[index] ?? 0);
+      return Number.isFinite(sum) ? sum : (stack[index] ?? 0);
+    });
+    return [next, next];
+  });
+  return Arr.map(series, (_, seriesIndex) => {
+    const upper = levels[seriesIndex] ?? [];
+    const lower = seriesIndex === 0 ? [] : (levels[seriesIndex - 1] ?? []);
+    return Arr.flatMap(upper, (value, index) => {
+      const top = scaleY(value, box, range);
+      const bottom = scaleY(lower[index] ?? 0, box, range);
+      const height = Math.abs(bottom - top);
+      if (height < 0.5) return [];
+      return [
+        {
+          kind: "rect" as const,
+          x: (index - offset) * slot + (slot - width) / 2,
+          y: Math.min(top, bottom),
+          width,
+          height,
+          rx: Math.min(radius, width / 2, height / 2),
+        },
+      ];
+    });
+  });
+};
+
+export interface ComposedChartProps extends ChartProps {
+  readonly lineKeys?: ReadonlyArray<string>;
+  readonly radius?: number;
+}
+
+export const ComposedChart = ({
+  lineKeys = [],
+  radius = 3,
+  ...props
+}: ComposedChartProps) => {
+  const windowed = windowOf(
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
+    props.domain,
+  );
+  const rows = windowed.rows;
+  const labels = windowed.labels;
+  const range = chartRange(rows, labels.length);
+  const view = viewOf(labels, props.view);
+  const isLine = (key: string): boolean =>
+    Arr.some(lineKeys, (candidate) => candidate === key);
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      domainLabels={labelsFor(props.labels, props.data)}
+      view={props.view}
+      range={range}
+      paint={({ series, labels: slots, box, reveal }) => {
+        const shown = scaleSeries(series, revealOf(reveal));
+        const clip = revealClip(reveal, box);
+        const bars = Arr.filter(shown, (one) => !isLine(one.key));
+        const barMarks = barMarksInRange(
+          bars,
+          box,
+          range,
+          slots.length,
+          radius,
+          view,
+        );
+        return Arr.flatten([
+          Arr.map(bars, (one, barIndex) => ({
+            key: one.key,
+            series: one,
+            seriesIndex: Arr.findFirstIndex(
+              series,
+              (entry) => entry.key === one.key,
+            ).pipe(Option.getOrElse(() => barIndex)),
+            marks: barMarks[barIndex] ?? [],
+          })),
+          Arr.flatMap(shown, (one, seriesIndex) => {
+            if (!isLine(one.key)) return [];
+            const points = seriesPoints(one.values, box, range, slots.length);
+            return [
+              {
+                key: one.key,
+                series: one,
+                seriesIndex,
+                ...(clip === undefined ? {} : { clip }),
+                marks: Option.match(curvePath(points, "linear"), {
+                  onNone: () => [],
+                  onSome: (d): ReadonlyArray<ChartMark> => [
+                    { kind: "path" as const, d, stroke: lineStroke(2) },
+                  ],
+                }),
+              } satisfies PaintLayer,
+            ];
+          }),
+        ]);
+      }}
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
+
+export interface LineChartProps extends ChartProps {
+  readonly curve?: Curve;
+  readonly dots?: boolean;
+  readonly dashed?: boolean;
+  readonly lineWidth?: number;
+  readonly showLabels?: boolean;
+  readonly dotIcons?: ReadonlyArray<IconName>;
+  readonly pointTooltip?: boolean;
+}
+
+export interface ScatterChartProps extends ChartProps {
+  readonly radius?: number;
+}
+
+export const ScatterChart = ({ radius = 3, ...props }: ScatterChartProps) => {
+  const windowed = windowOf(
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
+    props.domain,
+  );
+  const rows = windowed.rows;
+  const labels = windowed.labels;
+  const range = chartRange(rows, labels.length);
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      domainLabels={labelsFor(props.labels, props.data)}
+      range={range}
+      paint={({ series, labels: slots, box, reveal }) => {
+        const progress = revealOf(reveal);
+        return progress <= 0
+          ? layersFor(
+              series,
+              Arr.map(series, () => []),
+            )
+          : layersFor(
+              series,
+              Arr.map(series, (one) =>
+                scatterMarks(
+                  one.values,
+                  box,
+                  range,
+                  slots.length,
+                  radius * progress,
+                ),
+              ),
+            );
+      }}
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
+
+export interface CandleChartProps extends ChartProps {
+  readonly candles: ReadonlyArray<Candle>;
+  readonly width?: number;
+  readonly upColor?: string;
+  readonly downColor?: string;
+}
+
+export const CandleChart = ({
+  candles,
+  width = 6,
+  upColor,
+  downColor,
+  ...props
+}: CandleChartProps) => {
   const theme = useTheme();
   const colors = themeColors(theme);
-  const rows = recordsOf(items);
+  const windowed = windowOf(
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
+    props.domain,
+  );
+  const rows = windowed.rows;
+  const labels = windowed.labels;
+  const range = chartRange(
+    [
+      {
+        key: "close",
+        label: "Close",
+        values: Arr.map(candles, (one) => one.close),
+      },
+    ],
+    labels.length,
+  );
+  const up = upColor ?? colors.success ?? "#22c55e";
+  const down = downColor ?? colors.destructive ?? "#ef4444";
+  const tweened = useAnimatedValues(
+    [
+      Arr.map(candles, (one) => one.open),
+      Arr.map(candles, (one) => one.high),
+      Arr.map(candles, (one) => one.low),
+      Arr.map(candles, (one) => one.close),
+    ],
+    props.animate ?? true,
+    props.animationDuration ?? DEFAULT_ANIMATION_DURATION,
+  );
+  const shownCandles = Arr.map(candles, (candle, index) => ({
+    open: tweened[0]?.[index] ?? candle.open,
+    high: tweened[1]?.[index] ?? candle.high,
+    low: tweened[2]?.[index] ?? candle.low,
+    close: tweened[3]?.[index] ?? candle.close,
+  }));
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      domainLabels={labelsFor(props.labels, props.data)}
+      range={range}
+      paint={({ box, reveal }) => [
+        {
+          key: "candles",
+          series: { key: "candles", label: "Candles", values: [] },
+          seriesIndex: 0,
+          marks:
+            revealOf(reveal) <= 0
+              ? []
+              : Arr.flatMap(
+                  scaleCandles(shownCandles, revealOf(reveal)),
+                  (candle, index) =>
+                    Arr.map(
+                      candleAtMarks(
+                        candle,
+                        index,
+                        labels.length,
+                        box,
+                        range,
+                        width,
+                      ),
+                      (mark) => ({
+                        ...mark,
+                        fill: { color: candleUp(candle) ? up : down },
+                      }),
+                    ),
+                ),
+        },
+      ]}
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
+
+export interface FunnelChartProps extends ChartProps {
+  readonly stages: ReadonlyArray<number>;
+  readonly stageLabels?: ReadonlyArray<string>;
+}
+
+export const FunnelChart = ({
+  stages,
+  stageLabels,
+  ...props
+}: FunnelChartProps) => {
+  const windowed = windowOf(
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
+    props.domain,
+  );
+  const rows = windowed.rows;
+  const labels = stageLabels ?? labelsFor(props.labels, props.data);
+  const range = chartRange(
+    [{ key: "stage", label: "Stage", values: stages }],
+    labels.length,
+  );
+  const tweened =
+    useAnimatedValues(
+      [stages],
+      props.animate ?? true,
+      props.animationDuration ?? DEFAULT_ANIMATION_DURATION,
+    )[0] ?? stages;
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      domainLabels={labelsFor(props.labels, props.data)}
+      range={range}
+      paint={({ box, reveal }) => {
+        const shown = Arr.map(tweened, (value) =>
+          scaleValue(value, revealOf(reveal)),
+        );
+        return [
+          {
+            key: "funnel",
+            series: { key: "funnel", label: "Funnel", values: shown },
+            seriesIndex: 0,
+            marks: funnelMarks(shown, box),
+          },
+        ];
+      }}
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
+
+export const LineChart = ({
+  curve = "linear",
+  dots = false,
+  dashed = false,
+  lineWidth = 2,
+  showLabels = false,
+  dotIcons,
+  pointTooltip = false,
+  ...props
+}: LineChartProps) => {
+  const windowed = windowOf(
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
+    props.domain,
+  );
+  const rows = windowed.rows;
+  const labels = windowed.labels;
+  const range = chartRange(rows, labels.length);
+  const view = viewOf(labels, props.view);
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      domainLabels={labelsFor(props.labels, props.data)}
+      view={props.view}
+      range={range}
+      paint={({ series, labels, box, hovered, reveal }) => {
+        const clip = revealClip(reveal, box);
+        return Arr.flatMap(series, (one, seriesIndex) => {
+          const points = seriesPoints(
+            one.values,
+            box,
+            range,
+            labels.length,
+            view,
+          );
+          const path = curvePath(points, curve);
+          const line: PaintLayer = {
+            key: one.key,
+            series: one,
+            seriesIndex,
+            ...(clip === undefined ? {} : { clip }),
+            marks: Option.match(path, {
+              onNone: () => [],
+              onSome: (d): ReadonlyArray<ChartMark> => [
+                { kind: "path", d, stroke: lineStroke(lineWidth, dashed) },
+              ],
+            }),
+          };
+          return dots
+            ? [
+                {
+                  ...line,
+                  kind: "dots",
+                  decorative: true,
+                  marks: emphasisedPointMarks(
+                    points,
+                    lineWidth + 1.5,
+                    Option.getOrUndefined(hovered ?? Option.none()),
+                  ),
+                },
+                line,
+              ]
+            : [line];
+        });
+      }}
+      valueLabels={
+        showLabels
+          ? pointValueLabels(props.valueFormat ?? valueLabel)
+          : undefined
+      }
+      overlay={
+        dotIcons === undefined && !pointTooltip
+          ? undefined
+          : ({ series, labels, box, range, palette, origin, reveal }) => {
+              const zones = pointTooltip
+                ? Arr.flatMap(series, (one, seriesIndex) =>
+                    Arr.map(
+                      seriesPoints(one.values, box, range, labels.length, view),
+                      (point, index) => ({
+                        key: one.key,
+                        x: point.x,
+                        y: point.y,
+                        category: labels[index] ?? "",
+                        label: seriesName(one.label, one.key),
+                        value: (props.valueFormat ?? valueLabel)(
+                          one.values[index] ?? 0,
+                        ),
+                        colour: seriesColourOf(palette, one, seriesIndex),
+                      }),
+                    ),
+                  )
+                : [];
+              return (
+                <>
+                  {pointTooltip ? (
+                    <PointTooltip
+                      zones={zones}
+                      box={box}
+                      origin={origin}
+                      testId={props.testId}
+                    />
+                  ) : null}
+                  {dotIcons === undefined || revealOf(reveal) < 1
+                    ? null
+                    : Arr.flatMap(series, (one, seriesIndex) =>
+                        Arr.map(
+                          seriesPoints(one.values, box, range, labels.length),
+                          (point, index) => {
+                            const name = dotIcons[index];
+                            return name === undefined ||
+                              !isIconName(name) ? null : (
+                              <div
+                                key={`${one.key}-icon-${index}`}
+                                style={{
+                                  position: "absolute",
+                                  left: point.x - 7,
+                                  top: point.y - 7,
+                                }}
+                              >
+                                <Icon
+                                  color={seriesColourOf(
+                                    palette,
+                                    one,
+                                    seriesIndex,
+                                  )}
+                                  name={name}
+                                  size={14}
+                                  testId={
+                                    props.testId === undefined
+                                      ? undefined
+                                      : `${props.testId}-dot-${one.key}-${index}`
+                                  }
+                                />
+                              </div>
+                            );
+                          },
+                        ),
+                      )}
+                </>
+              );
+            }
+      }
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
+
+export interface AreaChartProps extends ChartProps {
+  readonly curve?: Curve;
+  readonly stacked?: boolean;
+  readonly gradient?: boolean;
+  readonly fillOpacity?: number;
+  readonly dots?: boolean;
+  readonly lineWidth?: number;
+  readonly showLabels?: boolean;
+  readonly pointTooltip?: boolean;
+  readonly dotIcons?: ReadonlyArray<IconName>;
+}
+
+export const AreaChart = ({
+  curve = "smooth",
+  stacked = false,
+  gradient = true,
+  fillOpacity = 0.35,
+  dots = false,
+  lineWidth = 2,
+  showLabels = false,
+  pointTooltip = false,
+  dotIcons,
+  ...props
+}: AreaChartProps) => {
+  const windowed = windowOf(
+    seriesFor(props.series, props.config, props.data),
+    labelsFor(props.labels, props.data),
+    props.domain,
+  );
+  const labels = windowed.labels;
+  const source = windowed.rows;
+  const rows = stacked ? cumulativeSeries(source) : source;
+  const range = chartRange(source, labels.length, stacked);
+  const view = viewOf(labels, props.view);
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      domainLabels={labelsFor(props.labels, props.data)}
+      view={props.view}
+      range={range}
+      paint={({ series, labels, box, hovered, reveal }) => {
+        const clip = revealClip(reveal, box);
+        return Arr.flatMap(series, (one, seriesIndex) => {
+          const points = seriesPoints(
+            one.values,
+            box,
+            range,
+            labels.length,
+            view,
+          );
+          const fill = areaPath(points, box, range, curve);
+          const bands = gradient ? areaBands(points, box, range, 3) : [];
+          const line = curvePath(points, curve);
+          return Arr.flatten([
+            [
+              {
+                key: one.key,
+                series: one,
+                seriesIndex,
+                opacity: fillOpacity,
+                ...(clip === undefined ? {} : { clip }),
+                marks: Option.match(fill, {
+                  onNone: () => [],
+                  onSome: (d): ReadonlyArray<ChartMark> => [
+                    { kind: "path", d },
+                  ],
+                }),
+              } satisfies PaintLayer,
+            ],
+            Arr.map(bands, (d, bandIndex) => ({
+              key: one.key,
+              series: one,
+              seriesIndex,
+              kind: `fade-${bandIndex}`,
+              decorative: true,
+              opacity: gradient ? fillOpacity / 3 : 0,
+              ...(clip === undefined ? {} : { clip }),
+              marks: [{ kind: "path" as const, d }],
+            })),
+            gradient
+              ? []
+              : [
+                  {
+                    key: one.key,
+                    series: one,
+                    seriesIndex,
+                    kind: "fade",
+                    decorative: true,
+                    ...(clip === undefined ? {} : { clip }),
+                    marks: [],
+                  } satisfies PaintLayer,
+                ],
+            [
+              {
+                key: one.key,
+                series: one,
+                seriesIndex,
+                kind: "line",
+                decorative: true,
+                ...(clip === undefined ? {} : { clip }),
+                marks: Option.match(line, {
+                  onNone: () => [],
+                  onSome: (d): ReadonlyArray<ChartMark> => [
+                    { kind: "path", d, stroke: lineStroke(lineWidth) },
+                  ],
+                }),
+              } satisfies PaintLayer,
+            ],
+            dots
+              ? [
+                  {
+                    key: one.key,
+                    series: one,
+                    seriesIndex,
+                    kind: "dots",
+                    decorative: true,
+                    ...(clip === undefined ? {} : { clip }),
+                    marks: emphasisedPointMarks(
+                      points,
+                      lineWidth + 1.5,
+                      Option.getOrUndefined(hovered ?? Option.none()),
+                    ),
+                  } satisfies PaintLayer,
+                ]
+              : [],
+          ]);
+        });
+      }}
+      valueLabels={
+        showLabels
+          ? pointValueLabels(props.valueFormat ?? valueLabel)
+          : undefined
+      }
+      overlay={
+        pointTooltip || dotIcons !== undefined
+          ? ({
+              series,
+              labels: slots,
+              box,
+              range: window,
+              palette,
+              origin,
+              reveal,
+            }) => (
+              <>
+                {pointTooltip ? (
+                  <PointTooltip
+                    zones={Arr.flatMap(series, (one, seriesIndex) =>
+                      Arr.map(
+                        seriesPoints(
+                          one.values,
+                          box,
+                          window,
+                          slots.length,
+                          view,
+                        ),
+                        (point, index) => ({
+                          key: one.key,
+                          x: point.x,
+                          y: point.y,
+                          category: slots[index] ?? "",
+                          label: seriesName(one.label, one.key),
+                          value: (props.valueFormat ?? valueLabel)(
+                            one.values[index] ?? 0,
+                          ),
+                          colour: seriesColourOf(palette, one, seriesIndex),
+                        }),
+                      ),
+                    )}
+                    box={box}
+                    origin={origin}
+                    testId={props.testId}
+                  />
+                ) : null}
+                {dotIcons === undefined || revealOf(reveal) < 1
+                  ? null
+                  : Arr.flatMap(series, (one, seriesIndex) =>
+                      Arr.map(
+                        seriesPoints(
+                          one.values,
+                          box,
+                          window,
+                          slots.length,
+                          view,
+                        ),
+                        (point, index) => {
+                          const name = dotIcons[index];
+                          return name === undefined ||
+                            !isIconName(name) ? null : (
+                            <div
+                              key={`${one.key}-icon-${index}`}
+                              style={{
+                                position: "absolute",
+                                left: point.x - 7,
+                                top: point.y - 7,
+                              }}
+                            >
+                              <Icon
+                                color={seriesColourOf(
+                                  palette,
+                                  one,
+                                  seriesIndex,
+                                )}
+                                name={name}
+                                size={14}
+                                testId={
+                                  props.testId === undefined
+                                    ? undefined
+                                    : `${props.testId}-dot-${one.key}-${index}`
+                                }
+                              />
+                            </div>
+                          );
+                        },
+                      ),
+                    )}
+              </>
+            )
+          : undefined
+      }
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
+
+const cumulativeSeries = (
+  series: ReadonlyArray<ChartSeries>,
+): ReadonlyArray<ChartSeries> => {
+  const [, running] = Arr.mapAccum(
+    series,
+    [] as ReadonlyArray<number>,
+    (stack, one) => {
+      const next = Arr.map(
+        one.values,
+        (value, index) => (stack[index] ?? 0) + Math.max(0, value),
+      );
+      return [next, next] as const;
+    },
+  );
+  return Arr.map(series, (one, index) => ({
+    ...one,
+    values: running[index] ?? [],
+  }));
+};
+
+const LegendFor = ({
+  series,
+  colors,
+  config,
+  shape,
+  testId,
+}: {
+  readonly series: ReadonlyArray<ChartSeries>;
+  readonly colors: ReadonlyArray<string> | undefined;
+  readonly config?: ChartConfig;
+  readonly shape?: LegendShape;
+  readonly testId?: string;
+}) => {
+  const theme = useTheme();
+  const palette = paletteOf(theme, colors);
+  const mode = themeModeOf(theme);
+  return (
+    <ChartLegend
+      shape={shape}
+      testId={testId}
+      items={Arr.map(series, (one, index) => ({
+        key: one.key,
+        label: one.label,
+        color: Option.getOrElse(configSeriesColour(config, one.key, mode), () =>
+          seriesColourOf(palette, one, index),
+        ),
+      }))}
+    />
+  );
+};
+
+export interface ChartDatum {
+  readonly key: string;
+  readonly label: string;
+  readonly value: number;
+}
+
+export interface PieChartProps extends Omit<Props, "children"> {
+  readonly data: ReadonlyArray<ChartDatum>;
+  readonly size?: number;
+  readonly innerRadius?: number;
+  readonly padAngle?: number;
+  readonly legend?: boolean;
+  readonly legendValues?: boolean;
+  readonly colors?: ReadonlyArray<string>;
+  readonly valueFormat?: (value: number) => string;
+  readonly centerLabel?: string;
+  readonly showLabels?: boolean;
+  readonly labelPosition?: "inside" | "outside";
+  readonly labelFormat?: (datum: ChartDatum, share: number) => string;
+  readonly activeIndex?: number;
+  readonly stacked?: boolean;
+  readonly onSliceActivate?: (datum: ChartDatum, index: number) => void;
+  readonly animate?: boolean;
+  readonly animationDuration?: number;
+  readonly className?: string;
+  readonly testId?: string;
+}
+
+const Ring = ({
+  data,
+  size,
+  innerRadius,
+  padAngle,
+  colors,
+  centerLabel,
+  showLabels = false,
+  labelPosition = "inside",
+  labelFormat,
+  activeIndex,
+  stacked = false,
+  onSliceActivate,
+  testId,
+}: {
+  readonly data: ReadonlyArray<ChartDatum>;
+  readonly size: number;
+  readonly innerRadius: number;
+  readonly padAngle: number;
+  readonly colors: ReadonlyArray<string> | undefined;
+  readonly centerLabel: string | undefined;
+  readonly showLabels?: boolean;
+  readonly labelPosition?: "inside" | "outside";
+  readonly labelFormat?: (datum: ChartDatum, share: number) => string;
+  readonly activeIndex?: number;
+  readonly stacked?: boolean;
+  readonly onSliceActivate?: (datum: ChartDatum, index: number) => void;
+  readonly testId: string | undefined;
+}) => {
+  const theme = useTheme();
+  const palette = paletteOf(theme, colors);
+  const box = chartBox(size, size, {
+    width: DEFAULT_RING_SIZE,
+    height: DEFAULT_RING_SIZE,
+  });
+  const slices = Arr.filter(data, (one) => one !== null && one !== undefined);
+  const values = Arr.map(slices, (one) => one.value);
+  const total = Arr.reduce(
+    values,
+    0,
+    (sum, value) => sum + Math.max(0, Number.isFinite(value) ? value : 0),
+  );
+  const segments = stacked
+    ? ringBands(values, box, innerRadius, padAngle, activeIndex)
+    : ringSegments(values, box, innerRadius, padAngle, activeIndex);
+  const labelPoints = ringLabelPoints(values, box, innerRadius);
+  const outsideLabels = ringOutsideLabels(values, box);
   return (
     <div
-      {...rest}
-      testId={testId}
-      style={mergeStyles(recipeStyle(CHART_LEGEND, theme), style)}
+      testId={testId === undefined ? undefined : `${testId}-plot`}
+      style={{
+        ...recipeStyle(CHART_PLOT, theme),
+        width: box.width,
+        height: box.height,
+      }}
     >
-      {rows.map((item) => (
-        <div key={item.key} style={recipeStyle(CHART_LEGEND_ITEM, theme)}>
-          <div
-            testId={
-              testId === undefined ? undefined : `${testId}-swatch-${item.key}`
-            }
-            style={{
-              ...recipeStyle(CHART_SWATCH, theme),
-              width: iconStepValue(theme, "xs"),
-              height: iconStepValue(theme, "xs"),
-              backgroundColor: item.color,
-            }}
-          />
-          <text
-            style={{
-              ...textStyle(theme, "caption"),
-              color: colors.mutedForeground,
-            }}
-          >
-            {seriesName(item.label, item.key)}
-          </text>
-        </div>
+      {Arr.map(slices, (one, index) => (
+        <ChartMask
+          key={one.key}
+          chartTestId={testId}
+          layer={{
+            key: one.key,
+            series: { key: one.key, label: one.label, values: [one.value] },
+            seriesIndex: index,
+            marks: segments[index] ?? [],
+          }}
+          label={seriesName(one.label, one.key)}
+          description={seriesDescription([one.value])}
+          colour={seriesColourOf(
+            palette,
+            { key: one.key, label: one.label, values: [] },
+            index,
+          )}
+          box={box}
+        />
       ))}
+      {onSliceActivate === undefined
+        ? undefined
+        : Arr.map(slices, (one, index) => {
+            const point = labelPoints[index];
+            if (point === undefined || Option.isNone(point)) return null;
+            return (
+              <div
+                key={`${one.key}-hit`}
+                testId={
+                  testId === undefined
+                    ? undefined
+                    : `${testId}-slice-${one.key}`
+                }
+                onClick={() => onSliceActivate(one, index)}
+                style={{
+                  position: "absolute",
+                  left: point.value.x - 16,
+                  top: point.value.y - 16,
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                }}
+              />
+            );
+          })}
+      {showLabels && labelPosition === "outside" ? (
+        <ChartMask
+          chartTestId={testId}
+          layer={{
+            key: "leaders",
+            series: { key: "leaders", label: "leaders", values: [] },
+            seriesIndex: 0,
+            decorative: true,
+            opacity: 0.8,
+            marks: Arr.flatMap(outsideLabels, (label) =>
+              Option.match(label, {
+                onNone: () => [],
+                onSome: (found): ReadonlyArray<ChartMark> => [
+                  { kind: "path", d: found.leader, stroke: lineStroke(1) },
+                ],
+              }),
+            ),
+          }}
+          label=""
+          description=""
+          colour={themeColors(theme).border ?? "#000000"}
+          box={box}
+        />
+      ) : undefined}
+      {showLabels && labelPosition === "outside"
+        ? Arr.map(slices, (one, index) => {
+            const label = outsideLabels[index];
+            if (label === undefined || Option.isNone(label)) return null;
+            const share = total <= 0 ? 0 : Math.max(0, one.value) / total;
+            const words =
+              labelFormat === undefined
+                ? seriesName(one.label, one.key)
+                : labelFormat(one, share);
+            const anchor = label.value.point;
+            return (
+              <text
+                key={`${one.key}-outside`}
+                style={{
+                  ...textStyle(theme, "caption"),
+                  position: "absolute",
+                  left: label.value.right ? anchor.x + 4 : anchor.x - 84,
+                  top: anchor.y - 8,
+                  width: 80,
+                  textAlign: label.value.right ? "left" : "right",
+                  color: themeColors(theme).mutedForeground,
+                }}
+              >
+                {words}
+              </text>
+            );
+          })
+        : undefined}
+      {showLabels && labelPosition === "inside"
+        ? Arr.map(slices, (one, index) => {
+            const point = labelPoints[index];
+            if (point === undefined || Option.isNone(point)) return null;
+            const share = total <= 0 ? 0 : Math.max(0, one.value) / total;
+            const words =
+              labelFormat === undefined
+                ? seriesName(one.label, one.key)
+                : labelFormat(one, share);
+            return (
+              <text
+                key={`${one.key}-label`}
+                style={{
+                  ...textStyle(theme, "caption"),
+                  position: "absolute",
+                  left: point.value.x - 30,
+                  top: point.value.y - 8,
+                  width: 60,
+                  textAlign: "center",
+                  color: themeColors(theme).background,
+                }}
+              >
+                {words}
+              </text>
+            );
+          })
+        : undefined}
+      {centerLabel === undefined ||
+      centerLabel.trim().length === 0 ? undefined : (
+        <text
+          style={{
+            ...textStyle(theme, "label"),
+            position: "absolute",
+            left: 0,
+            top: box.height / 2 - 10,
+            width: box.width,
+            textAlign: "center",
+            color: themeColors(theme).foreground,
+          }}
+        >
+          {centerLabel}
+        </text>
+      )}
     </div>
   );
 };
 
-/** The rules every series chart shares. */
-export interface ChartProps extends Omit<Props, "children"> {
-  /**
-   * The series, painted in the theme's categorical order.
-   *
-   * A saved chart writes `null` where it carried no series, so only a list is a
-   * list: a chart with no series paints its frame and no layer. An entry the
-   * store wrote as a hole is not a series (`recordsOf`).
-   */
-  readonly series: ReadonlyArray<ChartSeries>;
-  /**
-   * One label per category, under the plot.
-   *
-   * A stored absence is no label list — the rule {@link ChartProps.series}
-   * follows — so the categories paint nothing rather than throwing.
-   */
-  readonly labels: ReadonlyArray<string>;
-  /** The plot's width, in pixels. Defaults to `320`. */
-  readonly width?: number;
-  /** The plot's height, in pixels. Defaults to `160`. */
-  readonly height?: number;
-  /** The legend paints under the labels. Defaults to `true` for two or more series. */
-  readonly legend?: boolean;
-  /** The y-axis tick column paints. Defaults to `true`. */
-  readonly axis?: boolean;
-  /** How many ticks the y axis divides its scale into. Defaults to `4`. */
-  readonly ticks?: number;
-  readonly className?: string;
-  /** The chart's test id. A series layer is `${testId}-layer-${key}`. */
-  readonly testId?: string;
-}
-
-/** One series' mask, tinted by the element's `color`. */
-const ChartLayer = ({
-  chartTestId,
-  seriesKey,
-  label,
-  description,
-  colour,
-  marks,
-  box,
-}: {
-  readonly chartTestId: string | undefined;
-  readonly seriesKey: string;
-  readonly label: string;
-  /**
-   * The series' values, as words.
-   *
-   * A chart is a picture of numbers, so the series' name alone leaves the data
-   * silent. 0.11.0 carries no figure or table role, so the readout travels in
-   * the one extra channel the tree has: `aria-description` beside the name.
-   */
-  readonly description: string;
-  readonly colour: string;
-  readonly marks: ReadonlyArray<ChartMark>;
-  readonly box: ChartBox;
-}) => (
-  <svg
-    source={chartMarkup(marks, box)}
-    role="img"
-    aria-label={label}
-    aria-description={description}
-    testId={
-      chartTestId === undefined
-        ? undefined
-        : `${chartTestId}-layer-${seriesKey}`
-    }
-    style={{
-      position: "absolute",
-      left: 0,
-      top: 0,
-      width: box.width,
-      height: box.height,
-      color: colour,
-      pointerEvents: "none",
-    }}
-  />
-);
-
-/**
- * A decorative layer under the series: a line's area wash or the tick rules.
- * It carries no name, because the series layer above it already reads out.
- */
-const ChartWash = ({
-  marks,
-  box,
-  colour,
-  opacity,
-}: {
-  readonly marks: ReadonlyArray<ChartMark>;
-  readonly box: ChartBox;
-  readonly colour: string;
-  readonly opacity: number;
-}) =>
-  marks.length === 0 ? null : (
-    <svg
-      source={chartMarkup(marks, box)}
-      style={{
-        position: "absolute",
-        left: 0,
-        top: 0,
-        width: box.width,
-        height: box.height,
-        color: colour,
-        opacity,
-        pointerEvents: "none",
-      }}
-    />
-  );
-
-/** A line's area wash, as a share of its colour. */
-const WASH_OPACITY = 0.14;
-
-/** A line's stroke width, and the room it keeps from the plot's edges. */
-const LINE_WIDTH = 2.5;
-
-/**
- * A series chart's shared frame: axis, plot, labels and legend.
- *
- * A series keeps its layer while it has a labelled slot, even when no value in
- * it draws: a bar chart of zeros paints no bar, but the series is part of the
- * picture and its numbers still reach the tree ("Q1 0, Q2 0"). A series with no
- * labelled category is not part of the chart and paints no layer.
- */
-const ChartFrame = ({
-  series,
-  labels,
-  width = DEFAULT_CHART_WIDTH,
-  height = DEFAULT_CHART_HEIGHT,
-  legend,
-  axis = true,
-  ticks = 4,
-  className,
+const RingLegend = ({
+  data,
+  colors,
+  values,
+  format,
   testId,
-  marks,
-  wash,
-  scaleOf = chartScale,
-  style,
-  ...rest
-}: ChartProps & {
-  /**
-   * The scale the axis prints and the marks draw against.
-   *
-   * A grouped bar or a line reads the widest single value; a stack reads its
-   * totals (`stackedScale`). Both come from the same call, so the axis cannot
-   * name a value the plot did not draw.
-   */
-  readonly scaleOf?: (
-    series: ReadonlyArray<ChartSeries>,
-    categories: number,
-  ) => number;
-  /**
-   * The geometry, per series.
-   *
-   * The series and labels are the lists this frame read (`recordsOf` and
-   * `listOf`), so a geometry function never receives the stored absence the
-   * props may carry.
-   */
-  readonly marks: (
-    series: ReadonlyArray<ChartSeries>,
-    labels: ReadonlyArray<string>,
-    box: ChartBox,
-    scale: number,
-  ) => ReadonlyArray<ReadonlyArray<ChartMark>>;
-  /** A wash painted under each series (a line's area), in the same shape as `marks`. */
-  readonly wash?: (
-    series: ReadonlyArray<ChartSeries>,
-    labels: ReadonlyArray<string>,
-    box: ChartBox,
-    scale: number,
-  ) => ReadonlyArray<ReadonlyArray<ChartMark>>;
+}: {
+  readonly data: ReadonlyArray<ChartDatum>;
+  readonly colors: ReadonlyArray<string> | undefined;
+  readonly values: boolean;
+  readonly format: (value: number) => string;
+  readonly testId: string | undefined;
 }) => {
   const theme = useTheme();
-  const box = chartBox(width, height, {
-    width: DEFAULT_CHART_WIDTH,
-    height: DEFAULT_CHART_HEIGHT,
-  });
-  const rows = Arr.map(recordsOf(series), (one) => ({
+  const palette = paletteOf(theme, colors);
+  return (
+    <ChartLegend
+      testId={testId}
+      items={Arr.map(data, (one, index) => ({
+        key: one.key,
+        label: values
+          ? `${seriesName(one.label, one.key)} · ${format(one.value)}`
+          : one.label,
+        color: seriesColourOf(
+          palette,
+          { key: one.key, label: one.label, values: [] },
+          index,
+        ),
+      }))}
+    />
+  );
+};
+
+export const PieChart = ({
+  data,
+  size = DEFAULT_RING_SIZE,
+  innerRadius = 0,
+  padAngle = 0.02,
+  legend = true,
+  legendValues = false,
+  colors,
+  valueFormat,
+  centerLabel,
+  showLabels = false,
+  labelPosition = "inside",
+  labelFormat,
+  activeIndex,
+  stacked = false,
+  onSliceActivate,
+  animate = true,
+  animationDuration = DEFAULT_ANIMATION_DURATION,
+  className,
+  testId,
+  style,
+  ...rest
+}: PieChartProps) => {
+  const theme = useTheme();
+  const rows = dataOf(data);
+  const animated = useAnimatedValues(
+    Arr.map(rows, (one) => [one.value]),
+    animate,
+    animationDuration,
+  );
+  const reveal = useMountReveal(animate, animationDuration);
+  const shown = Arr.map(rows, (one, index) => ({
     ...one,
-    // A series' own list is a stored field too: a saved chart writes `null`
-    // where a series carried no values, and the geometry would throw on it.
-    values: listOf(one.values),
+    value: scaleValue(animated[index]?.[0] ?? one.value, reveal),
   }));
-  const categories = textsOf(labels);
-  const scale = scaleOf(rows, categories.length);
-  const palette = seriesColors(theme);
-  const layers = marks(rows, categories, box, scale);
-  const washes = wash?.(rows, categories, box, scale) ?? [];
-  const rule = themeColors(theme).border;
-  const slot = barSlot(categories.length, box.width).slot;
-  const tickValues = axisTicks(scale, ticks);
-  // The labels take their precision from the distance between neighbours, not
-  // from the plot's scale: a four-step axis over `0.005` has a `0.00125` step
-  // and prints `0.0013`, while `100` still prints `25`.
-  const tickStep =
-    tickValues.length > 1 ? scale / (tickValues.length - 1) : scale;
-  const showLegend = legend ?? rows.length > 1;
   return (
     <div
       {...rest}
@@ -388,258 +1550,380 @@ const ChartFrame = ({
       testId={testId}
       style={mergeStyles(recipeStyle(cn(CHART_ROOT, className), theme), style)}
     >
-      <div style={{ display: "flex", flexDirection: "row" }}>
-        {axis ? (
-          <div
-            testId={testId === undefined ? undefined : `${testId}-axis`}
-            style={{
-              ...recipeStyle(CHART_AXIS, theme),
-              width: CHART_AXIS_WIDTH,
-              height: box.height,
-            }}
-          >
-            {/**
-             * A column reads top to bottom, so the ceiling paints first: the
-             * axis and the bars then share one floor.
-             */}
-            {Arr.map(Arr.reverse(tickValues), (tick) => (
-              <text
-                key={`tick-${tick}`}
-                testId={
-                  testId === undefined ? undefined : `${testId}-tick-${tick}`
-                }
-                style={{
-                  ...recipeStyle(CHART_AXIS_LABEL, theme),
-                  textAlign: "right",
-                }}
-              >
-                {tickLabel(tick, tickStep)}
-              </text>
-            ))}
-          </div>
-        ) : undefined}
-        <div
-          testId={testId === undefined ? undefined : `${testId}-plot`}
-          style={{
-            ...recipeStyle(CHART_PLOT, theme),
-            width: box.width,
-            height: box.height,
-          }}
-        >
-          {axis && rule !== undefined ? (
-            <ChartWash
-              marks={tickRules(tickValues, scale, box)}
-              box={box}
-              colour={rule}
-              opacity={1}
-            />
-          ) : null}
-          {Arr.map(washes, (marks, index) => (
-            <ChartWash
-              key={`wash-${index}`}
-              marks={marks}
-              box={box}
-              colour={seriesColour(palette, index)}
-              opacity={WASH_OPACITY}
-            />
-          ))}
-          {Arr.map(rows, (one, index) =>
-            // A series paints a layer while it has a labelled slot, even if no
-            // value in it draws: a bar chart of zeros shows no bar, but the
-            // series exists and its numbers still reach the tree. Only a series
-            // with no labelled category at all is not part of the picture.
-            Arr.match(Arr.take(one.values, categories.length), {
-              onEmpty: () => null,
-              onNonEmpty: () => (
-                <ChartLayer
-                  key={one.key}
-                  chartTestId={testId}
-                  seriesKey={one.key}
-                  label={seriesName(one.label, one.key)}
-                  description={seriesDescription(one.values, categories)}
-                  colour={seriesColour(palette, index)}
-                  marks={layers[index] ?? []}
-                  box={box}
-                />
-              ),
-            }),
-          )}
-        </div>
-      </div>
-      <div
-        testId={testId === undefined ? undefined : `${testId}-categories`}
-        style={{
-          ...recipeStyle(CHART_CATEGORIES, theme),
-          paddingLeft: axis ? CHART_AXIS_WIDTH : 0,
-        }}
-      >
-        {Arr.map(categories, (label, index) => (
-          <div
-            key={`category-${index}`}
-            testId={
-              testId === undefined ? undefined : `${testId}-label-${index}`
-            }
-            style={{ ...recipeStyle(CHART_CATEGORY, theme), width: slot }}
-          >
-            <text
-              style={{
-                ...recipeStyle(CHART_CATEGORY_LABEL, theme),
-                // The label's own box is the slot: a word longer than its
-                // category needs a box with an edge to ellipsis at, and the
-                // slot clips whatever still runs past it. Without both, the
-                // run painted over the neighbouring label.
-                width: slot,
-                textAlign: "center",
-              }}
-            >
-              {label}
-            </text>
-          </div>
-        ))}
-      </div>
-      {showLegend ? (
-        <ChartLegend
+      <Ring
+        data={shown}
+        size={size}
+        innerRadius={innerRadius}
+        padAngle={padAngle}
+        colors={colors}
+        centerLabel={centerLabel}
+        showLabels={showLabels && reveal >= 1}
+        labelPosition={labelPosition}
+        labelFormat={labelFormat}
+        activeIndex={activeIndex}
+        stacked={stacked}
+        onSliceActivate={onSliceActivate}
+        testId={testId}
+      />
+      {legend ? (
+        <RingLegend
+          data={rows}
+          colors={colors}
+          values={legendValues}
+          format={valueFormat ?? valueLabel}
           testId={testId === undefined ? undefined : `${testId}-legend`}
-          items={Arr.map(rows, (one, index) => ({
-            key: one.key,
-            label: one.label,
-            color: seriesColour(palette, index),
-          }))}
         />
       ) : undefined}
     </div>
   );
 };
 
-/** {@link BarChart} props. */
-export type BarChartProps = ChartProps;
+export type DonutChartProps = PieChartProps;
 
-/** Grouped bars: every series stands in the same category slot. */
-export const BarChart = (props: BarChartProps) => (
-  <ChartFrame
-    {...props}
-    marks={(series, labels, box, scale) =>
-      groupedBarMarks(series, box, scale, labels.length)
-    }
-  />
+export const DonutChart = ({ innerRadius = 0.62, ...props }: PieChartProps) => (
+  <PieChart {...props} innerRadius={innerRadius} />
 );
 
-/** {@link StackedBar} props. */
-export type StackedBarProps = ChartProps;
+const circleAxes = (shape: "polygon" | "circle", axes: number): number =>
+  shape === "circle" ? 4 : axes;
 
-/**
- * Stacked bars: the first series on the floor, each later one above it.
- *
- * The axis and the bars both read {@link stackedScale}: a stack is one bar of
- * its totals, so a scale measured over the widest single series would label a
- * `120` stack `100`.
- */
-export const StackedBar = (props: StackedBarProps) => (
-  <ChartFrame
-    {...props}
-    scaleOf={stackedScale}
-    marks={(series, labels, box, scale) =>
-      stackedBarMarks(series, box, scale, labels.length)
-    }
-  />
-);
-
-/** {@link LineChart} props. */
-export type LineChartProps = ChartProps;
-
-/**
- * One path per series through its points, left to right.
- *
- * The path is spaced over the **labelled** categories, like the bars, so a
- * point sits above its own label and a series with values past the last label
- * draws only the labelled ones.
- */
-export const LineChart = (props: LineChartProps) => (
-  <ChartFrame
-    {...props}
-    marks={(series, labels, box, scale) =>
-      Arr.map(series, (one) =>
-        lineMarks(
-          insetLine(one.values, box, scale, labels.length, LINE_WIDTH),
-          LINE_WIDTH,
-        ),
-      )
-    }
-    wash={(series, labels, box, scale) =>
-      Arr.map(series, (one) =>
-        Option.match(
-          areaPath(
-            insetLine(one.values, box, scale, labels.length, LINE_WIDTH),
-            box,
-          ),
-          {
-            onNone: () => [],
-            onSome: (d): ReadonlyArray<ChartMark> => [{ kind: "path", d }],
-          },
-        ),
-      )
-    }
-  />
-);
-
-/** One slice of a ring. */
-export interface ChartDatum {
-  readonly key: string;
-  /** The datum's name in the legend and in its image's accessible name. A blank label reads as `key`. */
-  readonly label: string;
-  readonly value: number;
+export interface RadarChartProps extends ChartProps {
+  readonly levels?: number;
+  readonly dots?: boolean;
+  readonly fillOpacity?: number;
+  readonly webs?: boolean;
+  readonly gridShape?: "polygon" | "circle";
+  readonly gridFill?: boolean;
+  readonly fill?: boolean;
+  readonly radius?: number;
+  readonly gridAt?: ReadonlyArray<number>;
+  readonly dotIcons?: ReadonlyArray<IconName>;
+  readonly axisLabelFormat?: (label: string, index: number) => string;
+  readonly pointTooltip?: boolean;
 }
 
-/** {@link DonutChart} props. */
-export interface DonutChartProps extends Omit<Props, "children"> {
-  /**
-   * One slice per datum, in the theme's categorical order.
-   *
-   * A saved ring writes `null` where it carried no data, so only a list is a
-   * list: a ring with no data paints its empty frame. An entry the store wrote
-   * as a hole is not a datum (`recordsOf`).
-   */
+export const RadarChart = ({
+  levels = 4,
+  dots = false,
+  fillOpacity = 0.25,
+  webs = true,
+  gridShape = "polygon",
+  gridFill = false,
+  fill = true,
+  radius,
+  gridAt,
+  dotIcons,
+  axisLabelFormat,
+  pointTooltip = false,
+  ...props
+}: RadarChartProps) => {
+  const rows = seriesFor(props.series, props.config, props.data);
+  const labels = labelsFor(props.labels, props.data);
+  const axes = Math.max(3, labels.length);
+  const max = chartScale(rows, axes);
+  const range = { min: 0, max };
+  const theme = useTheme();
+  return (
+    <ChartFrame
+      {...props}
+      series={rows}
+      labels={labels}
+      axis={false}
+      grid={false}
+      xLabels={false}
+      range={range}
+      paint={({ series, box, reveal }) => {
+        const shown = scaleSeries(series, revealOf(reveal));
+        return Arr.flatMap(shown, (one, seriesIndex) => {
+          const points = radarPoints(one.values, axes, box, max, radius);
+          const outline = polygonPath(points);
+          return Arr.flatten([
+            webs
+              ? [
+                  {
+                    key: one.key,
+                    series: one,
+                    seriesIndex,
+                    kind: "web",
+                    decorative: true,
+                    opacity: 0.6,
+                    marks: Arr.map(
+                      [
+                        ...(gridAt === undefined
+                          ? gridShape === "circle"
+                            ? radarCircleGrid(levels, box, radius)
+                            : radarGrid(levels, axes, box, max, radius)
+                          : gridShape === "circle"
+                            ? radarCircleGridAt(gridAt, box, radius)
+                            : radarGridAt(gridAt, axes, box, max, radius)),
+                        ...radarSpokes(
+                          circleAxes(gridShape, axes),
+                          box,
+                          max,
+                          radius,
+                        ),
+                      ],
+                      (d): ChartMark => ({
+                        kind: "path",
+                        d,
+                        stroke: lineStroke(1),
+                      }),
+                    ),
+                  } satisfies PaintLayer,
+                  ...(gridFill
+                    ? [
+                        {
+                          key: one.key,
+                          series: one,
+                          seriesIndex,
+                          kind: "web-fill",
+                          decorative: true,
+                          opacity: 0.06,
+                          marks: Arr.map(
+                            radarGrid(levels, axes, box, max, radius),
+                            (d): ChartMark => ({ kind: "path", d }),
+                          ),
+                        } satisfies PaintLayer,
+                      ]
+                    : []),
+                ]
+              : [],
+            [
+              ...(fill
+                ? [
+                    {
+                      key: one.key,
+                      series: one,
+                      seriesIndex,
+                      opacity: fillOpacity,
+                      marks: Option.match(outline, {
+                        onNone: () => [],
+                        onSome: (d): ReadonlyArray<ChartMark> => [
+                          { kind: "path" as const, d },
+                        ],
+                      }),
+                    } satisfies PaintLayer,
+                  ]
+                : []),
+              {
+                key: one.key,
+                series: one,
+                seriesIndex,
+                kind: "line",
+                decorative: true,
+                marks: Option.match(outline, {
+                  onNone: () => [],
+                  onSome: (d): ReadonlyArray<ChartMark> => [
+                    { kind: "path", d, stroke: lineStroke(2) },
+                  ],
+                }),
+              } satisfies PaintLayer,
+            ],
+            dots
+              ? [
+                  {
+                    key: one.key,
+                    series: one,
+                    seriesIndex,
+                    kind: "dots",
+                    decorative: true,
+                    marks: pointMarks(points, 3),
+                  } satisfies PaintLayer,
+                ]
+              : [],
+          ]);
+        });
+      }}
+      overlay={({ box, series, palette, origin, reveal }) => (
+        <>
+          {Arr.map(labels, (label, index) => {
+            const angle = -Math.PI / 2 + (index / axes) * Math.PI * 2;
+            const reach =
+              radius === undefined
+                ? Math.min(box.width, box.height) / 2 - 4
+                : radius;
+            const x = box.width / 2 + reach * Math.cos(angle);
+            const y = box.height / 2 + reach * Math.sin(angle);
+            return (
+              <text
+                key={`axis-${index}`}
+                style={{
+                  ...textStyle(theme, "caption"),
+                  position: "absolute",
+                  left: x - 40,
+                  top: y - 8,
+                  width: 80,
+                  textAlign: "center",
+                  color: themeColors(theme).mutedForeground,
+                }}
+              >
+                {axisLabelFormat === undefined
+                  ? label
+                  : axisLabelFormat(label, index)}
+              </text>
+            );
+          })}
+          {pointTooltip && revealOf(reveal) >= 1 ? (
+            <PointTooltip
+              zones={Arr.flatMap(series, (one, seriesIndex) =>
+                Arr.map(
+                  radarPoints(one.values, axes, box, max, radius),
+                  (point, index) => ({
+                    key: one.key,
+                    x: point.x,
+                    y: point.y,
+                    category: labels[index] ?? "",
+                    label: seriesName(one.label, one.key),
+                    value: (props.valueFormat ?? valueLabel)(
+                      one.values[index] ?? 0,
+                    ),
+                    colour: seriesColourOf(palette, one, seriesIndex),
+                  }),
+                ),
+              )}
+              box={box}
+              origin={origin}
+              testId={props.testId}
+            />
+          ) : undefined}
+          {dotIcons === undefined || revealOf(reveal) < 1
+            ? undefined
+            : Arr.flatMap(series, (one, seriesIndex) =>
+                Arr.map(
+                  radarPoints(one.values, axes, box, max, radius),
+                  (point, index) => {
+                    const name = dotIcons[index];
+                    return name === undefined || !isIconName(name) ? null : (
+                      <div
+                        key={`${one.key}-icon-${index}`}
+                        style={{
+                          position: "absolute",
+                          left: point.x - 7,
+                          top: point.y - 7,
+                        }}
+                      >
+                        <Icon
+                          color={seriesColourOf(palette, one, seriesIndex)}
+                          name={name}
+                          size={14}
+                          testId={
+                            props.testId === undefined
+                              ? undefined
+                              : `${props.testId}-dot-${one.key}-${index}`
+                          }
+                        />
+                      </div>
+                    );
+                  },
+                ),
+              )}
+        </>
+      )}
+      legendNode={() => (
+        <LegendFor
+          series={rows}
+          colors={props.colors}
+          config={props.config}
+          shape={props.legendShape}
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-legend`
+          }
+        />
+      )}
+    />
+  );
+};
+
+export interface RadialChartProps extends Omit<Props, "children"> {
   readonly data: ReadonlyArray<ChartDatum>;
-  /** The plot's size, in pixels. Defaults to `160` square. */
   readonly size?: number;
-  /** The legend paints under the ring. Defaults to `true`. */
+  readonly max?: number;
+  readonly thickness?: number;
+  readonly gap?: number;
+  readonly track?: boolean;
+  readonly grid?: boolean;
+  readonly rounded?: boolean;
+  readonly showLabels?: boolean;
+  readonly animate?: boolean;
+  readonly animationDuration?: number;
   readonly legend?: boolean;
+  readonly colors?: ReadonlyArray<string>;
+  readonly valueFormat?: (value: number) => string;
+  readonly centerLabel?: string;
   readonly className?: string;
-  /** The chart's test id. A slice is `${testId}-layer-${key}`. */
   readonly testId?: string;
 }
 
-/**
- * A ring: one slice per datum, each its own `<svg>` because each is its own
- * tint, with the segments drawn from twelve o'clock.
- *
- * A single datum that fills the ring paints two halves — an arc from an angle
- * to itself is empty, which the geometry suite measures.
- *
- * A datum keeps its image while it is part of the ring's data, even when it
- * draws no slice: a zero, or a value the geometry cannot read, paints no
- * segment but its reading is still the number a reader came for — the same rule
- * the series charts follow for a bar of zeros. Only the geometry is skipped.
- */
-export const DonutChart = ({
+export const RadialChart = ({
   data,
-  size = DEFAULT_DONUT_SIZE,
+  size = DEFAULT_RING_SIZE,
+  max,
+  thickness = 10,
+  gap = 4,
+  track = false,
+  grid = false,
+  rounded = false,
+  showLabels = false,
+  animate = true,
+  animationDuration = DEFAULT_ANIMATION_DURATION,
   legend = true,
+  colors,
+  valueFormat,
+  centerLabel,
   className,
   testId,
   style,
   ...rest
-}: DonutChartProps) => {
+}: RadialChartProps) => {
   const theme = useTheme();
+  const palette = paletteOf(theme, colors);
+  const rows = dataOf(data);
+  const animated = useAnimatedValues(
+    Arr.map(rows, (one) => [one.value]),
+    animate,
+    animationDuration,
+  );
+  const reveal = useMountReveal(animate, animationDuration);
+  const shown = Arr.map(rows, (one, index) => ({
+    ...one,
+    value: scaleValue(animated[index]?.[0] ?? one.value, reveal),
+  }));
   const box = chartBox(size, size, {
-    width: DEFAULT_DONUT_SIZE,
-    height: DEFAULT_DONUT_SIZE,
+    width: DEFAULT_RING_SIZE,
+    height: DEFAULT_RING_SIZE,
   });
-  const palette = seriesColors(theme);
-  const slices = recordsOf(data);
-  const segments = donutSegments(
-    Arr.map(slices, (one) => one.value),
-    box,
+  const ceiling = Option.match(Option.fromNullishOr(max), {
+    onNone: () =>
+      Arr.reduce(rows, 0, (most, one) =>
+        Math.max(most, Math.max(0, one.value)),
+      ) || 1,
+    onSome: (value) => (Number.isFinite(value) && value > 0 ? value : 1),
+  });
+  const arcs = Arr.map(
+    radialArcs(
+      Arr.map(shown, (one) => one.value),
+      box,
+      ceiling,
+      thickness,
+      gap,
+    ),
+    (marks, index) => {
+      if (!rounded) return marks;
+      const value = shown[index]?.value ?? 0;
+      const span =
+        ceiling <= 0 ? 0 : (Math.max(0, value) / ceiling) * Math.PI * 2;
+      if (span <= 0 || span >= Math.PI * 2 - 1e-9) return marks;
+      const outer =
+        Math.min(box.width, box.height) / 2 - 1 - index * (thickness + gap);
+      const mid = outer - thickness / 2;
+      const cap = (angle: number): ChartMark => ({
+        kind: "circle",
+        cx: box.width / 2 + mid * Math.cos(angle),
+        cy: box.height / 2 + mid * Math.sin(angle),
+        r: thickness / 2,
+      });
+      return [...marks, cap(-Math.PI / 2), cap(-Math.PI / 2 + span)];
+    },
   );
   return (
     <div
@@ -656,74 +1940,179 @@ export const DonutChart = ({
           height: box.height,
         }}
       >
-        {slices.map((one, index) => (
-          <ChartLayer
+        {grid ? (
+          <ChartMask
+            chartTestId={testId}
+            layer={{
+              key: "grid",
+              series: { key: "grid", label: "grid", values: [] },
+              seriesIndex: 0,
+              decorative: true,
+              opacity: 0.6,
+              marks: Arr.makeBy(4, (index) => ({
+                kind: "path" as const,
+                d: fullRing(
+                  box.width / 2,
+                  box.height / 2,
+                  ((Math.min(box.width, box.height) / 2 - 1) * (index + 1)) / 4,
+                  ((Math.min(box.width, box.height) / 2 - 1) * (index + 1)) /
+                    4 -
+                    1,
+                ),
+                stroke: lineStroke(1),
+              })),
+            }}
+            label=""
+            description=""
+            colour={themeColors(theme).border ?? "#000000"}
+            box={box}
+          />
+        ) : undefined}
+        {track
+          ? Arr.map(rows, (one, index) => (
+              <ChartMask
+                key={`${one.key}-track`}
+                chartTestId={testId}
+                layer={{
+                  key: one.key,
+                  series: { key: one.key, label: one.label, values: [] },
+                  seriesIndex: index,
+                  kind: "track",
+                  decorative: true,
+                  opacity: 0.18,
+                  marks: Arr.makeBy(1, () => {
+                    const outer =
+                      Math.min(box.width, box.height) / 2 -
+                      1 -
+                      index * (thickness + gap);
+                    return {
+                      kind: "path" as const,
+                      d: fullRing(
+                        box.width / 2,
+                        box.height / 2,
+                        Math.max(0, outer),
+                        Math.max(0, outer - thickness),
+                      ),
+                    };
+                  }),
+                }}
+                label=""
+                description=""
+                colour={themeColors(theme).muted ?? "#000000"}
+                box={box}
+              />
+            ))
+          : undefined}
+        {Arr.map(rows, (one, index) => (
+          <ChartMask
             key={one.key}
             chartTestId={testId}
-            seriesKey={one.key}
+            layer={{
+              key: one.key,
+              series: { key: one.key, label: one.label, values: [one.value] },
+              seriesIndex: index,
+              marks: arcs[index] ?? [],
+            }}
             label={seriesName(one.label, one.key)}
             description={seriesDescription([one.value])}
-            colour={seriesColour(palette, index)}
-            marks={segments[index] ?? []}
+            colour={seriesColourOf(
+              palette,
+              { key: one.key, label: one.label, values: [] },
+              index,
+            )}
             box={box}
           />
         ))}
+        {showLabels && reveal >= 1
+          ? Arr.map(rows, (one, index) => {
+              const span =
+                ceiling <= 0
+                  ? 0
+                  : (Math.max(0, one.value) / ceiling) * Math.PI * 2;
+              if (span <= 0) return null;
+              const outer =
+                Math.min(box.width, box.height) / 2 -
+                1 -
+                index * (thickness + gap);
+              const mid = outer - thickness / 2;
+              const angle = -Math.PI / 2 + span;
+              return (
+                <text
+                  key={`${one.key}-value`}
+                  testId={
+                    testId === undefined
+                      ? undefined
+                      : `${testId}-value-${one.key}`
+                  }
+                  style={{
+                    ...textStyle(theme, "caption"),
+                    position: "absolute",
+                    left: box.width / 2 + mid * Math.cos(angle) + 6,
+                    top: box.height / 2 + mid * Math.sin(angle) - 8,
+                    width: 48,
+                    color: themeColors(theme).mutedForeground,
+                  }}
+                >
+                  {(valueFormat ?? valueLabel)(one.value)}
+                </text>
+              );
+            })
+          : undefined}
+        {centerLabel === undefined ||
+        centerLabel.trim().length === 0 ? undefined : (
+          <text
+            style={{
+              ...textStyle(theme, "label"),
+              position: "absolute",
+              left: 0,
+              top: box.height / 2 - 10,
+              width: box.width,
+              textAlign: "center",
+              color: themeColors(theme).foreground,
+            }}
+          >
+            {centerLabel}
+          </text>
+        )}
       </div>
       {legend ? (
-        <ChartLegend
+        <RingLegend
+          data={rows}
+          colors={colors}
+          values
+          format={valueFormat ?? valueLabel}
           testId={testId === undefined ? undefined : `${testId}-legend`}
-          items={Arr.map(slices, (one, index) => ({
-            key: one.key,
-            label: one.label,
-            color: seriesColour(palette, index),
-          }))}
         />
       ) : undefined}
     </div>
   );
 };
 
-/** {@link Sparkline} props. */
 export interface SparklineProps extends Omit<Props, "children"> {
-  /**
-   * The values, one point each, in paint order.
-   *
-   * A saved trend writes `null` where it carried no samples, so only a list is
-   * a list: a sparkline with no values paints its frame and no line.
-   */
   readonly values: ReadonlyArray<number>;
-  /** The plot's width, in pixels. Defaults to `120`. */
   readonly width?: number;
-  /** The plot's height, in pixels. Defaults to `32`. */
   readonly height?: number;
-  /**
-   * The line's colour. Defaults to the theme's first categorical swatch; a
-   * blank colour is that absence too, because a default only covers an absent
-   * prop.
-   */
   readonly color?: string;
+  readonly curve?: Curve;
+  /** The line is filled down to the floor. Defaults to `false`. */
+  readonly filled?: boolean;
+  /** A data change tweens the line's values. Defaults to `false`. */
+  readonly animate?: boolean;
+  /** How long a data change takes, in milliseconds. Defaults to `320`. */
+  readonly animationDuration?: number;
   readonly className?: string;
   readonly testId?: string;
 }
 
-/**
- * A word-sized line: no axis, no labels, no legend.
- *
- * It is one `<svg>` in the first categorical colour, so a stat card's trend and
- * a chart's first series agree without the caller naming a colour twice.
- *
- * Unlike the series charts it is **one image, not a group of them**: there is
- * no series list, so the caller's `aria-label` names the single layer and the
- * values travel in its description. A wrapper that also claimed `role="img"`
- * made a reader hear the sparkline twice — measured, the tree held two `Image`
- * nodes with the same name. A blank name is absence, so the image takes
- * {@link DEFAULT_SPARKLINE_LABEL} — a default only covers an absent prop.
- */
 export const Sparkline = ({
   values,
   width = DEFAULT_SPARKLINE_WIDTH,
   height = DEFAULT_SPARKLINE_HEIGHT,
   color,
+  curve = "smooth",
+  filled = false,
+  animate = true,
+  animationDuration = DEFAULT_ANIMATION_DURATION,
   className,
   testId,
   style,
@@ -735,12 +2124,32 @@ export const Sparkline = ({
     width: DEFAULT_SPARKLINE_WIDTH,
     height: DEFAULT_SPARKLINE_HEIGHT,
   });
-  const points = listOf(values);
-  const scale = chartScale([
-    { key: "sparkline", label: "sparkline", values: points },
-  ]);
-  const line = insetLine(points, box, scale, points.length, 2);
-  const colour = chosenColour(color, seriesColour(seriesColors(theme), 0));
+  const points = Arr.filter(listOf(values), Number.isFinite);
+  const tweened = useAnimatedValues([points], animate, animationDuration);
+  const shownPoints = tweened[0] ?? points;
+  const reveal = useMountReveal(animate, animationDuration);
+  const clip =
+    reveal >= 1
+      ? undefined
+      : { x: 0, y: 0, width: box.width * reveal, height: box.height };
+  const series: ChartSeries = {
+    key: "sparkline",
+    label: "sparkline",
+    values: shownPoints,
+  };
+  const range = chartRange([series]);
+  const path = curvePath(
+    seriesPoints(shownPoints, box, range, shownPoints.length),
+    curve,
+  );
+  const area = filled
+    ? areaPath(
+        seriesPoints(shownPoints, box, range, shownPoints.length),
+        box,
+        range,
+        curve,
+      )
+    : Option.none();
   return (
     <div
       {...rest}
@@ -754,25 +2163,51 @@ export const Sparkline = ({
           height: box.height,
         }}
       >
-        <ChartWash
-          marks={Option.match(areaPath(line, box), {
-            onNone: () => [],
-            onSome: (d): ReadonlyArray<ChartMark> => [{ kind: "path", d }],
-          })}
-          box={box}
-          colour={colour}
-          opacity={WASH_OPACITY}
-        />
-        <ChartLayer
+        {Option.isNone(area) ? undefined : (
+          <ChartMask
+            chartTestId={testId}
+            layer={{
+              key: "sparkline",
+              series,
+              seriesIndex: 0,
+              kind: "area",
+              decorative: true,
+              opacity: 0.2,
+              ...(clip === undefined ? {} : { clip }),
+              marks: [{ kind: "path", d: Option.getOrElse(area, () => "") }],
+            }}
+            label=""
+            description=""
+            colour={chosenColour(
+              color,
+              paletteOf(theme, undefined)[0] ?? "#000000",
+            )}
+            box={box}
+          />
+        )}
+        <ChartMask
           chartTestId={testId}
-          seriesKey="sparkline"
+          layer={{
+            key: "sparkline",
+            series,
+            seriesIndex: 0,
+            ...(clip === undefined ? {} : { clip }),
+            marks: Option.match(path, {
+              onNone: () => [],
+              onSome: (d): ReadonlyArray<ChartMark> => [
+                { kind: "path", d, stroke: lineStroke(1.5) },
+              ],
+            }),
+          }}
           label={spokenText(
             Option.fromNullishOr(ariaLabel),
             DEFAULT_SPARKLINE_LABEL,
           )}
-          description={seriesDescription(points)}
-          colour={colour}
-          marks={lineMarks(line, 2, false)}
+          description={seriesDescription(shownPoints)}
+          colour={chosenColour(
+            color,
+            paletteOf(theme, undefined)[0] ?? "#000000",
+          )}
           box={box}
         />
       </div>

@@ -14,9 +14,14 @@
 
 import { StatCard } from "../src/surfaces/stat-card.js";
 import {
+  AreaChart,
   BarChart,
+  ComposedChart,
   DonutChart,
   LineChart,
+  PieChart,
+  RadarChart,
+  RadialChart,
   Sparkline,
   StackedBar,
 } from "../src/chart/chart.js";
@@ -124,6 +129,8 @@ export const ChartExample = () => {
           aria-label="Revenue against cost by quarter"
           labels={QUARTERS}
           series={[revenue, cost]}
+          valueLabels
+          valueLabelFormat={(value, one) => `${one.label} ${value}`}
           width={320}
           height={140}
           testId="chart-bars"
@@ -134,6 +141,8 @@ export const ChartExample = () => {
         aria-label="Churn by quarter"
         labels={QUARTERS}
         series={[churn]}
+        showLabels
+        dotIcons={["check", "info", "bell", "circle"]}
         width={360}
         height={120}
         testId="chart-line"
@@ -148,11 +157,67 @@ export const ChartExample = () => {
         testId="chart-stacked"
       />
 
+      <AreaChart
+        aria-label="Revenue and cost as areas"
+        labels={QUARTERS}
+        series={[revenue, cost]}
+        width={360}
+        height={140}
+        testId="chart-area"
+      />
+
       <DonutChart
         aria-label="Traffic by source"
         data={sources}
         size={160}
         testId="chart-donut"
+      />
+
+      <PieChart
+        aria-label="Traffic by source as a pie"
+        data={sources}
+        size={160}
+        showLabels
+        labelPosition="outside"
+        activeIndex={1}
+        testId="chart-pie"
+      />
+
+      <ComposedChart
+        aria-label="Revenue as bars, cost as a line"
+        labels={QUARTERS}
+        series={[revenue, cost]}
+        lineKeys={["cost"]}
+        width={360}
+        height={140}
+        testId="chart-composed"
+      />
+
+      <RadarChart
+        aria-label="Coverage by discipline"
+        labels={["Ship", "Review", "Test", "Design", "Docs"]}
+        series={[{ key: "team", label: "Team", values: [8, 6, 7, 4, 5] }]}
+        width={220}
+        height={180}
+        gridShape="circle"
+        gridFill
+        gridAt={[0.25, 0.5, 0.75, 1]}
+        dotIcons={["check", "circle", "info", "bell", "eye"]}
+        axisLabelFormat={(label) => label.toUpperCase()}
+        testId="chart-radar"
+      />
+
+      <RadialChart
+        aria-label="Storage by service"
+        data={sources}
+        max={100}
+        size={160}
+        centerLabel="100"
+        track
+        grid
+        rounded
+        showLabels
+        testId="chart-radial"
       />
     </div>
   );

@@ -66,7 +66,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
   {
     name: "Actions",
     pages: [
-      primitive("button", "Button"),
+      component("button", "Button"),
       primitive("icon-button", "IconButton"),
       primitive("button-group", "ButtonGroup"),
       primitive("toggle", "Toggle"),
@@ -79,10 +79,10 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
   {
     name: "Selection controls",
     pages: [
-      primitive("checkbox", "Checkbox"),
+      component("checkbox", "Checkbox"),
       primitive("checkbox-group", "Checkbox group"),
       primitive("radio-group", "RadioGroup"),
-      primitive("switch", "Switch"),
+      component("switch", "Switch"),
       primitive("rating", "Rating"),
       primitive("slider", "Slider"),
       primitive("range-slider", "RangeSlider"),
@@ -96,7 +96,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       primitive("textarea", "TextArea"),
       primitive("number-field", "NumberField"),
       primitive("otp-field", "OTPField"),
-      primitive("select", "Select"),
+      component("select", "Select"),
       component("input-group", "Input group"),
     ],
   },
@@ -303,7 +303,8 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       data("property-panel", "Property panels"),
       data("key-value", "Key-value displays"),
       data("stat-card", "Statistic / metric cards"),
-      data("charts", "Charts"),
+      page("Charts", "/graphics/charts/charts"),
+      component("diagram", "Diagrams"),
     ],
   },
   {
@@ -371,7 +372,7 @@ export const soloPages: ReadonlyArray<SoloPage> = [
     reason: "a provider, not a component — no sibling to choose between",
   },
   {
-    href: "/icons/icon",
+    href: "/graphics/icons/icon",
     reason: "the icon set is one page",
   },
 ];

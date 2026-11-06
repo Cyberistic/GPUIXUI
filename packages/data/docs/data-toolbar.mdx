@@ -34,8 +34,7 @@ import { DataToolbar } from "@gpuixui/data";
 | `label` | `string` | `Search` | the field's accessible name; a blank name reads as `Search` |
 | `debounceMs` | `number` | `150` | how long the query waits before it is reported; `0` reports every edit at once, and a value that is not finite or is negative reads as `150` |
 
-## Limitations
-
+## Notes
 - The toolbar does not own the query; it reports a debounced value.
 - A pending query is dropped when the toolbar unmounts.
 - It lays children out in one row only.

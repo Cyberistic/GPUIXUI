@@ -48,8 +48,7 @@ export const DeploymentWindow = () => {
 };
 ```
 
-A span is `mode="range"`: the value is `{ from, to }` of ISO days, the surface
-opens on two months, and it closes when the second day completes the span.
+A span is `mode="range"`: the value is `{ from, to }`, and it closes on the second day.
 
 ```tsx
 <DatePicker
@@ -127,29 +126,7 @@ DatePicker
 | ---- | ---- | ------- | ----------- |
 | `label` | `string` | `"Calendar"` | the grid's accessible name |
 
-## Migration
-
-`DatePickerTrigger`, `DatePickerContent` and `DatePickerCalendar` keep their
-names and props; `DatePickerCalendar` is now a thin wrapper over `Calendar`, so
-the old composition keeps working and the grid gains the new keyboard, the
-dropdown caption and the span modes.
-
-Two things changed on purpose:
-
-- the trigger prints shadcn's labels — `"Oct 17, 2026"` instead of
-  `"17 October 2026"`, and `"Jan 20 – Feb 4, 2026"` for a span;
-- the surface paints the neighbouring months' days by default. Pass
-  `showOutsideDays={false}` for the old blank-cell grid.
-
-## Limitations
-
+## Notes
 - No `aria-current`: today is a border, not an attribute.
-- No `aria-disabled`: an unavailable day leaves the tab order and is named
-  "unavailable".
-- Fixed English labels; time of day is the separate Time picker.
-
-## Related
-
-- **Calendar** — the grid this control anchors in a popover.
-- **Popover** — the surface and its dismissal rules.
-- **Time picker** — the time of day this control does not own.
+- No `aria-disabled`: an unavailable day leaves the tab order and is named "unavailable".
+- Fixed English labels, and the trigger prints `"Oct 17, 2026"`; time of day is the Time picker.

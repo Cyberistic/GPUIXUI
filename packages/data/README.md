@@ -6,7 +6,16 @@ with resizing, the virtualized list over the runtime's own `<virtual-list>`, the
 virtualized table that composes it with a fixed header, the **tree** with its
 expansion and cursor model, the **windowed tree** that retains one window of a
 hierarchy, the **expandable table row** that opens a detail panel under itself,
-the **charts** (bar, stacked, line, donut and sparkline, one tinted `<svg>` mask
+the **charts** (bar — vertical or horizontal, negative values, value labels —,
+stacked — with a `percent` mode —, line — linear/smooth/step, dots, dashed —,
+area — stacked, with a faded fill —, pie, donut, radar, radial, composed
+(bars and lines on one axis) and sparkline,
+icon dots on line and radar points, outside pie labels with leader lines, an
+optional data-change tween (`animate`), per-point readouts (`pointTooltip`) and
+a brushed category window (`domain`, with a drag strip), icon rows in the
+readout, continuous zoom/pan
+(`view` / `zoom`), one
+tinted `<svg>` mask
 per series), and the **data surfaces** (a key-value list, a statistic card, a
 property panel, a toolbar and the advanced filter's predicate tree), and the
 **frozen column** — two panes mirrored into one scroll (`FrozenTable`).
@@ -50,7 +59,7 @@ Measured on the pinned `@gpuix/native@0.11.0`; evidence is in
 | A painted row that grows re-measures | `virtual-list-expand` | An expandable row opens a **sibling** detail row (no row span on 0.11.0): the rows below shift by the growth, and a fixed-estimate `itemCount` window cannot express it — use the plain table or the list's children mode. |
 | A key is dispatched along the focus path | `press-routing-lifecycle` | A key typed in a field inside a row still reaches the row's `onKeyDown`, so a row that owns activation reads the renderer's focused element first. `TableExpandableRow` toggles only while the row itself holds focus, and a disabled row toggles on no key. `TreeView` reads the same rule: it answers a key only while one of its rows holds native focus, so a field in `renderRow` keeps its space, Enter and characters (`tree.test.tsx`). |
 | The `aria-*` set is closed | `a11y-tree`, `docs/gpuix-capabilities.md` | A row's state travels only in the attributes 0.11.0 carries — a chosen row's selected state, an open one's expanded state. A disabled row installs no press handler and paints no pointer state, because 0.11.0 has no aria-disabled; the reason belongs in a cell's text (`src/table/aria.test.ts` holds the write set). |
-| `<svg source>` is one tinted mask | `chart-raster`, `content-surfaces` | A chart is **one `<svg>` per series**, each carrying its series in the plot's viewBox and tinted through `style.color`; labels and the legend are text. A translucent mark that must sit over another uses the raster route (`setImagePixels`), not two masks. |
+| `<svg source>` is one tinted mask | `chart-raster`, `content-surfaces` | An `<svg source>` cannot carry a chart's colour: it paints **one** tint for the whole document. A chart therefore takes the **document** route — `setImage` decodes SVG bytes through the runtime's own renderer, so one element carries every series' own fill and a real gradient (`chart-raster` measured three colours in one element). The labels and the legend stay text beside the plot. |
 | A list builds only a window | `virtual-list-lifecycle`, `virtual-list-windowed` | `VirtualList` wraps the host element: children mode retains every React child and skips build/paint off screen; `itemCount` + `estimatedItemHeight` + `windowStart` retains only the app's slice. A list sizes its viewport from a definite height. |
 | A shrinking set re-clamps the window | `virtual-table-lifecycle` | A scroll offset belongs to the set it was measured against. `useVirtualRows` clamps it to `count × rowHeight − viewport` before the window is computed, so a filter that narrows the set under a reader at row 900 lands on the narrowed set's end with the viewport still full — the core alone clamps the stale offset to the content's end and mounts five rows in a nine-row viewport. |
 | `onVisibleRange` lags the paint | `virtual-list-windowed` | The reported range is **not** the window's source: the window follows the runtime's **scroll anchor** (`getListScrollTop`), which is exact even while the row heights are estimates. A window built from the reported range paints blank rows. |
@@ -79,8 +88,9 @@ src/
   tree/       the flattening, the cursor contract, TreeView, the shared row and
               keyboard controller, useExpandedRows; type-ahead reads
               @gpuixui/components/typeahead
-  chart/      the geometry, the one-tint-per-series markup, the five charts
-              and the legend
+  chart/      the geometry, the mark model, the scene bridge to TanStack
+              Charts, the SVG document, the surface that paints it, the nine
+              charts, the config seam and the legend
   surfaces/   KeyValue, StatCard, PropertyPanel, DataToolbar, AdvancedFilter
               and the predicate tree they read
   use-table   the uncontrolled controller over the core's row models
@@ -611,9 +621,15 @@ the panel, because a focusable `div` has no activation of its own. An expanding
 row belongs in the plain table or the list's children mode: a fixed-estimate
 `itemCount` window would misplace every row below it.
 
-A **chart** is one `<svg>` per series, tinted through `style.color`, because an
-`<svg source>` is one mask (`chart-raster`). The geometry is pure data, and the
-labels and legend are text beside the plot:
+A **chart** is a **scene**, compiled by
+[TanStack Charts](https://github.com/TanStack/charts) — MIT, and the one chart
+library whose compiler runs without a DOM. The scene serialises to one SVG
+document, and the runtime's own renderer paints that document as one image,
+so a chart holds **every series' own colour in one element** and a real
+gradient under an area. The hit test is geometric: the scene keeps a point for
+every datum beside the paint, so the datum under the pointer is the nearest
+point rather than a DOM event on a mark. The labels, legend and hover readout
+are text and boxes beside the plot:
 
 ```tsx
 <BarChart
@@ -627,6 +643,14 @@ labels and legend are text beside the plot:
 <DonutChart aria-label="Traffic by source" data={sources} size={160} />
 <Sparkline aria-label="Revenue trend" values={[32, 48, 41, 60]} />
 ```
+
+`chart/scene.ts` is the bridge: `sceneRows` lays the caller's series out as
+flat rows, `sceneDefinition` makes a definition of them, `chartScene`
+compiles the scene and `sceneSvg` serialises it. Only the DOM-free subpaths
+are used (`/scene`, `/line`, `/bar`, `/area`, `/tick`, `/svg`, `/scales/*`),
+which keeps `d3-scale`, `d3-shape` and `d3-selection` out of the bundle — the
+shipped bundle carries **zero** d3 references. The scales come from
+`@tanstack/charts-scales`, a package with no dependencies of its own.
 
 `chart/logic.ts` holds the scale, the marks and the markup so a chart can be
 drawn from Effect or a store; `seriesColors(theme)` supplies the categorical

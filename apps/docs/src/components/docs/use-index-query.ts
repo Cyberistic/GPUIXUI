@@ -10,8 +10,7 @@ import {
  *
  * The component index, the icon gallery and the API reference's symbol table
  * each narrow a generated list, and a reader who found what they wanted is
- * looking at a view worth linking: the platform switch already writes its state
- * to the address bar (`?platform=`), and a filter follows the same rule. Reading
+ * looking at a view worth linking, so the filter follows the same rule. Reading
  * happens in the state initializer so the first paint is already the linked
  * view; writing replaces the address without navigating.
  */

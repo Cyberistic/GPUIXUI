@@ -1,6 +1,10 @@
-import { packageCollections } from "./collection-routes";
+import {
+  packageCollections,
+  type PackageCollection,
+} from "./collection-routes";
 import { servedPages } from "./curated-twins";
 import { frontmatterField, frontmatterOf } from "./frontmatter";
+import * as Arr from "effect/Array";
 
 /**
  * The component index.
@@ -91,20 +95,43 @@ const sectionOrder = packageCollections.reduce<ReadonlyArray<string>>(
   [],
 );
 
+/**
+ * The collection that owns a docs file.
+ *
+ * A collection may sit **inside** a package's own `docs` — the charts live in
+ * `packages/data/docs/charts`, which is inside `packages/data/docs` — so the
+ * collection that owns the file is the **most specific** one: the longest
+ * directory that holds it. The data lane would otherwise claim the charts.
+ */
+const collectionOf = (file: string): PackageCollection | undefined =>
+  Arr.reduce(
+    packageCollections,
+    undefined as PackageCollection | undefined,
+    (best, candidate) => {
+      if (!file.startsWith(`${candidate.dir}/`)) return best;
+      return best === undefined || candidate.dir.length > best.dir.length
+        ? candidate
+        : best;
+    },
+  );
+
 /** Where a docs file is served, or `undefined` when it is not a component page. */
 export const pageUrl = (file: string): string | undefined => {
   const site = /^content\/docs\/components\/(.+)\.mdx$/.exec(file);
   if (site !== null) return indexUrl("/components", site[1]);
 
-  const packaged = /^packages\/([^/]+)\/docs\/(.+)\.mdx$/.exec(file);
-  if (packaged === null) return undefined;
+  const packaged = /^(packages\/[^/]+\/docs(?:\/.+)?)\.mdx$/.exec(file);
+  const directory = packaged?.[1];
+  if (directory === undefined) return undefined;
 
-  const collection = packageCollections.find(
-    (candidate) => candidate.dir === `packages/${packaged[1]}/docs`,
-  );
-  return collection === undefined
-    ? undefined
-    : indexUrl(collection.route, packaged[2]);
+  // A collection's directory may sit **inside** a package's own `docs` — the
+  // charts are `packages/data/docs/charts`, so the data lane mounts the rest
+  // and the Graphics category mounts the charts. The collection whose
+  // directory the file is in is the one that serves it.
+  const collection = collectionOf(directory);
+  if (collection === undefined) return undefined;
+  const name = directory.slice(collection.dir.length + 1);
+  return indexUrl(collection.route, name);
 };
 
 /** `index.mdx` is its folder's landing page, not a component. */
@@ -115,11 +142,10 @@ const indexUrl = (
   name === undefined || name === "index" ? undefined : `${route}/${name}`;
 
 /** The sidebar section a docs file belongs to. */
+/** The sidebar section a docs file belongs to. */
 const sectionOf = (file: string): string | undefined => {
   if (file.startsWith("content/docs/components/")) return siteSection;
-  return packageCollections.find((collection) =>
-    file.startsWith(`${collection.dir}/`),
-  )?.section;
+  return collectionOf(file)?.section;
 };
 
 /** One page's section: its `##` heading and the text under it. */

@@ -26,7 +26,7 @@ this site uses **3 for the paint and geometry, and 2 for the runtime**:
   reader can run the real component in `apps/playground` — the companion native
   playground — rather than trust the drawing.
 - Where the runtime lacks a capability (no `aria-checked`, no `transform`, no
-  caret position), the page says so in **Limitations** instead of drawing
+  caret position), the page says so in prose instead of drawing
   behaviour that does not exist. `.agents/slop/COMPONENTS.md` carries the same evidence per
   row.
 
@@ -66,7 +66,7 @@ a quarter of the pill's height plus the column's gap — so the pill crosses the
 surface's bottom edge, and the rest of its box lays out below the edge. shadcn
 anchors the row absolutely and hangs three quarters of it past the edge; the
 runtime cannot position a child against its parent, so the Bubble page says so
-under **Limitations** and the drawing mirrors the native quarter rather than
+in its accessibility notes and the drawing mirrors the native quarter rather than
 shadcn's. The drawing's corner is `var(--radius-xl)` and its type is the
 recipe's 14px/20px, so the platform switch moves the corner with the native one;
 shadcn's `--radius * 1.4` and `leading-relaxed` are the two numbers the library's
@@ -263,8 +263,8 @@ platform is a document-level singleton.
   class through the `gpuix-web-wasm` rule, and `vite.config.ts` resolves
   `@gpuix/native` to it for the client graph.
 - The theme is the platform switch's: `resolvePlatformTheme(platform, "dark",
-  look)` from `?platform=` and `?look=`, falling back to the remembered choice,
-  so the surface changes with the rest of the site's previews.
+  look)` from the choice the switch remembers, so the surface changes with the
+  rest of the site's previews.
 - A press goes through the automation locator, which calls
   `renderer.simulateClick` — the renderer's own input path — and the React
   handler repaints the banner's fill and counts the press. Nothing in the page
@@ -301,6 +301,51 @@ Press me,Waiting for a press`, the button sampled `#a7a9ff` at `41,113`, the
 banner `#1e222a` at `500,149`, and after one press through the automation locator
 the banner sampled `#0e5135` with the status reading "Pressed 1 time" — the same
 four claims, now painted by a React tree instead of a hand-fed batch.
+
+### Build-time frames: the library rendered once, for every page
+
+Strategy 1 is no longer one hand-written scene. The registry that feeds the
+native playground — `@gpuixui/components/examples` and
+`@gpuixui/data/examples` — is the set of screens a component page documents, and
+the wasm renderer can mount any of them. Two route forms expose that:
+
+- `/live?scene=example&id=accordion` mounts one registered example and reports
+  `status=painting`, `id`, `platform` and `mode`. This is what the Native tab's
+  "open the same scene live" link opens.
+- `/live?scene=examples` mounts no example until
+  `window.__gpuixCapture.render(id)` is called, then swaps the root to that
+  example in the same surface. One document, one wasm initialisation, any number
+  of frames. `clear()` paints the empty stage first, so a slow example cannot be
+  captured as the previous one.
+
+`scripts/native-previews.ts` drives the second form in headless Chrome and writes
+`src/assets/native/<id>.webp` for every registered example. It verifies each
+frame by **counting distinct colours across every pixel**: a screenshot that
+exists is not a paint, and an earlier five-point sample grid called a real
+toolbar flat because every point landed between its controls. A frame with one
+colour is the empty stage, and the run fails that example by id. The captures are
+checked in, roughly 657 KiB for 92 examples.
+
+That gives the site a real native still on every component page whose id the
+registry carries (the **Native** tab in `<ComponentPreview>`), and a real native
+poster in the component index before hydration: the server-rendered tile carries
+the image, and the mount replaces it with the interactive browser demo. The still
+is one platform and one palette — the caption names both — so it does not repaint
+with the platform switch; the live scene it links to does.
+
+The live example form uses the same frame as a **poster**: the server HTML for
+`/live?scene=example&id=accordion` carries the checked-in image, and the route
+starts the wasm fetch beside the backend probe instead of after it. The reader
+therefore sees the real library immediately; the canvas replaces the poster when
+the page reports `painting`. The Native tab's "open the same scene live" link
+starts the download on hover, focus or press, so the transfer overlaps the
+reader's decision and the live page's own fetch is served from cache. The 19 MiB
+payload is still a first-visit download
+and compile — the poster makes the wait honest, it does not remove it. The docs
+deploy sets `/assets/*` to `public, max-age=31536000, immutable` through
+Alchemy's asset headers, so the hashed wasm and native frames survive a repeat
+visit without revalidation; Cloudflare serves the Brotli encoding when the
+browser asks for it.
 
 ### Reading a hydrated node
 
@@ -383,12 +428,11 @@ added record asks the probe to move.
 
 ### The palette switch is a measured click
 
-The palette axis (`?mode=`, the sidebar's **Palette** group) is the one control
-that lets a reader see a component in both of the library's themes, and it is
-React state: `?mode=light` in the address bar proves the surface resolved a
-palette on the server, not that pressing *Light* changes one. `String` state
-crosses three places — the query parameter, the remembered choice and the
-provider — so the click is measured rather than assumed.
+The palette axis (the sidebar's **Palette** group) is the one control that lets
+a reader see a component in both of the library's themes, and it is React state:
+the address bar says nothing about what a press changes. The choice crosses two
+places — the provider and the remembered choice — so the click is measured
+rather than assumed.
 
 `apps/docs/scripts/palette-switch-probe.ts` presses the group on the served
 Button page. It waits for the **Light** button to carry `__reactProps.onClick`
@@ -401,9 +445,9 @@ surface's `data-mode`, `data-platform` and the `--background` variable the bridg
 wrote, and holds each against `platformTheme(themes[mode], platform)` — so the
 expected fill is the library's own value, and a palette edit moves the probe with
 it. It presses **Light**, requires every surface to follow (`3 of 3` on the Button
-page), the group's `aria-pressed` to move, and the address bar to carry
-`mode=light`; then it presses **Dark** and requires the URL back. Run it with a
-dev or preview server up:
+page) and the group's `aria-pressed` to move, and requires the address bar to
+carry none of the switch's axes; then it presses **Dark** and requires the group
+back. Run it with a dev or preview server up:
 
 ```sh
 nub run --filter @gpuixui/docs dev
@@ -432,32 +476,30 @@ is disabled.
 Measured 2026-10-23 on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80
 against `vite preview`: `light: 3 of 3 surfaces painted #F6F8FA`, exit `0` — the
 Default platform's light page fill, with the dark page `#11141A` before the
-press. The negative control is a link that opens on the other palette:
-`--url '…/components/button?mode=light'` prints
-`FAIL a preview opened in light, not dark`, the fill it read beside the dark one
-it expected, and the group's pressed position, then exits `1`.
+press. The negative control is the query guard: `namesSwitchAxis` names
+`platform`, `mode`, `look` and `appearance`, and the probe fails with
+`the address bar carries the switch's state (…)` if any path writes one back.
 `src/lib/palette-switch.test.ts` holds the policy, the command, both measurements
 and the parser the assertions read.
 
 ### The platform switch is a measured click
 
-The platform axis (`?platform=`, the sidebar's **Platform style** group) is the
-mission's acceptance: *a reader toggles macOS → Windows and every preview
-changes*. The URL half is server-rendered — `?platform=win32` reaches the
-surface — but a reader changes it by pressing a button, and that press is React
-state: it writes the address bar and re-resolves `platformTheme` for every
-`PreviewSurface`, which no `?platform=` capture proves.
+The platform axis (the sidebar's **Platform style** group) is the mission's
+acceptance: *a reader toggles macOS → Windows and every preview changes*. A
+reader changes it by pressing a button, and that press is React state: it
+re-resolves `platformTheme` for every `PreviewSurface`, which no capture of the
+markup proves.
 
 `apps/docs/scripts/platform-switch-probe.ts` presses **Windows**, then **macOS**,
 on the served Button page. It waits for the Windows button to carry
 `__reactProps.onClick`, then reads every preview surface's `data-platform`,
-`data-mode`, the `--control-height-md` variable the bridge wrote and the address
-bar. The height is held against
+`data-mode` and the `--control-height-md` variable the bridge wrote, and the
+platform button the group reports pressed. The height is held against
 `platformTheme(themes[mode], platform).density.controlHeight.md`, so the expected
 geometry is the library's own and a density edit moves the probe with it. It
-requires every surface to follow (`3 of 3` on the Button page) and the URL to
-carry `platform=win32`, then `platform=darwin`. Run it with a dev or preview
-server up:
+requires every surface to follow (`3 of 3` on the Button page), the group to
+report the pressed platform, and the address bar to carry none of the switch's
+axes. Run it with a dev or preview server up:
 
 ```sh
 nub run --filter @gpuixui/docs dev
@@ -476,8 +518,8 @@ surfaces that did. `src/lib/platform-switch.test.ts` holds the policy, the
 command, both measurements and the parser the assertions read.
 
 A platform press also clears an authored look. A look is an overlay: it fixes
-the palette, radii and density over whatever platform is showing, so with
-`?look=aero` remembered the sidebar's press moved only the label and every
+the palette, radii and density over whatever platform is showing, so with the
+Aero look remembered the sidebar's press moved only the label and every
 preview kept the look's paint — the failure a reader reports as "the switch does
 nothing". `choosingPlatform` in `src/lib/platform.ts` is that rule, and
 `platform.test.ts` holds both directions: the stale look paints the same page in
@@ -489,9 +531,9 @@ The site has **two** palettes, and they are deliberately independent:
 
 - the **docs chrome** — the sidebar, the page and the prose — reads its own
   `:root`/`.dark` values from `src/styles/app.css`;
-- a **preview** paints the library's theme, resolved from `?mode=`, `?platform=`
-  and `?look=`, so a component can be read in the dark palette while the page is
-  light.
+- a **preview** paints the library's theme, resolved from the switch's palette,
+  platform and look, so a component can be read in the dark palette while the
+  page is light.
 
 The chrome's switch is React state held by next-themes, so no static read proves
 it: `?theme=dark` in a URL, or the class on `<html>` at load, says nothing about
@@ -610,7 +652,8 @@ cannot ship a page the site does not show and the two cannot drift:
 | Collection | Source | Route | Sidebar |
 | ---------- | ------ | ----- | ------- |
 | Primitives | `packages/primitives/docs` | `/primitives` | Primitives |
-| Icons | `packages/icons/docs` | `/icons` | Icons |
+| Icons | `packages/icons/docs` | `/graphics/icons` | Graphics |
+| Charts | `packages/data/docs/charts` | `/graphics/charts` | Graphics |
 | Components | `packages/components/docs` | `/components` | Components |
 | Data | `packages/data/docs` | `/data-display` | Data display |
 | Code surfaces | `packages/editor/docs` | `/editor` | Workspace |
@@ -669,9 +712,9 @@ measures its own pane space in `onLayout`, so the two convert a pixel gesture
 against the same rule and different numbers; the docking layout's divider does
 the same against its own 620px frame. The pages print that difference, and the
 split page prints the 220–380px bounds its drawing owns.
-The data lane draws fifteen surfaces — Property panels on its own page, the
+The data lane draws fourteen surfaces — Property panels on its own page, the
 sorting, selection, filtering-control, advanced-filter, virtualization,
-column-configuration, tree-view, virtual-tree, charts, key-value, data-toolbar,
+column-configuration, tree-view, virtual-tree, key-value, data-toolbar,
 expandable-rows and frozen-columns pages through the site's table, and the
 statistic card through it
 too: the
@@ -946,13 +989,13 @@ come from `platformStyles`, the palettes are the library's own light and dark
 themes, and the looks are the authored `retroStyles` — Windows XP (Luna),
 Windows 7 (Aero) and Omarchy — which are styles of the same shape, not a fifth
 platform (the mission's toggle stays
-macOS · Linux · Windows · Default, and the sidebar offers platforms only). Each is
-written to the URL (`?platform=…&mode=…&look=…`) so a link carries what the
-reader saw.
+macOS · Linux · Windows · Default, and the sidebar offers platforms only). Each
+lives in the app — React for the page, local storage for the next visit — so the
+address bar names the page and nothing else.
 
 The palette is the one axis a reader chooses to see a component in both themes:
 the switch opens on the library's dark identity (`previewMode` in
-`src/lib/platform.ts`) and `?mode=light` paints the light theme. What stays fixed
+`src/lib/platform.ts`) and the palette axis paints the light theme. What stays fixed
 is the site's own light/dark mode — a preview does not follow the docs chrome's
 theme, because a preview is a picture of the library and not of the site; the
 palette axis is explicit, shareable and remembered, so a reader in light mode
@@ -986,7 +1029,7 @@ not the other, so a scheme cannot silently inherit a variable from its sibling.
   re-declared the dark theme and stopped following the platform switch.
   Measured in a headless browser on `/components/checkbox` — the macOS
   surface's `--control-height-md` is `28px` and its scene read `32px`, the dark
-  default, while `?platform=win32` read `32px` in both; with the split the macOS
+  default, while a Windows press read `32px` in both; with the split the macOS
   scene reads `28px` and Windows `32px`.
 - `src/lib/theme-css.test.ts` holds the seam: every `var(--…)` a preview style
   sheet reads must exist in the bridge, the `.gx-base` defaults must equal
@@ -1037,13 +1080,10 @@ Every page in `content/docs/components/` follows this order. Sections that do no
 | Composition | a `text` tree of the parts, only for a compound component |
 | API reference | tables: part → prop → type → default |
 | keyboard | the generated block: every key the component handles and what it does, read from the component's own modules — or the installed runtime module for a wrapper that handles none of them |
-| Limitations | at most three one-line runtime facts |
 
-The page is the sentence, the preview, the example, the API and the limits. A
-rationale, a measured story or a section that restates the API belongs in the
-commit or the source comment instead. That cap is enforced: a page carrying a
-fourth limit fails `component-page.test.ts`, and a fact a prop's Consequence
-already states is the API's, not the limits'.
+The page is the sentence, the preview, the example and the API. `src/lib/package-page-template.test.ts` holds every package page to its own `## API`. A rationale, a
+measured story or a section that restates the API belongs in the commit or the
+source comment instead.
 
 A page whose component has a **variant axis** prints a **Variants** table at
 the end of **API reference** — one row per member of the recipe's union, one
@@ -1079,16 +1119,6 @@ primitives package's field. A row may name several props at once
 is how the shared interaction and address props stay readable. A `Member` list —
 `useTable`'s fields, which are values a hook returns rather than props a caller
 passes — is the one table the completeness rule exempts, and the map says so.
-
-The **Limitations** section has a shared half as well as a per-component one. A
-page states what its own control does and cannot do; the runtime's ARIA budget —
-the role-required rule, the attributes it publishes, the attributes it refuses
-and the absent live region — is the cross-cutting contract in
-`docs/gpuix-capabilities.md`, so a page does not have to restate the runtime in
-order to be honest. `src/lib/capability-doc.test.ts` holds the record to the
-installed `@gpuix/native` typings, so a runtime bump that changes the budget
-fails the record rather than leaving it teaching the previous release. `src/lib/package-page-template.test.ts`
-holds every package page to its own `## API` and `## Limitations`.
 
 A page that documents a **dismissing surface** — a dialog, a drawer, a toast
 card, a menu, a navigation panel or a command palette — teaches the window it leaves in: the

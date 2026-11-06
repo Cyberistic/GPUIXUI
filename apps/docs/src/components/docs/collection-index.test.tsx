@@ -56,7 +56,7 @@ describe("the generated collection index", () => {
         {
           title: "Icon",
           description: "One glyph, its geometry and its naming rule.",
-          url: "/icons/icon",
+          url: "/graphics/icons/icon",
         },
       ],
     };

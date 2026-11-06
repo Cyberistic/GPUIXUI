@@ -162,9 +162,7 @@ describe("the live surface's route", () => {
     // evaluate the wasm in the Worker.
     expect(sources.match(/new glue\.GpuixRenderer\(/g) ?? []).toHaveLength(1);
     expect(sources.match(/\.init\(\{\}\)/g) ?? []).toHaveLength(1);
-    expect(surface).toContain(
-      'await import("@gpuix/native/wasm/gpuix-web.js")',
-    );
+    expect(surface).toContain('import("@gpuix/native/wasm/gpuix-web.js")');
     expect(surface).toContain('await import("@gpuix/react")');
     expect(surface.indexOf("useEffect")).toBeLessThan(
       surface.indexOf("await import("),

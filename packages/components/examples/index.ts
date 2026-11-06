@@ -34,6 +34,7 @@ import { ColorPickerExample } from "./color-picker.example.js";
 import { ComboboxExample } from "./combobox.example.js";
 import { CommandMenuExample } from "./command-menu.example.js";
 import { ConfirmDialogExample } from "./confirm-dialog.example.js";
+import { DiagramExample } from "./diagram.example.js";
 import { ContextMenuExample } from "./context-menu.example.js";
 import { CopyButtonExample } from "./copy-button.example.js";
 import { CountdownExample } from "./countdown.example.js";
@@ -55,6 +56,7 @@ import { HotkeyRecorderExample } from "./hotkey-recorder.example.js";
 import { HoverCardExample } from "./hover-card.example.js";
 import { InputGroupExample } from "./input-group.example.js";
 import { ItemExample } from "./item.example.js";
+import { KanbanExample } from "./kanban.example.js";
 import { ImageZoomExample } from "./image-zoom.example.js";
 import { InlineEditExample } from "./inline-edit.example.js";
 import { KeyboardShortcutsExample } from "./keyboard-shortcuts.example.js";
@@ -116,6 +118,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "color-picker": ColorPickerExample,
   combobox: ComboboxExample,
   "command-menu": CommandMenuExample,
+  diagram: DiagramExample,
   "confirm-dialog": ConfirmDialogExample,
   "context-menu": ContextMenuExample,
   "copy-button": CopyButtonExample,
@@ -138,6 +141,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "hover-card": HoverCardExample,
   "input-group": InputGroupExample,
   item: ItemExample,
+  kanban: KanbanExample,
   "image-zoom": ImageZoomExample,
   "inline-edit": InlineEditExample,
   "keyboard-shortcuts": KeyboardShortcutsExample,

@@ -65,27 +65,172 @@ export { FrozenTable } from "./table/frozen.js";
 export type { FrozenTableProps } from "./table/frozen.js";
 
 export {
+  AreaChart,
+  BarChart,
+  CandleChart,
   CHART_AXIS_WIDTH,
   ChartLegend,
+  ComposedChart,
   DEFAULT_CHART_HEIGHT,
   DEFAULT_CHART_WIDTH,
-  BarChart,
   DonutChart,
+  FunnelChart,
   LineChart,
+  PieChart,
+  RadarChart,
+  RadialChart,
+  ScatterChart,
   Sparkline,
   StackedBar,
 } from "./chart/chart.js";
 export type {
+  AreaChartProps,
   BarChartProps,
+  CandleChartProps,
   ChartDatum,
   ChartLegendItem,
   ChartLegendProps,
   ChartProps,
+  ComposedChartProps,
   DonutChartProps,
+  FunnelChartProps,
   LineChartProps,
+  PieChartProps,
+  RadarChartProps,
+  RadialChartProps,
+  ScatterChartProps,
   SparklineProps,
   StackedBarProps,
 } from "./chart/chart.js";
+
+export {
+  RadialBarChart,
+  SankeyChart,
+  SunburstChart,
+  TreemapChart,
+  type RadialBarChartProps,
+  type SankeyChartProps,
+  type SunburstChartProps,
+  type TreemapChartProps,
+} from "./chart/structure.js";
+export {
+  flowGraph,
+  hierarchyLeaves,
+  hierarchyRoots,
+  hierarchyRows,
+  nameOf,
+  type FlowLink,
+  type FlowNode,
+  type HierarchyNode,
+  type HierarchyRow,
+} from "./chart/hierarchy.js";
+
+export {
+  ANIMATION_FRAME_MS,
+  DEFAULT_ANIMATION_DURATION,
+  easeOutCubic,
+  interpolateSeries,
+  interpolateValues,
+} from "./chart/animation.js";
+
+export { PointTooltip, paletteOf, seriesColourOf } from "./chart/frame.js";
+export type {
+  ChartFrameProps,
+  LegendShape,
+  PointZone,
+  LegendSide,
+  TooltipIndicator,
+  PaintContext,
+  PaintLayer,
+  ValueLabel,
+} from "./chart/frame.js";
+
+export {
+  areaBands,
+  areaPath,
+  barMarksInRange,
+  chartRange,
+  chartView,
+  chartWindow,
+  clipArea,
+  circlePath,
+  curvePath,
+  finite,
+  fullRing,
+  horizontalBarMarks,
+  niceBound,
+  pointMarks,
+  polygonPath,
+  radarCircleGrid,
+  radarGrid,
+  radarPoints,
+  radarSpokes,
+  radialArcs,
+  rangeTicks,
+  ringArc,
+  ringSegments,
+  scaleX,
+  scaleY,
+  seriesPoints,
+  valueLabel,
+  zeroY,
+} from "./chart/geometry.js";
+export type { ChartRange, Curve, Point } from "./chart/geometry.js";
+
+export {
+  chartScene,
+  sceneDefinition,
+  scenePointAt,
+  sceneRows,
+  sceneSvg,
+} from "./chart/scene.js";
+export type {
+  SceneChartKind,
+  SceneChartOptions,
+  SceneRow,
+} from "./chart/scene.js";
+
+export { chartDocument, layerMarks } from "./chart/paint.js";
+export type { LayerPaint } from "./chart/paint.js";
+
+export { chartSvg, defsMarkup, gradientMarkup } from "./chart/svg.js";
+export type { ChartDocument, ChartGradient } from "./chart/svg.js";
+
+export {
+  flatMark,
+  lineStroke,
+  markMarkup,
+  num,
+  solidFill,
+} from "./chart/mark.js";
+export type {
+  CircleMark,
+  EllipseMark,
+  MarkFill,
+  MarkStroke,
+  PathMark,
+  RectMark,
+} from "./chart/mark.js";
+
+export {
+  categoriesFromData,
+  configColour,
+  configColours,
+  configEntryOf,
+  configEntries,
+  configIcon,
+  configKeys,
+  configLabel,
+  configOf,
+  datumNumber,
+  seriesFromConfig,
+} from "./chart/config.js";
+export type {
+  ChartConfig,
+  ChartConfigEntry,
+  ChartMode,
+  ChartRow,
+} from "./chart/config.js";
 
 export {
   AXIS_STEP_LIMIT,

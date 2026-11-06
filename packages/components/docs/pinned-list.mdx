@@ -42,8 +42,7 @@ import { PinnedList } from "@gpuixui/components/pinned-list";
 | `onScrollChange` | `(event) => void` | — |
 | `onLayout` | `(event) => void` | — |
 
-## Limitations
-
+## Notes
 - No `position: sticky`; the header is a repositioned layer.
 - A held header is a painted surface over the rows, not a hit target: the layer,
   the header and its title all take `pointerEvents: "none"`, so a press in the

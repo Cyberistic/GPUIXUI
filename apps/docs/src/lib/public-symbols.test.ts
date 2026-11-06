@@ -77,6 +77,122 @@ describe("the export scanner", () => {
       "export function make() {\n  const inner = { a: 1 };\n  return inner;\n}",
     ]);
   });
+
+  it("reads a declaration whose body holds a regex literal", () => {
+    // A regex's brackets are **pattern syntax**, not code: `[^)]` holds a
+    // closing parenthesis that closes nothing. Counting them left the
+    // scanner's depth off by one, and it swallowed the rest of the module --
+    // so the exports after a regex were never published, and a page naming
+    // one read as importing a name the package does not publish.
+    const source = [
+      "export const substitute = (svg: string): string =>",
+      '  svg.replace(/var\\((--pele-[a-z-]+)\\s*,\\s*[^)]*\\)/g, "\\$1");',
+      "export const after = 1;",
+    ].join("\n");
+
+    expect(scanExports(source).map((entry) => entry.text)).toEqual([
+      'export const substitute = (svg: string): string =>\n  svg.replace(/var\\((--pele-[a-z-]+)\\s*,\\s*[^)]*\\)/g, "\\$1");',
+      "export const after = 1;",
+    ]);
+  });
+
+  it("reads a declaration whose body holds JSX", () => {
+    // JSX is the fifth thing beside code, comments, strings and templates:
+    // its tags are not brackets, and a comma inside a child's props is not
+    // a declarator. A component that returns JSX was therefore unreadable,
+    // and every export after it was lost with it.
+    const source = [
+      "export const Label = ({ text }: Props) => (",
+      "  <div>",
+      "    <span>{text}</span>",
+      "  </div>",
+      ");",
+      "export const after = 1;",
+    ].join("\n");
+
+    expect(scanExports(source).map((entry) => entry.text)).toEqual([
+      "export const Label = ({ text }: Props) => (\n  <div>\n    <span>{text}</span>\n  </div>\n);",
+      "export const after = 1;",
+    ]);
+  });
+
+  it("reads a division as a division, not as a regex", () => {
+    // A slash after something that can end an expression is a division. Read
+    // as a regex it swallowed the rest of the file, and the exports after
+    // it were never published.
+    const source = [
+      "export const half = (value: number): number =>",
+      "  (value + 1) / 2;",
+      "export const after = 1;",
+    ].join("\n");
+
+    expect(scanExports(source).map((entry) => entry.text)).toEqual([
+      "export const half = (value: number): number =>\n  (value + 1) / 2;",
+      "export const after = 1;",
+    ]);
+  });
+
+  it("reads a declaration whose parameter is destructured", () => {
+    // A destructured parameter is a brace inside the parameter list, and its
+    // close is not the end of the statement. A scanner that counted only the
+    // braces closed the parameter list at the pattern's brace, and every
+    // export after it was lost with it.
+    const source = [
+      "export const SearchInput = ({",
+      "  value: valueProp,",
+      "  ...rest",
+      "}: SearchInputProps) => {",
+      "  return null;",
+      "};",
+      "export const after = 1;",
+    ].join("\n");
+
+    expect(scanExports(source).map((entry) => entry.text)).toEqual([
+      "export const SearchInput = ({\n  value: valueProp,\n  ...rest\n}: SearchInputProps) => {\n  return null;\n}",
+      "export const after = 1;",
+    ]);
+  });
+
+  it("reads an object literal that is an argument", () => {
+    // An object literal's brace closes at the same depth as the call's own
+    // parenthesis, so the statement's own brackets are still open when its
+    // `;` arrives. Read as a pattern's brace, the statement ended early and
+    // the exports after it were lost.
+    const source = [
+      "export const Field = () => {",
+      "  const [value, setValue] = useState({",
+      "    value: valueProp,",
+      "  });",
+      "};",
+      "export const after = 1;",
+    ].join("\n");
+
+    expect(scanExports(source).map((entry) => entry.text)).toEqual([
+      "export const Field = () => {\n  const [value, setValue] = useState({\n    value: valueProp,\n  });\n}",
+      "export const after = 1;",
+    ]);
+  });
+
+  it("reads a tag whose attributes hold a comment", () => {
+    // A comment in a tag's attributes is not the tag's end, and the comment
+    // may hold the `>` that a naive scan would read as the tag's own. The
+    // element was then never closed, and every export after it was lost.
+    const source = [
+      "export const Field = () => (",
+      "  <input",
+      "    {...rest}",
+      "    // The caret is measured against `background`.",
+      "    value={value}",
+      "  />",
+      ");",
+      "export const after = 1;",
+    ].join("\n");
+
+    expect(scanExports(source).map((entry) => entry.text)).toEqual([
+      "export const Field = () => (\n  <input\n    {...rest}\n    // The caret is measured against `background`.\n    value={value}\n  />\n);",
+      "export const after = 1;",
+    ]);
+  });
 });
 
 describe("the statement reader", () => {
@@ -245,6 +361,27 @@ describe("the page a symbol's module ships with", () => {
     expect(
       docsUrlFor("packages/components/src/card.tsx", collections, pages),
     ).toBe("/components/card");
+  });
+
+  it("links a retired primitive page to the curated page that documents it", () => {
+    // Five primitives are documented in full under `/components` and their
+    // package address only answers with a 301. A symbol declared in one of
+    // them linked to the retired address, so every reader who followed it
+    // made a round trip to learn where the page had gone.
+    expect(
+      docsUrlFor(
+        "packages/primitives/src/components/Button.tsx",
+        collections,
+        pages,
+      ),
+    ).toBe("/components/button");
+    expect(
+      docsUrlFor(
+        "packages/primitives/src/components/Tooltip.tsx",
+        collections,
+        pages,
+      ),
+    ).toBe("/components/tooltip");
   });
 
   it("refuses a helper, a bare index and a page the site does not mount", () => {

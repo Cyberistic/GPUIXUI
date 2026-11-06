@@ -5,8 +5,7 @@ description: One section that reveals its body on demand
 
 <ComponentPreview name="collapsible-workflow" />
 
-For several sections open at once, reach for [Accordion](/components/accordion):
-it prerenders its bodies, which a collapsible does not.
+For several sections at once, use [Accordion](/components/accordion); it prerenders its bodies.
 
 ## Installation
 
@@ -52,8 +51,7 @@ Collapsible
 | `CollapsibleContent` | `className` | `string` | — | joined after the recipe on the measured box |
 | `CollapsibleContent` | `children` | `ReactNode` | — | the body; mounted only while open, and during the exit |
 
-## Limitations
-
-- The trigger is a **`div role="button"`**: the runtime focuses it, `Tab` reaches it and `Enter`/`Space` activate it, but it is not an HTML `<button>`.
-- `aria-expanded` is the state channel.
-- There is no `aria-disabled`: a disabled trigger removes its tab stop, installs no press or key path, paints at half opacity and declares no ring.
+## Notes
+- The trigger is a **`div role="button"`**, not an HTML `<button>`.
+- `Enter` and `Space` activate it; `aria-expanded` is the state channel.
+- **No `aria-disabled`**: a disabled trigger leaves the tab order and paints at half opacity.

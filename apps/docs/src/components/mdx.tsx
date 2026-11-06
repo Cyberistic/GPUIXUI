@@ -6,13 +6,16 @@ import { BlockIndex } from "./docs/block-index";
 import { BlockPreview } from "./docs/block-preview";
 import { ComponentIndex } from "./docs/component-index";
 import { ComponentPreview } from "./docs/component-preview";
-import { ComponentSource } from "./docs/component-source";
+import { ComponentSource, DesktopStyles } from "./docs/component-source";
+import { EditorTabsPreview } from "./docs/editor-tabs-preview";
 import { ExamplesIndex } from "./docs/examples-index";
 import { IconGallery } from "./docs/icon-gallery";
 import { Install } from "./docs/install";
 import { LanePages } from "./docs/lane-pages";
 import { LaneTable } from "./docs/lane-table";
 import { MermaidDiagram } from "./docs/mermaid-diagram";
+import { DiagramExample } from "./diagram/DiagramExample";
+import { DiagramPlayground } from "./diagram/DiagramPlayground";
 import { PromptPage } from "./docs/prompt-page";
 import { LookPicker } from "./docs/look-picker";
 import { SidebarExample } from "./docs/sidebar-examples";
@@ -69,12 +72,16 @@ export const mdxComponents = {
   ComponentIndex,
   ComponentPreview,
   ComponentSource,
+  DesktopStyles,
+  EditorTabsPreview,
   ExamplesIndex,
   IconGallery,
   Install,
   LanePages,
   LaneTable,
   MermaidDiagram,
+  DiagramExample,
+  DiagramPlayground,
   pre,
   PromptPage,
   LookPicker,

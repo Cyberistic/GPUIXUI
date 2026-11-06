@@ -1,17 +1,16 @@
 /**
  * Prove the platform switch changes what a hydrated preview paints.
  *
- * The site is server-rendered with `?platform=darwin|linux|win32|default`, and
- * `platform-switch.test.ts` holds that markup path. A reader changes it by
- * pressing a button, though: the press is React state, writes the address bar
- * and re-resolves `platformTheme` for every `PreviewSurface`, and nothing
- * pressed that group before. This probe presses **Windows**, then **macOS**, on
- * a curated component page and reads the consequence off every preview surface —
- * its `data-platform`, the `--control-height-md` the bridge wrote and the
- * address bar a copied link would carry.
+ * The choice is the app's: React holds it for the page and local storage keeps
+ * it for the next visit, so the address bar names the page and nothing else.
+ * `platform-switch.test.ts` holds the state rules. This probe presses
+ * **Windows**, then **macOS**, on a curated component page and reads the
+ * consequence off every preview surface — its `data-platform`, the
+ * `--control-height-md` the bridge wrote and the platform button the group
+ * reports pressed — then requires the URL to carry none of the switch's axes.
  *
  * It is the mission's acceptance ("a reader toggles macOS -> Windows and every
- * preview changes") measured on the press path, not on a URL.
+ * preview changes") measured on the press path.
  *
  * Run (a dev or preview server is already up):
  * `nub apps/docs/scripts/platform-switch-probe.ts`
@@ -38,21 +37,34 @@ export interface Surface {
   readonly platform: string;
   readonly mode: string;
   readonly height: string;
-  readonly search: string;
+  readonly pressed: string;
 }
 
 /** Read the probe's one-line readout; `undefined` when it is not one. */
 export const parseSurface = (text: string): Surface | undefined => {
-  const [platform, mode, height, search] = text.split("|");
+  const [platform, mode, height, pressed] = text.split("|");
   if (
     platform === undefined ||
     mode === undefined ||
     height === undefined ||
-    search === undefined
+    pressed === undefined
   )
     return undefined;
-  return { platform, mode, height, search };
+  return { platform, mode, height, pressed };
 };
+
+/** The switch's three axes, none of which a docs URL may carry. */
+export const queryAxes = ["platform", "mode", "look", "appearance"] as const;
+
+/**
+ * Whether a search string names any of the switch's axes.
+ *
+ * A clean URL names the page and the page's own parameters (`?q=`, `?scene=`);
+ * a platform, palette or look in it would mean some path had written the
+ * switch back into the address bar.
+ */
+export const namesSwitchAxis = (search: string): boolean =>
+  queryAxes.some((axis) => new URLSearchParams(search).has(axis));
 
 /** The control height a platform paints at `md`, as the bridge writes it. */
 export const expectedHeight = (
@@ -75,11 +87,15 @@ const readSurfaces = `(() => {
     surfaces.map((surface) => surface.getAttribute("data-platform") ?? "none"),
   );
   const first = surfaces[0];
+  const pressed = [...document.querySelectorAll('[aria-label="${platformGroup}"] button')]
+    .filter((node) => node.getAttribute("aria-pressed") === "true")
+    .map((node) => node.textContent ?? "")
+    .join(",");
   return [
     platforms.size === 1 ? (first?.getAttribute("data-platform") ?? "none") : "mixed",
     first?.getAttribute("data-mode") ?? "none",
     (first?.style.getPropertyValue("--control-height-md") ?? "").trim(),
-    location.search,
+    pressed,
   ].join("|");
 })()`;
 
@@ -137,13 +153,12 @@ const until = async (
 export interface Step {
   readonly label: string;
   readonly platform: PlatformName;
-  readonly query: string;
 }
 
 /** The two presses the mission's acceptance names, in order. */
 export const steps: ReadonlyArray<Step> = [
-  { label: "Windows", platform: "win32", query: "platform=win32" },
-  { label: "macOS", platform: "darwin", query: "platform=darwin" },
+  { label: "Windows", platform: "win32" },
+  { label: "macOS", platform: "darwin" },
 ];
 
 /** Run the project. Returns the process exit code. */
@@ -208,10 +223,14 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
           `the ${step.label} preview paints --control-height-md ${surface.height || "nothing"}, not ${height}`,
         );
       }
-      if (!surface.search.includes(step.query)) {
+      if (surface.pressed !== step.label) {
         failures.push(
-          `the address bar does not carry ${step.query} (${surface.search})`,
+          `the platform group reports ${JSON.stringify(surface.pressed)} pressed, not ${step.label}`,
         );
+      }
+      const search = await session.page.text("location.search");
+      if (namesSwitchAxis(search)) {
+        failures.push(`the address bar carries the switch's state (${search})`);
       }
 
       const [all = "0", lit = "0"] = (
@@ -235,7 +254,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
     return 1;
   }
   console.log(
-    "PASS the platform switch repaints every preview and writes the URL",
+    "PASS the platform switch repaints every preview and leaves the URL clean",
   );
   return 0;
 };

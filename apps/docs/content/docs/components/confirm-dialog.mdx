@@ -86,19 +86,18 @@ ConfirmDialog
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `open` | `boolean` (required) | — | the controlled open state; the caller owns it, including the close |
+| `open` | `boolean` (required) | — | the controlled open state |
 | `onOpenChange` | `(open: boolean) => void` (required) | — | reports Cancel, Escape and an outside press |
 | `title` | `string` (required) | — | the dialog's accessible name and its heading |
-| `description` | `string` (required) | — | the consequence, as one paragraph of supporting copy |
-| `confirmLabel` | `string` | `"Confirm"` | the confirm action's label; change it to `"Try again"` after a failure |
+| `description` | `string` (required) | — | the consequence, as one paragraph |
+| `confirmLabel` | `string` | `"Confirm"` | the confirm action's label |
 | `cancelLabel` | `string` | `"Cancel"` | the cancel action's label |
 | `tone` | `"default" \| "danger"` | `"default"` | `"danger"` paints the destructive action variant |
 | `loading` | `boolean` | `false` | disables both actions, paints the busy mark, and ignores Escape and an outside press |
-| `onConfirm` | `() => void` (required) | — | runs once when the confirm action is activated; it never closes the dialog |
+| `onConfirm` | `() => void` (required) | — | runs on activation; never closes the dialog |
 | `children` | `ReactNode` | — | extra body between the description and the actions |
 
-## Limitations
-
+## Notes
 - `role="dialog"`, named by the required `title`.
 - Focus enters the dialog and then moves to Cancel; closing returns it to whatever opened the dialog.
-- **No `aria-modal` and no `aria-labelledby`** in `@gpuix/native@0.11.0` — the same limitation as Dialog, with the evidence on that page.
+- **No `aria-modal` and no `aria-labelledby`**.

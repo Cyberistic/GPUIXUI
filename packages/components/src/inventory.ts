@@ -23,6 +23,7 @@ import { carouselMeta } from "./carousel.js";
 import { cardMeta } from "./card.js";
 import { chatMeta } from "./chat.js";
 import { codeBlockMeta } from "./code-block.js";
+import { diagramMeta } from "./diagram.js";
 import { collapsibleMeta } from "./collapsible.js";
 import { colorPickerMeta } from "./color-picker.js";
 import { comboboxMeta } from "./combobox.js";
@@ -52,6 +53,7 @@ import { imageZoomMeta } from "./image-zoom.js";
 import { inlineEditMeta } from "./inline-edit.js";
 import { inputGroupMeta } from "./input-group.js";
 import { itemMeta } from "./item.js";
+import { kanbanMeta } from "./kanban.js";
 import { keyboardShortcutsMeta } from "./keyboard-shortcuts.js";
 import { listMeta } from "./list.js";
 import { mentionInputMeta } from "./mention-input.js";
@@ -122,6 +124,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   cardMeta,
   chatMeta,
   codeBlockMeta,
+  diagramMeta,
   collapsibleMeta,
   colorPickerMeta,
   comboboxMeta,
@@ -150,6 +153,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   inlineEditMeta,
   inputGroupMeta,
   itemMeta,
+  kanbanMeta,
   hoverCardMeta,
   keyboardShortcutsMeta,
   listMeta,

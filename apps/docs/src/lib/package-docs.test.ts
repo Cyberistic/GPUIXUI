@@ -1,7 +1,12 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { collectionPages } from "./collection-pages";
-import { packageCollections, packageSections } from "./collection-routes";
+import {
+  collectionAt,
+  collectionOwns,
+  packageCollections,
+  packageSections,
+} from "./collection-routes";
 import { curatedTwinOf } from "./curated-twins";
 
 /**
@@ -124,6 +129,50 @@ describe("the package docs collections", () => {
 
     expect(new Set(routes).size).toBe(routes.length);
     expect(routes.every((route) => route.startsWith("/"))).toBe(true);
+  });
+
+  it("serve each page from the collection that owns its directory", () => {
+    // The charts live in `packages/data/docs/charts`, inside the data
+    // package's own docs directory, and the data collection's glob could not
+    // be made to leave them out. So the data lane listed the charts page at
+    // `/data-display/charts/charts` as well — an address that answered **404**,
+    // and the sidebar's Data display section carried it.
+    //
+    // The owner is decided by the directory, and the **longest** matching
+    // directory wins.
+    expect(collectionOwns("charts", "charts/charts.mdx")).toBe(true);
+    expect(collectionOwns("data", "charts/charts.mdx")).toBe(false);
+    // The data collection's own pages are still its own.
+    expect(collectionOwns("data", "advanced-filter.mdx")).toBe(true);
+    // A collection that holds no other collection's directory owns all of it.
+    expect(collectionOwns("components", "dialog.mdx")).toBe(true);
+  });
+
+  it("answer a nested collection route, and the pages under it", () => {
+    // The charts and the icons live under the Graphics section, so their
+    // routes are `/graphics/charts` and `/graphics/icons` rather than one
+    // segment. A matcher that read a single segment found neither, so
+    // `/graphics/charts` answered **404** while every page under it answered
+    // — and the build, which prerenders the route of every collection that
+    // ships a generated index, failed on it.
+    const charts = collectionAt(["graphics", "charts"]);
+    expect(charts?.collection.origin).toBe("charts");
+    expect(charts?.rest).toEqual([]);
+
+    const page = collectionAt(["graphics", "charts", "charts"]);
+    expect(page?.collection.origin).toBe("charts");
+    expect(page?.rest).toEqual(["charts"]);
+
+    // The icons are a collection of their own.
+    expect(collectionAt(["graphics", "icons", "icon"])?.collection.origin).toBe(
+      "icons",
+    );
+    // A single-segment route still answers.
+    expect(collectionAt(["components", "dialog"])?.collection.origin).toBe(
+      "components",
+    );
+    // An address no collection owns answers with nothing.
+    expect(collectionAt(["graphics", "nothing-here"])).toBeUndefined();
   });
 
   it("fill a section that the site defines", () => {
@@ -317,7 +366,9 @@ describe("the package docs collections", () => {
     expect(count, "the set's name list is empty").toBeGreaterThan(40);
 
     const index = read(new URL("primitives/", docsDir), "index.mdx");
-    const row = /^\| \[Icons\]\(\/icons\/icon\) \| (.+) \|$/m.exec(index);
+    const row = /^\| \[Icons\]\(\/graphics\/icons\/icon\) \| (.+) \|$/m.exec(
+      index,
+    );
     expect(row?.[1] ?? "").toContain(`${count} monochrome icons`);
 
     // The page it links prints the same number in the sentence a search

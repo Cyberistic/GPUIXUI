@@ -80,8 +80,7 @@ the type-ahead's mapping threw `Cannot read properties of null (reading 'map')`
 in the first render and nothing painted at all
 (`behaviour/stored-rows.test.tsx`).
 
-## Limitations
-
+## Notes
 - One active row; a multi-select tree is not shipped.
 - `TreeView` paints every row it is given; `VirtualTree` is the windowed form for thousands of rows.
 - A row that changes height while painted re-measures on the next frame.

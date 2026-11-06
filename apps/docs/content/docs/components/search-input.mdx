@@ -72,8 +72,7 @@ SearchInput
 | `ref` / `aria-id` / `onLayout` | the addressed element | none | the inner `<input>`: focus it, measure it, name it for automation |
 | `onClick` / `onKeyDown` / `onKeyUp` / `onFocus` / `onBlur` | host handlers | none | composed with the field's own; yours runs first |
 
-## Limitations
-
+## Notes
 - The field has **no name of its own**: pass `aria-label` or wrap it in a `Field`.
 - The clear control is a labelled 24px target around a 14px glyph.
 - **No debounce**: a query fires on every keystroke.

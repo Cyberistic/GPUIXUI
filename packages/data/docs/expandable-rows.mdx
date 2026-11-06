@@ -62,8 +62,7 @@ const [open, setOpen] = useState<string | null>(null);
 | `instanceRef` | `Ref<PublicInstance>` | — | the row's painted element, for moving native focus to it |
 | `className` | `string` | — | joined after the row's recipe |
 
-## Limitations
-
+## Notes
 - One panel per row; two rows can be open at once.
 - No animation of the panel's height.
 - A windowed table cannot use it; use the plain table or the list's children mode.

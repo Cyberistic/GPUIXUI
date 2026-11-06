@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import type { EventPayload } from "@gpuix/native";
 import {
   liveBanner,
@@ -8,15 +9,9 @@ import {
   liveRestingFill,
   LiveScene,
 } from "@/lib/live-scene";
-import {
-  lookFromSearch,
-  platformFromSearch,
-  resolvePlatformTheme,
-} from "@/lib/platform";
-import {
-  browserChoiceStorage,
-  readRememberedChoice,
-} from "@/lib/platform-storage";
+import { resolvePlatformTheme } from "@/lib/platform";
+import { browserChoiceStorage, openingChoice } from "@/lib/platform-storage";
+import { nativeCaptureOf } from "@/lib/native-captures";
 import { mainContentId } from "@/components/skip-link";
 
 /**
@@ -127,14 +122,8 @@ const report = (lines: ReadonlyArray<string>): void => {
   if (out !== null) out.textContent = lines.join("\n");
 };
 
-const platformOf = () => {
-  const search = window.location.search;
-  const remembered = readRememberedChoice(browserChoiceStorage());
-  return {
-    platform: platformFromSearch(search) ?? remembered.platform,
-    look: lookFromSearch(search) ?? remembered.look,
-  };
-};
+/** The choice the docs switch remembers: the store, then detection. */
+const platformOf = () => openingChoice(browserChoiceStorage());
 
 /** The renderer appends its canvas a frame after `init()`, so wait for it. */
 const awaitCanvas = async (): Promise<HTMLCanvasElement | undefined> => {
@@ -148,6 +137,14 @@ const awaitCanvas = async (): Promise<HTMLCanvasElement | undefined> => {
 
 export function LiveSurface() {
   const [status, setStatus] = useState<Status>({ kind: "starting" });
+  const search = useRouterState({
+    select: (state) => state.location.searchStr,
+  });
+  const query = new URLSearchParams(search);
+  const poster =
+    query.get("scene") === "example"
+      ? nativeCaptureOf(query.get("id") ?? "")
+      : undefined;
 
   useEffect(() => {
     if (started) {
@@ -156,21 +153,40 @@ export function LiveSurface() {
     }
     started = true;
     const choice = platformOf();
-    const theme = resolvePlatformTheme(choice.platform, "dark", choice.look);
+    const theme = resolvePlatformTheme(
+      choice.platform,
+      choice.mode,
+      choice.look,
+    );
 
     const start = async (): Promise<void> => {
-      if (!(await hasBackend())) {
+      // The 19 MiB wasm and the backend probe are independent; start both at
+      // once. A browser with no backend aborts the download instead of leaving
+      // it running behind the "unavailable" sentence.
+      const abort = new AbortController();
+      const gluePromise = import("@gpuix/native/wasm/gpuix-web.js");
+      const wasm = import("@gpuix/native/wasm/gpuix-web_bg.wasm?url")
+        .then((module) => fetch(module.default, { signal: abort.signal }))
+        .then(
+          (response) => ({ ok: true, response }) as const,
+          (cause: unknown) => ({ ok: false, cause }) as const,
+        );
+
+      const [backend, glue] = await Promise.all([hasBackend(), gluePromise]);
+      if (!backend) {
+        abort.abort();
         report(["status=unavailable"]);
         setStatus({ kind: "unavailable" });
         return;
       }
 
+      const downloaded = await wasm;
+      if (!downloaded.ok) throw downloaded.cause;
+
       // The glue is initialised before the reconciler is imported: its class is
       // a binding into this module, and the shim `vite.config.ts` resolves
       // `@gpuix/native` to reads the same instance.
-      const glue = await import("@gpuix/native/wasm/gpuix-web.js");
-      const wasm = await import("@gpuix/native/wasm/gpuix-web_bg.wasm?url");
-      await glue.default({ module_or_path: wasm.default });
+      await glue.default({ module_or_path: downloaded.response });
 
       const react = await import("@gpuix/react");
 
@@ -204,6 +220,118 @@ export function LiveSurface() {
       // Node `process` that the browser bundle does not carry. `createRoot` is
       // the same mount without that side effect, and the automation App gives
       // the probe the same locators the reconciler's tree carries.
+      if (query.get("scene") === "examples") {
+        const [{ examples }, data] = await Promise.all([
+          import("@gpuixui/components/examples"),
+          import("@gpuixui/data/examples"),
+        ]);
+        const registry: Readonly<Record<string, ComponentType>> = {
+          ...examples,
+          ...data.examples,
+        };
+        const { ThemeProvider } = await import("@gpuixui/tokens/react");
+        const { LiveBlank, LiveExample } = await import("@/lib/live-example");
+        const root = react.createRoot(host);
+        const box = sizeOf(host.getWindowSize());
+        Reflect.set(window, "__gpuixCapture", {
+          clear: (): void => {
+            root.render(
+              <ThemeProvider theme={theme}>
+                <LiveBlank box={box} theme={theme} />
+              </ThemeProvider>,
+            );
+          },
+          render: (id: string): boolean => {
+            const Example = registry[id];
+            if (Example === undefined) return false;
+            root.render(
+              <ThemeProvider theme={theme}>
+                <LiveExample box={box} example={Example} theme={theme} />
+              </ThemeProvider>,
+            );
+            return true;
+          },
+          text: (): ReadonlyArray<string> => host.getAllText(),
+        });
+        report([
+          "status=ready",
+          "canvas=yes",
+          "scene=examples",
+          `platform=${choice.platform}`,
+          `mode=${choice.mode}`,
+        ]);
+        setStatus({ kind: "painting" });
+        return;
+      }
+
+      if (query.get("scene") === "example") {
+        const id = query.get("id") ?? "";
+        const [{ examples }, data] = await Promise.all([
+          import("@gpuixui/components/examples"),
+          import("@gpuixui/data/examples"),
+        ]);
+        const Example = { ...examples, ...data.examples }[id];
+        if (Example === undefined) {
+          report([`status=failed unknown-example ${id}`]);
+          setStatus({ kind: "failed", message: `no example named "${id}"` });
+          return;
+        }
+        const { ThemeProvider } = await import("@gpuixui/tokens/react");
+        const { LiveExample } = await import("@/lib/live-example");
+        react.createRoot(host).render(
+          <ThemeProvider theme={theme}>
+            <LiveExample
+              box={sizeOf(host.getWindowSize())}
+              example={Example}
+              theme={theme}
+            />
+          </ThemeProvider>,
+        );
+        await new Promise((wait) =>
+          requestAnimationFrame(() => requestAnimationFrame(wait)),
+        );
+        report([
+          "status=painting",
+          "canvas=yes",
+          "scene=example",
+          `id=${id}`,
+          `platform=${choice.platform}`,
+          `mode=${choice.mode}`,
+          `text=${host.getAllText().join(",")}`,
+        ]);
+        setStatus({ kind: "painting" });
+        return;
+      }
+
+      if (query.get("scene") === "parity") {
+        const { ThemeProvider } = await import("@gpuixui/tokens/react");
+        const { PARITY_CHARTS, ParityGallery } =
+          await import("@gpuixui/data/examples");
+        const only = query.get("only");
+        const chosen =
+          only === null
+            ? undefined
+            : PARITY_CHARTS.find(
+                (row: { readonly id: string }) => row.id === only,
+              );
+        react
+          .createRoot(host)
+          .render(
+            <ThemeProvider theme={theme}>
+              {chosen === undefined ? <ParityGallery /> : chosen.view}
+            </ThemeProvider>,
+          );
+        report([
+          "status=painting",
+          "canvas=yes",
+          `scene=parity`,
+          `only=${only ?? "all"}`,
+          `text=${host.getAllText().join(",")}`,
+        ]);
+        setStatus({ kind: "painting" });
+        return;
+      }
+
       react.createRoot(host).render(
         <LiveScene
           box={sizeOf(host.getWindowSize())}
@@ -300,6 +428,9 @@ export function LiveSurface() {
         <a href="/introduction">Back to the docs</a>
         <span>{liveSurfaceLabel}</span>
       </header>
+      {poster !== undefined && status.kind !== "painting" ? (
+        <img alt="" className="live-surface-poster" src={poster} />
+      ) : null}
       {status.kind === "unavailable" ? (
         <p className="live-surface-note">{liveUnavailable}</p>
       ) : status.kind === "refused" ? (

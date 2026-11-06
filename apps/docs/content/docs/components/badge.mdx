@@ -18,7 +18,6 @@ import { Badge } from "@gpuixui/components/badge";
 <Badge variant="success" size="sm">
   Passed
 </Badge>;
-// Without a variant it is the neutral pill.
 <Badge>main</Badge>;
 ```
 
@@ -28,9 +27,9 @@ import { Badge } from "@gpuixui/components/badge";
 | ---- | ---- | ------- | ----------- |
 | `variant` | `"neutral" \| "primary" \| "success" \| "warning" \| "danger" \| "info" \| "outline"` | `"neutral"` — a stored name the union does not carry | the fill, ink and edge in **Variants** below |
 | `size` | `"sm" \| "md"` | `"md"` — a stored name the union does not carry | the fixed type step and the pill's height in **Sizes** below |
-| `className` | `string` | none | a recipe class string joined after the component's own, so it wins a conflict |
-| `style` | `StyleDesc` | none | merged last, after the compiled recipe and the pointer refusal |
-| `children` | `ReactNode` | — | the label: a word, a count or a short version |
+| `className` | `string` | none | joined last |
+| `style` | `StyleDesc` | none | merged last |
+| `children` | `ReactNode` | — | the label |
 
 **Variants**
 
@@ -44,10 +43,6 @@ import { Badge } from "@gpuixui/components/badge";
 | `info` | `infoSoft` | `infoSoftForeground` | `info` at 30% |
 | `outline` | none | `mutedForeground` | `borderStrong` |
 
-A tone's edge is the solid role at 30%, not a fourth role: the soft fill carries
-the meaning and the edge only closes the pill. `outline` is the one variant with
-no fill, and the only one whose edge is opaque.
-
 **Sizes**
 
 | Size | Type | Pill height |
@@ -55,11 +50,7 @@ no fill, and the only one whose edge is opaque.
 | `sm` | 12/16, weight 400 | 20px |
 | `md` | 14/20, weight 500 | 24px |
 
-The pill is `rounded-full` — a full round, not a radius step — and every size
-keeps 8px sides and 2px above and below its line.
-
-## Limitations
-
-- A badge contributes **no role of its own**: a status is announced as its text, so the text carries the meaning.
-- It is not focusable and not reachable by keyboard, because it is nothing to operate.
-- Out of the pointer by design.
+## Notes
+- A badge contributes **no role of its own**: a status is announced as its text.
+- Not focusable and not reachable by keyboard: it is nothing to operate.
+- Not a pointer target.

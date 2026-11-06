@@ -16,11 +16,11 @@
  * Pass `--url http://localhost:4175` to reuse a running docs server.
  * Writes: `apps/docs/public/blocks/<slug>.webp` (checked in).
  */
-import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { findChrome, openChrome, type ChromePage } from "./chrome-session.ts";
+import { docsServer } from "./docs-server.ts";
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const publicDir = join(appRoot, "public");
@@ -42,12 +42,6 @@ interface Box {
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((done) => setTimeout(done, ms));
-
-const reachable = (url: string): Promise<boolean> =>
-  fetch(url).then(
-    (response) => response.ok,
-    () => false,
-  );
 
 /** The scene's box, from the page's own report (`x,y,width,height`). */
 const boxOf = (text: string): Box | undefined => {
@@ -102,50 +96,6 @@ const tileSources = async (
     await sleep(200);
   }
   return [];
-};
-
-/**
- * The docs server to capture from: the one `--url` names, else the one already
- * answering on this app's own port, else one this run starts and stops.
- */
-const docsServer = async (
-  url: string | undefined,
-): Promise<{ readonly url: string; readonly close: () => Promise<void> }> => {
-  const base = url ?? "http://localhost:4175";
-  if (await reachable(`${base}/blocks`)) {
-    return { url: base, close: () => Promise.resolve() };
-  }
-  if (url !== undefined) {
-    throw new Error(`no docs server answers at ${url}`);
-  }
-
-  const server = spawn("nub", ["run", "dev"], {
-    cwd: appRoot,
-    detached: true,
-    stdio: "ignore",
-  });
-  let spawnError: Error | undefined;
-  server.once("error", (error) => {
-    spawnError = error;
-  });
-  const stop = async (): Promise<void> => {
-    if (server.pid !== undefined) process.kill(-server.pid, "SIGTERM");
-  };
-
-  for (let attempt = 0; attempt < 120; attempt += 1) {
-    if (spawnError !== undefined) {
-      await stop();
-      throw new Error(`\`nub run dev\` did not start: ${spawnError.message}`);
-    }
-    if (await reachable(`${base}/blocks`)) {
-      return { url: base, close: stop };
-    }
-    await sleep(500);
-  }
-  await stop();
-  throw new Error(
-    `the docs server never answered at ${base}; run \`nub run dev:docs\` and pass --url`,
-  );
 };
 
 /** Capture every tile the index names, and return the files it wrote. */

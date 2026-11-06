@@ -62,8 +62,7 @@ InputGroup
 | `InputGroupInput` | field props | `value`, `defaultValue`, `onValueChange`, `onChange`, `onSubmit`, `placeholder`, `readOnly`, `disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `tabIndex`, `description`, `onClick`, `onKeyDown`, `onKeyUp`, `onFocus`, `onBlur`, `ref`, `aria-id`, `onLayout`, `className`, `style`, `testId` — the primitives' input contract | — |
 | `InputGroupTextarea` | field props | the same as `InputGroupInput` without `onSubmit`, plus `minRows` and `maxRows` | — |
 
-## Limitations
-
+## Notes
 - The row's ring follows **any** focus, not keyboard focus: the runtime reports
   that a field is focused, not how it got there, and an ancestor box cannot wear
   the focused field's `focusVisible` outline.

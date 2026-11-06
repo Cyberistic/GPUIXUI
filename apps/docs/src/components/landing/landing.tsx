@@ -2,12 +2,14 @@ import { useTheme } from "fumadocs-ui/provider/base";
 import { flushSync } from "react-dom";
 import { HighlightedCode } from "@/components/highlighted-code";
 import { mainContentId } from "../skip-link";
-import { BlocksStrip } from "./blocks-strip";
-import { Desktops } from "./deck";
-import { Feel } from "./feel";
-import { Hero } from "./hero";
-import { Proof } from "./proof";
+import { Hero } from "./deck";
+import { Lineage } from "./lineage";
+import { Terminal } from "./terminal";
 import { demos } from "../docs/demos";
+import { Showcase } from "./showcase";
+import { resolvePlatformTheme } from "@/lib/platform";
+import { previewFontStack } from "@/lib/fonts";
+import { toCssVars } from "@/lib/theme-css";
 import { navLinks, repo } from "./data";
 
 export function Landing() {
@@ -17,12 +19,10 @@ export function Landing() {
         <Nav />
         <main id={mainContentId} tabIndex={-1}>
           <Hero />
-          <Proof />
-          <Feel />
-          <BlocksStrip />
+          <Lineage />
+          <Dashboard />
+          <Terminal />
           <CodeAndComponent />
-          <Desktops />
-          <RunItLive />
           <Footer />
         </main>
       </div>
@@ -119,25 +119,102 @@ function MoonIcon() {
   );
 }
 
-function RunItLive() {
+/**
+ * A shipped demo under the landing's own theme, platform and primary colour.
+ *
+ * The landing has no `PreviewSurface`, so this is the one place a scene carries
+ * the preview variables itself; it is scoped to the tile and never touches the
+ * page's own roles.
+ */
+/** The landing's preview roles, scoped to one tile. */
+export function LandingScene({
+  platform,
+  primary,
+  primaryForeground,
+  mode,
+  className,
+  children,
+}: {
+  readonly platform: string;
+  readonly primary: string;
+  readonly primaryForeground: string;
+  readonly mode: "light" | "dark";
+  readonly className?: string;
+  readonly children: React.ReactNode;
+}) {
+  const name =
+    platform === "windows"
+      ? "win32"
+      : platform === "linux"
+        ? "linux"
+        : "darwin";
+  const theme = resolvePlatformTheme(name, mode);
   return (
-    <section className="landing-section landing-live" id="live">
-      <h2 className="landing-h2">Run the renderer in this tab.</h2>
+    <div
+      className={className === undefined ? "gx-demo" : `gx-demo ${className}`}
+      style={
+        {
+          ...toCssVars(theme),
+          "--font-sans": previewFontStack(theme, name),
+          "--primary": primary,
+          "--primary-foreground": primaryForeground,
+          "--ring": primary,
+          "--radius": `${theme.radius.md}px`,
+        } as React.CSSProperties
+      }
+    >
+      {children}
+    </div>
+  );
+}
+
+export function LandingDemo({
+  id,
+  platform,
+  primary,
+  primaryForeground,
+  mode,
+}: {
+  readonly id: string;
+  readonly platform: string;
+  readonly primary: string;
+  readonly primaryForeground: string;
+  readonly mode: "light" | "dark";
+}) {
+  const demo = demos[id];
+  if (demo === undefined) throw new Error(`LandingDemo: no demo named "${id}"`);
+  const Drawing = demo.render;
+  return (
+    <LandingScene
+      mode={mode}
+      platform={platform}
+      primary={primary}
+      primaryForeground={primaryForeground}
+    >
+      <Drawing />
+    </LandingScene>
+  );
+}
+
+export function Dashboard() {
+  return (
+    <section
+      className="landing-section landing-showcase-section"
+      id="dashboard"
+    >
+      <h2 className="landing-h2">All the components you need</h2>
       <p className="landing-lead">
-        GPUix&apos;s own WebAssembly build paints a library control in your
-        browser — the real renderer, not a reproduction.
+        Point your agent at <a href="/llms.txt">our components library</a>
       </p>
-      <a className="landing-btn landing-btn-ghost" href="/live">
-        Open the live surface (19 MB)
-      </a>
+      <Showcase />
     </section>
   );
 }
 
-function CodeAndComponent() {
-  const demo = demos["segmented-control-demo"];
+export function CodeAndComponent() {
+  const demo = demos["tabs-demo"];
   if (demo === undefined) {
-    throw new Error('CodeAndComponent: no demo named "segmented-control-demo"');
+    throw new Error('CodeAndComponent: no demo named "tabs-demo"');
   }
   // A demo is an element, not a call: `demo.render()` would run its hooks as
   // this section's own.
@@ -145,12 +222,8 @@ function CodeAndComponent() {
 
   return (
     <section className="landing-section" id="code">
-      <p className="landing-kicker">Code, rendered</p>
-      <h2 className="landing-h2">The code and the component.</h2>
-      <p className="landing-lead">
-        The API you read is the API you ship. A Mac segmented control — the
-        arrows select as they move — next to the component it renders.
-      </p>
+      <h2 className="landing-h2">Your agent already knows the syntax.</h2>
+      <p className="landing-lead">It&apos;s just shadcn!</p>
 
       <div className="landing-code">
         <HighlightedCode lang="tsx" code={demo.source} />
@@ -162,37 +235,29 @@ function CodeAndComponent() {
           </div>
         </div>
       </div>
-
-      <p className="landing-code-caption">
-        <a href="/components/segmented-control">Segmented control</a> — browser
-        preview of the native geometry and palette.
-      </p>
     </section>
   );
 }
 
-/** The maker's line at the very bottom of the landing. */
-export const credit = {
-  handle: "@sudo_kw",
-  href: "https://sudokw.com",
-} as const;
-
 function Footer() {
   return (
     <footer className="landing-footer">
-      <span>
-        GPUIxUI — shadcn/ui&apos;s composition, Base UI&apos;s behaviour and
-        Tailwind&apos;s syntax, drawn by GPUI.
-      </span>
-      <a href={repo} rel="noopener noreferrer" target="_blank">
-        Source
-      </a>
-      <p className="landing-credit">
-        Made with ☕ by{" "}
-        <a href={credit.href} rel="noopener noreferrer" target="_blank">
-          {credit.handle}
+      <span>GPUIxUI — native components for GPUix.</span>
+      <span className="landing-footer-end">
+        <span>
+          Made with ☕ by{" "}
+          <a
+            href="https://sudokw.com"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            @sudo_kw
+          </a>
+        </span>
+        <a href={repo} rel="noopener noreferrer" target="_blank">
+          source
         </a>
-      </p>
+      </span>
     </footer>
   );
 }

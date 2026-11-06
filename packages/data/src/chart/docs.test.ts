@@ -1,7 +1,7 @@
 /**
  * The charts page's API tables, held to the props the types declare.
  *
- * The bug this guards: `docs/charts.mdx` documented only the series charts'
+ * The bug this guards: `docs/charts/charts.mdx` documented only the series charts'
  * shared contract, so the page a consumer reads for `DonutChart`,
  * `Sparkline` and `ChartLegend` never named `data`, `size`, `values`, `color`,
  * `items` or their defaults — the three parts were exported, mounted by the
@@ -23,8 +23,20 @@ import { describe, expect, it } from "vitest";
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-const page = read("../../docs/charts.mdx");
-const source = read("./chart.tsx");
+const page = read("../../docs/charts/charts.mdx");
+/**
+ * The source of each module a chart part's props are read from.
+ *
+ * A type is read from the file that **declares** it: the legend's props
+ * live beside the legend, not in the file that happens to use it.
+ */
+const sources = {
+  chart: `${read("./chart.tsx")}\n${read("./frame.tsx")}`,
+  legend: read("./legend.tsx"),
+  structure: read("./structure.tsx"),
+} as const;
+
+const source = sources.chart;
 const recipe = read("./recipe.ts");
 const inventory = read("../../../../.agents/slop/COMPONENTS.md");
 
@@ -53,17 +65,61 @@ interface Section {
   readonly heading: string;
   /** The declared type whose fields the section's table must carry. */
   readonly type: string;
+  /**
+   * The module that declares the type.
+   *
+   * A type is read from the file that **declares** it: the legend's props
+   * live beside the legend, not in the file that happens to use it. A page
+   * section is checked against the type the library ships, wherever it is
+   * written.
+   */
+  readonly module: "chart" | "legend" | "structure";
 }
 
 /** Every chart part the page must document, and the type behind it. */
 const sections: ReadonlyArray<Section> = [
+  { heading: "`BarChart`", type: "BarChartProps", module: "chart" },
+  { heading: "`StackedBar`", type: "StackedBarProps", module: "chart" },
+  { heading: "`LineChart`", type: "LineChartProps", module: "chart" },
+  { heading: "`ComposedChart`", type: "ComposedChartProps", module: "chart" },
+  { heading: "`ScatterChart`", type: "ScatterChartProps", module: "chart" },
+  { heading: "`CandleChart`", type: "CandleChartProps", module: "chart" },
+  { heading: "`FunnelChart`", type: "FunnelChartProps", module: "chart" },
+  { heading: "`AreaChart`", type: "AreaChartProps", module: "chart" },
   {
-    heading: "`BarChart` · `StackedBar` · `LineChart`",
-    type: "ChartProps",
+    heading: "`PieChart` · `DonutChart`",
+    type: "PieChartProps",
+    module: "chart",
   },
-  { heading: "`DonutChart`", type: "DonutChartProps" },
-  { heading: "`Sparkline`", type: "SparklineProps" },
-  { heading: "`ChartLegend`", type: "ChartLegendProps" },
+  { heading: "`RadarChart`", type: "RadarChartProps", module: "chart" },
+  { heading: "`RadialChart`", type: "RadialChartProps", module: "chart" },
+  { heading: "`Sparkline`", type: "SparklineProps", module: "chart" },
+  {
+    heading: "`RadialBarChart`",
+    type: "RadialBarChartProps",
+    module: "structure",
+  },
+  {
+    heading: "`TreemapChart`",
+    type: "TreemapChartProps",
+    module: "structure",
+  },
+  {
+    heading: "`SankeyChart`",
+    type: "SankeyChartProps",
+    module: "structure",
+  },
+  {
+    heading: "`SunburstChart`",
+    type: "SunburstChartProps",
+    module: "structure",
+  },
+  {
+    heading: "`ChartLegend`",
+    type: "ChartLegendProps",
+    module: "legend",
+  },
+  { heading: "The shared frame", type: "ChartProps", module: "chart" },
 ];
 
 /** The runtime host props a chart takes from `Props`, documented once. */
@@ -79,10 +135,15 @@ const sectionOf = (site: string, heading: string): string => {
 };
 
 /** The fields a props interface declares itself, in source order. */
-const declaredProps = (type: string): ReadonlyArray<string> => {
+const declaredProps = (
+  type: string,
+  module: Section["module"],
+): ReadonlyArray<string> => {
+  // A props interface may extend another's — the cartesian ones do — or
+  // stand alone, and a doc comment may sit between the name and the brace.
   const body = new RegExp(
-    `export interface ${type} extends[^{]*\\{([\\s\\S]*?)\\n\\}`,
-  ).exec(source);
+    `export interface ${type}[^{]*\\{([\\s\\S]*?)\\n\\}`,
+  ).exec(sources[module]);
   if (body?.[1] === undefined) throw new Error(`no ${type}`);
   return [...body[1].matchAll(/^ {2}readonly (\w+)\??:/gm)].flatMap((match) =>
     match[1] === undefined ? [] : [match[1]],
@@ -100,7 +161,7 @@ const undocumented = (section: Section): ReadonlyArray<string> => {
   const documented = documentedProps(sectionOf(page, section.heading));
   return Arr.map(
     Arr.filter(
-      declaredProps(section.type),
+      declaredProps(section.type, section.module),
       (prop) => !documented.includes(prop),
     ),
     (prop) => `${section.heading}: ${prop}`,
@@ -109,7 +170,7 @@ const undocumented = (section: Section): ReadonlyArray<string> => {
 
 /** Every row naming a prop the section neither declares nor inherits. */
 const invented = (section: Section): ReadonlyArray<string> => {
-  const declared = declaredProps(section.type);
+  const declared = declaredProps(section.type, section.module);
   return Arr.map(
     Arr.filter(
       documentedProps(sectionOf(page, section.heading)),
@@ -121,10 +182,12 @@ const invented = (section: Section): ReadonlyArray<string> => {
 
 describe("the charts page's API tables", () => {
   it("documents every prop each chart part declares", () => {
-    expect(sections).toHaveLength(4);
+    expect(sections).toHaveLength(18);
     expect(
       Arr.length(
-        Arr.flatMap(sections, (section) => declaredProps(section.type)),
+        Arr.flatMap(sections, (section) =>
+          declaredProps(section.type, section.module),
+        ),
       ),
     ).toBeGreaterThan(20);
 
@@ -142,9 +205,22 @@ describe("the charts page's API tables", () => {
       "`BarChart`",
       "`StackedBar`",
       "`LineChart`",
+      "`ComposedChart`",
+      "`ScatterChart`",
+      "`CandleChart`",
+      "`FunnelChart`",
+      "`AreaChart`",
+      "`PieChart`",
       "`DonutChart`",
+      "`RadarChart`",
+      "`RadialChart`",
       "`Sparkline`",
+      "`RadialBarChart`",
+      "`TreemapChart`",
+      "`SankeyChart`",
+      "`SunburstChart`",
       "`ChartLegend`",
+      "The shared frame",
     ]);
     expect(
       Arr.filter(
@@ -175,5 +251,28 @@ describe("the charts page's API tables", () => {
     expect(source).toMatch(/width: slot,\s*\n\s*textAlign: "center"/);
     expect(page).toContain("clipped at the slot's edge");
     expect(chartsRow()).toContain("clipped");
+  });
+
+  it("names the scene compiler and the subpaths the chart depends on", () => {
+    // The page tells a consumer where the chart's geometry comes from. If the
+    // dependency changes, the page has to change with it — and it has to name
+    // the **DOM-free** subpaths, because TanStack's DOM renderers need a
+    // `document` this runtime does not have.
+    const bridge = read("./scene.ts");
+    expect(bridge).toContain("@tanstack/charts/scene");
+    expect(bridge).toContain("@tanstack/charts/scales/linear");
+    expect(page).toContain("TanStack Charts");
+    expect(page).toContain("/scales/*");
+    // The DOM renderers are named only to be ruled out.
+    expect(bridge).not.toContain("@tanstack/charts/canvas");
+    expect(bridge).not.toContain("@tanstack/charts/dom");
+  });
+
+  it("says that a chart is one element with every series' colour", () => {
+    // The claim the whole route rests on, and the one a consumer checking
+    // against Recharts would want stated plainly.
+    expect(page).toContain("every series' own colour");
+    expect(page).toContain("one element");
+    expect(page).toContain("real gradient");
   });
 });

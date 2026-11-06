@@ -44,7 +44,13 @@ const walk = (
       );
     if (!entry.name.endsWith(".mdx")) return [];
 
-    const bare = path.replace(/\.mdx$/, "").replace(/\/index$/, "");
+    // A folder's `index.mdx` is that folder's landing page, so its slug is
+    // empty — whether it is the file itself (`index.mdx`) or a page inside a
+    // subfolder (`charts/index.mdx`).
+    const bare = path
+      .replace(/\.mdx$/, "")
+      .replace(/\/index$/, "")
+      .replace(/^index$/, "");
     return [
       {
         file: `${filePrefix}${path}`,
@@ -69,7 +75,9 @@ const packagePages = packageCollections.flatMap((collection) => {
   return walk(
     dir,
     `${collection.dir}/`,
-    (slug) => `${collection.route}/${slug}`,
+    // A collection's own `index.mdx` answers at the route, so the slug is
+    // empty and the route stands alone.
+    (slug) => (slug === "" ? collection.route : `${collection.route}/${slug}`),
   );
 });
 

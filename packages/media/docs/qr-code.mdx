@@ -48,8 +48,7 @@ symbol is always valid though not always the smallest one the standard allows.
 The mode is a property of the value, not a prop: a caller who needs the smaller
 symbol writes a payload the table already covers.
 
-## Limitations
-
+## Notes
 - **Versions 1–10.** The largest symbol holds 271 bytes at `L`.
 - **A stored `ink` or `paper` that is blank or not text reads as the scanner pair**, so a saved record cannot hand the runtime a colour it cannot paint — a quiet zone left on the page is unscannable in a dark theme.
 - **A value that is not text carries nothing**: a record restored from storage

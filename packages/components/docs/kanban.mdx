@@ -1,0 +1,103 @@
+---
+title: Kanban
+description: Columns of cards a person reorders with a pointer or the arrow keys
+---
+
+A board places cards in columns and reports every move. The board owns the flat
+placement list in uncontrolled mode, and a controlled `order` keeps it in the
+caller's store.
+
+This page is the source, not a live preview. The board is a GPUix surface; the
+browser drawing on [the Kanban block](/docs/blocks/kanban) is an illustration
+of it.
+
+## Usage
+
+```tsx
+import { Kanban } from "@gpuixui/components/kanban";
+import type {
+  KanbanCard,
+  KanbanColumn,
+  KanbanMove,
+} from "@gpuixui/components/kanban";
+
+const columns: ReadonlyArray<KanbanColumn> = [
+  { id: "open", title: "Open" },
+  { id: "hunting", title: "Hunting" },
+  { id: "cleared", title: "Cleared" },
+];
+
+const cards: ReadonlyArray<KanbanCard> = [
+  { id: "exam", column: "open", title: "Pass the Hunter Exam" },
+  { id: "troupe", column: "hunting", title: "Track the Phantom Troupe" },
+];
+
+const move = (next: KanbanMove) => save(next);
+
+<Kanban
+  label="Hunter contracts"
+  columns={columns}
+  cards={cards}
+  onMove={move}
+  onCardClick={(card) => open(card.id)}
+/>;
+```
+
+## Moving
+
+A card moves by pointer or keyboard; both routes produce the same `KanbanMove`.
+
+- **Pointer** — press a card, move, release. A single insertion line marks the
+  slot; the source card stays in place at reduced opacity and no column or card
+  is tinted.
+- **Keyboard** — a focused card moves with `Up`/`Down` inside its column and
+  `Left`/`Right` into the neighbouring one. The move stops at the ends; it does
+  not wrap. `Enter` or `Space` presses the card.
+
+`onMove` reports `id`, `from`, `to` and `index`. The index counts the destination
+column **without** the moving card, which is the slot the line painted.
+`onOrderChange` reports the whole arrangement after an accepted move.
+
+## Controlled order
+
+Pass `order` to own the arrangement, or `defaultOrder` to start uncontrolled.
+An order saved before a card was added is still readable: a card the order does
+not name is appended to its own `column`, and an entry naming a card or column
+this render does not carry is dropped.
+
+## Limitations
+
+- `0.11.0` has no `aria-grabbed` or `aria-dropeffect`, so a drag is not
+  announced as a drag; the card's name and the arrow contract carry the
+  interaction.
+- No live region: a move is not announced. The column counts are painted text.
+- The runtime has no `document`, `window` or `getBoundingClientRect`, so
+  `@dnd-kit/core` cannot run here. Drag is pointer capture plus
+  `renderer.getElementBounds` — the same model the shipped `Slider` uses.
+- There is no auto-scroll while a long column is dragged past its edge.
+
+## API
+
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Kanban` | `columns` | `ReadonlyArray<KanbanColumn>` — `id` and `title` | — |
+| `Kanban` | `cards` | `ReadonlyArray<KanbanCard>` — `id`, `column`, `title`, optional `description` | — |
+| `Kanban` | `order` | `KanbanOrder` — a controlled placement list | — |
+| `Kanban` | `defaultOrder` | `KanbanOrder` — the uncontrolled starting list | the cards' own columns |
+| `Kanban` | `onOrderChange` | `(order: KanbanOrder) => void` | — |
+| `Kanban` | `onMove` | `(move: KanbanMove) => void` | — |
+| `Kanban` | `onCardClick` | `(card: KanbanCard) => void` | — |
+| `Kanban` | `label` | `string` — the board's accessible name | `Kanban board` |
+| `Kanban` | `cardLabel` | `(card: KanbanCard) => string` | the card's title |
+| `Kanban` | `renderCard` | `(card, state) => ReactNode` — content inside the drag surface | title and description |
+| `Kanban` | `style` | `StyleDesc` — merged last | — |
+| `Kanban` | `testId` | `string` — card and column locators extend it | — |
+
+`KanbanMove` is `{ id, from, to, index }`; `KanbanOrder` is
+`ReadonlyArray<{ id, column }>` in reading order.
+
+## Related
+
+- [Kanban block](/docs/blocks/kanban) — the browser drawing of this board
+- [Card](/docs/components/card) — the content a card can hold
+- [List](/docs/components/list) — a single-column alternative

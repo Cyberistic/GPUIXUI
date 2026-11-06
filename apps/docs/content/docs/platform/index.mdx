@@ -3,9 +3,7 @@ title: Platform
 description: The behaviours only the operating system owns.
 ---
 
-**The rule:** if the OS owns the behaviour, take it from the OS; if it is a picture,
-paint it. A button, row, popover or tooltip is a picture and repaints with the
-theme, while a file panel, zoom button and title bar lights come from the system.
+**The rule:** take OS-owned behaviour from the OS; paint everything else.
 
 ## What ships
 
@@ -16,9 +14,9 @@ theme, while a file panel, zoom button and title bar lights come from the system
 | Window verbs | `useWindowActions` | minimise, zoom, fullscreen, rename, activate |
 | Path picker | `window.pickPaths` | the system's open panel, and its cancel |
 
-The window is opened with `nativeWindowOptions`, which sets
-`titlebarTransparent`, `trafficLightX` / `trafficLightY` and the theme's
-`windowBackground` on macOS, and nothing elsewhere:
+The window opts in with `nativeWindowOptions`, which sets `titlebarTransparent`,
+`trafficLightX` / `trafficLightY` and the theme's `windowBackground` on macOS,
+and nothing elsewhere:
 
 ```tsx
 render(<App />, { title: "Files", ...nativeWindowOptions(theme, currentPlatform) });
@@ -26,7 +24,6 @@ render(<App />, { title: "Files", ...nativeWindowOptions(theme, currentPlatform)
 
 ## What stays painted
 
-The OS menu bar has no API in this release, so `AppMenu` draws it in-window
-(`/shell/app-menu`); alerts, sheets and popovers are the library's floating layers,
-not `NSAlert` or `NSPopover`, and a native colour panel and tooltip remain in
-`.agents/slop/TODO.md`.
+- The OS menu bar has no API, so `AppMenu` draws it in-window (`/shell/app-menu`).
+- Alerts, sheets and popovers are the library's floating layers, not `NSAlert` or `NSPopover`.
+- No native colour panel or tooltip; `Tooltip` is painted.

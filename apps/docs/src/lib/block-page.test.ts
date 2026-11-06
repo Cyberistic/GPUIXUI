@@ -23,6 +23,7 @@ const here = (path: string): string =>
 
 const pageDir = new URL("../../content/docs/blocks/", import.meta.url);
 const registry = here("../components/docs/blocks.tsx");
+const record = here("../../../../docs/gpuix-capabilities.md");
 
 interface BlockEntry {
   readonly key: string;
@@ -123,33 +124,32 @@ describe("the block pages", () => {
   });
 });
 
-describe("the dashboard page", () => {
+describe("the dashboard page's charts", () => {
   const dashboard = pageFor("dashboard");
-  const recipe = here(
-    "../../../../examples/blocks/src/dashboard/dashboard.tsx",
-  );
+  const recipe = here("../components/docs/dashboard.tsx");
 
-  it("describes the block it mounts, not a reproduction of it", () => {
-    // Bug guarded: the page called the preview a "browser reproduction" because
-    // the recipe was a hand-drawn picture of a dashboard. The preview now mounts
-    // the native block, so a page that still calls it a reproduction is lying
-    // about what the reader is looking at.
-    expect(dashboard).toContain('<BlockPreview name="dashboard-01" />');
-    expect(dashboard).not.toContain("browser reproduction");
-    expect(dashboard).not.toContain("drawn by hand");
+  it("labels the preview as a reproduction and states the one-tint rule", () => {
+    expect(record).toContain("as one tint");
+    expect(dashboard).toContain("browser reproduction");
+    expect(dashboard).toContain("one tint");
+    expect(dashboard).toContain("stacked");
+    expect(dashboard).not.toContain("not a DOM widget");
   });
 
-  it("names the parts the recipe composes", () => {
-    // Bug guarded: the page's composition list named charts the recipe did not
-    // import, so a reader who pasted it got a screen that did not match the list.
+  it("composes the charts the data package ships", () => {
+    // Bug guarded: the page said "the library has no chart component yet" and
+    // the recipe carried its own `<Chart>` whose markup was a comment
+    // (`markup="/* Mon–Sun bars */"`), so the copyable source painted nothing
+    // and the reader was told a shipped component did not exist. `@gpuixui/data`
+    // ships `BarChart`, `DonutChart` and `StackedBar`, and the composition list
+    // names them.
     expect(recipe).toContain('} from "@gpuixui/data"');
-    expect(recipe).toContain('} from "@gpuixui/components/sidebar"');
-    expect(recipe).toContain('} from "@gpuixui/components/tabs"');
     expect(
-      ["Sidebar", "LineChart", "Table", "Tabs", "Badge", "ToggleGroup"].flatMap(
-        (part) => (dashboard.includes(part) ? [] : [part]),
+      ["BarChart", "DonutChart", "StackedBar"].flatMap((part) =>
+        recipe.includes(part) && dashboard.includes(part) ? [] : [part],
       ),
     ).toEqual([]);
+    expect(dashboard).toContain("/graphics/charts");
   });
 
   it("hands the recipe no placeholder geometry", () => {

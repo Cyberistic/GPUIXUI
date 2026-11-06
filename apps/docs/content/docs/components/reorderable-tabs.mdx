@@ -1,0 +1,41 @@
+---
+title: Reorderable tabs
+description: A tab strip you can drag, close and reorder with the keyboard.
+---
+
+<EditorTabsPreview />
+
+## Usage
+
+```tsx
+import { ReorderableTabs } from "@/components/docs/reorderable-tabs";
+
+<ReorderableTabs
+  active={active}
+  label="Open editor files"
+  onActivate={setActive}
+  onClose={closeFile}
+  onReorder={setTabs}
+  tabs={tabs}
+/>;
+```
+
+## Interaction
+
+- Drag a tab to a new slot; the strip shifts its neighbours by the gap and snaps on release.
+- <kbd>Alt</kbd> + <kbd>←</kbd>/<kbd>→</kbd> moves the focused tab.
+- <kbd>×</kbd> closes a tab; a closing tab collapses its measured width first.
+
+The caller owns the order and the open tab, so a replay or an explorer press can put a closed tab back. This is a browser drawing, not the native `Tabs` component.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `tabs` | `ReadonlyArray<ReorderableTab>` | — | the open files, in strip order |
+| `active` | `string \| null` | — | the open tab; `null` when every tab is closed |
+| `label` | `string` | — | the strip's accessible name |
+| `onActivate` | `(id: string) => void` | — | reports the pressed tab |
+| `onReorder` | `(tabs: ReadonlyArray<ReorderableTab>) => void` | — | reports the new order |
+| `onClose` | `(id: string) => void` | — | reports the closed tab |
+| `className` / `tabClassName` / `closeClassName` | `string` | none | joined onto the strip, tab and close button |

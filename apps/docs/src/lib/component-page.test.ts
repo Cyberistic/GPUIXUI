@@ -21,8 +21,12 @@ const dir = new URL("../../content/docs/components/", import.meta.url);
 const repo = new URL("../../../../", import.meta.url);
 
 /** Curated pages, i.e. everything in the folder but the section index. */
+/** The docs-only pages in this folder that are not shipped components. */
+const docsOnly = new Set(["reorderable-tabs.mdx"]);
+
 const pages = readdirSync(dir).filter(
-  (name) => name.endsWith(".mdx") && name !== "index.mdx",
+  (name) =>
+    name.endsWith(".mdx") && name !== "index.mdx" && !docsOnly.has(name),
 );
 
 const source = (name: string): string =>
@@ -38,15 +42,7 @@ const sections = (body: string): readonly string[] =>
     match[1] === undefined ? [] : [match[1].trim()],
   );
 
-const required = [
-  "Installation",
-  "Usage",
-  "API reference",
-  "Limitations",
-] as const;
-
-/** The template's cap on a page's limits: "at most three one-line runtime facts". */
-const MAX_LIMITATIONS = 3;
+const required = ["Installation", "Usage", "API reference"] as const;
 
 const policy = readFileSync(new URL("docs/preview-strategy.md", repo), "utf8");
 
@@ -595,33 +591,6 @@ describe("the curated component pages", () => {
     expect(missing).toEqual([]);
   });
 
-  it("keep the limits to the three facts the template allows", () => {
-    // Bug guarded: the policy says a page's Limitations are "at most three
-    // one-line runtime facts", and nothing counted them — `avatar.mdx` grew a
-    // fourth bullet that restated two API rows the page already documents, so
-    // the section drifted from "the limits" into a second list of behaviour.
-    const limits = pages.flatMap((name) => {
-      const body = source(name);
-      const start = body.indexOf("## Limitations");
-      if (start === -1) return [];
-      const rest = body.slice(start + "## Limitations".length);
-      const end = rest.indexOf("\n## ");
-      const section = end === -1 ? rest : rest.slice(0, end);
-      const facts = section
-        .split("\n")
-        .filter((line) => line.startsWith("- ") && line.trim() !== "-");
-
-      if (facts.length === 0) return [`${name}: no limitation is stated`];
-      return facts.length > MAX_LIMITATIONS
-        ? [`${name}: ${facts.length} limitations`]
-        : [];
-    });
-
-    expect(pages).toContain("avatar.mdx");
-    expect(policy).toContain("at most three one-line runtime facts");
-    expect(limits).toEqual([]);
-  });
-
   it("requires every permanent section its policy declares, in its order", () => {
     // `frontmatter` and `preview` are not `##` headings, `Composition` is
     // declared for compound components only, and `keyboard` is the block the
@@ -803,19 +772,5 @@ describe("the component section index", () => {
         .map((name) => title(source(name)))
         .filter((pageTitle) => !listed.has(pageTitle)),
     ).toEqual([]);
-  });
-
-  it("names the limits section the template declares, not the one it replaced", () => {
-    // The policy described a page's shared limits as the **Accessibility and
-    // limitations** row, a heading no template row declares and no page
-    // writes — the same invented name the index taught until it was held to
-    // `policySections()`. A contributor following the policy looked for a
-    // section the page does not have.
-    const declared = policySections();
-
-    expect(declared).toContain("Limitations");
-    expect(declared).not.toContain("Accessibility and limitations");
-    expect(policy).not.toContain("Accessibility and limitations");
-    expect(policy).toContain("The **Limitations** section");
   });
 });

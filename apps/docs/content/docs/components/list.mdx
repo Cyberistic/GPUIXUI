@@ -70,7 +70,7 @@ List
 | Prop | Type | Default |
 | ---- | ---- | ------- |
 | `value` | `string` (required) | — |
-| `textValue` | `string` — the text type-ahead matches; omit and the row is not searched | — |
+| `textValue` | `string` — the text type-ahead matches | — |
 | `disabled` | `boolean` | `false` |
 | `leading` | `ReactNode` — an icon, avatar or marker | — |
 | `trailing` | `ReactNode` — metadata, a badge or an action | — |
@@ -78,8 +78,7 @@ List
 | `className` | `string` — joined after the row recipe | — |
 | `style` | `StyleDesc` or a function of `{ active, disabled, selected }` | — |
 
-## Limitations
-
-- `list`/`listitem` without a mode; `listbox`/`option` with one.
-- **No `aria-multiselectable`** in 0.11.0: the mode is read from each row's `aria-selected`.
+## Notes
+- Roles: `list`/`listitem` without a mode; `listbox`/`option` with one.
+- **No `aria-multiselectable`**: the mode is read from each row's `aria-selected`.
 - The row ring is keyboard-only: `focusVisible` paints after a key focus, not a click.

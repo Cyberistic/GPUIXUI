@@ -37,13 +37,10 @@ const columns = useColumns({
 const table = useTable({
   rows,
   keyOf: (row) => row.id,
-  // One column list is what the header paints, what the core sorts by and
-  // what the filter searches.
   columns: [
     { id: "service", valueOf: (row) => row.service },
     { id: "environment", valueOf: (row) => row.environment },
   ],
-  // A column the menu hides leaves the query; it keeps its sort.
   hiddenColumns: columns.hidden,
 });
 
@@ -158,8 +155,7 @@ Table
 | `pressSort` | `(field, initialDirection, modifiers?) => void` | the raw press; `modifiers.shift` is what sets `additive` |
 | `rows` | `ReadonlyArray<Row>` | filtered by the query, then ordered by every entry in turn |
 
-## Limitations
-
+## Notes
 - **No table element**: rows report `role` and `aria-selected`, not `aria-colindex` or `aria-rowindex`.
 - **No `aria-sort`**: `TableSortHeader` carries the state in its name.
 - **No `position: "sticky"`**: a header inside the row scroller scrolls away.

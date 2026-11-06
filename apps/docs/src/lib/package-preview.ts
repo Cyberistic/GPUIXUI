@@ -65,7 +65,7 @@ export const packagePreviews: ReadonlyArray<PackagePreview> = [
     path: "column-configuration.mdx",
     demo: "column-configuration-demo",
   },
-  { origin: "data", path: "charts.mdx", demo: "charts-demo" },
+  { origin: "data", path: "charts/charts.mdx", demo: "charts-demo" },
   { origin: "icons", path: "icon.mdx", demo: "icon-gallery-demo" },
   { origin: "shell", path: "toolbar.mdx", demo: "toolbar-demo" },
   { origin: "shell", path: "app-menu.mdx", demo: "app-menu-demo" },

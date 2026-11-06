@@ -2794,6 +2794,18 @@
   color: var(--muted-foreground);
 }
 
+/* The file path is the link, so it has to read as one. */
+.gx-install-note a {
+  color: var(--foreground);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gx-install-note a:hover {
+  color: var(--primary);
+}
+
 .gx-source {
   margin: 1rem 0;
 }
@@ -7419,6 +7431,50 @@ button.gx-date-navbtn:hover:not(:disabled) {
   flex: none;
 }
 
+/* The drawings arrive the way the library's charts do: a bar grows from its
+   baseline, an arc or a polygon scales out from its own centre. */
+.gx-dchart-plot rect,
+.gx-dchart-plot path,
+.gx-dchart-plot circle {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: gx-chart-grow 520ms ease-out backwards;
+}
+
+.gx-dchart-plot path,
+.gx-dchart-plot circle {
+  transform-origin: center;
+  animation-name: gx-chart-reveal;
+}
+
+@keyframes gx-chart-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes gx-chart-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-dchart-plot rect,
+  .gx-dchart-plot path,
+  .gx-dchart-plot circle {
+    animation: none;
+  }
+}
+
 .gx-dchart-categories {
   display: flex;
   flex-direction: row;
@@ -7470,6 +7526,21 @@ button.gx-date-navbtn:hover:not(:disabled) {
   border-radius: var(--radius-sm);
 }
 
+/* ---- the charts page fills its preview ----
+   The page is the gallery: the frame, the small multiples and the mode row
+   fill the preview instead of leaving half of it empty. ---- */
+.gx-data-scene[data-wide] {
+  max-width: none;
+}
+
+.gx-data-scene[data-wide] > .gx-dchart {
+  align-self: center;
+}
+
+.gx-data-scene[data-wide] > .gx-data-row {
+  justify-content: center;
+}
+
 /* ---- the scenes these drawings sit in ---- */
 .gx-data-scene {
   display: flex;
@@ -7479,6 +7550,20 @@ button.gx-date-navbtn:hover:not(:disabled) {
   max-width: 640px;
   align-items: stretch;
   text-align: left;
+}
+
+/* The charts page is the gallery: the frame, the small multiples and the mode
+   row fill the preview instead of leaving half of it empty. */
+.gx-data-scene[data-wide] {
+  max-width: none;
+}
+
+.gx-data-scene[data-wide] > .gx-dchart {
+  align-self: center;
+}
+
+.gx-data-scene[data-wide] > .gx-data-row {
+  justify-content: center;
 }
 
 .gx-data-row {
@@ -11284,14 +11369,23 @@ button.gx-rating-star:focus-visible {
 }
 
 /* The only flexible row. `flex-basis: 0` keeps a tall transcript from asking
-   the frame for more height; `overflow-y` is the scroller. */
+   the frame for more height; `overflow-y` is the scroller.
+
+   The transcript's right padding reserves the scrollbar's strip. A macOS
+   overlay scrollbar takes no space and draws over whatever is under it, so
+   the avatar on the right-hand rows sat in the strip it would cover; on a
+   platform with a classic scrollbar `scrollbar-gutter: stable` holds the same
+   space open, and the padding keeps the two from adding up. */
 .gx-chat-messages {
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
   min-height: 0;
+  padding-right: 10px;
   overflow-y: auto;
+  overflow-anchor: none;
   overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .gx-chat-content {
@@ -14961,7 +15055,9 @@ button.gx-rating-star:focus-visible {
   .gx-magnetic-card,
   .gx-imagezoom img,
   .gx-motiongrid-cell,
-  .gx-preview-picture {
+  .gx-preview-picture,
+  .gx-reorder-tab,
+  .gx-reorder-tab[data-dropping="true"] {
     transition: none;
   }
 }
@@ -15333,6 +15429,15 @@ button.gx-rating-star:focus-visible {
   color: var(--muted-foreground);
 }
 
+/* ---- The Diagram page's preview ------------------------------------------
+   Three drawings in one column: a flow, a sequence and the failure state. The
+   gap is the page's own, so the three read as one stack of examples. */
+.gx-diagram-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 /* ---- Mermaid diagrams, rendered by Pele ----------------------------------
    Pele reads `--pele-*` custom properties, so the figure hands it the preview's
    own roles and a theme switch re-themes the SVG without a second render. The
@@ -15528,6 +15633,13 @@ button.gx-rating-star:focus-visible {
    keeps the open panel's height whether or not the panel is mounted, so the
    surface can run its exit over the box it already occupies and nothing below
    it moves. */
+.gx-cp-anchor {
+  position: relative;
+}
+
+/* The docs preview keeps the panel in flow and reserves its height, so the
+   open panel is never clipped by the preview frame. The landing's copy portals
+   its panel instead. */
 .gx-cp-panel-slot {
   display: flex;
   flex-direction: column;
@@ -15788,4 +15900,352 @@ button.gx-rating-star:focus-visible {
   border-color: transparent;
   background: var(--primary);
   color: var(--primary-foreground);
+}
+
+/* The charts gallery: a contact sheet, one cell per type. The column count is
+   the preview's own width, so the page reads as a catalogue instead of nine
+   rows down one column. */
+.gx-dchart-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.gx-dchart-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+.gx-dchart-cell figcaption {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+/* The tooltip and legend example scenes: a static, labelled approximation. */
+.gx-dchart-tooltip-scene {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.gx-dchart-tip-card {
+  position: absolute;
+  top: 8px;
+  left: 46%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  font-size: 12px;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 20%);
+}
+
+.gx-dchart-tip-head {
+  color: var(--muted-foreground);
+}
+
+.gx-dchart-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-dchart-tip-line {
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.gx-dchart-legend-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dchart-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-dchart-legend-row b {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.gx-dchart-legend-mark {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.gx-dchart-legend-dot {
+  border-radius: 50%;
+}
+
+.gx-dchart-legend-line {
+  width: 18px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+/* A variants scene: one row of small labelled drawings. */
+.gx-dchart-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gx-dchart-label-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dchart-tip-static {
+  position: static;
+}
+
+.gx-dchart-tip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* The interactive chart previews: the frame the pointer moves over. */
+.gx-dchart-interactive-frame {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.gx-dchart-tip-follow {
+  position: absolute;
+  top: 8px;
+}
+
+/* The brushed window's strip: drag across it to window the plot. */
+.gx-dchart-brush-strip {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  border-radius: 3px;
+  background: var(--muted);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.gx-dchart-brush-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  opacity: 0.4;
+}
+
+/* The reorderable tab strip: the editor chrome's gesture and its two exits.
+   The component owns the order (the caller says where a tab lands); this sheet
+   only paints the travel, the gap and the close. */
+.gx-reorder-tabs {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  user-select: none;
+}
+
+.gx-reorder-indicator {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-radius: 3px;
+  background: var(--ring);
+  opacity: 0.2;
+  pointer-events: none;
+  transform: translateX(-1px);
+}
+
+.gx-reorder-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  touch-action: none;
+  transition:
+    transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 120ms ease,
+    color 120ms ease,
+    opacity 140ms ease,
+    width 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    padding 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.gx-reorder-tab[data-dragging="true"] {
+  z-index: 2;
+  cursor: grabbing;
+  transition: none;
+}
+
+/* The commit frame: the old offsets and the new base positions arrive in the
+   same paint, so the cleared transform must not animate a second time. */
+.gx-reorder-tabs[data-settling="true"] .gx-reorder-tab {
+  transition: none;
+}
+
+.gx-reorder-tab[data-dropping="true"] {
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.gx-reorder-tab[data-closing="true"] {
+  flex: 0 0 auto;
+  overflow: hidden;
+  opacity: 0;
+  padding-inline: 0;
+  border-right-color: transparent;
+  pointer-events: none;
+}
+
+.gx-reorder-tab:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.gx-reorder-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.gx-reorder-close:hover,
+.gx-reorder-close:focus-visible {
+  background: rgb(127 127 127 / 22%);
+  opacity: 1;
+}
+
+/* The preview on the Terminal guide: a dark editor strip, not the docs theme. */
+.gx-editor-tabs {
+  margin-block: 1.25rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.gx-editor-tabs-rail {
+  height: 36px;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+  overflow: hidden;
+}
+
+.gx-editor-tabs-tab {
+  padding: 0 10px;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.gx-editor-tabs-tab[data-active="true"] {
+  background: var(--card);
+  box-shadow: inset 0 1px 0 var(--primary);
+  color: var(--foreground);
+}
+
+.gx-editor-tabs-tab[data-dragging="true"] {
+  background: var(--card);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 22%);
+  color: var(--foreground);
+}
+
+.gx-editor-tabs-close {
+  margin-left: 2px;
+}
+
+.gx-editor-tabs-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 64px;
+  padding: 0.75rem 1rem;
+}
+
+.gx-editor-tabs-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.gx-editor-tabs-line > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--foreground);
+}
+
+.gx-editor-tabs-dim {
+  flex: none;
+  color: var(--muted-foreground);
+}
+
+.gx-editor-tabs-empty {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-editor-tabs-hint {
+  margin: 0;
+  padding: 0 1rem 0.85rem;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-editor-tabs-hint kbd {
+  padding: 1px 4px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-reorder-tab {
+    transition: none;
+  }
 }

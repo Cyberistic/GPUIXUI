@@ -86,12 +86,22 @@ export const sitePageUrls = (root: string | URL): ReadonlyArray<string> => [
     .map((collection) => collection.route),
 ];
 
-/** Every page the mounted package collections ship, at its mounted URL. */
+/**
+ * Every page the mounted package collections ship, at its mounted URL.
+ *
+ * `index.mdx` is its directory's landing page, so it answers at the
+ * collection's own route — the same rule the site's own pages follow. A
+ * collection that writes one lands a real page at its route instead of the
+ * index the site generates for a package that writes none.
+ */
 export const packagePageUrls = (root: string | URL): ReadonlyArray<string> =>
   packageCollections.flatMap((collection) =>
-    collectionPages(root, collection).map(
-      (name) => `${collection.route}/${name.replace(/\.mdx$/, "")}`,
-    ),
+    collectionPages(root, collection).map((name) => {
+      const page = name.replace(/\.mdx$/, "");
+      return page === "index"
+        ? collection.route
+        : `${collection.route}/${page}`;
+    }),
   );
 
 /**

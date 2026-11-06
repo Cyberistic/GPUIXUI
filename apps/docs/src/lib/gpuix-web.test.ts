@@ -133,6 +133,15 @@ describe("the GPUix web build", () => {
     expect(bytes).toBeGreaterThan(1024 * 1024);
   });
 
+  it("keeps the hashed assets, including the wasm, immutable", () => {
+    // The deployment, not the app, decides this: `_headers` through Alchemy's
+    // asset config. Without it the 19 MiB wasm is revalidated on every visit.
+    const deploy = read("packages/deploy/alchemy.run.docs.ts");
+    expect(deploy).toContain("/assets/*");
+    expect(deploy).toContain("public, max-age=31536000, immutable");
+    expect(deploy).toContain("headers: docsAssetHeaders");
+  });
+
   it("publishes the browser target in the capability record", () => {
     // The record is where a reader asks what the pinned package provides. It
     // prints the same three measured constraints, the size, and the gap that

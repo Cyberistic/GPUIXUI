@@ -21,6 +21,33 @@
   background-image: none;
 }
 
+.gx-block-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 6px 0 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-block-source-link {
+  color: var(--foreground);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gx-block-source-link:hover {
+  color: var(--primary);
+}
+
+.gx-block-source code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
 /* The index tile is a capture of that same page, not a live scene: a grid of
    twelve mounted compositions paid for every scene's listeners and repainted
    all of them on a platform switch. The images live in `public/blocks/` and are
@@ -621,59 +648,129 @@
   }
 }
 
-/* ---- settings ---- */
+/* ---- profile settings ---- */
 
-.gx-block-settings .gx-block-card {
-  width: min(560px, 100%);
-  gap: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-.gx-block-profile {
+.gx-block-settings {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  padding: 6px 0;
 }
 
-.gx-block-avatar {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--secondary);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.gx-block-profile-text {
-  flex: 1;
-}
-
-.gx-block-badge {
-  padding: 2px 10px;
-  border-radius: 9999px;
-  background: var(--primary);
-  color: var(--primary-foreground);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.gx-block-tabs {
-  padding: 0 22px;
-}
-
-.gx-block-panel {
+.gx-profile {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 18px 22px;
+  width: min(760px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 8px);
+  background: var(--card);
 }
 
+.gx-profile-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 22px 24px 14px;
+}
+
+.gx-profile-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.gx-profile-tabs {
+  padding: 0 24px;
+}
+
+.gx-profile-tab {
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 9999px;
+}
+
+.gx-profile-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.gx-profile-row {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 28px;
+  padding: 22px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.gx-profile-side {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gx-profile-section {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.gx-profile-photo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.gx-profile-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 76px;
+  height: 76px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--secondary);
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.gx-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gx-profile-photo-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.gx-profile-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.gx-profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.gx-profile-field-wide {
+  grid-column: 1 / -1;
+}
+
+.gx-profile-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 .gx-block-row-between {
   display: flex;
   align-items: center;
@@ -686,27 +783,55 @@
   flex-shrink: 0;
   width: 36px;
   height: 20px;
+  padding: 0;
+  border: 0;
   border-radius: 9999px;
+  background: var(--secondary);
+  cursor: pointer;
+}
+
+.gx-block-switch[data-on="true"] {
   background: var(--primary);
 }
 
-.gx-block-switch::after {
-  content: "";
+.gx-block-switch span {
   position: absolute;
   top: 2px;
-  right: 2px;
+  left: 2px;
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--primary-foreground);
+  background: var(--card);
+  transition: left 160ms ease;
 }
 
-.gx-block-footer {
+.gx-block-switch[data-on="true"] span {
+  left: 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-block-switch span {
+    transition: none;
+  }
+}
+
+.gx-profile-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding: 14px 22px;
+  padding: 14px 24px;
   border-top: 1px solid var(--border);
+}
+
+@container (width < 720px) {
+  .gx-profile-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .gx-profile-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ---- dashboard ---- */
@@ -744,6 +869,9 @@
   flex-direction: column;
   width: 100%;
   max-width: 1080px;
+  /* The block's frame is 16:9, so the window reads as a screen rather than a
+     page that happens to end. The panes scroll inside it. */
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid var(--dash-line-strong);
   border-radius: 14px;
@@ -838,6 +966,10 @@
   flex-direction: column;
   gap: 22px;
   width: 240px;
+  overflow-y: auto;
+  transition:
+    width 0.28s ease,
+    padding 0.28s ease;
   flex: none;
   padding: 18px 14px 16px;
   border-right: 1px solid var(--dash-line);
@@ -929,6 +1061,9 @@
 /* collapsed sidebar: icon-only rail */
 .gx-dash-side[data-collapsed="true"] {
   width: 64px;
+  transition:
+    width 0.28s ease,
+    padding 0.28s ease;
   align-items: center;
   padding: 18px 10px 16px;
 }
@@ -963,6 +1098,7 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
+  min-height: 0;
 }
 
 .gx-dash-topbar {
@@ -1044,9 +1180,13 @@
 /* content grid: three rows of two cards */
 .gx-dash-grid {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
   padding: 18px;
+  scrollbar-gutter: stable;
 }
 
 .gx-dash-grid-row {
@@ -1095,6 +1235,7 @@
 
 .gx-dash-card-body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 14px;
   min-width: 0;
@@ -1139,6 +1280,12 @@
   height: auto;
 }
 
+/* The chart sits on the card's floor, so the height the taller card in the row
+   adds is breathing room above the plot rather than a hole under it. */
+.gx-dash-total .gx-dash-bars {
+  margin-top: auto;
+}
+
 .gx-dash-axis {
   stroke: var(--dash-line);
   stroke-width: 1;
@@ -1170,7 +1317,9 @@
 }
 
 .gx-dash-donut-segment {
-  animation: gx-dash-draw 500ms ease-out backwards;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: gx-dash-draw 420ms ease-out backwards;
 }
 
 @keyframes gx-dash-grow {
@@ -1184,10 +1333,12 @@
 
 @keyframes gx-dash-draw {
   from {
-    stroke-dasharray: 0 var(--dash-circ);
+    opacity: 0;
+    transform: scale(0.92);
   }
   to {
-    stroke-dasharray: var(--dash-len) var(--dash-gap);
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -1387,10 +1538,11 @@
 }
 
 /* ---- kanban board ----
-   The board window: a 230px app sidebar and four equal columns. A card's
-   `…` menu is the move affordance (the browser shim has no pointer capture),
-   the `+` appends a placeholder, and both counts come from the same array, so
-   a move can never leave a heading stale. */
+   The board window: a 230px app sidebar and four equal columns. The drawing
+   shares the shipped component's placement rule; a card drags to the line the
+   pointer names, the `…` menu sends it without a pointer, and `+` appends a
+   placeholder. Both counts come from the same array, so a move can never leave
+   a heading stale. */
 
 .gx-kan {
   display: flex;
@@ -1424,16 +1576,6 @@
   align-items: center;
   gap: 9px;
   padding: 0 6px 2px;
-}
-
-.gx-kan-mark {
-  display: block;
-  flex: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  background: var(--primary);
-  box-shadow: inset 0 0 0 3px var(--card);
 }
 
 .gx-kan-brand-name {
@@ -1529,6 +1671,9 @@
 .gx-notif-panel {
   display: flex;
   flex-direction: column;
+  /* A fixed window: filtering or reading a row scrolls the list inside the
+     panel instead of moving the block around the page. */
+  height: 620px;
   width: min(460px, 100%);
   overflow: hidden;
   border: 1px solid var(--border);
@@ -1613,10 +1758,17 @@
 }
 
 .gx-kan-user-avatar {
+  display: grid;
+  place-items: center;
   width: 24px;
   height: 24px;
   overflow: hidden;
   border-radius: 9999px;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .gx-notif-icon:focus-visible {
@@ -1651,8 +1803,12 @@
 
 .gx-notif-list {
   display: flex;
+  flex: 1;
   flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
   padding: 6px 8px 10px;
+  scrollbar-gutter: stable;
 }
 
 .gx-notif-group {
@@ -1856,23 +2012,10 @@
   gap: 10px;
 }
 
-.gx-kan-project {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-right: auto;
-}
-
-.gx-kan-project-name {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 650;
-  letter-spacing: -0.015em;
-}
-
 .gx-kan-people {
   display: flex;
   align-items: center;
+  margin-right: auto;
 }
 
 .gx-kan-person {
@@ -1887,6 +2030,7 @@
   color: var(--foreground);
   font-size: 8.5px;
   font-weight: 700;
+  line-height: 1;
 }
 
 .gx-kan-person:first-child {
@@ -1901,31 +2045,23 @@
 }
 
 .gx-kan-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
+  height: 34px;
+  padding: 0;
+  border-bottom: 0;
 }
 
 .gx-kan-tab {
-  position: relative;
-  height: 32px;
-  padding: 0 10px;
-  border: 0;
-  background: transparent;
-  color: var(--muted-foreground);
-  font-family: inherit;
+  height: 34px;
   font-size: 12.5px;
-  font-weight: 600;
   white-space: nowrap;
-  cursor: pointer;
 }
 
-.gx-kan-tab:hover {
-  color: var(--foreground);
-}
-
-.gx-kan-tab[aria-selected="true"] {
-  color: var(--foreground);
+.gx-kan-empty {
+  margin: 0;
+  padding: 40px 20px;
+  color: var(--muted-foreground);
+  font-size: 12.5px;
+  text-align: center;
 }
 
 .gx-kan-tab[aria-selected="true"]::after {
@@ -2367,8 +2503,8 @@
   gap: 10px;
 }
 
-/* The drag surface: the card lifts, the column it would land in tints, and the
-   line is the exact slot the drop names. */
+/* The drag surface: the card lifts and the line is the exact slot the drop
+   names. No column or card is tinted — the line is the whole target cue. */
 .gx-kan-drag {
   cursor: grab;
 }
@@ -2376,11 +2512,6 @@
 .gx-kan-drag[data-dragging="true"] {
   opacity: 0.45;
   cursor: grabbing;
-}
-
-.gx-kan-stack[data-drop="true"] {
-  background: var(--accent);
-  border-radius: calc(var(--radius) + 2px);
 }
 
 .gx-kan-drop-line {
@@ -2412,7 +2543,7 @@
 
 .gx-kan-chip {
   max-width: 100%;
-  padding: 2px 7px;
+  padding: 2px 6px;
   overflow: hidden;
   border-radius: 999px;
   background: var(--secondary);
@@ -2421,6 +2552,10 @@
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.gx-kan-priority {
+  flex: none;
 }
 
 .gx-kan-priority[data-priority="high"] {
@@ -2537,6 +2672,7 @@
   color: var(--accent-foreground);
   font-size: 7.5px;
   font-weight: 700;
+  line-height: 1;
 }
 
 .gx-kan-avatar:first-child {
@@ -2633,23 +2769,6 @@
   font-size: 17px;
   font-weight: 650;
   letter-spacing: -0.015em;
-}
-
-.gx-set-close {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-}
-
-.gx-set-close:hover {
-  background: var(--hover);
-  color: var(--foreground);
 }
 
 .gx-set-search {
@@ -2765,7 +2884,6 @@
 }
 
 .gx-set-nav-item:focus-visible,
-.gx-set-close:focus-visible,
 .gx-set-layout:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
@@ -3637,7 +3755,7 @@
   display: flex;
   width: 100%;
   max-width: 1180px;
-  height: 640px;
+  height: 680px;
   overflow: hidden;
   container-type: inline-size;
   border: 1px solid var(--border);
@@ -3645,6 +3763,7 @@
   background: var(--card);
   color: var(--foreground);
   font-family: var(--font-sans);
+  line-height: 1.4;
   text-align: left;
 }
 
@@ -3652,9 +3771,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: 220px;
+  width: 190px;
   flex: none;
-  padding: 12px;
+  padding: 10px;
   overflow-y: auto;
   border-right: 1px solid var(--border);
   background: var(--muted);
@@ -3663,9 +3782,9 @@
 .gx-mail-side-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 4px;
+  min-height: 28px;
+  margin-bottom: 8px;
 }
 
 .gx-mail-title {
@@ -3677,6 +3796,7 @@
 
 .gx-mail-new {
   display: inline-flex;
+  margin-left: auto;
 }
 
 .gx-mail-new .gx-btn-primary:first-child {
@@ -3808,25 +3928,26 @@
 
 .gx-mail-toolbar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 6px;
-  padding: 6px 10px;
+  padding: 5px 6px;
   border-bottom: 1px solid var(--border);
 }
 
 .gx-mail-actions {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 1px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .gx-mail-action {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  flex: 0 1 auto;
+  min-width: 0;
   height: 28px;
   padding: 0 7px;
   border: 0;
@@ -3835,6 +3956,7 @@
   color: var(--muted-foreground);
   font: inherit;
   font-size: 11.5px;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -3843,31 +3965,26 @@
   color: var(--foreground);
 }
 
-.gx-mail-tabs {
+.gx-mail-action:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -1px;
+}
+
+.gx-mail-tabbar {
   display: flex;
-  align-items: center;
-  gap: 2px;
+  align-items: stretch;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-mail-tabs {
+  height: 34px;
+  padding: 0;
+  border-bottom: 0;
 }
 
 .gx-mail-tab {
-  padding: 5px 8px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: var(--muted-foreground);
-  font: inherit;
   font-size: 12px;
-  cursor: pointer;
-}
-
-.gx-mail-tab:hover {
-  color: var(--foreground);
-}
-
-.gx-mail-tab[aria-selected="true"] {
-  border-bottom-color: var(--primary);
-  color: var(--foreground);
-  font-weight: 600;
 }
 
 .gx-mail-panes {
@@ -3877,7 +3994,7 @@
 }
 
 .gx-mail-list {
-  width: 400px;
+  width: 250px;
   flex: none;
   padding: 4px;
   overflow-y: auto;
@@ -3887,9 +4004,9 @@
 .gx-mail-row {
   display: flex;
   align-items: flex-start;
-  gap: 9px;
+  gap: 8px;
   width: 100%;
-  padding: 9px 8px;
+  padding: 8px 6px;
   border: 0;
   border-radius: var(--radius);
   background: transparent;
@@ -3910,21 +4027,21 @@
 .gx-mail-avatar {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   flex: none;
   border-radius: 50%;
   background: var(--secondary);
   color: var(--foreground);
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 650;
   letter-spacing: 0.02em;
 }
 
 .gx-mail-avatar-lg {
-  width: 38px;
-  height: 38px;
-  font-size: 12px;
+  width: 34px;
+  height: 34px;
+  font-size: 11px;
 }
 
 .gx-mail-row-body {
@@ -4026,24 +4143,33 @@
 .gx-mail-read {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   flex: 1;
   min-width: 0;
-  padding: 16px 18px;
+  padding: 14px;
   overflow: hidden;
+}
+
+.gx-mail-read-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: none;
 }
 
 .gx-mail-subject-lg {
   margin: 0;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 650;
   letter-spacing: -0.01em;
+  line-height: 1.25;
 }
 
 .gx-mail-from {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
+  min-width: 0;
 }
 
 .gx-mail-from-text {
@@ -4051,23 +4177,35 @@
   min-width: 0;
 }
 
-.gx-mail-from-text p {
+.gx-mail-from-line {
+  margin: 0;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-mail-from-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
-  margin: 0;
-  font-size: 12.5px;
+  gap: 2px 6px;
+  min-width: 0;
+  margin: 1px 0 0;
+  color: var(--muted-foreground);
+  font-size: 10.5px;
 }
 
 .gx-mail-to {
+  min-width: 0;
+  overflow: hidden;
   color: var(--muted-foreground);
-  font-size: 11px;
+  text-overflow: ellipsis;
 }
 
-.gx-mail-from-text .gx-mail-date {
-  display: block;
-  margin-top: 2px;
+.gx-mail-from-meta .gx-mail-date {
+  flex: none;
 }
 
 .gx-mail-icon {
@@ -4203,27 +4341,16 @@
   text-overflow: ellipsis;
 }
 
-.gx-mail-contact-tabs {
-  display: flex;
-  gap: 2px;
+.gx-mail-contact-tabs-list {
+  height: 28px;
+  padding: 0;
   border-bottom: 1px solid var(--border);
 }
 
 .gx-mail-contact-tab {
-  padding: 5px 7px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: var(--muted-foreground);
-  font: inherit;
-  font-size: 11.5px;
-  cursor: pointer;
-}
-
-.gx-mail-contact-tab[aria-selected="true"] {
-  border-bottom-color: var(--primary);
-  color: var(--foreground);
-  font-weight: 600;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 11px;
 }
 
 .gx-mail-contact-panel {
@@ -4269,8 +4396,7 @@
 }
 
 @media (max-width: 1100px) {
-  .gx-fm-info,
-  .gx-mail-contact {
+  .gx-fm-info {
     display: none;
   }
 }
@@ -4291,13 +4417,15 @@
   }
 
   .gx-mail-side {
-    width: 170px;
+    width: 180px;
   }
 
   .gx-mail-list {
-    width: 280px;
+    width: 250px;
   }
+}
 
+@container (max-width: 1080px) {
   .gx-mail-contact {
     display: none;
   }
@@ -4313,11 +4441,11 @@
   }
 
   .gx-mail-side {
-    width: 160px;
+    width: 176px;
   }
 
   .gx-mail-list {
-    width: 230px;
+    width: 244px;
   }
 }
 
@@ -4353,7 +4481,10 @@
   .gx-mail-action {
     gap: 0;
     padding: 0 6px;
-    font-size: 0;
+  }
+
+  .gx-mail-action-label {
+    display: none;
   }
 }
 
@@ -4926,41 +5057,10 @@
   flex: none;
   align-self: flex-end;
   width: min(220px, 60%);
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 12px;
-  background-image:
-    radial-gradient(
-      circle at 72% 24%,
-      color-mix(in srgb, var(--series-1) 55%, var(--background)) 0 14%,
-      transparent 55%
-    ),
-    linear-gradient(160deg, var(--series-2), var(--series-4));
-}
-
-.gx-conv-attach::before,
-.gx-conv-attach::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  transform: rotate(-7deg);
-}
-
-.gx-conv-attach::before {
-  right: -24%;
-  bottom: -16%;
-  left: -14%;
-  height: 68%;
-  background: color-mix(in srgb, var(--series-5) 55%, var(--background));
-}
-
-.gx-conv-attach::after {
-  right: -18%;
-  bottom: -30%;
-  left: 26%;
-  height: 62%;
-  transform: rotate(5deg);
-  background: color-mix(in srgb, var(--series-3) 48%, var(--background));
+  background: url("/media/landing/greed-island.webp") center / cover no-repeat;
 }
 
 .gx-conv-empty {
@@ -5106,34 +5206,124 @@
 }
 
 /* ---- dashboard management ----
-   A dense three-column console. Every state keeps its box: the toast stack
-   reserves both cards, the upload and copy actions reserve their label, and a
-   selection paints a fill instead of an edge. Three columns fold to two at
-   1200px and one at 760px. */
+   The settings screen: a 16:9 window with a workspace rail and one scrolling
+   column of sections. The body is three tracks — the rail takes one, the
+   sections take two — and folds to two tracks at 1200px and one at 760px. */
 
 .gx-mgmt {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
-  gap: 12px;
-  width: 100%;
-  text-align: left;
-}
-
-.gx-mgmt-col {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  width: 100%;
+  max-width: 1080px;
+  /* The frame is 16:9, so the preview reads as a screen rather than a page
+     that happens to end. The rail and the sections scroll inside it. */
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: var(--elevation-lg);
+  text-align: left;
+  font-family: var(--font-sans);
+}
+
+.gx-mgmt *,
+.gx-mgmt *::before,
+.gx-mgmt *::after {
+  box-sizing: border-box;
+}
+
+.gx-mgmt-bar {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--material-titlebar);
+}
+
+.gx-mgmt-lights {
+  position: absolute;
+  left: 14px;
+  display: flex;
+  gap: 7px;
+}
+
+.gx-mgmt-lights i {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+}
+
+.gx-mgmt-lights i:nth-child(1) {
+  background: var(--destructive);
+}
+
+.gx-mgmt-lights i:nth-child(2) {
+  background: var(--warning);
+}
+
+.gx-mgmt-lights i:nth-child(3) {
+  background: var(--success);
+}
+
+.gx-mgmt-bar-title {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-env {
+  position: absolute;
+  right: 14px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--placeholder);
+}
+
+.gx-mgmt-body {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  flex: 1;
+  min-height: 0;
+}
+
+.gx-mgmt-side {
+  display: flex;
+  grid-column: span 1;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  min-height: 0;
+  padding: var(--spacing-lg);
+  overflow: auto;
+  border-right: 1px solid var(--border);
+  background: var(--background);
+}
+
+.gx-mgmt-main {
+  display: flex;
+  grid-column: span 2;
+  flex-direction: column;
+  gap: var(--spacing-lg);
   min-width: 0;
+  min-height: 0;
+  padding: var(--spacing-lg);
+  overflow: auto;
 }
 
 .gx-mgmt-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
   border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 4px);
+  border-radius: var(--radius);
   background: var(--card);
   color: var(--foreground);
 }
@@ -5167,7 +5357,7 @@
 .gx-mgmt-service {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--spacing-md);
 }
 
 .gx-mgmt-dot {
@@ -5195,9 +5385,10 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
+  margin: 0;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   background: var(--border);
 }
 
@@ -5224,6 +5415,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 6px;
+  margin: 0;
 }
 
 .gx-mgmt-stat-value {
@@ -5238,30 +5430,31 @@
   font-variant-numeric: tabular-nums;
 }
 
-.gx-mgmt-delta[data-tone="up"] {
+.gx-mgmt-delta[data-tone="good"] {
   color: var(--success);
-}
-
-.gx-mgmt-delta[data-tone="down"] {
-  color: var(--destructive);
 }
 
 .gx-mgmt-delta[data-tone="flat"] {
   color: var(--muted-foreground);
 }
 
-.gx-mgmt-search {
-  width: 100%;
-}
-
-.gx-mgmt-group {
+.gx-mgmt-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
+.gx-mgmt-side-foot {
+  margin: auto 0 0;
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--placeholder);
+}
+
 .gx-mgmt-group-label {
-  margin: 0 0 2px;
+  margin: 0;
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.1em;
@@ -5269,20 +5462,25 @@
   color: var(--placeholder);
 }
 
+.gx-mgmt-nav .gx-mgmt-group-label {
+  padding: 0 8px 2px;
+}
+
 .gx-mgmt-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-md);
   width: 100%;
-  height: 26px;
-  padding: 0 6px;
+  height: 28px;
+  padding: 0 8px;
   border: 0;
-  border-radius: calc(var(--radius) - 1px);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--foreground);
   font: inherit;
   font-size: 11.5px;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -5295,8 +5493,16 @@
   outline-offset: -2px;
 }
 
+.gx-mgmt-row[aria-current="page"] {
+  background: var(--active);
+}
+
 .gx-mgmt-row .gx-mgmt-glyph {
   color: var(--muted-foreground);
+}
+
+.gx-mgmt-row[aria-current="page"] .gx-mgmt-glyph {
+  color: var(--foreground);
 }
 
 .gx-mgmt-row-label {
@@ -5316,7 +5522,7 @@
 .gx-mgmt-error-head {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--spacing-md);
 }
 
 .gx-mgmt-error-glyph {
@@ -5325,7 +5531,7 @@
 }
 
 .gx-mgmt-error-text {
-  margin: 0;
+  margin: 2px 0 0;
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.5;
@@ -5348,7 +5554,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--spacing-md);
   min-height: 24px;
 }
 
@@ -5372,10 +5578,10 @@
 .gx-mgmt-radio-card {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--spacing-md);
   padding: 8px 10px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   background: var(--card);
   cursor: pointer;
 }
@@ -5420,21 +5626,19 @@
 .gx-mgmt-toasts {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: 8px;
+  gap: var(--spacing-md);
   min-height: 132px;
 }
 
 .gx-mgmt-toast {
-  padding: 10px 12px;
   box-shadow: none;
 }
 
 .gx-mgmt-toasts-empty {
   margin: 0;
-  padding: 12px;
+  padding: var(--spacing-lg);
   border: 1px dashed var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   font-size: 11px;
   text-align: center;
   color: var(--placeholder);
@@ -5504,8 +5708,6 @@
   color: var(--foreground);
 }
 
-/* The shared outline action at the card's width: the label runs from the
-   terminal glyph to the chevron, so only the row's own layout stays here. */
 .gx-mgmt-debug {
   justify-content: flex-start;
   width: 100%;
@@ -5521,24 +5723,43 @@
   color: var(--placeholder);
 }
 
+.gx-mgmt-menu-wrap {
+  position: relative;
+  align-self: flex-start;
+}
+
+.gx-mgmt-menu-trigger {
+  gap: var(--spacing-md);
+}
+
+.gx-mgmt-menu-trigger .gx-mgmt-glyph {
+  transform: rotate(90deg);
+}
+
 .gx-mgmt-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 1px;
+  min-width: 200px;
   padding: 4px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--popover);
+  box-shadow: var(--elevation-lg);
 }
 
 .gx-mgmt-menu-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-md);
   height: 28px;
   padding: 0 6px;
   border: 0;
-  border-radius: calc(var(--radius) - 1px);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--foreground);
   font: inherit;
@@ -5567,7 +5788,7 @@
 
 .gx-mgmt-clear {
   align-items: center;
-  padding: 18px 14px;
+  padding: var(--spacing-lg);
   text-align: center;
 }
 
@@ -5578,7 +5799,7 @@
 }
 
 .gx-mgmt-clear-title {
-  margin: 2px 0 0;
+  margin: 0;
   font-size: 12.5px;
   font-weight: 650;
 }
@@ -5610,7 +5831,7 @@
 .gx-mgmt-key-top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-md);
 }
 
 .gx-mgmt-key-name {
@@ -5644,14 +5865,23 @@
 }
 
 @media (max-width: 1200px) {
-  .gx-mgmt {
+  .gx-mgmt-body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gx-mgmt-main {
+    grid-column: auto;
   }
 }
 
 @media (max-width: 760px) {
-  .gx-mgmt {
+  .gx-mgmt-body {
     grid-template-columns: 1fr;
+  }
+
+  .gx-mgmt-side {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
   }
 }
 
@@ -5773,11 +6003,11 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  width: var(--target-size);
-  height: var(--target-size);
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   background: transparent;
   color: var(--muted-foreground);
   cursor: pointer;
@@ -7136,8 +7366,8 @@ button.gx-sb-row {
 
 .gx-sb-pop--user {
   right: auto;
-  bottom: calc(100% + 6px);
-  left: 4px;
+  bottom: 0;
+  left: calc(100% + 8px);
   width: 224px;
 }
 
@@ -7726,4 +7956,1708 @@ button.gx-sb-row {
   margin-top: 8px;
   font-size: 13px;
   color: var(--muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-dash-side,
+  .gx-dash-side[data-collapsed="true"] {
+    transition: none;
+  }
+}
+
+/* A dashboard is taller than a page: its content pane scrolls inside a
+   frame, the way the reference's does, and the sidebar stays put. */
+.gx-sb:has(.gx-dash01-body) {
+  height: 900px;
+}
+
+.gx-sb:has(.gx-dash01-body) .gx-sb-inset-body {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* -- Dashboard 01 ---------------------------------------------------------
+ *
+ * shadcn's dashboard: an inset sidebar, four stat cards, an interactive area
+ * chart, three structural charts and a documents table. The colours are the
+ * library's data series, so the platform and look switch repaint the charts.
+ */
+.gx-dash01-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.gx-dash01-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* The block is a container, so the layout answers **its** width — a reader on
+   a 1440px window sees a 500px block, and a viewport media query handed it the
+   window's columns. */
+@container (width < 900px) {
+  .gx-dash01-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (width < 520px) {
+  .gx-dash01-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.gx-dash01-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--primary) 5%, var(--card));
+}
+
+.gx-dash01-card-label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gx-dash01-card-value {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.gx-dash01-badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-badge[data-up="true"] {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
+}
+
+.gx-dash01-card-note {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.gx-dash01-card-sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+.gx-dash01-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gx-dash01-panel-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gx-dash01-panel-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-panel-tab {
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@container (width < 900px) {
+  .gx-dash01-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The charts. Each is the shape its own type paints: the area fades toward
+   the axis, the treemap's cells are squared, the sankey's ribbons are
+   proportional, and the sunburst's arcs are angular shares. */
+.gx-dash01-area {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The three small charts fill their panel: a grid row stretches every panel to
+   the tallest, and a chart pinned to its intrinsic height left the rest of the
+   card empty. */
+.gx-dash01-treemap,
+.gx-dash01-sankey,
+.gx-dash01-sunburst {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 340px;
+  margin-inline: auto;
+  min-height: 0;
+  height: 100%;
+}
+
+/* The plot is a stacked area: the line is a fine stroke and the region under
+   it is a gradient, so the two series read as one picture with two parts. */
+.gx-dash01-area-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gx-dash01-area-line {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* A grid rule the eye reads past: the reference's charts are a whisper of a
+   line, not a box. */
+.gx-dash01-area .gx-dash-axis {
+  stroke: color-mix(in srgb, var(--border) 55%, transparent);
+  stroke-width: 1;
+}
+
+.gx-dash01-area .gx-dash-axis-label {
+  font-size: 10px;
+  fill: color-mix(in srgb, var(--muted-foreground) 80%, transparent);
+  font-family: var(--font-sans);
+}
+
+.gx-dash01-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 0;
+  padding: 0 0 2px;
+  list-style: none;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gx-dash01-legend-dot,
+.gx-dash01-tip-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+
+/* Each cell and each arc takes the next colour of the library's series
+   scale, so a picture of four parts reads as four parts. */
+.gx-dash01-cell {
+  fill: var(--series-1, #a7a9ff);
+}
+
+.gx-dash01-cell[data-slot="2"],
+.gx-dash01-arc[data-slot="2"] {
+  fill: var(--series-2, #6e9cff);
+}
+
+.gx-dash01-cell[data-slot="3"],
+.gx-dash01-arc[data-slot="3"] {
+  fill: var(--series-3, #1fa968);
+}
+
+.gx-dash01-cell[data-slot="4"],
+.gx-dash01-arc[data-slot="4"] {
+  fill: var(--series-4, #ffde8a);
+}
+
+/* A cell's own colour is its fill, so the label has to hold its own against
+   four different hues: the ink is the surface colour, which is what a filled
+   chip's caption uses. */
+/* A cell is a palette fill in either mode, so its ink is a constant dark
+   rather than the surface's. No halo: the stroke that made it legible on the
+   page read as a blur on the cell. */
+.gx-dash01-cell-label {
+  font-size: 11px;
+  fill: #0b0d12;
+  font-weight: 700;
+}
+
+.gx-dash01-cell-value {
+  font-size: 9.5px;
+  fill: #0b0d12;
+  font-weight: 600;
+  opacity: 0.72;
+}
+
+.gx-dash01-ribbon {
+  fill: var(--series-3, #1fa968);
+}
+
+/* The nodes are the frame of the flow; the ribbons carry the colour. */
+.gx-dash01-node {
+  fill: color-mix(in srgb, var(--foreground) 28%, transparent);
+}
+
+.gx-dash01-node-label {
+  font-size: 10px;
+  fill: var(--muted-foreground);
+}
+
+.gx-dash01-arc {
+  fill: var(--series-1, #a7a9ff);
+  fill-opacity: 0.9;
+  stroke: var(--card);
+  stroke-width: 1;
+}
+
+.gx-dash01-hub {
+  fill: var(--card);
+}
+
+.gx-dash01-table-wrap {
+  overflow-x: auto;
+}
+
+.gx-dash01-table {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.gx-dash01-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.gx-dash01-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.gx-dash01-cell-strong {
+  font-weight: 500;
+}
+
+.gx-dash01-status {
+  padding: 2px 8px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-status[data-done="true"] {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
+}
+
+.gx-dash01-node-value {
+  font-size: 9px;
+  fill: var(--foreground);
+  font-weight: 600;
+}
+
+/* The readout follows the pointer, the way Recharts places its tooltip
+   wrapper: the card is offset from the cursor and flips across the plot's
+   midline so it never runs past an edge. `cursor={false}` in the reference,
+   so there is no rule across the plot — a dot on each series marks the datum
+   instead. */
+.gx-dash01-area-plot,
+.gx-dash01-plot {
+  position: relative;
+}
+
+/* The three small charts wait for the pointer, so the cursor says so. */
+.gx-dash01-treemap,
+.gx-dash01-sankey,
+.gx-dash01-sunburst {
+  cursor: pointer;
+}
+
+.gx-dash01-area {
+  cursor: crosshair;
+}
+
+.gx-dash01-points circle {
+  fill: var(--primary);
+}
+
+.gx-dash01-tip {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 132px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--popover);
+  box-shadow: 0 10px 28px -10px rgb(0 0 0 / 70%);
+  transform: translate(12px, 12px);
+  pointer-events: none;
+}
+
+.gx-dash01-tip[data-flip-x="true"] {
+  transform: translate(calc(-100% - 12px), 12px);
+}
+
+.gx-dash01-tip[data-flip-y="true"] {
+  transform: translate(12px, calc(-100% - 12px));
+}
+
+.gx-dash01-tip[data-flip-x="true"][data-flip-y="true"] {
+  transform: translate(calc(-100% - 12px), calc(-100% - 12px));
+}
+
+.gx-dash01-tip-date {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.gx-dash01-tip-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-dash01-tip-rows li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-dash01-tip-name {
+  flex: 1;
+}
+
+.gx-dash01-tip-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* ---- the tasks block: a Notion-style Tasks view ---- */
+
+/*
+ * The reference is Notion's Tasks screen: a top bar over two panes, a warm-grey
+ * workspace sidebar, and a white content pane whose page holds an inbox of
+ * tasks and two rows of document cards.
+ */
+.gx-task {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* The block's frame is 16:9, like the dashboard: a screen, not a page. The
+     sidebar and the task pane scroll inside it. */
+  aspect-ratio: 16 / 9;
+  max-width: 1080px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13px;
+  line-height: 1.45;
+  container-type: inline-size;
+}
+
+/* ---- the top bar ---- */
+.gx-task-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 40px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+}
+
+.gx-task-bar-left,
+.gx-task-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.gx-task-bar-right {
+  justify-content: flex-end;
+}
+
+.gx-task-bar-arrows {
+  display: flex;
+  gap: 2px;
+  margin-left: 6px;
+}
+
+.gx-task-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gx-task-bar-btn:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.gx-task-bar-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+/* The strip is `ReorderableTabs`: the shared drag, close and keyboard
+   behaviour, dressed as the reference's rounded tab. */
+/* A row of its own under the bar: the views span the block and start at the
+   left edge, and the row's height is fixed so a new tab cannot move the page. */
+.gx-task-tabbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+}
+
+.gx-task-tabs {
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+  gap: 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.gx-task-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.gx-task-tab {
+  flex: none;
+  height: 26px;
+  padding: 0 10px 0 12px;
+  border-radius: 7px;
+  color: var(--muted-foreground);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: grab;
+}
+
+.gx-task-tab[data-active="true"] {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.gx-task-tab .gx-reorder-close {
+  width: 14px;
+  height: 14px;
+  font-size: 12px;
+  opacity: 0;
+}
+
+.gx-task-tab:hover .gx-reorder-close,
+.gx-task-tab[data-active="true"] .gx-reorder-close,
+.gx-task-tab .gx-reorder-close:focus-visible {
+  opacity: 0.55;
+}
+
+.gx-task-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 4px;
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+/* ---- the two panes ---- */
+.gx-task-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.gx-task-side {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+  width: 244px;
+  padding: 10px 8px 8px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: color-mix(in oklab, var(--muted), var(--background) 35%);
+  transition:
+    width 200ms ease,
+    padding 200ms ease;
+}
+
+.gx-task-side[data-collapsed="true"] {
+  width: 64px;
+  padding-inline: 8px;
+}
+
+.gx-task-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.gx-task-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 28px;
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gx-task-nav-row:hover {
+  background: color-mix(in oklab, var(--muted), transparent 30%);
+  color: var(--foreground);
+}
+
+.gx-task-nav-row[data-active] {
+  background: color-mix(in oklab, var(--muted), transparent 10%);
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.gx-task-nav-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -1px;
+}
+
+.gx-task-nav-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-task-nav-trailing {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+/* The workspace row is the sidebar's own header: avatar, name, chevron, search. */
+.gx-task-workspace {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 0 4px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.gx-task-workspace:hover {
+  background: color-mix(in oklab, var(--muted), transparent 30%);
+}
+
+.gx-task-workspace-avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-task-workspace-chevron {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-task-workspace-search {
+  margin-left: auto;
+}
+
+.gx-task-folders-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 2px;
+  padding: 2px 7px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.gx-task-folders-head .gx-task-nav-label {
+  flex: 1;
+}
+
+.gx-task-foot {
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+/* The rail toggle is a row at the foot of the sidebar, not a floating square
+   over the first nav item. */
+.gx-task-collapse {
+  position: static;
+  flex: none;
+  align-self: flex-end;
+  margin: 6px 2px 0;
+  opacity: 1;
+}
+
+.gx-task-side[data-collapsed="true"] .gx-task-collapse {
+  align-self: center;
+}
+
+/* A collapsed rail keeps its icons and hides its labels. */
+.gx-task-side[data-collapsed="true"] .gx-task-nav-label,
+.gx-task-side[data-collapsed="true"] .gx-task-nav-trailing,
+.gx-task-side[data-collapsed="true"] .gx-task-workspace-chevron,
+.gx-task-side[data-collapsed="true"] .gx-task-workspace-search,
+.gx-task-side[data-collapsed="true"] .gx-task-folders-head .gx-task-nav-label {
+  display: none;
+}
+
+.gx-task-side[data-collapsed="true"] .gx-task-workspace {
+  justify-content: center;
+}
+
+.gx-task-side[data-collapsed="true"] .gx-task-nav-row {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+/* ---- the content pane ---- */
+.gx-task-main {
+  flex: 1;
+  min-width: 0;
+  padding: 26px 32px 40px;
+  overflow-y: auto;
+}
+
+.gx-task-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.gx-task-page-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.gx-task-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  background: color-mix(in oklab, var(--primary), transparent 88%);
+  color: var(--primary);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.gx-task-new:hover {
+  background: color-mix(in oklab, var(--primary), transparent 80%);
+}
+
+.gx-task-new:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ---- a section ---- */
+.gx-task-section {
+  margin-bottom: 26px;
+}
+
+.gx-task-section-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.gx-task-section-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* The reference keeps the `···` beside every section title, not only on
+   hover, so the control is always there to read. */
+.gx-task-section-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+}
+
+.gx-task-section-head:hover .gx-task-section-more,
+.gx-task-section-more:focus-visible {
+  opacity: 1;
+}
+
+.gx-task-section-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+
+.gx-task-section-chevron[aria-expanded="false"] {
+  transform: rotate(-90deg);
+}
+
+.gx-task-section-more:hover,
+.gx-task-section-chevron:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+/* ---- the inbox ---- */
+/* A fixed window on the inbox: a new task scrolls the list instead of moving
+   the sections under it. */
+.gx-task-inbox {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  height: 236px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-gutter: stable;
+}
+
+.gx-task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+
+.gx-task-row:hover {
+  background: var(--muted);
+}
+
+.gx-task-row[data-done] .gx-task-row-text {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+.gx-task-row-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The date pill: a small grey rounded chip beside (or after) the task. */
+.gx-task-date {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  height: 21px;
+  padding: 0 7px;
+  border-radius: 5px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ---- the checkbox ---- */
+.gx-task-check {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.gx-task-check:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.gx-task-check-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--muted-foreground);
+  border-radius: 3px;
+  color: var(--primary-foreground);
+  font-size: 10px;
+  line-height: 1;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.gx-task-check[data-state="checked"] .gx-task-check-box {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+/* ---- the cards ---- */
+.gx-task-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.gx-task-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.gx-task-card:hover {
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.gx-task-card[data-accent="blue"] {
+  border-color: color-mix(in oklab, #4a8cf7, transparent 55%);
+}
+
+.gx-task-card[data-accent="orange"] {
+  border-color: color-mix(in oklab, #e8a33d, transparent 50%);
+}
+
+.gx-task-card[data-accent="yellow"] {
+  border-color: color-mix(in oklab, #e8d33d, transparent 40%);
+}
+
+.gx-task-card[data-accent="violet"] {
+  border-color: color-mix(in oklab, #9b7cf7, transparent 55%);
+}
+
+.gx-task-card-cover {
+  position: relative;
+  flex: none;
+  height: 44px;
+  background: var(--muted);
+}
+
+/* Three photographs, so no two cards paint the same crop. */
+.gx-task-card-cover[data-cover="photo"] {
+  background-image: url("/hxh-wp.jpg");
+  background-position: center 38%;
+  background-size: cover;
+}
+
+.gx-task-card-cover[data-cover="photo"][data-art="killua"] {
+  background-image: url("/hxh-a.webp");
+  background-position: center 30%;
+}
+
+.gx-task-card-cover[data-cover="photo"][data-art="gon"] {
+  background-image: url("/hxh-b.webp");
+  background-position: center 34%;
+}
+
+.gx-task-card-cover[data-tone="sunset"] {
+  background: linear-gradient(100deg, #f6d7a8 0%, #f0b27a 100%);
+}
+
+.gx-task-card-cover[data-tone="sky"] {
+  background: linear-gradient(100deg, #cfe3f7 0%, #bfd9c4 100%);
+}
+
+.gx-task-card-cover[data-tone="mist"] {
+  background: linear-gradient(100deg, #ececec 0%, #dcdcdc 100%);
+}
+
+.gx-task-card-cover[data-tone="dark"] {
+  background: linear-gradient(100deg, #2b2b2b 0%, #1c1c1c 100%);
+}
+
+.gx-task-card-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--background), transparent 15%);
+  color: var(--muted-foreground);
+}
+
+.gx-task-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px 12px;
+}
+
+.gx-task-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.gx-task-card-glyph {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.gx-task-card[data-accent="orange"] .gx-task-card-title {
+  color: #c87b23;
+}
+
+.gx-task-card[data-accent="yellow"] .gx-task-card-title {
+  color: #a8890f;
+}
+
+.gx-task-card[data-accent="violet"] .gx-task-card-title {
+  color: #7b58d6;
+}
+
+.gx-task-card-count {
+  margin: 0 0 4px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-task-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-task-card-list li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.gx-task-card-task {
+  min-width: 0;
+  overflow: hidden;
+  color: #4a8cf7;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gx-task-card[data-accent="orange"] .gx-task-card-task {
+  color: #c87b23;
+}
+
+.gx-task-card[data-accent="yellow"] .gx-task-card-task {
+  color: #a8890f;
+}
+
+.gx-task-card[data-accent="violet"] .gx-task-card-task {
+  color: #7b58d6;
+}
+
+.gx-task-card-menu {
+  position: relative;
+  flex: none;
+}
+
+.gx-task-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.gx-task-card:hover .gx-task-more,
+.gx-task-more[aria-expanded="true"],
+.gx-task-more:focus-visible {
+  opacity: 1;
+}
+
+.gx-task-more:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.gx-task-menu-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--popover);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 14%);
+}
+
+.gx-task-menu-item {
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--popover-foreground);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gx-task-menu-item:hover {
+  background: var(--muted);
+}
+
+/* ---- the page a document tab opens ---- */
+.gx-task-doc {
+  max-width: 640px;
+}
+
+.gx-task-doc-cover {
+  height: 120px;
+  margin-bottom: 18px;
+  border-radius: 8px;
+  background: var(--muted);
+}
+
+.gx-task-doc-cover[data-cover="photo"] {
+  background-image: url("/hxh-wp.jpg");
+  background-position: center 42%;
+  background-size: cover;
+}
+
+.gx-task-doc-cover[data-cover="photo"][data-art="killua"] {
+  background-image: url("/hxh-a.webp");
+  background-position: center 30%;
+}
+
+.gx-task-doc-cover[data-cover="photo"][data-art="gon"] {
+  background-image: url("/hxh-b.webp");
+  background-position: center 34%;
+}
+
+.gx-task-doc-cover[data-tone="sunset"] {
+  background: linear-gradient(100deg, #f6d7a8 0%, #f0b27a 100%);
+}
+
+.gx-task-doc-cover[data-tone="sky"] {
+  background: linear-gradient(100deg, #cfe3f7 0%, #bfd9c4 100%);
+}
+
+.gx-task-doc-cover[data-tone="mist"] {
+  background: linear-gradient(100deg, #ececec 0%, #dcdcdc 100%);
+}
+
+.gx-task-doc-cover[data-tone="dark"] {
+  background: linear-gradient(100deg, #2b2b2b 0%, #1c1c1c 100%);
+}
+
+.gx-task-doc-title {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.gx-task-doc-count {
+  margin: 0 0 16px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-task-doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gx-task-doc-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+
+.gx-task-doc-list li:hover {
+  background: var(--muted);
+}
+
+.gx-task-doc-list li[data-done] span:last-child {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+/* The card's title is the control that opens the document. */
+.gx-task-card-title {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #4a8cf7;
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  line-height: 1.3;
+  overflow: hidden;
+  cursor: pointer;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.gx-task-card-title:hover {
+  text-decoration: underline;
+}
+
+.gx-task-card-title:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+/* A narrower pane narrows the rail; the rail itself stays, because it is the
+   block's navigation, not decoration. The cards keep three across only while
+   a card is wide enough to read its tasks. */
+@container (max-width: 900px) {
+  .gx-task-side {
+    width: 208px;
+  }
+
+  .gx-task-main {
+    padding: 22px 22px 36px;
+  }
+}
+
+/* Three across only where a card still has the reference's own measure. */
+@container (min-width: 1080px) {
+  .gx-task-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 640px) {
+  .gx-task-side {
+    display: none;
+  }
+}
+
+@container (max-width: 480px) {
+  .gx-task-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gx-task-main {
+    padding: 18px 16px 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-task-side,
+  .gx-task-card,
+  .gx-task-section-chevron,
+  .gx-task-check-box,
+  .gx-task-more,
+  .gx-task-section-more,
+  .gx-task-collapse {
+    transition: none;
+  }
+}
+
+/* ---- data table ---- */
+
+.gx-dt {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 1080px;
+  aspect-ratio: 16 / 9;
+  padding: 22px 24px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 8px);
+  background: var(--card);
+}
+
+.gx-dt-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.gx-dt-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.gx-dt-desc {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-dt-actions {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.gx-dt .gx-demo-table {
+  flex: 1;
+  min-height: 0;
+}
+
+.gx-dt .gx-table-card {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.gx-dt .gx-table {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ---- calendar ---- */
+
+.gx-cal {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 1080px;
+  aspect-ratio: 16 / 9;
+  padding: 22px 24px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 8px);
+  background: var(--card);
+}
+
+.gx-cal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.gx-cal-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.gx-cal-desc {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-cal-body {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 18px;
+  min-height: 0;
+}
+
+.gx-cal-month,
+.gx-cal-agenda {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--background);
+}
+
+.gx-cal-month-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.gx-cal-month-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gx-cal-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.gx-cal-arrow {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gx-cal-arrow:hover {
+  background: var(--secondary);
+}
+
+.gx-cal-grid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  min-height: 0;
+}
+
+.gx-cal-weekday {
+  padding: 4px 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.gx-cal-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 0;
+  padding: 5px 2px 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gx-cal-day:hover {
+  background: var(--secondary);
+}
+
+.gx-cal-day[data-outside] {
+  color: var(--placeholder);
+}
+
+.gx-cal-day[data-today] .gx-cal-day-number {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  border-radius: 9999px;
+}
+
+.gx-cal-day[data-selected],
+.gx-cal-day[data-selected]:hover {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-cal-day[data-today][data-selected] .gx-cal-day-number {
+  box-shadow: none;
+}
+
+.gx-cal-day-number {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+}
+
+.gx-cal-dots {
+  display: flex;
+  gap: 2px;
+  height: 4px;
+}
+
+.gx-cal-dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.gx-cal-dots i[data-tone="green"] {
+  background: var(--series-3, #1fa968);
+}
+
+.gx-cal-dots i[data-tone="amber"] {
+  background: var(--series-4, #d8a531);
+}
+
+.gx-cal-day[data-selected] .gx-cal-dots i {
+  background: var(--primary-foreground);
+}
+
+.gx-cal-agenda {
+  gap: 12px;
+}
+
+.gx-cal-agenda-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gx-cal-agenda-day {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gx-cal-agenda-count {
+  margin: 2px 0 0;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-cal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.gx-cal-event {
+  display: flex;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.gx-cal-event[data-tone="green"] {
+  border-left-color: var(--series-3, #1fa968);
+}
+
+.gx-cal-event[data-tone="amber"] {
+  border-left-color: var(--series-4, #d8a531);
+}
+
+.gx-cal-time {
+  flex: none;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gx-cal-event-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gx-cal-event-title {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.gx-cal-event-who {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.gx-cal-empty {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+@container (width < 820px) {
+  .gx-cal-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

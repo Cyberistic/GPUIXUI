@@ -258,6 +258,68 @@ const hex = (red: number, green: number, blue: number): string =>
     .join("")}`;
 
 /**
+ * A decoded frame: the header's fields and the unfiltered scanlines.
+ *
+ * The scanlines keep their filter byte, so a pixel's offset is
+ * `row * stride + 1 + x * channels`.
+ */
+interface Frame extends Header {
+  readonly data: Bytes;
+}
+
+/** One decode of the PNG; `undefined` when the file cannot be measured. */
+const decode = (png: Bytes): Frame | undefined => {
+  const size = header(png);
+  if (size === undefined) return undefined;
+
+  const data = pixels(png);
+  if (data === undefined) return undefined;
+
+  const stride = size.width * size.channels + 1;
+  if (data.length < stride * size.height) return undefined;
+
+  let previous: Bytes = new Uint8Array(stride);
+  for (let row = 0; row < size.height; row += 1) {
+    const line = data.subarray(row * stride, (row + 1) * stride);
+    unfilter(line, previous, size.channels);
+    previous = line;
+  }
+
+  return { ...size, data };
+};
+
+/**
+ * How many distinct colours the whole frame carries.
+ *
+ * A capture that exists is not a paint: a blank canvas writes a perfectly valid
+ * image. The capture run holds a frame to this floor — one colour is the empty
+ * stage, and the empty stage is not a rendered component. Every pixel counts:
+ * a sampled grid missed a disclosure's glyphs and called a real frame flat.
+ * `undefined` when the file cannot be measured, never a guess.
+ */
+export const distinctFillCount = (png: Bytes): number | undefined => {
+  const frame = decode(png);
+  if (frame === undefined) return undefined;
+
+  const stride = frame.width * frame.channels + 1;
+  const seen = new Set<number>();
+
+  for (let y = 0; y < frame.height; y += 1) {
+    for (let x = 0; x < frame.width; x += 1) {
+      const at = y * stride + 1 + x * frame.channels;
+      const [red, green, blue] = [
+        frame.data[at] ?? 0,
+        frame.data[at + 1] ?? 0,
+        frame.data[at + 2] ?? 0,
+      ];
+      seen.add((red << 16) | (green << 8) | blue);
+    }
+  }
+
+  return seen.size;
+};
+
+/**
  * The pixel at `(x, y)` of an 8-bit, non-interlaced RGB or RGBA PNG.
  *
  * `undefined` rather than a guess: a frame this reader cannot measure must fail
@@ -269,29 +331,16 @@ export const fillAt = (
   x: number,
   y: number,
 ): string | undefined => {
-  const size = header(png);
-  if (size === undefined) return undefined;
-  if (x < 0 || y < 0 || x >= size.width || y >= size.height) return undefined;
+  const frame = decode(png);
+  if (frame === undefined) return undefined;
+  if (x < 0 || y < 0 || x >= frame.width || y >= frame.height) return undefined;
 
-  const inflated = pixels(png);
-  if (inflated === undefined) return undefined;
-
-  const stride = size.width * size.channels + 1;
-  if (inflated.length < stride * (y + 1)) return undefined;
-
-  let previous: Bytes = new Uint8Array(stride);
-  for (let row = 0; row <= y; row += 1) {
-    const line = inflated.subarray(row * stride, (row + 1) * stride);
-    unfilter(line, previous, size.channels);
-    previous = line;
-  }
-
-  // `previous` is the last row's slice, so the offset is row-relative.
-  const start = 1 + x * size.channels;
+  const stride = frame.width * frame.channels + 1;
+  const at = y * stride + 1 + x * frame.channels;
   const [red, green, blue] = [
-    previous[start] ?? 0,
-    previous[start + 1] ?? 0,
-    previous[start + 2] ?? 0,
+    frame.data[at] ?? 0,
+    frame.data[at + 1] ?? 0,
+    frame.data[at + 2] ?? 0,
   ];
 
   return hex(red, green, blue);

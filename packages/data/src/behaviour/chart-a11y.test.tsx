@@ -18,6 +18,8 @@
 
 import * as Arr from "effect/Array";
 import { afterEach, describe, expect, it } from "vitest";
+import { darkTheme, seriesColors } from "@gpuixui/tokens";
+import { seriesShapesOf } from "../internal/interaction.js";
 import {
   decodeA11yTree,
   onlyRole,
@@ -216,12 +218,20 @@ describe("a chart's accessibility tree", () => {
       { label: "Revenue", description: "Q1 0, Q2 0" },
       { label: "Cost", description: "Q1 0, Q2 -4" },
     ]);
-    // The picture did not lie to meet the words: nothing is painted, because
-    // the geometry has no bar for a zero or a negative value.
-    Arr.forEach(["revenue", "cost"], (layer) => {
-      const node = root?.renderer.findByTestId(`chart-zero-layer-${layer}`);
-      expect(node?.customProps?.source).not.toContain("<rect");
-    });
+    // The picture does not lie to meet the words: a zero paints no bar, while
+    // a negative value stands below the zero line — the geometry draws it, so
+    // the tree names a series the plot really shows. The document carries the
+    // grid and every series, so a series' shapes are the ones in its colour.
+    const palette = seriesColors(darkTheme);
+    const revenue = seriesShapesOf(
+      root!,
+      "chart-zero",
+      "revenue",
+      palette[0] ?? "",
+    );
+    const cost = seriesShapesOf(root!, "chart-zero", "cost", palette[1] ?? "");
+    expect(revenue.filter((shape) => shape.startsWith("<rect"))).toEqual([]);
+    expect(cost.filter((shape) => shape.startsWith("<rect")).length).toBe(1);
   });
 
   it("reads a blank series label as the key the series is stored by", () => {

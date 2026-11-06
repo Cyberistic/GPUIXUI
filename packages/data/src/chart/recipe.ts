@@ -47,3 +47,42 @@ export const CHART_LEGEND_ITEM = "flex flex-row items-center gap-1.5";
 
 /** A legend's colour swatch. */
 export const CHART_SWATCH = "rounded-sm shrink-0";
+
+/**
+ * The hover hit zone: one per category, filling the plot's height.
+ *
+ * It paints nothing; it is the element that reports which column the pointer is
+ * over, so the pressure of a press never falls on a mask that ignores it.
+ */
+export const CHART_TOOLTIP_ZONE = "shrink-0";
+
+/** The hover readout: the theme's popover surface, floating over the plot. */
+export const CHART_TOOLTIP =
+  "flex flex-col gap-1 rounded-md border border-border bg-popover p-2";
+
+/** The hovered category's name. */
+export const CHART_TOOLTIP_HEAD = "text-xs";
+
+/** One series in the readout: swatch, name and value. */
+export const CHART_TOOLTIP_ROW = "flex flex-row items-center gap-1";
+
+/** The value, at the row's end. */
+export const CHART_TOOLTIP_VALUE = "text-xs";
+
+/** A bar's value, painted above it. */
+export const CHART_VALUE_LABEL = "text-xs";
+
+/** The brush strip under the plot: a track the drag runs across. */
+export const CHART_BRUSH = "shrink-0";
+
+/** The brush's track, at the plot's width. */
+export const CHART_BRUSH_TRACK =
+  "relative h-4 overflow-hidden rounded-sm bg-muted pointer-events-none";
+
+/** The window the brush selects. */
+export const CHART_BRUSH_BAND =
+  "top-0 bottom-0 rounded-sm opacity-40 pointer-events-none";
+
+/** One edge of the selected window. */
+export const CHART_BRUSH_HANDLE =
+  "top-0 bottom-0 w-1 rounded-sm pointer-events-none";

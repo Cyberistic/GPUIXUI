@@ -51,7 +51,15 @@ const staticRoutes = readdirSync(join(appDir, "src/routes"))
   .filter((name) => /^[a-z-]+\.tsx$/.test(name) && name !== "index.tsx")
   .map((name) => `/${name.replace(/\.tsx$/, "")}`);
 
-const urls = new Set(["/", ...staticRoutes, ...mounted.map(({ url }) => url)]);
+/** The agent-readable text routes (`src/routes/llms[.]txt.tsx`). */
+const agentRoutes = ["/llms.txt", "/llms-full.txt"];
+
+const urls = new Set([
+  "/",
+  ...agentRoutes,
+  ...staticRoutes,
+  ...mounted.map(({ url }) => url),
+]);
 
 const landingFiles: ReadonlyArray<string> = readdirSync(
   join(appDir, "src/components/landing"),

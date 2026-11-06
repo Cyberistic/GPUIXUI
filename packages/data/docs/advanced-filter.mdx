@@ -80,8 +80,7 @@ field was picked carries a blank `field`, which the tree's schema accepts. The
 builder does not refuse it — there is a clause to edit — it reads the missing
 name as `Field`, so the row is named and its sentence says which part is absent.
 
-## Limitations
-
+## Notes
 - The builder edits a tree; it does not run one — use `filterByTree`.
 - `fields` is read as data: a saved record that carried `null` for the
   list offers no field, so a clause falls back to the field's own name. An entry

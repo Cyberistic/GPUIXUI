@@ -16,7 +16,7 @@ import { appName, docsRoute } from "@/lib/shared";
  * A package page a curated page replaces redirects before the loader runs, so
  * a reader who followed an older address lands on the one page that documents
  * the component (`curated-twins.ts`). The query travels with them, so a
- * `?platform=` or `?mode=` link keeps the theme it was shared with.
+ * `?q=` filter or a live scene survives the redirect.
  */
 export const Route = createFileRoute("/$")({
   component: Page,

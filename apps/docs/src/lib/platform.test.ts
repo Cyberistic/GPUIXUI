@@ -8,33 +8,27 @@ import { describe, expect, it } from "vitest";
 import {
   landingPlatformLabel,
   landingPlatformOrder,
-  lookFromSearch,
   lookLabel,
   lookOrder,
-  lookSearch,
-  modeFromSearch,
   modeLabel,
   modeOrder,
-  modeSearch,
   parseLook,
   parseMode,
   parsePlatform,
-  platformFromSearch,
   platformLabel,
   platformOrder,
-  platformSearch,
   choosingPlatform,
   previewMode,
   resolvePlatformTheme,
 } from "./platform";
 
-describe("the platform query parameter", () => {
+describe("the platform a stored value names", () => {
   it("accepts every platform the library names and rejects anything else", () => {
     expect(platformOrder.map((platform) => parsePlatform(platform))).toEqual([
       ...platformOrder,
     ]);
 
-    // A mistyped URL must not resolve to a platform the library does not have.
+    // A mistyped value must not resolve to a platform the library does not have.
     expect(parsePlatform("windows")).toBeUndefined();
     expect(parsePlatform("darwin ")).toBeUndefined();
     expect(parsePlatform("")).toBeUndefined();
@@ -49,25 +43,12 @@ describe("the platform query parameter", () => {
       [...platformOrder].toSorted(),
     );
   });
-
-  it("reads the platform out of a query string", () => {
-    expect(platformFromSearch("?platform=win32")).toBe("win32");
-    expect(platformFromSearch("?theme=dark&platform=linux")).toBe("linux");
-    expect(platformFromSearch("?platform=nope")).toBeUndefined();
-    expect(platformFromSearch("")).toBeUndefined();
-  });
-
-  it("writes the platform back as a query parameter", () => {
-    expect(platformSearch("darwin")).toBe("?platform=darwin");
-    // A value written into a URL must survive the round trip.
-    expect(platformFromSearch(platformSearch("linux"))).toBe("linux");
-  });
 });
 
-describe("the palette query parameter", () => {
+describe("the palette a stored value names", () => {
   it("accepts every mode the library ships and rejects anything else", () => {
     expect(modeOrder.map((mode) => parseMode(mode))).toEqual([...modeOrder]);
-    // A mistyped URL must not resolve to a palette the library does not have.
+    // A mistyped value must not resolve to a palette the library does not have.
     expect(parseMode("sepia")).toBeUndefined();
     expect(parseMode("Dark")).toBeUndefined();
     expect(parseMode("")).toBeUndefined();
@@ -80,19 +61,6 @@ describe("the palette query parameter", () => {
     // palette a reader cannot see, and a stale entry would offer nothing.
     expect([...modeOrder].toSorted()).toEqual(Object.keys(themes).toSorted());
     expect(modeOrder[0]).toBe(previewMode);
-  });
-
-  it("reads the mode out of a query string", () => {
-    expect(modeFromSearch("?mode=light")).toBe("light");
-    expect(modeFromSearch("?platform=win32&mode=dark")).toBe("dark");
-    expect(modeFromSearch("?mode=sepia")).toBeUndefined();
-    expect(modeFromSearch("")).toBeUndefined();
-  });
-
-  it("writes the mode back as a query parameter", () => {
-    expect(modeSearch("light")).toBe("?mode=light");
-    // A value written into a URL must survive the round trip.
-    expect(modeFromSearch(modeSearch("dark"))).toBe("dark");
   });
 
   it("labels both palettes the way the switch shows them", () => {
@@ -113,7 +81,7 @@ describe("choosing a platform", () => {
   });
 
   it("is what makes a platform press visible under an authored look", () => {
-    // The reported bug: with `look=aero` remembered, pressing Linux moved the
+    // The reported bug: with the Aero look remembered, pressing Linux moved the
     // label while every surface kept the look's palette and density, because
     // the look had already overridden the platform. Clearing it on the press is
     // the difference the reader sees.
@@ -204,8 +172,8 @@ describe("the platform theme", () => {
 describe("the landing's desktops", () => {
   it("shows the three native looks and leaves Omarchy off the axis", () => {
     // Omarchy is a Linux desktop that follows your theme, not a fourth look:
-    // the deck keeps the three windows and `?platform=` keeps accepting only
-    // the library's platforms.
+    // the deck keeps the three windows and the platform switch keeps accepting
+    // only the library's platforms.
     expect(landingPlatformOrder).toEqual(["macos", "windows", "linux"]);
     expect(platformOrder).not.toContain("omarchy");
   });
@@ -233,17 +201,9 @@ describe("the authored look", () => {
     expect(parseLook(undefined)).toBeUndefined();
   });
 
-  it("reads and writes the look as its own query parameter", () => {
-    expect(lookFromSearch("?look=luna")).toBe("luna");
-    expect(lookFromSearch("?platform=win32&look=aero")).toBe("aero");
-    expect(lookFromSearch("?look=platform")).toBeUndefined();
-    expect(lookFromSearch("")).toBeUndefined();
-    expect(lookFromSearch(`?look=${lookSearch("aero")}`)).toBe("aero");
-  });
-
   it("labels every look the library ships, with no two sharing a name", () => {
     // The labels are `retroStyles`' own; a look added to the library must reach
-    // the page, and two looks that read as one would make a `?look=` link
+    // the page, and two looks that read as one would make the switch
     // ambiguous. `native` is the switch's own style, not an authored look.
     const labels = lookOrder
       .filter((look) => look !== "native")

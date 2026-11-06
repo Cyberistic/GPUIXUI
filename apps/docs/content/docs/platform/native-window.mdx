@@ -5,11 +5,9 @@ description: The native window's anatomy — a sidebar under the traffic lights,
 
 <ComponentPreview name="platform-window" />
 
-`Window` is the frame every native block wears. The sidebar runs from the top
-edge under the traffic lights and paints the theme's `sidebar` material; the
-unified toolbar sits over the content column; the content and the inspector are
-opaque. On macOS the window is vibrant, so the desktop shows through the
-sidebar and toolbar (`/theming#materials`).
+`Window` is the native frame: a sidebar under the traffic lights, a unified
+toolbar, opaque content; macOS vibrancy shows the desktop behind
+(`/theming#materials`).
 
 ```tsx
 <Window
@@ -21,9 +19,7 @@ sidebar and toolbar (`/theming#materials`).
 </Window>
 ```
 
-Open it with `nativeWindowOptions`: a transparent titlebar, the theme's window
-background and the lights centred on the toolbar's line. Windows and Linux get
-no options and keep the system bar.
+Open it with `nativeWindowOptions`; Windows and Linux keep the system bar.
 
 ```tsx
 render(<App />, { title: "Mail", ...nativeWindowOptions(theme, currentPlatform) });
@@ -42,21 +38,17 @@ render(<App />, { title: "Mail", ...nativeWindowOptions(theme, currentPlatform) 
 
 ## Source list
 
-`SourceList` is the sidebar's list: 28-point rows with an icon, a label and a
-count, titled sections, and one tab stop. ↑/↓/Home/End move the choice and stop
-at either end, and typing a label's first letters jumps to it. A titled section
-with `collapsible` folds from its header (`defaultCollapsed` starts it folded);
-a folded section's rows leave the keyboard's path too. As on macOS, a row paints **no hover wash**, and the chosen row is
-emphasized (the accent fill) only while the list holds focus.
+`SourceList` is the sidebar's list: 28-point rows, titled sections, one tab
+stop. ↑/↓/Home/End move the choice; typing jumps to a label.
 
-## Following the Mac
+- No hover wash; the chosen row is emphasized only while the list holds focus.
+- A `collapsible` section folds from its header; `defaultCollapsed` starts it folded.
 
-The runtime reports neither the accent colour, the Light/Dark choice nor Reduce
-Transparency, so `@gpuixui/shell` reads them from `defaults` at the app's
-boundary. `watchAppearance` emits the settings now and on each change (polled
-every two seconds), and `appearanceOverrides` turns them into a theme edit: the
-accent repaints `primary`, `ring` and the selection with a readable ink, and
-Reduce Transparency paints every material opaque.
+## Appearance
+
+The runtime reports no accent colour, Light/Dark or Reduce Transparency, so
+`@gpuixui/shell` reads them from `defaults`; `watchAppearance` emits changes
+(polled every two seconds) and `appearanceOverrides` edits the theme.
 
 ```tsx
 const app = watchAppearance.pipe(
@@ -69,12 +61,8 @@ const app = watchAppearance.pipe(
 );
 ```
 
-A sandboxed `.app` may be refused the global domain; the read then fails with
-`AppearanceReadError` instead of guessing a blue.
+- A sandboxed `.app` may be refused the global domain: `AppearanceReadError`.
 
-## Limits
-
-The runtime reserves no titlebar and reports none, so whether the OS bar is
-hidden and where the lights sit are confirmed by eye on macOS
-(`docs/gpuix-capabilities.md` §Window chrome). An app's own capture shows
-neither the lights nor the blur.
+## Notes
+- The runtime reserves no titlebar and reports none; check the lights by eye on macOS.
+- An app's own capture shows neither the lights nor the blur.

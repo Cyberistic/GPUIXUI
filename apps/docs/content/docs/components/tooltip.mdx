@@ -75,8 +75,7 @@ Tooltip
 | `disableHoverableContent` | `boolean` | the runtime's `false` | close as soon as the pointer leaves the trigger, for every tip below |
 | `children` | `ReactNode` | — (required) | the tree the provider covers |
 
-## Limitations
-
-- The trigger carries the tip as `aria-description`; GPUix 0.11.0 has no `aria-describedby`, so there is no id reference between the two.
+## Notes
+- The tip is the trigger's `aria-description`; there is no `aria-describedby` id reference.
 - The tip has **no live region**: it is not announced when it appears.
 - A `Tab` traversal does not open the tip; hover is the window's open path.

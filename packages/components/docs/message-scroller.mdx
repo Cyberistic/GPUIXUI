@@ -97,8 +97,7 @@ is never moved.
 | `MessageScrollerItem` | one row, no surface; reports its size | `scrollAnchor?`, `className?`, `children`, `ref?` |
 | `MessageScrollerJumpToLatest` | a floating secondary control, centred over the viewport's bottom edge | `label?`, `className?`, `style?` |
 
-## Limitations
-
+## Notes
 - Not virtualized; every row renders. `<virtual-list>` takes an item count
   rather than compound children.
 - No `aria-live` role, so new rows are not announced; the control's count is

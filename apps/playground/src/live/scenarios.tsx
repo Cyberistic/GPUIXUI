@@ -97,6 +97,7 @@ import {
   ListItem,
   ListItemTitle,
   DropdownMenuContent,
+  Diagram,
   DropdownMenuItem,
   DropdownMenuTrigger,
   MessageScroller,
@@ -335,6 +336,21 @@ import {
   pointIn,
   type Box,
 } from "./chart.js";
+import {
+  CHART_DOCUMENT_BARS,
+  CHART_DOCUMENT_COLOURS,
+  CHART_DOCUMENT_COST,
+  CHART_DOCUMENT_DIAGRAM,
+  CHART_DOCUMENT_GROUND,
+  CHART_DOCUMENT_KIND,
+  CHART_DOCUMENT_LABELS,
+  CHART_DOCUMENT_PALETTE,
+  CHART_DOCUMENT_POINTS,
+  CHART_DOCUMENT_PROBE,
+  CHART_DOCUMENT_REVENUE,
+  CHART_DOCUMENT_SIZES,
+  CHART_DOCUMENT_SOURCE,
+} from "./chart-document.js";
 import {
   CHART_SURFACE_BARS,
   CHART_SURFACE_CHURN,
@@ -18003,6 +18019,244 @@ const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   });
 
 /**
+ * The document-route probe: what the charts and the diagram paint in a window.
+ *
+ * The charts' marks travel as **one SVG document** on an `<img>`'s `src`,
+ * which the runtime decodes itself, so one element carries every series' own
+ * colour. The offscreen renderer reads markup, not pixels, so only a real
+ * frame can answer the question the route exists to answer: **do two series
+ * paint two colours inside one plot?**
+ *
+ * The `Diagram` is here for the same reason — it is the other surface that
+ * travels the document route, and a diagram that drew nothing would be a
+ * component nobody noticed.
+ */
+const ChartDocumentProbe = (): ReactNode => {
+  const theme = useTheme();
+  const palette = seriesColors(theme);
+  const sizes = CHART_DOCUMENT_SIZES;
+  const readout = (testId: string, text: string): ReactNode => (
+    <Readout testId={testId}>{text}</Readout>
+  );
+  return (
+    <div
+      testId={CHART_DOCUMENT_PROBE}
+      style={{
+        width: 860,
+        height: 500,
+        padding: theme.spacing.sm,
+        backgroundColor: theme.colors.background,
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.sm,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: theme.spacing.md,
+          alignItems: "flex-start",
+        }}
+      >
+        <BarChart
+          aria-label="Revenue against cost by quarter"
+          labels={[...CHART_DOCUMENT_LABELS]}
+          series={[CHART_DOCUMENT_REVENUE, CHART_DOCUMENT_COST]}
+          width={sizes.bars.width}
+          height={sizes.bars.height}
+          testId={CHART_DOCUMENT_BARS}
+        />
+        <Diagram
+          aria-label="The render path"
+          source={CHART_DOCUMENT_SOURCE}
+          testId={CHART_DOCUMENT_DIAGRAM}
+        />
+      </div>
+      <Toolbar>
+        {readout(CHART_DOCUMENT_PALETTE, `palette=${palette.join(",")}`)}
+        {readout(CHART_DOCUMENT_KIND, "kind=flowchart")}
+        {readout(
+          CHART_DOCUMENT_COLOURS,
+          // The four colours the drawing paints in: the node's text, its
+          // edge, its fill and its border.
+          `diagram=${theme.colors.foreground},${theme.colors.borderStrong ?? theme.colors.border},${theme.colors.muted},${theme.colors.accent}`,
+        )}
+        {readout(CHART_DOCUMENT_GROUND, `ground=${theme.colors.background}`)}
+      </Toolbar>
+    </div>
+  );
+};
+
+/**
+ * What the document route paints in a window.
+ *
+ * A mark is read out of the plot's own crop, so a tint that leaks into the
+ * legend or the page cannot stand in for the series. The first check is the
+ * route itself: **two colours inside one plot** is what a single-mask chart
+ * cannot do, and every later check assumes it.
+ */
+const chartDocumentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
+  Effect.gen(function* () {
+    yield* ctx.host.waitFor(chartSurfacePart(CHART_DOCUMENT_BARS, "plot"));
+    // The diagram paints in its own image, so the probe waits for **that**
+    // too: the chart's plot can be there before the diagram's bytes have
+    // been decoded, and a capture taken then would show a blank drawing.
+    yield* ctx.host.waitFor(`${CHART_DOCUMENT_DIAGRAM}-drawing`);
+    yield* Effect.sleep(SETTLE);
+    yield* ctx.host.capture("chart-document");
+    const frame = yield* ctx.host.pixels("chart-document");
+    const size = yield* ctx.host.windowSize();
+    const scale = yield* ctx.expectSome(
+      "the capture is the window at a whole device scale",
+      captureScale(frame, size),
+    );
+    const box = (testId: string) =>
+      Effect.flatMap(
+        Effect.map(ctx.host.bounds(testId), Option.fromNullishOr),
+        (bounds) => ctx.expectSome(`the runtime paints ${testId}`, bounds),
+      );
+    const colourOf = (hex: string, index: number | string) =>
+      ctx.expectSome(
+        `colour ${index} resolves`,
+        Option.fromNullishOr(Pixels.hexToRgba(hex)),
+      );
+    const solid = (colour: Pixels.Rgba): Pixels.Rgba =>
+      new Pixels.Rgba({ r: colour.r, g: colour.g, b: colour.b, a: 0xff });
+    const crop = (
+      captured: Pixels.Pixels,
+      bounds: {
+        readonly x: number;
+        readonly y: number;
+        readonly width: number;
+        readonly height: number;
+      },
+    ) =>
+      Pixels.crop(
+        captured,
+        new Pixels.PixelRegion({
+          x: Math.round(bounds.x * scale),
+          y: Math.round(bounds.y * scale),
+          width: Math.round(bounds.width * scale),
+          height: Math.round(bounds.height * scale),
+        }),
+      );
+    const countIn = (
+      captured: Pixels.Pixels,
+      bounds: {
+        readonly x: number;
+        readonly y: number;
+        readonly width: number;
+        readonly height: number;
+      },
+      colour: Pixels.Rgba,
+    ): number =>
+      Option.match(Option.fromNullishOr(crop(captured, bounds)), {
+        onNone: () => 0,
+        onSome: (plot) => Pixels.countColour(plot, colour),
+      });
+    const sample = (
+      captured: Pixels.Pixels,
+      bounds: {
+        readonly x: number;
+        readonly y: number;
+        readonly width: number;
+        readonly height: number;
+      },
+      point: { readonly x: number; readonly y: number },
+    ): string =>
+      Option.match(
+        Option.fromNullishOr(
+          Pixels.pixelAt(
+            captured,
+            Math.round((bounds.x + point.x) * scale),
+            Math.round((bounds.y + point.y) * scale),
+          ),
+        ),
+        { onNone: () => "outside the capture", onSome: describeColour },
+      );
+
+    // The palette is the theme's own, read from the probe rather than restated,
+    // so a brand's categorical scale is measured too.
+    const paletteText = yield* ctx.host.text(CHART_DOCUMENT_PALETTE);
+    const palette = yield* Effect.forEach(
+      paletteText.slice("palette=".length).split(","),
+      (hex, index) => colourOf(hex, index + 1),
+      { concurrency: 1 },
+    );
+    const [first, second] = palette;
+    const paintFirst = yield* ctx.expectSome(
+      "the first series has a colour",
+      Option.fromNullishOr(first),
+    );
+    const paintSecond = yield* ctx.expectSome(
+      "the second series has a colour",
+      Option.fromNullishOr(second),
+    );
+
+    const plot = yield* box(chartSurfacePart(CHART_DOCUMENT_BARS, "plot"));
+
+    // The route itself: **two colours inside one plot**. A chart painted as
+    // one tinted mask per series could not do this in one element.
+    const firstCount = countIn(frame, plot, solid(paintFirst));
+    const secondCount = countIn(frame, plot, solid(paintSecond));
+    yield* ctx.expectEqual(
+      "the first series paints inside the plot",
+      firstCount > 0,
+      true,
+    );
+    yield* ctx.expectEqual(
+      "the second series paints inside the same plot",
+      secondCount > 0,
+      true,
+    );
+
+    // The two colours are **different**, so the plot holds two tints rather
+    // than one drawn twice.
+    yield* ctx.expectEqual(
+      "the two series paint two different colours",
+      describeColour(solid(paintFirst)) !== describeColour(solid(paintSecond)),
+      true,
+    );
+
+    // And the marks land where the geometry says they do.
+    yield* ctx.expectEqual(
+      "the first series' bar paints its own colour",
+      sample(frame, plot, CHART_DOCUMENT_POINTS.revenue),
+      describeColour(solid(paintFirst)),
+    );
+    yield* ctx.expectEqual(
+      "the second series' bar paints beside it, in its own colour",
+      sample(frame, plot, CHART_DOCUMENT_POINTS.cost),
+      describeColour(solid(paintSecond)),
+    );
+
+    // The diagram travels the same route, so it paints too. A diagram that
+    // drew nothing would be a component nobody noticed. The drawing paints in
+    // the **theme's** own roles — Pele's palette is baked in — so the probe
+    // samples those, read from the probe rather than restated.
+    const coloursText = yield* ctx.host.text(CHART_DOCUMENT_COLOURS);
+    const diagramColours = yield* Effect.forEach(
+      coloursText.slice("diagram=".length).split(","),
+      (hex, index) => colourOf(hex, `diagram ${index + 1}`),
+      { concurrency: 1 },
+    );
+    // The **drawing** is the element that paints, so it is the element the
+    // probe samples: the root div is the column the drawing sits in.
+    const diagram = yield* box(`${CHART_DOCUMENT_DIAGRAM}-drawing`);
+    const painted = Arr.reduce(
+      diagramColours,
+      0,
+      (total, colour) => total + countIn(frame, diagram, solid(colour)),
+    );
+    yield* ctx.expectEqual(
+      "the diagram paints inside its own box",
+      painted > 0,
+      true,
+    );
+  });
+
+/**
  * The window-chrome probe: where the app's own layout starts, and what the
  * window reports as its safe area.
  */
@@ -30355,6 +30609,11 @@ export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
     id: "chart-surface-lifecycle",
     view: () => <ChartSurfaceProbe />,
     steps: chartSurfaceSteps,
+  },
+  "chart-document-lifecycle": {
+    id: "chart-document-lifecycle",
+    view: () => <ChartDocumentProbe />,
+    steps: chartDocumentSteps,
   },
   "window-chrome": {
     id: "window-chrome",

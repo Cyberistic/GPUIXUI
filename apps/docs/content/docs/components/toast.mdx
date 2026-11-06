@@ -49,14 +49,11 @@ const PublishBar = () => {
 export const App = () => (
   <ToastProvider>
     <PublishBar />
-    {/* Render the viewport last: the runtime paints in order. */}
+    {/* Render the viewport last. */}
     <ToastViewport />
   </ToastProvider>
 );
 ```
-
-A promise toast is one row that changes state; the caller's promise is
-returned unchanged:
 
 ```tsx
 const rows = await toast.promise(importRows(file), {
@@ -99,53 +96,7 @@ ToastProvider
 | `ToastInput` | `duration` | `Duration.Input` — `0` keeps it until dismissed | the provider's default |
 | `ToastInput` | `action` | `{ label }` — the handler travels beside the draft | — |
 
-## Behaviour
-
-- **Stack.** The newest card is full; the two behind it are short, inset peeks
-  of the card's own top. The fourth push expires the oldest (`max`), and the
-  leaving card fades and closes its row without re-slotting.
-- **Unfold.** Hovering or focusing the stack turns the peeks into full cards
-  with one gap; leaving folds them back. Every clock pauses while the stack is
-  held and resumes with the time it had left, so a card pushed during the hold
-  starts paused.
-- **Swipe.** A sideways drag moves the card on its `left` axis. Past 40 px, or a
-  fast 12 px flick, the release dismisses it toward the edge it travelled; under
-  that it springs back.
-- **Action.** One action per card runs once and dismisses it; a label without a
-  handler paints nothing.
-- **Close.** The X dismisses, and both it and the action are labelled buttons.
-
-## Motion
-
-The card fades and slides **16 px** in from the right once its height is known,
-and leaves by fading while it slides 16 px toward the edge it was dismissed
-from. Everything the stack does to itself — a card taking the rank in front of
-it, a peek unfolding, a row closing, a swipe returning — runs on one movement:
-**260 ms** of Base UI's `[0.22, 1, 0.36, 1]` curve. The arrival is **240 ms**
-and the exit **180 ms**, on their own phases.
-
-A push only animates the card that arrived. The cards behind it re-slot from the
-box they are already painting — `initial` is the runtime's mount frame, never a
-re-rank — so nothing replays an entrance. GPUix clamps a tween to its target, so
-a swipe-back returns fast and settles instead of overshooting: the runtime has
-duration and a cubic-bezier, not a spring integrator.
-
-A dismissed or expired card stays painted for its exit (180 ms) with the content
-it was thrown with, and its action and dismiss controls leave the Tab order for
-that window. Its row closes over that same window, so the stack does not hold a
-gap for it. `MotionProvider preference="reduced"` snaps every frame and keeps
-the resting appearance.
-
-## Limitations
-
-- **No `aria-live` or `aria-atomic`**: a card paints `role="status"` (`alert` for
-  the destructive tone) inside a labelled group — a marker, not an announcement —
-  and the runtime offers no inherited `inert`.
-- **The stack shows 3 cards while collapsed**; a fourth push expires the oldest
-  (`max`), so the store is a queue rather than a history — a notification centre
-  that must list expired titles owns that history itself. **No progress
-  indicator** for the remaining time, and a `Tab` traversal does not hold the
-  clock on `0.11.0`, so an action a keyboard reader must reach uses
-  `duration: 0`.
-- **Swipe travels one axis (horizontal)**: the runtime has no `transform`, and a
-  card at an arbitrary angle would paint over the page.
+## Notes
+- **No `aria-live` or `aria-atomic`**: `role="status"` is a marker, not an announcement; no inherited `inert`.
+- **3 cards show while collapsed** — a queue, not a history; a Tab traversal does not hold the clock; use `duration: 0` for a keyboard user.
+- A dismissed card paints its **180 ms** exit and its controls leave the Tab order; a swipe is one axis.

@@ -19,12 +19,15 @@ Every page is an MDX file; the paths below are relative to `content/docs/`.
 ```
 introduction.mdx             Introduction (served at /introduction)
 getting-started/index.mdx    The guide: install, the first component, the four rules, the theme, where next
+getting-started/omarchy.mdx  Developing on Arch/Hyprland, and following the Omarchy palette
 getting-started/prompt.mdx   One copyable build prompt, generated from the pages the site ships
-diagrams.mdx                 Mermaid diagrams at build time, themed from the page's roles
+graphics/index.mdx            The Graphics category: the charts, the icons and the diagrams, and the one paint path they share
+graphics/diagrams.mdx        The Diagram component, the Mermaid fences it draws, the diagram renderer, zoom/pan and playground on Pele
 themes.mdx                   The live token editor, the authored looks, the Aero look's generated CSS, and the compiled style/type/scale references
 workspace/index.mdx            The desktop-shell lane: composing parts, the docking gate
 platform/index.mdx            The native surface: what the OS owns and what the library paints
 platform/native-window.mdx    The native window: a sidebar under the lights, a unified toolbar
+getting-started/terminal.mdx  The same view painted into kitty or Ghostty
 platform/window.mdx           The window's verbs and the system's path picker
 data-display/index.mdx      The data lane: what ships, the table gate, runtime gaps
 registry.mdx                 The shadcn registry: install command and what the files still need
@@ -33,32 +36,21 @@ reference.mdx                The public entry points and the symbols behind them
 blocks/index.mdx             Page-level recipes composed from the library
 blocks/all.mdx               Every block in one column, generated from the pages' frontmatter
 blocks/dashboard.mdx         An activity dashboard composed from the library
+blocks/dashboard-01.mdx      The dashboard block with the captures and stats
 blocks/sign-in.mdx           A full sign-in page: navbar, form card, illustrated quote panel
 blocks/dashboard-management.mdx A three-column management console: service health, deploys, toasts, keys
 blocks/settings.mdx          A settings page with tabbed sections
 blocks/kanban.mdx            A project task board: sidebar, four counted columns, cards that move
+blocks/tasks.mdx             A Notion-style Tasks view: inbox, pinned docs, card task counts
 blocks/settings-dialog.mdx   A modal settings window: section nav, switch, font-size slider, layouts
 blocks/notification-centre.mdx A notification centre: filters, four row bodies, unread dots
 blocks/command-centre.mdx    A command palette over a dimmed page: filter, highlight, run line
-blocks/notes.mdx             Notes: the Mac-app block, from its native capture
-blocks/preferences.mdx       Preferences: the Mac-app block, from its native capture
-blocks/launcher.mdx          Launcher: the Mac-app block, from its native capture
-blocks/menubar.mdx           Menu bar: the Mac-app block, from its native capture
-blocks/agent.mdx             Agent: the Mac-app block, from its native capture
-blocks/calendar.mdx          Calendar: the Mac-app block, from its native capture
-blocks/welcome.mdx           Welcome: the Mac-app block, from its native capture
-blocks/viewer.mdx            Viewer: the Mac-app block, from its native capture
-blocks/license.mdx           Hunter License: the registry, a licence card and its privileges
 blocks/pipeline.mdx          A release pipeline in a native Mac window, from the compiled block
 blocks/file-manager.mdx      A three-pane browser: folders, image tiles and file facts
 blocks/email-inbox.mdx       A four-pane mail client with a filterable list
 blocks/conversations.mdx     A macOS Messages window: threads, search and a composer
 blocks/sidebar.mdx           All sixteen sidebar blocks on one page, grouped by the panel each draws
 blocks/desktop.mdx           A whole XP-era or Aero-era desktop, from the library; the preview is the native capture
-blocks/macos.mdx             A macOS desktop: the drawn wallpaper, its menu bar and menus, the dock, and a window layer
-blocks/editor.mdx            A code editor: the explorer, tokenised code and a status bar, from its native capture
-blocks/podcast.mdx           An episode player: art, a seeded waveform, the transport and the season
-blocks/monitor.mdx           A hardware monitor: sparklines, core bars and a memory ring over a sampled window
 components/index.mdx         The component grid: one preview tile per page, filter in the URL
 components/accordion.mdx     Curated: the two modes, the chevron swap, the unmounted body
 components/alert.mdx         Curated: four tones, the composition, no announcement claimed
@@ -97,6 +89,7 @@ components/table.mdx         Curated: the model, the sort and selection rules, t
 components/tag-input.mdx     Curated: the commit rules, the cap, the 24px removal target, no Backspace
 components/timeline.mdx      Curated: the passed status, the rail that stops, the dot nobody could see
 components/tabs.mdx          Curated: the measured indicator
+components/reorderable-tabs.mdx The browser tab strip: drag, keyboard move, close
 components/time-picker.mdx   Curated: one clock behind typing, arrows and midnight
 components/toast.mdx         Curated: the bounded queue, one action, the hold
 components/tooltip.mdx       Curated: the tip's clock, its entry and held exit, the traversal that never opens it
@@ -115,7 +108,6 @@ src/router.tsx                      The router instance
 src/routes/__root.tsx               The document shell, icons and the Fumadocs provider
 src/routes/index.tsx                The landing page at /
 src/routes/live.tsx                 /live, the real GPUix surface (whole page)
-src/routes/live.block.$slug.tsx     /live/block/:slug, one real block per document (framed by the block pages)
 src/routes/$.tsx                    Every docs page, from either collection
 src/routes/docs/index.tsx           The old / root, a 301 to /
 src/routes/docs/$.tsx               The old /<path>, a 301 to /<path>
@@ -136,12 +128,19 @@ src/components/landing/blocks-strip.tsx The block tiles, each linking to its pag
 src/components/landing/deck.tsx     The three-desktop deck and the Omarchy strip under it
 src/components/landing/reduced-motion.ts The one prefers-reduced-motion query both moving surfaces read
 src/components/landing/data.ts      The landing page's content, as data
+src/components/landing/lineage.tsx The maker line and its provenance note
+src/components/landing/showcase.tsx The product grid: small working components
+src/components/landing/css-rules.ts Reading the landing's own CSS rules, for its layout guards
+src/components/landing/terminal.tsx The terminal frame the launch film types into
 src/components/not-found.tsx        The 404 inside the docs chrome
 src/components/skip-link.tsx        The site's first tab stop and the content id it targets
 
 src/components/docs/component-preview.tsx The Preview/Code component preview
 src/components/docs/preview-surface.tsx   A preview carrying the resolved theme's variables
 src/components/docs/demos.tsx             The browser renderings and their source strings
+src/components/docs/editor-tabs-preview.tsx The editor tab strip's browser drawing
+src/components/docs/reorderable-tabs-logic.ts The reorder gesture, its placement maths and its two exits
+src/components/docs/reorderable-tabs.tsx   The reorderable tab strip, over that logic
 src/components/docs/bubble-demo.tsx        The seven surfaces, joined corners and action strip
 src/components/docs/chat-demo.tsx          The chat block: fixed header, transcript, rail and composer
 src/components/docs/empty-state-demo.tsx   The empty panel's three shapes
@@ -236,6 +235,8 @@ src/components/docs/tree-keys.ts          The browser keys both tree drawings re
 src/components/docs/window-preview.ts      The rows a viewport shows, against the window that mounts them
 src/components/docs/column-configuration-demo.tsx Show, hide, move and keyboard-resize over the column reducers
 src/components/docs/charts-demo.tsx       The chart geometry, its axis and the theme's categorical swatches
+src/components/docs/chart-smooth.ts       The monotone curve every browser drawing of a chart shares
+src/components/docs/chart-gallery.tsx     The seventeen-types contact sheet every chart's drawing is named in
 src/components/docs/key-value-demo.tsx    The list's fixed label track and the width a layout cannot paint
 src/components/docs/data-toolbar-demo.tsx The toolbar's debounced wait, its blank-name default and the rows it reports
 src/components/docs/table-filter-demo.tsx The filter field's blank name and hint, and the literal match the table owns
@@ -327,11 +328,21 @@ src/components/docs/block-icons.tsx       The glyphs the block previews draw
 src/components/docs/sidebar-rail.tsx      The shared collapsible-rail toggle and state
 src/components/docs/auth-blocks.tsx       The auth examples, the sign-in page and their recipes
 src/components/docs/dashboard.tsx         The dashboard's charts and stats
+src/components/docs/dashboard-01.tsx      The dashboard block's captured screen
 src/components/docs/dashboard-management.tsx The console block's browser reproduction and recipe
 src/components/docs/kanban-board.tsx      The kanban board's reproduction, columns and card moves
+src/components/docs/tasks-block.tsx       The Notion-style tasks view: inbox, pinned docs and their recipes
 src/components/docs/settings-dialog.tsx   The settings dialog's reproduction, theme state and controls
 src/components/docs/pipeline-block.tsx   The pipeline's preview, from the compiled block's data and rules
 src/components/docs/mermaid.ts          Rendering Mermaid with Pele, and the role mapping
+src/components/diagram/DiagramView.tsx The diagram figure, drawn through Pele
+src/components/diagram/DiagramEditor.tsx The source editor and its live preview
+src/components/diagram/DiagramExample.tsx A worked diagram beside its source
+src/components/diagram/DiagramPlayground.tsx The playground composing editor, figure and templates
+src/components/diagram/ZoomPan.tsx    The zoom and pan viewer around a figure
+src/components/diagram/templates.ts   The starter diagrams the playground offers
+src/components/diagram/theme.ts       The Mermaid palette, read from the page's roles
+src/components/diagram/zoom.ts        The zoom and pan arithmetic
 src/components/docs/mermaid-diagram.tsx A diagram's frame, its caption and its refusal
 src/components/docs/prompt-page.tsx     The prompt printed as one string, with one copy action
 src/components/docs/notification-centre.tsx The notification centre's rows, filters and mark-read state
@@ -359,14 +370,12 @@ src/components/docs/blocks/sidebar-14.tsx The sidebar block 14's browser reprodu
 src/components/docs/blocks/sidebar-15.tsx The sidebar block 15's browser reproduction and recipe
 src/components/docs/blocks/sidebar-16.tsx The sidebar block 16's browser reproduction and recipe
 src/components/docs/live-surface.tsx      Boots the wasm renderer on /live, mounts the reconciler and reports what it painted
-src/components/docs/live-block.tsx        The block page's screen: an iframe onto the real block, the capture behind it
-src/lib/live-blocks.tsx                   The blocks the docs paints live, lazily: slug, design size and the mount
-src/lib/live-block-scene.tsx              The live block's theme wrapper, written with the reconciler's JSX pragma
 src/components/docs/scatter.ts              The decorative fields' deterministic point scatter
 src/components/docs/auto-height-demo.tsx   The auto height's expand/collapse preview and its source
 src/components/docs/avatar-group-demo.tsx  The facepile's overlap, ring and overflow chip
 src/components/docs/bubbles-demo.tsx       The bubbles field's rising scatter
 src/components/docs/code-block-demo.tsx    The code block's title bar, gutter and source
+src/components/docs/diagram-demo.tsx        The Diagram component's three drawings: a flow, a sequence and the failure state
 src/components/docs/code-editor-demo.tsx   The code editor's token layer, gutter, Tab rule and read-only state
 src/components/docs/code-editor-preview.ts The preview's tiny tokenizer for a tsx snippet
 src/components/docs/copy-button-demo.tsx   The copy button's acknowledge flip
@@ -419,7 +428,7 @@ src/styles/blocks.css                     The block recipes' preview styles
 src/styles/landing.css                    The landing page's styles
 src/styles/platform.css                   The platform switch's own chrome
 src/styles/live.css                       The live surface's bar and its fallback sentence
-src/styles/live-block.css                 The live block's document: transparent, no scroll, its fallback sentence
+src/styles/diagram.css                  The Mermaid editor and viewer chrome
 
 src/lib/docs-view.tsx               The shared docs layout and the two-collection page template
 src/lib/style-reference.ts          The class groups /themes prints, resolved by @gpuixui/tw
@@ -496,6 +505,11 @@ src/lib/code-theme.ts               The Shiki themes a code block highlights wit
 src/lib/remark-mermaid.ts           Turns a `mermaid` fence into a diagram at compile time
 src/lib/prompt-data.ts             The build prompt: prose plus the rows the pages generate
 src/lib/live-scene.tsx              /live's React screen, styled by the primitives' resolver
+src/lib/live-example.tsx            /live's stage for a registered native example, and its empty frame
+src/lib/native-captures.ts          The build-time native frames, looked up by component id
+src/lib/native-captures.generated.ts The platform and palette the checked-in frames were rendered on
+src/lib/live-prefetch.ts            Warms the live wasm download when a reader shows intent
+src/lib/live-wasm.ts                The browser build's wasm URL, imported lazily
 src/lib/gpuix-native.ts             The browser entry `@gpuix/native` resolves to on /live
 src/lib/block-source.test.ts        A block's copyable source, resolved against the workspace
 src/lib/gpuix-web.test.ts           The GPUix web build: browser entry, shared memory and the policy's status
@@ -541,7 +555,8 @@ is why the route column is the collection's root.
 | ---------- | ----- | ------- |
 | `content/docs` | `/` | the curated pages |
 | `packages/primitives/docs` | `/primitives/<name>` | Primitives |
-| `packages/icons/docs` | `/icons/<name>` | Icons |
+| `packages/icons/docs` | `/graphics/icons/<name>` | Graphics |
+| `packages/data/docs/charts` | `/graphics/charts/<name>` | Graphics |
 | `packages/components/docs` | `/components/<name>` | Components |
 | `packages/data/docs` | `/data-display/<name>` | Data display |
 | `packages/editor/docs` | `/editor/<name>` | Workspace |
@@ -807,16 +822,53 @@ Press me,Waiting for a press`, the button sampled `#a7a9ff` at `41,113`, the
 banner `#1e222a` at `500,149`, and one press through the automation locator
 sampled `#0e5135` with "Pressed 1 time" — a React tree, a real press.
 
+### Native frames rendered at build time
+
+The component pages and the component index can show the **real** library, not
+only a drawing of it, because the wasm renderer does not need a native binding.
+`scripts/native-previews.ts` opens one cross-origin-isolated `/live` document and
+mounts every registered example in turn through
+`window.__gpuixCapture.render(id)` — the page is `?scene=examples` — then captures
+a `960`-wide WebP after the frame carries more than one colour. The frames land
+in `src/assets/native/<id>.webp` and are checked in; a whole run is 92 examples
+and roughly 657 KiB.
+
+`src/lib/native-captures.ts` resolves a component id to its frame through an
+eager `import.meta.glob`, so a prerendered page carries the image URL before any
+client JavaScript runs. `<ComponentPreview>` gains a **Native** tab when the
+page's last URL segment has a frame; the tab shows the still, names the platform
+and palette it was rendered on, and links to the same tree live. The component
+index paints the frame on the server and mounts the interactive browser demo
+after hydration, so its first paint is the real renderer too.
+
+`/live?scene=example&id=accordion` is the single-example form for a reader;
+`?scene=examples` is the batch surface the capture run drives. The server HTML
+for the example form carries the checked-in frame as a poster, and the route
+starts the wasm fetch beside the backend probe, so the real library is visible
+while the renderer boots; the canvas replaces the poster when it paints. A frame
+is one platform and one palette — switching the preview switch repaints the
+interactive demo, not the checked-in still — and the caption says so. The
+first visit still downloads and compiles the ~20 MiB module; the deploy caches
+`/assets/*` for a year (`immutable`) and Cloudflare serves Brotli, so a repeat
+visit reuses both.
+
+Run `nub run --filter @gpuixui/docs native:previews` (pass
+`--only accordion,dialog` while iterating, or `--url` to reuse a server). The
+script starts the docs server when one is not answering, uses the same headless
+Chrome driver as the live probes, and fails by id when an example paints a flat
+frame. `src/lib/native-captures.test.ts` fails when a capture names an example
+that no longer exists.
+
 ## The platform switch and the authored looks
 
 `PlatformToggle` sits in the sidebar footer and offers macOS, Linux, Windows and
 Default — the mission's four platform names and **no look group**, because a look
 is not a fifth platform. `src/lib/platform.ts` resolves
 `platformTheme(themes[mode], platform)`; a look is applied over it because the
-authored styles are library data: `?look=luna`, `?look=aero` or `?look=omarchy`
-resolves `retroStyles` (**Windows XP (Luna)**, **Windows 7 (Aero)**, **Omarchy**)
-through `applyStyle`. The choice is carried in
-`?platform=…&mode=…&look=…` and remembered in local storage, and every preview
+authored styles are library data: Luna, Aero or Omarchy resolves `retroStyles`
+(**Windows XP (Luna)**, **Windows 7 (Aero)**, **Omarchy**) through `applyStyle`.
+The choice lives in the app — React for the page and local storage for the next
+visit — so the URL names the page and nothing else. Every preview
 renders on a `PreviewSurface` that applies the resolved theme's variables,
 `data-platform`, `data-mode` and `data-look`. A preview therefore paints the
 library's roles, radii, families and density, not a docs palette. `/themes`
@@ -868,8 +920,8 @@ fixed.
 
 Every docs page publishes its own document metadata: the frontmatter `title`
 with the site name, its `description`, an Open Graph and Twitter card, and a
-canonical link. The canonical drops the `?platform=` and `?look=` switches, so
-the variants are one page to a crawler and shareable links to a reader.
+canonical link. The canonical is the page's own absolute URL: the preview
+switch is not a query string, so there is nothing to strip for a crawler.
 `src/lib/page-meta.ts` builds it; `docs-view.tsx` returns the page's title and
 description from the loader, so both collections — the site's pages and the
 package's — get real metadata without a copy. The landing page is a route rather
@@ -950,9 +1002,9 @@ What stays server-rendered is what a static document cannot be:
 
 Nothing interactive moves to the server with it: the preview switch, the search
 dialog, the copy buttons and the playground all run in the browser after the
-prerendered HTML hydrates, exactly as they did after an SSR response. A choice
-carried in `?platform=` is applied by the client, so a shared link still opens on
-the platform it asked for.
+prerendered HTML hydrates, exactly as they did after an SSR response. The
+switch's remembered choice is applied by the client, so a reader's last platform
+survives the prerendered HTML.
 
 `vite build` clears `dist/` before it writes, so a prerendered file can never
 outlive the page it renders. Serving a stale `dist/` by hand is the one way to

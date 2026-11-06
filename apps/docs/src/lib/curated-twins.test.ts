@@ -87,14 +87,14 @@ describe("the curated primitive twins", () => {
   });
 
   it("keeps the query a reader followed to a retired address", () => {
-    expect(curatedRedirect("/primitives/button", "?platform=win32")).toBe(
-      "/components/button?platform=win32",
+    expect(curatedRedirect("/primitives/button", "?scene=parity")).toBe(
+      "/components/button?scene=parity",
     );
     expect(curatedRedirect("/primitives/button", "")).toBe(
       "/components/button",
     );
     expect(
-      curatedRedirect("/primitives/slider", "?platform=win32"),
+      curatedRedirect("/primitives/slider", "?scene=parity"),
     ).toBeUndefined();
   });
 

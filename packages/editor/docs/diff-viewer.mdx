@@ -51,8 +51,7 @@ long line scrolls inside the column it belongs to instead of pushing or clipping
 its neighbour. A one-line edit is therefore one row with the old line on the
 left and the new one on the right, not a removal and an addition stacked apart.
 
-## Limitations
-
+## Notes
 - **`O(n·m)` time and space.** The LCS table is the size of the two files, so very large files are slow.
 - **No word-level diff.** A changed line is a whole line, not the words inside it.
 - **The diff text is presentational.** The rows are `role="presentation"` runs, so a reader hears whether anything changed, not the diffed text itself.

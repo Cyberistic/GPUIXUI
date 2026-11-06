@@ -80,7 +80,7 @@ const variants: ReadonlyArray<{
     platform: "macos",
     tone: "success",
     placeholder: "iMessage",
-    rail: false,
+    rail: true,
     lights: true,
     wincontrols: false,
   },
@@ -153,7 +153,10 @@ describe("the conversations window", () => {
 
   it("fills Killua's row and opens Killua's thread", () => {
     expect(count(initial, /data-selected="true"/g)).toBe(1);
-    expect(count(initial, /aria-current="true"/g)).toBe(1);
+    // The rail marks its own active section, so `aria-current` appears twice:
+    // once on Messages, once on the one selected row.
+    expect(count(initial, /aria-current="true"/g)).toBe(2);
+    expect(count(initial, /class="gx-conv-rail"/g)).toBe(1);
     const selected = selectedRow(initial);
     expect(selected).toContain("Killua Zoldyck");
     expect(selected).not.toContain("Gon Freecss");
@@ -343,10 +346,24 @@ describe("the conversations' state", () => {
   });
 
   it("opens an empty state for a conversation with no thread", () => {
-    const knov = render({ ...initialConversationsState, selectedId: "knov" });
-    expect(knov).toContain("No messages with Knov yet. Say hello.");
-    expect(count(knov, /class="gx-conv-bubble"/g)).toBe(0);
-    expect(knov).toContain('placeholder="iMessage"');
+    // Every shipped thread carries messages now; the empty state is still a
+    // route a saved list can reach, so it is exercised with a bare thread.
+    const empty = {
+      id: "empty",
+      name: "Nobody",
+      initials: "NO",
+      preview: "",
+      when: "Today",
+      messages: [],
+    };
+    const markup = render({
+      ...initialConversationsState,
+      threads: [...conversations, empty],
+      selectedId: "empty",
+    });
+    expect(markup).toContain("No messages with Nobody yet. Say hello.");
+    expect(count(markup, /class="gx-conv-bubble"/g)).toBe(0);
+    expect(markup).toContain('placeholder="iMessage"');
   });
 
   it("falls back to the sample thread for an unknown selection", () => {

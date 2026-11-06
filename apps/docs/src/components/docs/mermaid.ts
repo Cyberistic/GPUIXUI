@@ -1,5 +1,5 @@
 import { Effect, Schema } from "effect";
-import { render } from "pele";
+import { render, type RenderOptions } from "pele";
 
 /**
  * Mermaid diagrams, rendered by Pele.
@@ -37,9 +37,10 @@ export class MermaidError extends Schema.TaggedError<MermaidError>()(
 /** Render one Mermaid source to SVG markup. */
 export const renderMermaid = (
   source: string,
+  options?: RenderOptions,
 ): Effect.Effect<string, MermaidError> =>
   Effect.try({
-    try: () => render(source).svg,
+    try: () => render(source, options).svg,
     catch: (cause) =>
       new MermaidError({
         message:

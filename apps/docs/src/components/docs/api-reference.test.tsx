@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { componentIndex } from "../../lib/component-index-data";
+import { curatedTwinOf } from "../../lib/curated-twins";
 import { publicApi } from "../../lib/public-api-data";
 import { publicSymbolIndex } from "../../lib/public-symbols-data";
 import { filterSymbols } from "../../lib/public-symbols";
@@ -27,20 +28,35 @@ const noop = (): void => undefined;
 const markup = renderToStaticMarkup(
   <ApiReferenceView onQueryChange={noop} query="" />,
 );
-const mounted = new Set(componentIndex.map((page) => page.url));
+const mounted = new Set(
+  componentIndex
+    .map((page) => page.url)
+    // A page a curated page replaces is **not served**: its address answers
+    // with a 301, so a link to it is a link to a page the reader cannot open.
+    .filter((url) => curatedTwinOf(url) === undefined),
+);
 const linked = [...markup.matchAll(/href="(\/[^"]+)"/g)].map(
   (match) => match[1],
 );
 
 describe("the API reference's symbol links", () => {
   it("links a symbol to the page named after the file that declares it", () => {
-    expect(markup).toContain('href="/primitives/button"');
+    // `Button` is declared in `packages/primitives/src/components/Button.tsx`,
+    // and the page that documents it is the **curated** one: five primitives
+    // are documented in full under `/components` and their package address
+    // only answers with a 301. So the link is the page a reader can open.
+    expect(markup).toContain('href="/components/button"');
     // The row is the symbol's, not the entry point table's: the name, its
     // module and the page are one row.
-    const start = markup.indexOf('href="/primitives/button"');
-    const row = markup.slice(start, markup.indexOf("</tr>", start));
+    const row = markup.slice(
+      markup.indexOf("packages/primitives/src/components/Button.tsx") - 400,
+      markup.indexOf(
+        "</tr>",
+        markup.indexOf("packages/primitives/src/components/Button.tsx"),
+      ),
+    );
     expect(row).toContain("Button");
-    expect(row).toContain("packages/primitives/src/components/Button.tsx");
+    expect(row).toContain('href="/components/button"');
   });
 
   it("links only pages the site mounts, and a floor of them", () => {

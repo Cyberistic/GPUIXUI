@@ -14,9 +14,11 @@
  */
 
 import type { Theme } from "@gpuixui/tokens";
+import { createPortal } from "react-dom";
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -529,9 +531,30 @@ const ClosedPicker = ({ theme }: { readonly theme: Theme }) => {
 };
 
 /** A deploy-style workflow: the app owns the value, the picker reports it. */
-export function ColorPickerWorkflowBody({ theme }: { readonly theme: Theme }) {
+export function ColorPickerWorkflowBody({
+  theme,
+  initiallyOpen = true,
+  label = "Accent colour",
+  defaultValue,
+  onValueChange,
+  portal = false,
+}: {
+  readonly theme: Theme;
+  /** The landing mounts it closed so the picker opens on a press. */
+  readonly initiallyOpen?: boolean;
+  readonly label?: string;
+  /** The colour the panel opens on; the theme primary when absent. */
+  readonly defaultValue?: string;
+  /** Reports every committed colour, so a host can theme the page with it. */
+  readonly onValueChange?: (value: string) => void;
+  /**
+   * Floats the panel in the page instead of the picker's box. A picker inside
+   * a multi-column flow otherwise fragments its open panel across columns.
+   */
+  readonly portal?: boolean;
+}) {
   const swatches = defaultSwatches(theme);
-  const start = parseHex(swatches[0]?.value ?? "#2F6BFF") ?? {
+  const start = parseHex(defaultValue ?? swatches[0]?.value ?? "#2F6BFF") ?? {
     h: 220,
     s: 0.8,
     v: 1,
@@ -541,15 +564,66 @@ export function ColorPickerWorkflowBody({ theme }: { readonly theme: Theme }) {
   const [value, setValue] = useState<string>(toHex(start));
   const [draft, setDraft] = useState<string>(toHex(start));
   const [invalid, setInvalid] = useState(false);
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(initiallyOpen);
   const panel = usePanelPresence(open);
   const chosen = chosenRole(swatches, value);
+  const anchor = useRef<HTMLDivElement>(null);
+  const popover = useRef<HTMLDivElement>(null);
+  const [portalAt, setPortalAt] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+
+  // The panel is placed in page coordinates, not viewport coordinates: a
+  // scrolled page moves it with its trigger instead of leaving it behind a
+  // frame while a scroll listener catches up.
+  useLayoutEffect(() => {
+    if (!portal || !panel.mounted) return;
+    const update = (): void => {
+      const rect = anchor.current?.getBoundingClientRect();
+      if (rect === undefined) return;
+      const width = Math.min(PANEL_WIDTH, window.innerWidth - 32);
+      setPortalAt({
+        top: rect.bottom + window.scrollY + 8,
+        left: Math.min(
+          rect.left + window.scrollX,
+          window.scrollX + window.innerWidth - width - 16,
+        ),
+      });
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [panel.mounted, portal]);
+
+  // A press anywhere else, or Escape, closes the floating panel.
+  useEffect(() => {
+    if (!portal || !open) return;
+    const onPointer = (event: PointerEvent): void => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (anchor.current?.contains(target)) return;
+      if (popover.current?.contains(target)) return;
+      setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointer, true);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer, true);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, portal]);
 
   const apply = (next: Hsva): void => {
+    const hex = toHex(next);
     setHsva(next);
-    setValue(toHex(next));
-    setDraft(toHex(next));
+    setValue(hex);
+    setDraft(hex);
     setInvalid(false);
+    onValueChange?.(hex);
   };
 
   const commitDraft = (): void => {
@@ -561,47 +635,47 @@ export function ColorPickerWorkflowBody({ theme }: { readonly theme: Theme }) {
     apply(parsed);
   };
 
+  const panelBody = panel.mounted ? (
+    <Panel
+      background={theme.colors.background}
+      draft={draft}
+      hsva={hsva}
+      invalid={invalid}
+      label={label}
+      open={open}
+      onAnimationEnd={panel.onAnimationEnd}
+      onAlpha={(alpha) => apply({ ...hsva, a: alpha })}
+      onArea={(saturation, brightness) =>
+        apply({ ...hsva, s: saturation, v: brightness })
+      }
+      onCommit={commitDraft}
+      onDraft={(next) => {
+        setDraft(next);
+        setInvalid(false);
+      }}
+      onHue={(hue) => apply({ ...hsva, h: hue })}
+      onPreset={(swatch) => {
+        const next = choose(swatch.value, value, hsva.h);
+        const parsed = parseHex(next.value, hsva.h);
+        if (parsed !== undefined) apply(parsed);
+      }}
+      swatches={swatches}
+    />
+  ) : null;
+
   return (
     <div className="gx-demo gx-demo-column gx-cp-scene">
-      <p className="gx-demo-label">Accent colour</p>
+      <p className="gx-demo-label">{label}</p>
       <div className="gx-cp-card">
-        <Trigger
-          hsva={hsva}
-          label="Accent colour"
-          open={open}
-          onToggle={() => setOpen((current) => !current)}
-        />
-        <div className="gx-cp-panel-slot">
-          {panel.mounted ? (
-            <Panel
-              background={theme.colors.background}
-              draft={draft}
-              hsva={hsva}
-              invalid={invalid}
-              label="Accent colour"
-              open={open}
-              onAnimationEnd={panel.onAnimationEnd}
-              onAlpha={(alpha) => apply({ ...hsva, a: alpha })}
-              onArea={(saturation, brightness) =>
-                apply({ ...hsva, s: saturation, v: brightness })
-              }
-              onCommit={commitDraft}
-              onDraft={(next) => {
-                setDraft(next);
-                setInvalid(false);
-              }}
-              onHue={(hue) => apply({ ...hsva, h: hue })}
-              onPreset={(swatch) => {
-                const next = choose(swatch.value, value, hsva.h);
-                const parsed = parseHex(next.value, hsva.h);
-                if (parsed !== undefined) apply(parsed);
-              }}
-              swatches={swatches}
-            />
-          ) : undefined}
+        <div className="gx-cp-anchor" ref={anchor}>
+          <Trigger
+            hsva={hsva}
+            label={label}
+            open={open}
+            onToggle={() => setOpen((current) => !current)}
+          />
+          {portal ? null : <div className="gx-cp-panel-slot">{panelBody}</div>}
         </div>
-        {/* The committed value and the draft, in sentences rather than a
-            `value=… draft=…` line: a readout is data, not a debug dump. */}
         <div className="gx-cp-readout" role="status">
           {draft === value
             ? `Committed ${value}.`
@@ -619,6 +693,18 @@ export function ColorPickerWorkflowBody({ theme }: { readonly theme: Theme }) {
           </span>
         </div>
       </div>
+      {portal && panelBody !== null && portalAt !== null
+        ? createPortal(
+            <div
+              className="gx-cp-panel-portal"
+              ref={popover}
+              style={{ top: portalAt.top, left: portalAt.left }}
+            >
+              {panelBody}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

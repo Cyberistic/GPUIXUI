@@ -49,8 +49,7 @@ The `<input>` keeps the runtime's own history: `cmd-z` restores its text through
 that history. The component stores no draft history of its own, so an edit that
 must stay undoable after a commit belongs to the caller.
 
-## Limitations
-
+## Notes
 - No rich text; the editor is a single-line `<input>`.
 - Blur commits in an active app; a live window cannot prove it — use `Enter` or a caller-owned commit when the draft must not be lost.
 - A consumer wanting blur-to-cancel must not use this part.

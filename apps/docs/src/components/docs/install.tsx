@@ -7,13 +7,23 @@ import {
 } from "fumadocs-ui/components/tabs";
 
 /**
- * The install block shared by every component page: the `nub` command for a
- * workspace consumer, and the manual manifest entry for a consumer that pins
- * the dependency by hand.
+ * The install block shared by every component page: the shadcn registry
+ * command, the item's direct address, and the package import the page uses.
  *
- * GPUIxUI's packages are private workspace packages, so there is no registry
- * command yet. The note says so instead of inventing one.
+ * The registry names items `<package>-<page>`, so the command is derived from
+ * the page's package and component. `ToastProvider` is the one page whose
+ * import differs from its slug; the registry still calls that item `toast`.
  */
+const itemAliases: Readonly<Record<string, string>> = {
+  ToastProvider: "toast",
+};
+
+const kebab = (value: string): string =>
+  value
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/([A-Z])([A-Z][a-z])/g, "$1-$2")
+    .toLowerCase();
+
 export function Install({
   packageName,
   importName,
@@ -21,39 +31,27 @@ export function Install({
   packageName: string;
   importName: string;
 }) {
-  const command = `nub add ${packageName}@workspace:*`;
-  const manifest = `{
-  "dependencies": {
-    "${packageName}": "workspace:*"
-  }
-}`;
+  const pkg = packageName.split("/").at(-1) ?? packageName;
+  const item = `${pkg}-${itemAliases[importName] ?? kebab(importName)}`;
+  const command = `npx shadcn@latest add @sudokw/${item}`;
+  const direct = `npx shadcn@latest add https://gpuixui.sudokw.com/${item}.json`;
   const usage = `import { ${importName} } from "${packageName}";`;
 
   return (
     <div className="gx-source not-prose">
-      <Tabs defaultValue="nub">
+      <Tabs defaultValue="shadcn">
         <TabsList>
-          <TabsTrigger value="nub">nub</TabsTrigger>
-          <TabsTrigger value="manual">Manual</TabsTrigger>
+          <TabsTrigger value="shadcn">shadcn</TabsTrigger>
+          <TabsTrigger value="url">URL</TabsTrigger>
         </TabsList>
-        <TabsContent value="nub">
+        <TabsContent value="shadcn">
           <HighlightedCode lang="bash" code={command} />
-          <p className="gx-install-note">
-            Run this inside the GPUIXUI workspace. The packages are private and
-            not published to a registry, so the workspace protocol is the
-            version. A fresh checkout installs everything with{" "}
-            <code>nub install</code>.
-          </p>
         </TabsContent>
-        <TabsContent value="manual">
-          <HighlightedCode lang="json" code={manifest} />
-          <p className="gx-install-note">
-            Add the dependency to the consuming package, run{" "}
-            <code>nub install</code>, then import from the package root:
-          </p>
-          <HighlightedCode lang="tsx" code={usage} />
+        <TabsContent value="url">
+          <HighlightedCode lang="bash" code={direct} />
         </TabsContent>
       </Tabs>
+      <HighlightedCode lang="tsx" code={usage} />
     </div>
   );
 }

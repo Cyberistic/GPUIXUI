@@ -36,8 +36,7 @@ import { CodeBlock } from "@gpuixui/components/code-block";
 | `className` | `string` | — |
 | `style` | `StateStyle<CodeBlockState>` | — |
 
-## Limitations
-
+## Notes
 - `level` is read through `surfaceLevelOf`, so a saved `"none"` paints at rest; the table's own `motionLevelOf` would animate it.
 - The code text is not exposed to assistive technology.
 - `@tanstack/highlight` decides what a run is; the palette only colours it.

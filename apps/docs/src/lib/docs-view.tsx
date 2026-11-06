@@ -26,7 +26,7 @@ import {
 } from "@/components/docs/platform-toggle";
 import { collectionIndexOf } from "./collection-index";
 import {
-  packageCollections,
+  collectionAt,
   packageSections,
   type PackageOrigin,
 } from "./collection-routes";
@@ -34,7 +34,6 @@ import { baseOptions } from "./layout.shared";
 import { completeSection } from "./page-tree";
 import { descriptionRuns } from "./page-description";
 import { docsByOrigin, sectionPages, sourceByOrigin } from "./package-docs";
-import { docsRoute } from "./shared";
 import { docs, source } from "./source";
 
 /**
@@ -58,12 +57,6 @@ const pageTree = async () =>
     ),
   );
 
-/** The mounted collection that owns a `/<segment>` route. */
-const collectionAt = (segment: string | undefined) =>
-  packageCollections.find(
-    (collection) => collection.route === `${docsRoute}/${segment}`,
-  );
-
 export const loadDocsPage = createServerFn({ method: "GET" })
   .validator((slugs: string[]) => slugs)
   .handler(async ({ data: slugs }) => {
@@ -81,9 +74,9 @@ export const loadDocsPage = createServerFn({ method: "GET" })
 
     // A package collection is mounted under its own route, so the remaining
     // slugs are relative to that prefix.
-    const [segment, ...rest] = slugs;
-    const collection = collectionAt(segment);
-    if (!collection) throw notFound();
+    const found = collectionAt(slugs);
+    if (!found) throw notFound();
+    const { collection, rest } = found;
 
     const packaged = sourceByOrigin[collection.origin].getPage(rest);
     if (packaged) {

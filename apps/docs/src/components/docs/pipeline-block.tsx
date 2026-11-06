@@ -1,11 +1,3 @@
-/**
- * The pipeline block's browser preview (plan 728).
- *
- * It reads the compiled block's own `data.ts` and `logic.ts`, so the preview
- * and the native window show the same work, filtered by the same rules, and
- * the source the page prints is the module itself (`?raw`). The frame is
- * `WindowFrame`, the drawing of the shell's `Window`.
- */
 import { useState } from "react";
 import {
   projects,
@@ -83,6 +75,14 @@ export function PipelineRender() {
                 <span>Estimate</span>
                 <span>{item.estimate} pt</span>
               </div>
+            </div>
+            <span className="gx-inset-title">▾ Activity</span>
+            <div className="gx-pipeline-activity">
+              {item.activity.length === 0 ? (
+                <p>No activity yet</p>
+              ) : (
+                item.activity.map((line) => <p key={line}>{line}</p>)
+              )}
             </div>
           </div>
         )

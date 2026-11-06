@@ -31,8 +31,7 @@ import { StatCard } from "@gpuixui/data";
 | `direction` | `"up" \| "down" \| "flat"` | which way the reading moved; it chooses the status tone's readable role |
 | `text` | `string \| null` | the trend's own words, e.g. `+12%`; a nullish or blank one paints no words |
 
-## Limitations
-
+## Notes
 - The card does not size itself; it fills the box it is given.
 - The reading is a node, not a number: the card formats nothing.
 - A saved card's `trend` is read as data: `null` means no trend, so the

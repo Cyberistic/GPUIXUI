@@ -37,8 +37,7 @@ import { ImagePreview } from "@gpuixui/media";
 | `radius` | `number` | `theme.radius.md` |
 | `className` | `string` | — |
 
-## Limitations
-
+## Notes
 - **No load/error signal**: the `<img>` host has no `onLoad`/`onError`, so `status` is caller-driven and the only error the component detects itself is a blank `src`.
 - **A source that is not text paints the error state**: a `src` restored from storage as `null` is read as text once, so the derived state is paintable instead of throwing out of the render.
 - The docs site cannot render this live; the code above is the real source.

@@ -79,8 +79,14 @@ export const packageDocsFiles = (): ReadonlyArray<DocsFile> =>
   packageCollections.flatMap((collection) => {
     const dir = new URL(`${collection.dir}/`, root);
     if (!existsSync(dir)) return [];
-    return collectionPages(root, collection).map((name) => ({
-      ...readFile(join(dir.pathname, name)),
-      url: `${collection.route}/${name.replace(/\.mdx$/, "")}`,
-    }));
+    return collectionPages(root, collection).map((name) => {
+      const page = name.replace(/\.mdx$/, "");
+      return {
+        ...readFile(join(dir.pathname, name)),
+        // `index.mdx` answers at the collection's own route, the rule the
+        // site's own pages follow.
+        url:
+          page === "index" ? collection.route : `${collection.route}/${page}`,
+      };
+    });
   });

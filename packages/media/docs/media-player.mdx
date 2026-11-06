@@ -105,8 +105,7 @@ holds no button ends the gesture.
 The bar fades out after `idleMs` without a pointer move, key or focus, and any
 of those brings it back. A popup keeps it painted while it is open.
 
-## Limitations
-
+## Notes
 - **No audio, no decoding, no `<video>`.** The runtime declares no `video` or
   `audio` element and no playback verb, so the caller supplies each frame's
   bytes and the app owns the clock. This player is the poster and the transport;

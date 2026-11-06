@@ -4,7 +4,8 @@ export const docsRoute = "";
 /** Where each package's own pages render. */
 export const primitiveDocsRoute = "/primitives";
 export const componentDocsRoute = "/components";
-export const iconDocsRoute = "/icons";
+export const iconDocsRoute = "/graphics/icons";
+export const chartsDocsRoute = "/graphics/charts";
 export const dataDocsRoute = "/data-display";
 export const editorDocsRoute = "/editor";
 export const filesDocsRoute = "/files";

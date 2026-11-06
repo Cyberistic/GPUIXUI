@@ -1,57 +1,28 @@
-/**
- * Chart geometry, in pixels, as pure data.
- *
- * `@gpuix/native@0.11.0` has no chart host and no canvas, and an `<svg source>`
- * is rasterised into **one** tinted mask (`chart-raster` measured a five-layer
- * icon painting five colours as one). The route a chart takes is therefore
- * **stacked `<svg>` elements, one per series**, each carrying that series'
- * geometry in the same viewBox and tinted through `style.color`; the labels are
- * ordinary `<text>` beside the plot.
- *
- * Everything here is deterministic arithmetic over the caller's numbers: a
- * value that is not finite reads as `0`, a negative value paints nothing, and a
- * scale with no positive value still has a top of `1` so a bar chart of zeros
- * lays out instead of dividing by zero. A scale is measured over the **slots
- * the chart paints**: a value past the last label draws nowhere, so it cannot
- * raise the axis and shrink every painted bar.
- */
-
 import { spokenText } from "@gpuixui/primitives/core";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
+import { flatMark, marksMarkup, num, type ChartMark } from "./mark.js";
 
-/** One series: a stable key, its label, and one value per category. */
+export { type ChartMark } from "./mark.js";
+
 export interface ChartSeries {
   readonly key: string;
-  /** The series' name in the legend and in its image's accessible name. A blank label reads as `key`. */
   readonly label: string;
   readonly values: ReadonlyArray<number>;
+  readonly color?: string;
 }
 
-/** The plot's box, in pixels. */
 export interface ChartBox {
   readonly width: number;
   readonly height: number;
 }
 
-/** One side of a plot: the caller's when it can paint, else the fallback. */
 const paintableSide = (side: number, fallback: number): number =>
   Number.isFinite(side) && side > 0
     ? side
     : Math.max(1, Number.isFinite(fallback) && fallback > 0 ? fallback : 1);
 
-/**
- * The plot box a chart lays out in, from the sides a caller gives.
- *
- * A side is often computed — a share of a pane, a measurement taken before the
- * first layout — and one the geometry cannot lay out (`NaN`, an infinity, zero
- * or a negative) reads as the fallback side. `Math.max(1, NaN)` is `NaN`, so an
- * unreadable width used to reach the `<svg>` viewBox, the axis column and every
- * category slot's width: the plot collapsed to `0 × 0` while the group kept its
- * name, and the labels lost their tracks. A finite positive side is kept as
- * given — a fractional width is paintable.
- */
 export const chartBox = (
   width: number,
   height: number,
@@ -61,61 +32,18 @@ export const chartBox = (
   height: paintableSide(height, fallback.height),
 });
 
-/** One painted shape, in the plot's pixel space. */
-export type ChartMark =
-  | {
-      readonly kind: "rect";
-      readonly x: number;
-      readonly y: number;
-      readonly width: number;
-      readonly height: number;
-      /** Corner radius; a bar's top and foot round alike, as the landing's do. */
-      readonly radius?: number;
-    }
-  | { readonly kind: "path"; readonly d: string }
-  /** An open path drawn as a line, `width` thick: round caps unless `cap` is `"butt"`. */
-  | {
-      readonly kind: "stroke";
-      readonly d: string;
-      readonly width: number;
-      readonly cap?: "round" | "butt";
-    };
-
-/** A bar's corner radius: soft, never more than a quarter of its width or half its height. */
-export const barRadius = (width: number, height: number): number =>
-  Math.max(0, Math.min(6, width / 4, height / 2));
-
-/** A value the chart can draw: finite and not negative. */
 export const drawableValue = (value: number): number =>
   Number.isFinite(value) && value > 0 ? value : 0;
 
-/**
- * The number of slots a chart paints, when it names one.
- *
- * A count the chart cannot read is no count, so the caller's whole series is
- * measured. A finite count is the labelled slots, floored to a whole number and
- * never negative — and **zero stays zero**: a chart with no label paints no
- * slot. `Arr.makeBy` normalises a count to at least one, so the geometry has to
- * read the zero before it lays out any marks.
- */
 const paintedSlots = (categories?: number): Option.Option<number> =>
   Option.map(
     Option.filter(Option.fromNullishOr(categories), Number.isFinite),
     (count) => Math.max(0, Math.floor(count)),
   );
 
-/** `count` slot indexes, and none at all for a chart that paints no category. */
 const slotIndexes = (count: number): ReadonlyArray<number> =>
   count <= 0 ? [] : Arr.makeBy(count, (index) => index);
 
-/**
- * The values a series paints: only the labelled slots exist.
- *
- * A category the chart does not name draws nowhere, so it cannot raise the axis
- * either — a stray value past the last label would otherwise shrink every
- * painted bar towards a pixel while the axis named a value no slot shows. A
- * count the chart cannot read is no count, so the series is taken whole.
- */
 const paintedValues = (
   values: ReadonlyArray<number>,
   categories?: number,
@@ -125,13 +53,11 @@ const paintedValues = (
     onSome: (count) => Arr.take(values, count),
   });
 
-/** The largest drawable value in a series, over the slots it paints. */
 export const seriesMax = (series: ChartSeries, categories?: number): number =>
   Arr.reduce(paintedValues(series.values, categories), 0, (max, value) =>
     Math.max(max, drawableValue(value)),
   );
 
-/** The largest drawable value across every series, over the painted slots. */
 export const chartMaxOf = (
   series: ReadonlyArray<ChartSeries>,
   categories?: number,
@@ -140,12 +66,6 @@ export const chartMaxOf = (
     Math.max(max, seriesMax(one, categories)),
   );
 
-/**
- * A rounded ceiling above `raw`: 1, 2 or 5 times a power of ten.
- *
- * A chart's axis reads `0, 25, 50, 75, 100` for a maximum of 93 rather than
- * `0, 23.25, …`; the ceiling is a design decision, so it is one function.
- */
 export const niceCeiling = (raw: number): number => {
   const value = drawableValue(raw);
   if (value === 0) return 1;
@@ -155,20 +75,11 @@ export const niceCeiling = (raw: number): number => {
   return nice * magnitude;
 };
 
-/**
- * The scale a chart draws against: the rounded ceiling of every series.
- *
- * `categories` is the number of slots the chart paints — the labels it was
- * given. A value past the last label draws nowhere, so it cannot raise the axis
- * the painted bars are read against; without a count every value is measured,
- * which is what a chart with no labels paints.
- */
 export const chartScale = (
   series: ReadonlyArray<ChartSeries>,
   categories?: number,
 ): number => niceCeiling(chartMaxOf(series, categories));
 
-/** How many category slots a series list spans, when the caller names none. */
 const categoryCount = (
   series: ReadonlyArray<ChartSeries>,
   categories?: number,
@@ -177,17 +88,6 @@ const categoryCount = (
     Arr.reduce(series, 0, (most, one) => Math.max(most, one.values.length)),
   );
 
-/**
- * The scale a **stacked** chart draws against: the rounded ceiling of the
- * tallest painted category's total.
- *
- * A stack is read as one bar, so its axis is measured over the sums — a scale
- * taken from the widest single series would label a 120 total `100`, and every
- * bar in the plot would claim a value the axis does not name. `categories` is
- * the number of slots the chart paints: a value past the last label is drawn
- * nowhere, so it cannot raise the axis, and a chart that names no category
- * paints no slot at all — its ceiling is the empty chart's `1`.
- */
 export const stackedScale = (
   series: ReadonlyArray<ChartSeries>,
   categories?: number,
@@ -206,91 +106,44 @@ export const stackedScale = (
     ),
   );
 
-/** The most steps an axis divides its scale into. */
 export const AXIS_STEP_LIMIT = 20;
 
-/**
- * The steps an axis divides its scale into.
- *
- * `ticks` is often computed, so a count the geometry cannot read is the
- * default four rather than `NaN` (which mounts no tick at all) and a finite
- * count is bounded: an axis of a million labels is not a chart, it is a way to
- * mount a million text hosts.
- */
 const axisSteps = (count: number): number =>
   Number.isFinite(count)
     ? Math.min(AXIS_STEP_LIMIT, Math.max(1, Math.floor(count)))
     : 4;
 
-/**
- * Evenly spaced axis values from `0` to `scale`, inclusive.
- *
- * A count the axis cannot read reads as four steps and a count past
- * {@link AXIS_STEP_LIMIT} is capped, so a computed `ticks` cannot empty the
- * axis or mount an unbounded column of labels.
- */
 export const axisTicks = (scale: number, count = 4): ReadonlyArray<number> => {
   const steps = axisSteps(count);
   return Arr.makeBy(steps + 1, (index) => (scale / steps) * index);
 };
 
-/**
- * A tick's label, with the precision its own step needs.
- *
- * A fixed two decimals is only right for a scale measured in whole units: a
- * step of `0.00125` printed `0, 0, 0, 0, 0.01`, so a chart of rates or seconds
- * read as a column of zeros and its bars had no number to be read against. The
- * label keeps one guard digit past the step's magnitude (`0.0013`, `0.0025`,
- * `0.0037`, `0.005`), and a step too small for a finite decimal falls back to
- * exponential notation rather than rounding every tick away. Trailing zeros
- * are dropped, so a whole scale still reads `0, 25, 50, 75, 100`.
- *
- * A step of `100` or more needs no fraction at all: the guard digit is only
- * ever **added** to the step's magnitude, never taken below whole numbers,
- * which `toFixed` refuses.
- *
- * `step` is the distance between adjacent ticks (`scale / steps`), not the
- * scale: the precision a label needs is the precision of its neighbour.
- */
 export const tickLabel = (tick: number, step: number): string => {
   if (!Number.isFinite(tick)) return "0";
   if (!Number.isFinite(step) || step <= 0) return `${tick}`;
-  // One guard digit past the step's magnitude keeps adjacent labels distinct
-  // when a step is not a power of ten.
   const decimals = Math.max(0, Math.ceil(-Math.log10(step)) + 1);
   if (decimals > 20) return tick === 0 ? "0" : tick.toExponential(2);
   return `${Number(tick.toFixed(decimals))}`;
 };
 
-/** The width of one category's slot and of the bar inside it. */
 export interface BarSlot {
   readonly slot: number;
   readonly barWidth: number;
 }
 
-/** How many category slots a count spans: whole, and at least one. */
 const slotCount = (count: number): number => Math.max(1, Math.floor(count));
 
-/** The slot a bar chart gives each category. */
 export const barSlot = (count: number, width: number, share = 0.6): BarSlot => {
   const slot = Math.max(0, width) / slotCount(count);
   return { slot, barWidth: slot * Math.min(1, Math.max(0, share)) };
 };
 
-/** The height one value paints, clamped into the box. */
 const barHeight = (value: number, box: ChartBox, scale: number): number => {
   if (scale <= 0) return 0;
   const raw = (drawableValue(value) / scale) * Math.max(0, box.height);
   return Math.min(Math.max(0, box.height), raw);
 };
 
-/**
- * One bar per value, left to right, standing on the box's floor.
- *
- * A zero paints no bar (a bar of one pixel would claim a value the data does
- * not have); the layout keeps its slot, so the labels still line up. Only the
- * `categories` slots exist: a value past the last one draws nowhere.
- */
 export const barMarks = (
   values: ReadonlyArray<number>,
   box: ChartBox,
@@ -312,18 +165,10 @@ export const barMarks = (
       y: box.height - one.height,
       width: barWidth,
       height: one.height,
-      radius: barRadius(barWidth, one.height),
     }),
   );
 };
 
-/**
- * Grouped bars: every series draws beside the others in each category slot.
- *
- * The group is centred in its slot, so three series still line up under one
- * label. A series with more values than there are slots paints only the
- * labelled ones; the rest draw nowhere.
- */
 export const groupedBarMarks = (
   series: ReadonlyArray<ChartSeries>,
   box: ChartBox,
@@ -333,8 +178,6 @@ export const groupedBarMarks = (
   const count = categoryCount(series, categories);
   const { slot } = barSlot(count, box.width);
   const width = series.length === 0 ? 0 : (slot * 0.8) / series.length;
-  // Side-by-side series keep a sliver of ground between them.
-  const gap = series.length > 1 ? width * 0.12 : 0;
   return Arr.map(series, (one, seriesIndex) =>
     Arr.map(
       Arr.filter(
@@ -346,25 +189,15 @@ export const groupedBarMarks = (
       ),
       (candidate): ChartMark => ({
         kind: "rect",
-        x: candidate.index * slot + slot * 0.1 + seriesIndex * width + gap / 2,
+        x: candidate.index * slot + slot * 0.1 + seriesIndex * width,
         y: box.height - candidate.height,
-        width: width - gap,
+        width,
         height: candidate.height,
-        radius: barRadius(width - gap, candidate.height),
       }),
     ),
   );
 };
 
-/**
- * Stacked bars: the first series stands on the floor and each later one stands
- * on the series before it.
- *
- * The stack's height is the sum, so the scale it draws against is
- * {@link stackedScale} — the one measure its axis prints. Passing the widest
- * single series' scale instead draws every stack against an axis that does not
- * name it.
- */
 export const stackedBarMarks = (
   series: ReadonlyArray<ChartSeries>,
   box: ChartBox,
@@ -384,7 +217,6 @@ export const stackedBarMarks = (
     Arr.map(
       Arr.filter(
         Arr.map(totals, (_, index) => {
-          // The height of everything below this series in the same slot.
           const below = Arr.reduce(
             Arr.take(series, seriesIndex),
             0,
@@ -411,190 +243,54 @@ export const stackedBarMarks = (
   );
 };
 
-/** A number as the markup spells it: at most two decimals, no `NaN`. */
-const num = (value: number): string =>
-  Number.isFinite(value) ? `${Math.round(value * 100) / 100}` : "0";
-
-/**
- * The path through a series' points, left to right.
- *
- * A point sits at the **centre of its category slot**, which is where a bar
- * stands and where the label under it is centred. Spacing the path edge to
- * edge instead (`0 … width`) put the first and last points half a slot away
- * from their own labels, and measured a two-value series across the whole plot
- * while the axis named four categories. A value past the last category draws
- * nowhere, the rule the bars follow.
- *
- * A single value paints a half-pixel run rather than a zero-length path, which
- * some rasterisers drop; an empty series paints nothing.
- */
-export const linePoints = (
-  values: ReadonlyArray<number>,
-  box: ChartBox,
-  scale: number,
-  categories: number = values.length,
-): ReadonlyArray<{ readonly x: number; readonly y: number }> => {
-  const painted = paintedValues(values, categories);
-  const { slot } = barSlot(
-    Option.getOrElse(paintedSlots(categories), () => values.length),
-    box.width,
-  );
-  return Arr.map(painted, (value, index) => ({
-    x: index * slot + slot / 2,
-    y: box.height - barHeight(value, box, scale),
-  }));
-};
-
-type Point = { readonly x: number; readonly y: number };
-
-/**
- * A smooth curve through every point that never overshoots one: a monotone
- * cubic (Fritsch–Carlson), so a peak stays the peak and a flat run stays flat.
- */
-export const monotonePath = (points: ReadonlyArray<Point>): string => {
-  const at = (index: number): Point => points[index] ?? { x: 0, y: 0 };
-  const head = `M${num(at(0).x)} ${num(at(0).y)}`;
-  if (points.length < 2) return `${head}h1`;
-  const slopes = Arr.makeBy(points.length - 1, (index) => {
-    const dx = at(index + 1).x - at(index).x;
-    return dx === 0 ? 0 : (at(index + 1).y - at(index).y) / dx;
-  });
-  const slope = (index: number): number => slopes[index] ?? 0;
-  const raw = Arr.makeBy(points.length, (index) =>
-    index === 0
-      ? slope(0)
-      : index === points.length - 1
-        ? slope(index - 1)
-        : slope(index - 1) * slope(index) <= 0
-          ? 0
-          : (slope(index - 1) + slope(index)) / 2,
-  );
-  // Limit each segment's tangents so the curve stays inside its two values.
-  const setPair = (
-    m: ReadonlyArray<number>,
-    index: number,
-    a: number,
-    b: number,
-  ) =>
-    Arr.map(m, (value, at) =>
-      at === index ? a : at === index + 1 ? b : value,
-    );
-  const tangents = Arr.reduce(
-    slopes,
-    raw as ReadonlyArray<number>,
-    (m, d, index) => {
-      if (d === 0) return setPair(m, index, 0, 0);
-      const a = (m[index] ?? 0) / d;
-      const b = (m[index + 1] ?? 0) / d;
-      const t = 3 / Math.sqrt(a * a + b * b);
-      return t >= 1 ? m : setPair(m, index, t * a * d, t * b * d);
-    },
-  );
-  const curves = Arr.makeBy(points.length - 1, (index) => {
-    const from = at(index);
-    const to = at(index + 1);
-    const h = (to.x - from.x) / 3;
-    const m0 = tangents[index] ?? 0;
-    const m1 = tangents[index + 1] ?? 0;
-    return `C${num(from.x + h)} ${num(from.y + m0 * h)} ${num(to.x - h)} ${num(to.y - m1 * h)} ${num(to.x)} ${num(to.y)}`;
-  });
-  return head + Arr.join(curves, "");
-};
-
-/** The smooth line through a series' points; `None` for a series with none. */
 export const linePath = (
   values: ReadonlyArray<number>,
   box: ChartBox,
   scale: number,
   categories: number = values.length,
 ): Option.Option<string> => {
-  const points = linePoints(values, box, scale, categories);
-  return points.length === 0
-    ? Option.none()
-    : Option.some(monotonePath(points));
+  const painted = paintedValues(values, categories);
+  if (painted.length === 0) return Option.none();
+  const { slot } = barSlot(
+    Option.getOrElse(paintedSlots(categories), () => values.length),
+    box.width,
+  );
+  const points = Arr.map(painted, (value, index) => ({
+    x: index * slot + slot / 2,
+    y: box.height - barHeight(value, box, scale),
+  }));
+  const path = Arr.join(
+    Arr.map(
+      points,
+      (point, index) =>
+        `${index === 0 ? "M" : "L"}${num(point.x)} ${num(point.y)}`,
+    ),
+    "",
+  );
+  return Option.some(painted.length === 1 ? `${path}h1` : path);
 };
 
-/**
- * A line's points kept `pad` inside the plot's top and floor, so a round cap at
- * the ceiling or on a zero is drawn whole instead of half-clipped.
- */
-export const insetLine = (
-  values: ReadonlyArray<number>,
-  box: ChartBox,
-  scale: number,
-  categories: number,
-  pad: number,
-): ReadonlyArray<Point> =>
-  Arr.map(
-    linePoints(
-      values,
-      { width: box.width, height: Math.max(1, box.height - pad * 2) },
-      scale,
-      categories,
-    ),
-    (point) => ({ x: point.x, y: point.y + pad }),
-  );
+const arcPath = (
+  cx: number,
+  cy: number,
+  outer: number,
+  inner: number,
+  start: number,
+  end: number,
+): string => {
+  const point = (radius: number, angle: number): string =>
+    `${num(cx + radius * Math.cos(angle))} ${num(cy + radius * Math.sin(angle))}`;
+  const span = end - start;
+  const large = span > Math.PI ? 1 : 0;
+  return [
+    `M${point(outer, start)}`,
+    `A${num(outer)} ${num(outer)} 0 ${large} 1 ${point(outer, end)}`,
+    `L${point(inner, end)}`,
+    `A${num(inner)} ${num(inner)} 0 ${large} 0 ${point(inner, start)}`,
+    "Z",
+  ].join("");
+};
 
-/** A line's marks: the stroke, and a dot on its last point unless `dot` is off. */
-export const lineMarks = (
-  points: ReadonlyArray<Point>,
-  width: number,
-  dot = true,
-): ReadonlyArray<ChartMark> =>
-  points.length === 0
-    ? []
-    : [
-        { kind: "stroke", d: monotonePath(points), width },
-        ...Option.match(dot ? Arr.last(points) : Option.none(), {
-          onNone: (): ReadonlyArray<ChartMark> => [],
-          onSome: (end): ReadonlyArray<ChartMark> => [
-            {
-              kind: "stroke",
-              d: `M${num(end.x)} ${num(end.y)}h0.01`,
-              width: width * 2.4,
-            },
-          ],
-        }),
-      ];
-
-/** A hairline at each tick, from the floor (0) to the ceiling (`scale`). */
-export const tickRules = (
-  ticks: ReadonlyArray<number>,
-  scale: number,
-  box: ChartBox,
-): ReadonlyArray<ChartMark> =>
-  Arr.map(ticks, (tick) => ({
-    kind: "rect" as const,
-    x: 0,
-    y: Math.min(
-      box.height - 1,
-      box.height - (scale > 0 ? (tick / scale) * box.height : 0),
-    ),
-    width: box.width,
-    height: 1,
-  }));
-
-/** The area under a line: its curve closed down to the plot's floor. */
-export const areaPath = (
-  points: ReadonlyArray<Point>,
-  box: ChartBox,
-): Option.Option<string> =>
-  Option.map(
-    Option.all({ first: Arr.head(points), last: Arr.last(points) }),
-    ({ first, last }) =>
-      `${monotonePath(points)}L${num(last.x)} ${num(box.height)}L${num(first.x)} ${num(box.height)}Z`,
-  );
-
-/** The ring segment between two angles, in radians. */
-/**
- * Ring segments, one entry per **datum**, in data order.
- *
- * The entry holds the marks that datum paints: usually one segment, and two
- * halves when a single value fills the ring — an arc from an angle to itself is
- * empty, so a full turn is drawn as two half turns. A value that is zero,
- * negative or not a number paints nothing, so its entry is empty and its slice
- * keeps no slot.
- */
 export const donutSegments = (
   values: ReadonlyArray<number>,
   box: ChartBox,
@@ -605,31 +301,41 @@ export const donutSegments = (
   const size = Math.min(box.width, box.height);
   const cx = box.width / 2;
   const cy = box.height / 2;
-  const width = size * DONUT_THICKNESS;
-  const radius = size / 2 - width / 2;
+  const outer = size / 2;
+  const inner = outer * 0.6;
+  const start = -Math.PI / 2;
   const full = Math.PI * 2;
-  const shown = Arr.filter(drawable, (value) => value > 0).length;
-  const inset = shown > 1 ? DONUT_PAD / 2 : 0;
-  const arc = (start: number, end: number): ChartMark => ({
-    kind: "stroke",
-    width,
-    cap: "butt",
-    d: `M${num(cx + radius * Math.cos(start))} ${num(cy + radius * Math.sin(start))}A${num(radius)} ${num(radius)} 0 ${end - start > Math.PI ? 1 : 0} 1 ${num(cx + radius * Math.cos(end))} ${num(cy + radius * Math.sin(end))}`,
-  });
+
   const [, segments] = Arr.mapAccum(
     drawable,
-    -Math.PI / 2,
+    start,
     (angle, value): readonly [number, ReadonlyArray<ChartMark>] => {
       if (value <= 0) return [angle, []];
       const span = (value / total) * full;
-      if (span >= full - 1e-9)
+      if (span >= full - 1e-9) {
         return [
           angle + full,
-          [arc(angle, angle + Math.PI), arc(angle + Math.PI, angle + full)],
+          [
+            {
+              kind: "path",
+              d: arcPath(cx, cy, outer, inner, angle, angle + Math.PI),
+            },
+            {
+              kind: "path",
+              d: arcPath(cx, cy, outer, inner, angle + Math.PI, angle + full),
+            },
+          ],
         ];
-      const middle = angle + span / 2;
-      const half = Math.max(0.0001, span / 2 - inset);
-      return [angle + span, [arc(middle - half, middle + half)]];
+      }
+      return [
+        angle + span,
+        [
+          {
+            kind: "path",
+            d: arcPath(cx, cy, outer, inner, angle, angle + span),
+          },
+        ],
+      ];
     },
   );
   return segments;
@@ -641,31 +347,9 @@ export const donutMarks = (
   box: ChartBox,
 ): ReadonlyArray<ChartMark> => Arr.flatten(donutSegments(values, box));
 
-/**
- * The words a series, a ring datum or a legend row is named by.
- *
- * A label is content before it is a literal: an i18n table missing its row
- * answers `""`, and a saved chart configuration can restore a series with no
- * words. A blank label therefore reads as its **key** — the identity the caller
- * stores the series by, and the one word that is always there — so a series is
- * never an unnamed image beside a nameless legend row.
- */
 export const seriesName = (label: string, key: string): string =>
   spokenText(Option.fromNullishOr(label), key);
 
-/**
- * The words a series paints, category by category.
- *
- * A chart is a picture of numbers, and the accessibility tree has no way to
- * read a picture: without this line a series image is named by its label alone
- * and every value it draws — the thing the chart exists for — is silent. A
- * category is read as `label value` (`Q1 32`), a value with no label as the
- * number alone, and a value that is not a number as `no value` rather than the
- * zero the geometry substitutes — a reader should not be told a datum is zero
- * when the caller never supplied one. A label is stored content too: a hole the
- * store wrote, or whitespace, names no category, so that datum reads as its
- * number alone rather than as the word `null`.
- */
 export const seriesDescription = (
   values: ReadonlyArray<number>,
   labels: ReadonlyArray<string> = [],
@@ -677,9 +361,6 @@ export const seriesDescription = (
         ? `${Math.round(value * 100) / 100}`
         : "no value";
       const label = labels[index];
-      // A label is stored content: a hole the store wrote, or a word that is
-      // only spaces, names no category. The word `null` is not a category a
-      // reader was given, so such a datum reads as its number alone — the rule
       // an absent label already follows.
       return P.isString(label) && label.trim().length > 0
         ? `${label} ${readout}`
@@ -689,24 +370,23 @@ export const seriesDescription = (
   );
 };
 
-/** The SVG document one series paints, tinted by the element's `color`. */
 export const chartMarkup = (
   marks: ReadonlyArray<ChartMark>,
   box: ChartBox,
+  clip?: ChartMark["clip"],
 ): string => {
-  const shapes = Arr.map(marks, (mark) =>
-    mark.kind === "rect"
-      ? `<rect x="${num(mark.x)}" y="${num(mark.y)}" width="${num(mark.width)}" height="${num(mark.height)}" rx="${num(mark.radius ?? 0)}" fill="#000"/>`
-      : mark.kind === "stroke"
-        ? `<path d="${mark.d}" fill="none" stroke="#000" stroke-width="${num(mark.width)}" stroke-linecap="${mark.cap ?? "round"}" stroke-linejoin="round"/>`
-        : `<path d="${mark.d}" fill="#000"/>`,
-  );
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${num(box.width)}" height="${num(box.height)}" viewBox="0 0 ${num(box.width)} ${num(box.height)}">${Arr.join(shapes, "")}</svg>`;
+  const flat = Arr.map(marks, (mark) => {
+    const shape = flatMark(mark);
+    return {
+      ...shape,
+      ...(clip === undefined ? {} : { clip }),
+      fill: shape.fill === undefined ? { color: "#000" } : shape.fill,
+    };
+  });
+  const painted = marksMarkup(flat);
+  const defs = painted.defs.length === 0 ? "" : `<defs>${painted.defs}</defs>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${num(box.width)}" height="${num(box.height)}" viewBox="0 0 ${num(box.width)} ${num(box.height)}">${defs}${painted.body}</svg>`;
 };
-
-/** The ring's thickness as a share of the donut's size, and the gap between slices (radians). */
-export const DONUT_THICKNESS = 0.13;
-export const DONUT_PAD = 0.04;
 
 /** The colour a series paints: the categorical scale, cycling. */
 export const seriesColour = (

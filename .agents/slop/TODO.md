@@ -9,9 +9,29 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ---
 
+## Native previews rendered at build time (2026-11-06)
+
+`[x]` `[██████████]` 1/1 — **the docs can now show the real library through the wasm renderer.**
+
+`[x]` Land plan `756`. `/live?scene=example&id=<id>` mounts any registered
+      example; `/live?scene=examples` exposes `__gpuixCapture.render(id)` so one
+      wasm initialisation yields every frame. `nub run --filter @gpuixui/docs
+      native:previews` writes 92 checked-in WebPs (657 KiB) and rejects a flat
+      frame by counting every pixel's colour. `<ComponentPreview>` gains a
+      **Native** tab for captured ids, and the component index's server paint is
+      the real frame before hydration mounts the interactive demo. The live
+      example route SSRs that frame as a poster and warms the wasm on hover,
+      focus or press. Evidence:
+      `src/lib/native-captures.test.ts` (5), `live-frame.test.ts` (+3),
+      `live-prefetch.test.ts` (1), `component-index.test.tsx` (server frame +
+      hydrated demo); the accordion
+      page showed a `960×633` still captioned macOS/dark and linked to the live
+      scene. Limitations are on the page: one platform, one palette, not the
+      native macOS runtime.
+
 ## Calculator example — fx-991ES Plus on GPUix
 
-`[x]` `[██████████]` 10/10
+`[x]` `[██████████]` 18/18
 
 `[x]` Land `@gpuixui/calc` — Effect-first engine, Casio parser/evaluator,
       model seam for a later TI-84 (plans 740/741)
@@ -125,7 +145,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ## Phase B — working foundation
 
-`[x]` `[██████████]` 16/16
+`[x]` `[██████████]` 18/18
 
 `[x]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
@@ -230,40 +250,44 @@ of a generic "unknown class".
 
 ### Upstream runtime PRs (`remorses/gpuix`, `remorses/zed`)
 
-`[ ]` `[██░░░░░░░░]` 2/7
+Checked against the GitHub API on 2026-11-02. Eight of our ten PRs are merged
+(one is still open, one closed unmerged); the runtime surface they add is **not
+in any npm release yet** (`@gpuix/native`
+latest is 0.11.0, cut before these merges), so the repo cannot consume them
+until the GPUix source pin moves and the binding is rebuilt.
 
-`[x]` **zed#15** — tray on macOS (`NSStatusItem`), Windows (`Shell_NotifyIconW`),
-Linux (SNI/`ksni`); native callbacks only fill a channel, one foreground task
-drains it; `App::keep_running`; `TrayHandle::set_title`. Independently re-ran
-279 lib tests, clippy, Windows and Linux checks, and the PR body now argues the
-maintainer's two points.
-`[x]` **zed#16** — `App::set_dock_badge` (stacked on #15); `dockTile.badgeLabel`,
-typed no-op on Windows/Linux, example menu entries.
-`[ ]` **gpuix a11y props** — draft **#122**: 13 props wired
-(`aria-keyshortcuts`, `aria-placeholder`, `aria-pressed` → `Toggled`,
-`aria-valuenow`/`min`/`max`, `aria-orientation`, `aria-posinset`/`setsize`,
-`aria-rowindex`/`colindex`/`rowcount`/`colcount`), with the `aria-*` allowlist
-opened in both host adapters. `aria-invalid`/`required`/`modal`/`current`/
-`haspopup` still need fork builders, and `aria-activedescendant` cannot be
-expressed (the builder marks the descendant, not a container reference) — plan 700.
-`[ ]` **gpuix clipboard** — `writeToClipboard`/`readFromClipboard` + `copyText`
-(plan 708), draft **#121**: a sync read (the pinned GPUI has no macOS async read),
-text-only, an empty string is a real entry, and the test renderer never touches
-the system clipboard.
-`[ ]` **transform** — **zed#17** (`feat/transform`) carries the ported
-`ElementTransform` on top of `f77e5cf` (`04016ba`), plus `951ff5f`, which scales
-corner radii, border widths, shadow blur and underline thickness with the element
-(anisotropic/rotated matrices keep the old behaviour). 302 lib tests (24
-transform + 3 decoration), clippy clean, authored by the original author. No
-upstream PR exists to link — #53306 was never promoted from a discussion, so the
-code came from `0xErwin1/zed` @ `fc4c1586`. Next: `StyleDesc.transform` +
-`MotionStyle` in gpuix once it merges (plan 525 §15). `darwin-x64` is still
-absent from the prebuild matrix.
-`[ ]` **gpuix wrappers** for tray/dock/clipboard — wait on the zed merges and a
-submodule bump.
-`[ ]` **plans 702–714** — tray completion, hotkeys, single instance, auto-launch,
-overlay windows, quit mode, resource profiles, downstream fixture, screen
-capture, biometrics, keyring, power/network.
+**merged, not yet consumable**
+
+`[x]` **gpuix #118** — OS notifications (`notify`, `dismissNotification`,
+`onNotificationResponse`) — merged 2026-10-31.
+`[x]` **gpuix #119** — keep the replaced bundle and roll back to it — merged
+2026-10-31.
+`[x]` **gpuix #121** — clipboard text (`writeToClipboard`, `readFromClipboard`)
+— merged 2026-10-31; unblocks plan 708's wrapper and the copy controls.
+`[x]` **gpuix #122** — ARIA state/value props mapped in `packages/native/js/host.ts`
+and Rust — merged 2026-10-31; unblocks plan 700's remaining props.
+`[x]` **zed #15** — macOS tray / status-bar item — merged 2026-11-02; the gpuix
+wrapper (tray handle, channel drain) is still ours to write.
+`[x]` **zed #16** — dock icon badge — merged 2026-11-02; same: no gpuix wrapper
+yet.
+`[x]` **zed #17** — `ElementTransform` (pan/zoom) — merged 2026-11-02; the
+`StyleDesc.transform` / `MotionStyle` surface in gpuix is still to add (plan 525
+§15).
+`[x]` **zed #14** — physical key code on `Keystroke` — merged 2026-11-02.
+
+**not merged**
+
+`[ ]` **gpuix #127** — `resizeWindow` / `isFullscreen` — **open**.
+`[x]` **gpuix #120** — custom elements — closed unmerged; not available.
+
+`[ ]` `[███░░░░░░░]` **Next: consume what is merged** — bump
+`apps/playground/scripts/build-native-binding.sh`'s `GPUIX_REV` to the GPUix
+main commit that carries #118/#119/#121/#122, build the binding on this host,
+install the matching JS wrapper + types (the 0.11.0 wrapper re-exports a fixed
+name list, so the `.node` alone is not enough), then implement, in order:
+clipboard (plan 708), the outstanding ARIA props (plan 700), and the gpuix
+wrappers for notifications. Tray/dock/transform wait on gpuix wrapper PRs of
+our own.
 
 `[x]` **Docs deploy** — the toast rebuild is live at
 <https://gpuixui.sudokw.com/docs/components/toast> (deployed 2026-10-26 from
@@ -22566,7 +22590,7 @@ numbers).
 
 ## Animated primitives (plan 600)
 
-`[x]` `[██████████]` 17/17
+`[x]` `[██████████]` 18/18
 
 `[x]` `packages/components`: **the four effect components kept their state in
       React, and two of their docs previews were broken** — `RollingText`,
@@ -23771,7 +23795,21 @@ scenario applies — the timings are pure values.
 ## TanStack cores
 
 
-`[x]` `[████░░░░░░]` 4/5
+`[x]` `[█████░░░░░]` 5/6
+
+`[x]` **Adopt `@tanstack/charts`** — the chart module is built on TanStack's **scene compiler**, the one chart library whose compiler is DOM-free. `createChartScene(definition, size)` is a pure function over a definition and a size; it returns a `ChartScene` whose nodes are renderer-neutral primitives (`group`, `rule`, `polyline`, `area`, `dot`, `rect`, `label`), each with a `SceneStyle` carrying its own fill, stroke, opacity and dash. `renderChartSvg(scene)` turns that scene into **one** SVG document, which `setImage` hands to the runtime's own renderer — so a chart paints **every series' own colour in one element** and a real gradient under an area, both of which the one-tint `<svg source>` mask cannot do. **Measured, in an environment with no `document` and no `window`:** a two-series chart compiles to a scene and serialises to one document carrying both series' colours; the DOM lives only in TanStack's *renderers* (`/canvas`, `/dom`, `/dom-text`), never in the scene path. The hit test is **geometric** — the scene keeps a `ChartPoint` for every datum beside the paint, so the datum under the pointer is the nearest point and the readout needs no per-mark event. Only the DOM-free subpaths are imported (`/scene`, `/line`, `/bar`, `/area`, `/tick`, `/svg`, `/scales/band`, `/scales/linear`), which keeps `d3-scale`, `d3-shape` and `d3-selection` out of the bundle: **zero** d3 references, **57 kB** minified / **21 kB** gzip for the scene path + SVG renderer + bar/line/area, **41 kB** / **15 kB** for a minimal scene. The scales come from `@tanstack/charts-scales`, a package with **no dependencies of its own**. `packages/data/src/chart/scene.ts` is the bridge (`sceneRows` → flat rows, one field per series; `sceneDefinition`; `chartScene`; `sceneSvg`; `scenePointAt`); `src/chart/scene.test.ts` holds the nine claims — the DOM-free path, the flat rows, the six points, the one document with both colours, the named chart, the geometric hit test, the far pointer naming nothing, a line as a stroked path and an area as a filled one. `src/chart/docs.test.ts` gains two cases holding the page to the compiler and to the subpaths. Docs: `packages/data/docs/charts.mdx` §How a chart is painted and §Limitations, the package README's chart section and the `<svg source>` row, the `Charts` inventory row, and `.agents/slop/LICENSES/tanstack.md` (the DOM renderers are named only to be ruled out). Green: 39 files / **364** tests, `check-types` clean, `check:exports` clean.
+
+`[x]` **The document route is the chart's default paint** — the marks travel as one SVG document on an `<img>`'s `src`, which the runtime decodes itself, so a chart paints **every series' own colour in one element** and a real gradient under an area. The document route keeps a **named element per series**: the document is one image, so a reader would otherwise meet a chart with no named series in it, and the accessibility tree is where a chart's numbers are announced. Each series' element carries its name, its values and its colour, and the document element itself is decorative — the tree holds one Image per series, as it did before (`src/behaviour/chart-a11y.test.tsx` reads the tree). The suites read the markup through **one seam that reads either route** (`chartMarkupOf` for the document, `seriesShapesOf` for a series' own shapes, found by the colour they were painted in), so a suite names the chart and not the route.
+
+`[x]` **The chart's config** — shadcn's `ChartConfig`, decoupled from the data: a keyed table of `{ label?, icon?, color?, theme? }` per series, plus a `data` table of one row per category and one field per series. The two make the series and the categories, so one table can be shared by several charts and a theme can own the colours; the colour is read in the **mode the theme is in**, so a table that names one colour per mode follows a light/dark switch, and the legend and the plot read the same colour so a swatch and the mark it names cannot disagree. A chart that names neither keeps the caller's own `series`, so the config is an addition rather than a replacement. `src/chart/config.test.ts` (10 cases) and two behaviour cases hold it.
+
+`[x]` **Three more types** — `ScatterChart` (one point per datum, no line between them), `CandleChart` (the open, high, low and close of each period, each candle in the colour of **its own** direction, so a reader who cannot separate two hues still reads the direction) and `FunnelChart` (a stage per datum, each a share of the first, centred and narrowing). Each lands with its geometry, its props, its table on the page and a behaviour case that mounts it.
+
+`[x]` **The crosshair and the emphasised point** — a vertical rule paints at the hovered column (Recharts' `cursor`, GPUI Kit's crosshair), and only when the pointer names one, so the rule marks the datum rather than the chart; the point under the pointer grows, and only that point.
+
+`[~]` **The window probe** — the document route and the `Diagram` component are proven in the **offscreen** renderer (the behaviour suites), but neither has been measured in a **real window**: the charts' `chart-surface-lifecycle` probe still reads the old per-series masks, and the `Diagram` has no probe at all. **Next:** a probe that mounts the shipped charts and the `Diagram` in a window and counts each series' tint inside its own plot crop, and a diagram probe that reads a drawn diagram's pixels.
+
+Green: 40 files / **374** unit tests, 32 files / **350** behaviour tests, `check-types` clean, `check:exports` clean, `oxlint` clean.
 
 `[x]` Adopt `@tanstack/table-core` for the grid state — sorting, the filtered order and the chosen ids are row models now (`packages/data/src/grid-core.ts`: the registered features and `constructGrid` over **controlled** state, so no store subscription, adapter package or DOM), and `useTable` takes the caller's **column list** (`{ id, label, width, valueOf }` — one list for the header, the rows and the row model). The rules a window measured stay in the package: the press cycle (`sort/logic`), the chord gesture (`selection/logic`), the render-time release of a hidden selection and the arrow walk. The hand-rolled order reducers (`sortRows`, `filterRows`/`narrowTable`, `matchesQuery`) are deleted; `src/grid-core.test.ts` (7 cases) holds the core's numeric/code-unit/stable order, the trimmed literal filter and the premise retention rests on (a chosen id the filter hides stays held). Directions measured: rewriting a column's value as text fails the numeric case, dropping the trim fails the blank-query case, and a glob query fails the literal case. `nub run --filter @gpuixui/data test` 116/116 and `test:behaviour` 55/55 on 0.11.0; in a real window `--only data-table-core` (headless, 1/1), `--only table-lifecycle`, `--only table-filter-lifecycle`, `--only table-columns-lifecycle`, `--only data-table-lifecycle` and `--only virtual-table-lifecycle` all pass. **Column visibility/order/sizing stay `useColumns`** — a renderer layout measured by its own probes, not a row model; grouping and pagination are unregistered until a consumer asks for them. **Breaking API**: `useTable({ rows, keyOf, columns })`; the docs-site snippet and the curated table page still teach `textOf`/`valueOf` (row below)
 `[x]` Adopt `@tanstack/virtual-core` — windowing math with our own scroll offset and row measurement. `src/virtual/window.ts` constructs a `Virtualizer` with `getScrollElement` answering `null` (no observers), hands it the runtime's scroll-anchor offset and the measured body height, and reads the range back; `window.test.ts` holds the arithmetic and `window.ts` the seam.
@@ -24838,7 +24876,7 @@ of the change.
 
 ## The reported previews, and the crash behind them (2026-10-30)
 
-`[x]` `[██████████]` 10/10 — **the data-display routes no longer crash.** The
+`[x]` `[██████████]` 18/18 — **the data-display routes no longer crash.** The
 preview and the landing called a demo as a function (`demo.render()`), so the
 drawing's hooks were counted as the preview's own; navigating from one data page
 to another opened the same component with a different hook list and threw React
@@ -25000,6 +25038,404 @@ green; the site deployed and all 195 sitemap pages answer 200.
       in every installed tree resolving to a shipped file or a declared npm
       package.
 
-`[ ]` Deploy the docs site — the runtime documents and the new
-      `/registry.json` exist only in the built assets, so production still
-      serves the registry that installs dangling `@gpuixui/*` imports.
+`[x]` Deployed the docs site (2026-11-01): live `/registry.json` lists 170 items
+      (161 components + 9 runtime) and `/gpuix-tokens.json` answers 200. A fresh
+      project ran `npx shadcn@latest add @sudokw/primitives-button` from the
+      directory, installed 91 files and type-checked with `tsc --noEmit`.
+      The deploy needs the account variables in
+      `/Users/cyberistic/Documents/Sudo/sudokw/.env` sourced first; alchemy's
+      `default` profile token only sees `bravenlab.com`.
+
+---
+
+## Docs prose pass (plan 750, 2026-11-01)
+
+`[x]` `[██████████]` 3/3
+
+`[x]` Cut every page to the `docs/VOICE.md` budget: each component page is ≤ 60
+      prose words with one compiling usage example, the composition tree, the API
+      table and 1–3 one-line limitations; block pages ≤ 120; guides ≤ 150.
+      Rationale, measurements, test counts, version stories and plan paths are
+      gone; the facts a consumer acts on moved into Limitations. Two page
+      contracts kept their strings (`dialog`/`drawer`/`toast`/the menu surfaces,
+      `conversations`, `dashboard`, `color-picker`, `collapsible`, `examples`).
+`[x]` `/platform/terminal`: `render(<App />, { terminal: true })`,
+      `GPUIX_TERMINAL=1`, the playground command, kitty/Ghostty, `isTerminal()`,
+      and the three real limits (no window automation, no embedded terminal host,
+      terminal grid wins over size options).
+`[x]` `/getting-started/omarchy`: developing on Arch/Hyprland (`nub install`,
+      playground, docs, gate, terminal run) and following the live palette —
+      `~/.local/state/omarchy/current/theme/colors.toml` →
+      `decodeOmarchyPalette` → `paletteToTokens` — with the measured-on-macOS
+      caveat stated on the page.
+
+## History rewrite (2026-11-01)
+
+`[x]` Remove the 49 `Co-Authored-By: Claude` trailers from public history. The
+      account was never on GitHub's contributors list (it lists `Cyberistic` and
+      `benjivdbrand`), but every one of those commits displayed the trailer.
+      Rewrote those 49 messages — and the hash of every descendant — in a mirror
+      clone with `git filter-repo`, then force-pushed `master` and
+      `agent/launch-film` (the only refs that carried them). The four local
+      branches that contain the range (`master`, `agent/launch-film`,
+      `agent/calculator`, `agent/repo-cleanup`) now point at the rewritten
+      commits; trees are byte-identical, so every working tree and uncommitted
+      change survived. Backup before the rewrite:
+      `/tmp/gpuiui-pre-rewrite.bundle`. Trailer text now lives only in local
+      stashes, which are never pushed.
+
+## Landing restored (2026-11-01)
+
+`[x]` Put back the landing that preceded the plan-727 rebuild
+      (`7e643c375^`): hero deck, dashboard and management sections, terminal,
+      lineage, defaults and the code/component pair, with the old stylesheet.
+      The rebuild's `hero`, `proof`, `feel` and `blocks-strip` modules are gone.
+      The footer's reference list stays retired (commit `96f44be72`), and the
+      reader-facing sentence now says what the library is built on. Landing
+      tests 32/32 and `check-types` clean; deployed.
+
+## Landing pass (2026-11-01)
+
+`[x]` Rework the restored landing to the owner's brief: monotone navbar mark,
+      "Super fast GPU apps on Mac, Windows & Linux" hero, lineage second with
+      "Write once, run everywhere" and a Terminal leaf (its stack caption gone),
+      authored-looks section removed, "Your agent already knows the syntax" /
+      "It's just shadcn!", dashboard renamed "Build native-looking apps" with a
+      platform switch and no browser-preview caption, and the management console
+      replaced by a stage — one window, a Deploy action, progress and a toast.
+      Conversations now all carry threads, macOS gets the same rail as the other
+      dresses, the Greed Island attachment is `greed-island.webp`, and the
+      Windows taskbar runs the full width. The terminal section reads "Render
+      your apps in a terminal", links the Terminal guide, and opens the editor
+      **inside** the same frame with a working file tree, file tabs and a
+      collapsible sidebar. Landing tests 32/32; `check-types` and the production
+      build clean; deployed.
+
+---
+
+## Charts: types, styling and the chart page (plan 751, 2026-11-02)
+
+`[x]` `[██████████]` 18/18
+
+`[x]` `geometry.ts`: signed ranges (`chartRange`, so a negative bar stands below
+      zero), curves (linear/smooth/step), area clipping and nested fade bands,
+      radar webs/points, radial rings, pie/donut ring segments with a pad angle,
+      horizontal and rounded bars, value labels.
+`[x]` New chart types in `@gpuixui/data`: `AreaChart`, `PieChart`, `RadarChart`,
+      `RadialChart`, plus horizontal/negative bars with `valueLabels`, `percent`
+      stacking, `curve`/`dots`/`dashed`/`lineWidth` on lines, `gradient`/
+      `stacked`/`fillOpacity` on areas, `innerRadius`/`padAngle`/`centerLabel`
+      on rings, and `colors`/per-series `color` everywhere.
+`[x]` Shared frame: grid lines, top/bottom legend, value formats, and a hovered
+      column's readout (category + every series' value).
+`[x]` `docs/charts.mdx` now documents every type with its own usage snippet and
+      API table; the site preview shows a gallery of area, pie, radar and radial
+      beside the bar/line switch.
+`[x]` `geometry.test.ts` (13 cases) and `chart-types.test.tsx` (12 cases in the
+      real renderer) hold the new geometry; the shipped example mounts every
+      type.
+`[x]` shadcn-parity pass: `ComposedChart` (bars + line), legend marks
+      (`square`/`dot`/`line`) with row values, tooltip indicator and label
+      format, an active band, radar polygon/circle grids with fills and a
+      lines-only mode, and a radial track with guide rings. The page's preview
+      switches between bars, lines, area, mixed, pie, radar and radial.
+`[x]` shadcn examples round two: pie slice labels (`showLabels`, `labelFormat`)
+      with an `activeIndex` that stands proud, radar `radius`, radial `rounded`
+      caps, and line/area `showLabels`; the page's preview now offers bars,
+      lines, area, mixed, pie, pie-labels, line-labels, radar, radar-filled,
+      radial and radial-rounded.
+`[x]` shadcn examples round three: pie labels outside the ring with leader
+      lines, icon dots on line and radar points, custom radar grid radii
+      (`gridAt`), and dedicated Tooltip/Legend sections on the page with the
+      `tooltip` and `legend` preview modes. Behaviour cases drive the tooltip
+      indicator through a pointer move, and hold the leaders, icons and legend
+      marks.
+`[x]` shadcn example families, round four: `valueLabelFormat` on bars,
+      `axisLabelFormat` on radar, `showLabels` on radial, and seven grouped
+      preview scenes — `area-variants` (linear/step/legend), `bar-variants`
+      (active band + custom labels), `line-variants` (linear/step),
+      `pie-interactive` (rest vs active slice), `radar-variants` (no grid,
+      lines only, custom labels), `radial-variants` (labels, track + grid) and
+      `tooltip-variants` (line indicator, formatter, custom label).
+`[x]` The chart page's parity rows link to the real renderer: `/live` takes
+      `?scene=parity&only=<id>` and mounts that row's native chart (or the whole
+      gallery) through the GPUix wasm build, and each table row links to it.
+      `chart-parity.test.tsx` now asserts every row paints marks with geometry
+      and words, not merely that a node mounts.
+`[x]` `chart-pie-stacked` is native: `PieChart stacked` paints each datum on
+      its own concentric band (`ringBands`), with `activeIndex` still standing
+      one band proud; a behaviour case reads three arcs at decreasing radii.
+      Every parity row is native, and `parity.test.ts` now fails if any row is
+      not.
+`[x]` Reference parity is executable: `chart-tooltip-icons` is native
+      (`tooltipIcons` paints a series' icon in the readout) and area icon dots
+      are native (`AreaChart.dotIcons`), leaving only `chart-pie-stacked`
+      approximated. `chart-parity.example.tsx` renders every one of the 70 rows
+      as a real chart from `PARITY_CHARTS`; `chart-parity.test.tsx` mounts the
+      gallery once in the renderer with a named case per example, and the
+      playground's example gallery mounts the data registry too.
+`[x]` On-plot zoom: with `zoom` on, the plot itself takes a drag-select band
+      (release sets `view` to the selected categories) and a wheel/trackpad
+      zoom around the window's centre; pointer-driven cases cover both. Pinch
+      stays unavailable — the runtime publishes no multitouch gesture.
+`[x]` Reference parity is a checked map: `chart/parity.ts` names all 70 examples
+      of shadcn's charts app with the native chart, option and preview that
+      answer each, marks the approximated and unsupported rows with a reason,
+      and `parity.test.ts` fails when a name, option, mode or covered part is
+      missing. The page prints the table.
+`[x]` Continuous zoom and pan: `view` is a fractional category window,
+      `zoom` paints a navigation strip whose drag pans and whose wheel zooms
+      around the centre, and its Reset returns `[0, labels]`. Marks and labels
+      are placed from the fractional window and clipped to the plot;
+      `chart-zoom.test.tsx` drags (window start moves, first label clipped),
+      wheels (the span narrows and a category widens) and resets.
+`[x]` The brush is a real drag: `brush` paints a strip under the plot, a press
+      and drag reports every step through `onDomainChange`, and the controlled
+      `domain` paints the band while the plot windows live (`domainLabels` keeps
+      the strip's own category list from being windowed by its drag). A
+      behaviour test drags category 1 → 2 and reads only Q2/Q3 with two bars.
+      Per-point cards now follow the pointer inside their zone through the
+      plot's `onLayout` origin.
+`[x]` Per-point readouts and a brushed window: `pointTooltip` on line, area and
+      radar puts a hit zone on every mark (`PointTooltip`, native divs + text,
+      pointer-driven tests), and `domain: [start, end)` windows the plotted
+      categories for the cartesian charts (`chartWindow` normalizes reversed,
+      fractional and out-of-range windows). The page adds a `point-tooltip`
+      and a `brush` preview and a Brush section with API rows.
+`[x]` Native chart animation: `animate` / `animationDuration` tween a data
+      change from the frames on screen (`chart/animation.ts`; ease-out cubic,
+      16 ms clock, series matched by key, added series grow from zero), a
+      `MotionProvider preference="reduced"` paints the target at once, and the
+      page's `animated` preview replays the same interpolation in the browser.
+      `chart-animation.test.tsx` asserts a frame strictly between the start and
+      the end, the exact landing, and the reduced no-tween path.
+`[x]` Charts are interactive where the runtime allows: the readout follows the
+      cursor inside a column (`onLayout` gives the plot's origin, `onMouseMove`
+      the pointer), a press on a pie slice reports through `onSliceActivate`
+      and a controlled `activeIndex` stands the slice proud, and the page's
+      `area-interactive` / `line-interactive` previews track the pointer with a
+      guide line, dot and readout.
+`[x]` The hover readout is driven end to end: `nativeSimulateMouseMove` enters a
+      category zone, the card opens with the category and values, and leaving
+      closes it. `nub run check`, the docs suite (2285), the data suites (331
+      unit, 247 behaviour) and the docs build are green.
+
+## Reorderable editor tabs (2026-11-03)
+
+`[x]` `[██████████]` 7/7 — the landing terminal's editor tabs drag into a
+      new order and close, and the Terminal guide shows the same browser strip.
+
+`[x]` Add the docs-site `ReorderableTabs` component: a pointer drag with a
+      measured gap and a snap, `Alt`+Left/Right keyboard moves, a roving tab
+      stop and a close that collapses the tab's own width before the caller
+      removes it. `reorderable-tabs-logic.ts` holds the arithmetic
+      (`dropIndex`, `orderWith`, `moveTabTo`, `positionsFor`, `shiftsFor`,
+      `closedTabs`).
+`[x]` Use it in `terminal.tsx`: one tab per open file, close leaves the next
+      (or previous) tab open, closing the marked buffer moves the focus to its
+      successor, and an explorer press reopens a closed file at the end of the
+      strip.
+`[x]` Show it on `/platform/terminal` under **The editor tab strip**, with the
+      pointer and keyboard rules and a Reopen all reset.
+`[x]` Keep the motion honest: transforms and measured widths in `demos.css`,
+      the VS Code drag wash in `landing.css`, and both dropped under
+      `prefers-reduced-motion`.
+`[x]` `reorderable-tabs.test.tsx` holds the slot arithmetic, the close
+      successor, the public tab shape and the gesture's source/CSS;
+      `terminal.test.tsx` holds the landing's tab list and close names.
+`[x]` Verified in the browser: dragging `page.tsx` to the end lands
+      `button.tsx,theme.ts,page.tsx`; closing `page.tsx` selects `theme.ts`;
+      closing the last tab paints the empty buffer; an explorer press reopens
+      `page.tsx`; the same drag and close run on the guide preview.
+`[x]` `nub run --filter @gpuixui/docs check-types` and `test` (230 files /
+      2298 tests) are green; the docs build prerenders the new section.
+
+## mermaidcn on Pele (2026-11-03)
+
+`[x]` `[██████████]` 8/8 — the docs ship mermaidcn's renderer, zoom/pan canvas
+      and playground, rebuilt on Pele with the same component syntax.
+
+`[x]` Read the reference and record it in `.agents/slop/LICENSES/mermaidcn.md`,
+      `.agents/slop/LICENSES/README.md` and `status.md`'s Built on table. The
+      clone is at `references/mermaidcn`; the repository carries no LICENSE
+      file, so the record names the README's MIT declaration honestly.
+`[x]` `Mermaid` keeps `chart`, `config`, `onSuccess` and `onError`; Pele renders
+      synchronously, so there is no loading state, and a refused source is the
+      parser's sentence instead of an empty frame.
+`[x]` `config.theme` accepts Mermaid's five names and the fifteen named
+      palettes; the eight Mermaid variables map to `--pele-*` in a fixed
+      precedence, so `primaryTextColor` and `primaryColor` win over their
+      broader fallbacks.
+`[x]` `ZoomPan` keeps mermaidcn's props and controls render prop, adds pointer
+      panning, wheel zoom around the cursor, fit and reset. `zoom.ts` holds the
+      arithmetic; pinch is recorded as a limit (Pele's `enableZoom` has it).
+`[x]` `MermaidPlayground` is the editor + live preview + template/theme
+      pickers + copy/download SVG; the preview is one deferred value behind the
+      editor and opens fitted on a template change.
+`[x]` `/diagrams` documents the fence, the three components, the theme table
+      and the limits; `mermaidcn.test.tsx` holds the renderer, theme mapping,
+      zoom arithmetic, every template and the playground markup.
+`[x]` `mermaidcn.test.tsx` (2315 docs tests) is green, `check-types` and the
+      docs build pass; the example and playground were measured in the browser:
+      a theme switch repaints `--pele-surface` without a second render and a
+      template change refits the canvas.
+`[x]` The gradient/zoom buttons use the shared `.gx-btn` family, held by
+      `drawing-buttons.test.ts`.
+
+`[x]` Fix the terminal explorer's chrome after the package tree landed: the
+      docs demo scene (`.gx-base.gx-demo`) brought a 40px inset, dot field,
+      border and card radius into VS Code's sidebar, so the tree now paints on
+      the explorer's own `--vsc-*` roles with its `Explorer` header and Seti TS
+      badges. The package's row fold animation is untouched.
+`[x]` Make the tabs drag read before the release: a `gx-reorder-indicator`
+      marks the slot, neighbours transition into the opened gap while the
+      pointer moves, and the snapping transforms stay until the caller's order
+      arrives (a layout effect clears them before paint) instead of animating
+      after the tab has already been placed.
+## Charts v2 and the Graphics category (plans 752/753, 2026-11-04)
+
+`[x]` `[██████████]` 10/10
+
+`[x]` Record **why Recharts is unusable here** — it needs a DOM
+      (`document.createElementNS`, `getBoundingClientRect`, `ResizeObserver`),
+      per-mark pointer events and CSS. GPUix publishes twelve host elements;
+      `<svg source>` is a one-tint `gpui::svg()` icon with no `mouseMove`,
+      and `setImage` yields a `RenderImage` picture with no hit-testable marks.
+      Plan 752 §8 holds the measurement.
+`[x]` Adopt **TanStack Charts** — `createChartScene(definition, size)` is a
+      pure DOM-free function, `renderChartSvg(scene)` emits one document, and
+      `nearestScenePoint` is a pure geometric hit test. Measured in a node
+      environment: a two-series chart compiles and serialises with both
+      series' colours in one document. Bundle 57 kB minified / 21 kB gzip
+      (scene + SVG + bar/line/area + compact scales), 41 kB / 15 kB minimal,
+      with **zero d3 references** — the scales come from
+      `@tanstack/charts-scales`, not from d3.
+`[x]` Make the **document route** the default paint — the chart's `src` data
+      URL on an `<img>`, decoded by the runtime; the one-tint mask route stays
+      as `render="mask"`.
+`[x]` Keep the **accessibility tree** on the document route — a named element
+      per series (a transparent `<div role="img">`) so each series' name and
+      values are still announced; the document element itself is `role="none"`.
+`[x]` Land the **`ChartConfig` seam** — every cartesian chart takes `config`
+      and `data`; the colour is resolved in the theme's mode, and the legend
+      and the plot read the same colour.
+`[x]` Land the **missing types** — `ScatterChart`, `CandleChart` and
+      `FunnelChart`, with geometry, props, page tables and behaviour cases.
+`[x]` Land the **crosshair** and the **emphasised point** — only the hovered
+      point grows.
+`[x]` Land the **`Diagram` component** — Pele, shadcn-like, in
+      `@gpuixui/components` (`src/diagram.tsx` + `src/diagram/logic.ts`), with
+      a docs page, an example, an inventory row and a licence note. The theming
+      bug is fixed too: Pele writes its palette twice (the public `--pele-*`
+      and the internal `--_*`), and a raster resolves neither — both must
+      become literal colours.
+`[x]` Replace the **"Icons"** docs category with **"Graphics"** — charts,
+      icons and diagrams under one heading, mounted at
+      `/graphics/charts/charts` and `/graphics/icons/icon`.
+`[x]` Teach the **docs-site export scanner** to read a component — the scanner
+      could not read a component returning JSX, which is why `Diagram` was
+      never published. It now reads the five things the compiler reads: code,
+      comments, strings, templates, and beside them **regex literals** and
+      **JSX elements**. A statement ends when its own brackets are all closed,
+      so a parameter list's brace and an object literal's brace no longer end
+      it. Six regression tests cover the reading (a regex literal, a JSX body,
+      a division, a destructured parameter, an object literal that is an
+      argument, and a tag whose attributes hold a comment); three of them fail
+      on the previous scanner. Docs suite back to its pre-existing baseline.
+`[x]` Land the **document-route live probe** — `chart-document-lifecycle` in
+      `apps/playground`, 24 checks, green on 4 consecutive runs. It proves two
+      series hold two colours inside one plot and that the diagram paints
+      through the same route.
+`[x]` Repair the **lockfile drift** — `nub install` had re-resolved
+      `@effect/platform-node-shared` to 4.1.2, which is incompatible with
+      `effect@4.0.5` and broke the playground runner. `nub.lock` was rebuilt
+      from the pre-drift base plus only the TanStack Charts entries; this also
+      fixed the four pre-existing playground failures.
+
+`[x]` **Merge into `master`** — the owner landed the shared working tree
+      (136 files, `a00903142`) and kept the native chart package with this
+      workstream, so the branch was rebased onto it: 17 commits on top of
+      `origin/master`, green, with the plan index, the component inventory and
+      the task ledger merged rather than overwritten. The rebase resolved four
+      conflicts by keeping both sides — plan 751 and plan 752 in the plan
+      index, one merged Charts row, the owner's `mermaidcn` fence documentation
+      and this workstream's `Diagram` component documentation in one diagrams
+      page, and the owner's `/platform/terminal` guide with this workstream's
+      Graphics navigation.
+
+## The Graphics category's icon grid (2026-11-06)
+
+`[x]` `[██████████]` 2/2
+
+`[x]` The icons page already mounted the gallery through the site's preview
+      table (`package-preview.ts` → `icon-gallery-demo`); the primitives index
+      mounted a second copy below its own text. The duplicate is gone — the
+      index now says where the set lives — and `icon-gallery.test.tsx` holds
+      the mount to one page, through the preview table rather than a literal.
+`[x]` The charts page draws all seventeen types: `70ac7d90a` moved the contact
+      sheet into `chart-gallery.tsx` and mounted it, so the grid and the page's
+      table are the same list.
+
+## The three remaining chart types (plan 754, 2026-11-05)
+
+`[x]` `[██████████]` 10/10
+
+`[x]` Measure the gap against **Recharts' thirteen** chart types — the library
+      shipped ten, and the three it lacked were the ones that draw a
+      **structure** rather than a set of categories: `Treemap`, `Sankey` and
+      `SunburstChart`. GPUI Kit ships seven types and adds only a
+      candlestick, which this library already had, so the three were the whole
+      of the gap.
+`[x]` Measure that **TanStack Charts ships all three** — the `hierarchy/
+      treemap`, `hierarchy/sunburst` and `network/sankey` marks. Measured in a
+      process with no `document` and no `window`: a flat hierarchy compiled to
+      a scene and serialised to one document carrying three differently
+      coloured cells; the same hierarchy as a sunburst serialised to one
+      document carrying two coloured arcs; a four-node, four-link graph
+      serialised to one document carrying the node rects and the link lines.
+`[x]` Land the **bridge** — `SceneChartKind` grows `treemap | sankey |
+      sunburst`, and each layout gets its own definition: a treemap holds no
+      scale (the compiler resolves its cells), a sankey holds none (it
+      resolves the flow), and a sunburst runs inside a polar mark. A
+      `defineChart` call's overload is chosen from the marks it is given, so
+      the type argument is **explicit** — inference across a cartesian and a
+      polar call in one file picks the wrong one.
+`[x]` Land the **hierarchy rows** — a node's **path** is its route through
+      the tree, and the caller's list may name only the leaves: a root is
+      added when the list names none, and the compiler's own rule of exactly
+      one root is met by construction. A node without a value holds its
+      subtree's, and a value that is not finite counts as nothing.
+`[x]` Land the **flow graph** — a link naming a node the graph does not
+      hold is dropped, and a link whose value is not positive is dropped: the
+      compiler rejects both, and a reader would rather see the flow that is.
+`[x]` Land the **three components** — `TreemapChart`, `SankeyChart` and
+      `SunburstChart`, each with its props, its legend and its own
+      accessible name and description.
+`[x]` Land the **page** — a section per type in `packages/data/docs/charts/
+      charts.mdx`, with the usage, every prop and its default.
+`[x]` Hold the **rules** — nine geometry cases in `src/chart/hierarchy.test.ts`
+      (the root, the two roots, the aggregate, the non-finite value, the
+      leaves, the dangling link, the valueless link) and seven behaviour
+      cases in `src/behaviour/chart-structure.test.tsx` (the treemap's
+      colours and its **proportional** areas, the sankey's nodes and ribbons
+      and its dropped link, the sunburst's colours and its **proportional**
+      angles). Each fails on the previous rule.
+`[x]` Read the **export scanner's** props from the module that declares
+      them — the legend's props moved beside the legend when it became its
+      own module, and a type is read from the file that **declares** it.
+`[x]` Move the **legend** into its own module — every chart family needs
+      it, and a legend that lived in one of them would make the others
+      import a chart.
+`[x]` Land the **radial bar** — `RadialChart` paints **concentric rings**, a
+      gauge, and Recharts' `RadialBarChart` paints **radially-arranged
+      bars**: each category owns a slot around the circle and its bar
+      extends out from the centre by its value's share of the largest. TanStack
+      ships the mark (`radialBarRadius` in a polar layout), and it is the
+      last of Recharts' thirteen, so the coverage is exact and not nominal.
+      One behaviour case holds it: one bar per category, and the bar's
+      length is proportional to its value.
+
+`[!]` The GPUix issue for **SVG primitives** is open upstream:
+      https://github.com/remorses/gpuix/issues/130 — "Add support for SVG
+      primitives", with a link to `https://www.w3.org/TR/SVG2/`. Until it
+      lands, every chart and diagram paints through the document route.

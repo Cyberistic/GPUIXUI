@@ -3,6 +3,8 @@ title: Table sorting
 description: The press cycle a sortable header reports
 ---
 
+Using [TanStack Table](https://tanstack.com/table).
+
 ## Usage
 
 ```tsx
@@ -136,9 +138,3 @@ where the core's `data` access used to throw
 `Cannot read properties of null (reading 'length')` out of the first build. A
 readable list is the caller's own, untouched
 (`behaviour/stored-rows.test.tsx`).
-
-## Limitations
-
-- No `aria-sort`: direction and place are spoken, not attached to the header.
-- Pressing a field already in the order moves nothing; a plain press replaces the order.
-- No secondary sort editor beyond the press gestures.

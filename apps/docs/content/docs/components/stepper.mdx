@@ -34,21 +34,16 @@ Stepper
 
 ## API reference
 
-A finite `value` is never clamped: `0` leaves every step upcoming and a value
-past the last step completes them all. A value no step can answer — `NaN` or an
-infinity, from arithmetic over a step index before a total arrived — reads as
-the first step, because a stepper mid-computation still paints somewhere.
-
 ### `Stepper`
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `value` | `number` | — | the current step, 1-based; steps below it are complete, and a value the caller cannot read reads as the first step |
+| `value` | `number` | — | the current step, 1-based; steps below it are complete |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` — a stored name the union does not carry | a row of steps, or a column for a sidebar |
 | `label` | `string` | none | the list's accessible name (`aria-label`) |
 | `children` | `ReactNode` | — | `StepperStep` parts, in order |
 | `style` | `StyleDesc` | — | merged last |
-| `className` | `string` | — | compiled through `@gpuixui/tw`, joined after the recipe |
+| `className` | `string` | — | joined last |
 | `testId` | `string` | — | stable locator |
 
 ### `StepperStep`
@@ -56,14 +51,13 @@ the first step, because a stepper mid-computation still paints somewhere.
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | — | this step's position, 1-based, on the root's scale |
-| `label` | `string` | — | the step's name and its accessible name; a blank name reads as `Step` and the step's position |
-| `description` | `string` | none | one line of support copy under the name |
-| `style` | `StateStyle<StepperStepState>` | — | resolved against the derived status, merged last |
-| `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `label` | `string` | — | the step's name and its accessible name |
+| `description` | `string` | none | support copy under the name |
+| `style` | `StateStyle<StepperStepState>` | — | merged last |
+| `className` | `string` | — | joined last |
 | `testId` | `string` | — | stable locator |
 
-## Limitations
-
-- The root is a list named when `label` is given; every step is a `listitem` named by its `label`, and a blank label reads as `Step` plus the step's position (`Step 2` for the second) rather than publishing an unnamed item.
-- `@gpuix/native@0.11.0` has no `aria-current`, so the current step carries `aria-selected` — the same substitution Pagination uses.
-- The number marker is visual: the step's accessible name does not include it, so a screen reader hears "Billing", not "2 Billing".
+## Notes
+- `value` is never clamped: `NaN` or an infinity reads as the first step.
+- A step with a blank label reads as `Step` plus the step's position (`Step 2` for the second).
+- No `aria-current`: the current step carries `aria-selected`.

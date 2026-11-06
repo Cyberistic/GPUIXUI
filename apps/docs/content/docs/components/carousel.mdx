@@ -57,11 +57,11 @@ Carousel
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `label` | `string` | — | the region's accessible name; required |
-| `value` | `number` | — | controlled slide index; omit to let the carousel keep its own |
+| `value` | `number` | — | controlled slide index |
 | `defaultValue` | `number` | `0` | the opening slide when uncontrolled |
-| `onValueChange` | `(value: number) => void` | none | the next index, only when it changed |
+| `onValueChange` | `(value: number) => void` | none | the next index |
 | `loop` | `boolean` | `false` | wraps past both ends and keeps both controls live |
-| `className` | `string` | — | joined after the recipe, so it wins conflicts |
+| `className` | `string` | — | joined last |
 | `children` | `ReactNode` | none | the track and the controls, directly inside |
 
 ### `CarouselTrack`
@@ -69,7 +69,7 @@ Carousel
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `children` | `ReactNode` | none | the slides, as direct children |
-| `className` | `string` | — | joined after the recipe |
+| `className` | `string` | — | joined last |
 
 ### `CarouselSlide`
 
@@ -77,7 +77,7 @@ Carousel
 | ---- | ---- | ------- | ----------- |
 | `children` | `ReactNode` | none | the slide's content |
 | `style` | `StateStyle<CarouselSlideState>` | — | `{ active, index }`, merged last |
-| `className` | `string` | — | joined after the recipe |
+| `className` | `string` | — | joined last |
 
 ### `CarouselControl`
 
@@ -93,10 +93,9 @@ Carousel
 | ---- | ---- | ------- | ----------- |
 | `label` | `string` | `"Choose a slide"` | the dot group's accessible name |
 | `style` | `StateStyle<CarouselIndicatorsState>` | — | `{ active, count }`, merged last |
-| `className` | `string` | — | joined after the recipe |
+| `className` | `string` | — | joined last |
 
-## Limitations
-
-- The root is a named `group`; 0.11.0 has no `aria-roledescription="carousel"`.
-- Dots use `aria-selected`; 0.11.0 has no `aria-current`.
+## Notes
+- The root is a named `group`; no `aria-roledescription="carousel"`.
+- Dots use `aria-selected`; no `aria-current`.
 - Only the active slide is mounted.

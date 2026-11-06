@@ -1,6 +1,7 @@
 import { deflateSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import {
+  distinctFillCount,
   fillAt,
   isolationHeaders,
   judge,
@@ -76,6 +77,56 @@ describe("the live frame's pixel", () => {
     expect(fillAt(png([124, 92, 255]).subarray(0, 40), 1, 1)).toBeUndefined();
     expect(fillAt(new Uint8Array(), 0, 0)).toBeUndefined();
     expect(fillAt(png([124, 92, 255]), 99, 99)).toBeUndefined();
+  });
+});
+
+describe("the capture run's flat-frame check", () => {
+  it("reports one colour for a solid frame", () => {
+    expect(distinctFillCount(png([18, 22, 30]))).toBe(1);
+  });
+
+  it("reports both colours for a frame with two fills", () => {
+    // The capture run rejects a frame with fewer than two distinct colours, so
+    // this is the measurement that lets a painted frame through.
+    const size = 4;
+    const left = [124, 92, 255];
+    const right = [49, 160, 95];
+    const row = [
+      0,
+      ...Array.from({ length: size }, (_, x) =>
+        x < size / 2 ? left : right,
+      ).flat(),
+    ];
+    const pixels = new Uint8Array(
+      Array.from({ length: size }, () => row).flat(),
+    );
+    const header = new Uint8Array(13);
+    const view = new DataView(header.buffer);
+    view.setUint32(0, size);
+    view.setUint32(4, size);
+    header[8] = 8;
+    header[9] = 2;
+    const parts = [
+      new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
+      chunk("IHDR", header),
+      chunk("IDAT", new Uint8Array(deflateSync(pixels))),
+      chunk("IEND", new Uint8Array()),
+    ];
+    const out = new Uint8Array(
+      parts.reduce((sum, part) => sum + part.length, 0),
+    );
+    parts.forEach((part, index) =>
+      out.set(
+        part,
+        parts.slice(0, index).reduce((sum, earlier) => sum + earlier.length, 0),
+      ),
+    );
+
+    expect(distinctFillCount(out)).toBe(2);
+  });
+
+  it("is not a guess for a frame it cannot read", () => {
+    expect(distinctFillCount(new Uint8Array())).toBeUndefined();
   });
 });
 

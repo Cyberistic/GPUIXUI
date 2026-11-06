@@ -77,8 +77,7 @@ Each entry of `steps` is a `MultiStep`:
 
 A gate's message is copy on the same rule. `Some("")` still **refuses** the move, so a table with a missing row cannot release a step its author gated, but the painted alert reads `This step is not complete yet.` rather than nothing — an invisible refusal leaves the reader pressing a button that does nothing.
 
-## Limitations
-
+## Notes
 - **A workflow is data as well as code**: a `steps` list restored from a saved
   definition is read at the boundary (`stepsOf`), so JSON's `null` for a list a
   record never carried paints nothing rather than throwing on `steps.length`,

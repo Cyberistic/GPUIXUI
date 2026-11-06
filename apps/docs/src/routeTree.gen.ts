@@ -18,7 +18,6 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as DocsSplatRouteImport } from './routes/docs/$'
-import { Route as LiveBlockSlugRouteImport } from './routes/live.block.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -65,48 +64,40 @@ const DocsSplatRoute = DocsSplatRouteImport.update({
   path: '/docs/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LiveBlockSlugRoute = LiveBlockSlugRouteImport.update({
-  id: '/block/$slug',
-  path: '/block/$slug',
-  getParentRoute: () => LiveRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/live': typeof LiveRouteWithChildren
+  '/live': typeof LiveRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/': typeof DocsIndexRoute
-  '/live/block/$slug': typeof LiveBlockSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/live': typeof LiveRouteWithChildren
+  '/live': typeof LiveRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs': typeof DocsIndexRoute
-  '/live/block/$slug': typeof LiveBlockSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/live': typeof LiveRouteWithChildren
+  '/live': typeof LiveRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/': typeof DocsIndexRoute
-  '/live/block/$slug': typeof LiveBlockSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,7 +111,6 @@ export interface FileRouteTypes {
     | '/api/search'
     | '/docs/$'
     | '/docs/'
-    | '/live/block/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -132,7 +122,6 @@ export interface FileRouteTypes {
     | '/api/search'
     | '/docs/$'
     | '/docs'
-    | '/live/block/$slug'
   id:
     | '__root__'
     | '/'
@@ -144,13 +133,12 @@ export interface FileRouteTypes {
     | '/api/search'
     | '/docs/$'
     | '/docs/'
-    | '/live/block/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
-  LiveRoute: typeof LiveRouteWithChildren
+  LiveRoute: typeof LiveRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -224,30 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/live/block/$slug': {
-      id: '/live/block/$slug'
-      path: '/block/$slug'
-      fullPath: '/live/block/$slug'
-      preLoaderRoute: typeof LiveBlockSlugRouteImport
-      parentRoute: typeof LiveRoute
-    }
   }
 }
-
-interface LiveRouteChildren {
-  LiveBlockSlugRoute: typeof LiveBlockSlugRoute
-}
-
-const LiveRouteChildren: LiveRouteChildren = {
-  LiveBlockSlugRoute: LiveBlockSlugRoute,
-}
-
-const LiveRouteWithChildren = LiveRoute._addFileChildren(LiveRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
-  LiveRoute: LiveRouteWithChildren,
+  LiveRoute: LiveRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

@@ -78,9 +78,9 @@ const root = new URL("../../../../", import.meta.url);
 
 const packageFiles = (): ReadonlyArray<string> =>
   packageCollections.flatMap((collection) =>
-    collectionPages(root, collection).map(
-      (name) => `${collection.dir}/${name}`,
-    ),
+    collectionPages(root, collection)
+      .filter((name) => name !== "index.mdx")
+      .map((name) => `${collection.dir}/${name}`),
   );
 
 describe("the index's URL mapping", () => {
@@ -94,7 +94,9 @@ describe("the index's URL mapping", () => {
     expect(pageUrl("packages/primitives/docs/slider.mdx")).toBe(
       "/primitives/slider",
     );
-    expect(pageUrl("packages/icons/docs/icon.mdx")).toBe("/icons/icon");
+    expect(pageUrl("packages/icons/docs/icon.mdx")).toBe(
+      "/graphics/icons/icon",
+    );
   });
 
   it("drops a section index and a file that is not a component page", () => {
@@ -145,7 +147,7 @@ describe("the index built from pages", () => {
     ]);
     expect(entries.map((row) => row.section)).toEqual([
       "Primitives",
-      "Icons",
+      "Graphics",
       "Components",
       "Components",
     ]);
@@ -570,12 +572,16 @@ describe("the real index", () => {
         .map((name) => `/components/${name.replace(/\.mdx$/, "")}`),
     );
 
-    const missing = packageFiles().filter((file) => {
-      const url = pageUrl(file);
-      if (url === undefined) return true;
-      // The curated page owns the URL; the package row is shadowed on purpose.
-      return !listed.has(url) && !curated.has(url);
-    });
+    // `index.mdx` is its directory's landing page, not a component — the same
+    // rule the curated list above applies.
+    const missing = packageFiles()
+      .filter((file) => !file.endsWith("/index.mdx"))
+      .filter((file) => {
+        const url = pageUrl(file);
+        if (url === undefined) return true;
+        // The curated page owns the URL; the package row is shadowed on purpose.
+        return !listed.has(url) && !curated.has(url);
+      });
 
     expect(missing).toEqual([]);
   });
@@ -588,7 +594,7 @@ describe("the real index", () => {
     const sections = [...new Set(componentIndex.map((row) => row.section))];
     expect(sections).toEqual([
       "Primitives",
-      "Icons",
+      "Graphics",
       "Components",
       "Data display",
       "Workspace",
@@ -606,7 +612,12 @@ describe("the real index", () => {
     const curated = readdirSync(
       new URL("apps/docs/content/docs/components/", root),
     )
-      .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
+      .filter(
+        (name) =>
+          name.endsWith(".mdx") &&
+          name !== "index.mdx" &&
+          name !== "reorderable-tabs.mdx",
+      )
       .map((name) => ({
         url: `/components/${name.replace(/\.mdx$/, "")}`,
         preview: readFileSync(
@@ -681,13 +692,6 @@ describe("the real index", () => {
     const found = filterEntries(componentIndex, "DropdownMenuCheckboxItem");
 
     expect(found.map((row) => row.url)).toContain("/components/dropdown-menu");
-  });
-
-  it("finds a component by a limitation it records", () => {
-    const found = filterEntries(componentIndex, "aria-orientation");
-
-    expect(found.length).toBeGreaterThan(0);
-    expect(found.map((row) => row.url)).toContain("/components/tabs");
   });
 
   it("finds a component by the parts a curated page composes", () => {

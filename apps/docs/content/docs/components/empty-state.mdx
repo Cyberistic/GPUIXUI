@@ -64,8 +64,7 @@ EmptyState
 | `style` | `StyleDesc` | none | merged last, so a caller overrides any recipe property |
 | `testId` | `string` | none | stable locator |
 
-## Limitations
-
-- The panel is a `div` with **no role**, so the panel itself is not announced; its title and description are labels.
+## Notes
+- The panel is a `div` with **no role**: it is not announced.
 - The title is **not a heading**: `<text>` paints a label.
-- No live region in 0.11.0, so a panel that replaces content is not announced.
+- **No live region**: a panel that replaces content is not announced.

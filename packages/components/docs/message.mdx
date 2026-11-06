@@ -98,8 +98,7 @@ painted into the reply.
 | `MessageActions` | a named action row, or `null` | `onCopy?`, `onRetry?`, `onFeedback?`, `copyLabel?`, `retryLabel?`, `helpfulLabel?`, `notHelpfulLabel?`, `className?` |
 | `MessageGroup` | consecutive rows, tighter | `gap?`, `className?`, `children` |
 
-## Limitations
-
+## Notes
 - The bubble is a child: a caller can reuse `Bubble` on its own, and `Message`
   never invents one.
 - No `aria-labelledby` or `aria-describedby`; a tool call's result and a

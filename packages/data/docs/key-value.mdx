@@ -36,8 +36,7 @@ import { KeyValue } from "@gpuixui/data";
 | `label` | `string` | the words in the fixed label column; a blank one reads as the row's `key` |
 | `value` | `ReactNode` | the value, already rendered by the caller; a string or a number is painted as its own `Label` |
 
-## Limitations
-
+## Notes
 - The label column is fixed, not measured: a long label wraps.
 - An unusable `width` reads as the default rather than a malformed track.
 - The list does not scroll; the owning panel scrolls it.

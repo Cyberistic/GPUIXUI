@@ -1,94 +1,81 @@
-/**
- * The landing's claims (plan 727).
- *
- * Bugs guarded: a hero that plays no native footage (or plays it to a reader
- * who asked for less motion), sections that argue against the product with
- * "Browser preview" captions, a number printed that the bench never measured,
- * a block tile linking to a page that does not exist, a video over its budget,
- * and the retired Hunter identity creeping back.
- */
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import raw from "../../lib/proof.json";
-import { landingBlocks } from "./blocks-strip";
-import { Hero, heroMedia } from "./hero";
-import { credit, Landing } from "./landing";
-import { feelClips } from "./feel";
-import { proofFigures } from "./proof";
+import { Hero } from "./deck";
+import { Dashboard } from "./landing";
+import { Lineage } from "./lineage";
+import { CodeAndComponent } from "./landing";
 
-const at = (path: string) => fileURLToPath(new URL(path, import.meta.url));
-const publicFile = (path: string) => at(`../../../public${path}`);
+/**
+ * The landing's copy, held to the brief it was rewritten from.
+ *
+ * The page carried a marketing line per section that drifted from what the
+ * section actually shows: a hero advertising native "looks", an authored-look
+ * grid that repeated three counts, and a lineage caption explaining the stack.
+ * The copy now says what a reader gets — speed, one codebase, every platform —
+ * and this guard renders each section, so a reworded heading or a reintroduced
+ * caption fails here rather than in a screenshot review.
+ */
 
-describe("the landing", () => {
-  it("plays native footage with a poster and a label", () => {
-    const hero = renderToStaticMarkup(<Hero />);
-    expect(hero).toContain(`poster="${heroMedia.poster}"`);
-    expect(hero).toContain(`aria-label="${heroMedia.label}"`);
-    expect(hero).toContain(heroMedia.mp4);
+const read = (path: string): string =>
+  readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
+
+const hero = renderToStaticMarkup(<Hero />);
+const lineage = renderToStaticMarkup(<Lineage />);
+const dashboard = renderToStaticMarkup(<Dashboard />);
+const code = renderToStaticMarkup(<CodeAndComponent />);
+
+describe("the landing's copy", () => {
+  it("leads with the claim a reader can check in the deck", () => {
+    expect(hero).toContain("Super fast GPU apps");
+    expect(hero).toContain("on Mac, Windows &amp; Linux");
   });
 
-  it("keeps every hero file in the repository and within budget", () => {
-    const sizes = [heroMedia.mp4, heroMedia.webm, heroMedia.poster].map(
-      (path) => statSync(publicFile(path)).size,
+  it("puts the lineage directly after the hero, and no authored-look grid", () => {
+    const source = read("landing.tsx");
+    const order = source.slice(source.indexOf("<Hero />"));
+
+    expect(order.indexOf("<Lineage />")).toBeLessThan(
+      order.indexOf("<Dashboard />"),
     );
-    expect(Math.max(...sizes)).toBeLessThanOrEqual(3 * 1024 * 1024);
+    expect(source).not.toContain("Defaults");
+    expect(source).not.toContain("authored looks");
   });
 
-  it("plays five recorded feel loops, each with its poster, within budget", () => {
-    const page = renderToStaticMarkup(<Landing />);
-    for (const clip of feelClips) {
-      expect(page).toContain(`/media/landing/feel-${clip.id}.mp4`);
-      for (const ext of ["mp4", "jpg"]) {
-        const size = statSync(
-          publicFile(`/media/landing/feel-${clip.id}.${ext}`),
-        ).size;
-        expect(size).toBeLessThanOrEqual(800 * 1024);
-      }
-    }
+  it("names the one-codebase claim and drops the stack caption", () => {
+    expect(lineage).toContain("Build once, run on the GPU everywhere");
+    expect(lineage).toContain("blazingly fast btw");
+    expect(lineage).toContain("Terminal");
+    expect(lineage).not.toContain("shadcn/ui composition, Base UI behaviour");
   });
 
-  it("prints only the numbers the bench wrote", () => {
-    expect(proofFigures.map((figure) => figure.value)).toEqual([
-      `${raw.coldStartMs} ms`,
-      `${raw.idleRssMb} MB`,
-      `${raw.installMb} MB`,
-    ]);
-    const source = readFileSync(at("./proof.tsx"), "utf8");
-    expect(source).not.toMatch(/\d+ ?(ms|MB)\b/);
+  it("renames the code section to the agent-friendly claim", () => {
+    expect(code).toContain("Your agent already knows the syntax.");
+    expect(code).toContain("It&#x27;s just shadcn!");
   });
 
-  it("links every block tile to a block page and its image", () => {
-    const pages = readdirSync(at("../../../content/docs/blocks"));
-    for (const block of landingBlocks) {
-      expect(pages, block.slug).toContain(`${block.slug}.mdx`);
-      expect(
-        statSync(publicFile(`/blocks/${block.slug}.webp`)).size,
-      ).toBeGreaterThan(0);
-    }
-  });
-
-  it("argues with no browser-preview captions outside the code sample", () => {
-    const page = renderToStaticMarkup(<Landing />);
-    expect(page.match(/Browser preview|browser preview/g) ?? []).toHaveLength(
-      1,
+  it("shows the shipped components as one grid, with no preview switch", () => {
+    expect(dashboard).toContain("All the components you need");
+    expect(dashboard).toContain("Point your agent at");
+    expect(dashboard).toContain('href="/llms.txt"');
+    expect(dashboard).toContain("landing-grid");
+    expect(dashboard).not.toContain("Choose platform");
+    expect(dashboard).not.toContain(
+      "Browser preview of the native composition",
     );
-    expect(page).toContain('href="/live"');
   });
 
-  it("ends with the maker's line, the handle an underlined link to the site", () => {
-    const page = renderToStaticMarkup(<Landing />);
-    const line = page.slice(page.indexOf('class="landing-credit"'));
-    expect(line).toContain("Made with ☕ by");
-    expect(line).toContain(`href="${credit.href}"`);
-    expect(line).toContain(`>${credit.handle}</a>`);
-    expect(page.indexOf('class="landing-credit"')).toBeGreaterThan(
-      page.lastIndexOf("landing-footer"),
-    );
-    const css = readFileSync(at("../../styles/landing.css"), "utf8");
-    expect(css.slice(css.indexOf(".landing-credit a {"))).toMatch(
-      /^[^}]*text-decoration: underline/,
+  it("credits the maker in the footer", () => {
+    const source = read("landing.tsx");
+    expect(source).toContain("Made with ☕ by");
+    expect(source).toContain('href="https://sudokw.com"');
+    expect(source).toContain("@sudo_kw");
+  });
+
+  it("draws the navbar mark from the monotone outline", () => {
+    expect(read("../../styles/landing.css")).toContain(
+      'mask: url("/logo-outline.svg")',
     );
   });
 });
