@@ -31,6 +31,8 @@ import {
   fileManagerSource,
 } from "./file-manager-block";
 import { KanbanRender, kanbanPackages, kanbanSource } from "./kanban-board";
+import { CalendarRender, calendarBlockSource } from "./calendar-block";
+import { DataTableRender, dataTableBlockSource } from "./data-table-block";
 import { TasksRender, tasksPackages, tasksSource } from "./tasks-block";
 import { PipelineRender } from "./pipeline-block";
 import {
@@ -458,6 +460,28 @@ export const blocks: Readonly<Record<string, Block>> = {
     render: SettingsRender,
     source: settingsSource,
     file: "apps/docs/src/components/docs/blocks.tsx",
+  },
+  "data-table-01": {
+    name: "data-table-01",
+    slug: "data-table",
+    title: "Data table",
+    description:
+      "A deploy table: filter, sort, select, hide columns and page through — shadcn's data table over TanStack Table.",
+    packages: ["@gpuixui/data", "@gpuixui/primitives", "@gpuixui/components"],
+    render: DataTableRender,
+    source: dataTableBlockSource,
+    file: "apps/docs/src/components/docs/data-table-block.tsx",
+  },
+  "calendar-01": {
+    name: "calendar-01",
+    slug: "calendar",
+    title: "Calendar",
+    description:
+      "A month grid with the selected day's agenda beside it, and a Today press.",
+    packages: ["@gpuixui/components", "@gpuixui/primitives"],
+    render: CalendarRender,
+    source: calendarBlockSource,
+    file: "apps/docs/src/components/docs/calendar-block.tsx",
   },
   "kanban-01": {
     name: "kanban-01",
