@@ -7,6 +7,7 @@ import { spokenText } from "@gpuixui/primitives/core";
 import { themeModeOf } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
 import * as Arr from "effect/Array";
+import { areaGradient } from "./paint.js";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { listOf, recordsOf, textsOf } from "../internal/list.js";
@@ -26,7 +27,6 @@ import {
   seriesName,
 } from "./logic.js";
 import {
-  areaBands,
   areaPath,
   barMarksInRange,
   candleAtMarks,
@@ -765,13 +765,37 @@ export const FunnelChart = ({
       props.animate ?? true,
       props.animationDuration ?? DEFAULT_ANIMATION_DURATION,
     )[0] ?? stages;
+  const theme = useTheme();
   return (
     <ChartFrame
+      axis={false}
+      grid={false}
+      xLabels={false}
       {...props}
       series={rows}
       labels={labels}
       domainLabels={labelsFor(props.labels, props.data)}
       range={range}
+      overlay={({ box }) => (
+        <>
+          {Arr.map(labels, (label, index) => (
+            <text
+              key={label}
+              style={{
+                ...textStyle(theme, "label"),
+                position: "absolute",
+                left: 0,
+                width: box.width,
+                top: ((index + 0.4) * box.height) / labels.length - 8,
+                textAlign: "center",
+                color: themeColors(theme).primaryForeground,
+              }}
+            >
+              {`${label} ${stages[index] ?? ""}`}
+            </text>
+          ))}
+        </>
+      )}
       paint={({ box, reveal }) => {
         const shown = Arr.map(tweened, (value) =>
           scaleValue(value, revealOf(reveal)),
@@ -1001,6 +1025,17 @@ export const AreaChart = ({
       domainLabels={labelsFor(props.labels, props.data)}
       view={props.view}
       range={range}
+      gradients={({ series, palette }) =>
+        gradient
+          ? Arr.map(series, (one, index) =>
+              areaGradient(
+                one.key,
+                seriesColourOf(palette, one, index),
+                fillOpacity * 2,
+              ),
+            )
+          : []
+      }
       paint={({ series, labels, box, hovered, reveal }) => {
         const clip = revealClip(reveal, box);
         return Arr.flatMap(series, (one, seriesIndex) => {
@@ -1012,7 +1047,7 @@ export const AreaChart = ({
             view,
           );
           const fill = areaPath(points, box, range, curve);
-          const bands = gradient ? areaBands(points, box, range, 3) : [];
+          const fade = `chart-area-${one.key}`;
           const line = curvePath(points, curve);
           return Arr.flatten([
             [
@@ -1020,39 +1055,18 @@ export const AreaChart = ({
                 key: one.key,
                 series: one,
                 seriesIndex,
-                opacity: fillOpacity,
+                opacity: gradient ? 1 : fillOpacity,
                 ...(clip === undefined ? {} : { clip }),
                 marks: Option.match(fill, {
                   onNone: () => [],
                   onSome: (d): ReadonlyArray<ChartMark> => [
-                    { kind: "path", d },
+                    gradient
+                      ? { kind: "path", d, fill: { color: "#000000", gradient: fade } }
+                      : { kind: "path", d },
                   ],
                 }),
               } satisfies PaintLayer,
             ],
-            Arr.map(bands, (d, bandIndex) => ({
-              key: one.key,
-              series: one,
-              seriesIndex,
-              kind: `fade-${bandIndex}`,
-              decorative: true,
-              opacity: gradient ? fillOpacity / 3 : 0,
-              ...(clip === undefined ? {} : { clip }),
-              marks: [{ kind: "path" as const, d }],
-            })),
-            gradient
-              ? []
-              : [
-                  {
-                    key: one.key,
-                    series: one,
-                    seriesIndex,
-                    kind: "fade",
-                    decorative: true,
-                    ...(clip === undefined ? {} : { clip }),
-                    marks: [],
-                  } satisfies PaintLayer,
-                ],
             [
               {
                 key: one.key,
@@ -1602,6 +1616,9 @@ export interface RadarChartProps extends ChartProps {
   readonly pointTooltip?: boolean;
 }
 
+/** How far an axis label stands off the web's outer ring, in pixels. */
+const RADAR_LABEL_GAP = 14;
+
 export const RadarChart = ({
   levels = 4,
   dots = false,
@@ -1666,7 +1683,10 @@ export const RadarChart = ({
                       (d): ChartMark => ({
                         kind: "path",
                         d,
-                        stroke: lineStroke(1),
+                        stroke: {
+                          ...lineStroke(1),
+                          color: themeColors(theme).border ?? "#000000",
+                        },
                       }),
                     ),
                   } satisfies PaintLayer,
@@ -1739,9 +1759,9 @@ export const RadarChart = ({
           {Arr.map(labels, (label, index) => {
             const angle = -Math.PI / 2 + (index / axes) * Math.PI * 2;
             const reach =
-              radius === undefined
+              (radius === undefined
                 ? Math.min(box.width, box.height) / 2 - 4
-                : radius;
+                : radius) + RADAR_LABEL_GAP;
             const x = box.width / 2 + reach * Math.cos(angle);
             const y = box.height / 2 + reach * Math.sin(angle);
             return (

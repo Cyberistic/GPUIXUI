@@ -66,12 +66,18 @@ export const chartMaxOf = (
     Math.max(max, seriesMax(one, categories)),
   );
 
+/** Each divides by the axis's four intervals into a tick worth printing. */
+const NICE_STEPS = [1, 1.2, 1.6, 2, 2.4, 3, 4, 5, 6, 8, 10] as const;
+
 export const niceCeiling = (raw: number): number => {
   const value = drawableValue(raw);
   if (value === 0) return 1;
   const magnitude = 10 ** Math.floor(Math.log10(value));
   const step = value / magnitude;
-  const nice = step <= 1 ? 1 : step <= 2 ? 2 : step <= 5 ? 5 : 10;
+  const nice = Option.getOrElse(
+    Arr.findFirst(NICE_STEPS, (candidate) => step <= candidate),
+    () => 10,
+  );
   return nice * magnitude;
 };
 
@@ -380,7 +386,11 @@ export const chartMarkup = (
     return {
       ...shape,
       ...(clip === undefined ? {} : { clip }),
-      fill: shape.fill === undefined ? { color: "#000" } : shape.fill,
+      // A stroked line stays unfilled: filling it paints a wedge across its chord.
+      fill:
+        shape.fill === undefined && shape.stroke === undefined
+          ? { color: "#000" }
+          : shape.fill,
     };
   });
   const painted = marksMarkup(flat);

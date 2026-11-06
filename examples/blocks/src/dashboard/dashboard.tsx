@@ -5,11 +5,12 @@
  *
  * The block is shadcn's `dashboard-01` rebuilt from GPUIxUI parts: the
  * sidebar is `Sidebar`/`SidebarMenu*`, the KPI tiles are `Card`, the chart is
- * `LineChart` (its own area wash), the report is `Tabs` over `Table`, and every
+ * `AreaChart` over the charts row, the report is `Tabs` over `Table`, and every
  * pill is `Badge`. Range, tab and selection are real state, so the screen can be
  * driven in the renderer rather than painted.
  */
 import { Badge } from "@gpuixui/components/badge";
+import { Avatar } from "@gpuixui/components/avatar";
 import { Card } from "@gpuixui/components/card";
 import {
   Sidebar,
@@ -24,7 +25,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarSeparator,
 } from "@gpuixui/components/sidebar";
 import {
   Tabs,
@@ -33,7 +33,9 @@ import {
   TabsTrigger,
 } from "@gpuixui/components/tabs";
 import {
-  LineChart,
+  AreaChart,
+  DonutChart,
+  FunnelChart,
   Table,
   TableBody,
   TableCell,
@@ -41,22 +43,27 @@ import {
   TableHeaderCell,
   TableRow,
   TableViewport,
+  TreemapChart,
 } from "@gpuixui/data";
 import { Icon, type IconName } from "@gpuixui/icons";
 import {
   Button,
   Checkbox,
+  Input,
   Stack,
   Text,
   ToggleGroup,
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
+  devices,
   documents,
+  funnel,
   navigation,
   ranges,
+  sources,
   tabs,
   tiles,
   visitors,
@@ -72,6 +79,35 @@ import {
   rowsOf,
   toggleRow,
 } from "./logic.js";
+
+/** A titled card around one chart, in the row under the traffic chart. */
+const ChartCard = ({
+  title,
+  note,
+  children,
+}: {
+  readonly title: string;
+  readonly note: string;
+  readonly children: ReactNode;
+}) => {
+  const theme = useTheme();
+  return (
+    <Card
+      variant="outline"
+      style={{ flexGrow: 1, flexBasis: 0, minWidth: 0, padding: theme.spacing.xl }}
+    >
+      <Stack direction="column" gap="md">
+        <Stack direction="column" gap="2xs">
+          <Text role="h3">{title}</Text>
+          <Text tone="muted">{note}</Text>
+        </Stack>
+        <Stack direction="row" justify="center">
+          {children}
+        </Stack>
+      </Stack>
+    </Card>
+  );
+};
 
 /** The sidebar row: an icon, a name, and the current destination's wash. */
 const NavRow = ({
@@ -260,51 +296,56 @@ export const Dashboard = () => {
   const [active, setActive] = useState("Dashboard");
   const data = visitors[range];
   return (
-    <SidebarProvider defaultOpen width={252}>
+    <SidebarProvider defaultOpen width={264}>
       <Sidebar>
         <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton label="Acme Inc." testId="workspace">
-                <div
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: theme.radius.full,
-                    borderWidth: theme.borderWidth.strong,
-                    borderColor: theme.colors.borderStrong,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text role="caption" tone="default">
-                    A
-                  </Text>
-                </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Button
-                fullWidth
-                leading={
-                  <Icon name="plus" color={theme.colors.primaryForeground} />
-                }
-                trailing={
-                  <Icon
-                    name="chevrons-up-down"
-                    size={14}
-                    color={theme.colors.primaryForeground}
-                  />
-                }
+          <Stack direction="column" gap="md">
+            <Stack
+              direction="row"
+              align="center"
+              gap="md"
+              testId="workspace"
+              style={{ padding: theme.spacing.xs }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  width: 34,
+                  height: 34,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: theme.radius.lg,
+                  backgroundColor: theme.colors.primary,
+                }}
               >
-                Quick Create
-              </Button>
-            </SidebarMenuItem>
-          </SidebarMenu>
+                <Icon
+                  name="grid"
+                  size={18}
+                  color={theme.colors.primaryForeground}
+                />
+              </div>
+              <Stack direction="column" style={{ flexGrow: 1 }}>
+                <Text role="bodyStrong">Documents</Text>
+                <Text role="caption" tone="muted">
+                  v1.0.1
+                </Text>
+              </Stack>
+              <Icon
+                name="chevrons-up-down"
+                size={15}
+                color={theme.colors.mutedForeground}
+              />
+            </Stack>
+            <Input
+              label="Search"
+              placeholder="Search the docs..."
+              testId="dashboard-search"
+            />
+          </Stack>
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
+            <SidebarGroupLabel>Platform</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {Arr.map(navigation, (entry) => (
@@ -332,61 +373,33 @@ export const Dashboard = () => {
                     onSelect={() => setActive(entry.label)}
                   />
                 ))}
-                <SidebarMenuItem>
-                  <SidebarMenuButton label="More" testId="nav-more">
-                    <Icon
-                      name="ellipsis"
-                      size={16}
-                      color={theme.colors.mutedForeground}
-                    />
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter>
-          <SidebarMenu>
-            {Arr.map(
-              [
-                { icon: "settings", label: "Settings" },
-                { icon: "help", label: "Get Help" },
-                { icon: "search", label: "Search" },
-              ] as const,
-              (entry) => (
-                <NavRow
-                  key={entry.label}
-                  icon={entry.icon}
-                  label={entry.label}
-                />
-              ),
-            )}
-          </SidebarMenu>
-          <SidebarSeparator />
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton label="shadcn" testId="account">
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: theme.radius.full,
-                    backgroundColor: theme.colors.muted,
-                    pointerEvents: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Icon
-                    name="user"
-                    size={15}
-                    color={theme.colors.mutedForeground}
-                  />
-                </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <Stack
+            direction="row"
+            align="center"
+            gap="md"
+            testId="account"
+            style={{ padding: theme.spacing.xs }}
+          >
+            <Avatar name="Ada Lovelace" />
+            <Stack direction="column" style={{ flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
+              <Text role="bodyStrong" truncate>
+                Ada Lovelace
+              </Text>
+              <Text role="caption" tone="muted" truncate>
+                ada@acme.com
+              </Text>
+            </Stack>
+            <Icon
+              name="chevrons-up-down"
+              size={15}
+              color={theme.colors.mutedForeground}
+            />
+          </Stack>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
@@ -403,46 +416,39 @@ export const Dashboard = () => {
           <Stack
             direction="row"
             align="center"
-            justify="between"
+            gap="md"
             style={{
-              height: 54,
+              height: 58,
+              flexShrink: 0,
               paddingLeft: theme.spacing.xl,
               paddingRight: theme.spacing.xl,
+              borderBottomWidth: theme.borderWidth.thin,
+              borderColor: theme.colors.border,
             }}
           >
-            <Stack direction="row" align="center" gap="sm">
-              <Icon
-                name="folder"
-                size={16}
-                color={theme.colors.mutedForeground}
-              />
-              <Text role="body" tone="default">
-                Documents
-              </Text>
-            </Stack>
-            <Stack direction="row" align="center" gap="2xs">
-              <Text role="caption" tone="muted">
-                GitHub
-              </Text>
-              <Icon
-                name="external-link"
-                size={14}
-                color={theme.colors.mutedForeground}
-              />
-            </Stack>
+            <Icon name="panel-left" size={17} color={theme.colors.foreground} />
+            <div
+              style={{
+                width: theme.borderWidth.thin,
+                height: 18,
+                backgroundColor: theme.colors.border,
+              }}
+            />
+            <Text tone="muted">Documents</Text>
+            <Text tone="muted">/</Text>
+            <Text>Dashboard</Text>
           </Stack>
-          <div
-            style={{
-              height: theme.borderWidth.thin,
-              backgroundColor: theme.colors.border,
-            }}
-          />
           <Stack
             direction="column"
             gap="lg"
-            style={{ flexGrow: 1, padding: theme.spacing.xl, minHeight: 0 }}
+            style={{
+              flexGrow: 1,
+              padding: theme.spacing.xl,
+              minHeight: 0,
+              overflowY: "scroll",
+            }}
           >
-            <Stack direction="row" gap="md">
+            <Stack direction="row" gap="lg" style={{ flexShrink: 0 }}>
               {Arr.map(tiles, (tile) => (
                 <Card
                   key={tile.label}
@@ -451,39 +457,31 @@ export const Dashboard = () => {
                     flexGrow: 1,
                     flexBasis: 0,
                     minWidth: 0,
-                    padding: theme.spacing.lg,
+                    padding: theme.spacing.xl,
                   }}
                 >
-                  <Stack direction="column" gap="2xs">
+                  <Stack direction="column" gap="xs">
+                    <Text tone="muted">{tile.label}</Text>
                     <Stack direction="row" align="center" justify="between">
-                      <Text role="caption" tone="muted">
-                        {tile.label}
+                      <Text role="h1" testId={`kpi-${tile.label}`}>
+                        {tile.value}
                       </Text>
-                      <Badge variant="outline" size="sm">
+                      <Badge variant={tile.direction === "down" ? "outline" : "success"} size="sm">
                         {`${movement(tile.direction)} ${tile.change}`}
                       </Badge>
                     </Stack>
-                    <Text role="display" testId={`kpi-${tile.label}`}>
-                      {tile.value}
-                    </Text>
-                    <Text role="bodyStrong" tone="default">
-                      {tile.line}
-                    </Text>
-                    <Text role="caption" tone="muted">
-                      {tile.note}
-                    </Text>
+                    <Text role="bodyStrong">{tile.line}</Text>
+                    <Text tone="muted">{tile.note}</Text>
                   </Stack>
                 </Card>
               ))}
             </Stack>
-            <Card variant="outline">
-              <Stack direction="column" gap="sm">
+            <Card variant="outline" style={{ flexShrink: 0, padding: theme.spacing.xl }}>
+              <Stack direction="column" gap="lg">
                 <Stack direction="row" align="start" justify="between">
                   <Stack direction="column" gap="2xs">
-                    <Text role="h3" tone="default">
-                      Total Visitors
-                    </Text>
-                    <Text role="caption" tone="muted" testId="visitors-total">
+                    <Text role="h3">Traffic</Text>
+                    <Text tone="muted" testId="visitors-total">
                       {`${data.total} total · ${data.change} · ${
                         ranges.find((entry) => entry.value === range)?.label ??
                         ""
@@ -492,7 +490,6 @@ export const Dashboard = () => {
                   </Stack>
                   <ToggleGroup
                     type="single"
-                    size="sm"
                     label="Range"
                     value={range}
                     onValueChange={(next) =>
@@ -502,21 +499,39 @@ export const Dashboard = () => {
                     itemTestId={(value) => `range-${value}`}
                   />
                 </Stack>
-                <LineChart
+                <AreaChart
+                  aria-label="Traffic"
                   series={[
-                    { key: "visitors", label: "Visitors", values: data.values },
+                    { key: "desktop", label: "Desktop", values: data.values },
+                    { key: "mobile", label: "Mobile", values: data.mobile },
                   ]}
                   labels={data.labels}
-                  width={1024}
-                  height={168}
+                  colors={[theme.colors.primary, theme.colors.info]}
+                  width={1012}
+                  height={250}
                   testId="visitors-chart"
                 />
               </Stack>
             </Card>
-            <Card
-              variant="outline"
-              style={{ flexGrow: 1, minHeight: 0, paddingBottom: 0 }}
-            >
+            <Stack direction="row" gap="lg" style={{ flexShrink: 0 }}>
+              <ChartCard title="Sources" note="Where the traffic came from">
+                <TreemapChart aria-label="Sources" nodes={sources} size={200} legend={false} />
+              </ChartCard>
+              <ChartCard title="Funnel" note="Visits through to paid">
+                <FunnelChart
+                  aria-label="Funnel"
+                  labels={funnel.labels}
+                  stages={funnel.stages}
+                  series={[]}
+                  width={290}
+                  height={200}
+                />
+              </ChartCard>
+              <ChartCard title="Devices" note="The mix of readers">
+                <DonutChart aria-label="Devices" data={devices} size={200} legend={false} />
+              </ChartCard>
+            </Stack>
+            <Card variant="outline" style={{ flexShrink: 0, height: 380, paddingBottom: 0 }}>
               <Report
                 tab={tab}
                 onTab={(next) => (isTab(next) ? setTab(next) : undefined)}
@@ -533,7 +548,7 @@ export const Dashboard = () => {
                 }
               />
             </Card>
-            <Stack direction="row" align="center" justify="between">
+            <Stack direction="row" align="center" justify="between" style={{ flexShrink: 0 }}>
               <Text role="caption" tone="muted">
                 {`${String(selected.length)} of ${String(
                   Arr.length(

@@ -27,7 +27,13 @@ import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import { darkTheme, seriesColors } from "@gpuixui/tokens";
 import { ChartExample } from "../../examples/chart.example.js";
-import { BarChart, LineChart, Sparkline, StackedBar } from "../chart/chart.js";
+import {
+  AreaChart,
+  BarChart,
+  LineChart,
+  Sparkline,
+  StackedBar,
+} from "../chart/chart.js";
 import {
   chartMarkupOf,
   paintedText,
@@ -546,5 +552,25 @@ describe("the charts", () => {
     expect(requireStyle(root, "chart-unconfigured-layer-revenue").color).toBe(
       colourAt(0),
     );
+  });
+});
+
+/** Guards: a 30-day axis painted thirty clipped "Apr…" labels instead of a readable few. */
+describe("a long category axis", () => {
+  it("thins its labels so each reads whole", () => {
+    root = renderData(
+      <AreaChart
+        aria-label="Thirty days"
+        labels={Arr.makeBy(30, (i) => `Apr ${i + 1}`)}
+        series={[{ key: "a", label: "A", values: Arr.makeBy(30, (i) => i) }]}
+        width={600}
+        height={100}
+        testId="long-axis"
+      />,
+    );
+    settle(root);
+    const first = requireBounds(root, "long-axis-label-0");
+    expect(first.width).toBeGreaterThanOrEqual(40);
+    expect(root.renderer.findByTestId("long-axis-label-1")).toBeFalsy();
   });
 });

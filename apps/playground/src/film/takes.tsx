@@ -376,7 +376,11 @@ export const takes: Readonly<Record<string, Take>> = {
     height: 900,
     frames: 60,
     view: () => (
-      <ThemeProvider theme={macWindow}>
+      <ThemeProvider
+        theme={extendTheme(platformTheme(darkTheme, "darwin"), {
+          window: "opaque",
+        })}
+      >
         <div style={{ width: 1400, height: 900, display: "flex" }}>
           <Dashboard />
         </div>

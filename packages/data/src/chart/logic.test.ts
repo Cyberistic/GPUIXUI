@@ -65,13 +65,14 @@ const rectOf = (
 };
 
 describe("the chart scale", () => {
-  it("rounds a maximum up to 1, 2 or 5 times a power of ten", () => {
+  it("rounds a maximum up to a step its four intervals divide cleanly", () => {
     expect(niceCeiling(0)).toBe(1);
     expect(niceCeiling(1)).toBe(1);
     expect(niceCeiling(2)).toBe(2);
-    expect(niceCeiling(3)).toBe(5);
-    expect(niceCeiling(8)).toBe(10);
-    expect(niceCeiling(12)).toBe(20);
+    expect(niceCeiling(3)).toBe(3);
+    expect(niceCeiling(7)).toBe(8);
+    expect(niceCeiling(13)).toBe(16);
+    expect(niceCeiling(1240)).toBe(1600);
     expect(niceCeiling(93)).toBe(100);
     // A value that cannot be drawn reads as zero, and a zero still scales.
     expect(niceCeiling(Number.NaN)).toBe(1);
@@ -156,23 +157,23 @@ describe("the chart scale", () => {
     // the labelled 3 and 6 as 0.3px and 0.6px slivers.
     const ragged = [series("a", [3, 6, 999])];
     expect(chartScale(ragged)).toBe(1000);
-    expect(chartScale(ragged, 2)).toBe(10);
+    expect(chartScale(ragged, 2)).toBe(6);
     // The painted bar is read against the axis it is drawn on.
     const marks = groupedBarMarks(ragged, box, chartScale(ragged, 2), 2);
-    expect(rectOf(marks[0]?.[1]).height).toBe(60);
+    expect(rectOf(marks[0]?.[1]).height).toBe(100);
   });
 
   it("reads a stack's axis against the totals, not its widest series", () => {
     const two = [series("a", [60]), series("b", [60])];
     // The widest single value is 60; the bar a reader sees is the 120 total.
-    expect(chartScale(two)).toBe(100);
-    expect(stackedScale(two)).toBe(200);
+    expect(chartScale(two)).toBe(60);
+    expect(stackedScale(two)).toBe(120);
     // The tallest category is what the axis is rounded from, wherever it sits,
     // and a ragged series is measured over the categories it does not span.
     expect(stackedScale([series("a", [60, 10]), series("b", [60, 10])])).toBe(
-      200,
+      120,
     );
-    expect(stackedScale([series("a", [5, 12]), series("b", [5])])).toBe(20);
+    expect(stackedScale([series("a", [5, 12]), series("b", [5])])).toBe(12);
     // A value past the last painted category draws nowhere, so it cannot raise
     // the axis the painted bars are read against.
     expect(stackedScale([series("a", [5, 500])], 1)).toBe(5);
@@ -286,22 +287,22 @@ describe("the bar marks", () => {
   });
 
   it("draws a stack the axis it publishes actually reads", () => {
-    const two = [series("a", [60]), series("b", [60])];
+    const two = [series("a", [55]), series("b", [55])];
     const scale = stackedScale(two);
     const stacked = stackedBarMarks(two, box, scale);
     const lower = rectOf(stacked[0]?.[0]);
     const upper = rectOf(stacked[1]?.[0]);
-    const total = 120;
+    const total = 110;
     // Every layer draws against the scale the axis prints, so the top of the
     // stack lands where the topmost datum says it does.
-    expect(axisTicks(scale, 4)).toEqual([0, 50, 100, 150, 200]);
-    expect(Math.min(lower.y, upper.y)).toBe(box.height * (1 - total / scale));
+    expect(axisTicks(scale, 4)).toEqual([0, 30, 60, 90, 120]);
+    expect(Math.min(lower.y, upper.y)).toBeCloseTo(box.height * (1 - total / scale));
     // Drawn against the widest single value instead, the stack reports a full
     // plot for a total the axis does not name: the top of the stack reaches y=0
-    // while the axis stops at 100.
+    // while the axis stops at 60.
     const widest = stackedBarMarks(two, box, chartScale(two));
     expect(rectOf(widest[1]?.[0]).y).toBe(0);
-    expect(Math.min(lower.y, upper.y)).toBe(40);
+    expect(Math.min(lower.y, upper.y)).toBeGreaterThan(0);
   });
 });
 
@@ -446,5 +447,16 @@ describe("the words a series announces", () => {
     expect(seriesName("", "revenue")).toBe("revenue");
     expect(seriesName("   ", "cost")).toBe("cost");
     expect(seriesName("  Revenue  ", "revenue")).toBe("Revenue");
+  });
+});
+
+/** Guards: a stroked line went to the mask with a fill, and a sparkline painted a wedge. */
+describe("the mask's markup", () => {
+  it("leaves a stroked line unfilled", () => {
+    const markup = chartMarkup(
+      [{ kind: "path", d: "M0,0L10,10", stroke: { color: "#000", width: 1 } }],
+      { width: 10, height: 10 },
+    );
+    expect(markup).toContain('fill="none"');
   });
 });

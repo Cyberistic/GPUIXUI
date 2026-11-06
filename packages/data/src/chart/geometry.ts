@@ -1022,6 +1022,7 @@ export const funnelMarks = (
       y: cell.index * slot,
       width: (cell.value / widest) * box.width,
       height: Math.max(1, slot * 0.8),
+      rx: 6,
     }),
   );
 };

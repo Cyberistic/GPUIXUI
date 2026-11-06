@@ -70,18 +70,12 @@ describe("the sharper chart types", () => {
     );
   });
 
-  it("fades the fill in nested bands, so the top is the darkest", () => {
+  it("fades the fill with a real gradient, not stacked bands", () => {
     const tree = mount();
-
-    // A band below every point clips to nothing (the fill does not reach the
-    // cut), so the deepest band is the one that must paint, and the band above
-    // it paints only the points it catches.
-    expect(
-      tree.renderer.findByTestId("chart-area-layer-revenue-fade-0"),
-    ).toBeDefined();
-    expect(
-      tree.renderer.findByTestId("chart-area-layer-revenue-fade-1"),
-    ).toBeDefined();
+    // Guards: three translucent bands showed hard steps across the plot.
+    const markup = chartMarkupOf(tree, "chart-area");
+    expect(markup).toContain("<linearGradient");
+    expect(markup).toContain('fill="url(#chart-area-revenue)"');
   });
 
   it("separates a pie's slices, so two neighbours are not one shape", () => {

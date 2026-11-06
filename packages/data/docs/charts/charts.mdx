@@ -175,6 +175,7 @@ its own holds its subtree's.
 | ---- | ---- | ------- | ----------- |
 | `nodes` | `{ path: string; value?: number }[]` | — | the hierarchy, one row per node |
 | `size` | `number` | `200` | the plot's size, in pixels |
+| `height` | `number` | `size` | the box's height when it is not square; `size` is then its width |
 | `method` | `"squarify" \| "binary" \| "dice" \| "slice" \| "slice-dice"` | `"squarify"` | how the cells are squared |
 | `ratio` | `number` | the compiler's | the target aspect ratio of a cell |
 | `paddingInner` | `number` | `0` | the gap between adjacent cells |
@@ -247,6 +248,7 @@ flow that is.
 | `nodes` | `{ id: string; name?: string }[]` | — | the nodes the flow runs through |
 | `links` | `{ source: string; target: string; value: number }[]` | — | the edges the flow runs along |
 | `size` | `number` | `200` | the plot's size, in pixels |
+| `height` | `number` | `size` | the box's height when it is not square; `size` is then its width |
 | `nodeWidth` | `number` | the compiler's | a node's width, in pixels |
 | `nodePadding` | `number` | the compiler's | the gap between same-column nodes |
 | `colors` | `string[]` | the theme's series scale | the categorical palette |
@@ -324,7 +326,7 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 | ---- | ---- | ------- | ----------- |
 | `curve` | `"linear" \| "smooth" \| "step"` | `"smooth"` | how the area's edge joins its points |
 | `stacked` | `boolean` | `false` | each series stands on the one before it |
-| `gradient` | `boolean` | `true` | the fill fades toward the axis in nested bands |
+| `gradient` | `boolean` | `true` | the fill fades toward the axis |
 | `fillOpacity` | `number` | `0.35` | the fill's top opacity |
 | `dots` | `boolean` | `false` | a dot paints on every point |
 | `lineWidth` | `number` | `2` | the edge's stroke weight |
@@ -520,5 +522,5 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 
 - **Measured in a window**: `chart-surface-lifecycle` (41 checks, 0.11.0)
   samples the bar, the stack, the ring and the line the shipped geometry draws.
-- A category label wider than its slot is **clipped at the slot's edge**.
+- A category label wider than its slot is **clipped at the slot's edge**. Past twelve categories the axis thins its labels instead.
 - A mark cannot answer a press, so there is no per-mark tooltip and no zoom.

@@ -242,7 +242,7 @@ describe("Stats", () => {
 
 describe("Dashboard", () => {
   it("re-reads the chart, the table and the selection", () => {
-    const r = mount(<Dashboard />, 1400, 900);
+    const r = mount(<Dashboard />, 1400, 1500);
     const text = () => r.getAllText();
     const total = () => textOf(r, "visitors-total");
     expect(total()).toContain("18,412");

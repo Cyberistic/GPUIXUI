@@ -62,6 +62,7 @@ const sankeyColours = (
 };
 
 const SceneChart = ({
+  height,
   kind,
   rows,
   flow,
@@ -98,6 +99,8 @@ const SceneChart = ({
   readonly series?: ReadonlyArray<ChartSeries>;
   readonly labels?: ReadonlyArray<string>;
   readonly size: number;
+  /** The box's height when it is not square; `size` is then its width. */
+  readonly height?: number;
   readonly label: string;
   readonly description: string;
   readonly method?: "squarify" | "binary" | "dice" | "slice" | "slice-dice";
@@ -113,7 +116,7 @@ const SceneChart = ({
   readonly animationDuration?: number;
   readonly testId?: string;
 }) => {
-  const box: ChartBox = { width: size, height: size };
+  const box: ChartBox = { width: size, height: height ?? size };
   const reveal = useMountReveal(animate, animationDuration);
   const hierarchyTween =
     useAnimatedValues(
@@ -200,15 +203,19 @@ const SceneChart = ({
       visibleDepth,
     ],
   );
+  // The image is absolute over its box; the box is what holds its place in the
+  // layout, or a centred parent would start the image at its own midpoint.
   return (
-    <ChartSurface
-      document={{ box, marks: [] }}
-      markup={markup}
-      label={label}
-      description={description}
-      testId={testId === undefined ? undefined : `${testId}-document`}
-      style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}
-    />
+    <div style={{ position: "relative", width: box.width, height: box.height }}>
+      <ChartSurface
+        document={{ box, marks: [] }}
+        markup={markup}
+        label={label}
+        description={description}
+        testId={testId === undefined ? undefined : `${testId}-document`}
+        style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}
+      />
+    </div>
   );
 };
 
@@ -226,6 +233,8 @@ export const leafRows = (
 export interface TreemapChartProps {
   readonly nodes: ReadonlyArray<HierarchyNode>;
   readonly size?: number;
+  /** The chart's height when it is not square; `size` is then its width. */
+  readonly height?: number;
   readonly method?: "squarify" | "binary" | "dice" | "slice" | "slice-dice";
   readonly ratio?: number;
   readonly paddingInner?: number;
@@ -243,6 +252,7 @@ export interface TreemapChartProps {
 export const TreemapChart = ({
   nodes,
   size = 200,
+  height,
   method,
   ratio,
   paddingInner,
@@ -270,6 +280,7 @@ export const TreemapChart = ({
         flow={{ nodes: [], links: [] }}
         colours={palette}
         size={size}
+        {...(height === undefined ? {} : { height })}
         label={label}
         description={description}
         animate={animate}
@@ -387,6 +398,8 @@ export interface SankeyChartProps {
   readonly nodes: ReadonlyArray<FlowNode>;
   readonly links: ReadonlyArray<FlowLink>;
   readonly size?: number;
+  /** The chart's height when it is not square; `size` is then its width. */
+  readonly height?: number;
   readonly nodeWidth?: number;
   readonly nodePadding?: number;
   readonly colors?: ReadonlyArray<string>;
@@ -403,6 +416,7 @@ export const SankeyChart = ({
   nodes,
   links,
   size = 200,
+  height,
   nodeWidth,
   nodePadding,
   colors,
@@ -429,6 +443,7 @@ export const SankeyChart = ({
         colours={palette}
         named={sankeyColours(graph, palette, nodeColors)}
         size={size}
+        {...(height === undefined ? {} : { height })}
         label={label}
         description={description}
         animate={animate}

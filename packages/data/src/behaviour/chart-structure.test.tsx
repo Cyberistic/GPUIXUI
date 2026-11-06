@@ -320,3 +320,29 @@ describe("a structural chart given no colours", () => {
     expect(painted).not.toContain("#000000");
   });
 });
+
+/**
+ * Guards: the chart's image is absolute, and nothing held its place, so a centred
+ * parent started it at the midpoint and clipped it (a treemap lost its largest cell).
+ */
+describe("a structural chart in layout", () => {
+  it("holds the box it paints in", () => {
+    root = renderData(
+      <TreemapChart
+        testId="held"
+        nodes={[{ path: "a", value: 1 }]}
+        size={120}
+        height={80}
+        legend={false}
+      />,
+    );
+    settle(root);
+    const element = root.renderer.findByTestId("held-document");
+    const bounds =
+      element === undefined || element === null
+        ? null
+        : root.renderer.getElementBounds(element.id);
+    expect(bounds?.width).toBe(120);
+    expect(bounds?.height).toBe(80);
+  });
+});

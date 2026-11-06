@@ -17,6 +17,8 @@ export type Range = (typeof ranges)[number]["value"];
 export interface Visitors {
   readonly labels: ReadonlyArray<string>;
   readonly values: ReadonlyArray<number>;
+  /** The same days on phones, the second layer of the traffic chart. */
+  readonly mobile: ReadonlyArray<number>;
   /** The period's total and its movement, printed under the chart's name. */
   readonly total: string;
   readonly change: string;
@@ -24,51 +26,46 @@ export interface Visitors {
 
 export const visitors: Readonly<Record<Range, Visitors>> = {
   "3m": {
-    labels: [
-      "Apr 3",
-      "Apr 9",
-      "Apr 15",
-      "Apr 21",
-      "Apr 27",
-      "May 3",
-      "May 9",
-      "May 15",
-      "May 22",
-      "May 29",
-      "Jun 4",
-      "Jun 10",
-      "Jun 16",
-      "Jun 22",
-      "Jun 30",
-    ],
-    values: [
-      312, 468, 402, 556, 498, 624, 588, 742, 690, 812, 748, 906, 858, 972, 934,
-    ],
+    labels: ["Apr 01", "Apr 04", "Apr 07", "Apr 10", "Apr 13", "Apr 16", "Apr 19", "Apr 22", "Apr 25", "Apr 28", "May 01", "May 04", "May 07", "May 10", "May 13", "May 16", "May 19", "May 22", "May 25", "May 28", "Jun 01", "Jun 04", "Jun 07", "Jun 10", "Jun 13", "Jun 16", "Jun 19", "Jun 22", "Jun 25", "Jun 28"],
+    values: [220, 310, 280, 420, 610, 530, 700, 480, 560, 890, 760, 520, 640, 980, 1020, 700, 560, 640, 860, 1110, 760, 620, 720, 980, 1240, 1090, 720, 840, 1160, 1320],
+    mobile: [130, 190, 150, 240, 330, 270, 380, 240, 300, 470, 390, 260, 350, 530, 560, 360, 300, 330, 470, 600, 400, 330, 390, 520, 640, 590, 370, 450, 600, 690],
     total: "18,412",
     change: "+12.5%",
   },
   "30d": {
-    labels: [
-      "May 30",
-      "Jun 3",
-      "Jun 7",
-      "Jun 11",
-      "Jun 15",
-      "Jun 19",
-      "Jun 23",
-      "Jun 27",
-    ],
-    values: [524, 610, 578, 688, 642, 754, 712, 830],
+    labels: ["Apr 01", "Apr 02", "Apr 03", "Apr 04", "Apr 05", "Apr 06", "Apr 07", "Apr 08", "Apr 09", "Apr 10", "Apr 11", "Apr 12", "Apr 13", "Apr 14", "Apr 15", "Apr 16", "Apr 17", "Apr 18", "Apr 19", "Apr 20", "Apr 21", "Apr 22", "Apr 23", "Apr 24", "Apr 25", "Apr 26", "Apr 27", "Apr 28", "Apr 29", "Apr 30"],
+    values: [420, 380, 520, 740, 690, 480, 560, 860, 1040, 720, 500, 620, 780, 960, 1180, 1020, 640, 520, 700, 920, 1100, 840, 560, 660, 880, 1060, 780, 960, 1240, 1020],
+    mobile: [210, 190, 260, 390, 350, 240, 300, 440, 560, 370, 260, 310, 410, 520, 630, 520, 320, 280, 360, 490, 590, 430, 280, 340, 470, 560, 400, 510, 660, 530],
     total: "6,238",
     change: "+6.1%",
   },
   "7d": {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    values: [186, 214, 198, 246, 232, 268, 254],
+    values: [420, 760, 580, 1040, 860, 1220, 980],
+    mobile: [210, 420, 300, 560, 440, 660, 520],
     total: "1,598",
     change: "+2.8%",
   },
 };
+
+/** Where the traffic came from, the path through to paid, and the device mix. */
+export const sources = [
+  { path: "Organic", value: 42 },
+  { path: "Direct", value: 26 },
+  { path: "Referral", value: 18 },
+  { path: "Social", value: 14 },
+] as const;
+
+export const funnel = {
+  labels: ["Visits", "Trials", "Paid"],
+  stages: [100, 60, 24],
+} as const;
+
+export const devices = [
+  { key: "desktop", label: "Desktop", value: 54 },
+  { key: "mobile", label: "Mobile", value: 34 },
+  { key: "tablet", label: "Tablet", value: 12 },
+] as const;
 
 export interface Tile {
   readonly label: string;

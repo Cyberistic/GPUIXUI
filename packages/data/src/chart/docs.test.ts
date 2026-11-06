@@ -248,7 +248,7 @@ describe("the charts page's API tables", () => {
     // at. Without it the run keeps its intrinsic width and only the parent's
     // clip hides it.
     expect(source).toContain("CHART_CATEGORY_LABEL");
-    expect(source).toMatch(/width: slot,\s*\n\s*textAlign: "center"/);
+    expect(source).toMatch(/width: slot \* stride,\s*\n\s*textAlign: "center"/);
     expect(page).toContain("clipped at the slot's edge");
     expect(chartsRow()).toContain("clipped");
   });

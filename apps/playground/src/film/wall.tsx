@@ -37,6 +37,8 @@ import type { Take } from "./take.js";
 
 /** One wall tile's canvas, in points; captured at the rig's 2× scale. */
 export const TILE = { width: 400, height: 267 };
+/** One chart card in the chart scene. */
+export const CARD = { width: 560, height: 380 };
 
 /** Long enough for a chart's mount animation to finish and settle. */
 const TILE_FRAMES = 54;
@@ -117,7 +119,12 @@ const charts: Readonly<Record<string, ReactNode>> = {
     />
   ),
   scatter: (
-    <ScatterChart aria-label="Load" labels={LABELS} series={[REVENUE, COST]} />
+    <ScatterChart
+      aria-label="Load"
+      labels={LABELS}
+      series={[REVENUE, COST]}
+      radius={5}
+    />
   ),
   candle: (
     <CandleChart
@@ -190,6 +197,7 @@ const charts: Readonly<Record<string, ReactNode>> = {
   sparkline: (
     <Sparkline
       aria-label="Aura trend"
+      filled
       values={REVENUE.values}
       width={340}
       height={170}

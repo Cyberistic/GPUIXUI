@@ -196,6 +196,36 @@ export const ChartMask = ({
   );
 };
 
+/** Past this many categories an axis thins its labels instead of clipping them. */
+const THIN_FROM = 12;
+
+/** A category label's average character width at its role's size, in pixels. */
+const CATEGORY_CHAR_WIDTH = 7;
+
+/** How many slots one label spans: 1 until the axis is long enough to thin. */
+export const labelStride = (
+  labels: ReadonlyArray<string>,
+  slot: number,
+): number => {
+  if (labels.length <= THIN_FROM) return 1;
+  const longest = Arr.reduce(labels, 0, (most, one) =>
+    Math.max(most, one.length),
+  );
+  return Math.max(
+    1,
+    Math.ceil(((longest + 2) * CATEGORY_CHAR_WIDTH) / Math.max(1, slot)),
+  );
+};
+
+const thinned = (
+  labels: ReadonlyArray<string>,
+  stride: number,
+): ReadonlyArray<{ readonly label: string; readonly index: number }> =>
+  Arr.filter(
+    Arr.map(labels, (label, index) => ({ label, index })),
+    ({ index }) => index % stride === 0,
+  );
+
 export const paletteOf = (
   theme: ReturnType<typeof useTheme>,
   colors: ReadonlyArray<string> | undefined,
@@ -328,6 +358,7 @@ export const ChartFrame = ({
   const showLegend = legend === undefined ? rows.length > 1 : legend !== false;
   const side: LegendSide = legend === "top" ? "top" : "bottom";
   const slot = box.width / slotsOf(rows, categories);
+  const stride = labelStride(categories, slot);
   const [hovered, setHovered] = useState<Option.Option<number>>(Option.none());
   const [pointer, setPointer] = useState<Option.Option<Point>>(Option.none());
   const selectFrom = useRef<Option.Option<number>>(Option.none());
@@ -735,18 +766,21 @@ export const ChartFrame = ({
             paddingLeft: axis ? CHART_AXIS_WIDTH : 0,
           }}
         >
-          {Arr.map(categories, (label, index) => (
+          {Arr.map(thinned(categories, stride), ({ label, index }) => (
             <div
               key={`category-${index}`}
               testId={
                 testId === undefined ? undefined : `${testId}-label-${index}`
               }
-              style={{ ...recipeStyle(CHART_CATEGORY, theme), width: slot }}
+              style={{
+                ...recipeStyle(CHART_CATEGORY, theme),
+                width: slot * stride,
+              }}
             >
               <text
                 style={{
                   ...recipeStyle(CHART_CATEGORY_LABEL, theme),
-                  width: slot,
+                  width: slot * stride,
                   textAlign: "center",
                 }}
               >
