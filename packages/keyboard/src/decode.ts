@@ -1,9 +1,6 @@
 import type { EventPayload } from "@gpuix/react";
-import {
-  normalizeKeyName,
-  parseHotkey,
-  type ParsedHotkeyChord,
-} from "@tanstack/hotkeys";
+import { parseHotkey, type ParsedHotkeyChord } from "@tanstack/hotkeys";
+import { canonicalKey } from "./chord.js";
 import { toTanstackPlatform, type Platform } from "./platform.js";
 
 /**
@@ -27,7 +24,7 @@ export const decodeGpuixEvent = (
 ): ParsedHotkeyChord =>
   parseHotkey(
     {
-      key: normalizeKeyName(event.key ?? ""),
+      key: canonicalKey(event.key ?? ""),
       ctrl: event.modifiers?.ctrl === true,
       shift: event.modifiers?.shift === true,
       alt: event.modifiers?.alt === true,

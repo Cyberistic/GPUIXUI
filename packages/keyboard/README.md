@@ -18,15 +18,16 @@ package keeps the thin GPUix adapter, the scope stack and the registry.
 | `platform` | `Platform` + `toTanstackPlatform` |
 | `react` | `CommandRegistryProvider` + `useCommandRegistry` |
 
-## Why `@tanstack/hotkeys` (0.17.0)
+## Why `@tanstack/hotkeys` (0.24.0)
 
 The hand-rolled accelerator grammar (~459 LOC across `accelerator.ts` and
-`display.ts`) is deleted. `@tanstack/hotkeys@0.17.0` already provides, better
+`display.ts`) is deleted. `@tanstack/hotkeys@0.24.0` already provides, better
 than we did, `parseHotkey` / `normalizeHotkey` / `formatForDisplay`,
 `areHotkeysEqual`, `hasNonModifierKey`, `validateHotkey`, `normalizeKeyName`,
 `PUNCTUATION_CODE_MAP`, physical bindings (`Mod+[KeyS]`), dead-key handling, and
 sequence types. It is TanStack-maintained, `sideEffects: false`, and has **zero
-peer dependencies** — only `@tanstack/store`, which the repo already has.
+dependencies**. GPUix key names reach it through `toDomKey` (`key-names.ts`, no
+library) and `canonicalKey` (`chord.ts`, its spelling).
 
 - **Gained**: the full chord/sequence algebra, physical bindings, dead-key and
   Option+letter correctness, `Mod` resolution, and canonical display — for a net
@@ -49,10 +50,9 @@ writes the GPUix decode itself rather than casting a plain object to
 ### The 0.x churn risk
 
 `@tanstack/hotkeys` is 0.x, so its surface may change in a minor release. The
-adapter isolates that risk: only `decode.ts`, `display.ts` and `platform.ts`
-touch the dependency's types; consumers import `@gpuixui/keyboard` and see a
-stable `Platform`/`Binding` shape. A breaking bump means updating three small
-files, not the components.
+adapter isolates that risk: only this package touches the dependency's types;
+consumers import `@gpuixui/keyboard` and see a stable `Platform`/`Binding` shape.
+A breaking bump means updating this package, not the components.
 
 ## The decode adapter
 

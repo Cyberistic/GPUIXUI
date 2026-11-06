@@ -15,6 +15,7 @@
 
 import * as Option from "effect/Option";
 import {
+  canonicalKey,
   formatSymbols,
   hasNonModifierKey,
   normalizeHotkey,
@@ -70,7 +71,9 @@ export const chordOf = (
     {
       key: isModifierName(event.key)
         ? event.key
-        : acceleratorOf(event.code === "" ? event.key : event.code),
+        : canonicalKey(
+            acceleratorOf(event.code === "" ? event.key : event.code),
+          ),
       alt: event.altKey,
       ctrl: event.ctrlKey,
       meta: event.metaKey,
