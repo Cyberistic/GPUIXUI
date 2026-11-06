@@ -278,3 +278,45 @@ describe("the sunburst", () => {
     expect(Math.max(...angles) / total).toBeLessThan(0.8);
   });
 });
+
+/**
+ * Guards: the structural charts fell back to an empty palette, so with no
+ * `colors` every cell, arc, bar and ribbon painted black while the Cartesian
+ * charts used the theme's series.
+ */
+describe("a structural chart given no colours", () => {
+  const nodes = [
+    { path: "root/a", value: 40 },
+    { path: "root/b", value: 20 },
+  ];
+  it.each([
+    ["treemap", <TreemapChart testId="chart" nodes={nodes} animate={false} />],
+    ["sunburst", <SunburstChart testId="chart" nodes={nodes} animate={false} />],
+    [
+      "radial bar",
+      <RadialBarChart
+        testId="chart"
+        data={[{ key: "a", value: 40 }]}
+        animate={false}
+      />,
+    ],
+    [
+      "sankey",
+      <SankeyChart
+        testId="chart"
+        nodes={[
+          { id: "a", label: "A" },
+          { id: "b", label: "B" },
+        ]}
+        links={[{ source: "a", target: "b", value: 10 }]}
+        animate={false}
+      />,
+    ],
+  ])("the %s paints the theme's series, not black", (_, chart) => {
+    root = renderData(chart);
+    settle(root);
+    const painted = coloursOf(chartMarkupOf(root, "chart"));
+    expect(painted.length).toBeGreaterThan(0);
+    expect(painted).not.toContain("#000000");
+  });
+});

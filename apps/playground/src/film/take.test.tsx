@@ -10,7 +10,7 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { capture, type Take } from "./take.js";
+import { capture, type Take, virtualTime } from "./take.js";
 
 const press: Take = {
   width: 200,
@@ -56,5 +56,45 @@ describe("capture", () => {
     const control = shoot(rest);
     expect(first[2]!.equals(control[2]!)).toBe(true);
     expect(first[7]!.equals(control[7]!)).toBe(false);
+  });
+});
+
+/**
+ * Guards: the capture loop is synchronous, so an animation on `setTimeout` and
+ * `Date.now` never ran and every chart was captured with its marks at zero.
+ */
+describe("virtualTime", () => {
+  it("runs due timers in order, on the clock they asked for", () => {
+    const time = virtualTime();
+    const start = Date.now();
+    const ran: Array<readonly [string, number]> = [];
+    setTimeout(() => ran.push(["late", Date.now() - start]), 40);
+    setTimeout(() => ran.push(["early", Date.now() - start]), 10);
+    time.advance(20);
+    const afterTwenty = ran.length;
+    time.advance(30);
+    time.restore();
+    expect(afterTwenty).toBe(1);
+    expect(ran).toEqual([
+      ["early", 10],
+      ["late", 40],
+    ]);
+  });
+
+  it("drives a timer that re-arms itself, and a cancel holds", () => {
+    const time = virtualTime();
+    let ticks = 0;
+    const tick = () => {
+      ticks += 1;
+      setTimeout(tick, 16);
+    };
+    setTimeout(tick, 0);
+    const cancelled = setTimeout(() => {
+      ticks = -100;
+    }, 8);
+    clearTimeout(cancelled);
+    time.advance(50);
+    time.restore();
+    expect(ticks).toBe(4);
   });
 });

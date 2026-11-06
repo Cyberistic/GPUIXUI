@@ -144,6 +144,62 @@ const blueprint = (
 };
 
 /** Capture `take` into `outDir` as `0000.png…` and `cursor.json`. */
+/**
+ * The capture's own time, for code that animates on `Date.now` and `setTimeout`:
+ * the capture loop is synchronous, so those timers would never fire and a chart
+ * would stay on its first frame. Installed for one capture, then handed back.
+ */
+export const virtualTime = () => {
+  const real = {
+    now: Date.now,
+    setTimeout: globalThis.setTimeout,
+    clearTimeout: globalThis.clearTimeout,
+  };
+  const due = new Map<number, { at: number; run: () => void }>();
+  let now = real.now();
+  let nextId = 1;
+  Date.now = () => now;
+  const schedule = (run: () => void, delay = 0) => {
+    const id = nextId;
+    nextId += 1;
+    due.set(id, { at: now + delay, run });
+    return id;
+  };
+  const cancel = (id?: number) => {
+    if (id !== undefined) due.delete(id);
+  };
+  Object.assign(globalThis, { setTimeout: schedule, clearTimeout: cancel });
+  return {
+    advance: (ms: number): void => {
+      const target = now + ms;
+      for (;;) {
+        const next = Arr.head(
+          Arr.sort(
+            Arr.filter([...due], ([, task]) => task.at <= target),
+            Order.mapInput(
+              Order.Number,
+              ([, task]: [number, { at: number }]) => task.at,
+            ),
+          ),
+        );
+        if (Option.isNone(next)) break;
+        const [id, task] = next.value;
+        due.delete(id);
+        now = Math.max(now, task.at);
+        task.run();
+      }
+      now = target;
+    },
+    restore: (): void => {
+      Date.now = real.now;
+      Object.assign(globalThis, {
+        setTimeout: real.setTimeout,
+        clearTimeout: real.clearTimeout,
+      });
+    },
+  };
+};
+
 export const capture = (
   take: Take,
   outDir: string,
@@ -174,6 +230,7 @@ export const capture = (
     return point;
   };
 
+  const time = virtualTime();
   root.render(take.view(0));
   renderer.flush();
   const origin = renderer.clockPause();
@@ -203,6 +260,7 @@ export const capture = (
       },
     );
     renderer.clockSet(origin + (frame * 1000) / FPS);
+    time.advance(1000 / FPS);
     renderer.flush();
     renderer.captureScreenshot(
       `${outDir}/${String(frame).padStart(4, "0")}.png`,
@@ -214,6 +272,7 @@ export const capture = (
       );
   }
   root.unmount();
+  time.restore();
   writeFileSync(`${outDir}/cursor.json`, JSON.stringify(samples));
   return samples;
 };

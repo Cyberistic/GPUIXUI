@@ -56,6 +56,7 @@ import { Kanban } from "@gpuixui/blocks/kanban";
 import { License } from "@gpuixui/blocks/license";
 import { Preferences } from "@gpuixui/blocks/preferences";
 import { MenuBar } from "@gpuixui/blocks/menubar";
+import { wallTakes } from "./wall.js";
 import { capture, type Take, type Waypoint } from "./take.js";
 
 const mac = platformTheme(lightTheme, "darwin");
@@ -321,6 +322,7 @@ const tap = (testId: string): ReadonlyArray<Waypoint> => [
 ];
 
 export const takes: Readonly<Record<string, Take>> = {
+  ...wallTakes,
   "cu-switch-solo": solo(
     <Switch testId="c" label="Wi-Fi" />,
     tap("c"),
@@ -754,6 +756,7 @@ export const takes: Readonly<Record<string, Take>> = {
 };
 
 const [, , name = "", outDir = ""] = process.argv;
+if (name === "--list") process.stdout.write(R.keys(takes).join("\n"));
 Effect.runSync(
   Option.match(R.get(takes, name), {
     onNone: () =>

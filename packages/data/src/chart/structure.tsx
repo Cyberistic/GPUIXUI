@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import * as Arr from "effect/Array";
 import { ChartLegend } from "./legend.js";
+import { paletteOf } from "./frame.js";
+import { useTheme } from "../theme.js";
 import { ChartSurface } from "./surface.js";
 import {
   flowGraph,
@@ -256,7 +258,7 @@ export const TreemapChart = ({
 }: TreemapChartProps) => {
   const rows = hierarchyRows(nodes);
   const leaves = leafRows(rows);
-  const palette = colors ?? [];
+  const palette = paletteOf(useTheme(), colors);
   const description = Arr.map(leaves, (row) => `${row.name} ${row.value}`).join(
     ", ",
   );
@@ -329,7 +331,7 @@ export const RadialBarChart = ({
   testId,
   label = "Radial bar",
 }: RadialBarChartProps) => {
-  const palette = colors ?? [];
+  const palette = paletteOf(useTheme(), colors);
   const rows = Arr.map(data, (row) => ({
     category: row.label ?? row.key,
     value: row.value,
@@ -413,7 +415,7 @@ export const SankeyChart = ({
   label = "Sankey",
 }: SankeyChartProps) => {
   const graph = flowGraph(nodes, links);
-  const palette = colors ?? [];
+  const palette = paletteOf(useTheme(), colors);
   const description = Arr.map(
     graph.links,
     (link) => `${link.source} to ${link.target} ${link.value}`,
@@ -499,7 +501,7 @@ export const SunburstChart = ({
 }: SunburstChartProps) => {
   const rows = hierarchyRows(nodes);
   const leaves = leafRows(rows);
-  const palette = colors ?? [];
+  const palette = paletteOf(useTheme(), colors);
   const description = Arr.map(leaves, (row) => `${row.name} ${row.value}`).join(
     ", ",
   );
