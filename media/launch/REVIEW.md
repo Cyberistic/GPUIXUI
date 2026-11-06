@@ -1,15 +1,13 @@
-# REVIEW — v3 render of 2026-11-01
+# REVIEW — v8 render of 2026-11-06
 
-Checked from the rendered file (27.5 s, 1920×1080) and from `npx hyperframes snapshot`
-across every section.
+Checked from contact sheets of the rendered file and from frames at 7.6, 18.6 and 25.0 s.
+Viewed as stills only: the motion and the sound have not been watched or heard in real time.
 
-**Picture.** Eight different controls are each pressed in the first four seconds;
-every later shot shows its block reacting to real input on a beat. The terminal
-window fits the frame so its toasts stay visible. Captions are prose about building
-GPU-powered apps and never sit over UI.
+**Picture.** The film opens on the Switch. Every scene change carries an object or a press.
+The wall holds 83 distinct tiles; all 17 chart types draw on landing.
 
-**Sound.** Measured, not heard: −18.9 LUFS integrated, −4.1 dBFS peak. That is quieter
-than v2 (−15.8) on purpose: the score sits at 0.55 and the 58 tactile cues at 0.5×.
+**Sync.** Measured per frame from the takes: repaints land on press + 1, where the cues sit.
 
-**Check.** `npx hyperframes check`: no errors. Kept warnings: scene-local media
-starts (intended) and `line_unread` on the fast-typed terminal command.
+**Sound.** -17.7 LUFS integrated, -1.0 dBFS peak after mastering.
+
+**Check.** `npx hyperframes check`: no errors.

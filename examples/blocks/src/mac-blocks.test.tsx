@@ -18,6 +18,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Agent } from "./agent/agent.js";
 import { CalendarBlock } from "./calendar/calendar.js";
 import { Launcher } from "./launcher/launcher.js";
+import { Vault } from "./vault/vault.js";
 import { License } from "./license/license.js";
 import { MenuBar } from "./menubar/menubar.js";
 import { Notes } from "./notes/notes.js";
@@ -81,6 +82,16 @@ describe("the Mac-app blocks", () => {
     type(r, "launcher-query", "rel");
     expect(has(r, "result-releases")).toBe(true);
     expect(has(r, "result-rules")).toBe(false);
+  });
+
+  it("vault: a link opens its note, and the graph follows", () => {
+    const r = mount(<Vault />);
+    expect(has(r, "backlink-ten")).toBe(true);
+    press(r, "link-ten");
+    expect(has(r, "backlink-nen")).toBe(true);
+    expect(has(r, "backlink-ten")).toBe(false);
+    press(r, "graph-gon");
+    expect(has(r, "backlink-hatsu")).toBe(true);
   });
 
   it("menu bar: a switch moves the status line", () => {

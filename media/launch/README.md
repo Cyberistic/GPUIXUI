@@ -1,67 +1,59 @@
-# Launch film (v7)
+# Launch film (v8)
 
-`gpuixui-launch.mp4`: 30 seconds, 1920×1080, 30 fps, cut to an original piano score
-at 120 BPM with a designed tactile sound on every press. Paper's pace and ground
-(`~/Documents/paper.mp4`): one lowercase line held at a time, crossfades instead
-of cuts. Plan: `.agents/slop/plans/068-launch-film-v7.md` (the v4 history is
-`066-launch-film-v4.md`).
+`gpuixui-launch.mp4`: 30 seconds, 1920×1080, 30 fps, on the original 120 BPM piano
+score, with a designed sound on every press. Plan:
+`.agents/slop/plans/069-launch-film-v8.md`. Not a one-take: that attempt was
+rejected (`agent/launch-film-v4`). Each scene is carried into the next by an
+object or a press.
 
 ## Every frame of product is the product
 
-| Time | Line | Shot | Source |
+| Time | Line | Scene | Source |
 | --- | --- | --- | --- |
-| 0–1 s | — | the Switch, camera pushing from 1.1× | `cu-switch-solo` |
-| 1–2 s | — | Tabs, resuming the push at 1.33× | `cu-tabs` |
-| 2–3 s | — | Slider, 1.58× | `cu-slider` |
-| 3–4 s | — | Checkbox, 1.84× — the cut lands at 2.1×, the same scale the wall opens on | `cu-checkbox` |
-| 4–8.5 s | every component you need | **the wall**: fifteen real windows and single controls in one bento — the blocks the landing page shows (pipeline, kanban, inbox, calendar, licence) beside the components; it opens on the checkbox the montage left, then pulls back | one still of each take |
-| 8.5–10.5 s | — | the report dashboard: its range control is pressed and the chart re-reads | `dashboard` |
-| 10.5–13.5 s | Native on Mac, Windows & Linux | **the same Settings window** in three looks, cut still: macOS, Windows, Linux, each with its own toolbar | `settings` |
-| 13.5–16 s | your theme, live · omarchy | **five Omarchy themes**, each with its own wallpaper, cut a beat apart: Tokyo Night → Rosé Pine → Gruvbox → Catppuccin Latte → Everforest | `omarchy-*` stills |
-| 16–20 s | — | Slang’s fx-991, the editor, the hardware monitor, the podcast player (its artwork full-bleed behind the episode) | Slang still, `editor`, `monitor`, `podcast` |
-| 20–24 s | the same app, over ssh | the ssh session; the Settings block takes the whole terminal over, then its look moves to Windows and its dark mode comes on — three real terminal states, cut on the press beats | `term-light-linux`, `term-dark`, `term-light-win` |
-| 24–26 s | — | the stack | film |
-| 26–30 s | — | the end card | film |
+| 0–4 s | — | Switch, Tabs, Slider, Checkbox | `cu-*` |
+| 4–8 s | every component you need | 83 tiles drop onto a tilted plane, opening from the Checkbox | `tile-*`, `dark-tile-*`: the packages' own examples |
+| 8–13 s | real apps, in react | ⌘K: Launcher → Vault (a link and a graph node pressed) → Dashboard (range pressed, chart punched in) | `launcher-v8`, `vault-v8`, `dashboard-v8` |
+| 13–16 s | and every chart | all 17 chart types drop and draw on landing; Settings falls last and levels into the desktop | `chart-*`, `dark-chart-*` |
+| 16–19 s | native on mac, windows & linux | one Settings window; each Look press wipes the desktop from the pointer | `settings-v8` |
+| 19–21 s | follows your omarchy theme | full-bleed tiling desktop, four real palettes and wallpapers | `omarchy-*` |
+| 21–24 s | the same app, over ssh | ssh, the command, the app; presses repaint on their own frames | `term-v8` |
+| 24–26 s | works with your npm packages | package tabs on the score's chord stabs | film |
+| 26–30 s | — | the mark, wordmark, URL, maker's line | film |
 
-Takes are the real tree under real input (`apps/playground/src/film/take.ts`);
-the stage shot is a stageshow recording of real takes (`stage/README.md`). The
-film draws the ground, the lines, the platform names, the cursor, the terminal
-window and the end card.
+**Drawn by the film, not the library:** the menu bars, docks, taskbar and GNOME top
+bar around the windows; the terminal shell and status line; the lines, cursor,
+package tabs and end card. The desktops' dock icons are plain tiles, not real apps.
 
-The terminal paints only on input — measured: three batches for a whole take,
-and kitty-key, wheel and in-band-resize pulses add none (`terminal-take.ts`
-carries the note) — so the app area inside the terminal is that same tree
-rendered by the window renderer at the terminal's own 1024×576 and darwin
-theme (`console-term`). The chrome, the ssh session and the cursor are the
-film's; the sidebar and toast animations are the component's, which is the only
-way they can appear inside that frame until the platform drives its own
-frames.
+**The terminal scene is not the terminal stream.** Terminal mode commits a paint
+only on input (`terminal-take.ts`), so the app inside the shell is the same tree
+through the window renderer at the terminal's 1024×576.
+
+**Sync.** A press and its repaint come from one take. State commits on mouse-up, so
+the v8 takes release one frame after the press: the change lands on press + 1, the
+frame its sound is placed on. The close-ups change on press + 3 and their cues follow.
+
+## The npm line
+
+`apps/playground/src/film/npm-proof.test.tsx` runs TanStack DB, TanStack AI and Better
+Auth under a real GPUix tree. Effect and TanStack Table, Virtual, Hotkeys and Form are
+the library's own dependencies. react-doctor is a CLI and scans `examples/blocks`.
+
+Known limit: Better Auth's `useSession` never fetches here, because it returns early
+when `window` is undefined and a native app runs under Node. `getSession()` works.
 
 ## Build
 
 ```sh
 nub run --filter playground build
-for take in cu-switch-solo cu-switch cu-tabs cu-slider cu-checkbox cu-toggle cu-button cu-radio cu-input settings stats blueprint slang console-term desktop-aero tiling chat-mac chat-win chat-linux editor podcast dashboard kanban notes pipeline welcome license inbox; do
-  nub apps/playground/dist/film/takes.js $take media/launch/takes/$take
-done
-# Slang's own captures (its `src/capture.tsx`), as the film's three stills
-cp ~/Documents/slang/media/slang-result.png media/launch/takes/slang-app-result.png
-cp ~/Documents/slang/media/slang-latex.png media/launch/takes/slang-app-latex.png
-cp ~/Documents/slang/media/slang-ti84-graph.png media/launch/takes/slang-app-ti84.png
-# the app area inside the terminal: the Settings block at 1024×576, its look and
-# dark switch pressed there, so each press repaints a real change
-nub apps/playground/dist/film/terminal-take.js media/launch/takes/term-settings settings \
-  dark@0.6 look-win32@1.2 look-linux@1.8
-sh media/launch/stage/setup.sh            # then record the two stage shots (stage/README.md)
-# the five Omarchy themes: one still each, the desktop repainted by the palette file
-for theme in tokyo rose-pine gruvbox catppuccin-latte everforest; do
-  nub apps/playground/dist/film/takes.js omarchy-$theme media/launch/takes/omarchy-$theme
-done
+nub apps/playground/dist/film/takes.js --list          # every take
+sh media/launch/stage/take.sh <take>                   # one take; build.ts names the ones it needs
 sh media/launch/sound/kit.sh ~/.claude/skills/media-use/audio/assets/sfx
 sh media/launch/sound/score.sh <SalamanderGrandPiano-V3+20200602.sf2>
-nub media/launch/build.ts                 # encodes footage, writes index.html and compositions/
-cd media/launch && npx hyperframes check && npx hyperframes render -o gpuixui-launch.mp4 --crf 14
-ffmpeg -i gpuixui-launch.mp4 -c:v copy -af loudnorm=I=-18:TP=-1:LRA=11 -c:a aac -b:a 256k master.mp4  # the mastered file
+nub media/launch/build.ts                              # encodes footage, writes index.html and compositions/
+cd media/launch
+npx hyperframes snapshot -o /tmp/wall --no-end --at 7.95 && cp /tmp/wall/frame-00*.png assets/footage/wall-end.png
+npx hyperframes check && npx hyperframes render -o gpuixui-launch.mp4 --crf 14
+ffmpeg -i gpuixui-launch.mp4 -t 30 -c:v copy -af loudnorm=I=-18:TP=-1:LRA=11 -ar 48000 -c:a aac -b:a 256k master.mp4
 ```
 
 ## Sound
@@ -80,3 +72,4 @@ square. Piano samples: Salamander Grand Piano by Alexander Holm, CC BY 3.0
 `assets/wallpaper/SOURCES.md`). Stage shots: the stageshow skill (MIT, Benji
 Taylor).
 Clicks: HyperFrames' bundled sound library.
+TanStack, Effect and Better Auth marks: simple-icons (CC0), `assets/logos/`.

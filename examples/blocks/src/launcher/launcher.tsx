@@ -7,8 +7,8 @@
  * the runtime a borderless floating window.
  */
 import { Icon } from "@gpuixui/icons";
-import { Input, Stack, Text } from "@gpuixui/primitives";
-import { materialFill } from "@gpuixui/tokens";
+import { Input, Separator, Stack, Text } from "@gpuixui/primitives";
+import { materialFill, seriesColors } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { KeyEvent } from "@gpuix/react";
 import * as Arr from "effect/Array";
@@ -27,6 +27,7 @@ export const Launcher = ({
   const [query, setQuery] = useState("");
   const [at, setAt] = useState(0);
   const shown = rank(results, query);
+  const tiles = seriesColors(theme);
 
   const onKeyDown = (event: KeyEvent) => {
     const key = event.key ?? "";
@@ -54,9 +55,9 @@ export const Launcher = ({
         style={{
           display: "flex",
           flexDirection: "column",
-          width: 680,
-          height: 420,
-          borderRadius: 14,
+          width: 720,
+          height: 460,
+          borderRadius: theme.radius.xl,
           borderWidth: theme.borderWidth.thin,
           borderColor: theme.colors.border,
           backgroundColor: materialFill(theme, "hud"),
@@ -74,79 +75,102 @@ export const Launcher = ({
             setAt(0);
           }}
           style={{
-            height: 52,
-            fontSize: 20,
+            height: 60,
+            fontSize: 22,
+            paddingLeft: theme.spacing.lg,
             borderWidth: 0,
             backgroundColor: undefined,
           }}
         />
-        <Stack direction="column" style={{ flexGrow: 1, padding: 8 }}>
+        <Separator orientation="horizontal" />
+        <Stack
+          direction="column"
+          style={{ flexGrow: 1, minHeight: 0, padding: theme.spacing.sm }}
+        >
           {Arr.map(shown, (result, index) => (
             <div
               key={result.id}
-              testId={`result-${result.id}`}
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                height: 32,
-                paddingLeft: 10,
-                paddingRight: 10,
-                borderRadius: theme.radius.sm,
-                ...(index === at
-                  ? { backgroundColor: theme.colors.primary }
-                  : {}),
-              }}
+              style={{ display: "flex", flexDirection: "column" }}
             >
-              <Icon
-                name={result.icon}
-                size={theme.iconSize.md}
-                color={
-                  index === at
-                    ? theme.colors.primaryForeground
-                    : theme.colors.primary
-                }
-              />
-              <Text
+              {shown[index - 1]?.group === result.group ? null : (
+                <Text
+                  tone="muted"
+                  role="caption"
+                  style={{
+                    paddingLeft: theme.spacing.sm,
+                    paddingTop: theme.spacing.sm,
+                    paddingBottom: theme.spacing.xs,
+                  }}
+                >
+                  {result.group}
+                </Text>
+              )}
+              <div
+                testId={`result-${result.id}`}
                 style={{
-                  flexGrow: 1,
-                  color:
-                    index === at
-                      ? theme.colors.primaryForeground
-                      : theme.colors.foreground,
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: theme.spacing.md,
+                  height: 42,
+                  paddingLeft: theme.spacing.sm,
+                  paddingRight: theme.spacing.md,
+                  borderRadius: theme.radius.md,
+                  ...(index === at
+                    ? { backgroundColor: theme.colors.selected }
+                    : {}),
                 }}
               >
-                {result.title}
-              </Text>
-              <Text
-                style={{
-                  color:
-                    index === at
-                      ? theme.colors.primaryForeground
-                      : theme.colors.mutedForeground,
-                }}
-              >
-                {result.shortcut ?? result.group}
-              </Text>
+                <div
+                  style={{
+                    display: "flex",
+                    width: 28,
+                    height: 28,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: theme.radius.md,
+                    backgroundColor: tiles[index % tiles.length],
+                  }}
+                >
+                  <Icon
+                    name={result.icon}
+                    size={theme.iconSize.md}
+                    color={theme.colors.primaryForeground}
+                  />
+                </div>
+                <Text role="bodyStrong">{result.title}</Text>
+                <Text
+                  tone="muted"
+                  truncate
+                  style={{ flexGrow: 1, flexBasis: 0 }}
+                >
+                  {result.subtitle}
+                </Text>
+                <Text tone="muted">{result.shortcut ?? result.group}</Text>
+              </div>
             </div>
           ))}
         </Stack>
+        <Separator orientation="horizontal" />
         <div
           style={{
             display: "flex",
             flexDirection: "row",
-            justifyContent: "flex-end",
-            gap: 16,
-            height: 36,
-            paddingRight: 14,
             alignItems: "center",
-            borderTopWidth: theme.borderWidth.thin,
-            borderColor: theme.colors.border,
+            gap: theme.spacing.lg,
+            height: 40,
+            paddingLeft: theme.spacing.lg,
+            paddingRight: theme.spacing.lg,
           }}
         >
+          <Text tone="muted" truncate style={{ flexGrow: 1, flexBasis: 0 }}>
+            {Option.match(Arr.get(shown, at), {
+              onNone: () => "No results",
+              onSome: (result) => `Open ${result.title}`,
+            })}
+          </Text>
           <Text tone="muted">↵ Open</Text>
-          <Text tone="muted">⌘↵ Actions</Text>
+          <Text tone="muted">⌘K Actions</Text>
         </div>
       </div>
     </div>

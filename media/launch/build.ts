@@ -1,5 +1,5 @@
 /**
- * The launch film v4 (plan 066), written from one timeline table: encodes the
+ * The launch film v8 (plan 069), written from one timeline table: encodes the
  * takes it uses into `assets/footage/`, then writes `index.html` and one
  * composition per scene. A retime is one edit here; nothing is pasted by hand.
  *
@@ -7,8 +7,8 @@
  *
  * Every product picture is a real take (`takes/<name>/`, the native renderer's
  * frames) or a stage recording of real takes (`takes/stage-*`, see
- * `stage/README.md`). The film draws only the ground, the lines, the window
- * frames, the cursor and the end card.
+ * `stage/README.md`). The film draws only the ground, the lines, the desktops
+ * around the windows, the terminal shell, the cursor and the end card.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -16,9 +16,8 @@ import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 const FPS = 30;
 const HERE = new URL(".", import.meta.url).pathname;
 const at = (path: string) => `${HERE}${path}`;
-const GROUND = "#FAFAFA";
+const GROUND = "#F4F2EE";
 const INK = "#1D1D1F";
-const ACCENT = "#171717";
 
 /* ------------------------------------------------------------ footage */
 
@@ -48,13 +47,6 @@ const footage = (take: string, crf = 14): string => {
       out,
     ]);
   return `assets/footage/${take}.mp4`;
-};
-
-/** A still beside the takes (the Slang app's own captures), copied for the film. */
-const stillOf = (name: string): string => {
-  const out = `assets/footage/${name}`;
-  execFileSync("cp", [at(`takes/${name}`), at(out)]);
-  return out;
 };
 
 const still = (take: string, frame = 0): string => {
@@ -214,560 +206,600 @@ const montage: Scene = {
   }).join("\n    "),
 };
 
-// 3.6–8.4: a field of live components in columns sliding opposite ways; the
-// camera starts on one being typed into and keeps pulling back to reveal more.
-// Every tile a different take, and a span that gives the wall a rhythm: a hero,
-// wide panels, two tall ones and a big block — a bento, not a contact sheet.
-// Tiles are picked for what they read at 300 px: a bold control or a dense
-// screen, never a pale card whose content disappears (measured: the palest
-// takes sit at 2.7–9 centre contrast, the chosen ones at 15–93).
-interface Cell {
-  readonly take: string;
-  readonly col: number;
-  readonly row: number;
+/* ------------------------------------------------------------ the tilted screen */
+
+/** A tile on a tilted plane; coordinates are its centre, in plane pixels. */
+interface PlaneTile {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
   readonly w: number;
   readonly h: number;
-  /** Detail crop: magnify the tile's content by this much (uniform, no stretch). */
-  readonly zoom?: number;
-  /** The point of the source, in fractions, that the detail crop keeps. */
-  readonly focus?: readonly [number, number];
-  /** Source width / height, when the take was not recorded at 2200×1400. */
-  readonly aspect?: number;
-  /** A hand-placed offset, so the wall is composed rather than snapped. */
-  readonly nudge?: readonly [number, number];
-}
-/** The tile the montage's last close-up cuts into: a card with one control. */
-/** The tile the montage's last close-up cuts into: the checkbox card. */
-const MATCH_TILE: Cell = {
-  take: "cu-checkbox",
-  col: 2,
-  row: 4,
-  w: 2,
-  h: 1,
-  zoom: 2.05,
-  focus: [0.5, 0.5],
-};
-/**
- * The wall, composed rather than snapped: a bento of whole windows and single
- * controls, with the blocks the landing page shows (pipeline, kanban, inbox,
- * calendar, licence) beside the components. The gap between the rows is what
- * makes the field read at a glance.
- */
-const WALL: ReadonlyArray<Cell> = [
-  { take: "stats", col: 0, row: 0, w: 2, h: 2 },
-  { take: "podcast", col: 2, row: 0, w: 2, h: 1, nudge: [0, 4] },
-  {
-    take: "license",
-    col: 4,
-    row: 0,
-    w: 2,
-    h: 1,
-    zoom: 1.15,
-    focus: [0.5, 0.45],
-  },
-  {
-    take: "cu-tabs",
-    col: 2,
-    row: 1,
-    w: 2,
-    h: 1,
-    zoom: 2.15,
-    focus: [0.5, 0.5],
-  },
-  {
-    take: "calendar",
-    col: 4,
-    row: 1,
-    w: 1,
-    h: 1,
-    zoom: 1.7,
-    focus: [0.45, 0.4],
-  },
-  { take: "monitor", col: 5, row: 1, w: 1, h: 1, nudge: [4, -6] },
-  { take: "kanban", col: 0, row: 2, w: 1, h: 2 },
-  { take: "omarchy", col: 1, row: 2, w: 2, h: 2, nudge: [-4, 3] },
-  {
-    take: "cu-slider",
-    col: 3,
-    row: 2,
-    w: 2,
-    h: 1,
-    zoom: 2.15,
-    focus: [0.5, 0.5],
-  },
-  { take: "desktop-aero", col: 5, row: 2, w: 1, h: 2 },
-  { take: "pipeline", col: 3, row: 3, w: 2, h: 1 },
-  { take: "inbox", col: 0, row: 4, w: 2, h: 1, nudge: [0, 4] },
-  MATCH_TILE,
-  {
-    take: "cu-switch-solo",
-    col: 4,
-    row: 4,
-    w: 1,
-    h: 1,
-    zoom: 2.4,
-    focus: [0.5, 0.5],
-  },
-  { take: "editor", col: 5, row: 4, w: 1, h: 1, zoom: 1.75, focus: [0.5, 0.3] },
-];
-const UNIT = { w: 300, h: 200, gap: 16 };
-/**
- * Every film take is recorded at 2200×1400. A detail crop sizes the image to that
- * aspect as well, so `cover` has no slack and the focus point is exact.
- */
-const SCREEN_ASPECT = 2200 / 1400;
-const GRID = { cols: 6, rows: 5 };
-const cellBox = (cell: Cell) => ({
-  x: cell.col * (UNIT.w + UNIT.gap) + (cell.nudge?.[0] ?? 0),
-  y: cell.row * (UNIT.h + UNIT.gap) + (cell.nudge?.[1] ?? 0),
-  w: cell.w * UNIT.w + (cell.w - 1) * UNIT.gap,
-  h: cell.h * UNIT.h + (cell.h - 1) * UNIT.gap,
-});
-const WALL_BOX = {
-  w: GRID.cols * UNIT.w + (GRID.cols - 1) * UNIT.gap,
-  h: GRID.rows * UNIT.h + (GRID.rows - 1) * UNIT.gap,
-};
-const lastFrame = (take: string): number =>
-  Number(
-    execFileSync("sh", [
-      "-c",
-      `ls "${at(`takes/${take}`)}" | grep png | tail -1`,
-    ])
-      .toString()
-      .slice(0, 4),
-  );
-/** The wall's opening frame: the match tile, centred exactly where it lands. */
-const FOCUS = cellBox(MATCH_TILE);
-const FOCUS_CX = FOCUS.x + Math.round(FOCUS.w / 2);
-const FOCUS_CY = FOCUS.y + Math.round(FOCUS.h / 2);
-const SHOWCASE = 8.5;
-const GRID_LENGTH = SHOWCASE - 4 * BEAT_CUT;
-const grid: Scene = {
-  id: "grid",
-  start: 4 * BEAT_CUT,
-  duration: GRID_LENGTH,
-  css: `#root .cam { position:absolute; left:960px; top:540px; width:0; height:0; }
-    #root .wall { position:absolute; left:0; top:0; width:${WALL_BOX.w}px; height:${WALL_BOX.h}px; }
-    #root .tile { position:absolute; border-radius:24px; overflow:hidden; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 10px 30px -14px rgba(30,30,60,.25); }
-    #root .tile img, #root .tile video { position:absolute; }
-    #root .tile img.cover { left:-3%; top:-3%; width:106%; height:106%; object-fit:cover; }
-    #root .cap { position:absolute; left:0; right:0; top:880px; text-align:center; font:600 64px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
-    #root .cap-band { position:absolute; left:0; right:0; height:330px; pointer-events:none; }
-    #root .cap-band.down { bottom:0; height:400px; background:linear-gradient(rgba(250,250,250,0) 30%, rgba(250,250,250,.96) 45%, ${GROUND} 58%); }
-    #root .cap-band.up { top:0; height:260px; opacity:0; background:linear-gradient(${GROUND} 46%, rgba(250,250,250,0) 78%); }`,
-  body: `    <div id="g-cam" class="cam">
-      <div id="g-wall" class="wall">
-${WALL.map((cell) => {
-  const box = cellBox(cell);
-  const end = still(cell.take, lastFrame(cell.take));
-  // Depth: a tile further from the wall's middle starts a little larger and
-  // settles to its own size, so the wall comes forward instead of unzipping.
-  const depth = Math.abs(box.y + box.h / 2 - WALL_BOX.h / 2) / (WALL_BOX.h / 2);
-  const dz = (1.02 + depth * 0.05).toFixed(3);
-  // The further a tile sits from the wall's middle, the later it settles: half a
-  // beat of lag at the edges is what turns the scale change into parallax.
-  const dl = (depth * 0.32).toFixed(3);
-  const [fx, fy] = cell.focus ?? [0.5, 0.5];
-  // A detail crop blows the screenshot up and centres the chosen point of it:
-  // the image is `zoom` times the tile and offset so (fx, fy) lands in the middle.
-  const zoom = cell.zoom ?? 1;
-  const width = Math.round(box.w * zoom);
-  const height = Math.round(width / (cell.aspect ?? SCREEN_ASPECT));
-  const left = Math.round(box.w / 2 - fx * width);
-  const top = Math.round(box.h / 2 - fy * height);
-  const detail = cell.zoom
-    ? ` style="left:${left}px;top:${top}px;right:auto;bottom:auto;width:${width}px;height:${height}px"`
-    : "";
-  return `        <div class="tile" data-dz="${dz}" data-dl="${dl}" style="left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px"><img class="cover"${detail} src="${end}" alt=""></div>`;
-}).join("\n")}
-      </div>
-    </div>
-    <div id="g-band-b" class="cap-band down"></div>
-    <div id="g-band-t" class="cap-band up"></div>
-    <div id="g-cap" class="cap">every component you need</div>`,
-  script: `const cam = { z: Math.log(2.1) };
-    const zoom = () => gsap.set("#g-cam", { scale: Math.exp(cam.z) });
-    // It opens on one tile, not on the wall's seam: the montage's last close-up
-    // is the checkbox card, and the wall opens on that same card — same shape,
-    // same size, same place in the frame — then pulls back.
-    gsap.set("#g-wall", { x: ${-FOCUS_CX}, y: ${-FOCUS_CY} });
-    tl.to("#g-wall", { x: ${-Math.round(WALL_BOX.w / 2)}, y: ${-Math.round(WALL_BOX.h / 2)}, duration: 3, ease: "power1.inOut" }, 0);
-    zoom();
-    // Depth: the outer tiles start 7 % larger and settle to their own size late,
-    // while the centre settles first — the wall comes forward as a field with
-    // parallax, not a contact sheet (every tile lands by 1.8 s, before the line).
-    gsap.utils.toArray("#g-wall .tile").forEach((tile) => {
-      const delay = +tile.dataset.dl;
-      tl.fromTo(tile, { scale: +tile.dataset.dz },
-        { scale: 1, duration: 1.8 - delay, ease: "power1.inOut" }, delay);
-    });
-    // The wall breathes inside its tiles: each picture drifts a few pixels on
-    // its own delay, so the field moves without a single gutter changing.
-    gsap.utils.toArray("#g-wall .tile").forEach((tile, i) => {
-      const img = tile.querySelector("img");
-      if (!img) return;
-      const dx = (i % 3) - 1;
-      const dy = ((i + 1) % 3) - 1;
-      tl.fromTo(img, { x: 0, y: 0 },
-        { x: dx * 7, y: dy * 6, duration: 1.8, ease: "sine.inOut", yoyo: true, repeat: 1 },
-        2.2 + (i % 5) * 0.06);
-    });
-    tl.to(cam, { z: Math.log(0.82), duration: 2, ease: "power1.inOut", onUpdate: zoom }, 0);
-    tl.fromTo("#g-wall",{rotation:0},{rotation:0,duration:${GRID_LENGTH}},0);
-    // The wall gets the first two seconds to itself, then the line rises out of
-    // the paper under it and the two swap.
-    tl.fromTo("#g-cap",{opacity:0},{opacity:1,duration:0.3,ease:"power2.out"},1.9);
-    tl.fromTo("#g-band-b",{opacity:0},{opacity:1,duration:0.3,ease:"none"},1.9);
-    tl.to("#g-cap",{y:-824,duration:0.5,ease:"power2.inOut"},3);
-    // The wall settles below the line: 88 px clears the top band and leaves a
-    // bottom margin inside the frame.
-    tl.to("#g-cam",{y:88,duration:0.5,ease:"power2.inOut"},3);
-    tl.to("#g-band-t",{opacity:1,duration:0.5,ease:"none"},3);
-    tl.to("#g-band-b",{opacity:0,duration:0.5,ease:"none"},3);`,
-};
-
-// 8.4–19.45: what it builds, cut on the actions — the dashboard assembled, one
-// tree across looks and desktops, a chat typed and sent, a calculator used.
-interface Shot {
-  /** A take's footage, played from `mediaStart` — or a still, when `still` is set. */
+  /** Scene seconds at which it lands. */
+  readonly land: number;
+  /** A take drawn as a still, or played from its landing frame. */
   readonly take?: string;
-  readonly mediaStart?: number;
-  readonly still?: string;
-  readonly length: number;
-  readonly width: number;
-  readonly height: number;
-  readonly scale: number;
-  readonly framed: boolean;
-  readonly push: readonly [number, number];
-  /** A slow lateral drift, from this offset in px (relative to the shot) to 0. */
-  readonly drift?: readonly [number, number];
-  readonly cursor?: boolean;
-  /** The platform this shot shows; the film names it under the line. */
-  readonly platform?: string;
+  readonly play?: boolean;
+  readonly src?: string;
+  readonly label?: string;
 }
-const SHOTS: ReadonlyArray<Shot> = [
-  // The block the page is built from: a whole report screen, its range control
-  // pressed by the pointer the film follows.
-  {
-    take: "dashboard",
-    mediaStart: 0,
-    length: 2,
-    width: 1400,
-    height: 900,
-    scale: 0.92,
-    framed: true,
-    push: [1.04, 1],
-    drift: [-10, 8],
-    cursor: true,
-  },
-  // One window, three platforms: the same Settings screen restyled.
-  {
-    take: "settings",
-    mediaStart: 0.15,
-    length: 1,
-    width: 1760,
-    height: 940,
-    scale: 0.9,
-    framed: true,
-    push: [1, 1],
-    cursor: false,
-    platform: "macOS",
-  },
-  {
-    take: "settings",
-    mediaStart: 1.6,
-    length: 1,
-    width: 1760,
-    height: 940,
-    scale: 0.9,
-    framed: true,
-    push: [1, 1],
-    cursor: true,
-    platform: "Windows",
-  },
-  {
-    take: "settings",
-    mediaStart: 2.95,
-    length: 1,
-    width: 1760,
-    height: 940,
-    scale: 0.9,
-    framed: true,
-    push: [1, 1],
-    cursor: true,
-    platform: "Linux",
-  },
-  // The desktop follows the theme: five Omarchy palettes, each with its own
-  // wallpaper, cut on the beat. The same tree, repainted by the palette file.
-  {
-    still: still("omarchy-tokyo", 0),
-    length: 0.5,
-    width: 1280,
-    height: 720,
-    scale: 1.05,
-    framed: true,
-    push: [1, 1],
-  },
-  {
-    still: still("omarchy-rose-pine", 0),
-    length: 0.5,
-    width: 1280,
-    height: 720,
-    scale: 1.05,
-    framed: true,
-    push: [1, 1],
-  },
-  {
-    still: still("omarchy-gruvbox", 0),
-    length: 0.5,
-    width: 1280,
-    height: 720,
-    scale: 1.05,
-    framed: true,
-    push: [1, 1],
-  },
-  {
-    still: still("omarchy-catppuccin-latte", 0),
-    length: 0.5,
-    width: 1280,
-    height: 720,
-    scale: 1.05,
-    framed: true,
-    push: [1, 1],
-  },
-  {
-    still: still("omarchy-everforest", 0),
-    length: 0.5,
-    width: 1280,
-    height: 720,
-    scale: 1.05,
-    framed: true,
-    push: [1, 1],
-  },
-  // The apps: Slang's fx-991, the editor, the monitor, the podcast player. Each
-  // one pushes in and drifts a few pixels, so a beat of real screens reads as
-  // camera work rather than stills.
-  {
-    still: stillOf("slang-app-history.png"),
-    length: 1,
-    width: 1720,
-    height: 1640,
-    scale: 0.9,
-    framed: true,
-    push: [1.03, 1],
-    drift: [12, 10],
-  },
-  {
-    take: "editor",
-    mediaStart: 0,
-    length: 1,
-    width: 2200,
-    height: 1400,
-    scale: 0.85,
-    framed: true,
-    push: [1.03, 1],
-    drift: [-12, 8],
-    cursor: false,
-  },
-  {
-    take: "monitor",
-    mediaStart: 0,
-    length: 1,
-    width: 2200,
-    height: 1720,
-    scale: 0.52,
-    framed: true,
-    push: [1.03, 1],
-    drift: [10, 12],
-    cursor: false,
-  },
-  {
-    take: "podcast",
-    mediaStart: 0,
-    length: 1,
-    width: 2200,
-    height: 1400,
-    scale: 0.6,
-    framed: true,
-    push: [1.03, 1],
-    drift: [-10, -8],
-    cursor: false,
-  },
-];
-/** Below the line's band: a shot fits the frame under it, centred there. */
-const BAND = 170;
-const shotStart = (i: number) =>
-  SHOTS.slice(0, i).reduce((sum, shot) => sum + shot.length, 0);
-const showcase: Scene = {
-  id: "showcase",
-  start: SHOWCASE,
-  duration: shotStart(SHOTS.length),
-  css: `#root .cam { position:absolute; inset:0; transform-origin:960px 625px; }
-    #root .frame { position:absolute; overflow:hidden; }
-    #root .frame.framed { border-radius:20px; box-shadow:0 0 0 1px rgba(0,0,0,.08),0 30px 80px -30px rgba(30,30,60,.35); }
-    #root .frame video, #root .frame img { position:absolute; left:0; top:0; width:100%; height:100%; }`,
-  body: SHOTS.map((shot, i) => {
-    const w = Math.round(shot.width * shot.scale);
-    const h = Math.round(shot.height * shot.scale);
-    const left = Math.round((1920 - w) / 2);
-    // A shot taller than the band hangs from the line instead of climbing
-    // through it: the crop goes off the bottom, like a tight framing.
-    const top =
-      shot.scale === 1
-        ? 0
-        : Math.round(BAND + Math.max(0, (1080 - BAND - h) / 2));
-    const media =
-      shot.still === undefined
-        ? clip(
-            `s-v${i}`,
-            footage(shot.take ?? ""),
-            shotStart(i),
-            shot.length,
-            shot.mediaStart ?? 0,
-            "",
-            1 + (i % 2),
-          )
-        : `<img class="shot" src="${shot.still}" alt="">`;
-    const cursor =
-      shot.cursor === true
-        ? `<div id="s-cur${i}" class="cursor">${CURSOR}</div>`
-        : "";
-    return `    <div id="s-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0}">
-      <div class="frame${shot.framed ? " framed" : ""}" style="left:${left}px;top:${top}px;width:${w}px;height:${h}px">
-        ${media}
-        ${cursor}
+
+const lastTakeFrame = 53;
+const TILE_MEDIA = 1.8;
+const DROP = 0.42;
+
+const planeCss = `#root .stage { position:absolute; inset:0; perspective:2600px; perspective-origin:50% 42%; }
+    #root .plane { position:absolute; left:960px; top:540px; width:0; height:0; transform-style:preserve-3d; }
+    #root .tile { position:absolute; overflow:hidden; border-radius:16px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 18px 40px -22px rgba(29,29,31,.4); }
+    #root .tile img, #root .tile video { position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; }
+    #root .tile b { position:absolute; left:18px; top:12px; font:500 19px Inter, sans-serif; color:#6e6e73; letter-spacing:-0.01em; }`;
+
+const planeBody = (
+  tiles: ReadonlyArray<PlaneTile>,
+  duration: number,
+  extra = "",
+): string => `    <div class="stage" data-layout-allow-overflow>
+      <div id="plane" class="plane" data-layout-allow-overflow>
+${tiles
+  .map((tile) => {
+    const box = `left:${tile.x - tile.w / 2}px;top:${tile.y - tile.h / 2}px;width:${tile.w}px;height:${tile.h}px`;
+    const remaining = duration - tile.land;
+    const settled =
+      tile.take === undefined ? "" : still(tile.take, lastTakeFrame);
+    const picture =
+      tile.src !== undefined
+        ? `<img src="${tile.src}" alt="">`
+        : tile.play === true
+          ? `${video(`${tile.id}-v`, footage(tile.take ?? "", 18), tile.land, Math.min(TILE_MEDIA, remaining), "", 2)}${remaining > TILE_MEDIA ? `<img id="${tile.id}-s" src="${settled}" alt="" style="opacity:0">` : ""}`
+          : `<img src="${settled}" alt="">`;
+    return `        <div id="${tile.id}" class="tile" style="${box};opacity:0">${picture}${tile.label === undefined ? "" : `<b>${tile.label}</b>`}</div>`;
+  })
+  .join("\n")}
+${extra}
       </div>
     </div>`;
-  }).join("\n"),
-  script: SHOTS.map((shot, i) => {
-    const t = shotStart(i);
-    const follow =
-      shot.take !== undefined && shot.cursor === true
-        ? cursorClip(
-            `s-cur${i}`,
-            shot.take,
-            t,
-            shot.mediaStart ?? 0,
-            shot.length,
-            shot.scale,
-          )
-        : "";
-    return `${i > 0 ? `tl.set("#s-cam${i}",{opacity:1},${t.toFixed(3)});` : ""}tl.set("#s-cam${i}",{opacity:0},${(t + shot.length).toFixed(3)});
-    tl.fromTo("#s-cam${i}",{scale:${shot.push[0]},x:${shot.drift?.[0] ?? 0},y:${shot.drift?.[1] ?? 0}},{scale:${shot.push[1]},x:0,y:0,duration:${shot.length},ease:"power2.out"},${t.toFixed(3)});
-    ${follow}`;
-  }).join("\n    "),
+
+/** Each tile falls from above the plane and settles with a small give. */
+const planeDrops = (tiles: ReadonlyArray<PlaneTile>): string =>
+  tiles
+    .map(
+      (tile) =>
+        `tl.fromTo("#${tile.id}",{z:820,opacity:0},{z:0,opacity:1,duration:${DROP},ease:"power2.in"},${(tile.land - DROP).toFixed(3)});tl.to("#${tile.id}",{z:14,duration:0.08,ease:"power1.out"},${tile.land.toFixed(3)});tl.to("#${tile.id}",{z:0,duration:0.14,ease:"power1.in"},${(tile.land + 0.08).toFixed(3)});${tile.play === true ? `tl.set("#${tile.id}-s",{opacity:1},${(tile.land + TILE_MEDIA - 0.04).toFixed(3)});` : ""}`,
+    )
+    .join("\n    ");
+
+/** A stable scatter for a tile's index. */
+const jitter = (i: number): number => ((i * 2654435761) % 1000) / 1000;
+
+const TILT = { rotationX: 50, rotationZ: -18 };
+
+/* ------------------------------------------------------------ 4–8: the wall */
+
+const WALL_TAKES = [
+  "calendar",
+  "table",
+  "chat",
+  "code-editor",
+  "form",
+  "kanban",
+  "file-tree",
+  "diagram",
+  "timeline",
+  "media-player",
+  "tabs",
+  "toast",
+  "date-picker",
+  "diff-viewer",
+  "accordion",
+  "avatar-group",
+  "stepper",
+  "log-viewer",
+  "card",
+  "progress",
+  "markdown-editor",
+  "qr-code",
+  "inset-group",
+  "tag-input",
+  "time-picker",
+  "virtual-table",
+  "message",
+  "keyboard-shortcuts",
+  "alert",
+  "property-panel",
+  "gradient-text",
+  "sidebar",
+  "code-block",
+  "frozen-table",
+  "multi-step-form",
+  "image-preview",
+  "list",
+  "drop-zone",
+  "search-input",
+  "item",
+  "hexagon",
+  "expandable-rows",
+  "color-picker",
+  "tree",
+  "slider",
+  "theme-toggler",
+  "scroll-fade",
+  "toggle-group",
+  "surfaces",
+  "shine-button",
+  "input-group",
+  "crop-area",
+  "field",
+  "reveal",
+  "bubble",
+  "user-menu",
+  "pinned-list",
+  "command-menu",
+  "sliding-number",
+  "fieldset",
+  "aspect-ratio",
+  "breadcrumb",
+  "carousel",
+  "collapsible",
+  "combobox",
+  "confirm-dialog",
+  "context-menu",
+  "copy-button",
+  "countdown",
+  "counting-number",
+  "disclosure",
+  "drawer",
+  "dropdown-menu",
+  "empty-state",
+  "glyph",
+  "highlight-text",
+  "hotkey-recorder",
+  "hover-card",
+  "image-zoom",
+  "inline-edit",
+  "message-scroller",
+  "mention-input",
+  "motion-grid",
+] as const;
+const WALL_LIVE = new Set([
+  "toast",
+  "progress",
+  "sliding-number",
+  "reveal",
+  "shine-button",
+  "gradient-text",
+  "hexagon",
+  "chat",
+  "timeline",
+  "form",
+  "stepper",
+  "accordion",
+]);
+const CELL = { w: 400, h: 267, gap: 22 };
+const WALL_COLS = 12;
+const WALL_ROWS = 7;
+const cellX = (col: number, cols: number) =>
+  (col - (cols - 1) / 2) * (CELL.w + CELL.gap);
+const cellY = (row: number, rows: number) =>
+  (row - (rows - 1) / 2) * (CELL.h + CELL.gap);
+const WALL_CENTRE = { col: 6, row: 3 };
+const WALL_LENGTH = 4;
+const wallCells = Array.from({ length: WALL_ROWS * WALL_COLS }, (_, i) => ({
+  col: i % WALL_COLS,
+  row: Math.floor(i / WALL_COLS),
+})).filter(
+  ({ col, row }) => col !== WALL_CENTRE.col || row !== WALL_CENTRE.row,
+);
+const WALL_ORIGIN = {
+  x: cellX(WALL_CENTRE.col, WALL_COLS),
+  y: cellY(WALL_CENTRE.row, WALL_ROWS),
+};
+const reach = Math.hypot(6 * (CELL.w + CELL.gap), 3 * (CELL.h + CELL.gap));
+const wallTiles: ReadonlyArray<PlaneTile> = WALL_TAKES.map((name, i) => {
+  const cell = wallCells[i]!;
+  const x = cellX(cell.col, WALL_COLS);
+  const y = cellY(cell.row, WALL_ROWS);
+  const dist = Math.hypot(x - WALL_ORIGIN.x, y - WALL_ORIGIN.y) / reach;
+  return {
+    id: `t${i}`,
+    take: `${i % 4 === 2 ? "dark-" : ""}tile-${name}`,
+    play: WALL_LIVE.has(name),
+    x,
+    y,
+    w: CELL.w,
+    h: CELL.h,
+    land: 0.45 + dist * 2.95 + jitter(i) * 0.3,
+  };
+});
+const CHECKBOX_SCALE = (1080 * PUSH[4]) / CELL.h;
+const wall: Scene = {
+  id: "wall",
+  start: 4,
+  duration: WALL_LENGTH,
+  css: planeCss,
+  body: planeBody(
+    wallTiles,
+    WALL_LENGTH,
+    `<div id="t-check" class="tile" style="left:${WALL_ORIGIN.x - CELL.w / 2}px;top:${WALL_ORIGIN.y - CELL.h / 2}px;width:${CELL.w}px;height:${CELL.h}px;background:${GROUND}"><img src="${still("cu-checkbox", 59)}" alt=""></div>`,
+  ),
+  // The last close-up is the first tile: the plane opens flat at exactly the
+  // montage's framing, then tips back as the rest of the wall falls onto it.
+  script: `tl.set("#plane",{scale:${CHECKBOX_SCALE.toFixed(4)},x:${(-WALL_ORIGIN.x * CHECKBOX_SCALE).toFixed(1)},y:${(-WALL_ORIGIN.y * CHECKBOX_SCALE).toFixed(1)},rotationX:0,rotationZ:0},0);
+    tl.to("#plane",{scale:0.92,x:40,y:90,...${JSON.stringify(TILT)},duration:0.7,ease:"expo.inOut"},0.02);
+    tl.to("#plane",{scale:0.5,x:-30,y:70,rotationX:46,rotationZ:-14,duration:${WALL_LENGTH - 0.72},ease:"none"},0.72);
+    ${planeDrops(wallTiles)}`,
 };
 
-// The console in a terminal, reached over ssh — the local prompt, the login,
-// the command, its output, then the app taking the whole screen over.
-const TERM = { x: 371, y: 187, scale: 1.15, bar: 44 };
-const TERM_W = Math.round(1024 * TERM.scale);
-const TERM_SCREEN_H = Math.round(576 * TERM.scale);
-const TERMINAL = SHOWCASE + shotStart(SHOTS.length);
-const TERMINAL_LENGTH = 24 - TERMINAL;
+/* ------------------------------------------------------------ 8–13: the apps */
+
+const APPS = { start: 8, length: 5, launcherFor: 1, vaultFor: 2 };
+const WIN = { x: 110, y: 186, w: 1700 };
+const cursorOn = (
+  take: string,
+  id: string,
+  start: number,
+  mediaStart: number,
+  duration: number,
+  w: number,
+  logical: number,
+) => cursorClip(id, take, start, mediaStart, duration, w / (2 * logical));
+const apps: Scene = {
+  id: "apps",
+  start: APPS.start,
+  duration: APPS.length,
+  css: `#root .under { position:absolute; inset:0; }
+    #root .under img { position:absolute; inset:0; width:100%; height:100%; }
+    #root .scrim { position:absolute; inset:0; background:${GROUND}; opacity:0; }
+    #root .win { position:absolute; left:${WIN.x}px; top:${WIN.y}px; width:${WIN.w}px; border-radius:18px; overflow:hidden; box-shadow:0 0 0 1px rgba(29,29,31,.1), 0 50px 90px -40px rgba(29,29,31,.5); opacity:0; }
+    #root .win video { position:relative; display:block; width:100%; height:auto; }
+    #root .hud { position:absolute; left:510px; top:270px; width:900px; border-radius:22px; overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,.14), 0 60px 110px -30px rgba(0,0,0,.65); opacity:0; transform-origin:50% 50%; }
+    #root .hud video { position:relative; display:block; width:100%; height:auto; }
+    #root .cursor { width:56px; }`,
+  body: `    <div class="under"><img src="assets/footage/wall-end.png" alt=""></div>
+    <div id="a-scrim" class="scrim"></div>
+    <div id="a-vault" class="win">${video("a-vault-v", footage("vault-v8", 12), APPS.launcherFor, APPS.vaultFor, "", 2)}<div id="a-vc" class="cursor">${CURSOR}</div></div>
+    <div id="a-dash" class="win">${clip("a-dash-v", footage("dashboard-v8", 12), APPS.launcherFor + APPS.vaultFor, 2, 0, "", 3)}<div id="a-dc" class="cursor">${CURSOR}</div></div>
+    <div id="a-hud" class="hud">${video("a-hud-v", footage("launcher-v8", 12), 0, APPS.launcherFor + 0.1, "", 1)}</div>`,
+  script: `tl.to("#a-scrim",{opacity:0.72,duration:0.25,ease:"power2.out"},0);
+    tl.fromTo("#a-hud",{opacity:0,scale:0.94,y:-16},{opacity:1,scale:1,y:0,duration:0.28,ease:"back.out(1.6)"},0);
+    // Enter: the panel grows into the window it opened.
+    tl.to("#a-hud",{scale:2.05,y:190,opacity:0,duration:0.32,ease:"expo.in"},${(APPS.launcherFor - 0.22).toFixed(2)});
+    tl.fromTo("#a-vault",{opacity:0,scale:0.48,y:-60},{opacity:1,scale:1,y:0,duration:0.42,ease:"expo.out"},${APPS.launcherFor.toFixed(2)});
+    tl.to("#a-scrim",{opacity:1,duration:0.3},${APPS.launcherFor.toFixed(2)});
+    ${cursorOn("vault-v8", "a-vc", APPS.launcherFor, 0, APPS.vaultFor, WIN.w, 980)}
+    // Three-finger swipe: the next window pushes this one off.
+    tl.to("#a-vault",{x:-1900,duration:0.42,ease:"power3.inOut"},${(APPS.launcherFor + APPS.vaultFor - 0.2).toFixed(2)});
+    tl.set("#a-dash",{opacity:1},${(APPS.launcherFor + APPS.vaultFor - 0.2).toFixed(2)});
+    tl.fromTo("#a-dash",{x:1900},{x:0,duration:0.42,ease:"power3.inOut"},${(APPS.launcherFor + APPS.vaultFor - 0.2).toFixed(2)});
+    // In on the chart for the two range presses, and back out for the handoff.
+    tl.set("#a-dash",{transformOrigin:"78% 27%"},0);
+    tl.to("#a-dash",{scale:1.55,y:-24,duration:0.4,ease:"power3.inOut"},${(APPS.launcherFor + APPS.vaultFor + 0.12).toFixed(2)});
+    tl.to("#a-dash",{scale:1,y:0,duration:0.42,ease:"power3.inOut"},${(APPS.launcherFor + APPS.vaultFor + 1.56).toFixed(2)});
+    ${cursorOn("dashboard-v8", "a-dc", APPS.launcherFor + APPS.vaultFor, 0, 2, WIN.w, 1400)}`,
+};
+
+/* ------------------------------------------------------------ 13–16: the charts */
+
+const CHARTS = [
+  ["bar", "BarChart"],
+  ["line", "LineChart"],
+  ["donut", "DonutChart"],
+  ["area", "AreaChart"],
+  ["treemap", "TreemapChart"],
+  ["radar", "RadarChart"],
+  ["candle", "CandleChart"],
+  ["pie", "PieChart"],
+  ["funnel", "FunnelChart"],
+  ["sankey", "SankeyChart"],
+  ["stacked", "StackedBar"],
+  ["radial", "RadialChart"],
+  ["scatter", "ScatterChart"],
+  ["composed", "ComposedChart"],
+  ["sunburst", "SunburstChart"],
+  ["radial-bar", "RadialBarChart"],
+  ["sparkline", "Sparkline"],
+] as const;
+const CHARTS_START = 13;
+const CHARTS_LENGTH = 3;
+const CARD = { w: 400, h: 267, gap: 22 };
+const CHART_COLS = 5;
+const CHART_ROWS = 4;
+const SLOTS = Array.from({ length: CHART_COLS * CHART_ROWS }, (_, i) => ({
+  col: i % CHART_COLS,
+  row: Math.floor(i / CHART_COLS),
+}));
+const cardX = (col: number) =>
+  (col - (CHART_COLS - 1) / 2) * (CARD.w + CARD.gap);
+const cardY = (row: number) =>
+  (row - (CHART_ROWS - 1) / 2) * (CARD.h + CARD.gap);
+const DASH_SLOT = { col: 2, row: 1 };
+const SETTINGS_SLOT = { col: 2, row: 2 };
+const chartSlots = SLOTS.filter(
+  ({ col, row }) =>
+    !(col === DASH_SLOT.col && row === DASH_SLOT.row) &&
+    !(col === SETTINGS_SLOT.col && row === SETTINGS_SLOT.row),
+);
+const chartTiles: ReadonlyArray<PlaneTile> = CHARTS.map(([name, label], i) => {
+  const slot = chartSlots[i]!;
+  const dist = Math.hypot(slot.col - DASH_SLOT.col, slot.row - DASH_SLOT.row);
+  return {
+    id: `c${i}`,
+    take: `${i % 5 === 1 ? "dark-" : ""}chart-${name}`,
+    play: true,
+    label,
+    x: cardX(slot.col),
+    y: cardY(slot.row),
+    w: CARD.w,
+    h: CARD.h,
+    land: 0.55 + dist * 0.28 + jitter(i) * 0.14,
+  };
+});
+const DASH_H = Math.round((CARD.w * 900) / 1400);
+const SETTINGS_H = Math.round((CARD.w * 470) / 880);
+const dashTile = { x: cardX(DASH_SLOT.col), y: cardY(DASH_SLOT.row) };
+const settingsTile = {
+  x: cardX(SETTINGS_SLOT.col),
+  y: cardY(SETTINGS_SLOT.row),
+};
+/** The Settings window as the desktops show it. */
+const SETTINGS_WIN = {
+  w: 1320,
+  x: 300,
+  y: 196,
+  h: Math.round((1320 * 470) / 880),
+};
+const DASH_SCALE = WIN.w / CARD.w;
+const SETTINGS_SCALE = SETTINGS_WIN.w / CARD.w;
+
+/* The desktops around one window: wallpaper to the edges and the system's own furniture. */
+const dockTile = (fill: string) => `<i style="background:${fill}"></i>`;
+const DOCK = [
+  "linear-gradient(#5ac8fa,#007aff)",
+  "linear-gradient(#ffd60a,#ff9f0a)",
+  "linear-gradient(#30d158,#248a3d)",
+  "linear-gradient(#ff6482,#ff2d55)",
+  "linear-gradient(#bf5af2,#5e5ce6)",
+  "linear-gradient(#8e8e93,#48484a)",
+];
+const desktopCss = `#root .desk { position:absolute; inset:0; overflow:hidden; font-family:Inter, sans-serif; }
+    #root .desk > img.wall { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    #root .gnome-wall { position:absolute; inset:0; background:linear-gradient(160deg,#1c71d8 0%,#3584e4 34%,#26a269 68%,#1b5e4a 100%); }
+    #root .macbar { position:absolute; left:0; right:0; top:0; height:34px; display:flex; align-items:center; gap:22px; padding:0 18px; background:rgba(255,255,255,.34); color:#111; font-size:17px; font-weight:500; }
+    #root .macbar b { font-weight:700; } #root .macbar span.r { margin-left:auto; }
+    #root .dock { position:absolute; left:50%; bottom:12px; transform:translateX(-50%); display:flex; gap:10px; padding:9px 12px; border-radius:24px; background:rgba(255,255,255,.34); box-shadow:0 0 0 1px rgba(255,255,255,.4); }
+    #root .dock i { display:block; width:62px; height:62px; border-radius:15px; }
+    #root .dock img { display:block; width:62px; height:62px; border-radius:15px; background:#fff; }
+    #root .winbar { position:absolute; left:0; right:0; bottom:0; height:62px; display:flex; align-items:center; justify-content:center; gap:10px; background:rgba(243,243,243,.92); color:#111; font-size:16px; }
+    #root .winbar i { display:block; width:36px; height:36px; border-radius:7px; }
+    #root .winbar .start { display:grid; grid-template-columns:15px 15px; gap:2px; width:32px; height:32px; }
+    #root .winbar .start u { display:block; background:#0078d4; }
+    #root .winbar .search { width:220px; height:36px; line-height:36px; padding-left:16px; border-radius:18px; background:#fff; color:#666; box-shadow:0 0 0 1px rgba(0,0,0,.08); }
+    #root .winbar .tray { position:absolute; right:18px; text-align:right; line-height:21px; }
+    #root .gbar { position:absolute; left:0; right:0; top:0; height:36px; display:flex; align-items:center; padding:0 12px; background:#000; color:#fff; font-size:16px; font-weight:600; }
+    #root .gbar .act { padding:3px 13px; border-radius:14px; background:rgba(255,255,255,.18); }
+    #root .gbar .clock { position:absolute; left:0; right:0; text-align:center; }
+    #root .gbar .sys { margin-left:auto; }
+    #root .dash { position:absolute; left:50%; bottom:14px; transform:translateX(-50%); display:flex; gap:12px; padding:12px; border-radius:26px; background:rgba(40,40,44,.82); }
+    #root .dash i { display:block; width:58px; height:58px; border-radius:50%; }`;
+const macDesk = (
+  id: string,
+) => `<div id="${id}" class="desk"><img class="wall" src="assets/wallpaper/omarchy.jpg" alt="">
+      <div class="macbar"><b>Settings</b><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span><span class="r">Fri 6 Nov 9:41</span></div>
+      <div class="dock"><img src="assets/logo.png" alt="">${DOCK.map(dockTile).join("")}</div></div>`;
+const winDesk = (
+  id: string,
+) => `<div id="${id}" class="desk"><img class="wall" src="assets/wallpaper/windows.jpg" alt="">
+      <div class="winbar"><div class="start"><u></u><u></u><u></u><u></u></div><div class="search">Search</div>${DOCK.map(dockTile).join("")}<div class="tray">9:41 AM<br>11/6/2026</div></div></div>`;
+const gnomeDesk = (
+  id: string,
+) => `<div id="${id}" class="desk"><div class="gnome-wall"></div>
+      <div class="gbar"><span class="act">Activities</span><span class="clock">Fri Nov 6  9:41</span><span class="sys">Wi-Fi  ·  100%</span></div>
+      <div class="dash">${DOCK.map(dockTile).join("")}</div></div>`;
+
+const charts: Scene = {
+  id: "charts",
+  start: CHARTS_START,
+  duration: CHARTS_LENGTH,
+  css: `${planeCss}\n    ${desktopCss}`,
+  body: `    <div id="c-desk" style="position:absolute;inset:0;opacity:0">${macDesk("c-mac")}</div>
+${planeBody(
+  chartTiles,
+  CHARTS_LENGTH,
+  `<div id="c-dash" class="tile" style="left:${dashTile.x - CARD.w / 2}px;top:${dashTile.y - DASH_H / 2}px;width:${CARD.w}px;height:${DASH_H}px"><img src="${still("dashboard-v8", 59)}" alt=""></div>
+        <div id="c-set" class="tile" style="left:${settingsTile.x - CARD.w / 2}px;top:${settingsTile.y - SETTINGS_H / 2}px;width:${CARD.w}px;height:${SETTINGS_H}px;opacity:0"><img src="${still("settings-v8", 0)}" alt=""></div>`,
+)}`,
+  // In: the dashboard's window shrinks into its slot as the plane tips back.
+  // Out: Settings falls last, and the plane levels until it is the desktop's window.
+  script: `tl.set("#plane",{scale:${DASH_SCALE.toFixed(4)},x:${(-dashTile.x * DASH_SCALE).toFixed(1)},y:${(WIN.y + (WIN.w * 900) / 1400 / 2 - 540 - dashTile.y * DASH_SCALE).toFixed(1)},rotationX:0,rotationZ:0},0);
+    tl.to("#plane",{scale:0.84,x:20,y:66,...${JSON.stringify(TILT)},duration:0.6,ease:"expo.inOut"},0);
+    tl.to("#plane",{scale:0.76,x:-10,y:48,rotationX:46,rotationZ:-15,duration:1.72,ease:"none"},0.6);
+    ${planeDrops(chartTiles)}
+    tl.fromTo("#c-set",{z:900,opacity:0},{z:0,opacity:1,duration:0.36,ease:"power2.in"},1.96);
+    tl.to("#plane",{scale:${SETTINGS_SCALE.toFixed(4)},x:${(-settingsTile.x * SETTINGS_SCALE).toFixed(1)},y:${(SETTINGS_WIN.y + SETTINGS_WIN.h / 2 - 540 - settingsTile.y * SETTINGS_SCALE).toFixed(1)},rotationX:0,rotationZ:0,duration:0.68,ease:"expo.inOut"},2.32);
+    ${[...chartTiles.map((t) => `#${t.id}`), "#c-dash"].map((sel) => `tl.to("${sel}",{opacity:0,duration:0.3},2.5);`).join("")}
+    tl.to("#c-desk",{opacity:1,duration:0.4,ease:"power2.out"},2.6);`,
+};
+
+/* ------------------------------------------------------------ 16–19: three desktops */
+
+const DESK_START = 16;
+const DESK_LENGTH = 3;
+const PRESS_WIN = 1;
+const PRESS_LINUX = 2;
+const lookAt = cursorOf("settings-v8");
+const pointAt = (frame: number) => {
+  const sample = lookAt.find((s) => s.frame === frame)!;
+  const k = SETTINGS_WIN.w / (2 * 880);
+  return { x: SETTINGS_WIN.x + sample.x * k, y: SETTINGS_WIN.y + sample.y * k };
+};
+const pW = pointAt(PRESS_WIN * FPS);
+const pL = pointAt(PRESS_LINUX * FPS);
+const desktops: Scene = {
+  id: "desktops",
+  start: DESK_START,
+  duration: DESK_LENGTH,
+  css: `${desktopCss}
+    #root .window { position:absolute; left:${SETTINGS_WIN.x}px; top:${SETTINGS_WIN.y}px; width:${SETTINGS_WIN.w}px; height:${SETTINGS_WIN.h}px; box-shadow:0 60px 100px -36px rgba(0,0,0,.6); border-radius:19px; overflow:hidden; }
+    #root .window video { position:relative; display:block; width:100%; height:100%; }
+    #root .cursor { width:56px; z-index:5; }`,
+  body: `    ${macDesk("d-mac")}
+    <div id="d-win-layer" style="position:absolute;inset:0;clip-path:circle(0px at ${pW.x.toFixed(0)}px ${pW.y.toFixed(0)}px)">${winDesk("d-win")}</div>
+    <div id="d-gnome-layer" style="position:absolute;inset:0;clip-path:circle(0px at ${pL.x.toFixed(0)}px ${pL.y.toFixed(0)}px)">${gnomeDesk("d-gnome")}</div>
+    <div id="d-window" class="window">${video("d-v", footage("settings-v8", 12), 0, DESK_LENGTH, "", 2)}<div id="d-cur" class="cursor">${CURSOR}</div></div>`,
+  // Each press and its wipe share a frame; the window's own chrome is the take's.
+  script: `tl.to("#d-win-layer",{clipPath:"circle(2300px at ${pW.x.toFixed(0)}px ${pW.y.toFixed(0)}px)",duration:0.55,ease:"expo.out"},${(PRESS_WIN + 1 / FPS).toFixed(3)});
+    tl.to("#d-gnome-layer",{clipPath:"circle(2300px at ${pL.x.toFixed(0)}px ${pL.y.toFixed(0)}px)",duration:0.55,ease:"expo.out"},${(PRESS_LINUX + 1 / FPS).toFixed(3)});
+    ${cursorClip("d-cur", "settings-v8", 0, 0, DESK_LENGTH, SETTINGS_WIN.w / (2 * 880))}`,
+};
+
+/* ------------------------------------------------------------ 19–21: Omarchy */
+
+const OM_START = 19;
+const OM_LENGTH = 2;
+const THEMES = ["rose-pine", "gruvbox", "catppuccin-latte", "tokyo"] as const;
+/** The terminal pane in the tiling take, in frame fractions (measured from the still). */
+const PANE = { x: 0.55, y: 0.075, w: 0.42, h: 0.46 };
+const paneZoom = 1 / PANE.w;
+const omarchy: Scene = {
+  id: "omarchy",
+  start: OM_START,
+  duration: OM_LENGTH,
+  css: `#root .full { position:absolute; inset:0; width:100%; height:100%; }
+    #root #o-all { position:absolute; inset:0; transform-origin:0 0; }
+    #root .t { position:absolute; inset:0; }
+    #root .fly { position:absolute; left:${SETTINGS_WIN.x}px; top:${SETTINGS_WIN.y}px; width:${SETTINGS_WIN.w}px; border-radius:19px; }
+    ${desktopCss}`,
+  body: `    ${gnomeDesk("o-gnome")}
+    <div id="o-all" style="opacity:0">
+${THEMES.map((t, i) => `      <div id="o-t${i}" class="t" style="clip-path:${i === 0 ? "none" : "circle(0px at 960px 18px)"}"><img class="full" src="${still(`omarchy-${t}`, lastTakeFrame)}" alt=""></div>`).join("\n")}
+    </div>
+    <img id="o-fly" class="fly" src="${still("settings-v8", 89)}" alt="">`,
+  script: `tl.to("#o-all",{opacity:1,duration:0.3,ease:"power2.out"},0.05);
+    tl.to("#o-fly",{x:-270,y:-110,scale:0.6,opacity:0,duration:0.4,ease:"expo.inOut"},0);
+    ${THEMES.slice(1)
+      .map(
+        (_, i) =>
+          `tl.to("#o-t${i + 1}",{clipPath:"circle(2300px at 960px 18px)",duration:0.34,ease:"expo.out"},${(0.5 + i * 0.4).toFixed(2)});`,
+      )
+      .join("\n    ")}
+    // The camera pushes into the terminal pane, which becomes the next scene.
+    tl.to("#o-all",{x:${(-PANE.x * 1920 * paneZoom).toFixed(1)},y:${(-PANE.y * 1080 * paneZoom + (1080 - PANE.h * 1080 * paneZoom) / 2).toFixed(1)},scale:${paneZoom.toFixed(3)},duration:0.42,ease:"expo.in"},${(OM_LENGTH - 0.42).toFixed(2)});`,
+};
+
+/* ------------------------------------------------------------ 21–24: the terminal */
+
+const TERM_START = 21;
+const TERM_LENGTH = 3;
 const SSH = "ssh gon@whale-island";
 const RUN = "nub run dev settings --terminal";
-const TYPE_AT = 0.1; // the first keystroke
-const CHAR = 0.016; // seconds per character
-const T_LOGIN = TYPE_AT + SSH.length * CHAR + 0.06;
-const T_RUN = T_LOGIN + 0.06;
-const T_READY = T_RUN + RUN.length * CHAR + 0.08;
-const T_APP = 1.5; // the app takes the screen — on the beat grid
+const CHARS_PER_FRAME = 2;
+const TYPE_AT = 0.3;
+const typeTime = (text: string) =>
+  Math.ceil(text.length / CHARS_PER_FRAME) / FPS;
+const T_LOGIN = TYPE_AT + typeTime(SSH) + 0.1;
+const T_RUN = T_LOGIN + 0.1;
+const T_APP = 1.4;
 const typed = (id: string, text: string, from: number): string =>
-  [...text]
-    .map(
-      (_, i) =>
-        `tl.set("#${id}",{textContent:${JSON.stringify(text.slice(0, i + 1))}},${(from + i * CHAR).toFixed(3)});`,
-    )
-    .join("");
+  Array.from(
+    { length: Math.ceil(text.length / CHARS_PER_FRAME) },
+    (_, i) =>
+      `tl.set("#${id}",{textContent:${JSON.stringify(text.slice(0, (i + 1) * CHARS_PER_FRAME))}},${(from + i / FPS).toFixed(3)});`,
+  ).join("");
+const APP_W = 1500;
+const APP_H = Math.round((APP_W * 576) / 1024);
+const APP_X = 210;
+const APP_Y = 40;
+const TERM_BG = "#1a1b26";
 const terminal: Scene = {
   id: "terminal",
-  start: TERMINAL,
-  duration: TERMINAL_LENGTH,
-  css: `#root .term { position:absolute; transform-origin:0 0; left:${TERM.x}px; top:${TERM.y}px; width:${TERM_W}px; height:${TERM.bar + TERM_SCREEN_H}px; border-radius:12px; overflow:hidden; background:#0d0e10; border:1px solid rgba(0,0,0,.18); box-shadow:0 40px 90px -40px rgba(20,20,40,.55), 0 12px 30px -18px rgba(20,20,40,.35); }
-    #root .bar { position:relative; height:${TERM.bar}px; display:flex; align-items:center; gap:8px; padding-left:18px; background:linear-gradient(#fbfbfb, #ececed); border-bottom:1px solid #d7d7d9; color:#4b4b4f; font:500 26px Inter, sans-serif; }
-    #root .bar i { width:12px; height:12px; border-radius:50%; display:inline-block; }
-    #root .bar span { position:absolute; left:0; right:0; text-align:center; font-weight:500; }
-    #root .hist { position:absolute; left:0; top:${TERM.bar}px; width:100%; padding:18px 28px 0; font:500 22px/30px "JetBrains Mono", Menlo, monospace; color:#e8e8ea; }
-    #root .hist .dim { color:#8b8b93; }
-    #root .hist .off { opacity:0; }
-    #root .hist b { font-weight:600; color:#8ab4ff; }
-    #root .caret { display:inline-block; width:10px; height:20px; margin-left:2px; vertical-align:-3px; background:#c9c9d2; }
-    #root .frame { position:absolute; left:0; top:${TERM.bar}px; width:${TERM_W}px; height:${TERM_SCREEN_H}px; overflow:hidden; }
-    #root .frame video, #root .frame img { position:absolute; left:0; top:0; width:100%; height:100%; }`,
-  body: `    <div class="term">
-      <div class="bar" data-layout-ignore><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>gon@whale-island — ssh</span></div>
-      <div id="t-hist" class="hist" data-layout-ignore>
-        <div class="ln"><b>gon@macbook ~ %</b> <span id="t-ssh"></span><span id="t-caret1" class="caret"></span></div>
-        <div id="t-login" class="ln dim off">Last login: Sun Nov 1 19:41:07 2026 from 10.0.0.2</div>
-        <div id="t-runline" class="ln off"><b>gon@whale-island ~ %</b> <span id="t-run"></span><span id="t-caret3" class="caret"></span></div>
-        <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
-        <div id="t-out1" class="ln off"><span class="dim">VITE v7.1.3</span>  ready in 412 ms</div>
-        <div id="t-out2" class="ln off"><b>➜</b>  Local:   <span class="dim">http://localhost:5173/</span></div>
-        <div id="t-out3" class="ln off"><b>➜</b>  GPUix:   <span class="dim">http://localhost:5173/terminal</span></div>
-      </div>
-      <div class="frame">
-        ${["term-light-linux", "term-dark", "term-light-win"]
-          .map(
-            (take, i) =>
-              `<img id="t-v${i}" class="look" src="${still(take, 80)}" alt="" style="opacity:0">`,
-          )
-          .join("\n        ")}
-        <div id="t-cur" class="cursor" style="opacity:0">${CURSOR}</div>
-      </div>
-    </div>`,
+  start: TERM_START,
+  duration: TERM_LENGTH,
+  css: `#root .shell { position:absolute; inset:0; background:${TERM_BG}; padding:44px 60px; font:500 34px/50px "JetBrains Mono", Menlo, monospace; color:#c0caf5; }
+    #root .shell b { font-weight:600; color:#7aa2f7; } #root .shell .dim { color:#565f89; } #root .shell .off { opacity:0; }
+    #root .app { position:absolute; left:${APP_X}px; top:${APP_Y}px; width:${APP_W}px; height:${APP_H}px; opacity:0; overflow:hidden; }
+    #root .app video { position:relative; display:block; width:100%; height:100%; }
+    #root .status { position:absolute; left:0; right:0; bottom:0; height:44px; display:flex; align-items:center; gap:24px; padding:0 22px; background:#7aa2f7; color:#1a1b26; font:600 24px "JetBrains Mono", Menlo, monospace; }
+    #root .status span:last-child { margin-left:auto; }
+    #root .cursor { width:56px; }`,
+  body: `    <div id="term" class="shell">
+      <div><b>~ ❯</b> <span id="t-ssh"></span></div>
+      <div id="t-login" class="dim off">Last login: Fri Nov 6 09:41:07 2026 from 10.0.0.2</div>
+      <div id="t-runline" class="off"><b>gon@whale-island ~ ❯</b> <span id="t-run"></span></div>
+    </div>
+    <div id="t-app" class="app">${video("t-v", footage("term-v8", 12), T_APP, TERM_LENGTH - T_APP, "", 2)}<div id="t-cur" class="cursor">${CURSOR}</div></div>
+    <div class="status"><span>0:nub*</span><span>gon@whale-island</span><span>ssh · 120×40 · 09:41</span></div>`,
   script: `${typed("t-ssh", SSH, TYPE_AT)}
-    // Zoomed into the prompt while it types, then pulled back to the whole window
-    // once the app has taken the screen over.
-    tl.set(".term",{scale:1.32,x:-188,y:-40},0);
-    tl.to(".term",{scale:1.02,x:0,y:0,duration:1.6,ease:"power2.inOut"},${T_APP.toFixed(2)});
-    tl.set("#t-caret1",{opacity:0},${T_LOGIN.toFixed(2)});
-    tl.set("#t-login",{opacity:1},${T_LOGIN.toFixed(2)});
-    tl.set("#t-runline",{opacity:1},${T_RUN.toFixed(2)});
+    tl.set("#t-login",{opacity:1},${T_LOGIN.toFixed(3)});
+    tl.set("#t-runline",{opacity:1},${T_RUN.toFixed(3)});
     ${typed("t-run", RUN, T_RUN)}
-    tl.set("#t-caret3",{opacity:0},${T_READY.toFixed(2)});
-    tl.set("#t-ready",{opacity:1},${T_READY.toFixed(2)});
-    // The command's own output, so the prompt is a screen and not a line.
-    tl.set("#t-out1",{opacity:1},${(T_READY + 0.06).toFixed(2)});
-    tl.set("#t-out2",{opacity:1},${(T_READY + 0.16).toFixed(2)});
-    tl.set("#t-out3",{opacity:1},${(T_READY + 0.26).toFixed(2)});
-    tl.set("#t-hist",{opacity:0},${T_APP.toFixed(2)}); tl.set("#t-v0",{opacity:1},${T_APP.toFixed(2)}); tl.set("#t-cur",{opacity:1},${T_APP.toFixed(2)});
-    // Three real terminal captures: the platform paints a state change only into
-    // the next frame it commits, so each state is recorded as its own take (one
-    // press before the first paint) and the film cuts between them. The order puts
-    // a theme flip on both cuts — Linux light → Linux dark → Windows light — so
-    // each change reads at a glance instead of moving one chip.
-    tl.set("#t-v0",{opacity:0},${(T_APP + 0.5).toFixed(2)}); tl.set("#t-v1",{opacity:1},${(T_APP + 0.5).toFixed(2)});
-    tl.set("#t-v1",{opacity:0},${(T_APP + 1.0).toFixed(2)}); tl.set("#t-v2",{opacity:1},${(T_APP + 1.0).toFixed(2)});
-    ${cursorTrack("t-cur", cursorOf("term-app"), T_APP, TERM.scale / 2)}`,
+    tl.set("#term > div",{opacity:0},${T_APP.toFixed(3)});
+    tl.set("#t-app",{opacity:1},${T_APP.toFixed(3)});
+    ${cursorClip("t-cur", "term-v8", T_APP, 0, TERM_LENGTH - T_APP, APP_W / (2 * 1024))}`,
 };
 
-// 24–26: the stack, one word per chord stab (the score's bar 12).
-const WORDS = ["GPUI", "React", "shadcn", "Tailwind"] as const;
-const stack: Scene = {
-  id: "stack",
-  start: 24,
-  duration: 2,
-  css: `#root .words { position:absolute; left:0; right:0; top:470px; text-align:center; font:600 104px Inter, sans-serif; letter-spacing:-0.035em; color:${INK}; }
-    #root .words span { opacity:.18; margin:0 26px; }
-    #root .words b { color:#c7c7cc; font-weight:600; }`,
-  body: `    <div class="words">${WORDS.map((w, i) => `<span id="w${i}">${w}</span>`).join("<b>·</b>")}</div>`,
-  script: `tl.fromTo(".words",{scale:1,x:0,y:0},{scale:1.03,x:-10,y:-6,duration:2,ease:"none"},0);
-    ${WORDS.map(
-      (_, i) =>
-        `tl.to("#w${i}",{opacity:1,duration:0.18},${(i * 0.5).toFixed(2)});`,
-    ).join("")}`,
+/* ------------------------------------------------------------ 24–26: the packages */
+
+const PACKAGES = [
+  [
+    ["TanStack DB", "tanstack"],
+    ["TanStack AI", "tanstack"],
+    ["TanStack Hotkeys", "tanstack"],
+    ["TanStack Virtual", "tanstack"],
+    ["TanStack Table", "tanstack"],
+  ],
+  [
+    ["Effect", "effect"],
+    ["Better Auth", "better-auth"],
+    ["react-doctor", ""],
+    ["TanStack Form", "tanstack"],
+    ["and more", ""],
+  ],
+] as const;
+const PKG_START = 24;
+const PKG_LENGTH = 2;
+const chip = (name: string, logo: string, id: string) =>
+  `<div id="${id}" class="chip">${logo === "" ? `<i></i>` : `<img src="assets/logos/${logo}.svg" alt="">`}<span>${name}</span></div>`;
+const npm: Scene = {
+  id: "npm",
+  start: PKG_START,
+  duration: PKG_LENGTH,
+  css: `#root .row { position:absolute; left:0; right:0; display:flex; justify-content:center; gap:16px; white-space:nowrap; }
+    #root .chip { display:flex; align-items:center; gap:16px; height:100px; padding:0 30px; border-radius:20px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 16px 34px -20px rgba(29,29,31,.4); font:500 36px Inter, sans-serif; letter-spacing:-0.02em; color:${INK}; }
+    #root .chip img { width:40px; height:40px; }
+    #root .chip i { display:block; width:26px; height:26px; border-radius:7px; background:#c7c7cc; }
+    #root .outgoing { position:absolute; inset:0; background:${TERM_BG}; }`,
+  body: `    ${PACKAGES.map(
+    (row, r) =>
+      `<div id="n-row${r}" class="row" style="top:${r === 0 ? 300 : 690}px">${row.map(([name, logo], i) => chip(name, logo, `n-${r}-${i}`)).join("")}</div>`,
+  ).join("\n    ")}
+    <div id="n-out" class="outgoing"><img src="${still("term-v8", 59)}" alt="" style="position:absolute;left:${APP_X}px;top:${APP_Y}px;width:${APP_W}px;height:${APP_H}px"></div>`,
+  // The terminal lifts away on the first stab; a chip lands on every beat after.
+  script: `tl.to("#n-out",{y:-1090,duration:0.34,ease:"expo.inOut"},0);
+    tl.fromTo("#n-row0",{x:24},{x:-24,duration:${PKG_LENGTH},ease:"none"},0);
+    tl.fromTo("#n-row1",{x:-24},{x:24,duration:${PKG_LENGTH},ease:"none"},0);
+    ${PACKAGES.flatMap((row, r) =>
+      row.map(
+        (_, i) =>
+          `tl.fromTo("#n-${r}-${i}",{y:${r === 0 ? -60 : 60},opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.26,ease:"back.out(1.8)"},${(0.1 + r * 0.12 + i * 0.13).toFixed(2)});`,
+      ),
+    ).join("\n    ")}
+    ${PACKAGES.flatMap((row, r) =>
+      row.map(
+        (_, i) =>
+          `tl.to("#n-${r}-${i}",{x:${(2 - i) * 330},y:${r === 0 ? 240 : -150},scale:0.1,opacity:0,duration:0.24,ease:"power3.in"},${(PKG_LENGTH - 0.24).toFixed(2)});`,
+      ),
+    ).join("\n    ")}`,
 };
 
-// 26–30: the mark, the URL, the credit.
+/* ------------------------------------------------------------ 26–30: the end */
+
 const end: Scene = {
   id: "end",
   start: 26,
   duration: 4,
   css: `#root .lockup { position:absolute; inset:0; }
-    #root .mark { position:absolute; left:50%; top:330px; width:190px; height:190px; margin-left:-95px; }
-    #root .name { position:absolute; left:0; right:0; top:560px; text-align:center; font:600 92px Inter, sans-serif; letter-spacing:-0.035em; color:${INK}; }
-    #root .url { position:absolute; left:0; right:0; top:690px; text-align:center; font:500 46px Inter, sans-serif; color:${ACCENT}; }
+    #root .mark { position:absolute; left:50%; top:290px; width:200px; height:200px; margin-left:-100px; }
+    #root .name { position:absolute; left:0; right:0; top:520px; text-align:center; font:500 92px Inter, sans-serif; letter-spacing:-0.035em; color:${INK}; }
+    #root .url { position:absolute; left:0; right:0; top:648px; text-align:center; font:400 46px Inter, sans-serif; letter-spacing:-0.015em; color:#6e6e73; }
     #root .credit { position:absolute; left:0; right:0; top:950px; text-align:center; font:400 30px Inter, sans-serif; color:#6e6e73; }
     #root .credit u { color:${INK}; text-underline-offset:5px; }`,
   body: `    <div class="lockup">
@@ -776,113 +808,119 @@ const end: Scene = {
       <div id="e-url" class="url">gpuixui.sudokw.com</div>
       <div id="e-credit" class="credit">Made with ☕ by <u>@sudo_kw</u></div>
     </div>`,
-  script: `tl.fromTo(".lockup",{scale:1,x:0,y:0},{scale:1.03,x:-8,y:-6,duration:4,ease:"none"},0);
-    tl.from("#e-mark",{opacity:0,duration:0.5},0.1);
-    tl.from("#e-name",{opacity:0.35,duration:0.35},0.5);
-    tl.from("#e-url",{opacity:0,duration:0.5},1.1);
-    tl.from("#e-credit",{opacity:0,duration:0.5},1.6);`,
+  script: `tl.fromTo("#e-mark",{scale:0.2,opacity:0},{scale:1,opacity:1,duration:0.5,ease:"back.out(1.9)"},0);
+    tl.fromTo("#e-name",{y:18,opacity:0},{y:0,opacity:1,duration:0.4,ease:"power3.out"},0.45);
+    tl.fromTo("#e-url",{y:14,opacity:0},{y:0,opacity:1,duration:0.4,ease:"power3.out"},1);
+    tl.fromTo("#e-credit",{opacity:0},{opacity:1,duration:0.4},1.5);`,
 };
 
-const scenes = [montage, grid, showcase, terminal, stack, end];
+const scenes = [
+  montage,
+  wall,
+  apps,
+  charts,
+  desktops,
+  omarchy,
+  terminal,
+  npm,
+  end,
+];
 const LENGTH = 30;
 
 /* ------------------------------------------------------------ lines and sound */
 
-/** Few words: the pictures carry the film, a line names what they show. */
-const LINES: ReadonlyArray<readonly [number, number, string]> = [
-  // Three lines, one per claim the pictures cannot make alone. The montage, the
-  // block, the apps and the theme flips carry themselves.
-  [
-    SHOWCASE + shotStart(1),
-    SHOWCASE + shotStart(4),
-    "Native on Mac, Windows & Linux",
-  ],
-  [SHOWCASE + shotStart(4), SHOWCASE + shotStart(9), "your theme, live"],
-  [TERMINAL, 24, "the same app, over ssh"],
-];
-/** The platform each shot shows, named under the line as the cut lands. */
-const PLATFORMS: ReadonlyArray<readonly [number, number, string]> = [
-  ...SHOTS.flatMap((shot, i) =>
-    shot.platform === undefined
-      ? []
-      : [
-          [
-            SHOWCASE + shotStart(i),
-            SHOWCASE + shotStart(i) + shot.length,
-            shot.platform,
-          ] as const,
-        ],
-  ),
-  // The five theme stills are one beat, so the platform line names the desktop
-  // once rather than flickering five theme names.
-  [SHOWCASE + shotStart(4), SHOWCASE + shotStart(9), "omarchy"],
+/** One line at a time; `on` is the colour it needs over a full-bleed picture. */
+const LINES: ReadonlyArray<
+  readonly [number, number, string, ("light" | "pill" | "ink")?]
+> = [
+  [4.9, 8, "every component you need"],
+  [9, 13, "real apps, in react"],
+  [13.6, 15.6, "and every chart"],
+  [16.15, 19, "native on mac, windows & linux", "light"],
+  [19.2, 20.6, "follows your omarchy theme", "pill"],
+  [22.4, 24, "the same app, over ssh", "pill"],
+  [24.25, 25.76, "works with your npm packages", "ink"],
 ];
 
-/** Every cue sits one frame after the picture that causes it. */
 const F = 1 / FPS;
-const shot = (i: number): Shot => {
-  const found = SHOTS[i];
-  if (found === undefined) throw new Error(`build: no shot ${i}`);
-  return found;
-};
-const shotAt = (i: number, takeSeconds: number) =>
-  SHOWCASE + shotStart(i) + takeSeconds - (shot(i).mediaStart ?? 0) + F;
-const platformCue = (i: number, sound: string): readonly [number, string] => [
-  SHOWCASE + shotStart(i) + F,
-  sound,
-];
-/** Keys under a typed line: every fifth character, four takes rotated. */
+/** A cue: when, which sample, and an optional level (0.9 is the default bed). */
 const keyCues = (
   text: string,
   from: number,
-): ReadonlyArray<readonly [number, string]> =>
-  Array.from(text, (_, i) => i)
-    .filter((i) => i % 5 === 0)
-    .map((i, n) => [from + i * CHAR, `key-${n % 4}`] as const);
-/** A cue: when, which sample, and an optional level (0.9 is the default bed). */
+): ReadonlyArray<readonly [number, string, number?]> =>
+  Array.from({ length: Math.ceil(text.length / CHARS_PER_FRAME) }, (_, i) => i)
+    .filter((i) => i % 2 === 0)
+    .map((i, n) => [from + i / FPS, `key-${n % 4}`, 0.7] as const);
+const SCENE = (scene: Scene, at: number) => scene.start + at;
 const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   ...MONTAGE.map(
-    ({ sound }, i) => [i * BEAT_CUT + PRESS_AT - LEAD_IN + F, sound] as const,
+    // A close-up's state changes on release, three frames after its press.
+    ({ sound }, i) =>
+      [i * BEAT_CUT + PRESS_AT - LEAD_IN + 3 * F, sound] as const,
   ),
   ...[20, 24, 28, 32, 36].map(
     (frame, n) =>
       [2 * BEAT_CUT + frame / FPS - LEAD_IN + F, `detent-${n + 2}`] as const,
   ),
-  ...[26, 29, 32].map(
-    (frame, n) => [4 * BEAT_CUT + frame / FPS - 0.3 + F, `key-${n}`] as const,
+  // The wall falls in waves: a tick for a landing every few tiles, thinned so a
+  // sound always has a picture.
+  [SCENE(wall, 0), "air", 0.6],
+  ...wallTiles
+    .slice()
+    .sort((a, b) => a.land - b.land)
+    .filter((_, i) => i % 6 === 0)
+    .map((tile, i) => [SCENE(wall, tile.land), `cap-${i % 4}`, 0.5] as const),
+  // ⌘K, three keys, Enter.
+  [8, "press"],
+  ...[12, 15, 18].map((frame, n) => [8 + frame / FPS + F, `key-${n}`] as const),
+  [8 + APPS.launcherFor - 0.22, "thud"],
+  // The take's own presses.
+  ...[24, 46].map(
+    (frame) => [8 + APPS.launcherFor + frame / FPS + F, "press"] as const,
   ),
-  // The dashboard's range control is pressed by the pointer the shot follows.
-  [shotAt(0, 0.95), "press"],
-  platformCue(1, "look-mac"),
-  platformCue(2, "look-win"),
-  platformCue(3, "look-linux"),
-  // One glass tick per theme flip: five cuts, a beat each.
-  ...[4, 5, 6, 7, 8].map(
-    (i, n) => [SHOWCASE + shotStart(i) + F, `glass-${n % 3}`, 1] as const,
+  [8 + APPS.launcherFor + APPS.vaultFor - 0.2, "air", 0.6],
+  ...[15, 30].map(
+    (frame) =>
+      [
+        8 + APPS.launcherFor + APPS.vaultFor + frame / FPS + F,
+        "press",
+      ] as const,
   ),
-  ...keyCues(SSH, TERMINAL + TYPE_AT),
-  ...keyCues(RUN, TERMINAL + T_RUN),
-  // The app takes the terminal over, and the take's one repaint lands on the frame
-  // it actually paints (frame 61 of takes/term-settings at 30 fps). The two
-  // "presses" that used to sit between them had no picture to land on.
-  // Enter, on the keystroke that finishes the command.
-  [TERMINAL + T_RUN + RUN.length * CHAR + 0.02, "press"],
-  [TERMINAL + T_APP, "land"],
-  [TERMINAL + T_APP + 0.5, "thud"],
-  [TERMINAL + T_APP + 1.0, "press"],
-  // A cut is a whoosh: the scene starts and the showcase's shot boundaries, read
-  // from the same table the compositions are written from.
-  // Every cut is a whoosh: the scene starts at full level, and every shot
-  // boundary inside the showcase a little softer, because those come half a beat
-  // apart. `shotStart(0)` is the showcase itself.
-  ...[4 * BEAT_CUT, TERMINAL, 24, 26].map((at) => [at, "air"] as const),
-  // Every shot boundary in the showcase is a soft whoosh, except the Omarchy
-  // beat: those five cuts are the theme flip's own glass tick, so a whoosh over
-  // them would bury the sound the picture is making.
-  ...SHOTS.flatMap((_, i) =>
-    i >= 4 && i <= 8 ? [] : [[SHOWCASE + shotStart(i), "air", 0.4] as const],
+  [CHARTS_START, "air", 0.6],
+  ...chartTiles
+    .slice()
+    .sort((a, b) => a.land - b.land)
+    .filter((_, i) => i % 3 === 0)
+    .map(
+      (tile, i) => [SCENE(charts, tile.land), `glass-${i % 3}`, 0.45] as const,
+    ),
+  [SCENE(charts, 2.32), "land"],
+  [DESK_START + PRESS_WIN + F, "look-win"],
+  [DESK_START + PRESS_LINUX + F, "look-linux"],
+  [OM_START, "air", 0.5],
+  ...[0, 1, 2].map(
+    (i) => [OM_START + 0.5 + i * 0.4 + F, `glass-${i}`, 1] as const,
   ),
-  [26.1, "mark"],
+  [TERM_START - 0.42, "air", 0.6],
+  ...keyCues(SSH, TERM_START + TYPE_AT),
+  [TERM_START + T_LOGIN - 0.03, "press", 0.6],
+  ...keyCues(RUN, TERM_START + T_RUN),
+  [TERM_START + T_APP, "land"],
+  ...[15, 30].map(
+    (frame) => [TERM_START + T_APP + frame / FPS + F, "press"] as const,
+  ),
+  [PKG_START, "air", 0.6],
+  ...PACKAGES.flatMap((row, r) =>
+    row.map(
+      (_, i) =>
+        [
+          PKG_START + 0.1 + r * 0.12 + i * 0.13 + 0.1,
+          `cap-${(r + i) % 4}`,
+          0.55,
+        ] as const,
+    ),
+  ),
+  [26.03, "mark"],
 ];
 
 /** A sound's own length, so its slot is never longer than the file. */
@@ -911,23 +949,24 @@ const index = `<!doctype html>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1920px; height: 1080px; overflow: hidden; background: ${GROUND}; }
-      .line { position: absolute; left: 0; right: 0; top: 0; height: 230px; padding-top: 62px; text-align: center; font: 600 64px Inter, sans-serif; letter-spacing: -0.025em; color: ${INK};
-        background: linear-gradient(${GROUND} 62%, rgba(250, 250, 250, 0)); }
-      .platform { position: absolute; left: 0; right: 0; top: 146px; text-align: center; font: 600 30px Inter, sans-serif; letter-spacing: 0.04em; color: ${ACCENT}; }
+      .line { position: absolute; left: 0; right: 0; top: 0; height: 200px; padding-top: 58px; text-align: center; font: 400 62px Inter, sans-serif; letter-spacing: -0.025em; color: ${INK}; background: linear-gradient(${GROUND} 58%, rgba(244, 242, 238, 0)); }
+      .line.light { height: auto; padding-top: 72px; background: none; color: #fff; font-weight: 500; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 40px rgba(0, 0, 0, 0.6); }
+      .line.ink { top: 500px; font-size: 72px; height: auto; padding-top: 0; background: none; }
+      .line.pill { top: auto; bottom: 66px; height: auto; padding: 0; background: none; }
+      .line.pill span { display: inline-block; padding: 14px 34px; border-radius: 26px; font-size: 50px; color: #fff; background: rgba(12, 12, 16, 0.76); }
     </style>
   </head>
   <body>
-    <!-- The launch film v4 (plan 066), written by build.ts: ${LENGTH} s on the score's 120 BPM grid. -->
+    <!-- The launch film v8 (plan 069), written by build.ts: ${LENGTH} s on the score's 120 BPM grid. -->
     <div id="root" data-composition-id="main" data-start="0" data-duration="${LENGTH}" data-width="1920" data-height="1080">
 ${scenes.map((s) => `      <div id="${s.id}" data-composition-id="${s.id}" data-composition-src="compositions/${s.id}.html" data-start="${s.start}" data-duration="${s.duration}" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>`).join("\n")}
-${LINES.map(([start, stop, text], i) => `      <div id="line-${i}" class="line clip" data-start="${start}" data-duration="${(stop - start).toFixed(2)}" data-track-index="9">${text}</div>`).join("\n")}
-${PLATFORMS.map(([start, stop, name], i) => `      <div id="platform-${i}" class="platform clip" data-start="${start.toFixed(2)}" data-duration="${(stop - start).toFixed(2)}" data-track-index="9">${name}</div>`).join("\n")}
+${LINES.map(([start, stop, text, on], i) => `      <div id="line-${i}" class="line ${on ?? ""} clip" data-start="${start}" data-duration="${(stop - start).toFixed(2)}" data-track-index="9"><span id="line-${i}-t">${text}</span></div>`).join("\n")}
       <audio id="score" class="clip" data-start="0" data-duration="${LENGTH}" data-track-index="19" data-volume="0.28" data-fade-out="1.5" src="assets/music/score.wav"></audio>
 ${CUES.map(([time, sound, volume], i) => `      <audio id="sfx-${String(i).padStart(2, "0")}" class="clip" data-start="${time.toFixed(3)}" data-duration="${lengthOf(sound).toFixed(3)}" data-track-index="${20 + (i % 8)}" data-volume="${volume ?? 0.9}" src="assets/sfx/${sound}.wav"></audio>`).join("\n")}
     </div>
     <script>
       const tl = gsap.timeline({ paused: true });
-      ${LINES.map((_, i) => `tl.fromTo("#line-${i}",{opacity:0.35},{opacity:1,duration:0.35,ease:"power2.out"},${LINES[i]![0]});`).join("\n      ")}
+      ${LINES.map(([start], i) => `tl.fromTo("#line-${i}-t",{opacity:0.25},{opacity:1,duration:0.3,ease:"power2.out"},${start});`).join("\n      ")}
       window.__timelines = window.__timelines || {};
       window.__timelines["main"] = tl;
     </script>

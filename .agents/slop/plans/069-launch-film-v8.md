@@ -71,3 +71,13 @@ nub run check && nub run lint && nub run test
 nub run --filter playground build && nub media/launch/build.ts
 cd media/launch && npx hyperframes check && npx hyperframes render -o gpuixui-launch.mp4 --crf 14
 ```
+
+## Outcome
+
+Rendered: 30.000 s, `hyperframes check` 0 errors, -17.7 LUFS, -1.0 dBFS.
+
+- Wall: 83 distinct real tiles. Charts: 17 types, drawing on landing.
+- Measured sync (pixel delta per frame): `term-v8`, `settings-v8`, `vault-v8` and `dashboard-v8` all repaint on press + 1, where their cues sit. v7.4 had no shared take between pointer and stills, and even inside a take the state lands on release, 100 ms after the press.
+- npm proof: TanStack DB, TanStack AI and Better Auth pass under a real tree. Better Auth's `useSession` does not fetch without `window`; `getSession()` works. react-doctor scans `examples/blocks` (92 files), scoring it 48/100 with 109 issues; not triaged, and its DOM accessibility rules may not apply to native elements.
+- The owner's "TanStack visualizer" is read as TanStack Virtual, the name in the repo README. To confirm.
+- Found on the way: structural charts painted black with no `colors` (fixed, 4 tests fail without it).

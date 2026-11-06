@@ -15,6 +15,8 @@ import { revealed, send } from "./agent/logic.js";
 import { events } from "./calendar/data.js";
 import { layoutDay, visible, weekStart } from "./calendar/logic.js";
 import { results } from "./launcher/data.js";
+import { vaultNotes } from "./vault/data.js";
+import { backlinks, edges, linksFrom, spans } from "./vault/logic.js";
 import { moveHighlight, rank } from "./launcher/logic.js";
 import { watches } from "./menubar/data.js";
 import { statusLine, toggle } from "./menubar/logic.js";
@@ -135,5 +137,33 @@ describe("welcome and viewer", () => {
   it("steps photos without wrapping", () => {
     expect(neighbour(["a", "b", "c"], "c", 1)).toBe("c");
     expect(neighbour(["a", "b", "c"], "b", -1)).toBe("a");
+  });
+});
+
+describe("vault", () => {
+  it("splits a paragraph into text and links, in order", () => {
+    expect(spans("see [[ten]] and [[nen]].")).toEqual([
+      { _tag: "Text", text: "see " },
+      { _tag: "Link", id: "ten" },
+      { _tag: "Text", text: " and " },
+      { _tag: "Link", id: "nen" },
+      { _tag: "Text", text: "." },
+    ]);
+  });
+
+  it("every link names a note the vault holds", () => {
+    const ids = vaultNotes.map((note) => note.id);
+    for (const note of vaultNotes)
+      for (const link of linksFrom(note)) expect(ids).toContain(link);
+  });
+
+  it("backlinks are the notes that link here, and edges are undirected", () => {
+    expect(backlinks(vaultNotes, "ten").map((note) => note.id)).toEqual([
+      "nen",
+    ]);
+    // nen → ten and ten → nen are stated by both notes, and draw one edge.
+    expect(
+      edges(vaultNotes).filter(([a, b]) => a === "nen" && b === "ten"),
+    ).toHaveLength(1);
   });
 });

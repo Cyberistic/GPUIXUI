@@ -56,6 +56,7 @@ import { Kanban } from "@gpuixui/blocks/kanban";
 import { License } from "@gpuixui/blocks/license";
 import { Preferences } from "@gpuixui/blocks/preferences";
 import { MenuBar } from "@gpuixui/blocks/menubar";
+import { Vault } from "@gpuixui/blocks/vault";
 import { wallTakes } from "./wall.js";
 import { capture, type Take, type Waypoint } from "./take.js";
 
@@ -114,7 +115,7 @@ const SettingsWindow = () => {
  */
 const TerminalSettings = () => {
   const [look, setLook] = useState<Look>("darwin");
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(true);
   return (
     <ThemeProvider
       theme={platformTheme(dark ? darkTheme : lightTheme, "darwin")}
@@ -175,12 +176,13 @@ const omarchyWallpaper = (name: string): string =>
 const omarchy = (palette: PaletteName, name: string): Take => ({
   width: 1280,
   height: 720,
-  frames: 1,
+  // Its charts draw on mount: the film uses the settled last frame.
+  frames: 54,
   view: () => (
     <TilingDesktop
       palette={palette}
       wallpaper={omarchyWallpaper(name)}
-      inset={56}
+      inset={40}
     />
   ),
 });
@@ -321,8 +323,113 @@ const tap = (testId: string): ReadonlyArray<Waypoint> => [
   { frame: 59, aim: { testId } },
 ];
 
+const typedQuery = (text: string, frame: number) => typing(text, frame, 3);
+
 export const takes: Readonly<Record<string, Take>> = {
   ...wallTakes,
+  /** ⌘K: the HUD over nothing, "vault" typed; the film grows it into the app. */
+  "launcher-v8": {
+    width: 720,
+    height: 460,
+    frames: 45,
+    view: () => (
+      <ThemeProvider
+        theme={extendTheme(platformTheme(darkTheme, "darwin"), {
+          window: "opaque",
+        })}
+      >
+        <div style={{ width: 720, height: 460, display: "flex" }}>
+          <Launcher />
+        </div>
+      </ThemeProvider>
+    ),
+    pointer: [{ frame: 0, aim: { testId: "launcher-query" } }],
+    keys: typedQuery("vau", 12),
+  },
+  /** A wiki link is pressed: the title, the graph and the backlinks all answer. */
+  "vault-v8": {
+    width: 980,
+    height: 620,
+    frames: 60,
+    view: () => (
+      <ThemeProvider theme={macWindow}>
+        <div style={{ width: 980, height: 620, display: "flex" }}>
+          <Vault platform="darwin" />
+          <Lights />
+        </div>
+      </ThemeProvider>
+    ),
+    pointer: [
+      { frame: 0, aim: { x: 700, y: 560 } },
+      { frame: 16, aim: { testId: "link-hatsu" } },
+      { frame: 24, aim: { testId: "link-hatsu" }, down: true },
+      { frame: 25, aim: { testId: "link-hatsu" } },
+      { frame: 42, aim: { testId: "graph-gon" } },
+      { frame: 46, aim: { testId: "graph-gon" }, down: true },
+      { frame: 47, aim: { testId: "graph-gon" } },
+      { frame: 59, aim: { testId: "graph-gon", dx: 30, dy: 30 } },
+    ],
+  },
+  /** The dashboard's range is pressed on the film's beat and the chart redraws. */
+  "dashboard-v8": {
+    width: 1400,
+    height: 900,
+    frames: 60,
+    view: () => (
+      <ThemeProvider theme={macWindow}>
+        <div style={{ width: 1400, height: 900, display: "flex" }}>
+          <Dashboard />
+        </div>
+      </ThemeProvider>
+    ),
+    pointer: [
+      { frame: 0, aim: { x: 1000, y: 620 } },
+      { frame: 10, aim: { testId: "range-7d" } },
+      { frame: 15, aim: { testId: "range-7d" }, down: true },
+      { frame: 16, aim: { testId: "range-7d" } },
+      { frame: 25, aim: { testId: "range-30d" } },
+      { frame: 30, aim: { testId: "range-30d" }, down: true },
+      { frame: 31, aim: { testId: "range-30d" } },
+      { frame: 59, aim: { testId: "range-30d", dx: 40, dy: 60 } },
+    ],
+  },
+  /** The look moves on the film's two presses, 30 frames apart. */
+  "settings-v8": {
+    width: 880,
+    height: 470,
+    frames: 90,
+    view: () => <SettingsWindow />,
+    pointer: [
+      { frame: 0, aim: { testId: "look-win32", dx: 60, dy: 50 } },
+      { frame: 24, aim: { testId: "look-win32" } },
+      { frame: 30, aim: { testId: "look-win32" }, down: true },
+      { frame: 31, aim: { testId: "look-win32" } },
+      { frame: 54, aim: { testId: "look-linux" } },
+      { frame: 60, aim: { testId: "look-linux" }, down: true },
+      { frame: 61, aim: { testId: "look-linux" } },
+      { frame: 89, aim: { testId: "look-linux", dx: 30, dy: 40 } },
+    ],
+  },
+  /**
+   * The app inside the terminal: one continuous take, so a press and the repaint
+   * it causes are the same frame.
+   */
+  "term-v8": {
+    width: 1024,
+    height: 576,
+    frames: 60,
+    view: () => <TerminalSettings />,
+    pointer: [
+      { frame: 0, aim: { testId: "look-win32", dx: 60, dy: 70 } },
+      { frame: 10, aim: { testId: "look-win32" } },
+      { frame: 15, aim: { testId: "look-win32" }, down: true },
+      { frame: 16, aim: { testId: "look-win32" } },
+      { frame: 26, aim: { testId: "dark" } },
+      { frame: 30, aim: { testId: "dark" }, down: true },
+      { frame: 31, aim: { testId: "dark" } },
+      { frame: 59, aim: { testId: "dark", dx: 40, dy: 40 } },
+    ],
+  },
   "cu-switch-solo": solo(
     <Switch testId="c" label="Wi-Fi" />,
     tap("c"),

@@ -29,6 +29,7 @@ import { MenuBar } from "./menubar/menubar.js";
 import { MacosDesktop } from "./macos/macos.js";
 import { Editor } from "./editor/editor.js";
 import { Podcast } from "./podcast/podcast.js";
+import { Vault } from "./vault/vault.js";
 import { Monitor } from "./monitor/monitor.js";
 import { Notes } from "./notes/notes.js";
 import { Dashboard } from "./dashboard/dashboard.js";
@@ -52,6 +53,7 @@ const screens: Readonly<Record<string, ComponentType>> = {
   "block:macos": MacosDesktop,
   "block:editor": Editor,
   "block:podcast": Podcast,
+  "block:vault": Vault,
   "block:monitor": Monitor,
   "block:notes": Notes,
   "block:dashboard": Dashboard,

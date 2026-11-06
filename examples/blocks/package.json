@@ -26,7 +26,8 @@
     "./console": "./src/console/console.tsx",
     "./license": "./src/license/license.tsx",
     "./dashboard": "./src/dashboard/dashboard.tsx",
-    "./podcast": "./src/podcast/podcast.tsx"
+    "./podcast": "./src/podcast/podcast.tsx",
+    "./vault": "./src/vault/vault.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

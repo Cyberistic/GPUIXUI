@@ -1,0 +1,325 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #f4f2ee;
+      font-family: Inter, sans-serif;
+    }
+    #root video,
+    #root img.shot {
+      position: absolute;
+      display: block;
+    }
+    #root .cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 34px;
+      transform-origin: 8% 6%;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+    }
+    #root .cursor svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root .under {
+      position: absolute;
+      inset: 0;
+    }
+    #root .under img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #root .scrim {
+      position: absolute;
+      inset: 0;
+      background: #f4f2ee;
+      opacity: 0;
+    }
+    #root .win {
+      position: absolute;
+      left: 110px;
+      top: 186px;
+      width: 1700px;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(29, 29, 31, 0.1),
+        0 50px 90px -40px rgba(29, 29, 31, 0.5);
+      opacity: 0;
+    }
+    #root .win video {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root .hud {
+      position: absolute;
+      left: 510px;
+      top: 270px;
+      width: 900px;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.14),
+        0 60px 110px -30px rgba(0, 0, 0, 0.65);
+      opacity: 0;
+      transform-origin: 50% 50%;
+    }
+    #root .hud video {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root .cursor {
+      width: 56px;
+    }
+  </style>
+  <div
+    id="root"
+    data-composition-id="apps"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div class="under"><img src="assets/footage/wall-end.png" alt="" /></div>
+    <div id="a-scrim" class="scrim"></div>
+    <div id="a-vault" class="win">
+      <video
+        id="a-vault-v"
+        class="clip"
+        data-start="1"
+        data-duration="2"
+        data-track-index="2"
+        muted
+        playsinline
+        src="assets/footage/vault-v8.mp4"
+        style=""
+      ></video>
+      <div id="a-vc" class="cursor">
+        <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+            fill="#000"
+            stroke="#fff"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+    </div>
+    <div id="a-dash" class="win">
+      <video
+        data-media-start="0"
+        id="a-dash-v"
+        class="clip"
+        data-start="3"
+        data-duration="2"
+        data-track-index="3"
+        muted
+        playsinline
+        src="assets/footage/dashboard-v8.mp4"
+        style=""
+      ></video>
+      <div id="a-dc" class="cursor">
+        <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+            fill="#000"
+            stroke="#fff"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+    </div>
+    <div id="a-hud" class="hud">
+      <video
+        id="a-hud-v"
+        class="clip"
+        data-start="0"
+        data-duration="1.1"
+        data-track-index="1"
+        muted
+        playsinline
+        src="assets/footage/launcher-v8.mp4"
+        style=""
+      ></video>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.to("#a-scrim", { opacity: 0.72, duration: 0.25, ease: "power2.out" }, 0);
+    tl.fromTo(
+      "#a-hud",
+      { opacity: 0, scale: 0.94, y: -16 },
+      { opacity: 1, scale: 1, y: 0, duration: 0.28, ease: "back.out(1.6)" },
+      0,
+    );
+    // Enter: the panel grows into the window it opened.
+    tl.to(
+      "#a-hud",
+      { scale: 2.05, y: 190, opacity: 0, duration: 0.32, ease: "expo.in" },
+      0.78,
+    );
+    tl.fromTo(
+      "#a-vault",
+      { opacity: 0, scale: 0.48, y: -60 },
+      { opacity: 1, scale: 1, y: 0, duration: 0.42, ease: "expo.out" },
+      1.0,
+    );
+    tl.to("#a-scrim", { opacity: 1, duration: 0.3 }, 1.0);
+    tl.set("#a-vc", { x: 1214.3, y: 971.4, scale: 1 }, 1.0);
+    tl.set("#a-vc", { x: 1214.3, y: 971.4, scale: 1 }, 1.0);
+    tl.set("#a-vc", { x: 1213.8, y: 970.7, scale: 1 }, 1.033);
+    tl.set("#a-vc", { x: 1210.2, y: 965.7, scale: 1 }, 1.067);
+    tl.set("#a-vc", { x: 1200.4, y: 952.0, scale: 1 }, 1.1);
+    tl.set("#a-vc", { x: 1181.3, y: 925.5, scale: 1 }, 1.133);
+    tl.set("#a-vc", { x: 1149.9, y: 881.6, scale: 1 }, 1.167);
+    tl.set("#a-vc", { x: 1103.0, y: 816.3, scale: 1 }, 1.2);
+    tl.set("#a-vc", { x: 1037.6, y: 725.1, scale: 1 }, 1.233);
+    tl.set("#a-vc", { x: 950.6, y: 603.7, scale: 1 }, 1.267);
+    tl.set("#a-vc", { x: 863.6, y: 482.3, scale: 1 }, 1.3);
+    tl.set("#a-vc", { x: 798.2, y: 391.1, scale: 1 }, 1.333);
+    tl.set("#a-vc", { x: 751.3, y: 325.7, scale: 1 }, 1.367);
+    tl.set("#a-vc", { x: 719.9, y: 281.9, scale: 1 }, 1.4);
+    tl.set("#a-vc", { x: 700.8, y: 255.3, scale: 1 }, 1.433);
+    tl.set("#a-vc", { x: 691.1, y: 241.7, scale: 1 }, 1.467);
+    tl.set("#a-vc", { x: 687.5, y: 236.6, scale: 1 }, 1.5);
+    tl.set("#a-vc", { x: 686.9, y: 235.9, scale: 1 }, 1.533);
+    tl.set("#a-vc", { x: 686.9, y: 235.9, scale: 1 }, 1.567);
+    tl.set("#a-vc", { x: 686.9, y: 235.9, scale: 1 }, 1.6);
+    tl.set("#a-vc", { x: 686.9, y: 235.9, scale: 1 }, 1.633);
+    tl.set("#a-vc", { x: 686.9, y: 235.9, scale: 1 }, 1.667);
+    tl.set("#a-vc", { x: 686.9, y: 235.9, scale: 1 }, 1.7);
+    tl.set("#a-vc", { x: 686.9, y: 235.9, scale: 1 }, 1.733);
+    tl.set("#a-vc", { x: 686.9, y: 235.9, scale: 1 }, 1.767);
+    tl.set("#a-vc", { x: 686.9, y: 235.9, scale: 0.86 }, 1.8);
+    tl.set("#a-vc", { x: 686.9, y: 235.9, scale: 1 }, 1.833);
+    tl.set("#a-vc", { x: 687.7, y: 236.1, scale: 1 }, 1.867);
+    tl.set("#a-vc", { x: 692.7, y: 237.5, scale: 1 }, 1.9);
+    tl.set("#a-vc", { x: 706.4, y: 241.2, scale: 1 }, 1.933);
+    tl.set("#a-vc", { x: 733.2, y: 248.4, scale: 1 }, 1.967);
+    tl.set("#a-vc", { x: 777.2, y: 260.4, scale: 1 }, 2.0);
+    tl.set("#a-vc", { x: 843.0, y: 278.2, scale: 1 }, 2.033);
+    tl.set("#a-vc", { x: 934.7, y: 303.0, scale: 1 }, 2.067);
+    tl.set("#a-vc", { x: 1056.8, y: 336.1, scale: 1 }, 2.1);
+    tl.set("#a-vc", { x: 1204.4, y: 376.0, scale: 1 }, 2.133);
+    tl.set("#a-vc", { x: 1326.4, y: 409.1, scale: 1 }, 2.167);
+    tl.set("#a-vc", { x: 1418.2, y: 433.9, scale: 1 }, 2.2);
+    tl.set("#a-vc", { x: 1483.9, y: 451.7, scale: 1 }, 2.233);
+    tl.set("#a-vc", { x: 1528.0, y: 463.7, scale: 1 }, 2.267);
+    tl.set("#a-vc", { x: 1554.7, y: 470.9, scale: 1 }, 2.3);
+    tl.set("#a-vc", { x: 1568.5, y: 474.6, scale: 1 }, 2.333);
+    tl.set("#a-vc", { x: 1573.5, y: 476.0, scale: 1 }, 2.367);
+    tl.set("#a-vc", { x: 1574.2, y: 476.2, scale: 1 }, 2.4);
+    tl.set("#a-vc", { x: 1574.2, y: 476.2, scale: 1 }, 2.433);
+    tl.set("#a-vc", { x: 1574.2, y: 476.2, scale: 1 }, 2.467);
+    tl.set("#a-vc", { x: 1574.2, y: 476.2, scale: 1 }, 2.5);
+    tl.set("#a-vc", { x: 1574.2, y: 476.2, scale: 0.86 }, 2.533);
+    tl.set("#a-vc", { x: 1574.2, y: 476.2, scale: 1 }, 2.567);
+    tl.set("#a-vc", { x: 1574.4, y: 476.3, scale: 1 }, 2.6);
+    tl.set("#a-vc", { x: 1575.2, y: 477.1, scale: 1 }, 2.633);
+    tl.set("#a-vc", { x: 1577.5, y: 479.4, scale: 1 }, 2.667);
+    tl.set("#a-vc", { x: 1581.9, y: 483.9, scale: 1 }, 2.7);
+    tl.set("#a-vc", { x: 1589.3, y: 491.2, scale: 1 }, 2.733);
+    tl.set("#a-vc", { x: 1600.3, y: 502.2, scale: 1 }, 2.767);
+    tl.set("#a-vc", { x: 1611.2, y: 513.2, scale: 1 }, 2.8);
+    tl.set("#a-vc", { x: 1618.6, y: 520.5, scale: 1 }, 2.833);
+    tl.set("#a-vc", { x: 1623.0, y: 525.0, scale: 1 }, 2.867);
+    tl.set("#a-vc", { x: 1625.3, y: 527.3, scale: 1 }, 2.9);
+    tl.set("#a-vc", { x: 1626.2, y: 528.1, scale: 1 }, 2.933);
+    tl.set("#a-vc", { x: 1626.3, y: 528.2, scale: 1 }, 2.967);
+    // Three-finger swipe: the next window pushes this one off.
+    tl.to("#a-vault", { x: -1900, duration: 0.42, ease: "power3.inOut" }, 2.8);
+    tl.set("#a-dash", { opacity: 1 }, 2.8);
+    tl.fromTo(
+      "#a-dash",
+      { x: 1900 },
+      { x: 0, duration: 0.42, ease: "power3.inOut" },
+      2.8,
+    );
+    // In on the chart for the two range presses, and back out for the handoff.
+    tl.set("#a-dash", { transformOrigin: "78% 27%" }, 0);
+    tl.to(
+      "#a-dash",
+      { scale: 1.55, y: -24, duration: 0.4, ease: "power3.inOut" },
+      3.12,
+    );
+    tl.to(
+      "#a-dash",
+      { scale: 1, y: 0, duration: 0.42, ease: "power3.inOut" },
+      4.56,
+    );
+    tl.set("#a-dc", { x: 1214.3, y: 752.9, scale: 1 }, 3.0);
+    tl.set("#a-dc", { x: 1214.3, y: 752.9, scale: 1 }, 3.0);
+    tl.set("#a-dc", { x: 1216.0, y: 750.9, scale: 1 }, 3.033);
+    tl.set("#a-dc", { x: 1227.7, y: 737.2, scale: 1 }, 3.067);
+    tl.set("#a-dc", { x: 1259.5, y: 699.9, scale: 1 }, 3.1);
+    tl.set("#a-dc", { x: 1321.5, y: 627.3, scale: 1 }, 3.133);
+    tl.set("#a-dc", { x: 1423.8, y: 507.6, scale: 1 }, 3.167);
+    tl.set("#a-dc", { x: 1526.0, y: 387.9, scale: 1 }, 3.2);
+    tl.set("#a-dc", { x: 1588.0, y: 315.3, scale: 1 }, 3.233);
+    tl.set("#a-dc", { x: 1619.8, y: 278.0, scale: 1 }, 3.267);
+    tl.set("#a-dc", { x: 1631.5, y: 264.2, scale: 1 }, 3.3);
+    tl.set("#a-dc", { x: 1633.2, y: 262.3, scale: 1 }, 3.333);
+    tl.set("#a-dc", { x: 1633.2, y: 262.3, scale: 1 }, 3.367);
+    tl.set("#a-dc", { x: 1633.2, y: 262.3, scale: 1 }, 3.4);
+    tl.set("#a-dc", { x: 1633.2, y: 262.3, scale: 1 }, 3.433);
+    tl.set("#a-dc", { x: 1633.2, y: 262.3, scale: 1 }, 3.467);
+    tl.set("#a-dc", { x: 1633.2, y: 262.3, scale: 0.86 }, 3.5);
+    tl.set("#a-dc", { x: 1633.2, y: 262.3, scale: 1 }, 3.533);
+    tl.set("#a-dc", { x: 1632.7, y: 262.3, scale: 1 }, 3.567);
+    tl.set("#a-dc", { x: 1628.7, y: 262.3, scale: 1 }, 3.6);
+    tl.set("#a-dc", { x: 1618.0, y: 262.3, scale: 1 }, 3.633);
+    tl.set("#a-dc", { x: 1597.2, y: 262.3, scale: 1 }, 3.667);
+    tl.set("#a-dc", { x: 1566.6, y: 262.3, scale: 1 }, 3.7);
+    tl.set("#a-dc", { x: 1545.8, y: 262.3, scale: 1 }, 3.733);
+    tl.set("#a-dc", { x: 1535.1, y: 262.3, scale: 1 }, 3.767);
+    tl.set("#a-dc", { x: 1531.2, y: 262.3, scale: 1 }, 3.8);
+    tl.set("#a-dc", { x: 1530.6, y: 262.3, scale: 1 }, 3.833);
+    tl.set("#a-dc", { x: 1530.6, y: 262.3, scale: 1 }, 3.867);
+    tl.set("#a-dc", { x: 1530.6, y: 262.3, scale: 1 }, 3.9);
+    tl.set("#a-dc", { x: 1530.6, y: 262.3, scale: 1 }, 3.933);
+    tl.set("#a-dc", { x: 1530.6, y: 262.3, scale: 1 }, 3.967);
+    tl.set("#a-dc", { x: 1530.6, y: 262.3, scale: 0.86 }, 4.0);
+    tl.set("#a-dc", { x: 1530.6, y: 262.3, scale: 1 }, 4.033);
+    tl.set("#a-dc", { x: 1530.6, y: 262.3, scale: 1 }, 4.067);
+    tl.set("#a-dc", { x: 1530.7, y: 262.4, scale: 1 }, 4.1);
+    tl.set("#a-dc", { x: 1530.8, y: 262.6, scale: 1 }, 4.133);
+    tl.set("#a-dc", { x: 1531.2, y: 263.1, scale: 1 }, 4.167);
+    tl.set("#a-dc", { x: 1531.7, y: 263.9, scale: 1 }, 4.2);
+    tl.set("#a-dc", { x: 1532.5, y: 265.2, scale: 1 }, 4.233);
+    tl.set("#a-dc", { x: 1533.6, y: 266.8, scale: 1 }, 4.267);
+    tl.set("#a-dc", { x: 1535.1, y: 269.1, scale: 1 }, 4.3);
+    tl.set("#a-dc", { x: 1537.1, y: 272.0, scale: 1 }, 4.333);
+    tl.set("#a-dc", { x: 1539.5, y: 275.6, scale: 1 }, 4.367);
+    tl.set("#a-dc", { x: 1542.4, y: 280.0, scale: 1 }, 4.4);
+    tl.set("#a-dc", { x: 1545.9, y: 285.2, scale: 1 }, 4.433);
+    tl.set("#a-dc", { x: 1550.1, y: 291.5, scale: 1 }, 4.467);
+    tl.set("#a-dc", { x: 1554.9, y: 298.7, scale: 1 }, 4.5);
+    tl.set("#a-dc", { x: 1559.7, y: 306.0, scale: 1 }, 4.533);
+    tl.set("#a-dc", { x: 1563.9, y: 312.2, scale: 1 }, 4.567);
+    tl.set("#a-dc", { x: 1567.4, y: 317.5, scale: 1 }, 4.6);
+    tl.set("#a-dc", { x: 1570.3, y: 321.9, scale: 1 }, 4.633);
+    tl.set("#a-dc", { x: 1572.7, y: 325.5, scale: 1 }, 4.667);
+    tl.set("#a-dc", { x: 1574.6, y: 328.3, scale: 1 }, 4.7);
+    tl.set("#a-dc", { x: 1576.1, y: 330.6, scale: 1 }, 4.733);
+    tl.set("#a-dc", { x: 1577.3, y: 332.3, scale: 1 }, 4.767);
+    tl.set("#a-dc", { x: 1578.1, y: 333.5, scale: 1 }, 4.8);
+    tl.set("#a-dc", { x: 1578.6, y: 334.3, scale: 1 }, 4.833);
+    tl.set("#a-dc", { x: 1578.9, y: 334.8, scale: 1 }, 4.867);
+    tl.set("#a-dc", { x: 1579.1, y: 335.0, scale: 1 }, 4.9);
+    tl.set("#a-dc", { x: 1579.2, y: 335.1, scale: 1 }, 4.933);
+    tl.set("#a-dc", { x: 1579.2, y: 335.1, scale: 1 }, 4.967);
+    tl.set({}, {}, 5);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["apps"] = tl;
+  </script>
+</template>

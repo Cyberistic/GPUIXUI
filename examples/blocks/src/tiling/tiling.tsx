@@ -352,6 +352,7 @@ export const TilingDesktop = ({
           <img
             alt=""
             src={wallpaper}
+            objectFit="cover"
             style={{
               position: "absolute",
               left: 0,

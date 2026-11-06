@@ -115,19 +115,24 @@ const paints = (
       point.y < rect.y + rect.height,
   });
 
-/**
- * The ring's band a slice paints: a stroked arc on the ring's centre line,
- * `width` thick, so it reaches half its width either side of the arc's radius.
- */
+/** The radii an arc path's two sweep commands name, in the path's own units. */
 const arcRadii = (
   mark: ChartMark,
 ): Option.Option<{ readonly inner: number; readonly outer: number }> =>
-  mark.kind !== "stroke"
-    ? Option.none()
-    : Option.map(Option.fromNullishOr(/A([\d.]+) /.exec(mark.d)), (match) => ({
-        inner: Number(match[1]) - mark.width / 2,
-        outer: Number(match[1]) + mark.width / 2,
+  Option.flatMap(
+    Option.fromNullishOr(mark.kind === "path" ? mark.d : null),
+    (d) => {
+      const radii = Arr.fromIterable(
+        Arr.map([...d.matchAll(/A([\d.]+) ([\d.]+)/g)], (match) =>
+          Number(match[1]),
+        ),
+      );
+      return Option.map(Arr.head(radii), (outer) => ({
+        outer,
+        inner: Math.min(...radii),
       }));
+    },
+  );
 
 /** The label a ring sample belongs to, and the sweep its datum occupies. */
 const ringBounds = (): ReadonlyArray<{

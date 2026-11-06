@@ -855,18 +855,17 @@ describe("the data series", () => {
     expect(values(".dark .landing .gx-dash")).toEqual(cssSeries(darkSeries));
   });
 
-  it("draws the dashboard's chart from the theme, not a palette", () => {
-    const source = read(
-      "../../../../examples/blocks/src/dashboard/dashboard.tsx",
-    );
+  it("draws the dashboard's charts from the variables, not a palette", () => {
+    const source = read("../components/docs/dashboard.tsx");
 
-    // The handled recipe carried five hand-picked hexes described as "readable
-    // in both themes", which nothing measured. The native block paints its
-    // chart through `LineChart`, which reads the theme's categorical scale; a
-    // colour literal returning here means the chart stops following the theme.
+    // The block used to carry five hand-picked hexes described as "readable in
+    // both themes", which nothing measured. A colour literal returning here
+    // means the charts stop following the theme again.
     expect(source.match(/#[0-9a-f]{6}\b/gi) ?? []).toEqual([]);
-    expect(source).toContain("LineChart");
-    expect(source).not.toContain("--dash-series-");
+    expect(source).toContain("var(--dash-series-");
+    // The recipe's swatches read the same scale through the theme hook.
+    expect(source).toContain("const series = seriesColors(theme)");
+    expect(source).toContain("const theme = useTheme()");
   });
 });
 

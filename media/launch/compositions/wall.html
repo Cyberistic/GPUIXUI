@@ -1,0 +1,2048 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #f4f2ee;
+      font-family: Inter, sans-serif;
+    }
+    #root video,
+    #root img.shot {
+      position: absolute;
+      display: block;
+    }
+    #root .cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 34px;
+      transform-origin: 8% 6%;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+    }
+    #root .cursor svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root .stage {
+      position: absolute;
+      inset: 0;
+      perspective: 2600px;
+      perspective-origin: 50% 42%;
+    }
+    #root .plane {
+      position: absolute;
+      left: 960px;
+      top: 540px;
+      width: 0;
+      height: 0;
+      transform-style: preserve-3d;
+    }
+    #root .tile {
+      position: absolute;
+      overflow: hidden;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow:
+        0 0 0 1px rgba(29, 29, 31, 0.07),
+        0 18px 40px -22px rgba(29, 29, 31, 0.4);
+    }
+    #root .tile img,
+    #root .tile video {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    #root .tile b {
+      position: absolute;
+      left: 18px;
+      top: 12px;
+      font:
+        500 19px Inter,
+        sans-serif;
+      color: #6e6e73;
+      letter-spacing: -0.01em;
+    }
+  </style>
+  <div
+    id="root"
+    data-composition-id="wall"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div class="stage" data-layout-allow-overflow>
+      <div id="plane" class="plane" data-layout-allow-overflow>
+        <div
+          id="t0"
+          class="tile"
+          style="
+            left: -2521px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-calendar-53.png" alt="" />
+        </div>
+        <div
+          id="t1"
+          class="tile"
+          style="
+            left: -2099px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-table-53.png" alt="" />
+        </div>
+        <div
+          id="t2"
+          class="tile"
+          style="
+            left: -1677px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t2-v"
+            class="clip"
+            data-start="2.698"
+            data-duration="1.302"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/dark-tile-chat.mp4"
+            style=""
+          ></video>
+        </div>
+        <div
+          id="t3"
+          class="tile"
+          style="
+            left: -1255px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-code-editor-53.png" alt="" />
+        </div>
+        <div
+          id="t4"
+          class="tile"
+          style="
+            left: -833px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t4-v"
+            class="clip"
+            data-start="1.797"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/tile-form.mp4"
+            style=""
+          ></video
+          ><img
+            id="t4-s"
+            src="assets/footage/tile-form-53.png"
+            alt=""
+            style="opacity: 0"
+          />
+        </div>
+        <div
+          id="t5"
+          class="tile"
+          style="
+            left: -411px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-kanban-53.png" alt="" />
+        </div>
+        <div
+          id="t6"
+          class="tile"
+          style="
+            left: 11px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-file-tree-53.png" alt="" />
+        </div>
+        <div
+          id="t7"
+          class="tile"
+          style="
+            left: 433px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-diagram-53.png" alt="" />
+        </div>
+        <div
+          id="t8"
+          class="tile"
+          style="
+            left: 855px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t8-v"
+            class="clip"
+            data-start="1.81"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/tile-timeline.mp4"
+            style=""
+          ></video
+          ><img
+            id="t8-s"
+            src="assets/footage/tile-timeline-53.png"
+            alt=""
+            style="opacity: 0"
+          />
+        </div>
+        <div
+          id="t9"
+          class="tile"
+          style="
+            left: 1277px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-media-player-53.png" alt="" />
+        </div>
+        <div
+          id="t10"
+          class="tile"
+          style="
+            left: 1699px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-tabs-53.png" alt="" />
+        </div>
+        <div
+          id="t11"
+          class="tile"
+          style="
+            left: 2121px;
+            top: -1000.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t11-v"
+            class="clip"
+            data-start="3.076"
+            data-duration="0.924"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/tile-toast.mp4"
+            style=""
+          ></video>
+        </div>
+        <div
+          id="t12"
+          class="tile"
+          style="
+            left: -2521px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-date-picker-53.png" alt="" />
+        </div>
+        <div
+          id="t13"
+          class="tile"
+          style="
+            left: -2099px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-diff-viewer-53.png" alt="" />
+        </div>
+        <div
+          id="t14"
+          class="tile"
+          style="
+            left: -1677px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t14-v"
+            class="clip"
+            data-start="2.613"
+            data-duration="1.387"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/dark-tile-accordion.mp4"
+            style=""
+          ></video>
+        </div>
+        <div
+          id="t15"
+          class="tile"
+          style="
+            left: -1255px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-avatar-group-53.png" alt="" />
+        </div>
+        <div
+          id="t16"
+          class="tile"
+          style="
+            left: -833px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t16-v"
+            class="clip"
+            data-start="1.63"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/tile-stepper.mp4"
+            style=""
+          ></video
+          ><img
+            id="t16-s"
+            src="assets/footage/tile-stepper-53.png"
+            alt=""
+            style="opacity: 0"
+          />
+        </div>
+        <div
+          id="t17"
+          class="tile"
+          style="
+            left: -411px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-log-viewer-53.png" alt="" />
+        </div>
+        <div
+          id="t18"
+          class="tile"
+          style="
+            left: 11px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-card-53.png" alt="" />
+        </div>
+        <div
+          id="t19"
+          class="tile"
+          style="
+            left: 433px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t19-v"
+            class="clip"
+            data-start="1.377"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/tile-progress.mp4"
+            style=""
+          ></video
+          ><img
+            id="t19-s"
+            src="assets/footage/tile-progress-53.png"
+            alt=""
+            style="opacity: 0"
+          />
+        </div>
+        <div
+          id="t20"
+          class="tile"
+          style="
+            left: 855px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-markdown-editor-53.png" alt="" />
+        </div>
+        <div
+          id="t21"
+          class="tile"
+          style="
+            left: 1277px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-qr-code-53.png" alt="" />
+        </div>
+        <div
+          id="t22"
+          class="tile"
+          style="
+            left: 1699px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-inset-group-53.png" alt="" />
+        </div>
+        <div
+          id="t23"
+          class="tile"
+          style="
+            left: 2121px;
+            top: -711.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-tag-input-53.png" alt="" />
+        </div>
+        <div
+          id="t24"
+          class="tile"
+          style="
+            left: -2521px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-time-picker-53.png" alt="" />
+        </div>
+        <div
+          id="t25"
+          class="tile"
+          style="
+            left: -2099px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-virtual-table-53.png" alt="" />
+        </div>
+        <div
+          id="t26"
+          class="tile"
+          style="
+            left: -1677px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-message-53.png" alt="" />
+        </div>
+        <div
+          id="t27"
+          class="tile"
+          style="
+            left: -1255px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-keyboard-shortcuts-53.png" alt="" />
+        </div>
+        <div
+          id="t28"
+          class="tile"
+          style="
+            left: -833px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-alert-53.png" alt="" />
+        </div>
+        <div
+          id="t29"
+          class="tile"
+          style="
+            left: -411px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-property-panel-53.png" alt="" />
+        </div>
+        <div
+          id="t30"
+          class="tile"
+          style="
+            left: 11px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t30-v"
+            class="clip"
+            data-start="1.018"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/dark-tile-gradient-text.mp4"
+            style=""
+          ></video
+          ><img
+            id="t30-s"
+            src="assets/footage/dark-tile-gradient-text-53.png"
+            alt=""
+            style="opacity: 0"
+          />
+        </div>
+        <div
+          id="t31"
+          class="tile"
+          style="
+            left: 433px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-sidebar-53.png" alt="" />
+        </div>
+        <div
+          id="t32"
+          class="tile"
+          style="
+            left: 855px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-code-block-53.png" alt="" />
+        </div>
+        <div
+          id="t33"
+          class="tile"
+          style="
+            left: 1277px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-frozen-table-53.png" alt="" />
+        </div>
+        <div
+          id="t34"
+          class="tile"
+          style="
+            left: 1699px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-multi-step-form-53.png" alt="" />
+        </div>
+        <div
+          id="t35"
+          class="tile"
+          style="
+            left: 2121px;
+            top: -422.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-image-preview-53.png" alt="" />
+        </div>
+        <div
+          id="t36"
+          class="tile"
+          style="
+            left: -2521px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-list-53.png" alt="" />
+        </div>
+        <div
+          id="t37"
+          class="tile"
+          style="
+            left: -2099px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-drop-zone-53.png" alt="" />
+        </div>
+        <div
+          id="t38"
+          class="tile"
+          style="
+            left: -1677px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-search-input-53.png" alt="" />
+        </div>
+        <div
+          id="t39"
+          class="tile"
+          style="
+            left: -1255px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-item-53.png" alt="" />
+        </div>
+        <div
+          id="t40"
+          class="tile"
+          style="
+            left: -833px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t40-v"
+            class="clip"
+            data-start="1.512"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/tile-hexagon.mp4"
+            style=""
+          ></video
+          ><img
+            id="t40-s"
+            src="assets/footage/tile-hexagon-53.png"
+            alt=""
+            style="opacity: 0"
+          />
+        </div>
+        <div
+          id="t41"
+          class="tile"
+          style="
+            left: -411px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-expandable-rows-53.png" alt="" />
+        </div>
+        <div
+          id="t42"
+          class="tile"
+          style="
+            left: 433px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-color-picker-53.png" alt="" />
+        </div>
+        <div
+          id="t43"
+          class="tile"
+          style="
+            left: 855px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-tree-53.png" alt="" />
+        </div>
+        <div
+          id="t44"
+          class="tile"
+          style="
+            left: 1277px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-slider-53.png" alt="" />
+        </div>
+        <div
+          id="t45"
+          class="tile"
+          style="
+            left: 1699px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-theme-toggler-53.png" alt="" />
+        </div>
+        <div
+          id="t46"
+          class="tile"
+          style="
+            left: 2121px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-scroll-fade-53.png" alt="" />
+        </div>
+        <div
+          id="t47"
+          class="tile"
+          style="
+            left: -2521px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-toggle-group-53.png" alt="" />
+        </div>
+        <div
+          id="t48"
+          class="tile"
+          style="
+            left: -2099px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-surfaces-53.png" alt="" />
+        </div>
+        <div
+          id="t49"
+          class="tile"
+          style="
+            left: -1677px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t49-v"
+            class="clip"
+            data-start="2.424"
+            data-duration="1.576"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/tile-shine-button.mp4"
+            style=""
+          ></video>
+        </div>
+        <div
+          id="t50"
+          class="tile"
+          style="
+            left: -1255px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-input-group-53.png" alt="" />
+        </div>
+        <div
+          id="t51"
+          class="tile"
+          style="
+            left: -833px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-crop-area-53.png" alt="" />
+        </div>
+        <div
+          id="t52"
+          class="tile"
+          style="
+            left: -411px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-field-53.png" alt="" />
+        </div>
+        <div
+          id="t53"
+          class="tile"
+          style="
+            left: 11px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t53-v"
+            class="clip"
+            data-start="0.868"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/tile-reveal.mp4"
+            style=""
+          ></video
+          ><img
+            id="t53-s"
+            src="assets/footage/tile-reveal-53.png"
+            alt=""
+            style="opacity: 0"
+          />
+        </div>
+        <div
+          id="t54"
+          class="tile"
+          style="
+            left: 433px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-bubble-53.png" alt="" />
+        </div>
+        <div
+          id="t55"
+          class="tile"
+          style="
+            left: 855px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-user-menu-53.png" alt="" />
+        </div>
+        <div
+          id="t56"
+          class="tile"
+          style="
+            left: 1277px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-pinned-list-53.png" alt="" />
+        </div>
+        <div
+          id="t57"
+          class="tile"
+          style="
+            left: 1699px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-command-menu-53.png" alt="" />
+        </div>
+        <div
+          id="t58"
+          class="tile"
+          style="
+            left: 2121px;
+            top: 155.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <video
+            id="t58-v"
+            class="clip"
+            data-start="2.839"
+            data-duration="1.161"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/dark-tile-sliding-number.mp4"
+            style=""
+          ></video>
+        </div>
+        <div
+          id="t59"
+          class="tile"
+          style="
+            left: -2521px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-fieldset-53.png" alt="" />
+        </div>
+        <div
+          id="t60"
+          class="tile"
+          style="
+            left: -2099px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-aspect-ratio-53.png" alt="" />
+        </div>
+        <div
+          id="t61"
+          class="tile"
+          style="
+            left: -1677px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-breadcrumb-53.png" alt="" />
+        </div>
+        <div
+          id="t62"
+          class="tile"
+          style="
+            left: -1255px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-carousel-53.png" alt="" />
+        </div>
+        <div
+          id="t63"
+          class="tile"
+          style="
+            left: -833px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-collapsible-53.png" alt="" />
+        </div>
+        <div
+          id="t64"
+          class="tile"
+          style="
+            left: -411px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-combobox-53.png" alt="" />
+        </div>
+        <div
+          id="t65"
+          class="tile"
+          style="
+            left: 11px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-confirm-dialog-53.png" alt="" />
+        </div>
+        <div
+          id="t66"
+          class="tile"
+          style="
+            left: 433px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-context-menu-53.png" alt="" />
+        </div>
+        <div
+          id="t67"
+          class="tile"
+          style="
+            left: 855px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-copy-button-53.png" alt="" />
+        </div>
+        <div
+          id="t68"
+          class="tile"
+          style="
+            left: 1277px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-countdown-53.png" alt="" />
+        </div>
+        <div
+          id="t69"
+          class="tile"
+          style="
+            left: 1699px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-counting-number-53.png" alt="" />
+        </div>
+        <div
+          id="t70"
+          class="tile"
+          style="
+            left: 2121px;
+            top: 444.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-disclosure-53.png" alt="" />
+        </div>
+        <div
+          id="t71"
+          class="tile"
+          style="
+            left: -2521px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-drawer-53.png" alt="" />
+        </div>
+        <div
+          id="t72"
+          class="tile"
+          style="
+            left: -2099px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-dropdown-menu-53.png" alt="" />
+        </div>
+        <div
+          id="t73"
+          class="tile"
+          style="
+            left: -1677px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-empty-state-53.png" alt="" />
+        </div>
+        <div
+          id="t74"
+          class="tile"
+          style="
+            left: -1255px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-glyph-53.png" alt="" />
+        </div>
+        <div
+          id="t75"
+          class="tile"
+          style="
+            left: -833px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-highlight-text-53.png" alt="" />
+        </div>
+        <div
+          id="t76"
+          class="tile"
+          style="
+            left: -411px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-hotkey-recorder-53.png" alt="" />
+        </div>
+        <div
+          id="t77"
+          class="tile"
+          style="
+            left: 11px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-hover-card-53.png" alt="" />
+        </div>
+        <div
+          id="t78"
+          class="tile"
+          style="
+            left: 433px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-image-zoom-53.png" alt="" />
+        </div>
+        <div
+          id="t79"
+          class="tile"
+          style="
+            left: 855px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-inline-edit-53.png" alt="" />
+        </div>
+        <div
+          id="t80"
+          class="tile"
+          style="
+            left: 1277px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-message-scroller-53.png" alt="" />
+        </div>
+        <div
+          id="t81"
+          class="tile"
+          style="
+            left: 1699px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/tile-mention-input-53.png" alt="" />
+        </div>
+        <div
+          id="t82"
+          class="tile"
+          style="
+            left: 2121px;
+            top: 733.5px;
+            width: 400px;
+            height: 267px;
+            opacity: 0;
+          "
+        >
+          <img src="assets/footage/dark-tile-motion-grid-53.png" alt="" />
+        </div>
+        <div
+          id="t-check"
+          class="tile"
+          style="
+            left: 11px;
+            top: -133.5px;
+            width: 400px;
+            height: 267px;
+            background: #f4f2ee;
+          "
+        >
+          <img src="assets/footage/cu-checkbox-59.png" alt="" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.set(
+      "#plane",
+      { scale: 8.4944, x: -1792.3, y: 0.0, rotationX: 0, rotationZ: 0 },
+      0,
+    );
+    tl.to(
+      "#plane",
+      {
+        scale: 0.92,
+        x: 40,
+        y: 90,
+        ...{ rotationX: 50, rotationZ: -18 },
+        duration: 0.7,
+        ease: "expo.inOut",
+      },
+      0.02,
+    );
+    tl.to(
+      "#plane",
+      {
+        scale: 0.5,
+        x: -30,
+        y: 70,
+        rotationX: 46,
+        rotationZ: -14,
+        duration: 3.2800000000000002,
+        ease: "none",
+      },
+      0.72,
+    );
+    tl.fromTo(
+      "#t0",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.98,
+    );
+    tl.to("#t0", { z: 14, duration: 0.08, ease: "power1.out" }, 3.4);
+    tl.to("#t0", { z: 0, duration: 0.14, ease: "power1.in" }, 3.48);
+    tl.fromTo(
+      "#t1",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.773,
+    );
+    tl.to("#t1", { z: 14, duration: 0.08, ease: "power1.out" }, 3.193);
+    tl.to("#t1", { z: 0, duration: 0.14, ease: "power1.in" }, 3.273);
+    tl.fromTo(
+      "#t2",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.278,
+    );
+    tl.to("#t2", { z: 14, duration: 0.08, ease: "power1.out" }, 2.698);
+    tl.to("#t2", { z: 0, duration: 0.14, ease: "power1.in" }, 2.778);
+    tl.set("#t2-s", { opacity: 1 }, 4.458);
+    tl.fromTo(
+      "#t3",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.806,
+    );
+    tl.to("#t3", { z: 14, duration: 0.08, ease: "power1.out" }, 2.226);
+    tl.to("#t3", { z: 0, duration: 0.14, ease: "power1.in" }, 2.306);
+    tl.fromTo(
+      "#t4",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.377,
+    );
+    tl.to("#t4", { z: 14, duration: 0.08, ease: "power1.out" }, 1.797);
+    tl.to("#t4", { z: 0, duration: 0.14, ease: "power1.in" }, 1.877);
+    tl.set("#t4-s", { opacity: 1 }, 3.557);
+    tl.fromTo(
+      "#t5",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.334,
+    );
+    tl.to("#t5", { z: 14, duration: 0.08, ease: "power1.out" }, 1.754);
+    tl.to("#t5", { z: 0, duration: 0.14, ease: "power1.in" }, 1.834);
+    tl.fromTo(
+      "#t6",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.155,
+    );
+    tl.to("#t6", { z: 14, duration: 0.08, ease: "power1.out" }, 1.575);
+    tl.to("#t6", { z: 0, duration: 0.14, ease: "power1.in" }, 1.655);
+    tl.fromTo(
+      "#t7",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.191,
+    );
+    tl.to("#t7", { z: 14, duration: 0.08, ease: "power1.out" }, 1.611);
+    tl.to("#t7", { z: 0, duration: 0.14, ease: "power1.in" }, 1.691);
+    tl.fromTo(
+      "#t8",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.39,
+    );
+    tl.to("#t8", { z: 14, duration: 0.08, ease: "power1.out" }, 1.81);
+    tl.to("#t8", { z: 0, duration: 0.14, ease: "power1.in" }, 1.89);
+    tl.set("#t8-s", { opacity: 1 }, 3.57);
+    tl.fromTo(
+      "#t9",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.976,
+    );
+    tl.to("#t9", { z: 14, duration: 0.08, ease: "power1.out" }, 2.396);
+    tl.to("#t9", { z: 0, duration: 0.14, ease: "power1.in" }, 2.476);
+    tl.fromTo(
+      "#t10",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.305,
+    );
+    tl.to("#t10", { z: 14, duration: 0.08, ease: "power1.out" }, 2.725);
+    tl.to("#t10", { z: 0, duration: 0.14, ease: "power1.in" }, 2.805);
+    tl.fromTo(
+      "#t11",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.656,
+    );
+    tl.to("#t11", { z: 14, duration: 0.08, ease: "power1.out" }, 3.076);
+    tl.to("#t11", { z: 0, duration: 0.14, ease: "power1.in" }, 3.156);
+    tl.set("#t11-s", { opacity: 1 }, 4.836);
+    tl.fromTo(
+      "#t12",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.932,
+    );
+    tl.to("#t12", { z: 14, duration: 0.08, ease: "power1.out" }, 3.352);
+    tl.to("#t12", { z: 0, duration: 0.14, ease: "power1.in" }, 3.432);
+    tl.fromTo(
+      "#t13",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.709,
+    );
+    tl.to("#t13", { z: 14, duration: 0.08, ease: "power1.out" }, 3.129);
+    tl.to("#t13", { z: 0, duration: 0.14, ease: "power1.in" }, 3.209);
+    tl.fromTo(
+      "#t14",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.193,
+    );
+    tl.to("#t14", { z: 14, duration: 0.08, ease: "power1.out" }, 2.613);
+    tl.to("#t14", { z: 0, duration: 0.14, ease: "power1.in" }, 2.693);
+    tl.set("#t14-s", { opacity: 1 }, 4.373);
+    tl.fromTo(
+      "#t15",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.689,
+    );
+    tl.to("#t15", { z: 14, duration: 0.08, ease: "power1.out" }, 2.109);
+    tl.to("#t15", { z: 0, duration: 0.14, ease: "power1.in" }, 2.189);
+    tl.fromTo(
+      "#t16",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.21,
+    );
+    tl.to("#t16", { z: 14, duration: 0.08, ease: "power1.out" }, 1.63);
+    tl.to("#t16", { z: 0, duration: 0.14, ease: "power1.in" }, 1.71);
+    tl.set("#t16-s", { opacity: 1 }, 3.39);
+    tl.fromTo(
+      "#t17",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.1,
+    );
+    tl.to("#t17", { z: 14, duration: 0.08, ease: "power1.out" }, 1.52);
+    tl.to("#t17", { z: 0, duration: 0.14, ease: "power1.in" }, 1.6);
+    tl.fromTo(
+      "#t18",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.877,
+    );
+    tl.to("#t18", { z: 14, duration: 0.08, ease: "power1.out" }, 1.297);
+    tl.to("#t18", { z: 0, duration: 0.14, ease: "power1.in" }, 1.377);
+    tl.fromTo(
+      "#t19",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.957,
+    );
+    tl.to("#t19", { z: 14, duration: 0.08, ease: "power1.out" }, 1.377);
+    tl.to("#t19", { z: 0, duration: 0.14, ease: "power1.in" }, 1.457);
+    tl.set("#t19-s", { opacity: 1 }, 3.137);
+    tl.fromTo(
+      "#t20",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.224,
+    );
+    tl.to("#t20", { z: 14, duration: 0.08, ease: "power1.out" }, 1.644);
+    tl.to("#t20", { z: 0, duration: 0.14, ease: "power1.in" }, 1.724);
+    tl.fromTo(
+      "#t21",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.858,
+    );
+    tl.to("#t21", { z: 14, duration: 0.08, ease: "power1.out" }, 2.278);
+    tl.to("#t21", { z: 0, duration: 0.14, ease: "power1.in" }, 2.358);
+    tl.fromTo(
+      "#t22",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.219,
+    );
+    tl.to("#t22", { z: 14, duration: 0.08, ease: "power1.out" }, 2.639);
+    tl.to("#t22", { z: 0, duration: 0.14, ease: "power1.in" }, 2.719);
+    tl.fromTo(
+      "#t23",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.592,
+    );
+    tl.to("#t23", { z: 14, duration: 0.08, ease: "power1.out" }, 3.012);
+    tl.to("#t23", { z: 0, duration: 0.14, ease: "power1.in" }, 3.092);
+    tl.fromTo(
+      "#t24",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.918,
+    );
+    tl.to("#t24", { z: 14, duration: 0.08, ease: "power1.out" }, 3.338);
+    tl.to("#t24", { z: 0, duration: 0.14, ease: "power1.in" }, 3.418);
+    tl.fromTo(
+      "#t25",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.385,
+    );
+    tl.to("#t25", { z: 14, duration: 0.08, ease: "power1.out" }, 2.805);
+    tl.to("#t25", { z: 0, duration: 0.14, ease: "power1.in" }, 2.885);
+    tl.fromTo(
+      "#t26",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.153,
+    );
+    tl.to("#t26", { z: 14, duration: 0.08, ease: "power1.out" }, 2.573);
+    tl.to("#t26", { z: 0, duration: 0.14, ease: "power1.in" }, 2.653);
+    tl.fromTo(
+      "#t27",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.625,
+    );
+    tl.to("#t27", { z: 14, duration: 0.08, ease: "power1.out" }, 2.045);
+    tl.to("#t27", { z: 0, duration: 0.14, ease: "power1.in" }, 2.125);
+    tl.fromTo(
+      "#t28",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.106,
+    );
+    tl.to("#t28", { z: 14, duration: 0.08, ease: "power1.out" }, 1.526);
+    tl.to("#t28", { z: 0, duration: 0.14, ease: "power1.in" }, 1.606);
+    tl.fromTo(
+      "#t29",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.614,
+    );
+    tl.to("#t29", { z: 14, duration: 0.08, ease: "power1.out" }, 1.034);
+    tl.to("#t29", { z: 0, duration: 0.14, ease: "power1.in" }, 1.114);
+    tl.fromTo(
+      "#t30",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.598,
+    );
+    tl.to("#t30", { z: 14, duration: 0.08, ease: "power1.out" }, 1.018);
+    tl.to("#t30", { z: 0, duration: 0.14, ease: "power1.in" }, 1.098);
+    tl.set("#t30-s", { opacity: 1 }, 2.778);
+    tl.fromTo(
+      "#t31",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.771,
+    );
+    tl.to("#t31", { z: 14, duration: 0.08, ease: "power1.out" }, 1.191);
+    tl.to("#t31", { z: 0, duration: 0.14, ease: "power1.in" }, 1.271);
+    tl.fromTo(
+      "#t32",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.119,
+    );
+    tl.to("#t32", { z: 14, duration: 0.08, ease: "power1.out" }, 1.539);
+    tl.to("#t32", { z: 0, duration: 0.14, ease: "power1.in" }, 1.619);
+    tl.fromTo(
+      "#t33",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.495,
+    );
+    tl.to("#t33", { z: 14, duration: 0.08, ease: "power1.out" }, 1.915);
+    tl.to("#t33", { z: 0, duration: 0.14, ease: "power1.in" }, 1.995);
+    tl.fromTo(
+      "#t34",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.18,
+    );
+    tl.to("#t34", { z: 14, duration: 0.08, ease: "power1.out" }, 2.6);
+    tl.to("#t34", { z: 0, duration: 0.14, ease: "power1.in" }, 2.68);
+    tl.fromTo(
+      "#t35",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.568,
+    );
+    tl.to("#t35", { z: 14, duration: 0.08, ease: "power1.out" }, 2.988);
+    tl.to("#t35", { z: 0, duration: 0.14, ease: "power1.in" }, 3.068);
+    tl.fromTo(
+      "#t36",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.94,
+    );
+    tl.to("#t36", { z: 14, duration: 0.08, ease: "power1.out" }, 3.36);
+    tl.to("#t36", { z: 0, duration: 0.14, ease: "power1.in" }, 3.44);
+    tl.fromTo(
+      "#t37",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.403,
+    );
+    tl.to("#t37", { z: 14, duration: 0.08, ease: "power1.out" }, 2.823);
+    tl.to("#t37", { z: 0, duration: 0.14, ease: "power1.in" }, 2.903);
+    tl.fromTo(
+      "#t38",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.166,
+    );
+    tl.to("#t38", { z: 14, duration: 0.08, ease: "power1.out" }, 2.586);
+    tl.to("#t38", { z: 0, duration: 0.14, ease: "power1.in" }, 2.666);
+    tl.fromTo(
+      "#t39",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.629,
+    );
+    tl.to("#t39", { z: 14, duration: 0.08, ease: "power1.out" }, 2.049);
+    tl.to("#t39", { z: 0, duration: 0.14, ease: "power1.in" }, 2.129);
+    tl.fromTo(
+      "#t40",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.092,
+    );
+    tl.to("#t40", { z: 14, duration: 0.08, ease: "power1.out" }, 1.512);
+    tl.to("#t40", { z: 0, duration: 0.14, ease: "power1.in" }, 1.592);
+    tl.set("#t40-s", { opacity: 1 }, 3.272);
+    tl.fromTo(
+      "#t41",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.555,
+    );
+    tl.to("#t41", { z: 14, duration: 0.08, ease: "power1.out" }, 0.975);
+    tl.to("#t41", { z: 0, duration: 0.14, ease: "power1.in" }, 1.055);
+    tl.fromTo(
+      "#t42",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.784,
+    );
+    tl.to("#t42", { z: 14, duration: 0.08, ease: "power1.out" }, 1.204);
+    tl.to("#t42", { z: 0, duration: 0.14, ease: "power1.in" }, 1.284);
+    tl.fromTo(
+      "#t43",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.177,
+    );
+    tl.to("#t43", { z: 14, duration: 0.08, ease: "power1.out" }, 1.597);
+    tl.to("#t43", { z: 0, duration: 0.14, ease: "power1.in" }, 1.677);
+    tl.fromTo(
+      "#t44",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.571,
+    );
+    tl.to("#t44", { z: 14, duration: 0.08, ease: "power1.out" }, 1.991);
+    tl.to("#t44", { z: 0, duration: 0.14, ease: "power1.in" }, 2.071);
+    tl.fromTo(
+      "#t45",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.964,
+    );
+    tl.to("#t45", { z: 14, duration: 0.08, ease: "power1.out" }, 2.384);
+    tl.to("#t45", { z: 0, duration: 0.14, ease: "power1.in" }, 2.464);
+    tl.fromTo(
+      "#t46",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.358,
+    );
+    tl.to("#t46", { z: 14, duration: 0.08, ease: "power1.out" }, 2.778);
+    tl.to("#t46", { z: 0, duration: 0.14, ease: "power1.in" }, 2.858);
+    tl.fromTo(
+      "#t47",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      3.069,
+    );
+    tl.to("#t47", { z: 14, duration: 0.08, ease: "power1.out" }, 3.489);
+    tl.to("#t47", { z: 0, duration: 0.14, ease: "power1.in" }, 3.569);
+    tl.fromTo(
+      "#t48",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.536,
+    );
+    tl.to("#t48", { z: 14, duration: 0.08, ease: "power1.out" }, 2.956);
+    tl.to("#t48", { z: 0, duration: 0.14, ease: "power1.in" }, 3.036);
+    tl.fromTo(
+      "#t49",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.004,
+    );
+    tl.to("#t49", { z: 14, duration: 0.08, ease: "power1.out" }, 2.424);
+    tl.to("#t49", { z: 0, duration: 0.14, ease: "power1.in" }, 2.504);
+    tl.set("#t49-s", { opacity: 1 }, 4.184);
+    tl.fromTo(
+      "#t50",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.476,
+    );
+    tl.to("#t50", { z: 14, duration: 0.08, ease: "power1.out" }, 1.896);
+    tl.to("#t50", { z: 0, duration: 0.14, ease: "power1.in" }, 1.976);
+    tl.fromTo(
+      "#t51",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.257,
+    );
+    tl.to("#t51", { z: 14, duration: 0.08, ease: "power1.out" }, 1.677);
+    tl.to("#t51", { z: 0, duration: 0.14, ease: "power1.in" }, 1.757);
+    tl.fromTo(
+      "#t52",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.765,
+    );
+    tl.to("#t52", { z: 14, duration: 0.08, ease: "power1.out" }, 1.185);
+    tl.to("#t52", { z: 0, duration: 0.14, ease: "power1.in" }, 1.265);
+    tl.fromTo(
+      "#t53",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.448,
+    );
+    tl.to("#t53", { z: 14, duration: 0.08, ease: "power1.out" }, 0.868);
+    tl.to("#t53", { z: 0, duration: 0.14, ease: "power1.in" }, 0.948);
+    tl.set("#t53-s", { opacity: 1 }, 2.628);
+    tl.fromTo(
+      "#t54",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.622,
+    );
+    tl.to("#t54", { z: 14, duration: 0.08, ease: "power1.out" }, 1.042);
+    tl.to("#t54", { z: 0, duration: 0.14, ease: "power1.in" }, 1.122);
+    tl.fromTo(
+      "#t55",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.27,
+    );
+    tl.to("#t55", { z: 14, duration: 0.08, ease: "power1.out" }, 1.69);
+    tl.to("#t55", { z: 0, duration: 0.14, ease: "power1.in" }, 1.77);
+    tl.fromTo(
+      "#t56",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.646,
+    );
+    tl.to("#t56", { z: 14, duration: 0.08, ease: "power1.out" }, 2.066);
+    tl.to("#t56", { z: 0, duration: 0.14, ease: "power1.in" }, 2.146);
+    tl.fromTo(
+      "#t57",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.031,
+    );
+    tl.to("#t57", { z: 14, duration: 0.08, ease: "power1.out" }, 2.451);
+    tl.to("#t57", { z: 0, duration: 0.14, ease: "power1.in" }, 2.531);
+    tl.fromTo(
+      "#t58",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.419,
+    );
+    tl.to("#t58", { z: 14, duration: 0.08, ease: "power1.out" }, 2.839);
+    tl.to("#t58", { z: 0, duration: 0.14, ease: "power1.in" }, 2.919);
+    tl.set("#t58-s", { opacity: 1 }, 4.599);
+    tl.fromTo(
+      "#t59",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      3.162,
+    );
+    tl.to("#t59", { z: 14, duration: 0.08, ease: "power1.out" }, 3.582);
+    tl.to("#t59", { z: 0, duration: 0.14, ease: "power1.in" }, 3.662);
+    tl.fromTo(
+      "#t60",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.639,
+    );
+    tl.to("#t60", { z: 14, duration: 0.08, ease: "power1.out" }, 3.059);
+    tl.to("#t60", { z: 0, duration: 0.14, ease: "power1.in" }, 3.139);
+    tl.fromTo(
+      "#t61",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.123,
+    );
+    tl.to("#t61", { z: 14, duration: 0.08, ease: "power1.out" }, 2.543);
+    tl.to("#t61", { z: 0, duration: 0.14, ease: "power1.in" }, 2.623);
+    tl.fromTo(
+      "#t62",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.619,
+    );
+    tl.to("#t62", { z: 14, duration: 0.08, ease: "power1.out" }, 2.039);
+    tl.to("#t62", { z: 0, duration: 0.14, ease: "power1.in" }, 2.119);
+    tl.fromTo(
+      "#t63",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.44,
+    );
+    tl.to("#t63", { z: 14, duration: 0.08, ease: "power1.out" }, 1.86);
+    tl.to("#t63", { z: 0, duration: 0.14, ease: "power1.in" }, 1.94);
+    tl.fromTo(
+      "#t64",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.03,
+    );
+    tl.to("#t64", { z: 14, duration: 0.08, ease: "power1.out" }, 1.45);
+    tl.to("#t64", { z: 0, duration: 0.14, ease: "power1.in" }, 1.53);
+    tl.fromTo(
+      "#t65",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.807,
+    );
+    tl.to("#t65", { z: 14, duration: 0.08, ease: "power1.out" }, 1.227);
+    tl.to("#t65", { z: 0, duration: 0.14, ease: "power1.in" }, 1.307);
+    tl.fromTo(
+      "#t66",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      0.887,
+    );
+    tl.to("#t66", { z: 14, duration: 0.08, ease: "power1.out" }, 1.307);
+    tl.to("#t66", { z: 0, duration: 0.14, ease: "power1.in" }, 1.387);
+    tl.fromTo(
+      "#t67",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.454,
+    );
+    tl.to("#t67", { z: 14, duration: 0.08, ease: "power1.out" }, 1.874);
+    tl.to("#t67", { z: 0, duration: 0.14, ease: "power1.in" }, 1.954);
+    tl.fromTo(
+      "#t68",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.788,
+    );
+    tl.to("#t68", { z: 14, duration: 0.08, ease: "power1.out" }, 2.208);
+    tl.to("#t68", { z: 0, duration: 0.14, ease: "power1.in" }, 2.288);
+    tl.fromTo(
+      "#t69",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.149,
+    );
+    tl.to("#t69", { z: 14, duration: 0.08, ease: "power1.out" }, 2.569);
+    tl.to("#t69", { z: 0, duration: 0.14, ease: "power1.in" }, 2.649);
+    tl.fromTo(
+      "#t70",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.522,
+    );
+    tl.to("#t70", { z: 14, duration: 0.08, ease: "power1.out" }, 2.942);
+    tl.to("#t70", { z: 0, duration: 0.14, ease: "power1.in" }, 3.022);
+    tl.fromTo(
+      "#t71",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.989,
+    );
+    tl.to("#t71", { z: 14, duration: 0.08, ease: "power1.out" }, 3.409);
+    tl.to("#t71", { z: 0, duration: 0.14, ease: "power1.in" }, 3.489);
+    tl.fromTo(
+      "#t72",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.782,
+    );
+    tl.to("#t72", { z: 14, duration: 0.08, ease: "power1.out" }, 3.202);
+    tl.to("#t72", { z: 0, duration: 0.14, ease: "power1.in" }, 3.282);
+    tl.fromTo(
+      "#t73",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.288,
+    );
+    tl.to("#t73", { z: 14, duration: 0.08, ease: "power1.out" }, 2.708);
+    tl.to("#t73", { z: 0, duration: 0.14, ease: "power1.in" }, 2.788);
+    tl.fromTo(
+      "#t74",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.816,
+    );
+    tl.to("#t74", { z: 14, duration: 0.08, ease: "power1.out" }, 2.236);
+    tl.to("#t74", { z: 0, duration: 0.14, ease: "power1.in" }, 2.316);
+    tl.fromTo(
+      "#t75",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.386,
+    );
+    tl.to("#t75", { z: 14, duration: 0.08, ease: "power1.out" }, 1.806);
+    tl.to("#t75", { z: 0, duration: 0.14, ease: "power1.in" }, 1.886);
+    tl.fromTo(
+      "#t76",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.344,
+    );
+    tl.to("#t76", { z: 14, duration: 0.08, ease: "power1.out" }, 1.764);
+    tl.to("#t76", { z: 0, duration: 0.14, ease: "power1.in" }, 1.844);
+    tl.fromTo(
+      "#t77",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.165,
+    );
+    tl.to("#t77", { z: 14, duration: 0.08, ease: "power1.out" }, 1.585);
+    tl.to("#t77", { z: 0, duration: 0.14, ease: "power1.in" }, 1.665);
+    tl.fromTo(
+      "#t78",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.2,
+    );
+    tl.to("#t78", { z: 14, duration: 0.08, ease: "power1.out" }, 1.62);
+    tl.to("#t78", { z: 0, duration: 0.14, ease: "power1.in" }, 1.7);
+    tl.fromTo(
+      "#t79",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.399,
+    );
+    tl.to("#t79", { z: 14, duration: 0.08, ease: "power1.out" }, 1.819);
+    tl.to("#t79", { z: 0, duration: 0.14, ease: "power1.in" }, 1.899);
+    tl.fromTo(
+      "#t80",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      1.985,
+    );
+    tl.to("#t80", { z: 14, duration: 0.08, ease: "power1.out" }, 2.405);
+    tl.to("#t80", { z: 0, duration: 0.14, ease: "power1.in" }, 2.485);
+    tl.fromTo(
+      "#t81",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.314,
+    );
+    tl.to("#t81", { z: 14, duration: 0.08, ease: "power1.out" }, 2.734);
+    tl.to("#t81", { z: 0, duration: 0.14, ease: "power1.in" }, 2.814);
+    tl.fromTo(
+      "#t82",
+      { z: 820, opacity: 0 },
+      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
+      2.665,
+    );
+    tl.to("#t82", { z: 14, duration: 0.08, ease: "power1.out" }, 3.085);
+    tl.to("#t82", { z: 0, duration: 0.14, ease: "power1.in" }, 3.165);
+    tl.set({}, {}, 4);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["wall"] = tl;
+  </script>
+</template>

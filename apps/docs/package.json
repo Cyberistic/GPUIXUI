@@ -15,7 +15,6 @@
   "dependencies": {
     "@gpuix/native": "catalog:",
     "@gpuix/react": "catalog:",
-    "@gpuixui/blocks": "workspace:*",
     "@gpuixui/components": "workspace:*",
     "@gpuixui/data": "workspace:*",
     "@gpuixui/dock": "workspace:*",

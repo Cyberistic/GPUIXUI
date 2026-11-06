@@ -291,7 +291,10 @@ describe("a structural chart given no colours", () => {
   ];
   it.each([
     ["treemap", <TreemapChart testId="chart" nodes={nodes} animate={false} />],
-    ["sunburst", <SunburstChart testId="chart" nodes={nodes} animate={false} />],
+    [
+      "sunburst",
+      <SunburstChart testId="chart" nodes={nodes} animate={false} />,
+    ],
     [
       "radial bar",
       <RadialBarChart
@@ -304,10 +307,7 @@ describe("a structural chart given no colours", () => {
       "sankey",
       <SankeyChart
         testId="chart"
-        nodes={[
-          { id: "a", label: "A" },
-          { id: "b", label: "B" },
-        ]}
+        nodes={[{ id: "a" }, { id: "b" }]}
         links={[{ source: "a", target: "b", value: 10 }]}
         animate={false}
       />,

@@ -42,6 +42,7 @@ import { TilingDesktop } from "./tiling/tiling.js";
 import { MacosDesktop } from "./macos/macos.js";
 import { Editor } from "./editor/editor.js";
 import { Podcast } from "./podcast/podcast.js";
+import { Vault } from "./vault/vault.js";
 import { Monitor } from "./monitor/monitor.js";
 import { CalendarBlock } from "./calendar/calendar.js";
 import { Inbox } from "./inbox/inbox.js";
@@ -74,6 +75,7 @@ const blocks: Readonly<Record<string, ComponentType>> = {
   macos: MacosDesktop,
   editor: Editor,
   podcast: Podcast,
+  vault: Vault,
   monitor: Monitor,
   calendar: CalendarBlock,
   welcome: Welcome,

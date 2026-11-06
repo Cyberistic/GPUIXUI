@@ -13,6 +13,22 @@ export interface Result {
 
 export const results: ReadonlyArray<Result> = [
   {
+    id: "vault",
+    group: "Apps",
+    title: "Vault",
+    subtitle: "Linked notes and their graph",
+    icon: "file-text",
+    shortcut: "⌘V",
+  },
+  {
+    id: "dashboard",
+    group: "Apps",
+    title: "Dashboard",
+    subtitle: "Heavens Arena, this quarter",
+    icon: "calendar",
+    shortcut: "⌘D",
+  },
+  {
     id: "releases",
     group: "Apps",
     title: "Releases",

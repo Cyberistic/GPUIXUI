@@ -152,16 +152,12 @@ measured constraints:
   surface at all, so a live route owes a plain-text fallback rather than a blank
   canvas.
 
-**The site mounts it, one surface per document.** `/live` boots the browser
-build and paints a real card with a `@gpuixui/primitives` filled action on it,
-through `@gpuix/react`'s reconciler. `/live/block/:slug` mounts **a real block**
-the same way, and every block page frames it in an iframe — one document per
-surface, so a page can show the real block beside its prose and the capture
-stays behind the iframe as the backdrop until the first frame paints (and as the
-picture a browser without WebGPU or WebGL2 keeps). Component pages keep the
-labelled DOM reproduction above, because the platform hosts one surface per
-document and a component page needs room for its prose. `src/lib/gpuix-web.test.ts` holds this status to the
-tree in both directions: the policy cannot claim the surfaces are mounted while no
+**The site mounts it, on one route.** `/live` boots the browser build and paints
+a real card with a `@gpuixui/primitives` filled action on it, through
+`@gpuix/react`'s reconciler; every other page keeps the labelled DOM reproduction
+above, because the platform hosts one surface per document and a component page
+needs room for its prose. `src/lib/gpuix-web.test.ts` holds this status to the
+tree in both directions: the policy cannot claim the surface is mounted while no
 route boots the build, and it cannot claim a route that is not there. The guard
 also reads the installed package, so the size, the memory requirement and the
 browser entry it quotes cannot drift silently. Plan `440-live-gpuix-web-surface`

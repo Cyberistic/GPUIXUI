@@ -23,7 +23,12 @@ import { examples as editorExamples } from "@gpuixui/editor/examples";
 import { examples as fileExamples } from "@gpuixui/files/examples";
 import { examples as fxExamples } from "@gpuixui/fx/examples";
 import { examples as mediaExamples } from "@gpuixui/media/examples";
-import { lightTheme, platformTheme } from "@gpuixui/tokens";
+import {
+  darkTheme,
+  lightTheme,
+  platformTheme,
+  type Theme,
+} from "@gpuixui/tokens";
 import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import * as R from "effect/Record";
@@ -31,7 +36,7 @@ import { createElement, type ComponentType, type ReactNode } from "react";
 import type { Take } from "./take.js";
 
 /** One wall tile's canvas, in points; captured at the rig's 2× scale. */
-export const TILE = { width: 480, height: 320 };
+export const TILE = { width: 400, height: 267 };
 
 /** Long enough for a chart's mount animation to finish and settle. */
 const TILE_FRAMES = 54;
@@ -67,11 +72,14 @@ const FLOW = {
   ],
 };
 const TREE = [
-  { path: "yorknew/auction", value: 40 },
-  { path: "yorknew/troupe", value: 26 },
-  { path: "greed-island/cards", value: 30 },
-  { path: "greed-island/dodgeball", value: 18 },
-  { path: "heavens-arena", value: 22 },
+  { path: "hunter" },
+  { path: "hunter/yorknew" },
+  { path: "hunter/yorknew/auction", value: 40 },
+  { path: "hunter/yorknew/troupe", value: 26 },
+  { path: "hunter/greed-island" },
+  { path: "hunter/greed-island/cards", value: 30 },
+  { path: "hunter/greed-island/dodgeball", value: 18 },
+  { path: "hunter/heavens-arena", value: 22 },
 ];
 const CANDLES = Arr.makeBy(14, (i) => {
   const open = 50 + 14 * Math.sin(i / 2);
@@ -127,14 +135,18 @@ const charts: Readonly<Record<string, ReactNode>> = {
       stages={[404, 148, 42, 9]}
     />
   ),
-  pie: <PieChart aria-label="Nen types" data={SHARE} size={210} />,
-  donut: <DonutChart aria-label="Nen types" data={SHARE} size={210} />,
+  pie: (
+    <PieChart aria-label="Nen types" data={SHARE} size={205} legend={false} />
+  ),
+  donut: (
+    <DonutChart aria-label="Nen types" data={SHARE} size={205} legend={false} />
+  ),
   radar: (
     <RadarChart
       aria-label="Discipline"
       labels={["Ten", "Zetsu", "Ren", "Hatsu", "Gyo"]}
       series={[{ key: "gon", label: "Gon", values: [70, 52, 88, 64, 40] }]}
-      radius={110}
+      radius={92}
     />
   ),
   radial: (
@@ -143,24 +155,50 @@ const charts: Readonly<Record<string, ReactNode>> = {
       data={SHARE}
       max={50}
       centerLabel="62%"
-      thickness={12}
+      thickness={18}
+      size={205}
+      legend={false}
     />
   ),
-  "radial-bar": <RadialBarChart aria-label="Nen types" data={SHARE} />,
-  treemap: <TreemapChart aria-label="The arcs" nodes={TREE} />,
-  sankey: <SankeyChart aria-label="The exam" {...FLOW} />,
-  sunburst: <SunburstChart aria-label="The arcs" nodes={TREE} />,
+  "radial-bar": (
+    <RadialBarChart
+      aria-label="Nen types"
+      data={SHARE}
+      size={205}
+      legend={false}
+    />
+  ),
+  treemap: (
+    <TreemapChart
+      aria-label="The arcs"
+      nodes={TREE}
+      size={205}
+      legend={false}
+    />
+  ),
+  sankey: (
+    <SankeyChart aria-label="The exam" {...FLOW} size={205} legend={false} />
+  ),
+  sunburst: (
+    <SunburstChart
+      aria-label="The arcs"
+      nodes={TREE}
+      size={205}
+      legend={false}
+    />
+  ),
   sparkline: (
     <Sparkline
       aria-label="Aura trend"
       values={REVENUE.values}
-      width={400}
-      height={180}
+      width={340}
+      height={170}
     />
   ),
 };
 
 const mac = platformTheme(lightTheme, "darwin");
+const macDark = platformTheme(darkTheme, "darwin");
 
 const Canvas = ({ children }: { readonly children: ReactNode }) => {
   const theme = useTheme();
@@ -182,12 +220,12 @@ const Canvas = ({ children }: { readonly children: ReactNode }) => {
   );
 };
 
-const tile = (child: () => ReactNode): Take => ({
+const tile = (child: () => ReactNode, theme: Theme = mac): Take => ({
   width: TILE.width,
   height: TILE.height,
   frames: TILE_FRAMES,
   view: () => (
-    <ThemeProvider theme={mac}>
+    <ThemeProvider theme={theme}>
       <Canvas>{child()}</Canvas>
     </ThemeProvider>
   ),
@@ -202,19 +240,21 @@ const registry: Readonly<Record<string, ComponentType>> = {
   ...mediaExamples,
 };
 
-const chartTakes = R.fromEntries(
-  Arr.map(R.toEntries(charts), ([id, node]) => [`chart-${id}`, tile(() => node)]),
-);
+const both = (
+  prefix: string,
+  id: string,
+  child: () => ReactNode,
+): ReadonlyArray<readonly [string, Take]> => [
+  [`${prefix}-${id}`, tile(child)],
+  [`dark-${prefix}-${id}`, tile(child, macDark)],
+];
 
-const exampleTakes = R.fromEntries(
-  Arr.map(R.toEntries(registry), ([id, example]) => [
-    `tile-${id}`,
-    tile(() => createElement(example)),
-  ]),
-);
-
-/** Every chart type and every shipped example, as one capture each. */
-export const wallTakes: Readonly<Record<string, Take>> = {
-  ...chartTakes,
-  ...exampleTakes,
-};
+/** Every chart type and shipped example, as one capture each, in both modes. */
+export const wallTakes: Readonly<Record<string, Take>> = R.fromEntries([
+  ...Arr.flatMap(R.toEntries(charts), ([id, node]) =>
+    both("chart", id, () => node),
+  ),
+  ...Arr.flatMap(R.toEntries(registry), ([id, example]) =>
+    both("tile", id, () => createElement(example)),
+  ),
+]);

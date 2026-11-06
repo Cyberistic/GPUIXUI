@@ -1,0 +1,313 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #f4f2ee;
+      font-family: Inter, sans-serif;
+    }
+    #root video,
+    #root img.shot {
+      position: absolute;
+      display: block;
+    }
+    #root .cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 34px;
+      transform-origin: 8% 6%;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+    }
+    #root .cursor svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root .row {
+      position: absolute;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      white-space: nowrap;
+    }
+    #root .chip {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 100px;
+      padding: 0 30px;
+      border-radius: 20px;
+      background: #fff;
+      box-shadow:
+        0 0 0 1px rgba(29, 29, 31, 0.07),
+        0 16px 34px -20px rgba(29, 29, 31, 0.4);
+      font:
+        500 36px Inter,
+        sans-serif;
+      letter-spacing: -0.02em;
+      color: #1d1d1f;
+    }
+    #root .chip img {
+      width: 40px;
+      height: 40px;
+    }
+    #root .chip i {
+      display: block;
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: #c7c7cc;
+    }
+    #root .outgoing {
+      position: absolute;
+      inset: 0;
+      background: #1a1b26;
+    }
+  </style>
+  <div id="root" data-composition-id="npm" data-width="1920" data-height="1080">
+    <div id="n-row0" class="row" style="top: 300px">
+      <div id="n-0-0" class="chip">
+        <img src="assets/logos/tanstack.svg" alt="" /><span>TanStack DB</span>
+      </div>
+      <div id="n-0-1" class="chip">
+        <img src="assets/logos/tanstack.svg" alt="" /><span>TanStack AI</span>
+      </div>
+      <div id="n-0-2" class="chip">
+        <img src="assets/logos/tanstack.svg" alt="" /><span
+          >TanStack Hotkeys</span
+        >
+      </div>
+      <div id="n-0-3" class="chip">
+        <img src="assets/logos/tanstack.svg" alt="" /><span
+          >TanStack Virtual</span
+        >
+      </div>
+      <div id="n-0-4" class="chip">
+        <img src="assets/logos/tanstack.svg" alt="" /><span
+          >TanStack Table</span
+        >
+      </div>
+    </div>
+    <div id="n-row1" class="row" style="top: 690px">
+      <div id="n-1-0" class="chip">
+        <img src="assets/logos/effect.svg" alt="" /><span>Effect</span>
+      </div>
+      <div id="n-1-1" class="chip">
+        <img src="assets/logos/better-auth.svg" alt="" /><span
+          >Better Auth</span
+        >
+      </div>
+      <div id="n-1-2" class="chip"><i></i><span>react-doctor</span></div>
+      <div id="n-1-3" class="chip">
+        <img src="assets/logos/tanstack.svg" alt="" /><span>TanStack Form</span>
+      </div>
+      <div id="n-1-4" class="chip"><i></i><span>and more</span></div>
+    </div>
+    <div id="n-out" class="outgoing">
+      <img
+        src="assets/footage/term-v8-59.png"
+        alt=""
+        style="
+          position: absolute;
+          left: 210px;
+          top: 40px;
+          width: 1500px;
+          height: 844px;
+        "
+      />
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.to("#n-out", { y: -1090, duration: 0.34, ease: "expo.inOut" }, 0);
+    tl.fromTo("#n-row0", { x: 24 }, { x: -24, duration: 2, ease: "none" }, 0);
+    tl.fromTo("#n-row1", { x: -24 }, { x: 24, duration: 2, ease: "none" }, 0);
+    tl.fromTo(
+      "#n-0-0",
+      { y: -60, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.26, ease: "back.out(1.8)" },
+      0.1,
+    );
+    tl.fromTo(
+      "#n-0-1",
+      { y: -60, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.26, ease: "back.out(1.8)" },
+      0.23,
+    );
+    tl.fromTo(
+      "#n-0-2",
+      { y: -60, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.26, ease: "back.out(1.8)" },
+      0.36,
+    );
+    tl.fromTo(
+      "#n-0-3",
+      { y: -60, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.26, ease: "back.out(1.8)" },
+      0.49,
+    );
+    tl.fromTo(
+      "#n-0-4",
+      { y: -60, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.26, ease: "back.out(1.8)" },
+      0.62,
+    );
+    tl.fromTo(
+      "#n-1-0",
+      { y: 60, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.26, ease: "back.out(1.8)" },
+      0.22,
+    );
+    tl.fromTo(
+      "#n-1-1",
+      { y: 60, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.26, ease: "back.out(1.8)" },
+      0.35,
+    );
+    tl.fromTo(
+      "#n-1-2",
+      { y: 60, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.26, ease: "back.out(1.8)" },
+      0.48,
+    );
+    tl.fromTo(
+      "#n-1-3",
+      { y: 60, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.26, ease: "back.out(1.8)" },
+      0.61,
+    );
+    tl.fromTo(
+      "#n-1-4",
+      { y: 60, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.26, ease: "back.out(1.8)" },
+      0.74,
+    );
+    tl.to(
+      "#n-0-0",
+      {
+        x: 660,
+        y: 240,
+        scale: 0.1,
+        opacity: 0,
+        duration: 0.24,
+        ease: "power3.in",
+      },
+      1.76,
+    );
+    tl.to(
+      "#n-0-1",
+      {
+        x: 330,
+        y: 240,
+        scale: 0.1,
+        opacity: 0,
+        duration: 0.24,
+        ease: "power3.in",
+      },
+      1.76,
+    );
+    tl.to(
+      "#n-0-2",
+      {
+        x: 0,
+        y: 240,
+        scale: 0.1,
+        opacity: 0,
+        duration: 0.24,
+        ease: "power3.in",
+      },
+      1.76,
+    );
+    tl.to(
+      "#n-0-3",
+      {
+        x: -330,
+        y: 240,
+        scale: 0.1,
+        opacity: 0,
+        duration: 0.24,
+        ease: "power3.in",
+      },
+      1.76,
+    );
+    tl.to(
+      "#n-0-4",
+      {
+        x: -660,
+        y: 240,
+        scale: 0.1,
+        opacity: 0,
+        duration: 0.24,
+        ease: "power3.in",
+      },
+      1.76,
+    );
+    tl.to(
+      "#n-1-0",
+      {
+        x: 660,
+        y: -150,
+        scale: 0.1,
+        opacity: 0,
+        duration: 0.24,
+        ease: "power3.in",
+      },
+      1.76,
+    );
+    tl.to(
+      "#n-1-1",
+      {
+        x: 330,
+        y: -150,
+        scale: 0.1,
+        opacity: 0,
+        duration: 0.24,
+        ease: "power3.in",
+      },
+      1.76,
+    );
+    tl.to(
+      "#n-1-2",
+      {
+        x: 0,
+        y: -150,
+        scale: 0.1,
+        opacity: 0,
+        duration: 0.24,
+        ease: "power3.in",
+      },
+      1.76,
+    );
+    tl.to(
+      "#n-1-3",
+      {
+        x: -330,
+        y: -150,
+        scale: 0.1,
+        opacity: 0,
+        duration: 0.24,
+        ease: "power3.in",
+      },
+      1.76,
+    );
+    tl.to(
+      "#n-1-4",
+      {
+        x: -660,
+        y: -150,
+        scale: 0.1,
+        opacity: 0,
+        duration: 0.24,
+        ease: "power3.in",
+      },
+      1.76,
+    );
+    tl.set({}, {}, 2);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["npm"] = tl;
+  </script>
+</template>

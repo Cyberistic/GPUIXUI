@@ -4,7 +4,7 @@
       position: absolute;
       inset: 0;
       overflow: hidden;
-      background: #fafafa;
+      background: #f4f2ee;
       font-family: Inter, sans-serif;
     }
     #root video,
@@ -25,93 +25,64 @@
       width: 100%;
       height: auto;
     }
-    #root .term {
+    #root .shell {
       position: absolute;
-      transform-origin: 0 0;
-      left: 371px;
-      top: 187px;
-      width: 1178px;
-      height: 706px;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #0d0e10;
-      border: 1px solid rgba(0, 0, 0, 0.18);
-      box-shadow:
-        0 40px 90px -40px rgba(20, 20, 40, 0.55),
-        0 12px 30px -18px rgba(20, 20, 40, 0.35);
-    }
-    #root .bar {
-      position: relative;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding-left: 18px;
-      background: linear-gradient(#fbfbfb, #ececed);
-      border-bottom: 1px solid #d7d7d9;
-      color: #4b4b4f;
+      inset: 0;
+      background: #1a1b26;
+      padding: 44px 60px;
       font:
-        500 26px Inter,
-        sans-serif;
+        500 34px/50px "JetBrains Mono",
+        Menlo,
+        monospace;
+      color: #c0caf5;
     }
-    #root .bar i {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      display: inline-block;
+    #root .shell b {
+      font-weight: 600;
+      color: #7aa2f7;
     }
-    #root .bar span {
+    #root .shell .dim {
+      color: #565f89;
+    }
+    #root .shell .off {
+      opacity: 0;
+    }
+    #root .app {
+      position: absolute;
+      left: 210px;
+      top: 40px;
+      width: 1500px;
+      height: 844px;
+      opacity: 0;
+      overflow: hidden;
+    }
+    #root .app video {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    #root .status {
       position: absolute;
       left: 0;
       right: 0;
-      text-align: center;
-      font-weight: 500;
-    }
-    #root .hist {
-      position: absolute;
-      left: 0;
-      top: 44px;
-      width: 100%;
-      padding: 18px 28px 0;
+      bottom: 0;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 0 22px;
+      background: #7aa2f7;
+      color: #1a1b26;
       font:
-        500 22px/30px "JetBrains Mono",
+        600 24px "JetBrains Mono",
         Menlo,
         monospace;
-      color: #e8e8ea;
     }
-    #root .hist .dim {
-      color: #8b8b93;
+    #root .status span:last-child {
+      margin-left: auto;
     }
-    #root .hist .off {
-      opacity: 0;
-    }
-    #root .hist b {
-      font-weight: 600;
-      color: #8ab4ff;
-    }
-    #root .caret {
-      display: inline-block;
-      width: 10px;
-      height: 20px;
-      margin-left: 2px;
-      vertical-align: -3px;
-      background: #c9c9d2;
-    }
-    #root .frame {
-      position: absolute;
-      left: 0;
-      top: 44px;
-      width: 1178px;
-      height: 662px;
-      overflow: hidden;
-    }
-    #root .frame video,
-    #root .frame img {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
+    #root .cursor {
+      width: 56px;
     }
   </style>
   <div
@@ -120,220 +91,126 @@
     data-width="1920"
     data-height="1080"
   >
-    <div class="term">
-      <div class="bar" data-layout-ignore>
-        <i style="background: #ff5f57"></i><i style="background: #febc2e"></i
-        ><i style="background: #28c840"></i><span>gon@whale-island — ssh</span>
+    <div id="term" class="shell">
+      <div><b>~ ❯</b> <span id="t-ssh"></span></div>
+      <div id="t-login" class="dim off">
+        Last login: Fri Nov 6 09:41:07 2026 from 10.0.0.2
       </div>
-      <div id="t-hist" class="hist" data-layout-ignore>
-        <div class="ln">
-          <b>gon@macbook ~ %</b> <span id="t-ssh"></span
-          ><span id="t-caret1" class="caret"></span>
-        </div>
-        <div id="t-login" class="ln dim off">
-          Last login: Sun Nov 1 19:41:07 2026 from 10.0.0.2
-        </div>
-        <div id="t-runline" class="ln off">
-          <b>gon@whale-island ~ %</b> <span id="t-run"></span
-          ><span id="t-caret3" class="caret"></span>
-        </div>
-        <div id="t-ready" class="ln dim off">console · ready in 1.4 s</div>
-        <div id="t-out1" class="ln off">
-          <span class="dim">VITE v7.1.3</span> ready in 412 ms
-        </div>
-        <div id="t-out2" class="ln off">
-          <b>➜</b> Local: <span class="dim">http://localhost:5173/</span>
-        </div>
-        <div id="t-out3" class="ln off">
-          <b>➜</b> GPUix:
-          <span class="dim">http://localhost:5173/terminal</span>
-        </div>
+      <div id="t-runline" class="off">
+        <b>gon@whale-island ~ ❯</b> <span id="t-run"></span>
       </div>
-      <div class="frame">
-        <img
-          id="t-v0"
-          class="look"
-          src="assets/footage/term-light-linux-80.png"
-          alt=""
-          style="opacity: 0"
-        />
-        <img
-          id="t-v1"
-          class="look"
-          src="assets/footage/term-dark-80.png"
-          alt=""
-          style="opacity: 0"
-        />
-        <img
-          id="t-v2"
-          class="look"
-          src="assets/footage/term-light-win-80.png"
-          alt=""
-          style="opacity: 0"
-        />
-        <div id="t-cur" class="cursor" style="opacity: 0">
-          <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
-              fill="#000"
-              stroke="#fff"
-              stroke-width="1.8"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </div>
+    </div>
+    <div id="t-app" class="app">
+      <video
+        id="t-v"
+        class="clip"
+        data-start="1.4"
+        data-duration="1.6"
+        data-track-index="2"
+        muted
+        playsinline
+        src="assets/footage/term-v8.mp4"
+        style=""
+      ></video>
+      <div id="t-cur" class="cursor">
+        <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
+            fill="#000"
+            stroke="#fff"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+        </svg>
       </div>
+    </div>
+    <div class="status">
+      <span>0:nub*</span><span>gon@whale-island</span
+      ><span>ssh · 120×40 · 09:41</span>
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.set("#t-ssh", { textContent: "s" }, 0.1);
-    tl.set("#t-ssh", { textContent: "ss" }, 0.116);
-    tl.set("#t-ssh", { textContent: "ssh" }, 0.132);
-    tl.set("#t-ssh", { textContent: "ssh " }, 0.148);
-    tl.set("#t-ssh", { textContent: "ssh g" }, 0.164);
-    tl.set("#t-ssh", { textContent: "ssh go" }, 0.18);
-    tl.set("#t-ssh", { textContent: "ssh gon" }, 0.196);
-    tl.set("#t-ssh", { textContent: "ssh gon@" }, 0.212);
-    tl.set("#t-ssh", { textContent: "ssh gon@w" }, 0.228);
-    tl.set("#t-ssh", { textContent: "ssh gon@wh" }, 0.244);
-    tl.set("#t-ssh", { textContent: "ssh gon@wha" }, 0.26);
-    tl.set("#t-ssh", { textContent: "ssh gon@whal" }, 0.276);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale" }, 0.292);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-" }, 0.308);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-i" }, 0.324);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-is" }, 0.34);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-isl" }, 0.356);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-isla" }, 0.372);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-islan" }, 0.388);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-island" }, 0.404);
-    // Zoomed into the prompt while it types, then pulled back to the whole window
-    // once the app has taken the screen over.
-    tl.set(".term", { scale: 1.32, x: -188, y: -40 }, 0);
-    tl.to(
-      ".term",
-      { scale: 1.02, x: 0, y: 0, duration: 1.6, ease: "power2.inOut" },
-      1.5,
-    );
-    tl.set("#t-caret1", { opacity: 0 }, 0.48);
-    tl.set("#t-login", { opacity: 1 }, 0.48);
-    tl.set("#t-runline", { opacity: 1 }, 0.54);
-    tl.set("#t-run", { textContent: "n" }, 0.54);
-    tl.set("#t-run", { textContent: "nu" }, 0.556);
-    tl.set("#t-run", { textContent: "nub" }, 0.572);
-    tl.set("#t-run", { textContent: "nub " }, 0.588);
-    tl.set("#t-run", { textContent: "nub r" }, 0.604);
-    tl.set("#t-run", { textContent: "nub ru" }, 0.62);
-    tl.set("#t-run", { textContent: "nub run" }, 0.636);
-    tl.set("#t-run", { textContent: "nub run " }, 0.652);
-    tl.set("#t-run", { textContent: "nub run d" }, 0.668);
-    tl.set("#t-run", { textContent: "nub run de" }, 0.684);
-    tl.set("#t-run", { textContent: "nub run dev" }, 0.7);
-    tl.set("#t-run", { textContent: "nub run dev " }, 0.716);
-    tl.set("#t-run", { textContent: "nub run dev s" }, 0.732);
-    tl.set("#t-run", { textContent: "nub run dev se" }, 0.748);
-    tl.set("#t-run", { textContent: "nub run dev set" }, 0.764);
-    tl.set("#t-run", { textContent: "nub run dev sett" }, 0.78);
-    tl.set("#t-run", { textContent: "nub run dev setti" }, 0.796);
-    tl.set("#t-run", { textContent: "nub run dev settin" }, 0.812);
-    tl.set("#t-run", { textContent: "nub run dev setting" }, 0.828);
-    tl.set("#t-run", { textContent: "nub run dev settings" }, 0.844);
-    tl.set("#t-run", { textContent: "nub run dev settings " }, 0.86);
-    tl.set("#t-run", { textContent: "nub run dev settings -" }, 0.876);
-    tl.set("#t-run", { textContent: "nub run dev settings --" }, 0.892);
-    tl.set("#t-run", { textContent: "nub run dev settings --t" }, 0.908);
-    tl.set("#t-run", { textContent: "nub run dev settings --te" }, 0.924);
-    tl.set("#t-run", { textContent: "nub run dev settings --ter" }, 0.94);
-    tl.set("#t-run", { textContent: "nub run dev settings --term" }, 0.956);
-    tl.set("#t-run", { textContent: "nub run dev settings --termi" }, 0.972);
-    tl.set("#t-run", { textContent: "nub run dev settings --termin" }, 0.988);
-    tl.set("#t-run", { textContent: "nub run dev settings --termina" }, 1.004);
-    tl.set("#t-run", { textContent: "nub run dev settings --terminal" }, 1.02);
-    tl.set("#t-caret3", { opacity: 0 }, 1.12);
-    tl.set("#t-ready", { opacity: 1 }, 1.12);
-    // The command's own output, so the prompt is a screen and not a line.
-    tl.set("#t-out1", { opacity: 1 }, 1.18);
-    tl.set("#t-out2", { opacity: 1 }, 1.28);
-    tl.set("#t-out3", { opacity: 1 }, 1.38);
-    tl.set("#t-hist", { opacity: 0 }, 1.5);
-    tl.set("#t-v0", { opacity: 1 }, 1.5);
-    tl.set("#t-cur", { opacity: 1 }, 1.5);
-    // Three real terminal captures: the platform paints a state change only into
-    // the next frame it commits, so each state is recorded as its own take (one
-    // press before the first paint) and the film cuts between them. The order puts
-    // a theme flip on both cuts — Linux light → Linux dark → Windows light — so
-    // each change reads at a glance instead of moving one chip.
-    tl.set("#t-v0", { opacity: 0 }, 2.0);
-    tl.set("#t-v1", { opacity: 1 }, 2.0);
-    tl.set("#t-v1", { opacity: 0 }, 2.5);
-    tl.set("#t-v2", { opacity: 1 }, 2.5);
-    tl.set("#t-cur", { x: 1101.7, y: 163.9, scale: 1 }, 1.5);
-    tl.set("#t-cur", { x: 1100.4, y: 162.8, scale: 1 }, 1.533);
-    tl.set("#t-cur", { x: 1091.5, y: 155.4, scale: 1 }, 1.567);
-    tl.set("#t-cur", { x: 1067.2, y: 135.1, scale: 1 }, 1.6);
-    tl.set("#t-cur", { x: 1042.9, y: 114.9, scale: 1 }, 1.633);
-    tl.set("#t-cur", { x: 1034.0, y: 107.4, scale: 1 }, 1.667);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.7);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.733);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.767);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.8);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.833);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.867);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.9);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.933);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 1.967);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 0.86 }, 2.0);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 0.86 }, 2.033);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 0.86 }, 2.067);
-    tl.set("#t-cur", { x: 1032.7, y: 106.4, scale: 1 }, 2.1);
-    tl.set("#t-cur", { x: 1034.7, y: 108.1, scale: 1 }, 2.133);
-    tl.set("#t-cur", { x: 1049.1, y: 120.4, scale: 1 }, 2.167);
-    tl.set("#t-cur", { x: 1087.9, y: 153.8, scale: 1 }, 2.2);
-    tl.set("#t-cur", { x: 1126.7, y: 187.2, scale: 1 }, 2.233);
-    tl.set("#t-cur", { x: 1141.1, y: 199.5, scale: 1 }, 2.267);
-    tl.set("#t-cur", { x: 1143.1, y: 201.2, scale: 1 }, 2.3);
-    tl.set("#t-cur", { x: 1142.9, y: 201.1, scale: 1 }, 2.333);
-    tl.set("#t-cur", { x: 1141.6, y: 199.7, scale: 1 }, 2.367);
-    tl.set("#t-cur", { x: 1138.0, y: 196.1, scale: 1 }, 2.4);
-    tl.set("#t-cur", { x: 1131.0, y: 189.1, scale: 1 }, 2.433);
-    tl.set("#t-cur", { x: 1120.7, y: 178.9, scale: 1 }, 2.467);
-    tl.set("#t-cur", { x: 1113.7, y: 171.9, scale: 1 }, 2.5);
-    tl.set("#t-cur", { x: 1110.1, y: 168.3, scale: 1 }, 2.533);
-    tl.set("#t-cur", { x: 1108.8, y: 166.9, scale: 1 }, 2.567);
-    tl.set("#t-cur", { x: 1108.6, y: 166.8, scale: 0.86 }, 2.6);
-    tl.set("#t-cur", { x: 1108.6, y: 166.8, scale: 0.86 }, 2.633);
-    tl.set("#t-cur", { x: 1108.6, y: 166.8, scale: 0.86 }, 2.667);
-    tl.set("#t-cur", { x: 1108.6, y: 166.8, scale: 1 }, 2.7);
-    tl.set("#t-cur", { x: 1108.5, y: 165.6, scale: 1 }, 2.733);
-    tl.set("#t-cur", { x: 1107.8, y: 157.8, scale: 1 }, 2.767);
-    tl.set("#t-cur", { x: 1106.0, y: 136.6, scale: 1 }, 2.8);
-    tl.set("#t-cur", { x: 1104.2, y: 115.3, scale: 1 }, 2.833);
-    tl.set("#t-cur", { x: 1103.5, y: 107.5, scale: 1 }, 2.867);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 2.9);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 2.933);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 2.967);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.0);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.033);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.067);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.1);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.133);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.167);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 0.86 }, 3.2);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 0.86 }, 3.233);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 0.86 }, 3.267);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.3);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.333);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.367);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.4);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.433);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.467);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.5);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.533);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.567);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.6);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.633);
-    tl.set("#t-cur", { x: 1103.4, y: 106.4, scale: 1 }, 3.667);
-    tl.set({}, {}, 4);
+    tl.set("#t-ssh", { textContent: "ss" }, 0.3);
+    tl.set("#t-ssh", { textContent: "ssh " }, 0.333);
+    tl.set("#t-ssh", { textContent: "ssh go" }, 0.367);
+    tl.set("#t-ssh", { textContent: "ssh gon@" }, 0.4);
+    tl.set("#t-ssh", { textContent: "ssh gon@wh" }, 0.433);
+    tl.set("#t-ssh", { textContent: "ssh gon@whal" }, 0.467);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-" }, 0.5);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-is" }, 0.533);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-isla" }, 0.567);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-island" }, 0.6);
+    tl.set("#t-login", { opacity: 1 }, 0.733);
+    tl.set("#t-runline", { opacity: 1 }, 0.833);
+    tl.set("#t-run", { textContent: "nu" }, 0.833);
+    tl.set("#t-run", { textContent: "nub " }, 0.867);
+    tl.set("#t-run", { textContent: "nub ru" }, 0.9);
+    tl.set("#t-run", { textContent: "nub run " }, 0.933);
+    tl.set("#t-run", { textContent: "nub run de" }, 0.967);
+    tl.set("#t-run", { textContent: "nub run dev " }, 1.0);
+    tl.set("#t-run", { textContent: "nub run dev se" }, 1.033);
+    tl.set("#t-run", { textContent: "nub run dev sett" }, 1.067);
+    tl.set("#t-run", { textContent: "nub run dev settin" }, 1.1);
+    tl.set("#t-run", { textContent: "nub run dev settings" }, 1.133);
+    tl.set("#t-run", { textContent: "nub run dev settings -" }, 1.167);
+    tl.set("#t-run", { textContent: "nub run dev settings --t" }, 1.2);
+    tl.set("#t-run", { textContent: "nub run dev settings --ter" }, 1.233);
+    tl.set("#t-run", { textContent: "nub run dev settings --termi" }, 1.267);
+    tl.set("#t-run", { textContent: "nub run dev settings --termina" }, 1.3);
+    tl.set("#t-run", { textContent: "nub run dev settings --terminal" }, 1.333);
+    tl.set("#term > div", { opacity: 0 }, 1.4);
+    tl.set("#t-app", { opacity: 1 }, 1.4);
+    tl.set("#t-cur", { x: 1403.3, y: 238.0, scale: 1 }, 1.4);
+    tl.set("#t-cur", { x: 1403.3, y: 238.0, scale: 1 }, 1.4);
+    tl.set("#t-cur", { x: 1403.0, y: 237.6, scale: 1 }, 1.433);
+    tl.set("#t-cur", { x: 1400.5, y: 234.8, scale: 1 }, 1.467);
+    tl.set("#t-cur", { x: 1393.8, y: 227.0, scale: 1 }, 1.5);
+    tl.set("#t-cur", { x: 1380.8, y: 211.8, scale: 1 }, 1.533);
+    tl.set("#t-cur", { x: 1359.4, y: 186.8, scale: 1 }, 1.567);
+    tl.set("#t-cur", { x: 1337.9, y: 161.7, scale: 1 }, 1.6);
+    tl.set("#t-cur", { x: 1324.9, y: 146.6, scale: 1 }, 1.633);
+    tl.set("#t-cur", { x: 1318.2, y: 138.8, scale: 1 }, 1.667);
+    tl.set("#t-cur", { x: 1315.8, y: 135.9, scale: 1 }, 1.7);
+    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.733);
+    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.767);
+    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.8);
+    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.833);
+    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.867);
+    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 0.86 }, 1.9);
+    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.933);
+    tl.set("#t-cur", { x: 1315.8, y: 135.8, scale: 1 }, 1.967);
+    tl.set("#t-cur", { x: 1318.5, y: 138.0, scale: 1 }, 2.0);
+    tl.set("#t-cur", { x: 1325.9, y: 143.8, scale: 1 }, 2.033);
+    tl.set("#t-cur", { x: 1340.2, y: 155.2, scale: 1 }, 2.067);
+    tl.set("#t-cur", { x: 1363.8, y: 174.0, scale: 1 }, 2.1);
+    tl.set("#t-cur", { x: 1387.4, y: 192.7, scale: 1 }, 2.133);
+    tl.set("#t-cur", { x: 1401.7, y: 204.1, scale: 1 }, 2.167);
+    tl.set("#t-cur", { x: 1409.0, y: 209.9, scale: 1 }, 2.2);
+    tl.set("#t-cur", { x: 1411.7, y: 212.1, scale: 1 }, 2.233);
+    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.267);
+    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.3);
+    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.333);
+    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.367);
+    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 0.86 }, 2.4);
+    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.433);
+    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.467);
+    tl.set("#t-cur", { x: 1412.2, y: 212.5, scale: 1 }, 2.5);
+    tl.set("#t-cur", { x: 1412.4, y: 212.7, scale: 1 }, 2.533);
+    tl.set("#t-cur", { x: 1412.8, y: 213.1, scale: 1 }, 2.567);
+    tl.set("#t-cur", { x: 1413.4, y: 213.7, scale: 1 }, 2.6);
+    tl.set("#t-cur", { x: 1414.4, y: 214.7, scale: 1 }, 2.633);
+    tl.set("#t-cur", { x: 1415.8, y: 216.1, scale: 1 }, 2.667);
+    tl.set("#t-cur", { x: 1417.6, y: 217.9, scale: 1 }, 2.7);
+    tl.set("#t-cur", { x: 1419.9, y: 220.2, scale: 1 }, 2.733);
+    tl.set("#t-cur", { x: 1422.8, y: 223.1, scale: 1 }, 2.767);
+    tl.set("#t-cur", { x: 1426.3, y: 226.6, scale: 1 }, 2.8);
+    tl.set("#t-cur", { x: 1430.6, y: 230.9, scale: 1 }, 2.833);
+    tl.set("#t-cur", { x: 1435.6, y: 235.9, scale: 1 }, 2.867);
+    tl.set("#t-cur", { x: 1441.4, y: 241.7, scale: 1 }, 2.9);
+    tl.set("#t-cur", { x: 1447.2, y: 247.5, scale: 1 }, 2.933);
+    tl.set("#t-cur", { x: 1452.3, y: 252.5, scale: 1 }, 2.967);
+    tl.set({}, {}, 3);
     window.__timelines = window.__timelines || {};
     window.__timelines["terminal"] = tl;
   </script>

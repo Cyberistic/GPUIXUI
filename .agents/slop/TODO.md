@@ -24993,6 +24993,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 `[ ]` Docs blocks read their source from the compiled blocks instead of uncompiled strings (plan 728 Part A)
 
 ---
+`[x]` Launch film v8: the tilted drop wall, the Vault block, real desktops, synced terminal, charts, the npm line (plan 069)
 
 ## Native Mac — materials, window, blocks and the landing (plans 721–730, 2026-10-31)
 

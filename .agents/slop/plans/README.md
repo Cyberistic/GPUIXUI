@@ -262,7 +262,7 @@ Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` �
 | [062](./062-desktop-block.md) | The `desktop` block: XP-era and Aero-era desktops from the library | blocks | 728 Part A, tokens `retro` | landed |
 | [064](./064-launch-film-v2.md) | Launch film v2: faster, wider, scored | media | 060, 062, 728, 729 | landed |
 | [065](./065-chart-polish.md) | Charts that look like the landing's: stroked smooth lines, rounded bars, a gapped ring, tick rules | data | — | landed |
-| [069](./069-launch-film-v8.md) | Launch film v8: one camera through one world; a tilted drop wall, real desktops, the charts, the npm line, and the Vault block | media | 068, 751 | in progress |
+| [069](./069-launch-film-v8.md) | Launch film v8: v7.4 joined up, not a one-take; a tilted drop wall, real desktops, the charts, the npm line, and the Vault block | media | 068, 751 | landed on `agent/launch-film`, awaiting the owner's review |
 | [068](./068-launch-film-v7.md) | Launch film v7: the page-shaped wall, the `dashboard` block, the Omarchy theme scene, and the lines rewritten | media | 066, 745, 433 | landed — wall 15 cards at 16 px gutters, dashboard in the docs, five theme flips |
 | [066](./066-launch-film-v4.md) | Launch film v4: Paper's pace, a stageshow bento, a dashboard built from its blueprint | media | 064, 065, 067 | landed |
 | [067](./067-tiling-block.md) | The `tiling` block: a Hyprland-style Linux desktop themed by Omarchy palettes | blocks | 728 | landed |
