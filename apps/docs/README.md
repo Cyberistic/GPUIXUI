@@ -848,8 +848,9 @@ starts the wasm fetch beside the backend probe, so the real library is visible
 while the renderer boots; the canvas replaces the poster when it paints. A frame
 is one platform and one palette — switching the preview switch repaints the
 interactive demo, not the checked-in still — and the caption says so. The
-first visit still downloads and compiles the ~20 MiB module; a long-lived
-immutable cache and Brotli on the hashed asset path make a repeat visit cheaper.
+first visit still downloads and compiles the ~20 MiB module; the deploy caches
+`/assets/*` for a year (`immutable`) and Cloudflare serves Brotli, so a repeat
+visit reuses both.
 
 Run `nub run --filter @gpuixui/docs native:previews` (pass
 `--only accordion,dialog` while iterating, or `--url` to reuse a server). The

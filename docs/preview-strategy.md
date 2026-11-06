@@ -337,9 +337,11 @@ the page reports `painting`. The Native tab's "open the same scene live" link
 starts the download on hover, focus or press, so the transfer overlaps the
 reader's decision and the live page's own fetch is served from cache. The 19 MiB
 payload is still a first-visit download
-and compile — the poster makes the wait honest, it does not remove it. Serving
-the module with Brotli and a long-lived immutable cache (the hashed asset path
-allows both) is the deployment half of that; a repeat visit reuses it.
+and compile — the poster makes the wait honest, it does not remove it. The docs
+deploy sets `/assets/*` to `public, max-age=31536000, immutable` through
+Alchemy's asset headers, so the hashed wasm and native frames survive a repeat
+visit without revalidation; Cloudflare serves the Brotli encoding when the
+browser asks for it.
 
 ### Reading a hydrated node
 
