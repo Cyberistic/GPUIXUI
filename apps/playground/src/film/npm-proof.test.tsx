@@ -8,6 +8,7 @@
  * reads source; it is run over `examples/blocks` by hand (plan 069).
  */
 import { createTestRoot } from "@gpuix/react/testing";
+import { EventType } from "@tanstack/ai";
 import { stream, useChat } from "@tanstack/ai-react";
 import { createCollection, localOnlyCollectionOptions } from "@tanstack/db";
 import { useLiveQuery } from "@tanstack/react-db";
@@ -70,26 +71,31 @@ describe("the npm line", () => {
         threadId: "whale-island",
         connection: stream(async function* () {
           const base = { model: "fake", timestamp: 0 };
-          yield { ...base, type: "RUN_STARTED", runId: "r", threadId: "t" };
           yield {
             ...base,
-            type: "TEXT_MESSAGE_START",
-            messageId: "m",
-            role: "assistant",
+            type: EventType.RUN_STARTED,
+            runId: "r",
+            threadId: "t",
           };
           yield {
             ...base,
-            type: "TEXT_MESSAGE_CONTENT",
+            type: EventType.TEXT_MESSAGE_START,
+            messageId: "m",
+            role: "assistant" as const,
+          };
+          yield {
+            ...base,
+            type: EventType.TEXT_MESSAGE_CONTENT,
             messageId: "m",
             delta: "Ten",
           };
-          yield { ...base, type: "TEXT_MESSAGE_END", messageId: "m" };
+          yield { ...base, type: EventType.TEXT_MESSAGE_END, messageId: "m" };
           yield {
             ...base,
-            type: "RUN_FINISHED",
+            type: EventType.RUN_FINISHED,
             runId: "r",
             threadId: "t",
-            finishReason: "stop",
+            finishReason: "stop" as const,
           };
         }),
       });
