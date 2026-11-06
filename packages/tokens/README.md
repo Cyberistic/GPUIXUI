@@ -984,6 +984,8 @@ The pace is configuration as often as a literal, so an `every` outside the
 one past its 32-bit limit as the 1 ms floor, so an unreadable pace would decode
 the platform's file in a loop.
 
+**A shadcn builder's CSS ships decoded.** `shadcnTheme(css, base, mode?)` reads the `:root` or `.dark` block a theme builder exports, in `oklch()`, `hsl()`, bare `h s% l%` or hex, and returns `{ theme, problems }`: a variable it cannot read is named in `problems` and its role keeps the base's colour. `cssColorToHex(value)` is the one-colour form.
+
 **Omarchy's `colors.toml` ships decoded.** `decodeOmarchyPalette(source)` reads
 the file `omarchy-theme-set` stages at
 `~/.local/state/omarchy/current/theme/colors.toml` (format documented in

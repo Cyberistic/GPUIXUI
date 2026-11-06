@@ -40,6 +40,24 @@
       position: absolute;
       inset: 0;
     }
+    #root .pill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 60px;
+      text-align: center;
+    }
+    #root .pill span {
+      display: inline-block;
+      padding: 14px 34px;
+      border-radius: 26px;
+      font:
+        400 50px Inter,
+        sans-serif;
+      letter-spacing: -0.025em;
+      color: #fff;
+      background: rgba(12, 12, 16, 0.76);
+    }
     #root .fly {
       position: absolute;
       left: 300px;
@@ -59,17 +77,6 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-    }
-    #root .gnome-wall {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        160deg,
-        #1c71d8 0%,
-        #3584e4 34%,
-        #26a269 68%,
-        #1b5e4a 100%
-      );
     }
     #root .macbar {
       position: absolute;
@@ -198,16 +205,15 @@
       bottom: 14px;
       transform: translateX(-50%);
       display: flex;
-      gap: 12px;
-      padding: 12px;
-      border-radius: 26px;
-      background: rgba(40, 40, 44, 0.82);
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 22px;
+      background: rgba(36, 36, 40, 0.86);
     }
-    #root .dash i {
+    #root .dash img {
       display: block;
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
+      width: 64px;
+      height: 64px;
     }
   </style>
   <div
@@ -217,19 +223,23 @@
     data-height="1080"
   >
     <div id="o-gnome" class="desk">
-      <div class="gnome-wall"></div>
+      <img class="wall" src="assets/gnome/adwaita.jpg" alt="" />
       <div class="gbar">
         <span class="act">Activities</span
         ><span class="clock">Fri Nov 6 9:41</span
         ><span class="sys">Wi-Fi · 100%</span>
       </div>
       <div class="dash">
-        <i style="background: linear-gradient(#5ac8fa, #007aff)"></i
-        ><i style="background: linear-gradient(#ffd60a, #ff9f0a)"></i
-        ><i style="background: linear-gradient(#30d158, #248a3d)"></i
-        ><i style="background: linear-gradient(#ff6482, #ff2d55)"></i
-        ><i style="background: linear-gradient(#bf5af2, #5e5ce6)"></i
-        ><i style="background: linear-gradient(#8e8e93, #48484a)"></i>
+        <img src="assets/gnome/org.gnome.Epiphany.svg" alt="" /><img
+          src="assets/gnome/org.gnome.Nautilus.svg"
+          alt=""
+        /><img src="assets/gnome/org.gnome.Calendar.svg" alt="" /><img
+          src="assets/gnome/org.gnome.Music.svg"
+          alt=""
+        /><img src="assets/gnome/org.gnome.TextEditor.svg" alt="" /><img
+          src="assets/gnome/org.gnome.Settings.svg"
+          alt=""
+        />
       </div>
     </div>
     <div id="o-all" style="opacity: 0">
@@ -260,9 +270,12 @@
       src="assets/footage/settings-v8-89.png"
       alt=""
     />
+    <div id="o-say" class="pill"><span>follows your omarchy theme</span></div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#o-say", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.2);
+    tl.to("#o-say", { opacity: 0, duration: 0.12 }, 1.58);
     tl.to("#o-all", { opacity: 1, duration: 0.3, ease: "power2.out" }, 0.05);
     tl.to(
       "#o-fly",

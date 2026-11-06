@@ -296,7 +296,9 @@ describe("the bar marks", () => {
     // Every layer draws against the scale the axis prints, so the top of the
     // stack lands where the topmost datum says it does.
     expect(axisTicks(scale, 4)).toEqual([0, 30, 60, 90, 120]);
-    expect(Math.min(lower.y, upper.y)).toBeCloseTo(box.height * (1 - total / scale));
+    expect(Math.min(lower.y, upper.y)).toBeCloseTo(
+      box.height * (1 - total / scale),
+    );
     // Drawn against the widest single value instead, the stack reports a full
     // plot for a total the axis does not name: the top of the stack reaches y=0
     // while the axis stops at 60.

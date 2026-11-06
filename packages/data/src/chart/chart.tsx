@@ -1061,7 +1061,11 @@ export const AreaChart = ({
                   onNone: () => [],
                   onSome: (d): ReadonlyArray<ChartMark> => [
                     gradient
-                      ? { kind: "path", d, fill: { color: "#000000", gradient: fade } }
+                      ? {
+                          kind: "path",
+                          d,
+                          fill: { color: "#000000", gradient: fade },
+                        }
                       : { kind: "path", d },
                   ],
                 }),

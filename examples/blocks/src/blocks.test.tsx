@@ -242,7 +242,7 @@ describe("Stats", () => {
 
 describe("Dashboard", () => {
   it("re-reads the chart, the table and the selection", () => {
-    const r = mount(<Dashboard />, 1400, 1500);
+    const r = mount(<Dashboard />, 1400, 900);
     const text = () => r.getAllText();
     const total = () => textOf(r, "visitors-total");
     expect(total()).toContain("18,412");
@@ -252,6 +252,10 @@ describe("Dashboard", () => {
     r.flush();
     expect(total()).toContain("1,598");
     expect(total()).not.toContain("18,412");
+    // The report sits under the charts: the screen scrolls to it, as a reader does.
+    const chart = centre(r, "visitors-chart");
+    r.nativeSimulateScrollWheel(chart.x, chart.y, 0, -700);
+    r.flush();
     const past = centre(r, "tab-past");
     r.nativeSimulateClick(past.x, past.y);
     r.flush();
@@ -279,6 +283,16 @@ describe("SettingsApp", () => {
 });
 
 describe("Console", () => {
+  it("offers the theme toggle only when the host owns the theme", () => {
+    const seen: Array<boolean> = [];
+    const r = mount(<Console dark onDarkChange={(next) => seen.push(next)} />);
+    const toggle = centre(r, "theme");
+    r.nativeSimulateClick(toggle.x, toggle.y);
+    r.flush();
+    expect(seen).toEqual([false]);
+    expect(mount(<Console />).findByTestId("theme")).toBeFalsy();
+  });
+
   it("collapses the sidebar and raises the deploy toasts", () => {
     const r = mount(<Console />);
     const width = () => {

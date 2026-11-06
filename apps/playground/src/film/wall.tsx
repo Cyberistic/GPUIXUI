@@ -1,3 +1,4 @@
+import { Badge } from "@gpuixui/components/badge";
 import { examples as componentExamples } from "@gpuixui/components/examples";
 import {
   AreaChart,
@@ -24,6 +25,15 @@ import { examples as fileExamples } from "@gpuixui/files/examples";
 import { examples as fxExamples } from "@gpuixui/fx/examples";
 import { examples as mediaExamples } from "@gpuixui/media/examples";
 import {
+  Button,
+  Checkbox,
+  Input,
+  RadioGroup,
+  Slider,
+  Switch,
+  ToggleGroup,
+} from "@gpuixui/primitives";
+import {
   darkTheme,
   lightTheme,
   platformTheme,
@@ -32,7 +42,13 @@ import {
 import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import * as R from "effect/Record";
-import { createElement, type ComponentType, type ReactNode } from "react";
+import {
+  cloneElement,
+  createElement,
+  isValidElement,
+  type ComponentType,
+  type ReactNode,
+} from "react";
 import type { Take } from "./take.js";
 
 /** One wall tile's canvas, in points; captured at the rig's 2× scale. */
@@ -186,13 +202,20 @@ const charts: Readonly<Record<string, ReactNode>> = {
   treemap: (
     <TreemapChart
       aria-label="The arcs"
-      nodes={TREE}
-      size={205}
+      nodes={ARCS}
+      size={340}
+      height={210}
       legend={false}
     />
   ),
   sankey: (
-    <SankeyChart aria-label="The exam" {...FLOW} size={205} legend={false} />
+    <SankeyChart
+      aria-label="The exam"
+      {...FLOW}
+      size={340}
+      height={210}
+      legend={false}
+    />
   ),
   sunburst: (
     <SunburstChart
@@ -256,6 +279,84 @@ const registry: Readonly<Record<string, ComponentType>> = {
   ...mediaExamples,
 };
 
+const STACK = { display: "flex", flexDirection: "column", gap: 14 } as const;
+const ROW = {
+  display: "flex",
+  flexDirection: "row",
+  gap: 10,
+  flexWrap: "wrap",
+} as const;
+
+/** The everyday controls, each a tile of its own at a size that reads on the wall. */
+const controls: Readonly<Record<string, () => ReactNode>> = {
+  buttons: () => (
+    <div style={ROW}>
+      <Button variant="primary">Deploy</Button>
+      <Button variant="secondary">Preview</Button>
+      <Button variant="outline">Cancel</Button>
+      <Button variant="ghost">Skip</Button>
+      <Button variant="destructive">Delete</Button>
+    </div>
+  ),
+  switches: () => (
+    <div style={STACK}>
+      <Switch label="Wi-Fi" defaultChecked />
+      <Switch label="Bluetooth" />
+      <Switch label="Focus mode" defaultChecked />
+    </div>
+  ),
+  checks: () => (
+    <div style={STACK}>
+      <Checkbox label="Hunter License" defaultChecked />
+      <Checkbox label="Restricted areas" defaultChecked />
+      <Checkbox label="Public records" />
+    </div>
+  ),
+  radios: () => (
+    <RadioGroup
+      label="Nen type"
+      defaultValue="enhancer"
+      options={[
+        { value: "enhancer", label: "Enhancer" },
+        { value: "transmuter", label: "Transmuter" },
+        { value: "conjurer", label: "Conjurer" },
+      ]}
+    />
+  ),
+  sliders: () => (
+    <div style={STACK}>
+      <Slider label="Volume" defaultValue={70} style={{ width: 300 }} />
+      <Slider label="Aura" defaultValue={35} style={{ width: 300 }} />
+    </div>
+  ),
+  toggles: () => (
+    <ToggleGroup
+      type="single"
+      label="Range"
+      defaultValue="week"
+      options={[
+        { value: "day", label: "Day" },
+        { value: "week", label: "Week" },
+        { value: "month", label: "Month" },
+      ]}
+    />
+  ),
+  badges: () => (
+    <div style={ROW}>
+      <Badge variant="success">Live</Badge>
+      <Badge variant="danger">Failed</Badge>
+      <Badge variant="outline">Draft</Badge>
+      <Badge>Hunter</Badge>
+    </div>
+  ),
+  inputs: () => (
+    <div style={STACK}>
+      <Input label="Name" placeholder="Gon Freecss" style={{ width: 300 }} />
+      <Input label="Island" placeholder="Whale Island" style={{ width: 300 }} />
+    </div>
+  ),
+};
+
 const both = (
   prefix: string,
   id: string,
@@ -267,8 +368,16 @@ const both = (
 
 /** Every chart type and shipped example, as one capture each, in both modes. */
 export const wallTakes: Readonly<Record<string, Take>> = R.fromEntries([
+  // A fast draw: the film gives each chart under two seconds to land and read.
   ...Arr.flatMap(R.toEntries(charts), ([id, node]) =>
-    both("chart", id, () => node),
+    both("chart", id, () =>
+      isValidElement<{ animationDuration?: number }>(node)
+        ? cloneElement(node, { animationDuration: 800 })
+        : node,
+    ),
+  ),
+  ...Arr.flatMap(R.toEntries(controls), ([id, child]) =>
+    both("tile", id, child),
   ),
   ...Arr.flatMap(R.toEntries(registry), ([id, example]) =>
     both("tile", id, () => createElement(example)),

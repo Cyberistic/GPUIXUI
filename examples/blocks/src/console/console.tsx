@@ -24,12 +24,24 @@ import {
   useToast,
 } from "@gpuixui/components/toast";
 import { Icon } from "@gpuixui/icons";
-import { Button, Separator, Stack, Text } from "@gpuixui/primitives";
+import {
+  Button,
+  IconButton,
+  Separator,
+  Stack,
+  Text,
+} from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import { deploys, sections } from "./data.js";
 
-const Deploys = () => {
+export interface ConsoleProps {
+  /** The appearance, when the host owns it; the toggle shows only then. */
+  readonly dark?: boolean;
+  readonly onDarkChange?: (dark: boolean) => void;
+}
+
+const Deploys = ({ dark, onDarkChange }: ConsoleProps) => {
   const theme = useTheme();
   const toast = useToast();
   return (
@@ -43,24 +55,40 @@ const Deploys = () => {
           <SidebarTrigger />
           <Text role="h3">Deploys</Text>
         </Stack>
-        <Button
-          testId="deploy"
-          variant="primary"
-          onActivate={() => {
-            toast.push({
-              title: "Deploying to Greed Island",
-              description: "Killua's build, 14 files",
-              tone: "info",
-            });
-            toast.push({
-              title: "Greed Island is live",
-              description: "Every check passed",
-              tone: "success",
-            });
-          }}
-        >
-          Deploy
-        </Button>
+        <Stack direction="row" align="center" gap="sm">
+          {dark === undefined ? null : (
+            <IconButton
+              testId="theme"
+              label={dark ? "Use the light theme" : "Use the dark theme"}
+              icon={
+                <Icon
+                  name={dark ? "sun" : "moon"}
+                  size={theme.iconSize.sm}
+                  color={theme.colors.foreground}
+                />
+              }
+              onActivate={() => onDarkChange?.(!dark)}
+            />
+          )}
+          <Button
+            testId="deploy"
+            variant="primary"
+            onActivate={() => {
+              toast.push({
+                title: "Deploying to Greed Island",
+                description: "Killua's build, 14 files",
+                tone: "info",
+              });
+              toast.push({
+                title: "Greed Island is live",
+                description: "Every check passed",
+                tone: "success",
+              });
+            }}
+          >
+            Deploy
+          </Button>
+        </Stack>
       </Stack>
       <Separator orientation="horizontal" />
       {Arr.map(deploys, (deploy) => (
@@ -90,7 +118,7 @@ const Deploys = () => {
 };
 
 /** The console, as a window's (or a terminal's) whole content. */
-export const Console = () => {
+export const Console = ({ dark, onDarkChange }: ConsoleProps = {}) => {
   const theme = useTheme();
   return (
     <ToastProvider>
@@ -132,7 +160,10 @@ export const Console = () => {
             </SidebarContent>
           </Sidebar>
           <SidebarInset>
-            <Deploys />
+            <Deploys
+              {...(dark === undefined ? {} : { dark })}
+              {...(onDarkChange === undefined ? {} : { onDarkChange })}
+            />
           </SidebarInset>
         </SidebarProvider>
         <ToastViewport />

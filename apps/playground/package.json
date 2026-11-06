@@ -36,6 +36,8 @@
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@gpuixui/config": "workspace:*",
+    "@orpc/client": "^1.16.1",
+    "@orpc/server": "^1.16.1",
     "@tanstack/ai": "^1.2.0",
     "@tanstack/ai-react": "^1.0.2",
     "@tanstack/db": "^1.0.0-rc.1.3",

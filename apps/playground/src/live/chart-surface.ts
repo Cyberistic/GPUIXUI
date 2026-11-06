@@ -102,7 +102,7 @@ export const CHART_SURFACE_POINTS = {
   barsFirst: { x: 22, y: 110 },
   barsSecond: { x: 52, y: 110 },
   /** Above the 32-bar, inside the 60-bar the press paints. */
-  barsGrowth: { x: 22, y: 70 },
+  barsGrowth: { x: 22, y: 30 },
   /** The stack's floor series and the series above it, same category. */
   stackedLower: { x: 37, y: 110 },
   stackedUpper: { x: 37, y: 70 },

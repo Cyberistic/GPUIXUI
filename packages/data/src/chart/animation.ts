@@ -80,7 +80,7 @@ export const signatureOf = (
     "|",
   );
 
-const now = (): number => Date.now();
+const now = (): number => performance.now();
 
 const useTween = <A>(
   value: A,

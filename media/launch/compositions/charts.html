@@ -25,47 +25,86 @@
       width: 100%;
       height: auto;
     }
-    #root .stage {
+    #root {
+      background: #09090b;
+    }
+    #root .out {
+      position: absolute;
+      left: 110px;
+      top: 186px;
+      width: 1700px;
+      border-radius: 18px;
+    }
+    #root .rows {
       position: absolute;
       inset: 0;
-      perspective: 2600px;
-      perspective-origin: 50% 42%;
     }
-    #root .plane {
+    #root .rw {
       position: absolute;
-      left: 960px;
-      top: 540px;
-      width: 0;
-      height: 0;
-      transform-style: preserve-3d;
+      left: 0;
+      display: flex;
+      gap: 20px;
     }
-    #root .tile {
-      position: absolute;
+    #root .cd {
+      position: relative;
+      flex: none;
+      width: 420px;
+      height: 280px;
+      border-radius: 18px;
       overflow: hidden;
-      border-radius: 16px;
-      background: #fff;
-      box-shadow:
-        0 0 0 1px rgba(29, 29, 31, 0.07),
-        0 18px 40px -22px rgba(29, 29, 31, 0.4);
+      background: #1b1b1f;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
     }
-    #root .tile img,
-    #root .tile video {
+    #root .cd video,
+    #root .cd img {
       position: absolute;
       left: 0;
       top: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
     }
-    #root .tile b {
+    #root .cd b {
       position: absolute;
-      left: 18px;
-      top: 12px;
+      left: 16px;
+      top: 10px;
       font:
-        500 19px Inter,
+        500 18px Inter,
         sans-serif;
-      color: #6e6e73;
-      letter-spacing: -0.01em;
+      color: #a1a1aa;
+    }
+    #root .band {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 170px;
+      background: linear-gradient(#09090b 66%, rgba(9, 9, 11, 0));
+    }
+    #root .say {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 58px;
+      text-align: center;
+      font:
+        400 62px Inter,
+        sans-serif;
+      letter-spacing: -0.025em;
+      color: #fff;
+    }
+    #root .next {
+      position: absolute;
+      inset: 0;
+      clip-path: circle(0px at 960px 560px);
+    }
+    #root .next > img {
+      position: absolute;
+      left: 300px;
+      top: 196px;
+      width: 1320px;
+      height: 705px;
+      border-radius: 19px;
+      box-shadow: 0 60px 100px -36px rgba(0, 0, 0, 0.6);
     }
     #root .desk {
       position: absolute;
@@ -79,17 +118,6 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-    }
-    #root .gnome-wall {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        160deg,
-        #1c71d8 0%,
-        #3584e4 34%,
-        #26a269 68%,
-        #1b5e4a 100%
-      );
     }
     #root .macbar {
       position: absolute;
@@ -218,16 +246,15 @@
       bottom: 14px;
       transform: translateX(-50%);
       display: flex;
-      gap: 12px;
-      padding: 12px;
-      border-radius: 26px;
-      background: rgba(40, 40, 44, 0.82);
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 22px;
+      background: rgba(36, 36, 40, 0.86);
     }
-    #root .dash i {
+    #root .dash img {
       display: block;
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
+      width: 64px;
+      height: 64px;
     }
   </style>
   <div
@@ -236,7 +263,346 @@
     data-width="1920"
     data-height="1080"
   >
-    <div id="c-desk" style="position: absolute; inset: 0; opacity: 0">
+    <img
+      id="c-out"
+      class="out"
+      src="assets/footage/dashboard-v8-59.png"
+      alt=""
+    />
+    <div id="c-rows" class="rows">
+      <div id="c-r0" class="rw" style="top: 150px">
+        <div class="cd">
+          <video
+            id="c-v0-0"
+            class="clip"
+            data-start="0.15"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-area.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s0-0"
+            src="assets/footage/dark-chart-area-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>AreaChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v0-1"
+            class="clip"
+            data-start="0.31"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-bar.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s0-1"
+            src="assets/footage/dark-chart-bar-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>BarChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v0-2"
+            class="clip"
+            data-start="0.47"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-donut.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s0-2"
+            src="assets/footage/dark-chart-donut-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>DonutChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v0-3"
+            class="clip"
+            data-start="0.63"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-treemap.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s0-3"
+            src="assets/footage/dark-chart-treemap-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>TreemapChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v0-4"
+            class="clip"
+            data-start="0.79"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-line.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s0-4"
+            src="assets/footage/dark-chart-line-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>LineChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v0-5"
+            class="clip"
+            data-start="0.95"
+            data-duration="1.8"
+            data-track-index="2"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-radar.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s0-5"
+            src="assets/footage/dark-chart-radar-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>RadarChart</b>
+        </div>
+      </div>
+      <div id="c-r1" class="rw" style="top: 450px">
+        <div class="cd">
+          <video
+            id="c-v1-0"
+            class="clip"
+            data-start="0.25"
+            data-duration="1.8"
+            data-track-index="3"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-candle.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s1-0"
+            src="assets/footage/dark-chart-candle-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>CandleChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v1-1"
+            class="clip"
+            data-start="0.41"
+            data-duration="1.8"
+            data-track-index="3"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-pie.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s1-1"
+            src="assets/footage/dark-chart-pie-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>PieChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v1-2"
+            class="clip"
+            data-start="0.57"
+            data-duration="1.8"
+            data-track-index="3"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-funnel.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s1-2"
+            src="assets/footage/dark-chart-funnel-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>FunnelChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v1-3"
+            class="clip"
+            data-start="0.73"
+            data-duration="1.8"
+            data-track-index="3"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-sankey.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s1-3"
+            src="assets/footage/dark-chart-sankey-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>SankeyChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v1-4"
+            class="clip"
+            data-start="0.89"
+            data-duration="1.8"
+            data-track-index="3"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-stacked.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s1-4"
+            src="assets/footage/dark-chart-stacked-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>StackedBar</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v1-5"
+            class="clip"
+            data-start="1.05"
+            data-duration="1.8"
+            data-track-index="3"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-radial.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s1-5"
+            src="assets/footage/dark-chart-radial-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>RadialChart</b>
+        </div>
+      </div>
+      <div id="c-r2" class="rw" style="top: 750px">
+        <div class="cd">
+          <video
+            id="c-v2-0"
+            class="clip"
+            data-start="0.35"
+            data-duration="1.8"
+            data-track-index="4"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-scatter.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s2-0"
+            src="assets/footage/dark-chart-scatter-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>ScatterChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v2-1"
+            class="clip"
+            data-start="0.51"
+            data-duration="1.8"
+            data-track-index="4"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-composed.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s2-1"
+            src="assets/footage/dark-chart-composed-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>ComposedChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v2-2"
+            class="clip"
+            data-start="0.67"
+            data-duration="1.8"
+            data-track-index="4"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-sunburst.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s2-2"
+            src="assets/footage/dark-chart-sunburst-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>SunburstChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v2-3"
+            class="clip"
+            data-start="0.83"
+            data-duration="1.8"
+            data-track-index="4"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-radial-bar.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s2-3"
+            src="assets/footage/dark-chart-radial-bar-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>RadialBarChart</b>
+        </div>
+        <div class="cd">
+          <video
+            id="c-v2-4"
+            class="clip"
+            data-start="0.99"
+            data-duration="1.8"
+            data-track-index="4"
+            muted
+            playsinline
+            src="assets/footage/dark-chart-sparkline.mp4"
+            style=""
+          ></video
+          ><img
+            id="c-s2-4"
+            src="assets/footage/dark-chart-sparkline-53.png"
+            alt=""
+            style="opacity: 0"
+          /><b>Sparkline</b>
+        </div>
+      </div>
+    </div>
+    <div class="band"></div>
+    <div id="c-say" class="say">and every chart</div>
+    <div id="c-next" class="next">
       <div id="c-mac" class="desk">
         <img class="wall" src="assets/wallpaper/omarchy.jpg" alt="" />
         <div class="macbar">
@@ -255,723 +621,48 @@
           ><i style="background: linear-gradient(#8e8e93, #48484a)"></i>
         </div>
       </div>
-    </div>
-    <div class="stage" data-layout-allow-overflow>
-      <div id="plane" class="plane" data-layout-allow-overflow>
-        <div
-          id="c0"
-          class="tile"
-          style="
-            left: -1044px;
-            top: -567px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c0-v"
-            class="clip"
-            data-start="1.176"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-bar.mp4"
-            style=""
-          ></video
-          ><img
-            id="c0-s"
-            src="assets/footage/chart-bar-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>BarChart</b>
-        </div>
-        <div
-          id="c1"
-          class="tile"
-          style="
-            left: -622px;
-            top: -567px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c1-v"
-            class="clip"
-            data-start="1.053"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/dark-chart-line.mp4"
-            style=""
-          ></video
-          ><img
-            id="c1-s"
-            src="assets/footage/dark-chart-line-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>LineChart</b>
-        </div>
-        <div
-          id="c2"
-          class="tile"
-          style="
-            left: -200px;
-            top: -567px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c2-v"
-            class="clip"
-            data-start="0.903"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-donut.mp4"
-            style=""
-          ></video
-          ><img
-            id="c2-s"
-            src="assets/footage/chart-donut-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>DonutChart</b>
-        </div>
-        <div
-          id="c3"
-          class="tile"
-          style="
-            left: 222px;
-            top: -567px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c3-v"
-            class="clip"
-            data-start="0.986"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-area.mp4"
-            style=""
-          ></video
-          ><img
-            id="c3-s"
-            src="assets/footage/chart-area-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>AreaChart</b>
-        </div>
-        <div
-          id="c4"
-          class="tile"
-          style="
-            left: 644px;
-            top: -567px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c4-v"
-            class="clip"
-            data-start="1.182"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-treemap.mp4"
-            style=""
-          ></video
-          ><img
-            id="c4-s"
-            src="assets/footage/chart-treemap-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>TreemapChart</b>
-        </div>
-        <div
-          id="c5"
-          class="tile"
-          style="
-            left: -1044px;
-            top: -278px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c5-v"
-            class="clip"
-            data-start="1.223"
-            data-duration="1.777"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-radar.mp4"
-            style=""
-          ></video
-          ><b>RadarChart</b>
-        </div>
-        <div
-          id="c6"
-          class="tile"
-          style="
-            left: -622px;
-            top: -278px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c6-v"
-            class="clip"
-            data-start="0.909"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/dark-chart-candle.mp4"
-            style=""
-          ></video
-          ><img
-            id="c6-s"
-            src="assets/footage/dark-chart-candle-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>CandleChart</b>
-        </div>
-        <div
-          id="c7"
-          class="tile"
-          style="
-            left: 222px;
-            top: -278px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c7-v"
-            class="clip"
-            data-start="0.876"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-pie.mp4"
-            style=""
-          ></video
-          ><img
-            id="c7-s"
-            src="assets/footage/chart-pie-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>PieChart</b>
-        </div>
-        <div
-          id="c8"
-          class="tile"
-          style="
-            left: 644px;
-            top: -278px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c8-v"
-            class="clip"
-            data-start="1.122"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-funnel.mp4"
-            style=""
-          ></video
-          ><img
-            id="c8-s"
-            src="assets/footage/chart-funnel-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>FunnelChart</b>
-        </div>
-        <div
-          id="c9"
-          class="tile"
-          style="
-            left: -1044px;
-            top: 11px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c9-v"
-            class="clip"
-            data-start="1.295"
-            data-duration="1.705"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-sankey.mp4"
-            style=""
-          ></video
-          ><b>SankeyChart</b>
-        </div>
-        <div
-          id="c10"
-          class="tile"
-          style="
-            left: -622px;
-            top: 11px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c10-v"
-            class="clip"
-            data-start="1.031"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-stacked.mp4"
-            style=""
-          ></video
-          ><img
-            id="c10-s"
-            src="assets/footage/chart-stacked-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>StackedBar</b>
-        </div>
-        <div
-          id="c11"
-          class="tile"
-          style="
-            left: 222px;
-            top: 11px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c11-v"
-            class="clip"
-            data-start="0.998"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/dark-chart-radial.mp4"
-            style=""
-          ></video
-          ><img
-            id="c11-s"
-            src="assets/footage/dark-chart-radial-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>RadialChart</b>
-        </div>
-        <div
-          id="c12"
-          class="tile"
-          style="
-            left: 644px;
-            top: 11px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c12-v"
-            class="clip"
-            data-start="1.195"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-scatter.mp4"
-            style=""
-          ></video
-          ><img
-            id="c12-s"
-            src="assets/footage/chart-scatter-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>ScatterChart</b>
-        </div>
-        <div
-          id="c13"
-          class="tile"
-          style="
-            left: -1044px;
-            top: 300px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c13-v"
-            class="clip"
-            data-start="1.467"
-            data-duration="1.533"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-composed.mp4"
-            style=""
-          ></video
-          ><b>ComposedChart</b>
-        </div>
-        <div
-          id="c14"
-          class="tile"
-          style="
-            left: -622px;
-            top: 300px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c14-v"
-            class="clip"
-            data-start="1.268"
-            data-duration="1.732"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-sunburst.mp4"
-            style=""
-          ></video
-          ><b>SunburstChart</b>
-        </div>
-        <div
-          id="c15"
-          class="tile"
-          style="
-            left: -200px;
-            top: 300px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c15-v"
-            class="clip"
-            data-start="1.168"
-            data-duration="1.8"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/chart-radial-bar.mp4"
-            style=""
-          ></video
-          ><img
-            id="c15-s"
-            src="assets/footage/chart-radial-bar-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>RadialBarChart</b>
-        </div>
-        <div
-          id="c16"
-          class="tile"
-          style="
-            left: 222px;
-            top: 300px;
-            width: 400px;
-            height: 267px;
-            opacity: 0;
-          "
-        >
-          <video
-            id="c16-v"
-            class="clip"
-            data-start="1.201"
-            data-duration="1.799"
-            data-track-index="2"
-            muted
-            playsinline
-            src="assets/footage/dark-chart-sparkline.mp4"
-            style=""
-          ></video
-          ><b>Sparkline</b>
-        </div>
-        <div
-          id="c-dash"
-          class="tile"
-          style="left: -200px; top: -273px; width: 400px; height: 257px"
-        >
-          <img src="assets/footage/dashboard-v8-59.png" alt="" />
-        </div>
-        <div
-          id="c-set"
-          class="tile"
-          style="
-            left: -200px;
-            top: 37.5px;
-            width: 400px;
-            height: 214px;
-            opacity: 0;
-          "
-        >
-          <img src="assets/footage/settings-v8-0.png" alt="" />
-        </div>
-      </div>
+      <img src="assets/footage/settings-v8-0.png" alt="" />
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.set(
-      "#plane",
-      { scale: 4.25, x: 0.0, y: 806.6, rotationX: 0, rotationZ: 0 },
-      0,
+    tl.to("#c-out", { y: -1100, duration: 0.45, ease: "power3.inOut" }, 0);
+    tl.fromTo(
+      "#c-rows",
+      { y: 1080 },
+      { y: 0, duration: 0.5, ease: "power3.out" },
+      0.02,
     );
+    tl.fromTo("#c-say", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.15);
+    tl.fromTo("#c-r0", { x: 40 }, { x: -780, duration: 3, ease: "none" }, 0);
+    tl.fromTo("#c-r1", { x: -820 }, { x: 0, duration: 3, ease: "none" }, 0);
+    tl.fromTo("#c-r2", { x: -20 }, { x: -400, duration: 3, ease: "none" }, 0);
+    tl.set("#c-s0-0", { opacity: 1 }, 1.91);
+    tl.set("#c-s0-1", { opacity: 1 }, 2.07);
+    tl.set("#c-s0-2", { opacity: 1 }, 2.23);
+    tl.set("#c-s0-3", { opacity: 1 }, 2.39);
+    tl.set("#c-s0-4", { opacity: 1 }, 2.55);
+    tl.set("#c-s0-5", { opacity: 1 }, 2.71);
+    tl.set("#c-s1-0", { opacity: 1 }, 2.01);
+    tl.set("#c-s1-1", { opacity: 1 }, 2.17);
+    tl.set("#c-s1-2", { opacity: 1 }, 2.33);
+    tl.set("#c-s1-3", { opacity: 1 }, 2.49);
+    tl.set("#c-s1-4", { opacity: 1 }, 2.65);
+    tl.set("#c-s1-5", { opacity: 1 }, 2.81);
+    tl.set("#c-s2-0", { opacity: 1 }, 2.11);
+    tl.set("#c-s2-1", { opacity: 1 }, 2.27);
+    tl.set("#c-s2-2", { opacity: 1 }, 2.43);
+    tl.set("#c-s2-3", { opacity: 1 }, 2.59);
+    tl.set("#c-s2-4", { opacity: 1 }, 2.75);
     tl.to(
-      "#plane",
+      "#c-next",
       {
-        scale: 0.84,
-        x: 20,
-        y: 66,
-        ...{ rotationX: 50, rotationZ: -18 },
-        duration: 0.6,
+        clipPath: "circle(1300px at 960px 560px)",
+        duration: 0.42,
         ease: "expo.inOut",
       },
-      0,
+      2.58,
     );
-    tl.to(
-      "#plane",
-      {
-        scale: 0.76,
-        x: -10,
-        y: 48,
-        rotationX: 46,
-        rotationZ: -15,
-        duration: 1.72,
-        ease: "none",
-      },
-      0.6,
-    );
-    tl.fromTo(
-      "#c0",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.756,
-    );
-    tl.to("#c0", { z: 14, duration: 0.08, ease: "power1.out" }, 1.176);
-    tl.to("#c0", { z: 0, duration: 0.14, ease: "power1.in" }, 1.256);
-    tl.set("#c0-s", { opacity: 1 }, 2.936);
-    tl.fromTo(
-      "#c1",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.633,
-    );
-    tl.to("#c1", { z: 14, duration: 0.08, ease: "power1.out" }, 1.053);
-    tl.to("#c1", { z: 0, duration: 0.14, ease: "power1.in" }, 1.133);
-    tl.set("#c1-s", { opacity: 1 }, 2.813);
-    tl.fromTo(
-      "#c2",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.483,
-    );
-    tl.to("#c2", { z: 14, duration: 0.08, ease: "power1.out" }, 0.903);
-    tl.to("#c2", { z: 0, duration: 0.14, ease: "power1.in" }, 0.983);
-    tl.set("#c2-s", { opacity: 1 }, 2.663);
-    tl.fromTo(
-      "#c3",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.566,
-    );
-    tl.to("#c3", { z: 14, duration: 0.08, ease: "power1.out" }, 0.986);
-    tl.to("#c3", { z: 0, duration: 0.14, ease: "power1.in" }, 1.066);
-    tl.set("#c3-s", { opacity: 1 }, 2.746);
-    tl.fromTo(
-      "#c4",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.762,
-    );
-    tl.to("#c4", { z: 14, duration: 0.08, ease: "power1.out" }, 1.182);
-    tl.to("#c4", { z: 0, duration: 0.14, ease: "power1.in" }, 1.262);
-    tl.set("#c4-s", { opacity: 1 }, 2.942);
-    tl.fromTo(
-      "#c5",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.803,
-    );
-    tl.to("#c5", { z: 14, duration: 0.08, ease: "power1.out" }, 1.223);
-    tl.to("#c5", { z: 0, duration: 0.14, ease: "power1.in" }, 1.303);
-    tl.set("#c5-s", { opacity: 1 }, 2.983);
-    tl.fromTo(
-      "#c6",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.489,
-    );
-    tl.to("#c6", { z: 14, duration: 0.08, ease: "power1.out" }, 0.909);
-    tl.to("#c6", { z: 0, duration: 0.14, ease: "power1.in" }, 0.989);
-    tl.set("#c6-s", { opacity: 1 }, 2.669);
-    tl.fromTo(
-      "#c7",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.456,
-    );
-    tl.to("#c7", { z: 14, duration: 0.08, ease: "power1.out" }, 0.876);
-    tl.to("#c7", { z: 0, duration: 0.14, ease: "power1.in" }, 0.956);
-    tl.set("#c7-s", { opacity: 1 }, 2.636);
-    tl.fromTo(
-      "#c8",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.702,
-    );
-    tl.to("#c8", { z: 14, duration: 0.08, ease: "power1.out" }, 1.122);
-    tl.to("#c8", { z: 0, duration: 0.14, ease: "power1.in" }, 1.202);
-    tl.set("#c8-s", { opacity: 1 }, 2.882);
-    tl.fromTo(
-      "#c9",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.875,
-    );
-    tl.to("#c9", { z: 14, duration: 0.08, ease: "power1.out" }, 1.295);
-    tl.to("#c9", { z: 0, duration: 0.14, ease: "power1.in" }, 1.375);
-    tl.set("#c9-s", { opacity: 1 }, 3.055);
-    tl.fromTo(
-      "#c10",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.611,
-    );
-    tl.to("#c10", { z: 14, duration: 0.08, ease: "power1.out" }, 1.031);
-    tl.to("#c10", { z: 0, duration: 0.14, ease: "power1.in" }, 1.111);
-    tl.set("#c10-s", { opacity: 1 }, 2.791);
-    tl.fromTo(
-      "#c11",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.578,
-    );
-    tl.to("#c11", { z: 14, duration: 0.08, ease: "power1.out" }, 0.998);
-    tl.to("#c11", { z: 0, duration: 0.14, ease: "power1.in" }, 1.078);
-    tl.set("#c11-s", { opacity: 1 }, 2.758);
-    tl.fromTo(
-      "#c12",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.775,
-    );
-    tl.to("#c12", { z: 14, duration: 0.08, ease: "power1.out" }, 1.195);
-    tl.to("#c12", { z: 0, duration: 0.14, ease: "power1.in" }, 1.275);
-    tl.set("#c12-s", { opacity: 1 }, 2.955);
-    tl.fromTo(
-      "#c13",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.047,
-    );
-    tl.to("#c13", { z: 14, duration: 0.08, ease: "power1.out" }, 1.467);
-    tl.to("#c13", { z: 0, duration: 0.14, ease: "power1.in" }, 1.547);
-    tl.set("#c13-s", { opacity: 1 }, 3.227);
-    tl.fromTo(
-      "#c14",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.848,
-    );
-    tl.to("#c14", { z: 14, duration: 0.08, ease: "power1.out" }, 1.268);
-    tl.to("#c14", { z: 0, duration: 0.14, ease: "power1.in" }, 1.348);
-    tl.set("#c14-s", { opacity: 1 }, 3.028);
-    tl.fromTo(
-      "#c15",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.748,
-    );
-    tl.to("#c15", { z: 14, duration: 0.08, ease: "power1.out" }, 1.168);
-    tl.to("#c15", { z: 0, duration: 0.14, ease: "power1.in" }, 1.248);
-    tl.set("#c15-s", { opacity: 1 }, 2.928);
-    tl.fromTo(
-      "#c16",
-      { z: 820, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.781,
-    );
-    tl.to("#c16", { z: 14, duration: 0.08, ease: "power1.out" }, 1.201);
-    tl.to("#c16", { z: 0, duration: 0.14, ease: "power1.in" }, 1.281);
-    tl.set("#c16-s", { opacity: 1 }, 2.961);
-    tl.fromTo(
-      "#c-set",
-      { z: 900, opacity: 0 },
-      { z: 0, opacity: 1, duration: 0.36, ease: "power2.in" },
-      1.96,
-    );
-    tl.to(
-      "#plane",
-      {
-        scale: 3.3,
-        x: 0.0,
-        y: -468.3,
-        rotationX: 0,
-        rotationZ: 0,
-        duration: 0.68,
-        ease: "expo.inOut",
-      },
-      2.32,
-    );
-    tl.to("#c0", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c1", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c2", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c3", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c4", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c5", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c6", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c7", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c8", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c9", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c10", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c11", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c12", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c13", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c14", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c15", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c16", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c-dash", { opacity: 0, duration: 0.3 }, 2.5);
-    tl.to("#c-desk", { opacity: 1, duration: 0.4, ease: "power2.out" }, 2.6);
     tl.set({}, {}, 3);
     window.__timelines = window.__timelines || {};
     window.__timelines["charts"] = tl;

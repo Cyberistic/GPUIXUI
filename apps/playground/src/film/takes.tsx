@@ -57,6 +57,7 @@ import { License } from "@gpuixui/blocks/license";
 import { Preferences } from "@gpuixui/blocks/preferences";
 import { MenuBar } from "@gpuixui/blocks/menubar";
 import { Vault } from "@gpuixui/blocks/vault";
+import { shadcnTake } from "./shadcn-scene.js";
 import { wallTakes } from "./wall.js";
 import { capture, type Take, type Waypoint } from "./take.js";
 
@@ -325,8 +326,48 @@ const tap = (testId: string): ReadonlyArray<Waypoint> => [
 
 const typedQuery = (text: string, frame: number) => typing(text, frame, 3);
 
+const watching = (control: string, take: Take): Take => ({
+  ...take,
+  watch: control,
+});
+
+/** The console as the terminal's whole page, its theme a real state of the app. */
+const TerminalConsole = () => {
+  const [dark, setDark] = useState(true);
+  return (
+    <ThemeProvider
+      theme={platformTheme(dark ? darkTheme : lightTheme, "darwin")}
+    >
+      <div style={{ width: 1024, height: 553, display: "flex" }}>
+        <Console dark={dark} onDarkChange={setDark} />
+      </div>
+    </ThemeProvider>
+  );
+};
+
 export const takes: Readonly<Record<string, Take>> = {
   ...wallTakes,
+  "shadcn-v8": shadcnTake,
+  /** Collapse the sidebar, go light, deploy: each from one press, in one take. */
+  "console-v8": {
+    width: 1024,
+    height: 553,
+    frames: 90,
+    view: () => <TerminalConsole />,
+    pointer: [
+      { frame: 0, aim: { x: 640, y: 340 } },
+      { frame: 10, aim: { testId: "sidebar-trigger" } },
+      { frame: 15, aim: { testId: "sidebar-trigger" }, down: true },
+      { frame: 16, aim: { testId: "sidebar-trigger" } },
+      { frame: 28, aim: { testId: "theme" } },
+      { frame: 34, aim: { testId: "theme" }, down: true },
+      { frame: 35, aim: { testId: "theme" } },
+      { frame: 48, aim: { testId: "deploy" } },
+      { frame: 54, aim: { testId: "deploy" }, down: true },
+      { frame: 55, aim: { testId: "deploy" } },
+      { frame: 89, aim: { testId: "deploy", dx: 20, dy: 60 } },
+    ],
+  },
   /** ⌘K: the HUD over nothing, "vault" typed; the film grows it into the app. */
   "launcher-v8": {
     width: 720,
@@ -344,15 +385,19 @@ export const takes: Readonly<Record<string, Take>> = {
       </ThemeProvider>
     ),
     pointer: [{ frame: 0, aim: { testId: "launcher-query" } }],
-    keys: typedQuery("vau", 12),
+    keys: typedQuery("vault", 12),
   },
   /** A wiki link is pressed: the title, the graph and the backlinks all answer. */
   "vault-v8": {
     width: 980,
     height: 620,
-    frames: 60,
+    frames: 45,
     view: () => (
-      <ThemeProvider theme={macWindow}>
+      <ThemeProvider
+        theme={extendTheme(platformTheme(darkTheme, "darwin"), {
+          window: "opaque",
+        })}
+      >
         <div style={{ width: 980, height: 620, display: "flex" }}>
           <Vault platform="darwin" />
           <Lights />
@@ -362,12 +407,12 @@ export const takes: Readonly<Record<string, Take>> = {
     pointer: [
       { frame: 0, aim: { x: 700, y: 560 } },
       { frame: 16, aim: { testId: "link-hatsu" } },
-      { frame: 24, aim: { testId: "link-hatsu" }, down: true },
-      { frame: 25, aim: { testId: "link-hatsu" } },
-      { frame: 42, aim: { testId: "graph-gon" } },
-      { frame: 46, aim: { testId: "graph-gon" }, down: true },
-      { frame: 47, aim: { testId: "graph-gon" } },
-      { frame: 59, aim: { testId: "graph-gon", dx: 30, dy: 30 } },
+      { frame: 16, aim: { testId: "link-hatsu" }, down: true },
+      { frame: 17, aim: { testId: "link-hatsu" } },
+      { frame: 28, aim: { testId: "graph-gon" } },
+      { frame: 32, aim: { testId: "graph-gon" }, down: true },
+      { frame: 33, aim: { testId: "graph-gon" } },
+      { frame: 44, aim: { testId: "graph-gon", dx: 30, dy: 30 } },
     ],
   },
   /** The dashboard's range is pressed on the film's beat and the chart redraws. */
@@ -535,25 +580,28 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 32, keys: "n" },
     ],
   ),
-  "cu-slider": closeUp(
-    <Stack direction="column" gap="sm">
-      <Text role="label">Aura</Text>
-      <Slider
-        testId="c"
-        label="Aura"
-        step={10}
-        defaultValue={20}
-        style={{ width: 372 }}
-      />
-    </Stack>,
-    [
-      { frame: 0, aim: { testId: "c", dx: -60, dy: 90 } },
-      { frame: 16, aim: { testId: "c", dx: -108, dy: 0 } },
-      { frame: 20, aim: { testId: "c", dx: -108, dy: 0 }, down: true },
-      { frame: 44, aim: { testId: "c", dx: 108, dy: 0 }, down: true },
-      { frame: 47, aim: { testId: "c", dx: 108, dy: 0 } },
-      { frame: 59, aim: { testId: "c", dx: 108, dy: 0 } },
-    ],
+  "cu-slider": watching(
+    "c",
+    closeUp(
+      <Stack direction="column" gap="sm">
+        <Text role="label">Aura</Text>
+        <Slider
+          testId="c"
+          label="Aura"
+          step={10}
+          defaultValue={20}
+          style={{ width: 372 }}
+        />
+      </Stack>,
+      [
+        { frame: 0, aim: { testId: "c", dx: -60, dy: 90 } },
+        { frame: 16, aim: { testId: "c", dx: -108, dy: 0 } },
+        { frame: 20, aim: { testId: "c", dx: -108, dy: 0 }, down: true },
+        { frame: 44, aim: { testId: "c", dx: 108, dy: 0 }, down: true },
+        { frame: 47, aim: { testId: "c", dx: 108, dy: 0 } },
+        { frame: 59, aim: { testId: "c", dx: 108, dy: 0 } },
+      ],
+    ),
   ),
 
   /** The console at the terminal's own 1024×576, in the terminal's theme. */
@@ -868,20 +916,20 @@ export const takes: Readonly<Record<string, Take>> = {
 
 const [, , name = "", outDir = ""] = process.argv;
 if (name === "--list") process.stdout.write(R.keys(takes).join("\n"));
-Effect.runSync(
+void Effect.runPromise(
   Option.match(R.get(takes, name), {
     onNone: () =>
       Effect.logError(
         `unknown take "${name}"; one of ${R.keys(takes).join(", ")}`,
       ),
     onSome: (take) =>
-      Effect.sync(() => {
+      Effect.promise(() => {
         mkdirSync(outDir, { recursive: true });
-        return capture(take, outDir).length;
+        return capture(take, outDir);
       }).pipe(
         Effect.flatMap((moves) =>
           Effect.logInfo(
-            `${name}: ${take.frames} frames, ${moves} pointer samples → ${outDir}`,
+            `${name}: ${take.frames} frames, ${moves.length} pointer samples → ${outDir}`,
           ),
         ),
       ),

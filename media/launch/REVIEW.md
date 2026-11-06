@@ -1,13 +1,11 @@
-# REVIEW — v8 render of 2026-11-06
+# REVIEW — v8 render of 2026-11-06, the owner's notes applied
 
-Checked from contact sheets of the rendered file and from frames at 7.6, 18.6 and 25.0 s.
-Viewed as stills only: the motion and the sound have not been watched or heard in real time.
+Checked from contact sheets and single frames of the rendered file. Viewed as stills:
+the motion and the sound have not been watched or heard in real time.
 
-**Picture.** The film opens on the Switch. Every scene change carries an object or a press.
-The wall holds 83 distinct tiles; all 17 chart types draw on landing.
+**Sync.** Slider ticks land on the value's own frames (27, 30, 32, 33, 35, 38; the old
+cues were guessed at 20–36). Keys sound on the typed characters. No whooshes.
 
-**Sync.** Measured per frame from the takes: repaints land on press + 1, where the cues sit.
-
-**Sound.** -17.7 LUFS integrated, -1.0 dBFS peak after mastering.
+**Sound.** -18.0 LUFS integrated, -0.8 dBFS peak after mastering.
 
 **Check.** `npx hyperframes check`: no errors.

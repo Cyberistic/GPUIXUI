@@ -94,7 +94,12 @@ const ChartCard = ({
   return (
     <Card
       variant="outline"
-      style={{ flexGrow: 1, flexBasis: 0, minWidth: 0, padding: theme.spacing.xl }}
+      style={{
+        flexGrow: 1,
+        flexBasis: 0,
+        minWidth: 0,
+        padding: theme.spacing.xl,
+      }}
     >
       <Stack direction="column" gap="md">
         <Stack direction="column" gap="2xs">
@@ -386,7 +391,10 @@ export const Dashboard = () => {
             style={{ padding: theme.spacing.xs }}
           >
             <Avatar name="Ada Lovelace" />
-            <Stack direction="column" style={{ flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
+            <Stack
+              direction="column"
+              style={{ flexGrow: 1, flexBasis: 0, minWidth: 0 }}
+            >
               <Text role="bodyStrong" truncate>
                 Ada Lovelace
               </Text>
@@ -466,7 +474,12 @@ export const Dashboard = () => {
                       <Text role="h1" testId={`kpi-${tile.label}`}>
                         {tile.value}
                       </Text>
-                      <Badge variant={tile.direction === "down" ? "outline" : "success"} size="sm">
+                      <Badge
+                        variant={
+                          tile.direction === "down" ? "outline" : "success"
+                        }
+                        size="sm"
+                      >
                         {`${movement(tile.direction)} ${tile.change}`}
                       </Badge>
                     </Stack>
@@ -476,7 +489,10 @@ export const Dashboard = () => {
                 </Card>
               ))}
             </Stack>
-            <Card variant="outline" style={{ flexShrink: 0, padding: theme.spacing.xl }}>
+            <Card
+              variant="outline"
+              style={{ flexShrink: 0, padding: theme.spacing.xl }}
+            >
               <Stack direction="column" gap="lg">
                 <Stack direction="row" align="start" justify="between">
                   <Stack direction="column" gap="2xs">
@@ -515,7 +531,12 @@ export const Dashboard = () => {
             </Card>
             <Stack direction="row" gap="lg" style={{ flexShrink: 0 }}>
               <ChartCard title="Sources" note="Where the traffic came from">
-                <TreemapChart aria-label="Sources" nodes={sources} size={200} legend={false} />
+                <TreemapChart
+                  aria-label="Sources"
+                  nodes={sources}
+                  size={200}
+                  legend={false}
+                />
               </ChartCard>
               <ChartCard title="Funnel" note="Visits through to paid">
                 <FunnelChart
@@ -528,10 +549,18 @@ export const Dashboard = () => {
                 />
               </ChartCard>
               <ChartCard title="Devices" note="The mix of readers">
-                <DonutChart aria-label="Devices" data={devices} size={200} legend={false} />
+                <DonutChart
+                  aria-label="Devices"
+                  data={devices}
+                  size={200}
+                  legend={false}
+                />
               </ChartCard>
             </Stack>
-            <Card variant="outline" style={{ flexShrink: 0, height: 380, paddingBottom: 0 }}>
+            <Card
+              variant="outline"
+              style={{ flexShrink: 0, height: 380, paddingBottom: 0 }}
+            >
               <Report
                 tab={tab}
                 onTab={(next) => (isTab(next) ? setTab(next) : undefined)}
@@ -548,7 +577,12 @@ export const Dashboard = () => {
                 }
               />
             </Card>
-            <Stack direction="row" align="center" justify="between" style={{ flexShrink: 0 }}>
+            <Stack
+              direction="row"
+              align="center"
+              justify="between"
+              style={{ flexShrink: 0 }}
+            >
               <Text role="caption" tone="muted">
                 {`${String(selected.length)} of ${String(
                   Arr.length(

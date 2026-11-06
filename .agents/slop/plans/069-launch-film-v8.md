@@ -81,3 +81,16 @@ Rendered: 30.000 s, `hyperframes check` 0 errors, -17.7 LUFS, -1.0 dBFS.
 - npm proof: TanStack DB, TanStack AI and Better Auth pass under a real tree. Better Auth's `useSession` does not fetch without `window`; `getSession()` works. react-doctor scans `examples/blocks` (92 files), scoring it 48/100 with 109 issues; not triaged, and its DOM accessibility rules may not apply to native elements.
 - The owner's "TanStack visualizer" is read as TanStack Virtual, the name in the repo README. To confirm.
 - Found on the way: structural charts painted black with no `colors` (fixed, 4 tests fail without it).
+
+## Round two: the owner's notes (2026-11-06)
+
+38.000 s. Order: montage, shadcn, npm, wall, apps, charts, desktops, Omarchy, terminal, stack, end.
+
+- Slider ticks read from the take; every whoosh removed; "vault" typed in full with keys.
+- The wall opens flat on nothing rather than scaling a capture 8×, which was the blur. 60 curated tiles, all light, one swipe to dark.
+- Native `Dashboard` rebuilt to the docs block. Charts have their own scene (three sliding rows).
+- Chart source fixes, each guarded: real area gradients; rounder axis steps; long axes thin their labels; structural charts hold their box (a treemap lost its largest cell) and stop double-counting parents; RadialBar colours by category; radar grid and labels; funnel labels; a stroked sparkline no longer paints a wedge.
+- New: `shadcnTheme` in `@gpuixui/tokens` reads a builder's CSS, so the theme claim is real.
+- Terminal: the whole terminal but the tmux bar is the page; collapse, dark to light, toast. `Console` gained optional `dark`/`onDarkChange`.
+- GNOME: Adwaita wallpaper and GNOME's own icons. oRPC replaces TanStack Form, proven in `npm-proof.test.tsx`.
+- Capture rig: `capture` is async, zero-delay timers stay on the real loop, and only `performance.now` is virtual. Overriding `Date.now` swallowed sidebar and toast presses; the cause inside Effect was not traced, only bisected.

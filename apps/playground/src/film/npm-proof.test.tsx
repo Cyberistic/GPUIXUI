@@ -12,6 +12,7 @@ import { EventType } from "@tanstack/ai";
 import { stream, useChat } from "@tanstack/ai-react";
 import { createCollection, localOnlyCollectionOptions } from "@tanstack/db";
 import { useLiveQuery } from "@tanstack/react-db";
+import { createRouterClient, os } from "@orpc/server";
 import { createAuthClient } from "better-auth/react";
 import * as Arr from "effect/Array";
 import { afterEach, describe, expect, it } from "vitest";
@@ -111,6 +112,20 @@ describe("the npm line", () => {
     };
     mount(<Chat />);
     expect(await settled("chat", "Nen?|Ten")).toBe("Nen?|Ten");
+  });
+
+  it("oRPC: a typed procedure's answer paints the tree", async () => {
+    const licensed = os.handler(() => "Gon is licensed");
+    const client = createRouterClient({ licensed });
+    const License = () => {
+      const [text, setText] = useState("");
+      useEffect(() => {
+        void client.licensed().then(setText);
+      }, []);
+      return <div testId="license" aria-label={text} />;
+    };
+    mount(<License />);
+    expect(await settled("license", "Gon is licensed")).toBe("Gon is licensed");
   });
 
   it("Better Auth: the client fetches the session and paints the user", async () => {

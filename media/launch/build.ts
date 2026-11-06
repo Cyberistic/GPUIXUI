@@ -10,6 +10,11 @@
  * `stage/README.md`). The film draws only the ground, the lines, the desktops
  * around the windows, the terminal shell, the cursor and the end card.
  */
+import {
+  CHARS_PER_FRAME as CODE_SPEED,
+  CODE,
+  THEMES as BUILDER_THEMES,
+} from "../../apps/playground/src/film/shadcn-timeline.ts";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 
@@ -18,6 +23,7 @@ const HERE = new URL(".", import.meta.url).pathname;
 const at = (path: string) => `${HERE}${path}`;
 const GROUND = "#F4F2EE";
 const INK = "#1D1D1F";
+const INK_DARK = "#09090B";
 
 /* ------------------------------------------------------------ footage */
 
@@ -206,233 +212,248 @@ const montage: Scene = {
   }).join("\n    "),
 };
 
-/* ------------------------------------------------------------ the tilted screen */
+/* ------------------------------------------------------------ 4–9: it's just shadcn */
 
-/** A tile on a tilted plane; coordinates are its centre, in plane pixels. */
-interface PlaneTile {
-  readonly id: string;
-  readonly x: number;
-  readonly y: number;
-  readonly w: number;
-  readonly h: number;
-  /** Scene seconds at which it lands. */
-  readonly land: number;
-  /** A take drawn as a still, or played from its landing frame. */
-  readonly take?: string;
-  readonly play?: boolean;
-  readonly src?: string;
-  readonly label?: string;
-}
+const SHADCN_START = 4;
+const SHADCN_LENGTH = 5;
+const SHADCN_F = (frame: number) => frame / FPS;
+const CODE_BG = "#101014";
+const highlight = (text: string) =>
+  text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/(&lt;\/?)([A-Z]\w*)/g, "$1<b>$2</b>")
+    .replace(/("[^"]*")/g, "<i>$1</i>")
+    .replace(/(--[a-z-]+)/g, "<b>$1</b>")
+    .replace(/(oklch\([^)]*\)|\d+(?:\.\d+)?rem)/g, "<i>$1</i>");
+const shadcn: Scene = {
+  id: "shadcn",
+  start: SHADCN_START,
+  duration: SHADCN_LENGTH,
+  css: `#root .code { position:absolute; left:0; top:0; width:960px; height:1080px; background:${CODE_BG}; padding:96px 0 0 64px; font:500 27px/46px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
+    #root .code b { font-weight:500; color:#7aa2f7; } #root .code i { font-style:normal; color:#9ece6a; }
+    #root .ln { height:46px; overflow:hidden; white-space:pre; width:0; }
+    #root .css { position:absolute; left:64px; top:96px; white-space:pre; opacity:0; }
+    #root .file { position:absolute; left:64px; top:36px; font:500 22px Inter, sans-serif; color:#71717a; }
+    #root .say { position:absolute; left:64px; right:64px; bottom:60px; font:400 52px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }
+    #root .right { position:absolute; left:960px; top:0; width:960px; height:1080px; overflow:hidden; }
+    #root .right video { position:relative; display:block; width:100%; height:100%; }`,
+  body: `    <div id="s-right" class="right">${video("s-v", footage("shadcn-v8", 12), 0, SHADCN_LENGTH, "", 1)}</div>
+    <div id="s-code" class="code">
+      <div id="s-file" class="file">license.tsx</div>
+      <div id="s-lines">${CODE.map((line, i) => `<div id="s-l${i}" class="ln">${highlight(line.text)}</div>`).join("")}</div>
+      ${BUILDER_THEMES.map((theme, i) => `<div id="s-c${i}" class="css">${highlight(theme.css)}</div>`).join("\n      ")}
+      <div id="s-say0" class="say">it's just shadcn</div>
+      <div id="s-say1" class="say" style="opacity:0">paste a theme from the shadcn builder</div>
+    </div>`,
+  script: `tl.fromTo("#s-code",{x:-960},{x:0,duration:0.42,ease:"power3.out"},0);
+    tl.fromTo("#s-right",{opacity:0},{opacity:1,duration:0.3},0.08);
+    ${CODE.flatMap((line, i) =>
+      Array.from(
+        { length: Math.ceil(line.text.length / CODE_SPEED) },
+        (_, n) =>
+          `tl.set("#s-l${i}",{width:"${Math.min(line.text.length, (n + 1) * CODE_SPEED)}ch"},${SHADCN_F(line.frame + n).toFixed(3)});`,
+      ),
+    ).join("")}
+    ${BUILDER_THEMES.map(
+      (theme, i) =>
+        `tl.set("#s-lines",{opacity:0},${SHADCN_F(theme.frame).toFixed(3)});
+    ${i > 0 ? `tl.set("#s-c${i - 1}",{opacity:0},${SHADCN_F(theme.frame).toFixed(3)});` : ""}
+    tl.set("#s-c${i}",{opacity:1},${SHADCN_F(theme.frame).toFixed(3)});`,
+    ).join("\n    ")}
+    tl.set("#s-file",{textContent:"globals.css"},${SHADCN_F(BUILDER_THEMES[0]!.frame).toFixed(3)});
+    tl.set("#s-say0",{opacity:0},${SHADCN_F(BUILDER_THEMES[0]!.frame).toFixed(3)});
+    tl.set("#s-say1",{opacity:1},${SHADCN_F(BUILDER_THEMES[0]!.frame).toFixed(3)});`,
+};
 
-const lastTakeFrame = 53;
-const TILE_MEDIA = 1.8;
-const DROP = 0.42;
+/* ------------------------------------------------------------ 9–12: the packages */
 
-const planeCss = `#root .stage { position:absolute; inset:0; perspective:2600px; perspective-origin:50% 42%; }
-    #root .plane { position:absolute; left:960px; top:540px; width:0; height:0; transform-style:preserve-3d; }
-    #root .tile { position:absolute; overflow:hidden; border-radius:16px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 18px 40px -22px rgba(29,29,31,.4); }
-    #root .tile img, #root .tile video { position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; }
-    #root .tile b { position:absolute; left:18px; top:12px; font:500 19px Inter, sans-serif; color:#6e6e73; letter-spacing:-0.01em; }`;
+const PACKAGES = [
+  [
+    ["TanStack DB", "tanstack"],
+    ["TanStack AI", "tanstack"],
+    ["TanStack Hotkeys", "tanstack"],
+    ["TanStack Virtual", "tanstack"],
+    ["TanStack Table", "tanstack"],
+  ],
+  [
+    ["Effect", "effect"],
+    ["Better Auth", "better-auth"],
+    ["oRPC", "orpc"],
+    ["react-doctor", ""],
+    ["and more", ""],
+  ],
+] as const;
+const PKG_START = SHADCN_START + SHADCN_LENGTH;
+const PKG_LENGTH = 3;
+const chip = (name: string, logo: string, id: string) =>
+  `<div id="${id}" class="chip">${logo === "" ? `<i></i>` : `<img src="assets/logos/${logo}.svg" alt="">`}<span>${name}</span></div>`;
+const npm: Scene = {
+  id: "npm",
+  start: PKG_START,
+  duration: PKG_LENGTH,
+  css: `#root .row { position:absolute; left:0; right:0; display:flex; justify-content:center; gap:16px; white-space:nowrap; }
+    #root .chip { display:flex; align-items:center; gap:16px; height:100px; padding:0 30px; border-radius:20px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 16px 34px -20px rgba(29,29,31,.4); font:500 36px Inter, sans-serif; letter-spacing:-0.02em; color:${INK}; }
+    #root .chip img { width:40px; height:40px; }
+    #root .chip i { display:block; width:26px; height:26px; border-radius:7px; background:#c7c7cc; }
+    #root .out { position:absolute; inset:0; }
+    #root .out .a { position:absolute; left:0; top:0; width:960px; height:1080px; background:${CODE_BG}; }
+    #root .out img { position:absolute; left:960px; top:0; width:960px; height:1080px; }`,
+  body: `    ${PACKAGES.map(
+    (row, r) =>
+      `<div id="n-row${r}" class="row" style="top:${r === 0 ? 300 : 690}px">${row.map(([name, logo], i) => chip(name, logo, `n-${r}-${i}`)).join("")}</div>`,
+  ).join("\n    ")}
+    <div id="n-out" class="out"><div class="a"></div><img src="${still("shadcn-v8", 149)}" alt=""></div>`,
+  script: `tl.to("#n-out",{y:-1090,duration:0.42,ease:"expo.inOut"},0);
+    tl.fromTo("#n-row0",{x:24},{x:-24,duration:${PKG_LENGTH},ease:"none"},0);
+    tl.fromTo("#n-row1",{x:-24},{x:24,duration:${PKG_LENGTH},ease:"none"},0);
+    ${PACKAGES.flatMap((row, r) =>
+      row.map(
+        (_, i) =>
+          `tl.fromTo("#n-${r}-${i}",{y:${r === 0 ? -60 : 60},opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.28,ease:"back.out(1.8)"},${(0.3 + r * 0.14 + i * 0.16).toFixed(2)});`,
+      ),
+    ).join("\n    ")}`,
+};
 
-const planeBody = (
-  tiles: ReadonlyArray<PlaneTile>,
-  duration: number,
-  extra = "",
-): string => `    <div class="stage" data-layout-allow-overflow>
-      <div id="plane" class="plane" data-layout-allow-overflow>
-${tiles
-  .map((tile) => {
-    const box = `left:${tile.x - tile.w / 2}px;top:${tile.y - tile.h / 2}px;width:${tile.w}px;height:${tile.h}px`;
-    const remaining = duration - tile.land;
-    const settled =
-      tile.take === undefined ? "" : still(tile.take, lastTakeFrame);
-    const picture =
-      tile.src !== undefined
-        ? `<img src="${tile.src}" alt="">`
-        : tile.play === true
-          ? `${video(`${tile.id}-v`, footage(tile.take ?? "", 18), tile.land, Math.min(TILE_MEDIA, remaining), "", 2)}${remaining > TILE_MEDIA ? `<img id="${tile.id}-s" src="${settled}" alt="" style="opacity:0">` : ""}`
-          : `<img src="${settled}" alt="">`;
-    return `        <div id="${tile.id}" class="tile" style="${box};opacity:0">${picture}${tile.label === undefined ? "" : `<b>${tile.label}</b>`}</div>`;
-  })
-  .join("\n")}
-${extra}
-      </div>
-    </div>`;
-
-/** Each tile falls from above the plane and settles with a small give. */
-const planeDrops = (tiles: ReadonlyArray<PlaneTile>): string =>
-  tiles
-    .map(
-      (tile) =>
-        `tl.fromTo("#${tile.id}",{z:820,opacity:0},{z:0,opacity:1,duration:${DROP},ease:"power2.in"},${(tile.land - DROP).toFixed(3)});tl.to("#${tile.id}",{z:14,duration:0.08,ease:"power1.out"},${tile.land.toFixed(3)});tl.to("#${tile.id}",{z:0,duration:0.14,ease:"power1.in"},${(tile.land + 0.08).toFixed(3)});${tile.play === true ? `tl.set("#${tile.id}-s",{opacity:1},${(tile.land + TILE_MEDIA - 0.04).toFixed(3)});` : ""}`,
-    )
-    .join("\n    ");
-
-/** A stable scatter for a tile's index. */
-const jitter = (i: number): number => ((i * 2654435761) % 1000) / 1000;
-
-const TILT = { rotationX: 50, rotationZ: -18 };
-
-/* ------------------------------------------------------------ 4–8: the wall */
+/* ------------------------------------------------------------ 12–16: the tilted screen */
 
 const WALL_TAKES = [
   "calendar",
-  "table",
-  "chat",
-  "code-editor",
-  "form",
+  "buttons",
+  "tabs",
+  "code-block",
+  "switches",
   "kanban",
   "file-tree",
   "diagram",
   "timeline",
-  "media-player",
-  "tabs",
-  "toast",
-  "date-picker",
-  "diff-viewer",
+  "badges",
   "accordion",
-  "avatar-group",
+  "date-picker",
+  "checks",
+  "diff-viewer",
+  "alert",
+  "avatar",
   "stepper",
   "log-viewer",
   "card",
   "progress",
   "markdown-editor",
   "qr-code",
-  "inset-group",
+  "radios",
   "tag-input",
   "time-picker",
-  "virtual-table",
-  "message",
+  "field",
+  "sliders",
   "keyboard-shortcuts",
-  "alert",
+  "toggles",
   "property-panel",
   "gradient-text",
-  "sidebar",
-  "code-block",
+  "inset-group",
+  "item",
   "frozen-table",
-  "multi-step-form",
-  "image-preview",
-  "list",
+  "command-menu",
+  "crop-area",
+  "inputs",
   "drop-zone",
   "search-input",
-  "item",
-  "hexagon",
-  "expandable-rows",
-  "color-picker",
-  "tree",
-  "slider",
-  "theme-toggler",
-  "scroll-fade",
-  "toggle-group",
-  "surfaces",
-  "shine-button",
-  "input-group",
-  "crop-area",
-  "field",
-  "reveal",
-  "bubble",
-  "user-menu",
   "pinned-list",
-  "command-menu",
-  "sliding-number",
-  "fieldset",
-  "aspect-ratio",
-  "breadcrumb",
-  "carousel",
-  "collapsible",
-  "combobox",
+  "expandable-rows",
   "confirm-dialog",
-  "context-menu",
-  "copy-button",
-  "countdown",
-  "counting-number",
-  "disclosure",
-  "drawer",
-  "dropdown-menu",
-  "empty-state",
-  "glyph",
   "highlight-text",
-  "hotkey-recorder",
+  "avatar-group",
+  "slider",
+  "combobox",
+  "search-replace",
+  "toggle-group",
+  "badge",
+  "media-player",
+  "popover",
   "hover-card",
-  "image-zoom",
-  "inline-edit",
+  "user-menu",
+  "scroll-fade",
   "message-scroller",
-  "mention-input",
-  "motion-grid",
-] as const;
-const WALL_LIVE = new Set([
-  "toast",
-  "progress",
-  "sliding-number",
-  "reveal",
-  "shine-button",
-  "gradient-text",
-  "hexagon",
   "chat",
-  "timeline",
-  "form",
-  "stepper",
-  "accordion",
-]);
-const CELL = { w: 400, h: 267, gap: 22 };
-const WALL_COLS = 12;
-const WALL_ROWS = 7;
-const cellX = (col: number, cols: number) =>
-  (col - (cols - 1) / 2) * (CELL.w + CELL.gap);
-const cellY = (row: number, rows: number) =>
-  (row - (rows - 1) / 2) * (CELL.h + CELL.gap);
-const WALL_CENTRE = { col: 6, row: 3 };
+  "segmented-control",
+  "preview-card",
+  "pagination",
+  "list",
+] as const;
+const WALL_START = PKG_START + PKG_LENGTH;
 const WALL_LENGTH = 4;
-const wallCells = Array.from({ length: WALL_ROWS * WALL_COLS }, (_, i) => ({
-  col: i % WALL_COLS,
-  row: Math.floor(i / WALL_COLS),
-})).filter(
-  ({ col, row }) => col !== WALL_CENTRE.col || row !== WALL_CENTRE.row,
-);
-const WALL_ORIGIN = {
-  x: cellX(WALL_CENTRE.col, WALL_COLS),
-  y: cellY(WALL_CENTRE.row, WALL_ROWS),
-};
-const reach = Math.hypot(6 * (CELL.w + CELL.gap), 3 * (CELL.h + CELL.gap));
-const wallTiles: ReadonlyArray<PlaneTile> = WALL_TAKES.map((name, i) => {
-  const cell = wallCells[i]!;
-  const x = cellX(cell.col, WALL_COLS);
-  const y = cellY(cell.row, WALL_ROWS);
-  const dist = Math.hypot(x - WALL_ORIGIN.x, y - WALL_ORIGIN.y) / reach;
-  return {
-    id: `t${i}`,
-    take: `${i % 4 === 2 ? "dark-" : ""}tile-${name}`,
-    play: WALL_LIVE.has(name),
-    x,
-    y,
-    w: CELL.w,
-    h: CELL.h,
-    land: 0.45 + dist * 2.95 + jitter(i) * 0.3,
-  };
+const CELL = { w: 400, h: 267, gap: 22 };
+const WALL_COLS = 10;
+const WALL_ROWS = 6;
+const cellX = (col: number) =>
+  (col - (WALL_COLS - 1) / 2) * (CELL.w + CELL.gap);
+const cellY = (row: number) =>
+  (row - (WALL_ROWS - 1) / 2) * (CELL.h + CELL.gap);
+const PLANE_WIDTH = WALL_COLS * (CELL.w + CELL.gap);
+const jitter = (i: number): number => ((i * 2654435761) % 1000) / 1000;
+const DROP = 0.42;
+/** The swipe to dark: a line crossing the plane left to right. */
+const SWIPE = { at: 2.3, length: 0.75 };
+const swipeAt = (x: number) =>
+  SWIPE.at + ((x + PLANE_WIDTH / 2) / PLANE_WIDTH) * SWIPE.length;
+const tileMeta = WALL_TAKES.map((name, i) => {
+  const col = i % WALL_COLS;
+  const row = Math.floor(i / WALL_COLS);
+  const x = cellX(col);
+  const y = cellY(row);
+  const dist =
+    Math.hypot(col - (WALL_COLS - 1) / 2, row - (WALL_ROWS - 1) / 2) / 5.4;
+  return { id: `t${i}`, name, x, y, land: 0.45 + dist * 1.6 + jitter(i) * 0.2 };
 });
-const CHECKBOX_SCALE = (1080 * PUSH[4]) / CELL.h;
 const wall: Scene = {
   id: "wall",
-  start: 4,
+  start: WALL_START,
   duration: WALL_LENGTH,
-  css: planeCss,
-  body: planeBody(
-    wallTiles,
-    WALL_LENGTH,
-    `<div id="t-check" class="tile" style="left:${WALL_ORIGIN.x - CELL.w / 2}px;top:${WALL_ORIGIN.y - CELL.h / 2}px;width:${CELL.w}px;height:${CELL.h}px;background:${GROUND}"><img src="${still("cu-checkbox", 59)}" alt=""></div>`,
-  ),
-  // The last close-up is the first tile: the plane opens flat at exactly the
-  // montage's framing, then tips back as the rest of the wall falls onto it.
-  script: `tl.set("#plane",{scale:${CHECKBOX_SCALE.toFixed(4)},x:${(-WALL_ORIGIN.x * CHECKBOX_SCALE).toFixed(1)},y:${(-WALL_ORIGIN.y * CHECKBOX_SCALE).toFixed(1)},rotationX:0,rotationZ:0},0);
-    tl.to("#plane",{scale:0.92,x:40,y:90,...${JSON.stringify(TILT)},duration:0.7,ease:"expo.inOut"},0.02);
-    tl.to("#plane",{scale:0.5,x:-30,y:70,rotationX:46,rotationZ:-14,duration:${WALL_LENGTH - 0.72},ease:"none"},0.72);
-    ${planeDrops(wallTiles)}`,
+  css: `#root .stage { position:absolute; inset:0; perspective:2600px; perspective-origin:50% 42%; }
+    #root .plane { position:absolute; left:960px; top:540px; width:0; height:0; transform-style:preserve-3d; }
+    #root .sky { position:absolute; left:-3000px; top:-2000px; width:6000px; height:4000px; background:${INK_DARK}; clip-path:inset(0 100% 0 0); }
+    #root .tile { position:absolute; overflow:hidden; border-radius:16px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 18px 40px -22px rgba(29,29,31,.4); }
+    #root .tile img { position:absolute; left:0; top:0; width:100%; height:100%; }
+    #root .tile img.d { clip-path:inset(0 100% 0 0); }
+    #root .band { position:absolute; left:0; right:0; top:0; height:190px; background:linear-gradient(${GROUND} 62%, rgba(244,242,238,0)); }
+    #root .band.k { background:linear-gradient(${INK_DARK} 62%, rgba(9,9,11,0)); opacity:0; }
+    #root .say { position:absolute; left:0; right:0; top:58px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }`,
+  body: `    <div class="stage" data-layout-allow-overflow>
+      <div id="plane" class="plane" data-layout-allow-overflow>
+        <div id="sky" class="sky"></div>
+${tileMeta
+  .map(
+    (t) =>
+      `        <div id="${t.id}" class="tile" style="left:${t.x - CELL.w / 2}px;top:${t.y - CELL.h / 2}px;width:${CELL.w}px;height:${CELL.h}px;opacity:0"><img src="${still(`tile-${t.name}`, 53)}" alt=""><img id="${t.id}-d" class="d" src="${still(`dark-tile-${t.name}`, 53)}" alt=""></div>`,
+  )
+  .join("\n")}
+      </div>
+    </div>
+    <div class="band"></div><div id="w-band" class="band k"></div>
+    <div id="w-say" class="say">every component you need</div>`,
+  script: `tl.set("#plane",{scale:0.74,x:0,y:90,rotationX:50,rotationZ:-18},0);
+    tl.to("#plane",{scale:0.62,x:-30,y:70,rotationX:46,rotationZ:-14,duration:${WALL_LENGTH},ease:"none"},0);
+    ${tileMeta
+      .map(
+        (t) =>
+          `tl.fromTo("#${t.id}",{z:820,opacity:0},{z:0,opacity:1,duration:${DROP},ease:"power2.in"},${(t.land - DROP).toFixed(3)});tl.to("#${t.id}-d",{clipPath:"inset(0 0% 0 0)",duration:${((CELL.w / PLANE_WIDTH) * SWIPE.length).toFixed(3)},ease:"none"},${swipeAt(t.x - CELL.w / 2).toFixed(3)});`,
+      )
+      .join("\n    ")}
+    tl.to("#sky",{clipPath:"inset(0 0% 0 0)",duration:${SWIPE.length},ease:"none"},${SWIPE.at});
+    tl.fromTo("#w-band",{opacity:0},{opacity:1,duration:0.3},${(SWIPE.at + SWIPE.length * 0.35).toFixed(2)});
+    tl.to("#w-say",{color:"#ffffff",duration:0.2},${(SWIPE.at + SWIPE.length * 0.4).toFixed(2)});
+    tl.set("#w-say",{textContent:"and they all go dark"},${(SWIPE.at + SWIPE.length * 0.5).toFixed(2)});`,
 };
 
-/* ------------------------------------------------------------ 8–13: the apps */
+/* ------------------------------------------------------------ 16–20: the apps */
 
-const APPS = { start: 8, length: 5, launcherFor: 1, vaultFor: 2 };
+const APPS = {
+  start: WALL_START + WALL_LENGTH,
+  length: 4,
+  launcherFor: 1,
+  vaultFor: 1.4,
+};
 const WIN = { x: 110, y: 186, w: 1700 };
+const DASH_AT = APPS.launcherFor + APPS.vaultFor;
 const cursorOn = (
   take: string,
   id: string,
@@ -446,45 +467,50 @@ const apps: Scene = {
   id: "apps",
   start: APPS.start,
   duration: APPS.length,
-  css: `#root .under { position:absolute; inset:0; }
-    #root .under img { position:absolute; inset:0; width:100%; height:100%; }
-    #root .scrim { position:absolute; inset:0; background:${GROUND}; opacity:0; }
-    #root .win { position:absolute; left:${WIN.x}px; top:${WIN.y}px; width:${WIN.w}px; border-radius:18px; overflow:hidden; box-shadow:0 0 0 1px rgba(29,29,31,.1), 0 50px 90px -40px rgba(29,29,31,.5); opacity:0; }
+  css: `#root { background:${INK_DARK}; }
+    #root .under { position:absolute; inset:0; }
+    #root .under img { position:absolute; inset:0; width:100%; height:100%; clip-path:inset(190px 0 0 0); }
+    #root .scrim { position:absolute; inset:0; background:${INK_DARK}; opacity:0; }
+    #root .win { position:absolute; left:${WIN.x}px; top:${WIN.y}px; width:${WIN.w}px; border-radius:18px; overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,.12), 0 50px 90px -40px #000; opacity:0; }
     #root .win video { position:relative; display:block; width:100%; height:auto; }
-    #root .hud { position:absolute; left:510px; top:270px; width:900px; border-radius:22px; overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,.14), 0 60px 110px -30px rgba(0,0,0,.65); opacity:0; transform-origin:50% 50%; }
+    #root .hud { position:absolute; left:510px; top:270px; width:900px; border-radius:22px; overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,.14), 0 60px 110px -30px #000; opacity:0; transform-origin:50% 50%; }
     #root .hud video { position:relative; display:block; width:100%; height:auto; }
+    #root .say { position:absolute; left:0; right:0; top:62px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; opacity:0; }
     #root .cursor { width:56px; }`,
   body: `    <div class="under"><img src="assets/footage/wall-end.png" alt=""></div>
     <div id="a-scrim" class="scrim"></div>
-    <div id="a-vault" class="win">${video("a-vault-v", footage("vault-v8", 12), APPS.launcherFor, APPS.vaultFor, "", 2)}<div id="a-vc" class="cursor">${CURSOR}</div></div>
-    <div id="a-dash" class="win">${clip("a-dash-v", footage("dashboard-v8", 12), APPS.launcherFor + APPS.vaultFor, 2, 0, "", 3)}<div id="a-dc" class="cursor">${CURSOR}</div></div>
-    <div id="a-hud" class="hud">${video("a-hud-v", footage("launcher-v8", 12), 0, APPS.launcherFor + 0.1, "", 1)}</div>`,
-  script: `tl.to("#a-scrim",{opacity:0.72,duration:0.25,ease:"power2.out"},0);
+    <div id="a-vault" class="win">${video("a-vault-v", footage("vault-v8", 12), APPS.launcherFor, APPS.vaultFor + 0.2, "", 2)}<div id="a-vc" class="cursor">${CURSOR}</div></div>
+    <div id="a-dash" class="win">${clip("a-dash-v", footage("dashboard-v8", 12), DASH_AT - 0.2, 1.8, 0, "", 3)}<div id="a-dc" class="cursor">${CURSOR}</div></div>
+    <div id="a-hud" class="hud">${video("a-hud-v", footage("launcher-v8", 12), 0, APPS.launcherFor + 0.1, "", 1)}</div>
+    <div id="a-say" class="say">real apps, in react</div>`,
+  script: `tl.to("#a-scrim",{opacity:0.78,duration:0.25,ease:"power2.out"},0);
     tl.fromTo("#a-hud",{opacity:0,scale:0.94,y:-16},{opacity:1,scale:1,y:0,duration:0.28,ease:"back.out(1.6)"},0);
     // Enter: the panel grows into the window it opened.
-    tl.to("#a-hud",{scale:2.05,y:190,opacity:0,duration:0.32,ease:"expo.in"},${(APPS.launcherFor - 0.22).toFixed(2)});
-    tl.fromTo("#a-vault",{opacity:0,scale:0.48,y:-60},{opacity:1,scale:1,y:0,duration:0.42,ease:"expo.out"},${APPS.launcherFor.toFixed(2)});
+    tl.to("#a-hud",{scale:1.9,y:190,opacity:0,duration:0.26,ease:"expo.in"},${(APPS.launcherFor - 0.16).toFixed(2)});
+    tl.fromTo("#a-vault",{opacity:0,scale:0.5,y:-60},{opacity:1,scale:1,y:0,duration:0.42,ease:"expo.out"},${APPS.launcherFor.toFixed(2)});
     tl.to("#a-scrim",{opacity:1,duration:0.3},${APPS.launcherFor.toFixed(2)});
+    tl.to("#a-say",{opacity:1,duration:0.25},${APPS.launcherFor.toFixed(2)});
     ${cursorOn("vault-v8", "a-vc", APPS.launcherFor, 0, APPS.vaultFor, WIN.w, 980)}
-    // Three-finger swipe: the next window pushes this one off.
-    tl.to("#a-vault",{x:-1900,duration:0.42,ease:"power3.inOut"},${(APPS.launcherFor + APPS.vaultFor - 0.2).toFixed(2)});
-    tl.set("#a-dash",{opacity:1},${(APPS.launcherFor + APPS.vaultFor - 0.2).toFixed(2)});
-    tl.fromTo("#a-dash",{x:1900},{x:0,duration:0.42,ease:"power3.inOut"},${(APPS.launcherFor + APPS.vaultFor - 0.2).toFixed(2)});
-    // In on the chart for the two range presses, and back out for the handoff.
+    tl.to("#a-vault",{x:-1900,duration:0.42,ease:"power3.inOut"},${(DASH_AT - 0.2).toFixed(2)});
+    tl.set("#a-dash",{opacity:1},${(DASH_AT - 0.2).toFixed(2)});
+    tl.fromTo("#a-dash",{x:1900},{x:0,duration:0.42,ease:"power3.inOut"},${(DASH_AT - 0.2).toFixed(2)});
+    // In on the chart for the two range presses, and back out to hand it over.
     tl.set("#a-dash",{transformOrigin:"78% 27%"},0);
-    tl.to("#a-dash",{scale:1.55,y:-24,duration:0.4,ease:"power3.inOut"},${(APPS.launcherFor + APPS.vaultFor + 0.12).toFixed(2)});
-    tl.to("#a-dash",{scale:1,y:0,duration:0.42,ease:"power3.inOut"},${(APPS.launcherFor + APPS.vaultFor + 1.56).toFixed(2)});
-    ${cursorOn("dashboard-v8", "a-dc", APPS.launcherFor + APPS.vaultFor, 0, 2, WIN.w, 1400)}`,
+    tl.to("#a-dash",{scale:1.45,y:-24,duration:0.36,ease:"power3.inOut"},${(DASH_AT + 0.14).toFixed(2)});
+    tl.to("#a-dash",{scale:1,y:0,duration:0.3,ease:"power3.inOut"},${(APPS.length - 0.3).toFixed(2)});
+    ${cursorOn("dashboard-v8", "a-dc", DASH_AT, 0, 1.6, WIN.w, 1400)}`,
 };
 
-/* ------------------------------------------------------------ 13–16: the charts */
+/* ------------------------------------------------------------ 20–23: the charts */
 
+/** A chart take is 54 frames; its last frame holds after that. */
+const TILE_MEDIA = 1.8;
 const CHARTS = [
-  ["bar", "BarChart"],
-  ["line", "LineChart"],
-  ["donut", "DonutChart"],
   ["area", "AreaChart"],
+  ["bar", "BarChart"],
+  ["donut", "DonutChart"],
   ["treemap", "TreemapChart"],
+  ["line", "LineChart"],
   ["radar", "RadarChart"],
   ["candle", "CandleChart"],
   ["pie", "PieChart"],
@@ -498,57 +524,21 @@ const CHARTS = [
   ["radial-bar", "RadialBarChart"],
   ["sparkline", "Sparkline"],
 ] as const;
-const CHARTS_START = 13;
+const CHARTS_START = APPS.start + APPS.length;
 const CHARTS_LENGTH = 3;
-const CARD = { w: 400, h: 267, gap: 22 };
-const CHART_COLS = 5;
-const CHART_ROWS = 4;
-const SLOTS = Array.from({ length: CHART_COLS * CHART_ROWS }, (_, i) => ({
-  col: i % CHART_COLS,
-  row: Math.floor(i / CHART_COLS),
-}));
-const cardX = (col: number) =>
-  (col - (CHART_COLS - 1) / 2) * (CARD.w + CARD.gap);
-const cardY = (row: number) =>
-  (row - (CHART_ROWS - 1) / 2) * (CARD.h + CARD.gap);
-const DASH_SLOT = { col: 2, row: 1 };
-const SETTINGS_SLOT = { col: 2, row: 2 };
-const chartSlots = SLOTS.filter(
-  ({ col, row }) =>
-    !(col === DASH_SLOT.col && row === DASH_SLOT.row) &&
-    !(col === SETTINGS_SLOT.col && row === SETTINGS_SLOT.row),
-);
-const chartTiles: ReadonlyArray<PlaneTile> = CHARTS.map(([name, label], i) => {
-  const slot = chartSlots[i]!;
-  const dist = Math.hypot(slot.col - DASH_SLOT.col, slot.row - DASH_SLOT.row);
-  return {
-    id: `c${i}`,
-    take: `${i % 5 === 1 ? "dark-" : ""}chart-${name}`,
-    play: true,
-    label,
-    x: cardX(slot.col),
-    y: cardY(slot.row),
-    w: CARD.w,
-    h: CARD.h,
-    land: 0.55 + dist * 0.28 + jitter(i) * 0.14,
-  };
-});
-const DASH_H = Math.round((CARD.w * 900) / 1400);
-const SETTINGS_H = Math.round((CARD.w * 470) / 880);
-const dashTile = { x: cardX(DASH_SLOT.col), y: cardY(DASH_SLOT.row) };
-const settingsTile = {
-  x: cardX(SETTINGS_SLOT.col),
-  y: cardY(SETTINGS_SLOT.row),
-};
-/** The Settings window as the desktops show it. */
+const CARD = { w: 420, h: 280, gap: 20 };
+const ROW_Y = [150, 450, 750];
+const RUN = [
+  [0, 6],
+  [6, 12],
+  [12, 17],
+] as const;
 const SETTINGS_WIN = {
   w: 1320,
   x: 300,
   y: 196,
   h: Math.round((1320 * 470) / 880),
 };
-const DASH_SCALE = WIN.w / CARD.w;
-const SETTINGS_SCALE = SETTINGS_WIN.w / CARD.w;
 
 /* The desktops around one window: wallpaper to the edges and the system's own furniture. */
 const dockTile = (fill: string) => `<i style="background:${fill}"></i>`;
@@ -560,9 +550,16 @@ const DOCK = [
   "linear-gradient(#bf5af2,#5e5ce6)",
   "linear-gradient(#8e8e93,#48484a)",
 ];
+const GNOME_APPS = [
+  "Epiphany",
+  "Nautilus",
+  "Calendar",
+  "Music",
+  "TextEditor",
+  "Settings",
+];
 const desktopCss = `#root .desk { position:absolute; inset:0; overflow:hidden; font-family:Inter, sans-serif; }
     #root .desk > img.wall { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-    #root .gnome-wall { position:absolute; inset:0; background:linear-gradient(160deg,#1c71d8 0%,#3584e4 34%,#26a269 68%,#1b5e4a 100%); }
     #root .macbar { position:absolute; left:0; right:0; top:0; height:34px; display:flex; align-items:center; gap:22px; padding:0 18px; background:rgba(255,255,255,.34); color:#111; font-size:17px; font-weight:500; }
     #root .macbar b { font-weight:700; } #root .macbar span.r { margin-left:auto; }
     #root .dock { position:absolute; left:50%; bottom:12px; transform:translateX(-50%); display:flex; gap:10px; padding:9px 12px; border-radius:24px; background:rgba(255,255,255,.34); box-shadow:0 0 0 1px rgba(255,255,255,.4); }
@@ -578,8 +575,8 @@ const desktopCss = `#root .desk { position:absolute; inset:0; overflow:hidden; f
     #root .gbar .act { padding:3px 13px; border-radius:14px; background:rgba(255,255,255,.18); }
     #root .gbar .clock { position:absolute; left:0; right:0; text-align:center; }
     #root .gbar .sys { margin-left:auto; }
-    #root .dash { position:absolute; left:50%; bottom:14px; transform:translateX(-50%); display:flex; gap:12px; padding:12px; border-radius:26px; background:rgba(40,40,44,.82); }
-    #root .dash i { display:block; width:58px; height:58px; border-radius:50%; }`;
+    #root .dash { position:absolute; left:50%; bottom:14px; transform:translateX(-50%); display:flex; gap:10px; padding:10px 14px; border-radius:22px; background:rgba(36,36,40,.86); }
+    #root .dash img { display:block; width:64px; height:64px; }`;
 const macDesk = (
   id: string,
 ) => `<div id="${id}" class="desk"><img class="wall" src="assets/wallpaper/omarchy.jpg" alt="">
@@ -591,37 +588,67 @@ const winDesk = (
       <div class="winbar"><div class="start"><u></u><u></u><u></u><u></u></div><div class="search">Search</div>${DOCK.map(dockTile).join("")}<div class="tray">9:41 AM<br>11/6/2026</div></div></div>`;
 const gnomeDesk = (
   id: string,
-) => `<div id="${id}" class="desk"><div class="gnome-wall"></div>
+) => `<div id="${id}" class="desk"><img class="wall" src="assets/gnome/adwaita.jpg" alt="">
       <div class="gbar"><span class="act">Activities</span><span class="clock">Fri Nov 6  9:41</span><span class="sys">Wi-Fi  ·  100%</span></div>
-      <div class="dash">${DOCK.map(dockTile).join("")}</div></div>`;
+      <div class="dash">${GNOME_APPS.map((name) => `<img src="assets/gnome/org.gnome.${name}.svg" alt="">`).join("")}</div></div>`;
 
 const charts: Scene = {
   id: "charts",
   start: CHARTS_START,
   duration: CHARTS_LENGTH,
-  css: `${planeCss}\n    ${desktopCss}`,
-  body: `    <div id="c-desk" style="position:absolute;inset:0;opacity:0">${macDesk("c-mac")}</div>
-${planeBody(
-  chartTiles,
-  CHARTS_LENGTH,
-  `<div id="c-dash" class="tile" style="left:${dashTile.x - CARD.w / 2}px;top:${dashTile.y - DASH_H / 2}px;width:${CARD.w}px;height:${DASH_H}px"><img src="${still("dashboard-v8", 59)}" alt=""></div>
-        <div id="c-set" class="tile" style="left:${settingsTile.x - CARD.w / 2}px;top:${settingsTile.y - SETTINGS_H / 2}px;width:${CARD.w}px;height:${SETTINGS_H}px;opacity:0"><img src="${still("settings-v8", 0)}" alt=""></div>`,
-)}`,
-  // In: the dashboard's window shrinks into its slot as the plane tips back.
-  // Out: Settings falls last, and the plane levels until it is the desktop's window.
-  script: `tl.set("#plane",{scale:${DASH_SCALE.toFixed(4)},x:${(-dashTile.x * DASH_SCALE).toFixed(1)},y:${(WIN.y + (WIN.w * 900) / 1400 / 2 - 540 - dashTile.y * DASH_SCALE).toFixed(1)},rotationX:0,rotationZ:0},0);
-    tl.to("#plane",{scale:0.84,x:20,y:66,...${JSON.stringify(TILT)},duration:0.6,ease:"expo.inOut"},0);
-    tl.to("#plane",{scale:0.76,x:-10,y:48,rotationX:46,rotationZ:-15,duration:1.72,ease:"none"},0.6);
-    ${planeDrops(chartTiles)}
-    tl.fromTo("#c-set",{z:900,opacity:0},{z:0,opacity:1,duration:0.36,ease:"power2.in"},1.96);
-    tl.to("#plane",{scale:${SETTINGS_SCALE.toFixed(4)},x:${(-settingsTile.x * SETTINGS_SCALE).toFixed(1)},y:${(SETTINGS_WIN.y + SETTINGS_WIN.h / 2 - 540 - settingsTile.y * SETTINGS_SCALE).toFixed(1)},rotationX:0,rotationZ:0,duration:0.68,ease:"expo.inOut"},2.32);
-    ${[...chartTiles.map((t) => `#${t.id}`), "#c-dash"].map((sel) => `tl.to("${sel}",{opacity:0,duration:0.3},2.5);`).join("")}
-    tl.to("#c-desk",{opacity:1,duration:0.4,ease:"power2.out"},2.6);`,
+  css: `#root { background:${INK_DARK}; }
+    #root .out { position:absolute; left:${WIN.x}px; top:${WIN.y}px; width:${WIN.w}px; border-radius:18px; }
+    #root .rows { position:absolute; inset:0; }
+    #root .rw { position:absolute; left:0; display:flex; gap:${CARD.gap}px; }
+    #root .cd { position:relative; flex:none; width:${CARD.w}px; height:${CARD.h}px; border-radius:18px; overflow:hidden; background:#1b1b1f; box-shadow:0 0 0 1px rgba(255,255,255,.08); }
+    #root .cd video, #root .cd img { position:absolute; left:0; top:0; width:100%; height:100%; }
+    #root .cd b { position:absolute; left:16px; top:10px; font:500 18px Inter, sans-serif; color:#a1a1aa; }
+    #root .band { position:absolute; left:0; right:0; top:0; height:170px; background:linear-gradient(${INK_DARK} 66%, rgba(9,9,11,0)); }
+    #root .say { position:absolute; left:0; right:0; top:58px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }
+    #root .next { position:absolute; inset:0; clip-path:circle(0px at 960px 560px); }
+    #root .next > img { position:absolute; left:${SETTINGS_WIN.x}px; top:${SETTINGS_WIN.y}px; width:${SETTINGS_WIN.w}px; height:${SETTINGS_WIN.h}px; border-radius:19px; box-shadow:0 60px 100px -36px rgba(0,0,0,.6); }
+    ${desktopCss}`,
+  body: `    <img id="c-out" class="out" src="${still("dashboard-v8", 59)}" alt="">
+    <div id="c-rows" class="rows">
+${RUN.map(
+  ([from, to], r) =>
+    `      <div id="c-r${r}" class="rw" style="top:${ROW_Y[r]}px">${CHARTS.slice(
+      from,
+      to,
+    )
+      .map(([name, label], i) => {
+        const land = 0.15 + i * 0.16 + r * 0.1;
+        const take = `dark-chart-${name}`;
+        return `<div class="cd">${video(`c-v${r}-${i}`, footage(take, 18), land, Math.min(TILE_MEDIA, CHARTS_LENGTH - land), "", 2 + r)}${CHARTS_LENGTH - land > TILE_MEDIA ? `<img id="c-s${r}-${i}" src="${still(take, 53)}" alt="" style="opacity:0">` : ""}<b>${label}</b></div>`;
+      })
+      .join("")}</div>`,
+).join("\n")}
+    </div>
+    <div class="band"></div>
+    <div id="c-say" class="say">and every chart</div>
+    <div id="c-next" class="next">${macDesk("c-mac")}<img src="${still("settings-v8", 0)}" alt=""></div>`,
+  script: `tl.to("#c-out",{y:-1100,duration:0.45,ease:"power3.inOut"},0);
+    tl.fromTo("#c-rows",{y:1080},{y:0,duration:0.5,ease:"power3.out"},0.02);
+    tl.fromTo("#c-say",{opacity:0},{opacity:1,duration:0.25},0.15);
+    tl.fromTo("#c-r0",{x:40},{x:-780,duration:${CHARTS_LENGTH},ease:"none"},0);
+    tl.fromTo("#c-r1",{x:-820},{x:0,duration:${CHARTS_LENGTH},ease:"none"},0);
+    tl.fromTo("#c-r2",{x:-20},{x:-400,duration:${CHARTS_LENGTH},ease:"none"},0);
+    ${RUN.flatMap(([from, to], r) =>
+      CHARTS.slice(from, to).flatMap((_, i) => {
+        const land = 0.15 + i * 0.16 + r * 0.1;
+        return CHARTS_LENGTH - land > TILE_MEDIA
+          ? [
+              `tl.set("#c-s${r}-${i}",{opacity:1},${(land + TILE_MEDIA - 0.04).toFixed(3)});`,
+            ]
+          : [];
+      }),
+    ).join("")}
+    tl.to("#c-next",{clipPath:"circle(1300px at 960px 560px)",duration:0.42,ease:"expo.inOut"},${(CHARTS_LENGTH - 0.42).toFixed(2)});`,
 };
 
-/* ------------------------------------------------------------ 16–19: three desktops */
+/* ------------------------------------------------------------ 23–26: three desktops */
 
-const DESK_START = 16;
+const DESK_START = CHARTS_START + CHARTS_LENGTH;
 const DESK_LENGTH = 3;
 const PRESS_WIN = 1;
 const PRESS_LINUX = 2;
@@ -640,20 +667,23 @@ const desktops: Scene = {
   css: `${desktopCss}
     #root .window { position:absolute; left:${SETTINGS_WIN.x}px; top:${SETTINGS_WIN.y}px; width:${SETTINGS_WIN.w}px; height:${SETTINGS_WIN.h}px; box-shadow:0 60px 100px -36px rgba(0,0,0,.6); border-radius:19px; overflow:hidden; }
     #root .window video { position:relative; display:block; width:100%; height:100%; }
+    #root .say { position:absolute; left:0; right:0; top:72px; text-align:center; font:500 62px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.5), 0 4px 40px rgba(0,0,0,.6); }
     #root .cursor { width:56px; z-index:5; }`,
   body: `    ${macDesk("d-mac")}
     <div id="d-win-layer" style="position:absolute;inset:0;clip-path:circle(0px at ${pW.x.toFixed(0)}px ${pW.y.toFixed(0)}px)">${winDesk("d-win")}</div>
     <div id="d-gnome-layer" style="position:absolute;inset:0;clip-path:circle(0px at ${pL.x.toFixed(0)}px ${pL.y.toFixed(0)}px)">${gnomeDesk("d-gnome")}</div>
-    <div id="d-window" class="window">${video("d-v", footage("settings-v8", 12), 0, DESK_LENGTH, "", 2)}<div id="d-cur" class="cursor">${CURSOR}</div></div>`,
+    <div id="d-window" class="window">${video("d-v", footage("settings-v8", 12), 0, DESK_LENGTH, "", 2)}<div id="d-cur" class="cursor">${CURSOR}</div></div>
+    <div id="d-say" class="say">native on mac, windows & linux</div>`,
   // Each press and its wipe share a frame; the window's own chrome is the take's.
-  script: `tl.to("#d-win-layer",{clipPath:"circle(2300px at ${pW.x.toFixed(0)}px ${pW.y.toFixed(0)}px)",duration:0.55,ease:"expo.out"},${(PRESS_WIN + 1 / FPS).toFixed(3)});
+  script: `tl.fromTo("#d-say",{opacity:0},{opacity:1,duration:0.25},0.12);
+    tl.to("#d-win-layer",{clipPath:"circle(2300px at ${pW.x.toFixed(0)}px ${pW.y.toFixed(0)}px)",duration:0.55,ease:"expo.out"},${(PRESS_WIN + 1 / FPS).toFixed(3)});
     tl.to("#d-gnome-layer",{clipPath:"circle(2300px at ${pL.x.toFixed(0)}px ${pL.y.toFixed(0)}px)",duration:0.55,ease:"expo.out"},${(PRESS_LINUX + 1 / FPS).toFixed(3)});
     ${cursorClip("d-cur", "settings-v8", 0, 0, DESK_LENGTH, SETTINGS_WIN.w / (2 * 880))}`,
 };
 
-/* ------------------------------------------------------------ 19–21: Omarchy */
+/* ------------------------------------------------------------ 26–28: Omarchy */
 
-const OM_START = 19;
+const OM_START = DESK_START + DESK_LENGTH;
 const OM_LENGTH = 2;
 const THEMES = ["rose-pine", "gruvbox", "catppuccin-latte", "tokyo"] as const;
 /** The terminal pane in the tiling take, in frame fractions (measured from the still). */
@@ -666,14 +696,19 @@ const omarchy: Scene = {
   css: `#root .full { position:absolute; inset:0; width:100%; height:100%; }
     #root #o-all { position:absolute; inset:0; transform-origin:0 0; }
     #root .t { position:absolute; inset:0; }
+    #root .pill { position:absolute; left:0; right:0; bottom:60px; text-align:center; }
+    #root .pill span { display:inline-block; padding:14px 34px; border-radius:26px; font:400 50px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; background:rgba(12,12,16,.76); }
     #root .fly { position:absolute; left:${SETTINGS_WIN.x}px; top:${SETTINGS_WIN.y}px; width:${SETTINGS_WIN.w}px; border-radius:19px; }
     ${desktopCss}`,
   body: `    ${gnomeDesk("o-gnome")}
     <div id="o-all" style="opacity:0">
-${THEMES.map((t, i) => `      <div id="o-t${i}" class="t" style="clip-path:${i === 0 ? "none" : "circle(0px at 960px 18px)"}"><img class="full" src="${still(`omarchy-${t}`, lastTakeFrame)}" alt=""></div>`).join("\n")}
+${THEMES.map((t, i) => `      <div id="o-t${i}" class="t" style="clip-path:${i === 0 ? "none" : "circle(0px at 960px 18px)"}"><img class="full" src="${still(`omarchy-${t}`, 53)}" alt=""></div>`).join("\n")}
     </div>
-    <img id="o-fly" class="fly" src="${still("settings-v8", 89)}" alt="">`,
-  script: `tl.to("#o-all",{opacity:1,duration:0.3,ease:"power2.out"},0.05);
+    <img id="o-fly" class="fly" src="${still("settings-v8", 89)}" alt="">
+    <div id="o-say" class="pill"><span>follows your omarchy theme</span></div>`,
+  script: `tl.fromTo("#o-say",{opacity:0},{opacity:1,duration:0.2},0.2);
+    tl.to("#o-say",{opacity:0,duration:0.12},${(OM_LENGTH - 0.42).toFixed(2)});
+    tl.to("#o-all",{opacity:1,duration:0.3,ease:"power2.out"},0.05);
     tl.to("#o-fly",{x:-270,y:-110,scale:0.6,opacity:0,duration:0.4,ease:"expo.inOut"},0);
     ${THEMES.slice(1)
       .map(
@@ -685,29 +720,27 @@ ${THEMES.map((t, i) => `      <div id="o-t${i}" class="t" style="clip-path:${i =
     tl.to("#o-all",{x:${(-PANE.x * 1920 * paneZoom).toFixed(1)},y:${(-PANE.y * 1080 * paneZoom + (1080 - PANE.h * 1080 * paneZoom) / 2).toFixed(1)},scale:${paneZoom.toFixed(3)},duration:0.42,ease:"expo.in"},${(OM_LENGTH - 0.42).toFixed(2)});`,
 };
 
-/* ------------------------------------------------------------ 21–24: the terminal */
+/* ------------------------------------------------------------ 28–32: the terminal */
 
-const TERM_START = 21;
-const TERM_LENGTH = 3;
+const TERM_START = OM_START + OM_LENGTH;
+const TERM_LENGTH = 4;
 const SSH = "ssh gon@whale-island";
-const RUN = "nub run dev settings --terminal";
+const RUN_CMD = "nub run dev console --terminal";
 const CHARS_PER_FRAME = 2;
-const TYPE_AT = 0.3;
+const TYPE_AT = 0.1;
 const typeTime = (text: string) =>
   Math.ceil(text.length / CHARS_PER_FRAME) / FPS;
-const T_LOGIN = TYPE_AT + typeTime(SSH) + 0.1;
-const T_RUN = T_LOGIN + 0.1;
-const T_APP = 1.4;
+const T_LOGIN = TYPE_AT + typeTime(SSH) + 0.04;
+const T_RUN = T_LOGIN + 0.03;
+const T_APP = T_RUN + typeTime(RUN_CMD) + 0.07;
 const typed = (id: string, text: string, from: number): string =>
   Array.from(
     { length: Math.ceil(text.length / CHARS_PER_FRAME) },
     (_, i) =>
       `tl.set("#${id}",{textContent:${JSON.stringify(text.slice(0, (i + 1) * CHARS_PER_FRAME))}},${(from + i / FPS).toFixed(3)});`,
   ).join("");
-const APP_W = 1500;
-const APP_H = Math.round((APP_W * 576) / 1024);
-const APP_X = 210;
-const APP_Y = 40;
+const STATUS_H = 44;
+const APP_H = 1080 - STATUS_H;
 const TERM_BG = "#1a1b26";
 const terminal: Scene = {
   id: "terminal",
@@ -715,9 +748,10 @@ const terminal: Scene = {
   duration: TERM_LENGTH,
   css: `#root .shell { position:absolute; inset:0; background:${TERM_BG}; padding:44px 60px; font:500 34px/50px "JetBrains Mono", Menlo, monospace; color:#c0caf5; }
     #root .shell b { font-weight:600; color:#7aa2f7; } #root .shell .dim { color:#565f89; } #root .shell .off { opacity:0; }
-    #root .app { position:absolute; left:${APP_X}px; top:${APP_Y}px; width:${APP_W}px; height:${APP_H}px; opacity:0; overflow:hidden; }
+    #root .say { position:absolute; left:0; right:0; top:440px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }
+    #root .app { position:absolute; left:0; top:0; width:1920px; height:${APP_H}px; opacity:0; overflow:hidden; }
     #root .app video { position:relative; display:block; width:100%; height:100%; }
-    #root .status { position:absolute; left:0; right:0; bottom:0; height:44px; display:flex; align-items:center; gap:24px; padding:0 22px; background:#7aa2f7; color:#1a1b26; font:600 24px "JetBrains Mono", Menlo, monospace; }
+    #root .status { position:absolute; left:0; right:0; bottom:0; height:${STATUS_H}px; display:flex; align-items:center; gap:24px; padding:0 22px; background:#7aa2f7; color:#1a1b26; font:600 24px "JetBrains Mono", Menlo, monospace; }
     #root .status span:last-child { margin-left:auto; }
     #root .cursor { width:56px; }`,
   body: `    <div id="term" class="shell">
@@ -725,81 +759,46 @@ const terminal: Scene = {
       <div id="t-login" class="dim off">Last login: Fri Nov 6 09:41:07 2026 from 10.0.0.2</div>
       <div id="t-runline" class="off"><b>gon@whale-island ~ ❯</b> <span id="t-run"></span></div>
     </div>
-    <div id="t-app" class="app">${video("t-v", footage("term-v8", 12), T_APP, TERM_LENGTH - T_APP, "", 2)}<div id="t-cur" class="cursor">${CURSOR}</div></div>
-    <div class="status"><span>0:nub*</span><span>gon@whale-island</span><span>ssh · 120×40 · 09:41</span></div>`,
+    <div id="t-say" class="say">the same app, over ssh</div>
+    <div id="t-app" class="app">${video("t-v", footage("console-v8", 12), T_APP, TERM_LENGTH - T_APP, "", 2)}<div id="t-cur" class="cursor">${CURSOR}</div></div>
+    <div class="status"><span>0:nub*</span><span>gon@whale-island</span><span>ssh · 09:41</span></div>`,
   script: `${typed("t-ssh", SSH, TYPE_AT)}
     tl.set("#t-login",{opacity:1},${T_LOGIN.toFixed(3)});
     tl.set("#t-runline",{opacity:1},${T_RUN.toFixed(3)});
-    ${typed("t-run", RUN, T_RUN)}
-    tl.set("#term > div",{opacity:0},${T_APP.toFixed(3)});
+    ${typed("t-run", RUN_CMD, T_RUN)}
+    tl.set("#t-say",{opacity:0},${T_APP.toFixed(3)});
     tl.set("#t-app",{opacity:1},${T_APP.toFixed(3)});
-    ${cursorClip("t-cur", "term-v8", T_APP, 0, TERM_LENGTH - T_APP, APP_W / (2 * 1024))}`,
+    ${cursorClip("t-cur", "console-v8", T_APP, 0, TERM_LENGTH - T_APP, 1920 / (2 * 1024))}`,
 };
 
-/* ------------------------------------------------------------ 24–26: the packages */
+/* ------------------------------------------------------------ 32–38: the stack and the end */
 
-const PACKAGES = [
-  [
-    ["TanStack DB", "tanstack"],
-    ["TanStack AI", "tanstack"],
-    ["TanStack Hotkeys", "tanstack"],
-    ["TanStack Virtual", "tanstack"],
-    ["TanStack Table", "tanstack"],
-  ],
-  [
-    ["Effect", "effect"],
-    ["Better Auth", "better-auth"],
-    ["react-doctor", ""],
-    ["TanStack Form", "tanstack"],
-    ["and more", ""],
-  ],
-] as const;
-const PKG_START = 24;
-const PKG_LENGTH = 2;
-const chip = (name: string, logo: string, id: string) =>
-  `<div id="${id}" class="chip">${logo === "" ? `<i></i>` : `<img src="assets/logos/${logo}.svg" alt="">`}<span>${name}</span></div>`;
-const npm: Scene = {
-  id: "npm",
-  start: PKG_START,
-  duration: PKG_LENGTH,
-  css: `#root .row { position:absolute; left:0; right:0; display:flex; justify-content:center; gap:16px; white-space:nowrap; }
-    #root .chip { display:flex; align-items:center; gap:16px; height:100px; padding:0 30px; border-radius:20px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 16px 34px -20px rgba(29,29,31,.4); font:500 36px Inter, sans-serif; letter-spacing:-0.02em; color:${INK}; }
-    #root .chip img { width:40px; height:40px; }
-    #root .chip i { display:block; width:26px; height:26px; border-radius:7px; background:#c7c7cc; }
-    #root .outgoing { position:absolute; inset:0; background:${TERM_BG}; }`,
-  body: `    ${PACKAGES.map(
-    (row, r) =>
-      `<div id="n-row${r}" class="row" style="top:${r === 0 ? 300 : 690}px">${row.map(([name, logo], i) => chip(name, logo, `n-${r}-${i}`)).join("")}</div>`,
-  ).join("\n    ")}
-    <div id="n-out" class="outgoing"><img src="${still("term-v8", 59)}" alt="" style="position:absolute;left:${APP_X}px;top:${APP_Y}px;width:${APP_W}px;height:${APP_H}px"></div>`,
-  // The terminal lifts away on the first stab; a chip lands on every beat after.
-  script: `tl.to("#n-out",{y:-1090,duration:0.34,ease:"expo.inOut"},0);
-    tl.fromTo("#n-row0",{x:24},{x:-24,duration:${PKG_LENGTH},ease:"none"},0);
-    tl.fromTo("#n-row1",{x:-24},{x:24,duration:${PKG_LENGTH},ease:"none"},0);
-    ${PACKAGES.flatMap((row, r) =>
-      row.map(
-        (_, i) =>
-          `tl.fromTo("#n-${r}-${i}",{y:${r === 0 ? -60 : 60},opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.26,ease:"back.out(1.8)"},${(0.1 + r * 0.12 + i * 0.13).toFixed(2)});`,
-      ),
-    ).join("\n    ")}
-    ${PACKAGES.flatMap((row, r) =>
-      row.map(
-        (_, i) =>
-          `tl.to("#n-${r}-${i}",{x:${(2 - i) * 330},y:${r === 0 ? 240 : -150},scale:0.1,opacity:0,duration:0.24,ease:"power3.in"},${(PKG_LENGTH - 0.24).toFixed(2)});`,
-      ),
-    ).join("\n    ")}`,
+const STACK_START = TERM_START + TERM_LENGTH;
+const WORDS = ["GPUI", "React", "shadcn", "Tailwind"] as const;
+const stack: Scene = {
+  id: "stack",
+  start: STACK_START,
+  duration: 2,
+  css: `#root .words { position:absolute; left:0; right:0; top:470px; text-align:center; font:600 104px Inter, sans-serif; letter-spacing:-0.035em; color:${INK}; }
+    #root .words span { opacity:.18; margin:0 26px; }
+    #root .words b { color:#c7c7cc; font-weight:600; }`,
+  body: `    <div class="words">${WORDS.map((w, i) => `<span id="w${i}">${w}</span>`).join("<b>·</b>")}</div>`,
+  script: `tl.fromTo(".words",{scale:1,x:0,y:0},{scale:1.03,x:-10,y:-6,duration:2,ease:"none"},0);
+    ${WORDS.map(
+      (_, i) =>
+        `tl.to("#w${i}",{opacity:1,duration:0.18},${(i * 0.5).toFixed(2)});`,
+    ).join("")}`,
 };
 
-/* ------------------------------------------------------------ 26–30: the end */
-
+const END_START = STACK_START + 2;
 const end: Scene = {
   id: "end",
-  start: 26,
+  start: END_START,
   duration: 4,
   css: `#root .lockup { position:absolute; inset:0; }
-    #root .mark { position:absolute; left:50%; top:290px; width:200px; height:200px; margin-left:-100px; }
-    #root .name { position:absolute; left:0; right:0; top:520px; text-align:center; font:500 92px Inter, sans-serif; letter-spacing:-0.035em; color:${INK}; }
-    #root .url { position:absolute; left:0; right:0; top:648px; text-align:center; font:400 46px Inter, sans-serif; letter-spacing:-0.015em; color:#6e6e73; }
+    #root .mark { position:absolute; left:50%; top:330px; width:190px; height:190px; margin-left:-95px; }
+    #root .name { position:absolute; left:0; right:0; top:560px; text-align:center; font:600 92px Inter, sans-serif; letter-spacing:-0.035em; color:${INK}; }
+    #root .url { position:absolute; left:0; right:0; top:690px; text-align:center; font:500 46px Inter, sans-serif; color:#171717; }
     #root .credit { position:absolute; left:0; right:0; top:950px; text-align:center; font:400 30px Inter, sans-serif; color:#6e6e73; }
     #root .credit u { color:${INK}; text-underline-offset:5px; }`,
   body: `    <div class="lockup">
@@ -808,120 +807,131 @@ const end: Scene = {
       <div id="e-url" class="url">gpuixui.sudokw.com</div>
       <div id="e-credit" class="credit">Made with ☕ by <u>@sudo_kw</u></div>
     </div>`,
-  script: `tl.fromTo("#e-mark",{scale:0.2,opacity:0},{scale:1,opacity:1,duration:0.5,ease:"back.out(1.9)"},0);
-    tl.fromTo("#e-name",{y:18,opacity:0},{y:0,opacity:1,duration:0.4,ease:"power3.out"},0.45);
-    tl.fromTo("#e-url",{y:14,opacity:0},{y:0,opacity:1,duration:0.4,ease:"power3.out"},1);
-    tl.fromTo("#e-credit",{opacity:0},{opacity:1,duration:0.4},1.5);`,
+  script: `tl.fromTo(".lockup",{scale:1,x:0,y:0},{scale:1.03,x:-8,y:-6,duration:4,ease:"none"},0);
+    tl.from("#e-mark",{opacity:0,duration:0.5},0.1);
+    tl.from("#e-name",{opacity:0.35,duration:0.35},0.5);
+    tl.from("#e-url",{opacity:0,duration:0.5},1.1);
+    tl.from("#e-credit",{opacity:0,duration:0.5},1.6);`,
 };
 
 const scenes = [
   montage,
+  shadcn,
+  npm,
   wall,
   apps,
   charts,
   desktops,
   omarchy,
   terminal,
-  npm,
+  stack,
   end,
 ];
-const LENGTH = 30;
+const LENGTH = END_START + 4;
 
 /* ------------------------------------------------------------ lines and sound */
 
-/** One line at a time; `on` is the colour it needs over a full-bleed picture. */
-const LINES: ReadonlyArray<
-  readonly [number, number, string, ("light" | "pill" | "ink")?]
-> = [
-  [4.9, 8, "every component you need"],
-  [9, 13, "real apps, in react"],
-  [13.6, 15.6, "and every chart"],
-  [16.15, 19, "native on mac, windows & linux", "light"],
-  [19.2, 20.6, "follows your omarchy theme", "pill"],
-  [22.4, 24, "the same app, over ssh", "pill"],
-  [24.25, 25.76, "works with your npm packages", "ink"],
+/** One line at a time, where a scene does not carry its own. */
+const LINES: ReadonlyArray<readonly [number, number, string]> = [
+  [PKG_START + 0.5, PKG_START + PKG_LENGTH, "works with your npm packages"],
 ];
 
 const F = 1 / FPS;
-/** A cue: when, which sample, and an optional level (0.9 is the default bed). */
-const keyCues = (
-  text: string,
-  from: number,
-): ReadonlyArray<readonly [number, string, number?]> =>
-  Array.from({ length: Math.ceil(text.length / CHARS_PER_FRAME) }, (_, i) => i)
+/** The frames the slider's value actually changed on, read from its take. */
+const sliderTicks: ReadonlyArray<number> = JSON.parse(
+  readFileSync(at("takes/cu-slider/changes.json"), "utf8"),
+);
+const typedCues = (text: string, from: number, speed: number) =>
+  Array.from({ length: Math.ceil(text.length / speed) }, (_, i) => i)
     .filter((i) => i % 2 === 0)
     .map((i, n) => [from + i / FPS, `key-${n % 4}`, 0.7] as const);
-const SCENE = (scene: Scene, at: number) => scene.start + at;
+/** A cue: when, which sample, and an optional level (0.9 is the default bed). */
 const CUES: ReadonlyArray<readonly [number, string, number?]> = [
+  // A close-up's state changes on release, three frames after its press.
   ...MONTAGE.map(
-    // A close-up's state changes on release, three frames after its press.
     ({ sound }, i) =>
       [i * BEAT_CUT + PRESS_AT - LEAD_IN + 3 * F, sound] as const,
   ),
-  ...[20, 24, 28, 32, 36].map(
-    (frame, n) =>
-      [2 * BEAT_CUT + frame / FPS - LEAD_IN + F, `detent-${n + 2}`] as const,
-  ),
-  // The wall falls in waves: a tick for a landing every few tiles, thinned so a
-  // sound always has a picture.
-  [SCENE(wall, 0), "air", 0.6],
-  ...wallTiles
-    .slice()
-    .sort((a, b) => a.land - b.land)
-    .filter((_, i) => i % 6 === 0)
-    .map((tile, i) => [SCENE(wall, tile.land), `cap-${i % 4}`, 0.5] as const),
-  // ⌘K, three keys, Enter.
-  [8, "press"],
-  ...[12, 15, 18].map((frame, n) => [8 + frame / FPS + F, `key-${n}`] as const),
-  [8 + APPS.launcherFor - 0.22, "thud"],
-  // The take's own presses.
-  ...[24, 46].map(
-    (frame) => [8 + APPS.launcherFor + frame / FPS + F, "press"] as const,
-  ),
-  [8 + APPS.launcherFor + APPS.vaultFor - 0.2, "air", 0.6],
-  ...[15, 30].map(
-    (frame) =>
-      [
-        8 + APPS.launcherFor + APPS.vaultFor + frame / FPS + F,
-        "press",
-      ] as const,
-  ),
-  [CHARTS_START, "air", 0.6],
-  ...chartTiles
-    .slice()
-    .sort((a, b) => a.land - b.land)
-    .filter((_, i) => i % 3 === 0)
+  ...sliderTicks
+    .filter(
+      (frame) => frame / FPS >= LEAD_IN && frame / FPS < LEAD_IN + BEAT_CUT,
+    )
     .map(
-      (tile, i) => [SCENE(charts, tile.land), `glass-${i % 3}`, 0.45] as const,
+      (frame, n) =>
+        [2 * BEAT_CUT + frame / FPS - LEAD_IN + F, `detent-${n + 2}`] as const,
     ),
-  [SCENE(charts, 2.32), "land"],
-  [DESK_START + PRESS_WIN + F, "look-win"],
-  [DESK_START + PRESS_LINUX + F, "look-linux"],
-  [OM_START, "air", 0.5],
-  ...[0, 1, 2].map(
-    (i) => [OM_START + 0.5 + i * 0.4 + F, `glass-${i}`, 1] as const,
+  // The code types, then each pasted theme lands.
+  ...CODE.flatMap((line) =>
+    typedCues(line.text, SHADCN_START + SHADCN_F(line.frame), CODE_SPEED),
   ),
-  [TERM_START - 0.42, "air", 0.6],
-  ...keyCues(SSH, TERM_START + TYPE_AT),
-  [TERM_START + T_LOGIN - 0.03, "press", 0.6],
-  ...keyCues(RUN, TERM_START + T_RUN),
-  [TERM_START + T_APP, "land"],
-  ...[15, 30].map(
-    (frame) => [TERM_START + T_APP + frame / FPS + F, "press"] as const,
+  ...BUILDER_THEMES.map(
+    (theme) => [SHADCN_START + SHADCN_F(theme.frame) + F, "press"] as const,
   ),
-  [PKG_START, "air", 0.6],
   ...PACKAGES.flatMap((row, r) =>
     row.map(
       (_, i) =>
         [
-          PKG_START + 0.1 + r * 0.12 + i * 0.13 + 0.1,
+          PKG_START + 0.3 + r * 0.14 + i * 0.16 + 0.1,
           `cap-${(r + i) % 4}`,
           0.55,
         ] as const,
     ),
   ),
-  [26.03, "mark"],
+  ...tileMeta
+    .slice()
+    .sort((a, b) => a.land - b.land)
+    .filter((_, i) => i % 8 === 0)
+    .map((t, i) => [WALL_START + t.land, `cap-${i % 4}`, 0.45] as const),
+  [WALL_START + SWIPE.at + 0.1, "glass-1", 0.8],
+  // ⌘K, five keys, Enter.
+  [APPS.start, "press"],
+  ...[12, 15, 18, 21, 24].map(
+    (frame, n) => [APPS.start + frame / FPS + F, `key-${n % 4}`] as const,
+  ),
+  [APPS.start + APPS.launcherFor - 0.16, "thud"],
+  // The take's own presses land on release, one frame after.
+  ...[16, 32].map(
+    (frame) =>
+      [APPS.start + APPS.launcherFor + frame / FPS + F, "press"] as const,
+  ),
+  ...[15, 30].map(
+    (frame) => [APPS.start + DASH_AT + frame / FPS + F, "press"] as const,
+  ),
+  ...[0.35, 0.7, 1.05].map(
+    (at, i) => [CHARTS_START + at, `glass-${i}`, 0.45] as const,
+  ),
+  [DESK_START + PRESS_WIN + F, "look-win"],
+  [DESK_START + PRESS_LINUX + F, "look-linux"],
+  ...[0, 1, 2].map(
+    (i) => [OM_START + 0.5 + i * 0.4 + F, `glass-${i}`, 1] as const,
+  ),
+  ...typedCues(SSH, TERM_START + TYPE_AT, CHARS_PER_FRAME),
+  [TERM_START + T_LOGIN - 0.03, "press", 0.6],
+  ...typedCues(RUN_CMD, TERM_START + T_RUN, CHARS_PER_FRAME),
+  [TERM_START + T_APP, "land"],
+  ...[15, 34, 54].map(
+    (frame) => [TERM_START + T_APP + frame / FPS + F, "press"] as const,
+  ),
+  [END_START + 0.1, "mark"],
 ];
+
+/** The score, opened up: its bars 5–8 play twice, so the stabs land the stack and its last chord the mark. */
+const score = (): string => {
+  const out = "assets/music/score-long.wav";
+  execFileSync("ffmpeg", [
+    "-v",
+    "error",
+    "-y",
+    "-i",
+    at("assets/music/score.wav"),
+    "-filter_complex",
+    "[0]atrim=0:16.03,asetpts=N/SR/TB[a];[0]atrim=8:16.03,asetpts=N/SR/TB[b];[0]atrim=start=16,asetpts=N/SR/TB[c];[a][b]acrossfade=d=0.03[ab];[ab][c]acrossfade=d=0.03[o]",
+    "-map",
+    "[o]",
+    at(out),
+  ]);
+  return out;
+};
 
 /** A sound's own length, so its slot is never longer than the file. */
 const lengthOf = (sound: string): number =>
@@ -949,20 +959,16 @@ const index = `<!doctype html>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1920px; height: 1080px; overflow: hidden; background: ${GROUND}; }
-      .line { position: absolute; left: 0; right: 0; top: 0; height: 200px; padding-top: 58px; text-align: center; font: 400 62px Inter, sans-serif; letter-spacing: -0.025em; color: ${INK}; background: linear-gradient(${GROUND} 58%, rgba(244, 242, 238, 0)); }
-      .line.light { height: auto; padding-top: 72px; background: none; color: #fff; font-weight: 500; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 40px rgba(0, 0, 0, 0.6); }
-      .line.ink { top: 500px; font-size: 72px; height: auto; padding-top: 0; background: none; }
-      .line.pill { top: auto; bottom: 66px; height: auto; padding: 0; background: none; }
-      .line.pill span { display: inline-block; padding: 14px 34px; border-radius: 26px; font-size: 50px; color: #fff; background: rgba(12, 12, 16, 0.76); }
+      .line { position: absolute; left: 0; right: 0; top: 500px; text-align: center; font: 400 72px Inter, sans-serif; letter-spacing: -0.025em; color: ${INK}; }
     </style>
   </head>
   <body>
     <!-- The launch film v8 (plan 069), written by build.ts: ${LENGTH} s on the score's 120 BPM grid. -->
     <div id="root" data-composition-id="main" data-start="0" data-duration="${LENGTH}" data-width="1920" data-height="1080">
 ${scenes.map((s) => `      <div id="${s.id}" data-composition-id="${s.id}" data-composition-src="compositions/${s.id}.html" data-start="${s.start}" data-duration="${s.duration}" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>`).join("\n")}
-${LINES.map(([start, stop, text, on], i) => `      <div id="line-${i}" class="line ${on ?? ""} clip" data-start="${start}" data-duration="${(stop - start).toFixed(2)}" data-track-index="9"><span id="line-${i}-t">${text}</span></div>`).join("\n")}
-      <audio id="score" class="clip" data-start="0" data-duration="${LENGTH}" data-track-index="19" data-volume="0.28" data-fade-out="1.5" src="assets/music/score.wav"></audio>
-${CUES.map(([time, sound, volume], i) => `      <audio id="sfx-${String(i).padStart(2, "0")}" class="clip" data-start="${time.toFixed(3)}" data-duration="${lengthOf(sound).toFixed(3)}" data-track-index="${20 + (i % 8)}" data-volume="${volume ?? 0.9}" src="assets/sfx/${sound}.wav"></audio>`).join("\n")}
+${LINES.map(([start, stop, text], i) => `      <div id="line-${i}" class="line clip" data-start="${start}" data-duration="${(stop - start).toFixed(2)}" data-track-index="9"><span id="line-${i}-t">${text}</span></div>`).join("\n")}
+      <audio id="score" class="clip" data-start="0" data-duration="${LENGTH}" data-track-index="19" data-volume="0.28" data-fade-out="1.5" src="${score()}"></audio>
+${CUES.map(([time, sound, volume], i) => `      <audio id="sfx-${String(i).padStart(3, "0")}" class="clip" data-start="${time.toFixed(3)}" data-duration="${lengthOf(sound).toFixed(3)}" data-track-index="${20 + (i % 8)}" data-volume="${volume ?? 0.9}" src="assets/sfx/${sound}.wav"></audio>`).join("\n")}
     </div>
     <script>
       const tl = gsap.timeline({ paused: true });
@@ -981,6 +987,9 @@ const written = [
 scenes.forEach((scene, i) => writeFileSync(written[i]!, composition(scene)));
 writeFileSync(at("index.html"), index);
 // The written files meet the repo's formatter, as hand-written ones do.
-execFileSync(at("../../node_modules/.bin/oxfmt"), ["--write", ...written], {
-  stdio: "ignore",
-});
+// `shadcn.html` holds preformatted code, which the formatter would reflow.
+execFileSync(
+  at("../../node_modules/.bin/oxfmt"),
+  ["--write", ...written.filter((file) => !file.endsWith("shadcn.html"))],
+  { stdio: "ignore" },
+);

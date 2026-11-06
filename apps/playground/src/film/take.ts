@@ -38,6 +38,8 @@ export interface Take {
   readonly height: number;
   readonly frames: number;
   readonly view: (frame: number) => ReactNode;
+  /** A control whose `aria-valuetext` the take records, for sound on each change. */
+  readonly watch?: string;
   /** Keyframes of the pointer, in frame order; it eases between them. */
   readonly pointer?: ReadonlyArray<Waypoint>;
   /** Keystrokes sent to the focused element on a frame (`"a b enter"`). */
@@ -145,31 +147,45 @@ const blueprint = (
 
 /** Capture `take` into `outDir` as `0000.png…` and `cursor.json`. */
 /**
- * The capture's own time, for code that animates on `Date.now` and `setTimeout`:
+ * The capture's own time, for code that animates on `performance.now` and `setTimeout`:
  * the capture loop is synchronous, so those timers would never fire and a chart
  * would stay on its first frame. Installed for one capture, then handed back.
  */
 export const virtualTime = () => {
   const real = {
-    now: Date.now,
+    now: performance.now.bind(performance),
     setTimeout: globalThis.setTimeout,
     clearTimeout: globalThis.clearTimeout,
   };
   const due = new Map<number, { at: number; run: () => void }>();
   let now = real.now();
   let nextId = 1;
-  Date.now = () => now;
+  performance.now = () => now;
+  // A zero delay stays on the real event loop: Effect runs its fibers there, and
+  // only a real wait is the capture's to advance.
   const schedule = (run: () => void, delay = 0) => {
+    if (delay <= 0) return real.setTimeout(run, 0);
     const id = nextId;
     nextId += 1;
     due.set(id, { at: now + delay, run });
-    return id;
+    const timer = {
+      id,
+      ref: () => timer,
+      unref: () => timer,
+      hasRef: () => true,
+    };
+    return timer;
   };
-  const cancel = (id?: number) => {
-    if (id !== undefined) due.delete(id);
+  const cancel = (timer?: unknown) => {
+    if (typeof timer === "object" && timer !== null && "id" in timer)
+      due.delete(timer.id as number);
+    else real.clearTimeout(timer as NodeJS.Timeout);
   };
   Object.assign(globalThis, { setTimeout: schedule, clearTimeout: cancel });
   return {
+    /** One real turn: zero-delay timers and the microtasks they start have run. */
+    turn: (): Promise<void> =>
+      new Promise((resolve) => real.setTimeout(resolve, 2)),
     advance: (ms: number): void => {
       const target = now + ms;
       for (;;) {
@@ -191,7 +207,7 @@ export const virtualTime = () => {
       now = target;
     },
     restore: (): void => {
-      Date.now = real.now;
+      performance.now = real.now;
       Object.assign(globalThis, {
         setTimeout: real.setTimeout,
         clearTimeout: real.clearTimeout,
@@ -200,10 +216,10 @@ export const virtualTime = () => {
   };
 };
 
-export const capture = (
+export const capture = async (
   take: Take,
   outDir: string,
-): ReadonlyArray<PointerSample> => {
+): Promise<ReadonlyArray<PointerSample>> => {
   const root = createTestRoot({ width: take.width, height: take.height });
   const renderer = root.renderer;
   const locate = (aim: Aim): { x: number; y: number } => {
@@ -230,11 +246,13 @@ export const capture = (
     return point;
   };
 
-  const time = virtualTime();
   root.render(take.view(0));
   renderer.flush();
+  const time = virtualTime();
   const origin = renderer.clockPause();
   const samples: PointerSample[] = [];
+  const changes: number[] = [];
+  let watched: unknown;
   let held = false;
 
   for (let frame = 0; frame < take.frames; frame += 1) {
@@ -259,9 +277,19 @@ export const capture = (
         samples.push({ frame, x: x * DEVICE_SCALE, y: y * DEVICE_SCALE, down });
       },
     );
+    await time.turn();
+    renderer.flush();
     renderer.clockSet(origin + (frame * 1000) / FPS);
     time.advance(1000 / FPS);
+    await time.turn();
     renderer.flush();
+    if (take.watch !== undefined) {
+      const value = renderer.findByTestId(take.watch)?.customProps?.[
+        "aria-valuetext"
+      ];
+      if (frame > 0 && value !== watched) changes.push(frame);
+      watched = value;
+    }
     renderer.captureScreenshot(
       `${outDir}/${String(frame).padStart(4, "0")}.png`,
     );
@@ -274,5 +302,7 @@ export const capture = (
   root.unmount();
   time.restore();
   writeFileSync(`${outDir}/cursor.json`, JSON.stringify(samples));
+  if (take.watch !== undefined)
+    writeFileSync(`${outDir}/changes.json`, JSON.stringify(changes));
   return samples;
 };

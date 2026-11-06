@@ -5525,3 +5525,10 @@ cannot go untested. Evidence:
 - No font family is bundled: `registerFonts` is consumer-only, so there is no
   redistribution licence to review yet. Shipping one needs the same review
   `.agents/slop/LICENSES/` gives every other asset.
+
+## Themes from shadcn's builders
+
+`shadcnTheme(css, base, mode?)` reads the CSS a theme builder exports: the `:root`
+or `.dark` block, in `oklch()`, `hsl()`, bare `h s% l%` or hex. It returns
+`{ theme, problems }`, and a variable it cannot read keeps the base's colour and
+is named in `problems`. `cssColorToHex(value)` converts one colour.

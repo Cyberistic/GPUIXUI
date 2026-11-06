@@ -46,12 +46,24 @@
     #root .shell .off {
       opacity: 0;
     }
+    #root .say {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 440px;
+      text-align: center;
+      font:
+        400 62px Inter,
+        sans-serif;
+      letter-spacing: -0.025em;
+      color: #fff;
+    }
     #root .app {
       position: absolute;
-      left: 210px;
-      top: 40px;
-      width: 1500px;
-      height: 844px;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1036px;
       opacity: 0;
       overflow: hidden;
     }
@@ -100,16 +112,17 @@
         <b>gon@whale-island ~ ❯</b> <span id="t-run"></span>
       </div>
     </div>
+    <div id="t-say" class="say">the same app, over ssh</div>
     <div id="t-app" class="app">
       <video
         id="t-v"
         class="clip"
-        data-start="1.4"
-        data-duration="1.6"
+        data-start="1.073"
+        data-duration="2.927"
         data-track-index="2"
         muted
         playsinline
-        src="assets/footage/term-v8.mp4"
+        src="assets/footage/console-v8.mp4"
         style=""
       ></video>
       <div id="t-cur" class="cursor">
@@ -125,92 +138,130 @@
       </div>
     </div>
     <div class="status">
-      <span>0:nub*</span><span>gon@whale-island</span
-      ><span>ssh · 120×40 · 09:41</span>
+      <span>0:nub*</span><span>gon@whale-island</span><span>ssh · 09:41</span>
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.set("#t-ssh", { textContent: "ss" }, 0.3);
-    tl.set("#t-ssh", { textContent: "ssh " }, 0.333);
-    tl.set("#t-ssh", { textContent: "ssh go" }, 0.367);
-    tl.set("#t-ssh", { textContent: "ssh gon@" }, 0.4);
-    tl.set("#t-ssh", { textContent: "ssh gon@wh" }, 0.433);
-    tl.set("#t-ssh", { textContent: "ssh gon@whal" }, 0.467);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-" }, 0.5);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-is" }, 0.533);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-isla" }, 0.567);
-    tl.set("#t-ssh", { textContent: "ssh gon@whale-island" }, 0.6);
-    tl.set("#t-login", { opacity: 1 }, 0.733);
-    tl.set("#t-runline", { opacity: 1 }, 0.833);
-    tl.set("#t-run", { textContent: "nu" }, 0.833);
-    tl.set("#t-run", { textContent: "nub " }, 0.867);
-    tl.set("#t-run", { textContent: "nub ru" }, 0.9);
-    tl.set("#t-run", { textContent: "nub run " }, 0.933);
-    tl.set("#t-run", { textContent: "nub run de" }, 0.967);
-    tl.set("#t-run", { textContent: "nub run dev " }, 1.0);
-    tl.set("#t-run", { textContent: "nub run dev se" }, 1.033);
-    tl.set("#t-run", { textContent: "nub run dev sett" }, 1.067);
-    tl.set("#t-run", { textContent: "nub run dev settin" }, 1.1);
-    tl.set("#t-run", { textContent: "nub run dev settings" }, 1.133);
-    tl.set("#t-run", { textContent: "nub run dev settings -" }, 1.167);
-    tl.set("#t-run", { textContent: "nub run dev settings --t" }, 1.2);
-    tl.set("#t-run", { textContent: "nub run dev settings --ter" }, 1.233);
-    tl.set("#t-run", { textContent: "nub run dev settings --termi" }, 1.267);
-    tl.set("#t-run", { textContent: "nub run dev settings --termina" }, 1.3);
-    tl.set("#t-run", { textContent: "nub run dev settings --terminal" }, 1.333);
-    tl.set("#term > div", { opacity: 0 }, 1.4);
-    tl.set("#t-app", { opacity: 1 }, 1.4);
-    tl.set("#t-cur", { x: 1403.3, y: 238.0, scale: 1 }, 1.4);
-    tl.set("#t-cur", { x: 1403.3, y: 238.0, scale: 1 }, 1.4);
-    tl.set("#t-cur", { x: 1403.0, y: 237.6, scale: 1 }, 1.433);
-    tl.set("#t-cur", { x: 1400.5, y: 234.8, scale: 1 }, 1.467);
-    tl.set("#t-cur", { x: 1393.8, y: 227.0, scale: 1 }, 1.5);
-    tl.set("#t-cur", { x: 1380.8, y: 211.8, scale: 1 }, 1.533);
-    tl.set("#t-cur", { x: 1359.4, y: 186.8, scale: 1 }, 1.567);
-    tl.set("#t-cur", { x: 1337.9, y: 161.7, scale: 1 }, 1.6);
-    tl.set("#t-cur", { x: 1324.9, y: 146.6, scale: 1 }, 1.633);
-    tl.set("#t-cur", { x: 1318.2, y: 138.8, scale: 1 }, 1.667);
-    tl.set("#t-cur", { x: 1315.8, y: 135.9, scale: 1 }, 1.7);
-    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.733);
-    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.767);
-    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.8);
-    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.833);
-    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.867);
-    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 0.86 }, 1.9);
-    tl.set("#t-cur", { x: 1315.4, y: 135.5, scale: 1 }, 1.933);
-    tl.set("#t-cur", { x: 1315.8, y: 135.8, scale: 1 }, 1.967);
-    tl.set("#t-cur", { x: 1318.5, y: 138.0, scale: 1 }, 2.0);
-    tl.set("#t-cur", { x: 1325.9, y: 143.8, scale: 1 }, 2.033);
-    tl.set("#t-cur", { x: 1340.2, y: 155.2, scale: 1 }, 2.067);
-    tl.set("#t-cur", { x: 1363.8, y: 174.0, scale: 1 }, 2.1);
-    tl.set("#t-cur", { x: 1387.4, y: 192.7, scale: 1 }, 2.133);
-    tl.set("#t-cur", { x: 1401.7, y: 204.1, scale: 1 }, 2.167);
-    tl.set("#t-cur", { x: 1409.0, y: 209.9, scale: 1 }, 2.2);
-    tl.set("#t-cur", { x: 1411.7, y: 212.1, scale: 1 }, 2.233);
-    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.267);
-    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.3);
-    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.333);
-    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.367);
-    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 0.86 }, 2.4);
-    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.433);
-    tl.set("#t-cur", { x: 1412.1, y: 212.4, scale: 1 }, 2.467);
-    tl.set("#t-cur", { x: 1412.2, y: 212.5, scale: 1 }, 2.5);
-    tl.set("#t-cur", { x: 1412.4, y: 212.7, scale: 1 }, 2.533);
-    tl.set("#t-cur", { x: 1412.8, y: 213.1, scale: 1 }, 2.567);
-    tl.set("#t-cur", { x: 1413.4, y: 213.7, scale: 1 }, 2.6);
-    tl.set("#t-cur", { x: 1414.4, y: 214.7, scale: 1 }, 2.633);
-    tl.set("#t-cur", { x: 1415.8, y: 216.1, scale: 1 }, 2.667);
-    tl.set("#t-cur", { x: 1417.6, y: 217.9, scale: 1 }, 2.7);
-    tl.set("#t-cur", { x: 1419.9, y: 220.2, scale: 1 }, 2.733);
-    tl.set("#t-cur", { x: 1422.8, y: 223.1, scale: 1 }, 2.767);
-    tl.set("#t-cur", { x: 1426.3, y: 226.6, scale: 1 }, 2.8);
-    tl.set("#t-cur", { x: 1430.6, y: 230.9, scale: 1 }, 2.833);
-    tl.set("#t-cur", { x: 1435.6, y: 235.9, scale: 1 }, 2.867);
-    tl.set("#t-cur", { x: 1441.4, y: 241.7, scale: 1 }, 2.9);
-    tl.set("#t-cur", { x: 1447.2, y: 247.5, scale: 1 }, 2.933);
-    tl.set("#t-cur", { x: 1452.3, y: 252.5, scale: 1 }, 2.967);
-    tl.set({}, {}, 3);
+    tl.set("#t-ssh", { textContent: "ss" }, 0.1);
+    tl.set("#t-ssh", { textContent: "ssh " }, 0.133);
+    tl.set("#t-ssh", { textContent: "ssh go" }, 0.167);
+    tl.set("#t-ssh", { textContent: "ssh gon@" }, 0.2);
+    tl.set("#t-ssh", { textContent: "ssh gon@wh" }, 0.233);
+    tl.set("#t-ssh", { textContent: "ssh gon@whal" }, 0.267);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-" }, 0.3);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-is" }, 0.333);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-isla" }, 0.367);
+    tl.set("#t-ssh", { textContent: "ssh gon@whale-island" }, 0.4);
+    tl.set("#t-login", { opacity: 1 }, 0.473);
+    tl.set("#t-runline", { opacity: 1 }, 0.503);
+    tl.set("#t-run", { textContent: "nu" }, 0.503);
+    tl.set("#t-run", { textContent: "nub " }, 0.537);
+    tl.set("#t-run", { textContent: "nub ru" }, 0.57);
+    tl.set("#t-run", { textContent: "nub run " }, 0.603);
+    tl.set("#t-run", { textContent: "nub run de" }, 0.637);
+    tl.set("#t-run", { textContent: "nub run dev " }, 0.67);
+    tl.set("#t-run", { textContent: "nub run dev co" }, 0.703);
+    tl.set("#t-run", { textContent: "nub run dev cons" }, 0.737);
+    tl.set("#t-run", { textContent: "nub run dev consol" }, 0.77);
+    tl.set("#t-run", { textContent: "nub run dev console " }, 0.803);
+    tl.set("#t-run", { textContent: "nub run dev console --" }, 0.837);
+    tl.set("#t-run", { textContent: "nub run dev console --te" }, 0.87);
+    tl.set("#t-run", { textContent: "nub run dev console --term" }, 0.903);
+    tl.set("#t-run", { textContent: "nub run dev console --termin" }, 0.937);
+    tl.set("#t-run", { textContent: "nub run dev console --terminal" }, 0.97);
+    tl.set("#t-say", { opacity: 0 }, 1.073);
+    tl.set("#t-app", { opacity: 1 }, 1.073);
+    tl.set("#t-cur", { x: 1200.0, y: 637.5, scale: 1 }, 1.073);
+    tl.set("#t-cur", { x: 1200.0, y: 637.5, scale: 1 }, 1.073);
+    tl.set("#t-cur", { x: 1197.3, y: 635.2, scale: 1 }, 1.107);
+    tl.set("#t-cur", { x: 1178.6, y: 618.9, scale: 1 }, 1.14);
+    tl.set("#t-cur", { x: 1127.9, y: 574.7, scale: 1 }, 1.173);
+    tl.set("#t-cur", { x: 1029.1, y: 488.7, scale: 1 }, 1.207);
+    tl.set("#t-cur", { x: 866.3, y: 346.9, scale: 1 }, 1.24);
+    tl.set("#t-cur", { x: 703.4, y: 205.1, scale: 1 }, 1.273);
+    tl.set("#t-cur", { x: 604.6, y: 119.0, scale: 1 }, 1.307);
+    tl.set("#t-cur", { x: 553.9, y: 74.9, scale: 1 }, 1.34);
+    tl.set("#t-cur", { x: 535.2, y: 58.6, scale: 1 }, 1.373);
+    tl.set("#t-cur", { x: 532.5, y: 56.3, scale: 1 }, 1.407);
+    tl.set("#t-cur", { x: 532.5, y: 56.3, scale: 1 }, 1.44);
+    tl.set("#t-cur", { x: 532.5, y: 56.3, scale: 1 }, 1.473);
+    tl.set("#t-cur", { x: 532.5, y: 56.3, scale: 1 }, 1.507);
+    tl.set("#t-cur", { x: 532.5, y: 56.3, scale: 1 }, 1.54);
+    tl.set("#t-cur", { x: 532.5, y: 56.3, scale: 0.86 }, 1.573);
+    tl.set("#t-cur", { x: 532.5, y: 56.3, scale: 1 }, 1.607);
+    tl.set("#t-cur", { x: 535.3, y: 56.3, scale: 1 }, 1.64);
+    tl.set("#t-cur", { x: 555.0, y: 56.3, scale: 1 }, 1.673);
+    tl.set("#t-cur", { x: 608.4, y: 56.3, scale: 1 }, 1.707);
+    tl.set("#t-cur", { x: 712.5, y: 56.3, scale: 1 }, 1.74);
+    tl.set("#t-cur", { x: 884.1, y: 56.3, scale: 1 }, 1.773);
+    tl.set("#t-cur", { x: 1140.0, y: 56.3, scale: 1 }, 1.807);
+    tl.set("#t-cur", { x: 1395.9, y: 56.3, scale: 1 }, 1.84);
+    tl.set("#t-cur", { x: 1567.5, y: 56.3, scale: 1 }, 1.873);
+    tl.set("#t-cur", { x: 1671.6, y: 56.3, scale: 1 }, 1.907);
+    tl.set("#t-cur", { x: 1725.0, y: 56.3, scale: 1 }, 1.94);
+    tl.set("#t-cur", { x: 1744.7, y: 56.3, scale: 1 }, 1.973);
+    tl.set("#t-cur", { x: 1747.5, y: 56.3, scale: 1 }, 2.007);
+    tl.set("#t-cur", { x: 1747.5, y: 56.3, scale: 1 }, 2.04);
+    tl.set("#t-cur", { x: 1747.5, y: 56.3, scale: 1 }, 2.073);
+    tl.set("#t-cur", { x: 1747.5, y: 56.3, scale: 1 }, 2.107);
+    tl.set("#t-cur", { x: 1747.5, y: 56.3, scale: 1 }, 2.14);
+    tl.set("#t-cur", { x: 1747.5, y: 56.3, scale: 1 }, 2.173);
+    tl.set("#t-cur", { x: 1747.5, y: 56.3, scale: 0.86 }, 2.207);
+    tl.set("#t-cur", { x: 1747.5, y: 56.3, scale: 1 }, 2.24);
+    tl.set("#t-cur", { x: 1747.7, y: 56.3, scale: 1 }, 2.273);
+    tl.set("#t-cur", { x: 1748.8, y: 56.3, scale: 1 }, 2.307);
+    tl.set("#t-cur", { x: 1751.9, y: 56.3, scale: 1 }, 2.34);
+    tl.set("#t-cur", { x: 1758.0, y: 56.3, scale: 1 }, 2.373);
+    tl.set("#t-cur", { x: 1768.0, y: 56.3, scale: 1 }, 2.407);
+    tl.set("#t-cur", { x: 1782.9, y: 56.3, scale: 1 }, 2.44);
+    tl.set("#t-cur", { x: 1802.1, y: 56.3, scale: 1 }, 2.473);
+    tl.set("#t-cur", { x: 1817.0, y: 56.3, scale: 1 }, 2.507);
+    tl.set("#t-cur", { x: 1827.0, y: 56.3, scale: 1 }, 2.54);
+    tl.set("#t-cur", { x: 1833.1, y: 56.3, scale: 1 }, 2.573);
+    tl.set("#t-cur", { x: 1836.2, y: 56.3, scale: 1 }, 2.607);
+    tl.set("#t-cur", { x: 1837.3, y: 56.3, scale: 1 }, 2.64);
+    tl.set("#t-cur", { x: 1837.5, y: 56.3, scale: 1 }, 2.673);
+    tl.set("#t-cur", { x: 1837.5, y: 56.3, scale: 1 }, 2.707);
+    tl.set("#t-cur", { x: 1837.5, y: 56.3, scale: 1 }, 2.74);
+    tl.set("#t-cur", { x: 1837.5, y: 56.3, scale: 1 }, 2.773);
+    tl.set("#t-cur", { x: 1837.5, y: 56.3, scale: 1 }, 2.807);
+    tl.set("#t-cur", { x: 1837.5, y: 56.3, scale: 1 }, 2.84);
+    tl.set("#t-cur", { x: 1837.5, y: 56.3, scale: 0.86 }, 2.873);
+    tl.set("#t-cur", { x: 1837.5, y: 56.3, scale: 1 }, 2.907);
+    tl.set("#t-cur", { x: 1837.5, y: 56.3, scale: 1 }, 2.94);
+    tl.set("#t-cur", { x: 1837.5, y: 56.3, scale: 1 }, 2.973);
+    tl.set("#t-cur", { x: 1837.6, y: 56.6, scale: 1 }, 3.007);
+    tl.set("#t-cur", { x: 1837.7, y: 57.0, scale: 1 }, 3.04);
+    tl.set("#t-cur", { x: 1838.0, y: 57.7, scale: 1 }, 3.073);
+    tl.set("#t-cur", { x: 1838.3, y: 58.7, scale: 1 }, 3.107);
+    tl.set("#t-cur", { x: 1838.8, y: 60.2, scale: 1 }, 3.14);
+    tl.set("#t-cur", { x: 1839.5, y: 62.1, scale: 1 }, 3.173);
+    tl.set("#t-cur", { x: 1840.3, y: 64.6, scale: 1 }, 3.207);
+    tl.set("#t-cur", { x: 1841.3, y: 67.7, scale: 1 }, 3.24);
+    tl.set("#t-cur", { x: 1842.6, y: 71.5, scale: 1 }, 3.273);
+    tl.set("#t-cur", { x: 1844.1, y: 76.0, scale: 1 }, 3.307);
+    tl.set("#t-cur", { x: 1845.9, y: 81.4, scale: 1 }, 3.34);
+    tl.set("#t-cur", { x: 1848.0, y: 87.7, scale: 1 }, 3.373);
+    tl.set("#t-cur", { x: 1850.4, y: 94.9, scale: 1 }, 3.407);
+    tl.set("#t-cur", { x: 1853.1, y: 103.1, scale: 1 }, 3.44);
+    tl.set("#t-cur", { x: 1856.3, y: 112.5, scale: 1 }, 3.473);
+    tl.set("#t-cur", { x: 1859.4, y: 121.9, scale: 1 }, 3.507);
+    tl.set("#t-cur", { x: 1862.1, y: 130.1, scale: 1 }, 3.54);
+    tl.set("#t-cur", { x: 1864.5, y: 137.3, scale: 1 }, 3.573);
+    tl.set("#t-cur", { x: 1866.6, y: 143.6, scale: 1 }, 3.607);
+    tl.set("#t-cur", { x: 1868.4, y: 149.0, scale: 1 }, 3.64);
+    tl.set("#t-cur", { x: 1869.9, y: 153.5, scale: 1 }, 3.673);
+    tl.set("#t-cur", { x: 1871.2, y: 157.3, scale: 1 }, 3.707);
+    tl.set("#t-cur", { x: 1872.2, y: 160.4, scale: 1 }, 3.74);
+    tl.set("#t-cur", { x: 1873.0, y: 162.9, scale: 1 }, 3.773);
+    tl.set("#t-cur", { x: 1873.7, y: 164.8, scale: 1 }, 3.807);
+    tl.set("#t-cur", { x: 1874.2, y: 166.3, scale: 1 }, 3.84);
+    tl.set("#t-cur", { x: 1874.5, y: 167.3, scale: 1 }, 3.873);
+    tl.set("#t-cur", { x: 1874.8, y: 168.0, scale: 1 }, 3.907);
+    tl.set("#t-cur", { x: 1874.9, y: 168.4, scale: 1 }, 3.94);
+    tl.set("#t-cur", { x: 1875.0, y: 168.7, scale: 1 }, 3.973);
+    tl.set({}, {}, 4);
     window.__timelines = window.__timelines || {};
     window.__timelines["terminal"] = tl;
   </script>

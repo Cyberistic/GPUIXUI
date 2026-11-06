@@ -38,17 +38,6 @@
       height: 100%;
       object-fit: cover;
     }
-    #root .gnome-wall {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        160deg,
-        #1c71d8 0%,
-        #3584e4 34%,
-        #26a269 68%,
-        #1b5e4a 100%
-      );
-    }
     #root .macbar {
       position: absolute;
       left: 0;
@@ -176,16 +165,15 @@
       bottom: 14px;
       transform: translateX(-50%);
       display: flex;
-      gap: 12px;
-      padding: 12px;
-      border-radius: 26px;
-      background: rgba(40, 40, 44, 0.82);
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 22px;
+      background: rgba(36, 36, 40, 0.86);
     }
-    #root .dash i {
+    #root .dash img {
       display: block;
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
+      width: 64px;
+      height: 64px;
     }
     #root .window {
       position: absolute;
@@ -202,6 +190,21 @@
       display: block;
       width: 100%;
       height: 100%;
+    }
+    #root .say {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 72px;
+      text-align: center;
+      font:
+        500 62px Inter,
+        sans-serif;
+      letter-spacing: -0.025em;
+      color: #fff;
+      text-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.5),
+        0 4px 40px rgba(0, 0, 0, 0.6);
     }
     #root .cursor {
       width: 56px;
@@ -264,19 +267,23 @@
       "
     >
       <div id="d-gnome" class="desk">
-        <div class="gnome-wall"></div>
+        <img class="wall" src="assets/gnome/adwaita.jpg" alt="" />
         <div class="gbar">
           <span class="act">Activities</span
           ><span class="clock">Fri Nov 6 9:41</span
           ><span class="sys">Wi-Fi · 100%</span>
         </div>
         <div class="dash">
-          <i style="background: linear-gradient(#5ac8fa, #007aff)"></i
-          ><i style="background: linear-gradient(#ffd60a, #ff9f0a)"></i
-          ><i style="background: linear-gradient(#30d158, #248a3d)"></i
-          ><i style="background: linear-gradient(#ff6482, #ff2d55)"></i
-          ><i style="background: linear-gradient(#bf5af2, #5e5ce6)"></i
-          ><i style="background: linear-gradient(#8e8e93, #48484a)"></i>
+          <img src="assets/gnome/org.gnome.Epiphany.svg" alt="" /><img
+            src="assets/gnome/org.gnome.Nautilus.svg"
+            alt=""
+          /><img src="assets/gnome/org.gnome.Calendar.svg" alt="" /><img
+            src="assets/gnome/org.gnome.Music.svg"
+            alt=""
+          /><img src="assets/gnome/org.gnome.TextEditor.svg" alt="" /><img
+            src="assets/gnome/org.gnome.Settings.svg"
+            alt=""
+          />
         </div>
       </div>
     </div>
@@ -304,9 +311,11 @@
         </svg>
       </div>
     </div>
+    <div id="d-say" class="say">native on mac, windows & linux</div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#d-say", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.12);
     tl.to(
       "#d-win-layer",
       {

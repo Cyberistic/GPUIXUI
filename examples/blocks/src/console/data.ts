@@ -20,6 +20,27 @@ export interface Deploy {
 
 export const deploys: ReadonlyArray<Deploy> = [
   {
+    id: "d8",
+    target: "Hunter Website",
+    by: "Biscuit Krueger",
+    when: "just now",
+    ok: true,
+  },
+  {
+    id: "d7",
+    target: "Heavens Arena floors",
+    by: "Wing",
+    when: "1m ago",
+    ok: true,
+  },
+  {
+    id: "d6",
+    target: "Meteor City",
+    by: "Chrollo Lucilfer",
+    when: "4h ago",
+    ok: false,
+  },
+  {
     id: "d4",
     target: "Greed Island",
     by: "Killua Zoldyck",

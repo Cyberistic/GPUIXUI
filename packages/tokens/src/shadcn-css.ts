@@ -79,6 +79,7 @@ export const cssColorToHex = (value: string): string | undefined => {
   return undefined;
 };
 
+/** The theme a builder's CSS describes, and the variables it could not read. */
 export interface ShadcnThemeFile {
   readonly theme: Theme;
   /** The variables that were named but could not be read. */
