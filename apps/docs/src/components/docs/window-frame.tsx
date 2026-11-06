@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
  * edge under the traffic lights and paints the theme's material over the
  * browser's own blur (`.gx-material`), the unified 52-point toolbar sits over
  * the content column, and the content and inspector are opaque. Without a
- * sidebar the toolbar leaves the lights their 78-point box, as the native bar
+ * sidebar the toolbar leaves the lights their 90-point box, as the native bar
  * does.
  */
 export interface WindowFrameProps {

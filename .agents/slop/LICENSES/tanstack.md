@@ -1,7 +1,7 @@
 # TanStack — headless cores
 
 - Repository: <https://github.com/TanStack> (table, virtual, form, pacer, hotkeys, charts)
-- Packages read: `@tanstack/hotkeys` `0.17.0`, `@tanstack/table-core` `9.3.1`,
+- Packages read: `@tanstack/hotkeys` `0.24.0`, `@tanstack/table-core` `9.3.1`,
   `@tanstack/virtual-core` `3.19.6`, `@tanstack/pacer` `0.23.1`
   (read 2026-10-22); `@tanstack/charts` `1.2.1` and `@tanstack/charts-scales`
   `1.2.1` (read 2026-11-03, repository `TanStack/charts`)

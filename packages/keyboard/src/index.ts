@@ -10,6 +10,7 @@
  * component/token layers.
  */
 
+export { canonicalKey } from "./chord.js";
 export { decodeGpuixEvent } from "./decode.js";
 export { formatSymbols } from "./display.js";
 export { toDomKey } from "./key-names.js";
