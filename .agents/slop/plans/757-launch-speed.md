@@ -1,47 +1,43 @@
 # 757: launch speed parity with raw GPUI
 
-Goal: reduce spawn-to-first-content on macOS as close to raw GPUI as Node allows.
-The baseline, on an M2 Pro with warm caches and a foreground window: raw GPUI 127 ms,
-stock GPUix 463 ms, playground via `nub` 1190 ms.
+Goal: reduce spawn-to-first-content on macOS as close to raw GPUI as Node allows. Numbers are
+from an M2 Pro with warm caches and a foreground window. Interleaved, 15 runs, medians.
 
-## Upstream, `remorses/gpuix` branch `feat/launch-speed`
+| Launch | `@gpuix` 0.11.0 | With `remorses/gpuix` `feat/launch-speed` |
+| ------ | --------------- | ----------------------------------------- |
+| Raw GPUI, same zed revision and profile | 131 ms | 130 ms |
+| Hello, bundled | 428 ms | 164 ms |
+| Playground, bundled | 519 ms | 260 ms |
+| Playground, bundled, compile cache | 472 ms | 226 ms |
+| Playground, `nub`, unbundled | 1168 ms | not measured until the release |
 
-| Change | Files | Measured saving |
-| ------ | ----- | --------------- |
-| Build the reqwest client on first request | `packages/native/src/custom_elements/img.rs` | 121 ms |
-| Open hidden, commit, then order front and draw synchronously | `packages/native/src/renderer.rs`, `packages/react/src/reconciler/renderer.ts` | prototype of the pre-window order: 118 ms |
-| Start the frame loop after the first commit | `packages/react/src/reconciler/renderer.ts` | included above |
-| Install the app menu on the first tick | `packages/native/src/renderer.rs` | 13 ms |
-| Import the automation client on demand | `packages/native/js/runtime.ts`, `packages/react/src/reconciler/renderer.ts`, `packages/solid/src/renderer.ts` | up to 40 ms unbundled |
+The residual is Node's boot and bundle evaluation, and AppKit finishing `finishLaunching`
+before the first commit. A V8 startup snapshot saved 14 ms on hello in a prototype and restricts
+what can run at build time, so it is not adopted. Bun's results were too noisy to prefer it.
 
-Zod stays: GPUix does not use Effect, so replacing it would add a dependency.
+## Upstream
 
-Commands, from `packages/native`: `cargo test --lib`, `bun run build`, `bun run test`.
-From `packages/react`: `bun run test`. From `example-app`: `bun run test`.
+- Open hidden, commit, order front and draw synchronously (`presentWindow`).
+- Build the HTTP client on the first request. Install the menu bar on the first tick.
+- Import the automation client and zod on demand, only when stdin is not a character device.
+- Zod stays: GPUix does not use Effect, so replacing it would add a dependency.
 
-STOP if synchronous presentation shows a black or partial first frame, if a remote `<img>`
-stops loading, if cmd-q stops working, or if `launch()` automation stops connecting.
+## This repo
 
-## GPUIXUI, branch `agent/launch-speed`
+- `apps/playground/scripts/launch-probe.c` and `src/launch/`: the benchmark. It counts a frame
+  as content only when its presented pixels are not uniform, so a blank frame or a hidden
+  frame never passes, and each row prints the content pixel count to catch a wrong render.
+- `apps/playground/scripts/bundle.ts`: the production bundle and `start.mjs`.
 
-- `apps/playground/scripts/launch-bench/`: the Metal frame probe and interleaved driver.
-- `apps/playground/scripts/bundle.ts` and `nub run --filter playground start`: a production
-  bundle with the V8 compile cache.
+Run `nub run --filter playground bench:launch`. Flags, after `nub run --filter playground bundle`:
+`--runs N`, `--only <substring>`, `--baseline <binary>`, `--addon <path>`. `GPUIX_CHECKOUT=<path>`
+bundles an unreleased GPUix. The display must be awake and the window comes to the front.
 
-Run the benchmark with `nub run --filter playground bench:launch`. It reports each variant's
-median and quartiles, and exits non-zero if a variant's first content frame cannot be found.
+The baseline binary is a `gpui_platform::application()` hello world with the same zed path
+dependency and `lto = true`, opening an 800x600 window.
 
-## Test plan
+## Remaining
 
-- First frame: the probe reads the presented drawable. Frame 0 of a shown window must
-  contain the committed tree. Against the old order frame 0 is pure black.
-- Lazy HTTP: creating the client must not build reqwest; the first request must.
-- Lazy automation: importing `@gpuix/react` must not load `zod`. Fails against the static import.
-- Regressions: `launch()` connects, a remote image loads, cmd-q quits, `focus: false` and
-  `show: false` keep their behaviour.
-
-## Acceptance
-
-`nub run check`, `nub run lint`, `nub run test` pass here. The upstream test commands pass.
-The benchmark's numbers are recorded in `.agents/slop/status.md`. Windows and Linux keep
-their current launch order because they could not be verified on this machine.
+STOP until the upstream PR ships in a release. Then bump the `@gpuix/*` catalog entries, rerun
+the benchmark, record the `nub` row here and delete this plan. Windows and Linux keep their launch
+order until someone can verify `presentWindow` there.

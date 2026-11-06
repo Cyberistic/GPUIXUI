@@ -266,4 +266,4 @@ Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` �
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [757](./757-launch-speed.md) | Launch speed parity with raw GPUI | perf | gpuix upstream | active |
+| [757](./757-launch-speed.md) | Launch speed parity with raw GPUI | perf | gpuix upstream | waiting on the upstream release |

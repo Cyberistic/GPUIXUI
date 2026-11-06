@@ -25388,3 +25388,10 @@ green; the site deployed and all 195 sitemap pages answer 200.
       https://github.com/remorses/gpuix/issues/130 — "Add support for SVG
       primitives", with a link to `https://www.w3.org/TR/SVG2/`. Until it
       lands, every chart and diagram paints through the document route.
+
+## Launch speed (plan 757, 2026-11-06)
+
+`[x]` A launch benchmark that counts a frame as content by its presented pixels.
+`[x]` A production bundle for the playground with the V8 compile cache.
+`[x]` Upstream PR `remorses/gpuix` `feat/launch-speed`: hello 428 ms to 164 ms on macOS, raw GPUI 130 ms.
+`[ ]` After the GPUix release: bump `@gpuix/*`, rerun the benchmark, delete plan 757.

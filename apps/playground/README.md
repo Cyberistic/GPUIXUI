@@ -8374,3 +8374,9 @@ published binary; and a detached tab in its own window is impossible, which
 `second-window-lifecycle` now measures rather than assumes — a second
 `GpuixRenderer.init()` is refused on the running thread, so a detached tab needs
 a second process.
+
+## Launch speed
+
+`nub run --filter playground start` runs the production bundle with the V8 compile cache.
+`nub run --filter playground bench:launch` measures spawn to first content on macOS, reading
+the pixels of each presented frame. Plan 757 has its flags and the recorded numbers.
