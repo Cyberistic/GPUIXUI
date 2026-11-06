@@ -7,7 +7,7 @@ A chart is a **scene**. `BarChart`, `AreaChart`, `PieChart` and the rest compile
 to one document, and the runtime paints it as **one element** carrying
 **every series' own colour** and a **real gradient**.
 
-The compiler is [TanStack Charts](https://github.com/TanStack/charts), and only
+The compiler is [TanStack Charts](https://tanstack.com/charts), and only
 its DOM-free subpaths are used — `/scene`, `/line`, `/bar`, `/area`, `/tick`,
 `/svg` and `/scales/*` — because its DOM renderers need a `document` this
 runtime does not have.
@@ -359,8 +359,8 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 | `activeIndex` | `number` | none | that slice stands proud of the ring |
 | `stacked` | `boolean` | `false` | each datum owns a concentric band instead of a slice |
 | `onSliceActivate` | `(datum, index) => void` | none | a press on a slice reports the datum |
-| `animate` | `boolean` | `false` | a data change tweens the ring's values |
-| `animationDuration` | `number` | `320` | how long that tween takes, in ms |
+| `animate` | `boolean` | `true` | a mount and a data change animate |
+| `animationDuration` | `number` | `1500` | how long a mount or a data change takes, in ms |
 | `className` | `string` | — | joined after the recipe |
 | `testId` | `string` | — | the ring's locator; a slice is `-layer-<key>` |
 
@@ -426,8 +426,8 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 | `grid` | `boolean` | `false` | guide rings at each quarter of the radius |
 | `rounded` | `boolean` | `false` | each arc's ends round off with a cap |
 | `showLabels` | `boolean` | `false` | each ring's value prints at the end of its arc |
-| `animate` | `boolean` | `false` | a data change tweens the rings' values |
-| `animationDuration` | `number` | `320` | how long that tween takes, in ms |
+| `animate` | `boolean` | `true` | a mount and a data change animate |
+| `animationDuration` | `number` | `1500` | how long a mount or a data change takes, in ms |
 | `legend` | `boolean` | `true` | paints the legend under the rings |
 | `colors` | `string[]` | the theme scale | the palette override |
 | `valueFormat` | `(value: number) => string` | one decimal | how a value prints |
@@ -450,8 +450,8 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 | `color` | `string` | the first categorical swatch | the line's colour; a blank one is the default |
 | `curve` | `"linear" \| "smooth" \| "step"` | `"smooth"` | how the line joins its points |
 | `filled` | `boolean` | `false` | the line fills down to the floor |
-| `animate` | `boolean` | `false` | a data change tweens the line |
-| `animationDuration` | `number` | `320` | how long that tween takes, in ms |
+| `animate` | `boolean` | `true` | a mount and a data change animate |
+| `animationDuration` | `number` | `1500` | how long a mount or a data change takes, in ms |
 | `className` | `string` | — | joined after the recipe |
 | `testId` | `string` | — | the plot's locator |
 
@@ -502,8 +502,8 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 | `onViewChange` | `(view) => void` | none | reports each pan or zoom step |
 | `brush` | `boolean` | `false` | a brush strip under the plot reports a dragged window |
 | `onDomainChange` | `(domain) => void` | none | reports each drag step as `[start, end)` |
-| `animate` | `boolean` | `false` | a data change tweens its values |
-| `animationDuration` | `number` | `320` | how long that tween takes, in ms |
+| `animate` | `boolean` | `true` | a mount and a data change animate |
+| `animationDuration` | `number` | `1500` | how long a mount or a data change takes, in ms |
 | `valueFormat` | `(value: number) => string` | one decimal | how a value prints in the readout |
 | `className` | `string` | — | joined after the recipe |
 | `testId` | `string` | — | the chart's locator; a series layer is `-layer-<key>` |

@@ -21,6 +21,33 @@
   background-image: none;
 }
 
+.gx-block-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 6px 0 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.gx-block-source-link {
+  color: var(--foreground);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gx-block-source-link:hover {
+  color: var(--primary);
+}
+
+.gx-block-source code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
 /* The index tile is a capture of that same page, not a live scene: a grid of
    twelve mounted compositions paid for every scene's listeners and repainted
    all of them on a platform switch. The images live in `public/blocks/` and are
@@ -621,59 +648,129 @@
   }
 }
 
-/* ---- settings ---- */
+/* ---- profile settings ---- */
 
-.gx-block-settings .gx-block-card {
-  width: min(560px, 100%);
-  gap: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-.gx-block-profile {
+.gx-block-settings {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  padding: 6px 0;
 }
 
-.gx-block-avatar {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--secondary);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.gx-block-profile-text {
-  flex: 1;
-}
-
-.gx-block-badge {
-  padding: 2px 10px;
-  border-radius: 9999px;
-  background: var(--primary);
-  color: var(--primary-foreground);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.gx-block-tabs {
-  padding: 0 22px;
-}
-
-.gx-block-panel {
+.gx-profile {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 18px 22px;
+  width: min(760px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 8px);
+  background: var(--card);
 }
 
+.gx-profile-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 22px 24px 14px;
+}
+
+.gx-profile-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.gx-profile-tabs {
+  padding: 0 24px;
+}
+
+.gx-profile-tab {
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 9999px;
+}
+
+.gx-profile-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.gx-profile-row {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 28px;
+  padding: 22px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.gx-profile-side {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gx-profile-section {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.gx-profile-photo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.gx-profile-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 76px;
+  height: 76px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--secondary);
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.gx-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gx-profile-photo-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.gx-profile-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.gx-profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.gx-profile-field-wide {
+  grid-column: 1 / -1;
+}
+
+.gx-profile-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 .gx-block-row-between {
   display: flex;
   align-items: center;
@@ -686,27 +783,55 @@
   flex-shrink: 0;
   width: 36px;
   height: 20px;
+  padding: 0;
+  border: 0;
   border-radius: 9999px;
+  background: var(--secondary);
+  cursor: pointer;
+}
+
+.gx-block-switch[data-on="true"] {
   background: var(--primary);
 }
 
-.gx-block-switch::after {
-  content: "";
+.gx-block-switch span {
   position: absolute;
   top: 2px;
-  right: 2px;
+  left: 2px;
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--primary-foreground);
+  background: var(--card);
+  transition: left 160ms ease;
 }
 
-.gx-block-footer {
+.gx-block-switch[data-on="true"] span {
+  left: 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-block-switch span {
+    transition: none;
+  }
+}
+
+.gx-profile-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding: 14px 22px;
+  padding: 14px 24px;
   border-top: 1px solid var(--border);
+}
+
+@container (width < 720px) {
+  .gx-profile-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .gx-profile-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ---- dashboard ---- */
@@ -744,6 +869,9 @@
   flex-direction: column;
   width: 100%;
   max-width: 1080px;
+  /* The block's frame is 16:9, so the window reads as a screen rather than a
+     page that happens to end. The panes scroll inside it. */
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid var(--dash-line-strong);
   border-radius: 14px;
@@ -838,6 +966,7 @@
   flex-direction: column;
   gap: 22px;
   width: 240px;
+  overflow-y: auto;
   transition:
     width 0.28s ease,
     padding 0.28s ease;
@@ -969,6 +1098,7 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
+  min-height: 0;
 }
 
 .gx-dash-topbar {
@@ -1050,9 +1180,13 @@
 /* content grid: three rows of two cards */
 .gx-dash-grid {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
   padding: 18px;
+  scrollbar-gutter: stable;
 }
 
 .gx-dash-grid-row {
@@ -1101,6 +1235,7 @@
 
 .gx-dash-card-body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 14px;
   min-width: 0;
@@ -1145,6 +1280,12 @@
   height: auto;
 }
 
+/* The chart sits on the card's floor, so the height the taller card in the row
+   adds is breathing room above the plot rather than a hole under it. */
+.gx-dash-total .gx-dash-bars {
+  margin-top: auto;
+}
+
 .gx-dash-axis {
   stroke: var(--dash-line);
   stroke-width: 1;
@@ -1176,7 +1317,9 @@
 }
 
 .gx-dash-donut-segment {
-  animation: gx-dash-draw 500ms ease-out backwards;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: gx-dash-draw 420ms ease-out backwards;
 }
 
 @keyframes gx-dash-grow {
@@ -1190,10 +1333,12 @@
 
 @keyframes gx-dash-draw {
   from {
-    stroke-dasharray: 0 var(--dash-circ);
+    opacity: 0;
+    transform: scale(0.92);
   }
   to {
-    stroke-dasharray: var(--dash-len) var(--dash-gap);
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -1535,6 +1680,9 @@
 .gx-notif-panel {
   display: flex;
   flex-direction: column;
+  /* A fixed window: filtering or reading a row scrolls the list inside the
+     panel instead of moving the block around the page. */
+  height: 620px;
   width: min(460px, 100%);
   overflow: hidden;
   border: 1px solid var(--border);
@@ -1657,8 +1805,12 @@
 
 .gx-notif-list {
   display: flex;
+  flex: 1;
   flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
   padding: 6px 8px 10px;
+  scrollbar-gutter: stable;
 }
 
 .gx-notif-group {
@@ -1907,31 +2059,23 @@
 }
 
 .gx-kan-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
+  height: 34px;
+  padding: 0;
+  border-bottom: 0;
 }
 
 .gx-kan-tab {
-  position: relative;
-  height: 32px;
-  padding: 0 10px;
-  border: 0;
-  background: transparent;
-  color: var(--muted-foreground);
-  font-family: inherit;
+  height: 34px;
   font-size: 12.5px;
-  font-weight: 600;
   white-space: nowrap;
-  cursor: pointer;
 }
 
-.gx-kan-tab:hover {
-  color: var(--foreground);
-}
-
-.gx-kan-tab[aria-selected="true"] {
-  color: var(--foreground);
+.gx-kan-empty {
+  margin: 0;
+  padding: 40px 20px;
+  color: var(--muted-foreground);
+  font-size: 12.5px;
+  text-align: center;
 }
 
 .gx-kan-tab[aria-selected="true"]::after {
@@ -2418,7 +2562,7 @@
 
 .gx-kan-chip {
   max-width: 100%;
-  padding: 2px 7px;
+  padding: 2px 6px;
   overflow: hidden;
   border-radius: 999px;
   background: var(--secondary);
@@ -2427,6 +2571,10 @@
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.gx-kan-priority {
+  flex: none;
 }
 
 .gx-kan-priority[data-priority="high"] {
@@ -2641,23 +2789,6 @@
   letter-spacing: -0.015em;
 }
 
-.gx-set-close {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-}
-
-.gx-set-close:hover {
-  background: var(--hover);
-  color: var(--foreground);
-}
-
 .gx-set-search {
   display: flex;
   align-items: center;
@@ -2771,7 +2902,6 @@
 }
 
 .gx-set-nav-item:focus-visible,
-.gx-set-close:focus-visible,
 .gx-set-layout:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
@@ -3643,7 +3773,7 @@
   display: flex;
   width: 100%;
   max-width: 1180px;
-  height: 640px;
+  height: 680px;
   overflow: hidden;
   container-type: inline-size;
   border: 1px solid var(--border);
@@ -3651,6 +3781,7 @@
   background: var(--card);
   color: var(--foreground);
   font-family: var(--font-sans);
+  line-height: 1.4;
   text-align: left;
 }
 
@@ -3658,9 +3789,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: 220px;
+  width: 190px;
   flex: none;
-  padding: 12px;
+  padding: 10px;
   overflow-y: auto;
   border-right: 1px solid var(--border);
   background: var(--muted);
@@ -3669,9 +3800,9 @@
 .gx-mail-side-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 4px;
+  min-height: 28px;
+  margin-bottom: 8px;
 }
 
 .gx-mail-title {
@@ -3683,6 +3814,7 @@
 
 .gx-mail-new {
   display: inline-flex;
+  margin-left: auto;
 }
 
 .gx-mail-new .gx-btn-primary:first-child {
@@ -3814,25 +3946,26 @@
 
 .gx-mail-toolbar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 6px;
-  padding: 6px 10px;
+  padding: 5px 6px;
   border-bottom: 1px solid var(--border);
 }
 
 .gx-mail-actions {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 1px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .gx-mail-action {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  flex: 0 1 auto;
+  min-width: 0;
   height: 28px;
   padding: 0 7px;
   border: 0;
@@ -3841,6 +3974,7 @@
   color: var(--muted-foreground);
   font: inherit;
   font-size: 11.5px;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -3849,31 +3983,26 @@
   color: var(--foreground);
 }
 
-.gx-mail-tabs {
+.gx-mail-action:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -1px;
+}
+
+.gx-mail-tabbar {
   display: flex;
-  align-items: center;
-  gap: 2px;
+  align-items: stretch;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-mail-tabs {
+  height: 34px;
+  padding: 0;
+  border-bottom: 0;
 }
 
 .gx-mail-tab {
-  padding: 5px 8px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: var(--muted-foreground);
-  font: inherit;
   font-size: 12px;
-  cursor: pointer;
-}
-
-.gx-mail-tab:hover {
-  color: var(--foreground);
-}
-
-.gx-mail-tab[aria-selected="true"] {
-  border-bottom-color: var(--primary);
-  color: var(--foreground);
-  font-weight: 600;
 }
 
 .gx-mail-panes {
@@ -3883,7 +4012,7 @@
 }
 
 .gx-mail-list {
-  width: 400px;
+  width: 250px;
   flex: none;
   padding: 4px;
   overflow-y: auto;
@@ -3893,9 +4022,9 @@
 .gx-mail-row {
   display: flex;
   align-items: flex-start;
-  gap: 9px;
+  gap: 8px;
   width: 100%;
-  padding: 9px 8px;
+  padding: 8px 6px;
   border: 0;
   border-radius: var(--radius);
   background: transparent;
@@ -3916,21 +4045,21 @@
 .gx-mail-avatar {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   flex: none;
   border-radius: 50%;
   background: var(--secondary);
   color: var(--foreground);
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 650;
   letter-spacing: 0.02em;
 }
 
 .gx-mail-avatar-lg {
-  width: 38px;
-  height: 38px;
-  font-size: 12px;
+  width: 34px;
+  height: 34px;
+  font-size: 11px;
 }
 
 .gx-mail-row-body {
@@ -4032,24 +4161,33 @@
 .gx-mail-read {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   flex: 1;
   min-width: 0;
-  padding: 16px 18px;
+  padding: 14px;
   overflow: hidden;
+}
+
+.gx-mail-read-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: none;
 }
 
 .gx-mail-subject-lg {
   margin: 0;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 650;
   letter-spacing: -0.01em;
+  line-height: 1.25;
 }
 
 .gx-mail-from {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
+  min-width: 0;
 }
 
 .gx-mail-from-text {
@@ -4057,23 +4195,35 @@
   min-width: 0;
 }
 
-.gx-mail-from-text p {
+.gx-mail-from-line {
+  margin: 0;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gx-mail-from-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
-  margin: 0;
-  font-size: 12.5px;
+  gap: 2px 6px;
+  min-width: 0;
+  margin: 1px 0 0;
+  color: var(--muted-foreground);
+  font-size: 10.5px;
 }
 
 .gx-mail-to {
+  min-width: 0;
+  overflow: hidden;
   color: var(--muted-foreground);
-  font-size: 11px;
+  text-overflow: ellipsis;
 }
 
-.gx-mail-from-text .gx-mail-date {
-  display: block;
-  margin-top: 2px;
+.gx-mail-from-meta .gx-mail-date {
+  flex: none;
 }
 
 .gx-mail-icon {
@@ -4209,27 +4359,16 @@
   text-overflow: ellipsis;
 }
 
-.gx-mail-contact-tabs {
-  display: flex;
-  gap: 2px;
+.gx-mail-contact-tabs-list {
+  height: 28px;
+  padding: 0;
   border-bottom: 1px solid var(--border);
 }
 
 .gx-mail-contact-tab {
-  padding: 5px 7px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: var(--muted-foreground);
-  font: inherit;
-  font-size: 11.5px;
-  cursor: pointer;
-}
-
-.gx-mail-contact-tab[aria-selected="true"] {
-  border-bottom-color: var(--primary);
-  color: var(--foreground);
-  font-weight: 600;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 11px;
 }
 
 .gx-mail-contact-panel {
@@ -4275,8 +4414,7 @@
 }
 
 @media (max-width: 1100px) {
-  .gx-fm-info,
-  .gx-mail-contact {
+  .gx-fm-info {
     display: none;
   }
 }
@@ -4297,13 +4435,15 @@
   }
 
   .gx-mail-side {
-    width: 170px;
+    width: 180px;
   }
 
   .gx-mail-list {
-    width: 280px;
+    width: 250px;
   }
+}
 
+@container (max-width: 1080px) {
   .gx-mail-contact {
     display: none;
   }
@@ -4319,11 +4459,11 @@
   }
 
   .gx-mail-side {
-    width: 160px;
+    width: 176px;
   }
 
   .gx-mail-list {
-    width: 230px;
+    width: 244px;
   }
 }
 
@@ -4359,7 +4499,10 @@
   .gx-mail-action {
     gap: 0;
     padding: 0 6px;
-    font-size: 0;
+  }
+
+  .gx-mail-action-label {
+    display: none;
   }
 }
 
@@ -5081,34 +5224,124 @@
 }
 
 /* ---- dashboard management ----
-   A dense three-column console. Every state keeps its box: the toast stack
-   reserves both cards, the upload and copy actions reserve their label, and a
-   selection paints a fill instead of an edge. Three columns fold to two at
-   1200px and one at 760px. */
+   The settings screen: a 16:9 window with a workspace rail and one scrolling
+   column of sections. The body is three tracks — the rail takes one, the
+   sections take two — and folds to two tracks at 1200px and one at 760px. */
 
 .gx-mgmt {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
-  gap: 12px;
-  width: 100%;
-  text-align: left;
-}
-
-.gx-mgmt-col {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  width: 100%;
+  max-width: 1080px;
+  /* The frame is 16:9, so the preview reads as a screen rather than a page
+     that happens to end. The rail and the sections scroll inside it. */
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: var(--elevation-lg);
+  text-align: left;
+  font-family: var(--font-sans);
+}
+
+.gx-mgmt *,
+.gx-mgmt *::before,
+.gx-mgmt *::after {
+  box-sizing: border-box;
+}
+
+.gx-mgmt-bar {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--material-titlebar);
+}
+
+.gx-mgmt-lights {
+  position: absolute;
+  left: 14px;
+  display: flex;
+  gap: 7px;
+}
+
+.gx-mgmt-lights i {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+}
+
+.gx-mgmt-lights i:nth-child(1) {
+  background: var(--destructive);
+}
+
+.gx-mgmt-lights i:nth-child(2) {
+  background: var(--warning);
+}
+
+.gx-mgmt-lights i:nth-child(3) {
+  background: var(--success);
+}
+
+.gx-mgmt-bar-title {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-mgmt-env {
+  position: absolute;
+  right: 14px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--placeholder);
+}
+
+.gx-mgmt-body {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  flex: 1;
+  min-height: 0;
+}
+
+.gx-mgmt-side {
+  display: flex;
+  grid-column: span 1;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  min-height: 0;
+  padding: var(--spacing-lg);
+  overflow: auto;
+  border-right: 1px solid var(--border);
+  background: var(--background);
+}
+
+.gx-mgmt-main {
+  display: flex;
+  grid-column: span 2;
+  flex-direction: column;
+  gap: var(--spacing-lg);
   min-width: 0;
+  min-height: 0;
+  padding: var(--spacing-lg);
+  overflow: auto;
 }
 
 .gx-mgmt-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
   border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 4px);
+  border-radius: var(--radius);
   background: var(--card);
   color: var(--foreground);
 }
@@ -5142,7 +5375,7 @@
 .gx-mgmt-service {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--spacing-md);
 }
 
 .gx-mgmt-dot {
@@ -5170,9 +5403,10 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
+  margin: 0;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   background: var(--border);
 }
 
@@ -5199,6 +5433,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 6px;
+  margin: 0;
 }
 
 .gx-mgmt-stat-value {
@@ -5213,30 +5448,31 @@
   font-variant-numeric: tabular-nums;
 }
 
-.gx-mgmt-delta[data-tone="up"] {
+.gx-mgmt-delta[data-tone="good"] {
   color: var(--success);
-}
-
-.gx-mgmt-delta[data-tone="down"] {
-  color: var(--destructive);
 }
 
 .gx-mgmt-delta[data-tone="flat"] {
   color: var(--muted-foreground);
 }
 
-.gx-mgmt-search {
-  width: 100%;
-}
-
-.gx-mgmt-group {
+.gx-mgmt-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
+.gx-mgmt-side-foot {
+  margin: auto 0 0;
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--placeholder);
+}
+
 .gx-mgmt-group-label {
-  margin: 0 0 2px;
+  margin: 0;
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.1em;
@@ -5244,20 +5480,25 @@
   color: var(--placeholder);
 }
 
+.gx-mgmt-nav .gx-mgmt-group-label {
+  padding: 0 8px 2px;
+}
+
 .gx-mgmt-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-md);
   width: 100%;
-  height: 26px;
-  padding: 0 6px;
+  height: 28px;
+  padding: 0 8px;
   border: 0;
-  border-radius: calc(var(--radius) - 1px);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--foreground);
   font: inherit;
   font-size: 11.5px;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -5270,8 +5511,16 @@
   outline-offset: -2px;
 }
 
+.gx-mgmt-row[aria-current="page"] {
+  background: var(--active);
+}
+
 .gx-mgmt-row .gx-mgmt-glyph {
   color: var(--muted-foreground);
+}
+
+.gx-mgmt-row[aria-current="page"] .gx-mgmt-glyph {
+  color: var(--foreground);
 }
 
 .gx-mgmt-row-label {
@@ -5291,7 +5540,7 @@
 .gx-mgmt-error-head {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--spacing-md);
 }
 
 .gx-mgmt-error-glyph {
@@ -5300,7 +5549,7 @@
 }
 
 .gx-mgmt-error-text {
-  margin: 0;
+  margin: 2px 0 0;
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.5;
@@ -5323,7 +5572,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--spacing-md);
   min-height: 24px;
 }
 
@@ -5347,10 +5596,10 @@
 .gx-mgmt-radio-card {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--spacing-md);
   padding: 8px 10px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   background: var(--card);
   cursor: pointer;
 }
@@ -5395,21 +5644,19 @@
 .gx-mgmt-toasts {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: 8px;
+  gap: var(--spacing-md);
   min-height: 132px;
 }
 
 .gx-mgmt-toast {
-  padding: 10px 12px;
   box-shadow: none;
 }
 
 .gx-mgmt-toasts-empty {
   margin: 0;
-  padding: 12px;
+  padding: var(--spacing-lg);
   border: 1px dashed var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   font-size: 11px;
   text-align: center;
   color: var(--placeholder);
@@ -5479,8 +5726,6 @@
   color: var(--foreground);
 }
 
-/* The shared outline action at the card's width: the label runs from the
-   terminal glyph to the chevron, so only the row's own layout stays here. */
 .gx-mgmt-debug {
   justify-content: flex-start;
   width: 100%;
@@ -5496,24 +5741,43 @@
   color: var(--placeholder);
 }
 
+.gx-mgmt-menu-wrap {
+  position: relative;
+  align-self: flex-start;
+}
+
+.gx-mgmt-menu-trigger {
+  gap: var(--spacing-md);
+}
+
+.gx-mgmt-menu-trigger .gx-mgmt-glyph {
+  transform: rotate(90deg);
+}
+
 .gx-mgmt-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 1px;
+  min-width: 200px;
   padding: 4px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--popover);
+  box-shadow: var(--elevation-lg);
 }
 
 .gx-mgmt-menu-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-md);
   height: 28px;
   padding: 0 6px;
   border: 0;
-  border-radius: calc(var(--radius) - 1px);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--foreground);
   font: inherit;
@@ -5542,7 +5806,7 @@
 
 .gx-mgmt-clear {
   align-items: center;
-  padding: 18px 14px;
+  padding: var(--spacing-lg);
   text-align: center;
 }
 
@@ -5553,7 +5817,7 @@
 }
 
 .gx-mgmt-clear-title {
-  margin: 2px 0 0;
+  margin: 0;
   font-size: 12.5px;
   font-weight: 650;
 }
@@ -5585,7 +5849,7 @@
 .gx-mgmt-key-top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-md);
 }
 
 .gx-mgmt-key-name {
@@ -5619,14 +5883,23 @@
 }
 
 @media (max-width: 1200px) {
-  .gx-mgmt {
+  .gx-mgmt-body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gx-mgmt-main {
+    grid-column: auto;
   }
 }
 
 @media (max-width: 760px) {
-  .gx-mgmt {
+  .gx-mgmt-body {
     grid-template-columns: 1fr;
+  }
+
+  .gx-mgmt-side {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
   }
 }
 
@@ -5748,11 +6021,11 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  width: var(--target-size);
-  height: var(--target-size);
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   background: transparent;
   color: var(--muted-foreground);
   cursor: pointer;
@@ -7111,8 +7384,8 @@ button.gx-sb-row {
 
 .gx-sb-pop--user {
   right: auto;
-  bottom: calc(100% + 6px);
-  left: 4px;
+  bottom: 0;
+  left: calc(100% + 8px);
   width: 224px;
 }
 
@@ -7974,25 +8247,20 @@ button.gx-sb-row {
 /* A cell's own colour is its fill, so the label has to hold its own against
    four different hues: the ink is the surface colour, which is what a filled
    chip's caption uses. */
+/* A cell is a palette fill in either mode, so its ink is a constant dark
+   rather than the surface's. No halo: the stroke that made it legible on the
+   page read as a blur on the cell. */
 .gx-dash01-cell-label {
   font-size: 11px;
-  fill: var(--background);
+  fill: #0b0d12;
   font-weight: 700;
-  paint-order: stroke;
-  stroke: color-mix(in srgb, var(--background) 22%, transparent);
-  stroke-width: 2.5px;
-  stroke-linejoin: round;
 }
 
 .gx-dash01-cell-value {
   font-size: 9.5px;
-  fill: var(--background);
+  fill: #0b0d12;
   font-weight: 600;
-  opacity: 0.78;
-  paint-order: stroke;
-  stroke: color-mix(in srgb, var(--background) 18%, transparent);
-  stroke-width: 2.5px;
-  stroke-linejoin: round;
+  opacity: 0.72;
 }
 
 .gx-dash01-ribbon {
@@ -8166,7 +8434,10 @@ button.gx-sb-row {
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-height: 640px;
+  /* The block's frame is 16:9, like the dashboard: a screen, not a page. The
+     sidebar and the task pane scroll inside it. */
+  aspect-ratio: 16 / 9;
+  max-width: 1080px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 6px);
@@ -8236,10 +8507,31 @@ button.gx-sb-row {
 
 /* The strip is `ReorderableTabs`: the shared drag, close and keyboard
    behaviour, dressed as the reference's rounded tab. */
+/* A row of its own under the bar: the views span the block and start at the
+   left edge, and the row's height is fixed so a new tab cannot move the page. */
+.gx-task-tabbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+}
+
 .gx-task-tabs {
+  flex: 1;
   min-width: 0;
+  justify-content: flex-start;
   gap: 2px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.gx-task-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .gx-task-tab {
@@ -8422,17 +8714,18 @@ button.gx-sb-row {
   padding-top: 10px;
 }
 
+/* The rail toggle is a row at the foot of the sidebar, not a floating square
+   over the first nav item. */
 .gx-task-collapse {
-  position: absolute;
-  top: 8px;
-  right: 6px;
-  opacity: 0;
-  transition: opacity 120ms ease;
+  position: static;
+  flex: none;
+  align-self: flex-end;
+  margin: 6px 2px 0;
+  opacity: 1;
 }
 
-.gx-task-side:hover .gx-task-collapse,
-.gx-task-collapse:focus-visible {
-  opacity: 1;
+.gx-task-side[data-collapsed="true"] .gx-task-collapse {
+  align-self: center;
 }
 
 /* A collapsed rail keeps its icons and hides its labels. */
@@ -8518,6 +8811,8 @@ button.gx-sb-row {
   font-weight: 600;
 }
 
+/* The reference keeps the `···` beside every section title, not only on
+   hover, so the control is always there to read. */
 .gx-task-section-more {
   display: inline-flex;
   align-items: center;
@@ -8530,7 +8825,7 @@ button.gx-sb-row {
   background: transparent;
   color: var(--muted-foreground);
   cursor: pointer;
-  opacity: 0;
+  opacity: 0.55;
   transition: opacity 120ms ease;
 }
 
@@ -8566,13 +8861,18 @@ button.gx-sb-row {
 }
 
 /* ---- the inbox ---- */
+/* A fixed window on the inbox: a new task scrolls the list instead of moving
+   the sections under it. */
 .gx-task-inbox {
   display: flex;
   flex-direction: column;
   gap: 1px;
+  height: 236px;
   margin: 0;
   padding: 0;
+  overflow-y: auto;
   list-style: none;
+  scrollbar-gutter: stable;
 }
 
 .gx-task-row {
@@ -8657,8 +8957,9 @@ button.gx-sb-row {
 /* ---- the cards ---- */
 .gx-task-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  align-items: start;
 }
 
 .gx-task-card {
@@ -8696,12 +8997,25 @@ button.gx-sb-row {
 .gx-task-card-cover {
   position: relative;
   flex: none;
-  height: 34px;
+  height: 44px;
   background: var(--muted);
 }
 
+/* Three photographs, so no two cards paint the same crop. */
 .gx-task-card-cover[data-cover="photo"] {
-  background: linear-gradient(115deg, #6fa8dc 0%, #8fc98a 60%, #e0c56b 100%);
+  background-image: url("/hxh-wp.jpg");
+  background-position: center 38%;
+  background-size: cover;
+}
+
+.gx-task-card-cover[data-cover="photo"][data-art="killua"] {
+  background-image: url("/hxh-a.webp");
+  background-position: center 30%;
+}
+
+.gx-task-card-cover[data-cover="photo"][data-art="gon"] {
+  background-image: url("/hxh-b.webp");
+  background-position: center 34%;
 }
 
 .gx-task-card-cover[data-tone="sunset"] {
@@ -8737,8 +9051,8 @@ button.gx-sb-row {
 .gx-task-card-body {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 9px 11px 11px;
+  gap: 4px;
+  padding: 10px 12px 12px;
 }
 
 .gx-task-card-head {
@@ -8891,7 +9205,19 @@ button.gx-sb-row {
 }
 
 .gx-task-doc-cover[data-cover="photo"] {
-  background: linear-gradient(115deg, #6fa8dc 0%, #8fc98a 60%, #e0c56b 100%);
+  background-image: url("/hxh-wp.jpg");
+  background-position: center 42%;
+  background-size: cover;
+}
+
+.gx-task-doc-cover[data-cover="photo"][data-art="killua"] {
+  background-image: url("/hxh-a.webp");
+  background-position: center 30%;
+}
+
+.gx-task-doc-cover[data-cover="photo"][data-art="gon"] {
+  background-image: url("/hxh-b.webp");
+  background-position: center 34%;
 }
 
 .gx-task-doc-cover[data-tone="sunset"] {
@@ -8961,10 +9287,13 @@ button.gx-sb-row {
   font: inherit;
   font-weight: 500;
   text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
   overflow: hidden;
   cursor: pointer;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .gx-task-card-title:hover {
@@ -8990,9 +9319,10 @@ button.gx-sb-row {
   }
 }
 
-@container (max-width: 780px) {
+/* Three across only where a card still has the reference's own measure. */
+@container (min-width: 1080px) {
   .gx-task-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

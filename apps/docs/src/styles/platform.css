@@ -378,7 +378,14 @@
   background: var(--switch-on, var(--primary));
 }
 
-/* ---- the pipeline block (plan 728) -------------------------------------- */
+/* ---- the pipeline block (plan 728) --------------------------------------
+   The stage strip and the toolbar title share the window's 12-point inset;
+   every row sits on one four-column grid so the project pills and the dates
+   do not shuffle as their labels change. */
+.gx-window:has(.gx-pipeline-stages) .gx-window-toolbar {
+  padding-left: 12px;
+}
+
 .gx-window-sidebar button.gx-window-row {
   width: 100%;
   justify-content: space-between;
@@ -388,6 +395,7 @@
 .gx-pipeline-count {
   color: var(--muted-foreground);
   font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 
 .gx-pipeline-layout {
@@ -399,8 +407,15 @@
   margin: 12px;
 }
 
+.gx-pipeline-stages button {
+  padding: 0 6px;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
 .gx-pipeline-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 100px 40px;
   align-items: center;
   gap: 12px;
   width: 100%;
@@ -425,18 +440,25 @@
 }
 
 .gx-pipeline-title {
-  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gx-pipeline-project {
+  justify-self: end;
   padding: 1px 8px;
   border: 1px solid var(--border);
   border-radius: 9999px;
   font-size: 11px;
+  white-space: nowrap;
 }
 
 .gx-pipeline-due {
+  justify-self: end;
   color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
 }
 
 .gx-pipeline-inspector {
@@ -446,7 +468,18 @@
   padding: 16px;
 }
 
-.gx-pipeline-stages button {
-  padding: 0 8px;
-  white-space: nowrap;
+.gx-pipeline-inspector strong {
+  font-size: 13px;
+}
+
+.gx-pipeline-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+
+.gx-pipeline-activity p {
+  margin: 0;
 }

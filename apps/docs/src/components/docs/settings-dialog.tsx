@@ -280,13 +280,6 @@ export const SettingsDialogRender = () => {
               collapsed={rail.collapsed}
               onToggle={rail.toggle}
             />
-            <button
-              aria-label="Close settings"
-              className="gx-set-close"
-              type="button"
-            >
-              <Glyph name="close" />
-            </button>
           </div>
           <label className="gx-set-search gx-rail-label">
             <Glyph name="search" size={13} />

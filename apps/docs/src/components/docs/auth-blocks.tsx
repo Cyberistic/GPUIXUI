@@ -660,12 +660,8 @@ export const SignInPageRender = () => {
         <aside aria-label="About GPUIxUI" className="gx-auth-page-aside">
           <figure className="gx-auth-page-quote">
             <blockquote className="gx-auth-page-quote-text">
-              One page, every platform — the controls, the palette and the type
-              all arrive from the theme.
+              One page, every platform.
             </blockquote>
-            <figcaption className="gx-auth-page-quote-by">
-              The same components, one theme away.
-            </figcaption>
           </figure>
         </aside>
       </div>

@@ -1,0 +1,199 @@
+/*
+ * The desktop block's chrome, as CSS.
+ *
+ * The native block draws the era chrome with the runtime's own styles; this
+ * file is the same geometry and colour for the browser, so a consumer can
+ * take the look without the component. Two looks, one set of class names:
+ * the values live on `[data-desktop]`, and Luna's Tahoma / Trebuchet and
+ * Aero's Segoe UI come from the token families.
+ */
+
+.desktop {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  color: #fff;
+}
+
+/* ---- the ground ---- */
+
+.desktop[data-desktop="luna"] {
+  background:
+    radial-gradient(120% 70% at 50% 108%, #6ea322 0 32%, transparent 33%),
+    radial-gradient(150% 90% at 50% 118%, #8cc63f 0 46%, transparent 47%),
+    linear-gradient(180deg, #1c4fa1 0%, #2f74cf 48%, #8ec6ff 100%);
+}
+
+.desktop[data-desktop="aero"] {
+  background:
+    radial-gradient(60% 45% at 22% 28%, rgb(120 190 255 / 35%), transparent 70%),
+    radial-gradient(70% 55% at 78% 72%, rgb(60 120 220 / 45%), transparent 72%),
+    linear-gradient(180deg, #06122b 0%, #0b2350 55%, #123a72 100%);
+}
+
+/* ---- a window ---- */
+
+.desktop-window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px 8px 3px 3px;
+  box-shadow:
+    0 18px 40px -18px rgb(0 0 0 / 55%),
+    0 0 0 1px rgb(0 0 0 / 35%);
+}
+
+.desktop-window[data-active="false"] {
+  filter: saturate(0.55);
+}
+
+.desktop-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 4px 0 7px;
+  border-radius: 8px 8px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.desktop-window[data-desktop="luna"] {
+  border: 3px solid #0a5bd8;
+  background: #ece9d8;
+}
+
+.desktop-window[data-desktop="luna"] .desktop-titlebar {
+  margin: -3px -3px 0;
+  background: linear-gradient(180deg, #3f8cf3 0%, #0a5bd8 42%, #0b4fc4 58%, #2f7ae8 100%);
+  text-shadow: 1px 1px 0 rgb(0 0 0 / 45%);
+}
+
+.desktop-window[data-desktop="aero"] {
+  border: 1px solid rgb(255 255 255 / 45%);
+  background: rgb(240 246 252 / 94%);
+  backdrop-filter: blur(20px);
+}
+
+.desktop-window[data-desktop="aero"] .desktop-titlebar {
+  background: linear-gradient(180deg, rgb(255 255 255 / 55%) 0%, rgb(214 232 248 / 30%) 50%, rgb(160 196 232 / 25%) 100%);
+  color: #16324f;
+  font-weight: 400;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 75%);
+}
+
+.desktop-caption {
+  display: inline-grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  margin-left: auto;
+  border: 1px solid rgb(255 255 255 / 85%);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #4c8cf7 0%, #1a56d6 100%);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.desktop-caption[data-close="true"] {
+  background: linear-gradient(180deg, #e9896b 0%, #c23b12 100%);
+}
+
+/* Aero hangs the caption group from the top edge and makes the close widest. */
+.desktop-window[data-desktop="aero"] .desktop-caption {
+  width: 26px;
+  height: 18px;
+  margin-left: 0;
+  border: 0;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 30%), rgb(120 160 210 / 35%));
+}
+
+.desktop-window[data-desktop="aero"] .desktop-caption[data-close="true"] {
+  width: 48px;
+  background: linear-gradient(180deg, #e46a5a 0%, #b8241a 100%);
+}
+
+.desktop-window-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ---- the taskbar ---- */
+
+.desktop-taskbar {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 4px;
+  font-size: 11px;
+}
+
+.desktop[data-desktop="luna"] .desktop-taskbar {
+  background: linear-gradient(180deg, #2f7ae8 0%, #0a5bd8 8%, #1764e0 52%, #0b4fc4 92%, #2f7ae8 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 45%);
+}
+
+.desktop[data-desktop="aero"] .desktop-taskbar {
+  background: linear-gradient(180deg, rgb(120 170 225 / 75%) 0%, rgb(30 70 120 / 85%) 100%);
+  backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 55%);
+}
+
+.desktop-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px 6px 0 0;
+  font: inherit;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
+
+.desktop[data-desktop="luna"] .desktop-start {
+  background: linear-gradient(180deg, #7fbf5a 0%, #3f8c1e 55%, #2f7a14 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 45%);
+}
+
+.desktop[data-desktop="aero"] .desktop-start {
+  background: radial-gradient(120% 140% at 50% 0%, rgb(255 255 255 / 40%), transparent 60%),
+    linear-gradient(180deg, rgb(90 150 210 / 80%), rgb(30 70 120 / 90%));
+  border: 1px solid rgb(255 255 255 / 45%);
+}
+
+/* The start menu, open above the taskbar. */
+.desktop-menu {
+  position: absolute;
+  bottom: 34px;
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.desktop[data-desktop="luna"] .desktop-menu {
+  border: 1px solid #0a5bd8;
+  border-radius: 6px 6px 0 0;
+  background: #fff;
+  color: #16324f;
+  box-shadow: 0 12px 30px -12px rgb(0 0 0 / 55%);
+}
+
+.desktop[data-desktop="aero"] .desktop-menu {
+  border: 1px solid rgb(255 255 255 / 55%);
+  background: rgb(240 246 252 / 92%);
+  color: #16324f;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 12px 30px -12px rgb(0 0 0 / 55%);
+}

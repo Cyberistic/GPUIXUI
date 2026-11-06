@@ -5,6 +5,8 @@ description: Capture a chord and display it as keycaps
 
 <ComponentPreview name="hotkey-recorder-demo" />
 
+Using [TanStack Hotkeys](https://tanstack.com/hotkeys).
+
 ## Usage
 
 ```tsx
@@ -55,9 +57,3 @@ const [recording, setRecording] = useState(false);
   />
 </AppShell>;
 ```
-
-## Notes
-- `preventDefault` stops the element's default action; the key still reaches an application-level handler, so gate your own bindings on `onRecordingChange`.
-- A chord the operating system intercepts before the window never arrives.
-- Clearing is a control, not `Backspace`.
-- No conflict detection against already-bound chords.

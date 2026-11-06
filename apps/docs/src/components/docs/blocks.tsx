@@ -1,6 +1,8 @@
 import desktopSource from "../../../../../examples/blocks/src/desktop/desktop.tsx?raw";
 import pipelineSource from "../../../../../examples/blocks/src/pipeline/pipeline.tsx?raw";
 import type { ReactNode } from "react";
+import { useState } from "react";
+import { TabStrip } from "./tab-strip";
 import { SignInPageRender, signInPageSource } from "./auth-blocks";
 import { CommandCentreRender, commandCentreSource } from "./command-centre";
 import {
@@ -46,32 +48,17 @@ import {
 } from "./dashboard-management";
 import { Sidebar01Render, sidebar01Source } from "./blocks/sidebar-01";
 
-/**
- * Block recipes for the docs. A block is a page-level composition of real
- * `@gpuixui/*` components — not a new component — shown exactly as shadcn/ui
- * presents its blocks: a browser rendering plus the real `@gpuixui` source.
- *
- * `render` reproduces the native geometry/palette with HTML (the shipped
- * components render through GPUix, not the DOM); `source` is the recipe a
- * consumer copies; `packages` is what the recipe composes.
- */
-
 export interface Block {
   readonly name: string;
-  /** The docs page slug under `/blocks/`. */
   readonly slug: string;
   readonly title: string;
   readonly description: string;
   readonly packages: ReadonlyArray<string>;
   readonly render: () => ReactNode;
   readonly source: string;
+  readonly file: string;
 }
 
-/**
- * The desktop block's screen is the native window itself: these are captures of
- * `DesktopBlock` rendered by GPUix (`apps/playground/src/film/takes.tsx`,
- * `desktop-luna` / `desktop-aero`), not an HTML reproduction.
- */
 const DesktopRender = () => (
   <div className="gx-block-desktop">
     {(
@@ -93,135 +80,302 @@ const DesktopRender = () => (
   </div>
 );
 
-const SettingsRender = () => (
-  <div className="gx-block-settings">
-    <div className="gx-block-card">
-      <div className="gx-block-profile">
-        <span className="gx-block-avatar">AD</span>
-        <div className="gx-block-profile-text">
-          <p className="gx-block-title">Ada Lovelace</p>
-          <p className="gx-block-desc">ada@example.com</p>
-        </div>
-        <span className="gx-block-badge">Pro</span>
-      </div>
-      <div
-        aria-label="Settings"
-        className="gx-tabs-list gx-block-tabs"
-        role="tablist"
-      >
-        <button
-          aria-selected="true"
-          className="gx-tab gx-block-tab"
-          role="tab"
-          type="button"
-        >
-          Profile
-        </button>
-        <button
-          aria-selected="false"
-          className="gx-tab gx-block-tab"
-          role="tab"
-          type="button"
-        >
-          Notifications
-        </button>
-      </div>
-      <div className="gx-block-panel">
-        <label className="gx-block-label" htmlFor="gx-set-name">
-          Display name
-        </label>
-        <input
-          className="gx-field gx-block-field"
-          defaultValue="Ada Lovelace"
-          id="gx-set-name"
+const SettingsRender = () => {
+  const [tab, setTab] = useState<"profile" | "notifications" | "security">(
+    "profile",
+  );
+  const [photo, setPhoto] = useState<"photo" | "initials">("photo");
+  const [alerts, setAlerts] = useState(true);
+  const [digest, setDigest] = useState(false);
+  const [twoFactor, setTwoFactor] = useState(true);
+
+  return (
+    <div className="gx-block-settings">
+      <div className="gx-profile">
+        <header className="gx-profile-head">
+          <h3 className="gx-profile-title">Profile settings</h3>
+          <p className="gx-block-desc">
+            Manage your account and how the library greets you.
+          </p>
+        </header>
+
+        <TabStrip
+          className="gx-profile-tabs"
+          label="Profile settings"
+          onChange={setTab}
+          options={[
+            { value: "profile", label: "Profile" },
+            { value: "notifications", label: "Notifications" },
+            { value: "security", label: "Security" },
+          ]}
+          tabClassName="gx-profile-tab"
+          value={tab}
         />
-        <label className="gx-block-label" htmlFor="gx-set-email">
-          Email
-        </label>
-        <input
-          className="gx-field gx-block-field"
-          defaultValue="ada@example.com"
-          id="gx-set-email"
-        />
-        <div className="gx-block-row-between">
-          <div>
-            <p className="gx-block-label">Desktop alerts</p>
-            <p className="gx-block-desc">
-              Alerts for runs that finish or fail.
-            </p>
+
+        {tab === "profile" ? (
+          <div className="gx-profile-body">
+            <section className="gx-profile-row">
+              <div className="gx-profile-side">
+                <p className="gx-profile-section">Profile picture</p>
+                <p className="gx-block-desc">
+                  A photo, or your initials when there is none.
+                </p>
+              </div>
+              <div className="gx-profile-photo">
+                <span
+                  className="gx-profile-avatar"
+                  data-photo={photo === "photo"}
+                >
+                  {photo === "photo" ? (
+                    <img
+                      alt="Gon and Killua on Whale Island"
+                      src="/hxh-b.webp"
+                    />
+                  ) : (
+                    "AD"
+                  )}
+                </span>
+                <span className="gx-profile-photo-actions">
+                  <button
+                    className="gx-btn gx-btn-secondary gx-btn-sm"
+                    onClick={() => setPhoto("photo")}
+                    type="button"
+                  >
+                    Change photo
+                  </button>
+                  <button
+                    aria-label="Remove photo"
+                    className="gx-btn gx-btn-ghost gx-btn-sm"
+                    onClick={() => setPhoto("initials")}
+                    type="button"
+                  >
+                    Remove
+                  </button>
+                </span>
+              </div>
+            </section>
+
+            <section className="gx-profile-row">
+              <div className="gx-profile-side">
+                <p className="gx-profile-section">Personal details</p>
+                <p className="gx-block-desc">
+                  The name and contact the account answers to.
+                </p>
+              </div>
+              <div className="gx-profile-fields">
+                <label className="gx-profile-field">
+                  <span className="gx-block-label">First name</span>
+                  <input
+                    className="gx-field"
+                    defaultValue="Ada"
+                    name="first-name"
+                  />
+                </label>
+                <label className="gx-profile-field">
+                  <span className="gx-block-label">Surname</span>
+                  <input
+                    className="gx-field"
+                    defaultValue="Lovelace"
+                    name="surname"
+                  />
+                </label>
+                <label className="gx-profile-field gx-profile-field-wide">
+                  <span className="gx-block-label">Email</span>
+                  <input
+                    className="gx-field"
+                    defaultValue="ada@example.com"
+                    name="email"
+                    type="email"
+                  />
+                </label>
+                <label className="gx-profile-field gx-profile-field-wide">
+                  <span className="gx-block-label">Phone</span>
+                  <input
+                    className="gx-field"
+                    defaultValue="+44 20 7946 0958"
+                    name="phone"
+                    type="tel"
+                  />
+                </label>
+              </div>
+            </section>
           </div>
-          <span aria-checked="true" className="gx-block-switch" role="switch" />
+        ) : null}
+
+        {tab === "notifications" ? (
+          <div className="gx-profile-body">
+            <section className="gx-profile-row">
+              <div className="gx-profile-side">
+                <p className="gx-profile-section">Notifications</p>
+                <p className="gx-block-desc">What arrives, and when.</p>
+              </div>
+              <div className="gx-profile-stack">
+                <div className="gx-block-row-between">
+                  <div>
+                    <p className="gx-block-label">Desktop alerts</p>
+                    <p className="gx-block-desc">Runs that finish or fail.</p>
+                  </div>
+                  <button
+                    aria-checked={alerts}
+                    aria-label="Desktop alerts"
+                    className="gx-block-switch"
+                    data-on={alerts}
+                    onClick={() => setAlerts((on) => !on)}
+                    role="switch"
+                    type="button"
+                  >
+                    <span />
+                  </button>
+                </div>
+                <div className="gx-block-row-between">
+                  <div>
+                    <p className="gx-block-label">Daily digest</p>
+                    <p className="gx-block-desc">A morning summary.</p>
+                  </div>
+                  <button
+                    aria-checked={digest}
+                    aria-label="Daily digest"
+                    className="gx-block-switch"
+                    data-on={digest}
+                    onClick={() => setDigest((on) => !on)}
+                    role="switch"
+                    type="button"
+                  >
+                    <span />
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        ) : null}
+
+        {tab === "security" ? (
+          <div className="gx-profile-body">
+            <section className="gx-profile-row">
+              <div className="gx-profile-side">
+                <p className="gx-profile-section">Password</p>
+                <p className="gx-block-desc">Last changed 14 days ago.</p>
+              </div>
+              <div className="gx-profile-fields">
+                <label className="gx-profile-field gx-profile-field-wide">
+                  <span className="gx-block-label">Current password</span>
+                  <input
+                    className="gx-field"
+                    defaultValue="hunter-exam"
+                    name="current-password"
+                    type="password"
+                  />
+                </label>
+              </div>
+            </section>
+            <section className="gx-profile-row">
+              <div className="gx-profile-side">
+                <p className="gx-profile-section">Two-factor</p>
+                <p className="gx-block-desc">A code from your phone.</p>
+              </div>
+              <div className="gx-profile-stack">
+                <div className="gx-block-row-between">
+                  <div>
+                    <p className="gx-block-label">Authenticator app</p>
+                    <p className="gx-block-desc">Required on a new device.</p>
+                  </div>
+                  <button
+                    aria-checked={twoFactor}
+                    aria-label="Two-factor authentication"
+                    className="gx-block-switch"
+                    data-on={twoFactor}
+                    onClick={() => setTwoFactor((on) => !on)}
+                    role="switch"
+                    type="button"
+                  >
+                    <span />
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        ) : null}
+
+        <div className="gx-profile-footer">
+          <button className="gx-btn gx-btn-ghost" type="button">
+            Cancel
+          </button>
+          <button className="gx-btn gx-btn-primary" type="button">
+            Save changes
+          </button>
         </div>
-      </div>
-      <div className="gx-block-footer">
-        <button className="gx-btn gx-btn-ghost" type="button">
-          Cancel
-        </button>
-        <button className="gx-btn gx-btn-primary" type="button">
-          Save changes
-        </button>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const settingsSource = `import { Avatar } from "@gpuixui/components/avatar";
-import { Badge } from "@gpuixui/components/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@gpuixui/components/card";
 import { Field, FieldInput } from "@gpuixui/components/field";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gpuixui/components/tabs";
-import { Button, Select, Stack, Switch, Text } from "@gpuixui/primitives";
+import { Button, Stack, Switch, Text } from "@gpuixui/primitives";
 
-export function SettingsPage() {
+export function ProfileSettings() {
+  const [photo, setPhoto] = useState(true);
+
   return (
     <Card variant="outline" style={{ width: 640 }}>
       <CardHeader>
-        <Stack direction="row" gap="sm" align="center">
-          <Avatar name="Ada Lovelace" size="md" />
-          <Stack direction="column" gap="2xs" grow>
-            <CardTitle>Ada Lovelace</CardTitle>
-            <Text role="caption" tone="muted">ada@example.com</Text>
-          </Stack>
-          <Badge variant="primary">Pro</Badge>
-        </Stack>
+        <CardTitle>Profile settings</CardTitle>
+        <Text role="caption" tone="muted">
+          Manage your account and how the library greets you.
+        </Text>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="profile">
-          <TabsList label="Settings">
+          <TabsList label="Profile settings">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
+
           <TabsContent value="profile">
-            <Field label="Display name">
-              <FieldInput defaultValue="Ada Lovelace" />
+            <Stack direction="row" gap="md" align="center">
+              <Avatar name="Ada Lovelace" size="lg" />
+              <Stack direction="column" gap="2xs">
+                <Button variant="secondary" size="sm" onActivate={() => setPhoto(true)}>
+                  Change photo
+                </Button>
+                <Button variant="ghost" size="sm" onActivate={() => setPhoto(false)}>
+                  Remove
+                </Button>
+              </Stack>
+            </Stack>
+            <Field label="First name">
+              <FieldInput defaultValue="Ada" />
+            </Field>
+            <Field label="Surname">
+              <FieldInput defaultValue="Lovelace" />
             </Field>
             <Field label="Email">
-              <FieldInput defaultValue="ada@example.com" />
+              <FieldInput defaultValue="ada@example.com" type="email" />
+            </Field>
+            <Field label="Phone">
+              <FieldInput defaultValue="+44 20 7946 0958" type="tel" />
             </Field>
           </TabsContent>
+
           <TabsContent value="notifications">
-            <Stack direction="row" justify="between" align="center">
-              <Text role="label">Desktop alerts</Text>
-              <Switch label="Desktop alerts" defaultChecked />
-            </Stack>
-            <Field label="Timezone">
-              <Select
-                label="Timezone"
-                options={[
-                  { value: "utc", label: "UTC" },
-                  { value: "eastern", label: "Eastern" },
-                ]}
-                defaultValue="utc"
-              />
+            <Switch label="Desktop alerts" defaultChecked />
+            <Switch label="Daily digest" />
+          </TabsContent>
+
+          <TabsContent value="security">
+            <Field label="Current password">
+              <FieldInput type="password" />
             </Field>
+            <Switch label="Authenticator app" defaultChecked />
           </TabsContent>
         </Tabs>
       </CardContent>
       <CardFooter>
         <Button variant="ghost">Cancel</Button>
-        <Button variant="primary" onActivate={save}>
-          Save changes
-        </Button>
+        <Button variant="primary">Save changes</Button>
       </CardFooter>
     </Card>
   );
@@ -237,6 +391,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...dashboardPackages],
     render: DashboardRender,
     source: dashboardSource,
+    file: "apps/docs/src/components/docs/dashboard.tsx",
   },
   "dashboard-01-shadcn": {
     name: "dashboard-01-shadcn",
@@ -247,6 +402,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...dashboard01Packages],
     render: Dashboard01Render,
     source: dashboard01Source,
+    file: "apps/docs/src/components/docs/dashboard-01.tsx",
   },
   "sign-in-01": {
     name: "sign-in-01",
@@ -257,13 +413,14 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
     render: SignInPageRender,
     source: signInPageSource,
+    file: "apps/docs/src/components/docs/auth-blocks.tsx",
   },
   "dashboard-management-01": {
     name: "dashboard-management-01",
     slug: "dashboard-management",
     title: "Dashboard management",
     description:
-      "A three-column management console: service health, a command palette, deploys, toasts, a context menu and API keys.",
+      "A 16:9 settings console: a workspace rail beside one column of sections — service health, compute, uploads, deploys, keys, notifications and quick actions.",
     packages: [
       "@gpuixui/components",
       "@gpuixui/data",
@@ -273,6 +430,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     ],
     render: DashboardManagementRender,
     source: dashboardManagementSource,
+    file: "apps/docs/src/components/docs/dashboard-management.tsx",
   },
   "desktop-01": {
     name: "desktop-01",
@@ -288,16 +446,18 @@ export const blocks: Readonly<Record<string, Block>> = {
     ],
     render: DesktopRender,
     source: desktopSource,
+    file: "examples/blocks/src/desktop/desktop.tsx",
   },
   "settings-01": {
     name: "settings-01",
-    slug: "settings",
-    title: "Settings",
+    slug: "profile-settings",
+    title: "Profile settings",
     description:
-      "A settings page: profile header, tabbed sections and controls.",
+      "A profile page: photo, name, phone and email over tabbed settings.",
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
     render: SettingsRender,
     source: settingsSource,
+    file: "apps/docs/src/components/docs/blocks.tsx",
   },
   "kanban-01": {
     name: "kanban-01",
@@ -308,6 +468,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...kanbanPackages],
     render: KanbanRender,
     source: kanbanSource,
+    file: "apps/docs/src/components/docs/kanban-board.tsx",
   },
   "tasks-01": {
     name: "tasks-01",
@@ -318,6 +479,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...tasksPackages],
     render: TasksRender,
     source: tasksSource,
+    file: "apps/docs/src/components/docs/tasks-block.tsx",
   },
   "settings-dialog-01": {
     name: "settings-dialog-01",
@@ -328,6 +490,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...settingsDialogPackages],
     render: SettingsDialogRender,
     source: settingsDialogSource,
+    file: "apps/docs/src/components/docs/settings-dialog.tsx",
   },
   "notification-centre-01": {
     name: "notification-centre-01",
@@ -338,6 +501,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: ["@gpuixui/primitives", "@gpuixui/components", "@gpuixui/icons"],
     render: NotificationCentreRender,
     source: notificationCentreSource,
+    file: "apps/docs/src/components/docs/notification-centre.tsx",
   },
   "command-centre-01": {
     name: "command-centre-01",
@@ -348,6 +512,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: ["@gpuixui/primitives", "@gpuixui/components"],
     render: CommandCentreRender,
     source: commandCentreSource,
+    file: "apps/docs/src/components/docs/command-centre.tsx",
   },
   "pipeline-01": {
     name: "pipeline-01",
@@ -363,6 +528,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     ],
     render: PipelineRender,
     source: pipelineSource,
+    file: "examples/blocks/src/pipeline/pipeline.tsx",
   },
 
   "file-manager-01": {
@@ -374,6 +540,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...fileManagerPackages],
     render: FileManagerRender,
     source: fileManagerSource,
+    file: "apps/docs/src/components/docs/file-manager-block.tsx",
   },
   "email-inbox-01": {
     name: "email-inbox-01",
@@ -384,6 +551,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...emailInboxPackages],
     render: EmailInboxRender,
     source: emailInboxSource,
+    file: "apps/docs/src/components/docs/email-inbox-block.tsx",
   },
   "conversations-01": {
     name: "conversations-01",
@@ -394,6 +562,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     packages: [...conversationsPackages],
     render: ConversationsRender,
     source: conversationsSource,
+    file: "apps/docs/src/components/docs/conversations-block.tsx",
   },
   sidebar: {
     name: "sidebar",
@@ -402,10 +571,9 @@ export const blocks: Readonly<Record<string, Block>> = {
     description:
       "All sixteen shadcn sidebar blocks on one page: docs navigation, floating, inset and icon panels, the nested inbox, calendar, settings dialog and site header. Every control is live.",
     packages: ["@gpuixui/components", "@gpuixui/icons", "@gpuixui/primitives"],
-    // The page shows all sixteen; these are its first example, which is also the
-    // frame the index tile captures.
     render: Sidebar01Render,
     source: sidebar01Source,
+    file: "apps/docs/src/components/docs/blocks/sidebar-01.tsx",
   },
 };
 

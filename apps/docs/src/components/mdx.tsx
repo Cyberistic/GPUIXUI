@@ -6,7 +6,7 @@ import { BlockIndex } from "./docs/block-index";
 import { BlockPreview } from "./docs/block-preview";
 import { ComponentIndex } from "./docs/component-index";
 import { ComponentPreview } from "./docs/component-preview";
-import { ComponentSource } from "./docs/component-source";
+import { ComponentSource, DesktopStyles } from "./docs/component-source";
 import { EditorTabsPreview } from "./docs/editor-tabs-preview";
 import { ExamplesIndex } from "./docs/examples-index";
 import { IconGallery } from "./docs/icon-gallery";
@@ -72,6 +72,7 @@ export const mdxComponents = {
   ComponentIndex,
   ComponentPreview,
   ComponentSource,
+  DesktopStyles,
   EditorTabsPreview,
   ExamplesIndex,
   IconGallery,

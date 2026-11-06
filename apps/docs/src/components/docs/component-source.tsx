@@ -1,4 +1,5 @@
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+import desktopStyles from "../../../../../examples/blocks/src/desktop/styles.css?raw";
 import { HighlightedCode } from "@/components/highlighted-code";
 import { githubUrl } from "@/lib/page-source";
 import { gitConfig } from "@/lib/shared";
@@ -32,15 +33,21 @@ export function ComponentSource({
 export function SourceAccordion({
   file,
   code,
+  label = "Component source",
+  lang = "tsx",
 }: {
   /** Repository-relative path, used for the label and the GitHub link. */
   readonly file: string;
   readonly code: string;
+  /** What the accordion calls the block: source, styles, recipe. */
+  readonly label?: string;
+  /** The highlighter's grammar. */
+  readonly lang?: "tsx" | "css";
 }) {
   return (
     <div className="gx-source not-prose">
       <Accordions collapsible type="single">
-        <Accordion title={`Component source — ${file}`}>
+        <Accordion title={`${label} — ${file}`}>
           <p className="gx-install-note">
             The shipping implementation is{" "}
             <a
@@ -52,9 +59,27 @@ export function SourceAccordion({
             </a>{" "}
             on GitHub.
           </p>
-          <HighlightedCode lang="tsx" code={code} />
+          <HighlightedCode lang={lang} code={code} />
         </Accordion>
       </Accordions>
     </div>
+  );
+}
+
+/**
+ * The desktop block's chrome, as the stylesheet a consumer copies.
+ *
+ * The block is native; this file is the browser equivalent of the same
+ * geometry and colour for both looks, so the page links the CSS that paints
+ * what the captures show.
+ */
+export function DesktopStyles() {
+  return (
+    <SourceAccordion
+      code={desktopStyles}
+      file="examples/blocks/src/desktop/styles.css"
+      label="Desktop styles"
+      lang="css"
+    />
   );
 }

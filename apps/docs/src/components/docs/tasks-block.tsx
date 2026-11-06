@@ -43,6 +43,8 @@ export interface TaskDoc {
   readonly accent: "blue" | "orange" | "yellow" | "slate" | "violet";
   /** The card's cover strip: a photo, or a tinted band. */
   readonly cover?: "photo" | "band";
+  /** Which photograph a `photo` cover paints, so no two cards share one. */
+  readonly coverArt?: "gon" | "killua";
   /** The cover's own tint, when it is a band. */
   readonly coverTone?: string;
   /** Whether the card is in the **Pinned Docs** row. */
@@ -183,6 +185,7 @@ export const initialDocs: ReadonlyArray<TaskDoc> = [
     title: "The Zoldyck family tree",
     accent: "blue",
     cover: "photo",
+    coverArt: "killua",
     pinned: true,
     badge: "clock",
   },
@@ -209,6 +212,7 @@ export const initialDocs: ReadonlyArray<TaskDoc> = [
     title: "Move to the Hunter Exam 2026",
     accent: "blue",
     cover: "photo",
+    coverArt: "gon",
     pinned: false,
     badge: "clock",
   },
@@ -515,6 +519,7 @@ const DocView = ({
     <div className="gx-task-doc" data-accent={doc.accent}>
       <div
         className="gx-task-doc-cover"
+        data-art={doc.coverArt}
         data-cover={doc.cover ?? "band"}
         data-tone={doc.coverTone}
       />
@@ -559,6 +564,7 @@ const DocCard = ({
     <article className="gx-task-card" data-accent={doc.accent}>
       <div
         className="gx-task-card-cover"
+        data-art={doc.coverArt}
         data-cover={doc.cover ?? "band"}
         data-tone={doc.coverTone}
       >
@@ -720,13 +726,6 @@ export const TasksRender = () => {
       <header className="gx-task-bar">
         <span className="gx-task-bar-left">
           <button
-            aria-label="Toggle sidebar"
-            className="gx-task-bar-btn"
-            type="button"
-          >
-            <Glyph name="panel" size={15} />
-          </button>
-          <button
             aria-label="Collapse sidebar"
             className="gx-task-bar-btn"
             onClick={rail.toggle}
@@ -747,6 +746,23 @@ export const TasksRender = () => {
             </button>
           </span>
         </span>
+        <span className="gx-task-bar-right">
+          <button
+            aria-label="Notifications"
+            className="gx-task-bar-btn"
+            type="button"
+          >
+            <Glyph name="bell" size={15} />
+          </button>
+          <span aria-hidden="true" className="gx-task-avatar">
+            <Glyph name="star" size={13} />
+          </span>
+        </span>
+      </header>
+
+      {/* The views sit on their own row: the bar keeps the window controls and
+          the reader's tabs get the whole width, so a new tab pushes neither. */}
+      <div className="gx-task-tabbar">
         <ReorderableTabs
           active={activeTab}
           className="gx-task-tabs"
@@ -765,19 +781,7 @@ export const TasksRender = () => {
         >
           <Glyph name="plus" size={15} />
         </button>
-        <span className="gx-task-bar-right">
-          <button
-            aria-label="Notifications"
-            className="gx-task-bar-btn"
-            type="button"
-          >
-            <Glyph name="bell" size={15} />
-          </button>
-          <span aria-hidden="true" className="gx-task-avatar">
-            <Glyph name="star" size={13} />
-          </span>
-        </span>
-      </header>
+      </div>
 
       <div className="gx-task-body">
         <aside className="gx-task-side" data-collapsed={rail.collapsed}>
@@ -827,7 +831,7 @@ export const TasksRender = () => {
                 ) : null}
                 {item.trailing === "focus" ? (
                   <span className="gx-task-nav-trailing">
-                    <Glyph name="search" size={13} />
+                    <Glyph name="panel" size={13} />
                   </span>
                 ) : null}
               </button>

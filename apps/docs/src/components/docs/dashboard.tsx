@@ -1,11 +1,25 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import {
+  axisTicks,
+  chartBox,
+  chartScale,
+  groupedBarMarks,
+  stackedBarMarks,
+  stackedScale,
+  tickLabel,
+  type ChartMark,
+  type ChartSeries,
+} from "@gpuixui/data/chart/logic";
+import { ringSegments } from "@gpuixui/data/chart/geometry";
 
 /**
- * Dashboard block — the landing's product window and the `/blocks/dashboard`
- * recipe. Like every block, `DashboardRender` is a browser reproduction of the
- * native geometry/palette (the shipped tree renders through GPUix, not the DOM);
- * `dashboardSource` is the `@gpuixui/*` recipe a consumer copies, and its charts
- * are `@gpuixui/data`'s — the browser drawing below cannot mount them.
+ * Dashboard block — the `/blocks/dashboard` recipe. Like every block,
+ * `DashboardRender` is a browser reproduction of the native geometry/palette
+ * (the shipped tree renders through GPUix, not the DOM); `dashboardSource` is
+ * the `@gpuixui/*` recipe a consumer copies, and its charts are
+ * `@gpuixui/data`'s — the browser drawing cannot mount them, so it reads the
+ * package's chart geometry (`stackedBarMarks`, `groupedBarMarks`,
+ * `ringSegments`) instead of laying the marks out a second time.
  *
  * The categorical colours are the library's data series, never a palette of the
  * docs' own: `--series-*` arrives from the preview surface's theme (so the
@@ -128,9 +142,6 @@ const HOURLY = [
   { label: "10PM", values: [16, 12, 9, 6, 4] },
 ] as const;
 
-const sum = (values: ReadonlyArray<number>): number =>
-  values.reduce((total, value) => total + value, 0);
-
 /** The categorical colour for a model index, from the theme's series scale. */
 const colorAt = (index: number): string =>
   `var(--dash-series-${(index % 5) + 1})`;
@@ -170,17 +181,26 @@ const SEARCH = (
   </>
 );
 
-/** Mon–Sun bar chart with a 0/4/8/12h axis. */
+/** Mon–Sun bars; the axis is the package's ceiling over the busiest day. */
+const WEEK_SERIES: ReadonlyArray<ChartSeries> = [
+  { key: "hours", label: "Hours", values: WEEK },
+];
+
+const WEEK_BOX = chartBox(270, 148, { width: 270, height: 148 });
+const WEEK_SCALE = chartScale(WEEK_SERIES, WEEK.length);
+const WEEK_MARKS = groupedBarMarks(
+  WEEK_SERIES,
+  WEEK_BOX,
+  WEEK_SCALE,
+  WEEK.length,
+);
+const WEEK_TICKS = axisTicks(WEEK_SCALE, 5);
+
 function WeekBars() {
-  const max = 12;
   const w = 300;
-  const h = 116;
+  const h = 190;
   const gutter = 30;
   const plotTop = 8;
-  const plotBottom = 82;
-  const plotH = plotBottom - plotTop;
-  const slot = (w - gutter) / WEEK.length;
-  const barW = slot * 0.42;
 
   return (
     <svg
@@ -189,89 +209,68 @@ function WeekBars() {
       role="img"
       viewBox={`0 0 ${w} ${h}`}
     >
-      {[0, 4, 8, 12].map((value) => {
-        const y = plotTop + plotH - (value / max) * plotH;
-        return (
-          <g key={value}>
-            <line className="gx-dash-axis" x1={gutter} x2={w} y1={y} y2={y} />
-            <text
-              className="gx-dash-axis-label"
-              textAnchor="end"
-              x={gutter - 6}
-              y={y + 3}
-            >
-              {value}h
-            </text>
-          </g>
-        );
-      })}
-      {WEEK.map((value, i) => {
-        const height = (value / max) * plotH;
-        const x = gutter + i * slot + (slot - barW) / 2;
-        const y = plotTop + plotH - height;
-        return (
-          <g key={i}>
+      <g transform={`translate(${gutter} ${plotTop})`}>
+        {WEEK_TICKS.map((value) => {
+          const y = WEEK_BOX.height - (value / WEEK_SCALE) * WEEK_BOX.height;
+          return (
+            <g key={value}>
+              <line
+                className="gx-dash-axis"
+                x1="0"
+                x2={WEEK_BOX.width}
+                y1={y}
+                y2={y}
+              />
+              <text
+                className="gx-dash-axis-label"
+                textAnchor="end"
+                x={-6}
+                y={y + 3}
+              >
+                {tickLabel(value, WEEK_SCALE / 5)}h
+              </text>
+            </g>
+          );
+        })}
+        {(WEEK_MARKS[0] ?? []).map((mark: ChartMark, i) =>
+          mark.kind === "rect" ? (
             <rect
               className="gx-dash-column"
-              height={height}
+              height={mark.height}
+              key={i}
               rx="3"
-              width={barW}
-              x={x}
-              y={y}
               style={{ animationDelay: `${i * 30}ms` }}
+              width={mark.width}
+              x={mark.x}
+              y={mark.y}
             />
-            <text
-              className="gx-dash-axis-label"
-              textAnchor="middle"
-              x={gutter + i * slot + slot / 2}
-              y={h - 6}
-            >
-              {DAYS[i]}
-            </text>
-          </g>
-        );
-      })}
+          ) : null,
+        )}
+      </g>
+      {DAYS.map((day, i) => (
+        <text
+          className="gx-dash-axis-label"
+          key={day}
+          textAnchor="middle"
+          x={gutter + ((i + 0.5) * WEEK_BOX.width) / DAYS.length}
+          y={h - 6}
+        >
+          {day}
+        </text>
+      ))}
     </svg>
   );
 }
 
-/** A donut segment's inline paint plus the custom properties its `stroke-dasharray`
- *  draw animation reads: the segment length, the gap to the circumference, and
- *  the circumference itself. */
-interface DonutSegmentStyle extends CSSProperties {
-  readonly "--dash-len": number;
-  readonly "--dash-gap": number;
-  readonly "--dash-circ": number;
-}
-
-/** The stroke colour and the draw-animation variables for one donut segment. */
-const donutSegmentStyle = (
-  segment: { readonly color: string; readonly length: number },
-  circumference: number,
-): DonutSegmentStyle => ({
-  stroke: segment.color,
-  "--dash-len": segment.length,
-  "--dash-gap": circumference - segment.length,
-  "--dash-circ": circumference,
-});
-
 /** Five-segment donut with the total in the centre. */
-function TokenDonut() {
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius;
-  let offset = 0;
-  const segments = MODELS.map((model, i) => {
-    const length = (model.pct / 100) * circumference;
-    const segment = {
-      name: model.name,
-      color: colorAt(i),
-      length,
-      offset,
-    };
-    offset += length;
-    return segment;
-  });
+const DONUT_SEGMENTS = ringSegments(
+  MODELS.map((model) => model.pct),
+  chartBox(100, 100, { width: 100, height: 100 }),
+  0.72,
+  0.015,
+);
 
+function TokenDonut() {
   return (
     <svg
       aria-label="Token usage by model"
@@ -279,22 +278,19 @@ function TokenDonut() {
       role="img"
       viewBox="0 0 100 100"
     >
-      <g transform="rotate(-90 50 50)">
-        {segments.map((segment) => (
-          <circle
-            className="gx-dash-donut-segment"
-            cx="50"
-            cy="50"
-            fill="none"
-            key={segment.name}
-            r={radius}
-            strokeDasharray={`${segment.length} ${circumference - segment.length}`}
-            strokeDashoffset={-segment.offset}
-            strokeWidth="13"
-            style={donutSegmentStyle(segment, circumference)}
-          />
-        ))}
-      </g>
+      {DONUT_SEGMENTS.map((marks, index) =>
+        marks.map((mark, at) =>
+          mark.kind === "path" ? (
+            <path
+              className="gx-dash-donut-segment"
+              d={mark.d}
+              fill={colorAt(index)}
+              key={`${index}-${at}`}
+              style={{ animationDelay: `${index * 40}ms` }}
+            />
+          ) : null,
+        ),
+      )}
       <text className="gx-dash-donut-total" textAnchor="middle" x="50" y="48">
         1.24M
       </text>
@@ -305,62 +301,36 @@ function TokenDonut() {
   );
 }
 
-/** One stacked column's geometry: its segments, bottom-up, and its extent. */
-export interface HourlyBarColumn {
-  readonly label: string;
-  readonly top: number;
-  readonly bottom: number;
-  readonly segments: ReadonlyArray<{
-    readonly y: number;
-    readonly height: number;
-    readonly series: number;
-  }>;
-}
+/** Token usage over a day, one series per model, read by the stacked-bar geometry. */
+const HOURLY_SERIES: ReadonlyArray<ChartSeries> = MODELS.map(
+  (model, index) => ({
+    key: model.model,
+    label: model.name,
+    values: HOURLY.map((column) => column.values[index] ?? 0),
+  }),
+);
 
-/**
- * The `HourlyStack` geometry, pure so its alignment invariant is testable:
- * every column stacks from the shared `plot.bottom` and the tallest column fills
- * the plot exactly. Columns scale to the largest column total.
- */
-export const hourlyBars = (
-  columns: ReadonlyArray<{
-    readonly label: string;
-    readonly values: ReadonlyArray<number>;
-  }>,
-  plot: { readonly top: number; readonly bottom: number },
-): ReadonlyArray<HourlyBarColumn> => {
-  const plotH = plot.bottom - plot.top;
-  const totals = columns.map((column) => sum(column.values));
-  const maxTotal = Math.max(...totals);
+/** The stack's plot: the width the card leaves and the band the axis needs. */
+export const HOURLY_PLOT = chartBox(288, 86, { width: 288, height: 86 });
 
-  return columns.map((column, index) => {
-    const total = totals[index] ?? 0;
-    const columnH = (total / maxTotal) * plotH;
-    let cumulative = 0;
-    const segments = column.values.map((value, series) => {
-      const height = (value / total) * columnH;
-      cumulative += height;
-      return { y: plot.bottom - cumulative, height, series };
-    });
+/** The measure a stack is read against: the tallest column's total. */
+export const HOURLY_SCALE = stackedScale(HOURLY_SERIES, HOURLY.length);
 
-    return {
-      label: column.label,
-      top: plot.bottom - columnH,
-      bottom: plot.bottom,
-      segments,
-    };
-  });
-};
+/** Every series' segments, in paint order, for the twelve buckets. */
+export const hourlyStack = (): ReadonlyArray<ReadonlyArray<ChartMark>> =>
+  stackedBarMarks(HOURLY_SERIES, HOURLY_PLOT, HOURLY_SCALE, HOURLY.length);
+
+/** The axis steps, from zero to the stack's ceiling. */
+export const HOURLY_TICKS = axisTicks(HOURLY_SCALE, 4);
 
 /** 12AM–10PM stacked bar, one column per two-hour bucket. */
 function HourlyStack() {
   const w = 320;
   const h = 120;
+  const gutter = 26;
   const plotTop = 6;
-  const plotBottom = 92;
-  const slot = w / HOURLY.length;
-  const barW = slot * 0.5;
-  const bars = hourlyBars(HOURLY, { top: plotTop, bottom: plotBottom });
+  const slot = HOURLY_PLOT.width / HOURLY.length;
+  const stacks = hourlyStack();
 
   return (
     <svg
@@ -369,44 +339,64 @@ function HourlyStack() {
       role="img"
       viewBox={`0 0 ${w} ${h}`}
     >
-      <line
-        className="gx-dash-baseline"
-        x1="0"
-        x2={w}
-        y1={plotBottom}
-        y2={plotBottom}
-      />
-      {bars.map((column, i) => {
-        const x = i * slot + (slot - barW) / 2;
-        return (
-          <g key={column.label}>
-            {column.segments.map((segment) => (
-              <rect
-                className="gx-dash-segment"
-                height={segment.height}
-                key={segment.series}
-                style={{
-                  fill: colorAt(segment.series),
-                  animationDelay: `${i * 30}ms`,
-                }}
-                width={barW}
-                x={x}
-                y={segment.y}
+      <g transform={`translate(${gutter} ${plotTop})`}>
+        {HOURLY_TICKS.map((value) => {
+          const y =
+            HOURLY_PLOT.height - (value / HOURLY_SCALE) * HOURLY_PLOT.height;
+          return (
+            <g key={value}>
+              <line
+                className="gx-dash-axis"
+                x1="0"
+                x2={HOURLY_PLOT.width}
+                y1={y}
+                y2={y}
               />
-            ))}
-            {i % 2 === 0 ? (
               <text
                 className="gx-dash-axis-label"
-                textAnchor="middle"
-                x={i * slot + slot / 2}
-                y={h - 6}
+                textAnchor="end"
+                x={-6}
+                y={y + 3}
               >
-                {column.label}
+                {tickLabel(value, HOURLY_SCALE / 4)}
               </text>
-            ) : null}
+            </g>
+          );
+        })}
+        {stacks.map((marks, series) => (
+          <g key={HOURLY_SERIES[series]?.key ?? series}>
+            {marks.map((mark, at) =>
+              mark.kind === "rect" ? (
+                <rect
+                  className="gx-dash-segment"
+                  height={mark.height}
+                  key={at}
+                  style={{
+                    fill: colorAt(series),
+                    animationDelay: `${Math.round(mark.x / slot) * 30}ms`,
+                  }}
+                  width={mark.width}
+                  x={mark.x}
+                  y={mark.y}
+                />
+              ) : null,
+            )}
           </g>
-        );
-      })}
+        ))}
+      </g>
+      {HOURLY.map((column, i) =>
+        i % 2 === 0 ? (
+          <text
+            className="gx-dash-axis-label"
+            key={column.label}
+            textAnchor="middle"
+            x={gutter + i * slot + slot / 2}
+            y={h - 6}
+          >
+            {column.label}
+          </text>
+        ) : null,
+      )}
     </svg>
   );
 }
