@@ -1,35 +1,35 @@
+// The browser drawing shares the shipped board's placement rule.
 import { Fragment, useState, type ReactNode } from "react";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+import {
+  moveCardInOrder,
+  resolveOrder,
+} from "@gpuixui/components/kanban/logic";
 import { RailToggle, useRailCollapse } from "./sidebar-rail";
+import { TabStrip } from "./tab-strip";
 
-/**
- * Kanban board block — a project task board with an app sidebar and four
- * columns.
- *
- * The reproduction owns the state a reader can watch: a card drags between
- * columns at the position the pointer names, the `…` menu moves it without a
- * pointer, and `+` appends a placeholder card. The counts follow the same
- * array, so a move cannot leave one stale.
- *
- * There is no kanban component in the library; this is a recipe built from
- * `Card`, `Badge`, `Avatar`, `SearchInput`, `Tabs`, `Button`, `Stack`, `Text`
- * and `Icon`.
- */
+export const KanbanColumnId = Schema.Literals([
+  "open",
+  "hunting",
+  "review",
+  "cleared",
+]);
 
-export type KanbanColumnId = "todo" | "progress" | "review" | "done";
+export type KanbanColumnId = typeof KanbanColumnId.Type;
 
 export interface KanbanColumn {
   readonly id: KanbanColumnId;
-  /** The heading, in the board's small-caps voice. */
   readonly label: string;
-  /** The heading in a sentence, for menus and accessible names. */
   readonly title: string;
 }
 
 export const kanbanColumns: ReadonlyArray<KanbanColumn> = [
-  { id: "todo", label: "TO DO", title: "To do" },
-  { id: "progress", label: "IN PROGRESS", title: "In progress" },
-  { id: "review", label: "IN REVIEW", title: "In review" },
-  { id: "done", label: "DONE", title: "Done" },
+  { id: "open", label: "OPEN", title: "Open" },
+  { id: "hunting", label: "HUNTING", title: "Hunting" },
+  { id: "review", label: "REVIEW", title: "Review" },
+  { id: "cleared", label: "CLEARED", title: "Cleared" },
 ];
 
 export type KanbanPriority = "High" | "Medium" | "Low";
@@ -48,183 +48,175 @@ export interface KanbanCard {
 
 export const initialKanbanCards: ReadonlyArray<KanbanCard> = [
   {
-    id: "design-system",
-    column: "todo",
-    project: "Hologram",
+    id: "exam",
+    column: "open",
+    project: "Exam",
     priority: "High",
-    title:
-      "Update the Design System to Support Dark Mode and High Contrast Themes",
-    due: "Oct 24",
-    people: ["DN", "AL"],
+    title: "Survive the Fourth Phase",
+    due: "Aug 31",
+    people: ["GO", "KI"],
     comments: 6,
     attachments: 2,
   },
   {
-    id: "wireframes",
-    column: "todo",
-    project: "DailyArt App",
+    id: "ging",
+    column: "open",
+    project: "Search",
     priority: "Low",
-    title: "Sketch out initial wireframes for the main screen",
-    due: "Oct 28",
-    people: ["MK"],
+    title: "Follow Ging's Tape",
+    due: "Sep 04",
+    people: ["GO"],
     comments: 2,
     attachments: 0,
   },
   {
-    id: "map-component",
-    column: "progress",
-    project: "Hologram",
+    id: "troupe",
+    column: "hunting",
+    project: "Yorknew",
     priority: "Medium",
-    title: "Map Component",
-    due: "Oct 26",
-    people: ["JS", "RT"],
+    title: "Track the Phantom Troupe",
+    due: "Sep 01",
+    people: ["KU", "LE"],
     comments: 4,
     attachments: 1,
   },
   {
-    id: "micro-interactions",
-    column: "progress",
-    project: "Wezslo.com",
+    id: "whale",
+    column: "hunting",
+    project: "Succession",
     priority: "High",
-    title: "Add micro-interactions to prototype for user feedback",
-    due: "Oct 30",
-    people: ["DN", "MK"],
+    title: "Board the Black Whale",
+    due: "Sep 06",
+    people: ["KI", "KU"],
     comments: 8,
     attachments: 3,
   },
   {
-    id: "color-contrast",
-    column: "progress",
-    project: "Starlight Team",
+    id: "eyes",
+    column: "hunting",
+    project: "Recovery",
     priority: "Low",
-    title: "Optimize color contrast for accessibility",
-    due: "Nov 2",
-    people: ["AL"],
+    title: "Recover the Scarlet Eyes",
+    due: "Sep 09",
+    people: ["KU"],
     comments: 1,
     attachments: 0,
   },
   {
-    id: "prototype-links",
+    id: "zoldyck",
     column: "review",
-    project: "Hologram",
+    project: "Estate",
     priority: "Medium",
-    title: "Update prototype links for usability testing",
-    due: "Oct 25",
-    people: ["RT", "JS"],
+    title: "Negotiate with the Zoldycks",
+    due: "Sep 02",
+    people: ["KI", "GO"],
     comments: 3,
     attachments: 1,
   },
   {
-    id: "custom-icons",
-    column: "done",
-    project: "DailyArt App",
+    id: "greed",
+    column: "cleared",
+    project: "Greed Island",
     priority: "Low",
-    title: "Create custom icons",
-    due: "Oct 20",
-    people: ["MK"],
+    title: "Clear Greed Island",
+    due: "Aug 28",
+    people: ["GO"],
     comments: 2,
     attachments: 4,
   },
   {
-    id: "handoff",
-    column: "done",
-    project: "Hologram",
+    id: "licence",
+    column: "cleared",
+    project: "Licence",
     priority: "Medium",
-    title: "Prepare handoff files for the development team",
-    due: "Oct 21",
-    people: ["AL", "DN", "RT"],
+    title: "Earn the Hunter Licence",
+    due: "Aug 29",
+    people: ["LE", "GO", "KU"],
     comments: 5,
     attachments: 6,
   },
 ];
 
-/** How many cards each column holds. */
+const orderOf = (cards: ReadonlyArray<KanbanCard>) =>
+  resolveOrder(cards, kanbanColumns);
+
+const placedColumn = (
+  value: string,
+  fallback: KanbanColumnId,
+): KanbanColumnId => (Schema.is(KanbanColumnId)(value) ? value : fallback);
+
+const emptyCounts = (): Record<KanbanColumnId, number> => ({
+  open: 0,
+  hunting: 0,
+  review: 0,
+  cleared: 0,
+});
+
 export const countCards = (
   cards: ReadonlyArray<KanbanCard>,
 ): Record<KanbanColumnId, number> =>
-  cards.reduce<Record<KanbanColumnId, number>>(
-    (counts, card) => ({
-      ...counts,
-      [card.column]: counts[card.column] + 1,
-    }),
-    { todo: 0, progress: 0, review: 0, done: 0 },
-  );
+  Arr.reduce(cards, emptyCounts(), (counts, card) => ({
+    ...counts,
+    [card.column]: counts[card.column] + 1,
+  }));
 
-/** The same cards with one card's column changed; every other field is kept. */
 export const moveCard = (
   cards: ReadonlyArray<KanbanCard>,
   id: string,
   column: KanbanColumnId,
 ): ReadonlyArray<KanbanCard> =>
-  cards.map((card) => (card.id === id ? { ...card, column } : card));
+  moveCardTo(cards, id, column, Number.MAX_SAFE_INTEGER);
 
-/**
- * The same cards with one card placed at `index` in `column`.
- *
- * A drag names a position, not only a column, so the board's order is the
- * array's: the card lands before the card currently at that index, or after the
- * column's last card when the index is past the end. A card the list does not
- * hold is a no-op, so a stale drag payload cannot drop a card that was removed
- * mid-gesture.
- */
 export const moveCardTo = (
   cards: ReadonlyArray<KanbanCard>,
   id: string,
   column: KanbanColumnId,
   index: number,
 ): ReadonlyArray<KanbanCard> => {
-  const moving = cards.find((card) => card.id === id);
-  if (moving === undefined) return cards;
-  const others = cards.filter((card) => card.id !== id);
-  const inColumn = others.filter((card) => card.column === column);
-  const next = { ...moving, column };
-  const anchor = inColumn[Math.max(0, Math.min(index, inColumn.length))];
-  if (anchor === undefined) {
-    const last = inColumn[inColumn.length - 1];
-    if (last === undefined) return [...others, next];
-    const at = others.indexOf(last);
-    return [...others.slice(0, at + 1), next, ...others.slice(at + 1)];
-  }
-  const at = others.indexOf(anchor);
-  return [...others.slice(0, at), next, ...others.slice(at)];
+  const order = orderOf(cards);
+  const moved = moveCardInOrder(order, id, column, index);
+  if (moved === order) return cards;
+
+  return Arr.flatMap(moved, (placement) =>
+    Arr.flatMap(cards, (card) =>
+      card.id === placement.id
+        ? [{ ...card, column: placedColumn(placement.column, card.column) }]
+        : [],
+    ),
+  );
 };
 
-/** Where a drop at `clientY` lands among the cards a stack paints. */
 const dropIndex = (stack: HTMLElement, clientY: number): number => {
   const cards = [...stack.querySelectorAll<HTMLElement>("[data-card-id]")];
-  return cards.filter((card) => {
+  return Arr.filter(cards, (card) => {
     const box = card.getBoundingClientRect();
     return clientY > box.top + box.height / 2;
   }).length;
 };
 
-/** A card's next unused placeholder number, so `+` never repeats an id. */
 const nextCardNumber = (cards: ReadonlyArray<KanbanCard>): number =>
-  cards.reduce((highest, card) => {
+  Arr.reduce(cards, 0, (highest, card) => {
     const match = /^new-(\d+)$/.exec(card.id);
     return match?.[1] === undefined
       ? highest
       : Math.max(highest, Number(match[1]));
-  }, 0) + 1;
+  }) + 1;
 
-/** Appends a placeholder card to a column; the count and the menu follow it. */
 export const addCard = (
   cards: ReadonlyArray<KanbanCard>,
   column: KanbanColumnId,
-): ReadonlyArray<KanbanCard> => [
-  ...cards,
-  {
+): ReadonlyArray<KanbanCard> =>
+  Arr.append(cards, {
     id: `new-${nextCardNumber(cards)}`,
     column,
-    project: "Hologram",
+    project: "Open",
     priority: "Low",
-    title: "New task",
+    title: "New hunt",
     due: "No due date",
-    people: ["DN"],
+    people: ["GO"],
     comments: 0,
     attachments: 0,
-  },
-];
+  });
 
 const ICON = {
   clock: (
@@ -331,42 +323,42 @@ const NAV_GROUPS: ReadonlyArray<{
   }>;
 }> = [
   {
-    label: "GENERAL",
+    label: "HUNT",
     items: [
-      { label: "My Time", icon: "clock", active: false },
-      { label: "My Work", icon: "work", active: false },
-      { label: "Boards", icon: "board", active: false },
-      { label: "Notification", icon: "bell", active: false, badge: 4 },
+      { label: "Schedule", icon: "clock", active: false },
+      { label: "Assignments", icon: "work", active: false },
+      { label: "Contracts", icon: "board", active: false },
+      { label: "Bounties", icon: "bell", active: false, badge: 4 },
     ],
   },
   {
-    label: "PROJECTS",
+    label: "EXPEDITIONS",
     items: [
-      { label: "Hologram", icon: "folder", active: true },
-      { label: "DailyArt App", icon: "folder", active: false },
-      { label: "Wezslo.com", icon: "folder", active: false },
-      { label: "Starlight Team", icon: "folder", active: false },
+      { label: "Yorknew", icon: "folder", active: true },
+      { label: "Greed Island", icon: "folder", active: false },
+      { label: "Dark Continent", icon: "folder", active: false },
+      { label: "Zoldyck Estate", icon: "folder", active: false },
     ],
   },
   {
     label: "OTHER",
     items: [
       { label: "Settings", icon: "settings", active: false },
-      { label: "Help Center", icon: "help", active: false },
+      { label: "Help", icon: "help", active: false },
     ],
   },
 ];
 
 const TABS = [
   "Overview",
-  "Tasks",
+  "Hunts",
   "Timeline",
   "Notes",
   "Files",
-  "Members",
+  "Hunters",
 ] as const;
 
-const MEMBERS = ["DN", "AL", "MK", "JS", "RT"] as const;
+const MEMBERS = ["GO", "KI", "KU", "LE", "HI"] as const;
 
 const KanbanCardView = ({
   card,
@@ -401,19 +393,21 @@ const KanbanCardView = ({
         </button>
         {menuOpen ? (
           <div className="gx-kan-menu-list" role="menu">
-            {kanbanColumns
-              .filter((column) => column.id !== card.column)
-              .map((column) => (
-                <button
-                  className="gx-kan-menu-item"
-                  key={column.id}
-                  onClick={() => onMove(column.id)}
-                  role="menuitem"
-                  type="button"
-                >
-                  Move to → {column.title}
-                </button>
-              ))}
+            {Arr.flatMap(kanbanColumns, (column) =>
+              column.id === card.column
+                ? []
+                : [
+                    <button
+                      className="gx-kan-menu-item"
+                      key={column.id}
+                      onClick={() => onMove(column.id)}
+                      role="menuitem"
+                      type="button"
+                    >
+                      Send to → {column.title}
+                    </button>,
+                  ],
+            )}
           </div>
         ) : null}
       </div>
@@ -421,11 +415,11 @@ const KanbanCardView = ({
     <p className="gx-kan-card-title">{card.title}</p>
     <p className="gx-kan-due">
       <Glyph size={12}>{ICON.clock}</Glyph>
-      Due Date: {card.due}
+      Due: {card.due}
     </p>
     <div className="gx-kan-card-foot">
       <span className="gx-kan-avatars">
-        {card.people.map((person) => (
+        {Arr.map(card.people, (person) => (
           <span className="gx-kan-avatar" key={person}>
             {person}
           </span>
@@ -446,26 +440,51 @@ const KanbanCardView = ({
 export const KanbanRender = () => {
   const [cards, setCards] =
     useState<ReadonlyArray<KanbanCard>>(initialKanbanCards);
-  const [menu, setMenu] = useState<string | null>(null);
-  const [dragging, setDragging] = useState<string | null>(null);
-  const [hover, setHover] = useState<{
-    readonly column: KanbanColumnId;
-    readonly index: number;
-  } | null>(null);
+  const [view, setView] = useState<(typeof TABS)[number]>("Hunts");
+  const [menu, setMenu] = useState<Option.Option<string>>(Option.none());
+  const [dragging, setDragging] = useState<Option.Option<string>>(
+    Option.none(),
+  );
+  const [hover, setHover] = useState<
+    Option.Option<{
+      readonly column: KanbanColumnId;
+      readonly index: number;
+    }>
+  >(Option.none());
   const rail = useRailCollapse();
   const counts = countCards(cards);
 
   const move = (id: string, column: KanbanColumnId) => {
     setCards((current) => moveCard(current, id, column));
-    setMenu(null);
+    setMenu(Option.none());
+  };
+
+  const drop = (column: KanbanColumnId, allIndex: number) => {
+    Option.match(dragging, {
+      onNone: () => undefined,
+      onSome: (id) => {
+        const inColumn = Arr.filter(cards, (card) => card.column === column);
+        const from = Arr.findFirstIndex(inColumn, (card) => card.id === id);
+        const index = Option.getOrElse(from, () => -1);
+        setCards((current) =>
+          moveCardTo(
+            current,
+            id,
+            column,
+            allIndex - (index >= 0 && allIndex > index ? 1 : 0),
+          ),
+        );
+      },
+    });
+    setDragging(Option.none());
+    setHover(Option.none());
   };
 
   return (
     <div className="gx-kan">
       <aside className="gx-kan-side" data-collapsed={rail.collapsed}>
         <div className="gx-kan-brand">
-          <span aria-hidden="true" className="gx-kan-mark" />
-          <span className="gx-kan-brand-name gx-rail-label">Hologram</span>
+          <span className="gx-kan-brand-name gx-rail-label">HUNTERS</span>
           <RailToggle
             className="gx-kan-collapse"
             collapsed={rail.collapsed}
@@ -482,14 +501,14 @@ export const KanbanRender = () => {
           />
           <kbd className="gx-kan-kbd">⌘F</kbd>
         </label>
-        {NAV_GROUPS.map((group) => (
+        {Arr.map(NAV_GROUPS, (group) => (
           <nav
             aria-label={group.label}
             className="gx-kan-group"
             key={group.label}
           >
             <p className="gx-kan-group-label gx-rail-label">{group.label}</p>
-            {group.items.map((item) => (
+            {Arr.map(group.items, (item) => (
               <button
                 aria-current={item.active ? "page" : undefined}
                 aria-label={item.label}
@@ -512,22 +531,18 @@ export const KanbanRender = () => {
           </nav>
         ))}
         <div className="gx-kan-user">
-          <span className="gx-kan-user-avatar">D</span>
+          <span className="gx-kan-user-avatar">G</span>
           <span className="gx-kan-user-text gx-rail-label">
-            <span className="gx-kan-user-name">Dom</span>
-            <span className="gx-kan-user-mail">dom@hologram.co</span>
+            <span className="gx-kan-user-name">Gon</span>
+            <span className="gx-kan-user-mail">gon@hunter.assoc</span>
           </span>
         </div>
       </aside>
       <div className="gx-kan-main">
         <header className="gx-kan-head">
           <div className="gx-kan-head-row">
-            <div className="gx-kan-project">
-              <span aria-hidden="true" className="gx-kan-mark" />
-              <h3 className="gx-kan-project-name">Hologram</h3>
-            </div>
-            <div aria-label="Members" className="gx-kan-people">
-              {MEMBERS.map((person) => (
+            <div aria-label="Hunters" className="gx-kan-people">
+              {Arr.map(MEMBERS, (person) => (
                 <span className="gx-kan-person" key={person}>
                   {person}
                 </span>
@@ -535,27 +550,18 @@ export const KanbanRender = () => {
             </div>
             <button className="gx-btn gx-btn-primary gx-btn-sm" type="button">
               <Glyph size={12}>{ICON.plus}</Glyph>
-              Add Member
+              Add Hunter
             </button>
           </div>
           <div className="gx-kan-tabbar">
-            <div
-              aria-label="Project sections"
+            <TabStrip
               className="gx-kan-tabs"
-              role="tablist"
-            >
-              {TABS.map((tab) => (
-                <button
-                  aria-selected={tab === "Tasks"}
-                  className="gx-kan-tab"
-                  key={tab}
-                  role="tab"
-                  type="button"
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+              label="Board sections"
+              onChange={setView}
+              options={Arr.map(TABS, (tab) => ({ value: tab, label: tab }))}
+              tabClassName="gx-kan-tab"
+              value={view}
+            />
             <button
               className="gx-btn gx-btn-outline gx-btn-sm gx-kan-filter"
               type="button"
@@ -565,97 +571,119 @@ export const KanbanRender = () => {
             </button>
           </div>
         </header>
-        <div className="gx-kan-board">
-          {kanbanColumns.map((column) => (
-            <section
-              aria-label={column.title}
-              className="gx-kan-column"
-              key={column.id}
-            >
-              <header className="gx-kan-column-head">
-                <span
-                  aria-hidden="true"
-                  className="gx-kan-dot"
-                  data-column={column.id}
-                />
-                <h4 className="gx-kan-column-title">{column.label}</h4>
-                <span className="gx-kan-column-count">{counts[column.id]}</span>
-                <button
-                  aria-label={`Add a card to ${column.title}`}
-                  className="gx-kan-plus"
-                  onClick={() =>
-                    setCards((current) => addCard(current, column.id))
-                  }
-                  type="button"
-                >
-                  <Glyph size={13}>{ICON.plus}</Glyph>
-                </button>
-              </header>
-              <div
-                className="gx-kan-stack"
-                data-drop={hover?.column === column.id}
-                onDragLeave={(event) => {
-                  if (
-                    !event.currentTarget.contains(
-                      event.relatedTarget as Node | null,
-                    )
-                  ) {
-                    setHover(null);
-                  }
-                }}
-                onDragOver={(event) => {
-                  event.preventDefault();
-                  event.dataTransfer.dropEffect = "move";
-                  setHover({
-                    column: column.id,
-                    index: dropIndex(event.currentTarget, event.clientY),
-                  });
-                }}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  const id =
-                    event.dataTransfer.getData("text/plain") || dragging;
-                  if (id !== null) {
-                    const index =
-                      hover?.column === column.id
-                        ? hover.index
-                        : Number.MAX_SAFE_INTEGER;
-                    setCards((current) =>
-                      moveCardTo(current, id, column.id, index),
-                    );
-                  }
-                  setDragging(null);
-                  setHover(null);
-                }}
+        <div className="gx-kan-board" hidden={view !== "Hunts"}>
+          {Arr.map(kanbanColumns, (column) => {
+            const columnCards = Arr.filter(
+              cards,
+              (card) => card.column === column.id,
+            );
+            const hovered = Option.exists(
+              hover,
+              (held) => held.column === column.id,
+            );
+            return (
+              <section
+                aria-label={column.title}
+                className="gx-kan-column"
+                key={column.id}
               >
-                {cards
-                  .filter((card) => card.column === column.id)
-                  .map((card, index) => (
+                <header className="gx-kan-column-head">
+                  <span
+                    aria-hidden="true"
+                    className="gx-kan-dot"
+                    data-column={column.id}
+                  />
+                  <h4 className="gx-kan-column-title">{column.label}</h4>
+                  <span className="gx-kan-column-count">
+                    {counts[column.id]}
+                  </span>
+                  <button
+                    aria-label={`Add a card to ${column.title}`}
+                    className="gx-kan-plus"
+                    onClick={() =>
+                      setCards((current) => addCard(current, column.id))
+                    }
+                    type="button"
+                  >
+                    <Glyph size={13}>{ICON.plus}</Glyph>
+                  </button>
+                </header>
+                <div
+                  className="gx-kan-stack"
+                  onDragLeave={(event) => {
+                    if (
+                      !event.currentTarget.contains(
+                        event.relatedTarget as Node | null,
+                      )
+                    ) {
+                      setHover(Option.none());
+                    }
+                  }}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = "move";
+                    setHover(
+                      Option.some({
+                        column: column.id,
+                        index: dropIndex(event.currentTarget, event.clientY),
+                      }),
+                    );
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    const id =
+                      event.dataTransfer.getData("text/plain") ||
+                      Option.getOrElse(dragging, () => "");
+                    if (id !== "") {
+                      const index = Option.match(hover, {
+                        onNone: () => columnCards.length,
+                        onSome: (held) =>
+                          held.column === column.id
+                            ? held.index
+                            : columnCards.length,
+                      });
+                      drop(column.id, index);
+                    } else {
+                      setDragging(Option.none());
+                      setHover(Option.none());
+                    }
+                  }}
+                >
+                  {Arr.map(columnCards, (card, index) => (
                     <Fragment key={card.id}>
-                      {hover?.column === column.id && hover.index === index ? (
+                      {hovered &&
+                      Option.exists(hover, (held) => held.index === index) ? (
                         <div aria-hidden="true" className="gx-kan-drop-line" />
                       ) : null}
                       <div
                         className="gx-kan-drag"
                         data-card-id={card.id}
-                        data-dragging={dragging === card.id}
+                        data-dragging={Option.exists(
+                          dragging,
+                          (held) => held === card.id,
+                        )}
                         draggable
                         onDragEnd={() => {
-                          setDragging(null);
-                          setHover(null);
+                          setDragging(Option.none());
+                          setHover(Option.none());
                         }}
                         onDragStart={(event) => {
                           event.dataTransfer.effectAllowed = "move";
                           event.dataTransfer.setData("text/plain", card.id);
-                          setDragging(card.id);
+                          setDragging(Option.some(card.id));
                         }}
                       >
                         <KanbanCardView
                           card={card}
-                          menuOpen={menu === card.id}
+                          menuOpen={Option.exists(
+                            menu,
+                            (held) => held === card.id,
+                          )}
                           onMenu={() =>
                             setMenu((current) =>
-                              current === card.id ? null : card.id,
+                              Option.exists(current, (held) => held === card.id)
+                                ? Option.none()
+                                : Option.some(card.id),
                             )
                           }
                           onMove={(target) => move(card.id, target)}
@@ -663,129 +691,66 @@ export const KanbanRender = () => {
                       </div>
                     </Fragment>
                   ))}
-                {hover?.column === column.id &&
-                hover.index >=
-                  cards.filter((card) => card.column === column.id).length ? (
-                  <div aria-hidden="true" className="gx-kan-drop-line" />
-                ) : null}
-              </div>
-            </section>
-          ))}
+                  {hovered &&
+                  Option.exists(
+                    hover,
+                    (held) => held.index >= columnCards.length,
+                  ) ? (
+                    <div aria-hidden="true" className="gx-kan-drop-line" />
+                  ) : null}
+                </div>
+              </section>
+            );
+          })}
         </div>
+        {view === "Hunts" ? null : (
+          <p className="gx-kan-empty">Only the hunt board is drawn.</p>
+        )}
       </div>
     </div>
   );
 };
 
-export const kanbanPackages: ReadonlyArray<string> = [
-  "@gpuixui/primitives",
-  "@gpuixui/components",
-  "@gpuixui/icons",
+export const kanbanPackages: ReadonlyArray<string> = ["@gpuixui/components"];
+
+export const kanbanSource = `import { useState } from "react";
+import {
+  Kanban,
+  type KanbanCard,
+  type KanbanColumn,
+  type KanbanMove,
+  type KanbanOrder,
+} from "@gpuixui/components/kanban";
+
+const columns: ReadonlyArray<KanbanColumn> = [
+  { id: "open", title: "Open" },
+  { id: "hunting", title: "Hunting" },
+  { id: "review", title: "Review" },
+  { id: "cleared", title: "Cleared" },
 ];
 
-export const kanbanSource = `import { Avatar } from "@gpuixui/components/avatar";
-import { Badge } from "@gpuixui/components/badge";
-import { Card, CardContent } from "@gpuixui/components/card";
-import { SearchInput } from "@gpuixui/components/search-input";
-import { Tabs, TabsList, TabsTrigger } from "@gpuixui/components/tabs";
-import { Button, Stack, Text, useTheme } from "@gpuixui/primitives";
-import { Icon } from "@gpuixui/icons";
+const cards: ReadonlyArray<KanbanCard> = [
+  { id: "exam", column: "open", title: "Survive the Fourth Phase" },
+  { id: "troupe", column: "hunting", title: "Track the Phantom Troupe" },
+  { id: "greed", column: "cleared", title: "Clear Greed Island" },
+];
 
-const columns = ["To do", "In progress", "In review", "Done"] as const;
+export function HuntBoard() {
+  const [order, setOrder] = useState<KanbanOrder>(
+    cards.map((card) => ({ id: card.id, column: card.column })),
+  );
 
-interface TaskCard {
-  readonly id: string;
-  readonly column: (typeof columns)[number];
-  readonly project: string;
-  readonly priority: "High" | "Medium" | "Low";
-  readonly title: string;
-  readonly due: string;
-  readonly people: ReadonlyArray<string>;
-  readonly comments: number;
-  readonly attachments: number;
-}
-
-export function KanbanBoard({ cards }: { cards: ReadonlyArray<TaskCard> }) {
-  const { theme } = useTheme();
+  const move = (next: KanbanMove) => save(next);
 
   return (
-    <Stack direction="row" style={{ height: 640, width: 1040 }}>
-      <Stack direction="column" gap="sm" style={{ width: 230, padding: 16 }}>
-        <Stack direction="row" align="center" gap="sm">
-          <Icon name="sparkles" color={theme.colors.primary} />
-          <Text role="title">Hologram</Text>
-        </Stack>
-        <SearchInput aria-label="Search" placeholder="Search" />
-        <Text role="caption" tone="muted">GENERAL</Text>
-        {["My Time", "My Work", "Boards", "Notification"].map((label) => (
-          <Text key={label} role="label">{label}</Text>
-        ))}
-        <Text role="caption" tone="muted">PROJECTS</Text>
-        {["Hologram", "DailyArt App", "Wezslo.com", "Starlight Team"].map((name) => (
-          <Text key={name} role="label">{name}</Text>
-        ))}
-      </Stack>
-      <Stack direction="column" grow gap="md" style={{ padding: 16 }}>
-        <Stack direction="row" align="center" justify="between">
-          <Text role="title">Hologram</Text>
-          <Stack direction="row" align="center" gap="xs">
-            {["DN", "AL", "MK", "JS", "RT"].map((name) => (
-              <Avatar key={name} name={name} size="sm" />
-            ))}
-            <Button variant="primary" icon="plus">Add Member</Button>
-          </Stack>
-        </Stack>
-        <Tabs defaultValue="tasks">
-          <TabsList label="Project sections">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-            <TabsTrigger value="files">Files</TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        <Stack direction="row" gap="md">
-          {columns.map((column) => {
-            const columnCards = cards.filter((card) => card.column === column);
-            return (
-              <Stack key={column} direction="column" grow gap="sm">
-                <Stack direction="row" align="center" gap="sm">
-                  <Text role="caption" tone="muted">{column}</Text>
-                  <Badge variant="neutral">{columnCards.length}</Badge>
-                  <Button variant="ghost" icon="plus" label={"Add to " + column} />
-                </Stack>
-                {columnCards.map((card) => (
-                  <Card key={card.id} variant="outline">
-                    <CardContent>
-                      <Stack direction="row" align="center" gap="xs">
-                        <Badge variant="neutral">{card.project}</Badge>
-                        <Badge variant="outline">{card.priority}</Badge>
-                        <Button
-                          variant="ghost"
-                          icon="ellipsis"
-                          label={"Move " + card.title}
-                        />
-                      </Stack>
-                      <Text role="label">{card.title}</Text>
-                      <Text role="caption" tone="muted">Due Date: {card.due}</Text>
-                      <Stack direction="row" align="center" gap="xs">
-                        {card.people.map((person) => (
-                          <Avatar key={person} name={person} size="xs" />
-                        ))}
-                        <Icon name="message" color={theme.colors.mutedForeground} />
-                        <Text role="caption" tone="muted">{card.comments}</Text>
-                        <Icon name="paperclip" color={theme.colors.mutedForeground} />
-                        <Text role="caption" tone="muted">{card.attachments}</Text>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                ))}
-              </Stack>
-            );
-          })}
-        </Stack>
-      </Stack>
-    </Stack>
+    <Kanban
+      label="Hunter contracts"
+      columns={columns}
+      cards={cards}
+      order={order}
+      onOrderChange={setOrder}
+      onMove={move}
+      onCardClick={(card) => open(card.id)}
+    />
   );
 }`;

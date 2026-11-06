@@ -1538,10 +1538,11 @@
 }
 
 /* ---- kanban board ----
-   The board window: a 230px app sidebar and four equal columns. A card's
-   `…` menu is the move affordance (the browser shim has no pointer capture),
-   the `+` appends a placeholder, and both counts come from the same array, so
-   a move can never leave a heading stale. */
+   The board window: a 230px app sidebar and four equal columns. The drawing
+   shares the shipped component's placement rule; a card drags to the line the
+   pointer names, the `…` menu sends it without a pointer, and `+` appends a
+   placeholder. Both counts come from the same array, so a move can never leave
+   a heading stale. */
 
 .gx-kan {
   display: flex;
@@ -1575,16 +1576,6 @@
   align-items: center;
   gap: 9px;
   padding: 0 6px 2px;
-}
-
-.gx-kan-mark {
-  display: block;
-  flex: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  background: var(--primary);
-  box-shadow: inset 0 0 0 3px var(--card);
 }
 
 .gx-kan-brand-name {
@@ -1767,10 +1758,17 @@
 }
 
 .gx-kan-user-avatar {
+  display: grid;
+  place-items: center;
   width: 24px;
   height: 24px;
   overflow: hidden;
   border-radius: 9999px;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .gx-notif-icon:focus-visible {
@@ -2014,23 +2012,10 @@
   gap: 10px;
 }
 
-.gx-kan-project {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-right: auto;
-}
-
-.gx-kan-project-name {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 650;
-  letter-spacing: -0.015em;
-}
-
 .gx-kan-people {
   display: flex;
   align-items: center;
+  margin-right: auto;
 }
 
 .gx-kan-person {
@@ -2045,6 +2030,7 @@
   color: var(--foreground);
   font-size: 8.5px;
   font-weight: 700;
+  line-height: 1;
 }
 
 .gx-kan-person:first-child {
@@ -2517,8 +2503,8 @@
   gap: 10px;
 }
 
-/* The drag surface: the card lifts, the column it would land in tints, and the
-   line is the exact slot the drop names. */
+/* The drag surface: the card lifts and the line is the exact slot the drop
+   names. No column or card is tinted — the line is the whole target cue. */
 .gx-kan-drag {
   cursor: grab;
 }
@@ -2526,11 +2512,6 @@
 .gx-kan-drag[data-dragging="true"] {
   opacity: 0.45;
   cursor: grabbing;
-}
-
-.gx-kan-stack[data-drop="true"] {
-  background: var(--accent);
-  border-radius: calc(var(--radius) + 2px);
 }
 
 .gx-kan-drop-line {
@@ -2691,6 +2672,7 @@
   color: var(--accent-foreground);
   font-size: 7.5px;
   font-weight: 700;
+  line-height: 1;
 }
 
 .gx-kan-avatar:first-child {

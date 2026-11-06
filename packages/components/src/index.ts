@@ -49,6 +49,7 @@ export * from "./image-zoom.js";
 export * from "./inline-edit.js";
 export * from "./input-group.js";
 export * from "./item.js";
+export * from "./kanban.js";
 export * from "./keyboard-shortcuts.js";
 export * from "./list.js";
 export * from "./mention-input.js";

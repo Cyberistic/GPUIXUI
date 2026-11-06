@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import {
   KanbanRender,
@@ -10,58 +11,51 @@ import {
   moveCardTo,
 } from "./kanban-board";
 
-/**
- * The kanban board block.
- *
- * The preview is an illustration, but the parts a reader is told to look for
- * have to reach the markup: the four counted columns, the sidebar nav and its
- * badge, the project tabs and the card's menu affordance. The pure helpers are
- * the board's rules — a moved card changes its own column only, and the heading
- * counts follow the same array — so a move cannot leave a count stale.
- */
-
 const markup = renderToStaticMarkup(<KanbanRender />);
 
 describe("dragging a card", () => {
   it("paints each card as a drag source and each column as a drop target", () => {
     expect(markup).toContain('draggable="true"');
-    expect(markup).toContain('data-card-id="design-system"');
+    expect(markup).toContain('data-card-id="exam"');
   });
 
   it("lands the card at the index the drop names", () => {
-    const moved = moveCardTo(initialKanbanCards, "design-system", "done", 0);
-    const done = moved.filter((card) => card.column === "done");
+    const moved = moveCardTo(initialKanbanCards, "exam", "cleared", 0);
+    const cleared = moved.filter((card) => card.column === "cleared");
 
-    expect(done[0]?.id).toBe("design-system");
-    // Every other card keeps its column and its fields.
-    expect(moved.filter((card) => card.column === "todo").length).toBe(
-      initialKanbanCards.filter((card) => card.column === "todo").length - 1,
+    expect(cleared[0]?.id).toBe("exam");
+    expect(moved.filter((card) => card.column === "open").length).toBe(
+      initialKanbanCards.filter((card) => card.column === "open").length - 1,
     );
   });
 
   it("reorders inside one column", () => {
-    const progress = initialKanbanCards.filter(
-      (card) => card.column === "progress",
+    const hunting = initialKanbanCards.filter(
+      (card) => card.column === "hunting",
     );
-    const last = progress[progress.length - 1];
-    // A last card moved to the front is the first thing the column paints.
-    const moved = moveCardTo(initialKanbanCards, last?.id ?? "", "progress", 0);
+    const last = hunting[hunting.length - 1];
+    const moved = moveCardTo(
+      initialKanbanCards,
+      last?.id ?? "",
+      "hunting",
+      0,
+    );
 
-    expect(moved.filter((card) => card.column === "progress")[0]?.id).toBe(
+    expect(moved.filter((card) => card.column === "hunting")[0]?.id).toBe(
       last?.id,
     );
   });
 
   it("appends past the end of the column", () => {
-    const moved = moveCardTo(initialKanbanCards, "design-system", "review", 99);
+    const moved = moveCardTo(initialKanbanCards, "exam", "review", 99);
 
     expect(moved.filter((card) => card.column === "review").at(-1)?.id).toBe(
-      "design-system",
+      "exam",
     );
   });
 
   it("ignores an id the list no longer holds", () => {
-    expect(moveCardTo(initialKanbanCards, "removed", "done", 0)).toBe(
+    expect(moveCardTo(initialKanbanCards, "removed", "cleared", 0)).toBe(
       initialKanbanCards,
     );
   });
@@ -69,50 +63,46 @@ describe("dragging a card", () => {
 
 describe("kanban board block markup", () => {
   it("prints the app sidebar, its groups and the user row", () => {
-    expect(markup).toContain("Hologram");
-    for (const label of [
-      "My Time",
-      "My Work",
-      "Boards",
-      "Notification",
-      "DailyArt App",
-      "Wezslo.com",
-      "Starlight Team",
-      "Help Center",
-      "⌘F",
-      "dom@hologram.co",
-    ]) {
-      expect(markup).toContain(label);
-    }
+    expect(markup).toContain("HUNTERS");
+    Arr.forEach(
+      [
+        "Schedule",
+        "Assignments",
+        "Contracts",
+        "Bounties",
+        "Yorknew",
+        "Greed Island",
+        "Dark Continent",
+        "Zoldyck Estate",
+        "Help",
+        "⌘F",
+        "gon@hunter.assoc",
+      ],
+      (label) => expect(markup).toContain(label),
+    );
     expect(markup).toContain('aria-current="page"');
+    expect(markup).not.toContain("Hologram");
   });
 
   it("collapses the app sidebar to an icon strip", () => {
-    // The bug guarded: the sidebar had no toggle, so the board could not take
-    // the width back. The shared rail component names the action, carries the
-    // state, and the labels are the ones the sheet fades.
     expect(markup).toContain('data-collapsed="false"');
     expect(markup).toContain('aria-label="Collapse sidebar"');
     expect(markup).toContain('aria-expanded="true"');
     expect(markup).toContain("gx-kan-brand-name gx-rail-label");
-    expect(markup).toContain('aria-label="My Time"');
+    expect(markup).toContain('aria-label="Schedule"');
   });
 
-  it("prints the header, both member rows and the tabs", () => {
-    expect(markup).toContain("Add Member");
+  it("prints the header, the member row and the tabs", () => {
+    expect(markup).toContain("Add Hunter");
     expect(markup).toContain("Filter");
     expect(markup).toContain('class="gx-kan-people"');
-    for (const tab of [
-      "Overview",
-      "Tasks",
-      "Timeline",
-      "Notes",
-      "Files",
-      "Members",
-    ]) {
-      expect(markup).toContain(tab);
-    }
+    Arr.forEach(
+      ["Overview", "Hunts", "Timeline", "Notes", "Files", "Hunters"],
+      (tab) => expect(markup).toContain(tab),
+    );
     expect(markup).toContain('aria-selected="true"');
+    expect(markup).not.toContain("gx-kan-project");
+    expect(markup).not.toContain("gx-kan-mark");
   });
 
   it("prints four columns with a count chip and an add control each", () => {
@@ -123,23 +113,19 @@ describe("kanban board block markup", () => {
     expect(markup.match(/gx-kan-column-count/g)?.length).toBe(4);
     expect(markup.match(/gx-kan-dot/g)?.length).toBe(4);
     expect(countCards(initialKanbanCards)).toEqual({
-      todo: 2,
-      progress: 3,
+      open: 2,
+      hunting: 3,
       review: 1,
-      done: 2,
+      cleared: 2,
     });
   });
 
   it("prints the cards with a project chip, a priority tint and their counts", () => {
-    expect(markup).toContain(
-      "Update the Design System to Support Dark Mode and High Contrast Themes",
-    );
-    expect(markup).toContain(
-      "Sketch out initial wireframes for the main screen",
-    );
-    expect(markup).toContain("Map Component");
-    expect(markup).toContain("Create custom icons");
-    expect(markup).toContain("Due Date:");
+    expect(markup).toContain("Survive the Fourth Phase");
+    expect(markup).toContain("Follow Ging");
+    expect(markup).toContain("Track the Phantom Troupe");
+    expect(markup).toContain("Earn the Hunter Licence");
+    expect(markup).toContain("Due:");
     for (const priority of ["high", "medium", "low"]) {
       expect(markup).toContain(`data-priority="${priority}"`);
     }
@@ -158,32 +144,32 @@ describe("kanban board block markup", () => {
 
 describe("moving a card", () => {
   it("changes only the moved card's column", () => {
-    const moved = moveCard(initialKanbanCards, "design-system", "done");
-    const card = moved.find((entry) => entry.id === "design-system");
+    const moved = moveCard(initialKanbanCards, "exam", "cleared");
+    const card = moved.find((entry) => entry.id === "exam");
 
-    expect(card?.column).toBe("done");
+    expect(card?.column).toBe("cleared");
     expect(card?.title).toBe(initialKanbanCards[0]?.title);
-    expect(moved.filter((entry) => entry.id !== "design-system")).toEqual(
-      initialKanbanCards.filter((entry) => entry.id !== "design-system"),
+    expect(moved.filter((entry) => entry.id !== "exam")).toEqual(
+      initialKanbanCards.filter((entry) => entry.id !== "exam"),
     );
   });
 
   it("updates both the source and the target column counts", () => {
     const counts = countCards(
-      moveCard(initialKanbanCards, "design-system", "done"),
+      moveCard(initialKanbanCards, "exam", "cleared"),
     );
 
-    expect(counts.todo).toBe(1);
-    expect(counts.done).toBe(3);
-    expect(counts.progress).toBe(3);
+    expect(counts.open).toBe(1);
+    expect(counts.cleared).toBe(3);
+    expect(counts.hunting).toBe(3);
     expect(counts.review).toBe(1);
   });
 
   it("keeps the total number of cards", () => {
     expect(
-      countCards(moveCard(initialKanbanCards, "wireframes", "review")).review,
+      countCards(moveCard(initialKanbanCards, "ging", "review")).review,
     ).toBe(2);
-    expect(moveCard(initialKanbanCards, "wireframes", "review")).toHaveLength(
+    expect(moveCard(initialKanbanCards, "ging", "review")).toHaveLength(
       initialKanbanCards.length,
     );
   });
@@ -196,7 +182,7 @@ describe("adding a card", () => {
 
     expect(card).toMatchObject({
       column: "review",
-      title: "New task",
+      title: "New hunt",
       priority: "Low",
       due: "No due date",
     });
@@ -204,8 +190,8 @@ describe("adding a card", () => {
   });
 
   it("never repeats a placeholder id", () => {
-    const once = addCard(initialKanbanCards, "todo");
-    const twice = addCard(once, "todo");
+    const once = addCard(initialKanbanCards, "open");
+    const twice = addCard(once, "open");
 
     expect(twice[twice.length - 1]?.id).not.toBe(twice[twice.length - 2]?.id);
   });

@@ -464,7 +464,7 @@ export const blocks: Readonly<Record<string, Block>> = {
     slug: "kanban",
     title: "Kanban board",
     description:
-      "A project task board: an app sidebar, four counted columns and cards that move between them.",
+      "A hunter's contract board: an app sidebar, four counted columns and contracts that move between them.",
     packages: [...kanbanPackages],
     render: KanbanRender,
     source: kanbanSource,

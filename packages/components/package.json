@@ -12,6 +12,7 @@
     "./validation/logic": "./src/validation/logic.ts",
     "./countdown/logic": "./src/countdown/logic.ts",
     "./image-zoom/logic": "./src/image-zoom/logic.ts",
+    "./kanban/logic": "./src/kanban/logic.ts",
     "./shimmer/logic": "./src/shimmer/logic.ts",
     "./authoring": "./src/authoring.ts",
     "./authoring/testing": "./src/authoring-testing.ts",
