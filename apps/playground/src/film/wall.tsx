@@ -81,7 +81,15 @@ const TREE = [
   { path: "hunter/greed-island" },
   { path: "hunter/greed-island/cards", value: 30 },
   { path: "hunter/greed-island/dodgeball", value: 18 },
-  { path: "hunter/heavens-arena", value: 22 },
+  { path: "hunter/heavens-arena" },
+  { path: "hunter/heavens-arena/floors", value: 22 },
+];
+const ARCS = [
+  { path: "Yorknew", value: 40 },
+  { path: "Greed Island", value: 30 },
+  { path: "Chimera Ant", value: 26 },
+  { path: "Heavens Arena", value: 18 },
+  { path: "Whale Island", value: 12 },
 ];
 const CANDLES = Arr.makeBy(14, (i) => {
   const open = 50 + 14 * Math.sin(i / 2);

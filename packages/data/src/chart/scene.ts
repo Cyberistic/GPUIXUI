@@ -133,9 +133,22 @@ const seriesMark = (
   );
 };
 
+/**
+ * A row's own weight: a parent's value is its children's sum, and the layout adds
+ * the two, so a parent counted again left a hole the size of its subtree.
+ */
+const ownValue =
+  (rows: ReadonlyArray<HierarchyRow>) =>
+  (row: HierarchyRow): number =>
+    Arr.some(rows, (other) =>
+      other.path.startsWith(`${row.path}${HIERARCHY_SEPARATOR}`),
+    )
+      ? 0
+      : row.value;
+
 const treemapMark = (options: SceneChartOptions) =>
   treemap(options.hierarchy ?? [], {
-    value: (row: HierarchyRow) => row.value,
+    value: ownValue(options.hierarchy ?? []),
     path: (row: HierarchyRow) => row.path,
     delimiter: HIERARCHY_SEPARATOR,
     fill: (node) =>
@@ -156,7 +169,7 @@ const sunburstMark = (options: SceneChartOptions) =>
     endAngle: Math.PI / 2 - Math.PI * 2,
     marks: [
       sunburst(options.hierarchy ?? [], {
-        value: (row: HierarchyRow) => row.value,
+        value: ownValue(options.hierarchy ?? []),
         path: (row: HierarchyRow) => row.path,
         delimiter: HIERARCHY_SEPARATOR,
         fill: (node) =>
@@ -286,7 +299,11 @@ const radialBarMark = (options: SceneChartOptions) =>
         // draws one bar per category, so there is one value per category.
         radius: valueChannel(options.series[0]?.key ?? "value"),
         key: "category",
-        fill: options.colours[0] ?? "#000000",
+        fill: (row: SceneRow) =>
+          options.colours[
+            options.labels.indexOf(row.category) %
+              Math.max(1, options.colours.length)
+          ] ?? "#000000",
       }),
     ],
   });
@@ -343,11 +360,17 @@ export const chartScene = (options: SceneChartOptions): ChartScene<SceneRow> =>
     height: options.box.height,
   });
 
-export const sceneSvg = (options: SceneChartOptions): string =>
-  renderChartSvg(chartScene(options), {
+export const sceneSvg = (options: SceneChartOptions): string => {
+  const markup = renderChartSvg(chartScene(options), {
     ariaLabel: options.label,
     ariaDescription: options.description,
   });
+  // TODO: the link mark has no cap option. A ribbon is as thick as it is long, so
+  // a round cap paints a disc past the node it meets.
+  return options.kind === "sankey"
+    ? markup.replaceAll('stroke-linecap="round"', 'stroke-linecap="butt"')
+    : markup;
+};
 
 export const scenePointAt = (
   scene: ChartScene<SceneRow>,
