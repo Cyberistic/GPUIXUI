@@ -738,6 +738,9 @@ export const CandleChart = ({
   );
 };
 
+/** A stage label's average character width at its role's size, in pixels. */
+const FUNNEL_CHAR_WIDTH = 7;
+
 export interface FunnelChartProps extends ChartProps {
   readonly stages: ReadonlyArray<number>;
   readonly stageLabels?: ReadonlyArray<string>;
@@ -778,22 +781,30 @@ export const FunnelChart = ({
       range={range}
       overlay={({ box }) => (
         <>
-          {Arr.map(labels, (label, index) => (
-            <text
-              key={label}
-              style={{
-                ...textStyle(theme, "label"),
-                position: "absolute",
-                left: 0,
-                width: box.width,
-                top: ((index + 0.4) * box.height) / labels.length - 8,
-                textAlign: "center",
-                color: themeColors(theme).primaryForeground,
-              }}
-            >
-              {`${label} ${stages[index] ?? ""}`}
-            </text>
-          ))}
+          {Arr.map(labels, (label, index) => {
+            const text = `${label} ${stages[index] ?? ""}`;
+            const bar = ((stages[index] ?? 0) / (stages[0] ?? 1)) * box.width;
+            // A label that does not fit its bar stands beside it, on the surface.
+            const inside = bar >= text.length * FUNNEL_CHAR_WIDTH + 16;
+            return (
+              <text
+                key={label}
+                style={{
+                  ...textStyle(theme, "label"),
+                  position: "absolute",
+                  top: ((index + 0.4) * box.height) / labels.length - 8,
+                  ...(inside
+                    ? { left: 0, width: box.width, textAlign: "center" }
+                    : { left: (box.width + bar) / 2 + 8 }),
+                  color: inside
+                    ? themeColors(theme).primaryForeground
+                    : themeColors(theme).foreground,
+                }}
+              >
+                {text}
+              </text>
+            );
+          })}
         </>
       )}
       paint={({ box, reveal }) => {
@@ -996,12 +1007,12 @@ export interface AreaChartProps extends ChartProps {
 }
 
 export const AreaChart = ({
-  curve = "smooth",
+  curve = "natural",
   stacked = false,
   gradient = true,
-  fillOpacity = 0.35,
+  fillOpacity = 0.4,
   dots = false,
-  lineWidth = 2,
+  lineWidth = 1,
   showLabels = false,
   pointTooltip = false,
   dotIcons,
@@ -1294,6 +1305,7 @@ export interface PieChartProps extends Omit<Props, "children"> {
 }
 
 const Ring = ({
+  sweep,
   data,
   size,
   innerRadius,
@@ -1313,6 +1325,8 @@ const Ring = ({
   readonly innerRadius: number;
   readonly padAngle: number;
   readonly colors: ReadonlyArray<string> | undefined;
+  /** How much of the circle the slices have opened to, 0 to 1. */
+  readonly sweep: number;
   readonly centerLabel: string | undefined;
   readonly showLabels?: boolean;
   readonly labelPosition?: "inside" | "outside";
@@ -1337,7 +1351,7 @@ const Ring = ({
   );
   const segments = stacked
     ? ringBands(values, box, innerRadius, padAngle, activeIndex)
-    : ringSegments(values, box, innerRadius, padAngle, activeIndex);
+    : ringSegments(values, box, innerRadius, padAngle, activeIndex, sweep);
   const labelPoints = ringLabelPoints(values, box, innerRadius);
   const outsideLabels = ringOutsideLabels(values, box);
   return (
@@ -1530,7 +1544,7 @@ export const PieChart = ({
   data,
   size = DEFAULT_RING_SIZE,
   innerRadius = 0,
-  padAngle = 0.02,
+  padAngle = 0,
   legend = true,
   legendValues = false,
   colors,
@@ -1556,10 +1570,14 @@ export const PieChart = ({
     animate,
     animationDuration,
   );
+  // The ring sweeps open from the top, as Recharts' does; a stacked one has no
+  // sweep to share and grows each band.
   const reveal = useMountReveal(animate, animationDuration);
   const shown = Arr.map(rows, (one, index) => ({
     ...one,
-    value: scaleValue(animated[index]?.[0] ?? one.value, reveal),
+    value: stacked
+      ? scaleValue(animated[index]?.[0] ?? one.value, reveal)
+      : (animated[index]?.[0] ?? one.value),
   }));
   return (
     <div
@@ -1570,6 +1588,7 @@ export const PieChart = ({
     >
       <Ring
         data={shown}
+        sweep={stacked ? 1 : reveal}
         size={size}
         innerRadius={innerRadius}
         padAngle={padAngle}
@@ -1616,6 +1635,8 @@ export interface RadarChartProps extends ChartProps {
   readonly radius?: number;
   readonly gridAt?: ReadonlyArray<number>;
   readonly dotIcons?: ReadonlyArray<IconName>;
+  /** A stroke around the shape; the fill alone reads by default, as shadcn's does. */
+  readonly outline?: boolean;
   readonly axisLabelFormat?: (label: string, index: number) => string;
   readonly pointTooltip?: boolean;
 }
@@ -1626,7 +1647,8 @@ const RADAR_LABEL_GAP = 14;
 export const RadarChart = ({
   levels = 4,
   dots = false,
-  fillOpacity = 0.25,
+  outline = false,
+  fillOpacity = 0.6,
   webs = true,
   gridShape = "polygon",
   gridFill = false,
@@ -1657,7 +1679,7 @@ export const RadarChart = ({
         const shown = scaleSeries(series, revealOf(reveal));
         return Arr.flatMap(shown, (one, seriesIndex) => {
           const points = radarPoints(one.values, axes, box, max, radius);
-          const outline = polygonPath(points);
+          const shape = polygonPath(points);
           return Arr.flatten([
             webs
               ? [
@@ -1720,7 +1742,7 @@ export const RadarChart = ({
                       series: one,
                       seriesIndex,
                       opacity: fillOpacity,
-                      marks: Option.match(outline, {
+                      marks: Option.match(shape, {
                         onNone: () => [],
                         onSome: (d): ReadonlyArray<ChartMark> => [
                           { kind: "path" as const, d },
@@ -1729,19 +1751,23 @@ export const RadarChart = ({
                     } satisfies PaintLayer,
                   ]
                 : []),
-              {
-                key: one.key,
-                series: one,
-                seriesIndex,
-                kind: "line",
-                decorative: true,
-                marks: Option.match(outline, {
-                  onNone: () => [],
-                  onSome: (d): ReadonlyArray<ChartMark> => [
-                    { kind: "path", d, stroke: lineStroke(2) },
-                  ],
-                }),
-              } satisfies PaintLayer,
+              ...(outline || !fill
+                ? [
+                    {
+                      key: one.key,
+                      series: one,
+                      seriesIndex,
+                      kind: "line",
+                      decorative: true,
+                      marks: Option.match(shape, {
+                        onNone: () => [],
+                        onSome: (d): ReadonlyArray<ChartMark> => [
+                          { kind: "path", d, stroke: lineStroke(2) },
+                        ],
+                      }),
+                    } satisfies PaintLayer,
+                  ]
+                : []),
             ],
             dots
               ? [

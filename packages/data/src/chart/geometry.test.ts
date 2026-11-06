@@ -290,6 +290,26 @@ describe("a radial and a ring", () => {
     );
   });
 
+  it("opens the ring by its sweep, so a half sweep paints half the circle", () => {
+    // Guards: a pie appeared whole on its first frame where Recharts' sweeps.
+    const whole = Arr.flatten(ringSegments([50, 50], box, 0, 0, undefined, 1));
+    const half = Arr.flatten(ringSegments([50, 50], box, 0, 0, undefined, 0.5));
+    expect(half).toHaveLength(2);
+    expect(half[1]?.kind === "path" ? half[1].d : "").not.toBe(
+      whole[1]?.kind === "path" ? whole[1].d : "",
+    );
+  });
+
+  it("keeps a slice's gap one width, rim to hub", () => {
+    // Guards: an angular gap tapered to nothing at the centre, and two slices
+    // read as overlapping there. The apex now stands off the hub by half the gap.
+    const [first] = Arr.flatten(ringSegments([50, 50], box, 0, 0.1));
+    const d = first?.kind === "path" ? first.d : "";
+    const hub = `L${box.width / 2} ${box.height / 2}`;
+    expect(d).toContain("L");
+    expect(d).not.toContain(hub);
+  });
+
   it("stacks each datum on its own concentric band", () => {
     const bands = ringBands([50, 30, 20], box);
     const radiusOf = (mark: unknown): number => {

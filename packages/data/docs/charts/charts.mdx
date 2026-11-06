@@ -324,10 +324,10 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `curve` | `"linear" \| "smooth" \| "step"` | `"smooth"` | how the area's edge joins its points |
+| `curve` | `"linear" \| "smooth" \| "natural" \| "step"` | `"natural"` | how the area's edge joins its points |
 | `stacked` | `boolean` | `false` | each series stands on the one before it |
 | `gradient` | `boolean` | `true` | the fill fades toward the axis |
-| `fillOpacity` | `number` | `0.35` | the fill's top opacity |
+| `fillOpacity` | `number` | `0.4` | half the gradient's top opacity; it fades to 0.1 at the axis |
 | `dots` | `boolean` | `false` | a dot paints on every point |
 | `lineWidth` | `number` | `2` | the edge's stroke weight |
 | `showLabels` | `boolean` | `false` | each point's value paints above it |
@@ -357,7 +357,7 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 | `data` | `ChartDatum[]` | — | `{ key, label, value }` per slice |
 | `size` | `number` | `160` | the ring's square box |
 | `innerRadius` | `number` | `0` (`0.62` for `DonutChart`) | the hole's share of the radius |
-| `padAngle` | `number` | `0.02` | the gap between slices, in radians |
+| `padAngle` | `number` | `0` | the gap between slices, measured at the rim; the same width to the hub |
 | `legend` | `boolean` | `true` | paints the legend under the ring |
 | `legendValues` | `boolean` | `true` | each legend row prints its value |
 | `colors` | `string[]` | the theme scale | the palette override |
@@ -396,6 +396,7 @@ out. A hierarchy deeper than `visibleDepth` is not drawn.
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `levels` | `number` | `4` | the number of webs the grid draws |
+| `outline` | `boolean` | `false` | a stroke around the shape; the fill alone reads by default |
 | `dots` | `boolean` | `false` | a dot paints on every corner |
 | `fillOpacity` | `number` | `0.25` | the series polygon's opacity |
 | `webs` | `boolean` | `true` | the webs and spokes paint |

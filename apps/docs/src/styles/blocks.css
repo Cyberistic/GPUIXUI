@@ -845,11 +845,11 @@
  * and the fallback is the dark theme's own scale for the landing.
  */
 .gx-dash {
-  --dash-series-1: var(--series-1, #a7a9ff);
-  --dash-series-2: var(--series-2, #6e9cff);
-  --dash-series-3: var(--series-3, #1fa968);
-  --dash-series-4: var(--series-4, #ffde8a);
-  --dash-series-5: var(--series-5, #ff9e9e);
+  --dash-series-1: var(--series-1, #70a7fa);
+  --dash-series-2: var(--series-2, #4f8ef8);
+  --dash-series-3: var(--series-3, #8fbdfc);
+  --dash-series-4: var(--series-4, #b3d3fd);
+  --dash-series-5: var(--series-5, #dbeafe);
   --dash-canvas: #10141b;
   --dash-chrome: #171c24;
   --dash-side: #0d1117;
@@ -8208,22 +8208,22 @@ button.gx-sb-row {
 /* Each cell and each arc takes the next colour of the library's series
    scale, so a picture of four parts reads as four parts. */
 .gx-dash01-cell {
-  fill: var(--series-1, #a7a9ff);
+  fill: var(--series-1, #70a7fa);
 }
 
 .gx-dash01-cell[data-slot="2"],
 .gx-dash01-arc[data-slot="2"] {
-  fill: var(--series-2, #6e9cff);
+  fill: var(--series-2, #4f8ef8);
 }
 
 .gx-dash01-cell[data-slot="3"],
 .gx-dash01-arc[data-slot="3"] {
-  fill: var(--series-3, #1fa968);
+  fill: var(--series-3, #8fbdfc);
 }
 
 .gx-dash01-cell[data-slot="4"],
 .gx-dash01-arc[data-slot="4"] {
-  fill: var(--series-4, #ffde8a);
+  fill: var(--series-4, #b3d3fd);
 }
 
 /* A cell's own colour is its fill, so the label has to hold its own against
@@ -8246,7 +8246,7 @@ button.gx-sb-row {
 }
 
 .gx-dash01-ribbon {
-  fill: var(--series-3, #1fa968);
+  fill: var(--series-3, #8fbdfc);
 }
 
 /* The nodes are the frame of the flow; the ribbons carry the colour. */
@@ -8260,7 +8260,7 @@ button.gx-sb-row {
 }
 
 .gx-dash01-arc {
-  fill: var(--series-1, #a7a9ff);
+  fill: var(--series-1, #70a7fa);
   fill-opacity: 0.9;
   stroke: var(--card);
   stroke-width: 1;
@@ -9564,11 +9564,11 @@ button.gx-sb-row {
 }
 
 .gx-cal-dots i[data-tone="green"] {
-  background: var(--series-3, #1fa968);
+  background: var(--series-3, #8fbdfc);
 }
 
 .gx-cal-dots i[data-tone="amber"] {
-  background: var(--series-4, #d8a531);
+  background: var(--series-4, #b3d3fd);
 }
 
 .gx-cal-day[data-selected] .gx-cal-dots i {
@@ -9620,11 +9620,11 @@ button.gx-sb-row {
 }
 
 .gx-cal-event[data-tone="green"] {
-  border-left-color: var(--series-3, #1fa968);
+  border-left-color: var(--series-3, #8fbdfc);
 }
 
 .gx-cal-event[data-tone="amber"] {
-  border-left-color: var(--series-4, #d8a531);
+  border-left-color: var(--series-4, #b3d3fd);
 }
 
 .gx-cal-time {

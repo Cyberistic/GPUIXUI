@@ -25,6 +25,26 @@
       width: 100%;
       height: auto;
     }
+    #root .hl {
+      position: relative;
+      display: inline-block;
+      padding: 0 0.14em;
+      isolation: isolate;
+    }
+    #root .hl i {
+      position: absolute;
+      z-index: -1;
+      left: 0;
+      right: 0;
+      top: 0.1em;
+      bottom: 0.02em;
+      border-radius: 0.14em;
+      background: #ffd84d;
+      transform-origin: 0 50%;
+    }
+    #root .on-dark .hl i {
+      background: #2f6fed;
+    }
     #root .shell {
       position: absolute;
       inset: 0;
@@ -50,10 +70,10 @@
       position: absolute;
       left: 0;
       right: 0;
-      top: 440px;
+      top: 470px;
       text-align: center;
       font:
-        400 62px Inter,
+        400 72px Inter,
         sans-serif;
       letter-spacing: -0.025em;
       color: #fff;
@@ -112,7 +132,10 @@
         <b>gon@whale-island ~ ❯</b> <span id="t-run"></span>
       </div>
     </div>
-    <div id="t-say" class="say">the same app, over ssh</div>
+    <div id="t-say" class="say on-dark">
+      the same app, in <span class="hl"><i></i>tmux</span>, over
+      <span class="hl"><i></i>ssh</span>
+    </div>
     <div id="t-app" class="app">
       <video
         id="t-v"
@@ -143,6 +166,12 @@
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
+    tl.fromTo(
+      "#t-say .hl i",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
+      0.12,
+    );
     tl.set("#t-ssh", { textContent: "ss" }, 0.1);
     tl.set("#t-ssh", { textContent: "ssh " }, 0.133);
     tl.set("#t-ssh", { textContent: "ssh go" }, 0.167);

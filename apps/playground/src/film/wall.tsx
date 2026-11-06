@@ -1,5 +1,6 @@
 import { Badge } from "@gpuixui/components/badge";
 import { examples as componentExamples } from "@gpuixui/components/examples";
+import { Tabs, TabsList, TabsTrigger } from "@gpuixui/components/tabs";
 import {
   AreaChart,
   BarChart,
@@ -70,11 +71,19 @@ const COST = {
   label: "Nen",
   values: [18, 22, 26, 24, 34, 30, 42, 39],
 };
+const RINGS = [
+  { key: "whale", label: "Whale Island", value: 86 },
+  { key: "yorknew", label: "Yorknew", value: 72 },
+  { key: "greed", label: "Greed Island", value: 61 },
+  { key: "arena", label: "Heavens Arena", value: 48 },
+  { key: "chimera", label: "Chimera Ant", value: 90 },
+];
 const SHARE = [
   { key: "enhancer", label: "Enhancer", value: 42 },
   { key: "transmuter", label: "Transmuter", value: 28 },
   { key: "conjurer", label: "Conjurer", value: 18 },
   { key: "emitter", label: "Emitter", value: 12 },
+  { key: "specialist", label: "Specialist", value: 9 },
 ];
 const FLOW = {
   nodes: [
@@ -128,11 +137,17 @@ const charts: Readonly<Record<string, ReactNode>> = {
       aria-label="Trend"
       labels={LABELS}
       series={[REVENUE, COST]}
-      curve="smooth"
+      curve="natural"
     />
   ),
   area: (
-    <AreaChart aria-label="Output" labels={LABELS} series={[REVENUE, COST]} />
+    <AreaChart
+      aria-label="Output"
+      labels={LABELS}
+      series={[COST, REVENUE]}
+      stacked
+      axis={false}
+    />
   ),
   composed: (
     <ComposedChart
@@ -170,23 +185,33 @@ const charts: Readonly<Record<string, ReactNode>> = {
     <PieChart aria-label="Nen types" data={SHARE} size={205} legend={false} />
   ),
   donut: (
-    <DonutChart aria-label="Nen types" data={SHARE} size={205} legend={false} />
+    <DonutChart
+      aria-label="Nen types"
+      data={SHARE}
+      size={205}
+      legend={false}
+      activeIndex={0}
+      centerLabel="42"
+    />
   ),
   radar: (
     <RadarChart
       aria-label="Discipline"
       labels={["Ten", "Zetsu", "Ren", "Hatsu", "Gyo"]}
       series={[{ key: "gon", label: "Gon", values: [70, 52, 88, 64, 40] }]}
-      radius={92}
+      width={320}
+      height={225}
+      radius={82}
     />
   ),
   radial: (
     <RadialChart
-      aria-label="Aura"
-      data={SHARE}
-      max={50}
-      centerLabel="62%"
-      thickness={18}
+      aria-label="Readers"
+      data={RINGS}
+      max={100}
+      thickness={13}
+      gap={5}
+      track
       size={205}
       legend={false}
     />
@@ -252,6 +277,8 @@ const Canvas = ({ children }: { readonly children: ReactNode }) => {
         justifyContent: "center",
         overflow: "hidden",
         backgroundColor: theme.colors.card,
+        // An example's bare <text> inherits this, or it paints black on dark.
+        color: theme.colors.foreground,
       }}
     >
       {children}
@@ -340,6 +367,27 @@ const controls: Readonly<Record<string, () => ReactNode>> = {
         { value: "month", label: "Month" },
       ]}
     />
+  ),
+  views: () => (
+    <ToggleGroup
+      type="single"
+      label="View"
+      defaultValue="board"
+      options={[
+        { value: "list", label: "List" },
+        { value: "board", label: "Board" },
+        { value: "calendar", label: "Calendar" },
+      ]}
+    />
+  ),
+  "tab-strip": () => (
+    <Tabs defaultValue="arena">
+      <TabsList label="Venue">
+        <TabsTrigger value="arena">Arena</TabsTrigger>
+        <TabsTrigger value="island">Island</TabsTrigger>
+        <TabsTrigger value="exam">Exam</TabsTrigger>
+      </TabsList>
+    </Tabs>
   ),
   badges: () => (
     <div style={ROW}>

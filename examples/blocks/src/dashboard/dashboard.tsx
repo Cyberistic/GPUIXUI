@@ -54,6 +54,7 @@ import {
   Text,
   ToggleGroup,
 } from "@gpuixui/primitives";
+import { seriesColors } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
 import { useState, type ReactNode } from "react";
@@ -518,12 +519,14 @@ export const Dashboard = () => {
                 <AreaChart
                   aria-label="Traffic"
                   series={[
-                    { key: "desktop", label: "Desktop", values: data.values },
                     { key: "mobile", label: "Mobile", values: data.mobile },
+                    { key: "desktop", label: "Desktop", values: data.values },
                   ]}
                   labels={data.labels}
-                  colors={[theme.colors.primary, theme.colors.info]}
-                  width={1012}
+                  colors={[seriesColors(theme)[1], seriesColors(theme)[0]]}
+                  stacked
+                  axis={false}
+                  width={1040}
                   height={250}
                   testId="visitors-chart"
                 />

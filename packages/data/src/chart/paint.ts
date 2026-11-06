@@ -102,5 +102,5 @@ export const areaGradient = (
   from: colour,
   to: colour,
   fromOpacity: opacity,
-  toOpacity: 0,
+  toOpacity: 0.1,
 });

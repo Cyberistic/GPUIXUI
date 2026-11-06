@@ -43,6 +43,14 @@ describe("a builder's file", () => {
     expect(theme.colors.success).toBe(lightTheme.colors.success);
   });
 
+  it("takes the chart palette from --chart-N", () => {
+    const { theme } = shadcnTheme(
+      ":root { --chart-1: #ff0000; --chart-2: #00ff00; }",
+      lightTheme,
+    );
+    expect(theme.series?.slice(0, 2)).toEqual(["#FF0000", "#00FF00"]);
+  });
+
   it("reports a value it cannot read, and the role keeps the base", () => {
     const { theme, problems } = shadcnTheme(CSS, lightTheme);
     expect(problems).toEqual(["--border"]);

@@ -8,7 +8,7 @@ export interface Point {
   readonly y: number;
 }
 
-export type Curve = "linear" | "smooth" | "step";
+export type Curve = "linear" | "smooth" | "natural" | "step";
 
 export interface ChartRange {
   readonly min: number;
@@ -164,6 +164,45 @@ const monotoneTangents = (
   return tangent;
 };
 
+/**
+ * The control points of a natural cubic spline through `values`: the curve shadcn's
+ * charts draw (Recharts' `type="natural"`). Unlike a monotone curve it swings past
+ * a sharp point, so a spike reads as a soft peak.
+ */
+const naturalControls = (
+  values: ReadonlyArray<number>,
+): readonly [ReadonlyArray<number>, ReadonlyArray<number>] => {
+  const n = values.length - 1;
+  const value = (index: number): number => values[index] ?? 0;
+  const a: Array<number> = [0];
+  const b: Array<number> = [2];
+  const r: Array<number> = [value(0) + 2 * value(1)];
+  for (let i = 1; i < n - 1; i += 1) {
+    a[i] = 1;
+    b[i] = 4;
+    r[i] = 4 * value(i) + 2 * value(i + 1);
+  }
+  a[n - 1] = 2;
+  b[n - 1] = 7;
+  r[n - 1] = 8 * value(n - 1) + value(n);
+  for (let i = 1; i < n; i += 1) {
+    const m = (a[i] ?? 0) / (b[i - 1] ?? 1);
+    b[i] = (b[i] ?? 0) - m;
+    r[i] = (r[i] ?? 0) - m * (r[i - 1] ?? 0);
+  }
+  const first: Array<number> = [];
+  first[n - 1] = (r[n - 1] ?? 0) / (b[n - 1] ?? 1);
+  for (let i = n - 2; i >= 0; i -= 1) {
+    first[i] = ((r[i] ?? 0) - (first[i + 1] ?? 0)) / (b[i] ?? 1);
+  }
+  const second: Array<number> = [];
+  second[n - 1] = (value(n) + (first[n - 1] ?? 0)) / 2;
+  for (let i = 0; i < n - 1; i += 1) {
+    second[i] = 2 * value(i + 1) - (first[i + 1] ?? 0);
+  }
+  return [first, second];
+};
+
 export const curvePath = (
   points: ReadonlyArray<Point>,
   curve: Curve,
@@ -176,11 +215,23 @@ export const curvePath = (
   const [head, ...rest] = points;
   if (head === undefined) return Option.none();
   const tangents = monotoneTangents(points);
+  const [x1, x2] = naturalControls(Arr.map(points, (point) => point.x));
+  const [y1, y2] = naturalControls(Arr.map(points, (point) => point.y));
   const body = Arr.map(rest, (point, index) => {
     const previous = points[index];
     if (previous === undefined) return "";
     return Match.value(curve).pipe(
       Match.when("step", () => `H${at(point.x)}V${at(point.y)}`),
+      Match.when("natural", () =>
+        points.length < 3
+          ? `L${pair(point)}`
+          : `C${pair({ x: x1[index] ?? point.x, y: y1[index] ?? point.y })} ${pair(
+              {
+                x: x2[index] ?? point.x,
+                y: y2[index] ?? point.y,
+              },
+            )} ${pair(point)}`,
+      ),
       Match.when("smooth", () => {
         const h = (point.x - previous.x) / 3;
         return `C${pair({
@@ -603,12 +654,45 @@ export const radialArcs = (
   });
 };
 
+/** How far an active slice grows, and the band outside it (Recharts' `activeShape`). */
+const ACTIVE_GROW = 8;
+const ACTIVE_BAND_INNER = 10;
+const ACTIVE_BAND_OUTER = 20;
+
+/** A slice whose straight edges run parallel, `width` apart from its neighbours'. */
+const gappedArc = (
+  cx: number,
+  cy: number,
+  outer: number,
+  inner: number,
+  from: number,
+  to: number,
+  width: number,
+): string => {
+  const half = width / 2;
+  const point = (radius: number, angle: number): string =>
+    `${at(cx + radius * Math.cos(angle))} ${at(cy + radius * Math.sin(angle))}`;
+  const inset = (radius: number) => Math.asin(Math.min(1, half / radius));
+  const large = (a: number, b: number) => (b - a > Math.PI ? 1 : 0);
+  const rimFrom = from + inset(outer);
+  const rimTo = to - inset(outer);
+  const rim = `M${point(outer, rimFrom)}A${at(outer)} ${at(outer)} 0 ${large(rimFrom, rimTo)} 1 ${point(outer, rimTo)}`;
+  if (inner > half) {
+    const hubFrom = from + inset(inner);
+    const hubTo = to - inset(inner);
+    return `${rim}L${point(inner, hubTo)}A${at(inner)} ${at(inner)} 0 ${large(hubFrom, hubTo)} 0 ${point(inner, hubFrom)}Z`;
+  }
+  const apex = half / Math.max(1e-6, Math.sin((to - from) / 2));
+  return `${rim}L${point(Math.min(apex, outer / 2), (from + to) / 2)}Z`;
+};
+
 export const ringSegments = (
   values: ReadonlyArray<number>,
   box: ChartBox,
   innerRatio = 0,
   padAngle = 0,
   emphasis?: number,
+  sweep = 1,
 ): ReadonlyArray<ReadonlyArray<ChartMark>> => {
   const drawable = Arr.map(values, (value) => Math.max(0, finite(value)));
   const total = Arr.reduce(drawable, 0, (sum, value) => sum + value);
@@ -616,7 +700,9 @@ export const ringSegments = (
   const size = Math.min(box.width, box.height);
   const cx = box.width / 2;
   const cy = box.height / 2;
-  const outer = size / 2;
+  // An active slice grows past the ring and carries a band outside it, so the
+  // ring gives up that room rather than clipping it.
+  const outer = size / 2 - (emphasis === undefined ? 0 : ACTIVE_BAND_OUTER);
   const inner = outer * Math.min(0.95, Math.max(0, innerRatio));
   const start = -Math.PI / 2;
   const full = Math.PI * 2;
@@ -624,17 +710,14 @@ export const ringSegments = (
     Math.max(0, padAngle),
     (full * 0.4) / Math.max(1, drawable.length),
   );
-  const [, segments] = Arr.mapAccum(drawable, start, (angle, value) => {
+  const [, segments] = Arr.mapAccum(drawable, start, (angle, value, index) => {
     if (value <= 0) return [angle, []];
-    const span = (value / total) * full;
+    const span = (value / total) * full * sweep;
     const from = angle + gap / 2;
     const to = angle + span - gap / 2;
     if (to <= from) return [angle + span, []];
-    const index = Math.max(
-      0,
-      Math.round(((angle - start) / Math.max(1e-9, full)) * drawable.length),
-    );
-    const rim = index === emphasis ? outer + 6 : outer;
+    const active = index === emphasis;
+    const rim = active ? outer + ACTIVE_GROW : outer;
     if (span >= full - 1e-9) {
       return [
         angle + full,
@@ -650,9 +733,31 @@ export const ringSegments = (
         ],
       ];
     }
+    // The gap is one width from rim to hub: an angular gap narrows to nothing
+    // at the centre, which read as two slices overlapping there.
     return [
       angle + span,
-      [{ kind: "path" as const, d: ringArc(cx, cy, rim, inner, from, to) }],
+      [
+        {
+          kind: "path" as const,
+          d: gappedArc(cx, cy, rim, inner, angle, angle + span, gap * outer),
+        },
+        ...(active
+          ? [
+              {
+                kind: "path" as const,
+                d: ringArc(
+                  cx,
+                  cy,
+                  outer + ACTIVE_BAND_OUTER,
+                  outer + ACTIVE_BAND_INNER,
+                  from,
+                  to,
+                ),
+              },
+            ]
+          : []),
+      ],
     ];
   });
   return segments;

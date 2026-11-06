@@ -25,6 +25,26 @@
       width: 100%;
       height: auto;
     }
+    #root .hl {
+      position: relative;
+      display: inline-block;
+      padding: 0 0.14em;
+      isolation: isolate;
+    }
+    #root .hl i {
+      position: absolute;
+      z-index: -1;
+      left: 0;
+      right: 0;
+      top: 0.1em;
+      bottom: 0.02em;
+      border-radius: 0.14em;
+      background: #ffd84d;
+      transform-origin: 0 50%;
+    }
+    #root .on-dark .hl i {
+      background: #2f6fed;
+    }
     #root .desk {
       position: absolute;
       inset: 0;
@@ -311,11 +331,19 @@
         </svg>
       </div>
     </div>
-    <div id="d-say" class="say">native on mac, windows & linux</div>
+    <div id="d-say" class="say on-dark">
+      <span class="hl"><i></i>one codebase.</span> every desktop.
+    </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
     tl.fromTo("#d-say", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.12);
+    tl.fromTo(
+      "#d-say .hl i",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
+      0.25,
+    );
     tl.to(
       "#d-win-layer",
       {

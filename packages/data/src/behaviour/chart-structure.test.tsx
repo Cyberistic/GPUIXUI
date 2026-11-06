@@ -18,6 +18,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import { darkTheme, seriesColors } from "@gpuixui/tokens";
+import { FunnelChart } from "../chart/chart.js";
 import {
   RadialBarChart,
   SankeyChart,
@@ -344,5 +345,32 @@ describe("a structural chart in layout", () => {
         : root.renderer.getElementBounds(element.id);
     expect(bounds?.width).toBe(120);
     expect(bounds?.height).toBe(80);
+  });
+});
+
+/**
+ * Guards: a stage label wider than its bar painted the bar's dark foreground on
+ * the card, unreadable beyond the bar's edges.
+ */
+describe("a funnel's labels", () => {
+  it("stand beside a bar too narrow to hold them, in the surface's colour", () => {
+    root = renderData(
+      <FunnelChart
+        aria-label="Exam"
+        testId="funnel"
+        labels={["Applied", "Licensed"]}
+        series={[]}
+        stages={[400, 9]}
+        width={300}
+        height={120}
+      />,
+    );
+    settle(root);
+    const labels =
+      root.renderer
+        .findByType("text")
+        .filter((node) => node.style.position === "absolute") ?? [];
+    expect(labels[0]?.style.color).toBe(darkTheme.colors.primaryForeground);
+    expect(labels[1]?.style.color).toBe(darkTheme.colors.foreground);
   });
 });

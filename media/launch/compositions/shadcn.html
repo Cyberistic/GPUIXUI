@@ -4,71 +4,152 @@
     #root video, #root img.shot { position: absolute; display: block; }
     #root .cursor { position: absolute; left: 0; top: 0; width: 34px; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0,0,0,.25)); }
     #root .cursor svg { display: block; width: 100%; height: auto; }
-    #root .code { position:absolute; left:0; top:0; width:960px; height:1080px; background:#101014; padding:96px 0 0 64px; font:500 27px/46px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
-    #root .code b { font-weight:500; color:#7aa2f7; } #root .code i { font-style:normal; color:#9ece6a; }
+    #root .hl { position: relative; display: inline-block; padding: 0 .14em; isolation: isolate; }
+    #root .hl i { position: absolute; z-index: -1; left: 0; right: 0; top: .1em; bottom: .02em; border-radius: .14em; background: #FFD84D; transform-origin: 0 50%; }
+    #root .on-dark .hl i { background: #2F6FED; }
+    #root .code { position:absolute; left:0; top:0; width:960px; overflow:hidden; height:1080px; background:#101014; padding:96px 0 0 64px; font:500 27px/46px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
+    #root .code b { font-weight:500; color:#7aa2f7; } #root .code .ln i, #root .code .css i { font-style:normal; color:#9ece6a; }
     #root .ln { height:46px; overflow:hidden; white-space:pre; width:0; }
-    #root .css { position:absolute; left:64px; top:96px; white-space:pre; opacity:0; }
+    #root .css { position:absolute; left:64px; top:96px; white-space:pre; opacity:0; font-size:24px; line-height:42px; }
     #root .file { position:absolute; left:64px; top:36px; font:500 22px Inter, sans-serif; color:#71717a; }
     #root .say { position:absolute; left:64px; right:64px; bottom:60px; font:400 52px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }
+    #root .title { position:absolute; left:64px; top:960px; font:400 56px Inter, sans-serif; letter-spacing:-0.025em; color:#1D1D1F; white-space:nowrap; transform-origin:0 50%; }
     #root .right { position:absolute; left:960px; top:0; width:960px; height:1080px; overflow:hidden; }
     #root .right video { position:relative; display:block; width:100%; height:100%; }
   </style>
   <div id="root" data-composition-id="shadcn" data-width="1920" data-height="1080">
-    <div id="s-right" class="right"><video id="s-v" class="clip" data-start="0" data-duration="5" data-track-index="1" muted playsinline src="assets/footage/shadcn-v8.mp4" style=""></video></div>
+    <div id="s-right" class="right"><video id="s-v" class="clip" data-start="0" data-duration="7" data-track-index="1" muted playsinline src="assets/footage/shadcn-v8.mp4" style=""></video></div>
     <div id="s-code" class="code">
       <div id="s-file" class="file">license.tsx</div>
       <div id="s-lines"><div id="s-l0" class="ln">&lt;<b>Card</b>></div><div id="s-l1" class="ln">  &lt;<b>CardHeader</b>></div><div id="s-l2" class="ln">    &lt;<b>CardTitle</b>>Hunter License&lt;/<b>CardTitle</b>></div><div id="s-l3" class="ln">    &lt;<b>CardDescription</b>>The 287th exam&lt;/<b>CardDescription</b>></div><div id="s-l4" class="ln">  &lt;/<b>CardHeader</b>></div><div id="s-l5" class="ln">  &lt;<b>CardContent</b>></div><div id="s-l6" class="ln">    &lt;<b>Input</b> placeholder=<i>"gon@whale-island"</i> /></div><div id="s-l7" class="ln">    &lt;<b>Button</b>>Apply&lt;/<b>Button</b>></div><div id="s-l8" class="ln">    &lt;<b>BarChart</b> series={applicants} /></div><div id="s-l9" class="ln">  &lt;/<b>CardContent</b>></div><div id="s-l10" class="ln">&lt;/<b>Card</b>></div></div>
       <div id="s-c0" class="css">:root {
-  <b>--background</b>: <i>oklch(0.98 0.01 300)</i>;
-  <b>--card</b>: <i>oklch(1 0 0)</i>;
-  <b>--primary</b>: <i>oklch(0.55 0.22 295)</i>;
-  <b>--primary-foreground</b>: <i>oklch(0.98 0 0)</i>;
-  <b>--muted-foreground</b>: <i>oklch(0.5 0.04 295)</i>;
-  <b>--border</b>: <i>oklch(0.9 0.02 295)</i>;
-  <b>--radius</b>: <i>1rem</i>;
+  <b>--background</b>: <i>oklch(0.9399 0.0203 345.6985)</i>;
+  <b>--foreground</b>: <i>oklch(0.4712 0 0)</i>;
+  <b>--card</b>: <i>oklch(0.9498 0.0500 86.8891)</i>;
+  <b>--card-foreground</b>: <i>oklch(0.4712 0 0)</i>;
+  <b>--primary</b>: <i>oklch(0.6209 0.1801 348.1385)</i>;
+  <b>--primary-foreground</b>: <i>oklch(1.0000 0 0)</i>;
+  <b>--muted-foreground</b>: <i>oklch(0.5795 0 0)</i>;
+  <b>--border</b>: <i>oklch(0.6209 0.1801 348.1385)</i>;
+  <b>--input</b>: <i>oklch(0.9189 0 0)</i>;
+  <b>--chart-</b>1: <i>oklch(0.7002 0.1597 350.7532)</i>;
+  <b>--chart-</b>2: <i>oklch(0.8189 0.0799 212.0892)</i>;
+  <b>--chart-</b>3: <i>oklch(0.9195 0.0801 87.6670)</i>;
+  <b>--radius</b>: <i>0.4rem</i>;
 }</div>
-      <div id="s-c1" class="css">:root {
-  <b>--background</b>: <i>oklch(0.97 0.02 85)</i>;
-  <b>--card</b>: <i>oklch(0.99 0.01 85)</i>;
-  <b>--primary</b>: <i>oklch(0.62 0.17 45)</i>;
-  <b>--primary-foreground</b>: <i>oklch(0.99 0 0)</i>;
-  <b>--muted-foreground</b>: <i>oklch(0.5 0.05 60)</i>;
-  <b>--border</b>: <i>oklch(0.88 0.03 85)</i>;
-  <b>--radius</b>: <i>0.25rem</i>;
+      <div id="s-c1" class="css">.dark {
+  <b>--background</b>: <i>oklch(0.1649 0.0352 281.8285)</i>;
+  <b>--foreground</b>: <i>oklch(0.9513 0.0074 260.7315)</i>;
+  <b>--card</b>: <i>oklch(0.2542 0.0611 281.1423)</i>;
+  <b>--card-foreground</b>: <i>oklch(0.9513 0.0074 260.7315)</i>;
+  <b>--primary</b>: <i>oklch(0.6726 0.2904 341.4084)</i>;
+  <b>--primary-foreground</b>: <i>oklch(1.0000 0 0)</i>;
+  <b>--muted-foreground</b>: <i>oklch(0.6245 0.0500 278.1046)</i>;
+  <b>--border</b>: <i>oklch(0.3279 0.0832 280.7890)</i>;
+  <b>--input</b>: <i>oklch(0.3279 0.0832 280.7890)</i>;
+  <b>--chart-</b>1: <i>oklch(0.6726 0.2904 341.4084)</i>;
+  <b>--chart-</b>2: <i>oklch(0.5488 0.2944 299.0954)</i>;
+  <b>--chart-</b>3: <i>oklch(0.8442 0.1457 209.2851)</i>;
+  <b>--radius</b>: <i>0.5rem</i>;
 }</div>
-      <div id="s-c2" class="css">.dark {
-  <b>--background</b>: <i>oklch(0.16 0.02 165)</i>;
-  <b>--card</b>: <i>oklch(0.21 0.02 165)</i>;
-  <b>--foreground</b>: <i>oklch(0.96 0.01 165)</i>;
-  <b>--card-foreground</b>: <i>oklch(0.96 0.01 165)</i>;
-  <b>--primary</b>: <i>oklch(0.78 0.17 165)</i>;
-  <b>--primary-foreground</b>: <i>oklch(0.2 0.03 165)</i>;
-  <b>--muted-foreground</b>: <i>oklch(0.7 0.03 165)</i>;
-  <b>--border</b>: <i>oklch(0.32 0.02 165)</i>;
-  <b>--radius</b>: <i>0.625rem</i>;
+      <div id="s-c2" class="css">:root {
+  <b>--background</b>: <i>oklch(0.9818 0.0054 95.0986)</i>;
+  <b>--foreground</b>: <i>oklch(0.3438 0.0269 95.7226)</i>;
+  <b>--card</b>: <i>oklch(0.9818 0.0054 95.0986)</i>;
+  <b>--card-foreground</b>: <i>oklch(0.1908 0.0020 106.5859)</i>;
+  <b>--primary</b>: <i>oklch(0.6171 0.1375 39.0427)</i>;
+  <b>--primary-foreground</b>: <i>oklch(1.0000 0 0)</i>;
+  <b>--muted-foreground</b>: <i>oklch(0.6059 0.0075 97.4233)</i>;
+  <b>--border</b>: <i>oklch(0.8847 0.0069 97.3627)</i>;
+  <b>--input</b>: <i>oklch(0.7621 0.0156 98.3528)</i>;
+  <b>--chart-</b>1: <i>oklch(0.5583 0.1276 42.9956)</i>;
+  <b>--chart-</b>2: <i>oklch(0.6898 0.1581 290.4107)</i>;
+  <b>--chart-</b>3: <i>oklch(0.8816 0.0276 93.1280)</i>;
+  <b>--radius</b>: <i>0.5rem</i>;
 }</div>
-      <div id="s-say0" class="say">it's just shadcn</div>
-      <div id="s-say1" class="say" style="opacity:0">paste a theme from the shadcn builder</div>
+      <div id="s-c3" class="css">.dark {
+  <b>--background</b>: <i>oklch(0.2178 0 0)</i>;
+  <b>--foreground</b>: <i>oklch(0.9067 0 0)</i>;
+  <b>--card</b>: <i>oklch(0.2850 0 0)</i>;
+  <b>--card-foreground</b>: <i>oklch(0.9067 0 0)</i>;
+  <b>--primary</b>: <i>oklch(0.6083 0.2090 27.0276)</i>;
+  <b>--primary-foreground</b>: <i>oklch(1.0000 0 0)</i>;
+  <b>--muted-foreground</b>: <i>oklch(0.7058 0 0)</i>;
+  <b>--border</b>: <i>oklch(0.4091 0 0)</i>;
+  <b>--input</b>: <i>oklch(0.4091 0 0)</i>;
+  <b>--chart-</b>1: <i>oklch(0.6083 0.2090 27.0276)</i>;
+  <b>--chart-</b>2: <i>oklch(0.6423 0.1467 133.0145)</i>;
+  <b>--chart-</b>3: <i>oklch(0.7482 0.1235 244.7492)</i>;
+  <b>--radius</b>: 0px;
+}</div>
+      <div id="s-c4" class="css">:root {
+  <b>--background</b>: <i>oklch(0.9809 0.0025 228.7836)</i>;
+  <b>--foreground</b>: <i>oklch(0.3211 0 0)</i>;
+  <b>--card</b>: <i>oklch(1.0000 0 0)</i>;
+  <b>--card-foreground</b>: <i>oklch(0.3211 0 0)</i>;
+  <b>--primary</b>: <i>oklch(0.8677 0.0735 7.0855)</i>;
+  <b>--primary-foreground</b>: <i>oklch(0 0 0)</i>;
+  <b>--muted-foreground</b>: <i>oklch(0.5382 0 0)</i>;
+  <b>--border</b>: <i>oklch(0.8699 0 0)</i>;
+  <b>--input</b>: <i>oklch(0.8699 0 0)</i>;
+  <b>--chart-</b>1: <i>oklch(0.8677 0.0735 7.0855)</i>;
+  <b>--chart-</b>2: <i>oklch(0.8148 0.0819 225.7537)</i>;
+  <b>--chart-</b>3: <i>oklch(0.9680 0.2110 109.7692)</i>;
+  <b>--radius</b>: <i>0.5rem</i>;
+}</div>
+      <div id="s-c5" class="css">.dark {
+  <b>--background</b>: <i>oklch(0.2155 0.0254 284.0647)</i>;
+  <b>--foreground</b>: <i>oklch(0.8787 0.0426 272.2767)</i>;
+  <b>--card</b>: <i>oklch(0.2429 0.0304 283.9110)</i>;
+  <b>--card-foreground</b>: <i>oklch(0.8787 0.0426 272.2767)</i>;
+  <b>--primary</b>: <i>oklch(0.7871 0.1187 304.7693)</i>;
+  <b>--primary-foreground</b>: <i>oklch(0.2429 0.0304 283.9110)</i>;
+  <b>--muted-foreground</b>: <i>oklch(0.7510 0.0396 273.9320)</i>;
+  <b>--border</b>: <i>oklch(0.3240 0.0319 281.9784)</i>;
+  <b>--input</b>: <i>oklch(0.3240 0.0319 281.9784)</i>;
+  <b>--chart-</b>1: <i>oklch(0.7871 0.1187 304.7693)</i>;
+  <b>--chart-</b>2: <i>oklch(0.8467 0.0833 210.2545)</i>;
+  <b>--chart-</b>3: <i>oklch(0.8577 0.1092 142.7153)</i>;
+  <b>--radius</b>: <i>0.35rem</i>;
+}</div>
+      <div id="s-say1" class="say on-dark" style="opacity:0">paste any <span class="hl"><i></i>tweakcn</span> theme. done.</div>
     </div>
+    <div id="s-title" class="title">it's just <span class="hl"><i></i>shadcn</span></div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.fromTo("#s-code",{x:-960},{x:0,duration:0.42,ease:"power3.out"},0);
-    tl.fromTo("#s-right",{opacity:0},{opacity:1,duration:0.3},0.08);
-    tl.set("#s-l0",{width:"3ch"},0.200);tl.set("#s-l0",{width:"6ch"},0.233);tl.set("#s-l1",{width:"3ch"},0.333);tl.set("#s-l1",{width:"6ch"},0.367);tl.set("#s-l1",{width:"9ch"},0.400);tl.set("#s-l1",{width:"12ch"},0.433);tl.set("#s-l1",{width:"14ch"},0.467);tl.set("#s-l2",{width:"3ch"},0.467);tl.set("#s-l2",{width:"6ch"},0.500);tl.set("#s-l2",{width:"9ch"},0.533);tl.set("#s-l2",{width:"12ch"},0.567);tl.set("#s-l2",{width:"15ch"},0.600);tl.set("#s-l2",{width:"18ch"},0.633);tl.set("#s-l2",{width:"21ch"},0.667);tl.set("#s-l2",{width:"24ch"},0.700);tl.set("#s-l2",{width:"27ch"},0.733);tl.set("#s-l2",{width:"30ch"},0.767);tl.set("#s-l2",{width:"33ch"},0.800);tl.set("#s-l2",{width:"36ch"},0.833);tl.set("#s-l2",{width:"39ch"},0.867);tl.set("#s-l2",{width:"41ch"},0.900);tl.set("#s-l3",{width:"3ch"},0.867);tl.set("#s-l3",{width:"6ch"},0.900);tl.set("#s-l3",{width:"9ch"},0.933);tl.set("#s-l3",{width:"12ch"},0.967);tl.set("#s-l3",{width:"15ch"},1.000);tl.set("#s-l3",{width:"18ch"},1.033);tl.set("#s-l3",{width:"21ch"},1.067);tl.set("#s-l3",{width:"24ch"},1.100);tl.set("#s-l3",{width:"27ch"},1.133);tl.set("#s-l3",{width:"30ch"},1.167);tl.set("#s-l3",{width:"33ch"},1.200);tl.set("#s-l3",{width:"36ch"},1.233);tl.set("#s-l3",{width:"39ch"},1.267);tl.set("#s-l3",{width:"42ch"},1.300);tl.set("#s-l3",{width:"45ch"},1.333);tl.set("#s-l3",{width:"48ch"},1.367);tl.set("#s-l3",{width:"51ch"},1.400);tl.set("#s-l3",{width:"53ch"},1.433);tl.set("#s-l4",{width:"3ch"},1.333);tl.set("#s-l4",{width:"6ch"},1.367);tl.set("#s-l4",{width:"9ch"},1.400);tl.set("#s-l4",{width:"12ch"},1.433);tl.set("#s-l4",{width:"15ch"},1.467);tl.set("#s-l5",{width:"3ch"},1.467);tl.set("#s-l5",{width:"6ch"},1.500);tl.set("#s-l5",{width:"9ch"},1.533);tl.set("#s-l5",{width:"12ch"},1.567);tl.set("#s-l5",{width:"15ch"},1.600);tl.set("#s-l6",{width:"3ch"},1.600);tl.set("#s-l6",{width:"6ch"},1.633);tl.set("#s-l6",{width:"9ch"},1.667);tl.set("#s-l6",{width:"12ch"},1.700);tl.set("#s-l6",{width:"15ch"},1.733);tl.set("#s-l6",{width:"18ch"},1.767);tl.set("#s-l6",{width:"21ch"},1.800);tl.set("#s-l6",{width:"24ch"},1.833);tl.set("#s-l6",{width:"27ch"},1.867);tl.set("#s-l6",{width:"30ch"},1.900);tl.set("#s-l6",{width:"33ch"},1.933);tl.set("#s-l6",{width:"36ch"},1.967);tl.set("#s-l6",{width:"39ch"},2.000);tl.set("#s-l6",{width:"42ch"},2.033);tl.set("#s-l6",{width:"44ch"},2.067);tl.set("#s-l7",{width:"3ch"},2.000);tl.set("#s-l7",{width:"6ch"},2.033);tl.set("#s-l7",{width:"9ch"},2.067);tl.set("#s-l7",{width:"12ch"},2.100);tl.set("#s-l7",{width:"15ch"},2.133);tl.set("#s-l7",{width:"18ch"},2.167);tl.set("#s-l7",{width:"21ch"},2.200);tl.set("#s-l7",{width:"24ch"},2.233);tl.set("#s-l7",{width:"26ch"},2.267);tl.set("#s-l8",{width:"3ch"},2.267);tl.set("#s-l8",{width:"6ch"},2.300);tl.set("#s-l8",{width:"9ch"},2.333);tl.set("#s-l8",{width:"12ch"},2.367);tl.set("#s-l8",{width:"15ch"},2.400);tl.set("#s-l8",{width:"18ch"},2.433);tl.set("#s-l8",{width:"21ch"},2.467);tl.set("#s-l8",{width:"24ch"},2.500);tl.set("#s-l8",{width:"27ch"},2.533);tl.set("#s-l8",{width:"30ch"},2.567);tl.set("#s-l8",{width:"33ch"},2.600);tl.set("#s-l8",{width:"36ch"},2.633);tl.set("#s-l9",{width:"3ch"},2.600);tl.set("#s-l9",{width:"6ch"},2.633);tl.set("#s-l9",{width:"9ch"},2.667);tl.set("#s-l9",{width:"12ch"},2.700);tl.set("#s-l9",{width:"15ch"},2.733);tl.set("#s-l9",{width:"16ch"},2.767);tl.set("#s-l10",{width:"3ch"},2.733);tl.set("#s-l10",{width:"6ch"},2.767);tl.set("#s-l10",{width:"7ch"},2.800);
-    tl.set("#s-lines",{opacity:0},3.067);
+    tl.fromTo("#s-title",{x:400,y:-448,scale:2.2,opacity:0},{opacity:1,duration:0.2},0.02);
+    tl.fromTo("#s-title .hl i",{scaleX:0},{scaleX:1,duration:0.32,ease:"power3.out",stagger:0.18},0.25);
+    tl.set("#s-code",{x:-960},0);
+    tl.set("#s-right",{opacity:0},0);
+    tl.to("#s-code",{x:0,duration:0.5,ease:"expo.inOut"},0.867);
+    tl.to("#s-title",{x:0,y:0,scale:1,color:"#ffffff",duration:0.5,ease:"expo.inOut"},0.867);
+    tl.to("#s-title .hl i",{backgroundColor:"#2F6FED",duration:0.25},0.933);
+    tl.to("#s-right",{opacity:1,duration:0.3},1.133);
+    tl.set("#s-l0",{width:"3ch"},1.333);tl.set("#s-l0",{width:"6ch"},1.367);tl.set("#s-l1",{width:"3ch"},1.467);tl.set("#s-l1",{width:"6ch"},1.500);tl.set("#s-l1",{width:"9ch"},1.533);tl.set("#s-l1",{width:"12ch"},1.567);tl.set("#s-l1",{width:"14ch"},1.600);tl.set("#s-l2",{width:"3ch"},1.600);tl.set("#s-l2",{width:"6ch"},1.633);tl.set("#s-l2",{width:"9ch"},1.667);tl.set("#s-l2",{width:"12ch"},1.700);tl.set("#s-l2",{width:"15ch"},1.733);tl.set("#s-l2",{width:"18ch"},1.767);tl.set("#s-l2",{width:"21ch"},1.800);tl.set("#s-l2",{width:"24ch"},1.833);tl.set("#s-l2",{width:"27ch"},1.867);tl.set("#s-l2",{width:"30ch"},1.900);tl.set("#s-l2",{width:"33ch"},1.933);tl.set("#s-l2",{width:"36ch"},1.967);tl.set("#s-l2",{width:"39ch"},2.000);tl.set("#s-l2",{width:"41ch"},2.033);tl.set("#s-l3",{width:"3ch"},2.000);tl.set("#s-l3",{width:"6ch"},2.033);tl.set("#s-l3",{width:"9ch"},2.067);tl.set("#s-l3",{width:"12ch"},2.100);tl.set("#s-l3",{width:"15ch"},2.133);tl.set("#s-l3",{width:"18ch"},2.167);tl.set("#s-l3",{width:"21ch"},2.200);tl.set("#s-l3",{width:"24ch"},2.233);tl.set("#s-l3",{width:"27ch"},2.267);tl.set("#s-l3",{width:"30ch"},2.300);tl.set("#s-l3",{width:"33ch"},2.333);tl.set("#s-l3",{width:"36ch"},2.367);tl.set("#s-l3",{width:"39ch"},2.400);tl.set("#s-l3",{width:"42ch"},2.433);tl.set("#s-l3",{width:"45ch"},2.467);tl.set("#s-l3",{width:"48ch"},2.500);tl.set("#s-l3",{width:"51ch"},2.533);tl.set("#s-l3",{width:"53ch"},2.567);tl.set("#s-l4",{width:"3ch"},2.467);tl.set("#s-l4",{width:"6ch"},2.500);tl.set("#s-l4",{width:"9ch"},2.533);tl.set("#s-l4",{width:"12ch"},2.567);tl.set("#s-l4",{width:"15ch"},2.600);tl.set("#s-l5",{width:"3ch"},2.600);tl.set("#s-l5",{width:"6ch"},2.633);tl.set("#s-l5",{width:"9ch"},2.667);tl.set("#s-l5",{width:"12ch"},2.700);tl.set("#s-l5",{width:"15ch"},2.733);tl.set("#s-l6",{width:"3ch"},2.733);tl.set("#s-l6",{width:"6ch"},2.767);tl.set("#s-l6",{width:"9ch"},2.800);tl.set("#s-l6",{width:"12ch"},2.833);tl.set("#s-l6",{width:"15ch"},2.867);tl.set("#s-l6",{width:"18ch"},2.900);tl.set("#s-l6",{width:"21ch"},2.933);tl.set("#s-l6",{width:"24ch"},2.967);tl.set("#s-l6",{width:"27ch"},3.000);tl.set("#s-l6",{width:"30ch"},3.033);tl.set("#s-l6",{width:"33ch"},3.067);tl.set("#s-l6",{width:"36ch"},3.100);tl.set("#s-l6",{width:"39ch"},3.133);tl.set("#s-l6",{width:"42ch"},3.167);tl.set("#s-l6",{width:"44ch"},3.200);tl.set("#s-l7",{width:"3ch"},3.133);tl.set("#s-l7",{width:"6ch"},3.167);tl.set("#s-l7",{width:"9ch"},3.200);tl.set("#s-l7",{width:"12ch"},3.233);tl.set("#s-l7",{width:"15ch"},3.267);tl.set("#s-l7",{width:"18ch"},3.300);tl.set("#s-l7",{width:"21ch"},3.333);tl.set("#s-l7",{width:"24ch"},3.367);tl.set("#s-l7",{width:"26ch"},3.400);tl.set("#s-l8",{width:"3ch"},3.400);tl.set("#s-l8",{width:"6ch"},3.433);tl.set("#s-l8",{width:"9ch"},3.467);tl.set("#s-l8",{width:"12ch"},3.500);tl.set("#s-l8",{width:"15ch"},3.533);tl.set("#s-l8",{width:"18ch"},3.567);tl.set("#s-l8",{width:"21ch"},3.600);tl.set("#s-l8",{width:"24ch"},3.633);tl.set("#s-l8",{width:"27ch"},3.667);tl.set("#s-l8",{width:"30ch"},3.700);tl.set("#s-l8",{width:"33ch"},3.733);tl.set("#s-l8",{width:"36ch"},3.767);tl.set("#s-l9",{width:"3ch"},3.733);tl.set("#s-l9",{width:"6ch"},3.767);tl.set("#s-l9",{width:"9ch"},3.800);tl.set("#s-l9",{width:"12ch"},3.833);tl.set("#s-l9",{width:"15ch"},3.867);tl.set("#s-l9",{width:"16ch"},3.900);tl.set("#s-l10",{width:"3ch"},3.867);tl.set("#s-l10",{width:"6ch"},3.900);tl.set("#s-l10",{width:"7ch"},3.933);
+    tl.set("#s-lines",{opacity:0},4.200);
     
-    tl.set("#s-c0",{opacity:1},3.067);
-    tl.set("#s-lines",{opacity:0},3.733);
-    tl.set("#s-c0",{opacity:0},3.733);
-    tl.set("#s-c1",{opacity:1},3.733);
-    tl.set("#s-lines",{opacity:0},4.400);
-    tl.set("#s-c1",{opacity:0},4.400);
-    tl.set("#s-c2",{opacity:1},4.400);
-    tl.set("#s-file",{textContent:"globals.css"},3.067);
-    tl.set("#s-say0",{opacity:0},3.067);
-    tl.set("#s-say1",{opacity:1},3.067);
-    tl.set({}, {}, 5);
+    tl.set("#s-c0",{opacity:1},4.200);
+    tl.set("#s-lines",{opacity:0},4.667);
+    tl.set("#s-c0",{opacity:0},4.667);
+    tl.set("#s-c1",{opacity:1},4.667);
+    tl.set("#s-lines",{opacity:0},5.133);
+    tl.set("#s-c1",{opacity:0},5.133);
+    tl.set("#s-c2",{opacity:1},5.133);
+    tl.set("#s-lines",{opacity:0},5.600);
+    tl.set("#s-c2",{opacity:0},5.600);
+    tl.set("#s-c3",{opacity:1},5.600);
+    tl.set("#s-lines",{opacity:0},6.067);
+    tl.set("#s-c3",{opacity:0},6.067);
+    tl.set("#s-c4",{opacity:1},6.067);
+    tl.set("#s-lines",{opacity:0},6.533);
+    tl.set("#s-c4",{opacity:0},6.533);
+    tl.set("#s-c5",{opacity:1},6.533);
+    tl.set("#s-file",{textContent:"bubblegum.css · tweakcn.com"},4.200);tl.set("#s-file",{textContent:"cyberpunk.css · tweakcn.com"},4.667);tl.set("#s-file",{textContent:"claude.css · tweakcn.com"},5.133);tl.set("#s-file",{textContent:"doom-64.css · tweakcn.com"},5.600);tl.set("#s-file",{textContent:"candyland.css · tweakcn.com"},6.067);tl.set("#s-file",{textContent:"catppuccin.css · tweakcn.com"},6.533);
+    tl.set("#s-title",{opacity:0},4.200);
+    tl.set("#s-say1",{opacity:1},4.200);
+    tl.fromTo("#s-say1 .hl i",{scaleX:0},{scaleX:1,duration:0.32,ease:"power3.out",stagger:0.18},4.20);
+    tl.set({}, {}, 7);
     window.__timelines = window.__timelines || {};
     window.__timelines["shadcn"] = tl;
   </script>

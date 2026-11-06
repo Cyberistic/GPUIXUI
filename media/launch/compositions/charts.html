@@ -25,6 +25,26 @@
       width: 100%;
       height: auto;
     }
+    #root .hl {
+      position: relative;
+      display: inline-block;
+      padding: 0 0.14em;
+      isolation: isolate;
+    }
+    #root .hl i {
+      position: absolute;
+      z-index: -1;
+      left: 0;
+      right: 0;
+      top: 0.1em;
+      bottom: 0.02em;
+      border-radius: 0.14em;
+      background: #ffd84d;
+      transform-origin: 0 50%;
+    }
+    #root .on-dark .hl i {
+      background: #2f6fed;
+    }
     #root {
       background: #09090b;
     }
@@ -601,7 +621,9 @@
       </div>
     </div>
     <div class="band"></div>
-    <div id="c-say" class="say">and every chart</div>
+    <div id="c-say" class="say on-dark">
+      <span class="hl"><i></i>17 charts.</span> one line each.
+    </div>
     <div id="c-next" class="next">
       <div id="c-mac" class="desk">
         <img class="wall" src="assets/wallpaper/omarchy.jpg" alt="" />
@@ -626,7 +648,14 @@
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.to("#c-out", { y: -1100, duration: 0.45, ease: "power3.inOut" }, 0);
+    // Clear of the frame entirely: the window is taller than the frame.
+    tl.to("#c-out", { y: -1500, duration: 0.45, ease: "power3.inOut" }, 0);
+    tl.fromTo(
+      "#c-say .hl i",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
+      0.3,
+    );
     tl.fromTo(
       "#c-rows",
       { y: 1080 },

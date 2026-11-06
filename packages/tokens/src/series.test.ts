@@ -214,9 +214,9 @@ describe("every shipped scale passes its contract", () => {
 
     expect(tightest).toEqual({
       label: "Light · Windows 7 (Aero)",
-      index: 3,
+      index: 0,
       surface: "muted",
-      ratio: expect.closeTo(3.047, 2),
+      ratio: expect.closeTo(3.19, 2),
     });
   });
 });
@@ -248,7 +248,7 @@ describe("the surface floor follows the theme's variant", () => {
       .filter(({ surface }) => surface === "background")
       .map(({ index }) => index);
 
-    expect(onBackground).toEqual([2, 3]);
+    expect(onBackground).toEqual([0, 1]);
   });
 });
 
@@ -320,10 +320,10 @@ describe("the strips a plot is drawn on", () => {
           `${index + 1} on ${surface} is ${ratio?.toFixed(2)}`,
       ),
     ).toEqual([
-      "1 on muted is 2.15",
-      "2 on muted is 2.67",
-      "4 on muted is 1.31",
-      "5 on muted is 1.97",
+      "1 on muted is 2.44",
+      "3 on muted is 1.94",
+      "4 on muted is 1.54",
+      "5 on muted is 1.22",
     ]);
     expect(measured.surfaces.every(({ floor }) => floor === 3)).toBe(true);
     expect(seriesSurfaces).toEqual(["background", "card", "popover", "muted"]);
@@ -336,7 +336,7 @@ describe("a look owns the scale its own strips need", () => {
   it("measures the shared light table on Luna's toolbar", () => {
     // The measured case for the mechanism: a look that only repainted its page
     // resolved the table designed for a near-white one, and on Luna's `#E0DCCB`
-    // toolbar the shared amber is 2.75:1 — one series nobody can find.
+    // toolbar the shared lightest blue is 2.88:1 — one series nobody can find.
     const inherited = seriesFailures(
       { ...luna, series: lightSeries },
       { surfaces: ["muted"] },
@@ -347,7 +347,7 @@ describe("a look owns the scale its own strips need", () => {
         ({ index, surface, ratio }) =>
           `series ${index + 1} on ${surface} is ${ratio?.toFixed(2)}`,
       ),
-    ).toEqual(["series 4 on muted is 2.75"]);
+    ).toEqual(["series 1 on muted is 2.88"]);
   });
 
   it("ships the table its own toolbar needs", () => {

@@ -130,11 +130,16 @@ export const shadcnTheme = (
       return isRole(name) && hex !== undefined ? [[ROLES[name], hex]] : [];
     }),
   ) as Partial<ThemeColors>;
+  // tweakcn and shadcn's builders name the chart palette `--chart-1` onward.
+  const series = found
+    .filter(([name]) => /^--chart-\d+$/.test(name))
+    .flatMap(([, value]) => cssColorToHex(value) ?? []);
   const radius = found.find(([name]) => name === "--radius")?.[1];
   const md = radius === undefined ? undefined : (numbers(radius)[0] ?? 0) * 16;
   return {
     theme: extendTheme(base, {
       colors,
+      ...(series.length === 0 ? {} : { series }),
       ...(md === undefined
         ? {}
         : { radius: { sm: md - 4, md: md - 2, lg: md, xl: md + 4 } }),

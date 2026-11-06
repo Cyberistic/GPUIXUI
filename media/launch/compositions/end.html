@@ -25,6 +25,26 @@
       width: 100%;
       height: auto;
     }
+    #root .hl {
+      position: relative;
+      display: inline-block;
+      padding: 0 0.14em;
+      isolation: isolate;
+    }
+    #root .hl i {
+      position: absolute;
+      z-index: -1;
+      left: 0;
+      right: 0;
+      top: 0.1em;
+      bottom: 0.02em;
+      border-radius: 0.14em;
+      background: #ffd84d;
+      transform-origin: 0 50%;
+    }
+    #root .on-dark .hl i {
+      background: #2f6fed;
+    }
     #root .lockup {
       position: absolute;
       inset: 0;

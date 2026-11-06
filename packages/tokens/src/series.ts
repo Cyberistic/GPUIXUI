@@ -12,6 +12,9 @@
  * (an OKLab distance below which two swatches read as one), and no two still
  * collapse for a reader with a colour-vision deficiency.
  *
+ * The default is one blue, stepped in lightness, the way shadcn's chart tokens
+ * are: spaced so each step still clears the three contracts below.
+ *
  * The scale is designed per mode and contrast variant because a categorical
  * hue that separates on a pale canvas does not separate on a dark one. A theme
  * may carry its own `series`; {@link seriesColors} otherwise resolves the
@@ -60,20 +63,20 @@ export type StoredSeries = ReadonlyArray<unknown>;
 
 /** The series scale for the default light theme. */
 export const lightSeries: SeriesColors = [
-  "#5F4BDB",
-  "#1B45AC",
-  "#158754",
-  "#B57600",
-  "#A5262B",
+  "#387BF4",
+  "#2563EB",
+  "#1C49D0",
+  "#1E3A8A",
+  "#172554",
 ];
 
 /** The series scale for the default dark theme. */
 export const darkSeries: SeriesColors = [
-  "#A7A9FF",
-  "#6E9CFF",
-  "#1FA968",
-  "#FFDE8A",
-  "#FF9E9E",
+  "#70A7FA",
+  "#4F8EF8",
+  "#8FBDFC",
+  "#B3D3FD",
+  "#DBEAFE",
 ];
 
 /** The series scale for the high-contrast light theme. */

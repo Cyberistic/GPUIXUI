@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import * as Arr from "effect/Array";
 import { ChartLegend } from "./legend.js";
 import { paletteOf } from "./frame.js";
-import { useTheme } from "../theme.js";
+import { themeColors, useTheme } from "../theme.js";
 import { ChartSurface } from "./surface.js";
 import {
   flowGraph,
@@ -117,6 +117,7 @@ const SceneChart = ({
   readonly testId?: string;
 }) => {
   const box: ChartBox = { width: size, height: height ?? size };
+  const gapColour = themeColors(useTheme()).card;
   const reveal = useMountReveal(animate, animationDuration);
   const hierarchyTween =
     useAnimatedValues(
@@ -159,6 +160,7 @@ const SceneChart = ({
         box,
         range: range ?? { min: 0, max: 1 },
         colours,
+        ...(gapColour === undefined ? {} : { gapColour }),
         kind,
         label,
         description,

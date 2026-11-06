@@ -1043,11 +1043,11 @@
 
 /* The landing light theme re-maps the dashboard's native (dark) palette. */
 .landing .gx-dash {
-  --dash-series-1: #5f4bdb;
-  --dash-series-2: #1b45ac;
-  --dash-series-3: #158754;
-  --dash-series-4: #b57600;
-  --dash-series-5: #a5262b;
+  --dash-series-1: #387bf4;
+  --dash-series-2: #2563eb;
+  --dash-series-3: #1c49d0;
+  --dash-series-4: #1e3a8a;
+  --dash-series-5: #172554;
   --dash-canvas: #eef1f6;
   --dash-chrome: #f7f9fc;
   --dash-side: #f4f6fa;
@@ -1066,11 +1066,11 @@
 
 /* Dark matches the landing's deep, quiet surface. */
 .dark .landing .gx-dash {
-  --dash-series-1: #a7a9ff;
-  --dash-series-2: #6e9cff;
-  --dash-series-3: #1fa968;
-  --dash-series-4: #ffde8a;
-  --dash-series-5: #ff9e9e;
+  --dash-series-1: #70a7fa;
+  --dash-series-2: #4f8ef8;
+  --dash-series-3: #8fbdfc;
+  --dash-series-4: #b3d3fd;
+  --dash-series-5: #dbeafe;
   --dash-canvas: #0a0c10;
   --dash-chrome: #151a21;
   --dash-side: #0d1015;

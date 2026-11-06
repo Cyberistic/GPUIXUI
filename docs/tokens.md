@@ -609,23 +609,23 @@ gets — rather than `null` handed to a painter that indexes it.
 
 | Series | Light | Dark | HC light | HC dark |
 | ------ | ----- | ---- | -------- | ------- |
-| `1` | `#5F4BDB` | `#A7A9FF` | `#4C39B5` | `#C7CBFF` |
-| `2` | `#1B45AC` | `#6E9CFF` | `#2559D6` | `#6E9CFF` |
-| `3` | `#158754` | `#1FA968` | `#0E5135` | `#3BC97F` |
-| `4` | `#B57600` | `#FFDE8A` | `#8E5B00` | `#FFE7A8` |
-| `5` | `#A5262B` | `#FF9E9E` | `#CC3439` | `#FFC6C6` |
+| `1` | `#387BF4` | `#70A7FA` | `#4C39B5` | `#C7CBFF` |
+| `2` | `#2563EB` | `#4F8EF8` | `#2559D6` | `#6E9CFF` |
+| `3` | `#1C49D0` | `#8FBDFC` | `#0E5135` | `#3BC97F` |
+| `4` | `#1E3A8A` | `#B3D3FD` | `#8E5B00` | `#FFE7A8` |
+| `5` | `#172554` | `#DBEAFE` | `#CC3439` | `#FFC6C6` |
 
 The four tables are `lightSeries`, `darkSeries`, `highContrastLightSeries` and
-`highContrastDarkSeries`. An authored look may carry its own — `lunaSeries` and
+`highContrastDarkSeries`. The defaults are one blue stepped in lightness, as shadcn's chart tokens are. An authored look may carry its own — `lunaSeries` and
 `omarchySeries` are the two the package ships. Three contracts are measured:
 
 - **On the plot.** Every swatch is held to the theme's own boundary floor
   against every surface a plot is drawn on — `seriesSurfaces` is `background`,
   `card`, `popover` and the `muted` strip a toolbar or status bar paints — so
   3:1 by default and 4.5:1 for a high-contrast theme. The tightest of the four
-  shipped tables is light series 4 at 3.34:1 on its muted strip; across every
-  platform and authored style it is Aero's light amber on its muted strip at
-  3.05:1. A chart painted on another role names it, because a surface nobody
+  shipped tables is light series 1 at 3.49:1 on its muted strip; across every
+  platform and authored style it is Aero's light series 1 on its muted strip at
+  3.19:1. A chart painted on another role names it, because a surface nobody
   measures is a swatch nobody has checked:
 
   ```ts
@@ -5287,8 +5287,8 @@ boundary floor on the four plot surfaces, every pair to 0.06 in OKLab, and
 every pair to 0.05 again after protanopia, deuteranopia and tritanopia are
 simulated. It reports the red/green pair a deuteranope sees 0.024 apart, a
 swatch that is the card it is drawn on, a repeated pair and a translucent
-swatch, names the tightest placement over every shipped style (Aero light's series 4 at
-3.05:1 on its `muted` strip), and it executes the example's legend and reported
+swatch, names the tightest placement over every shipped style (Aero light's series 1 at
+3.19:1 on its `muted` strip), and it executes the example's legend and reported
 lines.
 
 `packages/tokens/src/indicator.test.ts` covers the marks a component paints: the

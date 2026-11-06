@@ -51,6 +51,8 @@ export interface HierarchySceneRow extends SceneRow {
 }
 
 export interface SceneChartOptions {
+  /** The surface colour a polar mark's edges are stroked in, so neighbours separate. */
+  readonly gapColour?: string;
   readonly series: ReadonlyArray<ChartSeries>;
   readonly labels: ReadonlyArray<string>;
   readonly box: ChartBox;
@@ -174,6 +176,9 @@ const sunburstMark = (options: SceneChartOptions) =>
         delimiter: HIERARCHY_SEPARATOR,
         fill: (node) =>
           options.nodeColours?.get(node.data?.key ?? node.id) ?? "#000000",
+        ...(options.gapColour === undefined
+          ? {}
+          : { stroke: options.gapColour, strokeWidth: 2 }),
         ...(options.innerRadius === undefined
           ? {}
           : { innerRadius: options.innerRadius }),
@@ -304,6 +309,9 @@ const radialBarMark = (options: SceneChartOptions) =>
             options.labels.indexOf(row.category) %
               Math.max(1, options.colours.length)
           ] ?? "#000000",
+        ...(options.gapColour === undefined
+          ? {}
+          : { stroke: options.gapColour, strokeWidth: 2 }),
       }),
     ],
   });

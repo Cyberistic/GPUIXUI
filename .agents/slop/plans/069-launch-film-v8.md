@@ -94,3 +94,13 @@ Rendered: 30.000 s, `hyperframes check` 0 errors, -17.7 LUFS, -1.0 dBFS.
 - Terminal: the whole terminal but the tmux bar is the page; collapse, dark to light, toast. `Console` gained optional `dark`/`onDarkChange`.
 - GNOME: Adwaita wallpaper and GNOME's own icons. oRPC replaces TanStack Form, proven in `npm-proof.test.tsx`.
 - Capture rig: `capture` is async, zero-delay timers stay on the real loop, and only `performance.now` is virtual. Overriding `Date.now` swallowed sidebar and toast presses; the cause inside Effect was not traced, only bisected.
+
+## Round three: the owner's nitpicks and shadcn parity (2026-11-07)
+
+40.000 s. Shadcn's `chart-area-interactive` source set the targets:
+
+- Default series is one blue per mode, re-spaced so all shipped looks still pass `seriesFailures` unchanged (3:1 on plot surfaces, OKLab 0.06, colour-vision 0.05). Light `#387BF4 #2563EB #1C49D0 #1E3A8A #172554`; dark `#70A7FA #4F8EF8 #8FBDFC #B3D3FD #DBEAFE`. High contrast and authored looks keep their own. The gate forbids shadcn's exact dark ramp: its `#1E40AF` is under 3:1 on dark plot surfaces.
+- `AreaChart`: `natural` spline by default, 1px line, gradient 0.8 to 0.1.
+- Pie: no gap by default, gaps are one width to the hub, the circle sweeps open on mount, and `activeIndex` gets Recharts' grown slice and outer band (its rounding of the active index was also wrong).
+- Radar: fill alone at 0.6 by default, `outline` opts into the stroke.
+- Film: tweakcn's real themes via `--chart-N`; `<text>` on a dark tile inherits a colour; launcher caret and overflow; centred Omarchy title; marker headlines.

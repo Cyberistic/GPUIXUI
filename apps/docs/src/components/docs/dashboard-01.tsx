@@ -252,10 +252,10 @@ const TipCard = ({ tip }: { readonly tip: Tip }) => (
 
 /** The colour a cell or an arc paints in, by its slot on the series scale. */
 const SLOT_COLOURS = [
-  "var(--series-1, #a7a9ff)",
-  "var(--series-2, #6e9cff)",
-  "var(--series-3, #1fa968)",
-  "var(--series-4, #ffde8a)",
+  "var(--series-1, #70a7fa)",
+  "var(--series-2, #4f8ef8)",
+  "var(--series-3, #8fbdfc)",
+  "var(--series-4, #b3d3fd)",
 ] as const;
 
 /**
@@ -625,8 +625,8 @@ function FunnelSankey() {
   ] as const;
   const bar = (value: number): number => (value / widest) * span;
   const steps = [
-    { from: 0, to: 1, value: 60, colour: "var(--series-3, #1fa968)" },
-    { from: 1, to: 2, value: 24, colour: "var(--series-2, #6e9cff)" },
+    { from: 0, to: 1, value: 60, colour: "var(--series-3, #8fbdfc)" },
+    { from: 1, to: 2, value: 24, colour: "var(--series-2, #4f8ef8)" },
   ] as const;
 
   const [tip, setTip] = useState<Tip | null>(null);

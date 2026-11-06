@@ -25,6 +25,26 @@
       width: 100%;
       height: auto;
     }
+    #root .hl {
+      position: relative;
+      display: inline-block;
+      padding: 0 0.14em;
+      isolation: isolate;
+    }
+    #root .hl i {
+      position: absolute;
+      z-index: -1;
+      left: 0;
+      right: 0;
+      top: 0.1em;
+      bottom: 0.02em;
+      border-radius: 0.14em;
+      background: #ffd84d;
+      transform-origin: 0 50%;
+    }
+    #root .on-dark .hl i {
+      background: #2f6fed;
+    }
     #root .stage {
       position: absolute;
       inset: 0;
@@ -91,6 +111,9 @@
       letter-spacing: -0.025em;
       color: #1d1d1f;
     }
+    #root .say.on-dark {
+      color: #fff;
+    }
   </style>
   <div
     id="root"
@@ -148,10 +171,10 @@
             opacity: 0;
           "
         >
-          <img src="assets/footage/tile-tabs-53.png" alt="" /><img
+          <img src="assets/footage/tile-views-53.png" alt="" /><img
             id="t2-d"
             class="d"
-            src="assets/footage/dark-tile-tabs-53.png"
+            src="assets/footage/dark-tile-views-53.png"
             alt=""
           />
         </div>
@@ -790,10 +813,10 @@
             opacity: 0;
           "
         >
-          <img src="assets/footage/tile-search-input-53.png" alt="" /><img
+          <img src="assets/footage/tile-code-editor-53.png" alt="" /><img
             id="t38-d"
             class="d"
-            src="assets/footage/dark-tile-search-input-53.png"
+            src="assets/footage/dark-tile-code-editor-53.png"
             alt=""
           />
         </div>
@@ -1024,10 +1047,10 @@
             opacity: 0;
           "
         >
-          <img src="assets/footage/tile-hover-card-53.png" alt="" /><img
+          <img src="assets/footage/tile-color-picker-53.png" alt="" /><img
             id="t51-d"
             class="d"
-            src="assets/footage/dark-tile-hover-card-53.png"
+            src="assets/footage/dark-tile-color-picker-53.png"
             alt=""
           />
         </div>
@@ -1078,10 +1101,10 @@
             opacity: 0;
           "
         >
-          <img src="assets/footage/tile-message-scroller-53.png" alt="" /><img
+          <img src="assets/footage/tile-table-53.png" alt="" /><img
             id="t54-d"
             class="d"
-            src="assets/footage/dark-tile-message-scroller-53.png"
+            src="assets/footage/dark-tile-table-53.png"
             alt=""
           />
         </div>
@@ -1096,10 +1119,10 @@
             opacity: 0;
           "
         >
-          <img src="assets/footage/tile-chat-53.png" alt="" /><img
+          <img src="assets/footage/tile-dialog-53.png" alt="" /><img
             id="t55-d"
             class="d"
-            src="assets/footage/dark-tile-chat-53.png"
+            src="assets/footage/dark-tile-dialog-53.png"
             alt=""
           />
         </div>
@@ -1114,10 +1137,10 @@
             opacity: 0;
           "
         >
-          <img src="assets/footage/tile-segmented-control-53.png" alt="" /><img
+          <img src="assets/footage/tile-tab-strip-53.png" alt="" /><img
             id="t56-d"
             class="d"
-            src="assets/footage/dark-tile-segmented-control-53.png"
+            src="assets/footage/dark-tile-tab-strip-53.png"
             alt=""
           />
         </div>
@@ -1150,10 +1173,10 @@
             opacity: 0;
           "
         >
-          <img src="assets/footage/tile-pagination-53.png" alt="" /><img
+          <img src="assets/footage/tile-virtual-table-53.png" alt="" /><img
             id="t58-d"
             class="d"
-            src="assets/footage/dark-tile-pagination-53.png"
+            src="assets/footage/dark-tile-virtual-table-53.png"
             alt=""
           />
         </div>
@@ -1168,10 +1191,10 @@
             opacity: 0;
           "
         >
-          <img src="assets/footage/tile-list-53.png" alt="" /><img
+          <img src="assets/footage/tile-tree-53.png" alt="" /><img
             id="t59-d"
             class="d"
-            src="assets/footage/dark-tile-list-53.png"
+            src="assets/footage/dark-tile-tree-53.png"
             alt=""
           />
         </div>
@@ -1179,7 +1202,12 @@
     </div>
     <div class="band"></div>
     <div id="w-band" class="band k"></div>
-    <div id="w-say" class="say">every component you need</div>
+    <div id="w-say" class="say">
+      every component. <span class="hl"><i></i>zero webviews.</span>
+    </div>
+    <div id="w-say2" class="say on-dark" style="opacity: 0">
+      dark mode? <span class="hl"><i></i>already done.</span>
+    </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
@@ -1196,7 +1224,7 @@
         y: 70,
         rotationX: 46,
         rotationZ: -14,
-        duration: 4,
+        duration: 3.5,
         ease: "none",
       },
       0,
@@ -1205,671 +1233,683 @@
       "#t0",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.555,
+      1.239,
     );
     tl.to(
       "#t0-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.302,
+      1.952,
     );
     tl.fromTo(
       "#t1",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.457,
+      1.15,
     );
     tl.to(
       "#t1-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.377,
+      2.027,
     );
     tl.fromTo(
       "#t2",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.182,
+      0.929,
     );
     tl.to(
       "#t2-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.452,
+      2.102,
     );
     tl.fromTo(
       "#t3",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.95,
+      0.744,
     );
     tl.to(
       "#t3-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.527,
+      2.177,
     );
     tl.fromTo(
       "#t4",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.794,
+      0.62,
     );
     tl.to(
       "#t4-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.602,
+      2.252,
     );
     tl.fromTo(
       "#t5",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.946,
+      0.735,
     );
     tl.to(
       "#t5-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.677,
+      2.327,
     );
     tl.fromTo(
       "#t6",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.007,
+      0.787,
     );
     tl.to(
       "#t6-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.752,
+      2.402,
     );
     tl.fromTo(
       "#t7",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.143,
+      0.9,
     );
     tl.to(
       "#t7-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.827,
+      2.477,
     );
     tl.fromTo(
       "#t8",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.322,
+      1.049,
     );
     tl.to(
       "#t8-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.902,
+      2.552,
     );
     tl.fromTo(
       "#t9",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.725,
+      1.367,
     );
     tl.to(
       "#t9-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.977,
+      2.627,
     );
     tl.fromTo(
       "#t10",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.557,
+      1.233,
     );
     tl.to(
       "#t10-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.302,
+      1.952,
     );
     tl.fromTo(
       "#t11",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.232,
+      0.972,
     );
     tl.to(
       "#t11-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.377,
+      2.027,
     );
     tl.fromTo(
       "#t12",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.92,
+      0.722,
     );
     tl.to(
       "#t12-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.452,
+      2.102,
     );
     tl.fromTo(
       "#t13",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.837,
+      0.645,
     );
     tl.to(
       "#t13-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.527,
+      2.177,
     );
     tl.fromTo(
       "#t14",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.629,
+      0.479,
     );
     tl.to(
       "#t14-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.602,
+      2.252,
     );
     tl.fromTo(
       "#t15",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.581,
+      0.443,
     );
     tl.to(
       "#t15-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.677,
+      2.327,
     );
     tl.fromTo(
       "#t16",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.694,
+      0.537,
     );
     tl.to(
       "#t16-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.752,
+      2.402,
     );
     tl.fromTo(
       "#t17",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.081,
+      0.842,
     );
     tl.to(
       "#t17-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.827,
+      2.477,
     );
     tl.fromTo(
       "#t18",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.298,
+      1.021,
     );
     tl.to(
       "#t18-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.902,
+      2.552,
     );
     tl.fromTo(
       "#t19",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.527,
+      1.211,
     );
     tl.to(
       "#t19-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.977,
+      2.627,
     );
     tl.fromTo(
       "#t20",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.416,
+      1.123,
     );
     tl.to(
       "#t20-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.302,
+      1.952,
     );
     tl.fromTo(
       "#t21",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.274,
+      0.998,
     );
     tl.to(
       "#t21-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.377,
+      2.027,
     );
     tl.fromTo(
       "#t22",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.934,
+      0.725,
     );
     tl.to(
       "#t22-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.452,
+      2.102,
     );
     tl.fromTo(
       "#t23",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.599,
+      0.456,
     );
     tl.to(
       "#t23-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.527,
+      2.177,
     );
     tl.fromTo(
       "#t24",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.292,
+      0.21,
     );
     tl.to(
       "#t24-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.602,
+      2.252,
     );
     tl.fromTo(
       "#t25",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.245,
+      0.174,
     );
     tl.to(
       "#t25-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.677,
+      2.327,
     );
     tl.fromTo(
       "#t26",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.656,
+      0.499,
     );
     tl.to(
       "#t26-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.752,
+      2.402,
     );
     tl.fromTo(
       "#t27",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.895,
+      0.696,
     );
     tl.to(
       "#t27-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.827,
+      2.477,
     );
     tl.fromTo(
       "#t28",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.139,
+      0.897,
     );
     tl.to(
       "#t28-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.902,
+      2.552,
     );
     tl.fromTo(
       "#t29",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.385,
+      1.1,
     );
     tl.to(
       "#t29-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.977,
+      2.627,
     );
     tl.fromTo(
       "#t30",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.538,
+      1.215,
     );
     tl.to(
       "#t30-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.302,
+      1.952,
     );
     tl.fromTo(
       "#t31",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.196,
+      0.94,
     );
     tl.to(
       "#t31-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.377,
+      2.027,
     );
     tl.fromTo(
       "#t32",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.856,
+      0.667,
     );
     tl.to(
       "#t32-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.452,
+      2.102,
     );
     tl.fromTo(
       "#t33",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.521,
+      0.398,
     );
     tl.to(
       "#t33-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.527,
+      2.177,
     );
     tl.fromTo(
       "#t34",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.414,
+      0.301,
     );
     tl.to(
       "#t34-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.602,
+      2.252,
     );
     tl.fromTo(
       "#t35",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.367,
+      0.265,
     );
     tl.to(
       "#t35-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.677,
+      2.327,
     );
     tl.fromTo(
       "#t36",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.578,
+      0.44,
     );
     tl.to(
       "#t36-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.752,
+      2.402,
     );
     tl.fromTo(
       "#t37",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.817,
+      0.637,
     );
     tl.to(
       "#t37-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.827,
+      2.477,
     );
     tl.fromTo(
       "#t38",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.261,
+      0.989,
     );
     tl.to(
       "#t38-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.902,
+      2.552,
     );
     tl.fromTo(
       "#t39",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.507,
+      1.192,
     );
     tl.to(
       "#t39-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.977,
+      2.627,
     );
     tl.fromTo(
       "#t40",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.523,
+      1.208,
     );
     tl.to(
       "#t40-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.302,
+      1.952,
     );
     tl.fromTo(
       "#t41",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.198,
+      0.947,
     );
     tl.to(
       "#t41-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.377,
+      2.027,
     );
     tl.fromTo(
       "#t42",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.086,
+      0.846,
     );
     tl.to(
       "#t42-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.452,
+      2.102,
     );
     tl.fromTo(
       "#t43",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.803,
+      0.619,
     );
     tl.to(
       "#t43-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.527,
+      2.177,
     );
     tl.fromTo(
       "#t44",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.595,
+      0.453,
     );
     tl.to(
       "#t44-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.602,
+      2.252,
     );
     tl.fromTo(
       "#t45",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.547,
+      0.417,
     );
     tl.to(
       "#t45-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.677,
+      2.327,
     );
     tl.fromTo(
       "#t46",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.66,
+      0.512,
     );
     tl.to(
       "#t46-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.752,
+      2.402,
     );
     tl.fromTo(
       "#t47",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.047,
+      0.817,
     );
     tl.to(
       "#t47-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.827,
+      2.477,
     );
     tl.fromTo(
       "#t48",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.264,
+      0.996,
     );
     tl.to(
       "#t48-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.902,
+      2.552,
     );
     tl.fromTo(
       "#t49",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.493,
+      1.185,
     );
     tl.to(
       "#t49-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.977,
+      2.627,
     );
     tl.fromTo(
       "#t50",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.565,
+      1.247,
     );
     tl.to(
       "#t50-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.302,
+      1.952,
     );
     tl.fromTo(
       "#t51",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.467,
+      1.157,
     );
     tl.to(
       "#t51-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.377,
+      2.027,
     );
     tl.fromTo(
       "#t52",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.192,
+      0.937,
     );
     tl.to(
       "#t52-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.452,
+      2.102,
     );
     tl.fromTo(
       "#t53",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.96,
+      0.752,
     );
     tl.to(
       "#t53-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.527,
+      2.177,
     );
     tl.fromTo(
       "#t54",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.804,
+      0.628,
     );
     tl.to(
       "#t54-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.602,
+      2.252,
     );
     tl.fromTo(
       "#t55",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      0.956,
+      0.742,
     );
     tl.to(
       "#t55-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.677,
+      2.327,
     );
     tl.fromTo(
       "#t56",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.017,
+      0.794,
     );
     tl.to(
       "#t56-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.752,
+      2.402,
     );
     tl.fromTo(
       "#t57",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.153,
+      0.908,
     );
     tl.to(
       "#t57-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.827,
+      2.477,
     );
     tl.fromTo(
       "#t58",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.332,
+      1.056,
     );
     tl.to(
       "#t58-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.902,
+      2.552,
     );
     tl.fromTo(
       "#t59",
       { z: 820, opacity: 0 },
       { z: 0, opacity: 1, duration: 0.42, ease: "power2.in" },
-      1.735,
+      1.374,
     );
     tl.to(
       "#t59-d",
       { clipPath: "inset(0 0% 0 0)", duration: 0.071, ease: "none" },
-      2.977,
+      2.627,
     );
     tl.to(
       "#sky",
       { clipPath: "inset(0 0% 0 0)", duration: 0.75, ease: "none" },
-      2.3,
+      1.95,
     );
-    tl.fromTo("#w-band", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 2.56);
-    tl.to("#w-say", { color: "#ffffff", duration: 0.2 }, 2.6);
-    tl.set("#w-say", { textContent: "and they all go dark" }, 2.67);
-    tl.set({}, {}, 4);
+    tl.fromTo("#w-band", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 2.21);
+    tl.fromTo(
+      "#w-say .hl i",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
+      0.35,
+    );
+    tl.set("#w-say", { opacity: 0 }, 2.29);
+    tl.set("#w-say2", { opacity: 1 }, 2.29);
+    tl.fromTo(
+      "#w-say2 .hl i",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
+      2.33,
+    );
+    tl.set({}, {}, 3.5);
     window.__timelines = window.__timelines || {};
     window.__timelines["wall"] = tl;
   </script>

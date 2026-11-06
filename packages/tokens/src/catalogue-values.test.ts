@@ -336,16 +336,16 @@ describe("the catalogue's colour roles", () => {
     );
 
     expect(seriesSurfaces).toContain("muted");
-    expect(shippedTightest.index).toBe(3);
+    expect(shippedTightest.index).toBe(0);
     expect(shippedTightest.surface).toBe("muted");
-    expect(shippedTightest.ratio).toBeCloseTo(3.336, 3);
+    expect(shippedTightest.ratio).toBeCloseTo(3.492, 3);
     expect(flatCatalogue).toContain(
-      `light series 4 at ${shippedTightest.ratio.toFixed(2)}:1`,
+      `light series 1 at ${shippedTightest.ratio.toFixed(2)}:1`,
     );
     expect(styledTightest.theme.name).toBe("Light · Windows 7 (Aero)");
     expect(styledTightest.surface).toBe("muted");
     expect(flatCatalogue).toContain(
-      `Aero's light amber on its muted strip at ${styledTightest.ratio.toFixed(2)}:1`,
+      `Aero's light series 1 on its muted strip at ${styledTightest.ratio.toFixed(2)}:1`,
     );
   });
 

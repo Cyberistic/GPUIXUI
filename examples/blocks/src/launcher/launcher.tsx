@@ -56,7 +56,7 @@ export const Launcher = ({
           display: "flex",
           flexDirection: "column",
           width: 720,
-          height: 460,
+          height: 500,
           borderRadius: theme.radius.xl,
           borderWidth: theme.borderWidth.thin,
           borderColor: theme.colors.border,
@@ -68,7 +68,8 @@ export const Launcher = ({
           label="Search"
           testId="launcher-query"
           autoFocus
-          placeholder="Search for apps and commands"
+          // The caret stands at the text's first pixel; a thin space keeps it off the S.
+          placeholder={"\u2009Search for apps and commands"}
           value={query}
           onValueChange={(next) => {
             setQuery(next);
@@ -85,7 +86,13 @@ export const Launcher = ({
         <Separator orientation="horizontal" />
         <Stack
           direction="column"
-          style={{ flexGrow: 1, minHeight: 0, padding: theme.spacing.sm }}
+          style={{
+            flexGrow: 1,
+            flexBasis: 0,
+            minHeight: 0,
+            overflow: "hidden",
+            padding: theme.spacing.sm,
+          }}
         >
           {Arr.map(shown, (result, index) => (
             <div

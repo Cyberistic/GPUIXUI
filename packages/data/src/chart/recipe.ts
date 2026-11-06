@@ -40,7 +40,8 @@ export const CHART_CATEGORY_LABEL =
   "text-xs text-muted-foreground text-ellipsis whitespace-nowrap";
 
 /** The legend: a row of swatches and labels. */
-export const CHART_LEGEND = "flex flex-row flex-wrap items-center gap-3";
+export const CHART_LEGEND =
+  "flex flex-row flex-wrap items-center justify-center gap-3";
 
 /** One legend entry. */
 export const CHART_LEGEND_ITEM = "flex flex-row items-center gap-1.5";

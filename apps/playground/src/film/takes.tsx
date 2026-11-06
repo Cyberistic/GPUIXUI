@@ -371,7 +371,7 @@ export const takes: Readonly<Record<string, Take>> = {
   /** ⌘K: the HUD over nothing, "vault" typed; the film grows it into the app. */
   "launcher-v8": {
     width: 720,
-    height: 460,
+    height: 500,
     frames: 45,
     view: () => (
       <ThemeProvider
@@ -379,7 +379,7 @@ export const takes: Readonly<Record<string, Take>> = {
           window: "opaque",
         })}
       >
-        <div style={{ width: 720, height: 460, display: "flex" }}>
+        <div style={{ width: 720, height: 500, display: "flex" }}>
           <Launcher />
         </div>
       </ThemeProvider>

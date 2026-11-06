@@ -25,6 +25,26 @@
       width: 100%;
       height: auto;
     }
+    #root .hl {
+      position: relative;
+      display: inline-block;
+      padding: 0 0.14em;
+      isolation: isolate;
+    }
+    #root .hl i {
+      position: absolute;
+      z-index: -1;
+      left: 0;
+      right: 0;
+      top: 0.1em;
+      bottom: 0.02em;
+      border-radius: 0.14em;
+      background: #ffd84d;
+      transform-origin: 0 50%;
+    }
+    #root .on-dark .hl i {
+      background: #2f6fed;
+    }
     #root .row {
       position: absolute;
       left: 0;
@@ -62,6 +82,18 @@
       border-radius: 7px;
       background: #c7c7cc;
     }
+    #root .say {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 500px;
+      text-align: center;
+      font:
+        400 72px Inter,
+        sans-serif;
+      letter-spacing: -0.025em;
+      color: #1d1d1f;
+    }
     #root .out {
       position: absolute;
       inset: 0;
@@ -83,6 +115,9 @@
     }
   </style>
   <div id="root" data-composition-id="npm" data-width="1920" data-height="1080">
+    <div id="n-say" class="say">
+      the <span class="hl"><i></i>npm packages</span> you already use
+    </div>
     <div id="n-row0" class="row" style="top: 300px">
       <div id="n-0-0" class="chip">
         <img src="assets/logos/tanstack.svg" alt="" /><span>TanStack DB</span>
@@ -123,14 +158,20 @@
     </div>
     <div id="n-out" class="out">
       <div class="a"></div>
-      <img src="assets/footage/shadcn-v8-149.png" alt="" />
+      <img src="assets/footage/shadcn-v8-209.png" alt="" />
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
     tl.to("#n-out", { y: -1090, duration: 0.42, ease: "expo.inOut" }, 0);
-    tl.fromTo("#n-row0", { x: 24 }, { x: -24, duration: 3, ease: "none" }, 0);
-    tl.fromTo("#n-row1", { x: -24 }, { x: 24, duration: 3, ease: "none" }, 0);
+    tl.fromTo(
+      "#n-say .hl i",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
+      0.45,
+    );
+    tl.fromTo("#n-row0", { x: 24 }, { x: -24, duration: 2.5, ease: "none" }, 0);
+    tl.fromTo("#n-row1", { x: -24 }, { x: 24, duration: 2.5, ease: "none" }, 0);
     tl.fromTo(
       "#n-0-0",
       { y: -60, opacity: 0, scale: 0.9 },
@@ -191,7 +232,7 @@
       { y: 0, opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.8)" },
       1.08,
     );
-    tl.set({}, {}, 3);
+    tl.set({}, {}, 2.5);
     window.__timelines = window.__timelines || {};
     window.__timelines["npm"] = tl;
   </script>
