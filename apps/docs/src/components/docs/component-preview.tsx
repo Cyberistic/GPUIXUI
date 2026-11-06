@@ -13,6 +13,7 @@ import {
   nativeExampleHref,
 } from "@/lib/native-captures";
 import { platformLabel } from "@/lib/platform";
+import { prefetchLiveSurface } from "@/lib/live-prefetch";
 import { demos } from "./demos";
 import { PreviewSurface } from "./preview-surface";
 
@@ -70,7 +71,12 @@ export function ComponentPreview({ name }: { name: string }) {
               />
               <figcaption>
                 {`A real GPUix frame, rendered at build time by the wasm build on ${platformLabel(nativeCaptureFrame.platform)}, ${nativeCaptureFrame.mode}. The still is one palette and one platform; `}
-                <a href={nativeExampleHref(component)}>
+                <a
+                  href={nativeExampleHref(component)}
+                  onFocus={prefetchLiveSurface}
+                  onMouseEnter={prefetchLiveSurface}
+                  onPointerDown={prefetchLiveSurface}
+                >
                   open the same scene live
                 </a>
                 {"."}

@@ -19,9 +19,12 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
       native:previews` writes 92 checked-in WebPs (657 KiB) and rejects a flat
       frame by counting every pixel's colour. `<ComponentPreview>` gains a
       **Native** tab for captured ids, and the component index's server paint is
-      the real frame before hydration mounts the interactive demo. Evidence:
+      the real frame before hydration mounts the interactive demo. The live
+      example route SSRs that frame as a poster and warms the wasm on hover,
+      focus or press. Evidence:
       `src/lib/native-captures.test.ts` (5), `live-frame.test.ts` (+3),
-      `component-index.test.tsx` (server frame + hydrated demo); the accordion
+      `live-prefetch.test.ts` (1), `component-index.test.tsx` (server frame +
+      hydrated demo); the accordion
       page showed a `960×633` still captioned macOS/dark and linked to the live
       scene. Limitations are on the page: one platform, one palette, not the
       native macOS runtime.

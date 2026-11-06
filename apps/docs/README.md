@@ -508,6 +508,8 @@ src/lib/live-scene.tsx              /live's React screen, styled by the primitiv
 src/lib/live-example.tsx            /live's stage for a registered native example, and its empty frame
 src/lib/native-captures.ts          The build-time native frames, looked up by component id
 src/lib/native-captures.generated.ts The platform and palette the checked-in frames were rendered on
+src/lib/live-prefetch.ts            Warms the live wasm download when a reader shows intent
+src/lib/live-wasm.ts                The browser build's wasm URL, imported lazily
 src/lib/gpuix-native.ts             The browser entry `@gpuix/native` resolves to on /live
 src/lib/block-source.test.ts        A block's copyable source, resolved against the workspace
 src/lib/gpuix-web.test.ts           The GPUix web build: browser entry, shared memory and the policy's status

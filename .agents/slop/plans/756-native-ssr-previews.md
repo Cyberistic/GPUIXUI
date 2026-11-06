@@ -157,6 +157,8 @@ The spike passed. On this host (macOS, headless Chrome over SwiftShader):
 - The live example form SSR-paints the same capture as a poster and starts the
   wasm fetch beside the backend probe, so the real library is visible while the
   renderer boots; the canvas replaces it when the route reports `painting`.
+- The Native tab's live link warms the wasm download on hover, focus or press
+  (`src/lib/live-prefetch.ts`); the transfer overlaps the reader's decision.
 - `/components` prerenders with `data-preview="native"` images for 81 tiles and
   mounts the interactive demos after hydration.
 - Guards: `src/lib/native-captures.test.ts` (5 cases) holds captures to the

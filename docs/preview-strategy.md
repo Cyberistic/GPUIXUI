@@ -333,7 +333,10 @@ The live example form uses the same frame as a **poster**: the server HTML for
 `/live?scene=example&id=accordion` carries the checked-in image, and the route
 starts the wasm fetch beside the backend probe instead of after it. The reader
 therefore sees the real library immediately; the canvas replaces the poster when
-the page reports `painting`. The 19 MiB payload is still a first-visit download
+the page reports `painting`. The Native tab's "open the same scene live" link
+starts the download on hover, focus or press, so the transfer overlaps the
+reader's decision and the live page's own fetch is served from cache. The 19 MiB
+payload is still a first-visit download
 and compile — the poster makes the wait honest, it does not remove it. Serving
 the module with Brotli and a long-lived immutable cache (the hashed asset path
 allows both) is the deployment half of that; a repeat visit reuses it.
