@@ -7431,6 +7431,50 @@ button.gx-date-navbtn:hover:not(:disabled) {
   flex: none;
 }
 
+/* The drawings arrive the way the library's charts do: a bar grows from its
+   baseline, an arc or a polygon scales out from its own centre. */
+.gx-dchart-plot rect,
+.gx-dchart-plot path,
+.gx-dchart-plot circle {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: gx-chart-grow 520ms ease-out backwards;
+}
+
+.gx-dchart-plot path,
+.gx-dchart-plot circle {
+  transform-origin: center;
+  animation-name: gx-chart-reveal;
+}
+
+@keyframes gx-chart-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes gx-chart-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-dchart-plot rect,
+  .gx-dchart-plot path,
+  .gx-dchart-plot circle {
+    animation: none;
+  }
+}
+
 .gx-dchart-categories {
   display: flex;
   flex-direction: row;
