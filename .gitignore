@@ -26,6 +26,8 @@ workspaces/
 # Environment variables
 .env
 .env.keys
+.env.*
+!.env.example
 
 # OS / editor
 .DS_Store
