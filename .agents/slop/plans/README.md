@@ -263,3 +263,9 @@ Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` �
 | [060](./060-launch-film-feel.md) | Launch film "Feel it": real takes, native blocks, sound as haptics | media | playground, tokens | landed — superseded by 064 for v2 |
 | [062](./062-desktop-block.md) | The `desktop` block: XP-era and Aero-era desktops from the library | blocks | 728 Part A, tokens `retro` | landed |
 | [064](./064-launch-film-v2.md) | Launch film v2: faster, wider, scored | media | 060, 062, 728, 729 | landed |
+
+### Performance
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [757](./757-launch-speed.md) | Launch speed parity with raw GPUI | perf | gpuix upstream | waiting on the upstream release |
