@@ -1,4 +1,3 @@
-
 export { canonicalKey } from "./chord.js";
 export { decodeGpuixEvent } from "./decode.js";
 export { formatSymbols } from "./display.js";

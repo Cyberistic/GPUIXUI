@@ -1,4 +1,3 @@
-
 /** GPUI's named keys, as GPUix reports them, by the DOM value each one is. */
 const GPUIX_NAMED_KEYS: Readonly<Record<string, string>> = {
   backspace: "Backspace",

@@ -1,3 +1,8 @@
+import type { WindowOptions } from "@gpuix/native";
+import type { PlatformName, Theme } from "@gpuixui/tokens";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+
 export const TRAFFIC_LIGHT_INSET = 90;
 
 export const TRAFFIC_LIGHT_X = 20;

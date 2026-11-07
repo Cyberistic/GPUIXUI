@@ -11,7 +11,6 @@ import {
   TRAFFIC_LIGHT_INSET,
 } from "./logic.js";
 
-
 const mac = platformTheme(lightTheme, "darwin");
 
 describe("the window options", () => {
