@@ -21,6 +21,7 @@ import { LookPicker } from "./docs/look-picker";
 import { SidebarExample } from "./docs/sidebar-examples";
 import { StyleReference } from "./docs/style-reference";
 import { ThemeEditor } from "./docs/theme-editor";
+import { ThemeStylesheet } from "./docs/theme-stylesheet";
 import { TokenScales } from "./docs/token-scales";
 import { TypeScale } from "./docs/type-scale";
 
@@ -72,6 +73,7 @@ export const mdxComponents = {
   SidebarExample,
   StyleReference,
   ThemeEditor,
+  ThemeStylesheet,
   TokenScales,
   TypeScale,
 };

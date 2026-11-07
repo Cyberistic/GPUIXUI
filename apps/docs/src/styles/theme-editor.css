@@ -303,6 +303,44 @@
    Its box is fixed and its list scrolls — a pin that breaks a pair can list a
    dozen findings, and letting them grow the block moved the whole page (measured
    at +657px of editor for one radius change) every time a variable was edited. */
+.gx-stylesheet {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.gx-stylesheet figure,
+.gx-stylesheet pre,
+.gx-stylesheet [data-fd-codeblock] {
+  max-width: none;
+  width: 100%;
+}
+
+.gx-stylesheet-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gx-stylesheet-select {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 12px;
+}
+
+.gx-stylesheet-note {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12.5px;
+}
+
 .gx-te-audit {
   height: 132px;
   overflow-y: auto;
@@ -327,6 +365,11 @@
 
 .gx-te-audit-fail {
   color: var(--destructive);
+}
+
+.gx-te-unmeasured {
+  margin-top: 8px;
+  color: var(--muted-foreground);
 }
 
 @media (max-width: 760px) {

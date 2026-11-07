@@ -28,6 +28,7 @@ const COMPONENT_AFFORDANCES = new Set([
 const isChrome = (path: string): boolean =>
   path.includes("/landing/") ||
   path.endsWith("/recipe-source.tsx") ||
+  path.endsWith("/theme-stylesheet.tsx") ||
   path.endsWith("/skip-link.tsx");
 
 const chromeClasses = (): ReadonlySet<string> => {
