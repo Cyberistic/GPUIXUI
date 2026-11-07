@@ -14,6 +14,7 @@
     "@types/node": "^26.1.1",
     "alchemy": "catalog:",
     "effect": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@alchemy.run/cloudflare": "catalog:"
   }
 }

@@ -57,7 +57,7 @@
       "@tanstack/virtual-core": "3.19.6",
       "@types/react": "^19.2.0",
       "@vitejs/plugin-react": "^6.0.3",
-      "alchemy": "2.0.0-beta.83",
+      "alchemy": "2.0.0-beta.85",
       "effect": "4.1.2",
       "fumadocs-core": "^16.17.4",
       "fumadocs-mdx": "^15.4.7",
@@ -69,7 +69,8 @@
       "tailwindcss": "^4.3.2",
       "typescript": "^7",
       "vite": "^8.3.4",
-      "vitest": "^5.0.3"
+      "vitest": "^5.0.3",
+      "@alchemy.run/cloudflare": "2.0.0-beta.85"
     }
   }
 }
