@@ -297,11 +297,6 @@ export function ThemeEditorSurface({
           </p>
         )}
       </div>
-
-      <p className="gx-component-note">
-        Browser preview. The components read these roles through GPUix, not CSS
-        variables.
-      </p>
     </div>
   );
 }
