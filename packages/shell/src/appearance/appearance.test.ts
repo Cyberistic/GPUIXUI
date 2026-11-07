@@ -14,10 +14,10 @@ import {
 const defaults = (answers: Readonly<Record<string, string>>) =>
   Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, {
     ...ChildProcessSpawner.make(() => Effect.die("only `string` is read")),
-    string: (command) =>
-      Effect.succeed(
-        answers["args" in command ? (command.args[2] ?? "") : ""] ?? "",
-      ),
+    string: (command) => {
+      const key = "args" in command ? command.args[2] : undefined;
+      return Effect.succeed(answers[typeof key === "string" ? key : ""] ?? "");
+    },
   });
 
 const read = (answers: Readonly<Record<string, string>>) =>
