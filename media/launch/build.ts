@@ -1008,18 +1008,20 @@ const terminal: Scene = {
 
 const STACK_START = TERM_START + TERM_LENGTH;
 const WORDS = ["GPUI", "React", "shadcn", "Tailwind"] as const;
+/** A beat of the score at 120 BPM: the stabs and the last chord land on these. */
+const BEAT = 0.5;
 const stack: Scene = {
   id: "stack",
   start: STACK_START,
   duration: 2,
   css: `#root .words { position:absolute; left:0; right:0; top:470px; text-align:center; font:600 104px ${SANS}; letter-spacing:-0.035em; color:${INK}; }
-    #root .words span { opacity:.18; margin:0 26px; }
+    #root .words span { display:inline-block; opacity:.18; margin:0 26px; }
     #root .words b { color:#c7c7cc; font-weight:600; }`,
   body: `    <div class="words">${WORDS.map((w, i) => `<span id="w${i}">${w}</span>`).join("<b>·</b>")}</div>`,
   script: `tl.fromTo(".words",{scale:1,x:0,y:0},{scale:1.03,x:-10,y:-6,duration:2,ease:"none"},0);
     ${WORDS.map(
       (_, i) =>
-        `tl.to("#w${i}",{opacity:1,duration:0.18},${(i * 0.5).toFixed(2)});`,
+        `tl.set("#w${i}",{opacity:1},${(i * BEAT).toFixed(2)});tl.fromTo("#w${i}",{scale:1.08},{scale:1,duration:0.3,ease:"power3.out"},${(i * BEAT).toFixed(2)});`,
     ).join("")}`,
 };
 
@@ -1041,10 +1043,13 @@ const end: Scene = {
       <div id="e-credit" class="credit">Made with ☕ by <u>@sudo_kw</u></div>
     </div>`,
   script: `tl.fromTo(".lockup",{scale:1,x:0,y:0},{scale:1.03,x:-8,y:-6,duration:4,ease:"none"},0);
-    tl.from("#e-mark",{opacity:0,duration:0.5},0.1);
-    tl.from("#e-name",{opacity:0.35,duration:0.35},0.5);
-    tl.from("#e-url",{opacity:0,duration:0.5},1.1);
-    tl.from("#e-credit",{opacity:0,duration:0.5},1.6);`,
+    tl.fromTo("#e-mark",{scale:0.86},{scale:1,duration:0.4,ease:"back.out(2)"},0);
+    ${["name", "url", "credit"]
+      .map(
+        (part, i) =>
+          `tl.from("#e-${part}",{opacity:0,y:10,duration:0.14,ease:"power2.out"},${(i + 1) * BEAT});`,
+      )
+      .join("\n    ")}`,
 };
 
 const scenes = [
@@ -1145,7 +1150,7 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   ...[15, 34, 54].map(
     (frame) => [TERM_START + T_APP + frame / FPS + F, "press"] as const,
   ),
-  [END_START + 0.1, "mark"],
+  [END_START + 0.02, "mark"],
 ];
 
 /**

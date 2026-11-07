@@ -64,6 +64,7 @@
       color: #1d1d1f;
     }
     #root .words span {
+      display: inline-block;
       opacity: 0.18;
       margin: 0 26px;
     }
@@ -91,10 +92,34 @@
       { scale: 1.03, x: -10, y: -6, duration: 2, ease: "none" },
       0,
     );
-    tl.to("#w0", { opacity: 1, duration: 0.18 }, 0.0);
-    tl.to("#w1", { opacity: 1, duration: 0.18 }, 0.5);
-    tl.to("#w2", { opacity: 1, duration: 0.18 }, 1.0);
-    tl.to("#w3", { opacity: 1, duration: 0.18 }, 1.5);
+    tl.set("#w0", { opacity: 1 }, 0.0);
+    tl.fromTo(
+      "#w0",
+      { scale: 1.08 },
+      { scale: 1, duration: 0.3, ease: "power3.out" },
+      0.0,
+    );
+    tl.set("#w1", { opacity: 1 }, 0.5);
+    tl.fromTo(
+      "#w1",
+      { scale: 1.08 },
+      { scale: 1, duration: 0.3, ease: "power3.out" },
+      0.5,
+    );
+    tl.set("#w2", { opacity: 1 }, 1.0);
+    tl.fromTo(
+      "#w2",
+      { scale: 1.08 },
+      { scale: 1, duration: 0.3, ease: "power3.out" },
+      1.0,
+    );
+    tl.set("#w3", { opacity: 1 }, 1.5);
+    tl.fromTo(
+      "#w3",
+      { scale: 1.08 },
+      { scale: 1, duration: 0.3, ease: "power3.out" },
+      1.5,
+    );
     tl.set({}, {}, 2);
     window.__timelines = window.__timelines || {};
     window.__timelines["stack"] = tl;

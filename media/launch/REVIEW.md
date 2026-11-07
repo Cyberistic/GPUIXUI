@@ -8,3 +8,5 @@ the motion and the sound have not been watched or heard in real time.
 **Sound.** -18.0 LUFS integrated, -1.0 dBFS peak after mastering.
 
 **Check.** `npx hyperframes check`: ok, no errors.
+
+**Sync, round five.** Onsets measured from the final file: stabs 34.01, 34.51, 35.01, 35.53 s; last chord with the mark's sound 36.02 s. Not yet heard in real time.

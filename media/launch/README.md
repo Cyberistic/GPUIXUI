@@ -36,6 +36,8 @@ through the window renderer.
 
 **Sync.** A press and its repaint come from one take, and a slider's ticks are the frames its value changed, read from the take (`changes.json`). State commits on mouse-up, so the v8 takes release one frame after the press: the change lands on press + 1, the frame its sound is placed on. The close-ups change on press + 3 and their cues follow.
 
+**The ending is on the grid.** The score's stabs land at 34, 34.5, 35 and 35.5 s and its last chord at 36 s (measured from the file). A word lights on its stab's frame, and the mark and its sound land with the chord. The name, URL and credit follow on the next three beats.
+
 ## The npm line
 
 `apps/playground/src/film/npm-proof.test.tsx` runs TanStack DB, TanStack AI, oRPC and
