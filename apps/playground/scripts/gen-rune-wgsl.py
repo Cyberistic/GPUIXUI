@@ -44,6 +44,7 @@ def fix(s):
         i = j
     s = re.sub(r"\bsource\b", "simulation_state", result)
     s = re.sub(r"\bsamp\b", "backdrop_sampler", s)
+    s = s.replace("select(c.p, c.q, i.p2.x > 0.5)", "select(c.p + frame.bounds.xy / frame.scale, c.q, i.p2.x > 0.5)")
     return s.replace("fn shade(in: VOut)", "fn rune_shade(in: VOut)")
 
 
