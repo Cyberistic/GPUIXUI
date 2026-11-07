@@ -1,11 +1,17 @@
 <template>
   <style>
+    @font-face {
+      font-family: "Mona Sans";
+      src: url("assets/fonts/Mona-Sans.ttf");
+      font-weight: 200 900;
+      font-stretch: 75% 125%;
+    }
     #root {
       position: absolute;
       inset: 0;
       overflow: hidden;
       background: #f4f2ee;
-      font-family: Inter, sans-serif;
+      font-family: "Mona Sans", sans-serif;
     }
     #root video,
     #root img.shot {
@@ -88,7 +94,7 @@
       left: 16px;
       top: 10px;
       font:
-        500 18px Inter,
+        500 18px "Mona Sans",
         sans-serif;
       color: #a1a1aa;
     }
@@ -110,7 +116,7 @@
       position: absolute;
       inset: 0;
       overflow: hidden;
-      font-family: Inter, sans-serif;
+      font-family: "Mona Sans", sans-serif;
     }
     #root .desk > img.wall {
       position: absolute;

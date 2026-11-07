@@ -5,7 +5,7 @@ Plan: `.agents/slop/plans/070-launch-film-v9.md`. The scene table is `README.md`
 ```text
 GOAL:    a developer sees real native apps built from real components, and goes to gpuixui.sudokw.com
 OUTPUT:  HyperFrames, 1920 x 1080, 30 fps, 40.0 s
-LOOK:    ground #F4F2EE, ink #1D1D1F; lines Inter 400, 62 px, tracking -0.025em, one at a time, only where the picture cannot say it
+LOOK:    ground #F4F2EE, ink #1D1D1F; lines Mona Sans 400, 62 px, tracking -0.025em, one at a time, only where the picture cannot say it
 MOTION:  every scene carried by an object or a press; windows bleed off the frame
          plane: rotateX 50, rotateZ -18, perspective 2600; tiles fall from z 820 in 0.42 s (power2.in); one swipe to dark
 SOUND:   every press sounds on the frame its state changes; the score's stabs land the stack

@@ -1,6 +1,7 @@
 <template>
   <style>
-    #root { position: absolute; inset: 0; overflow: hidden; background: #F4F2EE; font-family: Inter, sans-serif; }
+    @font-face { font-family: "Mona Sans"; src: url("assets/fonts/Mona-Sans.ttf"); font-weight: 200 900; font-stretch: 75% 125%; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #F4F2EE; font-family: "Mona Sans", sans-serif; }
     #root video, #root img.shot { position: absolute; display: block; }
     #root .cursor { position: absolute; left: 0; top: 0; width: 34px; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0,0,0,.25)); }
     #root .cursor svg { display: block; width: 100%; height: auto; }
@@ -10,11 +11,11 @@
     #root .code { position:absolute; left:0; top:0; width:960px; overflow:hidden; height:1080px; background:#101014; padding:96px 0 0 64px; font:500 27px/46px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
     #root .code b { font-weight:500; color:#7aa2f7; } #root .code .ln i, #root .code .css i { font-style:normal; color:#9ece6a; }
     #root .css { position:absolute; left:64px; top:96px; white-space:pre; font-size:24px; line-height:42px; }
-    #root .file { position:absolute; left:64px; top:36px; font:500 22px Inter, sans-serif; color:#71717a; }
-    #root .code .say { position:absolute; left:64px; right:64px; top:auto; bottom:60px; text-align:left; font:400 52px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }
+    #root .file { position:absolute; left:64px; top:36px; font:500 22px "Mona Sans", sans-serif; color:#71717a; }
+    #root .code .say { position:absolute; left:64px; right:64px; top:auto; bottom:60px; text-align:left; font:400 52px "Mona Sans", sans-serif; letter-spacing:-0.025em; color:#fff; }
     #root .ln { height:46px; overflow:hidden; white-space:pre; width:0; }
     #root .css { opacity:0; }
-    #root .title { position:absolute; left:64px; top:960px; font:400 56px Inter, sans-serif; letter-spacing:-0.025em; color:#1D1D1F; white-space:nowrap; transform-origin:0 50%; }
+    #root .title { position:absolute; left:64px; top:960px; font:400 56px "Mona Sans", sans-serif; letter-spacing:-0.025em; color:#1D1D1F; white-space:nowrap; transform-origin:0 50%; }
     #root .right { position:absolute; left:960px; top:0; width:960px; height:1080px; overflow:hidden; }
     #root .right video { position:relative; display:block; width:100%; height:100%; }
   </style>

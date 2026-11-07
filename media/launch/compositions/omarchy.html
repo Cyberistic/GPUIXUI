@@ -1,11 +1,17 @@
 <template>
   <style>
+    @font-face {
+      font-family: "Mona Sans";
+      src: url("assets/fonts/Mona-Sans.ttf");
+      font-weight: 200 900;
+      font-stretch: 75% 125%;
+    }
     #root {
       position: absolute;
       inset: 0;
       overflow: hidden;
       background: #f4f2ee;
-      font-family: Inter, sans-serif;
+      font-family: "Mona Sans", sans-serif;
     }
     #root video,
     #root img.shot {
@@ -88,7 +94,7 @@
       justify-content: center;
       gap: 0.26em;
       font:
-        500 116px/140px Inter,
+        500 116px/140px "Mona Sans",
         sans-serif;
       letter-spacing: -0.03em;
       color: #fff;
@@ -115,7 +121,7 @@
       top: 72px;
       text-align: center;
       font:
-        500 62px Inter,
+        500 62px "Mona Sans",
         sans-serif;
       letter-spacing: -0.025em;
       color: #fff;
@@ -127,7 +133,7 @@
       position: absolute;
       inset: 0;
       overflow: hidden;
-      font-family: Inter, sans-serif;
+      font-family: "Mona Sans", sans-serif;
     }
     #root .desk > img.wall {
       position: absolute;
@@ -399,9 +405,9 @@
     );
     tl.set("#o-front", { opacity: 0 }, 0.8);
     tl.to("#o-strip", { x: -1948, duration: 0.42, ease: "power3.inOut" }, 1.62);
-    tl.to("#o-strip", { x: -3896, duration: 0.34, ease: "expo.inOut" }, 2.16);
-    tl.to("#o-strip", { x: -5844, duration: 0.34, ease: "expo.inOut" }, 2.58);
-    tl.to("#o-strip", { x: -7792, duration: 0.34, ease: "expo.inOut" }, 3.0);
+    tl.set("#o-strip", { x: -3896 }, 2.4);
+    tl.set("#o-strip", { x: -5844 }, 2.8);
+    tl.set("#o-strip", { x: -7792 }, 3.2);
     tl.to(
       "#o-all",
       { x: -2514.3, y: -244.3, scale: 2.381, duration: 0.42, ease: "expo.in" },

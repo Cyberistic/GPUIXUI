@@ -30,7 +30,7 @@ Same 40 s, same scene order plus one new scene. Everything is edited in
 
 ## The train
 
-One strip of carriages: the sentence, then four themes. It arrives over the GNOME desktop and brakes with the whole sentence on screen, its words bunching up, holds 0.8 s, then pulls out and stops on each theme. A first version panned 240 px masked type and dived through a letter; the owner found it unreadable.
+One strip of carriages: the sentence, then four themes. It arrives over the GNOME desktop and brakes with the whole sentence on screen, its words bunching up, holds 0.8 s, then pulls out onto the first theme; the rest are hard cuts. A first version panned 240 px masked type and dived through a letter; the owner found it unreadable.
 
 The wall loses its header bands: their overlapping gradients left a grey smear over the dark plane.
 

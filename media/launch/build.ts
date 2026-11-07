@@ -26,6 +26,7 @@ const at = (path: string) => `${HERE}${path}`;
 const GROUND = "#F4F2EE";
 const INK = "#1D1D1F";
 const INK_DARK = "#09090B";
+const SANS = `"Mona Sans", sans-serif`;
 
 /* ------------------------------------------------------------ footage */
 
@@ -105,7 +106,8 @@ interface Scene {
 
 const composition = (scene: Scene): string => `<template>
   <style>
-    #root { position: absolute; inset: 0; overflow: hidden; background: ${GROUND}; font-family: Inter, sans-serif; }
+    @font-face { font-family: "Mona Sans"; src: url("assets/fonts/Mona-Sans.ttf"); font-weight: 200 900; font-stretch: 75% 125%; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: ${GROUND}; font-family: ${SANS}; }
     #root video, #root img.shot { position: absolute; display: block; }
     #root .cursor { position: absolute; left: 0; top: 0; width: 34px; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0,0,0,.25)); }
     #root .cursor svg { display: block; width: 100%; height: auto; }
@@ -337,16 +339,16 @@ const uglify = (code: string) =>
     .replace(/("[^"]*")/g, "<i>$1</i>")
     .replace(/(createElement|\.\w+(?=\())/g, "<b>$1</b>");
 /** Emoji bursting around the word: wide, because the word is, and never off the frame's top. */
-const LAUGHS = Array.from({ length: 14 }, (_, i) => {
-  const angle = (i * 2 * Math.PI * 5) / 14;
-  const reach = 1.25 + jitter(i) * 0.5;
+const LAUGHS = Array.from({ length: 8 }, (_, i) => {
+  const angle = (i * 2 * Math.PI * 3) / 8;
+  const reach = 1.1 + jitter(i) * 0.25;
   return {
     fromX: Math.round(Math.cos(angle) * 125),
     fromY: Math.round(Math.sin(angle) * 46),
     x: Math.round(Math.cos(angle) * 125 * reach),
     y: Math.round(Math.max(Math.sin(angle) * 46 * reach, -40)),
     spin: Math.round((jitter(i + 7) - 0.5) * 80),
-    at: +(0.5 + i * 0.08).toFixed(2),
+    at: +(0.5 + i * 0.16).toFixed(2),
   };
 });
 const MOCK_SIDES = [
@@ -357,11 +359,11 @@ const mock: Scene = {
   id: "mock",
   start: MOCK_START,
   duration: MOCK_LENGTH,
-  css: `#root .say { position:absolute; z-index:2; left:0; right:0; top:44px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
+  css: `#root .say { position:absolute; z-index:2; left:0; right:0; top:44px; text-align:center; font:400 62px ${SANS}; letter-spacing:-0.025em; color:${INK}; }
     #root .quoted { position:relative; display:inline-block; }
-    #root .laugh { position:absolute; left:50%; top:10px; margin-left:-24px; z-index:2; font-size:44px; line-height:48px; opacity:0; }
+    #root .laugh { position:absolute; left:50%; top:10px; margin-left:-14px; z-index:2; font-size:28px; line-height:32px; opacity:0; }
     #root .pane { position:absolute; top:150px; width:880px; height:960px; border-radius:20px; overflow:hidden; background:${CODE_BG}; padding:26px 36px; }
-    #root .pane h2 { position:absolute; left:0; right:0; top:0; z-index:1; padding:26px 36px 18px; background:${CODE_BG}; font:500 26px Inter, sans-serif; color:#a1a1aa; }
+    #root .pane h2 { position:absolute; left:0; right:0; top:0; z-index:1; padding:26px 36px 18px; background:${CODE_BG}; font:500 26px ${SANS}; color:#a1a1aa; }
     #root .pane em { font-style:normal; color:#71717a; margin-left:12px; }
     #root .pane pre { position:absolute; left:36px; top:86px; font:500 21px/${MOCK_LINE}px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
     #root .pane pre b { font-weight:500; color:#7aa2f7; } #root .pane pre i { font-style:normal; color:#9ece6a; }`,
@@ -379,7 +381,7 @@ const mock: Scene = {
     ${LAUGHS.map(
       ({ fromX, fromY, x, y, spin, at }, i) =>
         `tl.fromTo("#k-e${i}",{x:${fromX},y:${fromY},scale:0.3,rotation:0},{x:${x},y:${y},scale:1,rotation:${spin},duration:0.8,ease:"power2.out"},${at});
-    tl.fromTo("#k-e${i}",{opacity:0},{opacity:1,duration:0.1},${at});
+    tl.fromTo("#k-e${i}",{opacity:0},{opacity:0.55,duration:0.15},${at});
     tl.to("#k-e${i}",{opacity:0,duration:0.25},${(at + 0.55).toFixed(2)});`,
     ).join("\n    ")}
     tl.to("#k-say",{opacity:0,duration:0.14},${(MOCK_LENGTH - 0.16).toFixed(2)});`,
@@ -402,8 +404,8 @@ const highlight = (text: string) =>
 const CODE_CSS = `#root .code { position:absolute; left:0; top:0; width:960px; overflow:hidden; height:1080px; background:${CODE_BG}; padding:96px 0 0 64px; font:500 27px/46px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
     #root .code b { font-weight:500; color:#7aa2f7; } #root .code .ln i, #root .code .css i { font-style:normal; color:#9ece6a; }
     #root .css { position:absolute; left:64px; top:96px; white-space:pre; font-size:24px; line-height:42px; }
-    #root .file { position:absolute; left:64px; top:36px; font:500 22px Inter, sans-serif; color:#71717a; }
-    #root .code .say { position:absolute; left:64px; right:64px; top:auto; bottom:60px; text-align:left; font:400 52px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }`;
+    #root .file { position:absolute; left:64px; top:36px; font:500 22px ${SANS}; color:#71717a; }
+    #root .code .say { position:absolute; left:64px; right:64px; top:auto; bottom:60px; text-align:left; font:400 52px ${SANS}; letter-spacing:-0.025em; color:#fff; }`;
 const fileOf = (name: string) => `${name}.css · tweakcn.com`;
 const TWEAKCN_LINE = `paste any ${hl("tweakcn")} theme. done.`;
 const shadcn: Scene = {
@@ -413,7 +415,7 @@ const shadcn: Scene = {
   css: `${CODE_CSS}
     #root .ln { height:46px; overflow:hidden; white-space:pre; width:0; }
     #root .css { opacity:0; }
-    #root .title { position:absolute; left:64px; top:960px; font:400 56px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; white-space:nowrap; transform-origin:0 50%; }
+    #root .title { position:absolute; left:64px; top:960px; font:400 56px ${SANS}; letter-spacing:-0.025em; color:${INK}; white-space:nowrap; transform-origin:0 50%; }
     #root .right { position:absolute; left:960px; top:0; width:960px; height:1080px; overflow:hidden; }
     #root .right video { position:relative; display:block; width:100%; height:100%; }`,
   body: `    <div id="s-right" class="right">${video("s-v", footage("shadcn-v8", 12), 0, SHADCN_LENGTH, "", 1)}</div>
@@ -485,10 +487,10 @@ const npm: Scene = {
   duration: PKG_LENGTH,
   css: `${CODE_CSS}
     #root .row { position:absolute; left:0; right:0; display:flex; justify-content:center; gap:16px; white-space:nowrap; }
-    #root .chip { display:flex; align-items:center; gap:16px; height:100px; padding:0 30px; border-radius:20px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 16px 34px -20px rgba(29,29,31,.4); font:500 36px Inter, sans-serif; letter-spacing:-0.02em; color:${INK}; }
+    #root .chip { display:flex; align-items:center; gap:16px; height:100px; padding:0 30px; border-radius:20px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 16px 34px -20px rgba(29,29,31,.4); font:500 36px ${SANS}; letter-spacing:-0.02em; color:${INK}; }
     #root .chip img { width:40px; height:40px; }
     #root .chip i { display:block; width:26px; height:26px; border-radius:7px; background:#c7c7cc; }
-    #root .say { position:absolute; left:0; right:0; top:500px; text-align:center; font:400 72px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
+    #root .say { position:absolute; left:0; right:0; top:500px; text-align:center; font:400 72px ${SANS}; letter-spacing:-0.025em; color:${INK}; }
     #root .out { position:absolute; inset:0; }
     #root .out img { position:absolute; left:960px; top:0; width:960px; height:1080px; }`,
   body: `    <div id="n-say" class="say">the ${hl("npm packages")} you already use</div>
@@ -616,7 +618,7 @@ const wall: Scene = {
     #root .tile { position:absolute; overflow:hidden; border-radius:16px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 18px 40px -22px rgba(29,29,31,.4); }
     #root .tile img { position:absolute; left:0; top:0; width:100%; height:100%; }
     #root .tile img.d { clip-path:inset(0 100% 0 0); }
-    #root .say { position:absolute; left:0; right:0; top:58px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }`,
+    #root .say { position:absolute; left:0; right:0; top:58px; text-align:center; font:400 62px ${SANS}; letter-spacing:-0.025em; color:${INK}; }`,
   body: `    <div class="stage" data-layout-allow-overflow>
       <div id="plane" class="plane" data-layout-allow-overflow>
         <div id="sky" class="sky"></div>
@@ -754,7 +756,7 @@ const GNOME_APPS = [
   "TextEditor",
   "Settings",
 ];
-const desktopCss = `#root .desk { position:absolute; inset:0; overflow:hidden; font-family:Inter, sans-serif; }
+const desktopCss = `#root .desk { position:absolute; inset:0; overflow:hidden; font-family:${SANS}; }
     #root .desk > img.wall { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
     #root .macbar { position:absolute; left:0; right:0; top:0; height:34px; display:flex; align-items:center; gap:22px; padding:0 18px; background:rgba(255,255,255,.34); color:#111; font-size:17px; font-weight:500; }
     #root .macbar b { font-weight:700; } #root .macbar span.r { margin-left:auto; }
@@ -798,7 +800,7 @@ const charts: Scene = {
     #root .rw { position:absolute; left:0; display:flex; gap:${CARD.gap}px; }
     #root .cd { position:relative; flex:none; width:${CARD.w}px; height:${CARD.h}px; border-radius:18px; overflow:hidden; background:#1b1b1f; box-shadow:0 0 0 1px rgba(255,255,255,.08); }
     #root .cd video, #root .cd img { position:absolute; left:0; top:0; width:100%; height:100%; }
-    #root .cd b { position:absolute; left:16px; top:10px; font:500 18px Inter, sans-serif; color:#a1a1aa; }
+    #root .cd b { position:absolute; left:16px; top:10px; font:500 18px ${SANS}; color:#a1a1aa; }
     #root .next { position:absolute; inset:0; clip-path:circle(0px at 960px 560px); }
     #root .next > img { position:absolute; left:${SETTINGS_WIN.x}px; top:${SETTINGS_WIN.y}px; width:${SETTINGS_WIN.w}px; height:${SETTINGS_WIN.h}px; border-radius:19px; box-shadow:0 60px 100px -36px rgba(0,0,0,.6); }
     ${desktopCss}`,
@@ -842,7 +844,7 @@ ${RUN.map(
 
 const osLine = (id: string) =>
   `<span id="${id}0">${hl("Mac,")}</span> <span id="${id}1">${hl("Windows,")}</span> <span id="${id}2">${hl("Linux")}</span>`;
-const OS_SAY_CSS = `#root .say { position:absolute; left:0; right:0; top:72px; text-align:center; font:500 62px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.5), 0 4px 40px rgba(0,0,0,.6); }`;
+const OS_SAY_CSS = `#root .say { position:absolute; left:0; right:0; top:72px; text-align:center; font:500 62px ${SANS}; letter-spacing:-0.025em; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.5), 0 4px 40px rgba(0,0,0,.6); }`;
 
 const DESK_START = CHARTS_START + CHARTS_LENGTH;
 const DESK_LENGTH = 3;
@@ -892,7 +894,7 @@ const COUPLER = 28;
 const ARRIVE = 0.8;
 const DEPART = 1.62;
 const stopAt = (carriage: number) => -carriage * (1920 + COUPLER);
-const OM_FLIP = (i: number) => 2.16 + i * 0.42;
+const OM_FLIP = (i: number) => 2.4 + i * 0.4;
 const TRAIN_WORDS = ["Follows", "your", "theme", "in"] as const;
 const THEMES = ["rose-pine", "gruvbox", "catppuccin-latte", "tokyo"] as const;
 /** The terminal pane in the tiling take, in frame fractions (measured from the still). */
@@ -908,7 +910,7 @@ const omarchy: Scene = {
     #root .strip { position:absolute; inset:0; }
     #root .car { position:absolute; left:0; top:0; width:1920px; height:1080px; }
     #root .plate { position:absolute; left:-${NOSE}px; top:0; width:${1920 + NOSE}px; height:1080px; background:${INK_DARK}; border-radius:${NOSE}px 0 0 ${NOSE}px; }
-    #root .line { position:absolute; left:0; right:0; top:470px; display:flex; justify-content:center; gap:.26em; font:500 116px/140px Inter, sans-serif; letter-spacing:-0.03em; color:#fff; white-space:nowrap; }
+    #root .line { position:absolute; left:0; right:0; top:470px; display:flex; justify-content:center; gap:.26em; font:500 116px/140px ${SANS}; letter-spacing:-0.03em; color:#fff; white-space:nowrap; }
     #root .line span.w { display:block; }
     #root .front { position:absolute; inset:0; }
     #root .fly { position:absolute; left:${SETTINGS_WIN.x}px; top:${SETTINGS_WIN.y}px; width:${SETTINGS_WIN.w}px; border-radius:19px; }
@@ -933,7 +935,7 @@ ${THEMES.map((t, i) => `      <div class="car" style="left:${-stopAt(i + 1)}px">
     ${THEMES.slice(1)
       .map(
         (_, i) =>
-          `tl.to("#o-strip",{x:${stopAt(i + 2)},duration:0.34,ease:"expo.inOut"},${OM_FLIP(i).toFixed(2)});`,
+          `tl.set("#o-strip",{x:${stopAt(i + 2)}},${OM_FLIP(i).toFixed(2)});`,
       )
       .join("\n    ")}
     tl.to("#o-all",{x:${(-PANE.x * 1920 * paneZoom).toFixed(1)},y:${(-PANE.y * 1080 * paneZoom + (1080 - PANE.h * 1080 * paneZoom) / 2).toFixed(1)},scale:${paneZoom.toFixed(3)},duration:0.42,ease:"expo.in"},${(OM_LENGTH - 0.42).toFixed(2)});`,
@@ -973,7 +975,7 @@ const terminal: Scene = {
   duration: TERM_LENGTH,
   css: `#root .shell { position:absolute; inset:0; background:${TERM_BG}; padding:44px 60px; font:500 34px/50px "JetBrains Mono", Menlo, monospace; color:#c0caf5; }
     #root .shell b { font-weight:600; color:#7aa2f7; } #root .shell .dim { color:#565f89; } #root .shell .off { opacity:0; }
-    #root .say { position:absolute; left:0; right:0; top:560px; display:flex; justify-content:center; gap:.3em; font:500 64px/88px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }
+    #root .say { position:absolute; left:0; right:0; top:560px; display:flex; justify-content:center; gap:.3em; font:500 64px/88px ${SANS}; letter-spacing:-0.025em; color:#fff; }
     #root .say .clause { display:block; overflow:hidden; }
     #root .say .clause span { display:block; }
     #root .app { position:absolute; left:0; top:0; width:1920px; height:${APP_H}px; clip-path:inset(0 0 100% 0); overflow:hidden; }
@@ -1010,7 +1012,7 @@ const stack: Scene = {
   id: "stack",
   start: STACK_START,
   duration: 2,
-  css: `#root .words { position:absolute; left:0; right:0; top:470px; text-align:center; font:600 104px Inter, sans-serif; letter-spacing:-0.035em; color:${INK}; }
+  css: `#root .words { position:absolute; left:0; right:0; top:470px; text-align:center; font:600 104px ${SANS}; letter-spacing:-0.035em; color:${INK}; }
     #root .words span { opacity:.18; margin:0 26px; }
     #root .words b { color:#c7c7cc; font-weight:600; }`,
   body: `    <div class="words">${WORDS.map((w, i) => `<span id="w${i}">${w}</span>`).join("<b>·</b>")}</div>`,
@@ -1028,9 +1030,9 @@ const end: Scene = {
   duration: 4,
   css: `#root .lockup { position:absolute; inset:0; }
     #root .mark { position:absolute; left:50%; top:330px; width:190px; height:190px; margin-left:-95px; }
-    #root .name { position:absolute; left:0; right:0; top:560px; text-align:center; font:600 92px Inter, sans-serif; letter-spacing:-0.035em; color:${INK}; }
-    #root .url { position:absolute; left:0; right:0; top:690px; text-align:center; font:500 46px Inter, sans-serif; color:#171717; }
-    #root .credit { position:absolute; left:0; right:0; top:950px; text-align:center; font:400 30px Inter, sans-serif; color:#6e6e73; }
+    #root .name { position:absolute; left:0; right:0; top:560px; text-align:center; font:600 92px ${SANS}; letter-spacing:-0.035em; color:${INK}; }
+    #root .url { position:absolute; left:0; right:0; top:690px; text-align:center; font:500 46px ${SANS}; color:#171717; }
+    #root .credit { position:absolute; left:0; right:0; top:950px; text-align:center; font:400 30px ${SANS}; color:#6e6e73; }
     #root .credit u { color:${INK}; text-underline-offset:5px; }`,
   body: `    <div class="lockup">
       <img id="e-mark" class="mark" src="assets/logo.png" alt="">
@@ -1134,7 +1136,7 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   [OM_START + ARRIVE - 0.2, "thud", 0.8],
   [OM_START + DEPART + 0.28, "land", 0.9],
   ...[0, 1, 2].map(
-    (i) => [OM_START + OM_FLIP(i) + 0.17, `glass-${i}`, 1] as const,
+    (i) => [OM_START + OM_FLIP(i) + F, `glass-${i}`, 1] as const,
   ),
   ...typedCues(SSH, TERM_START + TYPE_AT, CHARS_PER_FRAME),
   [TERM_START + T_LOGIN - 0.03, "press", 0.6],

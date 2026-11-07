@@ -17,7 +17,7 @@ was rejected (`agent/launch-film-v4`).
 | 16.5–20.5 s | — | ⌘K, "vault" typed: Launcher → Vault → Dashboard | `launcher-v8`, `vault-v8`, `dashboard-v8` |
 | 20.5–23 s | — | all 17 chart types in three sliding rows, drawing as they arrive | `dark-chart-*` |
 | 23–26 s | Mac, Windows, Linux | one Settings window; each Look press wipes the desktop from the pointer and marks its word | `settings-v8` |
-| 26–30 s | Follows your theme in omarchy | a train brakes with the whole sentence on screen and holds, then pulls out with the themes coupled behind it, stopping on each | `omarchy-*` |
+| 26–30 s | Follows your theme in omarchy | a train brakes with the whole sentence on screen and holds, then pulls out onto the first theme; the rest are hard cuts | `omarchy-*` |
 | 30–34 s | Run in the terminal, in tmux, over ssh, with animations. | ssh, `huntercli --terminal`, the clauses roll in and out, the app paints row by row: sidebar collapses, dark to light, Deploy raises a toast | `console-v8` |
 | 34–36 s | — | GPUI · React · shadcn · Tailwind | film |
 | 36–40 s | — | the mark, wordmark, URL, maker's line | film |
@@ -76,6 +76,7 @@ square. Piano samples: Salamander Grand Piano by Alexander Holm, CC BY 3.0
 `assets/wallpaper/SOURCES.md`). Stage shots: the stageshow skill (MIT, Benji
 Taylor).
 Clicks: HyperFrames' bundled sound library.
+Lines: Mona Sans by GitHub (SIL OFL 1.1), `assets/fonts/`.
 TanStack, Effect and Better Auth marks: simple-icons (CC0), `assets/logos/`.
 GNOME wallpaper and app icons: GNOME project (CC BY-SA 3.0), `assets/gnome/`. oRPC mark: oRPC's own, `assets/logos/orpc.svg`.
 Themes: tweakcn.com's registry (`/r/themes/<name>.json`), in `shadcn-timeline.ts`. Dashboard traffic data: shadcn's `chart-area-interactive` (MIT).

@@ -1,11 +1,17 @@
 <template>
   <style>
+    @font-face {
+      font-family: "Mona Sans";
+      src: url("assets/fonts/Mona-Sans.ttf");
+      font-weight: 200 900;
+      font-stretch: 75% 125%;
+    }
     #root {
       position: absolute;
       inset: 0;
       overflow: hidden;
       background: #f4f2ee;
-      font-family: Inter, sans-serif;
+      font-family: "Mona Sans", sans-serif;
     }
     #root video,
     #root img.shot {
@@ -53,7 +59,7 @@
       top: 44px;
       text-align: center;
       font:
-        400 62px Inter,
+        400 62px "Mona Sans",
         sans-serif;
       letter-spacing: -0.025em;
       color: #1d1d1f;
@@ -66,10 +72,10 @@
       position: absolute;
       left: 50%;
       top: 10px;
-      margin-left: -24px;
+      margin-left: -14px;
       z-index: 2;
-      font-size: 44px;
-      line-height: 48px;
+      font-size: 28px;
+      line-height: 32px;
       opacity: 0;
     }
     #root .pane {
@@ -91,7 +97,7 @@
       padding: 26px 36px 18px;
       background: #101014;
       font:
-        500 26px Inter,
+        500 26px "Mona Sans",
         sans-serif;
       color: #a1a1aa;
     }
@@ -135,13 +141,7 @@
         ><span id="k-e4" class="laugh">😂</span
         ><span id="k-e5" class="laugh">😂</span
         ><span id="k-e6" class="laugh">😂</span
-        ><span id="k-e7" class="laugh">😂</span
-        ><span id="k-e8" class="laugh">😂</span
-        ><span id="k-e9" class="laugh">😂</span
-        ><span id="k-e10" class="laugh">😂</span
-        ><span id="k-e11" class="laugh">😂</span
-        ><span id="k-e12" class="laugh">😂</span
-        ><span id="k-e13" class="laugh">😂</span></span
+        ><span id="k-e7" class="laugh">😂</span></span
       >
       this.
     </div>
@@ -268,7 +268,7 @@
       "#k-e0",
       { x: 125, y: 0, scale: 0.3, rotation: 0 },
       {
-        x: 156,
+        x: 138,
         y: 0,
         scale: 1,
         rotation: -14,
@@ -277,203 +277,113 @@
       },
       0.5,
     );
-    tl.fromTo("#k-e0", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 0.5);
+    tl.fromTo("#k-e0", { opacity: 0 }, { opacity: 0.55, duration: 0.15 }, 0.5);
     tl.to("#k-e0", { opacity: 0, duration: 0.25 }, 1.05);
     tl.fromTo(
       "#k-e1",
-      { x: -78, y: 36, scale: 0.3, rotation: 0 },
+      { x: -88, y: 33, scale: 0.3, rotation: 0 },
       {
-        x: -127,
-        y: 59,
+        x: -114,
+        y: 42,
         scale: 1,
         rotation: -33,
         duration: 0.8,
         ease: "power2.out",
       },
-      0.58,
+      0.66,
     );
-    tl.fromTo("#k-e1", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 0.58);
-    tl.to("#k-e1", { opacity: 0, duration: 0.25 }, 1.13);
+    tl.fromTo("#k-e1", { opacity: 0 }, { opacity: 0.55, duration: 0.15 }, 0.66);
+    tl.to("#k-e1", { opacity: 0, duration: 0.25 }, 1.21);
     tl.fromTo(
       "#k-e2",
-      { x: -28, y: -45, scale: 0.3, rotation: 0 },
+      { x: 0, y: -46, scale: 0.3, rotation: 0 },
       {
-        x: -42,
+        x: 0,
         y: -40,
         scale: 1,
         rotation: 28,
         duration: 0.8,
         ease: "power2.out",
       },
-      0.66,
+      0.82,
     );
-    tl.fromTo("#k-e2", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 0.66);
-    tl.to("#k-e2", { opacity: 0, duration: 0.25 }, 1.21);
+    tl.fromTo("#k-e2", { opacity: 0 }, { opacity: 0.55, duration: 0.15 }, 0.82);
+    tl.to("#k-e2", { opacity: 0, duration: 0.25 }, 1.37);
     tl.fromTo(
       "#k-e3",
-      { x: 113, y: 20, scale: 0.3, rotation: 0 },
+      { x: 88, y: 33, scale: 0.3, rotation: 0 },
       {
-        x: 157,
-        y: 28,
+        x: 103,
+        y: 38,
         scale: 1,
         rotation: 9,
         duration: 0.8,
         ease: "power2.out",
       },
-      0.74,
+      0.98,
     );
-    tl.fromTo("#k-e3", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 0.74);
-    tl.to("#k-e3", { opacity: 0, duration: 0.25 }, 1.29);
+    tl.fromTo("#k-e3", { opacity: 0 }, { opacity: 0.55, duration: 0.15 }, 0.98);
+    tl.to("#k-e3", { opacity: 0, duration: 0.25 }, 1.53);
     tl.fromTo(
       "#k-e4",
-      { x: -113, y: 20, scale: 0.3, rotation: 0 },
+      { x: -125, y: 0, scale: 0.3, rotation: 0 },
       {
-        x: -143,
-        y: 25,
+        x: -139,
+        y: 0,
         scale: 1,
         rotation: -10,
         duration: 0.8,
         ease: "power2.out",
       },
-      0.82,
+      1.14,
     );
-    tl.fromTo("#k-e4", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 0.82);
-    tl.to("#k-e4", { opacity: 0, duration: 0.25 }, 1.37);
+    tl.fromTo("#k-e4", { opacity: 0 }, { opacity: 0.55, duration: 0.15 }, 1.14);
+    tl.to("#k-e4", { opacity: 0, duration: 0.25 }, 1.69);
     tl.fromTo(
       "#k-e5",
-      { x: 28, y: -45, scale: 0.3, rotation: 0 },
+      { x: 88, y: -33, scale: 0.3, rotation: 0 },
       {
-        x: 46,
+        x: 115,
         y: -40,
         scale: 1,
         rotation: -29,
         duration: 0.8,
         ease: "power2.out",
       },
-      0.9,
+      1.3,
     );
-    tl.fromTo("#k-e5", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 0.9);
-    tl.to("#k-e5", { opacity: 0, duration: 0.25 }, 1.45);
+    tl.fromTo("#k-e5", { opacity: 0 }, { opacity: 0.55, duration: 0.15 }, 1.3);
+    tl.to("#k-e5", { opacity: 0, duration: 0.25 }, 1.85);
     tl.fromTo(
       "#k-e6",
-      { x: 78, y: 36, scale: 0.3, rotation: 0 },
+      { x: 0, y: 46, scale: 0.3, rotation: 0 },
       {
-        x: 119,
-        y: 55,
+        x: 0,
+        y: 57,
         scale: 1,
         rotation: 31,
         duration: 0.8,
         ease: "power2.out",
       },
-      0.98,
+      1.46,
     );
-    tl.fromTo("#k-e6", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 0.98);
-    tl.to("#k-e6", { opacity: 0, duration: 0.25 }, 1.53);
+    tl.fromTo("#k-e6", { opacity: 0 }, { opacity: 0.55, duration: 0.15 }, 1.46);
+    tl.to("#k-e6", { opacity: 0, duration: 0.25 }, 2.01);
     tl.fromTo(
       "#k-e7",
-      { x: -125, y: 0, scale: 0.3, rotation: 0 },
+      { x: -88, y: -33, scale: 0.3, rotation: 0 },
       {
-        x: -177,
-        y: 0,
+        x: -104,
+        y: -38,
         scale: 1,
         rotation: 12,
         duration: 0.8,
         ease: "power2.out",
       },
-      1.06,
+      1.62,
     );
-    tl.fromTo("#k-e7", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 1.06);
-    tl.to("#k-e7", { opacity: 0, duration: 0.25 }, 1.61);
-    tl.fromTo(
-      "#k-e8",
-      { x: 78, y: -36, scale: 0.3, rotation: 0 },
-      {
-        x: 101,
-        y: -40,
-        scale: 1,
-        rotation: -7,
-        duration: 0.8,
-        ease: "power2.out",
-      },
-      1.14,
-    );
-    tl.fromTo("#k-e8", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 1.14);
-    tl.to("#k-e8", { opacity: 0, duration: 0.25 }, 1.69);
-    tl.fromTo(
-      "#k-e9",
-      { x: 28, y: 45, scale: 0.3, rotation: 0 },
-      {
-        x: 47,
-        y: 75,
-        scale: 1,
-        rotation: -26,
-        duration: 0.8,
-        ease: "power2.out",
-      },
-      1.22,
-    );
-    tl.fromTo("#k-e9", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 1.22);
-    tl.to("#k-e9", { opacity: 0, duration: 0.25 }, 1.77);
-    tl.fromTo(
-      "#k-e10",
-      { x: -113, y: -20, scale: 0.3, rotation: 0 },
-      {
-        x: -175,
-        y: -31,
-        scale: 1,
-        rotation: 35,
-        duration: 0.8,
-        ease: "power2.out",
-      },
-      1.3,
-    );
-    tl.fromTo("#k-e10", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 1.3);
-    tl.to("#k-e10", { opacity: 0, duration: 0.25 }, 1.85);
-    tl.fromTo(
-      "#k-e11",
-      { x: 113, y: -20, scale: 0.3, rotation: 0 },
-      {
-        x: 162,
-        y: -29,
-        scale: 1,
-        rotation: 16,
-        duration: 0.8,
-        ease: "power2.out",
-      },
-      1.38,
-    );
-    tl.fromTo("#k-e11", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 1.38);
-    tl.to("#k-e11", { opacity: 0, duration: 0.25 }, 1.93);
-    tl.fromTo(
-      "#k-e12",
-      { x: -28, y: 45, scale: 0.3, rotation: 0 },
-      {
-        x: -37,
-        y: 59,
-        scale: 1,
-        rotation: -3,
-        duration: 0.8,
-        ease: "power2.out",
-      },
-      1.46,
-    );
-    tl.fromTo("#k-e12", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 1.46);
-    tl.to("#k-e12", { opacity: 0, duration: 0.25 }, 2.01);
-    tl.fromTo(
-      "#k-e13",
-      { x: -78, y: -36, scale: 0.3, rotation: 0 },
-      {
-        x: -132,
-        y: -40,
-        scale: 1,
-        rotation: -22,
-        duration: 0.8,
-        ease: "power2.out",
-      },
-      1.54,
-    );
-    tl.fromTo("#k-e13", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 1.54);
-    tl.to("#k-e13", { opacity: 0, duration: 0.25 }, 2.09);
+    tl.fromTo("#k-e7", { opacity: 0 }, { opacity: 0.55, duration: 0.15 }, 1.62);
+    tl.to("#k-e7", { opacity: 0, duration: 0.25 }, 2.17);
     tl.to("#k-say", { opacity: 0, duration: 0.14 }, 2.34);
     tl.set({}, {}, 2.5);
     window.__timelines = window.__timelines || {};
