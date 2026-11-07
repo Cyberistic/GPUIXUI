@@ -204,13 +204,21 @@ describe("DiffViewer in split mode", () => {
     const root = createTestRoot({ width: 800, height: 400 });
     root.render(
       <ThemeProvider theme={darkTheme}>
-        <DiffViewer testId="wrap" mode="split" wrapColumns={10} before={"short"} after={"a line well past ten columns"} />
+        <DiffViewer
+          testId="wrap"
+          mode="split"
+          wrapColumns={10}
+          before={"short"}
+          after={"a line well past ten columns"}
+        />
       </ThemeProvider>,
     );
     root.renderer.flush();
     const height = (side: string) => {
       const element = root.renderer.findByTestId(`wrap-row-0-${side}`);
-      return element === null || element === undefined ? -1 : (root.renderer.getElementBounds(element.id)?.height ?? -1);
+      return element === null || element === undefined
+        ? -1
+        : (root.renderer.getElementBounds(element.id)?.height ?? -1);
     };
     const line = textStyle(darkTheme, "codeBlock").lineHeight;
     expect(height("before")).toBe(line * 3);
@@ -237,7 +245,9 @@ const renderDiffForNote = () => {
         mode="split"
         before={"one\ntwo\nthree"}
         after={"one\nTWO\nthree"}
-        annotations={[{ line: 2, height: 40, content: <text>looks right</text> }]}
+        annotations={[
+          { line: 2, height: 40, content: <text>looks right</text> },
+        ]}
       />
     </ThemeProvider>,
   );
@@ -245,7 +255,10 @@ const renderDiffForNote = () => {
   return {
     bounds: (testId: string) => {
       const element = root.renderer.findByTestId(testId);
-      const box = element === null || element === undefined ? null : root.renderer.getElementBounds(element.id);
+      const box =
+        element === null || element === undefined
+          ? null
+          : root.renderer.getElementBounds(element.id);
       if (box === null) throw new Error(`no element ${testId}`);
       return box;
     },

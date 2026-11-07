@@ -361,7 +361,8 @@ export interface WordMarks {
 
 const TOKEN = /\s+|[\p{L}\p{N}_]+|[^\s\p{L}\p{N}_]/gu;
 
-const tokensOf = (line: string): ReadonlyArray<string> => line.match(TOKEN) ?? [];
+const tokensOf = (line: string): ReadonlyArray<string> =>
+  line.match(TOKEN) ?? [];
 
 const mergedRanges = (
   tokens: ReadonlyArray<string>,
@@ -385,7 +386,7 @@ export const wordMarks = (before: string, after: string): WordMarks => {
   const a = tokensOf(before);
   const b = tokensOf(after);
   const table = Array.from({ length: a.length + 1 }, () =>
-    new Array<number>(b.length + 1).fill(0),
+    Array.from({ length: b.length + 1 }, () => 0),
   );
   for (let i = a.length - 1; i >= 0; i--) {
     for (let j = b.length - 1; j >= 0; j--) {

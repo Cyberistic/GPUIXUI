@@ -32,6 +32,8 @@ describe("mixThemes", () => {
   });
 
   it("keeps structure the mix does not own", () => {
-    expect(mixThemes(darkTheme, lightTheme, 0.5).spacing).toBe(lightTheme.spacing);
+    expect(mixThemes(darkTheme, lightTheme, 0.5).spacing).toBe(
+      lightTheme.spacing,
+    );
   });
 });

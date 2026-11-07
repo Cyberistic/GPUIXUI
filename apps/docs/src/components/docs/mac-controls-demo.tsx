@@ -144,12 +144,23 @@ import { Switch } from "@gpuixui/primitives";
   <InsetGroupRow label="Sounds" control={<Switch label="Sounds" defaultChecked />} />
 </InsetGroup>`;
 
-const SWATCH_COLORS = ["#3B82F6", "#8B5CF6", "#EC4899", "#F59E0B", "#22C55E", "#6B7280"];
+const SWATCH_COLORS = [
+  "#3B82F6",
+  "#8B5CF6",
+  "#EC4899",
+  "#F59E0B",
+  "#22C55E",
+  "#6B7280",
+];
 
 export const ColorSwatchesDemo = () => {
   const [chosen, setChosen] = useState(SWATCH_COLORS[0]);
   return (
-    <div role="radiogroup" aria-label="Accent colour" className="flex items-center gap-1.5">
+    <div
+      role="radiogroup"
+      aria-label="Accent colour"
+      className="flex items-center gap-1.5"
+    >
       {SWATCH_COLORS.map((color) => (
         <button
           key={color}
@@ -161,7 +172,10 @@ export const ColorSwatchesDemo = () => {
           className="flex size-6 items-center justify-center rounded-full"
           style={{ border: color === chosen ? `2px solid ${color}` : "none" }}
         >
-          <span className="size-4 rounded-full" style={{ backgroundColor: color }} />
+          <span
+            className="size-4 rounded-full"
+            style={{ backgroundColor: color }}
+          />
         </button>
       ))}
     </div>

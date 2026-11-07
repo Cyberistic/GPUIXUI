@@ -1,5 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-import { mixColor } from "@gpuixui/tokens";
 import {
   useGpuix,
   type KeyEvent,
@@ -131,7 +130,7 @@ export const SegmentedControl = ({
                 ? {
                     backgroundColor:
                       theme.mode === "dark"
-                        ? mixColor(theme.colors.muted, "#ffffff", 0.14)
+                        ? theme.colors.selected
                         : theme.colors.background,
                     boxShadow: elevationShadow(theme, "sm"),
                   }

@@ -620,3 +620,39 @@ describe("Tabs", () => {
     tabs.unmount();
   });
 });
+
+describe("TabsList variant", () => {
+  const tree = (variant: "pill" | "line") => (
+    <Tabs defaultValue="one">
+      <TabsList variant={variant} testId="list">
+        <TabsTrigger testId="one" value="one">
+          One
+        </TabsTrigger>
+        <TabsTrigger testId="two" value="two">
+          Two
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
+  );
+
+  it("draws the line variant's indicator as a thin bar under the chosen tab", () => {
+    const root = renderComponent(tree("line"));
+    settleMotion(root);
+    const bar = requireBounds(root, "tabs-indicator");
+    const tab = requireBounds(root, "one");
+    expect(bar.height).toBe(2);
+    expect(bar.y + bar.height).toBeCloseTo(tab.y + tab.height, 0);
+    expect(bar.width).toBeCloseTo(tab.width, 0);
+    root.unmount();
+  });
+
+  it("keeps the pill variant's indicator the height of the tab", () => {
+    const root = renderComponent(tree("pill"));
+    settleMotion(root);
+    expect(requireBounds(root, "tabs-indicator").height).toBeCloseTo(
+      requireBounds(root, "one").height,
+      0,
+    );
+    root.unmount();
+  });
+});

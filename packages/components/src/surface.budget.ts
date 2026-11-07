@@ -1,5 +1,5 @@
 export const surfaceBudget = {
-  modules: 179,
+  modules: 180,
 
   bytes: 1390 * 1024,
 

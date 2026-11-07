@@ -57,7 +57,9 @@ export const InsetGroup = ({
           borderWidth: theme.borderWidth.thin,
           borderColor: theme.colors.border,
           backgroundColor: theme.colors.card,
-          ...(elevated ? { boxShadow: [...theme.elevation.md] } : { overflow: "hidden" }),
+          ...(elevated
+            ? { boxShadow: [...theme.elevation.md] }
+            : { overflow: "hidden" }),
         }}
       >
         {Arr.map(rows, (row, index) => (

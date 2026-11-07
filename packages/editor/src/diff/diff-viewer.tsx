@@ -171,7 +171,10 @@ const codeCell = (
   ink: DiffInk = "tone",
 ): StyleDesc => ({
   ...metrics,
-  color: ink === "code" && kind !== "hunk" ? theme.colors.foreground : rowInk(theme, kind),
+  color:
+    ink === "code" && kind !== "hunk"
+      ? theme.colors.foreground
+      : rowInk(theme, kind),
   whiteSpace: "nowrap",
   paddingRight: theme.spacing.sm,
 });
@@ -338,12 +341,18 @@ const SplitColumn = ({
         onSome: (value) => value.kind,
       });
       const lengths = [pair.left, pair.right].map((cell) =>
-        Option.match(cell, { onNone: () => 0, onSome: (value) => value.text.length }),
+        Option.match(cell, {
+          onNone: () => 0,
+          onSome: (value) => value.text.length,
+        }),
       );
       const rowLines =
         wrapColumns === undefined
           ? 1
-          : Math.max(1, ...lengths.map((length) => Math.ceil(length / wrapColumns)));
+          : Math.max(
+              1,
+              ...lengths.map((length) => Math.ceil(length / wrapColumns)),
+            );
       const afterLine = Option.flatMap(pair.right, (value) => value.after);
       const note = Option.match(afterLine, {
         onNone: () => undefined,
@@ -351,62 +360,77 @@ const SplitColumn = ({
       });
       return (
         <Fragment key={index}>
-        <div
-          testId={`${testId}-row-${index}-${side}`}
-          style={{
-            ...lineRow(theme, metrics, kindHere),
-            height: metrics.lineHeight * rowLines,
-            ...(ink === "code" ? rowBar(theme, kindHere) : {}),
-            ...(ink === "code" && kindHere !== "context" && Option.isSome(row)
-              ? { backgroundColor: alpha(rowInk(theme, kindHere), 0.13) }
-              : {}),
-          }}
-        >
-          {Option.match(row, {
-            onNone: () => null,
-            onSome: (value) => (
-              <>
-                {lineNumbers ? (
+          <div
+            testId={`${testId}-row-${index}-${side}`}
+            style={{
+              ...lineRow(theme, metrics, kindHere),
+              height: metrics.lineHeight * rowLines,
+              ...(ink === "code" ? rowBar(theme, kindHere) : {}),
+              ...(ink === "code" && kindHere !== "context" && Option.isSome(row)
+                ? { backgroundColor: alpha(rowInk(theme, kindHere), 0.13) }
+                : {}),
+            }}
+          >
+            {Option.match(row, {
+              onNone: () => null,
+              onSome: (value) => (
+                <>
+                  {lineNumbers ? (
+                    <text
+                      role="presentation"
+                      style={gutterCell(
+                        theme,
+                        metrics,
+                        value.kind,
+                        numberWidth,
+                      )}
+                    >
+                      {rowNumber(
+                        Option.map(
+                          side === "before" ? value.before : value.after,
+                          (line) => line + shift,
+                        ),
+                      )}
+                    </text>
+                  ) : null}
                   <text
                     role="presentation"
-                    style={gutterCell(theme, metrics, value.kind, numberWidth)}
+                    highlight={
+                      marks === undefined || marks.length === 0
+                        ? undefined
+                        : {
+                            ranges: marks.map(
+                              ([from, to]) => [from, to] as [number, number],
+                            ),
+                            color: markColor(theme, value.kind),
+                          }
+                    }
+                    style={{
+                      ...codeCell(theme, metrics, value.kind, ink),
+                      ...(wrapColumns === undefined
+                        ? {}
+                        : {
+                            whiteSpace: "normal",
+                            flexGrow: 1,
+                            flexBasis: 0,
+                            minWidth: 0,
+                          }),
+                    }}
                   >
-                    {rowNumber(
-                      Option.map(
-                        side === "before" ? value.before : value.after,
-                        (line) => line + shift,
-                      ),
-                    )}
+                    {value.text}
                   </text>
-                ) : null}
-                <text
-                  role="presentation"
-                  highlight={
-                    marks === undefined || marks.length === 0
-                      ? undefined
-                      : { ranges: [...marks.map(([from, to]) => [from, to] as [number, number])], color: markColor(theme, value.kind) }
-                  }
-                  style={{
-                    ...codeCell(theme, metrics, value.kind, ink),
-                    ...(wrapColumns === undefined
-                      ? {}
-                      : { whiteSpace: "normal", flexGrow: 1, flexBasis: 0, minWidth: 0 }),
-                  }}
-                >
-                  {value.text}
-                </text>
-              </>
-            ),
-          })}
-        </div>
-        {note === undefined ? null : (
-          <div
-            testId={`${testId}-note-${note.line}-${side}`}
-            style={{ height: note.height, flexShrink: 0 }}
-          >
-            {side === "after" ? note.content : null}
+                </>
+              ),
+            })}
           </div>
-        )}
+          {note === undefined ? null : (
+            <div
+              testId={`${testId}-note-${note.line}-${side}`}
+              style={{ height: note.height, flexShrink: 0 }}
+            >
+              {side === "after" ? note.content : null}
+            </div>
+          )}
         </Fragment>
       );
     })}
