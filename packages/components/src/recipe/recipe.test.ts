@@ -324,8 +324,10 @@ describe("Card recipe", () => {
       display: "flex",
       flexDirection: "column",
       gap: 12,
+      // Bug guarded: a card with no footer ended flush on its last row.
       paddingLeft: 16,
       paddingRight: 16,
+      paddingBottom: 16,
     });
     expect(style(CARD_FOOTER)).toEqual({
       display: "flex",
