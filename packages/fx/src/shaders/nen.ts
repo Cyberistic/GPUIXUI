@@ -7,17 +7,28 @@ const WATER = `
 fn ring(p: vec2f, drop: vec4f) -> vec3f {
   let d = p - drop.yz; let r = max(length(d), 1.0); let age = drop.x;
   if (age <= 0.0) { return vec3f(0.0); }
-  let front = 80.0 + age * 620.0;
-  let env = (1.0 - smoothstep(front - 150.0, front, r)) * exp(-age * 1.2) * smoothstep(front - 420.0, front - 300.0, r + 300.0);
+  let front = 40.0 + age * 560.0;
+  let env = (1.0 - smoothstep(front - 170.0, front, r)) * exp(-age * 1.05);
   let w = sin((r - front) * 0.085) * env;
   return vec3f(d / r * w, w);
 }
 fn shade(p: vec2f) -> vec4f {
-  let w = ring(p, frame.params[0]) + ring(p, frame.params[1]) + ring(p, frame.params[2]);
-  let off = w.xy * 30.0;
-  let c = vec3f(backdrop_at(p + off * 1.06).r, backdrop_at(p + off).g, backdrop_at(p + off * 0.94).b);
-  let spec = pow(max(w.z, 0.0), 3.0) * 0.9;
-  return vec4f(c * mix(vec3f(1.0), vec3f(0.74, 0.92, 1.12), min(1.0, abs(w.z) * 2.0)) + spec * vec3f(0.7, 0.92, 1.0), 1.0);
+  var w = vec3f(0.0);
+  for (var k = 0u; k < 8u; k++) { w += ring(p, frame.params[k]); }
+  let t = frame.time; let level = frame.params[8].x; let swell = frame.params[8].y;
+  let surface = level + swell * (sin(p.x * 0.018 + t * 3.1) + 0.55 * sin(p.x * 0.041 - t * 4.3) + 0.3 * sin(p.x * 0.09 + t * 6.1));
+  let depth = p.y - surface; let inside = smoothstep(-1.5, 1.5, depth);
+  let sway = vec2f(sin(p.y * 0.035 + t * 3.7) * 12.0 + sin(p.y * 0.09 - t * 5.0) * 4.0, sin(p.x * 0.03 + t * 2.9) * 7.0) * inside;
+  let off = w.xy * 34.0 + sway;
+  var c = vec3f(backdrop_at(p + off * 1.06).r, backdrop_at(p + off).g, backdrop_at(p + off * 0.94).b);
+  c *= mix(vec3f(1.0), vec3f(0.74, 0.92, 1.12), min(1.0, abs(w.z) * 2.0));
+  c += pow(max(w.z, 0.0), 3.0) * 0.9 * vec3f(0.7, 0.92, 1.0);
+  let q = p + vec2f(sin(p.y * 0.021 + t * 1.3) * 34.0 + sin(p.y * 0.053 - t) * 12.0, sin(p.x * 0.017 - t * 1.1) * 34.0 + sin(p.x * 0.047 + t * 1.7) * 12.0);
+  let caustic = pow(0.5 + 0.1667 * (sin((q.x + q.y) * 0.05 + t * 3.0) + sin((q.x - q.y) * 0.061 - t * 2.3) + sin(q.y * 0.083 + t * 1.9)), 6.0) * 1.6;
+  let body = mix(vec3f(0.34, 0.62, 0.92), vec3f(0.1, 0.26, 0.56), clamp(depth / 340.0, 0.0, 1.0));
+  c = mix(c, c * 0.62 + body * 0.42, inside) + caustic * 0.5 * inside * vec3f(0.55, 0.85, 1.0);
+  c += exp(-pow(depth / 3.0, 2.0)) * 0.75 * vec3f(0.82, 0.95, 1.0) + exp(-max(depth, 0.0) / 26.0) * inside * 0.14 * vec3f(0.6, 0.85, 1.0);
+  return vec4f(c, 1.0);
 }`;
 const GUM = `
 fn shade(p: vec2f) -> vec4f {
@@ -102,17 +113,26 @@ export interface Drop {
   readonly x: number;
   readonly y: number;
 }
+const MAX_DROPS = 8;
 export const waterRipple = (o: {
   box: Rect;
   time: number;
-  drops: readonly [Drop, Drop, Drop];
-}): Fx =>
-  layer(
-    WATER,
-    o.box,
-    o.time,
-    o.drops.flatMap((d) => [d.age, d.x - o.box.x, d.y - o.box.y, 0]),
+  drops: ReadonlyArray<Drop>;
+  level?: number;
+  swell?: number;
+}): Fx => {
+  const drops = Array.from(
+    { length: MAX_DROPS },
+    (_, k) => o.drops[k] ?? { age: -1, x: 0, y: 0 },
   );
+  return layer(WATER, o.box, o.time, [
+    ...drops.flatMap((d) => [d.age, d.x - o.box.x, d.y - o.box.y, 0]),
+    (o.level ?? o.box.y + o.box.h + 120) - o.box.y,
+    o.swell ?? 0,
+    0,
+    0,
+  ]);
+};
 export const bungeeGum = (o: {
   box: Rect;
   time: number;

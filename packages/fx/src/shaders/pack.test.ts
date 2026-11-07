@@ -37,12 +37,12 @@ describe("shader effects", () => {
     const fx = waterRipple({
       box,
       time: 0,
-      drops: [
-        { age: 1, x: 140, y: 120 },
-        { age: 0, x: 0, y: 0 },
-        { age: 0, x: 0, y: 0 },
-      ],
+      drops: [{ age: 1, x: 140, y: 120 }],
+      level: 220,
+      swell: 9,
     });
+    expect(fx.params.slice(32, 34)).toEqual([200, 9]);
+    expect(fx.params[4]).toBe(-1);
     expect(fx.readsBackdrop).toBe(true);
     expect(fx.params.slice(0, 3)).toEqual([1, 100, 100]);
     expect(

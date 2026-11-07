@@ -36,7 +36,10 @@ const TYPES = ["Enhancer", "Transmuter", "Emitter"].map((name) => ({
 }));
 const MAIN = { x: 332, y: 28, w: 296, h: 484 };
 
-export const LicensePanel = (): ReactNode => (
+const EIGHTH = 1 / 3;
+const wave = (t: number, rate: number, phase: number) =>
+  50 + 42 * Math.sin(t * rate + phase);
+export const LicensePanel = ({ t = 0 }: { readonly t?: number }): ReactNode => (
   <div style={{ ...at(0, 0, W, H), backgroundColor: "#0b0b0d" }}>
     <Card
       style={{
@@ -62,9 +65,9 @@ export const LicensePanel = (): ReactNode => (
         </Badge>
       </div>
       {[
-        ["Aura", 82],
-        ["Control", 46],
-        ["Luck", 94],
+        ["Aura", t === 0 ? 82 : wave(t, 3.1, 0)],
+        ["Control", t === 0 ? 46 : wave(t, 4.3, 1.4)],
+        ["Luck", t === 0 ? 94 : wave(t, 2.3, 2.6)],
       ].map(([name, value]) => (
         <div key={name} style={col(6)}>
           <T s={String(name)} size={12.5} color={MUTED} />
@@ -91,19 +94,31 @@ export const LicensePanel = (): ReactNode => (
       />
       <SegmentedControl
         label="Nen type"
-        value="Enhancer"
+        value={TYPES[Math.trunc(t / EIGHTH / 2) % TYPES.length]!.value}
         onValueChange={noop}
         items={TYPES}
       />
       <InsetGroup title="Nen" titleTone="muted">
-        <InsetGroupRow label="Ten" control={<Switch checked label="Ten" />} />
+        <InsetGroupRow
+          label="Ten"
+          control={
+            <Switch checked={Math.trunc(t / EIGHTH) % 3 !== 1} label="Ten" />
+          }
+        />
         <InsetGroupRow
           label="Zetsu"
-          control={<Switch checked={false} label="Zetsu" />}
+          control={
+            <Switch checked={Math.trunc(t / EIGHTH) % 4 === 2} label="Zetsu" />
+          }
         />
-        <InsetGroupRow label="Ren" control={<Switch checked label="Ren" />} />
+        <InsetGroupRow
+          label="Ren"
+          control={
+            <Switch checked={Math.trunc(t / EIGHTH) % 2 === 0} label="Ren" />
+          }
+        />
       </InsetGroup>
-      <Slider label="Aura output" value={64} />
+      <Slider label="Aura output" value={t === 0 ? 64 : wave(t, 2.7, 0.7)} />
       <div style={{ flexGrow: 1 }} />
       <Button variant="primary" style={{ width: "100%", height: 42 }}>
         Enter Greed Island
@@ -119,9 +134,17 @@ export const LicensePanel = (): ReactNode => (
     >
       <T s="Bounties" size={17} weight={600} />
       {[
-        ["Phantom Troupe", "Open", "danger"],
+        [
+          "Phantom Troupe",
+          t > 0.7 ? "Cleared" : "Open",
+          t > 0.7 ? "success" : "danger",
+        ],
         ["Greed Island", "Cleared", "success"],
-        ["Chimera Ants", "Open", "danger"],
+        [
+          "Chimera Ants",
+          t > 1.7 ? "Cleared" : "Open",
+          t > 1.7 ? "success" : "danger",
+        ],
         ["Heavens Arena", "Floor 200", "neutral"],
         ["Yorknew Auction", "Sold out", "neutral"],
       ].map(([name, state, variant]) => (
@@ -151,12 +174,26 @@ export const LicensePanel = (): ReactNode => (
 const box = { x: 0, y: 0, w: W, h: H };
 const BEAT = 2 / 3;
 const CUTS = [
-  ["Water Divination", 2],
-  ["Bungee Gum", 1],
+  ["Water Divination", 4],
+  ["Bungee Gum", 2],
   ["En", 1],
-  ["Godspeed", 1],
+  ["Godspeed", 2],
   ["Nanika", 1],
   ["Zetsu", 2],
+] as const;
+const DROPS = [
+  [480, 300],
+  [168, 150],
+  [790, 400],
+  [480, 110],
+  [150, 420],
+  [800, 130],
+  [320, 300],
+  [640, 300],
+] as const;
+const GUM_FROM = [
+  [480, 468],
+  [120, 470],
 ] as const;
 const cutAt = (t: number) => {
   let start = 0;
@@ -167,27 +204,31 @@ const cutAt = (t: number) => {
   }
   return { name: "Zetsu" as const, age: 0 };
 };
-const BTN = [480, 468] as const;
 export const Flex = ({ t }: { t: number }): ReactNode => {
   const { name, age } = cutAt(t);
   const rect = { x: MAIN.x, y: MAIN.y, w: MAIN.w, h: MAIN.h };
-  const gum = track(age, 0, [
+  const beat = age % BEAT;
+  const from = GUM_FROM[Math.min(1, Math.trunc(age / BEAT))]!;
+  const gum = track(beat, 0, [
     [0.03, 1, sp(0.32, 0)],
     [0.44, 0, sp(0.22, 0.55)],
   ]);
+  const level = H + 30 - (H - 90) * ease(age, 0, 2.4);
   return (
     <Root fill="#0b0b0d">
-      <LicensePanel />
+      <LicensePanel t={t + 1e-3} />
       {name === "Water Divination" ? (
         <ShaderLayer
           fx={waterRipple({
             box,
             time: t,
-            drops: [
-              { age: age - 0.02, x: 480, y: 270 },
-              { age: age - 0.42, x: 170, y: 150 },
-              { age: age - 0.8, x: 790, y: 380 },
-            ],
+            drops: DROPS.map(([x, y], i) => ({
+              age: age - 0.02 - i * EIGHTH,
+              x,
+              y,
+            })),
+            level,
+            swell: 9 + 12 * ease(age, 0, 1.6),
           })}
         />
       ) : null}
@@ -196,8 +237,8 @@ export const Flex = ({ t }: { t: number }): ReactNode => {
           fx={bungeeGum({
             box,
             time: t,
-            from: BTN,
-            pull: [-300 * gum, -320 * gum],
+            from,
+            pull: [(from[0] > 300 ? -300 : 420) * gum, -320 * gum],
           })}
         />
       ) : null}
@@ -213,7 +254,11 @@ export const Flex = ({ t }: { t: number }): ReactNode => {
       ) : null}
       {name === "Godspeed" ? (
         <ShaderLayer
-          fx={godspeed({ box, time: t, amount: Math.max(0.15, 1 - age * 0.9) })}
+          fx={godspeed({
+            box,
+            time: t,
+            amount: Math.max(0.15, 1 - beat * 0.9),
+          })}
         />
       ) : null}
       {name === "Nanika" ? (
@@ -237,13 +282,21 @@ export const Flex = ({ t }: { t: number }): ReactNode => {
         />
       ) : null}
       {name === "Godspeed" ? <ElectricAt rect={rect} t={t} /> : null}
-      {name === "Bungee Gum" ? (
+      {name === "Water Divination" ? (
         <PointerAt
           t={age}
-          start={[BTN[0], BTN[1]]}
+          start={[620, 500]}
+          path={DROPS.map(([x, y], i) => [i * EIGHTH - 0.2, x, y] as const)}
+          taps={DROPS.map((_, i) => i * EIGHTH)}
+        />
+      ) : null}
+      {name === "Bungee Gum" ? (
+        <PointerAt
+          t={beat}
+          start={[from[0], from[1]]}
           path={[
-            [0.03, BTN[0] - 300, BTN[1] - 320],
-            [0.44, BTN[0] - 210, BTN[1] - 240],
+            [0.03, from[0] + (from[0] > 300 ? -300 : 420), from[1] - 320],
+            [0.44, from[0], from[1] - 240],
           ]}
           taps={[0]}
         />

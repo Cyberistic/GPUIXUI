@@ -55,6 +55,17 @@ test("a drop that has not fallen leaves the backdrop alone", () => {
   expect(pixel.g).toBeLessThan(15);
 });
 
+test("water tints what it covers and leaves the air above alone", () => {
+  const under = centre(
+    <ShaderLayer fx={waterRipple({ box, time: 0, drops: [], level: 5 })} />,
+  );
+  const over = centre(
+    <ShaderLayer fx={waterRipple({ box, time: 0, drops: [], level: 35 })} />,
+  );
+  expect(under.b).toBeGreaterThan(over.b + 30);
+  expect(over.r).toBeGreaterThan(240);
+});
+
 test("a finished dissolve replaces the backdrop with black", () => {
   const pixel = centre(
     <ShaderLayer fx={zetsu({ box, time: 0, center: [20, 20], wipe: 2 })} />,
