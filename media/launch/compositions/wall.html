@@ -61,10 +61,10 @@
     }
     #root .sky {
       position: absolute;
-      left: -3000px;
-      top: -2000px;
-      width: 6000px;
-      height: 4000px;
+      left: -6000px;
+      top: -6000px;
+      width: 12000px;
+      height: 12000px;
       background: #09090b;
       clip-path: inset(0 100% 0 0);
     }
@@ -86,18 +86,6 @@
     }
     #root .tile img.d {
       clip-path: inset(0 100% 0 0);
-    }
-    #root .band {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      height: 190px;
-      background: linear-gradient(#f4f2ee 62%, rgba(244, 242, 238, 0));
-    }
-    #root .band.k {
-      background: linear-gradient(#09090b 62%, rgba(9, 9, 11, 0));
-      opacity: 0;
     }
     #root .say {
       position: absolute;
@@ -1197,8 +1185,6 @@
         </div>
       </div>
     </div>
-    <div class="band"></div>
-    <div id="w-band" class="band k"></div>
     <div id="w-say" class="say">
       <span class="hl"><i></i>zero web views</span>
     </div>
@@ -1885,10 +1871,9 @@
     );
     tl.to(
       "#sky",
-      { clipPath: "inset(0 0% 0 0)", duration: 0.75, ease: "none" },
-      1.95,
+      { clipPath: "inset(0 0% 0 0)", duration: 2.133, ease: "none" },
+      1.259,
     );
-    tl.fromTo("#w-band", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 2.21);
     tl.fromTo(
       "#w-say .hl i",
       { scaleX: 0 },

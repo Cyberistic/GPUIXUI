@@ -10,14 +10,14 @@ was rejected (`agent/launch-film-v4`).
 | Time | Line | Scene | Source |
 | --- | --- | --- | --- |
 | 0–4 s | — | Switch, Tabs, Slider, Checkbox, the camera pushing up to 1:1 and never past it | `cu-*` |
-| 4–6.5 s | nobody wants to write this. | one card in GPUI's Rust and in `createElement`, scrolling | film |
+| 4–6.5 s | nobody wants to “write” this. | one card in GPUI's Rust and in `createElement`, scrolling | film |
 | 6.5–10.5 s | it's just shadcn · paste any tweakcn theme. done. | the code slides in beside the card it builds; four real tweakcn themes, read by `shadcnTheme` | `shadcn-v8` |
 | 10.5–13 s | the npm packages you already use | the code slides off; package tabs | film |
 | 13–16.5 s | zero web views | 60 real tiles drop onto a tilted plane; a swipe crosses it to dark | `tile-*`, `dark-tile-*` |
 | 16.5–20.5 s | — | ⌘K, "vault" typed: Launcher → Vault → Dashboard | `launcher-v8`, `vault-v8`, `dashboard-v8` |
 | 20.5–23 s | — | all 17 chart types in three sliding rows, drawing as they arrive | `dark-chart-*` |
 | 23–26 s | Mac, Windows, Linux | one Settings window; each Look press wipes the desktop from the pointer and marks its word | `settings-v8` |
-| 26–30 s | Follows your theme in omarchy | a train of 240 px type pans in, its letters windows onto the desktop, and dives through the h; palettes arrive as carriages | `omarchy-*` |
+| 26–30 s | Follows your theme in omarchy | a train brakes with the whole sentence on screen and holds, then pulls out with the themes coupled behind it, stopping on each | `omarchy-*` |
 | 30–34 s | Run in the terminal, in tmux, over ssh, with animations. | ssh, `huntercli --terminal`, the clauses roll in and out, the app paints row by row: sidebar collapses, dark to light, Deploy raises a toast | `console-v8` |
 | 34–36 s | — | GPUI · React · shadcn · Tailwind | film |
 | 36–40 s | — | the mark, wordmark, URL, maker's line | film |

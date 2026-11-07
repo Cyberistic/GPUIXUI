@@ -224,6 +224,7 @@ const montage: Scene = {
 
 /* ------------------------------------------------------------ headlines */
 
+const jitter = (i: number): number => ((i * 2654435761) % 1000) / 1000;
 /** A word under a marker; `marked` draws every one in a line, left to right. */
 const hl = (word: string) => `<span class="hl"><i></i>${word}</span>`;
 const marked = (line: string, at: number) =>
@@ -335,6 +336,19 @@ const uglify = (code: string) =>
     .replace(/</g, "&lt;")
     .replace(/("[^"]*")/g, "<i>$1</i>")
     .replace(/(createElement|\.\w+(?=\())/g, "<b>$1</b>");
+/** Emoji bursting around the word: wide, because the word is, and never off the frame's top. */
+const LAUGHS = Array.from({ length: 14 }, (_, i) => {
+  const angle = (i * 2 * Math.PI * 5) / 14;
+  const reach = 1.25 + jitter(i) * 0.5;
+  return {
+    fromX: Math.round(Math.cos(angle) * 125),
+    fromY: Math.round(Math.sin(angle) * 46),
+    x: Math.round(Math.cos(angle) * 125 * reach),
+    y: Math.round(Math.max(Math.sin(angle) * 46 * reach, -40)),
+    spin: Math.round((jitter(i + 7) - 0.5) * 80),
+    at: +(0.5 + i * 0.08).toFixed(2),
+  };
+});
 const MOCK_SIDES = [
   { label: "GPUI, in Rust", code: RUST },
   { label: "React, no JSX", code: NO_JSX },
@@ -343,13 +357,15 @@ const mock: Scene = {
   id: "mock",
   start: MOCK_START,
   duration: MOCK_LENGTH,
-  css: `#root .say { position:absolute; left:0; right:0; top:44px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
+  css: `#root .say { position:absolute; z-index:2; left:0; right:0; top:44px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
+    #root .quoted { position:relative; display:inline-block; }
+    #root .laugh { position:absolute; left:50%; top:10px; margin-left:-24px; z-index:2; font-size:44px; line-height:48px; opacity:0; }
     #root .pane { position:absolute; top:150px; width:880px; height:960px; border-radius:20px; overflow:hidden; background:${CODE_BG}; padding:26px 36px; }
     #root .pane h2 { position:absolute; left:0; right:0; top:0; z-index:1; padding:26px 36px 18px; background:${CODE_BG}; font:500 26px Inter, sans-serif; color:#a1a1aa; }
     #root .pane em { font-style:normal; color:#71717a; margin-left:12px; }
     #root .pane pre { position:absolute; left:36px; top:86px; font:500 21px/${MOCK_LINE}px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
     #root .pane pre b { font-weight:500; color:#7aa2f7; } #root .pane pre i { font-style:normal; color:#9ece6a; }`,
-  body: `    <div id="k-say" class="say">nobody wants to ${hl("write this.")}</div>
+  body: `    <div id="k-say" class="say">nobody wants to <span class="quoted">“write”${LAUGHS.map((_, i) => `<span id="k-e${i}" class="laugh">😂</span>`).join("")}</span> this.</div>
     ${MOCK_SIDES.map(
       ({ label, code }, i) =>
         `<div id="k-p${i}" class="pane" style="left:${i === 0 ? 60 : 980}px"><h2>${label}<em>${code.split("\n").length} lines</em></h2><pre id="k-c${i}" data-layout-allow-overlap>${uglify(code)}</pre></div>`,
@@ -360,7 +376,12 @@ const mock: Scene = {
     tl.to("#k-c${i}",{y:${-(MOCK_SIDES[i]!.code.split("\n").length * MOCK_LINE - 840)},duration:${MOCK_LENGTH - 0.3},ease:"power1.in"},0.3);
     tl.to("#k-p${i}",{y:1000,duration:0.32,ease:"expo.in"},${(MOCK_LENGTH - 0.36 + i * 0.03).toFixed(2)});`,
   ).join("\n    ")}
-    ${marked("#k-say", 0.45)}
+    ${LAUGHS.map(
+      ({ fromX, fromY, x, y, spin, at }, i) =>
+        `tl.fromTo("#k-e${i}",{x:${fromX},y:${fromY},scale:0.3,rotation:0},{x:${x},y:${y},scale:1,rotation:${spin},duration:0.8,ease:"power2.out"},${at});
+    tl.fromTo("#k-e${i}",{opacity:0},{opacity:1,duration:0.1},${at});
+    tl.to("#k-e${i}",{opacity:0,duration:0.25},${(at + 0.55).toFixed(2)});`,
+    ).join("\n    ")}
     tl.to("#k-say",{opacity:0,duration:0.14},${(MOCK_LENGTH - 0.16).toFixed(2)});`,
 };
 
@@ -562,10 +583,12 @@ const cellX = (col: number) =>
 const cellY = (row: number) =>
   (row - (WALL_ROWS - 1) / 2) * (CELL.h + CELL.gap);
 const PLANE_WIDTH = WALL_COLS * (CELL.w + CELL.gap);
-const jitter = (i: number): number => ((i * 2654435761) % 1000) / 1000;
 const DROP = 0.42;
 /** The swipe to dark: a line crossing the plane left to right. */
 const SWIPE = { at: 1.95, length: 0.75 };
+/** The ground behind the plane, reaching past every corner of the frame. */
+const SKY_HALF = 6000;
+const SWIPE_SPEED = PLANE_WIDTH / SWIPE.length;
 const swipeAt = (x: number) =>
   SWIPE.at + ((x + PLANE_WIDTH / 2) / PLANE_WIDTH) * SWIPE.length;
 const tileMeta = WALL_TAKES.map((name, i) => {
@@ -589,12 +612,10 @@ const wall: Scene = {
   duration: WALL_LENGTH,
   css: `#root .stage { position:absolute; inset:0; perspective:2600px; perspective-origin:50% 42%; }
     #root .plane { position:absolute; left:960px; top:540px; width:0; height:0; transform-style:preserve-3d; }
-    #root .sky { position:absolute; left:-3000px; top:-2000px; width:6000px; height:4000px; background:${INK_DARK}; clip-path:inset(0 100% 0 0); }
+    #root .sky { position:absolute; left:-${SKY_HALF}px; top:-${SKY_HALF}px; width:${SKY_HALF * 2}px; height:${SKY_HALF * 2}px; background:${INK_DARK}; clip-path:inset(0 100% 0 0); }
     #root .tile { position:absolute; overflow:hidden; border-radius:16px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 18px 40px -22px rgba(29,29,31,.4); }
     #root .tile img { position:absolute; left:0; top:0; width:100%; height:100%; }
     #root .tile img.d { clip-path:inset(0 100% 0 0); }
-    #root .band { position:absolute; left:0; right:0; top:0; height:190px; background:linear-gradient(${GROUND} 62%, rgba(244,242,238,0)); }
-    #root .band.k { background:linear-gradient(${INK_DARK} 62%, rgba(9,9,11,0)); opacity:0; }
     #root .say { position:absolute; left:0; right:0; top:58px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }`,
   body: `    <div class="stage" data-layout-allow-overflow>
       <div id="plane" class="plane" data-layout-allow-overflow>
@@ -607,7 +628,6 @@ ${tileMeta
   .join("\n")}
       </div>
     </div>
-    <div class="band"></div><div id="w-band" class="band k"></div>
     <div id="w-say" class="say">${hl("zero web views")}</div>`,
   script: `tl.set("#plane",{scale:0.74,x:0,y:90,rotationX:50,rotationZ:-18},0);
     tl.to("#plane",{scale:0.62,x:-30,y:70,rotationX:46,rotationZ:-14,duration:${WALL_LENGTH},ease:"none"},0);
@@ -617,8 +637,7 @@ ${tileMeta
           `tl.fromTo("#${t.id}",{z:820,opacity:0},{z:0,opacity:1,duration:${DROP},ease:"power2.in"},${(t.land - DROP).toFixed(3)});tl.to("#${t.id}-d",{clipPath:"inset(0 0% 0 0)",duration:${((CELL.w / PLANE_WIDTH) * SWIPE.length).toFixed(3)},ease:"none"},${swipeAt(t.x - CELL.w / 2).toFixed(3)});`,
       )
       .join("\n    ")}
-    tl.to("#sky",{clipPath:"inset(0 0% 0 0)",duration:${SWIPE.length},ease:"none"},${SWIPE.at});
-    tl.fromTo("#w-band",{opacity:0},{opacity:1,duration:0.3},${(SWIPE.at + SWIPE.length * 0.35).toFixed(2)});
+    tl.to("#sky",{clipPath:"inset(0 0% 0 0)",duration:${((SKY_HALF * 2) / SWIPE_SPEED).toFixed(3)},ease:"none"},${swipeAt(-SKY_HALF).toFixed(3)});
     ${marked("#w-say", 0.35)}
     tl.to("#w-say",{color:"#ffffff",duration:0.2},${(SWIPE.at + SWIPE.length * 0.4).toFixed(2)});
     tl.to("#w-say .hl i",{backgroundColor:"#2F6FED",duration:0.2},${(SWIPE.at + SWIPE.length * 0.4).toFixed(2)});`,
@@ -649,7 +668,7 @@ const apps: Scene = {
   duration: APPS.length,
   css: `#root { background:${INK_DARK}; }
     #root .under { position:absolute; inset:0; }
-    #root .under img { position:absolute; inset:0; width:100%; height:100%; clip-path:inset(190px 0 0 0); }
+    #root .under img { position:absolute; inset:0; width:100%; height:100%; mask:linear-gradient(#0000 140px,#000 240px); }
     #root .scrim { position:absolute; inset:0; background:${INK_DARK}; opacity:0; }
     #root .win { position:absolute; left:${WIN.x}px; top:${WIN.y}px; width:${WIN.w}px; border-radius:18px; overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,.12), 0 50px 90px -40px #000; opacity:0; }
     #root .win video { position:relative; display:block; width:100%; height:auto; }
@@ -867,20 +886,14 @@ const desktops: Scene = {
 
 const OM_START = DESK_START + DESK_LENGTH;
 const OM_LENGTH = 4;
-/** The train: the plate's nose starts at the frame's right edge and brakes on "omarchy". */
-const TRAIN = {
-  reach: 3500,
-  length: 1.7,
-  ease: "power2.out",
-  gap: 0.2,
-  dive: 0.34,
-};
-const TRAIN_FROM = 1920 - 960 + TRAIN.reach;
+/** A strip of carriages: the sentence, then each theme, stopping on one at a time. */
 const NOSE = 140;
-const DIVE_AT = TRAIN.length + TRAIN.gap;
-/** The stem of the h in "omarchy", measured from a frame: the camera dives through it. */
-const STEM = { x: 1241, y: 520 };
-const OM_FLIP = (i: number) => DIVE_AT + TRAIN.dive + 0.08 + i * 0.4;
+const COUPLER = 28;
+const ARRIVE = 0.8;
+const DEPART = 1.62;
+const stopAt = (carriage: number) => -carriage * (1920 + COUPLER);
+const OM_FLIP = (i: number) => 2.16 + i * 0.42;
+const TRAIN_WORDS = ["Follows", "your", "theme", "in"] as const;
 const THEMES = ["rose-pine", "gruvbox", "catppuccin-latte", "tokyo"] as const;
 /** The terminal pane in the tiling take, in frame fractions (measured from the still). */
 const PANE = { x: 0.55, y: 0.075, w: 0.42, h: 0.46 };
@@ -889,34 +902,38 @@ const omarchy: Scene = {
   id: "omarchy",
   start: OM_START,
   duration: OM_LENGTH,
-  css: `#root .full { position:absolute; inset:0; width:100%; height:100%; }
+  css: `#root { background:${INK_DARK}; }
+    #root .full { position:absolute; inset:0; width:100%; height:100%; }
     #root #o-all { position:absolute; inset:0; transform-origin:0 0; }
-    #root .t { position:absolute; inset:0; }
-    #root .dive { position:absolute; inset:0; mix-blend-mode:multiply; transform-origin:${STEM.x}px ${STEM.y}px; }
-    #root .train { position:absolute; left:960px; top:0; width:0; height:1080px; }
-    #root .plate { position:absolute; left:-${TRAIN.reach}px; top:0; width:14000px; height:1080px; background:#000; border-radius:${NOSE}px 0 0 ${NOSE}px; }
-    #root .word { position:absolute; left:0; top:400px; transform:translateX(-50%); font:800 240px/280px Inter, sans-serif; letter-spacing:-0.04em; color:#fff; white-space:nowrap; }
-    #root .before { position:absolute; right:calc(100% + .26em); top:0; }
+    #root .strip { position:absolute; inset:0; }
+    #root .car { position:absolute; left:0; top:0; width:1920px; height:1080px; }
+    #root .plate { position:absolute; left:-${NOSE}px; top:0; width:${1920 + NOSE}px; height:1080px; background:${INK_DARK}; border-radius:${NOSE}px 0 0 ${NOSE}px; }
+    #root .line { position:absolute; left:0; right:0; top:470px; display:flex; justify-content:center; gap:.26em; font:500 116px/140px Inter, sans-serif; letter-spacing:-0.03em; color:#fff; white-space:nowrap; }
+    #root .line span.w { display:block; }
     #root .front { position:absolute; inset:0; }
     #root .fly { position:absolute; left:${SETTINGS_WIN.x}px; top:${SETTINGS_WIN.y}px; width:${SETTINGS_WIN.w}px; border-radius:19px; }
     ${OS_SAY_CSS}
     ${desktopCss}`,
-  body: `    <div id="o-all">
-${THEMES.map((t, i) => `      <div id="o-t${i}" class="t"><img class="full" src="${still(`omarchy-${t}`, 53)}" alt=""></div>`).join("\n")}
-    </div>
-    <div id="o-front" class="front">${gnomeDesk("o-gnome")}<img class="fly" src="${still("settings-v8", 89)}" alt=""><div class="say on-dark">${osLine("o-os")}</div></div>
-    <div id="o-dive" class="dive"><div id="o-train" class="train" data-layout-allow-overflow>
+  body: `    <div id="o-front" class="front">${gnomeDesk("o-gnome")}<img class="fly" src="${still("settings-v8", 89)}" alt=""><div class="say on-dark">${osLine("o-os")}</div></div>
+    <div id="o-all"><div id="o-strip" class="strip" data-layout-allow-overflow>
       <div class="plate"></div>
-      <div class="word"><div class="before">Follows your theme in</div>omarchy</div>
+      <div id="o-line" class="line on-dark">${[...TRAIN_WORDS, hl("omarchy")].map((word, i) => `<span id="o-w${i}" class="w">${word}</span>`).join("")}</div>
+${THEMES.map((t, i) => `      <div class="car" style="left:${-stopAt(i + 1)}px"><img class="full" src="${still(`omarchy-${t}`, 53)}" alt=""></div>`).join("\n")}
     </div></div>`,
-  script: `tl.fromTo("#o-train",{x:${TRAIN_FROM}},{x:0,duration:${TRAIN.length},ease:"${TRAIN.ease}"},0);
-    tl.fromTo("#o-front",{clipPath:"inset(0 -${NOSE}px 0 0)"},{clipPath:"inset(0 ${TRAIN_FROM - NOSE}px 0 0)",duration:${TRAIN.length},ease:"${TRAIN.ease}"},0);
-    tl.to("#o-dive",{scale:70,duration:${TRAIN.dive},ease:"expo.in"},${DIVE_AT});
-    tl.set("#o-dive",{opacity:0},${(DIVE_AT + TRAIN.dive).toFixed(3)});
+  script: `tl.fromTo("#o-strip",{x:${1920 + NOSE}},{x:0,duration:${ARRIVE},ease:"power3.out"},0);
+    ${[...TRAIN_WORDS, "omarchy"]
+      .map(
+        (_, i) =>
+          `tl.fromTo("#o-w${i}",{x:${i * 170}},{x:0,duration:${ARRIVE + 0.14},ease:"back.out(1.3)"},0);`,
+      )
+      .join("\n    ")}
+    ${marked("#o-line", ARRIVE - 0.1)}
+    tl.set("#o-front",{opacity:0},${ARRIVE});
+    tl.to("#o-strip",{x:${stopAt(1)},duration:0.42,ease:"power3.inOut"},${DEPART});
     ${THEMES.slice(1)
       .map(
         (_, i) =>
-          `tl.fromTo("#o-t${i + 1}",{x:1920},{x:0,duration:0.34,ease:"expo.inOut"},${OM_FLIP(i).toFixed(2)});`,
+          `tl.to("#o-strip",{x:${stopAt(i + 2)},duration:0.34,ease:"expo.inOut"},${OM_FLIP(i).toFixed(2)});`,
       )
       .join("\n    ")}
     tl.to("#o-all",{x:${(-PANE.x * 1920 * paneZoom).toFixed(1)},y:${(-PANE.y * 1080 * paneZoom + (1080 - PANE.h * 1080 * paneZoom) / 2).toFixed(1)},scale:${paneZoom.toFixed(3)},duration:0.42,ease:"expo.in"},${(OM_LENGTH - 0.42).toFixed(2)});`,
@@ -1114,10 +1131,10 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   ),
   [DESK_START + PRESS_WIN + F, "look-win"],
   [DESK_START + PRESS_LINUX + F, "look-linux"],
-  [OM_START + TRAIN.length - 0.25, "thud", 0.8],
-  [OM_START + DIVE_AT + TRAIN.dive - 0.06, "land", 0.9],
+  [OM_START + ARRIVE - 0.2, "thud", 0.8],
+  [OM_START + DEPART + 0.28, "land", 0.9],
   ...[0, 1, 2].map(
-    (i) => [OM_START + OM_FLIP(i) + 0.1, `glass-${i}`, 1] as const,
+    (i) => [OM_START + OM_FLIP(i) + 0.17, `glass-${i}`, 1] as const,
   ),
   ...typedCues(SSH, TERM_START + TYPE_AT, CHARS_PER_FRAME),
   [TERM_START + T_LOGIN - 0.03, "press", 0.6],

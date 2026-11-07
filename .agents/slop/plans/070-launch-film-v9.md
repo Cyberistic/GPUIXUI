@@ -30,10 +30,9 @@ Same 40 s, same scene order plus one new scene. Everything is edited in
 
 ## The train
 
-A black plate, 240 px white type, `mix-blend-mode: multiply`: the letters are windows
-onto the Omarchy desktop. Its rounded nose wipes the GNOME desktop off, on one tween
-shared with the desktop's clip. It brakes with "omarchy" centred, then the camera dives
-through a stem of the h and the desktop is full-bleed. Palettes follow as carriages.
+One strip of carriages: the sentence, then four themes. It arrives over the GNOME desktop and brakes with the whole sentence on screen, its words bunching up, holds 0.8 s, then pulls out and stops on each theme. A first version panned 240 px masked type and dived through a letter; the owner found it unreadable.
+
+The wall loses its header bands: their overlapping gradients left a grey smear over the dark plane.
 
 ## Commands
 
@@ -50,7 +49,7 @@ npx hyperframes render -o gpuixui-launch.mp4 --crf 14
 ## Acceptance
 
 - `hyperframes check`: 0 errors; 40.000 s.
-- Frames: no code panel blank during the npm slide; the h-stem dive fills the frame; the opening's largest scale is 1.
+- Frames: no code panel blank during the npm slide; the sentence legible at rest; the opening's largest scale is 1.
 - `nub run check`, `lint`, `test` on the branch.
 
 ## STOP conditions
