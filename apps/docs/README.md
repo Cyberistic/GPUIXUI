@@ -37,6 +37,8 @@ blocks/index.mdx             Page-level recipes composed from the library
 blocks/all.mdx               Every block in one column, generated from the pages' frontmatter
 blocks/dashboard.mdx         An activity dashboard composed from the library
 blocks/dashboard-01.mdx      The dashboard block with the captures and stats
+blocks/calendar.mdx          A month calendar block
+blocks/data-table.mdx        A sortable data table block
 blocks/sign-in.mdx           A full sign-in page: navbar, form card, illustrated quote panel
 blocks/dashboard-management.mdx A three-column management console: service health, deploys, toasts, keys
 blocks/settings.mdx          A settings page with tabbed sections
@@ -409,6 +411,9 @@ src/components/docs/page-transition-demo.tsx The page transition's view swap
 src/components/docs/particles-demo.tsx     The particles field's drifting motes
 src/components/docs/pinned-list-demo.tsx   The pinned list's sticky headers
 src/components/docs/reveal-demo.tsx        The reveal's fade-and-rise entrance
+src/components/docs/shader-layer-demo.tsx A capture of the backdrop effects over real components
+src/components/docs/calendar-block.tsx    The calendar block's recipe
+src/components/docs/data-table-block.tsx  The data table block's recipe
 src/components/docs/ripple-button-demo.tsx The ripple button's press wash
 src/components/docs/rolling-text-demo.tsx  The rolling text's vertical roll
 src/components/docs/rotating-text-demo.tsx The rotating text's phrase interval

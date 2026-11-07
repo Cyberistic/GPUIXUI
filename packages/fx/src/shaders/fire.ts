@@ -1,4 +1,4 @@
-import { FIRE_SIMULATION } from "./rune-firesim.js";
+import { FIRE_SIMULATION } from "./firesim.js";
 
 export { FIRE_SIMULATION };
 
@@ -7,11 +7,17 @@ const pcg = (v: number): number => {
   const w = Math.imul(((s >>> ((s >>> 28) + 4)) ^ s) | 0, 277803737);
   return ((w >>> 22) ^ w) >>> 0;
 };
-const hu = (a: number, b: number): number => pcg((a ^ pcg((b + 0x9e3779b9) >>> 0)) >>> 0);
+const hu = (a: number, b: number): number =>
+  pcg((a ^ pcg((b + 0x9e3779b9) >>> 0)) >>> 0);
 const u01 = (n: number): number => (pcg(n >>> 0) >>> 8) * (1 / 16777216);
 
 export interface FireInput {
-  readonly rect: { readonly x: number; readonly y: number; readonly w: number; readonly h: number };
+  readonly rect: {
+    readonly x: number;
+    readonly y: number;
+    readonly w: number;
+    readonly h: number;
+  };
   readonly radius: number;
   readonly time: number;
   readonly height: number;
@@ -27,14 +33,21 @@ export interface FireInput {
   readonly occlusion?: number;
   readonly rise?: number;
   readonly cooling?: number;
-  readonly domain?: { readonly x: number; readonly y: number; readonly w: number; readonly h: number };
+  readonly domain?: {
+    readonly x: number;
+    readonly y: number;
+    readonly w: number;
+    readonly h: number;
+  };
 }
 
 const DRAG = 2.4;
 
 const embersOf = (i: FireInput, seed: number): number[] => {
   const { rect: r, radius, time: t, height } = i;
-  const rise = i.emberRise ?? 58, size = i.emberSize ?? 0.8, life0 = i.emberLife ?? 1.5;
+  const rise = i.emberRise ?? 58,
+    size = i.emberSize ?? 0.8,
+    life0 = i.emberLife ?? 1.5;
   const out: number[] = [];
   for (let e = 0; e < Math.min(i.embers ?? 24, 30); e++) {
     const hk0 = hu((seed + 991) >>> 0, e * 7 + 3);
@@ -57,10 +70,18 @@ const embersOf = (i: FireInput, seed: number): number[] => {
     const drift = (u01(hk + 8) - 0.5) * 14;
     const grow = 1 - Math.exp(-age * 3);
     const x = x0 + drift * age + sway * Math.sin(age * fq + ph) * grow;
-    const vx = drift + sway * (Math.cos(age * fq + ph) * fq * grow + Math.sin(age * fq + ph) * 3 * Math.exp(-age * 3));
+    const vx =
+      drift +
+      sway *
+        (Math.cos(age * fq + ph) * fq * grow +
+          Math.sin(age * fq + ph) * 3 * Math.exp(-age * 3));
     const sz = size * (0.5 + 0.8 * u01(hk + 9)) * (1 - 0.4 * a);
     const attack = Math.min(1, age / 0.05);
-    const temp = Math.exp(-age / (life * 0.42)) * (1 - a * a) * (0.8 + 0.3 * u01(hk + 10)) * attack;
+    const temp =
+      Math.exp(-age / (life * 0.42)) *
+      (1 - a * a) *
+      (0.8 + 0.3 * u01(hk + 10)) *
+      attack;
     if (temp < 0.004) continue;
     const shutter = 0.6 / 60;
     out.push(x, y, vx * shutter, vy * shutter, sz, temp, 0, 0);
@@ -73,25 +94,71 @@ export const firePlan = (i: FireInput) => {
   const seed = i.seed ?? 0;
   const rise = i.emberRise ?? 58;
   const life = (i.emberLife ?? 1.5) * 1.4;
-  const emberUp = maxHeight * 0.55 + rise * (1.48 / DRAG + 0.32 * life) + (i.emberSize ?? 0.8) * 4;
+  const emberUp =
+    maxHeight * 0.55 +
+    rise * (1.48 / DRAG + 0.32 * life) +
+    (i.emberSize ?? 0.8) * 4;
   const side = 7.5 * life + 9;
   const up = Math.max(maxHeight * 2.6 + 8, emberUp) + 4;
-  const box = i.domain ?? { x: r.x - side, y: r.y - up, w: r.w + 2 * side, h: up + 4 };
-  const cell = Math.min(3, Math.max(1, Math.sqrt(Math.max(box.w * box.h, 1) / 16000)));
-  const n: [number, number] = [Math.max(8, Math.ceil(box.w / cell)), Math.max(8, Math.ceil(box.h / cell))];
+  const box = i.domain ?? {
+    x: r.x - side,
+    y: r.y - up,
+    w: r.w + 2 * side,
+    h: up + 4,
+  };
+  const cell = Math.min(
+    3,
+    Math.max(1, Math.sqrt(Math.max(box.w * box.h, 1) / 16000)),
+  );
+  const n: [number, number] = [
+    Math.max(8, Math.ceil(box.w / cell)),
+    Math.max(8, Math.ceil(box.h / cell)),
+  ];
   const simRise = i.rise ?? Math.min(140, Math.max(20, height * 2.2));
   const cooling = i.cooling ?? (1.15 * simRise) / Math.max(height, 4);
   const local = { ...i, rect: { ...r, x: r.x - box.x, y: r.y - box.y } };
   const uniform = [
-    n[0], n[1], cell, 1 / 60,
-    0, 0, 0, 0,
-    local.rect.x + r.w / 2, local.rect.y + r.h / 2, r.w / 2, r.h / 2,
-    radius, seed % 65536, simRise, Math.max(i.scale ?? 26, 2),
-    simRise * 3, cooling, Math.max(i.smoke ?? 0.6, 0) * 0.6, 0.25 + 0.6,
-    simRise * 0.3, 1, 1.4, 2,
+    n[0],
+    n[1],
+    cell,
+    1 / 60,
+    0,
+    0,
+    0,
+    0,
+    local.rect.x + r.w / 2,
+    local.rect.y + r.h / 2,
+    r.w / 2,
+    r.h / 2,
+    radius,
+    seed % 65536,
+    simRise,
+    Math.max(i.scale ?? 26, 2),
+    simRise * 3,
+    cooling,
+    Math.max(i.smoke ?? 0.6, 0) * 0.6,
+    0.25 + 0.6,
+    simRise * 0.3,
+    1,
+    1.4,
+    2,
   ];
   const embers = embersOf(local, seed);
-  const params = [0, 0, n[0] * cell, n[1] * cell, box.w, box.h, i.intensity, i.occlusion ?? 0.25, embers.length / 8, 0, 0, 0, ...embers];
+  const params = [
+    0,
+    0,
+    n[0] * cell,
+    n[1] * cell,
+    box.w,
+    box.h,
+    i.intensity,
+    i.occlusion ?? 0.25,
+    embers.length / 8,
+    0,
+    0,
+    0,
+    ...embers,
+  ];
   return { box, grid: n, uniform, params };
 };
 

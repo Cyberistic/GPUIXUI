@@ -1,22 +1,102 @@
 // rune-light (MIT, © Anomaly): its surface, field, soft shadow, shaft and composite passes as one fragment shader.
-export interface Prim { readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly r: number; readonly z0?: number; readonly z1?: number; readonly bevel?: number; readonly lift?: number; readonly gloss?: number; readonly rough?: number; readonly floor?: boolean }
-export interface LightDesc { readonly x: number; readonly y: number; readonly z: number; readonly radius: number; readonly color: readonly [number, number, number]; readonly intensity: number; readonly range: number; readonly shafts?: number; readonly bulb?: number; readonly specular?: number; readonly softness?: number }
-export interface LightSettings { readonly ambient: readonly [number, number, number]; readonly rim: number; readonly ao: number; readonly shaftsOver: number; readonly floor?: number }
+export interface Prim {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+  readonly r: number;
+  readonly z0?: number;
+  readonly z1?: number;
+  readonly bevel?: number;
+  readonly lift?: number;
+  readonly gloss?: number;
+  readonly rough?: number;
+  readonly floor?: boolean;
+}
+export interface LightDesc {
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+  readonly radius: number;
+  readonly color: readonly [number, number, number];
+  readonly intensity: number;
+  readonly range: number;
+  readonly shafts?: number;
+  readonly bulb?: number;
+  readonly specular?: number;
+  readonly softness?: number;
+}
+export interface LightSettings {
+  readonly ambient: readonly [number, number, number];
+  readonly rim: number;
+  readonly ao: number;
+  readonly shaftsOver: number;
+  readonly floor?: number;
+}
 
-const dec = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-export const srgbf = (r: number, g: number, b: number): readonly [number, number, number] => [dec(r), dec(g), dec(b)];
+const dec = (c: number) =>
+  c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+export const srgbf = (
+  r: number,
+  g: number,
+  b: number,
+): readonly [number, number, number] => [dec(r), dec(g), dec(b)];
 
-export const lightParams = (s: number, lights: ReadonlyArray<LightDesc>, st: LightSettings, count: number): number[] => [
-  lights.length, count, st.rim, st.ao, ...st.ambient, st.shaftsOver, st.floor ?? 0.025, 0.4, 0.55, 0,
+export const lightParams = (
+  s: number,
+  lights: ReadonlyArray<LightDesc>,
+  st: LightSettings,
+  count: number,
+): number[] => [
+  lights.length,
+  count,
+  st.rim,
+  st.ao,
+  ...st.ambient,
+  st.shaftsOver,
+  st.floor ?? 0.025,
+  0.4,
+  0.55,
+  0,
   ...lights.flatMap((l) => {
-    const peak = Math.max(...l.color, 1e-6), k = l.intensity / peak;
-    return [l.x * s, l.y * s, l.z * s, l.radius * s, l.color[0] * k, l.color[1] * k, l.color[2] * k, l.range * s, l.shafts ?? 0, l.bulb ?? 0, l.specular ?? 1, l.softness ?? 1];
+    const peak = Math.max(...l.color, 1e-6),
+      k = l.intensity / peak;
+    return [
+      l.x * s,
+      l.y * s,
+      l.z * s,
+      l.radius * s,
+      l.color[0] * k,
+      l.color[1] * k,
+      l.color[2] * k,
+      l.range * s,
+      l.shafts ?? 0,
+      l.bulb ?? 0,
+      l.specular ?? 1,
+      l.softness ?? 1,
+    ];
   }),
 ];
 export const lightData = (s: number, prims: ReadonlyArray<Prim>): number[] =>
   prims.flatMap((p) => {
-    const z0 = (p.z0 ?? 0) * s, z1 = (p.z1 ?? p.z0 ?? 0) * s, occ = z1 > z0 ? 1 : 0, raised = (p.bevel ?? 0) > 0 ? 4 : 0;
-    return [p.x * s, p.y * s, p.w * s, p.h * s, p.r * s, z0, z1, (p.bevel ?? 0) * s, (p.lift ?? 0) * s, p.gloss ?? 0, p.rough ?? 0.6, occ + raised];
+    const z0 = (p.z0 ?? 0) * s,
+      z1 = (p.z1 ?? p.z0 ?? 0) * s,
+      occ = z1 > z0 ? 1 : 0,
+      raised = (p.bevel ?? 0) > 0 ? 4 : 0;
+    return [
+      p.x * s,
+      p.y * s,
+      p.w * s,
+      p.h * s,
+      p.r * s,
+      z0,
+      z1,
+      (p.bevel ?? 0) * s,
+      (p.lift ?? 0) * s,
+      p.gloss ?? 0,
+      p.rough ?? 0.6,
+      occ + raised,
+    ];
   });
 
 export const LIGHT_SHADER = String.raw`

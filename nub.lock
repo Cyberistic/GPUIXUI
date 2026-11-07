@@ -960,6 +960,9 @@ importers:
       '@gpuixui/config':
         specifier: workspace:*
         version: link:../config
+      '@gpuixui/fx':
+        specifier: workspace:*
+        version: link:../fx
       '@gpuixui/testing':
         specifier: workspace:*
         version: link:../testing
