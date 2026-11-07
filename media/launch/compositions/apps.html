@@ -68,7 +68,7 @@
     #root .win {
       position: absolute;
       left: 110px;
-      top: 186px;
+      top: 40px;
       width: 1700px;
       border-radius: 18px;
       overflow: hidden;
@@ -101,19 +101,6 @@
       display: block;
       width: 100%;
       height: auto;
-    }
-    #root .say {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 62px;
-      text-align: center;
-      font:
-        400 62px Inter,
-        sans-serif;
-      letter-spacing: -0.025em;
-      color: #fff;
-      opacity: 0;
     }
     #root .cursor {
       width: 56px;
@@ -189,9 +176,6 @@
         style=""
       ></video>
     </div>
-    <div id="a-say" class="say on-dark">
-      <span class="hl"><i></i>no electron.</span> just react.
-    </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
@@ -215,13 +199,6 @@
       1.0,
     );
     tl.to("#a-scrim", { opacity: 1, duration: 0.3 }, 1.0);
-    tl.to("#a-say", { opacity: 1, duration: 0.25 }, 1.0);
-    tl.fromTo(
-      "#a-say .hl i",
-      { scaleX: 0 },
-      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
-      1.15,
-    );
     tl.set("#a-vc", { x: 1214.3, y: 971.4, scale: 1 }, 1.0);
     tl.set("#a-vc", { x: 1214.3, y: 971.4, scale: 1 }, 1.0);
     tl.set("#a-vc", { x: 1213.8, y: 970.7, scale: 1 }, 1.033);

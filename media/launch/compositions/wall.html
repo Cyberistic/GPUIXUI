@@ -111,9 +111,6 @@
       letter-spacing: -0.025em;
       color: #1d1d1f;
     }
-    #root .say.on-dark {
-      color: #fff;
-    }
   </style>
   <div
     id="root"
@@ -1203,10 +1200,7 @@
     <div class="band"></div>
     <div id="w-band" class="band k"></div>
     <div id="w-say" class="say">
-      every component. <span class="hl"><i></i>zero webviews.</span>
-    </div>
-    <div id="w-say2" class="say on-dark" style="opacity: 0">
-      dark mode? <span class="hl"><i></i>already done.</span>
+      <span class="hl"><i></i>zero web views</span>
     </div>
   </div>
   <script>
@@ -1901,14 +1895,8 @@
       { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
       0.35,
     );
-    tl.set("#w-say", { opacity: 0 }, 2.29);
-    tl.set("#w-say2", { opacity: 1 }, 2.29);
-    tl.fromTo(
-      "#w-say2 .hl i",
-      { scaleX: 0 },
-      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
-      2.33,
-    );
+    tl.to("#w-say", { color: "#ffffff", duration: 0.2 }, 2.25);
+    tl.to("#w-say .hl i", { backgroundColor: "#2F6FED", duration: 0.2 }, 2.25);
     tl.set({}, {}, 3.5);
     window.__timelines = window.__timelines || {};
     window.__timelines["wall"] = tl;

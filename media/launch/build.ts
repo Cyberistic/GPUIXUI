@@ -1,5 +1,5 @@
 /**
- * The launch film v8 (plan 069), written from one timeline table: encodes the
+ * The launch film v9 (plan 070), written from one timeline table: encodes the
  * takes it uses into `assets/footage/`, then writes `index.html` and one
  * composition per scene. A retime is one edit here; nothing is pasted by hand.
  *
@@ -45,7 +45,13 @@ const footage = (take: string, crf = 14): string => {
       "-i",
       at(`takes/${take}/%04d.png`),
       "-vf",
-      "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+      "scale=trunc(iw/2)*2:trunc(ih/2)*2:out_color_matrix=bt709",
+      "-colorspace",
+      "bt709",
+      "-color_primaries",
+      "bt709",
+      "-color_trc",
+      "iec61966-2-1",
       "-c:v",
       "libx264",
       "-crf",
@@ -174,8 +180,7 @@ const clip = (
 // 0–4.8: four controls, each held 1.2 s and cut only once its press has
 // settled. Every shot is a static framing: the cut is the only motion. The
 // first is the switch alone, pushed in — the film's thumbnail.
-// Crops stay near 1: the take is already the control at 2× device pixels, and
-// anything past 1.5 magnifies the capture instead of framing it.
+// A take is 1920×1080: past scale 1 the camera magnifies the capture and text blurs.
 const MONTAGE = [
   { take: "cu-switch-solo", sound: "press" },
   { take: "cu-tabs", sound: "cap-0" },
@@ -184,7 +189,7 @@ const MONTAGE = [
 ] as const;
 const BEAT_CUT = 1;
 /** The opening's camera, one continuous push: each clip resumes the last scale. */
-const PUSH = [1.1, 1.33, 1.58, 1.84, 2.1] as const;
+const PUSH = [0.76, 0.82, 0.88, 0.94, 1] as const;
 const PRESS_AT = 0.8; // every close-up presses on its frame 24
 const LEAD_IN = 0.42; // each clip starts this far into its take, so the press lands 0.38 s in
 /** On-screen pointer width: the camera crops otherwise scale the pointer too. */
@@ -194,7 +199,7 @@ const montage: Scene = {
   start: 0,
   duration: MONTAGE.length * BEAT_CUT,
   css: `#root .cam { position:absolute; inset:0; transform-origin:960px 540px; }
-    #root .cam video { left:0; top:0; width:1920px; height:1080px; }`,
+    #root .cam video { left:0; top:0; width:1920px; height:1080px; mask:linear-gradient(90deg,#0000,#000 14%,#000 86%,#0000),linear-gradient(#0000,#000 14%,#000 86%,#0000); mask-composite:intersect; }`,
   body: MONTAGE.map(
     ({ take }, i) =>
       `    <div id="m-cam${i}" class="cam" style="opacity:${i === 0 ? 1 : 0};transform:scale(${PUSH[i]})">
@@ -224,12 +229,146 @@ const hl = (word: string) => `<span class="hl"><i></i>${word}</span>`;
 const marked = (line: string, at: number) =>
   `tl.fromTo("${line} .hl i",{scaleX:0},{scaleX:1,duration:0.32,ease:"power3.out",stagger:0.18},${at.toFixed(2)});`;
 
-/* ------------------------------------------------------------ 4–11: it's just shadcn */
+/* ------------------------------------------------------------ 4–6.5: the mock */
 
-const SHADCN_START = 4;
+const MOCK_START = 4;
+const MOCK_LENGTH = 2.5;
+const MOCK_LINE = 31;
+const CODE_BG = "#101014";
+const RUST = `impl Render for License {
+    fn render(
+        &mut self,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap_4()
+            .p_6()
+            .w(px(520.))
+            .rounded_xl()
+            .border_1()
+            .border_color(rgb(0x27272a))
+            .bg(rgb(0x18181b))
+            .child(
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap_1()
+                    .child(
+                        div()
+                            .text_lg()
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .child("Hunter License"),
+                    )
+                    .child(
+                        div()
+                            .text_sm()
+                            .text_color(rgb(0xa1a1aa))
+                            .child("The 287th exam"),
+                    ),
+            )
+            .child(self.email.clone())
+            .child(
+                div()
+                    .id("apply")
+                    .flex()
+                    .justify_center()
+                    .h_9()
+                    .rounded_md()
+                    .bg(rgb(0xfafafa))
+                    .text_color(rgb(0x18181b))
+                    .cursor_pointer()
+                    .on_click(cx.listener(Self::apply))
+                    .child("Apply"),
+            )
+    }
+}`;
+const NO_JSX = `return createElement(
+  "div",
+  {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 16,
+      padding: 24,
+      width: 520,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: "#27272a",
+      backgroundColor: "#18181b",
+    },
+  },
+  createElement(
+    "div",
+    { style: { gap: 4 } },
+    createElement(
+      "text",
+      { style: { fontSize: 18, fontWeight: 600 } },
+      "Hunter License",
+    ),
+    createElement(
+      "text",
+      { style: { fontSize: 14, color: "#a1a1aa" } },
+      "The 287th exam",
+    ),
+  ),
+  createElement(Input, { placeholder: "gon@whale-island" }),
+  createElement(
+    "div",
+    {
+      onClick: apply,
+      style: {
+        height: 36,
+        borderRadius: 6,
+        backgroundColor: "#fafafa",
+        justifyContent: "center",
+      },
+    },
+    createElement("text", null, "Apply"),
+  ),
+);`;
+const uglify = (code: string) =>
+  code
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/("[^"]*")/g, "<i>$1</i>")
+    .replace(/(createElement|\.\w+(?=\())/g, "<b>$1</b>");
+const MOCK_SIDES = [
+  { label: "GPUI, in Rust", code: RUST },
+  { label: "React, no JSX", code: NO_JSX },
+];
+const mock: Scene = {
+  id: "mock",
+  start: MOCK_START,
+  duration: MOCK_LENGTH,
+  css: `#root .say { position:absolute; left:0; right:0; top:44px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
+    #root .pane { position:absolute; top:150px; width:880px; height:960px; border-radius:20px; overflow:hidden; background:${CODE_BG}; padding:26px 36px; }
+    #root .pane h2 { position:absolute; left:0; right:0; top:0; z-index:1; padding:26px 36px 18px; background:${CODE_BG}; font:500 26px Inter, sans-serif; color:#a1a1aa; }
+    #root .pane em { font-style:normal; color:#71717a; margin-left:12px; }
+    #root .pane pre { position:absolute; left:36px; top:86px; font:500 21px/${MOCK_LINE}px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
+    #root .pane pre b { font-weight:500; color:#7aa2f7; } #root .pane pre i { font-style:normal; color:#9ece6a; }`,
+  body: `    <div id="k-say" class="say">nobody wants to ${hl("write this.")}</div>
+    ${MOCK_SIDES.map(
+      ({ label, code }, i) =>
+        `<div id="k-p${i}" class="pane" style="left:${i === 0 ? 60 : 980}px"><h2>${label}<em>${code.split("\n").length} lines</em></h2><pre id="k-c${i}" data-layout-allow-overlap>${uglify(code)}</pre></div>`,
+    ).join("\n    ")}`,
+  script: `${MOCK_SIDES.map(
+    (_, i) =>
+      `tl.fromTo("#k-p${i}",{y:1000},{y:0,duration:0.4,ease:"expo.out"},${(i * 0.1).toFixed(2)});
+    tl.to("#k-c${i}",{y:${-(MOCK_SIDES[i]!.code.split("\n").length * MOCK_LINE - 840)},duration:${MOCK_LENGTH - 0.3},ease:"power1.in"},0.3);
+    tl.to("#k-p${i}",{y:1000,duration:0.32,ease:"expo.in"},${(MOCK_LENGTH - 0.36 + i * 0.03).toFixed(2)});`,
+  ).join("\n    ")}
+    ${marked("#k-say", 0.45)}
+    tl.to("#k-say",{opacity:0,duration:0.14},${(MOCK_LENGTH - 0.16).toFixed(2)});`,
+};
+
+/* ------------------------------------------------------------ 6.5–10.5: it's just shadcn */
+
+const SHADCN_START = MOCK_START + MOCK_LENGTH;
 const SHADCN_LENGTH = SHADCN_FRAMES / FPS;
 const SHADCN_F = (frame: number) => frame / FPS;
-const CODE_BG = "#101014";
 const highlight = (text: string) =>
   text
     .replace(/&/g, "&amp;")
@@ -238,16 +377,21 @@ const highlight = (text: string) =>
     .replace(/("[^"]*")/g, "<i>$1</i>")
     .replace(/(--[a-z-]+)/g, "<b>$1</b>")
     .replace(/(oklch\([^)]*\)|\d+(?:\.\d+)?rem)/g, "<i>$1</i>");
+/** The left half's look, shared with the npm scene that slides it away. */
+const CODE_CSS = `#root .code { position:absolute; left:0; top:0; width:960px; overflow:hidden; height:1080px; background:${CODE_BG}; padding:96px 0 0 64px; font:500 27px/46px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
+    #root .code b { font-weight:500; color:#7aa2f7; } #root .code .ln i, #root .code .css i { font-style:normal; color:#9ece6a; }
+    #root .css { position:absolute; left:64px; top:96px; white-space:pre; font-size:24px; line-height:42px; }
+    #root .file { position:absolute; left:64px; top:36px; font:500 22px Inter, sans-serif; color:#71717a; }
+    #root .code .say { position:absolute; left:64px; right:64px; top:auto; bottom:60px; text-align:left; font:400 52px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }`;
+const fileOf = (name: string) => `${name}.css · tweakcn.com`;
+const TWEAKCN_LINE = `paste any ${hl("tweakcn")} theme. done.`;
 const shadcn: Scene = {
   id: "shadcn",
   start: SHADCN_START,
   duration: SHADCN_LENGTH,
-  css: `#root .code { position:absolute; left:0; top:0; width:960px; overflow:hidden; height:1080px; background:${CODE_BG}; padding:96px 0 0 64px; font:500 27px/46px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
-    #root .code b { font-weight:500; color:#7aa2f7; } #root .code .ln i, #root .code .css i { font-style:normal; color:#9ece6a; }
+  css: `${CODE_CSS}
     #root .ln { height:46px; overflow:hidden; white-space:pre; width:0; }
-    #root .css { position:absolute; left:64px; top:96px; white-space:pre; opacity:0; font-size:24px; line-height:42px; }
-    #root .file { position:absolute; left:64px; top:36px; font:500 22px Inter, sans-serif; color:#71717a; }
-    #root .say { position:absolute; left:64px; right:64px; bottom:60px; font:400 52px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }
+    #root .css { opacity:0; }
     #root .title { position:absolute; left:64px; top:960px; font:400 56px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; white-space:nowrap; transform-origin:0 50%; }
     #root .right { position:absolute; left:960px; top:0; width:960px; height:1080px; overflow:hidden; }
     #root .right video { position:relative; display:block; width:100%; height:100%; }`,
@@ -256,7 +400,7 @@ const shadcn: Scene = {
       <div id="s-file" class="file">license.tsx</div>
       <div id="s-lines">${CODE.map((line, i) => `<div id="s-l${i}" class="ln">${highlight(line.text)}</div>`).join("")}</div>
       ${BUILDER_THEMES.map((theme, i) => `<div id="s-c${i}" class="css">${highlight(theme.css)}</div>`).join("\n      ")}
-      <div id="s-say1" class="say on-dark" style="opacity:0">paste any ${hl("tweakcn")} theme. done.</div>
+      <div id="s-say1" class="say on-dark" style="opacity:0">${TWEAKCN_LINE}</div>
     </div>
     <div id="s-title" class="title">it's just ${hl("shadcn")}</div>`,
   // The title holds the frame alone; then the code slides in beneath it and it
@@ -284,14 +428,14 @@ const shadcn: Scene = {
     ).join("\n    ")}
     ${BUILDER_THEMES.map(
       (theme) =>
-        `tl.set("#s-file",{textContent:${JSON.stringify(`${theme.name}.css · tweakcn.com`)}},${SHADCN_F(theme.frame).toFixed(3)});`,
+        `tl.set("#s-file",{textContent:${JSON.stringify(fileOf(theme.name))}},${SHADCN_F(theme.frame).toFixed(3)});`,
     ).join("")}
     tl.set("#s-title",{opacity:0},${SHADCN_F(BUILDER_THEMES[0]!.frame).toFixed(3)});
     tl.set("#s-say1",{opacity:1},${SHADCN_F(BUILDER_THEMES[0]!.frame).toFixed(3)});
     ${marked("#s-say1", SHADCN_F(BUILDER_THEMES[0]!.frame))}`,
 };
 
-/* ------------------------------------------------------------ 9–12: the packages */
+/* ------------------------------------------------------------ 10.5–13: the packages */
 
 const PACKAGES = [
   [
@@ -311,26 +455,27 @@ const PACKAGES = [
 ] as const;
 const PKG_START = SHADCN_START + SHADCN_LENGTH;
 const PKG_LENGTH = 2.5;
+const LAST_THEME = BUILDER_THEMES[BUILDER_THEMES.length - 1]!;
 const chip = (name: string, logo: string, id: string) =>
   `<div id="${id}" class="chip">${logo === "" ? `<i></i>` : `<img src="assets/logos/${logo}.svg" alt="">`}<span>${name}</span></div>`;
 const npm: Scene = {
   id: "npm",
   start: PKG_START,
   duration: PKG_LENGTH,
-  css: `#root .row { position:absolute; left:0; right:0; display:flex; justify-content:center; gap:16px; white-space:nowrap; }
+  css: `${CODE_CSS}
+    #root .row { position:absolute; left:0; right:0; display:flex; justify-content:center; gap:16px; white-space:nowrap; }
     #root .chip { display:flex; align-items:center; gap:16px; height:100px; padding:0 30px; border-radius:20px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 16px 34px -20px rgba(29,29,31,.4); font:500 36px Inter, sans-serif; letter-spacing:-0.02em; color:${INK}; }
     #root .chip img { width:40px; height:40px; }
     #root .chip i { display:block; width:26px; height:26px; border-radius:7px; background:#c7c7cc; }
     #root .say { position:absolute; left:0; right:0; top:500px; text-align:center; font:400 72px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
     #root .out { position:absolute; inset:0; }
-    #root .out .a { position:absolute; left:0; top:0; width:960px; height:1080px; background:${CODE_BG}; }
     #root .out img { position:absolute; left:960px; top:0; width:960px; height:1080px; }`,
   body: `    <div id="n-say" class="say">the ${hl("npm packages")} you already use</div>
     ${PACKAGES.map(
       (row, r) =>
         `<div id="n-row${r}" class="row" style="top:${r === 0 ? 300 : 690}px">${row.map(([name, logo], i) => chip(name, logo, `n-${r}-${i}`)).join("")}</div>`,
     ).join("\n    ")}
-    <div id="n-out" class="out"><div class="a"></div><img src="${still("shadcn-v8", SHADCN_FRAMES - 1)}" alt=""></div>`,
+    <div id="n-out" class="out"><div class="code"><div class="file">${fileOf(LAST_THEME.name)}</div><div class="css">${highlight(LAST_THEME.css)}</div><div class="say on-dark">${TWEAKCN_LINE}</div></div><img src="${still("shadcn-v8", SHADCN_FRAMES - 1)}" alt=""></div>`,
   script: `tl.to("#n-out",{y:-1090,duration:0.42,ease:"expo.inOut"},0);
     ${marked("#n-say", 0.45)}
     tl.fromTo("#n-row0",{x:24},{x:-24,duration:${PKG_LENGTH},ease:"none"},0);
@@ -343,7 +488,7 @@ const npm: Scene = {
     ).join("\n    ")}`,
 };
 
-/* ------------------------------------------------------------ 12–16: the tilted screen */
+/* ------------------------------------------------------------ 13–16.5: the tilted screen */
 
 const WALL_TAKES = [
   "calendar",
@@ -450,8 +595,7 @@ const wall: Scene = {
     #root .tile img.d { clip-path:inset(0 100% 0 0); }
     #root .band { position:absolute; left:0; right:0; top:0; height:190px; background:linear-gradient(${GROUND} 62%, rgba(244,242,238,0)); }
     #root .band.k { background:linear-gradient(${INK_DARK} 62%, rgba(9,9,11,0)); opacity:0; }
-    #root .say { position:absolute; left:0; right:0; top:58px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }
-    #root .say.on-dark { color:#fff; }`,
+    #root .say { position:absolute; left:0; right:0; top:58px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:${INK}; }`,
   body: `    <div class="stage" data-layout-allow-overflow>
       <div id="plane" class="plane" data-layout-allow-overflow>
         <div id="sky" class="sky"></div>
@@ -464,8 +608,7 @@ ${tileMeta
       </div>
     </div>
     <div class="band"></div><div id="w-band" class="band k"></div>
-    <div id="w-say" class="say">every component. ${hl("zero webviews.")}</div>
-    <div id="w-say2" class="say on-dark" style="opacity:0">dark mode? ${hl("already done.")}</div>`,
+    <div id="w-say" class="say">${hl("zero web views")}</div>`,
   script: `tl.set("#plane",{scale:0.74,x:0,y:90,rotationX:50,rotationZ:-18},0);
     tl.to("#plane",{scale:0.62,x:-30,y:70,rotationX:46,rotationZ:-14,duration:${WALL_LENGTH},ease:"none"},0);
     ${tileMeta
@@ -477,12 +620,11 @@ ${tileMeta
     tl.to("#sky",{clipPath:"inset(0 0% 0 0)",duration:${SWIPE.length},ease:"none"},${SWIPE.at});
     tl.fromTo("#w-band",{opacity:0},{opacity:1,duration:0.3},${(SWIPE.at + SWIPE.length * 0.35).toFixed(2)});
     ${marked("#w-say", 0.35)}
-    tl.set("#w-say",{opacity:0},${(SWIPE.at + SWIPE.length * 0.45).toFixed(2)});
-    tl.set("#w-say2",{opacity:1},${(SWIPE.at + SWIPE.length * 0.45).toFixed(2)});
-    ${marked("#w-say2", SWIPE.at + SWIPE.length * 0.5)}`,
+    tl.to("#w-say",{color:"#ffffff",duration:0.2},${(SWIPE.at + SWIPE.length * 0.4).toFixed(2)});
+    tl.to("#w-say .hl i",{backgroundColor:"#2F6FED",duration:0.2},${(SWIPE.at + SWIPE.length * 0.4).toFixed(2)});`,
 };
 
-/* ------------------------------------------------------------ 16–20: the apps */
+/* ------------------------------------------------------------ 16.5–20.5: the apps */
 
 const APPS = {
   start: WALL_START + WALL_LENGTH,
@@ -490,7 +632,7 @@ const APPS = {
   launcherFor: 1,
   vaultFor: 1.4,
 };
-const WIN = { x: 110, y: 186, w: 1700 };
+const WIN = { x: 110, y: 40, w: 1700 };
 const DASH_AT = APPS.launcherFor + APPS.vaultFor;
 const cursorOn = (
   take: string,
@@ -513,22 +655,18 @@ const apps: Scene = {
     #root .win video { position:relative; display:block; width:100%; height:auto; }
     #root .hud { position:absolute; left:510px; top:270px; width:900px; border-radius:22px; overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,.14), 0 60px 110px -30px #000; opacity:0; transform-origin:50% 50%; }
     #root .hud video { position:relative; display:block; width:100%; height:auto; }
-    #root .say { position:absolute; left:0; right:0; top:62px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; opacity:0; }
     #root .cursor { width:56px; }`,
   body: `    <div class="under"><img src="assets/footage/wall-end.png" alt=""></div>
     <div id="a-scrim" class="scrim"></div>
     <div id="a-vault" class="win">${video("a-vault-v", footage("vault-v8", 12), APPS.launcherFor, APPS.vaultFor + 0.2, "", 2)}<div id="a-vc" class="cursor">${CURSOR}</div></div>
     <div id="a-dash" class="win">${clip("a-dash-v", footage("dashboard-v8", 12), DASH_AT - 0.2, 1.8, 0, "", 3)}<div id="a-dc" class="cursor">${CURSOR}</div></div>
-    <div id="a-hud" class="hud">${video("a-hud-v", footage("launcher-v8", 12), 0, APPS.launcherFor + 0.1, "", 1)}</div>
-    <div id="a-say" class="say on-dark">${hl("no electron.")} just react.</div>`,
+    <div id="a-hud" class="hud">${video("a-hud-v", footage("launcher-v8", 12), 0, APPS.launcherFor + 0.1, "", 1)}</div>`,
   script: `tl.to("#a-scrim",{opacity:0.78,duration:0.25,ease:"power2.out"},0);
     tl.fromTo("#a-hud",{opacity:0,scale:0.94,y:-16},{opacity:1,scale:1,y:0,duration:0.28,ease:"back.out(1.6)"},0);
     // Enter: the panel grows into the window it opened.
     tl.to("#a-hud",{scale:1.9,y:190,opacity:0,duration:0.26,ease:"expo.in"},${(APPS.launcherFor - 0.16).toFixed(2)});
     tl.fromTo("#a-vault",{opacity:0,scale:0.5,y:-60},{opacity:1,scale:1,y:0,duration:0.42,ease:"expo.out"},${APPS.launcherFor.toFixed(2)});
     tl.to("#a-scrim",{opacity:1,duration:0.3},${APPS.launcherFor.toFixed(2)});
-    tl.to("#a-say",{opacity:1,duration:0.25},${APPS.launcherFor.toFixed(2)});
-    ${marked("#a-say", APPS.launcherFor + 0.15)}
     ${cursorOn("vault-v8", "a-vc", APPS.launcherFor, 0, APPS.vaultFor, WIN.w, 980)}
     tl.to("#a-vault",{x:-1900,duration:0.42,ease:"power3.inOut"},${(DASH_AT - 0.2).toFixed(2)});
     tl.set("#a-dash",{opacity:1},${(DASH_AT - 0.2).toFixed(2)});
@@ -540,7 +678,7 @@ const apps: Scene = {
     ${cursorOn("dashboard-v8", "a-dc", DASH_AT, 0, 1.6, WIN.w, 1400)}`,
 };
 
-/* ------------------------------------------------------------ 20–23: the charts */
+/* ------------------------------------------------------------ 20.5–23: the charts */
 
 /** A chart take is 54 frames; its last frame holds after that. */
 const TILE_MEDIA = 1.8;
@@ -564,9 +702,9 @@ const CHARTS = [
   ["sparkline", "Sparkline"],
 ] as const;
 const CHARTS_START = APPS.start + APPS.length;
-const CHARTS_LENGTH = 3;
+const CHARTS_LENGTH = 2.5;
 const CARD = { w: 420, h: 280, gap: 20 };
-const ROW_Y = [150, 450, 750];
+const ROW_Y = [100, 400, 700];
 const RUN = [
   [0, 6],
   [6, 12],
@@ -642,8 +780,6 @@ const charts: Scene = {
     #root .cd { position:relative; flex:none; width:${CARD.w}px; height:${CARD.h}px; border-radius:18px; overflow:hidden; background:#1b1b1f; box-shadow:0 0 0 1px rgba(255,255,255,.08); }
     #root .cd video, #root .cd img { position:absolute; left:0; top:0; width:100%; height:100%; }
     #root .cd b { position:absolute; left:16px; top:10px; font:500 18px Inter, sans-serif; color:#a1a1aa; }
-    #root .band { position:absolute; left:0; right:0; top:0; height:170px; background:linear-gradient(${INK_DARK} 66%, rgba(9,9,11,0)); }
-    #root .say { position:absolute; left:0; right:0; top:58px; text-align:center; font:400 62px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }
     #root .next { position:absolute; inset:0; clip-path:circle(0px at 960px 560px); }
     #root .next > img { position:absolute; left:${SETTINGS_WIN.x}px; top:${SETTINGS_WIN.y}px; width:${SETTINGS_WIN.w}px; height:${SETTINGS_WIN.h}px; border-radius:19px; box-shadow:0 60px 100px -36px rgba(0,0,0,.6); }
     ${desktopCss}`,
@@ -663,14 +799,10 @@ ${RUN.map(
       .join("")}</div>`,
 ).join("\n")}
     </div>
-    <div class="band"></div>
-    <div id="c-say" class="say on-dark">${hl("17 charts.")} one line each.</div>
     <div id="c-next" class="next">${macDesk("c-mac")}<img src="${still("settings-v8", 0)}" alt=""></div>`,
   script: `// Clear of the frame entirely: the window is taller than the frame.
     tl.to("#c-out",{y:-1500,duration:0.45,ease:"power3.inOut"},0);
-    ${marked("#c-say", 0.3)}
     tl.fromTo("#c-rows",{y:1080},{y:0,duration:0.5,ease:"power3.out"},0.02);
-    tl.fromTo("#c-say",{opacity:0},{opacity:1,duration:0.25},0.15);
     tl.fromTo("#c-r0",{x:40},{x:-780,duration:${CHARTS_LENGTH},ease:"none"},0);
     tl.fromTo("#c-r1",{x:-820},{x:0,duration:${CHARTS_LENGTH},ease:"none"},0);
     tl.fromTo("#c-r2",{x:-20},{x:-400,duration:${CHARTS_LENGTH},ease:"none"},0);
@@ -688,6 +820,10 @@ ${RUN.map(
 };
 
 /* ------------------------------------------------------------ 23–26: three desktops */
+
+const osLine = (id: string) =>
+  `<span id="${id}0">${hl("Mac,")}</span> <span id="${id}1">${hl("Windows,")}</span> <span id="${id}2">${hl("Linux")}</span>`;
+const OS_SAY_CSS = `#root .say { position:absolute; left:0; right:0; top:72px; text-align:center; font:500 62px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.5), 0 4px 40px rgba(0,0,0,.6); }`;
 
 const DESK_START = CHARTS_START + CHARTS_LENGTH;
 const DESK_LENGTH = 3;
@@ -708,28 +844,43 @@ const desktops: Scene = {
   css: `${desktopCss}
     #root .window { position:absolute; left:${SETTINGS_WIN.x}px; top:${SETTINGS_WIN.y}px; width:${SETTINGS_WIN.w}px; height:${SETTINGS_WIN.h}px; box-shadow:0 60px 100px -36px rgba(0,0,0,.6); border-radius:19px; overflow:hidden; }
     #root .window video { position:relative; display:block; width:100%; height:100%; }
-    #root .say { position:absolute; left:0; right:0; top:72px; text-align:center; font:500 62px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.5), 0 4px 40px rgba(0,0,0,.6); }
+    ${OS_SAY_CSS}
     #root .cursor { width:56px; z-index:5; }`,
   body: `    ${macDesk("d-mac")}
     <div id="d-win-layer" style="position:absolute;inset:0;clip-path:circle(0px at ${pW.x.toFixed(0)}px ${pW.y.toFixed(0)}px)">${winDesk("d-win")}</div>
     <div id="d-gnome-layer" style="position:absolute;inset:0;clip-path:circle(0px at ${pL.x.toFixed(0)}px ${pL.y.toFixed(0)}px)">${gnomeDesk("d-gnome")}</div>
     <div id="d-window" class="window">${video("d-v", footage("settings-v8", 12), 0, DESK_LENGTH, "", 2)}<div id="d-cur" class="cursor">${CURSOR}</div></div>
-    <div id="d-say" class="say on-dark">${hl("one codebase.")} every desktop.</div>`,
+    <div id="d-say" class="say on-dark">${osLine("d-os")}</div>`,
   // Each press and its wipe share a frame; the window's own chrome is the take's.
-  script: `tl.fromTo("#d-say",{opacity:0},{opacity:1,duration:0.25},0.12);
-    ${marked("#d-say", 0.25)}
+  script: `${[0.12, PRESS_WIN + 1 / FPS, PRESS_LINUX + 1 / FPS]
+    .map(
+      (at, i) =>
+        `tl.fromTo("#d-os${i}",{opacity:0.35},{opacity:1,duration:0.15},${at.toFixed(3)});${marked(`#d-os${i}`, at)}`,
+    )
+    .join("\n    ")}
     tl.to("#d-win-layer",{clipPath:"circle(2300px at ${pW.x.toFixed(0)}px ${pW.y.toFixed(0)}px)",duration:0.55,ease:"expo.out"},${(PRESS_WIN + 1 / FPS).toFixed(3)});
     tl.to("#d-gnome-layer",{clipPath:"circle(2300px at ${pL.x.toFixed(0)}px ${pL.y.toFixed(0)}px)",duration:0.55,ease:"expo.out"},${(PRESS_LINUX + 1 / FPS).toFixed(3)});
     ${cursorClip("d-cur", "settings-v8", 0, 0, DESK_LENGTH, SETTINGS_WIN.w / (2 * 880))}`,
 };
 
-/* ------------------------------------------------------------ 26–28: Omarchy */
+/* ------------------------------------------------------------ 26–30: Omarchy */
 
 const OM_START = DESK_START + DESK_LENGTH;
-const OM_LENGTH = 3;
-/** The title holds the centre over a dimmed desktop; the flips follow it. */
-const OM_TITLE = { at: 0.34, out: 1.24 };
-const OM_FLIP = (i: number) => OM_TITLE.out + 0.1 + i * 0.42;
+const OM_LENGTH = 4;
+/** The train: the plate's nose starts at the frame's right edge and brakes on "omarchy". */
+const TRAIN = {
+  reach: 3500,
+  length: 1.7,
+  ease: "power2.out",
+  gap: 0.2,
+  dive: 0.34,
+};
+const TRAIN_FROM = 1920 - 960 + TRAIN.reach;
+const NOSE = 140;
+const DIVE_AT = TRAIN.length + TRAIN.gap;
+/** The stem of the h in "omarchy", measured from a frame: the camera dives through it. */
+const STEM = { x: 1241, y: 520 };
+const OM_FLIP = (i: number) => DIVE_AT + TRAIN.dive + 0.08 + i * 0.4;
 const THEMES = ["rose-pine", "gruvbox", "catppuccin-latte", "tokyo"] as const;
 /** The terminal pane in the tiling take, in frame fractions (measured from the still). */
 const PANE = { x: 0.55, y: 0.075, w: 0.42, h: 0.46 };
@@ -741,47 +892,55 @@ const omarchy: Scene = {
   css: `#root .full { position:absolute; inset:0; width:100%; height:100%; }
     #root #o-all { position:absolute; inset:0; transform-origin:0 0; }
     #root .t { position:absolute; inset:0; }
-    #root .dim { position:absolute; inset:0; background:#09090B; opacity:0; }
-    #root .title { position:absolute; left:0; right:0; top:490px; text-align:center; font:400 88px Inter, sans-serif; letter-spacing:-0.03em; color:#fff; }
+    #root .dive { position:absolute; inset:0; mix-blend-mode:multiply; transform-origin:${STEM.x}px ${STEM.y}px; }
+    #root .train { position:absolute; left:960px; top:0; width:0; height:1080px; }
+    #root .plate { position:absolute; left:-${TRAIN.reach}px; top:0; width:14000px; height:1080px; background:#000; border-radius:${NOSE}px 0 0 ${NOSE}px; }
+    #root .word { position:absolute; left:0; top:400px; transform:translateX(-50%); font:800 240px/280px Inter, sans-serif; letter-spacing:-0.04em; color:#fff; white-space:nowrap; }
+    #root .before { position:absolute; right:calc(100% + .26em); top:0; }
+    #root .front { position:absolute; inset:0; }
     #root .fly { position:absolute; left:${SETTINGS_WIN.x}px; top:${SETTINGS_WIN.y}px; width:${SETTINGS_WIN.w}px; border-radius:19px; }
+    ${OS_SAY_CSS}
     ${desktopCss}`,
-  body: `    ${gnomeDesk("o-gnome")}
-    <div id="o-all" style="opacity:0">
-${THEMES.map((t, i) => `      <div id="o-t${i}" class="t" style="clip-path:${i === 0 ? "none" : "circle(0px at 960px 18px)"}"><img class="full" src="${still(`omarchy-${t}`, 53)}" alt=""></div>`).join("\n")}
+  body: `    <div id="o-all">
+${THEMES.map((t, i) => `      <div id="o-t${i}" class="t"><img class="full" src="${still(`omarchy-${t}`, 53)}" alt=""></div>`).join("\n")}
     </div>
-    <img id="o-fly" class="fly" src="${still("settings-v8", 89)}" alt="">
-    <div id="o-dim" class="dim"></div>
-    <div id="o-say" class="title on-dark">your ${hl("omarchy")} theme. live.</div>`,
-  script: `tl.fromTo("#o-dim",{opacity:0},{opacity:0.72,duration:0.3},${OM_TITLE.at});
-    tl.fromTo("#o-say",{opacity:0,y:14},{opacity:1,y:0,duration:0.3,ease:"power3.out"},${OM_TITLE.at});
-    ${marked("#o-say", OM_TITLE.at + 0.2)}
-    tl.to("#o-dim",{opacity:0,duration:0.25},${OM_TITLE.out});
-    tl.to("#o-say",{opacity:0,y:-14,duration:0.2,ease:"power2.in"},${OM_TITLE.out});
-    tl.to("#o-all",{opacity:1,duration:0.3,ease:"power2.out"},0.05);
-    tl.to("#o-fly",{x:-270,y:-110,scale:0.6,opacity:0,duration:0.28,ease:"expo.inOut"},0);
+    <div id="o-front" class="front">${gnomeDesk("o-gnome")}<img class="fly" src="${still("settings-v8", 89)}" alt=""><div class="say on-dark">${osLine("o-os")}</div></div>
+    <div id="o-dive" class="dive"><div id="o-train" class="train" data-layout-allow-overflow>
+      <div class="plate"></div>
+      <div class="word"><div class="before">Follows your theme in</div>omarchy</div>
+    </div></div>`,
+  script: `tl.fromTo("#o-train",{x:${TRAIN_FROM}},{x:0,duration:${TRAIN.length},ease:"${TRAIN.ease}"},0);
+    tl.fromTo("#o-front",{clipPath:"inset(0 -${NOSE}px 0 0)"},{clipPath:"inset(0 ${TRAIN_FROM - NOSE}px 0 0)",duration:${TRAIN.length},ease:"${TRAIN.ease}"},0);
+    tl.to("#o-dive",{scale:70,duration:${TRAIN.dive},ease:"expo.in"},${DIVE_AT});
+    tl.set("#o-dive",{opacity:0},${(DIVE_AT + TRAIN.dive).toFixed(3)});
     ${THEMES.slice(1)
       .map(
         (_, i) =>
-          `tl.to("#o-t${i + 1}",{clipPath:"circle(2300px at 960px 18px)",duration:0.34,ease:"expo.out"},${OM_FLIP(i).toFixed(2)});`,
+          `tl.fromTo("#o-t${i + 1}",{x:1920},{x:0,duration:0.34,ease:"expo.inOut"},${OM_FLIP(i).toFixed(2)});`,
       )
       .join("\n    ")}
-    // The camera pushes into the terminal pane, which becomes the next scene.
     tl.to("#o-all",{x:${(-PANE.x * 1920 * paneZoom).toFixed(1)},y:${(-PANE.y * 1080 * paneZoom + (1080 - PANE.h * 1080 * paneZoom) / 2).toFixed(1)},scale:${paneZoom.toFixed(3)},duration:0.42,ease:"expo.in"},${(OM_LENGTH - 0.42).toFixed(2)});`,
 };
 
-/* ------------------------------------------------------------ 28–32: the terminal */
+/* ------------------------------------------------------------ 30–34: the terminal */
 
 const TERM_START = OM_START + OM_LENGTH;
 const TERM_LENGTH = 4;
 const SSH = "ssh gon@whale-island";
-const RUN_CMD = "nub run dev console --terminal";
+const RUN_CMD = "huntercli --terminal";
 const CHARS_PER_FRAME = 2;
 const TYPE_AT = 0.1;
 const typeTime = (text: string) =>
   Math.ceil(text.length / CHARS_PER_FRAME) / FPS;
 const T_LOGIN = TYPE_AT + typeTime(SSH) + 0.04;
-const T_RUN = T_LOGIN + 0.03;
-const T_APP = T_RUN + typeTime(RUN_CMD) + 0.07;
+const T_RUN = 0.8;
+const T_APP = 1.75;
+const CLAUSES = [
+  { text: "Run in the terminal,", at: 0.1 },
+  { text: "in tmux,", at: 0.5 },
+  { text: "over ssh,", at: 0.82 },
+  { text: "with animations.", at: 1.12 },
+];
 const typed = (id: string, text: string, from: number): string =>
   Array.from(
     { length: Math.ceil(text.length / CHARS_PER_FRAME) },
@@ -797,8 +956,10 @@ const terminal: Scene = {
   duration: TERM_LENGTH,
   css: `#root .shell { position:absolute; inset:0; background:${TERM_BG}; padding:44px 60px; font:500 34px/50px "JetBrains Mono", Menlo, monospace; color:#c0caf5; }
     #root .shell b { font-weight:600; color:#7aa2f7; } #root .shell .dim { color:#565f89; } #root .shell .off { opacity:0; }
-    #root .say { position:absolute; left:0; right:0; top:470px; text-align:center; font:400 72px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }
-    #root .app { position:absolute; left:0; top:0; width:1920px; height:${APP_H}px; opacity:0; overflow:hidden; }
+    #root .say { position:absolute; left:0; right:0; top:560px; display:flex; justify-content:center; gap:.3em; font:500 64px/88px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }
+    #root .say .clause { display:block; overflow:hidden; }
+    #root .say .clause span { display:block; }
+    #root .app { position:absolute; left:0; top:0; width:1920px; height:${APP_H}px; clip-path:inset(0 0 100% 0); overflow:hidden; }
     #root .app video { position:relative; display:block; width:100%; height:100%; }
     #root .status { position:absolute; left:0; right:0; bottom:0; height:${STATUS_H}px; display:flex; align-items:center; gap:24px; padding:0 22px; background:#7aa2f7; color:#1a1b26; font:600 24px "JetBrains Mono", Menlo, monospace; }
     #root .status span:last-child { margin-left:auto; }
@@ -808,16 +969,19 @@ const terminal: Scene = {
       <div id="t-login" class="dim off">Last login: Fri Nov 6 09:41:07 2026 from 10.0.0.2</div>
       <div id="t-runline" class="off"><b>gon@whale-island ~ ❯</b> <span id="t-run"></span></div>
     </div>
-    <div id="t-say" class="say on-dark">the same app, in ${hl("tmux")}, over ${hl("ssh")}</div>
+    <div id="t-say" class="say on-dark">${CLAUSES.map(({ text }, i) => `<div class="clause"><span id="t-c${i}">${text}</span></div>`).join("")}</div>
     <div id="t-app" class="app">${video("t-v", footage("console-v8", 12), T_APP, TERM_LENGTH - T_APP, "", 2)}<div id="t-cur" class="cursor">${CURSOR}</div></div>
-    <div class="status"><span>0:nub*</span><span>gon@whale-island</span><span>ssh · 09:41</span></div>`,
-  script: `${marked("#t-say", 0.12)}
+    <div class="status"><span>0:huntercli*</span><span>gon@whale-island</span><span>ssh · 09:41</span></div>`,
+  script: `${CLAUSES.map(
+    ({ at }, i) =>
+      `tl.fromTo("#t-c${i}",{yPercent:110},{yPercent:0,duration:0.42,ease:"power4.out"},${at});
+    tl.to("#t-c${i}",{yPercent:-110,duration:0.26,ease:"power3.in"},${(T_APP - 0.3 + i * 0.03).toFixed(2)});`,
+  ).join("\n    ")}
     ${typed("t-ssh", SSH, TYPE_AT)}
     tl.set("#t-login",{opacity:1},${T_LOGIN.toFixed(3)});
     tl.set("#t-runline",{opacity:1},${T_RUN.toFixed(3)});
     ${typed("t-run", RUN_CMD, T_RUN)}
-    tl.set("#t-say",{opacity:0},${T_APP.toFixed(3)});
-    tl.set("#t-app",{opacity:1},${T_APP.toFixed(3)});
+    tl.to("#t-app",{clipPath:"inset(0 0 0% 0)",duration:0.2,ease:"steps(24)"},${T_APP.toFixed(3)});
     ${cursorClip("t-cur", "console-v8", T_APP, 0, TERM_LENGTH - T_APP, 1920 / (2 * 1024))}`,
 };
 
@@ -866,6 +1030,7 @@ const end: Scene = {
 
 const scenes = [
   montage,
+  mock,
   shadcn,
   npm,
   wall,
@@ -905,7 +1070,9 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
       (frame, n) =>
         [2 * BEAT_CUT + frame / FPS - LEAD_IN + F, `detent-${n + 2}`] as const,
     ),
-  // The code types, then each pasted theme lands.
+  // The two panels land, then the code types and each pasted theme lands.
+  [MOCK_START + 0.2, "thud", 0.7],
+  [MOCK_START + 0.3, "thud", 0.7],
   ...CODE.flatMap((line) =>
     typedCues(line.text, SHADCN_START + SHADCN_F(line.frame), CODE_SPEED),
   ),
@@ -947,8 +1114,10 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   ),
   [DESK_START + PRESS_WIN + F, "look-win"],
   [DESK_START + PRESS_LINUX + F, "look-linux"],
+  [OM_START + TRAIN.length - 0.25, "thud", 0.8],
+  [OM_START + DIVE_AT + TRAIN.dive - 0.06, "land", 0.9],
   ...[0, 1, 2].map(
-    (i) => [OM_START + 0.5 + i * 0.4 + F, `glass-${i}`, 1] as const,
+    (i) => [OM_START + OM_FLIP(i) + 0.1, `glass-${i}`, 1] as const,
   ),
   ...typedCues(SSH, TERM_START + TYPE_AT, CHARS_PER_FRAME),
   [TERM_START + T_LOGIN - 0.03, "press", 0.6],
@@ -1011,7 +1180,7 @@ const index = `<!doctype html>
     </style>
   </head>
   <body>
-    <!-- The launch film v8 (plan 069), written by build.ts: ${LENGTH} s on the score's 120 BPM grid. -->
+    <!-- The launch film v9 (plan 070), written by build.ts: ${LENGTH} s on the score's 120 BPM grid. -->
     <div id="root" data-composition-id="main" data-start="0" data-duration="${LENGTH}" data-width="1920" data-height="1080">
 ${scenes.map((s) => `      <div id="${s.id}" data-composition-id="${s.id}" data-composition-src="compositions/${s.id}.html" data-start="${s.start}" data-duration="${s.duration}" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>`).join("\n")}
       <audio id="score" class="clip" data-start="0" data-duration="${LENGTH}" data-track-index="19" data-volume="0.28" data-fade-out="1.5" src="${score()}"></audio>
@@ -1033,9 +1202,9 @@ const written = [
 scenes.forEach((scene, i) => writeFileSync(written[i]!, composition(scene)));
 writeFileSync(at("index.html"), index);
 // The written files meet the repo's formatter, as hand-written ones do.
-// `shadcn.html` holds preformatted code, which the formatter would reflow.
+// `shadcn.html` and `npm.html` hold preformatted code, which it would reflow.
 execFileSync(
   at("../../node_modules/.bin/oxfmt"),
-  ["--write", ...written.filter((file) => !file.endsWith("shadcn.html"))],
+  ["--write", ...written.filter((file) => !/(shadcn|npm)\.html$/.test(file))],
   { stdio: "ignore" },
 );

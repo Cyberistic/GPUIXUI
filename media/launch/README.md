@@ -1,29 +1,34 @@
-# Launch film (v8)
+# Launch film (v9)
 
 `gpuixui-launch.mp4`: 40 seconds, 1920×1080, 30 fps, on the original 120 BPM piano
 score with bar 4 and bars 5–8 played twice, so its stabs land the stack and its last chord the
-mark. Plan: `.agents/slop/plans/069-launch-film-v8.md`. Not a one-take: that attempt
+mark. Plan: `.agents/slop/plans/070-launch-film-v9.md`. Not a one-take: that attempt
 was rejected (`agent/launch-film-v4`).
 
 ## Every frame of product is the product
 
 | Time | Line | Scene | Source |
 | --- | --- | --- | --- |
-| 0–4 s | — | Switch, Tabs, Slider, Checkbox | `cu-*` |
-| 4–11 s | it's just shadcn · paste any tweakcn theme. done. | the title alone, then the code slides in and it moves aside; six real tweakcn themes pasted, read by `shadcnTheme` | `shadcn-v8` |
-| 11–13.5 s | the npm packages you already use | package tabs | film |
-| 13.5–17 s | every component. zero webviews. · dark mode? already done. | 60 real tiles drop onto a tilted plane; a swipe crosses it to dark | `tile-*`, `dark-tile-*` |
-| 17–21 s | no electron. just react. | ⌘K, "vault" typed: Launcher → Vault → Dashboard | `launcher-v8`, `vault-v8`, `dashboard-v8` |
-| 21–24 s | 17 charts. one line each. | all 17 chart types in three sliding rows, drawing as they arrive | `dark-chart-*` |
-| 24–27 s | one codebase. every desktop. | one Settings window; each Look press wipes the desktop from the pointer | `settings-v8` |
-| 27–30 s | your omarchy theme. live. | the title holds the centre, then four real palettes flip full-bleed | `omarchy-*` |
-| 30–34 s | the same app, in tmux, over ssh | ssh, then the whole terminal is the page: sidebar collapses, dark to light, Deploy raises a toast | `console-v8` |
+| 0–4 s | — | Switch, Tabs, Slider, Checkbox, the camera pushing up to 1:1 and never past it | `cu-*` |
+| 4–6.5 s | nobody wants to write this. | one card in GPUI's Rust and in `createElement`, scrolling | film |
+| 6.5–10.5 s | it's just shadcn · paste any tweakcn theme. done. | the code slides in beside the card it builds; four real tweakcn themes, read by `shadcnTheme` | `shadcn-v8` |
+| 10.5–13 s | the npm packages you already use | the code slides off; package tabs | film |
+| 13–16.5 s | zero web views | 60 real tiles drop onto a tilted plane; a swipe crosses it to dark | `tile-*`, `dark-tile-*` |
+| 16.5–20.5 s | — | ⌘K, "vault" typed: Launcher → Vault → Dashboard | `launcher-v8`, `vault-v8`, `dashboard-v8` |
+| 20.5–23 s | — | all 17 chart types in three sliding rows, drawing as they arrive | `dark-chart-*` |
+| 23–26 s | Mac, Windows, Linux | one Settings window; each Look press wipes the desktop from the pointer and marks its word | `settings-v8` |
+| 26–30 s | Follows your theme in omarchy | a train of 240 px type pans in, its letters windows onto the desktop, and dives through the h; palettes arrive as carriages | `omarchy-*` |
+| 30–34 s | Run in the terminal, in tmux, over ssh, with animations. | ssh, `huntercli --terminal`, the clauses roll in and out, the app paints row by row: sidebar collapses, dark to light, Deploy raises a toast | `console-v8` |
 | 34–36 s | — | GPUI · React · shadcn · Tailwind | film |
 | 36–40 s | — | the mark, wordmark, URL, maker's line | film |
 
 **Drawn by the film, not the library:** the menu bars, docks, taskbar and GNOME top
 bar around the windows; the terminal shell and status line; the lines, cursor,
 package tabs and end card. The macOS and Windows docks are plain tiles, not real apps; the GNOME dash carries GNOME's own icons over its Adwaita wallpaper.
+
+**The opening never passes 1:1.** A close-up take is 1920×1080 and the renderer captures at a fixed 2×, so any camera scale above 1 upscales it and text blurs. Enlarging a close-up means drawing the control larger, as `cu-switch-solo` does through its theme.
+
+**`huntercli` is the film's name for the command.** No such binary ships; the app on screen is the `console-v8` take.
 
 **The terminal scene is not the terminal stream.** Terminal mode commits a paint
 only on input (`terminal-take.ts`), so the app inside the shell is the same tree
@@ -50,7 +55,7 @@ sh media/launch/sound/kit.sh ~/.claude/skills/media-use/audio/assets/sfx
 sh media/launch/sound/score.sh <SalamanderGrandPiano-V3+20200602.sf2>
 nub media/launch/build.ts                              # encodes footage, writes index.html and compositions/
 cd media/launch
-npx hyperframes snapshot -o /tmp/wall --no-end --at 16.95 && cp /tmp/wall/frame-00*.png assets/footage/wall-end.png
+npx hyperframes snapshot -o /tmp/wall --no-end --at 16.45 && cp /tmp/wall/frame-00*.png assets/footage/wall-end.png
 npx hyperframes check && npx hyperframes render -o gpuixui-launch.mp4 --crf 14
 ffmpeg -i gpuixui-launch.mp4 -t 40 -c:v copy -af loudnorm=I=-18:TP=-1:LRA=11 -ar 48000 -c:a aac -b:a 256k master.mp4
 ```

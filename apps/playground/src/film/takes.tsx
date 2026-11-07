@@ -270,8 +270,8 @@ const desktop = (look: DesktopLook): Take => ({
 
 /**
  * A close-up: one control in its card on the film's ground, at 1× for two
- * seconds. The composition's camera pushes in (captures are 2×, so up to 2× is
- * lossless); the recipes' fixed metrics never meet a scaled theme.
+ * seconds. A 960×540 stage captures to exactly 1920×1080, so the composition's
+ * camera stays at or below 1; the recipes' fixed metrics never meet a scaled theme.
  */
 const closeUp = (
   child: ReactNode,

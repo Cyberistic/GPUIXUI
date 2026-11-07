@@ -332,17 +332,54 @@
       </div>
     </div>
     <div id="d-say" class="say on-dark">
-      <span class="hl"><i></i>one codebase.</span> every desktop.
+      <span id="d-os0"
+        ><span class="hl"><i></i>Mac,</span></span
+      >
+      <span id="d-os1"
+        ><span class="hl"><i></i>Windows,</span></span
+      >
+      <span id="d-os2"
+        ><span class="hl"><i></i>Linux</span></span
+      >
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.fromTo("#d-say", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.12);
     tl.fromTo(
-      "#d-say .hl i",
+      "#d-os0",
+      { opacity: 0.35 },
+      { opacity: 1, duration: 0.15 },
+      0.12,
+    );
+    tl.fromTo(
+      "#d-os0 .hl i",
       { scaleX: 0 },
       { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
-      0.25,
+      0.12,
+    );
+    tl.fromTo(
+      "#d-os1",
+      { opacity: 0.35 },
+      { opacity: 1, duration: 0.15 },
+      1.033,
+    );
+    tl.fromTo(
+      "#d-os1 .hl i",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
+      1.03,
+    );
+    tl.fromTo(
+      "#d-os2",
+      { opacity: 0.35 },
+      { opacity: 1, duration: 0.15 },
+      2.033,
+    );
+    tl.fromTo(
+      "#d-os2 .hl i",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
+      2.03,
     );
     tl.to(
       "#d-win-layer",

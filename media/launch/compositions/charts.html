@@ -51,7 +51,7 @@
     #root .out {
       position: absolute;
       left: 110px;
-      top: 186px;
+      top: 40px;
       width: 1700px;
       border-radius: 18px;
     }
@@ -91,26 +91,6 @@
         500 18px Inter,
         sans-serif;
       color: #a1a1aa;
-    }
-    #root .band {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      height: 170px;
-      background: linear-gradient(#09090b 66%, rgba(9, 9, 11, 0));
-    }
-    #root .say {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 58px;
-      text-align: center;
-      font:
-        400 62px Inter,
-        sans-serif;
-      letter-spacing: -0.025em;
-      color: #fff;
     }
     #root .next {
       position: absolute;
@@ -290,7 +270,7 @@
       alt=""
     />
     <div id="c-rows" class="rows">
-      <div id="c-r0" class="rw" style="top: 150px">
+      <div id="c-r0" class="rw" style="top: 100px">
         <div class="cd">
           <video
             id="c-v0-0"
@@ -372,41 +352,31 @@
             id="c-v0-4"
             class="clip"
             data-start="0.79"
-            data-duration="1.8"
+            data-duration="1.71"
             data-track-index="2"
             muted
             playsinline
             src="assets/footage/dark-chart-line.mp4"
             style=""
           ></video
-          ><img
-            id="c-s0-4"
-            src="assets/footage/dark-chart-line-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>LineChart</b>
+          ><b>LineChart</b>
         </div>
         <div class="cd">
           <video
             id="c-v0-5"
             class="clip"
             data-start="0.95"
-            data-duration="1.8"
+            data-duration="1.55"
             data-track-index="2"
             muted
             playsinline
             src="assets/footage/dark-chart-radar.mp4"
             style=""
           ></video
-          ><img
-            id="c-s0-5"
-            src="assets/footage/dark-chart-radar-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>RadarChart</b>
+          ><b>RadarChart</b>
         </div>
       </div>
-      <div id="c-r1" class="rw" style="top: 450px">
+      <div id="c-r1" class="rw" style="top: 400px">
         <div class="cd">
           <video
             id="c-v1-0"
@@ -469,60 +439,45 @@
             id="c-v1-3"
             class="clip"
             data-start="0.73"
-            data-duration="1.8"
+            data-duration="1.77"
             data-track-index="3"
             muted
             playsinline
             src="assets/footage/dark-chart-sankey.mp4"
             style=""
           ></video
-          ><img
-            id="c-s1-3"
-            src="assets/footage/dark-chart-sankey-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>SankeyChart</b>
+          ><b>SankeyChart</b>
         </div>
         <div class="cd">
           <video
             id="c-v1-4"
             class="clip"
             data-start="0.89"
-            data-duration="1.8"
+            data-duration="1.61"
             data-track-index="3"
             muted
             playsinline
             src="assets/footage/dark-chart-stacked.mp4"
             style=""
           ></video
-          ><img
-            id="c-s1-4"
-            src="assets/footage/dark-chart-stacked-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>StackedBar</b>
+          ><b>StackedBar</b>
         </div>
         <div class="cd">
           <video
             id="c-v1-5"
             class="clip"
             data-start="1.05"
-            data-duration="1.8"
+            data-duration="1.45"
             data-track-index="3"
             muted
             playsinline
             src="assets/footage/dark-chart-radial.mp4"
             style=""
           ></video
-          ><img
-            id="c-s1-5"
-            src="assets/footage/dark-chart-radial-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>RadialChart</b>
+          ><b>RadialChart</b>
         </div>
       </div>
-      <div id="c-r2" class="rw" style="top: 750px">
+      <div id="c-r2" class="rw" style="top: 700px">
         <div class="cd">
           <video
             id="c-v2-0"
@@ -585,44 +540,30 @@
             id="c-v2-3"
             class="clip"
             data-start="0.83"
-            data-duration="1.8"
+            data-duration="1.67"
             data-track-index="4"
             muted
             playsinline
             src="assets/footage/dark-chart-radial-bar.mp4"
             style=""
           ></video
-          ><img
-            id="c-s2-3"
-            src="assets/footage/dark-chart-radial-bar-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>RadialBarChart</b>
+          ><b>RadialBarChart</b>
         </div>
         <div class="cd">
           <video
             id="c-v2-4"
             class="clip"
             data-start="0.99"
-            data-duration="1.8"
+            data-duration="1.51"
             data-track-index="4"
             muted
             playsinline
             src="assets/footage/dark-chart-sparkline.mp4"
             style=""
           ></video
-          ><img
-            id="c-s2-4"
-            src="assets/footage/dark-chart-sparkline-53.png"
-            alt=""
-            style="opacity: 0"
-          /><b>Sparkline</b>
+          ><b>Sparkline</b>
         </div>
       </div>
-    </div>
-    <div class="band"></div>
-    <div id="c-say" class="say on-dark">
-      <span class="hl"><i></i>17 charts.</span> one line each.
     </div>
     <div id="c-next" class="next">
       <div id="c-mac" class="desk">
@@ -651,38 +592,24 @@
     // Clear of the frame entirely: the window is taller than the frame.
     tl.to("#c-out", { y: -1500, duration: 0.45, ease: "power3.inOut" }, 0);
     tl.fromTo(
-      "#c-say .hl i",
-      { scaleX: 0 },
-      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
-      0.3,
-    );
-    tl.fromTo(
       "#c-rows",
       { y: 1080 },
       { y: 0, duration: 0.5, ease: "power3.out" },
       0.02,
     );
-    tl.fromTo("#c-say", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.15);
-    tl.fromTo("#c-r0", { x: 40 }, { x: -780, duration: 3, ease: "none" }, 0);
-    tl.fromTo("#c-r1", { x: -820 }, { x: 0, duration: 3, ease: "none" }, 0);
-    tl.fromTo("#c-r2", { x: -20 }, { x: -400, duration: 3, ease: "none" }, 0);
+    tl.fromTo("#c-r0", { x: 40 }, { x: -780, duration: 2.5, ease: "none" }, 0);
+    tl.fromTo("#c-r1", { x: -820 }, { x: 0, duration: 2.5, ease: "none" }, 0);
+    tl.fromTo("#c-r2", { x: -20 }, { x: -400, duration: 2.5, ease: "none" }, 0);
     tl.set("#c-s0-0", { opacity: 1 }, 1.91);
     tl.set("#c-s0-1", { opacity: 1 }, 2.07);
     tl.set("#c-s0-2", { opacity: 1 }, 2.23);
     tl.set("#c-s0-3", { opacity: 1 }, 2.39);
-    tl.set("#c-s0-4", { opacity: 1 }, 2.55);
-    tl.set("#c-s0-5", { opacity: 1 }, 2.71);
     tl.set("#c-s1-0", { opacity: 1 }, 2.01);
     tl.set("#c-s1-1", { opacity: 1 }, 2.17);
     tl.set("#c-s1-2", { opacity: 1 }, 2.33);
-    tl.set("#c-s1-3", { opacity: 1 }, 2.49);
-    tl.set("#c-s1-4", { opacity: 1 }, 2.65);
-    tl.set("#c-s1-5", { opacity: 1 }, 2.81);
     tl.set("#c-s2-0", { opacity: 1 }, 2.11);
     tl.set("#c-s2-1", { opacity: 1 }, 2.27);
     tl.set("#c-s2-2", { opacity: 1 }, 2.43);
-    tl.set("#c-s2-3", { opacity: 1 }, 2.59);
-    tl.set("#c-s2-4", { opacity: 1 }, 2.75);
     tl.to(
       "#c-next",
       {
@@ -690,9 +617,9 @@
         duration: 0.42,
         ease: "expo.inOut",
       },
-      2.58,
+      2.08,
     );
-    tl.set({}, {}, 3);
+    tl.set({}, {}, 2.5);
     window.__timelines = window.__timelines || {};
     window.__timelines["charts"] = tl;
   </script>

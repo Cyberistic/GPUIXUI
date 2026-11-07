@@ -1,237 +1,61 @@
 <template>
   <style>
-    #root {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-      background: #f4f2ee;
-      font-family: Inter, sans-serif;
-    }
-    #root video,
-    #root img.shot {
-      position: absolute;
-      display: block;
-    }
-    #root .cursor {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 34px;
-      transform-origin: 8% 6%;
-      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
-    }
-    #root .cursor svg {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-    #root .hl {
-      position: relative;
-      display: inline-block;
-      padding: 0 0.14em;
-      isolation: isolate;
-    }
-    #root .hl i {
-      position: absolute;
-      z-index: -1;
-      left: 0;
-      right: 0;
-      top: 0.1em;
-      bottom: 0.02em;
-      border-radius: 0.14em;
-      background: #ffd84d;
-      transform-origin: 0 50%;
-    }
-    #root .on-dark .hl i {
-      background: #2f6fed;
-    }
-    #root .row {
-      position: absolute;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      white-space: nowrap;
-    }
-    #root .chip {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      height: 100px;
-      padding: 0 30px;
-      border-radius: 20px;
-      background: #fff;
-      box-shadow:
-        0 0 0 1px rgba(29, 29, 31, 0.07),
-        0 16px 34px -20px rgba(29, 29, 31, 0.4);
-      font:
-        500 36px Inter,
-        sans-serif;
-      letter-spacing: -0.02em;
-      color: #1d1d1f;
-    }
-    #root .chip img {
-      width: 40px;
-      height: 40px;
-    }
-    #root .chip i {
-      display: block;
-      width: 26px;
-      height: 26px;
-      border-radius: 7px;
-      background: #c7c7cc;
-    }
-    #root .say {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 500px;
-      text-align: center;
-      font:
-        400 72px Inter,
-        sans-serif;
-      letter-spacing: -0.025em;
-      color: #1d1d1f;
-    }
-    #root .out {
-      position: absolute;
-      inset: 0;
-    }
-    #root .out .a {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 960px;
-      height: 1080px;
-      background: #101014;
-    }
-    #root .out img {
-      position: absolute;
-      left: 960px;
-      top: 0;
-      width: 960px;
-      height: 1080px;
-    }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #F4F2EE; font-family: Inter, sans-serif; }
+    #root video, #root img.shot { position: absolute; display: block; }
+    #root .cursor { position: absolute; left: 0; top: 0; width: 34px; transform-origin: 8% 6%; filter: drop-shadow(0 3px 6px rgba(0,0,0,.25)); }
+    #root .cursor svg { display: block; width: 100%; height: auto; }
+    #root .hl { position: relative; display: inline-block; padding: 0 .14em; isolation: isolate; }
+    #root .hl i { position: absolute; z-index: -1; left: 0; right: 0; top: .1em; bottom: .02em; border-radius: .14em; background: #FFD84D; transform-origin: 0 50%; }
+    #root .on-dark .hl i { background: #2F6FED; }
+    #root .code { position:absolute; left:0; top:0; width:960px; overflow:hidden; height:1080px; background:#101014; padding:96px 0 0 64px; font:500 27px/46px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
+    #root .code b { font-weight:500; color:#7aa2f7; } #root .code .ln i, #root .code .css i { font-style:normal; color:#9ece6a; }
+    #root .css { position:absolute; left:64px; top:96px; white-space:pre; font-size:24px; line-height:42px; }
+    #root .file { position:absolute; left:64px; top:36px; font:500 22px Inter, sans-serif; color:#71717a; }
+    #root .code .say { position:absolute; left:64px; right:64px; top:auto; bottom:60px; text-align:left; font:400 52px Inter, sans-serif; letter-spacing:-0.025em; color:#fff; }
+    #root .row { position:absolute; left:0; right:0; display:flex; justify-content:center; gap:16px; white-space:nowrap; }
+    #root .chip { display:flex; align-items:center; gap:16px; height:100px; padding:0 30px; border-radius:20px; background:#fff; box-shadow:0 0 0 1px rgba(29,29,31,.07), 0 16px 34px -20px rgba(29,29,31,.4); font:500 36px Inter, sans-serif; letter-spacing:-0.02em; color:#1D1D1F; }
+    #root .chip img { width:40px; height:40px; }
+    #root .chip i { display:block; width:26px; height:26px; border-radius:7px; background:#c7c7cc; }
+    #root .say { position:absolute; left:0; right:0; top:500px; text-align:center; font:400 72px Inter, sans-serif; letter-spacing:-0.025em; color:#1D1D1F; }
+    #root .out { position:absolute; inset:0; }
+    #root .out img { position:absolute; left:960px; top:0; width:960px; height:1080px; }
   </style>
   <div id="root" data-composition-id="npm" data-width="1920" data-height="1080">
-    <div id="n-say" class="say">
-      the <span class="hl"><i></i>npm packages</span> you already use
-    </div>
-    <div id="n-row0" class="row" style="top: 300px">
-      <div id="n-0-0" class="chip">
-        <img src="assets/logos/tanstack.svg" alt="" /><span>TanStack DB</span>
-      </div>
-      <div id="n-0-1" class="chip">
-        <img src="assets/logos/tanstack.svg" alt="" /><span>TanStack AI</span>
-      </div>
-      <div id="n-0-2" class="chip">
-        <img src="assets/logos/tanstack.svg" alt="" /><span
-          >TanStack Hotkeys</span
-        >
-      </div>
-      <div id="n-0-3" class="chip">
-        <img src="assets/logos/tanstack.svg" alt="" /><span
-          >TanStack Virtual</span
-        >
-      </div>
-      <div id="n-0-4" class="chip">
-        <img src="assets/logos/tanstack.svg" alt="" /><span
-          >TanStack Table</span
-        >
-      </div>
-    </div>
-    <div id="n-row1" class="row" style="top: 690px">
-      <div id="n-1-0" class="chip">
-        <img src="assets/logos/effect.svg" alt="" /><span>Effect</span>
-      </div>
-      <div id="n-1-1" class="chip">
-        <img src="assets/logos/better-auth.svg" alt="" /><span
-          >Better Auth</span
-        >
-      </div>
-      <div id="n-1-2" class="chip">
-        <img src="assets/logos/orpc.svg" alt="" /><span>oRPC</span>
-      </div>
-      <div id="n-1-3" class="chip"><i></i><span>react-doctor</span></div>
-      <div id="n-1-4" class="chip"><i></i><span>and more</span></div>
-    </div>
-    <div id="n-out" class="out">
-      <div class="a"></div>
-      <img src="assets/footage/shadcn-v8-209.png" alt="" />
-    </div>
+    <div id="n-say" class="say">the <span class="hl"><i></i>npm packages</span> you already use</div>
+    <div id="n-row0" class="row" style="top:300px"><div id="n-0-0" class="chip"><img src="assets/logos/tanstack.svg" alt=""><span>TanStack DB</span></div><div id="n-0-1" class="chip"><img src="assets/logos/tanstack.svg" alt=""><span>TanStack AI</span></div><div id="n-0-2" class="chip"><img src="assets/logos/tanstack.svg" alt=""><span>TanStack Hotkeys</span></div><div id="n-0-3" class="chip"><img src="assets/logos/tanstack.svg" alt=""><span>TanStack Virtual</span></div><div id="n-0-4" class="chip"><img src="assets/logos/tanstack.svg" alt=""><span>TanStack Table</span></div></div>
+    <div id="n-row1" class="row" style="top:690px"><div id="n-1-0" class="chip"><img src="assets/logos/effect.svg" alt=""><span>Effect</span></div><div id="n-1-1" class="chip"><img src="assets/logos/better-auth.svg" alt=""><span>Better Auth</span></div><div id="n-1-2" class="chip"><img src="assets/logos/orpc.svg" alt=""><span>oRPC</span></div><div id="n-1-3" class="chip"><i></i><span>react-doctor</span></div><div id="n-1-4" class="chip"><i></i><span>and more</span></div></div>
+    <div id="n-out" class="out"><div class="code"><div class="file">catppuccin.css · tweakcn.com</div><div class="css">.dark {
+  <b>--background</b>: <i>oklch(0.2155 0.0254 284.0647)</i>;
+  <b>--foreground</b>: <i>oklch(0.8787 0.0426 272.2767)</i>;
+  <b>--card</b>: <i>oklch(0.2429 0.0304 283.9110)</i>;
+  <b>--card-foreground</b>: <i>oklch(0.8787 0.0426 272.2767)</i>;
+  <b>--primary</b>: <i>oklch(0.7871 0.1187 304.7693)</i>;
+  <b>--primary-foreground</b>: <i>oklch(0.2429 0.0304 283.9110)</i>;
+  <b>--muted-foreground</b>: <i>oklch(0.7510 0.0396 273.9320)</i>;
+  <b>--border</b>: <i>oklch(0.3240 0.0319 281.9784)</i>;
+  <b>--input</b>: <i>oklch(0.3240 0.0319 281.9784)</i>;
+  <b>--chart-</b>1: <i>oklch(0.7871 0.1187 304.7693)</i>;
+  <b>--chart-</b>2: <i>oklch(0.8467 0.0833 210.2545)</i>;
+  <b>--chart-</b>3: <i>oklch(0.8577 0.1092 142.7153)</i>;
+  <b>--radius</b>: <i>0.35rem</i>;
+}</div><div class="say on-dark">paste any <span class="hl"><i></i>tweakcn</span> theme. done.</div></div><img src="assets/footage/shadcn-v8-119.png" alt=""></div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.to("#n-out", { y: -1090, duration: 0.42, ease: "expo.inOut" }, 0);
-    tl.fromTo(
-      "#n-say .hl i",
-      { scaleX: 0 },
-      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
-      0.45,
-    );
-    tl.fromTo("#n-row0", { x: 24 }, { x: -24, duration: 2.5, ease: "none" }, 0);
-    tl.fromTo("#n-row1", { x: -24 }, { x: 24, duration: 2.5, ease: "none" }, 0);
-    tl.fromTo(
-      "#n-0-0",
-      { y: -60, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.8)" },
-      0.3,
-    );
-    tl.fromTo(
-      "#n-0-1",
-      { y: -60, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.8)" },
-      0.46,
-    );
-    tl.fromTo(
-      "#n-0-2",
-      { y: -60, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.8)" },
-      0.62,
-    );
-    tl.fromTo(
-      "#n-0-3",
-      { y: -60, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.8)" },
-      0.78,
-    );
-    tl.fromTo(
-      "#n-0-4",
-      { y: -60, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.8)" },
-      0.94,
-    );
-    tl.fromTo(
-      "#n-1-0",
-      { y: 60, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.8)" },
-      0.44,
-    );
-    tl.fromTo(
-      "#n-1-1",
-      { y: 60, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.8)" },
-      0.6,
-    );
-    tl.fromTo(
-      "#n-1-2",
-      { y: 60, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.8)" },
-      0.76,
-    );
-    tl.fromTo(
-      "#n-1-3",
-      { y: 60, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.8)" },
-      0.92,
-    );
-    tl.fromTo(
-      "#n-1-4",
-      { y: 60, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.8)" },
-      1.08,
-    );
+    tl.to("#n-out",{y:-1090,duration:0.42,ease:"expo.inOut"},0);
+    tl.fromTo("#n-say .hl i",{scaleX:0},{scaleX:1,duration:0.32,ease:"power3.out",stagger:0.18},0.45);
+    tl.fromTo("#n-row0",{x:24},{x:-24,duration:2.5,ease:"none"},0);
+    tl.fromTo("#n-row1",{x:-24},{x:24,duration:2.5,ease:"none"},0);
+    tl.fromTo("#n-0-0",{y:-60,opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.28,ease:"back.out(1.8)"},0.30);
+    tl.fromTo("#n-0-1",{y:-60,opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.28,ease:"back.out(1.8)"},0.46);
+    tl.fromTo("#n-0-2",{y:-60,opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.28,ease:"back.out(1.8)"},0.62);
+    tl.fromTo("#n-0-3",{y:-60,opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.28,ease:"back.out(1.8)"},0.78);
+    tl.fromTo("#n-0-4",{y:-60,opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.28,ease:"back.out(1.8)"},0.94);
+    tl.fromTo("#n-1-0",{y:60,opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.28,ease:"back.out(1.8)"},0.44);
+    tl.fromTo("#n-1-1",{y:60,opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.28,ease:"back.out(1.8)"},0.60);
+    tl.fromTo("#n-1-2",{y:60,opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.28,ease:"back.out(1.8)"},0.76);
+    tl.fromTo("#n-1-3",{y:60,opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.28,ease:"back.out(1.8)"},0.92);
+    tl.fromTo("#n-1-4",{y:60,opacity:0,scale:0.9},{y:0,opacity:1,scale:1,duration:0.28,ease:"back.out(1.8)"},1.08);
     tl.set({}, {}, 2.5);
     window.__timelines = window.__timelines || {};
     window.__timelines["npm"] = tl;

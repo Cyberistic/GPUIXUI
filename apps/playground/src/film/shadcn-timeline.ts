@@ -2,12 +2,14 @@
  * The shadcn scene's script, read by both sides: the take paints the component
  * each line of code describes, and the film types that line on the same frame.
  */
-export const CHARS_PER_FRAME = 3;
+import * as Arr from "effect/Array";
+
+export const CHARS_PER_FRAME = 8;
 
 /** The title holds alone this long, then the code slides in under it. */
-export const INTRO = 34;
-const THEME_AT = 126;
-const THEME_EVERY = 14;
+export const INTRO = 20;
+const THEME_AT = 64;
+const THEME_EVERY = 12;
 const themeAt = (index: number): number => THEME_AT + index * THEME_EVERY;
 
 export interface CodeLine {
@@ -16,29 +18,36 @@ export interface CodeLine {
   readonly frame: number;
 }
 
-export const CODE: ReadonlyArray<CodeLine> = [
-  { text: "<Card>", frame: INTRO + 6 },
-  { text: "  <CardHeader>", frame: INTRO + 10 },
-  { text: "    <CardTitle>Hunter License</CardTitle>", frame: INTRO + 14 },
-  {
-    text: "    <CardDescription>The 287th exam</CardDescription>",
-    frame: INTRO + 26,
-  },
-  { text: "  </CardHeader>", frame: INTRO + 40 },
-  { text: "  <CardContent>", frame: INTRO + 44 },
-  { text: '    <Input placeholder="gon@whale-island" />', frame: INTRO + 48 },
-  { text: "    <Button>Apply</Button>", frame: INTRO + 60 },
-  { text: "    <BarChart series={applicants} />", frame: INTRO + 68 },
-  { text: "  </CardContent>", frame: INTRO + 78 },
-  { text: "</Card>", frame: INTRO + 82 },
+const LINES = [
+  "<Card>",
+  "  <CardHeader>",
+  "    <CardTitle>Hunter License</CardTitle>",
+  "    <CardDescription>The 287th exam</CardDescription>",
+  "  </CardHeader>",
+  "  <CardContent>",
+  '    <Input placeholder="gon@whale-island" />',
+  "    <Button>Apply</Button>",
+  "    <BarChart series={applicants} />",
+  "  </CardContent>",
+  "</Card>",
 ];
+
+const framesOf = (text: string): number =>
+  Math.ceil(text.length / CHARS_PER_FRAME);
+
+/** One line after another, from just after the code has slid in. */
+export const CODE: ReadonlyArray<CodeLine> = Arr.map(LINES, (text, i) => ({
+  text,
+  frame:
+    INTRO +
+    4 +
+    Arr.reduce(Arr.take(LINES, i), 0, (sum, line) => sum + framesOf(line)),
+}));
 
 /** The first frame each part of the card is on screen: its line's last character. */
 const typed = (index: number): number => {
   const line = CODE[index];
-  return line === undefined
-    ? 0
-    : line.frame + Math.ceil(line.text.length / CHARS_PER_FRAME);
+  return line === undefined ? 0 : line.frame + framesOf(line.text);
 };
 
 export const SHOWN = {
@@ -58,7 +67,7 @@ export interface BuilderTheme {
   readonly css: string;
 }
 
-/** Six real themes from tweakcn.com's registry (`/r/themes/<name>.json`). */
+/** Four real themes from tweakcn.com's registry (`/r/themes/<name>.json`). */
 export const THEMES: ReadonlyArray<BuilderTheme> = [
   {
     name: "bubblegum",
@@ -121,48 +130,8 @@ export const THEMES: ReadonlyArray<BuilderTheme> = [
 }`,
   },
   {
-    name: "doom-64",
-    frame: themeAt(3),
-    mode: "dark",
-    css: `.dark {
-  --background: oklch(0.2178 0 0);
-  --foreground: oklch(0.9067 0 0);
-  --card: oklch(0.2850 0 0);
-  --card-foreground: oklch(0.9067 0 0);
-  --primary: oklch(0.6083 0.2090 27.0276);
-  --primary-foreground: oklch(1.0000 0 0);
-  --muted-foreground: oklch(0.7058 0 0);
-  --border: oklch(0.4091 0 0);
-  --input: oklch(0.4091 0 0);
-  --chart-1: oklch(0.6083 0.2090 27.0276);
-  --chart-2: oklch(0.6423 0.1467 133.0145);
-  --chart-3: oklch(0.7482 0.1235 244.7492);
-  --radius: 0px;
-}`,
-  },
-  {
-    name: "candyland",
-    frame: themeAt(4),
-    mode: "light",
-    css: `:root {
-  --background: oklch(0.9809 0.0025 228.7836);
-  --foreground: oklch(0.3211 0 0);
-  --card: oklch(1.0000 0 0);
-  --card-foreground: oklch(0.3211 0 0);
-  --primary: oklch(0.8677 0.0735 7.0855);
-  --primary-foreground: oklch(0 0 0);
-  --muted-foreground: oklch(0.5382 0 0);
-  --border: oklch(0.8699 0 0);
-  --input: oklch(0.8699 0 0);
-  --chart-1: oklch(0.8677 0.0735 7.0855);
-  --chart-2: oklch(0.8148 0.0819 225.7537);
-  --chart-3: oklch(0.9680 0.2110 109.7692);
-  --radius: 0.5rem;
-}`,
-  },
-  {
     name: "catppuccin",
-    frame: themeAt(5),
+    frame: themeAt(3),
     mode: "dark",
     css: `.dark {
   --background: oklch(0.2155 0.0254 284.0647);
@@ -182,4 +151,4 @@ export const THEMES: ReadonlyArray<BuilderTheme> = [
   },
 ];
 
-export const SHADCN_FRAMES = 210;
+export const SHADCN_FRAMES = 120;

@@ -60,23 +60,48 @@
       position: absolute;
       inset: 0;
     }
-    #root .dim {
+    #root .dive {
       position: absolute;
       inset: 0;
-      background: #09090b;
-      opacity: 0;
+      mix-blend-mode: multiply;
+      transform-origin: 1241px 520px;
     }
-    #root .title {
+    #root .train {
+      position: absolute;
+      left: 960px;
+      top: 0;
+      width: 0;
+      height: 1080px;
+    }
+    #root .plate {
+      position: absolute;
+      left: -3500px;
+      top: 0;
+      width: 14000px;
+      height: 1080px;
+      background: #000;
+      border-radius: 140px 0 0 140px;
+    }
+    #root .word {
       position: absolute;
       left: 0;
-      right: 0;
-      top: 490px;
-      text-align: center;
+      top: 400px;
+      transform: translateX(-50%);
       font:
-        400 88px Inter,
+        800 240px/280px Inter,
         sans-serif;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.04em;
       color: #fff;
+      white-space: nowrap;
+    }
+    #root .before {
+      position: absolute;
+      right: calc(100% + 0.26em);
+      top: 0;
+    }
+    #root .front {
+      position: absolute;
+      inset: 0;
     }
     #root .fly {
       position: absolute;
@@ -84,6 +109,21 @@
       top: 196px;
       width: 1320px;
       border-radius: 19px;
+    }
+    #root .say {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 72px;
+      text-align: center;
+      font:
+        500 62px Inter,
+        sans-serif;
+      letter-spacing: -0.025em;
+      color: #fff;
+      text-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.5),
+        0 4px 40px rgba(0, 0, 0, 0.6);
     }
     #root .desk {
       position: absolute;
@@ -242,127 +282,112 @@
     data-width="1920"
     data-height="1080"
   >
-    <div id="o-gnome" class="desk">
-      <img class="wall" src="assets/gnome/adwaita.jpg" alt="" />
-      <div class="gbar">
-        <span class="act">Activities</span
-        ><span class="clock">Fri Nov 6 9:41</span
-        ><span class="sys">Wi-Fi · 100%</span>
-      </div>
-      <div class="dash">
-        <img src="assets/gnome/org.gnome.Epiphany.svg" alt="" /><img
-          src="assets/gnome/org.gnome.Nautilus.svg"
-          alt=""
-        /><img src="assets/gnome/org.gnome.Calendar.svg" alt="" /><img
-          src="assets/gnome/org.gnome.Music.svg"
-          alt=""
-        /><img src="assets/gnome/org.gnome.TextEditor.svg" alt="" /><img
-          src="assets/gnome/org.gnome.Settings.svg"
-          alt=""
-        />
-      </div>
-    </div>
-    <div id="o-all" style="opacity: 0">
-      <div id="o-t0" class="t" style="clip-path: none">
+    <div id="o-all">
+      <div id="o-t0" class="t">
         <img
           class="full"
           src="assets/footage/omarchy-rose-pine-53.png"
           alt=""
         />
       </div>
-      <div id="o-t1" class="t" style="clip-path: circle(0px at 960px 18px)">
+      <div id="o-t1" class="t">
         <img class="full" src="assets/footage/omarchy-gruvbox-53.png" alt="" />
       </div>
-      <div id="o-t2" class="t" style="clip-path: circle(0px at 960px 18px)">
+      <div id="o-t2" class="t">
         <img
           class="full"
           src="assets/footage/omarchy-catppuccin-latte-53.png"
           alt=""
         />
       </div>
-      <div id="o-t3" class="t" style="clip-path: circle(0px at 960px 18px)">
+      <div id="o-t3" class="t">
         <img class="full" src="assets/footage/omarchy-tokyo-53.png" alt="" />
       </div>
     </div>
-    <img
-      id="o-fly"
-      class="fly"
-      src="assets/footage/settings-v8-89.png"
-      alt=""
-    />
-    <div id="o-dim" class="dim"></div>
-    <div id="o-say" class="title on-dark">
-      your <span class="hl"><i></i>omarchy</span> theme. live.
+    <div id="o-front" class="front">
+      <div id="o-gnome" class="desk">
+        <img class="wall" src="assets/gnome/adwaita.jpg" alt="" />
+        <div class="gbar">
+          <span class="act">Activities</span
+          ><span class="clock">Fri Nov 6 9:41</span
+          ><span class="sys">Wi-Fi · 100%</span>
+        </div>
+        <div class="dash">
+          <img src="assets/gnome/org.gnome.Epiphany.svg" alt="" /><img
+            src="assets/gnome/org.gnome.Nautilus.svg"
+            alt=""
+          /><img src="assets/gnome/org.gnome.Calendar.svg" alt="" /><img
+            src="assets/gnome/org.gnome.Music.svg"
+            alt=""
+          /><img src="assets/gnome/org.gnome.TextEditor.svg" alt="" /><img
+            src="assets/gnome/org.gnome.Settings.svg"
+            alt=""
+          />
+        </div>
+      </div>
+      <img class="fly" src="assets/footage/settings-v8-89.png" alt="" />
+      <div class="say on-dark">
+        <span id="o-os0"
+          ><span class="hl"><i></i>Mac,</span></span
+        >
+        <span id="o-os1"
+          ><span class="hl"><i></i>Windows,</span></span
+        >
+        <span id="o-os2"
+          ><span class="hl"><i></i>Linux</span></span
+        >
+      </div>
+    </div>
+    <div id="o-dive" class="dive">
+      <div id="o-train" class="train" data-layout-allow-overflow>
+        <div class="plate"></div>
+        <div class="word">
+          <div class="before">Follows your theme in</div>
+          omarchy
+        </div>
+      </div>
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
-    tl.fromTo("#o-dim", { opacity: 0 }, { opacity: 0.72, duration: 0.3 }, 0.34);
     tl.fromTo(
-      "#o-say",
-      { opacity: 0, y: 14 },
-      { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" },
-      0.34,
-    );
-    tl.fromTo(
-      "#o-say .hl i",
-      { scaleX: 0 },
-      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
-      0.54,
-    );
-    tl.to("#o-dim", { opacity: 0, duration: 0.25 }, 1.24);
-    tl.to(
-      "#o-say",
-      { opacity: 0, y: -14, duration: 0.2, ease: "power2.in" },
-      1.24,
-    );
-    tl.to("#o-all", { opacity: 1, duration: 0.3, ease: "power2.out" }, 0.05);
-    tl.to(
-      "#o-fly",
-      {
-        x: -270,
-        y: -110,
-        scale: 0.6,
-        opacity: 0,
-        duration: 0.28,
-        ease: "expo.inOut",
-      },
+      "#o-train",
+      { x: 4460 },
+      { x: 0, duration: 1.7, ease: "power2.out" },
       0,
     );
-    tl.to(
+    tl.fromTo(
+      "#o-front",
+      { clipPath: "inset(0 -140px 0 0)" },
+      { clipPath: "inset(0 4320px 0 0)", duration: 1.7, ease: "power2.out" },
+      0,
+    );
+    tl.to("#o-dive", { scale: 70, duration: 0.34, ease: "expo.in" }, 1.9);
+    tl.set("#o-dive", { opacity: 0 }, 2.24);
+    tl.fromTo(
       "#o-t1",
-      {
-        clipPath: "circle(2300px at 960px 18px)",
-        duration: 0.34,
-        ease: "expo.out",
-      },
-      1.34,
+      { x: 1920 },
+      { x: 0, duration: 0.34, ease: "expo.inOut" },
+      2.32,
     );
-    tl.to(
+    tl.fromTo(
       "#o-t2",
-      {
-        clipPath: "circle(2300px at 960px 18px)",
-        duration: 0.34,
-        ease: "expo.out",
-      },
-      1.76,
+      { x: 1920 },
+      { x: 0, duration: 0.34, ease: "expo.inOut" },
+      2.72,
     );
-    tl.to(
+    tl.fromTo(
       "#o-t3",
-      {
-        clipPath: "circle(2300px at 960px 18px)",
-        duration: 0.34,
-        ease: "expo.out",
-      },
-      2.18,
+      { x: 1920 },
+      { x: 0, duration: 0.34, ease: "expo.inOut" },
+      3.12,
     );
-    // The camera pushes into the terminal pane, which becomes the next scene.
     tl.to(
       "#o-all",
       { x: -2514.3, y: -244.3, scale: 2.381, duration: 0.42, ease: "expo.in" },
-      2.58,
+      3.58,
     );
-    tl.set({}, {}, 3);
+    tl.set({}, {}, 4);
     window.__timelines = window.__timelines || {};
     window.__timelines["omarchy"] = tl;
   </script>

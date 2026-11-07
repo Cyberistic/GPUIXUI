@@ -55,6 +55,10 @@
       top: 0;
       width: 1920px;
       height: 1080px;
+      mask:
+        linear-gradient(90deg, #0000, #000 14%, #000 86%, #0000),
+        linear-gradient(#0000, #000 14%, #000 86%, #0000);
+      mask-composite: intersect;
     }
   </style>
   <div
@@ -63,7 +67,7 @@
     data-width="1920"
     data-height="1080"
   >
-    <div id="m-cam0" class="cam" style="opacity: 1; transform: scale(1.1)">
+    <div id="m-cam0" class="cam" style="opacity: 1; transform: scale(0.76)">
       <video
         data-media-start="0.42"
         id="m-v0"
@@ -76,7 +80,7 @@
         src="assets/footage/cu-switch-solo.mp4"
         style=""
       ></video>
-      <div id="m-cur0" class="cursor" style="width: 79px">
+      <div id="m-cur0" class="cursor" style="width: 114px">
         <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
@@ -88,7 +92,7 @@
         </svg>
       </div>
     </div>
-    <div id="m-cam1" class="cam" style="opacity: 0; transform: scale(1.33)">
+    <div id="m-cam1" class="cam" style="opacity: 0; transform: scale(0.82)">
       <video
         data-media-start="0.42"
         id="m-v1"
@@ -101,7 +105,7 @@
         src="assets/footage/cu-tabs.mp4"
         style=""
       ></video>
-      <div id="m-cur1" class="cursor" style="width: 65px">
+      <div id="m-cur1" class="cursor" style="width: 106px">
         <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
@@ -113,7 +117,7 @@
         </svg>
       </div>
     </div>
-    <div id="m-cam2" class="cam" style="opacity: 0; transform: scale(1.58)">
+    <div id="m-cam2" class="cam" style="opacity: 0; transform: scale(0.88)">
       <video
         data-media-start="0.42"
         id="m-v2"
@@ -126,7 +130,7 @@
         src="assets/footage/cu-slider.mp4"
         style=""
       ></video>
-      <div id="m-cur2" class="cursor" style="width: 55px">
+      <div id="m-cur2" class="cursor" style="width: 99px">
         <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
@@ -138,7 +142,7 @@
         </svg>
       </div>
     </div>
-    <div id="m-cam3" class="cam" style="opacity: 0; transform: scale(1.84)">
+    <div id="m-cam3" class="cam" style="opacity: 0; transform: scale(0.94)">
       <video
         data-media-start="0.42"
         id="m-v3"
@@ -151,7 +155,7 @@
         src="assets/footage/cu-checkbox.mp4"
         style=""
       ></video>
-      <div id="m-cur3" class="cursor" style="width: 47px">
+      <div id="m-cur3" class="cursor" style="width: 93px">
         <svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z"
@@ -169,8 +173,8 @@
     tl.set("#m-cam0", { opacity: 0 }, 1.0);
     tl.fromTo(
       "#m-cam0",
-      { scale: 1.1 },
-      { scale: 1.33, duration: 1, ease: "none" },
+      { scale: 0.76 },
+      { scale: 0.82, duration: 1, ease: "none" },
       0.0,
     );
     tl.set("#m-cur0", { x: 1008.0, y: 577.7, scale: 1 }, 0.0);
@@ -208,8 +212,8 @@
     tl.set("#m-cam1", { opacity: 0 }, 2.0);
     tl.fromTo(
       "#m-cam1",
-      { scale: 1.33 },
-      { scale: 1.58, duration: 1, ease: "none" },
+      { scale: 0.82 },
+      { scale: 0.88, duration: 1, ease: "none" },
       1.0,
     );
     tl.set("#m-cur1", { x: 1179.0, y: 577.7, scale: 1 }, 1.0);
@@ -247,8 +251,8 @@
     tl.set("#m-cam2", { opacity: 0 }, 3.0);
     tl.fromTo(
       "#m-cam2",
-      { scale: 1.58 },
-      { scale: 1.84, duration: 1, ease: "none" },
+      { scale: 0.88 },
+      { scale: 0.94, duration: 1, ease: "none" },
       2.0,
     );
     tl.set("#m-cur2", { x: 748.5, y: 565.7, scale: 1 }, 2.0);
@@ -285,8 +289,8 @@
     tl.set("#m-cam3", { opacity: 1 }, 3.0);
     tl.fromTo(
       "#m-cam3",
-      { scale: 1.84 },
-      { scale: 2.1, duration: 1, ease: "none" },
+      { scale: 0.94 },
+      { scale: 1, duration: 1, ease: "none" },
       3.0,
     );
     tl.set("#m-cur3", { x: 782.0, y: 577.7, scale: 1 }, 3.0);

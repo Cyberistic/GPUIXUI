@@ -1,0 +1,246 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #f4f2ee;
+      font-family: Inter, sans-serif;
+    }
+    #root video,
+    #root img.shot {
+      position: absolute;
+      display: block;
+    }
+    #root .cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 34px;
+      transform-origin: 8% 6%;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+    }
+    #root .cursor svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #root .hl {
+      position: relative;
+      display: inline-block;
+      padding: 0 0.14em;
+      isolation: isolate;
+    }
+    #root .hl i {
+      position: absolute;
+      z-index: -1;
+      left: 0;
+      right: 0;
+      top: 0.1em;
+      bottom: 0.02em;
+      border-radius: 0.14em;
+      background: #ffd84d;
+      transform-origin: 0 50%;
+    }
+    #root .on-dark .hl i {
+      background: #2f6fed;
+    }
+    #root .say {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 44px;
+      text-align: center;
+      font:
+        400 62px Inter,
+        sans-serif;
+      letter-spacing: -0.025em;
+      color: #1d1d1f;
+    }
+    #root .pane {
+      position: absolute;
+      top: 150px;
+      width: 880px;
+      height: 960px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #101014;
+      padding: 26px 36px;
+    }
+    #root .pane h2 {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      z-index: 1;
+      padding: 26px 36px 18px;
+      background: #101014;
+      font:
+        500 26px Inter,
+        sans-serif;
+      color: #a1a1aa;
+    }
+    #root .pane em {
+      font-style: normal;
+      color: #71717a;
+      margin-left: 12px;
+    }
+    #root .pane pre {
+      position: absolute;
+      left: 36px;
+      top: 86px;
+      font:
+        500 21px/31px "JetBrains Mono",
+        Menlo,
+        monospace;
+      color: #d4d4d8;
+    }
+    #root .pane pre b {
+      font-weight: 500;
+      color: #7aa2f7;
+    }
+    #root .pane pre i {
+      font-style: normal;
+      color: #9ece6a;
+    }
+  </style>
+  <div
+    id="root"
+    data-composition-id="mock"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div id="k-say" class="say">
+      nobody wants to <span class="hl"><i></i>write this.</span>
+    </div>
+    <div id="k-p0" class="pane" style="left: 60px">
+      <h2>GPUI, in Rust<em>50 lines</em></h2>
+      <pre id="k-c0" data-layout-allow-overlap>impl Render for License {
+    fn render(
+        &amp;mut self,
+        _window: &amp;mut Window,
+        cx: &amp;mut Context&lt;Self>,
+    ) -> impl IntoElement {
+        div()
+            <b>.flex</b>()
+            <b>.flex_col</b>()
+            <b>.gap_4</b>()
+            <b>.p_6</b>()
+            <b>.w</b>(px(520.))
+            <b>.rounded_xl</b>()
+            <b>.border_1</b>()
+            <b>.border_color</b>(rgb(0x27272a))
+            <b>.bg</b>(rgb(0x18181b))
+            <b>.child</b>(
+                div()
+                    <b>.flex</b>()
+                    <b>.flex_col</b>()
+                    <b>.gap_1</b>()
+                    <b>.child</b>(
+                        div()
+                            <b>.text_lg</b>()
+                            <b>.font_weight</b>(FontWeight::SEMIBOLD)
+                            <b>.child</b>(<i>"Hunter License"</i>),
+                    )
+                    <b>.child</b>(
+                        div()
+                            <b>.text_sm</b>()
+                            <b>.text_color</b>(rgb(0xa1a1aa))
+                            <b>.child</b>(<i>"The 287th exam"</i>),
+                    ),
+            )
+            <b>.child</b>(self.email<b>.clone</b>())
+            <b>.child</b>(
+                div()
+                    <b>.id</b>(<i>"apply"</i>)
+                    <b>.flex</b>()
+                    <b>.justify_center</b>()
+                    <b>.h_9</b>()
+                    <b>.rounded_md</b>()
+                    <b>.bg</b>(rgb(0xfafafa))
+                    <b>.text_color</b>(rgb(0x18181b))
+                    <b>.cursor_pointer</b>()
+                    <b>.on_click</b>(cx<b>.listener</b>(Self::apply))
+                    <b>.child</b>(<i>"Apply"</i>),
+            )
+    }
+}</pre>
+    </div>
+    <div id="k-p1" class="pane" style="left: 980px">
+      <h2>React, no JSX<em>44 lines</em></h2>
+      <pre id="k-c1" data-layout-allow-overlap>return <b>createElement</b>(
+  <i>"div"</i>,
+  {
+    style: {
+      display: <i>"flex"</i>,
+      flexDirection: <i>"column"</i>,
+      gap: 16,
+      padding: 24,
+      width: 520,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: <i>"#27272a"</i>,
+      backgroundColor: <i>"#18181b"</i>,
+    },
+  },
+  <b>createElement</b>(
+    <i>"div"</i>,
+    { style: { gap: 4 } },
+    <b>createElement</b>(
+      <i>"text"</i>,
+      { style: { fontSize: 18, fontWeight: 600 } },
+      <i>"Hunter License"</i>,
+    ),
+    <b>createElement</b>(
+      <i>"text"</i>,
+      { style: { fontSize: 14, color: <i>"#a1a1aa"</i> } },
+      <i>"The 287th exam"</i>,
+    ),
+  ),
+  <b>createElement</b>(Input, { placeholder: <i>"gon@whale-island"</i> }),
+  <b>createElement</b>(
+    <i>"div"</i>,
+    {
+      onClick: apply,
+      style: {
+        height: 36,
+        borderRadius: 6,
+        backgroundColor: <i>"#fafafa"</i>,
+        justifyContent: <i>"center"</i>,
+      },
+    },
+    <b>createElement</b>(<i>"text"</i>, null, <i>"Apply"</i>),
+  ),
+);</pre>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo(
+      "#k-p0",
+      { y: 1000 },
+      { y: 0, duration: 0.4, ease: "expo.out" },
+      0.0,
+    );
+    tl.to("#k-c0", { y: -710, duration: 2.2, ease: "power1.in" }, 0.3);
+    tl.to("#k-p0", { y: 1000, duration: 0.32, ease: "expo.in" }, 2.14);
+    tl.fromTo(
+      "#k-p1",
+      { y: 1000 },
+      { y: 0, duration: 0.4, ease: "expo.out" },
+      0.1,
+    );
+    tl.to("#k-c1", { y: -524, duration: 2.2, ease: "power1.in" }, 0.3);
+    tl.to("#k-p1", { y: 1000, duration: 0.32, ease: "expo.in" }, 2.17);
+    tl.fromTo(
+      "#k-say .hl i",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.32, ease: "power3.out", stagger: 0.18 },
+      0.45,
+    );
+    tl.to("#k-say", { opacity: 0, duration: 0.14 }, 2.34);
+    tl.set({}, {}, 2.5);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["mock"] = tl;
+  </script>
+</template>
