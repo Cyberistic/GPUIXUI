@@ -164,3 +164,13 @@ Unchanged from the audit (plan 525 §3.5):
    scaled subtree; portal overlays to the root.
 8. **Hit-test metadata lookup is a linear scan** over transformed hitboxes.
 9. **GPUix text selection inside a transformed container is unverified.**
+
+## `0002-paint-shader.patch`
+
+Adds `Window::paint_shader`, a WGSL fragment shader as a scene primitive in painter
+order, with a backdrop copy taken by ending and reopening the pass. Metal compiles the
+WGSL through naga's MSL backend; wgpu takes it directly; DirectX is a `TODO`.
+
+Unlike `0001`, this patch ships: `packages/native` applies it when building the
+GPUIxUI binary. Preimage: `remorses/zed` `f77e5cfe9dad04288566f00c66ecf3c58d6f84b3`, the
+pin of GPUix `0ce4f41`. Each backend's tests are in `metal_shader.rs` and `wgpu_shader.rs`.

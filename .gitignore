@@ -2,6 +2,7 @@
 node_modules/
 
 # Build / cache artifacts (all workspaces)
+packages/native/.build/
 dist/
 build/
 .source/

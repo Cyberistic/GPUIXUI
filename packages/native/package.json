@@ -1,0 +1,36 @@
+{
+  "name": "@gpuixui/native",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The GPUix native binary with GPUI's paint_shader patched in, and the <Shader> host element that paints through it.",
+  "sideEffects": [
+    "./src/register.ts"
+  ],
+  "exports": {
+    "./register": "./src/register.ts",
+    "./shader": "./src/shader.tsx"
+  },
+  "scripts": {
+    "build": "nub scripts/build.ts",
+    "check-types": "tsc --noEmit",
+    "test:behaviour": "vitest run"
+  },
+  "peerDependencies": {
+    "@gpuix/react": "catalog:",
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@gpuix/react": "catalog:",
+    "@gpuixui/config": "workspace:*",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "typescript": "catalog:",
+    "@gpuixui/testing": "workspace:*",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "@gpuix/native": "catalog:"
+  }
+}
