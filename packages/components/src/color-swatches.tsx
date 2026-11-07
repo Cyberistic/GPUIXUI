@@ -58,7 +58,9 @@ export const ColorSwatches = ({
               width: ring,
               height: ring,
               minWidth: ring,
-              padding: 0,
+              flexShrink: 0,
+              paddingLeft: 0,
+              paddingRight: 0,
               borderRadius: ring / 2,
               borderWidth: selected ? theme.borderWidth.strong : 0,
               borderColor: color,
@@ -69,6 +71,8 @@ export const ColorSwatches = ({
                 width: size,
                 height: size,
                 borderRadius: size / 2,
+                flexShrink: 0,
+                pointerEvents: "none",
                 backgroundColor: color,
               }}
             />
