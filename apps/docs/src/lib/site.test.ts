@@ -29,3 +29,19 @@ describe("the site origin", () => {
     expect(absoluteUrl("/")).toBe(`${siteOrigin}/`);
   });
 });
+
+// Bug guarded: the comment pass deleted these headers, so /live revalidated 20 MiB of wasm.
+describe("the deployed assets", () => {
+  it("caches hashed assets for a year", () => {
+    const stack = readFileSync(
+      new URL(
+        "../../../../packages/deploy/alchemy.run.docs.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    expect(stack).toContain("/assets/*");
+    expect(stack).toContain("max-age=31536000, immutable");
+    expect(stack).toContain("headers: docsAssetHeaders");
+  });
+});
