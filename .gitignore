@@ -71,3 +71,6 @@ media/launch/stage/kit
 dist-spike/
 apps/playground/scripts/web/bundle.js
 apps/playground/scripts/web/probe.mjs
+__pycache__/
+media/reel/
+media/launch/*.mp4

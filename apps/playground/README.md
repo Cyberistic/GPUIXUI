@@ -869,9 +869,6 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. A press on a row opens the scenario it hit, and the sidebar is drivable without a pointer: it is **one roving stop** (the open row), the arrows step the cursor with a clamp and open what they land on, `Home`/`End` jump and reveal the row they opened, and `Tab` leaves the list in one press — so the header, the mounted view and the selection's paint follow on either route; the mounted view is live (its own field types through to its readout), and the palette switch repaints the shell's root and the selected row and answers both `Enter` and `space` (`shell-selection`), every row and palette button publishing the name the accessibility tree carries (a `role="button"` has no name without `aria-label`); the renderer keeps a scroll offset per `testId`, so a probe must reveal a row before pressing it. The **stage** is a scroller too: the tallest view (`data-charts-core`, ~916px of charts) scrolls to its end at `-202` in a 714px stage, and `overflow: "scroll"` is what makes it one — removing it leaves the stage reporting no offset, while `minHeight: 0` changes nothing (`shell-stage-scroll`) |
 | content | `<svg source>` paints as one `style.color` tint; a multi-colour chart is one stacked `<svg>` per colour, and `<text>` inside it paints; `<img>` paints a data URL or a pixel buffer uploaded from a **layout** effect; `<canvas>` tracks no bounds and paints nothing (see the probe below) |
 
-`legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence
-(`./legacy-probe/run.sh probe`); they never set a component status.
-
 ## The live window runner (plan `053` STOP gate)
 
 The headless suite drives the offscreen `TestRenderer`; a live run drives a

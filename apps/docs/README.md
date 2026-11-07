@@ -445,9 +445,6 @@ src/lib/source.ts                   The Fumadocs collection for content/docs
 src/lib/doc-snippets.test-util.ts   The shared page-snippet and symbol resolve for the page guards
 src/lib/docs-pages.test-util.ts     The docs pages the two machine-document guards read from both trees
 src/lib/preload-recovery.ts           One reload when a route's chunk has gone
-src/lib/page-commands.test-util.ts  The shared `nub run` reader the contributing and installation guards hold to the manifests
-src/lib/column-drag.test-util.ts    The column drag both guards print, derived from the probe
-src/lib/floating-reflow.test-util.ts The panel placement both reflow guards print, derived from the probe
 src/lib/aria-budget.test-util.ts   The runtime's closed `aria-*` set, and the absence a page's limits claim
 src/lib/app-css.test-util.ts       The site palette both measuring guards read from the style sheet
 src/lib/search-index.ts             The search index's page list: curated pages shadow package pages
@@ -487,7 +484,6 @@ src/lib/public-symbols-source.ts    Reads the workspace source the index describ
 src/lib/public-symbols-data.ts      The index, read from the plugin's build-time module
 src/lib/page-dependencies.ts        The dependency model: a page's component imports, grouped by package; a mounted collection's route is its package's page
 src/lib/page-dependencies-source.ts Reads each package page's component module and each curated page's source block, at build time
-src/lib/page-dependencies-data.ts   The dependency index, read from the plugin's build-time module
 src/lib/keyboard-contracts.ts      The keyboard model: each page's keys, the modules (workspace or installed runtime) they are read from, and the sentence each key earns
 src/lib/page-source.ts              The source model: a page's module and the loader that reads it
 src/lib/page-source-data.ts         The source index, read from the plugin's build-time module
@@ -538,12 +534,7 @@ edited; `src/lib/sidebar-pages.test-util.ts` is the shared `meta.json` parse the
 three sidebar guards import, `src/lib/app-css.test-util.ts` is the style sheet's
 palette read for the two guards that measure it, `src/lib/doc-snippets.test-util.ts` is the
 shared snippet/import resolve the page guards use (the symbol index is read
-once, so every page is judged by the same rule),
-`src/lib/column-drag.test-util.ts` derives the widths the column-drag guards
-print from `column-resize-lifecycle`'s own fixture and steps, and
-`src/lib/floating-reflow.test-util.ts` derives the boxes the capability guard
-prints from `floating-reflow-lifecycle`'s fixture, its runner's window and the
-probe's own README section.
+once, so every page is judged by the same rule).
 
 ## The mounted collections
 
