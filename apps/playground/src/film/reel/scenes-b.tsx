@@ -8,15 +8,15 @@ import { alpha, at, center, col, Dot, H, MUTED, PointerAt, RawShader, Root, row,
 import { ease, sp, track } from "./motion.js";
 
 export const Hello = ({ t }: { t: number }): ReactNode => {
-  const on = track(t, 0, [[0.55, 1, sp(0.45, 0.2)]]);
+  const on = track(t, 0, [[0.68, 1, sp(0.45, 0.2)]]);
   const k = Math.min(1, Math.max(0, on));
   return (
     <Root fill="#111113">
-      <div style={{ ...at(0, 164, W), ...center }}><T s={t >= 0.55 ? "Nen on" : "Nen off"} size={52} weight={600} /></div>
+      <div style={{ ...at(0, 164, W), ...center }}><T s={t >= 0.68 ? "Nen on" : "Nen off"} size={52} weight={600} /></div>
       <div style={{ ...at(404, 290, 152, 88), borderRadius: 44, backgroundColor: k > 0.5 ? "#3b82f6" : "#2a2a2d" }}>
         <div style={{ ...at(8 + 64 * on, 8, 72, 72), borderRadius: 36, backgroundColor: "#ffffff", boxShadow: { offsetX: 0, offsetY: 2, blurRadius: 8, spreadRadius: 0, color: "#00000066" } }} />
       </div>
-      <PointerAt t={t} start={[760, 450]} path={[[0.1, 480, 334]]} taps={[0.55]} />
+      <PointerAt t={t} start={[760, 450]} path={[[0.1, 480, 334]]} taps={[0.68]} />
     </Root>
   );
 };
@@ -40,7 +40,7 @@ const Sep = ({ p }: { p: Paint }) => <div style={{ height: 1, marginLeft: 12, ma
 const blue = (theme: typeof darkTheme): typeof darkTheme => ({ ...theme, colors: { ...theme.colors, primary: "#3b82f6" } });
 const PICK = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#22c55e", "#6b7280"];
 export const Settings = ({ t }: { t: number }): ReactNode => {
-  const lit = t >= 0.67, p = lit ? LIGHT : DARK, sounds = t >= 0.42;
+  const lit = t >= 0.6, p = lit ? LIGHT : DARK, sounds = t >= 0.42;
   const speed = 0.5 - 0.28 * ease(t, 0.72, 0.5);
   return (
     <ThemeProvider theme={blue(lit ? lightTheme : darkTheme)}>
@@ -66,7 +66,7 @@ export const Settings = ({ t }: { t: number }): ReactNode => {
           <Section title="General" p={p}>
             <Row label="Launch at login" p={p}><Switch checked label="Launch at login" /></Row><Sep p={p} />
             <Row label="Show in menu bar" p={p}><Switch checked label="Show in menu bar" /></Row><Sep p={p} />
-            <Row label="Play sounds" p={p} hover={t < 0.67}><Switch checked={sounds} label="Play sounds" /></Row>
+            <Row label="Play sounds" p={p} hover={t < 0.6}><Switch checked={sounds} label="Play sounds" /></Row>
           </Section>
           <Section title="Motion" p={p}>
             <Row label="Animation speed" p={p}>
@@ -75,7 +75,7 @@ export const Settings = ({ t }: { t: number }): ReactNode => {
             <Row label="Reduce motion" p={p}><Switch checked={false} label="Reduce motion" /></Row>
           </Section>
         </div>
-        <PointerAt t={t} start={[880, 300]} path={[[0.05, 900, 324], [0.5, 882, 92], [0.8, 720, 422]]} taps={[0.42, 0.67]} />
+        <PointerAt t={t} start={[880, 300]} path={[[0.05, 900, 324], [0.5, 882, 92], [0.75, 720, 422]]} taps={[0.42, 0.6]} />
       </Root>
     </ThemeProvider>
   );
@@ -200,10 +200,10 @@ fn shade(p: vec2f) -> vec4f {
   var col = base * ambient;
   if (behind > 0.5) {
     let shaft = occ * fall;
-    col += tint * fall * mix(0.32, 1.0, occ) * smoothstep(-0.5, 1.0, d) * 0.7;
+    col += tint * fall * mix(0.62, 1.0, occ) * smoothstep(-0.5, 1.0, d) * 0.62;
     col += base * (0.45 * fall + 1.1 * fall * occ) * smoothstep(1.0, -0.5, d);
     col += tint * rim * 1.1;
-    col += vec3f(1.0, 0.86, 0.66) * exp(-dist * dist / 1800.0) * occ * 0.8;
+    col += vec3f(1.0, 0.86, 0.66) * exp(-dist * dist / 1500.0) * mix(0.4, 1.0, occ) * 0.7;
   } else {
     col += base * tint * fall * mix(0.35, 1.0, occ) * 1.6;
     col += tint * rim * 1.1;
