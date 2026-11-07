@@ -15,12 +15,37 @@ impl CustomElementFactory for ShaderFactory {
     }
 }
 
-#[derive(Default)]
 struct Shader {
     source: gpui::SharedString,
     time: f32,
-    params: [[f32; 4]; 8],
+    params: [[f32; 4]; gpui::SHADER_PARAMS],
     reads_backdrop: bool,
+    simulation_source: gpui::SharedString,
+    simulation_grid: [u32; 2],
+    simulation_uniform: [[f32; 4]; 6],
+}
+
+impl Default for Shader {
+    fn default() -> Self {
+        Self {
+            source: Default::default(),
+            time: 0.0,
+            params: [[0.0; 4]; gpui::SHADER_PARAMS],
+            reads_backdrop: false,
+            simulation_source: Default::default(),
+            simulation_grid: [0; 2],
+            simulation_uniform: [[0.0; 4]; 6],
+        }
+    }
+}
+
+fn vectors<const N: usize>(value: &serde_json::Value) -> [[f32; 4]; N] {
+    let mut out = [[0.0; 4]; N];
+    let values = value.as_array().map(Vec::as_slice).unwrap_or_default();
+    for (index, number) in values.iter().take(N * 4).enumerate() {
+        out[index / 4][index % 4] = number.as_f64().unwrap_or_default() as f32;
+    }
+    out
 }
 
 impl CustomElement for Shader {
@@ -34,6 +59,12 @@ impl CustomElement for Shader {
 
         let (source, time, params, reads_backdrop) =
             (self.source.clone(), self.time, self.params, self.reads_backdrop);
+        let simulation = (!self.simulation_source.is_empty()).then(|| gpui::ShaderSimulation {
+            key: ctx.id,
+            source: self.simulation_source.clone(),
+            grid: self.simulation_grid,
+            uniform: self.simulation_uniform,
+        });
         let children = std::mem::take(&mut ctx.children);
         let id = gpui::SharedString::from(format!("gpuixui_shader_{}", ctx.id));
         custom_surface(gpui::div().id(id), &ctx)
@@ -41,7 +72,7 @@ impl CustomElement for Shader {
                 gpui::canvas(
                     |_, _, _| {},
                     move |bounds, _, window, _| {
-                        window.paint_shader(bounds, source, time, params, reads_backdrop);
+                        window.paint_shader(bounds, source, time, params, reads_backdrop, simulation);
                     },
                 )
                 .absolute()
@@ -56,19 +87,29 @@ impl CustomElement for Shader {
             "source" => self.source = value.as_str().unwrap_or_default().to_string().into(),
             "time" => self.time = value.as_f64().unwrap_or_default() as f32,
             "readsBackdrop" => self.reads_backdrop = value.as_bool().unwrap_or_default(),
-            "params" => {
-                let values = value.as_array().map(Vec::as_slice).unwrap_or_default();
-                self.params = [[0.0; 4]; 8];
-                for (index, number) in values.iter().take(32).enumerate() {
-                    self.params[index / 4][index % 4] = number.as_f64().unwrap_or_default() as f32;
-                }
+            "params" => self.params = vectors(&value),
+            "simulationSource" => {
+                self.simulation_source = value.as_str().unwrap_or_default().to_string().into()
+            }
+            "simulationUniform" => self.simulation_uniform = vectors(&value),
+            "simulationGrid" => {
+                let size = |index: usize| value.get(index).and_then(|n| n.as_u64()).unwrap_or(8) as u32;
+                self.simulation_grid = [size(0), size(1)];
             }
             _ => {}
         }
     }
 
     fn supported_props(&self) -> &'static [&'static str] {
-        &["source", "time", "params", "readsBackdrop"]
+        &[
+            "source",
+            "time",
+            "params",
+            "readsBackdrop",
+            "simulationSource",
+            "simulationUniform",
+            "simulationGrid",
+        ]
     }
 
     fn supported_events(&self) -> &'static [&'static str] {

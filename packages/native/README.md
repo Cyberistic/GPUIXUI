@@ -25,10 +25,11 @@ light. The prelude provides:
 | Name | Meaning |
 | ---- | ------- |
 | `frame.time` | the `time` prop |
-| `frame.params[0..8]` | the `params` prop, up to 32 numbers packed into `vec4f`s |
+| `frame.params[0..8]` | the `params` prop, up to 256 numbers packed into `vec4f`s |
 | `frame.scale` | device pixels per logical pixel |
 | `size()` | the element's size in logical pixels |
 | `backdrop_at(point)` | what was drawn before this element; needs `readsBackdrop` |
+| `simulation_state` | the latest state of the element's simulation |
 
 `readsBackdrop` ends and reopens the render pass, and copies the element's visible
 rectangle, so it costs more than a plain shader. A shader that fails to compile logs
@@ -38,6 +39,14 @@ once and draws nothing; the rest of the frame is unaffected.
 napi-rs's override only for that load, because every napi-rs package reads the same
 variable. Without a binary for the platform it does nothing, and `<Shader>` paints
 nothing.
+
+## Simulations
+
+`simulationSource` adds a grid that keeps its state between frames: WGSL with the compute
+entry points `curl`, `forces`, `divergence`, `jacobi`, `project` and `advect`, stepped at a
+fixed 1/60 s before the frame is drawn, so the result depends on `time` and not on the frame
+rate. Redrawing a frame does not step it, and going back in time warms up from empty.
+WebGL2 has no compute, so `simulation_state` stays empty there.
 
 ## How the binary is made
 
