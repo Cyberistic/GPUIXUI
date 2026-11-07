@@ -120,13 +120,15 @@ describe("the share card", () => {
     expect(property(result, "og:image:height")).toBe(
       String(socialImage.height),
     );
-    expect(property(result, "og:image:alt")).toBe(`${appName} mark`);
+    expect(property(result, "og:image:alt")).toBe(socialImage.alt);
     expect(named(result, "twitter:image:alt")).toBe(socialImage.alt);
   });
 
-  it("points at a file that ships in public/", () => {
-    expect(socialImage.url).toBe(`${siteOrigin}/logo.png`);
-    expect(existsSync(new URL("../../public/logo.png", import.meta.url))).toBe(
+  it("points at a 1200×630 file that ships in public/", () => {
+    expect(socialImage.url).toBe(`${siteOrigin}/og.png`);
+    expect(socialImage.width).toBe(1200);
+    expect(socialImage.height).toBe(630);
+    expect(existsSync(new URL("../../public/og.png", import.meta.url))).toBe(
       true,
     );
 
@@ -140,7 +142,7 @@ describe("the landing page's head", () => {
   it("names and describes the front door for a share card", () => {
     expect(result.meta[0]).toEqual({ title: landingTitle });
     expect(named(result, "description")).toBe(landingDescription);
-    expect(named(result, "twitter:card")).toBe("summary");
+    expect(named(result, "twitter:card")).toBe("summary_large_image");
     expect(property(result, "og:title")).toBe(landingTitle);
     expect(property(result, "og:description")).toBe(landingDescription);
   });

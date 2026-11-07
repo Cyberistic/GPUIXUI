@@ -15,11 +15,11 @@ const fallbackDescription = `Documentation for ${appName}, the native UI compone
 export const pageTitle = (title: string): string => `${title} · ${appName}`;
 
 export const socialImage = {
-  url: absoluteUrl("/logo.png"),
+  url: absoluteUrl("/og.png"),
   type: "image/png",
-  width: 512,
-  height: 512,
-  alt: `${appName} mark`,
+  width: 1200,
+  height: 630,
+  alt: `${appName} — components drawn on the GPU by GPUix`,
 } as const;
 
 const socialMeta = [
@@ -32,10 +32,11 @@ const socialMeta = [
   { name: "twitter:image:alt", content: socialImage.alt },
 ];
 
-export const landingTitle = "GPUIxUI — native Mac apps in React";
+export const landingTitle =
+  "GPUIxUI — native UI components for Mac, Windows and Linux";
 
 export const landingDescription =
-  "GPUIxUI is a native UI library for GPUix + React: shadcn's API drawn on the GPU, with a vibrant sidebar, a unified toolbar and the system accent — and the same components on Windows 11 and Linux.";
+  "shadcn's API drawn on the GPU by GPUix: components you own, themed by semantic roles, running on Mac, Windows, Linux and the terminal.";
 
 export const landingMeta = () => {
   const url = absoluteUrl("/");
@@ -50,7 +51,7 @@ export const landingMeta = () => {
       { property: "og:description", content: landingDescription },
       { property: "og:url", content: url },
       ...socialMeta,
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: landingTitle },
       { name: "twitter:description", content: landingDescription },
     ],
@@ -77,7 +78,7 @@ export const docsMetadata = ({
       { property: "og:description", content: summary },
       { property: "og:url", content: url },
       ...socialMeta,
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: pageTitle(title) },
       { name: "twitter:description", content: summary },
     ],
