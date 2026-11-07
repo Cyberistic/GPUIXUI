@@ -52,6 +52,13 @@ packages, under `src/components/ui/gpuixui/`. More information on the
 Windows. On an Intel Mac, build it once with
 `sh apps/playground/scripts/build-native-binding.sh`.
 
+## Effects
+
+Fire, liquid metal, glass and backdrop effects painted by GPUI between your components, from
+[`@gpuixui/fx/shader-layer`](https://gpuixui.sudokw.com/effects/shader-layer). Stock GPUI has fixed
+primitives, so these need the patched binary in `packages/native` (`nub scripts/build.ts`). It covers
+Metal and wgpu, including WebGPU in the browser; DirectX is not implemented yet.
+
 ## References & Credits
 
 This library is built on top of [GPUIx](https://github.com/remorses/gpuix) which is built on top of Zed's [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui) while heavily references other work (is this distillation?). Throughout development, I kept pointing my agent at https://shoogle.dev/ and tried my best to keep track of all open-source libraries used as reference (or copied verbatim). Here is a list of the most important ones, you can find the rest [here](.agents/slop/LICENSES).
@@ -62,6 +69,7 @@ List of libraries I tried to mimic or build on top of:
 4. TailwindCSS - https://github.com/tailwindlabs/tailwindcss
 5. Lucide Icons - https://github.com/lucide-icons/lucide
 6. Tanstack (Virtualizer, table, hotkeys..) - https://tanstack.com/
+7. Rune - https://github.com/anomalyco/rune (MIT; the fire, material, glass and light effects are ported from `rune-fx` and `rune-light`)
 
 List of heavily used references:
 1. Base-gpui - https://github.com/LukeTandjung/base-gpui
@@ -71,4 +79,4 @@ List of heavily used references:
 
 ## License
 
-MIT
+[MIT](./LICENSE)

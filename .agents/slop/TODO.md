@@ -9,6 +9,16 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ---
 
+## Effects and launch sweep
+
+`[x]` `[██████████]` 3/3
+
+`[x]` `paint_shader`, `@gpuixui/fx/shader-layer` and the fire film (plans 759, 760)
+`[x]` Restore the docs asset cache headers the comment pass removed
+`[x]` Sweep dead files and retire finished worktrees
+
+---
+
 ## Calculator example — fx-991ES Plus on GPUix
 
 `[x]` `[██████████]` 18/18
