@@ -131,6 +131,7 @@ export interface AuditFinding {
   readonly kind: AuditKind;
   readonly text: string;
   readonly warning?: boolean;
+  readonly unmeasurable?: boolean;
 }
 
 export interface FindingOptions {
@@ -340,9 +341,7 @@ export const auditSummary: Readonly<
   switch: "the declared switch is findable",
 };
 
-export const auditFindings = (
-  report: ThemeAudit,
-): ReadonlyArray<AuditFinding> => [
+const findingsOf = (report: ThemeAudit): ReadonlyArray<AuditFinding> => [
   ...report.invalidRoles.map((failure) => ({
     kind: "role" as const,
     text: formatInvalidRole(failure),
@@ -374,6 +373,7 @@ export const auditFindings = (
   ...report.contrast.map((failure) => ({
     kind: "contrast" as const,
     text: formatContrastFailure(failure),
+    ...(failure.ratio === undefined ? { unmeasurable: true } : {}),
   })),
   ...report.decorative.map((failure) => ({
     kind: "decorative" as const,
@@ -416,6 +416,15 @@ export const auditFindings = (
     text: formatKeyboardDim(failure),
   })),
 ];
+
+export const auditFindings = (
+  report: ThemeAudit,
+): ReadonlyArray<AuditFinding> =>
+  findingsOf(report).map((finding) =>
+    finding.text.includes("unmeasurable")
+      ? { ...finding, unmeasurable: true }
+      : finding,
+  );
 
 export const themeFindings = (
   mode: ThemeMode,

@@ -329,6 +329,11 @@
   color: var(--destructive);
 }
 
+.gx-te-unmeasured {
+  margin-top: 8px;
+  color: var(--muted-foreground);
+}
+
 @media (max-width: 760px) {
   .gx-te-grid {
     grid-template-columns: 1fr;
