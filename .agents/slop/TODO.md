@@ -25004,6 +25004,7 @@ green; the site deployed and all 195 sitemap pages answer 200.
 ---
 `[x]` Launch film v8: the tilted drop wall, the Vault block, real desktops, synced terminal, charts, the npm line (plan 069)
 `[x]` Launch film v9: the opening stays at or under 1:1, a 4 s shadcn scene, the Rust/createElement mock, the Omarchy train, fewer lines (plan 070)
+`[ ]` Reconcile `shadcnTheme` and `shadcnBuilderTheme` in `@gpuixui/tokens`: the builder one decodes colours to hex and reads `--chart-N`, which the public one does not
 
 ## Native Mac — materials, window, blocks and the landing (plans 721–730, 2026-10-31)
 
