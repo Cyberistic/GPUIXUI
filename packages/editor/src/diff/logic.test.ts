@@ -17,6 +17,7 @@ import {
   type LineEdit,
   type SplitPair,
 } from "./logic.js";
+import { styledRows, wordMarks, wrapStarts } from "./logic.js";
 
 const side = (
   pairs: ReadonlyArray<SplitPair>,
@@ -246,5 +247,84 @@ describe("hunks", () => {
         onSome: (heading) => heading.text,
       }),
     ).toBe("@@ -2,0 +3,1 @@");
+  });
+});
+
+describe("wordMarks", () => {
+  it("marks only the words that changed", () => {
+    const marks = wordMarks("let wait = a * b;", "let wait = a.mul(b);");
+    expect(marks.before).toEqual([[12, 15]]);
+    expect(marks.after).toEqual([
+      [12, 17],
+      [18, 19],
+    ]);
+  });
+
+  it("marks nothing on an identical line", () => {
+    expect(wordMarks("same line", "same line")).toEqual({
+      before: [],
+      after: [],
+    });
+  });
+
+  it("marks the whole of a line that shares nothing", () => {
+    expect(wordMarks("abc", "xyz")).toEqual({
+      before: [[0, 3]],
+      after: [[0, 3]],
+    });
+  });
+});
+
+describe("styledRows", () => {
+  const runs = [
+    { text: "let ", role: "keyword" },
+    { text: "wait = self.base" },
+  ];
+
+  it("breaks after punctuation or space, never past the column", () => {
+    expect(wrapStarts("self.base.saturating_mul(two)", 12)).toEqual([
+      0, 10, 22,
+    ]);
+    expect(wrapStarts("abcdefgh", 3)).toEqual([0, 3, 6]);
+    expect(wrapStarts("short", 80)).toEqual([0]);
+  });
+
+  it("keeps every character, in order, across the rows", () => {
+    const rows = styledRows(runs, [], 9);
+    expect(
+      rows
+        .flat()
+        .map((run) => run.text)
+        .join(""),
+    ).toBe("let wait = self.base");
+    expect(rows.length).toBeGreaterThan(1);
+  });
+
+  it("keeps a run's role on both sides of a break", () => {
+    const rows = styledRows([{ text: "aaaa bbbb", role: "keyword" }], [], 5);
+    expect(rows.map((row) => row[0]?.role)).toEqual(["keyword", "keyword"]);
+  });
+
+  it("joins marks separated only by spaces, and keeps real gaps", () => {
+    const [row] = styledRows(
+      [{ text: "in a fork, ok" }],
+      [
+        [0, 2],
+        [3, 4],
+        [5, 9],
+        [11, 13],
+      ],
+      80,
+    );
+    expect(row?.[0]?.marks).toEqual([
+      [0, 9],
+      [11, 13],
+    ]);
+  });
+
+  it("moves a mark into the run it lands in, relative to that run", () => {
+    const [row] = styledRows(runs, [[5, 8]], 80);
+    expect(row?.[0]?.marks).toEqual([]);
+    expect(row?.[1]?.marks).toEqual([[1, 4]]);
   });
 });

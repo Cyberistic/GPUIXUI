@@ -22,6 +22,12 @@ import { DiffViewer } from "@gpuixui/editor";
 | `mode` | `"unified" \| "split"` | `"unified"` | One merged column, or two. A stored name that is neither reads as the default. |
 | `contextLines` | `number` | `3` | Unchanged rows kept either side of a change before the diff skips to a hunk heading. A negative or non-numeric value reads as the default. |
 | `lineNumbers` | `boolean` | `true` | Number the rows on both sides. |
+| `wordDiff` | `boolean` | `true` | In split mode, mark the words that changed inside a paired line. |
+| `ink` | `"tone" \| "code"` | `"tone"` | `code` keeps the text neutral and shows the change with the tint and a bar. |
+| `annotations` | `ReadonlyArray<{ line, height, content }>` | `[]` | A review note under an after-side line; the before side keeps a spacer, so rows stay level. |
+| `wrapColumns` | `number` | — | In split mode, wrap at this many characters and grow both cells of the row together. |
+| `language` | `string` | — | With `ink="code"`, colour the code by syntax, and break wrapped lines after a space or punctuation. |
+| `firstLine` | `{ before?, after? }` | `1` | The line number each side's numbering starts from, for an excerpt of a longer file. |
 | `label` | `string` | `"Diff"` | The accessible name; a blank or non-text name reads as the default (the rows are presentational, so this is the whole surface's name). |
 | `className` | `string` | — | A Tailwind class string, merged last. |
 | `style` | `StateStyle<DiffViewerState>` | — | The surface, or a function of `{ changed }`. |

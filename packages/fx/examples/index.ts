@@ -11,6 +11,7 @@ import { ParticlesExample } from "./particles.example.js";
 import { RippleButtonExample } from "./ripple-button.example.js";
 import { RollingTextExample } from "./rolling-text.example.js";
 import { RotatingTextExample } from "./rotating-text.example.js";
+import { ShaderLayerExample } from "./shader-layer.example.js";
 import { ShineButtonExample } from "./shine-button.example.js";
 import { SlidingTextExample } from "./sliding-text.example.js";
 import { SplittingTextExample } from "./splitting-text.example.js";
@@ -29,6 +30,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "ripple-button": RippleButtonExample,
   "rolling-text": RollingTextExample,
   "rotating-text": RotatingTextExample,
+  "shader-layer": ShaderLayerExample,
   "shine-button": ShineButtonExample,
   "sliding-text": SlidingTextExample,
   "splitting-text": SplittingTextExample,

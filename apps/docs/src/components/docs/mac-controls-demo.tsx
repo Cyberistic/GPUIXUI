@@ -143,3 +143,74 @@ import { Switch } from "@gpuixui/primitives";
   <InsetGroupRow label="Badge app icon" control={<Switch label="Badge app icon" />} />
   <InsetGroupRow label="Sounds" control={<Switch label="Sounds" defaultChecked />} />
 </InsetGroup>`;
+
+const SWATCH_COLORS = [
+  "#3B82F6",
+  "#8B5CF6",
+  "#EC4899",
+  "#F59E0B",
+  "#22C55E",
+  "#6B7280",
+];
+
+export const ColorSwatchesDemo = () => {
+  const [chosen, setChosen] = useState(SWATCH_COLORS[0]);
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Accent colour"
+      className="flex items-center gap-1.5"
+    >
+      {SWATCH_COLORS.map((color) => (
+        <button
+          key={color}
+          type="button"
+          role="radio"
+          aria-label={color}
+          aria-checked={color === chosen}
+          onClick={() => setChosen(color)}
+          className="flex size-6 items-center justify-center rounded-full"
+          style={{ border: color === chosen ? `2px solid ${color}` : "none" }}
+        >
+          <span
+            className="size-4 rounded-full"
+            style={{ backgroundColor: color }}
+          />
+        </button>
+      ))}
+    </div>
+  );
+};
+
+export const colorSwatchesDemoSource = `import { ColorSwatches } from "@gpuixui/components/color-swatches";
+
+<ColorSwatches label="Accent colour" colors={accents} value={accent} onValueChange={setAccent} />;`;
+
+export const KnobDemo = () => {
+  const [gain, setGain] = useState(60);
+  const angle = -135 + (gain / 100) * 270;
+  return (
+    <label className="flex items-center gap-3 text-sm">
+      <span
+        aria-hidden="true"
+        className="relative size-12 rounded-full bg-muted"
+        style={{ transform: `rotate(${angle}deg)` }}
+      >
+        <span className="absolute top-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-primary" />
+      </span>
+      <input
+        aria-label="Gain"
+        className="w-32"
+        max={100}
+        min={0}
+        onChange={(event) => setGain(Number(event.target.value))}
+        type="range"
+        value={gain}
+      />
+    </label>
+  );
+};
+
+export const knobDemoSource = `import { Knob } from "@gpuixui/components/knob";
+
+<Knob label="Gain" value={gain} onValueChange={setGain} />;`;

@@ -2,6 +2,7 @@ export * from "./audit.js";
 export * from "./brand-text.js";
 export * from "./color.js";
 export * from "./contrast.js";
+export * from "./crossfade.js";
 export * from "./decorative.js";
 export * from "./disabled.js";
 export * from "./elevation.js";

@@ -3,6 +3,8 @@ import { AccordionExample } from "./accordion.example.js";
 import { AlertExample } from "./alert.example.js";
 import { AspectRatioExample } from "./aspect-ratio.example.js";
 import { DisclosureExample } from "./disclosure.example.js";
+import { ColorSwatchesExample } from "./color-swatches.example.js";
+import { KnobExample } from "./knob.example.js";
 import { InsetGroupExample } from "./inset-group.example.js";
 import { SegmentedControlExample } from "./segmented-control.example.js";
 import { AutoHeightExample } from "./auto-height.example.js";
@@ -87,6 +89,8 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   alert: AlertExample,
   "aspect-ratio": AspectRatioExample,
   disclosure: DisclosureExample,
+  "color-swatches": ColorSwatchesExample,
+  knob: KnobExample,
   "inset-group": InsetGroupExample,
   "segmented-control": SegmentedControlExample,
   "auto-height": AutoHeightExample,

@@ -1,0 +1,30 @@
+[package]
+name = "gpuixui-native"
+version = "0.0.0"
+edition = "2021"
+publish = false
+license = "Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+serde_json = "1"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+gpuix-native = { path = ".build/gpuix/packages/native" }
+napi = { version = "3.12.7", features = ["napi8", "serde-json"] }
+napi-derive = "3.6.8"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+gpuix-native = { path = ".build/gpuix/packages/native", default-features = false }
+wasm-bindgen = "=0.2.127"
+
+[build-dependencies]
+napi-build = "2.4.4"
+
+[features]
+test-support = ["gpuix-native/test-support"]
+
+[profile.release]
+lto = true

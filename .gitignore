@@ -2,6 +2,7 @@
 node_modules/
 
 # Build / cache artifacts (all workspaces)
+packages/native/.build/
 dist/
 build/
 .source/
@@ -67,3 +68,6 @@ media/launch/.media/
 media/launch/.hyperframes/
 media/launch/stage/kit
 .claude/
+dist-spike/
+apps/playground/scripts/web/bundle.js
+apps/playground/scripts/web/probe.mjs

@@ -7,8 +7,10 @@ high-contrast variant — and every component reads semantic roles from here.
 
 - Core entry `@gpuixui/tokens` — pure data and pure functions, no runtime
   dependencies.
-- React entry `@gpuixui/tokens/react` — `ThemeProvider`, `useTheme` and
-  `useThemePresence`.
+- React entry `@gpuixui/tokens/react` — `ThemeProvider`, `useTheme`,
+  `useThemePresence` and `useThemeCrossfade`, which eases every colour role and
+  shadow from the old theme to the new one instead of cutting. `mixThemes` is the
+  pure step, for a caller that drives its own clock.
 - Reference: [`docs/tokens.md`](../../docs/tokens.md) and
   [`docs/design-system.md`](../../docs/design-system.md).
 

@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { darkTheme, lightTheme } from "@gpuixui/tokens";
 import { ThemeStylesheet, stylesheetOf } from "./theme-stylesheet";
 
+// Bug guarded: /themes promised the compiled CSS and offered none.
+
 const css = stylesheetOf({ light: lightTheme, dark: darkTheme });
 const markup = renderToStaticMarkup(<ThemeStylesheet />);
 

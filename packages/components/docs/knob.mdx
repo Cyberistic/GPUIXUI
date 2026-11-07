@@ -1,0 +1,34 @@
+---
+title: Knob
+description: A rotary control for one value in a range
+---
+
+<ComponentPreview name="knob-demo" />
+
+## Usage
+
+```tsx
+import { Knob } from "@gpuixui/components/knob";
+
+<Knob label="Gain" value={gain} onValueChange={setGain} />;
+```
+
+Drag upward to turn it up, or focus it and use the arrow keys, Home and End.
+The sweep runs through 270°, with the middle of the range at the top.
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `label` | `string` — the accessible name | — |
+| `value` | `number` | uncontrolled |
+| `defaultValue` | `number` | `min` |
+| `min`, `max` | `number` | `0`, `100` |
+| `step` | `number` | `1` |
+| `size` | `number` — the diameter | `48` |
+| `disabled` | `boolean` | `false` |
+| `indicatorColor` | `string` | the theme's primary |
+| `onValueChange` | `(value: number) => void` | — |
+| `style` | `StyleDesc` | — |
+
+Use [Slider](/primitives/slider) when the exact position along a range matters.

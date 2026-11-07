@@ -1,0 +1,2035 @@
+diff --git a/crates/gpui/src/scene.rs b/crates/gpui/src/scene.rs
+index 122f7b2..651bf40 100644
+--- a/crates/gpui/src/scene.rs
++++ b/crates/gpui/src/scene.rs
+@@ -50,6 +50,7 @@ pub struct Scene {
+     pub subpixel_sprites: Vec<SubpixelSprite>,
+     pub polychrome_sprites: Vec<PolychromeSprite>,
+     pub surfaces: Vec<PaintSurface>,
++    pub shaders: Vec<PaintShader>,
+ }
+ 
+ #[expect(missing_docs)]
+@@ -66,6 +67,7 @@ impl Scene {
+         self.subpixel_sprites.clear();
+         self.polychrome_sprites.clear();
+         self.surfaces.clear();
++        self.shaders.clear();
+     }
+ 
+     pub fn len(&self) -> usize {
+@@ -133,6 +135,10 @@ impl Scene {
+                 surface.order = order;
+                 self.surfaces.push(surface.clone());
+             }
++            Primitive::Shader(shader) => {
++                shader.order = order;
++                self.shaders.push(shader.clone());
++            }
+         }
+         self.paint_operations
+             .push(PaintOperation::Primitive(primitive));
+@@ -160,6 +166,7 @@ impl Scene {
+         self.polychrome_sprites
+             .sort_by_key(|sprite| (sprite.order, sprite.tile.tile_id));
+         self.surfaces.sort_by_key(|surface| surface.order);
++        self.shaders.sort_by_key(|shader| shader.order);
+     }
+ 
+     #[cfg_attr(
+@@ -187,6 +194,8 @@ impl Scene {
+             polychrome_sprites_iter: self.polychrome_sprites.iter().peekable(),
+             surfaces_start: 0,
+             surfaces_iter: self.surfaces.iter().peekable(),
++            shaders_start: 0,
++            shaders_iter: self.shaders.iter().peekable(),
+         }
+     }
+ }
+@@ -209,6 +218,7 @@ pub(crate) enum PrimitiveKind {
+     SubpixelSprite,
+     PolychromeSprite,
+     Surface,
++    Shader,
+ }
+ 
+ pub(crate) enum PaintOperation {
+@@ -228,6 +238,7 @@ pub enum Primitive {
+     SubpixelSprite(SubpixelSprite),
+     PolychromeSprite(PolychromeSprite),
+     Surface(PaintSurface),
++    Shader(PaintShader),
+ }
+ 
+ #[expect(missing_docs)]
+@@ -242,6 +253,7 @@ impl Primitive {
+             Primitive::SubpixelSprite(sprite) => &sprite.bounds,
+             Primitive::PolychromeSprite(sprite) => &sprite.bounds,
+             Primitive::Surface(surface) => &surface.bounds,
++            Primitive::Shader(shader) => &shader.bounds,
+         }
+     }
+ 
+@@ -255,6 +267,7 @@ impl Primitive {
+             Primitive::SubpixelSprite(sprite) => &sprite.content_mask,
+             Primitive::PolychromeSprite(sprite) => &sprite.content_mask,
+             Primitive::Surface(surface) => &surface.content_mask,
++            Primitive::Shader(shader) => &shader.content_mask,
+         }
+     }
+ }
+@@ -283,6 +296,8 @@ struct BatchIterator<'a> {
+     polychrome_sprites_iter: Peekable<slice::Iter<'a, PolychromeSprite>>,
+     surfaces_start: usize,
+     surfaces_iter: Peekable<slice::Iter<'a, PaintSurface>>,
++    shaders_start: usize,
++    shaders_iter: Peekable<slice::Iter<'a, PaintShader>>,
+ }
+ 
+ impl<'a> Iterator for BatchIterator<'a> {
+@@ -316,6 +331,10 @@ impl<'a> Iterator for BatchIterator<'a> {
+                 self.surfaces_iter.peek().map(|s| s.order),
+                 PrimitiveKind::Surface,
+             ),
++            (
++                self.shaders_iter.peek().map(|s| s.order),
++                PrimitiveKind::Shader,
++            ),
+         ];
+         orders_and_kinds.sort_by_key(|(order, kind)| (order.unwrap_or(u32::MAX), *kind));
+ 
+@@ -461,6 +480,20 @@ impl<'a> Iterator for BatchIterator<'a> {
+                 self.surfaces_start = surfaces_end;
+                 Some(PrimitiveBatch::Surfaces(surfaces_start..surfaces_end))
+             }
++            PrimitiveKind::Shader => {
++                let shaders_start = self.shaders_start;
++                let mut shaders_end = shaders_start + 1;
++                self.shaders_iter.next();
++                while self
++                    .shaders_iter
++                    .next_if(|shader| (shader.order, batch_kind) < max_order_and_kind)
++                    .is_some()
++                {
++                    shaders_end += 1;
++                }
++                self.shaders_start = shaders_end;
++                Some(PrimitiveBatch::Shaders(shaders_start..shaders_end))
++            }
+         }
+     }
+ }
+@@ -493,6 +526,7 @@ pub enum PrimitiveBatch {
+         range: Range<usize>,
+     },
+     Surfaces(Range<usize>),
++    Shaders(Range<usize>),
+ }
+ 
+ impl PrimitiveBatch {
+@@ -525,6 +559,7 @@ impl PrimitiveBatch {
+                 )
+             }
+             Self::Surfaces(range) => format!("surfaces ({})", range.len()),
++            Self::Shaders(range) => format!("shaders ({})", range.len()),
+         }
+     }
+ }
+@@ -779,6 +814,123 @@ pub struct PaintSurface {
+     pub texture_size: Size<crate::DevicePixels>,
+ }
+ 
++/// The WGSL every [`PaintShader`] is compiled with: its `frame` uniform, `size()` and `backdrop_at()`.
++pub const SHADER_PRELUDE: &str = r#"
++struct ShaderFrame {
++    bounds: vec4f,
++    viewport: vec2f,
++    scale: f32,
++    time: f32,
++    params: array<vec4f, 64>,
++}
++@group(0) @binding(0) var<uniform> frame: ShaderFrame;
++@group(0) @binding(1) var backdrop: texture_2d<f32>;
++@group(0) @binding(2) var backdrop_sampler: sampler;
++@group(0) @binding(3) var simulation_state: texture_2d<f32>;
++@group(0) @binding(4) var shader_data: texture_2d<f32>;
++struct ShaderVarying {
++    @builtin(position) position: vec4f,
++    @location(0) point: vec2f,
++}
++@vertex fn gpui_shader_vertex(@builtin(vertex_index) index: u32) -> ShaderVarying {
++    var unit = array<vec2f, 6>(vec2f(0., 0.), vec2f(1., 0.), vec2f(0., 1.), vec2f(0., 1.), vec2f(1., 0.), vec2f(1., 1.));
++    let device = frame.bounds.xy + unit[index] * frame.bounds.zw;
++    var out: ShaderVarying;
++    out.position = vec4f(device / frame.viewport * vec2f(2., -2.) + vec2f(-1., 1.), 0., 1.);
++    out.point = unit[index] * frame.bounds.zw / frame.scale;
++    return out;
++}
++fn shader_data_at(index: u32) -> vec4f {
++    return textureLoad(shader_data, vec2u(index % 1024u, index / 1024u), 0);
++}
++fn size() -> vec2f { return frame.bounds.zw / frame.scale; }
++fn backdrop_at(point: vec2f) -> vec4f {
++    let device = frame.bounds.xy + point * frame.scale;
++    return textureSampleLevel(backdrop, backdrop_sampler, device / frame.viewport, 0.);
++}
++@fragment fn gpui_shader_fragment(in: ShaderVarying) -> @location(0) vec4f { return shade(in.point); }
++"#;
++
++/// A fragment shader drawn over `bounds` in painter order. `source` is WGSL
++/// defining `shade(point: vec2f) -> vec4f`, returning premultiplied colour.
++#[derive(Clone, Debug)]
++pub struct PaintShader {
++    pub order: DrawOrder,
++    pub bounds: Bounds<ScaledPixels>,
++    pub content_mask: ContentMask<ScaledPixels>,
++    pub source: crate::SharedString,
++    pub scale: f32,
++    pub time: f32,
++    pub params: [[f32; 4]; SHADER_PARAMS],
++    pub reads_backdrop: bool,
++    pub simulation: Option<ShaderSimulation>,
++    /// Per-frame tables too large for `frame.params`, read with `shader_data_at`.
++    pub data: Option<std::sync::Arc<[[f32; 4]]>>,
++}
++
++/// How many `vec4f`s a [`PaintShader`] can pass in `frame.params`.
++pub const SHADER_PARAMS: usize = 64;
++
++/// A grid that keeps its state between frames and steps a fluid solver before the frame is drawn.
++/// `source` is WGSL with the compute entry points named in [`SIMULATION_PASSES`]; the shader samples
++/// the latest state from `simulation_state`.
++#[derive(Clone, Debug)]
++pub struct ShaderSimulation {
++    pub key: u64,
++    pub source: crate::SharedString,
++    pub grid: [u32; 2],
++    pub uniform: [[f32; 4]; 6],
++}
++
++/// Fixed simulation step, so the result does not depend on frame rate.
++pub const SIMULATION_DT: f32 = 1.0 / 60.0;
++const SIMULATION_MAX_STEPS: usize = 4;
++const SIMULATION_WARMUP_STEPS: usize = 72;
++const SIMULATION_JACOBI: usize = 14;
++
++/// One step's compute passes as `(entry, [state in, state out, a in, b in, scalar out])`. Textures 0
++/// and 1 are the rgba16float state pair, swapped each step; 2 to 5 are r32float scalars.
++pub const SIMULATION_PASSES: [(&str, [usize; 5]); 7] = [
++    ("curl", [0, 1, 5, 3, 2]),
++    ("forces", [0, 1, 2, 3, 5]),
++    ("divergence", [1, 0, 2, 4, 3]),
++    ("jacobi", [1, 0, 4, 3, 5]),
++    ("jacobi", [1, 0, 5, 3, 4]),
++    ("project", [1, 0, 4, 3, 2]),
++    ("advect", [0, 1, 2, 3, 5]),
++];
++
++/// The order of [`SIMULATION_PASSES`] for one step.
++pub fn simulation_pass_order() -> impl Iterator<Item = usize> {
++    [0, 1, 2]
++        .into_iter()
++        .chain((0..SIMULATION_JACOBI).map(|index| 3 + (index & 1)))
++        .chain([5, 6])
++}
++
++/// Steps to reach `target` from a grid last stepped to `previous`: `(steps, time before the first,
++/// start over)`. A hitch skips time; a new grid or a jump back warms up.
++pub fn simulation_schedule(previous: Option<f32>, target: f32) -> (usize, f32, bool) {
++    match previous {
++        Some(time) if target >= time - 1e-4 => {
++            let due = ((target - time) / SIMULATION_DT + 1e-3).floor() as usize;
++            let steps = due.min(SIMULATION_MAX_STEPS);
++            (steps, target - steps as f32 * SIMULATION_DT, false)
++        }
++        _ => (
++            SIMULATION_WARMUP_STEPS,
++            target - SIMULATION_WARMUP_STEPS as f32 * SIMULATION_DT,
++            true,
++        ),
++    }
++}
++
++impl From<PaintShader> for Primitive {
++    fn from(shader: PaintShader) -> Self {
++        Primitive::Shader(shader)
++    }
++}
++
+ impl std::fmt::Debug for PaintSurface {
+     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+         let mut debug = f.debug_struct("PaintSurface");
+@@ -968,3 +1120,74 @@ impl PathVertex<Pixels> {
+         }
+     }
+ }
++
++#[cfg(test)]
++mod shader_tests {
++    use super::*;
++    use crate::{point, px, size};
++
++    fn area() -> Bounds<ScaledPixels> {
++        Bounds {
++            origin: point(px(0.0).scale(1.0), px(0.0).scale(1.0)),
++            size: size(px(10.0).scale(1.0), px(10.0).scale(1.0)),
++        }
++    }
++
++    fn shader() -> PaintShader {
++        PaintShader {
++            order: 0,
++            bounds: area(),
++            content_mask: ContentMask { bounds: area() },
++            source: "fn shade(p: vec2f) -> vec4f { return vec4f(0.); }".into(),
++            scale: 1.0,
++            time: 0.0,
++            params: [[0.0; 4]; SHADER_PARAMS],
++            reads_backdrop: false,
++            simulation: None,
++            data: None,
++        }
++    }
++
++    #[test]
++    fn a_simulation_steps_at_a_fixed_rate_and_warms_up_only_when_it_must() {
++        let (steps, _, reset) = simulation_schedule(None, 3.0);
++        assert!(reset && steps == SIMULATION_WARMUP_STEPS);
++        let (steps, _, reset) = simulation_schedule(Some(1.0), 1.0 + 2.5 * SIMULATION_DT);
++        assert!(!reset && steps == 2);
++        assert_eq!(simulation_schedule(Some(1.0), 3.0).0, SIMULATION_MAX_STEPS);
++        assert_eq!(simulation_schedule(Some(1.0), 1.0).0, 0);
++        assert!(simulation_schedule(Some(2.0), 1.0).2, "back in time starts over");
++    }
++
++    #[test]
++    fn a_step_ends_its_pressure_solve_where_projection_reads_it() {
++        let last_jacobi = simulation_pass_order().filter(|pass| *pass == 3 || *pass == 4).last();
++        let written = SIMULATION_PASSES[last_jacobi.unwrap()].1[4];
++        assert_eq!(written, SIMULATION_PASSES[5].1[2]);
++    }
++
++    // A shader left in the scene is redrawn every later frame and additive light saturates.
++    #[test]
++    fn clearing_a_scene_drops_its_shaders() {
++        let mut scene = Scene::default();
++        scene.insert_primitive(shader());
++        scene.clear();
++        assert!(scene.shaders.is_empty());
++    }
++
++    #[test]
++    fn a_shader_batches_between_the_quads_painted_around_it() {
++        let quad = Quad {
++            bounds: area(),
++            content_mask: ContentMask { bounds: area() },
++            ..Default::default()
++        };
++        let mut scene = Scene::default();
++        scene.insert_primitive(quad);
++        scene.insert_primitive(shader());
++        scene.insert_primitive(quad);
++        scene.finish();
++        let kinds: Vec<String> = scene.batches().map(|batch| batch.label()).collect();
++        assert_eq!(kinds, ["quads (1)", "shaders (1)", "quads (1)"]);
++    }
++}
+diff --git a/crates/gpui/src/window.rs b/crates/gpui/src/window.rs
+index 076d3c8..9ed0ae1 100644
+--- a/crates/gpui/src/window.rs
++++ b/crates/gpui/src/window.rs
+@@ -4725,6 +4725,38 @@ impl Window {
+         Ok(())
+     }
+ 
++    /// Paint a WGSL fragment shader into the scene for the next frame at the current z-index.
++    ///
++    /// This method should only be called as part of the paint phase of element drawing.
++    pub fn paint_shader(
++        &mut self,
++        bounds: Bounds<Pixels>,
++        source: SharedString,
++        time: f32,
++        params: [[f32; 4]; crate::SHADER_PARAMS],
++        reads_backdrop: bool,
++        simulation: Option<crate::ShaderSimulation>,
++        data: Option<std::sync::Arc<[[f32; 4]]>>,
++    ) {
++        self.invalidator.debug_assert_paint();
++
++        let bounds = self.snap_bounds(bounds);
++        let content_mask = self.snapped_content_mask();
++        let scale = self.scale_factor();
++        self.next_frame.scene.insert_primitive(crate::PaintShader {
++            order: 0,
++            bounds,
++            content_mask,
++            source,
++            scale,
++            time,
++            params,
++            reads_backdrop,
++            simulation,
++            data,
++        });
++    }
++
+     /// Paint a surface into the scene for the next frame at the current z-index.
+     ///
+     /// This method should only be called as part of the paint phase of element drawing.
+diff --git a/crates/gpui_apple/Cargo.toml b/crates/gpui_apple/Cargo.toml
+index fb5f07a..0c4c57c 100644
+--- a/crates/gpui_apple/Cargo.toml
++++ b/crates/gpui_apple/Cargo.toml
+@@ -32,6 +32,7 @@ foreign-types.workspace = true
+ image.workspace = true
+ log.workspace = true
+ metal.workspace = true
++naga = { version = "29.0.4", features = ["wgsl-in", "msl-out"] }
+ objc.workspace = true
+ parking_lot.workspace = true
+ 
+diff --git a/crates/gpui_apple/src/gpui_apple.rs b/crates/gpui_apple/src/gpui_apple.rs
+index 208d297..cfdba08 100644
+--- a/crates/gpui_apple/src/gpui_apple.rs
++++ b/crates/gpui_apple/src/gpui_apple.rs
+@@ -5,4 +5,6 @@
+ //! by GPUI's Apple platform backends.
+ 
+ mod metal_atlas;
++#[cfg(target_os = "macos")]
++mod metal_shader;
+ pub mod metal_renderer;
+diff --git a/crates/gpui_apple/src/metal_renderer.rs b/crates/gpui_apple/src/metal_renderer.rs
+index 80f1ecf..6ce3503 100644
+--- a/crates/gpui_apple/src/metal_renderer.rs
++++ b/crates/gpui_apple/src/metal_renderer.rs
+@@ -1,4 +1,5 @@
+ use crate::metal_atlas::MetalAtlas;
++use crate::metal_shader::MetalShaders;
+ use anyhow::{Context as _, Result};
+ use block::ConcreteBlock;
+ use cocoa::{
+@@ -126,6 +127,7 @@ pub struct MetalRenderer {
+     monochrome_sprites_pipeline_state: metal::RenderPipelineState,
+     polychrome_sprites_pipeline_state: metal::RenderPipelineState,
+     surfaces_pipeline_state: metal::RenderPipelineState,
++    shaders: MetalShaders,
+     unit_vertices: metal::Buffer,
+     #[allow(clippy::arc_with_non_send_sync)]
+     instance_buffer_pool: Arc<Mutex<InstanceBufferPool>>,
+@@ -345,6 +347,7 @@ impl MetalRenderer {
+         let core_video_texture_cache =
+             CVMetalTextureCache::new(None, device.clone(), None).unwrap();
+ 
++        let shaders = MetalShaders::new(&device, pixel_format);
+         Self {
+             device,
+             layer,
+@@ -361,6 +364,7 @@ impl MetalRenderer {
+             monochrome_sprites_pipeline_state,
+             polychrome_sprites_pipeline_state,
+             surfaces_pipeline_state,
++            shaders,
+             unit_vertices,
+             instance_buffer_pool,
+             sprite_atlas,
+@@ -620,7 +624,6 @@ impl MetalRenderer {
+         // Commit and wait for completion
+         command_buffer.commit();
+         command_buffer.wait_until_completed();
+-
+         read_texture_to_image(&target_texture)
+     }
+ 
+@@ -750,6 +753,8 @@ impl MetalRenderer {
+         let command_buffer = command_queue.new_command_buffer();
+         let alpha = if self.opaque { 1. } else { 0. };
+ 
++        self.shaders.simulate(scene, command_buffer);
++
+         let mut command_encoder = new_command_encoder_for_texture(
+             command_buffer,
+             texture,
+@@ -821,6 +826,22 @@ impl MetalRenderer {
+                     viewport_size,
+                     command_encoder,
+                 ),
++                PrimitiveBatch::Shaders(range) => {
++                    for shader in &scene.shaders[range] {
++                        if shader.reads_backdrop {
++                            command_encoder.end_encoding();
++                            self.shaders
++                                .copy_backdrop(command_buffer, texture, shader, viewport_size);
++                            command_encoder = new_command_encoder_for_texture(
++                                command_buffer,
++                                texture,
++                                viewport_size,
++                                None,
++                            );
++                        }
++                        self.shaders.draw(shader, viewport_size, command_encoder);
++                    }
++                }
+                 PrimitiveBatch::SubpixelSprites { .. } => unreachable!(),
+             }
+         }
+diff --git a/crates/gpui_apple/src/metal_shader.rs b/crates/gpui_apple/src/metal_shader.rs
+new file mode 100644
+index 0000000..8c4284c
+--- /dev/null
++++ b/crates/gpui_apple/src/metal_shader.rs
+@@ -0,0 +1,601 @@
++use anyhow::{Context as _, Result, anyhow};
++use collections::HashMap;
++use gpui::{
++    Bounds, DevicePixels, PaintShader, SHADER_PARAMS, SHADER_PRELUDE, SIMULATION_DT,
++    SIMULATION_PASSES, ScaledPixels, Scene, ShaderSimulation, SharedString, Size,
++    simulation_pass_order, simulation_schedule,
++};
++use metal::MTLPixelFormat;
++use naga::{ResourceBinding, back::msl};
++use std::ffi::c_void;
++
++
++const MAX_PIPELINES: usize = 64;
++
++#[repr(C)]
++struct ShaderFrame {
++    bounds: [f32; 4],
++    viewport: [f32; 2],
++    scale: f32,
++    time: f32,
++    params: [[f32; 4]; SHADER_PARAMS],
++}
++
++pub(crate) struct MetalShaders {
++    device: metal::Device,
++    pixel_format: MTLPixelFormat,
++    pipelines: HashMap<SharedString, Option<metal::RenderPipelineState>>,
++    sampler: metal::SamplerState,
++    backdrop: Option<metal::Texture>,
++    empty: metal::Texture,
++    empty_data: metal::Texture,
++    programs: HashMap<SharedString, Option<HashMap<&'static str, metal::ComputePipelineState>>>,
++    grids: HashMap<u64, Grid>,
++    frame: u64,
++}
++
++struct Grid {
++    size: [u32; 2],
++    textures: Vec<metal::Texture>,
++    current: usize,
++    time: Option<f32>,
++    used: u64,
++}
++
++fn new_grid(device: &metal::Device, size: [u32; 2], used: u64) -> Grid {
++    let texture = |format| {
++        let descriptor = metal::TextureDescriptor::new();
++        descriptor.set_width(size[0] as u64);
++        descriptor.set_height(size[1] as u64);
++        descriptor.set_pixel_format(format);
++        descriptor.set_storage_mode(metal::MTLStorageMode::Private);
++        descriptor.set_usage(metal::MTLTextureUsage::ShaderRead | metal::MTLTextureUsage::ShaderWrite);
++        device.new_texture(&descriptor)
++    };
++    let mut textures: Vec<_> = (0..2).map(|_| texture(MTLPixelFormat::RGBA16Float)).collect();
++    textures.extend((0..4).map(|_| texture(MTLPixelFormat::R32Float)));
++    Grid { size, textures, current: 0, time: None, used }
++}
++
++fn compile_program(
++    device: &metal::Device,
++    source: &str,
++) -> Result<HashMap<&'static str, metal::ComputePipelineState>> {
++    let module = naga::front::wgsl::parse_str(source).map_err(|error| anyhow!(error.emit_to_string(source)))?;
++    let info = naga::valid::Validator::new(
++        naga::valid::ValidationFlags::all(),
++        naga::valid::Capabilities::default(),
++    )
++    .validate(&module)
++    .map_err(|error| anyhow!(error.emit_to_string(source)))?;
++    let resource = |binding| ResourceBinding { group: 0, binding };
++    let mut resources = msl::BindingMap::default();
++    resources.insert(resource(0), msl::BindTarget { buffer: Some(0), ..Default::default() });
++    for (binding, slot, mutable) in [(1, 0, false), (3, 1, true), (4, 2, false), (5, 3, false), (6, 4, true)] {
++        resources.insert(resource(binding), msl::BindTarget { texture: Some(slot), mutable, ..Default::default() });
++    }
++    let mut options = msl::Options { lang_version: (2, 4), ..Default::default() };
++    for (entry, _) in SIMULATION_PASSES {
++        options.per_entry_point_map.insert(
++            entry.to_string(),
++            msl::EntryPointResources { resources: resources.clone(), ..Default::default() },
++        );
++    }
++    let (code, translation) = msl::write_string(&module, &info, &options, &msl::PipelineOptions::default())?;
++    let library = device
++        .new_library_with_source(&code, &metal::CompileOptions::new())
++        .map_err(|error| anyhow!(error))?;
++    let mut pipelines = HashMap::default();
++    for (entry, _) in SIMULATION_PASSES {
++        let index = module
++            .entry_points
++            .iter()
++            .position(|point| point.name == entry)
++            .with_context(|| format!("no compute entry point `{entry}`"))?;
++        let name = translation.entry_point_names[index].clone().map_err(|error| anyhow!("{error}"))?;
++        let function = library.get_function(&name, None).map_err(|error| anyhow!(error))?;
++        let pipeline = device
++            .new_compute_pipeline_state_with_function(&function)
++            .map_err(|error| anyhow!(error))?;
++        pipelines.insert(entry, pipeline);
++    }
++    Ok(pipelines)
++}
++
++fn binding_map() -> msl::EntryPointResources {
++    let resource = |binding| ResourceBinding { group: 0, binding };
++    let mut resources = msl::BindingMap::default();
++    resources.insert(resource(0), msl::BindTarget { buffer: Some(0), ..Default::default() });
++    resources.insert(resource(1), msl::BindTarget { texture: Some(0), ..Default::default() });
++    resources.insert(
++        resource(2),
++        msl::BindTarget { sampler: Some(msl::BindSamplerTarget::Resource(0)), ..Default::default() },
++    );
++    resources.insert(resource(3), msl::BindTarget { texture: Some(1), ..Default::default() });
++    resources.insert(resource(4), msl::BindTarget { texture: Some(2), ..Default::default() });
++    msl::EntryPointResources { resources, ..Default::default() }
++}
++
++fn compile(
++    device: &metal::Device,
++    pixel_format: MTLPixelFormat,
++    source: &str,
++) -> Result<metal::RenderPipelineState> {
++    let wgsl = format!("{SHADER_PRELUDE}\n{source}");
++    let module = naga::front::wgsl::parse_str(&wgsl).map_err(|error| anyhow!(error.emit_to_string(&wgsl)))?;
++    let info = naga::valid::Validator::new(
++        naga::valid::ValidationFlags::all(),
++        naga::valid::Capabilities::default(),
++    )
++    .validate(&module)
++    .map_err(|error| anyhow!(error.emit_to_string(&wgsl)))?;
++    let mut options = msl::Options { lang_version: (2, 4), ..Default::default() };
++    for entry in ["gpui_shader_vertex", "gpui_shader_fragment"] {
++        options.per_entry_point_map.insert(entry.to_string(), binding_map());
++    }
++    let (code, translation) = msl::write_string(&module, &info, &options, &msl::PipelineOptions::default())?;
++    let name = |index: usize| -> Result<String> {
++        translation.entry_point_names[index].clone().map_err(|error| anyhow!("{error}"))
++    };
++    let library = device
++        .new_library_with_source(&code, &metal::CompileOptions::new())
++        .map_err(|error| anyhow!(error))?;
++    let vertex = library.get_function(&name(0)?, None).map_err(|error| anyhow!(error))?;
++    let fragment = library.get_function(&name(1)?, None).map_err(|error| anyhow!(error))?;
++    let descriptor = metal::RenderPipelineDescriptor::new();
++    descriptor.set_vertex_function(Some(vertex.as_ref()));
++    descriptor.set_fragment_function(Some(fragment.as_ref()));
++    let attachment = descriptor.color_attachments().object_at(0).context("no attachment")?;
++    attachment.set_pixel_format(pixel_format);
++    attachment.set_blending_enabled(true);
++    attachment.set_rgb_blend_operation(metal::MTLBlendOperation::Add);
++    attachment.set_alpha_blend_operation(metal::MTLBlendOperation::Add);
++    attachment.set_source_rgb_blend_factor(metal::MTLBlendFactor::One);
++    attachment.set_source_alpha_blend_factor(metal::MTLBlendFactor::One);
++    attachment.set_destination_rgb_blend_factor(metal::MTLBlendFactor::OneMinusSourceAlpha);
++    attachment.set_destination_alpha_blend_factor(metal::MTLBlendFactor::OneMinusSourceAlpha);
++    device.new_render_pipeline_state(&descriptor).map_err(|error| anyhow!(error))
++}
++
++fn clipped(shader: &PaintShader, viewport: Size<DevicePixels>) -> Option<metal::MTLRegion> {
++    let visible: Bounds<ScaledPixels> = shader.bounds.intersect(&shader.content_mask.bounds);
++    let (width, height) = (i32::from(viewport.width) as f64, i32::from(viewport.height) as f64);
++    let x0 = (visible.origin.x.0 as f64).floor().clamp(0., width);
++    let y0 = (visible.origin.y.0 as f64).floor().clamp(0., height);
++    let x1 = ((visible.origin.x.0 + visible.size.width.0) as f64).ceil().clamp(0., width);
++    let y1 = ((visible.origin.y.0 + visible.size.height.0) as f64).ceil().clamp(0., height);
++    (x1 > x0 && y1 > y0).then(|| metal::MTLRegion {
++        origin: metal::MTLOrigin { x: x0 as u64, y: y0 as u64, z: 0 },
++        size: metal::MTLSize { width: (x1 - x0) as u64, height: (y1 - y0) as u64, depth: 1 },
++    })
++}
++
++impl MetalShaders {
++    pub(crate) fn new(device: &metal::Device, pixel_format: MTLPixelFormat) -> Self {
++        let sampler = metal::SamplerDescriptor::new();
++        sampler.set_min_filter(metal::MTLSamplerMinMagFilter::Linear);
++        sampler.set_mag_filter(metal::MTLSamplerMinMagFilter::Linear);
++        sampler.set_address_mode_s(metal::MTLSamplerAddressMode::ClampToEdge);
++        sampler.set_address_mode_t(metal::MTLSamplerAddressMode::ClampToEdge);
++        let empty = metal::TextureDescriptor::new();
++        empty.set_width(1);
++        empty.set_height(1);
++        empty.set_pixel_format(pixel_format);
++        Self {
++            device: device.clone(),
++            pixel_format,
++            pipelines: HashMap::default(),
++            sampler: device.new_sampler(&sampler),
++            backdrop: None,
++            empty: device.new_texture(&empty),
++            empty_data: {
++                let descriptor = metal::TextureDescriptor::new();
++                descriptor.set_width(1);
++                descriptor.set_height(1);
++                descriptor.set_pixel_format(MTLPixelFormat::RGBA32Float);
++                device.new_texture(&descriptor)
++            },
++            programs: HashMap::default(),
++            grids: HashMap::default(),
++            frame: 0,
++        }
++    }
++
++    pub(crate) fn simulate(&mut self, scene: &Scene, command_buffer: &metal::CommandBufferRef) {
++        self.frame += 1;
++        for shader in &scene.shaders {
++            if let Some(simulation) = &shader.simulation {
++                self.step(simulation, shader.time, command_buffer);
++            }
++        }
++        let frame = self.frame;
++        self.grids.retain(|_, grid| grid.used + 1 >= frame);
++    }
++
++    fn step(
++        &mut self,
++        simulation: &ShaderSimulation,
++        time: f32,
++        command_buffer: &metal::CommandBufferRef,
++    ) {
++        let device = &self.device;
++        if self.programs.len() >= MAX_PIPELINES && !self.programs.contains_key(&simulation.source) {
++            self.programs.clear();
++        }
++        let program = self.programs.entry(simulation.source.clone()).or_insert_with(|| {
++            compile_program(device, &simulation.source)
++                .inspect_err(|error| log::error!("paint_shader simulation failed to compile: {error:#}"))
++                .ok()
++        });
++        let Some(program) = program.as_ref() else { return };
++        let frame = self.frame;
++        let grid = self
++            .grids
++            .entry(simulation.key)
++            .or_insert_with(|| new_grid(device, simulation.grid, frame));
++        if grid.size != simulation.grid {
++            *grid = new_grid(device, simulation.grid, frame);
++        }
++        grid.used = frame;
++        let (steps, start, reset) = simulation_schedule(grid.time, time);
++        if steps == 0 {
++            return;
++        }
++        let groups = metal::MTLSize {
++            width: grid.size[0].div_ceil(8) as u64,
++            height: grid.size[1].div_ceil(8) as u64,
++            depth: 1,
++        };
++        let group_size = metal::MTLSize { width: 8, height: 8, depth: 1 };
++        let encoder = command_buffer.new_compute_command_encoder();
++        for step in 0..steps {
++            let mut uniform = simulation.uniform;
++            uniform[1][2] = start + (step + 1) as f32 * SIMULATION_DT;
++            uniform[1][3] = if reset && step == 0 { 1.0 } else { 0.0 };
++            encoder.set_bytes(
++                0,
++                std::mem::size_of_val(&uniform) as u64,
++                uniform.as_ptr() as *const c_void,
++            );
++            for pass in simulation_pass_order() {
++                let (entry, bindings) = SIMULATION_PASSES[pass];
++                encoder.set_compute_pipeline_state(&program[entry]);
++                for (slot, binding) in bindings.into_iter().enumerate() {
++                    let index = if binding < 2 { binding ^ grid.current } else { binding };
++                    encoder.set_texture(slot as u64, Some(&grid.textures[index]));
++                }
++                encoder.dispatch_thread_groups(groups, group_size);
++            }
++            grid.current ^= 1;
++        }
++        encoder.end_encoding();
++        grid.time = Some(start + steps as f32 * SIMULATION_DT);
++    }
++
++    pub(crate) fn copy_backdrop(
++        &mut self,
++        command_buffer: &metal::CommandBufferRef,
++        target: &metal::TextureRef,
++        shader: &PaintShader,
++        viewport: Size<DevicePixels>,
++    ) {
++        if clipped(shader, viewport).is_none() {
++            return;
++        }
++        let stale = self.backdrop.as_ref().is_none_or(|texture| {
++            texture.width() != target.width() || texture.height() != target.height()
++        });
++        if stale {
++            let descriptor = metal::TextureDescriptor::new();
++            descriptor.set_width(target.width());
++            descriptor.set_height(target.height());
++            descriptor.set_pixel_format(self.pixel_format);
++            descriptor.set_usage(metal::MTLTextureUsage::ShaderRead);
++            descriptor.set_storage_mode(metal::MTLStorageMode::Private);
++            self.backdrop = Some(self.device.new_texture(&descriptor));
++        }
++        let Some(backdrop) = self.backdrop.as_ref() else { return };
++        let blit = command_buffer.new_blit_command_encoder();
++        let origin = metal::MTLOrigin { x: 0, y: 0, z: 0 };
++        let size = metal::MTLSize { width: target.width(), height: target.height(), depth: 1 };
++        blit.copy_from_texture(target, 0, 0, origin, size, backdrop, 0, 0, origin);
++        blit.end_encoding();
++    }
++
++    pub(crate) fn draw(
++        &mut self,
++        shader: &PaintShader,
++        viewport: Size<DevicePixels>,
++        encoder: &metal::RenderCommandEncoderRef,
++    ) {
++        let Some(region) = clipped(shader, viewport) else { return };
++        if self.pipelines.len() >= MAX_PIPELINES && !self.pipelines.contains_key(&shader.source) {
++            self.pipelines.clear();
++        }
++        let (device, pixel_format) = (&self.device, self.pixel_format);
++        let pipeline = self.pipelines.entry(shader.source.clone()).or_insert_with(|| {
++            compile(device, pixel_format, &shader.source)
++                .inspect_err(|error| log::error!("paint_shader failed to compile: {error:#}"))
++                .ok()
++        });
++        let Some(pipeline) = pipeline.as_ref() else { return };
++        let uniform = ShaderFrame {
++            bounds: [
++                shader.bounds.origin.x.0,
++                shader.bounds.origin.y.0,
++                shader.bounds.size.width.0,
++                shader.bounds.size.height.0,
++            ],
++            viewport: [i32::from(viewport.width) as f32, i32::from(viewport.height) as f32],
++            scale: shader.scale,
++            time: shader.time,
++            params: shader.params,
++        };
++        let bytes = std::mem::size_of::<ShaderFrame>() as u64;
++        let uniform = &uniform as *const ShaderFrame as *const c_void;
++        encoder.set_render_pipeline_state(pipeline);
++        encoder.set_vertex_bytes(0, bytes, uniform);
++        encoder.set_fragment_bytes(0, bytes, uniform);
++        let backdrop = self.backdrop.as_ref().filter(|_| shader.reads_backdrop).unwrap_or(&self.empty);
++        encoder.set_fragment_texture(0, Some(backdrop));
++        let state = shader
++            .simulation
++            .as_ref()
++            .and_then(|simulation| self.grids.get(&simulation.key))
++            .map_or(&self.empty, |grid| &grid.textures[grid.current]);
++        encoder.set_fragment_texture(1, Some(state));
++        let data = shader.data.as_ref().map(|data| {
++            let height = data.len().div_ceil(1024).max(1) as u64;
++            let descriptor = metal::TextureDescriptor::new();
++            descriptor.set_width(1024);
++            descriptor.set_height(height);
++            descriptor.set_pixel_format(MTLPixelFormat::RGBA32Float);
++            descriptor.set_storage_mode(metal::MTLStorageMode::Shared);
++            let texture = self.device.new_texture(&descriptor);
++            let mut rows = data.to_vec();
++            rows.resize(1024 * height as usize, [0.0; 4]);
++            texture.replace_region(
++                metal::MTLRegion {
++                    origin: metal::MTLOrigin { x: 0, y: 0, z: 0 },
++                    size: metal::MTLSize { width: 1024, height, depth: 1 },
++                },
++                0,
++                rows.as_ptr() as *const c_void,
++                1024 * 16,
++            );
++            texture
++        });
++        encoder.set_fragment_texture(2, Some(data.as_deref().unwrap_or(&self.empty_data)));
++        encoder.set_fragment_sampler_state(0, Some(&self.sampler));
++        encoder.set_scissor_rect(metal::MTLScissorRect {
++            x: region.origin.x,
++            y: region.origin.y,
++            width: region.size.width,
++            height: region.size.height,
++        });
++        encoder.draw_primitives(metal::MTLPrimitiveType::Triangle, 0, 6);
++        encoder.set_scissor_rect(metal::MTLScissorRect {
++            x: 0,
++            y: 0,
++            width: i32::from(viewport.width) as u64,
++            height: i32::from(viewport.height) as u64,
++        });
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use crate::metal_renderer::{InstanceBufferPool, MetalRenderer};
++    use gpui::{
++        Background, Bounds, ContentMask, DevicePixels, PaintShader, Quad, Scene, ScaledPixels,
++        SharedString, Size, point, px, rgb, size,
++    };
++    use parking_lot::Mutex;
++    use std::sync::Arc;
++
++    const SIZE: i32 = 40;
++
++    fn bounds(x: f32, y: f32, width: f32, height: f32) -> Bounds<ScaledPixels> {
++        Bounds {
++            origin: point(px(x).scale(1.0), px(y).scale(1.0)),
++            size: size(px(width).scale(1.0), px(height).scale(1.0)),
++        }
++    }
++
++    fn whole() -> ContentMask<ScaledPixels> {
++        ContentMask { bounds: bounds(0.0, 0.0, SIZE as f32, SIZE as f32) }
++    }
++
++    fn quad(area: Bounds<ScaledPixels>, color: u32) -> Quad {
++        Quad {
++            bounds: area,
++            content_mask: whole(),
++            background: Background::from(rgb(color)),
++            ..Default::default()
++        }
++    }
++
++    fn shader(area: Bounds<ScaledPixels>, source: &str, reads_backdrop: bool) -> PaintShader {
++        PaintShader {
++            order: 0,
++            bounds: area,
++            content_mask: whole(),
++            source: SharedString::from(source.to_string()),
++            scale: 1.0,
++            time: 0.0,
++            params: [[0.0; 4]; gpui::SHADER_PARAMS],
++            reads_backdrop,
++            simulation: None,
++            data: None,
++        }
++    }
++
++    fn render(scene: &mut Scene) -> image::RgbaImage {
++        scene.finish();
++        let pool = Arc::new(Mutex::new(InstanceBufferPool::default()));
++        MetalRenderer::new_headless(pool, metal::MTLPixelFormat::BGRA8Unorm)
++            .render_scene_to_image(scene, Size {
++                width: DevicePixels(SIZE),
++                height: DevicePixels(SIZE),
++            })
++            .expect("renders")
++    }
++
++    fn px_at(image: &image::RgbaImage, x: u32, y: u32) -> [u8; 3] {
++        let [r, g, b, _] = image.get_pixel(x, y).0;
++        [r, g, b]
++    }
++
++    const GREEN: &str = "fn shade(p: vec2f) -> vec4f { return vec4f(0., 1., 0., 1.); }";
++
++    #[test]
++    fn a_shader_keeps_its_place_in_painter_order() {
++        let mut scene = Scene::default();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(quad(bounds(0.0, 0.0, 40.0, 40.0), 0xff0000));
++        scene.pop_layer();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(shader(bounds(0.0, 0.0, 40.0, 40.0), GREEN, false));
++        scene.pop_layer();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(quad(bounds(20.0, 0.0, 20.0, 40.0), 0x0000ff));
++        scene.pop_layer();
++        let image = render(&mut scene);
++        assert_eq!(px_at(&image, 10, 20), [0, 255, 0], "the shader covers the first quad");
++        assert_eq!(px_at(&image, 30, 20), [0, 0, 255], "the later quad covers the shader");
++    }
++
++    #[test]
++    fn a_shader_reads_what_was_drawn_before_it() {
++        let source = "fn shade(p: vec2f) -> vec4f { return vec4f(backdrop_at(vec2f(10., 10.)).bgr, 1.); }";
++        let mut scene = Scene::default();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(quad(bounds(0.0, 0.0, 40.0, 40.0), 0xff0000));
++        scene.pop_layer();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(shader(bounds(0.0, 0.0, 40.0, 40.0), source, true));
++        scene.pop_layer();
++        let image = render(&mut scene);
++        assert_eq!(px_at(&image, 20, 20), [0, 0, 255], "red swizzled to blue from the backdrop");
++    }
++
++    #[test]
++    fn a_shader_is_premultiplied_and_can_add_light() {
++        let source = "fn shade(p: vec2f) -> vec4f { return vec4f(0., 0.5, 0., 0.); }";
++        let mut scene = Scene::default();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(quad(bounds(0.0, 0.0, 40.0, 40.0), 0xff0000));
++        scene.pop_layer();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(shader(bounds(0.0, 0.0, 40.0, 40.0), source, false));
++        scene.pop_layer();
++        let [r, g, b] = px_at(&render(&mut scene), 20, 20);
++        assert_eq!((r, b), (255, 0));
++        assert!((126..=129).contains(&g), "added 0.5 green, got {g}");
++    }
++
++    #[test]
++    fn a_shader_that_does_not_compile_draws_nothing_and_keeps_the_frame() {
++        let mut scene = Scene::default();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(quad(bounds(0.0, 0.0, 40.0, 40.0), 0xff0000));
++        scene.pop_layer();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(shader(bounds(0.0, 0.0, 40.0, 40.0), "fn shade(", false));
++        scene.pop_layer();
++        assert_eq!(px_at(&render(&mut scene), 20, 20), [255, 0, 0]);
++    }
++
++    const COUNTER: &str = r#"
++@group(0) @binding(0) var<uniform> u: array<vec4f, 6>;
++@group(0) @binding(1) var s_in: texture_2d<f32>;
++@group(0) @binding(3) var s_out: texture_storage_2d<rgba16float, write>;
++@group(0) @binding(4) var a_in: texture_2d<f32>;
++@group(0) @binding(5) var b_in: texture_2d<f32>;
++@group(0) @binding(6) var r_out: texture_storage_2d<r32float, write>;
++fn pass_state(id: vec3u) { textureStore(s_out, vec2i(id.xy), textureLoad(s_in, vec2i(id.xy), 0)); }
++fn pass_scalar(id: vec3u) { textureStore(r_out, vec2i(id.xy), textureLoad(a_in, vec2i(id.xy), 0) + textureLoad(b_in, vec2i(id.xy), 0)); }
++@compute @workgroup_size(8, 8) fn curl(@builtin(global_invocation_id) id: vec3u) { pass_scalar(id); }
++@compute @workgroup_size(8, 8) fn forces(@builtin(global_invocation_id) id: vec3u) { pass_state(id); }
++@compute @workgroup_size(8, 8) fn divergence(@builtin(global_invocation_id) id: vec3u) { pass_scalar(id); }
++@compute @workgroup_size(8, 8) fn jacobi(@builtin(global_invocation_id) id: vec3u) { pass_scalar(id); }
++@compute @workgroup_size(8, 8) fn project(@builtin(global_invocation_id) id: vec3u) { pass_state(id); }
++@compute @workgroup_size(8, 8) fn advect(@builtin(global_invocation_id) id: vec3u) {
++    let previous = select(textureLoad(s_in, vec2i(id.xy), 0).x, 0.0, u[1].w > 0.5);
++    textureStore(s_out, vec2i(id.xy), vec4f(previous + 1.0 / 255.0, 0.0, 0.0, 1.0));
++}
++"#;
++
++    fn counted(time: f32) -> PaintShader {
++        let mut counting = shader(
++            bounds(0.0, 0.0, 40.0, 40.0),
++            "fn shade(p: vec2f) -> vec4f { return vec4f(textureSampleLevel(simulation_state, backdrop_sampler, vec2f(0.5), 0.).x, 0., 0., 1.); }",
++            false,
++        );
++        counting.time = time;
++        counting.simulation = Some(gpui::ShaderSimulation {
++            key: 1,
++            source: SharedString::from(COUNTER.to_string()),
++            grid: [16, 16],
++            uniform: [[0.0; 4]; 6],
++        });
++        counting
++    }
++
++    #[test]
++    fn a_simulation_keeps_its_state_between_frames() {
++        let pool = Arc::new(Mutex::new(InstanceBufferPool::default()));
++        let mut renderer = MetalRenderer::new_headless(pool, metal::MTLPixelFormat::BGRA8Unorm);
++        let extent = Size { width: DevicePixels(SIZE), height: DevicePixels(SIZE) };
++        let mut frame = |time: f32| {
++            let mut scene = Scene::default();
++            scene.insert_primitive(counted(time));
++            scene.finish();
++            let image = renderer.render_scene_to_image(&scene, extent).expect("renders");
++            px_at(&image, 20, 20)[0]
++        };
++        assert_eq!(frame(10.0), 72, "a new grid warms up");
++        assert_eq!(frame(10.0 + 2.0 * gpui::SIMULATION_DT), 74, "two more fixed steps");
++        assert_eq!(frame(10.0 + 2.0 * gpui::SIMULATION_DT), 74, "redrawing a frame does not step");
++    }
++
++    // A refracting shader samples past its own bounds, so the whole frame must be readable.
++    #[test]
++    fn a_shader_reads_the_backdrop_outside_its_own_bounds() {
++        let source = "fn shade(p: vec2f) -> vec4f { return vec4f(backdrop_at(p + vec2f(20., 0.)).bgr, 1.); }";
++        let mut scene = Scene::default();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(quad(bounds(0.0, 0.0, 40.0, 40.0), 0xff0000));
++        scene.pop_layer();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(shader(bounds(0.0, 0.0, 10.0, 40.0), source, true));
++        scene.pop_layer();
++        assert_eq!(px_at(&render(&mut scene), 5, 20), [0, 0, 255]);
++    }
++
++    #[test]
++    fn a_shader_reads_its_data_table() {
++        let mut table = shader(
++            bounds(0.0, 0.0, 40.0, 40.0),
++            "fn shade(p: vec2f) -> vec4f { return shader_data_at(1500u); }",
++            false,
++        );
++        let mut rows = vec![[0.0; 4]; 1501];
++        rows[1500] = [0.0, 1.0, 0.0, 1.0];
++        table.data = Some(rows.into());
++        let mut scene = Scene::default();
++        scene.insert_primitive(table);
++        assert_eq!(px_at(&render(&mut scene), 20, 20), [0, 255, 0]);
++    }
++
++    #[test]
++    fn the_content_mask_clips_a_shader() {
++        let mut clipped = shader(bounds(0.0, 0.0, 40.0, 40.0), GREEN, false);
++        clipped.content_mask = ContentMask { bounds: bounds(0.0, 0.0, 10.0, 40.0) };
++        let mut scene = Scene::default();
++        scene.insert_primitive(clipped);
++        let image = render(&mut scene);
++        assert_eq!(px_at(&image, 5, 20), [0, 255, 0]);
++        assert_eq!(px_at(&image, 20, 20), [0, 0, 0]);
++    }
++}
+diff --git a/crates/gpui_wgpu/Cargo.toml b/crates/gpui_wgpu/Cargo.toml
+index 3d889ff..e6c07cc 100644
+--- a/crates/gpui_wgpu/Cargo.toml
++++ b/crates/gpui_wgpu/Cargo.toml
+@@ -24,6 +24,7 @@ cosmic-text = "0.19.0"
+ etagere.workspace = true
+ itertools.workspace = true
+ log.workspace = true
++naga = { version = "29.0.4", features = ["wgsl-in"] }
+ parking_lot.workspace = true
+ profiling.workspace = true
+ raw-window-handle.workspace = true
+@@ -44,7 +45,6 @@ wgpu = { workspace = true, features = ["webgl"] }
+ 
+ [dev-dependencies]
+ criterion.workspace = true
+-naga = { version = "29.0.4", features = ["wgsl-in"] }
+ 
+ [[bench]]
+ name = "layout_line"
+diff --git a/crates/gpui_wgpu/src/gpui_wgpu.rs b/crates/gpui_wgpu/src/gpui_wgpu.rs
+index 452c3c0..45a2be9 100644
+--- a/crates/gpui_wgpu/src/gpui_wgpu.rs
++++ b/crates/gpui_wgpu/src/gpui_wgpu.rs
+@@ -2,6 +2,7 @@ mod cosmic_text_system;
+ mod wgpu_atlas;
+ mod wgpu_context;
+ mod wgpu_renderer;
++mod wgpu_shader;
+ 
+ pub use cosmic_text_system::*;
+ pub use wgpu;
+diff --git a/crates/gpui_wgpu/src/wgpu_renderer.rs b/crates/gpui_wgpu/src/wgpu_renderer.rs
+index 47ce2a3..4fe05f1 100644
+--- a/crates/gpui_wgpu/src/wgpu_renderer.rs
++++ b/crates/gpui_wgpu/src/wgpu_renderer.rs
+@@ -1,3 +1,4 @@
++use crate::wgpu_shader::WgpuShaders;
+ use crate::{CompositorGpuHint, WgpuAtlas, WgpuContext};
+ use anyhow::{Context as _, Result};
+ use bytemuck::{Pod, Zeroable};
+@@ -190,6 +191,7 @@ struct WgpuResources {
+     surface_sampler: wgpu::Sampler,
+     #[allow(dead_code)]
+     surface_uniform_buffer: wgpu::Buffer,
++    shaders: WgpuShaders,
+     globals_buffer: wgpu::Buffer,
+     globals_bind_group: wgpu::BindGroup,
+     path_globals_bind_group: wgpu::BindGroup,
+@@ -457,7 +459,14 @@ impl WgpuRenderer {
+         }
+ 
+         let surface_config = wgpu::SurfaceConfiguration {
+-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
++            // wgpu reports only RENDER_ATTACHMENT for a WebGPU canvas, whose spec allows copies.
++            usage: if surface_caps.usages.contains(wgpu::TextureUsages::COPY_SRC)
++                || matches!(context.backend(), crate::WgpuBackend::BrowserWebGpu)
++            {
++                wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC
++            } else {
++                wgpu::TextureUsages::RENDER_ATTACHMENT
++            },
+             format: surface_format,
+             width: clamped_width.max(1),
+             height: clamped_height.max(1),
+@@ -622,6 +631,7 @@ impl WgpuRenderer {
+             *guard = Some(error.to_string());
+         }));
+ 
++        let shaders = WgpuShaders::new(device.clone(), queue.clone(), surface_format);
+         let resources = WgpuResources {
+             device,
+             queue,
+@@ -632,6 +642,7 @@ impl WgpuRenderer {
+             atlas_sampler,
+             surface_sampler,
+             surface_uniform_buffer,
++            shaders,
+             globals_buffer,
+             globals_bind_group,
+             path_globals_bind_group,
+@@ -1402,7 +1413,7 @@ impl WgpuRenderer {
+ 
+         self.write_globals();
+ 
+-        if let Err(error) = self.record_frame(scene, &frame_view) {
++        if let Err(error) = self.record_frame(scene, &frame.texture, &frame_view) {
+             log::error!("{error:#}");
+             self.resources().queue.submit(std::iter::empty());
+             return false;
+@@ -1489,13 +1500,13 @@ impl WgpuRenderer {
+         self.ensure_readback(width, height);
+         self.write_globals();
+ 
+-        let view = self
++        let (texture, view) = self
+             .resources()
+             .readback
+             .as_ref()
+-            .map(|readback| readback.view.clone())
++            .map(|readback| (readback.texture.clone(), readback.view.clone()))
+             .context("readback target was just created")?;
+-        self.record_frame(scene, &view)?;
++        self.record_frame(scene, &texture, &view)?;
+ 
+         let resources = self.resources();
+         let readback = resources
+@@ -1604,7 +1615,13 @@ impl WgpuRenderer {
+         });
+     }
+ 
+-    fn record_frame(&mut self, scene: &Scene, frame_view: &wgpu::TextureView) -> Result<()> {
++    fn record_frame(
++        &mut self,
++        scene: &Scene,
++        frame_texture: &wgpu::Texture,
++        frame_view: &wgpu::TextureView,
++    ) -> Result<()> {
++        self.resources_mut().shaders.prepare(scene, frame_texture);
+         let mut instance_offset = 0;
+         let instance_bindings = self
+             .write_instances(scene, &mut instance_offset)
+@@ -1628,6 +1645,8 @@ impl WgpuRenderer {
+                     label: Some("main_encoder"),
+                 });
+ 
++        self.resources_mut().shaders.simulate(scene, &mut encoder);
++
+         {
+             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                 label: Some("main_pass"),
+@@ -1731,6 +1750,34 @@ impl WgpuRenderer {
+                     PrimitiveBatch::Surfaces(range) => {
+                         self.draw_surfaces(&scene.surfaces[range], &mut pass)
+                     }
++                    PrimitiveBatch::Shaders(range) => {
++                        for index in range {
++                            let shader = &scene.shaders[index];
++                            if shader.reads_backdrop {
++                                drop(pass);
++                                self.resources().shaders.copy_backdrop(
++                                    &mut encoder,
++                                    frame_texture,
++                                    shader,
++                                );
++                                pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
++                                    label: Some("main_pass_after_backdrop"),
++                                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
++                                        view: frame_view,
++                                        resolve_target: None,
++                                        ops: wgpu::Operations {
++                                            load: wgpu::LoadOp::Load,
++                                            store: wgpu::StoreOp::Store,
++                                        },
++                                        depth_slice: None,
++                                    })],
++                                    depth_stencil_attachment: None,
++                                    ..Default::default()
++                                });
++                            }
++                            self.resources().shaders.draw(index, shader, &mut pass);
++                        }
++                    }
+                 }
+             }
+         }
+diff --git a/crates/gpui_wgpu/src/wgpu_shader.rs b/crates/gpui_wgpu/src/wgpu_shader.rs
+new file mode 100644
+index 0000000..1889749
+--- /dev/null
++++ b/crates/gpui_wgpu/src/wgpu_shader.rs
+@@ -0,0 +1,767 @@
++use anyhow::{Result, anyhow};
++use collections::HashMap;
++use gpui::{
++    PaintShader, SHADER_PARAMS, SHADER_PRELUDE, SIMULATION_DT, SIMULATION_PASSES, Scene,
++    ShaderSimulation, SharedString, simulation_pass_order, simulation_schedule,
++};
++use std::sync::Arc;
++
++const MAX_PIPELINES: usize = 64;
++const UNIFORM_SIZE: u64 = 32 + 16 * SHADER_PARAMS as u64;
++const SIMULATION_SLOT: u64 = 256;
++const SIMULATION_SLOTS: u64 = 80;
++
++#[repr(C)]
++#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
++struct ShaderFrame {
++    bounds: [f32; 4],
++    viewport: [f32; 2],
++    scale: f32,
++    time: f32,
++    params: [[f32; 4]; SHADER_PARAMS],
++}
++
++struct Clip {
++    x: u32,
++    y: u32,
++    width: u32,
++    height: u32,
++}
++
++fn clip_of(shader: &PaintShader, width: u32, height: u32) -> Option<Clip> {
++    let visible = shader.bounds.intersect(&shader.content_mask.bounds);
++    let x0 = (visible.origin.x.0.floor().max(0.0) as u32).min(width);
++    let y0 = (visible.origin.y.0.floor().max(0.0) as u32).min(height);
++    let x1 = ((visible.origin.x.0 + visible.size.width.0).ceil().max(0.0) as u32).min(width);
++    let y1 = ((visible.origin.y.0 + visible.size.height.0).ceil().max(0.0) as u32).min(height);
++    (x1 > x0 && y1 > y0).then_some(Clip { x: x0, y: y0, width: x1 - x0, height: y1 - y0 })
++}
++
++pub(crate) struct WgpuShaders {
++    device: Arc<wgpu::Device>,
++    queue: Arc<wgpu::Queue>,
++    format: wgpu::TextureFormat,
++    bind_group_layout: wgpu::BindGroupLayout,
++    pipeline_layout: wgpu::PipelineLayout,
++    sampler: wgpu::Sampler,
++    pipelines: HashMap<SharedString, Option<wgpu::RenderPipeline>>,
++    uniforms: Option<wgpu::Buffer>,
++    stride: u64,
++    backdrop: Option<(wgpu::Texture, wgpu::TextureView)>,
++    empty: wgpu::TextureView,
++    empty_data: wgpu::TextureView,
++    tables: Vec<Option<wgpu::TextureView>>,
++    target_size: (u32, u32),
++    backdrop_readable: bool,
++    compute: Option<(wgpu::BindGroupLayout, wgpu::PipelineLayout)>,
++    programs: HashMap<SharedString, Option<HashMap<&'static str, wgpu::ComputePipeline>>>,
++    grids: HashMap<u64, Grid>,
++    frame: u64,
++}
++
++struct Grid {
++    size: [u32; 2],
++    views: Vec<wgpu::TextureView>,
++    uniforms: wgpu::Buffer,
++    current: usize,
++    time: Option<f32>,
++    used: u64,
++}
++
++impl WgpuShaders {
++    pub(crate) fn new(
++        device: Arc<wgpu::Device>,
++        queue: Arc<wgpu::Queue>,
++        format: wgpu::TextureFormat,
++    ) -> Self {
++        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
++            label: Some("paint_shader_layout"),
++            entries: &[
++                wgpu::BindGroupLayoutEntry {
++                    binding: 0,
++                    visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
++                    ty: wgpu::BindingType::Buffer {
++                        ty: wgpu::BufferBindingType::Uniform,
++                        has_dynamic_offset: true,
++                        min_binding_size: wgpu::BufferSize::new(UNIFORM_SIZE),
++                    },
++                    count: None,
++                },
++                wgpu::BindGroupLayoutEntry {
++                    binding: 1,
++                    visibility: wgpu::ShaderStages::FRAGMENT,
++                    ty: wgpu::BindingType::Texture {
++                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
++                        view_dimension: wgpu::TextureViewDimension::D2,
++                        multisampled: false,
++                    },
++                    count: None,
++                },
++                wgpu::BindGroupLayoutEntry {
++                    binding: 2,
++                    visibility: wgpu::ShaderStages::FRAGMENT,
++                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
++                    count: None,
++                },
++                wgpu::BindGroupLayoutEntry {
++                    binding: 4,
++                    visibility: wgpu::ShaderStages::FRAGMENT,
++                    ty: wgpu::BindingType::Texture {
++                        sample_type: wgpu::TextureSampleType::Float { filterable: false },
++                        view_dimension: wgpu::TextureViewDimension::D2,
++                        multisampled: false,
++                    },
++                    count: None,
++                },
++                wgpu::BindGroupLayoutEntry {
++                    binding: 3,
++                    visibility: wgpu::ShaderStages::FRAGMENT,
++                    ty: wgpu::BindingType::Texture {
++                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
++                        view_dimension: wgpu::TextureViewDimension::D2,
++                        multisampled: false,
++                    },
++                    count: None,
++                },
++            ],
++        });
++        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
++            label: Some("paint_shader_pipeline_layout"),
++            bind_group_layouts: &[Some(&bind_group_layout)],
++            immediate_size: 0,
++        });
++        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
++            label: Some("paint_shader_sampler"),
++            mag_filter: wgpu::FilterMode::Linear,
++            min_filter: wgpu::FilterMode::Linear,
++            ..Default::default()
++        });
++        let empty = device
++            .create_texture(&wgpu::TextureDescriptor {
++                label: Some("paint_shader_empty"),
++                size: wgpu::Extent3d { width: 1, height: 1, depth_or_array_layers: 1 },
++                mip_level_count: 1,
++                sample_count: 1,
++                dimension: wgpu::TextureDimension::D2,
++                format,
++                usage: wgpu::TextureUsages::TEXTURE_BINDING,
++                view_formats: &[],
++            })
++            .create_view(&wgpu::TextureViewDescriptor::default());
++        let empty_data = device
++            .create_texture(&wgpu::TextureDescriptor {
++                label: Some("paint_shader_empty_data"),
++                size: wgpu::Extent3d { width: 1, height: 1, depth_or_array_layers: 1 },
++                mip_level_count: 1,
++                sample_count: 1,
++                dimension: wgpu::TextureDimension::D2,
++                format: wgpu::TextureFormat::Rgba32Float,
++                usage: wgpu::TextureUsages::TEXTURE_BINDING,
++                view_formats: &[],
++            })
++            .create_view(&wgpu::TextureViewDescriptor::default());
++        let alignment = u64::from(device.limits().min_uniform_buffer_offset_alignment);
++        let read = wgpu::BindingType::Texture {
++            sample_type: wgpu::TextureSampleType::Float { filterable: false },
++            view_dimension: wgpu::TextureViewDimension::D2,
++            multisampled: false,
++        };
++        let write = |format| wgpu::BindingType::StorageTexture {
++            access: wgpu::StorageTextureAccess::WriteOnly,
++            format,
++            view_dimension: wgpu::TextureViewDimension::D2,
++        };
++        let entry = |binding, ty| wgpu::BindGroupLayoutEntry {
++            binding,
++            visibility: wgpu::ShaderStages::COMPUTE,
++            ty,
++            count: None,
++        };
++        let compute = (device.limits().max_compute_workgroups_per_dimension > 0).then(|| {
++        let compute_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
++            label: Some("paint_shader_simulation_layout"),
++            entries: &[
++                entry(0, wgpu::BindingType::Buffer {
++                    ty: wgpu::BufferBindingType::Uniform,
++                    has_dynamic_offset: true,
++                    min_binding_size: wgpu::BufferSize::new(96),
++                }),
++                entry(1, read),
++                entry(3, write(wgpu::TextureFormat::Rgba16Float)),
++                entry(4, read),
++                entry(5, read),
++                entry(6, write(wgpu::TextureFormat::R32Float)),
++            ],
++        });
++        let compute_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
++            label: Some("paint_shader_simulation_pipeline_layout"),
++            bind_group_layouts: &[Some(&compute_layout)],
++            immediate_size: 0,
++        });
++        (compute_layout, compute_pipeline_layout)
++        });
++        Self {
++            device,
++            queue,
++            format,
++            bind_group_layout,
++            pipeline_layout,
++            sampler,
++            pipelines: HashMap::default(),
++            uniforms: None,
++            stride: UNIFORM_SIZE.next_multiple_of(alignment),
++            backdrop: None,
++            empty,
++            empty_data,
++            tables: Vec::new(),
++            target_size: (0, 0),
++            backdrop_readable: false,
++            compute,
++            programs: HashMap::default(),
++            grids: HashMap::default(),
++            frame: 0,
++        }
++    }
++
++    fn compile(&self, source: &str) -> Result<wgpu::RenderPipeline> {
++        let wgsl = format!("{SHADER_PRELUDE}\n{source}");
++        let module =
++            naga::front::wgsl::parse_str(&wgsl).map_err(|error| anyhow!(error.emit_to_string(&wgsl)))?;
++        naga::valid::Validator::new(
++            naga::valid::ValidationFlags::all(),
++            naga::valid::Capabilities::empty(),
++        )
++        .validate(&module)
++        .map_err(|error| anyhow!(error.emit_to_string(&wgsl)))?;
++        let module = self.device.create_shader_module(wgpu::ShaderModuleDescriptor {
++            label: Some("paint_shader"),
++            source: wgpu::ShaderSource::Wgsl(wgsl.into()),
++        });
++        Ok(self.device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
++            label: Some("paint_shader"),
++            layout: Some(&self.pipeline_layout),
++            vertex: wgpu::VertexState {
++                module: &module,
++                entry_point: Some("gpui_shader_vertex"),
++                buffers: &[],
++                compilation_options: wgpu::PipelineCompilationOptions::default(),
++            },
++            fragment: Some(wgpu::FragmentState {
++                module: &module,
++                entry_point: Some("gpui_shader_fragment"),
++                targets: &[Some(wgpu::ColorTargetState {
++                    format: self.format,
++                    blend: Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),
++                    write_mask: wgpu::ColorWrites::ALL,
++                })],
++                compilation_options: wgpu::PipelineCompilationOptions::default(),
++            }),
++            primitive: wgpu::PrimitiveState::default(),
++            depth_stencil: None,
++            multisample: wgpu::MultisampleState::default(),
++            multiview_mask: None,
++            cache: None,
++        }))
++    }
++
++    fn compile_program(&self, source: &str) -> Result<HashMap<&'static str, wgpu::ComputePipeline>> {
++        let (_, compute_pipeline_layout) =
++            self.compute.as_ref().ok_or_else(|| anyhow!("this device has no compute shaders"))?;
++        let module =
++            naga::front::wgsl::parse_str(source).map_err(|error| anyhow!(error.emit_to_string(source)))?;
++        naga::valid::Validator::new(
++            naga::valid::ValidationFlags::all(),
++            naga::valid::Capabilities::empty(),
++        )
++        .validate(&module)
++        .map_err(|error| anyhow!(error.emit_to_string(source)))?;
++        let module = self.device.create_shader_module(wgpu::ShaderModuleDescriptor {
++            label: Some("paint_shader_simulation"),
++            source: wgpu::ShaderSource::Wgsl(source.into()),
++        });
++        let mut pipelines = HashMap::default();
++        for (entry, _) in SIMULATION_PASSES {
++            pipelines.insert(
++                entry,
++                self.device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
++                    label: Some(entry),
++                    layout: Some(compute_pipeline_layout),
++                    module: &module,
++                    entry_point: Some(entry),
++                    compilation_options: wgpu::PipelineCompilationOptions::default(),
++                    cache: None,
++                }),
++            );
++        }
++        Ok(pipelines)
++    }
++
++    fn new_grid(&self, size: [u32; 2]) -> Grid {
++        let view = |format| {
++            self.device
++                .create_texture(&wgpu::TextureDescriptor {
++                    label: Some("paint_shader_simulation_grid"),
++                    size: wgpu::Extent3d { width: size[0], height: size[1], depth_or_array_layers: 1 },
++                    mip_level_count: 1,
++                    sample_count: 1,
++                    dimension: wgpu::TextureDimension::D2,
++                    format,
++                    usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::TEXTURE_BINDING,
++                    view_formats: &[],
++                })
++                .create_view(&wgpu::TextureViewDescriptor::default())
++        };
++        let mut views: Vec<_> = (0..2).map(|_| view(wgpu::TextureFormat::Rgba16Float)).collect();
++        views.extend((0..4).map(|_| view(wgpu::TextureFormat::R32Float)));
++        let uniforms = self.device.create_buffer(&wgpu::BufferDescriptor {
++            label: Some("paint_shader_simulation_uniforms"),
++            size: SIMULATION_SLOT * SIMULATION_SLOTS,
++            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
++            mapped_at_creation: false,
++        });
++        Grid { size, views, uniforms, current: 0, time: None, used: 0 }
++    }
++
++    pub(crate) fn simulate(&mut self, scene: &Scene, encoder: &mut wgpu::CommandEncoder) {
++        self.frame += 1;
++        if self.compute.is_some() {
++            for shader in &scene.shaders {
++                if let Some(simulation) = &shader.simulation {
++                    self.step(simulation, shader.time, encoder);
++                }
++            }
++        }
++        let frame = self.frame;
++        self.grids.retain(|_, grid| grid.used + 1 >= frame);
++    }
++
++    fn step(&mut self, simulation: &ShaderSimulation, time: f32, encoder: &mut wgpu::CommandEncoder) {
++        if !self.programs.contains_key(&simulation.source) {
++            if self.programs.len() >= MAX_PIPELINES {
++                self.programs.clear();
++            }
++            let program = self
++                .compile_program(&simulation.source)
++                .inspect_err(|error| log::error!("paint_shader simulation failed to compile: {error:#}"))
++                .ok();
++            self.programs.insert(simulation.source.clone(), program);
++        }
++        let stale = self.grids.get(&simulation.key).is_none_or(|grid| grid.size != simulation.grid);
++        if stale {
++            let grid = self.new_grid(simulation.grid);
++            self.grids.insert(simulation.key, grid);
++        }
++        let Some((compute_layout, _)) = self.compute.as_ref() else { return };
++        let Some(Some(program)) = self.programs.get(&simulation.source) else { return };
++        let Some(grid) = self.grids.get_mut(&simulation.key) else { return };
++        grid.used = self.frame;
++        let (steps, start, reset) = simulation_schedule(grid.time, time);
++        if steps == 0 {
++            return;
++        }
++        for step in 0..steps {
++            let mut uniform = simulation.uniform;
++            uniform[1][2] = start + (step + 1) as f32 * SIMULATION_DT;
++            uniform[1][3] = if reset && step == 0 { 1.0 } else { 0.0 };
++            self.queue.write_buffer(
++                &grid.uniforms,
++                step as u64 * SIMULATION_SLOT,
++                bytemuck::cast_slice(&uniform),
++            );
++        }
++        let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
++            label: Some("paint_shader_simulation"),
++            timestamp_writes: None,
++        });
++        let groups = [grid.size[0].div_ceil(8), grid.size[1].div_ceil(8)];
++        for step in 0..steps {
++            for index in simulation_pass_order() {
++                let (entry, bindings) = SIMULATION_PASSES[index];
++                let view = |slot: usize| {
++                    let binding = bindings[slot];
++                    let texture = if binding < 2 { binding ^ grid.current } else { binding };
++                    wgpu::BindingResource::TextureView(&grid.views[texture])
++                };
++                let bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
++                    label: Some("paint_shader_simulation"),
++                    layout: compute_layout,
++                    entries: &[
++                        wgpu::BindGroupEntry {
++                            binding: 0,
++                            resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
++                                buffer: &grid.uniforms,
++                                offset: 0,
++                                size: wgpu::BufferSize::new(96),
++                            }),
++                        },
++                        wgpu::BindGroupEntry { binding: 1, resource: view(0) },
++                        wgpu::BindGroupEntry { binding: 3, resource: view(1) },
++                        wgpu::BindGroupEntry { binding: 4, resource: view(2) },
++                        wgpu::BindGroupEntry { binding: 5, resource: view(3) },
++                        wgpu::BindGroupEntry { binding: 6, resource: view(4) },
++                    ],
++                });
++                pass.set_pipeline(&program[entry]);
++                pass.set_bind_group(0, &bind_group, &[(step as u64 * SIMULATION_SLOT) as u32]);
++                pass.dispatch_workgroups(groups[0], groups[1], 1);
++            }
++            grid.current ^= 1;
++        }
++        drop(pass);
++        grid.time = Some(start + steps as f32 * SIMULATION_DT);
++    }
++
++    pub(crate) fn prepare(&mut self, scene: &Scene, target: &wgpu::Texture) {
++        if scene.shaders.is_empty() {
++            return;
++        }
++        self.target_size = (target.width(), target.height());
++        let readable = target.usage().contains(wgpu::TextureUsages::COPY_SRC);
++        if !readable && self.backdrop_readable {
++            log::warn!("paint_shader skips shaders that read a backdrop: this surface forbids copies");
++        }
++        self.backdrop_readable = readable;
++        for shader in &scene.shaders {
++            if self.pipelines.contains_key(&shader.source) {
++                continue;
++            }
++            if self.pipelines.len() >= MAX_PIPELINES {
++                self.pipelines.clear();
++            }
++            let pipeline = self
++                .compile(&shader.source)
++                .inspect_err(|error| log::error!("paint_shader failed to compile: {error:#}"))
++                .ok();
++            self.pipelines.insert(shader.source.clone(), pipeline);
++        }
++        let needed = self.stride * scene.shaders.len() as u64;
++        if self.uniforms.as_ref().is_none_or(|buffer| buffer.size() < needed) {
++            self.uniforms = Some(self.device.create_buffer(&wgpu::BufferDescriptor {
++                label: Some("paint_shader_uniforms"),
++                size: needed.next_power_of_two(),
++                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
++                mapped_at_creation: false,
++            }));
++        }
++        self.tables = scene
++            .shaders
++            .iter()
++            .map(|shader| {
++                let data = shader.data.as_ref()?;
++                let height = data.len().div_ceil(1024).max(1) as u32;
++                let extent = wgpu::Extent3d { width: 1024, height, depth_or_array_layers: 1 };
++                let texture = self.device.create_texture(&wgpu::TextureDescriptor {
++                    label: Some("paint_shader_data"),
++                    size: extent,
++                    mip_level_count: 1,
++                    sample_count: 1,
++                    dimension: wgpu::TextureDimension::D2,
++                    format: wgpu::TextureFormat::Rgba32Float,
++                    usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
++                    view_formats: &[],
++                });
++                let mut rows = data.to_vec();
++                rows.resize(1024 * height as usize, [0.0; 4]);
++                self.queue.write_texture(
++                    wgpu::TexelCopyTextureInfo {
++                        texture: &texture,
++                        mip_level: 0,
++                        origin: wgpu::Origin3d::ZERO,
++                        aspect: wgpu::TextureAspect::All,
++                    },
++                    bytemuck::cast_slice(&rows),
++                    wgpu::TexelCopyBufferLayout {
++                        offset: 0,
++                        bytes_per_row: Some(1024 * 16),
++                        rows_per_image: Some(height),
++                    },
++                    extent,
++                );
++                Some(texture.create_view(&wgpu::TextureViewDescriptor::default()))
++            })
++            .collect();
++        let Some(uniforms) = self.uniforms.as_ref() else { return };
++        for (index, shader) in scene.shaders.iter().enumerate() {
++            let frame = ShaderFrame {
++                bounds: [
++                    shader.bounds.origin.x.0,
++                    shader.bounds.origin.y.0,
++                    shader.bounds.size.width.0,
++                    shader.bounds.size.height.0,
++                ],
++                viewport: [target.width() as f32, target.height() as f32],
++                scale: shader.scale,
++                time: shader.time,
++                params: shader.params,
++            };
++            self.queue.write_buffer(uniforms, self.stride * index as u64, bytemuck::bytes_of(&frame));
++        }
++        let wants_backdrop = readable && scene.shaders.iter().any(|shader| shader.reads_backdrop);
++        let stale = self.backdrop.as_ref().is_none_or(|(texture, _)| {
++            texture.width() != target.width()
++                || texture.height() != target.height()
++                || texture.format() != target.format()
++        });
++        if wants_backdrop && stale {
++            let texture = self.device.create_texture(&wgpu::TextureDescriptor {
++                label: Some("paint_shader_backdrop"),
++                size: target.size(),
++                mip_level_count: 1,
++                sample_count: 1,
++                dimension: wgpu::TextureDimension::D2,
++                format: target.format(),
++                usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
++                view_formats: &[],
++            });
++            let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
++            self.backdrop = Some((texture, view));
++        }
++    }
++
++    pub(crate) fn copy_backdrop(
++        &self,
++        encoder: &mut wgpu::CommandEncoder,
++        target: &wgpu::Texture,
++        shader: &PaintShader,
++    ) {
++        if !self.backdrop_readable {
++            return;
++        }
++        let Some((backdrop, _)) = self.backdrop.as_ref() else { return };
++        if clip_of(shader, target.width(), target.height()).is_none() {
++            return;
++        }
++        encoder.copy_texture_to_texture(
++            wgpu::TexelCopyTextureInfo {
++                texture: target,
++                mip_level: 0,
++                origin: wgpu::Origin3d::ZERO,
++                aspect: wgpu::TextureAspect::All,
++            },
++            wgpu::TexelCopyTextureInfo {
++                texture: backdrop,
++                mip_level: 0,
++                origin: wgpu::Origin3d::ZERO,
++                aspect: wgpu::TextureAspect::All,
++            },
++            target.size(),
++        );
++    }
++
++    pub(crate) fn draw(&self, index: usize, shader: &PaintShader, pass: &mut wgpu::RenderPass<'_>) {
++        if shader.reads_backdrop && !self.backdrop_readable {
++            return;
++        }
++        let (width, height) = self.target_size;
++        let Some(clip) = clip_of(shader, width, height) else { return };
++        let Some(Some(pipeline)) = self.pipelines.get(&shader.source) else { return };
++        let Some(uniforms) = self.uniforms.as_ref() else { return };
++        let backdrop = self
++            .backdrop
++            .as_ref()
++            .filter(|_| shader.reads_backdrop)
++            .map_or(&self.empty, |(_, view)| view);
++        let state = shader
++            .simulation
++            .as_ref()
++            .and_then(|simulation| self.grids.get(&simulation.key))
++            .map_or(&self.empty, |grid| &grid.views[grid.current]);
++        let bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
++            label: Some("paint_shader_bind_group"),
++            layout: &self.bind_group_layout,
++            entries: &[
++                wgpu::BindGroupEntry {
++                    binding: 0,
++                    resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
++                        buffer: uniforms,
++                        offset: 0,
++                        size: wgpu::BufferSize::new(UNIFORM_SIZE),
++                    }),
++                },
++                wgpu::BindGroupEntry {
++                    binding: 1,
++                    resource: wgpu::BindingResource::TextureView(backdrop),
++                },
++                wgpu::BindGroupEntry {
++                    binding: 2,
++                    resource: wgpu::BindingResource::Sampler(&self.sampler),
++                },
++                wgpu::BindGroupEntry {
++                    binding: 3,
++                    resource: wgpu::BindingResource::TextureView(state),
++                },
++                wgpu::BindGroupEntry {
++                    binding: 4,
++                    resource: wgpu::BindingResource::TextureView(
++                        self.tables.get(index).and_then(Option::as_ref).unwrap_or(&self.empty_data),
++                    ),
++                },
++            ],
++        });
++        pass.set_pipeline(pipeline);
++        pass.set_bind_group(0, &bind_group, &[(self.stride * index as u64) as u32]);
++        pass.set_scissor_rect(clip.x, clip.y, clip.width, clip.height);
++        pass.draw(0..6, 0..1);
++        pass.set_scissor_rect(0, 0, width, height);
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use crate::{WgpuContext, WgpuRenderer};
++    use gpui::{
++        Background, Bounds, ContentMask, DevicePixels, PaintShader, Quad, ScaledPixels, Scene,
++        SharedString, Size, point, px, rgb, size,
++    };
++
++    const SIDE: i32 = 40;
++
++    fn area(x: f32, width: f32) -> Bounds<ScaledPixels> {
++        Bounds {
++            origin: point(px(x).scale(1.0), px(0.0).scale(1.0)),
++            size: size(px(width).scale(1.0), px(SIDE as f32).scale(1.0)),
++        }
++    }
++
++    fn mask() -> ContentMask<ScaledPixels> {
++        ContentMask { bounds: area(0.0, SIDE as f32) }
++    }
++
++    fn quad(x: f32, width: f32, color: u32) -> Quad {
++        Quad {
++            bounds: area(x, width),
++            content_mask: mask(),
++            background: Background::from(rgb(color)),
++            ..Default::default()
++        }
++    }
++
++    fn shader(source: &str, reads_backdrop: bool) -> PaintShader {
++        PaintShader {
++            order: 0,
++            bounds: area(0.0, SIDE as f32),
++            content_mask: mask(),
++            source: SharedString::from(source.to_string()),
++            scale: 1.0,
++            time: 0.0,
++            params: [[0.0; 4]; gpui::SHADER_PARAMS],
++            reads_backdrop,
++            simulation: None,
++            data: None,
++        }
++    }
++
++    fn render(scene: &mut Scene) -> Vec<u8> {
++        scene.finish();
++        let context = WgpuContext::new_offscreen().expect("an adapter");
++        let extent = Size { width: DevicePixels(SIDE), height: DevicePixels(SIDE) };
++        let mut renderer = WgpuRenderer::new_offscreen(&context, extent).expect("a renderer");
++        let mut pixels = vec![0; (SIDE * SIDE * 4) as usize];
++        renderer.render_to_pixels(scene, extent, &mut pixels).expect("renders");
++        pixels
++    }
++
++    fn at(pixels: &[u8], x: usize, y: usize) -> [u8; 3] {
++        let offset = (y * SIDE as usize + x) * 4;
++        [pixels[offset], pixels[offset + 1], pixels[offset + 2]]
++    }
++
++    fn layered(scene: &mut Scene, primitive: impl Into<gpui::Primitive>) {
++        scene.push_layer(area(0.0, SIDE as f32));
++        scene.insert_primitive(primitive);
++        scene.pop_layer();
++    }
++
++    #[test]
++    fn a_shader_keeps_its_place_in_painter_order() {
++        let mut scene = Scene::default();
++        layered(&mut scene, quad(0.0, 40.0, 0xff0000));
++        layered(&mut scene, shader("fn shade(p: vec2f) -> vec4f { return vec4f(0., 1., 0., 1.); }", false));
++        layered(&mut scene, quad(20.0, 20.0, 0x0000ff));
++        let pixels = render(&mut scene);
++        assert_eq!(at(&pixels, 10, 20), [0, 255, 0]);
++        assert_eq!(at(&pixels, 30, 20), [0, 0, 255]);
++    }
++
++    #[test]
++    fn two_shaders_keep_their_own_uniforms() {
++        let source = "fn shade(p: vec2f) -> vec4f { return vec4f(frame.params[0].rgb, 1.); }";
++        let mut left = shader(source, false);
++        left.bounds = area(0.0, 20.0);
++        left.params[0] = [1.0, 0.0, 0.0, 0.0];
++        let mut right = shader(source, false);
++        right.bounds = area(20.0, 20.0);
++        right.params[0] = [0.0, 0.0, 1.0, 0.0];
++        let mut scene = Scene::default();
++        layered(&mut scene, left);
++        layered(&mut scene, right);
++        let pixels = render(&mut scene);
++        assert_eq!(at(&pixels, 10, 20), [255, 0, 0]);
++        assert_eq!(at(&pixels, 30, 20), [0, 0, 255]);
++    }
++
++    #[test]
++    fn a_shader_reads_what_was_drawn_before_it() {
++        let mut scene = Scene::default();
++        layered(&mut scene, quad(0.0, 40.0, 0xff0000));
++        layered(&mut scene, shader("fn shade(p: vec2f) -> vec4f { return vec4f(backdrop_at(vec2f(10., 10.)).bgr, 1.); }", true));
++        assert_eq!(at(&render(&mut scene), 20, 20), [0, 0, 255]);
++    }
++
++    const COUNTER: &str = r#"
++@group(0) @binding(0) var<uniform> u: array<vec4f, 6>;
++@group(0) @binding(1) var s_in: texture_2d<f32>;
++@group(0) @binding(3) var s_out: texture_storage_2d<rgba16float, write>;
++@group(0) @binding(4) var a_in: texture_2d<f32>;
++@group(0) @binding(5) var b_in: texture_2d<f32>;
++@group(0) @binding(6) var r_out: texture_storage_2d<r32float, write>;
++fn pass_state(id: vec3u) { textureStore(s_out, vec2i(id.xy), textureLoad(s_in, vec2i(id.xy), 0)); }
++fn pass_scalar(id: vec3u) { textureStore(r_out, vec2i(id.xy), textureLoad(a_in, vec2i(id.xy), 0) + textureLoad(b_in, vec2i(id.xy), 0)); }
++@compute @workgroup_size(8, 8) fn curl(@builtin(global_invocation_id) id: vec3u) { pass_scalar(id); }
++@compute @workgroup_size(8, 8) fn forces(@builtin(global_invocation_id) id: vec3u) { pass_state(id); }
++@compute @workgroup_size(8, 8) fn divergence(@builtin(global_invocation_id) id: vec3u) { pass_scalar(id); }
++@compute @workgroup_size(8, 8) fn jacobi(@builtin(global_invocation_id) id: vec3u) { pass_scalar(id); }
++@compute @workgroup_size(8, 8) fn project(@builtin(global_invocation_id) id: vec3u) { pass_state(id); }
++@compute @workgroup_size(8, 8) fn advect(@builtin(global_invocation_id) id: vec3u) {
++    let previous = select(textureLoad(s_in, vec2i(id.xy), 0).x, 0.0, u[1].w > 0.5);
++    textureStore(s_out, vec2i(id.xy), vec4f(previous + 1.0 / 255.0, 0.0, 0.0, 1.0));
++}
++"#;
++
++    #[test]
++    fn a_simulation_keeps_its_state_between_frames() {
++        let context = WgpuContext::new_offscreen().expect("an adapter");
++        let extent = Size { width: DevicePixels(SIDE), height: DevicePixels(SIDE) };
++        let mut renderer = WgpuRenderer::new_offscreen(&context, extent).expect("a renderer");
++        let mut frame = |time: f32| {
++            let mut counting = shader(
++                "fn shade(p: vec2f) -> vec4f { return vec4f(textureSampleLevel(simulation_state, backdrop_sampler, vec2f(0.5), 0.).x, 0., 0., 1.); }",
++                false,
++            );
++            counting.time = time;
++            counting.simulation = Some(gpui::ShaderSimulation {
++                key: 1,
++                source: SharedString::from(COUNTER.to_string()),
++                grid: [16, 16],
++                uniform: [[0.0; 4]; 6],
++            });
++            let mut scene = Scene::default();
++            scene.insert_primitive(counting);
++            scene.finish();
++            let mut pixels = vec![0; (SIDE * SIDE * 4) as usize];
++            renderer.render_to_pixels(&scene, extent, &mut pixels).expect("renders");
++            at(&pixels, 20, 20)[0]
++        };
++        assert_eq!(frame(10.0), 72, "a new grid warms up");
++        assert_eq!(frame(10.0 + 2.0 * gpui::SIMULATION_DT), 74, "two more fixed steps");
++        assert_eq!(frame(10.0 + 2.0 * gpui::SIMULATION_DT), 74, "redrawing a frame does not step");
++    }
++
++    #[test]
++    fn a_shader_that_does_not_compile_draws_nothing_and_keeps_the_frame() {
++        let mut scene = Scene::default();
++        layered(&mut scene, quad(0.0, 40.0, 0xff0000));
++        layered(&mut scene, shader("fn shade(", false));
++        assert_eq!(at(&render(&mut scene), 20, 20), [255, 0, 0]);
++    }
++}
+diff --git a/crates/gpui_windows/src/directx_renderer.rs b/crates/gpui_windows/src/directx_renderer.rs
+index 8590407..e1d3d38 100644
+--- a/crates/gpui_windows/src/directx_renderer.rs
++++ b/crates/gpui_windows/src/directx_renderer.rs
+@@ -384,6 +384,8 @@ impl DirectXRenderer {
+                 PrimitiveBatch::PolychromeSprites { texture_id, range } => {
+                     self.draw_polychrome_sprites(texture_id, range.start, range.len())
+                 }
++                // TODO: paint shaders on DirectX through naga's HLSL backend.
++                PrimitiveBatch::Shaders(_) => {}
+                 PrimitiveBatch::Surfaces(range) => self.draw_surfaces(&scene.surfaces[range]),
+             }
+             .with_context(|| {
