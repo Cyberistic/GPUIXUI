@@ -6,7 +6,9 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import { cn } from "@gpuixui/tw";
+import { Fragment, type ReactNode } from "react";
 import {
+  alpha,
   statusTone,
   textStyle,
   type TextStyleProperties,
@@ -24,6 +26,7 @@ import {
   numberDiff,
   pairs,
   rows,
+  wordMarks,
   type DiffMode,
   type DiffRow,
   type RowKind,
@@ -45,6 +48,16 @@ export interface DiffViewerState {
   readonly changed: boolean;
 }
 
+export type DiffInk = "tone" | "code";
+
+export interface DiffAnnotation {
+  readonly line: number;
+
+  readonly height: number;
+
+  readonly content: ReactNode;
+}
+
 export interface DiffViewerProps {
   readonly before: string;
 
@@ -55,6 +68,16 @@ export interface DiffViewerProps {
   readonly contextLines?: number;
 
   readonly lineNumbers?: boolean;
+
+  readonly wordDiff?: boolean;
+
+  readonly ink?: DiffInk;
+
+  readonly annotations?: ReadonlyArray<DiffAnnotation>;
+
+  readonly wrapColumns?: number;
+
+  readonly firstLine?: { readonly before?: number; readonly after?: number };
 
   readonly label?: string;
 
@@ -72,6 +95,14 @@ const rowFill = (theme: Theme, kind: RowKind): string | undefined =>
     Match.when("context", () => undefined),
     Match.exhaustive,
   );
+
+const rowBar = (theme: Theme, kind: RowKind): StyleDesc =>
+  kind === "added" || kind === "removed"
+    ? {
+        borderLeftWidth: theme.borderWidth.strong,
+        borderColor: rowInk(theme, kind),
+      }
+    : {};
 
 const rowInk = (theme: Theme, kind: RowKind): string =>
   Match.value(kind).pipe(
@@ -137,9 +168,10 @@ const codeCell = (
   theme: Theme,
   metrics: TextStyleProperties,
   kind: RowKind,
+  ink: DiffInk = "tone",
 ): StyleDesc => ({
   ...metrics,
-  color: rowInk(theme, kind),
+  color: ink === "code" && kind !== "hunk" ? theme.colors.foreground : rowInk(theme, kind),
   whiteSpace: "nowrap",
   paddingRight: theme.spacing.sm,
 });
@@ -248,6 +280,9 @@ const UnifiedRows = ({
   </div>
 );
 
+const markColor = (theme: Theme, kind: RowKind): string =>
+  alpha(rowInk(theme, kind), 0.28);
+
 const SplitColumn = ({
   side,
   script,
@@ -256,8 +291,18 @@ const SplitColumn = ({
   metrics,
   numberWidth,
   lineNumbers,
+  wordDiff,
+  ink,
+  annotations,
+  wrapColumns,
+  shift,
   testId,
 }: {
+  readonly wordDiff: boolean;
+  readonly ink: DiffInk;
+  readonly annotations: ReadonlyArray<DiffAnnotation>;
+  readonly wrapColumns: number | undefined;
+  readonly shift: number;
   readonly side: "before" | "after";
   readonly script: ReadonlyArray<SplitPair>;
   readonly offset: number;
@@ -281,18 +326,41 @@ const SplitColumn = ({
     {script.map((pair, position) => {
       const row = side === "before" ? pair.left : pair.right;
       const index = offset + position;
+      const marks = Option.match(Option.all([pair.left, pair.right]), {
+        onNone: () => undefined,
+        onSome: ([left, right]) =>
+          wordDiff && left.kind === "removed" && right.kind === "added"
+            ? wordMarks(left.text, right.text)[side]
+            : undefined,
+      });
+      const kindHere = Option.match(row, {
+        onNone: (): RowKind => "context",
+        onSome: (value) => value.kind,
+      });
+      const lengths = [pair.left, pair.right].map((cell) =>
+        Option.match(cell, { onNone: () => 0, onSome: (value) => value.text.length }),
+      );
+      const rowLines =
+        wrapColumns === undefined
+          ? 1
+          : Math.max(1, ...lengths.map((length) => Math.ceil(length / wrapColumns)));
+      const afterLine = Option.flatMap(pair.right, (value) => value.after);
+      const note = Option.match(afterLine, {
+        onNone: () => undefined,
+        onSome: (line) => annotations.find((item) => item.line === line),
+      });
       return (
+        <Fragment key={index}>
         <div
-          key={index}
           testId={`${testId}-row-${index}-${side}`}
-          style={lineRow(
-            theme,
-            metrics,
-            Option.match(row, {
-              onNone: () => "context",
-              onSome: (value) => value.kind,
-            }),
-          )}
+          style={{
+            ...lineRow(theme, metrics, kindHere),
+            height: metrics.lineHeight * rowLines,
+            ...(ink === "code" ? rowBar(theme, kindHere) : {}),
+            ...(ink === "code" && kindHere !== "context" && Option.isSome(row)
+              ? { backgroundColor: alpha(rowInk(theme, kindHere), 0.13) }
+              : {}),
+          }}
         >
           {Option.match(row, {
             onNone: () => null,
@@ -303,12 +371,27 @@ const SplitColumn = ({
                     role="presentation"
                     style={gutterCell(theme, metrics, value.kind, numberWidth)}
                   >
-                    {rowNumber(side === "before" ? value.before : value.after)}
+                    {rowNumber(
+                      Option.map(
+                        side === "before" ? value.before : value.after,
+                        (line) => line + shift,
+                      ),
+                    )}
                   </text>
                 ) : null}
                 <text
                   role="presentation"
-                  style={codeCell(theme, metrics, value.kind)}
+                  highlight={
+                    marks === undefined || marks.length === 0
+                      ? undefined
+                      : { ranges: [...marks.map(([from, to]) => [from, to] as [number, number])], color: markColor(theme, value.kind) }
+                  }
+                  style={{
+                    ...codeCell(theme, metrics, value.kind, ink),
+                    ...(wrapColumns === undefined
+                      ? {}
+                      : { whiteSpace: "normal", flexGrow: 1, flexBasis: 0, minWidth: 0 }),
+                  }}
                 >
                   {value.text}
                 </text>
@@ -316,6 +399,15 @@ const SplitColumn = ({
             ),
           })}
         </div>
+        {note === undefined ? null : (
+          <div
+            testId={`${testId}-note-${note.line}-${side}`}
+            style={{ height: note.height, flexShrink: 0 }}
+          >
+            {side === "after" ? note.content : null}
+          </div>
+        )}
+        </Fragment>
       );
     })}
   </div>
@@ -328,8 +420,18 @@ const SplitBlock = ({
   metrics,
   numberWidth,
   lineNumbers,
+  wordDiff,
+  ink,
+  annotations,
+  wrapColumns,
+  firstLine,
   testId,
 }: {
+  readonly wrapColumns: number | undefined;
+  readonly firstLine: DiffViewerProps["firstLine"];
+  readonly wordDiff: boolean;
+  readonly ink: DiffInk;
+  readonly annotations: ReadonlyArray<DiffAnnotation>;
   readonly script: ReadonlyArray<SplitPair>;
   readonly offset: number;
   readonly theme: Theme;
@@ -347,6 +449,11 @@ const SplitBlock = ({
       metrics={metrics}
       numberWidth={numberWidth}
       lineNumbers={lineNumbers}
+      wordDiff={wordDiff}
+      ink={ink}
+      annotations={annotations}
+      wrapColumns={wrapColumns}
+      shift={(firstLine?.before ?? 1) - 1}
       testId={testId}
     />
     <div
@@ -365,6 +472,11 @@ const SplitBlock = ({
       metrics={metrics}
       numberWidth={numberWidth}
       lineNumbers={lineNumbers}
+      wordDiff={wordDiff}
+      ink={ink}
+      annotations={annotations}
+      wrapColumns={wrapColumns}
+      shift={(firstLine?.after ?? 1) - 1}
       testId={testId}
     />
   </div>
@@ -376,8 +488,18 @@ const SplitRows = ({
   metrics,
   numberWidth,
   lineNumbers,
+  wordDiff,
+  ink,
+  annotations,
+  wrapColumns,
+  firstLine,
   testId,
 }: {
+  readonly wrapColumns: number | undefined;
+  readonly firstLine: DiffViewerProps["firstLine"];
+  readonly wordDiff: boolean;
+  readonly ink: DiffInk;
+  readonly annotations: ReadonlyArray<DiffAnnotation>;
   readonly script: ReadonlyArray<SplitPair>;
   readonly theme: Theme;
   readonly metrics: TextStyleProperties;
@@ -420,6 +542,11 @@ const SplitRows = ({
               metrics={metrics}
               numberWidth={numberWidth}
               lineNumbers={lineNumbers}
+              wordDiff={wordDiff}
+              ink={ink}
+              annotations={annotations}
+              wrapColumns={wrapColumns}
+              firstLine={firstLine}
               testId={testId}
             />
           ),
@@ -440,6 +567,11 @@ export const DiffViewer = ({
   mode = "unified",
   contextLines,
   lineNumbers = true,
+  wordDiff = true,
+  ink = "tone",
+  annotations = [],
+  wrapColumns,
+  firstLine,
   label,
   className,
   style,
@@ -485,6 +617,11 @@ export const DiffViewer = ({
           metrics={metrics}
           numberWidth={numberWidth}
           lineNumbers={lineNumbers}
+          wordDiff={wordDiff}
+          ink={ink}
+          annotations={annotations}
+          wrapColumns={wrapColumns}
+          firstLine={firstLine}
           testId={testId}
         />
       )}
@@ -499,7 +636,7 @@ export const diffViewerMeta = {
   gpuixSupport: "partial",
   limitations: [
     "the line diff is an LCS walk, `O(n·m)` in time and space, so very large files are slow",
-    "no word-level diff: a changed line is a whole line, not the words inside it",
+    "word marks and annotations paint in split mode; unified mode shows whole lines",
     "the diff rows are presentational runs, so a reader hears the change count, not the diffed text",
     "each split column scrolls its own horizontal overflow; the runtime has no sticky gutters, so a gutter travels with its column",
   ],

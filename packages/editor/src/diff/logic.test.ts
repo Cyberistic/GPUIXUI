@@ -17,6 +17,7 @@ import {
   type LineEdit,
   type SplitPair,
 } from "./logic.js";
+import { wordMarks } from "./logic.js";
 
 const side = (
   pairs: ReadonlyArray<SplitPair>,
@@ -246,5 +247,21 @@ describe("hunks", () => {
         onSome: (heading) => heading.text,
       }),
     ).toBe("@@ -2,0 +3,1 @@");
+  });
+});
+
+describe("wordMarks", () => {
+  it("marks only the words that changed", () => {
+    const marks = wordMarks("let wait = a * b;", "let wait = a.mul(b);");
+    expect(marks.before).toEqual([[12, 15]]);
+    expect(marks.after).toEqual([[12, 17], [18, 19]]);
+  });
+
+  it("marks nothing on an identical line", () => {
+    expect(wordMarks("same line", "same line")).toEqual({ before: [], after: [] });
+  });
+
+  it("marks the whole of a line that shares nothing", () => {
+    expect(wordMarks("abc", "xyz")).toEqual({ before: [[0, 3]], after: [[0, 3]] });
   });
 });

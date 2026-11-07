@@ -351,3 +351,60 @@ export const blocks = (
             : { heading: Option.none(), pairs: group },
       ),
   });
+
+export type MarkRange = readonly [number, number];
+
+export interface WordMarks {
+  readonly before: ReadonlyArray<MarkRange>;
+  readonly after: ReadonlyArray<MarkRange>;
+}
+
+const TOKEN = /\s+|[\p{L}\p{N}_]+|[^\s\p{L}\p{N}_]/gu;
+
+const tokensOf = (line: string): ReadonlyArray<string> => line.match(TOKEN) ?? [];
+
+const mergedRanges = (
+  tokens: ReadonlyArray<string>,
+  kept: ReadonlySet<number>,
+): ReadonlyArray<MarkRange> => {
+  const ranges: Array<[number, number]> = [];
+  let at = 0;
+  tokens.forEach((token, index) => {
+    const end = at + token.length;
+    if (!kept.has(index)) {
+      const last = ranges[ranges.length - 1];
+      if (last !== undefined && last[1] === at) last[1] = end;
+      else ranges.push([at, end]);
+    }
+    at = end;
+  });
+  return ranges;
+};
+
+export const wordMarks = (before: string, after: string): WordMarks => {
+  const a = tokensOf(before);
+  const b = tokensOf(after);
+  const table = Array.from({ length: a.length + 1 }, () =>
+    new Array<number>(b.length + 1).fill(0),
+  );
+  for (let i = a.length - 1; i >= 0; i--) {
+    for (let j = b.length - 1; j >= 0; j--) {
+      table[i]![j] =
+        a[i] === b[j]
+          ? table[i + 1]![j + 1]! + 1
+          : Math.max(table[i + 1]![j]!, table[i]![j + 1]!);
+    }
+  }
+  const keptA = new Set<number>();
+  const keptB = new Set<number>();
+  let i = 0;
+  let j = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      keptA.add(i++);
+      keptB.add(j++);
+    } else if (table[i + 1]![j]! >= table[i]![j + 1]!) i++;
+    else j++;
+  }
+  return { before: mergedRanges(a, keptA), after: mergedRanges(b, keptB) };
+};

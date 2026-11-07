@@ -27,6 +27,10 @@ export interface AvatarProps extends Props {
 
   readonly status?: AvatarStatus;
 
+  readonly color?: string;
+
+  readonly initials?: boolean;
+
   readonly clickThrough?: boolean;
 
   readonly className?: string;
@@ -48,6 +52,8 @@ export const Avatar = ({
   src,
   size = "md",
   status: statusProp,
+  color,
+  initials: showInitials = true,
   clickThrough: requestedClickThrough,
   className,
   style,
@@ -82,9 +88,10 @@ export const Avatar = ({
       <div
         style={mergeStyles(recipeStyle(AVATAR_DISC, theme), {
           pointerEvents: "none",
+          ...(color === undefined ? {} : { backgroundColor: color }),
         })}
       >
-        {src === undefined ? (
+        {src === undefined && !showInitials ? null : src === undefined ? (
           <text
             role="presentation"
             style={mergeStyles(recipeStyle(AVATAR_FALLBACK, theme), {
