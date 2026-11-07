@@ -161,6 +161,7 @@ edited:
 - Netherite — https://github.com/Infatoshi/netherite (the C/CUDA Minecraft 1.7.10 engine; `apps/netherite` wraps its CLI in a GPUix terminal client; clone at `references/netherite`)
 - PanelUI — https://panelui.dev/docs/components (documentation only: no public
   source repository, so it is read as documentation and not cloned)
+- Rune — https://github.com/anomalyco/rune (MIT; native UI framework, the reference for `rune-fx` effects and the showreel film in plan 759; clone at `~/GPUIXUI/references/rune`, symlinked into `references/`)
 - mermaidcn — https://github.com/Riley1101/mermaidcn (Mermaid renderer API,
   theme names and playground shape; clone at `references/mermaidcn`)
 

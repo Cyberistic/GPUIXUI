@@ -269,3 +269,10 @@ Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` �
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [757](./757-launch-speed.md) | Launch speed parity with raw GPUI | perf | gpuix upstream | waiting on the upstream release |
+
+### Effects
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [759](./759-paint-shader.md) | `paint_shader`, rune's effects and the fire film | fx | none | patch validated; film first cut in review; docs effects not started |
+| [760](./760-reel-on-real-components.md) | The reel on real components; fix what falls short | fx | 759 | in progress |
