@@ -7431,6 +7431,17 @@ button.gx-date-navbtn:hover:not(:disabled) {
   flex: none;
 }
 
+/* Below the chart's own measure the plot fills the column instead of
+   overflowing it; the viewBox keeps the drawing in proportion. */
+@media (max-width: 700px) {
+  .gx-dchart-plot {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+}
+
 /* The drawings arrive the way the library's charts do: a bar grows from its
    baseline, an arc or a polygon scales out from its own centre. */
 .gx-dchart-plot rect,

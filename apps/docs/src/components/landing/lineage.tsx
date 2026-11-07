@@ -63,7 +63,6 @@ export function Lineage() {
             <GraphNode className="landing-graph-leaf" name="Windows 11" />
             <GraphNode className="landing-graph-leaf" name="Linux / Arch" />
             <GraphNode className="landing-graph-leaf" name="Terminal" />
-            <GraphNode className="landing-graph-leaf" name="Web (WASM)" />
           </div>
         </div>
 
