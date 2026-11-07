@@ -3,15 +3,7 @@ import { describe, expect, it } from "vitest";
 import { darkTheme, lightTheme } from "@gpuixui/tokens";
 import { ThemeStylesheet, stylesheetOf } from "./theme-stylesheet";
 
-/**
- * The stylesheet a reader copies from `/themes`.
- *
- * Bug guarded: the page promised "the CSS they compile to" and offered none.
- * The block must be a single file a shadcn project pastes: Tailwind's import,
- * the light `:root`, the dark `.dark`, and the `@theme inline` bridge that maps
- * each variable to a Tailwind colour — without the bridge the variables are
- * defined and no utility reads them.
- */
+// Bug guarded: /themes promised the compiled CSS and offered none.
 
 const css = stylesheetOf({ light: lightTheme, dark: darkTheme });
 const markup = renderToStaticMarkup(<ThemeStylesheet />);
