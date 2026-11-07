@@ -13,6 +13,7 @@ import {
   textStyle,
   type TextStyleProperties,
   type Theme,
+  syntaxColors,
 } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 import * as Arr from "effect/Array";
@@ -26,12 +27,15 @@ import {
   numberDiff,
   pairs,
   rows,
+  styledRows,
   wordMarks,
+  wrapStarts,
   type DiffMode,
   type DiffRow,
   type RowKind,
   type SplitPair,
 } from "./logic.js";
+import { codeLines } from "../code-editor/highlight.js";
 import { recipeStyle } from "../internal/recipe.js";
 import { draftOf, labelOf } from "../internal/text.js";
 
@@ -77,6 +81,8 @@ export interface DiffViewerProps {
 
   readonly wrapColumns?: number;
 
+  readonly language?: string;
+
   readonly firstLine?: { readonly before?: number; readonly after?: number };
 
   readonly label?: string;
@@ -96,11 +102,14 @@ const rowFill = (theme: Theme, kind: RowKind): string | undefined =>
     Match.exhaustive,
   );
 
+const codeTone = (theme: Theme, kind: RowKind): string =>
+  kind === "added" ? theme.colors.success : theme.colors.destructive;
+
 const rowBar = (theme: Theme, kind: RowKind): StyleDesc =>
   kind === "added" || kind === "removed"
     ? {
         borderLeftWidth: theme.borderWidth.strong,
-        borderColor: rowInk(theme, kind),
+        borderColor: codeTone(theme, kind),
       }
     : {};
 
@@ -283,8 +292,10 @@ const UnifiedRows = ({
   </div>
 );
 
-const markColor = (theme: Theme, kind: RowKind): string =>
-  alpha(rowInk(theme, kind), 0.28);
+const markColor = (theme: Theme, kind: RowKind, ink: DiffInk): string =>
+  ink === "code"
+    ? alpha(codeTone(theme, kind), 0.34)
+    : alpha(rowInk(theme, kind), 0.28);
 
 const SplitColumn = ({
   side,
@@ -298,6 +309,7 @@ const SplitColumn = ({
   ink,
   annotations,
   wrapColumns,
+  language,
   shift,
   testId,
 }: {
@@ -305,6 +317,7 @@ const SplitColumn = ({
   readonly ink: DiffInk;
   readonly annotations: ReadonlyArray<DiffAnnotation>;
   readonly wrapColumns: number | undefined;
+  readonly language: string | undefined;
   readonly shift: number;
   readonly side: "before" | "after";
   readonly script: ReadonlyArray<SplitPair>;
@@ -349,10 +362,20 @@ const SplitColumn = ({
       const rowLines =
         wrapColumns === undefined
           ? 1
-          : Math.max(
-              1,
-              ...lengths.map((length) => Math.ceil(length / wrapColumns)),
-            );
+          : language === undefined
+            ? Math.max(
+                1,
+                ...lengths.map((length) => Math.ceil(length / wrapColumns)),
+              )
+            : Math.max(
+                ...[pair.left, pair.right].map((cell) =>
+                  Option.match(cell, {
+                    onNone: () => 1,
+                    onSome: (value) =>
+                      wrapStarts(value.text, wrapColumns).length,
+                  }),
+                ),
+              );
       const afterLine = Option.flatMap(pair.right, (value) => value.after);
       const note = Option.match(afterLine, {
         onNone: () => undefined,
@@ -367,7 +390,7 @@ const SplitColumn = ({
               height: metrics.lineHeight * rowLines,
               ...(ink === "code" ? rowBar(theme, kindHere) : {}),
               ...(ink === "code" && kindHere !== "context" && Option.isSome(row)
-                ? { backgroundColor: alpha(rowInk(theme, kindHere), 0.13) }
+                ? { backgroundColor: alpha(codeTone(theme, kindHere), 0.16) }
                 : {}),
             }}
           >
@@ -393,32 +416,74 @@ const SplitColumn = ({
                       )}
                     </text>
                   ) : null}
-                  <text
-                    role="presentation"
-                    highlight={
-                      marks === undefined || marks.length === 0
-                        ? undefined
-                        : {
-                            ranges: marks.map(
-                              ([from, to]) => [from, to] as [number, number],
-                            ),
-                            color: markColor(theme, value.kind),
-                          }
-                    }
-                    style={{
-                      ...codeCell(theme, metrics, value.kind, ink),
-                      ...(wrapColumns === undefined
-                        ? {}
-                        : {
-                            whiteSpace: "normal",
-                            flexGrow: 1,
-                            flexBasis: 0,
-                            minWidth: 0,
-                          }),
-                    }}
-                  >
-                    {value.text}
-                  </text>
+                  {language === undefined ? (
+                    <text
+                      role="presentation"
+                      highlight={
+                        marks === undefined || marks.length === 0
+                          ? undefined
+                          : {
+                              ranges: marks.map(
+                                ([from, to]) => [from, to] as [number, number],
+                              ),
+                              color: markColor(theme, value.kind, ink),
+                            }
+                      }
+                      style={{
+                        ...codeCell(theme, metrics, value.kind, ink),
+                        ...(wrapColumns === undefined
+                          ? {}
+                          : {
+                              whiteSpace: "normal",
+                              flexGrow: 1,
+                              flexBasis: 0,
+                              minWidth: 0,
+                            }),
+                      }}
+                    >
+                      {value.text}
+                    </text>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      {styledRows(
+                        codeLines(value.text, language)[0] ?? [],
+                        marks ?? [],
+                        wrapColumns ?? value.text.length + 1,
+                      ).map((runs, line) => (
+                        <div
+                          key={line}
+                          style={{ display: "flex", flexDirection: "row" }}
+                        >
+                          {runs.map((run, at) => (
+                            <text
+                              key={at}
+                              role="presentation"
+                              highlight={
+                                run.marks.length === 0
+                                  ? undefined
+                                  : {
+                                      ranges: run.marks.map(
+                                        ([from, to]) =>
+                                          [from, to] as [number, number],
+                                      ),
+                                      color: markColor(theme, value.kind, ink),
+                                    }
+                              }
+                              style={{
+                                ...codeCell(theme, metrics, value.kind, ink),
+                                paddingRight: 0,
+                                ...(run.role === undefined
+                                  ? {}
+                                  : { color: syntaxColors(theme)[run.role] }),
+                              }}
+                            >
+                              {run.text}
+                            </text>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </>
               ),
             })}
@@ -448,10 +513,12 @@ const SplitBlock = ({
   ink,
   annotations,
   wrapColumns,
+  language,
   firstLine,
   testId,
 }: {
   readonly wrapColumns: number | undefined;
+  readonly language: string | undefined;
   readonly firstLine: DiffViewerProps["firstLine"];
   readonly wordDiff: boolean;
   readonly ink: DiffInk;
@@ -477,6 +544,7 @@ const SplitBlock = ({
       ink={ink}
       annotations={annotations}
       wrapColumns={wrapColumns}
+      language={language}
       shift={(firstLine?.before ?? 1) - 1}
       testId={testId}
     />
@@ -500,6 +568,7 @@ const SplitBlock = ({
       ink={ink}
       annotations={annotations}
       wrapColumns={wrapColumns}
+      language={language}
       shift={(firstLine?.after ?? 1) - 1}
       testId={testId}
     />
@@ -516,10 +585,12 @@ const SplitRows = ({
   ink,
   annotations,
   wrapColumns,
+  language,
   firstLine,
   testId,
 }: {
   readonly wrapColumns: number | undefined;
+  readonly language: string | undefined;
   readonly firstLine: DiffViewerProps["firstLine"];
   readonly wordDiff: boolean;
   readonly ink: DiffInk;
@@ -570,6 +641,7 @@ const SplitRows = ({
               ink={ink}
               annotations={annotations}
               wrapColumns={wrapColumns}
+              language={language}
               firstLine={firstLine}
               testId={testId}
             />
@@ -595,6 +667,7 @@ export const DiffViewer = ({
   ink = "tone",
   annotations = [],
   wrapColumns,
+  language,
   firstLine,
   label,
   className,
@@ -645,6 +718,7 @@ export const DiffViewer = ({
           ink={ink}
           annotations={annotations}
           wrapColumns={wrapColumns}
+          language={language}
           firstLine={firstLine}
           testId={testId}
         />

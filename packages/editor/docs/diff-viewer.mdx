@@ -26,6 +26,7 @@ import { DiffViewer } from "@gpuixui/editor";
 | `ink` | `"tone" \| "code"` | `"tone"` | `code` keeps the text neutral and shows the change with the tint and a bar. |
 | `annotations` | `ReadonlyArray<{ line, height, content }>` | `[]` | A review note under an after-side line; the before side keeps a spacer, so rows stay level. |
 | `wrapColumns` | `number` | — | In split mode, wrap at this many characters and grow both cells of the row together. |
+| `language` | `string` | — | With `ink="code"`, colour the code by syntax, and break wrapped lines after a space or punctuation. |
 | `firstLine` | `{ before?, after? }` | `1` | The line number each side's numbering starts from, for an excerpt of a longer file. |
 | `label` | `string` | `"Diff"` | The accessible name; a blank or non-text name reads as the default (the rows are presentational, so this is the whole surface's name). |
 | `className` | `string` | — | A Tailwind class string, merged last. |

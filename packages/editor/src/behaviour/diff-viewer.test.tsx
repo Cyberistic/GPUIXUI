@@ -265,3 +265,37 @@ const renderDiffForNote = () => {
     unmount: root.unmount,
   };
 };
+
+describe("DiffViewer's code ink", () => {
+  const code = (language?: string) =>
+    render(
+      <DiffViewer
+        before={"let a = 1;"}
+        after={"let a = 2;"}
+        mode="split"
+        ink="code"
+        testId="code"
+        language={language}
+      />,
+    );
+  const colors = (root: Root) =>
+    root.renderer.findByType("text").map((element) => element.style.color);
+
+  it("tints a changed row with the status colour itself", () => {
+    const root = code();
+    const after = root.renderer.findByTestId("code-row-0-after");
+    expect(after?.style.borderColor).toBe(darkTheme.colors.success);
+    const before = root.renderer.findByTestId("code-row-0-before");
+    expect(before?.style.borderColor).toBe(darkTheme.colors.destructive);
+    const fill = String(after?.style.backgroundColor).toLowerCase();
+    expect(fill.startsWith(darkTheme.colors.success.toLowerCase())).toBe(true);
+  });
+
+  it("colours the code by syntax only when given a language", () => {
+    const plain = new Set(colors(code())).size;
+    current?.unmount();
+    current = undefined;
+    const coloured = new Set(colors(code("rust"))).size;
+    expect(coloured).toBeGreaterThan(plain);
+  });
+});

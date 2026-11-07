@@ -409,3 +409,68 @@ export const wordMarks = (before: string, after: string): WordMarks => {
   }
   return { before: mergedRanges(a, keptA), after: mergedRanges(b, keptB) };
 };
+
+export interface StyledRun<Role> {
+  readonly text: string;
+  readonly role?: Role;
+  readonly marks: ReadonlyArray<readonly [number, number]>;
+}
+
+const BREAK_AFTER = " .(,";
+
+export const wrapStarts = (
+  text: string,
+  columns: number,
+): ReadonlyArray<number> => {
+  const starts = [0];
+  let start = 0;
+  while (text.length - start > columns) {
+    const window = text.slice(start, start + columns);
+    const breaks = [...BREAK_AFTER].map((mark) => window.lastIndexOf(mark));
+    const at = Math.max(...breaks);
+    start += at > 0 ? at + 1 : columns;
+    starts.push(start);
+  }
+  return starts;
+};
+
+export const styledRows = <Role>(
+  runs: ReadonlyArray<{ readonly text: string; readonly role?: Role }>,
+  marks: ReadonlyArray<readonly [number, number]>,
+  columns: number,
+): ReadonlyArray<ReadonlyArray<StyledRun<Role>>> => {
+  const text = runs.map((run) => run.text).join("");
+  const starts = wrapStarts(text, columns);
+  const joined = marks.reduce<ReadonlyArray<readonly [number, number]>>(
+    (out, mark) => {
+      const last = out.at(-1);
+      return last !== undefined && text.slice(last[1], mark[0]).trim() === ""
+        ? [...out.slice(0, -1), [last[0], mark[1]] as const]
+        : [...out, mark];
+    },
+    [],
+  );
+  return starts.map((from, index) => {
+    const to = starts[index + 1] ?? text.length;
+    let at = 0;
+    return runs.flatMap((run) => {
+      const runFrom = at;
+      at += run.text.length;
+      const a = Math.max(from, runFrom);
+      const b = Math.min(to, at);
+      if (a >= b) return [];
+      const inside = joined.flatMap(([m0, m1]) => {
+        const c = Math.max(m0, a);
+        const d = Math.min(m1, b);
+        return c < d ? [[c - a, d - a] as const] : [];
+      });
+      return [
+        {
+          text: text.slice(a, b),
+          ...(run.role === undefined ? {} : { role: run.role }),
+          marks: inside,
+        },
+      ];
+    });
+  });
+};

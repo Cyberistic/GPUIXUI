@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Cuts the reel from captured frames. Usage: reel-cut.py <frames dir> <out dir> <reference.mp4> <score.wav>"""
-import subprocess, sys
+import re, subprocess, sys
 
 frames, out, ref, score = sys.argv[1:]
 # scene, start in the reference, duration, scene time at the cut's first frame, crop (x, y, width) in 1920 space
@@ -36,5 +36,6 @@ for name in ["opening", "flex"]:
 open(f"{out}/film.txt", "w").write(f"file '{out}/opening.mp4'\nfile '{out}/flex.mp4'\nfile '{out}/ours.mp4'\n")
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", f"{out}/film.txt", "-c", "copy", f"{out}/picture.mp4"], check=True)
 fire = "anoisesrc=d=5.6:c=brown:a=0.4:r=48000,lowpass=f=700,highpass=f=70,tremolo=f=7:d=0.5,afade=t=in:st=0.6:d=1.4,afade=t=out:st=4.2:d=1.3[bed];anoisesrc=d=5.6:c=white:a=0.35:r=48000:s=7,highpass=f=2400,tremolo=f=23:d=1,tremolo=f=9.7:d=1,volume=0.5,afade=t=in:st=0.7:d=1,afade=t=out:st=4.1:d=1.2[crackle];"
-mix = fire + "[1:a]aresample=48000,volume=9dB,aformat=channel_layouts=stereo[music];[bed][crackle]amix=inputs=2:normalize=0,aformat=channel_layouts=stereo[burn];[burn][music]amix=inputs=2:duration=longest:normalize=0,alimiter=limit=0.95[a]"
+peak = float(re.search(r"max_volume: (-?[\d.]+)", subprocess.run(["ffmpeg", "-hide_banner", "-i", score, "-af", "volumedetect", "-f", "null", "-"], capture_output=True, text=True).stderr).group(1))
+mix = fire + f"[1:a]aresample=48000,volume={-6 - peak}dB,aformat=channel_layouts=stereo[music];[bed][crackle]amix=inputs=2:normalize=0,aformat=channel_layouts=stereo[burn];[burn][music]amix=inputs=2:duration=longest:normalize=0[a]"
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", f"{out}/picture.mp4", "-i", score, "-filter_complex", mix, "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "256k", "-shortest", f"{out}/gpuixui-sets-the-ui-on-fire.mp4"], check=True)

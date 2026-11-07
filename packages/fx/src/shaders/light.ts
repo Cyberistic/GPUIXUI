@@ -157,7 +157,7 @@ fn trace(P: vec3f, T: vec3f, radius: f32, t_start: f32) -> f32 {
 fn shaft(p: vec2f, l: L) -> f32 {
   let D = l.pos.xy - p; let len = length(D);
   let R = max(l.pos.w * l.extra.w, 1.0);
-  let n = 48; let step = len / f32(n); let w = max(step * 0.6, 2.0);
+  let n = 48; let step = len / f32(n); let w = max(step * 0.6, 26.0);
   var acc = 0.0;
   for (var i = 0; i < n; i++) {
     let q = p + D * ((f32(i) + 0.5) / f32(n));

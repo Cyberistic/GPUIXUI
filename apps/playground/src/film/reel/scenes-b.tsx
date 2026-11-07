@@ -56,14 +56,10 @@ export const Hello = ({ t }: { t: number }): ReactNode => (
       theme={{ ...darkTheme, switch: HERO_SWITCH, switchMetrics: HERO_METRICS }}
     >
       <div style={{ ...at(0, 164, W), ...center }}>
-        <T
-          s={t >= 0.68 ? "GPUI fork on" : "GPUI fork off"}
-          size={52}
-          weight={600}
-        />
+        <T s={t >= 0.68 ? "GPUI on" : "GPUI off"} size={52} weight={600} />
       </div>
       <div style={{ ...at(404, 290, 152, 88), ...center }}>
-        <Switch checked={t >= 0.68} label="GPUI fork" />
+        <Switch checked={t >= 0.68} label="GPUI" />
       </div>
     </ThemeProvider>
     <PointerAt
@@ -347,6 +343,7 @@ export const Diff = ({ t }: { t: number }): ReactNode => (
         contextLines={40}
         wordDiff
         wrapColumns={58}
+        language="rust"
         annotations={[{ line: 19, height: 138, content: REVIEW }]}
         style={{ borderWidth: 0, borderRadius: 0, backgroundColor: "#17171a" }}
       />
