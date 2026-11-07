@@ -1,5 +1,5 @@
 diff --git a/crates/gpui/src/scene.rs b/crates/gpui/src/scene.rs
-index 122f7b2..179ed7f 100644
+index 122f7b2..651bf40 100644
 --- a/crates/gpui/src/scene.rs
 +++ b/crates/gpui/src/scene.rs
 @@ -50,6 +50,7 @@ pub struct Scene {
@@ -135,7 +135,7 @@ index 122f7b2..179ed7f 100644
          }
      }
  }
-@@ -779,6 +814,117 @@ pub struct PaintSurface {
+@@ -779,6 +814,123 @@ pub struct PaintSurface {
      pub texture_size: Size<crate::DevicePixels>,
  }
  
@@ -152,6 +152,7 @@ index 122f7b2..179ed7f 100644
 +@group(0) @binding(1) var backdrop: texture_2d<f32>;
 +@group(0) @binding(2) var backdrop_sampler: sampler;
 +@group(0) @binding(3) var simulation_state: texture_2d<f32>;
++@group(0) @binding(4) var shader_data: texture_2d<f32>;
 +struct ShaderVarying {
 +    @builtin(position) position: vec4f,
 +    @location(0) point: vec2f,
@@ -163,6 +164,9 @@ index 122f7b2..179ed7f 100644
 +    out.position = vec4f(device / frame.viewport * vec2f(2., -2.) + vec2f(-1., 1.), 0., 1.);
 +    out.point = unit[index] * frame.bounds.zw / frame.scale;
 +    return out;
++}
++fn shader_data_at(index: u32) -> vec4f {
++    return textureLoad(shader_data, vec2u(index % 1024u, index / 1024u), 0);
 +}
 +fn size() -> vec2f { return frame.bounds.zw / frame.scale; }
 +fn backdrop_at(point: vec2f) -> vec4f {
@@ -185,6 +189,8 @@ index 122f7b2..179ed7f 100644
 +    pub params: [[f32; 4]; SHADER_PARAMS],
 +    pub reads_backdrop: bool,
 +    pub simulation: Option<ShaderSimulation>,
++    /// Per-frame tables too large for `frame.params`, read with `shader_data_at`.
++    pub data: Option<std::sync::Arc<[[f32; 4]]>>,
 +}
 +
 +/// How many `vec4f`s a [`PaintShader`] can pass in `frame.params`.
@@ -253,7 +259,7 @@ index 122f7b2..179ed7f 100644
  impl std::fmt::Debug for PaintSurface {
      fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
          let mut debug = f.debug_struct("PaintSurface");
-@@ -968,3 +1114,73 @@ impl PathVertex<Pixels> {
+@@ -968,3 +1120,74 @@ impl PathVertex<Pixels> {
          }
      }
  }
@@ -281,6 +287,7 @@ index 122f7b2..179ed7f 100644
 +            params: [[0.0; 4]; SHADER_PARAMS],
 +            reads_backdrop: false,
 +            simulation: None,
++            data: None,
 +        }
 +    }
 +
@@ -328,10 +335,10 @@ index 122f7b2..179ed7f 100644
 +    }
 +}
 diff --git a/crates/gpui/src/window.rs b/crates/gpui/src/window.rs
-index 076d3c8..3a15dc2 100644
+index 076d3c8..9ed0ae1 100644
 --- a/crates/gpui/src/window.rs
 +++ b/crates/gpui/src/window.rs
-@@ -4725,6 +4725,36 @@ impl Window {
+@@ -4725,6 +4725,38 @@ impl Window {
          Ok(())
      }
  
@@ -346,6 +353,7 @@ index 076d3c8..3a15dc2 100644
 +        params: [[f32; 4]; crate::SHADER_PARAMS],
 +        reads_backdrop: bool,
 +        simulation: Option<crate::ShaderSimulation>,
++        data: Option<std::sync::Arc<[[f32; 4]]>>,
 +    ) {
 +        self.invalidator.debug_assert_paint();
 +
@@ -362,6 +370,7 @@ index 076d3c8..3a15dc2 100644
 +            params,
 +            reads_backdrop,
 +            simulation,
++            data,
 +        });
 +    }
 +
@@ -467,10 +476,10 @@ index 80f1ecf..6ce3503 100644
          }
 diff --git a/crates/gpui_apple/src/metal_shader.rs b/crates/gpui_apple/src/metal_shader.rs
 new file mode 100644
-index 0000000..d610b26
+index 0000000..8c4284c
 --- /dev/null
 +++ b/crates/gpui_apple/src/metal_shader.rs
-@@ -0,0 +1,536 @@
+@@ -0,0 +1,601 @@
 +use anyhow::{Context as _, Result, anyhow};
 +use collections::HashMap;
 +use gpui::{
@@ -501,6 +510,7 @@ index 0000000..d610b26
 +    sampler: metal::SamplerState,
 +    backdrop: Option<metal::Texture>,
 +    empty: metal::Texture,
++    empty_data: metal::Texture,
 +    programs: HashMap<SharedString, Option<HashMap<&'static str, metal::ComputePipelineState>>>,
 +    grids: HashMap<u64, Grid>,
 +    frame: u64,
@@ -584,6 +594,7 @@ index 0000000..d610b26
 +        msl::BindTarget { sampler: Some(msl::BindSamplerTarget::Resource(0)), ..Default::default() },
 +    );
 +    resources.insert(resource(3), msl::BindTarget { texture: Some(1), ..Default::default() });
++    resources.insert(resource(4), msl::BindTarget { texture: Some(2), ..Default::default() });
 +    msl::EntryPointResources { resources, ..Default::default() }
 +}
 +
@@ -659,6 +670,13 @@ index 0000000..d610b26
 +            sampler: device.new_sampler(&sampler),
 +            backdrop: None,
 +            empty: device.new_texture(&empty),
++            empty_data: {
++                let descriptor = metal::TextureDescriptor::new();
++                descriptor.set_width(1);
++                descriptor.set_height(1);
++                descriptor.set_pixel_format(MTLPixelFormat::RGBA32Float);
++                device.new_texture(&descriptor)
++            },
 +            programs: HashMap::default(),
 +            grids: HashMap::default(),
 +            frame: 0,
@@ -743,7 +761,9 @@ index 0000000..d610b26
 +        shader: &PaintShader,
 +        viewport: Size<DevicePixels>,
 +    ) {
-+        let Some(region) = clipped(shader, viewport) else { return };
++        if clipped(shader, viewport).is_none() {
++            return;
++        }
 +        let stale = self.backdrop.as_ref().is_none_or(|texture| {
 +            texture.width() != target.width() || texture.height() != target.height()
 +        });
@@ -758,7 +778,9 @@ index 0000000..d610b26
 +        }
 +        let Some(backdrop) = self.backdrop.as_ref() else { return };
 +        let blit = command_buffer.new_blit_command_encoder();
-+        blit.copy_from_texture(target, 0, 0, region.origin, region.size, backdrop, 0, 0, region.origin);
++        let origin = metal::MTLOrigin { x: 0, y: 0, z: 0 };
++        let size = metal::MTLSize { width: target.width(), height: target.height(), depth: 1 };
++        blit.copy_from_texture(target, 0, 0, origin, size, backdrop, 0, 0, origin);
 +        blit.end_encoding();
 +    }
 +
@@ -804,6 +826,28 @@ index 0000000..d610b26
 +            .and_then(|simulation| self.grids.get(&simulation.key))
 +            .map_or(&self.empty, |grid| &grid.textures[grid.current]);
 +        encoder.set_fragment_texture(1, Some(state));
++        let data = shader.data.as_ref().map(|data| {
++            let height = data.len().div_ceil(1024).max(1) as u64;
++            let descriptor = metal::TextureDescriptor::new();
++            descriptor.set_width(1024);
++            descriptor.set_height(height);
++            descriptor.set_pixel_format(MTLPixelFormat::RGBA32Float);
++            descriptor.set_storage_mode(metal::MTLStorageMode::Shared);
++            let texture = self.device.new_texture(&descriptor);
++            let mut rows = data.to_vec();
++            rows.resize(1024 * height as usize, [0.0; 4]);
++            texture.replace_region(
++                metal::MTLRegion {
++                    origin: metal::MTLOrigin { x: 0, y: 0, z: 0 },
++                    size: metal::MTLSize { width: 1024, height, depth: 1 },
++                },
++                0,
++                rows.as_ptr() as *const c_void,
++                1024 * 16,
++            );
++            texture
++        });
++        encoder.set_fragment_texture(2, Some(data.as_deref().unwrap_or(&self.empty_data)));
 +        encoder.set_fragment_sampler_state(0, Some(&self.sampler));
 +        encoder.set_scissor_rect(metal::MTLScissorRect {
 +            x: region.origin.x,
@@ -864,6 +908,7 @@ index 0000000..d610b26
 +            params: [[0.0; 4]; gpui::SHADER_PARAMS],
 +            reads_backdrop,
 +            simulation: None,
++            data: None,
 +        }
 +    }
 +
@@ -994,6 +1039,35 @@ index 0000000..d610b26
 +        assert_eq!(frame(10.0), 72, "a new grid warms up");
 +        assert_eq!(frame(10.0 + 2.0 * gpui::SIMULATION_DT), 74, "two more fixed steps");
 +        assert_eq!(frame(10.0 + 2.0 * gpui::SIMULATION_DT), 74, "redrawing a frame does not step");
++    }
++
++    // A refracting shader samples past its own bounds, so the whole frame must be readable.
++    #[test]
++    fn a_shader_reads_the_backdrop_outside_its_own_bounds() {
++        let source = "fn shade(p: vec2f) -> vec4f { return vec4f(backdrop_at(p + vec2f(20., 0.)).bgr, 1.); }";
++        let mut scene = Scene::default();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(quad(bounds(0.0, 0.0, 40.0, 40.0), 0xff0000));
++        scene.pop_layer();
++        scene.push_layer(bounds(0.0, 0.0, SIZE as f32, SIZE as f32));
++        scene.insert_primitive(shader(bounds(0.0, 0.0, 10.0, 40.0), source, true));
++        scene.pop_layer();
++        assert_eq!(px_at(&render(&mut scene), 5, 20), [0, 0, 255]);
++    }
++
++    #[test]
++    fn a_shader_reads_its_data_table() {
++        let mut table = shader(
++            bounds(0.0, 0.0, 40.0, 40.0),
++            "fn shade(p: vec2f) -> vec4f { return shader_data_at(1500u); }",
++            false,
++        );
++        let mut rows = vec![[0.0; 4]; 1501];
++        rows[1500] = [0.0, 1.0, 0.0, 1.0];
++        table.data = Some(rows.into());
++        let mut scene = Scene::default();
++        scene.insert_primitive(table);
++        assert_eq!(px_at(&render(&mut scene), 20, 20), [0, 255, 0]);
 +    }
 +
 +    #[test]
@@ -1175,10 +1249,10 @@ index 47ce2a3..4fe05f1 100644
          }
 diff --git a/crates/gpui_wgpu/src/wgpu_shader.rs b/crates/gpui_wgpu/src/wgpu_shader.rs
 new file mode 100644
-index 0000000..ee21595
+index 0000000..deda2d1
 --- /dev/null
 +++ b/crates/gpui_wgpu/src/wgpu_shader.rs
-@@ -0,0 +1,692 @@
+@@ -0,0 +1,763 @@
 +use anyhow::{Result, anyhow};
 +use collections::HashMap;
 +use gpui::{
@@ -1230,6 +1304,8 @@ index 0000000..ee21595
 +    stride: u64,
 +    backdrop: Option<(wgpu::Texture, wgpu::TextureView)>,
 +    empty: wgpu::TextureView,
++    empty_data: wgpu::TextureView,
++    tables: Vec<Option<wgpu::TextureView>>,
 +    target_size: (u32, u32),
 +    backdrop_readable: bool,
 +    compute_layout: wgpu::BindGroupLayout,
@@ -1284,6 +1360,16 @@ index 0000000..ee21595
 +                    count: None,
 +                },
 +                wgpu::BindGroupLayoutEntry {
++                    binding: 4,
++                    visibility: wgpu::ShaderStages::FRAGMENT,
++                    ty: wgpu::BindingType::Texture {
++                        sample_type: wgpu::TextureSampleType::Float { filterable: false },
++                        view_dimension: wgpu::TextureViewDimension::D2,
++                        multisampled: false,
++                    },
++                    count: None,
++                },
++                wgpu::BindGroupLayoutEntry {
 +                    binding: 3,
 +                    visibility: wgpu::ShaderStages::FRAGMENT,
 +                    ty: wgpu::BindingType::Texture {
@@ -1314,6 +1400,18 @@ index 0000000..ee21595
 +                sample_count: 1,
 +                dimension: wgpu::TextureDimension::D2,
 +                format,
++                usage: wgpu::TextureUsages::TEXTURE_BINDING,
++                view_formats: &[],
++            })
++            .create_view(&wgpu::TextureViewDescriptor::default());
++        let empty_data = device
++            .create_texture(&wgpu::TextureDescriptor {
++                label: Some("paint_shader_empty_data"),
++                size: wgpu::Extent3d { width: 1, height: 1, depth_or_array_layers: 1 },
++                mip_level_count: 1,
++                sample_count: 1,
++                dimension: wgpu::TextureDimension::D2,
++                format: wgpu::TextureFormat::Rgba32Float,
 +                usage: wgpu::TextureUsages::TEXTURE_BINDING,
 +                view_formats: &[],
 +            })
@@ -1367,6 +1465,8 @@ index 0000000..ee21595
 +            stride: UNIFORM_SIZE.next_multiple_of(alignment),
 +            backdrop: None,
 +            empty,
++            empty_data,
++            tables: Vec::new(),
 +            target_size: (0, 0),
 +            backdrop_readable: false,
 +            compute_layout,
@@ -1594,6 +1694,43 @@ index 0000000..ee21595
 +                mapped_at_creation: false,
 +            }));
 +        }
++        self.tables = scene
++            .shaders
++            .iter()
++            .map(|shader| {
++                let data = shader.data.as_ref()?;
++                let height = data.len().div_ceil(1024).max(1) as u32;
++                let extent = wgpu::Extent3d { width: 1024, height, depth_or_array_layers: 1 };
++                let texture = self.device.create_texture(&wgpu::TextureDescriptor {
++                    label: Some("paint_shader_data"),
++                    size: extent,
++                    mip_level_count: 1,
++                    sample_count: 1,
++                    dimension: wgpu::TextureDimension::D2,
++                    format: wgpu::TextureFormat::Rgba32Float,
++                    usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
++                    view_formats: &[],
++                });
++                let mut rows = data.to_vec();
++                rows.resize(1024 * height as usize, [0.0; 4]);
++                self.queue.write_texture(
++                    wgpu::TexelCopyTextureInfo {
++                        texture: &texture,
++                        mip_level: 0,
++                        origin: wgpu::Origin3d::ZERO,
++                        aspect: wgpu::TextureAspect::All,
++                    },
++                    bytemuck::cast_slice(&rows),
++                    wgpu::TexelCopyBufferLayout {
++                        offset: 0,
++                        bytes_per_row: Some(1024 * 16),
++                        rows_per_image: Some(height),
++                    },
++                    extent,
++                );
++                Some(texture.create_view(&wgpu::TextureViewDescriptor::default()))
++            })
++            .collect();
 +        let Some(uniforms) = self.uniforms.as_ref() else { return };
 +        for (index, shader) in scene.shaders.iter().enumerate() {
 +            let frame = ShaderFrame {
@@ -1642,22 +1779,23 @@ index 0000000..ee21595
 +            return;
 +        }
 +        let Some((backdrop, _)) = self.backdrop.as_ref() else { return };
-+        let Some(clip) = clip_of(shader, target.width(), target.height()) else { return };
-+        let origin = wgpu::Origin3d { x: clip.x, y: clip.y, z: 0 };
++        if clip_of(shader, target.width(), target.height()).is_none() {
++            return;
++        }
 +        encoder.copy_texture_to_texture(
 +            wgpu::TexelCopyTextureInfo {
 +                texture: target,
 +                mip_level: 0,
-+                origin,
++                origin: wgpu::Origin3d::ZERO,
 +                aspect: wgpu::TextureAspect::All,
 +            },
 +            wgpu::TexelCopyTextureInfo {
 +                texture: backdrop,
 +                mip_level: 0,
-+                origin,
++                origin: wgpu::Origin3d::ZERO,
 +                aspect: wgpu::TextureAspect::All,
 +            },
-+            wgpu::Extent3d { width: clip.width, height: clip.height, depth_or_array_layers: 1 },
++            target.size(),
 +        );
 +    }
 +
@@ -1702,6 +1840,12 @@ index 0000000..ee21595
 +                wgpu::BindGroupEntry {
 +                    binding: 3,
 +                    resource: wgpu::BindingResource::TextureView(state),
++                },
++                wgpu::BindGroupEntry {
++                    binding: 4,
++                    resource: wgpu::BindingResource::TextureView(
++                        self.tables.get(index).and_then(Option::as_ref).unwrap_or(&self.empty_data),
++                    ),
 +                },
 +            ],
 +        });
@@ -1754,6 +1898,7 @@ index 0000000..ee21595
 +            params: [[0.0; 4]; gpui::SHADER_PARAMS],
 +            reads_backdrop,
 +            simulation: None,
++            data: None,
 +        }
 +    }
 +

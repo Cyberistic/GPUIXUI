@@ -31,8 +31,8 @@ light. The prelude provides:
 | `backdrop_at(point)` | what was drawn before this element; needs `readsBackdrop` |
 | `simulation_state` | the latest state of the element's simulation |
 
-`readsBackdrop` ends and reopens the render pass, and copies the element's visible
-rectangle, so it costs more than a plain shader. A shader that fails to compile logs
+`readsBackdrop` ends and reopens the render pass and copies the whole frame, because a
+refracting shader samples past its own bounds, so it costs more than a plain shader. A shader that fails to compile logs
 once and draws nothing; the rest of the frame is unaffected.
 
 `register` must be imported before anything that loads `@gpuix/native`. It sets

@@ -7,6 +7,7 @@ export interface ShaderProps extends Omit<Props, "children"> {
   readonly time?: number;
   readonly params?: ReadonlyArray<number>;
   readonly readsBackdrop?: boolean;
+  readonly data?: ReadonlyArray<number>;
   readonly simulationSource?: string;
   readonly simulationGrid?: readonly [number, number];
   readonly simulationUniform?: ReadonlyArray<number>;

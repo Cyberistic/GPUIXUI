@@ -23,6 +23,7 @@ struct Shader {
     simulation_source: gpui::SharedString,
     simulation_grid: [u32; 2],
     simulation_uniform: [[f32; 4]; 6],
+    data: Option<std::sync::Arc<[[f32; 4]]>>,
 }
 
 impl Default for Shader {
@@ -35,6 +36,7 @@ impl Default for Shader {
             simulation_source: Default::default(),
             simulation_grid: [0; 2],
             simulation_uniform: [[0.0; 4]; 6],
+            data: None,
         }
     }
 }
@@ -65,6 +67,7 @@ impl CustomElement for Shader {
             grid: self.simulation_grid,
             uniform: self.simulation_uniform,
         });
+        let data = self.data.clone();
         let children = std::mem::take(&mut ctx.children);
         let id = gpui::SharedString::from(format!("gpuixui_shader_{}", ctx.id));
         custom_surface(gpui::div().id(id), &ctx)
@@ -72,7 +75,7 @@ impl CustomElement for Shader {
                 gpui::canvas(
                     |_, _, _| {},
                     move |bounds, _, window, _| {
-                        window.paint_shader(bounds, source, time, params, reads_backdrop, simulation);
+                        window.paint_shader(bounds, source, time, params, reads_backdrop, simulation, data);
                     },
                 )
                 .absolute()
@@ -90,6 +93,20 @@ impl CustomElement for Shader {
             "params" => self.params = vectors(&value),
             "simulationSource" => {
                 self.simulation_source = value.as_str().unwrap_or_default().to_string().into()
+            }
+            "data" => {
+                self.data = value.as_array().map(|values| {
+                    values
+                        .chunks(4)
+                        .map(|chunk| {
+                            let mut row = [0.0; 4];
+                            for (slot, number) in row.iter_mut().zip(chunk) {
+                                *slot = number.as_f64().unwrap_or_default() as f32;
+                            }
+                            row
+                        })
+                        .collect()
+                })
             }
             "simulationUniform" => self.simulation_uniform = vectors(&value),
             "simulationGrid" => {
@@ -109,6 +126,7 @@ impl CustomElement for Shader {
             "simulationSource",
             "simulationUniform",
             "simulationGrid",
+            "data",
         ]
     }
 
