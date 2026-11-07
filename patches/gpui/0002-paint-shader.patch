@@ -1249,10 +1249,10 @@ index 47ce2a3..4fe05f1 100644
          }
 diff --git a/crates/gpui_wgpu/src/wgpu_shader.rs b/crates/gpui_wgpu/src/wgpu_shader.rs
 new file mode 100644
-index 0000000..deda2d1
+index 0000000..1889749
 --- /dev/null
 +++ b/crates/gpui_wgpu/src/wgpu_shader.rs
-@@ -0,0 +1,763 @@
+@@ -0,0 +1,767 @@
 +use anyhow::{Result, anyhow};
 +use collections::HashMap;
 +use gpui::{
@@ -1308,8 +1308,7 @@ index 0000000..deda2d1
 +    tables: Vec<Option<wgpu::TextureView>>,
 +    target_size: (u32, u32),
 +    backdrop_readable: bool,
-+    compute_layout: wgpu::BindGroupLayout,
-+    compute_pipeline_layout: wgpu::PipelineLayout,
++    compute: Option<(wgpu::BindGroupLayout, wgpu::PipelineLayout)>,
 +    programs: HashMap<SharedString, Option<HashMap<&'static str, wgpu::ComputePipeline>>>,
 +    grids: HashMap<u64, Grid>,
 +    frame: u64,
@@ -1433,6 +1432,7 @@ index 0000000..deda2d1
 +            ty,
 +            count: None,
 +        };
++        let compute = (device.limits().max_compute_workgroups_per_dimension > 0).then(|| {
 +        let compute_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
 +            label: Some("paint_shader_simulation_layout"),
 +            entries: &[
@@ -1453,6 +1453,8 @@ index 0000000..deda2d1
 +            bind_group_layouts: &[Some(&compute_layout)],
 +            immediate_size: 0,
 +        });
++        (compute_layout, compute_pipeline_layout)
++        });
 +        Self {
 +            device,
 +            queue,
@@ -1469,8 +1471,7 @@ index 0000000..deda2d1
 +            tables: Vec::new(),
 +            target_size: (0, 0),
 +            backdrop_readable: false,
-+            compute_layout,
-+            compute_pipeline_layout,
++            compute,
 +            programs: HashMap::default(),
 +            grids: HashMap::default(),
 +            frame: 0,
@@ -1519,6 +1520,8 @@ index 0000000..deda2d1
 +    }
 +
 +    fn compile_program(&self, source: &str) -> Result<HashMap<&'static str, wgpu::ComputePipeline>> {
++        let (_, compute_pipeline_layout) =
++            self.compute.as_ref().ok_or_else(|| anyhow!("this device has no compute shaders"))?;
 +        let module =
 +            naga::front::wgsl::parse_str(source).map_err(|error| anyhow!(error.emit_to_string(source)))?;
 +        naga::valid::Validator::new(
@@ -1537,7 +1540,7 @@ index 0000000..deda2d1
 +                entry,
 +                self.device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
 +                    label: Some(entry),
-+                    layout: Some(&self.compute_pipeline_layout),
++                    layout: Some(compute_pipeline_layout),
 +                    module: &module,
 +                    entry_point: Some(entry),
 +                    compilation_options: wgpu::PipelineCompilationOptions::default(),
@@ -1576,7 +1579,7 @@ index 0000000..deda2d1
 +
 +    pub(crate) fn simulate(&mut self, scene: &Scene, encoder: &mut wgpu::CommandEncoder) {
 +        self.frame += 1;
-+        if self.device.limits().max_compute_workgroups_per_dimension > 0 {
++        if self.compute.is_some() {
 +            for shader in &scene.shaders {
 +                if let Some(simulation) = &shader.simulation {
 +                    self.step(simulation, shader.time, encoder);
@@ -1603,6 +1606,7 @@ index 0000000..deda2d1
 +            let grid = self.new_grid(simulation.grid);
 +            self.grids.insert(simulation.key, grid);
 +        }
++        let Some((compute_layout, _)) = self.compute.as_ref() else { return };
 +        let Some(Some(program)) = self.programs.get(&simulation.source) else { return };
 +        let Some(grid) = self.grids.get_mut(&simulation.key) else { return };
 +        grid.used = self.frame;
@@ -1635,7 +1639,7 @@ index 0000000..deda2d1
 +                };
 +                let bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
 +                    label: Some("paint_shader_simulation"),
-+                    layout: &self.compute_layout,
++                    layout: compute_layout,
 +                    entries: &[
 +                        wgpu::BindGroupEntry {
 +                            binding: 0,

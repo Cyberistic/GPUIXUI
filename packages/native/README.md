@@ -62,5 +62,5 @@ elements". No fork of either project is involved.
 | macOS | Metal | pixel-tested |
 | Linux | wgpu | pixel-tested through wgpu's Metal adapter; not yet on Linux |
 | Browser, WebGPU | wgpu | run in Chrome, backdrop reads included |
-| Browser, WebGL2 | wgpu | run in Chrome; shaders that read a backdrop are skipped |
+| Browser, WebGL2 | wgpu | run in Chrome; shaders that read a backdrop are skipped, and a simulation stays empty |
 | Windows | DirectX 11 | not implemented; `paint_shader` draws nothing |

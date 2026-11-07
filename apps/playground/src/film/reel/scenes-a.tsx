@@ -1114,13 +1114,13 @@ export const Today = ({ t }: { t: number }): ReactNode => {
     bx = (W - bw) / 2,
     by = H - bh - 26,
     slot = bw / 4;
-  const sel = track(t, 0, [
+  const sel = track(t + 0.3, 0, [
     [0.55, 2, sp(0.7, 0.28)],
     [1.75, 1, sp(0.6, 0.3)],
   ]);
   const sx = bx + slot * (sel + 0.5);
   const tabs = ["Today", "Search", "Saved", "Profile"];
-  const y0 = 30 - scroll,
+  const y0 = 6 - scroll,
     heroY = y0 + 78,
     w3 = (W - 80 - 40) / 3;
   return (

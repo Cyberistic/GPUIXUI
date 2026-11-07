@@ -68,3 +68,5 @@ media/launch/.media/
 media/launch/.hyperframes/
 .claude/
 dist-spike/
+apps/playground/scripts/web/bundle.js
+apps/playground/scripts/web/probe.mjs
