@@ -315,6 +315,8 @@ import { AspectRatioDemo, aspectRatioDemoSource } from "./aspect-ratio-demo";
 import {
   DisclosureDemo,
   disclosureDemoSource,
+  ColorSwatchesDemo,
+  colorSwatchesDemoSource,
   InsetGroupDemo,
   insetGroupDemoSource,
   SegmentedControlDemo,
@@ -3200,6 +3202,7 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: segmentedControlDemoSource,
   },
   "disclosure-demo": { render: DisclosureDemo, source: disclosureDemoSource },
+  "color-swatches-demo": { render: ColorSwatchesDemo, source: colorSwatchesDemoSource },
   "inset-group-demo": { render: InsetGroupDemo, source: insetGroupDemoSource },
   "aspect-ratio-demo": {
     render: AspectRatioDemo,

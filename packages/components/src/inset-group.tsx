@@ -7,11 +7,20 @@ import { textStyle, useTheme } from "./internal/theme.js";
 export interface InsetGroupProps extends Omit<Props, "children"> {
   readonly title?: string;
 
+  readonly titleTone?: "strong" | "muted";
+
+  readonly elevated?: boolean;
+
+  readonly insetDividers?: boolean;
+
   readonly children?: ReactNode;
 }
 
 export const InsetGroup = ({
   title,
+  titleTone = "strong",
+  elevated = false,
+  insetDividers = false,
   children,
   style,
   ...rest
@@ -28,10 +37,13 @@ export const InsetGroup = ({
       {title === undefined ? null : (
         <text
           style={{
-            ...textStyle(theme, "body"),
+            ...textStyle(theme, titleTone === "muted" ? "caption" : "body"),
             fontWeight: 600,
-            color: theme.colors.foreground,
-            paddingLeft: 4,
+            color:
+              titleTone === "muted"
+                ? theme.colors.mutedForeground
+                : theme.colors.foreground,
+            paddingLeft: titleTone === "muted" ? 12 : 4,
           }}
         >
           {title}
@@ -45,7 +57,7 @@ export const InsetGroup = ({
           borderWidth: theme.borderWidth.thin,
           borderColor: theme.colors.border,
           backgroundColor: theme.colors.card,
-          overflow: "hidden",
+          ...(elevated ? { boxShadow: [...theme.elevation.md] } : { overflow: "hidden" }),
         }}
       >
         {Arr.map(rows, (row, index) => (
@@ -54,12 +66,24 @@ export const InsetGroup = ({
             style={
               index === 0
                 ? {}
-                : {
-                    borderTopWidth: theme.borderWidth.thin,
-                    borderColor: theme.colors.border,
-                  }
+                : insetDividers
+                  ? {}
+                  : {
+                      borderTopWidth: theme.borderWidth.thin,
+                      borderColor: theme.colors.border,
+                    }
             }
           >
+            {insetDividers && index > 0 ? (
+              <div
+                style={{
+                  height: theme.borderWidth.thin,
+                  marginLeft: 12,
+                  marginRight: 12,
+                  backgroundColor: theme.colors.border,
+                }}
+              />
+            ) : null}
             {row}
           </div>
         ))}

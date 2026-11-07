@@ -1,84 +1,57 @@
 /** @jsxImportSource @gpuix/react */
 
+import { ColorSwatches } from "@gpuixui/components/color-swatches";
+import { InsetGroup, InsetGroupRow } from "@gpuixui/components/inset-group";
+import { SegmentedControl } from "@gpuixui/components/segmented-control";
 import { Slider, Switch } from "@gpuixui/primitives";
-import { darkTheme, lightTheme, mixColor, mixThemes } from "@gpuixui/tokens";
+import { darkTheme, lightTheme, mixThemes } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { ReactNode } from "react";
 import { alpha, at, center, col, Dot, H, MUTED, PointerAt, RawShader, Root, row, T, TEXT, W } from "./kit.js";
 import { ease, sp, track } from "./motion.js";
 import { LIGHT_SHADER, lightData, lightParams, srgbf, type LightDesc, type Prim } from "./rune-light.js";
 
-export const Hello = ({ t }: { t: number }): ReactNode => {
-  const on = track(t, 0, [[0.68, 1, sp(0.45, 0.2)]]);
-  const k = Math.min(1, Math.max(0, on));
-  return (
-    <Root fill="#111113">
+const HERO_SWITCH = { on: "#3b82f6", off: "#2a2a2d", knob: "#ffffff" };
+const HERO_METRICS = { width: 152, height: 88, knob: 72, inset: 8, border: 0 };
+export const Hello = ({ t }: { t: number }): ReactNode => (
+  <Root fill="#111113">
+    <ThemeProvider theme={{ ...darkTheme, switch: HERO_SWITCH, switchMetrics: HERO_METRICS }}>
       <div style={{ ...at(0, 164, W), ...center }}><T s={t >= 0.68 ? "Nen on" : "Nen off"} size={52} weight={600} /></div>
-      <div style={{ ...at(404, 290, 152, 88), borderRadius: 44, backgroundColor: k > 0.5 ? "#3b82f6" : "#2a2a2d" }}>
-        <div style={{ ...at(8 + 64 * on, 8, 72, 72), borderRadius: 36, backgroundColor: "#ffffff", boxShadow: { offsetX: 0, offsetY: 2, blurRadius: 8, spreadRadius: 0, color: "#00000066" } }} />
-      </div>
-      <PointerAt t={t} start={[760, 450]} path={[[0.1, 480, 334]]} taps={[0.68]} />
-    </Root>
-  );
-};
+      <div style={{ ...at(404, 290, 152, 88), ...center }}><Switch checked={t >= 0.68} label="Nen" /></div>
+    </ThemeProvider>
+    <PointerAt t={t} start={[760, 450]} path={[[0.1, 480, 334]]} taps={[0.68]} />
+  </Root>
+);
 
-const SECTION = { fontSize: 12 };
-const Section = ({ title, p, children }: { title: string; p: Paint; children: ReactNode }) => (
-  <div style={col(8)}>
-    <T s={title} size={SECTION.fontSize} weight={600} color={p.muted} style={{ marginLeft: 12 }} />
-    <div style={{ ...col(), padding: 4, borderRadius: 12, backgroundColor: p.card, borderWidth: 0.5, borderColor: p.edge, boxShadow: { offsetX: 0, offsetY: 8, blurRadius: 24, spreadRadius: 0, color: p.soft } }}>{children}</div>
-  </div>
-);
-interface Paint { readonly bg: string; readonly card: string; readonly text: string; readonly muted: string; readonly edge: string; readonly sep: string; readonly soft: string; readonly hover: string; readonly track: string; readonly chip: string }
-const DARK: Paint = { bg: "#17171a", card: "#222226", text: "#f2f2f4", muted: "#9d9da6", edge: "#ffffff0f", sep: "#ffffff0f", soft: "#00000040", hover: "#ffffff0d", track: "#2c2c30", chip: "#47474d" };
-const LIGHT: Paint = { bg: "#f2f2f5", card: "#ffffff", text: "#17171a", muted: "#6b6b75", edge: "#00000014", sep: "#0000000f", soft: "#0000001a", hover: "#0000000a", track: "#e7e7ea", chip: "#ffffff" };
-const Row = ({ label, p, hover, children }: { label: string; p: Paint; hover?: boolean; children: ReactNode }) => (
-  <div style={{ ...row(), height: 44, paddingLeft: 12, paddingRight: 12, borderRadius: 8, justifyContent: "space-between", backgroundColor: hover ? p.hover : "#00000000" }}>
-    <T s={label} size={14} weight={450} color={p.text} />{children}
-  </div>
-);
-const Sep = ({ p }: { p: Paint }) => <div style={{ height: 1, marginLeft: 12, marginRight: 12, backgroundColor: p.sep }} />;
-const blue = (theme: typeof darkTheme): typeof darkTheme => ({ ...theme, colors: { ...theme.colors, primary: "#3b82f6" } });
-const PICK = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#22c55e", "#6b7280"];
+const ACCENTS = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#22c55e", "#6b7280"];
+const SWITCH_METRICS = { width: 38, height: 22, knob: 18, inset: 2, border: 0 };
+const SETTINGS_DARK = { ...darkTheme, switch: { on: "#3b82f6", off: "#2c2c30", knob: "#ffffff" }, switchMetrics: SWITCH_METRICS, colors: { ...darkTheme.colors, primary: "#3b82f6", background: "#17171a", card: "#222226", foreground: "#f2f2f4", mutedForeground: "#9d9da6", border: "#ffffff0f", muted: "#2c2c30" } };
+const SETTINGS_LIGHT = { ...lightTheme, switch: { on: "#3b82f6", off: "#e0e0e4", knob: "#ffffff" }, switchMetrics: SWITCH_METRICS, colors: { ...lightTheme.colors, primary: "#3b82f6", background: "#f2f2f5", card: "#ffffff", foreground: "#17171a", mutedForeground: "#6b6b75", border: "#0000000f", muted: "#e7e7ea" } };
+const ROW = { minHeight: 44 };
 export const Settings = ({ t }: { t: number }): ReactNode => {
-  const k = track(t, 0, [[0.55, 1, sp(0.45, 0)]]), lit = k >= 0.5, sounds = t >= 0.42;
-  const p = Object.fromEntries(Object.entries(DARK).map(([key, value]) => [key, mixColor(value, LIGHT[key as keyof Paint], k)])) as unknown as Paint;
-  const speed = 0.5 - 0.28 * ease(t, 0.72, 0.5);
+  const k = track(t, 0, [[0.55, 1, sp(0.45, 0)]]), sounds = t >= 0.42, theme = mixThemes(SETTINGS_DARK, SETTINGS_LIGHT, k);
+  const speed = 0.5 - 0.28 * ease(t, 0.72, 0.5), hover = t < 0.55;
   return (
-    <ThemeProvider theme={blue(mixThemes(darkTheme, lightTheme, k))}>
-      <Root fill={p.bg}>
-        <div style={{ ...at(0, 0, W, 40), ...center }}><T s="Settings" size={14} weight={600} color={p.text} /></div>
-        <div style={{ ...at(24, 42, W - 48), ...col(17) }}>
-          <Section title="Appearance" p={p}>
-            <Row label="Theme" p={p}>
-              <div style={{ ...row(), height: 28, padding: 2, borderRadius: 8, backgroundColor: p.track }}>
-                {["Auto", "Light", "Dark"].map((name) => {
-                  const on = name === (t >= 0.55 ? "Light" : "Auto");
-                  return <div key={name} style={{ ...center, width: 66, height: 24, borderRadius: 6, backgroundColor: on ? p.chip : "#00000000" }}><T s={name} size={12.5} weight={on ? 600 : 450} color={on ? p.text : p.muted} /></div>;
-                })}
-              </div>
-            </Row>
-            <Sep p={p} />
-            <Row label="Accent colour" p={p}>
-              <div style={row(14)}>
-                {PICK.map((c, i) => <div key={c} style={{ ...center, width: 16 + (i === 0 ? 8 : 0), height: 16 + (i === 0 ? 8 : 0), borderRadius: 12, borderWidth: i === 0 ? 2 : 0, borderColor: c }}><Dot color={c} size={i === 0 ? 16 : 16} /></div>)}
-              </div>
-            </Row>
-          </Section>
-          <Section title="General" p={p}>
-            <Row label="Launch at login" p={p}><Switch checked label="Launch at login" /></Row><Sep p={p} />
-            <Row label="Show in menu bar" p={p}><Switch checked label="Show in menu bar" /></Row><Sep p={p} />
-            <Row label="Play sounds" p={p} hover={t < 0.55}><Switch checked={sounds} label="Play sounds" /></Row>
-          </Section>
-          <Section title="Motion" p={p}>
-            <Row label="Animation speed" p={p}>
-              <div style={row(14)}><div style={{ width: 180 }}><Slider label="Animation speed" value={speed * 100} /></div><T s={`${(2 ** (speed * 2 - 1)).toFixed(2)}×`} size={12} color={p.muted} /></div>
-            </Row><Sep p={p} />
-            <Row label="Reduce motion" p={p}><Switch checked={false} label="Reduce motion" /></Row>
-          </Section>
+    <ThemeProvider theme={theme}>
+      <div style={{ position: "relative", width: W, height: H, overflow: "hidden", backgroundColor: theme.colors.background }}>
+        <div style={{ ...at(0, 0, W, 40), ...center }}><T s="Settings" size={14} weight={600} color={theme.colors.foreground} /></div>
+        <div style={{ ...at(24, 44, W - 48), ...col(23) }}>
+          <InsetGroup title="Appearance" titleTone="muted" elevated insetDividers>
+            <InsetGroupRow label="Theme" style={ROW} control={<SegmentedControl style={{ width: 204 }} label="Theme" value={t >= 0.55 ? "light" : "auto"} items={[{ value: "auto", label: "Auto" }, { value: "light", label: "Light" }, { value: "dark", label: "Dark" }]} />} />
+            <InsetGroupRow label="Accent colour" style={ROW} control={<ColorSwatches label="Accent colour" colors={ACCENTS} value={ACCENTS[0]} />} />
+          </InsetGroup>
+          <InsetGroup title="General" titleTone="muted" elevated insetDividers>
+            <InsetGroupRow label="Launch at login" style={ROW} control={<Switch checked label="Launch at login" />} />
+            <InsetGroupRow label="Show in menu bar" style={ROW} control={<Switch checked label="Show in menu bar" />} />
+            <InsetGroupRow label="Play sounds" style={{ ...ROW, ...(hover ? { backgroundColor: "#ffffff0d" } : {}) }} control={<Switch checked={sounds} label="Play sounds" />} />
+          </InsetGroup>
+          <InsetGroup title="Motion" titleTone="muted" elevated insetDividers>
+            <InsetGroupRow label="Animation speed" style={ROW} control={<div style={row(14)}><div style={{ width: 180 }}><Slider label="Animation speed" value={speed * 100} /></div><T s={`${(2 ** (speed * 2 - 1)).toFixed(2)}×`} size={12} color={theme.colors.mutedForeground} /></div>} />
+            <InsetGroupRow label="Reduce motion" style={ROW} control={<Switch checked={false} label="Reduce motion" />} />
+          </InsetGroup>
         </div>
         <PointerAt t={t} start={[880, 300]} path={[[0.05, 900, 324], [0.5, 882, 92], [0.75, 720, 422]]} taps={[0.42, 0.55]} />
-      </Root>
+      </div>
     </ThemeProvider>
   );
 };

@@ -25,6 +25,12 @@ describe("mixThemes", () => {
     expect(mid).toMatch(/^#[0-9a-f]{8}$/);
   });
 
+  it("takes text colours at once, so ink never crosses its surface", () => {
+    const mid = mixThemes(darkTheme, lightTheme, 0.5).colors;
+    expect(mid.foreground).toBe(lightTheme.colors.foreground);
+    expect(mid.cardForeground).toBe(lightTheme.colors.cardForeground);
+  });
+
   it("keeps structure the mix does not own", () => {
     expect(mixThemes(darkTheme, lightTheme, 0.5).spacing).toBe(lightTheme.spacing);
   });

@@ -1,4 +1,7 @@
 /** @jsxImportSource @gpuix/react */
+import { Text } from "@gpuixui/primitives";
+import { darkTheme } from "@gpuixui/tokens";
+import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { ReactNode } from "react";
 import { pressed, sp, track } from "./motion.js";
 import type { Fx } from "./rune-pack.js";
@@ -17,7 +20,7 @@ export const RawShader = Shader;
 export const alpha = (hex: string, a: number): string => `${hex}${Math.round(Math.min(1, Math.max(0, a)) * 255).toString(16).padStart(2, "0")}`;
 
 export const T = ({ s, size, weight = 400, color = TEXT, a = 1, mono = false, style }: { readonly s: string; readonly size: number; readonly weight?: number; readonly color?: string; readonly a?: number; readonly mono?: boolean; readonly style?: Record<string, unknown> }): ReactNode => (
-  <text style={{ fontFamily: mono ? MONO : SANS, fontSize: size, lineHeight: Math.round(size * 1.21), fontWeight: weight, color: alpha(color, a), ...style }}>{s}</text>
+  <Text style={{ fontFamily: mono ? MONO : SANS, fontSize: size, lineHeight: Math.round(size * 1.21), fontWeight: weight, color: alpha(color, a), ...style }}>{s}</Text>
 );
 
 export const at = (x: number, y: number, w?: number, h?: number) => ({ position: "absolute", left: x, top: y, ...(w === undefined ? {} : { width: w }), ...(h === undefined ? {} : { height: h }) }) as const;
@@ -26,7 +29,9 @@ export const col = (gap = 0) => ({ display: "flex", flexDirection: "column", gap
 export const center = { display: "flex", alignItems: "center", justifyContent: "center" } as const;
 
 export const Root = ({ fill, children }: { readonly fill: string; readonly children: ReactNode }): ReactNode => (
-  <div style={{ position: "relative", width: W, height: H, overflow: "hidden", backgroundColor: fill }}>{children}</div>
+  <ThemeProvider theme={darkTheme}>
+    <div style={{ position: "relative", width: W, height: H, overflow: "hidden", backgroundColor: fill }}>{children}</div>
+  </ThemeProvider>
 );
 
 export const Pointer = ({ x, y, press }: { readonly x: number; readonly y: number; readonly press: number }): ReactNode => {

@@ -31,11 +31,26 @@ const mixValue = (from: unknown, to: unknown, k: number): unknown => {
   return k < 0.5 ? from : to;
 };
 
+// Ink takes the new theme at once: mixed alongside its surface it would cross it mid-fade and vanish.
+const mixColors = (from: Theme["colors"], to: Theme["colors"], k: number): Theme["colors"] => {
+  const a = from as unknown as Record<string, string>;
+  const b = to as unknown as Record<string, string>;
+  return Object.fromEntries(
+    Object.keys(b).map((role) => {
+      const ink = role.toLowerCase().endsWith("foreground");
+      return [role, ink ? b[role] : mixValue(a[role], b[role], k)];
+    }),
+  ) as unknown as Theme["colors"];
+};
+
 export const mixThemes = (from: Theme, to: Theme, k: number): Theme => {
   const settled = k <= 0 ? from : k >= 1 ? to : undefined;
   return settled ?? {
     ...to,
-    colors: mixValue(from.colors, to.colors, k) as Theme["colors"],
+    colors: mixColors(from.colors, to.colors, k),
     elevation: mixValue(from.elevation, to.elevation, k) as Theme["elevation"],
+    ...(from.switch !== undefined && to.switch !== undefined
+      ? { switch: mixValue(from.switch, to.switch, k) as NonNullable<Theme["switch"]> }
+      : {}),
   };
 };

@@ -1,0 +1,31 @@
+---
+title: Color swatches
+description: One colour chosen from a fixed row
+---
+
+<ComponentPreview name="color-swatches-demo" />
+
+## Usage
+
+```tsx
+import { ColorSwatches } from "@gpuixui/components/color-swatches";
+
+<ColorSwatches
+  label="Accent colour"
+  colors={["#3B82F6", "#8B5CF6", "#EC4899"]}
+  value={accent}
+  onValueChange={setAccent}
+/>;
+```
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `label` | `string` — the group's accessible name | — |
+| `colors` | `ReadonlyArray<string>` | — |
+| `value` | `string` — the chosen colour; it wears the ring | — |
+| `onValueChange` | `(color: string) => void` | — |
+| `size` | `number` — one swatch's diameter | `16` |
+
+Use [Color picker](/components/color-picker) when any colour is allowed.
