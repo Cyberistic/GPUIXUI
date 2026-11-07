@@ -3,6 +3,7 @@ import { Avatar } from "@gpuixui/components/avatar";
 import { AvatarGroup } from "@gpuixui/components/avatar-group";
 import { Badge } from "@gpuixui/components/badge";
 import { Card } from "@gpuixui/components/card";
+import { Knob } from "@gpuixui/components/knob";
 import { Dialog, DialogContent, DialogTitle } from "@gpuixui/components/dialog";
 import {
   Message,
@@ -869,9 +870,10 @@ export const Keys = ({ t }: { t: number }): ReactNode => {
     ky0 = by + 152;
   return (
     <Root fill="#101012">
-      <div
+      <Card
         style={{
           ...at(bx, by, bw, bh),
+          padding: 0,
           borderRadius: 30,
           backgroundColor: "#1c1b20",
           borderWidth: 1,
@@ -885,11 +887,12 @@ export const Keys = ({ t }: { t: number }): ReactNode => {
           },
         }}
       />
-      <div
+      <Card
         style={{
           ...at(kx0, by + 38, 230, 70),
           ...col(4),
           justifyContent: "center",
+          padding: 0,
           paddingLeft: 16,
           paddingRight: 16,
           borderRadius: 12,
@@ -923,7 +926,7 @@ export const Keys = ({ t }: { t: number }): ReactNode => {
           weight={500}
           color="#3c9b6c"
         />
-      </div>
+      </Card>
       <div
         style={{
           ...at(bx + bw - (kx0 - bx) - 120, by + 44, 120),
@@ -940,7 +943,8 @@ export const Keys = ({ t }: { t: number }): ReactNode => {
       {[0, 1, 2, 3].map((i) => {
         const kx = kx0 + 280 + i * 70,
           ky = by + 46,
-          ang = Math.sin(t * 0.9 + i * 1.3) * 2.2 - Math.PI / 2;
+          turn =
+            50 + (Math.sin(t * 0.9 + i * 1.3) * 2.2 * 100) / (1.5 * Math.PI);
         return (
           <div key={i}>
             <FxView
@@ -954,13 +958,13 @@ export const Keys = ({ t }: { t: number }): ReactNode => {
                 bevel: 10,
               })}
             />
-            <Dot
-              color="#f1ece1"
-              size={6}
-              style={at(
-                kx + 27 + Math.cos(ang) * 16 - 3,
-                ky + 27 + Math.sin(ang) * 16 - 3,
-              )}
+            <Knob
+              label={`Macro ${i + 1}`}
+              size={54}
+              step={0.01}
+              value={turn}
+              indicatorColor="#f1ece1"
+              style={{ ...at(kx, ky), backgroundColor: "transparent" }}
             />
           </div>
         );
@@ -1018,14 +1022,27 @@ export const Keys = ({ t }: { t: number }): ReactNode => {
                     })
               }
             />
-            <T
-              s={label}
-              size={11.5}
-              weight={600}
-              color={dark ? "#b9b9c2" : "#2a2a2e"}
-              a={0.85}
-              style={at(x + off + 10, y + off + 8)}
-            />
+            <Button
+              variant="ghost"
+              label={label}
+              style={{
+                ...at(rect.x, rect.y, rect.w, rect.h),
+                minWidth: 0,
+                padding: 0,
+                borderWidth: 0,
+                borderRadius: 14,
+                backgroundColor: "transparent",
+              }}
+            >
+              <T
+                s={label}
+                size={11.5}
+                weight={600}
+                color={dark ? "#b9b9c2" : "#2a2a2e"}
+                a={0.85}
+                style={at(10, 8)}
+              />
+            </Button>
           </div>
         );
       })}
@@ -1041,6 +1058,55 @@ const STORIES: ReadonlyArray<readonly [string, string, number]> = [
   ["Paper, cards and Greed", "Craft · 5 min", 2],
   ["Cold coast of Meteor", "Travel · 11 min", 6],
 ];
+const BARE_CARD = {
+  padding: 0,
+  borderWidth: 0,
+  backgroundColor: "transparent",
+};
+const Story = ({
+  title,
+  meta,
+  pal,
+  seed,
+  x,
+  y,
+  w,
+  h,
+  t,
+}: {
+  title: string;
+  meta: string;
+  pal: number;
+  seed: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  t: number;
+}) => (
+  <Card style={{ ...at(x, y, w, h + 60), ...BARE_CARD }}>
+    <MeshBox
+      pal={pal}
+      speed={0.5}
+      seed={seed}
+      drift={0.25}
+      x={0}
+      y={0}
+      w={w}
+      h={h}
+      r={18}
+      t={t}
+    />
+    <T s={title} size={17} weight={600} style={at(0, h + 10)} />
+    <T s={meta} size={13} color={MUTED} style={at(0, h + 36)} />
+  </Card>
+);
+const BAR_BUTTON = {
+  minWidth: 0,
+  padding: 0,
+  borderWidth: 0,
+  backgroundColor: "transparent",
+};
 export const Today = ({ t }: { t: number }): ReactNode => {
   const scroll = 50 * t + track(t, 0, [[0.9, 260, sp(1.1, 0)]]);
   const bw = 400,
@@ -1063,29 +1129,16 @@ export const Today = ({ t }: { t: number }): ReactNode => {
         <T s="Today" size={30} weight={600} />
         <T s="Friday, November 6" size={14} weight={500} color={MUTED} />
       </div>
-      <MeshBox
+      <Story
+        title="Nen, light and the long weekend"
+        meta="Featured · 14 min"
         pal={0}
-        speed={0.5}
         seed={1}
-        drift={0.25}
         x={40}
         y={heroY}
         w={W - 80}
         h={300}
-        r={18}
         t={t}
-      />
-      <T
-        s="Nen, light and the long weekend"
-        size={17}
-        weight={600}
-        style={at(40, heroY + 310)}
-      />
-      <T
-        s="Featured · 14 min"
-        size={13}
-        color={MUTED}
-        style={at(40, heroY + 336)}
       />
       {STORIES.map(([title, meta, pal], i) => {
         const c = i % 3,
@@ -1093,22 +1146,18 @@ export const Today = ({ t }: { t: number }): ReactNode => {
           x = 40 + c * (w3 + 20),
           y = heroY + 382 + r * (180 + 75);
         return (
-          <div key={title}>
-            <MeshBox
-              pal={pal}
-              speed={0.5}
-              seed={10 + c + pal}
-              drift={0.25}
-              x={x}
-              y={y}
-              w={w3}
-              h={180}
-              r={18}
-              t={t}
-            />
-            <T s={title} size={17} weight={600} style={at(x, y + 190)} />
-            <T s={meta} size={13} color={MUTED} style={at(x, y + 216)} />
-          </div>
+          <Story
+            key={title}
+            title={title}
+            meta={meta}
+            pal={pal}
+            seed={10 + c + pal}
+            x={x}
+            y={y}
+            w={w3}
+            h={180}
+            t={t}
+          />
         );
       })}
       <FxView
@@ -1138,9 +1187,11 @@ export const Today = ({ t }: { t: number }): ReactNode => {
         })}
       />
       {tabs.map((name, i) => (
-        <div
+        <Button
           key={name}
-          style={{ ...at(bx + slot * i, by, slot, bh), ...center }}
+          variant="ghost"
+          label={name}
+          style={{ ...at(bx + slot * i, by, slot, bh), ...BAR_BUTTON }}
         >
           <T
             s={name}
@@ -1148,11 +1199,15 @@ export const Today = ({ t }: { t: number }): ReactNode => {
             weight={600}
             color={Math.abs(sel - i) < 0.5 ? "#ffffff" : "#d8d8de"}
           />
-        </div>
+        </Button>
       ))}
-      <div style={{ ...at(bx + bw + 16, by, bh, bh), ...center }}>
+      <Button
+        variant="ghost"
+        label="New"
+        style={{ ...at(bx + bw + 16, by, bh, bh), ...BAR_BUTTON }}
+      >
         <T s="+" size={26} color="#ffffff" />
-      </div>
+      </Button>
     </Root>
   );
 };

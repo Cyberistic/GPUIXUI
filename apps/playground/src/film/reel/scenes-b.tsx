@@ -11,7 +11,15 @@ import {
   VirtualTable,
 } from "@gpuixui/data";
 import { DiffViewer } from "@gpuixui/editor";
-import { Slider, Switch } from "@gpuixui/primitives";
+import {
+  Slider,
+  SliderIndicator,
+  SliderThumb,
+  SliderTrack,
+  Switch,
+} from "@gpuixui/primitives";
+import { Avatar } from "@gpuixui/components/avatar";
+import { Knob } from "@gpuixui/components/knob";
 import { Button } from "@gpuixui/primitives/button";
 import { darkTheme, lightTheme, mixThemes } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -107,6 +115,18 @@ const SETTINGS_LIGHT = {
     muted: "#e7e7ea",
   },
 };
+const WHITE_THUMB = {
+  backgroundColor: "#ffffff",
+  borderWidth: 1,
+  borderColor: "#00000026",
+  boxShadow: {
+    offsetX: 0,
+    offsetY: 1,
+    blurRadius: 4,
+    spreadRadius: 0,
+    color: "#00000040",
+  },
+};
 const ROW = { minHeight: 44 };
 export const Settings = ({ t }: { t: number }): ReactNode => {
   const k = track(t, 0, [[0.55, 1, sp(0.45, 0)]]),
@@ -196,7 +216,12 @@ export const Settings = ({ t }: { t: number }): ReactNode => {
               control={
                 <div style={row(14)}>
                   <div style={{ width: 180 }}>
-                    <Slider label="Animation speed" value={speed * 100} />
+                    <Slider label="Animation speed" value={speed * 100}>
+                      <SliderTrack>
+                        <SliderIndicator />
+                      </SliderTrack>
+                      <SliderThumb style={WHITE_THUMB} />
+                    </Slider>
                   </div>
                   <T
                     s={`${(2 ** (speed * 2 - 1)).toFixed(2)}×`}
@@ -523,41 +548,44 @@ export const Op1 = ({ t }: { t: number }): ReactNode => {
   ];
   return (
     <Root fill="#101012">
-      <div
+      <Card
         style={{
           ...at(64, 22, 831, 496),
+          padding: 0,
+          borderWidth: 0,
           borderRadius: 32,
           backgroundColor: BODY_FILL,
         }}
       />
       {KNOB_X.map((x, i) => (
-        <div key={x}>
-          <div
-            style={{
-              ...at(x - 39, 118, 78, 78),
-              borderRadius: 39,
-              backgroundColor: KEY_FILL,
-            }}
-          />
-          <Dot
-            color={["#5b8def", "#54c078", "#d9843f", "#d9534f"][i]!}
-            size={9}
-            style={at(x - 4.5, 127)}
-          />
-        </div>
+        <Knob
+          key={x}
+          label={`Knob ${i + 1}`}
+          size={78}
+          value={50}
+          indicatorColor={["#5b8def", "#54c078", "#d9843f", "#d9534f"][i]!}
+          style={{ ...at(x - 39, 118), backgroundColor: KEY_FILL }}
+        />
       ))}
-      <div
+      <Card
         style={{
           ...at(592, 110, 264, 160),
+          padding: 0,
+          borderWidth: 0,
           borderRadius: 18,
           backgroundColor: "#0c0c10",
         }}
       />
       {KEY_RECTS.map((k, i) => (
-        <div
+        <Button
           key={i}
+          variant="ghost"
+          label={NOTES[i % 12]!}
           style={{
             ...at(k.x, k.y, k.w, k.h),
+            minWidth: 0,
+            padding: 0,
+            borderWidth: 0,
             borderRadius: 12,
             backgroundColor: ACCENT.has(i) ? "#cb5e3e" : KEY_FILL,
           }}
@@ -699,22 +727,25 @@ export const Launcher = ({ t }: { t: number }): ReactNode => {
   return (
     <Root fill="#0d0c0d">
       {TILES.map((b, i) => (
-        <div key={i}>
-          <div
-            style={{
-              ...at(b.x, b.y, b.w, b.h),
-              borderRadius: 20,
-              backgroundColor: "#1c1d24",
-            }}
+        <Card
+          key={i}
+          style={{
+            ...at(b.x, b.y, b.w, b.h),
+            padding: 0,
+            borderWidth: 0,
+            borderRadius: 20,
+            backgroundColor: "#1c1d24",
+          }}
+        >
+          <Avatar
+            name={APPS[i]!}
+            size="sm"
+            color={HUES[i]!}
+            initials={false}
+            radius={9}
+            style={at(15, 15, 30, 30)}
           />
-          <div
-            style={{
-              ...at(b.x + 15, b.y + 15, 30, 30),
-              borderRadius: 9,
-              backgroundColor: HUES[i]!,
-            }}
-          />
-        </div>
+        </Card>
       ))}
       <RawShader
         source={LIGHT_SHADER}

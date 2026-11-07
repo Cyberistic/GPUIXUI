@@ -227,6 +227,7 @@ export const relatedFamilies: ReadonlyArray<RelatedFamily> = [
       component("fieldset", "Fieldset"),
       component("inset-group", "Inset group"),
       component("color-swatches", "Color swatches"),
+      component("knob", "Knob"),
       component("form", "Form"),
       component("multi-step-form", "MultiStepForm"),
       component("inline-edit", "Inline edit"),

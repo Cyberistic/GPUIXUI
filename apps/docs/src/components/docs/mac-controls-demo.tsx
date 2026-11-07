@@ -185,3 +185,32 @@ export const ColorSwatchesDemo = () => {
 export const colorSwatchesDemoSource = `import { ColorSwatches } from "@gpuixui/components/color-swatches";
 
 <ColorSwatches label="Accent colour" colors={accents} value={accent} onValueChange={setAccent} />;`;
+
+export const KnobDemo = () => {
+  const [gain, setGain] = useState(60);
+  const angle = -135 + (gain / 100) * 270;
+  return (
+    <label className="flex items-center gap-3 text-sm">
+      <span
+        aria-hidden="true"
+        className="relative size-12 rounded-full bg-muted"
+        style={{ transform: `rotate(${angle}deg)` }}
+      >
+        <span className="absolute top-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-primary" />
+      </span>
+      <input
+        aria-label="Gain"
+        className="w-32"
+        max={100}
+        min={0}
+        onChange={(event) => setGain(Number(event.target.value))}
+        type="range"
+        value={gain}
+      />
+    </label>
+  );
+};
+
+export const knobDemoSource = `import { Knob } from "@gpuixui/components/knob";
+
+<Knob label="Gain" value={gain} onValueChange={setGain} />;`;

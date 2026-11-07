@@ -9,8 +9,10 @@ import { Icon, type IconName } from "@gpuixui/icons";
 import { Button as Action } from "@gpuixui/primitives/button";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useMoveTiming } from "./internal/presence.js";
 import { elevationShadow, useTheme } from "./internal/theme.js";
+import { indicatorBox, measuredBox, type TabBox } from "./tabs/indicator.js";
 
 export interface SegmentedControlItem {
   readonly value: string;
@@ -61,6 +63,13 @@ export const SegmentedControl = ({
   const segments = useRef(new Map<string, PublicInstance>());
 
   const follow = useRef(false);
+  const move = useMoveTiming("normal");
+  const [origin, setOrigin] = useState<Option.Option<TabBox>>(Option.none());
+  const [boxes, setBoxes] = useState<ReadonlyMap<string, TabBox>>(new Map());
+  const chipFill =
+    theme.mode === "dark" ? theme.colors.selected : theme.colors.background;
+  const chosenBox = Option.fromNullishOr(boxes.get(value));
+  const measured = Option.isSome(origin) && Option.isSome(chosenBox);
 
   useEffect(() => {
     if (!follow.current) return;
@@ -86,7 +95,12 @@ export const SegmentedControl = ({
       aria-label={label}
       {...rest}
       onKeyDown={onKeyDown}
+      onLayout={(event) => {
+        setOrigin(measuredBox(event));
+        rest.onLayout?.(event);
+      }}
       style={{
+        position: "relative",
         display: "flex",
         flexDirection: "row",
         gap: 2,
@@ -96,6 +110,23 @@ export const SegmentedControl = ({
         ...style,
       }}
     >
+      {Option.isSome(origin) && Option.isSome(chosenBox) ? (
+        <div
+          testId="segment-indicator"
+          motion={{
+            initial: false,
+            animate: indicatorBox(origin.value, chosenBox.value),
+            transition: move,
+          }}
+          style={{
+            position: "absolute",
+            backgroundColor: chipFill,
+            borderRadius: theme.radius.sm,
+            boxShadow: elevationShadow(theme, "sm"),
+            pointerEvents: "none",
+          }}
+        />
+      ) : null}
       {Arr.map(items, (item) => {
         const chosen = item.value === value;
         return (
@@ -113,6 +144,19 @@ export const SegmentedControl = ({
               else segments.current.set(item.value, instance);
             }}
             onActivate={() => choose(item.value)}
+            onLayout={(event) =>
+              Option.map(measuredBox(event), (box) =>
+                setBoxes((current) => {
+                  const known = current.get(item.value);
+                  return known?.x === box.x &&
+                    known.y === box.y &&
+                    known.width === box.width &&
+                    known.height === box.height
+                    ? current
+                    : new Map(current).set(item.value, box);
+                }),
+              )
+            }
             leading={
               item.icon === undefined ? undefined : (
                 <Icon
@@ -126,15 +170,12 @@ export const SegmentedControl = ({
               flexGrow: 1,
               flexBasis: 0,
               borderRadius: theme.radius.sm,
-              ...(chosen
+              ...(chosen && !measured
                 ? {
-                    backgroundColor:
-                      theme.mode === "dark"
-                        ? theme.colors.selected
-                        : theme.colors.background,
+                    backgroundColor: chipFill,
                     boxShadow: elevationShadow(theme, "sm"),
                   }
-                : {}),
+                : { backgroundColor: "transparent" }),
             }}
           >
             {item.label}

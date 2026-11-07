@@ -31,6 +31,8 @@ export interface AvatarProps extends Props {
 
   readonly initials?: boolean;
 
+  readonly radius?: number;
+
   readonly clickThrough?: boolean;
 
   readonly className?: string;
@@ -56,6 +58,7 @@ export const Avatar = ({
   initials: showInitials = true,
   clickThrough: requestedClickThrough,
   className,
+  radius,
   style,
   ...rest
 }: AvatarProps) => {
@@ -89,6 +92,7 @@ export const Avatar = ({
         style={mergeStyles(recipeStyle(AVATAR_DISC, theme), {
           pointerEvents: "none",
           ...(color === undefined ? {} : { backgroundColor: color }),
+          ...(radius === undefined ? {} : { borderRadius: radius }),
         })}
       >
         {src === undefined && !showInitials ? null : src === undefined ? (

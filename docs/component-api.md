@@ -334,6 +334,7 @@ the page and the package in the same change.
 | Disclosure | `Disclosure` | — | plan 725 |
 | Inset group | `InsetGroup`, `InsetGroupRow` | — | plan 725 |
 | Color swatches | `ColorSwatches` | — | plan 760 |
+| Knob | `Knob` | — | plan 760 |
 | Badges | `Badge` | — | plan 111 |
 | Avatars | `Avatar` | `AvatarRoot`/`Image`/`Fallback` | plan 111 |
 | Avatar group | `AvatarGroup` | — | plan 600 |

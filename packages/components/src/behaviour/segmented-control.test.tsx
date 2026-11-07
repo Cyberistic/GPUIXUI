@@ -85,3 +85,22 @@ describe("stepSegment", () => {
     expect(Option.getOrNull(stepSegment(ITEMS, "calendar", -1))).toBe("list");
   });
 });
+
+describe("SegmentedControl's chip", () => {
+  it("slides to the chosen segment and sits exactly on it", () => {
+    page = renderComponent(<View />);
+    settle(page);
+    const list = requireBounds(page, "segment-list");
+    expect(requireBounds(page, "segment-indicator").x).toBeCloseTo(list.x, 0);
+    clickCentreOf(page, "segment-calendar");
+    page.renderer.flush();
+    const calendar = requireBounds(page, "segment-calendar");
+    const midway = requireBounds(page, "segment-indicator");
+    expect(midway.x).toBeLessThan(calendar.x);
+    page.renderer.clockFastForward(1000);
+    settle(page);
+    const landed = requireBounds(page, "segment-indicator");
+    expect(landed.x).toBeCloseTo(calendar.x, 0);
+    expect(landed.width).toBeCloseTo(calendar.width, 0);
+  });
+});

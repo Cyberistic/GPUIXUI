@@ -210,3 +210,20 @@ describe("Avatar", () => {
     avatar.unmount();
   });
 });
+
+describe("Avatar radius", () => {
+  const radii = (root: ComponentTestRoot): ReadonlyArray<unknown> =>
+    Arr.map(
+      root.renderer.findByType("div"),
+      (element) => element.style.borderRadius,
+    );
+
+  it("rounds the disc as asked and stays a circle otherwise", () => {
+    const square = renderComponent(<Avatar name="Photos" radius={9} />);
+    expect(radii(square)).toContain(9);
+    square.unmount();
+    const round = renderComponent(<Avatar name="Photos" />);
+    expect(radii(round)).not.toContain(9);
+    round.unmount();
+  });
+});

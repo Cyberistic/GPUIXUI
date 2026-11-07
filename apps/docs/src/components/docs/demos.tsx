@@ -317,6 +317,8 @@ import {
   disclosureDemoSource,
   ColorSwatchesDemo,
   colorSwatchesDemoSource,
+  KnobDemo,
+  knobDemoSource,
   InsetGroupDemo,
   insetGroupDemoSource,
   SegmentedControlDemo,
@@ -3203,6 +3205,10 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: segmentedControlDemoSource,
   },
   "disclosure-demo": { render: DisclosureDemo, source: disclosureDemoSource },
+  "knob-demo": {
+    render: KnobDemo,
+    source: knobDemoSource,
+  },
   "color-swatches-demo": {
     render: ColorSwatchesDemo,
     source: colorSwatchesDemoSource,
