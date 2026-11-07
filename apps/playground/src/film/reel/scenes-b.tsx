@@ -1,11 +1,12 @@
 /** @jsxImportSource @gpuix/react */
 
 import { Slider, Switch } from "@gpuixui/primitives";
-import { darkTheme, lightTheme } from "@gpuixui/tokens";
+import { darkTheme, lightTheme, mixColor, mixThemes } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { ReactNode } from "react";
 import { alpha, at, center, col, Dot, H, MUTED, PointerAt, RawShader, Root, row, T, TEXT, W } from "./kit.js";
 import { ease, sp, track } from "./motion.js";
+import { LIGHT_SHADER, lightData, lightParams, srgbf, type LightDesc, type Prim } from "./rune-light.js";
 
 export const Hello = ({ t }: { t: number }): ReactNode => {
   const on = track(t, 0, [[0.68, 1, sp(0.45, 0.2)]]);
@@ -40,10 +41,11 @@ const Sep = ({ p }: { p: Paint }) => <div style={{ height: 1, marginLeft: 12, ma
 const blue = (theme: typeof darkTheme): typeof darkTheme => ({ ...theme, colors: { ...theme.colors, primary: "#3b82f6" } });
 const PICK = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#22c55e", "#6b7280"];
 export const Settings = ({ t }: { t: number }): ReactNode => {
-  const lit = t >= 0.6, p = lit ? LIGHT : DARK, sounds = t >= 0.42;
+  const k = track(t, 0, [[0.55, 1, sp(0.45, 0)]]), lit = k >= 0.5, sounds = t >= 0.42;
+  const p = Object.fromEntries(Object.entries(DARK).map(([key, value]) => [key, mixColor(value, LIGHT[key as keyof Paint], k)])) as unknown as Paint;
   const speed = 0.5 - 0.28 * ease(t, 0.72, 0.5);
   return (
-    <ThemeProvider theme={blue(lit ? lightTheme : darkTheme)}>
+    <ThemeProvider theme={blue(mixThemes(darkTheme, lightTheme, k))}>
       <Root fill={p.bg}>
         <div style={{ ...at(0, 0, W, 40), ...center }}><T s="Settings" size={14} weight={600} color={p.text} /></div>
         <div style={{ ...at(24, 42, W - 48), ...col(17) }}>
@@ -51,7 +53,7 @@ export const Settings = ({ t }: { t: number }): ReactNode => {
             <Row label="Theme" p={p}>
               <div style={{ ...row(), height: 28, padding: 2, borderRadius: 8, backgroundColor: p.track }}>
                 {["Auto", "Light", "Dark"].map((name) => {
-                  const on = name === (lit ? "Light" : "Auto");
+                  const on = name === (t >= 0.55 ? "Light" : "Auto");
                   return <div key={name} style={{ ...center, width: 66, height: 24, borderRadius: 6, backgroundColor: on ? p.chip : "#00000000" }}><T s={name} size={12.5} weight={on ? 600 : 450} color={on ? p.text : p.muted} /></div>;
                 })}
               </div>
@@ -66,7 +68,7 @@ export const Settings = ({ t }: { t: number }): ReactNode => {
           <Section title="General" p={p}>
             <Row label="Launch at login" p={p}><Switch checked label="Launch at login" /></Row><Sep p={p} />
             <Row label="Show in menu bar" p={p}><Switch checked label="Show in menu bar" /></Row><Sep p={p} />
-            <Row label="Play sounds" p={p} hover={t < 0.6}><Switch checked={sounds} label="Play sounds" /></Row>
+            <Row label="Play sounds" p={p} hover={t < 0.55}><Switch checked={sounds} label="Play sounds" /></Row>
           </Section>
           <Section title="Motion" p={p}>
             <Row label="Animation speed" p={p}>
@@ -75,7 +77,7 @@ export const Settings = ({ t }: { t: number }): ReactNode => {
             <Row label="Reduce motion" p={p}><Switch checked={false} label="Reduce motion" /></Row>
           </Section>
         </div>
-        <PointerAt t={t} start={[880, 300]} path={[[0.05, 900, 324], [0.5, 882, 92], [0.75, 720, 422]]} taps={[0.42, 0.6]} />
+        <PointerAt t={t} start={[880, 300]} path={[[0.05, 900, 324], [0.5, 882, 92], [0.75, 720, 422]]} taps={[0.42, 0.55]} />
       </Root>
     </ThemeProvider>
   );
@@ -172,82 +174,52 @@ export const Table = ({ t }: { t: number }): ReactNode => {
   );
 };
 
-const LIGHT_SHADER = String.raw`
-fn sd_box(p: vec2f, r: vec4f, c: f32) -> f32 { let q = abs(p - r.xy - r.zw * 0.5) - r.zw * 0.5 + c; return length(max(q, vec2f(0.0))) + min(max(q.x, q.y), 0.0) - c; }
-fn prims(p: vec2f) -> f32 {
-  var d = 1e5;
-  let n = u32(frame.params[2].x);
-  for (var k = 0u; k < n; k++) { d = min(d, sd_box(p, shader_data_at(k * 2u), shader_data_at(k * 2u + 1u).x)); }
-  return d;
-}
-fn shade(p: vec2f) -> vec4f {
-  let L = frame.params[0].xy; let radius = frame.params[0].z; let power = frame.params[0].w;
-  let tint = frame.params[1].xyz; let behind = frame.params[1].w; let ambient = frame.params[2].y;
-  let base = backdrop_at(p).rgb;
-  let d = prims(p);
-  let to = L - p; let dist = length(to); let dir = to / max(dist, 0.001);
-  let fall = power / (1.0 + dist * dist / (radius * radius));
-  var occ = 1.0;
-  let steps = 18u;
-  for (var k = 1u; k <= steps; k++) {
-    let q = p + to * (f32(k) / f32(steps));
-    let s = prims(q);
-    occ = min(occ, smoothstep(-2.0, 7.0, s + f32(k) * 0.35));
-  }
-  let e = 1.2;
-  let n = normalize(vec2f(prims(p + vec2f(e, 0.)) - prims(p - vec2f(e, 0.)), prims(p + vec2f(0., e)) - prims(p - vec2f(0., e))) + vec2f(1e-5));
-  let rim = smoothstep(-5.0, -0.6, d) * smoothstep(0.8, -0.4, d) * max(dot(n, dir), 0.0) * fall;
-  var col = base * ambient;
-  if (behind > 0.5) {
-    let shaft = occ * fall;
-    col += tint * fall * mix(0.62, 1.0, occ) * smoothstep(-0.5, 1.0, d) * 0.62;
-    col += base * (0.45 * fall + 1.1 * fall * occ) * smoothstep(1.0, -0.5, d);
-    col += tint * rim * 1.1;
-    col += vec3f(1.0, 0.86, 0.66) * exp(-dist * dist / 1500.0) * mix(0.4, 1.0, occ) * 0.7;
-  } else {
-    col += base * tint * fall * mix(0.35, 1.0, occ) * 1.6;
-    col += tint * rim * 1.1;
-    col += vec3f(1.0, 0.95, 0.88) * exp(-dist * dist / 180.0) * 0.7 + tint * exp(-dist / 60.0) * 0.16;
-  }
-  return vec4f(col, 1.0);
-}`;
-const lightData = (rects: ReadonlyArray<readonly [number, number, number, number, number]>) => rects.flatMap(([x, y, w, h, r]) => [x, y, w, h, r, 0, 0, 0]);
-
-const OP1_KEYS = Array.from({ length: 24 }, (_, i) => [104 + (i % 12) * 62.4, 311 + Math.trunc(i / 12) * 88, 54, 72, 12] as const);
-const OP1_KNOBS = [128, 240, 352, 464].map((x) => [x - 39, 118, 78, 78, 39] as const);
 const NOTES = ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G"];
 const ACCENT = new Set([2, 7, 22]);
+const KEY_FILL = "#2c2c2f", BODY_FILL = "#262628";
+const KEY_RECTS = Array.from({ length: 24 }, (_, i) => ({ x: 104 + (i % 12) * 62.4, y: 311 + Math.trunc(i / 12) * 88, w: 54, h: 72, r: 12 }));
+const KNOB_X = [128, 240, 352, 464];
+const KEY_MATERIAL = { z0: 10, z1: 18, bevel: 12, lift: 4.5, gloss: 0.85, rough: 0.28 };
+const OP1_PRIMS: ReadonlyArray<Prim> = [
+  { x: 64, y: 22, w: 831, h: 496, r: 32, z1: 10, bevel: 22, lift: 7, gloss: 0.7, rough: 0.32 },
+  ...KNOB_X.map((x) => ({ x: x - 39, y: 118, w: 78, h: 78, r: 39, z0: 10, z1: 22, bevel: 30, lift: 10, gloss: 0.9, rough: 0.26 })),
+  { x: 592, y: 110, w: 264, h: 160, r: 18, z0: 10, gloss: 1, rough: 0.18 },
+  ...KEY_RECTS.map((k) => ({ ...k, ...KEY_MATERIAL })),
+];
 export const Op1 = ({ t }: { t: number }): ReactNode => {
-  const L = [168 + 521 * t, 170 + 34 * t] as const;
+  const lights: ReadonlyArray<LightDesc> = [
+    { x: 168 + 521 * t, y: 170 + 34 * t, z: 150, radius: 26, color: srgbf(1, 0.93, 0.85), intensity: 3.4, range: 2200, specular: 2.4 },
+    { x: 1100, y: 760, z: 700, radius: 200, color: srgbf(0.5, 0.62, 1), intensity: 0.4, range: 3000 },
+  ];
   return (
-    <Root fill="#141416">
-      <div style={{ ...at(64, 22, 831, 496), borderRadius: 32, backgroundColor: "#2a2a2d", borderWidth: 1, borderColor: "#ffffff0d" }} />
-      {[[128, "#5b8def"], [240, "#54c078"], [352, "#d9843f"], [464, "#d9534f"]].map(([x, c]) => <div key={String(x)}><div style={{ ...at((x as number) - 39, 118, 78, 78), borderRadius: 39, backgroundColor: "#37373a" }} /><Dot color={c as string} size={9} style={at((x as number) - 4.5, 127)} /></div>)}
-      <div style={{ ...at(592, 110, 264, 160), borderRadius: 18, backgroundColor: "#141419" }} />
-      {OP1_KEYS.map(([x, y, w, h], i) => <div key={i}><div style={{ ...at(x, y, w, h), borderRadius: 12, backgroundColor: ACCENT.has(i) ? "#d04a34" : "#37373a" }} /><T s={NOTES[i % 12]!} size={11} weight={600} color={ACCENT.has(i) ? "#3a120a" : "#9d9da6"} style={at(x + 10, y + 10)} /></div>)}
-      <RawShader source={LIGHT_SHADER} readsBackdrop time={t} params={[L[0], L[1], 150, 0.8, 1, 0.9, 0.75, 0, OP1_KEYS.length + 5, 0.55, 0, 0]} data={lightData([...OP1_KEYS, ...OP1_KNOBS, [592, 110, 264, 160, 18]])} style={at(0, 0, W, H)} />
+    <Root fill="#101012">
+      <div style={{ ...at(64, 22, 831, 496), borderRadius: 32, backgroundColor: BODY_FILL }} />
+      {KNOB_X.map((x, i) => <div key={x}><div style={{ ...at(x - 39, 118, 78, 78), borderRadius: 39, backgroundColor: KEY_FILL }} /><Dot color={["#5b8def", "#54c078", "#d9843f", "#d9534f"][i]!} size={9} style={at(x - 4.5, 127)} /></div>)}
+      <div style={{ ...at(592, 110, 264, 160), borderRadius: 18, backgroundColor: "#0c0c10" }} />
+      {KEY_RECTS.map((k, i) => <div key={i} style={{ ...at(k.x, k.y, k.w, k.h), borderRadius: 12, backgroundColor: ACCENT.has(i) ? "#cb5e3e" : KEY_FILL }} />)}
+      <RawShader source={LIGHT_SHADER} readsBackdrop time={t} params={lightParams(2, lights, { ambient: [0.3, 0.31, 0.34], rim: 1.1, ao: 0.5, shaftsOver: 0.35 }, OP1_PRIMS.length)} data={lightData(2, OP1_PRIMS)} style={at(0, 0, W, H)} />
       <T s="Bisky's Field · Control surface" size={15} weight={600} style={at(104, 54)} />
       <T s="Bevels from the SDF catch the light" size={12} color="#9d9da6" style={at(104, 76)} />
       <T s="128 BPM" size={24} weight={600} color="#9de2b0" style={at(612, 130)} />
       <T s="Pattern A · bar 12" size={12} color="#6a9a7a" style={at(612, 166)} />
+      {KEY_RECTS.map((k, i) => <T key={i} s={NOTES[i % 12]!} size={11} weight={600} color={ACCENT.has(i) ? "#3a120a" : "#9d9da6"} style={at(k.x + 10, k.y + 10)} />)}
     </Root>
   );
 };
 
 const APPS = ["Inbox", "Calendar", "Notes", "Music", "Photos", "Maps", "Files", "Terminal", "Mail", "Weather", "Clock", "Books", "Stocks", "Podcasts", "Home", "Wallet", "Health", "Camera", "Code", "Fleet", "Chat", "Voice", "Launcher", "Gon"];
-const HUES = ["#a84e7a", "#a9583e", "#8d7a2a", "#7f9a55", "#6d9c86", "#4e7fab", "#5f5fb0", "#7f4f9e", "#a84e60", "#a06a2c", "#7d7d2c", "#7f9a55", "#7f9f8d", "#5f79ae", "#6a5cae", "#94498c", "#a04f4f", "#94702c", "#667f2f", "#3f8a68", "#4a84a0", "#5a5fac", "#7a4f9e", "#964a7a"];
-const TILES = APPS.map((_, i) => [34 + (i % 8) * 114, 157 + Math.trunc(i / 8) * 114, 93, 93, 20] as const);
+const HUES = ["#c0568c", "#c26247", "#a18c30", "#90af61", "#7cb29a", "#5992c3", "#6c6cc9", "#915ab5", "#c0586e", "#b67932", "#8e8e32", "#90af61", "#90b5a1", "#6c8ac6", "#7969c6", "#a853a0", "#b65a5a", "#a97f32", "#749136", "#489d77", "#5497b6", "#676cc4", "#8b5ab5", "#ab548b"];
+const TILES = APPS.map((_, i) => ({ x: 34 + (i % 8) * 114, y: 157 + Math.trunc(i / 8) * 114, w: 93, h: 93, r: 20 }));
+const TILE_PRIMS: ReadonlyArray<Prim> = TILES.map((b) => ({ ...b, z1: 14, bevel: 8, lift: 2.5, gloss: 0.5, rough: 0.4 }));
 export const Launcher = ({ t }: { t: number }): ReactNode => {
-  const L = [439 + 125 * t, 263] as const;
+  const lights: ReadonlyArray<LightDesc> = [{ x: 439 + 125 * t, y: 263, z: 4, radius: 12, color: srgbf(1, 0.8, 0.55), intensity: 1.6, range: 3000, shafts: 1.5, softness: 2.2 }];
   return (
-    <Root fill="#0d0c0b">
+    <Root fill="#0d0c0d">
+      {TILES.map((b, i) => <div key={i}><div style={{ ...at(b.x, b.y, b.w, b.h), borderRadius: 20, backgroundColor: "#1c1d24" }} /><div style={{ ...at(b.x + 15, b.y + 15, 30, 30), borderRadius: 9, backgroundColor: HUES[i]! }} /></div>)}
+      <RawShader source={LIGHT_SHADER} readsBackdrop time={t} params={lightParams(2, lights, { ambient: [0.5, 0.5, 0.58], rim: 0.8, ao: 0.35, shaftsOver: 0.12 }, TILE_PRIMS.length)} data={lightData(2, TILE_PRIMS)} style={at(0, 0, W, H)} />
       <T s="Good evening, Gon" size={24} weight={600} style={at(34, 30)} />
       <T s="24 apps · light from behind the grid" size={12} color="#9d9da6" style={at(34, 62)} />
-      {APPS.map((name, i) => {
-        const [x, y] = TILES[i]!;
-        return <div key={name}><div style={{ ...at(x, y, 93, 93), borderRadius: 20, backgroundColor: "#191a20", borderWidth: 1, borderColor: "#ffffff17" }} /><div style={{ ...at(x + 15, y + 15, 30, 30), borderRadius: 9, backgroundColor: HUES[i]! }} /><T s={name} size={11} weight={600} style={at(x + 15, y + 62)} /></div>;
-      })}
-      <RawShader source={LIGHT_SHADER} readsBackdrop time={t} params={[L[0], L[1], 240, 0.5, 1, 0.7, 0.42, 1, TILES.length, 0.95, 0, 0]} data={lightData(TILES)} style={at(0, 0, W, H)} />
+      {TILES.map((b, i) => <T key={i} s={APPS[i]!} size={11} weight={600} style={at(b.x + 15, b.y + 62)} />)}
     </Root>
   );
 };

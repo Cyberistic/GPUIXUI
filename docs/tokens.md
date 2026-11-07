@@ -276,6 +276,19 @@ alphaOf("#191D25"); // 1
 alphaOf("#191D25FF"); // 1 — a full byte is no share
 ```
 
+### `mixColor` and `mixThemes`
+
+`mixColor(from, to, k)` is a straight channel mix, alpha included, written as eight-digit hex.
+`mixThemes(from, to, k)` mixes every colour role and elevation shadow and hands back the
+endpoints themselves at `0` and `1`, so a settled theme keeps its identity. `useThemeCrossfade(theme)`
+from `@gpuixui/tokens/react` runs it on a critically damped spring whenever `theme` changes.
+
+```tsx
+const shown = useThemeCrossfade(dark ? darkTheme : lightTheme);
+
+<ThemeProvider theme={shown}>{children}</ThemeProvider>;
+```
+
 ### `blend`
 
 `blend(color, toward, amount)` moves each channel of `color` `amount` of the way
