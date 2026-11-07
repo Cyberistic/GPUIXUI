@@ -1120,8 +1120,8 @@ export const Today = ({ t }: { t: number }): ReactNode => {
   ]);
   const sx = bx + slot * (sel + 0.5);
   const tabs = ["Today", "Search", "Saved", "Profile"];
-  const y0 = 6 - scroll,
-    heroY = y0 + 78,
+  const y0 = 18 - scroll,
+    heroY = y0 + 85,
     w3 = (W - 80 - 40) / 3;
   return (
     <Root fill={BG}>
