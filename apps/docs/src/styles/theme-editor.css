@@ -306,8 +306,39 @@
 .gx-stylesheet {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.gx-stylesheet figure,
+.gx-stylesheet pre,
+.gx-stylesheet [data-fd-codeblock] {
+  max-width: none;
+  width: 100%;
+}
+
+.gx-stylesheet-bar {
+  display: flex;
   gap: 8px;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gx-stylesheet-select {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 12px;
+}
+
+.gx-stylesheet-note {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12.5px;
 }
 
 .gx-te-audit {
