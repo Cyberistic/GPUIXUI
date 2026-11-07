@@ -2,6 +2,8 @@ import { accordionMeta } from "./accordion.js";
 import { alertMeta } from "./alert.js";
 import { aspectRatioMeta } from "./aspect-ratio.js";
 import { disclosureMeta } from "./disclosure.js";
+import { colorSwatchesMeta } from "./color-swatches.js";
+import { knobMeta } from "./knob.js";
 import { insetGroupMeta } from "./inset-group.js";
 import { segmentedControlMeta } from "./segmented-control.js";
 import { autoHeightMeta } from "./auto-height.js";
@@ -99,6 +101,8 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   accordionMeta,
   aspectRatioMeta,
   disclosureMeta,
+  colorSwatchesMeta,
+  knobMeta,
   insetGroupMeta,
   segmentedControlMeta,
   autoHeightMeta,

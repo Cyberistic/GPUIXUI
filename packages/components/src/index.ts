@@ -89,4 +89,6 @@ export {
 } from "./internal/theme.js";
 export * from "./segmented-control.js";
 export * from "./disclosure.js";
+export * from "./color-swatches.js";
+export * from "./knob.js";
 export * from "./inset-group.js";

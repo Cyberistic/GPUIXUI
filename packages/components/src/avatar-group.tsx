@@ -34,6 +34,10 @@ export interface AvatarGroupMember {
   readonly src?: string;
 
   readonly status?: AvatarStatus;
+
+  readonly color?: string;
+
+  readonly initials?: boolean;
 }
 
 export interface AvatarGroupState {
@@ -153,6 +157,8 @@ export const AvatarGroup = ({
             name={member.name}
             src={member.src}
             status={member.status}
+            color={member.color}
+            initials={member.initials}
             size={size}
             style={{
               borderRadius: theme.radius.full,

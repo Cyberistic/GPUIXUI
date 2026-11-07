@@ -1,0 +1,64 @@
+---
+title: Shader layer
+description: Fire, liquid metal, glass and backdrop effects painted by GPUI in painter order
+---
+
+<ComponentPreview name="shader-layer-demo" />
+
+Every effect is real WGSL painted between your components, so a backdrop effect
+distorts the live pixels of whatever is under it. The clip above is a capture of
+real components, not an illustration.
+
+## Installation
+
+Stock GPUI has fixed primitives, so these effects need the patched binary from
+`@gpuixui/native`. Register it once at your entry point:
+
+```tsx
+import "@gpuixui/native/register";
+```
+
+The patch carries Metal and wgpu, including WebGPU in the browser. DirectX is
+not implemented, and WebGL2 skips any effect that reads the backdrop.
+
+## Usage
+
+```tsx
+import { liquidMetal, ShaderLayer, useShaderClock } from "@gpuixui/fx/shader-layer";
+
+const time = useShaderClock();
+
+<ShaderLayer fx={liquidMetal({ rect, radius: 28, time })} />;
+```
+
+An effect is a plain value. Factories are pure functions of `time`, so the same
+inputs give the same frame, and `useShaderClock` holds still under reduced motion.
+
+## Effects
+
+| Factory | Paints | Reads the backdrop |
+| ---- | ---- | ---- |
+| `firePlan` | a simulated flame and smoke on a persistent grid | no |
+| `glow`, `pulse`, `shimmer` | aura, radiating rings, a loading sweep | no |
+| `sparkles` | twinkles, or a burst at a chosen time | no |
+| `electric` | lightning running round a rounded rect | no |
+| `liquidMetal`, `plastic`, `mesh` | material fills | no |
+| `lens`, `fluted`, `shockwave` | refractive glass and a travelling wave | yes |
+| `waterRipple` | drops that refract and tint what is below | yes |
+| `bungeeGum` | stretches the pixels at a point along a strand | yes |
+| `enScan` | an expanding ring that reveals edges | yes |
+| `godspeed` | glitch bands and colour split | yes |
+| `singularity` | swirls everything into a black hole | yes |
+| `zetsu` | dissolves everything into cells | yes |
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `fx` | `Fx \| null` | — |
+
+`Fx` is `{ source, box, params, time, data?, readsBackdrop?, simulationSource?, simulationGrid?, simulationUniform? }`.
+`box` is relative to the parent, and the backdrop factories expect their points in the same space.
+
+The material, glow, glass and fire effects are ported from
+[rune-fx](https://github.com/anomalyco/rune) (MIT, © Anomaly).

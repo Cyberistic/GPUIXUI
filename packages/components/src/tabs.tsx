@@ -64,7 +64,12 @@ import {
   disabledFade,
   useTheme,
 } from "./internal/theme.js";
-import { indicatorBox, measuredBox, type TabBox } from "./tabs/indicator.js";
+import {
+  indicatorBox,
+  lineIndicatorBox,
+  measuredBox,
+  type TabBox,
+} from "./tabs/indicator.js";
 import {
   activationOf,
   moveOrigin,
@@ -363,8 +368,13 @@ export const Tabs = ({
   );
 };
 
+export type TabsListVariant = "pill" | "line";
+
+const LINE_THICKNESS = 2;
+
 export interface TabsListProps extends Omit<Props, "children"> {
   readonly label?: string;
+  readonly variant?: TabsListVariant;
 
   readonly className?: string;
   readonly children?: PartChildren;
@@ -372,6 +382,7 @@ export interface TabsListProps extends Omit<Props, "children"> {
 
 export const TabsList = ({
   label,
+  variant = "pill",
   className,
   onKeyDown,
   onKeyUp,
@@ -495,7 +506,12 @@ export const TabsList = ({
             theme,
           ),
 
-          { position: "relative" },
+          {
+            position: "relative",
+            ...(variant === "line"
+              ? { backgroundColor: "transparent", borderWidth: 0, padding: 0 }
+              : {}),
+          },
         ),
         style,
       )}
@@ -521,14 +537,20 @@ export const TabsList = ({
             testId="tabs-indicator"
             motion={{
               initial: false,
-              animate: indicatorBox(anchoredAt, box),
+              animate:
+                variant === "line"
+                  ? lineIndicatorBox(anchoredAt, box, LINE_THICKNESS)
+                  : indicatorBox(anchoredAt, box),
               transition: move,
             }}
             style={{
               position: "absolute",
 
-              backgroundColor: theme.colors.selected,
-              borderRadius: theme.radius.sm,
+              backgroundColor:
+                variant === "line"
+                  ? theme.colors.foreground
+                  : theme.colors.selected,
+              borderRadius: variant === "line" ? 0 : theme.radius.sm,
               pointerEvents: "none",
             }}
           />

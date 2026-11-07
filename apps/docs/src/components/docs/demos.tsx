@@ -315,6 +315,10 @@ import { AspectRatioDemo, aspectRatioDemoSource } from "./aspect-ratio-demo";
 import {
   DisclosureDemo,
   disclosureDemoSource,
+  ColorSwatchesDemo,
+  colorSwatchesDemoSource,
+  KnobDemo,
+  knobDemoSource,
   InsetGroupDemo,
   insetGroupDemoSource,
   SegmentedControlDemo,
@@ -400,6 +404,7 @@ import {
 import { ParticlesDemo, particlesDemoSource } from "./particles-demo";
 import { PinnedListDemo, pinnedListDemoSource } from "./pinned-list-demo";
 import { RevealDemo, revealDemoSource } from "./reveal-demo";
+import { ShaderLayerDemo, shaderLayerDemoSource } from "./shader-layer-demo";
 import { RippleButtonDemo, rippleButtonDemoSource } from "./ripple-button-demo";
 import { RollingTextDemo, rollingTextDemoSource } from "./rolling-text-demo";
 import { RotatingTextDemo, rotatingTextDemoSource } from "./rotating-text-demo";
@@ -3200,6 +3205,14 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: segmentedControlDemoSource,
   },
   "disclosure-demo": { render: DisclosureDemo, source: disclosureDemoSource },
+  "knob-demo": {
+    render: KnobDemo,
+    source: knobDemoSource,
+  },
+  "color-swatches-demo": {
+    render: ColorSwatchesDemo,
+    source: colorSwatchesDemoSource,
+  },
   "inset-group-demo": { render: InsetGroupDemo, source: insetGroupDemoSource },
   "aspect-ratio-demo": {
     render: AspectRatioDemo,
@@ -3348,6 +3361,10 @@ export const demos: Readonly<Record<string, Demo>> = {
     source: pinnedListDemoSource,
   },
   "reveal-demo": { render: RevealDemo, source: revealDemoSource },
+  "shader-layer-demo": {
+    render: ShaderLayerDemo,
+    source: shaderLayerDemoSource,
+  },
   "ripple-button-demo": {
     render: RippleButtonDemo,
     source: rippleButtonDemoSource,

@@ -12,6 +12,7 @@ export const effectSlugs: ReadonlyArray<string> = [
   "motion-grid",
   "particles",
   "ripple-button",
+  "shader-layer",
   "shine-button",
   "shimmer",
   "rotating-text",

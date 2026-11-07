@@ -48,6 +48,20 @@ describe("InsetGroup", () => {
     expect((c?.y ?? 0) - bottom(b)).toBe(1);
   });
 
+  it("insets the hairline when asked, and keeps exactly one", () => {
+    page = renderComponent(
+      <div style={{ width: 400 }}>
+        <InsetGroup title="General" insetDividers>
+          <InsetGroupRow testId="first" label="One" />
+          <InsetGroupRow testId="second" label="Two" />
+        </InsetGroup>
+      </div>,
+    );
+    const first = requireBounds(page, "first");
+    const second = requireBounds(page, "second");
+    expect(second.y).toBe(first.y + first.height + 1);
+  });
+
   it("lines every control up on the trailing edge", () => {
     page = renderComponent(<Pane />);
     const rights = ["a", "b", "c"].map((id) => {

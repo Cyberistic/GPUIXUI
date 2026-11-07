@@ -20,3 +20,14 @@ export const indicatorBox = (
   width: selected.width,
   height: selected.height,
 });
+
+export const lineIndicatorBox = (
+  origin: TabBox,
+  selected: TabBox,
+  thickness: number,
+): IndicatorBox => ({
+  left: selected.x - origin.x,
+  top: selected.y - origin.y + selected.height - thickness,
+  width: selected.width,
+  height: thickness,
+});
